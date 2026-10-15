@@ -12,6 +12,7 @@ import CultSeatRaw from './CultSeat.jsx';
 const CultSeat = memo(CultSeatRaw, sameSeat);
 const NO_OPTS = new Map();
 const NO_FLASH = new Set();
+let userMove = false; // set while your own click is being submitted (useTable.show reads it)
 const NO_SLOTS = new Map();
 const NO_SEATS = [];
 const NO_OPTIONS = () => null;
@@ -30,7 +31,7 @@ import PayPicker, { payChoice } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
+import { playChain, planChain, holdAfter, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
 import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
@@ -118,8 +119,10 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     const end = fresh.filter(isRoundEnd).pop();
     // the DOM still shows `prev` here: whatever must be measured before it changes is measured now (a card leaving)
     if (beforeShow && beforeShow.current && prev !== next) beforeShow.current(prev, next);
-    // The table's update is a transition (perf fix 1): a click's own frame (the press, the focus) paints first, and the
-    // re-render of the table follows without blocking input. The engine has already run; only the picture waits.
+    // Your own move's table update is a transition (perf fix 1): the click's own frame (the press, the focus) paints first,
+    // and the table follows without blocking input. A bot's step (a timer) is a plain update: one uninterrupted render.
+    // As a transition it was restarted by every number ticking on screen and waited for the ticks to stop (turn-wait.md).
+    const paint = userMove ? startTransition : f => f();
     if (end) {
       held.current = true;
       const start = roundStart.current;
@@ -127,10 +130,10 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       saveRoundStart(next, online);
       // Keep the board as it was when the round was scored until the card is dismissed.
       const board = scoringSnapshot(prev, next);
-      startTransition(() => setTable({ shown: next, moment: { result: parseRoundEnd(next, end), start, after: next, board } }));
+      paint(() => setTable({ shown: next, moment: { result: parseRoundEnd(next, end), start, after: next, board } }));
     } else {
       if (next.round !== prev.round) { roundStart.current = next; saveRoundStart(next, online); }
-      startTransition(() => setTable(t => ({ ...t, shown: next })));
+      paint(() => setTable(t => ({ ...t, shown: next })));
     }
   }, []);
 
@@ -163,7 +166,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       const plan = planChain(prev, next, { mine });
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
       // (a rival's step that shows something stays on screen at least 400ms before the same bot's next step: motion.mjs m4)
-      const dwellOf = pl => (pl.total ? (sameNext ? Math.max(pl.handoff, rivalStep ? Math.min(rivalDwell, 400) : 0) : pl.total) : rivalStep ? (sameNext ? 0 : MO.passHold) : base);
+      const dwellOf = pl => holdAfter(pl, { sameNext, rivalStep, floor: Math.min(rivalDwell, 400), base });
       // reduced motion (grammar §6, H14): nothing travels, so a step shows its end state and the next follows a beat later
       const still = !motionOK();
       const dwell = still ? (plan.total || rivalStep ? (sameNext && !plan.total ? 0 : Math.min(150, plan.total || 150)) : base) : dwellOf(plan);
@@ -448,7 +451,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const undoSig = () => (typeof session.canUndo === 'function' && session.canUndo() ? `${session.undoKind}:${session.undoSeat}` : '');
   const [, setUndoSeen] = useState(undoSig);
   const undoSeen = useRef(null);
-  useEffect(() => session.subscribe(() => { const u = undoSig(); if (u !== undoSeen.current) { undoSeen.current = u; startTransition(() => setUndoSeen(u)); } }), [session]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => session.subscribe(() => { const u = undoSig(); if (u !== undoSeen.current) { undoSeen.current = u; if (userMove) startTransition(() => setUndoSeen(u)); else setUndoSeen(u); } }), [session]); // eslint-disable-line react-hooks/exhaustive-deps
   // A local game's bots wait at a round end (session roundHold) until its summary is gone; they go on once the table
   // shows that state with no summary up (dismissed, or never detected: never a stalled table).
   useEffect(() => { if (!moment && session.roundHold && live0 === session.getState() && session.continueRound) session.continueRound(); }, [moment, live0, session]);
@@ -487,9 +490,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const prevState = useRef(state); // the state the table last committed (the flight effect moves it on)
-  // the spaces just taken (a new minion lands): worked out while rendering, kept until the next placement, faded after 2s
+  // the spaces just taken (a new minion lands): worked out while rendering, kept until the next placement
   const lastFlash = useRef(NO_FLASH);
-  const [flashOff, setFlashOff] = useState(null);
   const freshFlash = useMemo(() => {
     const before = prevState.current;
     if (!before || before === state) return null;
@@ -497,7 +499,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     return fresh.length ? new Set(fresh) : null;
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
   const flashSet = freshFlash || lastFlash.current;
-  const flash = flashSet === flashOff ? NO_FLASH : flashSet;
+  const flash = flashSet;
   const [ready, setReady] = useState(null); // hot-seat: which human seat has been handed the device
   const [rules, setRules] = useState(false);
   const wide = useWide();
@@ -631,8 +633,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const owner = state.slots[key];
     lastFlash.current = freshFlash;
     void owner; // (the minion's flight is the chain's first step: director.js)
-    const t = setTimeout(() => setFlashOff(freshFlash), 2000);
-    return () => clearTimeout(t);
+    // the flash is a one-shot landing animation: it stays on that space until the next placement replaces it (fading it
+    // after 2s re-rendered the whole table and the wheel mid-chain, once per placement, for no visible change)
+    return undefined;
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Every turn is told in one place (Cory): a turn card by the acting cult builds line by line as the turn goes
@@ -751,7 +754,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     setError('');
     const token = ++sendToken.current;
     let sent;
-    try { sent = session.submit({ player: pend.player, option: optionId }); } catch (e) { sent = Promise.reject(e); }
+    userMove = true; // the table's update for this move is a transition (useTable.show): the click's frame paints first
+    try { sent = session.submit({ player: pend.player, option: optionId }); } catch (e) { sent = Promise.reject(e); } finally { userMove = false; }
     // Don't lock the table forever if an answer never comes (online): give up waiting after a while.
     const timer = setTimeout(() => { if (sendToken.current === token) { busyNow.current = false; setBusy(false); setError('No answer yet. Try again.'); } }, 8000);
     Promise.resolve(sent)

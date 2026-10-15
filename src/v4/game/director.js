@@ -16,7 +16,7 @@
 // and timers (no React state). A click or Space skips the rest of a chain to its end (skipChain). Every duration comes
 // from src/v4/motion.js at the viewer's speed. A state without an effect stream (an online guest, a catch-up) falls
 // back to gains.js, which reads the change of state.
-import { MO, flightMs, nextBeatAt } from '../motion.js';
+import { MO, flightMs, nextBeatAt, speedScale } from '../motion.js';
 import { playerColor } from '../format.js';
 import { gainsBetween } from './gains.js';
 import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights } from './flight.js';
@@ -213,7 +213,26 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     t = Math.max(t, cur);
   }
   const turnPasses = !!(state.pending && before.pending && state.pending.player !== before.pending.player);
-  return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? end + (turnPasses ? MO.breath : 0) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses };
+  // a chain's cap (grammar §5: 3.0s at Steady): a longer plan plays faster to fit, never faster than Quick (half)
+  const cap = Math.round(3000 * speedScale());
+  if (end > cap) {
+    const k = Math.max(0.5, cap / end);
+    for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); }
+    end *= k; hand *= k; t *= k;
+  }
+  return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? Math.round(end + (turnPasses ? MO.breath : 0)) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses };
+}
+
+/**
+ * How long the table holds a step on screen before showing the next one (the table's pace, grammar §5): the same
+ * player's next step shows at this chain's hand-off (at least `floor` after a rival's visible step); a turn that
+ * passes waits for the whole chain and its breath; a rival's step with nothing to show costs nothing when the same
+ * bot moves next, and a turn-ending pass holds MO.passHold. `base`: the hold for anything else (your own steps).
+ * Pure: useTable paces with it, and src/test/v4/ui/pacing.test.js checks H2/H3 with it over recorded games.
+ */
+export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0 }) {
+  if (plan.total) return sameNext ? Math.max(plan.handoff, rivalStep ? floor : 0) : plan.total;
+  return rivalStep ? (sameNext ? 0 : MO.passHold) : base;
 }
 
 // ---------- the screen ----------

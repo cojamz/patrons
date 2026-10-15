@@ -39,6 +39,7 @@ import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.j
 import { createLocalSession } from '../../../v4/session/local.js';
 import { createEmitter } from '../../../v4/session/emitter.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
+import Tick from '../../../v4/game/Tick.jsx';
 import { saveLocalSoon, flushLocalSave, clearLocal, claimLocal, loadLocal } from '../../../v4/saved.js';
 
 afterEach(() => { cleanup(); globalThis.IS_REACT_ACT_ENVIRONMENT = true; });
@@ -189,5 +190,19 @@ describe('render budget', () => {
       expect(flushLocalSave()).toBe(false);
       expect(localStorage.getItem('patrons.v4.local')).toBe(null);
     } finally { Storage.prototype.setItem = real; localStorage.removeItem('patrons.v4.local'); }
+  });
+
+  it('a number counting renders at its start and end, never once per frame (the frames write the text node)', async () => {
+    const { container, rerender } = render(<Tick value={3} float={false} />);
+    await settle(2);
+    R.reset();
+    const seen = new Set();
+    act(() => { rerender(<Tick value={15} float={false} />); });
+    for (let k = 0; k < 50; k++) { await act(() => new Promise(r => setTimeout(r, 16))); seen.add(container.querySelector('.tv').textContent); }
+    const report = { Tick: R.n('Tick'), commits: R.commits, values: seen.size };
+    console.log('[render-budget] one count 3 → 15:', JSON.stringify(report));
+    expect(container.querySelector('.tv').textContent).toBe('15');
+    expect(report.values).toBeGreaterThan(3); // it counted through the numbers between
+    expect(report.Tick).toBeLessThanOrEqual(4); // the new value, its glow on and off, the end: not one per frame
   });
 });

@@ -261,8 +261,13 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
   }
   // nothing fits: line 1 alone at its smallest (line 2 and 3 are in the hover); a taken panel shows just its minion
   const ol = taken || !one ? 0 : isGain ? Math.min(2, oneClauses.length) : 3;
-  const w = room(ol * lineH(X.verbMin) + (taken ? X.minion + X.gap : 0));
-  return { one: isGain ? X.mainMin : X.verbMin, oneLines: ol, two: X.small, twoLines: 0, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
+  // a small wheel (under its 416-unit board, a phone): line 1 sets as large as fits its panel, down to 9px, rather than
+  // running word by word into its neighbours (the center ring's verbs overlapped on an iPhone 13); a laptop keeps 12px
+  const extra = taken ? X.minion + X.gap : 0;
+  let px = isGain ? X.mainMin : X.verbMin;
+  while (k < 1 && ol && px > 9 && room(ol * lineH(px) + extra) * k < needOne(px, ol) + 2) px--;
+  const w = room(ol * lineH(px) + extra);
+  return { one: px, oneLines: ol, two: X.small, twoLines: 0, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only

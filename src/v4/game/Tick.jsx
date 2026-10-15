@@ -11,16 +11,23 @@ let floatId = 0;
 export const countMs = (d, dur = 0) => Math.max(dur, Math.min(MO.tickMax, MO.tickBase + MO.tickPer * Math.abs(d)));
 
 export default function Tick({ value, from, color, className = '', float = true, dur = 0 }) {
+  // React draws the count's start and, once it has run, its end; every number in between is written straight to the
+  // text node each frame (perf, 2026-10-15: a render per frame per count interrupted the table's own renders)
   const [shown, setShown] = useState(from ?? value);
   const [floats, setFloats] = useState([]);
   const [bump, setBump] = useState(0);
   const last = useRef(from ?? value);
-  const shownRef = useRef(from ?? value);
-  shownRef.current = shown;
+  const disp = useRef(from ?? value); // the number on screen right now
+  const tv = useRef(null);
+  const write = n => {
+    disp.current = n;
+    const node = tv.current && tv.current.firstChild;
+    if (node && node.nodeType === 3) { if (node.nodeValue !== String(n)) node.nodeValue = String(n); } else if (tv.current) tv.current.textContent = String(n);
+  };
   const box = useRef(null);
   useEffect(() => {
     // count from what's on screen (a change mid-count carries on from there), through every whole number
-    const start = shownRef.current;
+    const start = disp.current;
     last.current = value;
     if (start === value) return undefined;
     const d = value - start;
@@ -38,7 +45,7 @@ export default function Tick({ value, from, color, className = '', float = true,
       setFloats(f => [...f.slice(-2), { id, d }]);
       timers.push(setTimeout(() => setFloats(f => f.filter(x => x.id !== id)), 900));
     }
-    if (reducedMotion() || typeof requestAnimationFrame !== 'function') { setShown(value); return () => timers.forEach(clearTimeout); }
+    if (reducedMotion() || typeof requestAnimationFrame !== 'function') { disp.current = value; setShown(value); return () => timers.forEach(clearTimeout); }
     // with pieces coming, the count starts when the first one lands (the director says so; the plan's time is the
     // fallback), however late a loaded box paints it
     let t0 = coming && !coming.landed ? Infinity : performance.now();
@@ -62,20 +69,21 @@ export default function Tick({ value, from, color, className = '', float = true,
       const k = t0 === Infinity ? 0 : Math.max(0, Math.min(1, (now - t0) / ms));
       const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // ease in-out: the middle numbers stay readable
       const aim = Math.max(lo, Math.min(hi, Math.round(start + d * e)));
-      const was = shownRef.current;
+      const was = disp.current;
       const next = Math.abs(aim - was) > stride ? was + Math.sign(aim - was) * stride : aim;
-      setShown(next);
+      write(next);
       if (k < 1 || next !== value) raf = requestAnimationFrame(step);
+      else setShown(value); // one render, at the end
     };
     raf = requestAnimationFrame(step);
     // a skipped chain (a click, Space: director.js) lands the count at once
-    const skip = () => { cancelAnimationFrame(raf); t0 = 0; setShown(value); if (coming) coming.el.removeEventListener('patrons:land', go); };
+    const skip = () => { cancelAnimationFrame(raf); t0 = 0; write(value); setShown(value); if (coming) coming.el.removeEventListener('patrons:land', go); };
     addEventListener('patrons:chain-skip', skip);
     return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); removeEventListener('patrons:chain-skip', skip); if (coming) coming.el.removeEventListener('patrons:land', go); };
   }, [value, float, dur]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <span ref={box} className={`tick ${className}${bump > 0 ? ' bump' : bump < 0 ? ' dip' : ''}`} style={bump && color ? { '--tc': color } : undefined}>
-      <span className="tv">{shown}</span>
+      <span className="tv" ref={tv}>{shown}</span>
       {floats.map(f => (
         <span key={f.id} className={`floater ${f.d > 0 ? 'up' : 'down'}`} style={color ? { color } : undefined} aria-hidden="true">
           {f.d > 0 ? '+' : '−'}{Math.abs(f.d)}
