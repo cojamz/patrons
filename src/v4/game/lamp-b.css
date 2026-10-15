@@ -115,7 +115,6 @@
 .seat-fig{position:relative;display:inline-block;flex:none}
 .seat-fig .sprite,.seat-fig .sig{position:absolute;inset:0}
 .seat-fig.dim{opacity:.32}
-.seat-fig.tall>svg,.lt-ring .lead.tall>svg{scale:1 1.2;transform-origin:50% 100%} /* a player named Max: leader 20% taller, not bigger (Cory) */
 
 /* ---------- your table ---------- */
 .lt-mine{display:flex;flex-direction:column;min-width:0}

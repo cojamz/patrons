@@ -87,14 +87,14 @@ export function FollowerMark({ n, size = 6, label = true }) {
   );
 }
 
-/** Cory's easter egg (2026-10-15): a player named Max gets a leader 20% taller (taller, not bigger). */
+/** Cory's easter egg (2026-10-15): a player named Max gets a leader 20% taller (taller, not bigger) */
 export const isMax = (state, id) => (state?.players?.[id]?.name || '').trim().toLowerCase() === 'max';
 /** A seat's cult leader (32px): the robed figure in the seat's accent color with the player's emoji (or sigil). */
 export function SeatFigure({ id, state = null, size = 32, title = null, dim = false, face = false }) {
   return (
-    <span className={`seat-fig${dim ? ' dim' : ''}${isMax(state, id) ? ' tall' : ''}`} data-seat={id} title={title || undefined} style={{ width: size, height: size }}>
-      {/* face: a rival shows its emoji alone, as its chair does (w2a #17); you keep the robed leader */}
-      {face ? <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={size} /> : <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />}
+    <span className={`seat-fig${dim ? ' dim' : ''}`} data-seat={id} title={title || undefined} style={{ width: size, height: size }}>
+      {/* every seat shows the robed leader (Cory, 2026-10-15; face is ignored) */}
+      <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} tall={isMax(state, id)} />
     </span>
   );
 }
@@ -129,10 +129,9 @@ export function LeaderRing({ state, id, size = 32, minion = 16, compact = false,
   const label = `${name}'s leader${left ? ` and ${left} minion${left === 1 ? '' : 's'} still to place` : ', every minion placed'}`;
   return (
     <span className={`lt-ring${compact ? ' compact' : ''}`} style={{ width: W, height: H }} data-hint={label} aria-label={label} role="img" data-leader-ring={id} data-left={left}>
-      <span className={`lead${isMax(state, id) ? ' tall' : ''}`} data-leader={id} style={{ left: cx - size / 2, top: cy - size / 2 }}>
-        {/* face: the player's emoji alone, crisp at 2× (a rival's chair: the robed leader at 30px read as a grey padlock,
-            w2a #17); the robe stays where it's drawn large */}
-        {face ? <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={size} /> : <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />}
+      <span className="lead" data-leader={id} style={{ left: cx - size / 2, top: cy - size / 2 }}>
+        {/* every seat shows the robed leader (Cory, 2026-10-15: "every block should show a robed leader") */}
+        <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} tall={isMax(state, id)} />
       </span>
       {Array.from({ length: n }, (_, k) => {
         // its own slow period and phase (golden-ratio spread), so no two bob together

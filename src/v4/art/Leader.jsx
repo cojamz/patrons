@@ -80,11 +80,13 @@ const SIGILS = {
   star: 'M6 .8L7.4 4.6L11.2 6L7.4 7.4L6 11.2L4.6 7.4L.8 6L4.6 4.6Z',
 };
 
+/** tall: a player named Max (Cory's easter egg): the robe drawn 20% taller, the emblem kept square. */
+const TALL = 1.2;
 /**
  * <Leader emoji sigil size pose>: emoji an emoji id; sigil the stand-in shape. color (the seat accent) is accepted
  * but no longer paints anything: every robe is ROBE. pose: one of LEADER_POSES (a frame of pixel animation), else idle.
  */
-export const Leader = memo(function Leader({ emoji = null, sigil = 'circle', size = 32, title = null, dim = false, pose = null }) {
+export const Leader = memo(function Leader({ emoji = null, sigil = 'circle', size = 32, title = null, dim = false, pose = null, tall = false }) {
   const art = emoji ? emojiArt(emoji) : null;
   const p = DRAWN && POSES[pose] ? pose : null;
   const body = DRAWN ? cached(`D|${p || ''}`, () => runs(p ? posed(p) : DRAWN.px, ROBE_PAL)) : cached('L', () => runs(LEADER, palette(ROBE)));
@@ -93,14 +95,14 @@ export const Leader = memo(function Leader({ emoji = null, sigil = 'circle', siz
   const eyes = p ? [] : DRAWN ? [[13, 8, 2], [17, 8, 2]] : [[13, 7, 1], [18, 7, 1]];
   const lid = DRAWN ? DRAWN.base.d : palette(ROBE).d;
   return (
-    <svg className={`leader${dim ? ' dim' : ''}`} viewBox="0 0 32 32" width={size} height={size} shapeRendering="crispEdges"
+    <svg className={`leader${dim ? ' dim' : ''}`} viewBox="0 0 32 32" width={size} height={tall ? Math.round(size * TALL) : size} preserveAspectRatio={tall ? 'none' : undefined} style={tall ? { marginTop: size - Math.round(size * TALL) } : undefined} shapeRendering="crispEdges"
       role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'} data-emoji={art ? emoji : undefined} data-pose={p || undefined}>
       {title ? <title>{title}</title> : null}
       {body.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
       {eyes.length > 0 && <g className="blink">{eyes.map(([x, y, w]) => <rect key={x} x={x} y={y} width={w} height="1" fill={lid} />)}</g>}
       {art
-        ? <g transform={`translate(${E.x} ${E.y})`}>{!DRAWN && <rect x="0" y="0" width="8" height="8" fill="#20160f" />}{art.rects.map((r, k) => <rect key={`e${k}`} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}</g>
-        : <path transform={`translate(${E.x - 2} ${E.y - 2})`} d={SIGILS[sigil] || SIGILS.circle} fill={DRAWN ? DRAWN.base.y : palette(ROBE)[1]} />}
+        ? <g transform={`translate(${E.x} ${E.y})${tall ? ` translate(0 4) scale(1 ${1 / TALL}) translate(0 -4)` : ''}`}>{!DRAWN && <rect x="0" y="0" width="8" height="8" fill="#20160f" />}{art.rects.map((r, k) => <rect key={`e${k}`} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}</g>
+        : <path transform={`translate(${E.x - 2} ${E.y - 2})${tall ? ` translate(0 6) scale(1 ${1 / TALL}) translate(0 -6)` : ''}`} d={SIGILS[sigil] || SIGILS.circle} fill={DRAWN ? DRAWN.base.y : palette(ROBE)[1]} />}
     </svg>
   );
 });
