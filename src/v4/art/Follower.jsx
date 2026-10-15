@@ -1,6 +1,6 @@
-// The follower mark (Cory, 2026-10-14: followers aren't a star). A tiny pixel person: a round head over shoulders,
-// in the text's own color with an ink outline, so it reads on paper and on wood. It is never a member (those are
-// hooded 24px figures in a sphere's color) and never a resource (those are colored shapes).
+// The follower mark (Cory, 2026-10-14: followers aren't a star). A tiny pixel person, one flat silhouette in the text's
+// own color (the visual language, 2026-10-15), so it reads on paper and on wood like every other mark. It is never a
+// member (those are hooded 24px figures in a sphere's color) and never a resource (those are colored dots).
 // <Follower /> is the mark alone; <Follower n={3} /> is "3" and the mark, labeled "3 followers" for screen readers
 // and on hover. Shared by the game and the intro.
 import { memo } from 'react';
@@ -41,14 +41,15 @@ const VB = GRID.length;
 
 /** The follower mark; with n, the count before it. size: the mark's height in px (9, 18 keep pixels square).
  *  markClass: extra classes on the mark itself (Rich's .rich-f sizes it to the plate's .8em of its text).
- *  flat: the plate's weight (visual language, 2026-10-15): the same pixel person as one flat silhouette in the text's
- *  own color, no outline, so it reads like the other marks (ink on paper, cream on the table). */
-export const Follower = memo(function Follower({ n = null, size = 10, className = '', title = null, markClass = '', flat = false }) {
+ *  The plate's weight (visual language, 2026-10-15): the pixel person is one flat silhouette in the text's own color,
+ *  no outline, so it reads like every other mark (ink on paper, cream on the table). outline: the drawn cream figure
+ *  with its ink edge, for the intro's little crowd. */
+export const Follower = memo(function Follower({ n = null, size = 10, className = '', title = null, markClass = '', outline = false }) {
   const label = title || (n == null ? 'followers' : `${n} follower${n === 1 ? '' : 's'}`);
   const mark = (
     <svg className={`follower-mark${markClass ? ` ${markClass}` : ''}`} viewBox={`0 0 ${VB} ${VB}`} width={size} height={size} shapeRendering="crispEdges" role="img" aria-label={label}>
       <title>{label}</title>
-      {flat
+      {!outline
         ? RUNS.filter(r => r.ch !== 'k').map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill="currentColor" />)
         : RUNS.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={FILL(r.ch)} />)}
     </svg>

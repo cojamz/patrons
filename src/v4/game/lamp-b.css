@@ -443,3 +443,16 @@
 .lt-rates-grid{grid-auto-rows:58px}
 .lt-shop-head .lt-h,.lt-rates-head .lbl{font-family:var(--sans);font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-cream-2,#b9a98c)}
 .lt-shop-head .lt-h small,.lt-rates-head small{font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--pl-cream-3,#7d6e5a)}
+
+/* the plate's three sizes on the chairs (14 / 18 / 36): names and the rivals' totals 18, your total 36, the rest 14 */
+@media (min-width:861px) and (min-height:500px){
+  .lt > .lt-seat .cs-who b{font-size:18px}
+  .lt > .lt-seat .cs-total{font-size:18px;color:var(--cream-2)}
+  .lt > .lt-seat.mine .cs-total{font-size:36px;line-height:40px;color:var(--cream)}
+  .lt > .lt-seat .cs-total.lead{color:var(--light, #fff3d4)}
+  .lt > .lt-seat .cs-total.lead .tv{color:inherit;text-shadow:none}
+  .lt > .lt-seat .cs-stack{font-size:14px}
+  .lt > .lt-seat.mine .cs-stack{font-size:18px}
+  .lt > .lt-seat .cs-build small,.lt > .lt-seat .cs-build .cs-inc b,.lt > .lt-seat .cs-last b{font-size:14px}
+  .lt > .lt-seat .cs-build .cs-inc b{font-weight:800}
+}

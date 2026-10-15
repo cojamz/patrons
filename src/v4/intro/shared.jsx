@@ -232,7 +232,7 @@ export const LeadFrames = ({ emoji, seq, stillAs }) => (
 /** A minion (16×16): the player's emoji. */
 export const Mini = ({ emoji }) => <span className="in-px in-fig"><Minion emoji={emoji} size={16} /></span>;
 /** The follower mark (10×10). */
-export const Fol = () => <span className="in-px in-fol"><Follower size={10} title="follower" /></span>;
+export const Fol = () => <span className="in-px in-fol"><Follower size={10} title="follower" outline /></span>;
 /** A resource (the game's glyph), 9 units. */
 export const Res = ({ r, size = 9 }) => <span className="in-res"><ResourceGlyph r={r} size={size} decorative /></span>;
 /** The player's emoji as the cult's mark (8×8 emblem). */

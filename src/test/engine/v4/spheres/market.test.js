@@ -279,8 +279,12 @@ describe(`Blue table: ${GAMES} seeded bot games`, () => {
       expect(s.ranking).toHaveLength(4);
       for (const p of s.players) expect(followers(s, p)).toBeGreaterThan(0);
     }
-    // Bots still take Spree in most games. The bar was 0.75 under the old 10→10 clock (166/200 then); with 10→10
-    // unlimited one buy absorbs 10 resources, so Spree's extra buys matter less (134/200 measured, Normal bots).
-    expect(usedSpree).toBeGreaterThan(GAMES * 0.6);
+    // Bots still reach Spree in about half the games. The bar was 0.75 under the old 10→10 clock (166/200 then), then
+    // 0.6 with 10→10 unlimited (134/200). Re-measured 2026-10-15 on these 200 seeds, Normal bots: 105/200 at c90c278
+    // and the live tree. Bisected: 134 through balance pass 1, 129 at a6ebe85 (pass 2), 95 at 86a7c8a (Cory's six
+    // pass-1 fixes, Tax Collector and Open House here, together with the Blue pricing and scoring change; neither
+    // alone moves it that far). Spree still pays: 2.1 buys a Spree turn on average, 8 of 20 use all 3 (40 seeds).
+    // A bot-use rate, not a design verdict: the bar guards against Spree going dead.
+    expect(usedSpree).toBeGreaterThan(GAMES * 0.45);
   });
 });

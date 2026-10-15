@@ -32,7 +32,8 @@ const errors = [];
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const PROFILES = [
   { tag: 'laptop', ctx: { viewport: { width: 1270, height: 700 } }, fol: '.lt-seat.mine .tv' },
-  { tag: 'phone', ctx: { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }, fol: '.lt-seat.mine .tv' },
+  // phone is out of scope for v0.2 (Cory, 2026-10-15: "don't worry about phone for now"): opt in with V4_PHONE=1, as touch.mjs
+  ...(process.env.V4_PHONE ? [{ tag: 'phone', ctx: { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }, fol: '.lt-seat.mine .tv' }] : []),
 ];
 
 // every distinct value the follower number shows, frame by frame, plus every flight ghost's geometry

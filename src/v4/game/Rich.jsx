@@ -11,7 +11,7 @@ const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', '
 const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b|(@[mrfnt])|([→⇄↻×])|(?<=\\S)(\\/)(?=[^\\s\\d])`, 'g');
 const TOKEN_MARK = { '@m': 'member', '@r': 'rival', '@n': 'minion', '@t': 'turn', '→': 'arrow', '⇄': 'swap', '↻': 'turn' };
 /** The follower mark in running text: Cory's pixel person at the plate's .8em (rounded to whole pixels by CSS). */
-export const TextFollower = ({ title = 'followers' }) => <Follower size={10} title={title} markClass="rich-f" flat />;
+export const TextFollower = ({ title = 'followers' }) => <Follower size={10} title={title} markClass="rich-f" />;
 
 /** One resource symbol. color: a resource name or 'any'. */
 export function Pip({ color, n }) {

@@ -5,7 +5,8 @@
 //  (b2) Insider: the top-of-pile cards the engine offers show in the shop, marked "From the pile", and can be recruited;
 //  (b3) Release: every release:<uid> buy option is a labelled button; pressing one leads to the color choice and
 //       finishes the release;
-//  (b4) Straggler: its from/to choices render as a labelled list (never mapped onto the board), and picking works.
+//  (b4) Straggler: it asks only where your last minion goes (Cory, 2026-10-15); the open spaces light on the wheel (every
+//       choice is picked on the board), "Stay put" stays a button, and picking a lit space works.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5188.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -147,20 +148,18 @@ try {
       }
     }
 
-    // (b4) Straggler: a labelled list, nothing on the board
+    // (b4) Straggler: the open spaces light on the wheel, "Stay put" is a button, and picking a lit space moves it
     const prompt = await page.$eval('.prompt.choice', e => e.textContent).catch(() => '');
     if (/Straggler/.test(prompt) && !seen.has(`straggler-${prompt.slice(0, 30)}`)) {
       seen.add(`straggler-${prompt.slice(0, 30)}`);
       seen.add('straggler');
       await shot(`b4-straggler-${seen.size}`);
-      const btns = await page.$$eval('.prompt.choice button[data-option]', els => els.map(e => [e.getAttribute('data-option'), e.textContent.trim()]));
-      if (btns.length < (/move one of your minions/.test(prompt) ? 2 : 1)) errors.push(`(b4) Straggler choice shows ${btns.length} buttons`);
-      for (const [id, t] of btns) if (!t || /undefined/.test(t)) errors.push(`(b4) Straggler option ${id} has label "${t}"`);
-      const onBoard = await page.$$eval('.slot[data-option]', els => els.map(e => e.getAttribute('data-option')).filter(id => /^(from|to):/.test(id)));
-      if (onBoard.length) errors.push(`(b4) Straggler options mapped onto the board: ${onBoard.join(', ')}`);
-      // move (the first "from"), not "Stay put"
-      const pick = btns.find(([id]) => id !== 'no');
-      if (pick) await page.click(`.prompt.choice button[data-option="${pick[0]}"]`).catch(e => errors.push(`(b4) could not pick ${pick[0]}: ${e.message}`));
+      if (/which (one|minion)|move one of your minions/i.test(prompt)) errors.push(`(b4) Straggler still asks which minion: "${prompt.slice(0, 80)}"`);
+      const stay = await page.$('.prompt.choice button[data-option="no"]');
+      if (!stay) errors.push('(b4) Straggler has no "Stay put" button');
+      const onBoard = await page.$$eval('.slot[data-option]', els => els.map(e => e.getAttribute('data-option')).filter(id => /^to:/.test(id)));
+      if (!onBoard.length) errors.push('(b4) Straggler\'s destinations are not lit on the wheel');
+      if (onBoard.length) await page.click(`.slot[data-option="${onBoard[0]}"]`).catch(e => errors.push(`(b4) could not pick ${onBoard[0]} on the wheel: ${e.message}`));
       await page.waitForTimeout(350);
       continue;
     }
