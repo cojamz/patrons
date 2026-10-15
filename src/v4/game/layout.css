@@ -305,6 +305,9 @@
   .app.game.lt > .lt-seat:not(.mine) .cs-foot{grid-column:1 / 5;grid-row:2;justify-self:start}
   .app.game.lt > .lt-seat:not(.mine) .cs-res{justify-content:flex-start;gap:10px}
   .app.game.lt > .lt-seat:not(.mine) .cs-crowd,.app.game.lt > .lt-seat:not(.mine) .cs-build{grid-row:3}
+}
+/* yours keeps clear of its minions at any height (its rows don't grow) */
+@media (min-width:861px) and (max-width:1049px) and (min-height:500px){
   .app.game.lt > .lt-seat.mine .cs-head,.app.game.lt > .lt-seat.mine .cs-head .cs-leader{grid-row:1}
   .app.game.lt > .lt-seat.mine .cs-foot{grid-column:1 / 5;grid-row:2;justify-self:start}
   .app.game.lt > .lt-seat.mine .cs-res{justify-content:flex-start;gap:10px}

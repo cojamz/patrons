@@ -148,3 +148,7 @@
   .lt .lt-wheel > .prompt.choice.plain p{color:var(--paper-ink);font-size:14px;line-height:20px}
   .lt .lt-wheel > .prompt.choice.plain .btn{color:var(--paper-ink);border-color:rgba(42,31,23,.35);background:rgba(255,255,255,.35)}
 }
+/* picking a rival's cult (Kickback): your own chair keeps no lit edge, so it doesn't look like one of the picks (w4
+   skeptic #17: all four chairs glowed, yours included) */
+.lt:has(.seat-pick.docked[data-board-pick~="seat"]) > .lt-seat.mine .lt-cult-seat.now{box-shadow:none;background:none}
+.lt:has(.seat-pick.docked[data-board-pick~="seat"]) > .lt-seat.mine{background:var(--seat, #221a15);box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.10));opacity:.75}

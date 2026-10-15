@@ -215,3 +215,9 @@ Instruments: filmstrips under the fake clock (a scenario harness that loads a re
 - **#31 the Reckoning's "+N" marks clipped at the top:** the same bow rule (ghostFly).
 - **#6 the Reckoning began unseen:** its lead is now its own beat: "Round II ends" stamps in at the wheel's centre (0.8s at Steady, was a silent 0.5s), then the first rim lights. No click.
 - **#3 the chairs re-sorted under the player at round I's start:** the new order now waits for the last starting pick to land, then the chairs slide as a beat of their own (500ms at Steady) before the first placement (director 'sort', GameScreen holds the column meanwhile). Later rounds unchanged: their order arrives with the Reckoning.
+
+## Round 18 (12:25, final panel on 8ea3e24: tester A, the skeptic; the motion engineer)
+- **The Reckoning ran under the round's last move** (tester A #29, #54, #65: "on quadrant 4 of 4 by the time the screen settled", seats ticking 16→19→20→24 against a "+4" card): it started its timers when the round-end step showed, while that step's chain still played. Its opening beat ("Round II ends") now starts when the table's chains have landed, so each quadrant keeps its ~1.6s at Steady and the seat ticks only with its prize. Skip sits quietly on the card itself (the skeptic #16).
+- **Steal picks** (the skeptic #22, tester A #34): each pick drops the rival's stack at once (director notePick); the last pick's chain adopts that hold and doesn't drop the same units again.
+- **A rival paid because of your move** (the skeptic #14, Tax Collector): its gain flies from your move's place (the rate, the space, the card) to their pile, after their member hops.
+- **The wheel sprang back** (the skeptic #19): a drag past 12° turns on to the next quarter its way instead of snapping home.

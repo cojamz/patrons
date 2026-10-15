@@ -116,6 +116,8 @@ export function previewSpace(state, pid, q, i) {
       turns: Math.max(0, me.left - (me0.left - 1)), discount: (me.discount || 0) - (me0.discount || 0),
       // members that came in while the count didn't rise by as many: traded for (a swap)
       swapped: Math.max(0, me.members.filter(u => !me0.members.includes(u)).length - Math.max(0, me.members.length - me0.members.length)),
+      // which members this branch brings you (display: "+1 member (Planner)", w4 skeptic #31)
+      joined: me.members.filter(u => !me0.members.includes(u)),
     };
   };
   const worths = leaves.map(s => worth(s, pid));

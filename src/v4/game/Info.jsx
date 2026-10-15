@@ -540,7 +540,9 @@ export function changeWords(d, state) {
   const n = (v, unit) => `${signed(v)} ${unit}${Math.abs(v) === 1 ? '' : 's'}`;
   const gain = [], loss = [];
   for (const r of state.resources) if (d.res[r] > 0) gain.push(`+${d.res[r]} ${r}`);
-  if (d.members > 0) gain.push(n(d.members, 'member'));
+  // the member by name when the branch brings one or two (w4 skeptic #31: "+1 member … your best pick" named none)
+  const who = d.joined && d.joined.length && d.joined.length <= 2 && d.members > 0 ? (() => { try { return ` (${d.joined.map(u => cardDef(state, u).name).join(', ')})`; } catch { return ''; } })() : '';
+  if (d.members > 0) gain.push(n(d.members, 'member') + who);
   if (d.followers > 0) gain.push(n(d.followers, 'follower'));
   if (d.turns > 0) gain.push(n(d.turns, 'extra turn'));
   if (d.discount > 0) gain.push(`next member −${d.discount}`);
@@ -607,9 +609,8 @@ export function YoudGet({ state, pid, q, i }) {
   const y = youdWords(pv, state, own);
   return (
     <span className="youd-get" data-youd-get={w.you} title="Worked out by playing this space on a copy of the table, right now">
-      {/* "about": the dry run followed only some branches and they differ; never "about nothing", and never for an outcome
-          every branch agrees on (w4b #12: Redistribute's fixed take read "about +3") */}
-      <b>You’d get:</b> {w.partial && !pv.exact && !/^nothing/.test(y.text || '') ? 'about ' : ''}
+      {/* never "about": the preview is the engine's own dry run, and hedged words made it read unsure (w4 skeptic #29) */}
+      <b>You’d get:</b>{' '}
       {/* a rival decides (Shake Down: pay, or lose the member): one plain line, what they'd likely do first, the other
           after "or", and whose call it is (w4b #12: "+4 likely / +1 member, +1 at best" read like an engine dump) */}
       {y.likely
