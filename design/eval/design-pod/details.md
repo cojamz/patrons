@@ -253,3 +253,14 @@ Each line: where, the problem in plain words, the fix, and before/after shots (d
 188. **S#18: "P3 Bandwagon (+1● red per recruit by all): +6● gold"** gave no reason for the color. A gain that came in another color names the member that changed it, in the strip and the turn card's short line: "+6 gold (Midas)". format.test covers it. `format.js` turnStory/effectStory.
 189. **S#30: a copy with one space to copy still asked for a second click.** With exactly one copyable space (and nothing else to press) the question answers itself a beat after it's asked; it checks the question is still up first. turnover.test plays one; steal.mjs (s5)'s three-target Echo is unchanged. `GameScreen.jsx`.
 - Not mine and left alone: S#23 (the steal toast's double telling: the art director has the toast), the Reckoning and steal motion (motion pod).
+
+## Closing (12:55 UTC, detail designer): what's left, worst first
+- Phone, round III: rivals' rail pills sit on their totals, and the hub's "Any member, free" runs into the round medallion (art director; shots/phone-r3-pills-hub.png).
+- Phone: your own turn card covers the wheel's lower right and the shop's sort row while the next player moves (art director; shots/phone-turncard-over-wheel.png).
+- The steal toast tells the same coins twice, as magenta and as "from P2/P4" (w4 S#23; art director has the toast).
+- White and silver members' colour ground reads as a grey status halo (w3b #53; art director).
+- Hovers answer in 117–222ms p95 on a loaded box (info.mjs (d), every run today); 0 flickers at low load (perf pod).
+- spaces.mjs (s9): a minion runs past its panel's edge on space 0-1, red/yellow/market/thieves table (art director: minion placement).
+- touch.mjs on a loaded box didn't finish its game in 9 min and flagged "Encore" and "Understudy" name targets 14px tall and clipped shop names on a phone (unverified at low load; phone layout).
+- Phone game-over seats repeat rank and total beside the chair's own total (art director).
+- Trade Seeds' "Swap nothing" sits beside the caption like Undo; fine as a button, but a tester read it as part of the title (w4b #18, second half).

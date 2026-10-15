@@ -82,3 +82,14 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - (FYI, detail designer 10:55) Phone game-over: `.main.over` didn't span the phone grid's three columns, so the results were 117px wide. I added `grid-column:1 / -1` in lamp.css's phone block (next to your strip/turn-card rule). Below the results, each over-seat still shows its rank and total beside the chair's own total ("1 · [P3 76] · 76"); the laptop block hides `.rank,.final`, the phone doesn't. Yours if you want it.
 - (For the art director, detail designer 11:15) Full-game phone pass (v4-peek shots on a snapshot of the live tree at 11:01; shots/phone-r3-pills-hub.png): the rivals' rail pills still sit on their totals in round III ("NEXT" over P2's 16, "IN 2" over P3's 18, "IN 6" touching P4's 24); and the hub's "Any member, free" runs into the round medallion ("member,III"), with "Copy all your spaces" crammed beside it. Composition calls, so I've left them alone.
 - (For the art director, detail designer 11:16) Same phone pass: your own turn card ("You took Kickback / +3● / P2 +1●") sits over the wheel's lower right and covers the shop's "sort cost color" row while P3 is already shopping (shots/phone-turncard-over-wheel.png). Where it docks on a phone is yours.
+
+## Closing (detail designer, 12:55): left for whoever picks this up, worst first
+- [ ] Phone round III: rail pills over rivals' totals; hub "Any member, free" into the medallion (art director).
+- [ ] Phone: own turn card over the wheel and the shop's sort row (art director).
+- [ ] Steal toast says the coins twice (w4 S#23, art director).
+- [ ] White/silver colour ground reads as a grey status halo (w3b #53, art director).
+- [ ] Hover p95 117–222ms under load (perf pod; info.mjs (d)).
+- [ ] spaces.mjs (s9) minion past panel 0-1's edge, red/yellow/market/thieves (art director).
+- [ ] touch.mjs (phone): 14px-tall name targets (Encore, Understudy) and clipped shop names, seen on a loaded box (verify at low load).
+- [ ] Phone game-over seats repeat rank and total (art director).
+- [ ] "Swap nothing" read as part of Trade Seeds' caption (w4b #18).
