@@ -36,3 +36,14 @@
 - Penny Pincher bought one click (154). Bot turns: ~52 s of idle for 3 bots x 2 actions (156).
 - Echo: "Copy which rival's space (taken since your last turn)?" lit spaces on board (161). Picked Open House → "Take a face-up member costing 4 or less, free" (163). Toast "Muse: P4 +2 green" (P4's Muse triggered from my echo?).
 - Tax Collector click bought instantly (Penny Pincher doubling) and card slid out; next card (Middleman) slid under pointer and opened its hover (168). Header "Your turn again (snake order) — place a minion" + italic subline overlaps seat column: "ROUND II OF 3" collides with cat emoji (170).
+- Seat hover (P3) lists members w/ state (used / pays at round start / not used yet) - matches Cory call (172). Long seat hovers run off bottom of screen (250).
+- Even Swap: header "pick yours · then theirs", my eligible members lit in seat, then rivals' lit members. 2 clicks, on-board. Good (187/189/193).
+- Pay dialog Impressionist: suggested 2 green + 1 green + 1 red; tapping piles moves coins; Penny Pincher note (196/198).
+- Round II scoring ~15 s, bubble counters next to seats (0/4/1/0) unexplained; summary (204) "THIS ROUND +7 from new members · +2 from abilities".
+- Round III: inner ring opens; "+6 gold" etc. Rim hover = full standings (213), rim emoji hover nothing extra.
+- Extra Hand "+1 minion in round III" bought in round III: no extra minion appeared (225 vs 206) and game ended after 5 placements. Card gives no warning.
+- Big Spender auto-used silently (log says "You use Big Spender"); header just stays "recruit or buy" with no "buy again" cue (225).
+- Pay default for 8→6 spent 4 of my 5 blue while I led Most blue → lost the +6 (258 → 260/261).
+- Seat member rows in round III truncate to ~6 icons with "each round +3" label overlapping them; no +N count in game seats (results page does show +4) (231/249).
+- Free recruit the cheapest: auto-picked Planner, no choice shown (244).
+- Round III summary with end-game bonuses line; name hover opens card (262). Results page: "P2 wins with 61 followers / won by 1, mostly by buying followers" good; columns don't add to total (self +1 missing); follower total shown twice per card (61 ☗ and 61); winner card nested box (264/268). Log at bottom of results.
