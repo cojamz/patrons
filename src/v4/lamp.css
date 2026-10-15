@@ -376,8 +376,11 @@ h1,h2,h3{font-family:var(--serif)}
 /* taken: the lines fade and the minion stands over them, at full strength (the panel never reflows) */
 .lt [data-spaces="panels"] .stage .slot .face .worker-fig{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:1px;filter:drop-shadow(0 1px 0 rgba(43,32,24,.5)) drop-shadow(0 0 3px rgba(43,32,24,.35))}
 .lt [data-spaces="panels"] .stage .slot .face .worker-fig svg{width:auto;height:21px}
-/* a taken panel with one line: the minion stands under its gain, never on it (it hid "+3●" outright; design pod) */
-.lt [data-spaces="panels"] .stage .slot.taken[data-panel*=".0.0"] .face .worker-fig{top:100%;transform:translate(-50%,1px)}
+/* the inner rings' panels are shallower: the minion scales with the board there, so it never runs past the panel's edge */
+.lt [data-spaces="panels"] .stage .slot.r2 .face .worker-fig svg,.lt [data-spaces="panels"] .stage .slot.r3 .face .worker-fig svg{height:clamp(14px, calc(var(--wheel-px, 480px) * .038), 19px)}
+/* a taken panel with exactly one line: the minion stands under its gain, never on it (it hid "+3●" outright; design pod).
+   Two lines or more stay under it: below a wrapped verb it ran past an inner panel's edge (spaces.mjs s9) */
+.lt [data-spaces="panels"] .stage .slot.taken[data-panel^="1.0.0"] .face .worker-fig{top:100%;transform:translate(-50%,1px)}
 /* a taken panel that's yours to pick (a copy): its lines are what you're choosing, so the minion steps up off them */
 .lt [data-spaces="panels"] .stage .slot.taken.lit .face .worker-fig{top:0;transform:translate(-50%,-100%)}
 .lt [data-spaces="panels"] .stage .slot.taken.lit .face .worker-fig svg{height:16px}

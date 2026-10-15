@@ -378,6 +378,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const k = Math.min(1, (now - t0) / dur);
       if (k < 1) { paintRot(from + (to - from) * spinEase(k)); anim.current = requestAnimationFrame(step); return; }
       anim.current = null;
+      // land on the exact angle in this frame (the spin ends at MO.spin); React's commit of it follows and changes nothing
+      // on screen (snappy gate s1: waiting on the commit read as a ~500ms spin)
+      paintRot(to);
       applyRot(to);
     };
     anim.current = requestAnimationFrame(step);
