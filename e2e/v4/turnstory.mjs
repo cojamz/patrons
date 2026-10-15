@@ -6,7 +6,7 @@
 //  (t3) after a placement, the turn card names the space actually taken (the engine's log is the truth);
 //  (t4) the snake turnaround reads "Your turn again (snake order)", never "Extra turn";
 //  (t5) the second placement gets its own card: its space, and nothing from the first;
-//  (t6) the Midas switch shows its state ("Midas: on"), and its hover says what a click does;
+//  (t6) the Midas switch shows its state (on), and its hover says so and what a click does;
 //  (t7) the full log opens from the strip in one tap;
 //  (t8) a space or member named in the strip, or in the log, opens its card on the board's hover layer (the space card,
 //       the member card), beside the name, whole on screen, above the log drawer.
@@ -65,7 +65,7 @@ try {
       card: document.querySelector('.turn-card')?.dataset.turnStory || null,
       strip: [...document.querySelectorAll('[data-since] [data-since-line]')].map(e => e.textContent),
       since: r('[data-since]'), wheel: r('.lt-wheel svg.wheel-paper') || r('.lt-wheel'), shop: r('.lt-shop'),
-      sw: [...document.querySelectorAll('.lt-seat-0 .cs-switch')].map(e => ({ state: e.dataset.switch, text: e.textContent, title: e.title })),
+      sw: [...document.querySelectorAll('.lt-seat-0 [data-switch]')].map(e => ({ state: e.dataset.switch, text: e.textContent.trim(), title: e.title })),
       took, players: st ? st.players.map(p => p.name) : [],
     };
   });
@@ -152,7 +152,7 @@ try {
   else if (!v.card || !v.card.startsWith(`You took ${first}`)) fail(`after taking ${first} the turn card reads "${v.card}"`, 't3');
   // (t6) the switch, in the buy step
   const sw = v.sw[0];
-  if (!sw || sw.state !== 'on' || sw.text !== 'Midas: on' || !/switch it off/.test(sw.title)) fail(`the Midas switch: ${JSON.stringify(v.sw)}`, 't6');
+  if (!sw || sw.state !== 'on' || !/\bon$/.test(sw.text) || !/Midas is on/.test(sw.title) || !/switch it off/.test(sw.title)) fail(`the Midas switch: ${JSON.stringify(v.sw)}`, 't6');
   await page.screenshot({ path: `${SHOTS}/3-first-placement.png` });
   await page.locator('.pass[data-option]').click();
   await page.waitForTimeout(700);

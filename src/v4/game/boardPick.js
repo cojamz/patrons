@@ -82,7 +82,8 @@ export function comboStep(state, pend, first = null) {
   const name = uid => (state.cards[uid] ? defById(state.cards[uid].def).name : String(uid));
   const firstTarget = a => (kind === 'trade' ? { uid: a } : { res: a });
   const firstLabel = a => (kind === 'trade' ? `Give ${name(a)}` : kind === 'give' ? `Give ${a}` : kind === 'colors' ? `Give 1 ${a}` : a);
-  const pick = a => ({ id: a === chosen ? '@unpick' : `@pick:${a}`, label: a === chosen ? `Put ${kind === 'trade' ? name(a) : a} back` : firstLabel(a), kind: 'first', first: a, target: firstTarget(a), chosen: a === chosen });
+  // alt: another first while one is picked (it switches the pick; it stays clickable but doesn't glow)
+  const pick = a => ({ id: a === chosen ? '@unpick' : `@pick:${a}`, label: a === chosen ? `Put ${kind === 'trade' ? name(a) : a} back` : firstLabel(a), kind: 'first', first: a, target: firstTarget(a), chosen: a === chosen, alt: chosen != null && a !== chosen });
   let options;
   if (chosen == null) options = [...firsts.map(pick), ...rest];
   else {
@@ -110,7 +111,7 @@ export function pickCaption(state, pk) {
     const a = c.chosen;
     const steps = {
       give: [[`give${c.n ? ` ${c.n}` : ''}`], 'Pick a color, then who gets it', [`give${c.n ? ` ${c.n}` : ''} `, { dot: a }], 'Now pick who gets it'],
-      trade: [['swap yours for theirs'], 'Pick yours, then theirs', [`give ${c.chosenName}`], 'Now pick theirs'],
+      trade: [['pick yours · then theirs'], 'Click one of your lit members', [`give ${c.chosenName} · pick theirs`], 'Click a lit member on a rival’s cult'],
       colors: [['swap one for one'], 'Pick a color to give, then one to get', ['1 ', { dot: a }, ' for 1 of…'], 'Now pick the color you get'],
       amount: [['swap for another color'], 'Pick a color, then how many', ['for ', { dot: a }], 'Now pick how many'],
     }[c.kind];

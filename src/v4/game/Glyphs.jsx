@@ -37,26 +37,6 @@ export function ResourceGlyph({ r, size = 16, n = null, decorative = false }) {
   );
 }
 
-// ---------- words, not marks (Cory, 2026-10-15: simplify) ----------
-// The one drawn mark left besides the dot and the follower: the arrow of a follower buy ("2● → 1👤"). Every other mark
-// a caller asks for prints as its plain word, so an old @m / ⇄ / ↻ anywhere reads "member", "swap", "extra turn".
-const ARROW = <path d="M2 8H13M9 4L13 8L9 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />;
-export const MARK_WORD = { member: 'member', minion: 'minion', rival: 'rival', swap: 'swap', turn: 'extra turn', arrow: 'for' };
-/** The follower buy's arrow (k="arrow", .8em of its type); any other k prints its plain word. */
-export function Mark({ k, title = null, className = '' }) {
-  if (k !== 'arrow') return <span className={`mk-word${className ? ` ${className}` : ''}`}>{MARK_WORD[k] || k}</span>;
-  const say = title || 'becomes';
-  return (
-    <svg className={`mk mk-arrow${className ? ` ${className}` : ''}`} data-mark="arrow" viewBox="0 0 16 16" width="16" height="16" role="img" aria-label={say}>
-      <title>{say}</title>{ARROW}
-    </svg>
-  );
-}
-/** "/" prints as the word "per"; anything else (a "·" between clauses) as itself, quiet. */
-export function Op({ t }) {
-  return <span className="op" data-op={t}>{t === '/' ? ' per ' : t}</span>;
-}
-
 /** The live table's colors in the "any" dot: quadrant q sits at 180 + 90q degrees on the wheel (0 = top, clockwise),
  *  so q0 is the bottom, q1 the left, q2 the top, q3 the right. Pass resource colors in quadrant order. */
 export function anyDotVars(colors) {

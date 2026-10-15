@@ -6,6 +6,7 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - [ ] 04:55 First sweep on Classic, a random four, and magenta/silver/yellow/purple tables (every state, every hover). Findings land in details.md.
 
 ## Art director: taking
+- [ ] 04:56 The game screen's composition at 1270×700 (Cory: "too much prime real estate was given to the log"): 2–3 layout variants behind `?layout=`, then the winner becomes the default. Files: the grid in `src/v4/lamp.css` (`.app.game.lt` desktop block), the since-strip box (`since.css`), the shop strip's outer layout (`lamp-b.css`), and the TurnCard placement and a `data-layout` attribute in `GameScreen.jsx` (small edits). Write-up: design/eval/design-pod/layout.md.
 
 ## For the art director (composition / layout)
 

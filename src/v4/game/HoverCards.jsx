@@ -112,7 +112,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   const place = () => {
     if (!c || c.pinned || !el || !box.current) { setPos(null); return; }
     const a = el.getBoundingClientRect();
-    const w = Math.min(c.kind === 'seat' ? 340 : 280, innerWidth - 16);
+    const w = Math.min(c.kind === 'seat' ? 360 : 280, innerWidth - 16);
     const h = box.current.offsetHeight || 160;
     const p = placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
     side.current = { el, side: p.side };

@@ -867,6 +867,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     return (
       <div
         key={key} className={cls} data-slot={key} data-option={opt || undefined} data-pick-note={(opt && pickNotes && pickNotes.get(key)) || undefined} style={style}
+        data-panel={lay ? `${lay.oneLines}.${lay.twoLines}.${lay.noteLines}${lay.tight ? ' tight' : ''}` : undefined}
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
         onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); }}
         onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}

@@ -50,8 +50,13 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
   // member figures shown before "+N": one row beside the "each round" line, so every chair keeps one fixed height
   const MAX = incomeWords.length ? 6 : 10;
-  const shown = groups.slice(0, MAX);
-  const rest = groups.slice(MAX).reduce((s, g) => s + g.count, 0);
+  // a member you can use now is never folded into "+N": it takes the place of the last one that's only shown
+  const isReady = g => g.uids.some(u => ready.has(u));
+  const late = groups.slice(MAX).filter(isReady);
+  const keep = groups.slice(0, MAX);
+  for (const g of late) { const k = keep.map(isReady).lastIndexOf(false); if (k < 0) break; keep.splice(k, 1); }
+  const shown = groups.filter(g => keep.includes(g) || late.includes(g));
+  const rest = groups.filter(g => !shown.includes(g)).reduce((s, g) => s + g.count, 0);
   const openSeat = (e, pinned) => hover && hover.onSeatHover(pid, e.currentTarget, { pinned });
   return (
     <section className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
@@ -93,7 +98,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // the board picker: a member the choice offers is clicked right here (seat figure)
           const pickM = pick && pick.members ? g.uids.map(u => pick.members[u]).find(Boolean) : null;
           return (
-            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${readyUid != null ? ' ready' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used ? 'used' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${readyUid != null ? ' ready' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used ? 'used' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
               <Tip className="fig" sticky={mine} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : 'show the card'}`}
                 content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
@@ -128,7 +133,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             const o = sp && sp.option, took = (pick && pick.picked[r]) || 0;
             const say = o ? (pick.give || mine ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take 1 ${r} from ${p.name} (${p.res[r] || 0}${took ? `, ${took} picked` : ''})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
             return (
-              <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}${sp ? (o ? ' pick-on' : ' pick-off') : ''}${sp && sp.chosen ? ' pick-chosen' : ''}`} data-res={r} title={say}
+              <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}${sp ? (o ? ' pick-on' : ' pick-off') : ''}${sp && sp.chosen ? ' pick-chosen' : ''}${o && o.alt ? ' pick-alt' : ''}`} data-res={r} title={say}
                 {...(o ? { role: 'button', tabIndex: -1, 'data-option': o.id, 'aria-label': say, onClick: e => pick.onPick(o.id, e.currentTarget) } : sp ? { 'data-why': sp.why, onClick: e => pick.onDenied && pick.onDenied(sp.why, e.currentTarget) } : {})}>
                 <ResourceGlyph r={r} size={mine ? 16 : 13} n={p.res[r] || 0} /><b className="num">{p.res[r] || 0}</b>
                 {took > 0 && <i className="cs-took num" aria-hidden="true">−{took}</i>}

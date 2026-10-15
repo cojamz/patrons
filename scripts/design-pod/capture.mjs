@@ -57,7 +57,10 @@ page.on('pageerror', e => errs.push(e.message));
 const url = (extra = '') => `${base}/?intro=0${query ? '&' + query : ''}${extra}`;
 const shot = async name => { await page.screenshot({ path: `${out}/${name}.png` }); console.log(`${out}/${name}.png`); };
 const settle = (ms = 600) => page.waitForTimeout(ms);
-async function load(pack) {
+async function load(pack, tries = 3) {
+  try { await load1(pack); } catch (e) { if (tries <= 1) throw e; await settle(1500); await load(pack, tries - 1); }
+}
+async function load1(pack) {
   await page.goto(url());
   await page.evaluate(({ save, rs }) => {
     localStorage.clear(); sessionStorage.clear();
@@ -66,7 +69,7 @@ async function load(pack) {
     localStorage.setItem('patrons.v4.introSeen', '1');
   }, { save: pack.save || pack, rs: pack.roundStart || null });
   await page.goto(url());
-  await page.click('[data-home="resume"]');
+  await page.click('[data-home="resume"]', { timeout: 10000 });
   await page.waitForSelector('.lt-shop .card', { timeout: 20000 });
   await settle(900);
 }
@@ -76,7 +79,7 @@ async function placeAndAnswer() {
   await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
   await settle(400);
   for (let k = 0; k < 10 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
-    const o = await page.$('.prompt.choice button[data-option]:not([disabled]), .lt-wheel .slot.lit .base, .seat-pickable');
+    const o = await page.$('.prompt.choice button[data-option]:not([disabled]), .lt-seat [data-option]:not(.pass), .lt-wheel .slot.lit .base');
     if (o) await o.click({ force: true }).catch(() => {});
     await settle(300);
   }

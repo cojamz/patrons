@@ -5,7 +5,7 @@
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { quadrant } from '../../engine/v4/index.js';
-import { CardText, CardName, onTable } from './Info.jsx';
+import { CardName, onTable } from './Info.jsx';
 import { Rich } from './Rich.jsx';
 import { memberRows, useNow } from './memberUse.js';
 import './members.css';
@@ -16,7 +16,7 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
 export function UseButton({ use, uid, name, onPick, big = false }) {
   if (!use || use.blocked) return null;
   return (
-    <button type="button" className={`mu-use${big ? ' big' : ''}`} data-use={uid} data-option={use.option} title={`Use ${name} now${use.words ? `: ${use.words}` : ''}`}
+    <button type="button" className={`mu-use${big ? ' big' : ''}`} data-use={uid} data-option={use.option} title={`Ready to use: ${name}${use.words ? `, ${use.words}` : ''}`}
       onClick={e => { e.stopPropagation(); onPick(use.option); }}>
       <Rich text={use.label} />
     </button>
@@ -54,11 +54,13 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
             <span className="mu-body">
               <span className="mu-head">
                 <b className="mu-name"><CardName state={state} uid={row.uid} />{row.n > 1 ? <span className="num"> ×{row.n}</span> : null}</b>
+                {/* its state on the right: a switch, the Use button when it's yours to use now, else a quiet word */}
                 {row.toggle ? <MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} />
-                  : row.tag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
+                  : onPick && row.use && !row.use.blocked ? <UseButton use={row.use} uid={row.uid} name={row.name} onPick={onPick} />
+                    : row.tag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
               </span>
-              <span className="mu-text" data-ability>{row.text ? <CardText text={row.text} /> : 'No effect.'}</span>
-              {onPick && row.use && !row.use.blocked ? <UseButton use={row.use} uid={row.uid} name={row.name} onPick={onPick} /> : null}
+              {/* the whole sentence, never cut; plain (the member's own card underlines its keywords) */}
+              <span className="mu-text" data-ability>{row.text ? <Rich text={row.text} /> : 'No effect.'}</span>
             </span>
           </li>
         );

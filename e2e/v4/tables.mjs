@@ -80,18 +80,49 @@ async function play(t) {
 
     const t0 = Date.now();
     let clicks = 0, shotMid = false;
+    // The stall guard: every step put to the person offers something on screen that moves the game on, and the round's
+    // Reckoning tells its quadrants and ends by itself. Either standing still fails fast, naming the step and what's on
+    // screen, instead of a blind 5-minute timeout.
+    const where = () => page.evaluate(() => {
+      const g = document.querySelector('.app.game');
+      const rk = document.querySelector('.lt-reckon .reckon-head');
+      const ids = [...document.querySelectorAll('[data-option]')].map(e => `${e.getAttribute('data-option')}${e.disabled || e.getAttribute('aria-disabled') === 'true' ? '(off)' : ''}`);
+      return { moves: g ? g.dataset.moves : '?', phase: g ? g.dataset.phase : '?', yours: g ? g.dataset.yours === '1' : false, reckon: rk ? rk.textContent.replace(/\s+/g, ' ').trim() : '',
+        prompt: (document.querySelector('[data-prompt]') || {}).textContent || '', ids };
+    }).catch(() => null);
+    let step = { key: '', since: Date.now(), clicks: 0, tried: new Set() };
     while (!(await page.$('.results'))) {
-      if (Date.now() - t0 > 300000) throw new Error('game did not finish in 5 minutes');
+      if (Date.now() - t0 > 300000) throw new Error(`game did not finish in 5 minutes; at ${JSON.stringify(await where())}`);
       const hand = await page.$('[data-handoff]');
       if (hand) { await hand.click().catch(() => {}); continue; }
       const next = await page.$('[data-next-round]');
       if (next) { if (!shotMid) { shotMid = true; await page.waitForTimeout(600); await shot('round-end'); } await next.click().catch(() => {}); continue; }
+      const at = await where();
+      const key = at ? `${at.moves}|${at.phase}|${at.reckon}` : step.key;
+      if (key !== step.key) step = { key, since: Date.now(), clicks: 0, tried: new Set() };
+      // a Reckoning that stops telling (the same quadrant on screen for 20s) is a frozen round end: say so, then Skip on
+      if (at && at.reckon && Date.now() - step.since > 20000) {
+        err(`the Reckoning stood still for 20s at "${at.reckon}"`);
+        await shot('zz-reckoning-frozen');
+        await page.click('[data-reckon-skip]', { timeout: 1500 }).catch(() => {});
+        step.since = Date.now();
+        continue;
+      }
+      // your step: 30 clicks that moved nothing (over at least 15s) means nothing on screen answers it
+      if (at && at.yours && step.clicks >= 30 && Date.now() - step.since > 15000) {
+        await shot('zz-stuck');
+        throw new Error(`stuck at move ${at.moves} (${at.phase}, "${at.prompt.trim().slice(0, 80)}"): ${step.clicks} clicks on [${[...step.tried].join(', ')}] moved nothing; on screen: ${at.ids.join(' ')}`);
+      }
       const els = await page.$$('[data-option]:not([disabled])');
+      const ids = await Promise.all(els.map(el => el.getAttribute('data-option').catch(() => null)));
+      // a pair is picked in two steps, like a person: yours (@pick:x), then theirs. Once one is lifted (@unpick on
+      // screen), putting it back or switching to another of yours would only go round in circles.
+      const second = ids.includes('@unpick');
       let clicked = false;
-      for (const el of els) {
-        const id = await el.getAttribute('data-option').catch(() => null);
-        if (!id || id.startsWith('toggle:') || id === 'back') continue;
-        try { await el.click({ timeout: 1500 }); clicked = true; clicks++; break; } catch { /* covered or gone */ }
+      for (let k = 0; k < els.length; k++) {
+        const id = ids[k];
+        if (!id || id.startsWith('toggle:') || id === 'back' || id === '@unpick' || (second && id.startsWith('@pick:'))) continue;
+        try { await els[k].click({ timeout: 1500 }); clicked = true; clicks++; step.clicks++; step.tried.add(id); break; } catch { /* covered or gone */ }
       }
       await page.waitForTimeout(clicked ? 20 : 40);
     }
