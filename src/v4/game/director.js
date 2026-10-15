@@ -149,9 +149,9 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   }
   let hand = 0; // when the last piece is two-thirds along: the same player's next step may show then
   // the action stage (stage.js): a space or member out on the hub gives and takes from there
-  let stagedKey = null;
+  const stagedKeys = new Map(); // a staged space's key → its slot: 'card', or 'card2' for the space it copies
   const stagedUids = new Map(); // a staged member's uid → its spot
-  const onStage = w => (!w ? w : w.kind === 'space' && w.key === stagedKey ? { kind: 'stage', slot: 'card' }
+  const onStage = w => (!w ? w : w.kind === 'space' && stagedKeys.has(w.key) ? { kind: 'stage', slot: stagedKeys.get(w.key) }
     : w.kind === 'member' && w.uid != null && stagedUids.has(w.uid) && w.pid === stagedUids.get(w.uid).pid ? { kind: 'stage', slot: stagedUids.get(w.uid).spot } : w);
   const pieces = (time, from0, to0, n, opt = {}) => {
     const from = onStage(from0), to = onStage(to0);
@@ -185,29 +185,32 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     // move's beat: it hops in its seat as the move plays, and what it gets flies from where the move happened, at once
     const reactive = c.kind === 'member' && mover != null && c.pid !== mover && !!movePlace && lastStart != null;
     if (reactive) s = lastStart + MO.lead;
-    const fromMove = reactive ? movePlace : null;
+    const fromMove = reactive && c.uid == null ? movePlace : null;
     // the source acts first: it flies out of its place onto the stage (a space as a card at the hub, a member beside
     // it), and gives from there (Cory, 2026-10-15: "a card shows up showing the action, and resources flow to/from that
     // action to players. same with members as they are contributing"). A member already out hops again.
-    if (reactive) { if (c.uid != null) { at(s, { op: 'hop', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def } }); s += MO.lead; } }
-    else if (c.kind === 'member' && c.uid != null) {
+    // (a blind tester, w5: "P4's Auctioneer +1 blue on each rival recruit … nearly invisible, all I saw was a seat
+    // number changing"): it steps onto the stage too, in the same beat, and gives from there
+    if (c.kind === 'member' && c.uid != null) {
       const was = stagedUids.get(c.uid);
       if (was && was.pid === c.pid) { at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot: was.spot, dur: MO.hop }); s += MO.lead; }
       else {
         const spot = stagedUids.size;
         stagedUids.set(c.uid, { pid: c.pid, spot });
         at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot, dur: MO.stageIn });
-        s += MO.stageIn * 0.5;
+        s += reactive ? MO.stageIn * 0.35 : MO.stageIn * 0.5;
       }
-    } else if (c.kind === 'space' && c.key !== stagedKey) {
+    } else if (c.kind === 'space' && !stagedKeys.has(c.key)) {
       // a space just taken: the card leaving it is the read of which space it was, so it leaves as the minion lands;
       // its gains start out as the card settles
       let s0 = s;
       if (c.key !== pulsed) { at(s, { op: 'pulse', place: { kind: 'space', key: c.key }, dur: MO.pulse }); s0 += MO.lead; pulsed = c.key; }
       else if (selectedAt != null) s0 = Math.max(0, selectedAt - MO.minionFly * 0.25);
-      at(s0, { op: 'stage', kind: 'space', place: { kind: 'space', key: c.key }, pid: c.pid, dur: MO.stageIn });
+      // a second space in one move is the one a copy runs (Echo, Encore): it lands on the first card, fanned, "copies"
+      const slot = stagedKeys.size ? 'card2' : 'card';
+      at(s0, { op: 'stage', kind: 'space', place: { kind: 'space', key: c.key }, pid: c.pid, slot, dur: MO.stageIn });
       s = Math.max(selectedAt != null ? selectedAt : s, s0 + MO.stageIn * 0.6);
-      stagedKey = c.key;
+      stagedKeys.set(c.key, slot);
     }
     else if (c.kind === 'setup') {
       // a starting pick (wave 3: nobody saw what the bots picked): a rival's coin in the pick row lights (grammar S3, the
@@ -740,8 +743,9 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           const A = was && a.from.kind === 'crowd' ? { getBoundingClientRect: () => was.rect } : where(a.from), B = where(a.to);
           if (!A || !B) return;
           chain.flying++;
-          const pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
+          let pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
           const R = a.via != null ? stageRect(a.via) : null;
+          if (R) { let nm = ''; try { nm = defById(ctx.state.cards[a.uid].def).name; } catch { /* unnamed */ } if (nm) pic += `<b class="pm-name">${nm.replace(/[<&]/g, '')}</b>`; }
           if (R) {
             // out of its old chair onto the stage, a beat there, then on to its new chair
             const leg1 = Math.round(MO.stageIn), hold = Math.round(MO.stageHold / 2), leg2 = Math.max(120, a.dur - leg1 - hold);
@@ -816,6 +820,9 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       onFinish(anim, () => g.remove());
     });
   }
+  // the stage holds a moment after this chain's own end, then flies home, even when the next chain follows at once
+  // (a blind tester, w5: "a recruited Stylist parked over the wheel centre … into the next player's turn")
+  if (plan.atoms.some(a => a.op === 'stage')) schedule(base + plan.total, skip => { if (!skip) stageRelease(MO.stageHold, chainId); });
   // what starts at once plays now, before this commit's first paint (the lifted card, the hidden chip, your minion's
   // stamp): never a frame of the end state first
   while (chain.queue.length && chain.queue[0].at <= chain.clock) chain.queue.shift().fn(false);
@@ -837,11 +844,13 @@ function stageOut(root, a, ctx, where, chainId, mine = []) {
     try { said = panelText(qid, quadrant(qid).actions[i], Math.max(1, st.round)); } catch { return; }
     const pid = a.pid ?? (st.slots && st.slots[key]);
     const p = st.players[pid];
-    const at = stageRect('card');
+    const slot = a.slot || 'card';
+    const at = stageRect(slot);
     if (!at) return;
     const slotEl = root.querySelector(`[data-slot="${key}"]`);
+    const who = !p ? '' : mine.length === 1 && mine[0] === pid ? 'You' : p.name;
     stageShow({ id: `space:${key}`, chain: chainId, kind: 'space', key, at, from, homeEl: slotEl, dur: a.dur, color: `var(--${qid})`,
-      pc: playerColor(pid), emoji: p ? seatEmoji(st, pid) : null, who: !p ? '' : mine.length === 1 && mine[0] === pid ? 'You' : p.name,
+      pc: playerColor(pid), emoji: p ? seatEmoji(st, pid) : null, who: slot === 'card2' ? `${who} copies` : who,
       main: said.main || said.verb || '', second: said.second || '', note: typeof said.note === 'string' ? said.note : '' });
     return;
   }

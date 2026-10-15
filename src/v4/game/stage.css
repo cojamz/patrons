@@ -5,16 +5,20 @@
 .as-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box;padding:18px 10px 10px;
   border-radius:10px;background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);text-align:center;--glyph:.95em;
   box-shadow:inset 0 4px 0 var(--q),0 0 0 1px rgba(43,32,24,.18),0 14px 30px rgba(0,0,0,.55)}
-.as-card .as-who{position:absolute;top:9px;left:10px;display:flex;align-items:center;gap:4px;font:600 12px/1 var(--sans);color:var(--pl-ink-2,#6e5c49)}
+.as-card .as-who{position:absolute;top:9px;left:10px;display:flex;align-items:center;gap:4px;font:600 11px/1 var(--sans);color:var(--pl-ink-2,#6e5c49)}
 .as-card .as-who svg{display:block}
-.as-card .as-main{font:800 24px/1.05 var(--sans);letter-spacing:-.01em;white-space:nowrap}
+.as-card .as-main{font:800 18px/1.05 var(--sans);letter-spacing:-.01em;white-space:nowrap}
 .as-card .as-second{font:600 14px/1.1 var(--sans);color:var(--pl-ink-2,#6e5c49);text-wrap:balance}
 .as-member{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;box-sizing:border-box;padding:6px 2px 6px;border-radius:10px;
   background:color-mix(in srgb,var(--q) 22%,var(--walnut-2,#271d16));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--q) 55%,transparent),0 10px 24px rgba(0,0,0,.5)}
 .as-member .as-fig{line-height:0;image-rendering:pixelated}
-.as-member .as-name{font:600 10px/1.05 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--cream,#f3e6c8);text-align:center;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.as-member .as-name{font:600 11px/1.05 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--cream,#f3e6c8);text-align:center;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* its place on the board while it's out: the space stands empty-looking, the member's chip a ghost */
 .lt .stage .slot.on-stage .face .yl,.lt .stage .slot.on-stage .face .note,.lt .stage .slot.on-stage .base{opacity:.4}
 .cs-member.on-stage .fig{opacity:.3}
 @media (prefers-reduced-motion: reduce){.action-stage{display:none}}
-.as-card .as-note{font:500 12px/1.1 var(--sans);color:var(--pl-ink-3,#a39078)}
+.as-card .as-note{font:500 11px/1.1 var(--sans);color:var(--pl-ink-3,#a39078)}
+/* a member changing hands, big on the stage on its way: its name under it */
+.piece-member.staged .path-inner{position:relative}
+.piece-member.staged .pm-name{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:2px;padding:1px 5px;border-radius:4px;background:var(--walnut-2,#271d16);color:var(--cream,#f3e6c8);font:600 11px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.flight.piece-member.staged,.piece-flight.piece-member.staged{overflow:visible}

@@ -18,7 +18,7 @@ for (const [id, px] of re) for (const e of ib.CultIcons.validate({ id, px })) co
 const svg = (id, px, size) => {
   const pal = { ...palette(sphere), ...personPalette(id) };
   let r = '';
-  withOutline(markPerson(px)).forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[ch]}"/>`; }));
+  withOutline((markPerson(px))).forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[ch]}"/>`; }));
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" shape-rendering="crispEdges">${r}</svg>`;
 };
 const ms = S.filter(i => i.kind === 'member' && i.sphere === sphere);

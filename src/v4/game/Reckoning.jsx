@@ -178,9 +178,15 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   const name = id => (id === meId ? 'You' : info.after.players[id].name);
   const fol = n => `${n} follower${n === 1 ? '' : 's'}`;
   // the verdict, once the counts are up: who wins what
+  // a sole winner whose count someone else matched won on the tie-break; say so, or the verdict reads wrong (tester)
+  const broke = r => {
+    const w = r.rows.find(x => x.id === r.winners[0]);
+    const level = w && r.rows.some(x => x.id !== w.id && x.shown === w.shown);
+    return level && r.tiebreak && r.tiebreak.unit ? ` (more ${r.tiebreak.unit})` : '';
+  };
   const verdict = !row ? '' : !row.winners.length ? 'no one scores'
     : row.winners.length > 1 ? `${row.winners.map(name).join(' and ')} tie: +${fol(row.prize)} each`
-    : `${name(row.winners[0])} ${row.winners[0] === meId ? 'win' : 'wins'} +${fol(row.prize)}`;
+    : `${name(row.winners[0])} ${row.winners[0] === meId ? 'win' : 'wins'} +${fol(row.prize)}${broke(row)}`;
   const shownBeat = step < rows.length ? beat : 2;
   return (
     <div className="lt-reckon" role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} onClick={finish}>

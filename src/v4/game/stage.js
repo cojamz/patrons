@@ -35,9 +35,11 @@ export function stageCenter() {
 export function stageRect(slot) {
   const c = stageCenter();
   if (!c) return null;
-  if (slot === 'card') return box(c.x - CARD.w / 2, c.y - CARD.h / 2 - 30, CARD.w, CARD.h);
+  if (slot === 'card') return box(c.x - CARD.w / 2, c.y - CARD.h / 2 - 50, CARD.w, CARD.h);
+  // the space a copy runs lands on the first card, fanned down and right, so the first card's top line still shows
+  if (slot === 'card2') return box(c.x - CARD.w / 2 + 22, c.y - CARD.h / 2 - 14, CARD.w, CARD.h);
   const k = SPOTS[slot % SPOTS.length] ?? 0;
-  return box(c.x - MEMBER.w / 2 + k * (MEMBER.w + 8), c.y + 30, MEMBER.w, MEMBER.h);
+  return box(c.x - MEMBER.w / 2 + k * (MEMBER.w + 8), c.y + 52, MEMBER.w, MEMBER.h);
 }
 const box = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top });
 
@@ -54,11 +56,12 @@ export function stageShow(item) {
 }
 let holdT = 0;
 /** The chain has played out: the stage holds a moment, then everything flies home. */
-export function stageRelease(hold = MO.stageHold) {
-  if (!items.some(it => !it.leaving)) return;
-  clearTimeout(holdT);
-  const these = items.filter(it => !it.leaving);
-  holdT = setTimeout(() => { for (const it of these) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; } emit(); }, hold);
+export function stageRelease(hold = MO.stageHold, chain = null) {
+  const these = items.filter(it => !it.leaving && (chain == null || it.chain === chain));
+  if (!these.length) return;
+  if (chain == null) clearTimeout(holdT);
+  const t = setTimeout(() => { for (const it of these) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; } emit(); }, hold);
+  if (chain == null) holdT = t;
 }
 /** Everything off the stage at once (a skip, a new round, the game leaving the screen). */
 export function stageClear() {
