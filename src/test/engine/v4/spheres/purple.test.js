@@ -284,16 +284,18 @@ describe('Purple members', () => {
     expect(s.players[0].left).toBe(2); // Crunch Time adds no minion
     expect(s.log.some(l => l.includes('Corner-Cutter'))).toBe(false);
   });
-  it('Bookkeeper: when you place your last worker of a round, +1 purple per 2 workers you have on the board; nothing at round end', () => {
+  it('Bookkeeper: when your last turn of a round ends, +1 purple per 2 workers you have on the board; nothing at round end', () => {
     expect(R(scene({ members: [['purple.bookkeeper']], slots: { [JV]: 0, [RUSH]: 0, [HIRE]: 0 }, queue: [{ t: 'endRound' }] })).purple).toBe(0);
     let s = scene({ members: [['purple.bookkeeper']], slots: { [JV]: 0, [HIRE]: 0 }, queue: turns(0, 1, 0) });
     s.players[0].left = 2;
     s = pass(take(s, 'gold.rush')); // 1 worker left after this: nothing yet
     expect(R(s).purple).toBe(0);
     s = pass(take(s, 'purple.hourly')); // P2
-    s = take(s, 'red.turnout'); // the last one: 4 workers on the board → +2, before this turn's buy
-    expect(R(s).purple).toBe(2);
+    s = take(s, 'red.turnout'); // the last one lands; Bookkeeper waits for the turn's end (Cory, 2026-10-15)
+    expect(R(s).purple).toBe(0);
     expect(s.pending.kind).toBe('buy');
+    s = pass(s); // the turn ends: 4 workers on the board → +2
+    expect(R(s).purple).toBe(2);
   });
   it('Clockmaker: round start (after other round-start income), +1 purple per 2 purple; nothing at round end', () => {
     expect(R(scene({ members: [['purple.clockmaker']], res: [{ purple: 7 }], queue: [{ t: 'endRound' }] })).purple).toBe(7);

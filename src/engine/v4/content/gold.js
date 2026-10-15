@@ -85,7 +85,7 @@ export default {
       onRoundStart(ctx, owner) { ctx.gain(owner, 'gold', 3); },
     }),
     m('prospector', 'Prospector', 2, 2, 'Whenever an action gains you gold, +1 more.', {
-      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === 'gold' && g.n > 0) owner.res.gold += 1; },
+      afterGain(ctx, owner, card, g) { if (g.fromAction && !g.again && g.color === 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
     // Cory, 2026-10-15 (balance pass 1, #1): only the top rival pays it, about a third of what any rival paid
     // (both bots read the old card at 8.7 for 4). Ties for the most all count; it's measured before the buy lands.
@@ -202,7 +202,8 @@ function stealStep(ctx, p, data) {
   const led = new Set(ctx.state.players.filter(o => ctx.followers(o) === top).map(o => o.id));
   for (const [id, k] of Object.entries(data.picked)) {
     const v = ctx.player(Number(id));
-    const x = ctx.steal(p, v, { take: { gold: k }, give: n => ctx.gain(p, 'gold', n, { fromAction: true }), led: led.has(v.id) });
+    // the gold comes in once per victim, but it is one action's gain: Prospector pays once (Cory, 2026-10-15)
+    const x = ctx.steal(p, v, { take: { gold: k }, give: n => ctx.gain(p, 'gold', n, { fromAction: true, again: got > 0 }), led: led.has(v.id) });
     if (x) { got += x; from.push(`${x} from ${v.name}`); }
   }
   ctx.log(got ? `${p.name} stole ${got} gold (${from.join(', ')}).` : `${p.name} found no gold to steal.`);

@@ -873,9 +873,11 @@ function buyFollowersNow(state, p, tier, chosen) {
   eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });
 }
 
-function gain(state, p, color, n, { fromAction = false } = {}) {
+// again: a later part of a gain the same action already paid (Collect Debts' second victim), so "whenever an action
+// gains you gold" members (Prospector) pay once per action
+function gain(state, p, color, n, { fromAction = false, again = false } = {}) {
   if (!(n > 0)) return;
-  const g = { color, n, fromAction, doubled: false };
+  const g = { color, n, fromAction, again, doubled: false };
   const ctx = ctxFor(state);
   // conversions (Midas) first, then amount changes (Underdog), so member order never matters.
   // Each one that changes the gain says so in the log ("Ana's Underdog: gold gain 4 → 8").

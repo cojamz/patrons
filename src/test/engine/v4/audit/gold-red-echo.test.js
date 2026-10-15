@@ -56,8 +56,8 @@ describe('Green: a space’s chip is what the space gave, closed at the buy step
 });
 
 describe('Gold', () => {
-  // known mismatch, not fixed (steal hands over gold once per rival): it.fails documents it
-  it.fails('Prospector: one action that gains you gold pays +1 more once (Collect Debts split over two rivals)', () => {
+  // fixed 2026-10-15 (Cory): the steal's later victims are the same gain (core gain's again)
+  it('Prospector: one action that gains you gold pays +1 more once (Collect Debts split over two rivals)', () => {
     let s = scene({ n: 3, round: 2, turns: [0], res: [{}, { gold: 2 }, { gold: 2 }], members: [['gold.prospector'], [], []] });
     s = take(s, 'gold.steal');
     s = move(s, 'player:1'); s = move(s, 'player:1'); s = move(s, 'player:2');

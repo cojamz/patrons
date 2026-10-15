@@ -244,9 +244,10 @@ export default {
     m('doubletime', 'Corner-Cutter', 2, 0,'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
-    m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last minion of a round, +1 purple per 2 minions you have on the board.', {
-      afterAction(ctx, owner, card) {
-        if (owner.left !== 0 || card.paidRound === ctx.state.round) return;
+    // Cory, 2026-10-15: pays when your last turn of the round ends, after an Overtime or Night Owl minion has landed
+    m('bookkeeper', 'Bookkeeper', 4, 2, 'At the end of your last turn each round, +1 purple per 2 minions you have on the board.', {
+      onTurnEnd(ctx, owner, card, who) {
+        if (who !== owner || owner.left !== 0 || card.paidRound === ctx.state.round) return;
         card.paidRound = ctx.state.round;
         ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
       },
@@ -258,7 +259,8 @@ export default {
     }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 12
     m('lamplighter', 'Lamplighter', 10, 2,'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
-      onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
+      // Cory, 2026-10-15: every minion you get counts (Extra Hand's too)
+      onRoundStart(ctx, owner) { ctx.gain(owner, P, owner.workers || [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win
     // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
