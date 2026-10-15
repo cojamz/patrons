@@ -360,13 +360,13 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage .slot .face .note{display:block;font-size:12px;line-height:13px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
 .lt [data-spaces="panels"] .stage .slot .face .note .dim{color:var(--pl-ink-3,#a39078);font-weight:500}
 .lt [data-spaces="panels"] .stage .slot .face .note .now{color:var(--pl-ink,#2b2018);font-weight:800}
-/* taken: the lines at half strength; the minion stands under the gain, where the effect was */
-.lt [data-spaces="panels"] .stage .slot .face .worker-fig{position:static;transform:none;display:flex;gap:1px;filter:drop-shadow(0 1.5px 0 rgba(43,32,24,.3))}
+/* taken: the lines fade and the minion stands over them, at full strength (the panel never reflows) */
+.lt [data-spaces="panels"] .stage .slot .face .worker-fig{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:1px;filter:drop-shadow(0 1px 0 rgba(43,32,24,.5)) drop-shadow(0 0 3px rgba(43,32,24,.35))}
 .lt [data-spaces="panels"] .stage .slot .face .worker-fig svg{width:auto;height:21px}
 .lt [data-spaces="panels"] .stage .slot.flash .face .worker-fig{animation:panelland .3s ease-out}
-@keyframes panelland{0%{transform:translateY(-5px)}60%{transform:translateY(1px)}100%{transform:none}}
+@keyframes panelland{0%{transform:translate(-50%,calc(-50% - 5px))}60%{transform:translate(-50%,calc(-50% + 1px))}100%{transform:translate(-50%,-50%)}}
 .lt [data-spaces="panels"] .stage .slot.taken .face{opacity:1}
-.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .main{opacity:.45}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .main,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .second,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .note{opacity:.35}
 .lt [data-spaces="panels"] .stage .slot.can:hover .face{transform:translateY(-1px);transition:transform var(--mo-quick,.12s)}
 /* locked: faint on the board */
 .lt [data-spaces="panels"] .stage .slot.locked .face{color:var(--pl-cream-2,#b9a98c)}

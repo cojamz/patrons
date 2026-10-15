@@ -73,7 +73,13 @@ function movesOf(cause, effects, owner) {
  */
 export function planChain(before, state, { mine = [], measure = null } = {}) {
   const atoms = [];
-  if (!before || !state || before === state || before.seed !== state.seed || !(state.moves > before.moves)) return { atoms, total: 0 };
+  if (!before || !state || before === state || before.seed !== state.seed) return { atoms, total: 0, handoff: 0 };
+  // a new round after the Reckoning (the table held the scored board, so no move separates the two): the minions walk
+  // home to their seats' columns, the closing beat of the round
+  if (!(state.moves > before.moves)) {
+    if (state.round > before.round && before.round >= 1) { const d = MO.minionsHome; return { atoms: [{ at: 0, op: 'home' }], total: d, handoff: d }; }
+    return { atoms, total: 0, handoff: 0 };
+  }
   const dist = (a, b) => (measure ? measure(a, b) : TYPICAL);
   const fly = (a, b) => flightMs(dist(a, b));
   let t = 0, end = 0;

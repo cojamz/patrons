@@ -4,7 +4,7 @@
 // Each state is reached from a hand-made save (bots play every seat, P1 too, so P1 holds a real build), the way the
 // e2e gates do it, then screenshotted. DOM access is fine here: this is the designer's camera, not a blind tester.
 import { chromium } from 'playwright';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { createGame, applyMove, chooseBotMove } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { buildStamp } from '../../e2e/v4/lib/stamp.mjs';
@@ -15,6 +15,8 @@ const argv = process.argv.slice(2);
 const flag = (k, d) => { const i = argv.indexOf('--' + k); if (i < 0) return d; const v = argv[i + 1]; argv.splice(i, 2); return v; };
 const bool = k => { const i = argv.indexOf('--' + k); if (i < 0) return false; argv.splice(i, 1); return true; };
 const query = flag('q', '');
+// --strip <name>: drop a dev stylesheet (e.g. layout.css, to photograph the old composition); --css <file>: add one
+const strip = flag('strip', ''), extraCss = flag('css', '');
 const base = flag('url', process.env.V4_URL || 'http://127.0.0.1:5410');
 const [W, H] = flag('size', '1270x700').split('x').map(Number);
 const x2 = bool('x2');
@@ -55,7 +57,15 @@ const page = await ctx.newPage();
 const errs = [];
 page.on('pageerror', e => errs.push(e.message));
 const url = (extra = '') => `${base}/?intro=0${query ? '&' + query : ''}${extra}`;
-const shot = async name => { await page.screenshot({ path: `${out}/${name}.png` }); console.log(`${out}/${name}.png`); };
+async function restyle() {
+  if (!strip && !extraCss) return;
+  await page.evaluate(({ strip, css }) => {
+    if (strip) for (const el of document.querySelectorAll(`style[data-vite-dev-id$="${strip}"]`)) el.remove();
+    if (css && !document.getElementById('pod-css')) { const st = document.createElement('style'); st.id = 'pod-css'; st.textContent = css; document.head.appendChild(st); }
+  }, { strip, css: extraCss ? readFileSync(extraCss, 'utf8') : '' });
+  await page.waitForTimeout(300);
+}
+const shot = async name => { await restyle(); await page.screenshot({ path: `${out}/${name}.png` }); console.log(`${out}/${name}.png`); };
 const settle = (ms = 600) => page.waitForTimeout(ms);
 async function load(pack, tries = 3) {
   try { await load1(pack); } catch (e) { if (tries <= 1) throw e; await settle(1500); await load(pack, tries - 1); }
@@ -75,6 +85,7 @@ async function load1(pack) {
   await page.goto(url());
   await page.click('[data-home="resume"]', { timeout: 60000 });
   await page.waitForSelector('.lt-shop .card', { timeout: 20000 });
+  await restyle();
   await page.mouse.move(4, 696); // park the pointer on the table's edge: no stray hover in the shot
   await settle(900);
 }
@@ -89,6 +100,7 @@ async function placeAndAnswer() {
     await settle(300);
   }
 }
+async function park() { await page.mouse.move(4, 696); await settle(200); }
 async function passBuy() {
   const p = await page.$('.lt-prompt .pass[data-option]');
   if (p) await p.click().catch(() => {});
@@ -115,7 +127,7 @@ for (const st of want) {
       const bb = await s.boundingBox();
       await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2); await settle(700); await shot('seathover');
     } else if (st === 'buy') {
-      await load(SAVES.place2()); await placeAndAnswer(); await settle(500); await shot('buy');
+      await load(SAVES.place2()); await placeAndAnswer(); await park(); await settle(500); await shot('buy');
     } else if (st === 'rival') {
       await load(SAVES.place2()); await placeAndAnswer(); await passBuy();
       await page.waitForSelector('.lt[data-bot="1"] .turn-card', { timeout: 8000 }).catch(() => {});

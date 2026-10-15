@@ -5111,7 +5111,14 @@ function movesOf(cause, effects, owner) {
 }
 function planChain(before, state, { mine: mine2 = [], measure = null } = {}) {
   const atoms = [];
-  if (!before || !state || before === state || before.seed !== state.seed || !(state.moves > before.moves)) return { atoms, total: 0 };
+  if (!before || !state || before === state || before.seed !== state.seed) return { atoms, total: 0, handoff: 0 };
+  if (!(state.moves > before.moves)) {
+    if (state.round > before.round && before.round >= 1) {
+      const d = MO.minionsHome;
+      return { atoms: [{ at: 0, op: "home" }], total: d, handoff: d };
+    }
+    return { atoms, total: 0, handoff: 0 };
+  }
   const dist = (a, b) => measure ? measure(a, b) : TYPICAL;
   const fly = (a, b) => flightMs(dist(a, b));
   let t = 0, end = 0;
@@ -5298,7 +5305,7 @@ for (let g = 0; g < Number(gamesArg); g++) {
     if (!byCause.has(ck)) byCause.set(ck, []);
     byCause.get(ck).push(ms);
     if (verbose === "1" && ms > 2600 || verbose === "pay" && pend && pend.kind === "pay" && actor !== 0 && Math.random() < 0.04 || verbose === "place" && pend && pend.kind === "place" && actor !== 0 && Math.random() < 0.03) console.log("long chain", ms, "actor", actor, pend && pend.kind, kinds, plan.atoms.map((a) => `${a.at}:${a.op}${a.dur ? "(" + a.dur + ")" : ""}${a.n ? "x" + a.n : ""}${a.bundle ? "B" : ""}`).join(" "));
-    if (!cur || cur.pid !== actor || cur.round !== s.round) {
+    if (!cur || cur.pid !== actor || cur.round !== s.round || pend && pend.kind === "place") {
       if (cur) (cur.pid === 0 ? mine : turns).push(cur.ms);
       cur = { pid: actor, ms: 0, round: s.round };
     }

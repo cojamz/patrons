@@ -798,7 +798,8 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const panelLays = useMemo(() => {
     if (!panels) return null;
     const k = scale || 1;
-    const lay = (s, need) => panelLayout({ s, R: rings[s.ring], rot, k, said: panelText(s.qid, s.a, round), taken: state.slots[s.key] !== undefined, need });
+    // a taken panel keeps its lines (faded) and its minion stands over them, so taking a space never reflows the wheel
+    const lay = (s, need) => panelLayout({ s, R: rings[s.ring], rot, k, said: panelText(s.qid, s.a, round), taken: false, need });
     const first = new Map(), group = {};
     for (const s of spaces) {
       const said = panelText(s.qid, s.a, round);
@@ -877,22 +878,22 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         <span className="base" aria-hidden="true" />
         {custom ? face : panels ? (
           // three lines at most, no picture (Cory, 2026-10-15): the gain, the effect in words, a quiet clarification.
-          // Taken: the minion stands under the gain, in place of the lines below it
+          // Taken: the lines fade and the minion stands over them (Cory: "over line 2")
           <span className="face" aria-hidden="true">
             {lay.oneLines > 0 && (
               <span className={`yl main${said.verb ? ' verb' : ''}`} data-yield>
                 {said.main && lay.oneLines > 1 ? clauses(said.main).map((c, k) => <span key={k} className="cl"><Said text={c} /></span>) : <Said text={said.main || said.verb} />}
               </span>
             )}
-            {minions}
-            {!minions && lay.twoLines > 0 && <span className="yl second" data-second><Said text={said.second} /></span>}
-            {!minions && lay.noteLines > 0 && (
+            {lay.twoLines > 0 && <span className="yl second" data-second><Said text={said.second} /></span>}
+            {lay.noteLines > 0 && (
               <span className="note" data-note>
                 {typeof said.note === 'object'
                   ? <>{said.note.byRound.map((v, k) => <span key={k}>{k ? ' · ' : ''}<b className={k + 1 === round ? 'now' : 'dim'}>{v}</b></span>)} by round</>
                   : <Said text={said.note} />}
               </span>
             )}
+            {minions}
           </span>
         ) : (
           <>

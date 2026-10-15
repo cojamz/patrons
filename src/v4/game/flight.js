@@ -173,7 +173,9 @@ export function flyMinionsHome(root, snap) {
   if (!root || !motionOK() || !snap || !snap.length) return 0;
   let n = 0;
   snap.forEach((m, k) => {
-    const home = playerAnchor(root, m.pid);
+    // home is the seat's column of minions still to place (where the next placement leaves from), else the leader
+    const col = root.querySelector(`.lt-cult-seat[data-seat="${m.pid}"] .cs-minions`);
+    const home = (col && visible(col) && col) || playerAnchor(root, m.pid);
     if (!home) return;
     const h = home.getBoundingClientRect();
     if (!h.width) return;

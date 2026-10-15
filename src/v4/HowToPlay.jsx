@@ -17,7 +17,7 @@ const MARKS = [
 function marked(text, key) {
   for (const [re, draw] of MARKS) {
     const m = text.match(re);
-    if (m) return <Fragment key={key}>{marked(text.slice(0, m.index + m[0].length), `${key}a`)}<span className="rules-mark"> {draw()}</span>{marked(text.slice(m.index + m[0].length), `${key}b`)}</Fragment>;
+    if (m) return <Fragment key={key}>{marked(text.slice(0, m.index), `${key}a`)}{m[0]}<span className="rules-mark"> {draw()}</span>{marked(text.slice(m.index + m[0].length), `${key}b`)}</Fragment>;
   }
   return <Fragment key={key}>{text}</Fragment>;
 }
