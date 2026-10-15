@@ -73,7 +73,7 @@ try {
     for (let k = 0; k < 12; k++) {
       await page.waitForTimeout(300);
       const c = page.locator('.prompt.choice button:not([disabled]), .pick-key:not([disabled]), .pick-rest-btn:not([disabled])').first();
-      if (await c.count()) { await c.click().catch(() => {}); continue; }
+      if (await c.count()) { await c.evaluate(el => el.click()).catch(() => {}); continue; } // a board pick's list keys may be visually hidden
       const pay = page.locator('.dialog.pay .btn.pri');
       if (await pay.count()) { await pay.click().catch(() => {}); continue; }
       break;

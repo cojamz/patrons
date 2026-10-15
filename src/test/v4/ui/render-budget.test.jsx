@@ -115,6 +115,23 @@ describe('render budget', () => {
     for (const s of perStep) expect(s.ShopCards).toBeLessThanOrEqual(1); // the shop once per step, at most
   });
 
+  it('a wheel spin paints its frames straight to the board: the wheel renders once, when it lands', async () => {
+    const state = advanceTo(createGame({ seats: SEATS, seed: 21 }), 'place', 0);
+    const session = drivenSession(state, [0]);
+    const { container } = render(<GameScreen session={session} pace={0} />);
+    await settle();
+    const g = () => container.querySelector('.stage svg g[transform]');
+    const seen = new Set();
+    R.reset();
+    act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); });
+    for (let k = 0; k < 40; k++) { await act(() => new Promise(r => setTimeout(r, 16))); if (g()) seen.add(g().getAttribute('transform')); }
+    const report = { commits: R.commits, Wheel: R.n('Wheel'), GameScreen: R.n('GameScreen'), frames: seen.size };
+    console.log('[render-budget] one spin:', JSON.stringify(report));
+    expect(report.frames).toBeGreaterThan(2); // it did turn, through several angles
+    expect(report.Wheel).toBeLessThanOrEqual(1);
+    expect(report.GameScreen).toBeLessThanOrEqual(1);
+  });
+
   it('a click on a lit space lets the press paint before the table re-renders', async () => {
     const state = advanceTo(createGame({ seats: SEATS, seed: 21 }), 'place', 0);
     const session = createLocalSession({ state, botDelayMs: 1e9 });

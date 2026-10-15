@@ -51,6 +51,9 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 41. **Dialogs pod:** the pay screen redesigned (cost as dots, coins visibly leave your stacks, click a stack to swap, skip the dialog when there's only one way to pay), swaps picked on the board, the choice caption kept off the wheel, the keyboard list only for keyboard users. Port 5398.
 42. **Members UX:** the seat hover becomes the player's member abilities with their states (ready, used, on/off, round start, game end); using a member is made obvious (lit figure, "Use: …" in its hover, effect flies from it). Port 5402.
 43. **Turn story follow-up:** names in the strip, turn cards and log open their cards on hover; the strip gets room.
+44. **Design pod: art director** (port 5410). Screen composition (the since-strip had too much space), layout variants compared and the best made default, then a ~20 min critique-and-fix loop until about 08:30.
+45. **Design pod: detail designer** (port 5412). Sweeps every state on several tables for obvious slop and fixes it at the root, with guards, until about 08:30.
+46. **QA: tables market-echo stall** (port 5404).
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).
