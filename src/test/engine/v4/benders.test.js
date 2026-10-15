@@ -132,7 +132,7 @@ describe('Big Spender: once per round, buy twice in one turn', () => {
     expect(s.cards[uidOf(s, 'benders.bigspender', 0)].spent).toBeUndefined();
   });
   it('with a Purple extra turn: the extra turn has its own buy, and Big Spender is still once per round', () => {
-    let s = scene({ quadrants: ['gold', 'red', 'purple', 'green'], members: [['benders.bigspender']], res: [{ gold: 9, red: 9, purple: 2, green: 9 }], rules: { release: false } });
+    let s = scene({ round: 2, quadrants: ['gold', 'red', 'purple', 'green'], members: [['benders.bigspender']], res: [{ gold: 9, red: 9, purple: 2, green: 9 }], rules: { release: false } }); // no extra minions in round I
     extraTurns(contextFor(s), s.players[0], 1);
     s = move(s, `slot:${RUSH}`);
     s = move(s, 'tier:mid'); s = move(s, 'tier:mid'); // the double buy

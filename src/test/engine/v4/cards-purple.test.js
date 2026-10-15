@@ -50,28 +50,28 @@ describe('Purple actions', () => {
 
 describe('Purple members', () => {
   it('Go-Getter: once per game, an extra turn right after this one; the log names Go-Getter', () => {
-    let s = sc({ members: [['purple.secondwind']] });
+    let s = sc({ round: 2, members: [['purple.secondwind']] }); // no extra minions in round I
     s = take(s, 'purple.hourly');
     s = move(s, `use:${uidOf(s, 'purple.secondwind', 0)}`);
     expect(turnsQueued(s, 0)).toBe(1);
     expect(named(s, 'Go-Getter')).toHaveLength(1);
   });
   it('Go-Getter × Foreman: the extra turn pays Foreman, named', () => {
-    let s = sc({ members: [['purple.secondwind', 'purple.foreman']] });
+    let s = sc({ round: 2, members: [['purple.secondwind', 'purple.foreman']] });
     s = take(s, 'purple.hourly');
     s = move(s, `use:${uidOf(s, 'purple.secondwind', 0)}`);
-    expect(P(s)).toBe(4 + 1);
+    expect(P(s)).toBe(5 + 1); // Clock In +5 in round II
     expect(named(s, 'Foreman')[0]).toMatch(/P1's Foreman: \+1 purple/);
   });
 
   it('Errand Runner: when recruited, an extra turn right after this one; named', () => {
-    let s = sc({ res: [rich], shop: ['purple.errand'] });
+    let s = sc({ round: 2, res: [rich], shop: ['purple.errand'] });
     s = take(s, 'purple.hourly'); s = buy(s, 'purple.errand');
     expect(turnsQueued(s, 0)).toBe(1);
     expect(named(s, 'Errand Runner')).toHaveLength(1);
   });
   it('Errand Runner × a rival’s Overseer: it reacts to the extra turn, named', () => {
-    let s = sc({ res: [rich, { purple: 6 }], members: [[], ['purple.overseer']], shop: ['purple.errand'] });
+    let s = sc({ round: 2, res: [rich, { purple: 6 }], members: [[], ['purple.overseer']], shop: ['purple.errand'] });
     s = take(s, 'purple.hourly'); s = buy(s, 'purple.errand');
     expect(P(s, 1)).toBe(6 + 3);
     expect(named(s, 'Overseer')[0]).toMatch(/P2's Overseer: \+3 purple/);

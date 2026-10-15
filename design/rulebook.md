@@ -30,6 +30,7 @@ On your turn:
    - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back only its colored part, in its color (in any colors if its color isn't on the table). The "any" part never comes back, so a member with no colored part can't be released, and neither can a member you've already used.
 
 Members keep working for you: some pay out at each round start (a member that says "Now and at round start" also pays the moment it joins you), some react to what other players do, and some you use once.
+- An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while the board has a space to spare.
 
 ## Round end
 Each quadrant's rim shows its rule, the prize, the tiebreak and the emoji of whoever leads it right now, for example "MOST MEMBERS · ties: red · +2", then the follower mark and the leader's emoji. Point at a rim for the full standings. When the round ends, whoever leads each rule gains followers: +2 in round I, +4 in round II and +6 in round III. Tied leaders all score, unless the tiebreak settles it (Red: more red members). You need at least 1 of what's measured to score. It's counted the moment the round ends, so anything you spend before then doesn't count. The Reckoning pays the quadrants one at a time; tap to skip it.
