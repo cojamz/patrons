@@ -17,8 +17,9 @@
 //      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
 //  (k) a resource is never color alone: every pip is its shape, every coin (setup, pay) carries its mark, and the
 //      setup picker's labels read on its paper (contrast ≥ 4.5);
-//  (l) who's winning and who's next: a ranked line of every player under the prompt, and each cult's place in the
-//      turn order;
+//  (l) who's winning and who's next, on the chairs (no score row, Cory 2026-10-15): every chair's total carries its
+//      place (data-rank), the places follow the totals (shown as "1st"… unless everyone is level), the chairs stand in
+//      this round's turn order (top to bottom, the engine's first pass) and each shows its place in the turns;
 //  (m) the hover card opens right next to what it explains (Cory, 2026-10-15: never a docked spot elsewhere): whole
 //      on screen, at the page's top level above every strip, beside or above its target and not over it;
 //  (o) the rim: pointing at a quadrant's rule or a leader's emoji opens that quadrant's standings, never a space;
@@ -296,8 +297,24 @@ try {
         // (m) your own seat's card opens beside it; (l) the ranked line and the turn-order places
         const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
         if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await anchorCheck(page, 'your seat', step, await head.evaluate(e => e.getBoundingClientRect().toJSON())); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
-        const tops = await page.evaluate(() => ({ seats: document.querySelectorAll('.lt > .lt-seat [data-cult]').length, rank: [...document.querySelectorAll('[data-rank] .rk')].map(e => e.textContent.trim()), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) }));
-        if (tops.rank.length !== tops.seats) fail(`(l) the ranked line shows ${tops.rank.length} players for ${tops.seats} cults`, step);
+        const tops = await page.evaluate(() => {
+          let st = null;
+          try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ }
+          const seats = [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].filter(e => e.querySelector('[data-cult]'));
+          const rows = seats.map(e => { const t = e.querySelector('.cs-total'); return { pid: Number(e.dataset.pid), f: Number(t.dataset.followers), rank: Number(t.dataset.rank), chip: (t.querySelector('.rk') || {}).textContent || '', y: e.getBoundingClientRect().top }; });
+          return { seats: seats.length, rows, first: st && st.order ? st.order.slice(0, st.players.length) : null, held: !!document.querySelector('[data-next-round], .lt-reckon'), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) };
+        });
+        const level = tops.rows.every(r => r.f === tops.rows[0].f);
+        if (tops.rows.some(r => !(r.rank >= 1))) fail(`(l) a chair's total carries no place: ${JSON.stringify(tops.rows)}`, step);
+        for (const a of tops.rows) for (const b of tops.rows) if (a.f > b.f && !(a.rank < b.rank)) fail(`(l) places don't follow the totals: ${JSON.stringify(tops.rows)}`, step);
+        if (!level && tops.rows.filter(r => r.chip).length !== tops.seats) fail(`(l) ${tops.rows.filter(r => r.chip).length} chairs show their place for ${tops.seats} cults`, step);
+        // position is order: top to bottom, the round's first pass (only when the screen has caught up with the save)
+        const byY = tops.rows.slice().sort((a, b) => a.y - b.y).map(r => r.pid);
+        if (tops.first && !tops.held && tops.first.length === byY.length && JSON.stringify(byY) !== JSON.stringify(tops.first)) {
+          await page.waitForTimeout(1200);
+          const again = await page.evaluate(() => { let st = null; try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ } return { first: st && st.order ? st.order.slice(0, st.players.length) : null, byY: [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].filter(e => e.querySelector('[data-cult]')).sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top).map(e => Number(e.dataset.pid)), moves: Number(document.querySelector('.app.game').dataset.moves), saved: st && st.moves }; });
+          if (again.moves === again.saved && JSON.stringify(again.byY) !== JSON.stringify(again.first)) fail(`(l) the chairs stand ${JSON.stringify(again.byY)}, the turn order is ${JSON.stringify(again.first)}`, step);
+        }
         if (tops.order.length !== tops.seats || !tops.order.includes('now')) fail(`(l) turn-order places: ${JSON.stringify(tops.order)}`, step);
       }
     }
