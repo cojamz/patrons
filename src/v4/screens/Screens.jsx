@@ -152,7 +152,7 @@ export function TablePicker({ value, onChange, readOnly = false }) {
                   disabled={!on && (quadrants.length >= 4 || clash)} style={{ '--c': `var(--${id})` }} onClick={() => toggle(id)}
                   title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : sphereHint(id)}>
                   <i className="dot" />{on && <span className="ord num">{quadrants.indexOf(id) + 1}</span>}
-                  <b>{sphereName(id)}</b><small>{quadrant(id).scoring.label}</small>
+                  <b>{sphereName(id)}</b><small>{lowColor(quadrant(id).scoring.label)}</small>
                 </button>
               );
             })}
@@ -168,7 +168,7 @@ export function TablePicker({ value, onChange, readOnly = false }) {
 export function sphereHint(id) {
   const q = quadrant(id);
   const lines = q.actions.filter(a => a.ring === 1).map(a => { const t = panelText(id, a, 1); const glue = t.verb || /^(from|per|then|and|on|in|of|for|to)\b/.test(t.second || '') ? ' ' : ', '; return [t.main || t.verb, t.second].filter(Boolean).join(glue).replace(/@f/g, 'follower'); });
-  return `${q.scoring.label}. Its round I spaces: ${lines.join(' · ')}.`;
+  return `${lowColor(q.scoring.label)}. Its round I spaces: ${lines.join(' · ')}.`;
 }
 function TableChip({ id }) {
   return <span className="table-chip" style={{ '--c': `var(--${id})` }} title={sphereHint(id)}><i className="dot" />{sphereName(id)}</span>;
@@ -193,6 +193,8 @@ export function LocalSetup({ initial, onStart, onBack }) {
   const [table, setTable] = useState(() => initialTable(initial?.table));
   const tableOk = !tableProblem(table.quadrants);
   const filled = seats.filter(s => s.kind !== 'empty');
+  const short = 4 - table.quadrants.length;
+  const startWhy = filled.length < 2 ? 'Needs at least 2 seats' : short > 0 ? `Pick ${short} more sphere${short === 1 ? '' : 's'}` : tableOk ? '' : tableProblem(table.quadrants);
   const set = (i, patch) => setSeats(settleEmojis(seats.map((s, k) => (k === i ? { ...s, ...patch } : s))));
   const pickEmoji = (i, id) => {
     const next = takeEmoji(seats, i, id);
@@ -227,8 +229,10 @@ export function LocalSetup({ initial, onStart, onBack }) {
         <TablePicker value={table} onChange={setTable} />
         {filled.length < 2 && <p className="hint warn">{GAME_NAME} needs at least 2 seats.</p>}
         <div className="row-btns">
+          {/* why Start is off, said beside it (RC1 #8: it dimmed at 3 of 4 with nothing near it) */}
+          {startWhy && <span className="hint start-why" data-start-why>{startWhy}</span>}
           <button type="button" className="btn" onClick={onBack}>Back</button>
-          <button type="button" className="btn pri" data-start disabled={filled.length < 2 || !tableOk} onClick={() => onStart({ seats: named(), speed, level, table })}>Start</button>
+          <button type="button" className="btn pri" data-start disabled={!!startWhy} title={startWhy || undefined} onClick={() => onStart({ seats: named(), speed, level, table })}>Start</button>
         </div>
       </div>
     </div>

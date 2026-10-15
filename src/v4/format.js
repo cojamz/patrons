@@ -22,7 +22,7 @@ export const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many
 /** Scoring banner text for a quadrant on a ring, e.g. "MOST GOLD +2". */
 /** A scoring label without its parenthetical note ("Most members (red members break ties)" -> "Most members"). */
 // a color inside a rule reads lowercase, like every other ("Most magenta members", beside "Most red"; RC1 sweep 9/58)
-const lowColor = t => t.replace(/(?<=\S\s)(Gold|Red|Blue|Green|Magenta|Silver|Yellow|Purple|White)\b/g, m => m.toLowerCase());
+export const lowColor = t => t.replace(/(?<=\S\s)(Gold|Red|Blue|Green|Magenta|Silver|Yellow|Purple|White)\b/g, m => m.toLowerCase());
 export const shortLabel = label => lowColor(label.replace(/\s*\(.*\)\s*$/, ''));
 export const bannerText = (qid, ring) => `${shortLabel(quadrant(qid).scoring.label).toUpperCase()}  +${RING_VALUE[ring - 1]}`;
 
