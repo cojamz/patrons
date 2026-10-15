@@ -36,7 +36,7 @@ function inTriangle(p, a, b, c) {
 }
 
 /** Is the pointer (at p, default: where it is) on its way to the aimed card, or on it? */
-export function heading(p = pt) {
+export function heading(p = pt, { noGrace = false } = {}) {
   if (!aim || !p) return false;
   const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
   if (!aim.el.isConnected || now > aim.until) { aim = null; return false; }
@@ -48,7 +48,7 @@ export function heading(p = pt) {
   // they often stand over a neighbour's name)
   const r = controlsRect(aim.el);
   if (!r) return false;
-  if (now < aim.grace && Math.hypot(p.x - aim.ox, p.y - aim.oy) <= GRACE_PX) { aim.x = p.x; aim.y = p.y; return true; }
+  if (!noGrace && now < aim.grace && Math.hypot(p.x - aim.ox, p.y - aim.oy) <= GRACE_PX) { aim.x = p.x; aim.y = p.y; return true; }
   if (p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD) return true;
   if (Math.hypot(p.x - aim.x, p.y - aim.y) <= PAD) return true; // still where it left
   // the hull of where the pointer left and the buttons' box (widened a little): every straight way there, whichever
@@ -98,9 +98,9 @@ const heldEl = () => (typeof held === 'function' ? held() : held);
 export const holdCard = el => { held = el || null; };
 export const dropCard = el => { if (!el || held === el) held = null; };
 /** The open card the pointer is on, or heading for (not `mine`): what the pointer crosses shouldn't open over it. */
-export function busyWith(p = pt, mine = null) {
+export function busyWith(p = pt, mine = null, opts = {}) {
   const t = aimedAt();
-  if (t && t !== mine && !(mine && t.contains(mine)) && heading(p)) return t;
+  if (t && t !== mine && !(mine && t.contains(mine)) && heading(p, opts)) return t;
   const h = heldEl();
   if (h && h !== mine && !(mine && h.contains(mine)) && h.isConnected && overControls(h, p)) return h;
   return null;

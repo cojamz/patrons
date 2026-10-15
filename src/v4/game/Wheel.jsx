@@ -549,6 +549,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const home = Math.round(dr.start / 90) * 90;
     let target = Math.round(rotRef.current / 90) * 90;
     if (Math.abs(dr.v) > 0.18 && performance.now() - dr.t < 120 && target === home) target = home + Math.sign(dr.v) * 90;
+    // a deliberate drag never springs back home (the skeptic, w4 #19: "it won't stay where I put it"): past 12° it turns
+    // on to the next quarter its way, where the rims read upright
+    else if (target === home && Math.abs(rotRef.current - home) > 12) target = home + Math.sign(rotRef.current - home) * 90;
     animateTo(target);
     setTimeout(() => { moved.current = false; }, 0);
   };

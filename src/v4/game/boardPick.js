@@ -29,7 +29,16 @@ export function boardPicker(state, pend, first = null) {
     else if (t && Number.isInteger(t.pid) && state.players[t.pid]) key = t.res ? `stack:${t.pid}:${t.res}` : `seat:${t.pid}`;
     else if (t && t.res) key = `stack:${pend.player}:${t.res}`;
     if (!key) { rest.push(o); continue; }
-    if (where.has(key)) return null; // two answers on one thing: the list says it better
+    if (where.has(key)) {
+      // two copies of one space (its taker's and a Squatter's join): the board keeps the better one for you, the other
+      // is a button by the caption; giving up here put a grid of chips over the wheel (w4 skeptic #3, Encore)
+      const prev = where.get(key);
+      if (o.kind === 'space' && prev.kind === 'space') {
+        if ((o.hint ?? 0) > (prev.hint ?? 0)) { where.set(key, o); rest.push(prev); } else rest.push(o);
+        continue;
+      }
+      return null; // two answers on one thing: the list says it better
+    }
     where.set(key, o);
   }
   if (!where.size) return null;

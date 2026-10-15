@@ -11,6 +11,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { scoredStandings, standings, playerColor } from '../format.js';
 import { playerAnchor, motionOK, flyToken, expectArrival, pulse, track } from './flight.js';
 import { MO, flightMs } from '../motion.js';
+import { chainRunning, onChainEnd } from './director.js';
 import Tick from './Tick.jsx';
 
 // The pace (the motion language's B6, grammar.md; Cory: "readable, one quadrant at a time"): about 1.6s a rim at
@@ -45,7 +46,18 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   }, [root, info]);
   // a beat after the round's last move (its "Turn passes." note) before the first rim lights (tester B #23)
   const [ready, setReady] = useState(() => !motionOK());
-  useEffect(() => { if (ready) return undefined; const t = setTimeout(() => setReady(true), MO.reckonLead); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // (wave 4 tester A #29, #54: the scoring ran under the round's last move, still playing on the table, so a player who
+  // watched that move found the Reckoning on its last quadrant, and the seats ticked both at once. The round's end
+  // waits for the table's chains to land, then has its own beat.)
+  useEffect(() => {
+    if (ready) return undefined;
+    let t = null;
+    const lead = () => { if (t == null) t = setTimeout(() => setReady(true), MO.reckonLead); };
+    if (!chainRunning()) lead();
+    const off = onChainEnd(lead);
+    const net = setTimeout(lead, 6000); // (a safety net: a chain that never reports its end)
+    return () => { clearTimeout(t); clearTimeout(net); off(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [spots, setSpots] = useState({}); // pid -> { left, top } of that player's chair, for the count chips
   const done = useRef(false);
   const finish = () => { if (!done.current) { done.current = true; onLamp && onLamp(null); onDone(); } };
@@ -172,6 +184,8 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
           </>
         )}
         <span className="reckon-dots" aria-hidden="true">{rows.map((r, k) => <i key={r.qid} className={k < step ? 'done' : ready && k === step ? 'on' : ''} style={{ '--c': `var(--${r.qid})` }} />)}</span>
+        {/* skip on the card the player is reading (the skeptic, w4 #16: the Skip pill sat far away, bottom right) */}
+        <button type="button" className="btn ghost reckon-skip in-card" data-reckon-skip onClick={e => { e.stopPropagation(); finish(); }}>Skip</button>
       </div>
       {row && step < rows.length && row.rows.map((r, k) => {
         const at = spots[r.id];
@@ -183,7 +197,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
           </span>
         );
       })}
-      <button type="button" className="btn ghost reckon-skip" data-reckon-skip onClick={e => { e.stopPropagation(); finish(); }}>Skip</button>
+
     </div>
   );
 }

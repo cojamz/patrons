@@ -62,6 +62,19 @@ describe('the board picker leaves no answer without a click', () => {
 });
 
 describe('CultSeat: a lit member is never folded into "+N"', () => {
+  it('two copies of one space (a taker and a Squatter) stay on the board: the better lit, the other a button (w4 skeptic #3)', () => {
+    const s = createGame({ seats: seats(4), seed: 2, quadrants: ['gold', 'echo', 'red', 'trading'] });
+    const pend = { kind: 'choose', player: 0, prompt: 'Encore: copy which space?', options: [
+      { id: 'space:e:a', kind: 'space', value: '0-1', hint: 3, label: 'Rush (P2): +2 gold', target: { space: '0-1' } },
+      { id: 'space:e:b', kind: 'space', value: '0-1#2', hint: 5, label: 'Rush (P3): +2 gold', target: { space: '0-1' } },
+      { id: 'space:e:c', kind: 'space', value: '2-0', hint: 1, label: 'Turnout (P4): +1 red', target: { space: '2-0' } },
+    ] };
+    const pk = boardPicker(s, pend, null);
+    expect(pk).not.toBeNull();
+    expect(pk.spaces.get('0-1')).toBe('space:e:b');
+    expect(pk.rest.map(o => o.id)).toEqual(['space:e:a']);
+  });
+
   it('a chair with more member kinds than fit still shows the one the picker lights, with its button', () => {
     let s = createGame({ seats: seats(3), seed: 5, quadrants: TABLES[0] });
     for (let k = 0; k < 400 && !(s.pending && s.pending.kind === 'place' && s.round >= 1); k++) s = applyMove(s, chooseBotMove(s, () => 0.3));

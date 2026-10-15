@@ -34,7 +34,7 @@ import PayPicker, { payChoice } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale } from '../motion.js';
 import { PERF_ON } from '../perf.js';
@@ -897,7 +897,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const now = Date.now();
     // counted picks ("take 1 gold… (2 left)") are meant to be clicked fast and repeatedly: every click counts
     const counted = !!(pend && /\(\d+ left\)/.test(pend.prompt || ''));
-    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < MO.doubleClick) return;
+    // the starting picks repeat one kind of step with the same buttons, so no step lock covers them: a slow double-click
+    // on one color spent both picks (w4 skeptic #9); there the same color again within 700ms is one pick
+    const twin = pend && pend.kind === 'setup' ? Math.max(700, MO.doubleClick) : MO.doubleClick;
+    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < twin) return;
     const d = lastDown.current, p0 = lastPick.current;
     // a fresh pointer press far from the last pick is deliberate; anything else (near it, or a key) waits out the lock
     const farFromLast = d.x != null && p0.x != null && now - d.t < 600 && Math.hypot(d.x - p0.x, d.y - p0.y) >= 48;
@@ -1109,7 +1112,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const home = root0 && (root0.querySelector(`.lt-seat[data-pid="${pk.actor}"] .cs-res`) || root0.querySelector(`.lt-seat[data-pid="${pk.actor}"]`));
     const coin = el && el.querySelector('svg') ? `<span class="pick-coin">${el.querySelector('svg').outerHTML}</span>` : '<span class="pick-coin dot"></span>';
     // each pick moves: a resource from their seat to yours (a gift: from yours to theirs); a picked seat nods
-    if (take) flyToken(el, home, coin, { tag: 'pick-flight', duration: 560 });
+    if (take) { flyToken(el, home, coin, { tag: 'pick-flight', duration: 560 }); notePick(el, 1); } // (its stack drops at once)
     else if (t.give) flyToken(home, el, coin, { tag: 'pick-flight', duration: 560 });
     else if (el && el.animate && motionOK()) el.animate([{ boxShadow: '0 0 0 0 rgba(255,220,140,.9)' }, { boxShadow: '0 0 0 10px rgba(255,220,140,0)' }], { duration: 520, easing: 'ease-out' });
     if (take && pickKey) {
@@ -1249,7 +1252,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </div>
       ) : (
         <>
-          <section className="lt-wheel" data-region="wheel">
+          {/* (data-step: after you've placed, the wheel steps back so only your buys are bright; final panel S#27) */}
+          <section className="lt-wheel" data-region="wheel" data-step={buyingNow ? 'buy' : undefined}>
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
             {showChoice && !picker && !payChoice(pend) && pend.kind !== 'setup' && <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
             {/* the starting picks (motion gaps 1): the row stays on the table while the others pick (read-only), and until the

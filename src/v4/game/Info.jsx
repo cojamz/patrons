@@ -71,7 +71,9 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     timer.current = setTimeout(() => { pending.current = false; setOpen(o => o || { el: ref.current, pinned: false }); }, TIP_MS);
   };
   // crossing toward another open card: this one stays shut (it opens on the next move once the crossing is over)
-  const crossing = e => !!busyWith(e ? { x: e.clientX, y: e.clientY } : undefined, body.current);
+  // (the short detour allowance doesn't hold back a neighbour: moving along the row opens the next member at once,
+  // w4a #36)
+  const crossing = e => !!busyWith(e ? { x: e.clientX, y: e.clientY } : undefined, body.current, { noGrace: true });
   // held back while the pointer crossed toward another open card: it opens once that's over, if the pointer is still
   // on it (a held-back hover never stays shut for good: w4b #2)
   const onIt = useRef(false);

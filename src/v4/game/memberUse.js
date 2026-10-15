@@ -64,7 +64,38 @@ export function useNow(state, pid, uid) {
     const name = cardDef(state, uid).name;
     const said = (lines[lines.length - 1] || '').replace(/\.$/, '').replace(new RegExp(`^${esc(p0.name)}(?:'s)?\\s+`), '').replace(new RegExp(`^${esc(name)}:\\s*`), '');
     const why = blocked ? said : idle ? (/\b(no|nothing|none|can’t|can't|cannot)\b/i.test(said) ? said : 'it would give you nothing right now') : '';
-    out = { option: id, words, blocked, asks, idle, why, label: blocked ? 'Can’t use now' : idle ? 'Use: +0' : words ? `Use: ${words}` : 'Use now' };
+    // a use that goes on into a choice says so, and counts what the choice can add at best (w4 skeptic #5: Tribute
+    // Band read "Use: +7●" and then opened a steal worth +4 more)
+    let then = '', more = '', asker = '';
+    if (asks) {
+      const ask = String(after.pending.prompt || '');
+      asker = (ask.match(/^([^:]{2,28}):\s/) || [])[1] || '';
+      then = /\b(take|steal|from (a |each )?rivals?)\b/i.test(ask) ? 'a steal' : 'a choice';
+      // the best it can come to, following the choice (and the choices it leads to) on copies, within a small budget
+      let best = null, bestN = 0, nodes = 0;
+      const walk = (st, depth) => {
+        if (++nodes > 40) return;
+        if (depth < 6 && st.pending && st.pending.player === pid && st.pending.kind === 'choose') {
+          for (const o of st.pending.options.slice(0, 6)) {
+            let next;
+            try { next = applyMove(st, { player: pid, option: o.id }); } catch { continue; }
+            walk(next, depth + 1);
+          }
+          return;
+        }
+        const q = st.players[pid];
+        const gain = {};
+        let n = 0;
+        for (const r of state.resources) { const d = (q.res[r] || 0) - (p1.res[r] || 0); if (d > 0) { gain[r] = d; n += d; } }
+        if (n > bestN) { bestN = n; best = gain; }
+      };
+      walk(after, 0);
+      if (best) more = Object.entries(best).map(([r, d]) => `+${d} ${r}`).join(', ');
+    }
+    // "Use: +6 gold, +1 white, then a steal (up to +4 white more)", or with nothing before it "Use: a steal, up to +3 gold"
+    const tail = then ? (words ? `then ${then}${more ? ` (up to ${more} more)` : ''}` : `${then}${more ? `, up to ${more}` : ''}`) : '';
+    const label = blocked ? 'Can’t use now' : idle ? 'Use: +0' : words ? `Use: ${words}${tail ? `, ${tail}` : ''}` : tail ? `Use: ${tail}` : 'Use now';
+    out = { option: id, words: tail ? (words ? `${words}, ${tail}` : tail) : words, blocked, asks, idle, why, label, then, asker };
   } catch {
     out = { option: id, words: '', blocked: false, asks: false, idle: false, why: '', label: 'Use now' };
   }

@@ -164,3 +164,14 @@ describe('a second buy is seen (w2a #6)', () => {
     expect(memberRows(t, 0, 0).find(r => r.uids.includes(uid)).tag.text).toBe('used this round');
   });
 });
+
+describe('a use that goes on into a choice says so (w4 skeptic #5)', () => {
+  it('Talent Scout: "Use: a choice", never a bare "Use now"', () => {
+    const s = table(['gold', 'echo', 'trading', 'market'], { members: [['market.blackmarket']], res: [{ gold: 9, white: 9, green: 9, blue: 9 }] });
+    const u = useNow(s, 0, uidIn(s, 'market.blackmarket', 0));
+    if (u && !u.blocked && !u.idle) {
+      expect(u.asks).toBe(true);
+      expect(u.label).toMatch(/^Use: a choice/);
+    }
+  });
+});

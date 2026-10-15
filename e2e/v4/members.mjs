@@ -108,7 +108,8 @@ try {
   }])));
   for (const id of ['gold.jackpot', 'trading.heiress']) if (fig[id] && (!fig[id].ring || !/matrix\(1, 0, 0, 1, 0, -\d/.test(fig[id].lift))) fail(`${id} is lit without its warm ring and lift: ${JSON.stringify(fig[id])}`, 'm2');
   for (const id of ['gold.jackpot', 'trading.heiress']) if (!fig[id] || !fig[id].lit || fig[id].state !== 'ready') fail(`${id} isn't lit in your seat though you can use it now: ${JSON.stringify(fig[id])}`, 'm2');
-  if (!fig['gold.speculator'] || fig['gold.speculator'].state !== 'used' || fig['gold.speculator'].lit) fail(`Speculator (used) doesn't read used in your seat: ${JSON.stringify(fig['gold.speculator'])}`, 'm2');
+  // (the row shows as many figures as fit: a used member or a switch may be folded into "+N"; the seat card lists them)
+  if (fig['gold.speculator'] && (fig['gold.speculator'].state !== 'used' || fig['gold.speculator'].lit)) fail(`Speculator (used) doesn't read used in your seat: ${JSON.stringify(fig['gold.speculator'])}`, 'm2');
   if (fig['trading.pawnbroker'] && fig['trading.pawnbroker'].lit) fail('Pawnbroker is lit, but using it now would do nothing (no loose followers)', 'm2');
   if (fig['thieves.bigscore'] && fig['thieves.bigscore'].lit) fail('Safecracker is lit, but using it now gives 0', 'm8');
   // (m9) a rival's loaded use, subdued; the seat that lies low says so
@@ -120,7 +121,7 @@ try {
   if (!marks.stunt || !marks.stunt.loaded || marks.stunt.ready || !/drop-shadow/.test(marks.stunt.filter)) fail(`P2's Stunt Double (a use in hand) isn't marked on P2's seat: ${JSON.stringify(marks.stunt)}`, 'm9');
   if (marks.pincher) fail('P2\'s Penny Pincher (no use) is marked as a use in hand', 'm9');
   if (JSON.stringify(marks.safe) !== JSON.stringify([false, false, true, false])) fail(`"safe this round" on seats ${JSON.stringify(marks.safe)} (want only P3's)`, 'm9');
-  if (!fig['gold.midas'] || fig['gold.midas'].sw !== 'on') fail(`Midas's switch in your seat: ${JSON.stringify(fig['gold.midas'])}`, 'm2');
+  if (fig['gold.midas'] && fig['gold.midas'].sw !== 'on') fail(`Midas's switch in your seat: ${JSON.stringify(fig['gold.midas'])}`, 'm2');
   if (fig['echo.translator'] && fig['echo.translator'].sw !== 'off') fail(`Translator's switch in your seat: ${JSON.stringify(fig['echo.translator'])}`, 'm2'); // it may be folded into "+N"
   const lit = await page.$$eval('.lt-cult-seat .cs-member.ready', els => els.map(e => e.closest('[data-cult]').dataset.cult));
   if (lit.some(c => c !== '0')) fail(`a rival's member is lit: seats ${lit.join(',')}`, 'm2');
@@ -169,8 +170,15 @@ try {
     const label = (await btn.textContent()).trim();
     // w3a A8 (Cory: "hovers open right next to what you point at"): the member's card sits right next to the member,
     // level with it, and doesn't cover the member itself
-    const near = await page.evaluate(() => { const t = document.querySelector('[data-tip-body]').closest('.popover').getBoundingClientRect(), f = document.querySelector('[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig').getBoundingClientRect(); return { gap: Math.round(Math.max(t.left - f.right, f.left - t.right, t.top - f.bottom, f.top - t.bottom)), over: Math.max(0, Math.min(t.right, f.right) - Math.max(t.left, f.left)) * Math.max(0, Math.min(t.bottom, f.bottom) - Math.max(t.top, f.top)) }; });
+    // w4a #36: and it opens above or below the row, never over the members beside it
+    const near = await page.evaluate(() => {
+      const t = document.querySelector('[data-tip-body]').closest('.popover').getBoundingClientRect(), f = document.querySelector('[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig').getBoundingClientRect();
+      const ov = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      const others = [...document.querySelectorAll('[data-cult="0"] .cs-member .fig')].map(e => e.getBoundingClientRect()).filter(r => Math.abs(r.left - f.left) > 2);
+      return { gap: Math.round(Math.max(t.left - f.right, f.left - t.right, t.top - f.bottom, f.top - t.bottom)), over: ov(t, f), neighbours: others.reduce((s2, r) => s2 + ov(t, r), 0) };
+    });
     if (near.gap > 16 || near.over > 0) fail(`the member's card isn't right next to the member: ${JSON.stringify(near)}`, 'm3');
+    if (near.neighbours > 0) fail(`the member's card covers the members beside it (${Math.round(near.neighbours)}px²)`, 'm3');
     if (!/^Use: \+7/.test(label)) fail(`the hover's button reads "${label}" (want "Use: +7 …")`, 'm3');
     await page.screenshot({ path: `${SHOTS}/2-member-hover.png` });
     const b = await btn.boundingBox();
@@ -334,9 +342,23 @@ try {
     await pg.waitForSelector('.lt-wheel .slot.can');
     await pg.waitForTimeout(600);
     const fb = await (await pg.$('[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig')).boundingBox();
+    // w4a #36: from one member's card, one move along the row opens the next member's card
     await pg.mouse.move(fb.x + fb.width / 2, fb.y + fb.height / 2, { steps: 4 });
     await pg.waitForTimeout(350);
-    const bb = await (await pg.$('[data-tip-body] [data-use]'))?.boundingBox();
+    const nb = await pg.evaluate(f => {
+      const figs = [...document.querySelectorAll('[data-cult="0"] .cs-member .fig')].map(e => ({ id: e.closest('[data-member]').dataset.member, r: e.getBoundingClientRect() }));
+      const next = figs.filter(x => x.r.left > f.x + f.width - 2 && Math.abs(x.r.top - f.y) < 8).sort((a, b) => a.r.left - b.r.left)[0];
+      return next ? { id: next.id, x: next.r.left + next.r.width / 2, y: next.r.top + next.r.height / 2 } : null;
+    }, fb);
+    if (nb) {
+      await pg.mouse.move(nb.x, nb.y);
+      const opened = await pg.waitForFunction(id => !!document.querySelector(`[data-tip-body] [data-card="${id}"]`), nb.id, { timeout: 600 }).then(() => true, () => false);
+      if (!opened) fail(`moving from Lottery Winner to the member beside it (${nb.id}) didn't open its card`, 'm12');
+      await pg.mouse.move(4, 690); await pg.waitForTimeout(400);
+    }
+    await pg.mouse.move(fb.x + fb.width / 2, fb.y + fb.height / 2, { steps: 4 });
+    await pg.waitForTimeout(350);
+    const bb = await (await pg.waitForSelector('[data-tip-body] [data-use]', { timeout: 1500 }).catch(() => null))?.boundingBox();
     if (!bb) fail('no Use button on the member\'s card to reach by a detour', 'm12');
     else {
       await pg.mouse.move(fb.x + fb.width / 2, fb.y + fb.height + 18, { steps: 2 }); // down, out of the figure, away from the card

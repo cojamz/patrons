@@ -208,8 +208,9 @@
    always means none; the number stays quiet */
 .cs-stack.zero .res-glyph path{fill:none}
 .cs-stack.zero .res-glyph .any-cross{display:none}
-.cs-stack.zero .res-glyph .res-ring{stroke:currentColor;stroke-width:1.5}
-.lt > .lt-seat .cs-stack.zero,.lt-cult-seat .cs-stack.zero{opacity:.6}
+.cs-stack.zero .res-glyph .res-ring{stroke:currentColor;stroke-width:1.25}
+/* a zero is clearly dimmer than any resource (final panel A#72: white's filled pearl and an empty cream ring read alike) */
+.lt > .lt-seat .cs-stack.zero,.lt-cult-seat .cs-stack.zero{opacity:.42}
 .lt > .lt-seat .cs-stack.zero .num,.lt-cult-seat .cs-stack.zero .num{opacity:.6}
 /* the white rim is light: its words and prize mark are dark ink on it */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule[data-rim-res="white"]{fill:#2b2018}
@@ -297,8 +298,9 @@
 
 /* the narrowest laptops (861–1049px): a rival's chair is ~225px inside, and its four stacks ran under its total and its
    minions in the name row (shots/1200-900/buy.png: "5●" under "3👤"). There the stacks take a row of their own under the
-   name (the column has the height: the story sits on the right at this width); yours keeps clear of its minions. */
-@media (min-width:861px) and (max-width:1049px) and (min-height:500px){
+   name (the column has the height: the story sits on the right at this width; from 680px tall, since at 900×600 the
+   taller chairs ran into the shop strip); yours keeps clear of its minions. */
+@media (min-width:861px) and (max-width:1049px) and (min-height:680px){
   .app.game.lt > .lt-seat:not(.mine) > .lt-cult-seat{grid-template-rows:32px 20px 34px}
   .app.game.lt > .lt-seat:not(.mine) .cs-foot{grid-column:1 / 5;grid-row:2;justify-self:start}
   .app.game.lt > .lt-seat:not(.mine) .cs-res{justify-content:flex-start;gap:10px}
@@ -340,4 +342,15 @@
 
 /* the story's newest line on one line, when two don't fit (SinceStrip level 1) */
 .lt-since .since-row.one{-webkit-line-clamp:1}
+
+/* the starting pick is the call to action: no hover card ever covers it (the final panel, S#11: a space's card opened
+   over "Pick 1 of 2"); a card that reaches it slides under it */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{z-index:61}
+}
+
+/* your buy step: you've placed, so the wheel steps back and only the buys are bright (final panel S#27: "the spaces
+   stay bright cream"). Opacity on the stage over the dark table, keyed on the wheel's own region, never a filter */
+.lt-wheel[data-step="buy"] .stage{opacity:.8;transition:opacity .2s}
+.lt-cult-seat .cs-more{white-space:nowrap;cursor:help}
 

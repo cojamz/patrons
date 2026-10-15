@@ -150,10 +150,21 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   const after = r => r.last + nextBeatAt(r.d); // when the next beat may start
   const owner0 = c => (c.kind === 'recruit' || c.kind === 'buy' || c.kind === 'space' || c.kind === 'move' || c.kind === 'release' || c.kind === 'member' || c.kind === 'setup' ? c.pid : null);
   let setup = false;
+  // where the mover's move happened (the space taken, the rate bought at, the card recruited): a rival's member that pays
+  // out because of it (Tax Collector on your follower buy) sends its gain from there to their pile (the skeptic, w4 #14:
+  // "nothing travels from my buy to P4's seat")
+  const mover = before.pending ? before.pending.player : null;
+  let movePlace = null;
   for (const beat of beats) {
     const c = beat.cause, owner = owner0(c);
     const m = movesOf(c, beat.effects, owner);
     let s = t;
+    if (!movePlace && c.kind !== 'member') {
+      const f0 = beat.effects[0] && beat.effects[0].from;
+      movePlace = c.kind === 'space' ? { kind: 'space', key: c.key } : c.kind === 'buy' ? { kind: 'rate', tier: c.tier, n: c.get }
+        : c.kind === 'recruit' ? { kind: 'shop', index: c.index, uid: c.uid } : f0 && f0.kind === 'space' ? f0 : null;
+    }
+    const fromMove = c.kind === 'member' && mover != null && c.pid !== mover && movePlace ? movePlace : null;
     // the source acts first: a member hops, a space pulses (unless the selection just lit it)
     if (c.kind === 'member' && c.uid != null) { at(s, { op: 'hop', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def } }); s += MO.lead; }
     else if (c.kind === 'space' && c.key !== pulsed) { at(s, { op: 'pulse', place: { kind: 'space', key: c.key }, dur: MO.pulse }); s += MO.lead; pulsed = c.key; }
@@ -230,7 +241,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     // the owner's gains, then the spill fan, which starts when the owner's are two-thirds along (the same beat)
     const own = m.gains.filter(g => g.to.pid === owner || owner == null), spill = m.gains.filter(g => !(g.to.pid === owner || owner == null));
     const before0 = cur;
-    phase(own.map(g => ({ from: g.from, to: g.to, n: g.what.n, opt: { r: g.what.r, owner: g.to.pid } })));
+    phase(own.map(g => ({ from: fromMove && g.from.kind === 'member' ? fromMove : g.from, to: g.to, n: g.what.n, opt: { r: g.what.r, owner: g.to.pid } })));
     if (spill.length) { cur = own.length ? cur : before0; phase(spill.map(g => ({ from: g.from, to: g.to, n: g.what.n, opt: { r: g.what.r, owner: g.to.pid, light: true } }))); }
     // members changing hands (grammar M10; motion gaps 3: "P3 traded Broker for P4's Retinue" showed no travel): a swap's
     // two members cross at once on mirrored arcs; a member taken (Poach, a ransom let go) is a take, the victim's crowd
@@ -370,6 +381,29 @@ export const holdCap = () => Math.round(2800 * speedScale()) + MO.breath + 400;
 // count ticking, its stack settling) comes from that piece's own animation finishing, never from a separate timer.
 
 const chain = { queue: [], clock: 0, wall: 0, last: null, raf: 0, flying: 0, holds: new Map(), pending: new Map(), counts: new Set(), root: null };
+
+// A counted steal's picks (Collect Debts, Help Yourself) show as they're made (the skeptic, w4 #22; tester A, w4 #34:
+// "P2 still showed 3 silver after '1 left'"): each pick drops the rival's stack at once, though the engine takes them all
+// on the last pick; that pick's chain then adopts the held number and doesn't drop the same units twice.
+const picked = new Map(); // stack element → { h (its hold), n (units shown as taken), t (safety timer) }
+export function notePick(el, n = 1) {
+  if (!el || !el.querySelector || !motionOK()) return;
+  const b = el.querySelector('b.num');
+  if (!b) return;
+  let p = picked.get(el);
+  if (!p) {
+    const shown = Number(b.dataset.hold ?? b.textContent.trim());
+    if (!Number.isFinite(shown)) return;
+    p = { h: holdStack(el, shown), n: 0, t: 0 };
+    picked.set(el, p);
+  }
+  p.n += n;
+  if (p.h) p.h.step(-n);
+  bump(el, true);
+  clearTimeout(p.t);
+  // (a pick that never becomes a take, as one undone, lets go of the number)
+  p.t = setTimeout(() => { if (picked.get(el) === p) { if (p.h) p.h.done(true); picked.delete(el); } }, 15000);
+}
 const skipSubs = new Set();
 /** Something that should jump to its end state when a chain is skipped (the table's pacing). */
 export const onChainSkip = fn => { skipSubs.add(fn); return () => skipSubs.delete(fn); };
@@ -551,7 +585,11 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   for (const [el, f] of firstLand) { expectArrival(el, now0 + f.at, Math.max(0, f.last - f.at)); chain.counts.add(el); }
   const holdOf = (el, pid, r) => {
     if (!el || el.rectOnly) return null;
-    if (!chain.holds.has(el)) { const p = before.players[pid]; chain.holds.set(el, { h: p ? holdStack(el, p.res[r] || 0) : null }); }
+    if (!chain.holds.has(el)) {
+      const pk = picked.get(el);
+      if (pk) { clearTimeout(pk.t); picked.delete(el); chain.holds.set(el, { h: pk.h, pre: pk.n }); }
+      else { const p = before.players[pid]; chain.holds.set(el, { h: p ? holdStack(el, p.res[r] || 0) : null }); }
+    }
     return chain.holds.get(el).h;
   };
   const release = el => { const n = (chain.pending.get(el) || 1) - 1; chain.pending.set(el, n); if (n <= 0) { const x = chain.holds.get(el); if (x && x.h) x.h.done(); chain.holds.delete(el); chain.pending.delete(el); } };
@@ -660,7 +698,15 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
         case 'piece': {
           const A = where(a.from), B = where(a.to);
           // a piece leaving a stack: its number drops as it goes
-          if (a.from.kind === 'stack' && A) { const h = holdOf(A, a.from.pid, a.from.r); if (h) h.step(-(a.n || 1)); if (!skip) bump(A, true); release(A); }
+          if (a.from.kind === 'stack' && A) {
+            const h = holdOf(A, a.from.pid, a.from.r), x = chain.holds.get(A);
+            // (units a pick already showed leaving aren't dropped again)
+            const k = x && x.pre ? Math.min(x.pre, a.n || 1) : 0;
+            if (k) x.pre -= k;
+            if (h && (a.n || 1) > k) h.step(-((a.n || 1) - k));
+            if (!skip) bump(A, true);
+            release(A);
+          }
           if (skip || !A || !B) { land(a, B, true); return; }
           const size = a.fol ? 18 : 16;
           const pid = a.to.kind === 'stack' || a.to.kind === 'count' ? a.to.pid : a.from.pid;

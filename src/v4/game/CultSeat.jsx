@@ -93,7 +93,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   };
   // the seat's body and resource row open its card too (w3b #47), but a member figure opens its own card
   // (a stack in a pick says its own thing: why it's dim, or nothing while lit; the seat card over it hid the reason, w4b #8)
-  const onFig = e => !!(e.target && e.target.closest && e.target.closest('.cs-member, .cs-more, .cs-pick-seat, button, .cs-stack[data-why], .cs-stack.pick-on'));
+  const onFig = e => !!(e.target && e.target.closest && e.target.closest('.cs-member, .cs-pick-seat, button, .cs-stack[data-why], .cs-stack.pick-on'));
   const bodyHover = {
     onPointerEnter: e => { if (realHover(e) && !onFig(e)) openSeat(e, false); },
     onPointerMove: e => { if (realHover(e) && hover && !onFig(e)) openSeat(e, false); },
@@ -165,7 +165,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           return (
             <span key={g.key} className={`cs-member${g.card.used && !state.over ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used && !state.over ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
-              <Tip className="fig" sticky={mine} beside=".fig" label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
+              <Tip className="fig" sticky={mine} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
@@ -185,7 +185,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             </span>
           );
         })}
-        {rest > 0 && <span className="cs-more" title={`${rest} more member${rest === 1 ? '' : 's'}`}>+{rest}</span>}
+        {/* says what it counts ("+3" alone read as followers, final panel S#32); pointing at it opens the chair's card,
+            which lists every member */}
+        {rest > 0 && <span className="cs-more" data-more={rest} aria-label={`${rest} more member${rest === 1 ? '' : 's'}`}>+{rest} more</span>}
         {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
         {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </div>
@@ -339,7 +341,7 @@ function useFigureFit(rootEl) {
         const more = crowd.querySelector(':scope > .cs-more');
         const room = c.width - beside - (safe ? safe.getBoundingClientRect().width + gap : 0);
         const all = Math.max(1, Math.floor((room + gap) / per));
-        const withMore = Math.max(1, Math.floor((room - (more ? more.getBoundingClientRect().width : 18)) / per));
+        const withMore = Math.max(1, Math.floor((room - (more ? more.getBoundingClientRect().width : 44)) / per));
         setFit(f => (f && f.all === all && f.withMore === withMore ? f : { all, withMore }));
       });
     }
