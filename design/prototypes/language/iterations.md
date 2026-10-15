@@ -55,3 +55,16 @@ Still failing at 1× and 2×:
 **Does anything look unaligned, cramped or inconsistent?** Nothing is off the 4px grid at 2×. Every container has an 8px corner, the three type sizes hold, and taken spaces put their minion in one spot. Remaining nits: the board's lower left is a large dark mass (on purpose, out of focus, but heavy); taken paper is a flat gray-beige; there's a hair of space between a dot and a following comma ("you ● ,").
 
 **Would this pass for a shipped game?** The cards, seats and hovers would. The wheel slice is close but not there: the rim band is a flat fill, where a shipped board would give it material (a printed edge, pressed type). That's a material pass, not a grammar change, so I stopped here at the time box.
+
+# Plate 2
+
+Cory on plate 1: "pretty good". He wants an object that says "a place you send a minion", as distinct as the dot (money) and the card with a person (a member). Names come off the spaces and go into the hover. Decompress: more air, bigger effects, fewer words.
+
+## Candidates (plate2-candidates.png, candidates.html)
+Four objects, each in open / lit / taken / locked, with the same effects in each column so only the object changes.
+- **A · Tile with a socket.** The round hollow is a clear spot for the minion, but the silhouette is a rounded rectangle, the same as a member card. It fails the brief's first test: a place must not look like a person.
+- **B · Doorway.** The arch is a silhouette nothing else in the game uses (dot = circle, member = card). The door is the minion's spot, built into the object, and every state comes from the door itself: dark when open, lit from inside when it's yours to take, a minion standing in it when taken, shut with the round's numeral when locked. Lit becomes literal light, which is rule 6.
+- **C · Plinth.** Distinct, and the minion on top reads well. But it's the only 3D object in a flat language, the top ellipse adds noise, and a minion on top pokes into the row above.
+- **D · Banner.** It reads as a flag rather than a place. The minion stands outside the object, so "taken" is weak and "locked" has nothing to shut.
+
+**Pick: B, the doorway.** It's the only candidate whose four states need no extra mark, and "send a minion through a door" is what placing is.

@@ -171,7 +171,7 @@ if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
     const all = quick ? ['hotseat.mjs'] : readdirSync(join(root, 'e2e/v4')).filter(f => f.endsWith('.mjs')).filter(f => f !== 'touch.mjs' || process.env.V4_PHONE);
     // timing-sensitive: hover p95 (info), count-ups and bot pacing (motion). They take every e2e token on the box.
     // memory.mjs is not: it reads the heap after a forced GC, which load doesn't change.
-    const SOLO = new Set(['info.mjs', 'motion.mjs']);
+    const SOLO = new Set(['info.mjs', 'motion.mjs', 'snappy.mjs']); // snappy: spin, hover and click-to-minion budgets
     // longest first (typical seconds on a quiet box), so the long pole starts at once
     const LONG = { 'online.mjs': 130, 'touch.mjs': 120, 'hotseat.mjs': 75, 'tables.mjs': 62, 'spaces.mjs': 60, 'memory.mjs': 60, 'benders.mjs': 50, 'reckoning.mjs': 21, 'layout.mjs': 13 };
     const order = (a, b) => (LONG[b] || 30) - (LONG[a] || 30) || a.localeCompare(b);
