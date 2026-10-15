@@ -57,8 +57,8 @@ const P = {
     planahead: { main: '+1 purple', second: 'per minion to place' },
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
     overtime: { verb: 'Take 1 extra turn', second: 'right after this' },
-    // the center drops line 2, so it's whole in line 1
-    rally: { verb: 'Take 2 extra turns' },
+    // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
+    rally: { verb: 'Take your next 2 turns now' },
   },
   silver: {
     toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', note: grows(r) }),

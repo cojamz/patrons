@@ -2,7 +2,7 @@
 // Card-by-card: every Purple action and member, through real moves, against the printed text, with a log line naming
 // the card whenever it changes a number (an extra turn is a number too: workers this round). Plus a cross-sphere case each.
 import { describe, it, expect } from 'vitest';
-import { followers } from '../../../engine/v4/core.js';
+import { followers, turnRail } from '../../../engine/v4/core.js';
 import { take, move, uidOf } from './helpers.js';
 import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 
@@ -28,16 +28,19 @@ describe('Purple actions', () => {
     expect(P(take(sc({ round: 2 }), 'purple.planahead'))).toBe(2); // 3 minions, this one placed: 2 left
     expect(P(take(sc({ round: 3, left: 5 }), 'purple.planahead'))).toBe(4);
   });
-  it('Overtime: 1 extra turn right after this one, free; Crunch Time: 2 extra turns, free', () => {
+  it('Overtime: 1 extra turn right after this one, free; Crunch Time: your next 2 turns right away, free, no new minion', () => {
     for (const held of [0, 7, 8]) {
       const s = take(sc({ round: 2, res: [{ purple: held }] }), 'purple.overtime');
       expect(P(s)).toBe(held);
       expect(turnsQueued(s, 0)).toBe(1);
     }
+    const r = s => turnRail(s), upcoming = s => [...r(s).done, ...(r(s).current != null ? [r(s).current] : []), ...r(s).next].slice(1);
     for (const held of [0, 3, 4, 12]) {
-      const s = take(sc({ round: 3, res: [{ purple: held }] }), 'purple.rally');
+      const s = take(sc({ round: 3, res: [{ purple: held }], queue: [0, 1, 0, 1, 0].map(p => ({ t: 'turn', p })) }), 'purple.rally');
       expect(P(s)).toBe(held);
-      expect(turnsQueued(s, 0)).toBe(2);
+      expect(turnsQueued(s, 0)).toBe(0); // no extra minion
+      expect(upcoming(s)).toEqual([0, 0, 1, 1]);
+      expect(named(s, 'Crunch Time')[0]).toBe("P1's Crunch Time: P1 takes their next 2 turns now.");
     }
   });
 });
@@ -96,25 +99,35 @@ describe('Purple members', () => {
     expect(s.players[0].left).toBe(5);
   });
 
-  it('Foreman: +1 purple per worker on the board whenever you take an extra turn (Crunch Time: 2 turns), named', () => {
-    const s = take(sc({ round: 3, members: [['purple.foreman']], slots: { '0-0': 0 } }), 'purple.rally');
-    expect(P(s)).toBe(2 + 2);
-    expect(named(s, 'Foreman')).toHaveLength(2);
+  // Crunch Time moves your own turns up: they aren't extra turns, so none of these fire for it
+  const crunch = o => take(sc({ round: 3, queue: [0, 1, 0, 1, 0].map(p => ({ t: 'turn', p })), ...o }), 'purple.rally');
+  it('Foreman: +1 purple per worker on the board whenever you take an extra turn (Overtime), named; not on Crunch Time', () => {
+    const s = take(sc({ round: 3, members: [['purple.foreman']], slots: { '0-0': 0 } }), 'purple.overtime');
+    expect(P(s)).toBe(2);
+    expect(named(s, 'Foreman')).toHaveLength(1);
+    const t = crunch({ members: [['purple.foreman']], slots: { '0-0': 0 } });
+    expect(P(t)).toBe(0);
+    expect(named(t, 'Foreman')).toHaveLength(0);
   });
-  it('Courier: +1 of each other color per extra turn, named; Midas leaves member income alone', () => {
-    const s = take(sc({ round: 3, members: [['purple.courier', 'gold.midas']] }), 'purple.rally');
-    expect(s.players[0].res).toEqual({ gold: 2, red: 2, purple: 0, green: 2 });
+  it('Courier: +1 of each other color per extra turn, named; Midas leaves member income alone; not on Crunch Time', () => {
+    const s = take(sc({ round: 3, members: [['purple.courier', 'gold.midas']] }), 'purple.overtime');
+    expect(s.players[0].res).toEqual({ gold: 1, red: 1, purple: 0, green: 1 });
     expect(named(s, 'Courier')[0]).toMatch(/P1's Courier: \+1 gold, \+1 red, \+1 green/);
+    expect(crunch({ members: [['purple.courier']] }).players[0].res).toEqual({ gold: 0, red: 0, purple: 0, green: 0 });
   });
-  it('Apprentice: each extra turn makes your next member 4 cheaper, named', () => {
-    const s = take(sc({ round: 3, members: [['purple.apprentice']] }), 'purple.rally');
-    expect(s.players[0].discount).toBe(8);
+  it('Apprentice: each extra turn makes your next member 4 cheaper, named; not on Crunch Time', () => {
+    const s = take(sc({ round: 3, members: [['purple.apprentice']] }), 'purple.overtime');
+    expect(s.players[0].discount).toBe(4);
     expect(named(s, 'Apprentice')[0]).toMatch(/next member costs 4 less/);
+    expect(crunch({ members: [['purple.apprentice']] }).players[0].discount).toBe(0);
   });
-  it('Overseer: half your purple, up to 4, when a rival takes an extra turn (capped), named', () => {
-    const s = take(sc({ round: 3, res: [{}, { purple: 11 }], members: [[], ['purple.overseer']] }), 'purple.rally');
-    expect(P(s, 1)).toBe(11 + 4 + 4);
-    expect(named(s, 'Overseer')).toHaveLength(2);
+  it('Overseer: half your purple, up to 4, when a rival takes an extra turn (capped), named; not on Crunch Time', () => {
+    const s = take(sc({ round: 3, res: [{}, { purple: 11 }], members: [[], ['purple.overseer']] }), 'purple.overtime');
+    expect(P(s, 1)).toBe(11 + 4);
+    expect(named(s, 'Overseer')).toHaveLength(1);
+    const t = crunch({ res: [{}, { purple: 11 }], members: [[], ['purple.overseer']] });
+    expect(P(t, 1)).toBe(11);
+    expect(named(t, 'Overseer')).toHaveLength(0);
   });
   it('Corner-Cutter: Overtime is free, so nothing to halve and no Corner-Cutter line; a Doppelganger copy does not crash', () => {
     let s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.doubletime']] }), 'purple.overtime');
@@ -125,7 +138,7 @@ describe('Purple members', () => {
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'purple.doubletime';
     s = take(s, 'purple.rally');
     expect(P(s)).toBe(8);
-    expect(turnsQueued(s, 0)).toBe(2);
+    expect(turnsQueued(s, 0)).toBe(0); // Crunch Time adds no turn (and here P1 has none left to bring forward)
     expect(named(s, 'Corner-Cutter')).toHaveLength(0);
   });
   it('Bookkeeper on your last placement of the round (before its buy), not at round end; Clockmaker and Lamplighter at round start; all named', () => {

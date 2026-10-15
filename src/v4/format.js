@@ -1,5 +1,5 @@
 // Display helpers. No rules here: everything is read off engine state.
-import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds, turnRail } from '../engine/v4/index.js';
+import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds, turnRail, roundOrder } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 import { defaultEmoji } from './art/emojis.js';
 import { usableNow } from './game/memberUse.js';
@@ -97,6 +97,12 @@ export function promptFor(state, mine) {
       const t = currentTurn(state);
       if (t && t.again) {
         const or = use ? `…or use ${use} first` : null;
+        // a turn taken early (Crunch Time) is your own next minion, moved up: not a bonus
+        if (t.early) {
+          return mine
+            ? { who: p, lead: `Your next turn, now (${t.early}): `, text: 'place a minion', keepCase: true, ...(or ? { sub: or } : {}) }
+            : { who: p, text: `${name}: next turn, now (${t.early})` };
+        }
         if (t.kind === 'snake') {
           return mine
             // the headline says it, and so do the rail and the chip ("now twice"): no third telling (w2b #15)
@@ -190,18 +196,25 @@ function extraGrants(state) {
 /**
  * This round's turns in order, from the engine's turn record and queue: [{ pid, kind, why, at }] where kind is
  * 'snake' (the round's order), 'hand' (an extra minion from a member, after the snake) or 'extra' (an extra turn a
- * card or space gave), why names that card or space, and at is 'done' | 'now' | 'later'. Every turn is one placement.
+ * card or space gave), why names that card or space, early names the space a player took that turn early with
+ * (Crunch Time: their own turn, moved up), and at is 'done' | 'now' | 'later'. Every turn is one placement.
  */
 export function turnSequence(state) {
   if (!(state.round >= 1) || state.over) return [];
   const r = turnRail(state);
   const seq = [...r.done.map(pid => ({ pid, at: 'done' })), ...(r.current != null ? [{ pid: r.current, at: 'now' }] : []), ...r.next.map(pid => ({ pid, at: 'later' }))];
-  const order = state.order || [];
+  // the round's order, with turns taken early (Crunch Time) moved up: they're the player's own turns, not extra ones
+  const { order, early, src } = roundOrder(state);
   const snake = (WORKERS[state.round - 1] || 0) * state.players.length;
   // the round's order is the sequence with the extra turns taken out: match it in order, and what's left over is extra
   let j = 0;
   for (const t of seq) {
-    if (j < order.length && order[j] === t.pid) { t.kind = j < snake ? 'snake' : 'hand'; j++; } else t.kind = 'extra';
+    if (j < order.length && order[j] === t.pid) {
+      // snake or hand by where the turn sat before it was taken early
+      t.kind = src[j] < snake ? 'snake' : 'hand';
+      if (early[j]) t.early = early[j];
+      j++;
+    } else t.kind = 'extra';
   }
   const grants = extraGrants(state), used = {};
   const begins = state.log.slice(roundLogStart(state.log)).find(l => /^Round \S+ begins\./.test(l)) || '';

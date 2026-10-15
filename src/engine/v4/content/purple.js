@@ -6,7 +6,8 @@
 // Reprice (Claude, 2026-10-14, go-with-your-gut, from the member-value sim in design/eval/purple-members.md): Corner-Cutter,
 // Taskmaster, Late Riser 4+2; Overseer 2+2; Go-Getter 6+2. Night Owl takes Relay's slot.
 //
-// Engine notes (content-only, no core change):
+// Engine notes (content-only, no core change, but for roundOrder):
+// - Crunch Time is not an extra turn: turnsNow moves your own next turns up to right after this one (no new minion).
 // - An extra turn is an ordinary { t: 'turn' } task put right after the current turn ends (p.left += 1).
 // - Extra turns only happen when the board has a space to spare (more open spaces than turns still to come),
 //   so they never squeeze anyone out of the last space (round I fills every space).
@@ -32,7 +33,7 @@ const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn').length;
 /** True when one more turn can't squeeze anyone out of a space. */
 export const spareSpace = ctx => openSpaces(ctx).length > scheduled(ctx);
 /** What extra turns that cost `base` purple cost p (Corner-Cutter halves it, rounded up). Only Taskmaster pays now:
- *  Overtime and Crunch Time are free (Cory, 2026-10-15: "no board action should require spending"). */
+ *  Overtime is free (Cory, 2026-10-15: "no board action should require spending"). */
 const priceFor = (ctx, p, base) => (ctx.membersOf(p).some(c => c.def.halfTurns || (c.copy && c.copy.endsWith('.doubletime'))) ? Math.ceil(base / 2) : base);
 /** How many more turns the board has room for (open spaces beyond the turns still to come). */
 const room = ctx => openSpaces(ctx).length - scheduled(ctx);
@@ -94,6 +95,58 @@ export function extraTurns(ctx, p, n = 1, why = null) {
   return k;
 }
 
+/**
+ * p takes up to n of their own turns still to come this round right after this one (Crunch Time; Cory, 2026-10-15:
+ * "it's not extra turns, it's taking two immediate turns with existing minions"). No new minion, so placements this
+ * round don't change, no spare space is needed, and the extra-turn members (Foreman, Overseer…) don't fire.
+ * The round's order (roundOrder) moves the same turns up, so the seats' "your turn in N" stay true. Returns how many.
+ */
+export function turnsNow(ctx, p, n, why) {
+  const s = ctx.state, q = s.queue;
+  const end = q.findIndex(t => t.t === 'endTurn');
+  const close = q.findIndex(t => t.t === 'allPlaced');
+  const stop = close < 0 ? q.length : close;
+  const picks = [];
+  for (let i = end + 1; i < stop && picks.length < n; i++) if (q[i].t === 'turn' && q[i].p === p.id) picks.push(i);
+  if (!picks.length) { ctx.log(`${p.name} has no minions left to place: ${why} does nothing.`); return 0; }
+  // where each turn sits in the round's order, matched as the seats match it (extra turns sit outside it)
+  const { order } = ctx.roundOrder();
+  const seq = [...(s.turns || []).map(pid => ({ pid })), ...q.filter(t => t.t === 'turn').map(task => ({ pid: task.p, task }))];
+  let j = 0;
+  for (const t of seq) if (j < order.length && order[j] === t.pid) t.at = j++;
+  const done = (s.turns || []).length;
+  const cur = Math.max(-1, ...seq.slice(0, done).map(t => (t.at === undefined ? -1 : t.at)));
+  const tasks = picks.map(i => q[i]);
+  for (let k = picks.length - 1; k >= 0; k--) q.splice(picks[k], 1);
+  q.splice(end + 1, 0, ...tasks);
+  const moves = [];
+  tasks.forEach((task, k) => {
+    const at = (seq.find(t => t.task === task) || {}).at;
+    if (at !== undefined && at !== cur + 1 + k) moves.push({ p: p.id, from: at, to: cur + 1 + k, why });
+  });
+  if (moves.length) {
+    if (!s.early || s.early.round !== s.round) s.early = { round: s.round, moves: [] };
+    s.early.moves.push(...moves);
+  }
+  const k = tasks.length;
+  const few = k < n ? ` (${k === 1 ? 'their last minion' : `their last ${k} minions`})` : '';
+  ctx.log(`${p.name}'s ${why}: ${p.name} takes ${k === 1 ? 'their next turn' : `their next ${k} turns`} now${few}.`);
+  return k;
+}
+/** Playing your own turns sooner: each one that jumps rivals gets first pick of the spaces they'd have taken. */
+const turnsNowEstimate = (ctx, p, n) => {
+  const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn');
+  const close = q.findIndex(t => t.t === 'allPlaced');
+  let v = 0, k = 0, jumped = 0;
+  for (let i = end + 1; i < (close < 0 ? q.length : close) && k < n; i++) {
+    if (q[i].t !== 'turn') continue;
+    if (q[i].p !== p.id) { jumped++; continue; }
+    k++;
+    v += Math.min(1, jumped / 3) * turnValue(ctx) * 0.25;
+  }
+  return v;
+};
+
 export default {
   id: 'purple',
   name: 'Purple',
@@ -136,9 +189,11 @@ export default {
     },
     {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
-      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take 2 extra turns right after this one.',
-      estimate: ctx => freeTurnsEstimate(ctx, 2),
-      resolve(ctx, p) { freeTurns(ctx, p, 2, 'Crunch Time'); },
+      // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
+      // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
+      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take your next 2 turns right away.',
+      estimate: (ctx, p) => turnsNowEstimate(ctx, p, 2),
+      resolve(ctx, p) { turnsNow(ctx, p, 2, 'Crunch Time'); },
     },
   ],
 

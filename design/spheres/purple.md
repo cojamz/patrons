@@ -15,7 +15,7 @@ Night Owl and the five reprices (marked) come from the member-value sim in desig
 4. Ring I, Wind-up: +1 purple per worker you have on the board, this one included.
 5. Ring II, Plan Ahead (fill-in, replaces Linger): +1 purple per minion you have left to place this round (was +2; Cory, balance pass 1, 2026-10-15).
 6. Ring II, Overtime (changed 2026-10-15): take 1 extra turn right after this one. No payment, no fallback (was: pay 8 purple for 2 extra turns, else +3 purple).
-7. Ring III, Crunch Time [Rally] (changed 2026-10-15): take 2 extra turns right after this one. No payment (was: pay all your purple, 4 or more, for 2 extra turns, else +4 purple).
+7. Ring III, Crunch Time [Rally] (changed 2026-10-15, twice): take your next 2 turns right away. Cory: "it's not extra turns, it's taking two immediate turns with existing minions." Your own next two queued turns this round move up to right after this one: no new minion, placements per round unchanged, no spare space needed, and the extra-turn members (Foreman, Courier, Apprentice, Overseer) don't fire. With 1 minion left you take 1; with none it does nothing. (Was: take 2 extra turns; before that, pay all your purple, 4 or more, for 2 extra turns, else +4 purple.)
 8. Second Wind (6+2, repriced): once per game, take an extra turn right after this one.
 9. Errand Runner (4+4): when you recruit it, take an extra turn right after this one.
 10. Taskmaster (4+2, repriced): once per round, pay 5 purple to take an extra turn right after this one.
@@ -32,7 +32,7 @@ Night Owl and the five reprices (marked) come from the member-value sim in desig
 21. Patience (6+2): at game end, +1 follower per 3 purple.
 22. Shift Crew (1+1): worth 2 followers. No effect.
 
-House rule: every extra turn needs a spare space (more open spaces than turns still to come), so nobody ever loses the last space. Overtime and Crunch Time give as many of their turns as the board has room for, and nothing else when it has none.
+House rule: every extra turn needs a spare space (more open spaces than turns still to come), so nobody ever loses the last space. Overtime gives its turn only when the board has room, and nothing else when it has none. Crunch Time needs no spare space: it moves your own turns, so nobody loses a placement.
 
 Cut in v4:
 23. Linger. Moving a worker to an open space and doing it is the same as placing there, except you also gave up Linger and reopened your old space for a rival. It fizzled whenever your workers sat on Purple.

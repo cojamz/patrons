@@ -7,6 +7,9 @@ import { createGame, applyMove, chooseBotMove, followers, memberCount, turnRail 
 import { rankRows, seatRanks } from '../../../v4/game/RankRow.jsx';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
 import { turnPlaces, seatTurns } from '../../../v4/game/seats.js';
+import { turnSequence, currentTurn } from '../../../v4/format.js';
+import { contextFor } from '../../../engine/v4/core.js';
+import { turnsNow } from '../../../engine/v4/content/purple.js';
 
 afterEach(cleanup);
 const seats = [{ name: 'Ana', kind: 'human' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }, { name: 'Di', kind: 'bot' }];
@@ -99,5 +102,27 @@ describe('turn order on the cults', () => {
     // before round I and with no viewer: nothing on yours
     expect(seatTurns(createGame({ seats, seed: 42 }), 0)).toEqual({});
     expect(Object.values(seatTurns(s, null)).every(w => w.say === 'next')).toBe(true);
+  });
+  it('turns taken early (Crunch Time) read as your own turns moved up: not extra, the seats count them right', () => {
+    let s = until(createGame({ seats, seed: 43 }), t => t.round >= 1 && t.pending && t.pending.kind === 'place');
+    const me = s.current;
+    turnsNow(contextFor(s), s.players[me], 2, 'Crunch Time');
+    const seq = turnSequence(s);
+    expect(seq.filter(t => t.kind === 'extra')).toHaveLength(0); // all 12 are the round's own placements
+    expect(seq.filter(t => t.kind === 'snake')).toHaveLength(12);
+    expect(seq.slice(0, 3).map(t => t.pid)).toEqual([me, me, me]);
+    expect(seq.slice(1, 3).map(t => t.early)).toEqual(['Crunch Time', 'Crunch Time']);
+    expect(seatTurns(s, me)[me].say).toBe('your turn, then again');
+    expect(turnPlaces(s, me).places[me].title).toMatch(/taken early \(Crunch Time\), not an extra one/);
+    // the seat after the early turns says next, and every other seat's count matches the queue
+    const r = turnRail(s);
+    const after = r.next.find(p => p !== me);
+    expect(seatTurns(s, after)[after].say).toBe(`your turn in ${r.next.indexOf(after) + 1}`);
+    // play into the early turn: the headline names Crunch Time, not "extra turn"
+    s = until(s, t => t.pending && t.pending.kind === 'place' && (t.turns || []).length === 2);
+    expect(s.current).toBe(me);
+    const c = currentTurn(s);
+    expect(c.again).toBe(true);
+    expect(c.early).toBe('Crunch Time');
   });
 });

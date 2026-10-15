@@ -159,7 +159,7 @@ const S = {
     windup: [['1', 'purple', '/', 'w']],
     planahead: [['1', 'purple', '/', 'wo']],
     overtime: [['1', 'turn']],
-    rally: [['2', 'turn']],
+    rally: [['2', 'wo']], // your next 2 minions, now (not extra turns)
   },
   silver: {
     toast: r => [[`${3 * r}`, 'silver'], ['rr', '+1']],

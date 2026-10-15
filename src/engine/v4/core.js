@@ -359,6 +359,8 @@ function advance(state) {
 function inputFor(state, task) {
   const p = task.p !== undefined ? state.players[task.p] : null;
   switch (task.t) {
+    // the preview's stop (preview.js): the round's turns wait behind it, there for content to read (Crunch Time), never run
+    case 'previewHold': return { kind: 'hold', prompt: '', options: [{ id: 'hold', label: '', kind: 'hold' }] };
     case 'setupPick':
       return {
         kind: 'setup', prompt: `${p.name}: pick a starting resource (${task.k} of 2)`,
@@ -749,6 +751,21 @@ export function turnRail(state) {
   const current = state.current ?? null;
   return { done: current != null ? taken.slice(0, -1) : [...taken], current, next: state.queue.filter(t => t.t === 'turn').map(t => t.p) };
 }
+/**
+ * This round's planned order (state.order: the snake, then extra minions) with the turns players took early moved up
+ * (Crunch Time: "taking two immediate turns with existing minions", Cory 2026-10-15). state.order itself keeps the
+ * round's first pass, which seats and next round's tiebreak read. Returns { order: [pid], early: [why|null], src:
+ * [index each turn had in state.order] }.
+ */
+export function roundOrder(state) {
+  const order = [...(state.order || [])], early = order.map(() => null), src = order.map((_, i) => i);
+  const e = state.early;
+  if (e && e.round === state.round) for (const m of e.moves) {
+    const [pid] = order.splice(m.from, 1); early.splice(m.from, 1); const [i] = src.splice(m.from, 1);
+    order.splice(m.to, 0, pid); early.splice(m.to, 0, m.why); src.splice(m.to, 0, i);
+  }
+  return { order, early, src };
+}
 /** Workers p had this round (Extra Hand adds to the round's count); older saves fall back to the round's count. */
 export const roundWorkers = (state, p) => p.workers ?? WORKERS[Math.max(1, state.round) - 1];
 
@@ -1062,6 +1079,8 @@ function ctxFor(state) {
     price: (p, uid, how) => memberPrice(state, p, uid, how),
     payChoices: (p, uid, how) => paymentChoices(state, p, uid, how),
     log: text => log(state, text),
+    /** This round's order with turns taken early moved up (roundOrder). */
+    roundOrder: () => roundOrder(state),
     cardLeaves: (p, uid) => cardLeaves(state, p, uid),
     /** Run fn on behalf of owner's member `name` (a hook content code calls itself, e.g. Choir reacting to a copy):
      *  whatever it changes and doesn't log is logged under that name, like the engine's own member hooks. */

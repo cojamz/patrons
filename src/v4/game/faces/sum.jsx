@@ -78,7 +78,7 @@ const SUMS = {
   'purple.windup': ({ n }) => [R('purple', plus(n(0, 1))), PER, MIN()], //                         +1⧗ / ♟       (on the board)
   'purple.planahead': ({ n }) => [R('purple', plus(n(0, 2))), PER, MIN({ left: true })], //         +2⧗ / ♙       (still to place)
   'purple.overtime': ({ n }) => [AGAIN(n(0, 1))], //                                                 1↻           (free)
-  'purple.rally': ({ n }) => [AGAIN(n(0, 2))], //                                                    2↻           (free)
+  'purple.rally': ({ n }) => [NUM(n(0, 2)), MIN({ left: true }), TAGT('now')], //                    2♙ [now]     (your next turns, not extra)
   // silver: generous gains that spill on everyone
   'silver.toast': ({ n, r }) => [R('silver', plus(n(0, 3) * r)), DOT, HOOD({ all: true }), R('silver', '+1')], // +6🔔 · ☗☗+1🔔
   'silver.gift': () => [R('silver', '+2'), R('any', '+2'), CUT, DOT, HOOD({ all: true }), R('any', '+1')], //  +2🔔 +2◌ · ☗☗+1◌

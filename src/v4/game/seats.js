@@ -40,7 +40,7 @@ export function turnPlaces(state, me = null) {
     const now = k === 0 && state.current === p.id;
     const label = now ? 'now' : k === 0 ? 'next' : k === 1 ? 'next' : `in ${k}`;
     const again = twice ? ', then again right after' : '';
-    const why = twice ? (seq[k + 1].kind === 'snake' ? ' In snake order, whoever ends a pass starts the next.' : ` ${seq[k + 1].kind === 'hand' ? 'An extra minion' : 'An extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''}.`) : '';
+    const why = twice ? (seq[k + 1].early ? ` A turn taken early (${seq[k + 1].early}), not an extra one.` : seq[k + 1].kind === 'snake' ? ' In snake order, whoever ends a pass starts the next.' : ` ${seq[k + 1].kind === 'hand' ? 'An extra minion' : 'An extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''}.`) : '';
     const what = now ? 'Placing now' : label === 'next' ? 'Places next' : `Places in ${k} turns`;
     // whoever opened the round because a member says so says which (w3a A2: "P3 picks first" with no reason)
     const firstBy = state.order && state.order[0] === p.id ? firstPickWhy(state, p.id) : null;
