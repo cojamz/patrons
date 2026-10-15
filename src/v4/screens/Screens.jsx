@@ -5,6 +5,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
 import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
 import { CLASSIC, spheres, sphereName, tableProblem, randomTable, urlTable } from '../tables.js';
+import { panelText } from '../game/panelText.js';
 import { GAME_NAME, VERSION } from '../version.js';
 import { copyText } from '../Recovery.jsx';
 import { EmojiButton, EmojiFace, emojiName } from './EmojiPicker.jsx';
@@ -140,7 +141,7 @@ export function TablePicker({ value, onChange, readOnly = false }) {
         </div>
       ) : (
         <>
-          <p className="hint">Pick 4, in wheel order. <span className="num">{quadrants.length}</span>/4</p>
+          <p className="hint">Pick 4: they go round the wheel in the order you pick them (the corner number). <span className="num">{quadrants.length}</span> of 4</p>
           <div className="sphere-grid">
             {spheres().map(id => {
               const on = quadrants.includes(id);
@@ -148,7 +149,7 @@ export function TablePicker({ value, onChange, readOnly = false }) {
               return (
                 <button key={id} type="button" className={`sphere${on ? ' on' : ''}`} aria-pressed={on} data-sphere={id}
                   disabled={!on && (quadrants.length >= 4 || clash)} style={{ '--c': `var(--${id})` }} onClick={() => toggle(id)}
-                  title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : quadrant(id).scoring.label}>
+                  title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : sphereHint(id)}>
                   <i className="dot" />{on && <span className="ord num">{quadrants.indexOf(id) + 1}</span>}
                   <b>{sphereName(id)}</b><small>{quadrant(id).scoring.label}</small>
                 </button>
@@ -161,8 +162,15 @@ export function TablePicker({ value, onChange, readOnly = false }) {
     </div>
   );
 }
+/** What a sphere does, in its own panels' words (RC1 sweep 6: the chips said only how it scores): "Most gold. Its
+ *  round I spaces: +3 gold, pick who gets 1 · +2 gold · Save 4 on next member." The resource dot is a word here. */
+export function sphereHint(id) {
+  const q = quadrant(id);
+  const lines = q.actions.filter(a => a.ring === 1).map(a => { const t = panelText(id, a, 1); const glue = t.verb || /^(from|per|then|and|on|in|of|for|to)\b/.test(t.second || '') ? ' ' : ', '; return [t.main || t.verb, t.second].filter(Boolean).join(glue).replace(/@f/g, 'follower'); });
+  return `${q.scoring.label}. Its round I spaces: ${lines.join(' · ')}.`;
+}
 function TableChip({ id }) {
-  return <span className="table-chip" style={{ '--c': `var(--${id})` }} title={quadrant(id).scoring.label}><i className="dot" />{sphereName(id)}</span>;
+  return <span className="table-chip" style={{ '--c': `var(--${id})` }} title={sphereHint(id)}><i className="dot" />{sphereName(id)}</span>;
 }
 
 // Every seat wears an emoji, none twice: the first person starts with the one this browser picked last, everyone

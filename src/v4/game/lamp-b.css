@@ -33,7 +33,7 @@
 .lt-card .art{position:relative;height:50px;margin:4px 4px 0;border-radius:4px;display:grid;place-items:center;flex:none;
   background:radial-gradient(circle at 50% 70%, color-mix(in srgb,var(--q) 30%,var(--paper)), color-mix(in srgb,var(--q) 12%,var(--paper-2)) 70%);box-shadow:inset 0 0 0 1px rgba(42,31,23,.18)}
 .lt-card .nm{font-family:var(--serif);font-weight:700;font-size:12px;line-height:1.1;margin:3px 4px 0;text-align:center;color:var(--paper-ink);display:block;overflow-wrap:anywhere;hyphens:auto}
-.lt-card .ft{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:2px;padding:3px 5px 4px;border-top:1px solid rgba(42,31,23,.16);font-size:13.5px;font-weight:700;color:var(--paper-ink)}
+.lt-card .ft{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:2px;padding:3px 5px 4px;border-top:1px solid rgba(42,31,23,.16);font-size:13px;font-weight:700;color:var(--paper-ink)}
 .lt-card .ft .res-glyph{width:14px;height:14px}
 .lt-card .ft .pip{width:12px;height:12px}
 .lt-card .ft .follower-mark{width:13px;height:13px}
@@ -72,7 +72,7 @@
 .lt-rates .rt-trade b{font-weight:700;font-size:17px;color:var(--paper-ink)}
 .lt-rates .rt-trade .pip.wild{width:12px;height:12px;margin:0 2px 0 1px}
 .lt-rates .rt-trade .follower-mark{width:13px;height:13px;color:var(--paper-ink);margin-left:1px}
-.lt-rates .rt-left{font-family:var(--sans);font-size:10.5px;font-weight:600;line-height:1;color:var(--paper-ink-3);letter-spacing:.02em}
+.lt-rates .rt-left{font-family:var(--sans);font-size:11px;font-weight:600;line-height:1;color:var(--paper-ink-3);letter-spacing:.02em}
 .lt-rates .lt-rate.lit{box-shadow:0 0 0 1px color-mix(in srgb,var(--paper-ink) 45%,transparent),inset 0 0 0 2px var(--paper),0 0 0 3px rgba(var(--lamp,255,206,140),.55),0 0 18px rgba(var(--lamp,255,206,140),.35)}
 .lt-rates .lt-rate.can:hover{background:linear-gradient(180deg,#fff7e6,var(--paper));transform:translateY(-2px)}
 .lt-rates .lt-rate.dim{filter:brightness(.72) saturate(.75)}
@@ -120,12 +120,12 @@
 .lt-stack.zero{opacity:.32}
 .lt-workers{display:flex;flex-direction:column;align-items:center;gap:4px}
 .lt-workers .figs{display:flex;gap:2px}
-.lt-workers small,.lt-cult-foot small{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
+.lt-workers small,.lt-cult-foot small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
 .lt-mycult{display:flex;flex-direction:column;gap:4px;min-width:0}
 .lt-mycult .crowd{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;max-width:420px}
 .lt-member{display:inline-flex;flex-direction:column;align-items:center;gap:2px;position:relative}
 .lt-member .fig{display:inline-block;position:relative;border-radius:4px}
-.lt-member .x{position:absolute;right:-4px;bottom:-2px;font-size:10px;color:var(--cream);background:var(--walnut,#1d1611);border-radius:6px;padding:0 3px}
+.lt-member .x{position:absolute;right:-4px;bottom:-2px;font-size:11px;color:var(--cream);background:var(--walnut,#1d1611);border-radius:6px;padding:0 3px}
 .lt-member.used .sprite{opacity:.45}
 .lt-cult-foot{display:flex;align-items:center;gap:10px}
 .fol-mark{display:inline-flex;align-items:center;gap:6px;color:var(--cream)}
@@ -143,9 +143,9 @@
 .lt-card-body h4{font-family:var(--serif);font-weight:700;font-size:20px;line-height:1;color:var(--paper-ink);margin:0}
 .lt-card-body h4 small{display:block;font-family:var(--sans);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-3);margin-top:4px}
 .lt-card-body p{font-size:14px;line-height:1.35;color:var(--paper-ink);margin:9px 0 0}
-.lt-yd{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(42,31,23,.28);font-size:13.5px;color:var(--paper-ink);display:flex;flex-direction:column;gap:5px}
+.lt-yd{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(42,31,23,.28);font-size:13px;color:var(--paper-ink);display:flex;flex-direction:column;gap:5px}
 .lt-yd-row{display:flex;align-items:baseline;gap:6px}
-.lt-yd-row .k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-3);width:66px;flex:none;line-height:1.5}
+.lt-yd-row .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-3);width:66px;flex:none;line-height:1.5}
 .lt-yd-row .v{min-width:0;flex:1}
 .lt-yd .youd-get{border:0;padding:0;margin:0;color:var(--paper-ink)}
 .lt-yd .youd-get b{display:none}
@@ -164,7 +164,7 @@
 .lt-drawer h3{font-family:var(--serif);font-size:22px;margin:0;color:var(--paper-ink)}
 .lt-chron{overflow-y:auto;padding:0 16px 20px;overscroll-behavior:contain}
 .lt-chron h4{font-family:var(--serif);font-size:15px;color:var(--paper-ink-3);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
-.lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.35;color:var(--paper-ink)}
+.lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.35;color:var(--paper-ink)}
 .lt-chron li{padding:3px 0;border-bottom:1px solid rgba(42,31,23,.08)}
 
 /* ---------- leaders and their floating minions (a slow 1px bob, each on its own period and phase) ---------- */
@@ -200,7 +200,7 @@
 .lt-cult-seat .cs-colors i{display:block;height:7px;width:calc(var(--n) * 7px);background:radial-gradient(circle at 3.5px 3.5px,var(--c) 2.6px,transparent 3.1px) 0 0/7px 7px repeat-x}
 /* what its members make each round, beside what it holds now */
 .lt-cult-seat .cs-income{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font-size:12px;font-weight:700;color:var(--cream-2);white-space:nowrap;cursor:help}
-.lt-cult-seat .cs-income small{font-size:10.5px;font-weight:500;letter-spacing:.04em;color:var(--cream-3)}
+.lt-cult-seat .cs-income small{font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--cream-3)}
 .lt-cult-seat .cs-inc{display:inline-flex;align-items:center;gap:1px}
 .lt-cult-seat .cs-inc .follower-mark{color:var(--cream-2)}
 .lt-cult-seat .cs-total .follower-mark{color:var(--cream-2)}
@@ -208,7 +208,7 @@
 /* yours: the same chair, ~1.15× (type and spacing; pixel figures keep whole-pixel sizes) */
 .lt-cult-seat.mine{padding:4px 7px 5px;gap:4px}
 .lt-cult-seat.mine .cs-who b{font-size:18px}
-.lt-cult-seat.mine .cs-who small{font-size:12.5px}
+.lt-cult-seat.mine .cs-who small{font-size:13px}
 .lt-cult-seat.mine .cs-crowd{gap:3px 4px}
 .lt-cult-seat .cs-crowd{display:flex;flex-wrap:wrap;gap:1px 2px;align-items:flex-end;min-height:24px}
 .lt-cult-seat .cs-member{display:inline-flex;flex-direction:column;align-items:center;gap:2px;position:relative}
@@ -271,10 +271,10 @@
 .lt-deck.low .n{color:#f2a654}
 .lt-deck.last .n{color:#ec7a4c}
 .lt-deck.empty .back{background:none;box-shadow:none;border:1.5px dashed rgba(243,230,200,.32);box-sizing:border-box}
-.lt-deck.empty .n{font-size:12.5px;font-weight:500;font-style:italic;color:var(--cream-3);text-shadow:none}
+.lt-deck.empty .n{font-size:13px;font-weight:500;font-style:italic;color:var(--cream-3);text-shadow:none}
 .lt-deck-card .lt-deck-mini{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:6px;background:linear-gradient(180deg,#4b2e41,#36202f);box-shadow:inset 0 0 0 1px rgba(217,166,58,.7);flex:none}
 .lt-deck-colors{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
-.lt-deck-colors li{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--paper-ink)}
+.lt-deck-colors li{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--paper-ink)}
 .lt-deck-colors li .k{flex:1}
 .lt-deck-colors li b{font-family:var(--serif);font-weight:700;font-size:15px}
 .lt-deck-colors li.none{color:var(--paper-ink-3)}
@@ -289,7 +289,7 @@
 .lt-cult-seat .cs-who .cs-order{align-self:flex-start}
 .lt-cult-seat .cs-crowd:empty{display:none}
 /* a seat's place in this round's turn order */
-.cs-order{display:inline-block;margin-left:6px;padding:0 5px;border-radius:7px;font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:14px;color:var(--cream-3);box-shadow:inset 0 0 0 1px rgba(243,230,200,.16);vertical-align:2px;cursor:help}
+.cs-order{display:inline-block;margin-left:6px;padding:0 5px;border-radius:7px;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:14px;color:var(--cream-3);box-shadow:inset 0 0 0 1px rgba(243,230,200,.16);vertical-align:2px;cursor:help}
 .cs-order.now,.cs-order.first{color:var(--paper-ink);background:var(--lamp-ink);box-shadow:none}
 .cs-order.next{color:var(--lamp-ink);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.55)}
 .cs-order.done{opacity:.55}
@@ -329,7 +329,7 @@
 /* the seat's hover: its build grouped by what each member does, a line each (name, then its effect) */
 .seat-card .seat-group .v{display:flex;flex-direction:column;gap:2px;min-width:0}
 .seat-card .seat-member{display:block;line-height:1.3;min-width:0}
-.seat-card .seat-effect{display:block;font-size:12.5px;color:var(--paper-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+.seat-card .seat-effect{display:block;font-size:13px;color:var(--paper-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
 .seat-card .seat-rank{font-size:12px;color:var(--paper-ink-3)}
 /* the rim's standings card opens with what its prize pays, in words */
 .lt-prize-line{margin:0 0 6px;font-size:13px;line-height:1.35;font-weight:700}
@@ -337,7 +337,7 @@
 /* a chair's build row (the plate's rival panel): what its members make each round, and what it just took */
 .lt-cult-seat .cs-build{display:flex;align-items:center;gap:14px;min-width:0;white-space:nowrap}
 .lt-cult-seat .cs-build .cs-income{margin-left:0}
-.lt-cult-seat .cs-build small{font-size:12.5px;font-weight:500;letter-spacing:0;color:var(--cream-3)}
+.lt-cult-seat .cs-build small{font-size:13px;font-weight:500;letter-spacing:0;color:var(--cream-3)}
 .lt-cult-seat .cs-build .cs-inc b{font-weight:800;font-size:15px;color:var(--cream)}
 .lt-cult-seat .cs-last{display:inline-flex;align-items:center;gap:5px;margin-left:auto;min-width:0;cursor:help}
 .lt-cult-seat .cs-last b{font-size:14px;font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis}
@@ -359,7 +359,7 @@
 .lt-card.card.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
 .lt-card.card.can:hover{background:var(--paper-lit,#fbf6ea);transform:translateY(-2px)}
 .lt-card .art{height:54px;margin:0;border-radius:0;box-shadow:none;background:color-mix(in srgb,var(--q) 16%,var(--pl-paper,#f2e8d2))}
-.lt-card .nm{font-family:var(--sans);font-size:10px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);margin:6px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
+.lt-card .nm{font-family:var(--sans);font-size:11px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);margin:6px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
 .lt-card .ft{height:20px;margin:auto 6px 0;padding:0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-family:var(--sans);font-size:12px;font-weight:500;color:var(--pl-ink,#2b2018)}
 .lt-card .ft .num,.lt-card .val b{font-weight:800}
 .lt-card .val{font-family:var(--sans);gap:1px}
@@ -391,6 +391,8 @@
 .lt-rates .rt-trade .follower-mark{color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-left{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--pl-ink-3,#a39078);margin-top:3px}
 
+/* type on the table and its cards (design pod, 2026-10-15): 11 (small caps labels) · 13 (fine print, lines) · 16 (card
+   sentences and names) · 18 and up for numbers that lead; no half sizes (10.5, 12.5, 13.5) and no 16-beside-17 near misses */
 /* the hover shell: the plate's paper card (lit paper, one 8px corner, a soft lift), 16px in, quiet hairlines */
 .lt-hover.popover,.popover:has(> .lt-note),.popover:has(.tip-body > .mc){background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);border:0;border-radius:var(--corner,8px);
   box-shadow:0 0 0 1px rgba(43,32,24,.10),0 12px 32px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3)}
@@ -422,15 +424,15 @@
 .mc .mc-art{flex:none;width:48px;height:48px;border-radius:var(--corner-art,4px);background:color-mix(in srgb,var(--c) 16%,var(--pl-paper,#f2e8d2));display:grid;place-items:center;overflow:hidden}
 .mc .mc-id{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .mc .mc-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.mc .mc-name{font-size:17px;line-height:22px;font-weight:800;color:var(--pl-ink,#2b2018)}
-.mc .mc-worth{font-size:17px;line-height:22px;white-space:nowrap;display:inline-flex;align-items:baseline}
+.mc .mc-name{font-size:16px;line-height:22px;font-weight:800;color:var(--pl-ink,#2b2018)}
+.mc .mc-worth{font-size:16px;line-height:22px;white-space:nowrap;display:inline-flex;align-items:baseline}
 .mc .mc-worth .follower-mark{color:var(--pl-ink,#2b2018)}
 .mc small,.mc .mc-cost{display:block;font-size:13px;line-height:18px;color:var(--pl-ink-2,#6e5c49)}
 .mc .mc-cost .cost-dots{display:inline-flex;gap:6px;margin-left:3px;color:var(--pl-ink,#2b2018)}
 .mc .cost-dots .cd{display:inline-flex;align-items:baseline}
 .mc .mc-text{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:16px;line-height:22px;color:var(--pl-ink,#2b2018);text-wrap:pretty}
 .mc .mc-text .pip.glyph,.mc .mc-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
-.mc .mc-live{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:12.5px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+.mc .mc-live{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:13px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
 .mc .mc-live + .mc-live{margin-top:2px;padding-top:0;border-top:0}
 .mc .mc-live .cost-dots{display:inline-flex;gap:4px;color:var(--pl-ink,#2b2018)}
 .mc .owner i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pc);margin-right:5px;vertical-align:0}
@@ -468,7 +470,7 @@
 .lt-rates .rt-left{position:absolute;left:0;right:0;bottom:4px;margin:0;text-align:center}
 .lt-rates .rt-trade .to{margin:0 .3em;font-weight:700;color:var(--pl-ink-2,#6e5c49)}
 /* the name gets two short lines' room, centred, so a long name wraps whole instead of shrinking */
-.lt-card .nm{height:26px;margin:3px 4px 0;display:flex;align-items:center;justify-content:center;text-align:center;white-space:normal;line-height:11px;overflow-wrap:normal}
+.lt-card .nm{height:26px;margin:3px 4px 0;display:flex;align-items:center;justify-content:center;text-align:center;white-space:normal;line-height:11px;overflow-wrap:normal;hyphens:manual}
 .mc .mc-live .cost-dots{margin:0 .2em}
 /* a card that only counts: its head is the whole card, so its live line sits right under it */
 .mc .mc-head + .mc-live{margin-top:12px}

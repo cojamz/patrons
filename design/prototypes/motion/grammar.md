@@ -111,7 +111,13 @@ Rivals' triggers on a buy (Tax Collector, Tipster, Extortionist) play after the 
 
 **B5. Switch toggle** (Midas, Translator: "you can switch it off or on when you buy"). The chip flips on its vertical axis (200ms, ease-in-out) to show its new face (on: full color; off: faded). No flight.
 
-**B6. Contest prizes in the Reckoning** (`contest` cause, `followers` from a rim). One rim at a time, in the wheel's order starting at the top. The rim lights (the others step down to 60% for the Reckoning). The leader's emoji on the rim hops (180ms). The prize lifts off the rim's engraving as the language's own "+4" follower bundle and arcs to the winner's count; tied winners get a fan (one bundle each, 40ms apart). The count rolls and settles. A rest of 120ms, then the next rim. A rim nobody scores pulses once, dim, and moves on (250ms). Members that act at round end (Investor, Dyer, Sower) play before the first rim, as triggers, because the rims count what's held after them. Then the minions fly home (all at once, 30ms apart) and B1 begins.
+**B6. Contest prizes in the Reckoning** (`contest` cause, `followers` from a rim). Cory (decisions.md, 2026-10-15): the round-end scoring was "way too fast and confusing"; go "one quadrant at a time, readable, with totals climbing as each prize lands". So each rim gets a full beat of its own; what's cut is still time, never the steps. One rim at a time, in the wheel's order from the top. Per rim at Steady (about 1.6s):
+1. The rim lights; the other rims and the spaces step down to 60% (0ms). The explanation ("Most gold · the gold you hold when the round ends") sits where it never covers the rim being scored.
+2. What it counts appears beside each seat, seat by seat, 100ms apart, each count stamping in (0–400). This is the counting; there's no "counting…" wait with nothing moving.
+3. The leader's count and their emoji on the rim hop together (450–630).
+4. The prize lifts off the rim's engraving as the language's own "+4" follower bundle and arcs to the winner's count (550–1000); tied winners get a fan (one bundle each, 40ms apart).
+5. The count rolls on landing (1000–1240) and settles; then a 300ms rest, and the next rim.
+A rim nobody scores pulses once, dim, with "no one" beside it, and moves on (400ms). Members that act at round end (Investor, Dyer, Sower) play before the first rim, as triggers, because the rims count what's held after them. Then the minions fly home (all at once, 30ms apart) and B1 begins.
 
 **B7. End-game bonuses** (`final` cause). After round III's rims. Player by player, from fewest followers to most (the suspense builds toward the leader); in a player, each "Game end" member hops in turn, 250ms apart, and its followers arc to the count (M12). A loss (Lender) runs backwards. Then the seats slide into rank order (400ms) and only the winner's seat takes the light.
 
@@ -156,7 +162,7 @@ The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hov
 | Deal: per card / stagger | 220 / 30 | 300 / 40 | 420 / 60 |
 | Next beat starts when this beat's last piece is … along | half | two-thirds | landed + 60 |
 | Breath between one player's turn and the next | 60 | 120 | 300 |
-| Reckoning: per rim (light, hop, prize, rest) | 500 | 900 | 1300 |
+| Reckoning: per rim (light, counts, hop, prize, roll, rest) | 900 | 1600 | 2400 |
 | Minions home: each / stagger | 260 / 20 | 340 / 30 | 480 / 45 |
 | Round-start income: seat stagger | 120 | 200 | 320 |
 
@@ -168,7 +174,7 @@ The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hov
 | Your whole turn's motion (both chains) | ~1.0s | ~1.6s | ~2.4s |
 | A rival's turn: place, gain, recruit, breath | ~1.1s | ~1.85s | ~2.9s |
 | A rival's turn with no buy | ~0.75s | ~1.2s | ~1.9s |
-| The Reckoning, four rims | ~2.2s | ~3.8s | ~5.6s |
+| The Reckoning, four rims | ~3.6s | ~6.4s | ~9.6s |
 
 The speed setting also sets the bots' pace: a bot's next turn starts when the last chain (plus the breath) is done, not on a separate timer. `BOT.pace` becomes a floor for a turn with nothing to show (a pass), not a fixed hold on top of the motion.
 
@@ -188,7 +194,7 @@ Measured today on the quiet box (design/eval/perf/quiet-baseline-b3ac40c.md): a 
 | H7 | Your placement chain with a simple gain (click → last landing) | ≤ 0.8s |
 | H8 | Your plain recruit (click → worth landed on the count) | ≤ 1.0s |
 | H9 | Any one chain except the Reckoning | ≤ 3.0s (the cap) |
-| H10 | The Reckoning, first rim lit → last count settled | ≤ 4.5s |
+| H10 | The Reckoning, first rim lit → last count settled | ≤ 7s at Steady, and no still stretch longer than 400ms (Cory wants it readable, one quadrant at a time) |
 | H11 | Skip (click or Space) → every number final and every ghost gone | ≤ 120ms |
 | H12 | Your turn starts → your spaces accept a click | 0ms (the glow may still be fading in) |
 | H13 | Truth: 50ms after a chain ends or is skipped, every number on the table equals the engine's | always (a gate) |
@@ -359,6 +365,8 @@ Rims clockwise from the top: Most White, Most Purple, Most Gold, Most Green. You
 | 2960 | A "+4" bundle arcs to your count, ~520px, 356ms; it lands at 3316, rolls to 3556, full settle and your 60ms hold. |
 | 3740 | Most Green pulses; P3's emoji hops; the bundle leaves at 3900, lands about 4310, rolls to 4550. |
 | 4670 | Done: 4.67s from the round's end (3.65s from the first rim, inside H10). The round card shows the standings. |
+
+(These per-rim timings are the first draft's, about 0.9s a rim. Since Cory asked for a readable, one-quadrant-at-a-time Reckoning, B6 gives each rim about 1.6s at Steady; the order of steps above holds.)
 
 After the round card: the minions fly home, all at once, 30ms apart (16 minions, 0–820), then round III's income seat by seat, 200ms apart (about 1.1s), then the first turn.
 

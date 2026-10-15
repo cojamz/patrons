@@ -72,7 +72,9 @@ async function resumeRich(prof) {
 }
 
 async function place(page, go, prof) {
-  const slot = await page.waitForSelector('.slot.can .base', { timeout: 8000 });
+  await page.waitForSelector('.slot.can .base', { timeout: 8000 });
+  // a plain gain space ("+3 blue"), so no question (a seat or a space to pick on the board) stands between it and the buy
+  const slot = await (await page.evaluateHandle(() => { const s = [...document.querySelectorAll('.slot.can')].find(e => /: \+\d+ \w+\.( Open)/.test(e.getAttribute('aria-label') || '')) || document.querySelector('.slot.can'); return s.querySelector('.base'); })).asElement();
   await page.evaluate(() => { window.__ghosts = []; });
   const bb = await slot.boundingBox();
   if (prof.ctx.hasTouch) await page.touchscreen.tap(bb.x + bb.width / 2, bb.y + bb.height / 2); else await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);

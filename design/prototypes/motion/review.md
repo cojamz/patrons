@@ -102,3 +102,39 @@ The good, load-free: the payment really comes before the purchase (the coin leav
 25 (again): when the pay dialog closed, the "Intro Offer" hover opened under the resting pointer and covered the middle of the wheel from 0 to about 900ms, the whole time the coins were in flight.
 
 The good: every coin goes into the right tile (they pass over the 2-for-1 on the way, which reads fine), and the "+10" bundle with its trail reads as one big handful.
+
+## Round 7 (05:55, re-filmed on the 05:44–05:47 code)
+`review-r7-gain-stack-filmstrip.png`, `review-r7-recruit-filmstrip.png`.
+
+Fixed (seen in the filmstrips):
+- **19:** the stacks no longer flash their final number at the click. Your gold reads 5 at 0ms and 5 until the bundle lands.
+- **20 (mostly):** the roll now shows every number: 5 → 7 → 8 → 9 → 10 between 600 and 850ms, with Prospector's +1 folded in, and no jump. Left over: it starts about 120ms after the bundle's lead dot lands (about 450–480ms). Start it on the lead's landing.
+- **11:** the refill is dealt after the bought card has left (the Green Helper deals in at about 600–700ms, and the Intern leaves the slot at about 450).
+- **26:** the lifted card is solid now.
+- The recruit reads as written: the card lifts, the red coin leaves your stack at about 200ms and travels to the card, the card leaves at about 450 and arcs over the wheel to your crowd (lands at about 850), and its follower rises from the chip at about 900 and reaches your count at about 1050.
+
+Still wrong:
+- **23 (the chip):** at 0ms the Intern is already standing in your crowd, and the shop slot is empty. At 50ms the chip is gone and the card is back in the shop, lifted. The numbers are held in time now; the recruited chip and the shop card aren't. Hide the incoming chip, and keep the bought card's slot, in the same layout effect that sets the holds.
+- **25:** the "Green Helper" hover still opens under the resting pointer and sits over the shop for the whole chain.
+- **14:** the "+4" label still lands over the stack's number ("5̶+4" at 450ms).
+- Not re-checked this round: 7, 21, 22, 24, 27, 28.
+
+## Round 8 (06:03, filmstrip of round II's Reckoning; Reckoning.jsx as it stands)
+`review-r8-reckoning-overview.png` (0–6000ms, every 300ms), `review-r8-reckoning-prize.png` (the first prize, 1200–1950ms). Seed 1, your last placement of round II, then pass.
+
+Cory asked for this slower and clearer ("way too fast and confusing… one quadrant at a time, readable, with totals climbing as each prize lands", decisions.md). So the grammar's B6 now gives each rim about 1.6s at Steady, not my first draft's 0.9s (H10 is now ≤ 7s for four rims). The build takes about 2.7s a rim (11s for four), and most of the extra is still time:
+
+29. **The rim being scored is hidden.** The "Most gold" card sits at the bottom of the wheel, over the Most Gold rim. The rim's light and its leader's emoji can't be seen, and the "+4" appears from behind the card's corner (1350ms, lower left). B6: the explanation never covers the rim it scores. Put it on the far side of the wheel from that rim, or beside the seats; the prize should visibly lift off the engraving.
+30. **"counting…" is 900ms with nothing moving** (300 → 1200ms, and again 3000 → 3900). Meanwhile each seat's count (7, 5, 8, 3) is already shown beside it from the first frame. Make the counting the motion: the counts stamp in seat by seat, 100ms apart, then the leader's count and emoji hop. The suspense stays, and the dead air goes.
+31. **The winner's count ticks about 500ms after the prize lands.** The "+4" reaches P2's count at about 1800ms; it still reads 10 at 1950 and 14 by 2400. It should roll on the landing (1800–2040). Same root as 28 (`Tick` runs on its own schedule).
+32. **Per rim: about 2.7s now, 1.6s targeted.** Taking out 30's still time (about 900ms) and 31's lag (about 400ms) gets there without hurrying any step.
+
+The good: one quadrant at a time; the measured count beside every seat, with the leader's ringed, reads at a glance (the "counted from" idea of B9); and the prize's flight from the rim's end to the winner's count is clear and well paced (about 450ms).
+
+## Round 9 (06:06, filmstrip of your Collect Debts: 3 gold taken from P2, with Prospector)
+`review-r9-steal-filmstrip.png` (0–1200ms, every 100ms; your three picks answered at 0, 50 and 100ms).
+
+The take reads right. P2's gold is lit, the pieces leave it and travel straight down to your gold (no arc: a take, not a gift), and P2's number drops as they go (3 → 0 by 400ms). Prospector's +1 then leaves the member at about 600ms.
+
+33. **Numbers trail their pieces, everywhere.** The three taken pieces are in your gold by about 500ms, but your gold reads 5 → 6 (500) → 7 (600) → 8 (800) → 9 (900). The last tick is about 400ms after the last stolen piece, and about 200ms after Prospector's. With 20's residue (the gain roll), 28 (the follower count) and 31 (the Reckoning prize), that makes four places where the number lags its piece by 100–500ms. Root fix, once for all of them: drive each destination's number from its piece's `finished` (or the bundle lead's), not from a timer or `Tick`'s own schedule. Principle 4 is the heart of "obvious": you can count along only if the number changes the instant the piece arrives.
+34. **A ringed gold dot sits still over your red stack from about 400 to 600ms.** A gold piece with a light halo rests over the red stack's dot, between your gold and blue, for about 200ms, then goes. It's neither a take (those land on the gold) nor Prospector's (that one leaves the member at 600). Find out what it is: a mis-aimed piece, a pick highlight left behind, or a ghost from the third pick's chain landing on the wrong place.

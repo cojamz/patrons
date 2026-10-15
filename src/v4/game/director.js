@@ -468,6 +468,9 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       }
     });
   }
+  // what starts at once plays now, before this commit's first paint (the lifted card, the hidden chip, your minion's
+  // stamp): never a frame of the end state first
+  while (chain.queue.length && chain.queue[0].at <= chain.clock) chain.queue.shift().fn(false);
   run();
   if (typeof window !== 'undefined') { window.__patronsChains = (window.__patronsChains || 0) + 1; window.__patronsChainMs = plan.total; }
   return plan;

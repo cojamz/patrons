@@ -90,7 +90,7 @@ async function load1(pack) {
   await page.click('[data-home="resume"]', { timeout: 60000 });
   await page.waitForSelector('.lt-shop .card', { timeout: 20000 });
   await restyle();
-  await page.mouse.move(4, 696); // park the pointer on the table's edge: no stray hover in the shot
+  await page.mouse.move(4, H - 4); // park the pointer on the table's edge: no stray hover in the shot
   await settle(900);
 }
 async function placeAndAnswer() {
@@ -104,7 +104,7 @@ async function placeAndAnswer() {
     await settle(300);
   }
 }
-async function park() { await page.mouse.move(4, 696); await settle(200); }
+async function park() { await page.mouse.move(4, H - 4); await settle(200); }
 async function passBuy() {
   const p = await page.$('.lt-prompt .pass[data-option]');
   if (p) await p.click().catch(() => {});

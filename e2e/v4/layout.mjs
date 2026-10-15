@@ -95,9 +95,11 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     const bb = await slot.boundingBox();
     await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
     await page.waitForTimeout(300);
-    for (let k = 0; k < 8 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
-      // a choice is answered where it's asked: a button, or on the board (a rival's seat or stack: lib/answer.mjs)
-      await answerChoice(page);
+    for (let k = 0; k < 16 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
+      // a choice is answered where it's asked: a button, or on the board (a rival's seat or stack: lib/answer.mjs);
+      // only while one is open, so a placement still landing never gets a second click on the table
+      // (never Pass, a buy or another space: the step can turn to the buy step between the check and the click)
+      if (await page.$('.lt[data-phase="choose"][data-yours="1"], .lt[data-phase="pay"][data-yours="1"]')) await answerChoice(page, { avoid: ['pass', 'card:', 'tier:', 'slot:', 'release:'] });
       await page.waitForTimeout(250);
     }
     await page.waitForSelector('.lt[data-phase="buy"][data-yours="1"]', { timeout: 5000 });

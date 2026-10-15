@@ -92,7 +92,9 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
   return (
     <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
       {turnOf && <TurnOf player={turnOf} />}
-      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `Pick a starting resource${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] ? ` (${pend.prompt.match(/\((\d) of 2\)/)[1]} of 2)` : ''}` : pend.prompt}</p>
+      {/* setup: the headline says "pick a starting resource (1 of 2)"; the panel says only which pick this is, not the
+          same sentence again (RC1 sweep 24) */}
+      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `Pick ${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] || 1} of 2` : pend.prompt}</p>
       {setup ? <><SetupTokens state={state} pend={pend} onPick={pick} busy={busy} /><ForSale state={state} /></>
         : trade ? <TradePicker state={state} pend={pend} onPick={pick} busy={busy} />
           : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}

@@ -4844,9 +4844,9 @@ var TABLE = {
   // your minion stands in the door at once, then settles
   trail: [140, 180, 240],
   // your minion's trail from the column
-  minionFly: [240, 380, 560],
+  minionFly: [220, 340, 520],
   // a rival's minion flight
-  readHold: [60, 160, 320],
+  readHold: [60, 130, 280],
   // after a rival places: which space, before anything flies
   pulse: [50, 90, 140],
   // a source about to give
@@ -4878,7 +4878,7 @@ var TABLE = {
   shopSlide: [180, 240, 320],
   deal: [220, 300, 420],
   dealStagger: [30, 40, 60],
-  breath: [80, 180, 360],
+  breath: [60, 120, 300],
   // between one player's turn and the next
   minionsHome: [260, 340, 480],
   minionsHomeStagger: [20, 30, 45],
@@ -5132,9 +5132,12 @@ function planChain(before, state, { mine: mine2 = [], measure = null } = {}) {
   };
   const sameRound = state.round === before.round;
   let pulsed = null;
-  const placed = sameRound ? Object.keys(state.slots).filter((k) => before.slots[k] === void 0) : [];
-  for (const key of placed) {
-    const pid = state.slots[key];
+  const placed = sameRound ? Object.keys(state.slots).filter((k) => before.slots[k] === void 0).map((k) => [k, state.slots[k]]) : [];
+  if (sameRound && state.squats) for (const k of Object.keys(state.squats)) {
+    const was = before.squats && before.squats[k] || [];
+    for (const pid of state.squats[k]) if (!was.includes(pid)) placed.push([k, pid]);
+  }
+  for (const [key, pid] of placed) {
     if (mine2.includes(pid)) {
       at(0, { op: "minion", pid, key, own: true, dur: MO.trail });
       at(0, { op: "pulse", place: { kind: "space", key }, dur: MO.ownStamp });

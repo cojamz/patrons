@@ -525,7 +525,7 @@ try {
     const bb = await sp.boundingBox();
     await pg.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
     // the space's question, answered where it's asked (Kickback: a rival's seat; lib/answer.mjs)
-    for (let k = 0; k < 8 && !(await pg.$('.lt[data-phase="buy"][data-yours="1"]')); k++) { await answerChoice(pg); await pg.waitForTimeout(250); }
+    for (let k = 0; k < 40 && !(await pg.$('.lt[data-phase="buy"][data-yours="1"]')); k++) { await answerChoice(pg); await pg.waitForTimeout(250); }
     const uid = await pg.evaluate(() => { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return s.shop.find(u => s.cards[u].def.startsWith('gold.') && s.cards[u].def !== 'gold.thrift'); });
     if (uid == null) fail('(q) no gold member in the shop to pay for', 'pay');
     else {

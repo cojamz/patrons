@@ -18,7 +18,8 @@ function save() {
   let s = createGame({ seats, seed });
   s.build = buildStamp();
   const rand = seededRandom(seed);
-  for (let n = 0; n < 3000 && !(s.round === wantRound && s.pending && s.pending.player === 0 && s.pending.kind === 'place'); n++) s = applyMove(s, chooseBotMove(s, rand));
+  const last = st => !process.env.RECKON || !st.queue.some(t => t.t === 'turn'); // RECKON=1: your placement is the round's last
+  for (let n = 0; n < 3000 && !(s.round === wantRound && s.pending && s.pending.player === 0 && s.pending.kind === 'place' && last(s)); n++) s = applyMove(s, chooseBotMove(s, rand));
   for (const r of s.resources) s.players[0].res[r] = Math.max(s.players[0].res[r] || 0, 5);
   for (const p of s.players.slice(1)) for (const r of s.resources) p.res[r] = Math.max(p.res[r] || 0, 3);
   return { config: { seats: seats.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal' }, state: s, undo: null, savedAt: Date.now() };
@@ -27,6 +28,7 @@ function save() {
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const ctx = await b.newContext({ viewport: { width: 1270, height: 700 } });
 const p = await ctx.newPage();
+if (process.env.REDUCED) await p.emulateMedia({ reducedMotion: 'reduce' });
 await p.addInitScript(() => {
   const list = (window.__fa = []);
   const orig = Element.prototype.animate;
@@ -68,7 +70,16 @@ const bb = await (await target.asElement().$('.base')).boundingBox();
 await p.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
 await p.clock.runFor(200);
 const frames = [];
-const shoot = async (tag, t) => { await p.evaluate(() => window.__sync()); const f = `${outdir}/${tag}${String(t).padStart(5, '0')}.png`; await p.screenshot({ path: f }); frames.push(f); };
+const answered = [];
+const shoot = async (tag, t) => {
+  if (process.env.SKIPAT && t === Number(process.env.SKIPAT)) { await p.keyboard.press('Space'); await p.clock.runFor(16); }
+  await p.evaluate(() => window.__sync()); const f = `${outdir}/${tag}${String(t).padStart(5, '0')}.png`; await p.screenshot({ path: f }); frames.push(f);
+  // ANSWER=1: answer your own choices as they come (the first live option on the board), and note when
+  if (process.env.ANSWER) {
+    const opt = await p.evaluateHandle(() => document.querySelector('.lt[data-yours="1"][data-phase="choose"]') && ([...document.querySelectorAll('[data-option]:not([disabled])')].find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && !e.closest('.menu, .lt-shop, .lt-rates') && !/^pass$|^tier:/.test(e.dataset.option); }) || null));
+    if (await opt.evaluate(e => !!e)) { answered.push({ t, option: await opt.evaluate(e => e.dataset.option) }); await opt.asElement().click(); }
+  }
+};
 await p.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
 if (mode === 'rival') {
   // land your chain at once, answer your choices, pass your buy, then film from the next rival's first motion
@@ -79,7 +90,7 @@ if (mode === 'rival') {
     const opt = await p.evaluateHandle(() => document.querySelector('.lt[data-yours="1"][data-phase="choose"]') && ([...document.querySelectorAll('[data-option]:not([disabled])')].find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && !e.closest('.menu, .lt-shop, .lt-rates') && !/^pass$|^tier:/.test(e.dataset.option); }) || null));
     if (await opt.evaluate(e => !!e)) await opt.asElement().click();
   }
-  await p.keyboard.press('Space');
+  if (!process.env.RECKON) await p.keyboard.press('Space');
   await p.clock.runFor(50);
 }
 if (mode === 'buy' || mode === 'rate') {
@@ -102,7 +113,7 @@ if (mode === 'buy' || mode === 'rate') {
   }
 }
 for (let t = 0; t <= MS; t += STEP) { await shoot(mode === 'rival' ? 'r' : mode === 'buy' ? 'b' : mode === 'rate' ? 'q' : 'f', t); await p.clock.runFor(STEP); }
-writeFileSync(`${outdir}/meta.json`, JSON.stringify({ label, speed, seed, step: STEP, frames: frames.length, mode }, null, 1));
+writeFileSync(`${outdir}/meta.json`, JSON.stringify({ label, speed, seed, step: STEP, frames: frames.length, mode, answered }, null, 1));
 console.log('space:', label, 'frames:', frames.length);
 await ctx.close();
 await b.close();

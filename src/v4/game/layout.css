@@ -9,7 +9,9 @@
     --col-l:340px;--col-r:clamp(276px, 22vw, 330px);--col-gap:18px;
     --turn-dock:since; /* GameScreen's turn card docks under the story of the turns */
     grid-template-columns:var(--col-l) minmax(0,1fr) var(--col-r);
-    grid-template-rows:54px minmax(0,1fr);
+    /* the question gets room for two lines (the buy step's, beside Release… and Pass, wraps at this width): the wheel is
+       bound by its width here, so the taller row costs it nothing */
+    grid-template-rows:72px minmax(0,1fr);
     grid-template-areas:"seats prompt shop" "seats wheel shop";
     column-gap:var(--col-gap);row-gap:6px;padding:8px 18px
   }
@@ -41,5 +43,5 @@
   /* setup: the starting-resource picker stands under the chairs (the column is empty until the turns begin), never
      over the wheel or the members you're choosing toward (layout gate l6) */
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:calc(-1 * var(--col-l) - var(--col-gap) + 44px);width:calc(var(--col-l) - 44px);
-    top:calc(var(--seats-end, 0px) + 20px - 60px);translate:none}
+    top:calc(var(--seats-end, 0px) + 20px - 78px);translate:none}
 }

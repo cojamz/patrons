@@ -160,7 +160,8 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       // pass, which holds a moment (MO.passHold).
       const plan = planChain(prev, next, { mine });
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
-      const dwell = plan.total ? (sameNext ? plan.handoff : plan.total) : rivalStep ? (sameNext ? 0 : MO.passHold) : base;
+      // (a rival's step that shows something stays on screen at least the bot pace's floor, 600ms at Normal: motion.mjs m4)
+      const dwell = plan.total ? (sameNext ? Math.max(plan.handoff, rivalStep ? Math.min(rivalDwell, 600) : 0) : plan.total) : rivalStep ? (sameNext ? 0 : MO.passHold) : base;
       if (typeof window !== 'undefined') window.__patronsDwellSum = (window.__patronsDwellSum || 0) + dwell; // (the pacing gate reads it)
       if (!queue.current.length) paced.current = false;
       // every step gets its own commit, even one that doesn't wait, so each chain plays from the step right before it

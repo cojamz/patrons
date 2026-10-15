@@ -60,8 +60,9 @@ async function place(p, re = null) {
   await p.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2, { steps: 4 });
   await p.waitForTimeout(250);
   await p.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
+  // a space may ask something first: answer its question (never Undo or Pass) until the buy step comes up
   for (let k = 0; k < 12 && !(await p.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
-    const opt = await p.$('.prompt.choice button[data-option]:not([disabled])');
+    const opt = await p.$('.lt[data-phase="choose"] .prompt.choice button[data-option]:not([disabled]):not([data-option="pass"]):not(.undo)');
     if (opt) { await p.waitForTimeout(300); await opt.click().catch(() => {}); }
     await p.waitForTimeout(250);
   }

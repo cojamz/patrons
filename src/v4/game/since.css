@@ -1,12 +1,12 @@
 /* "Since your last turn" (SinceStrip.jsx): a quiet list, one line per rival placement, each name opening its card.
    Self-contained: the layout (lamp.css) places the box; inside it nothing runs past its edges. */
 .lt-since{display:flex;flex-direction:column;gap:4px;box-sizing:border-box;min-width:0;max-width:100%;padding:2px 3px;overflow:hidden;font-family:var(--sans);color:var(--cream-2,#d9cbb0)}
-.lt-since .since-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:1px 2px 1px 0;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
+.lt-since .since-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:1px 2px 1px 0;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
 .lt-since .since-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lt-since .since-log{flex:none;font:inherit;letter-spacing:.06em;text-transform:uppercase;color:var(--lamp-ink);background:none;border:0;border-radius:7px;padding:2px 8px;box-shadow:inset 0 0 0 1px rgba(var(--lamp),.45);cursor:pointer;min-height:22px}
 .lt-since .since-log:hover,.lt-since .since-log:focus-visible{background:rgba(var(--lamp),.12)}
 .lt-since .since-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;min-width:0}
-.lt-since .since-row{position:relative;min-width:0;padding:3px 7px 3px 5px;border-radius:7px;font-size:12.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cream);cursor:pointer}
+.lt-since .since-row{position:relative;min-width:0;padding:3px 7px 3px 5px;border-radius:7px;font-size:13px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cream);cursor:pointer}
 .lt-since .since-row:hover{background:rgba(243,230,200,.07)}
 .lt-since .since-line{display:inline;cursor:help}
 /* the name's own box is the target: its enlarged hit area would cover the space named beside it */
@@ -38,7 +38,7 @@ body:has(.tip-body [data-since-card]) .lt-hover.popover{z-index:46}
 .since-card .sc-line.quiet{opacity:.7}
 
 /* the switch on a member that can be switched (Midas): its state, lit when on */
-.lt-cult-seat .cs-switch{font-size:10px;letter-spacing:.02em;white-space:nowrap}
+.lt-cult-seat .cs-switch{font-size:11px;letter-spacing:.02em;white-space:nowrap}
 .lt-cult-seat .lt-btn.mini.cs-switch{padding:3px 6px}
 .lt-cult-seat .lt-btn.mini.cs-switch.on{color:var(--paper-ink);background:var(--lamp-ink);border-color:transparent}
 .lt-cult-seat .cs-switch.idle{display:inline-block;padding:1px 5px;border-radius:7px;line-height:14px;color:var(--cream-3);box-shadow:inset 0 0 0 1px rgba(243,230,200,.2);cursor:help}

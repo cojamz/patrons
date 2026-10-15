@@ -22,7 +22,7 @@ At 1270×700 the wheel is the board, and the screen's height limits it, not the 
 ## The variants
 All variants are CSS only and keep the same elements, with nothing added.
 
-**A: who | where | what to buy (chosen).** On the left, the seats in turn order (snake rail and order marks unchanged). Under them sit the since-strip, then the turn card, so the newest turn reads last. The wheel runs the full height in the middle. On the right is the shop as a column: the deck heads the members like a card, three to a row, and the four follower buys sit right under them. This is Cory's own phrase from 2026-10-14: the shop is "a slim strip beside the wheel".
+**A: who | where | what to buy (chosen).** On the left, the seats in turn order (snake rail and order marks unchanged). Under them sit the since-strip, then the turn card, so the newest turn reads last. The wheel runs the full height in the middle. On the right is the shop as a column. The four follower buys come first, then the members three to a row, with the deck heading them like a card. This is Cory's own phrase from 2026-10-14: the shop is "a slim strip beside the wheel".
 
 | setup | your turn, round II | a rival's turn | round III |
 |---|---|---|---|
@@ -41,15 +41,18 @@ Old layout, for comparison: setup ![](before/setup.png) · round III ![](before/
 ## Why A
 - **One job per column, and all three are full.** Who's at the table, where you go, what you buy. The eye goes left to right through a turn: the seats (what happened), the wheel (place), the shop (buy). B still leaves a hole in the right column between the since-strip and the follower buys whenever no turn card is up, which is most of your own turn.
 - **The wheel gets bigger.** It goes from 478px to about 512px at 1270×700, because nothing runs under it any more, and to about 640px at 1440×860. In B it stays at 478px, because the strip still takes its height.
-- **The shop reads as one market.** The members and the follower buys sit in one column, at the same weight, and are lit the same way when you can buy. The deck sits at the head of the members like a card, not in front of a row. The cards grow toward the plate's portrait shape (88×130px, from 92×104px).
+- **The shop reads as one market.** The members and the follower buys sit in one column, at the same weight, and are lit the same way when you can buy. The follower buys lead the column because they're the four fixed offers you can always make (Cory: "too hidden"). The members are what you browse, so their grid takes whatever height is left and shrinks on a short screen; the follower buys are never cut. The deck is the first cell of the member grid (top left, card-sized). The cards grow toward the plate's portrait shape (88×122px, from 92×104px).
 - **The since-strip sits next to the rivals it describes**, at the size it needs, which is a few short lines. The turn card docks right under it in a fixed place, so the story runs top to bottom: older moves, then the turn happening now. It no longer floats.
-- **Alignment.** All three columns run from the top edge to the bottom edge. The shop's foot and the turn card's foot land on the same line.
+- **Alignment.** All three columns run from the top edge to the bottom edge, and the first seat, the prompt and the follower buys share the top line.
 - Nothing was added or reworded, and no game rule changed.
 
 ## Costs and limits (honest)
 - A needs a 340px seat column, or a seat's top row collides (seen at 1100px: the total ran into the resources). Below 1200px wide A would shrink the wheel below the old layout's, so the old grid stays there (`@media (min-width:1200px)` in `src/v4/game/layout.css`). The rejected narrow shots are `layout/a-1100x700/place.png` and `a-900x700/place.png`.
 - The since-strip has whatever height is left under the seats, minus 112px kept for the turn card. In round III that's about 6 lines with the current seat heights. Past that, the oldest lines clip first. The newest never clip, and the whole log is one tap away (Log).
 - At setup the starting-resource picker moves under the seats, where the since-strip will later be. That column is empty until the turns begin. The picker never covers the wheel or the members you're picking toward. The layout gate (l6) passes.
+
+## Follow-up the same night
+- 05:55: the follower buys moved to the top of the shop column (the foreman, relaying R3). At the foot of the column, lit tiles looked cut off: the column clipped their glow and shadow at its edge. The column no longer clips at this size, because its grid shrinks to fit. Checked at 1270×700 and 1270×620: `layout/final/buy.png`, `layout/final-620/buy.png`.
 
 ## Files
 - `src/v4/game/layout.css`: the composition from 1200px up (new; imported by GameScreen.jsx).

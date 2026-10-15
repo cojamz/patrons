@@ -17,6 +17,7 @@ void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
 import { MemberDeck, useDeal } from './MemberDeck.jsx';
 import './lamp-b.css';
+import { breakable } from './hyphen.js'; // long names break at a seam on the narrow card (Doppel-ganger)
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
@@ -120,7 +121,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
                 {tick && <span className="tick" title={`You could afford it after ${after}`}>after {after}</span>}
               </span>
-              <span className="nm">{d.name}</span>
+              <span className="nm">{breakable(d.name)}</span>
               <span className="ft">
                 <CostShapes parts={parts} />
                 <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
