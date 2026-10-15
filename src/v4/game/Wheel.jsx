@@ -235,7 +235,9 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
     let best = 0;
     for (const c of centres) {
       const [cx, cy] = polar(s.ang + rot, c);
-      const w = 2 * fitHalfWidth(cx, cy, hPx / k, R.r0, R.r1, a0, a1, 1.2, PANEL_GUT / 2 + 1.2);
+      // the hub's print keeps clear of the round's medallion as well as of the panel's edge ("Any member, free" ran
+      // into it at 1100px: the hub panels' inner edge is the medallion's own ring)
+      const w = 2 * fitHalfWidth(cx, cy, hPx / k, R.n === 1 ? R.r0 + 3 : R.r0, R.r1, a0, a1, 1.2, PANEL_GUT / 2 + 1.2);
       if (w > best + 0.01) { best = w; rc = c; }
     }
     return best;
