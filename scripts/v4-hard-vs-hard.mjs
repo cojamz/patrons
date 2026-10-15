@@ -2,7 +2,7 @@
 // seats rotated every game, ties split. Reports each side's win share with a 95% Wilson interval, average followers,
 // and how often each side takes Crunch Time. Hard runs uncapped (deterministic) at --budget.
 // Usage: node scripts/v4-hard-vs-hard.mjs [games=200] [firstGame=1] [--budget=100] [--weight=1] [--table=classic|a,b,c,d]
-//   [--grab=0] [--paired=0]  (switch off one half of new Hard)  [--old=normal]  (the old side plays Normal instead of old Hard)  [--old=normal-grab]  (Normal with grab vs Normal)  [--threads=4]
+//   [--grab=0] [--paired=0] [--prior=1]  (switch off one half of new Hard)  [--old=normal]  (the old side plays Normal instead of old Hard)  [--old=normal-grab]  (Normal with grab vs Normal)  [--threads=4]
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
@@ -15,7 +15,7 @@ const TABLES = { classic: ['gold', 'red', 'market', 'echo'] };
 // which seats play new Hard: two of four, rotated through all six pairings
 const PAIRS = [[0, 1], [2, 3], [0, 2], [1, 3], [0, 3], [1, 2]];
 
-function playGame({ g, budget, weight, quadrants, old, grab, paired }) {
+function playGame({ g, budget, weight, quadrants, old, grab, paired, prior }) {
   const rand = seededRandom(g * 9973 + 11);
   let s = createGame({ seats: Array.from({ length: 4 }, () => ({ kind: 'bot' })), seed: g, ...(quadrants ? { quadrants } : {}) });
   const fresh = new Set(PAIRS[g % PAIRS.length]);
@@ -24,7 +24,7 @@ function playGame({ g, budget, weight, quadrants, old, grab, paired }) {
     const p = s.pending.player;
     const isNew = fresh.has(p);
     const m = old === 'normal-grab' ? chooseNormalMove(s, rand, isNew ? { grab: true, grabWeight: weight } : {})
-      : isNew ? chooseThinkerMove(s, rand, { budget, grabWeight: weight, grab, paired })
+      : isNew ? chooseThinkerMove(s, rand, { budget, grabWeight: weight, grab, paired, prior })
       : old === 'normal' ? chooseNormalMove(s, rand) : chooseThinkerMove(s, rand, { budget, grab: false, paired: false });
     const o = s.pending.options.find(x => x.id === m.option);
     if (o?.kind === 'slot' && o.label === 'Crunch Time') crunch[isNew ? 'new' : 'old']++;
@@ -50,7 +50,7 @@ if (!isMainThread) {
   const budget = Number(flag.budget || 100), weight = Number(flag.weight ?? 1);
   const quadrants = flag.table ? (TABLES[flag.table] || flag.table.split(',')) : undefined;
   const threads = Number(flag.threads || Math.max(1, os.cpus().length));
-  const jobs = Array.from({ length: games }, (_, k) => ({ g: first + k, budget, weight, quadrants, old: flag.old, grab: flag.grab !== '0', paired: flag.paired !== '0' }));
+  const jobs = Array.from({ length: games }, (_, k) => ({ g: first + k, budget, weight, quadrants, old: flag.old, grab: flag.grab !== '0', paired: flag.paired !== '0', prior: Number(flag.prior ?? 0) }));
   const t0 = performance.now();
   const results = [];
   await Promise.all(Array.from({ length: threads }, (_, t) => new Promise((res, rej) => {
@@ -64,7 +64,7 @@ if (!isMainThread) {
   const hi = (ph + z * z / (2 * n) + z * Math.sqrt(ph * (1 - ph) / n + z * z / (4 * n * n))) / (1 + z * z / n);
   const mean = k => (results.reduce((a, r) => a + r[k], 0) / n).toFixed(1);
   const cr = side => results.reduce((a, r) => a + r.crunch[side], 0);
-  console.log(`new Hard (grab ${flag.grab !== '0' ? `on, weight ${weight}` : 'off'}, paired ${flag.paired !== '0' ? 'on' : 'off'}) vs ${flag.old ? flag.old : 'old Hard'}, 2 seats each, budget ${budget}, ${n} games from ${first}, table ${quadrants ? quadrants.join('/') : 'default'}, ${((performance.now() - t0) / 1000).toFixed(0)}s`);
+  console.log(`new Hard (grab ${flag.grab !== '0' ? `on, weight ${weight}` : 'off'}, paired ${flag.paired !== '0' ? 'on' : 'off'}, prior ${flag.prior ?? 0}) vs ${flag.old ? flag.old : 'old Hard'}, 2 seats each, budget ${budget}, ${n} games from ${first}, table ${quadrants ? quadrants.join('/') : 'default'}, ${((performance.now() - t0) / 1000).toFixed(0)}s`);
   console.log(`  new Hard wins ${(100 * ph).toFixed(1)}% of games (50% = no better), 95% CI ${(100 * lo).toFixed(1)}–${(100 * hi).toFixed(1)}%`);
   console.log(`  followers: new ${mean('fNew')}, old ${mean('fOld')}; Crunch Time taken: new ${cr('new')}, old ${cr('old')}`);
 }

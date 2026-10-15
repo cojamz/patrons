@@ -88,8 +88,15 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
     counts[i] += 1;
     if (k > 200) break;
   }
+  // A candidate gets one or two rollouts, so one lucky line can carry a weak option. Normal's own rating counts as
+  // opts.prior rollouts more (shrinkage toward its ranking; 0 = rollouts alone, the old way). Ratings and rollouts
+  // sit on different scales, so the prior is normal's gap to the pool's average, added to the average rollout.
+  const w0 = opts.prior ?? 0;
+  const allMean = totals.reduce((a, b) => a + b, 0) / counts.reduce((a, b) => a + b, 0);
+  const vMean = pool.reduce((a, r) => a + r.v, 0) / pool.length;
+  const score = i => (totals[i] + w0 * (allMean + pool[i].v - vMean)) / (counts[i] + w0);
   let best = 0;
-  for (let i = 1; i < pool.length; i++) if (totals[i] / counts[i] > totals[best] / counts[best]) best = i;
+  for (let i = 1; i < pool.length; i++) if (score(i) > score(best)) best = i;
   return { player: me, option: pool[best].o.id };
 }
 
