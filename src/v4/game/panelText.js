@@ -23,18 +23,20 @@ const grows = r => (r < 3 ? 'more each round' : null);
 // rival's; w3: "Pay all your purple" without its "for 2 extra turns").
 const P = {
   gold: {
-    // "+1 to anyone" (w3): the gift goes to a rival only, never to you
-    jv: { main: '+3 gold', second: '+1 to a rival', note: 'you pick who' },
+    // "+1 to anyone" (w3): the gift goes to a rival only, never to you. "1 of what?" says gold; "you pick who" read
+    // awkwardly (live panel r1): the note runs on from line 2 ("…to a rival / of your choice")
+    jv: { main: '+3 gold', second: '+1 gold to a rival', note: 'of your choice' },
     rush: r => ({ main: `+${2 * r} gold`, second: grows(r) }),
     // "Save 4" read as keeping 4 resources (blind testers, 2026-10-15): it's money off, said as a shop says it
     discount: { verb: '4 off', second: 'your next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
-    windfall: { main: '+1 gold', second: 'per member' },
+    // live (round 3 skeptic: "+1●" in big type paid +5): line 1 is this turn's gain, the rate small under it
+    windfall: (r, now) => (now == null ? { main: '+1 gold', second: 'per member' } : { main: `+${now} gold`, second: '1 per member you have' }),
     strike: { verb: 'Double your gold' },
   },
   red: {
     evenswap: { main: '+1 red', second: 'swap, equal cost', note: 'a member with a rival' },
-    turnout: { main: '+1 red', second: 'per recruit by all', note: 'this round' },
+    turnout: (r, now) => (now == null ? { main: '+1 red', second: 'per recruit by all', note: 'this round' } : { main: `+${now} red`, second: '1 per recruit by all', note: 'this round' }),
     hire: { verb: 'Free recruit', second: 'the cheapest' },
     hireup: { verb: 'Free recruit', second: 'cost 4 or less' },
     trade: { verb: 'Swap a member', second: 'with a rival', note: 'theirs can cost 2 more' },
@@ -50,23 +52,27 @@ const P = {
     // rule goes small under it ("+1 blue" in big type read as the whole gain with three blue members in the shop)
     showroom: (r, now) => (now == null ? { main: '+1 blue', second: '+1 per blue in the shop' } : { main: `+${now} blue`, second: '1, +1 per blue in the shop' }),
     clearance: { verb: 'Half-price recruit', second: 'as your buy', note: 'in any colors' },
-    pricecheck: { verb: 'Gain blue', second: 'half your priciest', note: 'member’s cost' },
+    // "half your priciest" read as half your biggest pile (live panel r1): the whole rule in line 1 (ring II can drop
+    // line 2), "member's cost" beside "priciest"; the color is the quadrant's own
+    pricecheck: { verb: 'Gain half your priciest member’s cost', second: 'in blue' },
     spree: { verb: 'Buy 3 times', second: 'this turn' },
   },
   purple: {
     hourly: r => ({ main: `+${3 + r} purple`, second: grows(r) }),
     // "per rival ahead" read as ahead on score (blind testers, 2026-10-15): it counts minions placed, said in line 2
-    catchup: { main: '+1 purple', second: '+1 per rival who placed more', note: 'minions this round' },
+    catchup: (r, now) => ({ main: `+${now ?? 1} purple`, second: now == null ? '+1 per rival who placed more' : '1, +1 per rival who placed more', note: 'minions this round' }),
     // "out" and "left" read alike (w3b #16): where the minions are, in the card's own words ("on the board")
-    windup: { main: '+1 purple', second: 'per minion on the board' },
-    planahead: { main: '+1 purple', second: 'per minion to place' },
+    windup: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion on the board' } : { main: `+${now} purple`, second: '1 per minion on the board', note: 'this one too' }),
+    // "per minion to place" read as +2 (round 3 skeptic): live, it's the count after this one
+    planahead: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion to place' } : { main: `+${now} purple`, second: '1 per minion left after this' }),
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
     overtime: { verb: 'Take 1 extra turn', second: 'right after this' },
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     rally: { verb: 'Take your next 2 turns now' },
   },
   silver: {
-    toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', note: grows(r) }),
+    // "others get 1" left "1 of what?" (live panel r1): silver
+    toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1 silver', note: grows(r) }),
     // "+2 of a color": which one? (w3a #56) yours to pick
     gift: { main: '+2 silver', second: '+2 of a color you pick', note: 'others get 1 of it' },
     // said like Kickback's gift ("a rival gets 2" ran on as "+4 silver a rival gets 2" off the wheel)
@@ -77,12 +83,12 @@ const P = {
     tongue: { main: '+4 silver', second: 'swap for a color', note: 'others get 1 silver' },
     // the richest in silver: the hover says "the rival with the most" ("Gain half the silver" left no room for line 2)
     // "half the richest" read as half your own pile (blind testers, 2026-10-15): it's the top rival's
-    tide: { verb: 'Gain silver', second: 'half the top rival’s', note: 'others get 1' },
+    tide: { verb: 'Gain silver', second: 'half the top rival’s', note: 'others get 1 silver' },
     // on the center line 2 drops: the rate is in line 1, and "held" says the silver stays
     jubilee: { verb: '+1 @f per 2 silver held', second: 'others get 2 silver' },
   },
   yellow: {
-    harvest: { main: '+1 yellow', second: '+1 per other color', note: 'you hold' },
+    harvest: (r, now) => ({ main: `+${now ?? 1} yellow`, second: now == null ? '+1 per other color' : '1, +1 per other color', note: 'you hold' }),
     bloom: { verb: 'Top up', second: '+1 of your fewest' },
     // in the rule's order, swap first, then the yellow (w4b #21: "+1● swap up to 3" read reversed against the hover)
     transmute: { verb: 'Swap up to 3', second: 'then +1 yellow', note: 'for other colors' },
@@ -98,25 +104,30 @@ const P = {
     tipoff: { verb: 'Steal 1 each', second: 'from rivals with more resources' },
     // "safe" from what? (w3a: guessed swaps) steals
     hideout: { verb: 'Steal 1', second: 'then safe from steals', note: 'this round' },
-    rob: { main: '+3 magenta', second: 'from rivals', note: 'at least 1 each' },
+    // the limit belongs on the face (skeptic round 2: line 3 drops on ring II): "from each rival" says from rivals too
+    rob: { main: '+3 magenta', second: 'at least 1 from each rival' },
     // "Ransom a member" read as paying to get a member back (w3b #19, w3a #57): what you get, whole in line 1 (ring II
     // drops line 2 when tight), and who decides
     // "A rival's member or its cost" read as "I choose" (w4b #5): line 1 says who decides, line 2 what's picked
     // what they pay is the member's cost (f8: the face didn't say how much), whole in line 1, since ring II drops line 2
-    ransom: { verb: 'A rival pays a member’s cost, or loses it', second: 'their choice', note: 'costing 4 or less' },
+    // the limit in line 2 (skeptic round 2: "costing 4 or less" sat in line 3, which ring II drops); who decides goes small
+    ransom: { verb: 'A rival pays a member’s cost, or loses it', second: 'a member costing 4 or less', note: 'their choice' },
     heist: { verb: 'Take a rival’s member', second: 'they recruit one free' },
   },
   trading: {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers
-    haggle: { main: '+2 white', second: '+1 per rival with more @f' },
+    haggle: (r, now) => ({ main: `+${now ?? 2} white`, second: now == null ? '+1 per rival with more @f' : '2, +1 per rival with more @f' }),
     // "up to 2, more each round" read as "+2 each round" (blind testers, 2026-10-15): the cap is what grows
-    buylow: r => ({ verb: 'Trade for followers', second: `1 for 1, up to ${2 * r}`, note: r < 3 ? 'the limit grows by round' : null }),
+    // "Trade for followers" hid that it costs you resources (live panel r1; the charge is Cory's call): it's a follower
+    // buy, in the shop's own words, at 1 resource each
+    buylow: r => ({ verb: 'Buy followers', second: `1 resource each, up to ${2 * r}`, note: r < 3 ? 'the limit grows by round' : null }),
     pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, note: grows(r) }),
     // the gain first: "Sell followers" lost its "3 white each" on ring II whenever the panel was tight (w3 words pass)
     sellhigh: { main: '+3 white', second: 'per follower sold', note: 'up to 2' },
     // "loose" is a rulebook word a newcomer won't remember (w3a #57): what it means, in the glossary's own words
-    dividend: { main: '+1 white', second: 'per @f bought or won' },
-    boom: { verb: 'All for followers, 1 for 1' },
+    dividend: (r, now) => (now == null ? { main: '+1 white', second: 'per @f bought or won' } : { main: `+${now} white`, second: '1 per @f bought or won' }),
+    // "All for followers" hid that you pay (tester A, live panel r1; the charge is Cory's call): it says so in line 1
+    boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
   },
   echo: {
     chant: r => ({ main: `+${2 * r} green`, second: grows(r) }),
@@ -131,20 +142,24 @@ const P = {
 
 // Spaces whose payout hangs on the table right now: with a state, the panel prints what it pays this turn. The engine's
 // own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
-const LIVE = new Set(['market.showroom']);
-function liveYield(qid, action, state) {
+// A space that pays per something shows this turn's gain big and its rate small (round 3 skeptic: Bandwagon's "+1●"
+// paid +5, Roll Call's +3), for `pid` (the viewer; else whoever's turn it is).
+const LIVE = new Set(['market.showroom', 'gold.windfall', 'red.turnout', 'purple.catchup', 'purple.windup', 'purple.planahead', 'yellow.harvest', 'trading.haggle', 'trading.dividend']);
+function liveYield(qid, action, state, pid) {
   if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
-  try { const n = action.estimate(contextFor(state)); return Number.isFinite(n) ? n : null; } catch { return null; }
+  const p = state.players && state.players[pid ?? state.current ?? 0];
+  if (!p) return null;
+  try { const n = action.estimate(contextFor(state), p); return Number.isFinite(n) ? Math.max(0, Math.round(n)) : null; } catch { return null; }
 }
 
 /**
  * { main, verb, second, note } for a space this round (any may be null; note may be { byRound: [a, b, c] }).
  * Pass `state` for the board's live face (what a space pays this turn); without it, the printed rule.
  */
-export function panelText(qid, action, round = 1, state = null) {
+export function panelText(qid, action, round = 1, state = null, pid = null) {
   const r = Math.max(1, Math.min(3, round));
   let v = P[qid] && P[qid][action.key];
-  if (typeof v === 'function') v = v(r, liveYield(qid, action, state));
+  if (typeof v === 'function') v = v(r, liveYield(qid, action, state, pid));
   if (v) return { main: v.main || null, verb: v.main ? null : v.verb || null, second: v.second || null, note: v.note || null };
   // the plain spheres: "+2 blue +1 red" is the gain, a clause a line when the panel is narrow
   const [main, ...rest] = String(pipEffect(qid, action, r)).split(' · ');

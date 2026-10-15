@@ -185,11 +185,12 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-prompt .steps-row{gap:16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
 .lt-prompt .round{font-family:var(--sans) !important;font-size:11px !important;color:var(--cream-3) !important;letter-spacing:.08em}
 .lt header.bar.lt-prompt .round small{font-size:inherit;color:inherit} /* beats v4.css's header.bar .round small (13px) */
-.lt-prompt .steps{display:flex;gap:14px}
-/* the turn's two steps are words: the one you're on is bright and underlined (no dots: a dot only ever means a
-   resource; no glow: nothing here is clickable) */
-.lt-prompt .steps span{padding-bottom:2px;border-bottom:1px solid transparent}
-.lt-prompt .steps .on{color:var(--cream);border-bottom-color:var(--lamp-ink)}
+.lt-prompt .steps{display:flex;gap:14px;font-size:14px;text-transform:none;letter-spacing:0}
+/* the turn's two steps are words: the one you're on is bright, heavier and underlined (no dots: a dot only ever means a
+   resource; no glow: nothing here is clickable). At 11px caps they read as ~9px, and only the underline told them
+   apart (live panel r1): text size, the other step dim */
+.lt-prompt .steps span{padding-bottom:1px;border-bottom:2px solid transparent;color:var(--cream-3)}
+.lt-prompt .steps .on{color:var(--cream);font-weight:600;border-bottom-color:var(--lamp-ink)}
 .lt-prompt .steps-row .say-sub{text-transform:none;letter-spacing:0;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--cream-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .lt-menu{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:30}
 .lt-menu .menu-glyph{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:none;color:var(--cream-3);border:1px solid rgba(243,230,200,.16);cursor:pointer}

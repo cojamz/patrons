@@ -35,12 +35,14 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
           <tbody>
             {ranked.map((p, k) => {
               const b = breakdown(state, p);
-              const n = plural(p.members.length, 'member');
+              // one count of members everywhere, the rule's (a card that counts as 3 members counts 3): the hover said "7
+              // members" (the cards) beside the name's "10 members" (live panel r1)
+              const n = plural(memberCount(state, p), 'member');
               const sign = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v)}`;
               return (
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
                   <td className="rank" data-label="#">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
-                  <td className="who"><Who state={state} id={p.id} meId={meId} />{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
+                  <td className="who"><Who state={state} id={p.id} meId={meId} />{p.kind === 'bot' ? ' · bot' : ''}<small data-members={p.id}>{n}</small></td>
                   <td className="tot" data-label="Followers">
                     <Tip label={`${poss(p)} followers`} content={() => (
                       <div className="pop-card"><b>{poss(p)} {followers(state, p)} followers</b>

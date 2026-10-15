@@ -16,6 +16,7 @@ import { playerAnchor, motionOK, flyToken, expectArrival, pulse, track } from '.
 import { MO, flightMs, slowed } from '../motion.js';
 import { chainRunning, onChainEnd } from './director.js';
 import Tick from './Tick.jsx';
+import { ruleWords } from '../shorts.js';
 import { play } from '../sound.js';
 
 // The pace (the motion language's B6, grammar.md; Cory: "readable, one quadrant at a time"): about 1.6s a rim at
@@ -30,7 +31,7 @@ export function reckonRows(info) {
   const roundNo = ['I', 'II', 'III'].indexOf(result.round) + 1;
   const scored = scoredStandings(after, roundNo);
   const base = scored || standings(board || after).map(st => ({ ...st, leaders: result.rows.find(r => r.qid === st.qid)?.winners || [] }));
-  return base.map(st => ({ qid: st.qid, rule: st.rule, counts: st.counts || null, tiebreak: st.tiebreak || null, prize: st.prize ?? result.rows.find(r => r.qid === st.qid)?.v ?? 0, rows: st.rows, winners: st.leaders || [] }));
+  return base.map(st => ({ qid: st.qid, rule: ruleWords(st.qid, st.rule), counts: st.counts || null, tiebreak: st.tiebreak || null, prize: st.prize ?? result.rows.find(r => r.qid === st.qid)?.v ?? 0, rows: st.rows, winners: st.leaders || [] }));
 }
 
 export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = null }) {

@@ -26,7 +26,7 @@ import { spriteId } from '../art/index.js';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
 import { Rich } from './Rich.jsx';
-import { shortEffect, pipEffect } from '../shorts.js';
+import { shortEffect, pipEffect, ruleWords } from '../shorts.js';
 import { Follower } from '../art/Follower.jsx';
 import { lookFromUrl, useFace, boxOf, faceStatus, FaceBox, BUILT_IN } from './faces/index.js';
 import { panelText, lineText } from './panelText.js';
@@ -645,13 +645,15 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   const EMOJI_ROOM = EMOJI_U + 2;
   // the tiebreak's words on the rim name a count, never a lone color: "ties: red" was read as the red player (blind
   // testers, 2026-10-15), so it's "ties: red members" or "ties: most yellow", never cut to one word
+  // the prize comes every round, not once at the game's end (Cory, 2026-10-15: "each round: most gold +4")
+  const EACH = 'each round: ';
   const tieWords = tb => (!tb ? null : / /.test(tb.unit) ? tb.unit : `most ${tb.unit}`);
   const rimLabel = (qid, q, leaders) => {
     const st = stdById[qid];
     const sc = quadrant(qid).scoring;
     // the prize ends the line with the follower mark after it (Cory, 2026-10-15: "+2" alone didn't say followers; he
     // asked for the symbol), then whoever leads: "MOST BLUE · ties: red · +2 👤 🐱"
-    const rule = (st ? st.rule : shortLabel(sc.label)).toUpperCase();
+    const rule = `${EACH}${ruleWords(qid, st ? st.rule : shortLabel(sc.label))}`.toUpperCase();
     const prize = `  ·  +${RING_VALUE[paying - 1]}`;
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
@@ -680,7 +682,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     const sc = quadrant(qid).scoring;
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
     const tie = tieWords(tb);
-    const runs = [{ kind: 'text', text: (st ? st.rule : shortLabel(sc.label)).toUpperCase(), tie }, { kind: 'text', text: '·' }, { kind: 'prize', text: `+${RING_VALUE[paying - 1]}` }];
+    const runs = [{ kind: 'text', text: `${EACH}${ruleWords(qid, st ? st.rule : shortLabel(sc.label))}`.toUpperCase(), tie }, { kind: 'text', text: '·' }, { kind: 'prize', text: `+${RING_VALUE[paying - 1]}` }];
     // widths per unit of font size, and the gaps before each run
     for (const [k, r] of runs.entries()) {
       r.w = r.kind === 'dot' ? 1.1 : r.kind === 'prize' ? 1.3 * rimWidth(r.text, 800, 0) : rimWidth(r.text, 700, 0) + RIM_LS * r.text.length + (r.tie ? rimWidth(`  ·  ties: ${r.tie}`, 600, 0.04) : 0);
@@ -876,7 +878,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     rimHits.push(
       <path key={`rh${q}`} className="rim-hit" d={arc(a0 + 1, a1 - 1, RIM_HIT.r0, RIM_HIT.r1)} data-rim={qid}
         role="button" tabIndex={0} aria-haspopup="dialog"
-        aria-label={`${shortLabel(label)}: +${RING_VALUE[paying - 1]} followers at round end.${tieLine}${leaders.length ? ` ${leaders.map(id => (id === meId ? 'You' : state.players[id].name)).join(' & ')} ${leaders.length > 1 || leaders[0] === meId ? 'lead' : 'leads'}.` : ' No one leads yet.'}${ruleLine} Show the standings.`}
+        aria-label={`Each round: ${ruleWords(qid, shortLabel(label)).replace(/^Most /, 'most ')}, +${RING_VALUE[paying - 1]} followers at this round's end.${tieLine}${leaders.length ? ` ${leaders.map(id => (id === meId ? 'You' : state.players[id].name)).join(' & ')} ${leaders.length > 1 || leaders[0] === meId ? 'lead' : 'leads'}.` : ' No one leads yet.'}${ruleLine} Show the standings.`}
         onPointerEnter={e => { if (hover && realHover(e)) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget); }}
         onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onPlaqueHover(qid, null); }}
         onClick={e => { e.stopPropagation(); if (moved.current) return; if (hover) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); }}
@@ -899,12 +901,14 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   // on Toast, Help Yourself, Cheap Seats and Your Call); every number on the wheel is one size, the smallest any panel
   // needs
   const shopSig = (state.shop || []).join(',');
+  // live faces (this turn's gain): the memo turns over when one of their numbers does
+  const liveSig = panels ? spaces.filter(s => s.ring <= Math.max(1, round)).map(s => { try { return panelText(s.qid, s.a, round, state, meId).main || ''; } catch { return ''; } }).join(',') : '';
   const panelLays = useMemo(() => {
     if (!panels) return null;
     const k = scale || 1;
     // a taken panel keeps its lines (faded) and its minion stands over them, so taking a space never reflows the wheel
     // a live face (Name Drop: what it pays this turn) reads the state; the memo turns over when the shop does (shopSig)
-    const said = s => panelText(s.qid, s.a, round, state);
+    const said = s => panelText(s.qid, s.a, round, state, meId);
     const lay = (s, need) => panelLayout({ s, R: rings[s.ring], rot, k, said: said(s), taken: false, need });
     const out = new Map();
     for (const s of spaces) out.set(s.key, { said: said(s), lay: lay(s) });
@@ -913,7 +917,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     sizeTo([...out.values()].filter(v => v.said.main));
     for (const t of [1, 2, 3]) sizeTo(spaces.filter(x => x.ring === t).map(x => out.get(x.key)).filter(v => v.said.verb));
     return out;
-  }, [panels, state.quadrants, round, rot, scale, fontsIn, shopSig]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [panels, state.quadrants, round, rot, scale, fontsIn, shopSig, liveSig]); // eslint-disable-line react-hooks/exhaustive-deps
   live.current = { tap, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
@@ -937,7 +941,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     // everything this space shows, as one string: the same string, the same element (Space skips it)
     const crewIds = owner !== undefined ? [owner, ...joiners] : [];
     const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', joiners.join(','), open ? 1 : 0, opt || '', quiet ? 1 : 0, selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
-      flash.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
+      flash.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', said ? `${said.main || said.verb}/${said.second || ''}` : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
       fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? `${scale}:${fontsIn}` : ''].join('|');
     const had = built.current.get(key);
     if (had && had.sig === sig) return <Space key={key} el={had.el} />;

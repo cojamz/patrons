@@ -95,7 +95,7 @@ const trading = {
       resolve(ctx, p) {
         const r = ctx.state.round, v = fv(ctx), late = lastTurn(ctx, p);
         // amount:k = take k of them as white, the rest as followers
-        ctx.choose(p, `Your Call: ${plural(r, 'follower')}, or ${PAWN.each} white instead of each?`, Array.from({ length: r + 1 }, (_, k) => ({
+        ctx.choose(p, `Your Call: up to ${plural(r, 'follower')}. Each one you turn down pays ${PAWN.each} white instead.`, Array.from({ length: r + 1 }, (_, k) => ({
           id: `amount:${k}`, kind: 'amount', value: k,
           label: [r - k ? `+${plural(r - k, 'follower')}` : '', k ? `+${PAWN.each * k} white` : ''].filter(Boolean).join(', '),
           // bots take white while it still builds, and followers on their last turn

@@ -101,6 +101,8 @@ describe('White actions', () => {
   it('Your Call: per round number, +1 follower or +2 white (you pick how many of each)', () => {
     let r3 = take(scene({ round: 3, bonus: [5] }), 'trading.pawn');
     expect(ids(r3)).toEqual(['amount:0', 'amount:1', 'amount:2', 'amount:3']);
+    // the question in plain words (round 3 skeptic: "2 followers, or 2 white instead of each?" was cryptic)
+    expect(r3.pending.prompt).toBe('Your Call: up to 3 followers. Each one you turn down pays 2 white instead.');
     const mix = move(r3, 'amount:2');
     expect(R(mix).white).toBe(4);
     expect(B(mix)).toBe(6);

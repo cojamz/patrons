@@ -36,6 +36,33 @@ describe('panel words (w3)', () => {
     expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/pays a member’s cost/);
   });
 
+  it('says 1 of what, what a space costs, and whose cost (live panel r1)', () => {
+    // "Others get 1" / "+1 to a rival": 1 of what
+    expect(lines(panelText('gold', { key: 'jv' }, 1))).toContain('+1 gold to a rival');
+    expect(lines(panelText('gold', { key: 'jv' }, 1)).join(' ')).not.toMatch(/you pick who/);
+    for (const key of ['toast', 'tide']) expect(lines(panelText('silver', { key }, 2)), key).toContain('others get 1 silver');
+    for (const [qid, key, t] of panelEntries()) for (const l of lines(t)) expect(l, `${qid}.${key}`).not.toMatch(/\bget 1$/);
+    // Cheap Seats spends your resources: it's a follower buy, said as one, at its price
+    const cs = panelText('trading', { key: 'buylow' }, 2);
+    expect(cs.verb).toBe('Buy followers');
+    expect(cs.second).toBe('1 resource each, up to 4');
+    // Show Off: half a member's cost, never "half your priciest" alone (read as half your biggest pile); whole in line 1
+    expect(panelText('market', { key: 'pricecheck' }, 2).verb).toMatch(/^Gain half your priciest member’s cost$/);
+  });
+
+  it('a space that pays per something shows this turn\'s gain big, its rate small (round 3 skeptic: Bandwagon "+1" paid +5)', () => {
+    const s = createGame({ seats: [{ name: 'A', kind: 'human' }, { name: 'B', kind: 'bot' }], seed: 5, quadrants: ['market', 'red', 'gold', 'purple'] });
+    s.recruits = 5;
+    const t = panelText('red', quadrant('red').actions.find(x => x.key === 'turnout'), 1, s, 0);
+    expect(t.main).toBe('+5 red');
+    expect(t.second).toBe('1 per recruit by all');
+    // Tithe: +1 gold per member you have, for the viewer
+    const w = panelText('gold', quadrant('gold').actions.find(x => x.key === 'windfall'), 2, s, 0);
+    expect(w.main).toBe(`+${s.players[0].members.length} gold`);
+    // without a table: the printed rule
+    expect(panelText('red', { key: 'turnout' }, 1).main).toBe('+1 red');
+  });
+
   it('Name Drop prints this turn\'s real payout big, with its rule small under it (f8)', () => {
     const s = createGame({ seats: [{ name: 'A', kind: 'human' }, { name: 'B', kind: 'bot' }], seed: 5, quadrants: ['market', 'red', 'gold', 'yellow'] });
     const a = quadrant('market').actions.find(x => x.key === 'showroom');

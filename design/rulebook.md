@@ -20,27 +20,27 @@ The wheel is split into four colored quadrants. Each quadrant has its own action
 - Some spaces and members **steal** from rivals. Resources a Magenta card takes arrive as magenta, ready to spend.
 
 ## A turn
-Players take turns in a snake order (1-2-3-4, then 4-3-2-1, and so on). Round I's order is random. After that, whoever has the fewest followers goes first; if tied, whoever went later last round goes first.
+Players take turns in a snake order (1-2-3-4, then 4-3-2-1, and so on). Round I's order is random. After that, whoever has the fewest followers goes first; if tied, whoever went later last round goes first. A member can change this (Front-runner always picks first); the round's summary says why someone picks first.
 
 On your turn:
 1. **Send a minion** to an open space and do what it says. A space that recruits a member doesn't use up your buy, unless it says "as your buy".
 2. **Buy one thing**, or pass:
    - **Recruit a member** from the shop: 10 face up, refilled from the face-down pile at the head of the row, which shows how many are left. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins are already in the cost; tap one of your resources to swap it in. A discount ("your next member costs 4 less") and any member that changes a price (Penny Pincher's gold counts double) apply to every member you pay for, including one a space lets you recruit (Snap Up, Half Price). While a discount is yours, each card shows what you'd pay, with its list price small and struck beside it ("free" when it costs you nothing). A card you can't afford yet is faded; point at it to see what you're short of.
-   - Or **buy followers** with any resources: 2 for 1 follower, 4 for 4, 8 for 8, 10 for 10. Only the 8-for-8 buy is limited: the table has 2 per player (8 with four players), first come, first served. Buy 10 for 10 as often as you can pay for it.
+   - Or **buy followers** with any resources: 2 for 1 follower, 4 for 4, 8 for 8, 10 for 10. Only the 8-for-8 buy is limited: the table has 2 per player (8 with four players), first come, first served. Buy 10 for 10 as often as you can pay for it. A few spaces also sell followers at their own price ("Buy followers, 1 resource each, up to 4"): those spend your resources too.
    - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back only its colored part, in its color (in any colors if its color isn't on the table). The "any" part never comes back, so a member with no colored part can't be released, and neither can a member you've already used.
 
 Members keep working for you: some pay out at each round start (a member that says "Now and at round start" also pays the moment it joins you), some react to what other players do, and some you use once.
 - An **extra turn** (Overtime, Go-Getter, Night Owl…) only happens while the board has a space to spare; with 4 players, round I has none.
-- A member whose color isn't on this table is **colorless**: it brings nothing to cards that pay "its color".
+- A member whose color isn't on this table is **colorless**: it still counts as one of your members, but never toward a color, and it brings nothing to cards that pay "its color".
 
 ## Round end
-Each quadrant's rim shows its rule, the prize, the tiebreak and the emoji of whoever leads it right now, for example "MOST MEMBERS · ties: red · +2", then the follower mark and the leader's emoji. Point at a rim for the full standings. When the round ends, whoever leads each rule gains followers: +2 in round I, +4 in round II and +6 in round III. Tied leaders all score, unless the tiebreak settles it (Red: more red members). You need at least 1 of what's measured to score. It's counted the moment the round ends, so anything you spend before then doesn't count. The Reckoning pays the quadrants one at a time; tap to skip it.
+Each quadrant's rim shows its rule, the prize, the tiebreak and the emoji of whoever leads it right now, for example "EACH ROUND: MOST MEMBERS · ties: red members · +2", then the follower mark and the leader's emoji. It's a bonus paid at the end of every round, not the final score. "MOST PURPLE RESOURCES" counts the purple you hold. A **full set** is one resource of each color on the table: holding 2 of every color is 2 full sets, so your fewest color sets how many you have. Point at a rim for the full standings. When the round ends, whoever leads each rule gains followers: +2 in round I, +4 in round II and +6 in round III. Tied leaders all score, unless the tiebreak settles it (Red: more red members). You need at least 1 of what's measured to score. It's counted the moment the round ends, so anything you spend before then doesn't count. The Reckoning pays the quadrants one at a time; tap to skip it.
 
 ## Game end
-The game always ends after round III; nothing ends it sooner. End-of-game member bonuses are added, then the most followers wins. If players tie, the one with more members wins.
+The game always ends after round III; nothing ends it sooner. End-of-game member bonuses are added (round III's summary already counts them), then the most followers wins. If players tie, the one with more members wins.
 
 ## Playing with friends
 - Type your name on the home screen (you pick your emoji in the lobby). One person taps **Host online game** and shares the invite link (or the room code). Everyone else opens the link (or types the code and taps **Join with code**) and waits for the host to start.
-- The host can add bots and pick their level, pick the table and start. Each person plays on their own device.
+- The host can add bots and pick their level, pick the table (its four quadrants: Classic, random, or your own) and start. Each person plays on their own device.
 - If you reload or lose your connection, open the same link again and you get your seat back. If someone leaves, the host can let a bot play for them until they return.
 - Something looked wrong? Open the menu, tap **Copy game record**, and send it to Cory with a note.

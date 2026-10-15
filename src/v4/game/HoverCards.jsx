@@ -5,7 +5,8 @@
 // cards are mine. GameScreen mounts <HoverCardLayer> once.
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { quadrant, roman, spaceOpen, contestTable, cardDef, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
+import { quadrant, roman, spaceOpen, contestTable, cardDef, botLevel, BOT_LEVEL_INFO, RING_VALUE } from '../../engine/v4/index.js';
+import { ruleWords } from '../shorts.js';
 import { playerColor, standings } from '../format.js';
 import { Popover } from './parts.jsx';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
@@ -497,7 +498,7 @@ export function StandingsCard({ state, qid, meId = null }) {
   // what the rim's prize pays, in words (Cory, 2026-10-15): "Round end: whoever has the most white gets 2 followers"
   return (
     <>
-      <p className="lt-prize-line" data-prize-line={qid}>Round end: whoever has the {st.rule.replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'}.</p>
+      <p className="lt-prize-line" data-prize-line={qid}>A bonus every round, not the final score: at this round’s end, whoever has the {ruleWords(qid, st.rule).replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'} ({RING_VALUE.map(v => `+${v}`).join(' / ')} in rounds I / II / III).</p>
       <ContestStandings state={state} st={st} meId={meId} brief />
     </>
   );

@@ -148,7 +148,7 @@ describe('keyword glossary: one source, every keyword in the cards defined', () 
     const u = container.querySelector('[data-term="full set"]');
     expect(u).not.toBeNull();
     fireEvent.click(u);
-    expect(document.querySelector('[data-tip-body]').textContent).toMatch(/One of each color/);
+    expect(document.querySelector('[data-tip-body]').textContent).toMatch(/One resource of each color/);
   });
 });
 void defById; void within;
