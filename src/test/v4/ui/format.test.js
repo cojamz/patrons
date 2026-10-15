@@ -1,6 +1,6 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
+import { createGame, applyMove, chooseBotMove, followers, quadrant, defById } from '../../../engine/v4/index.js';
 import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
@@ -81,6 +81,35 @@ describe('v4 format helpers', () => {
     ];
     const st = effectStory(s, s, 0, null, fx);
     expect(st.lines.slice(0, 2)).toEqual(['+3 gold', 'Hustler: +3 gold']);
+  });
+
+  it('the strip names what you got on a rival\'s turn and the members that paid it (wave-2 A#3, B#46)', () => {
+    const s = createGame({ seats, seed: 1 });
+    // Bo's turn: the space gives Bo 3 silver and you (Ana) 1; your Silversmith and Cy's Caterer add 1 each
+    const fx = [
+      { type: 'gain', to: { pid: 1 }, what: { r: 'silver', n: 3 }, cause: { kind: 'space' } },
+      { type: 'gain', to: { pid: 0 }, what: { r: 'silver', n: 1 }, cause: { kind: 'space' } },
+      { type: 'gain', to: { pid: 0 }, what: { r: 'silver', n: 1 }, cause: { kind: 'member', uid: 1, def: 'silver.silversmith', pid: 0 } },
+      { type: 'gain', to: { pid: 0 }, what: { r: 'gold', n: 1 }, cause: { kind: 'member', uid: 2, def: 'gold.taxman', pid: 2 } },
+    ];
+    const st = effectStory(s, s, 1, 0, fx);
+    expect(st.gift).toBe(`you +2 silver +1 gold (Silversmith, Cy's ${defById('gold.taxman').name})`);
+    expect(st.short.startsWith(st.gift)).toBe(true);
+    // on the turn card it leads, right after the space's own result, and isn't told again in its parts
+    expect(st.lines.slice(0, 2)).toEqual(['+3 silver', st.gift]);
+    expect(st.lines.some(l => /^(Your )?Silversmith:|^you \+1 silver$/.test(l))).toBe(false);
+    // your own turn names no gift
+    expect(effectStory(s, s, 0, 0, fx).gift).toBe('');
+    // the log's story (an online guest's table, no effect stream) says it too
+    const end = structuredClone(s);
+    end.log = [...s.log, 'Bo took Kickback (Gold).', "Ana's Tax Collector: +1 gold."];
+    end.players[1].res.gold = (end.players[1].res.gold || 0) + 3;
+    end.players[0].res.gold = (end.players[0].res.gold || 0) + 2;
+    const ts = turnStory(s, end, 1, 0);
+    expect(ts.gift).toBe('you +2 gold (Tax Collector)');
+    expect(ts.short.startsWith('you +2 gold (Tax Collector)')).toBe(true);
+    expect(ts.lines.slice(0, 2)).toEqual(['+3 gold', 'you +2 gold (Tax Collector)']);
+    expect(ts.lines.some(l => /^(Your )?Tax Collector:|^you \+\d gold$/.test(l))).toBe(false);
   });
 
   it('a member used before placing leads the turn card\'s head, in order (w4 skeptic #6)', () => {

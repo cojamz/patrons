@@ -955,9 +955,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [pend, mine, needHandoff, busy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Only one way to pay isn't a question (dialogs pod, gut call 2026-10-15): pay it at once. The coins still fly from
-  // your stacks to what you bought (flyGains), and Undo takes the buy back.
-  const onlyPay = mine && !needHandoff && pend && pend.kind === 'pay' && pend.options.filter(o => o.kind === 'pay').length === 1
-    ? pend.options.find(o => o.kind === 'pay').id : null;
+  // your stacks to what you bought (flyGains), and Undo takes the buy back. Except when that one way gives up a lead you
+  // hold (the engine marks it: breaks): then the sheet asks, saying so, with Cancel (wave-2 testers A#4, B#2: a single
+  // click spent the gold that led Most gold, and the round ended before Undo could take it back)
+  const onePay = pend && pend.kind === 'pay' ? pend.options.filter(o => o.kind === 'pay') : [];
+  const onlyPay = mine && !needHandoff && onePay.length === 1 && !(onePay[0].breaks && onePay[0].breaks.length) ? onePay[0].id : null;
   useEffect(() => {
     if (!onlyPay || busy) return undefined;
     const t = setTimeout(() => onPick(onlyPay, 'replay'), 0);

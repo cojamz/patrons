@@ -22,6 +22,8 @@
 //       way to pass on a laptop (no second Pass in the headline); the rail is gone (nothing drawn in the chairs' gutter);
 //       during a rival's turn the seat that places next (the engine's queue) reads "next" and no other rival does, and
 //       your seat reads "your turn next" / "your turn in N", N the turns before yours in the engine's queue.
+//  (t10) wave-2 testers A#3, B#46: what you got on a rival's turn (Silversmith, "everyone else +1") is on the strip's
+//       line for that turn, naming each member that paid it.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5310.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -29,7 +31,8 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { snakeSave } from './lib/snake-save.mjs';
 import { seedSave } from './lib/seed.mjs';
-import { stripSave } from './lib/strip-save.mjs';
+import { stripSave, giftSave } from './lib/strip-save.mjs';
+import { defById } from '../../src/engine/v4/index.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/turnstory';
 mkdirSync(SHOTS, { recursive: true });
@@ -330,6 +333,37 @@ try {
     const W2 = await stripFrames(p2, tag);
     console.log(`turnstory ${tag}: ${s2 ? s2.lines : 0} whole lines + ${s2 ? s2.folded : 0} folded with the card up; strip watched ${W2 ? W2.frames : 0} frames, longest part-line run ${W2 ? W2.worst : '?'}`);
     await p2.close();
+  }
+  // (t10) what you got on a rival's turn is named, with its cause (wave-2 testers A#3, B#46: "my silver went 3→9
+  // between turns with no 'you +N' line in the strip"): P1 holds Silversmith on a Silver table; the newest rival turn
+  // paid P1. The strip's newest line says "you +N" (each amount beside its dot) and names each member that paid it.
+  {
+    const tag = 't10';
+    const g = giftSave({ newest: true });
+    g.save.state.build = stamp; g.roundStart.state.build = stamp;
+    const p3 = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    p3.on('pageerror', e => errors.push(`[${tag}] pageerror: ${e.message}`));
+    await seedSave(p3, g.save, { roundStart: g.roundStart });
+    await p3.goto(`${base}/?botDelay=300&intro=0`);
+    await p3.click('[data-home="resume"]', { timeout: 30000 });
+    await p3.waitForSelector('.lt-wheel .slot.can');
+    await p3.waitForTimeout(800);
+    const line = await p3.$$eval('[data-since] .since-row', els => (els.length ? els[els.length - 1].textContent.replace(/\s+/g, ' ').trim() : ''));
+    // and it is in sight: on the strip's newest line, or (when the turn card takes the strip's room) on the card
+    // (the card's text is its data-turn-story: its amounts draw as dots; it shows its first four lines)
+    const seen = await p3.evaluate(() => [...document.querySelectorAll('[data-since] .since-row, .turn-card')].filter(e => {
+      const r = e.getBoundingClientRect();
+      return r.width && r.height && !e.closest('[hidden]') && getComputedStyle(e).visibility !== 'hidden' && r.top >= 0 && r.bottom <= innerHeight;
+    }).map(e => (e.dataset.turnStory ? e.dataset.turnStory.split(' · ').slice(0, 5).join(' · ') : e.textContent.replace(/\s+/g, ' ').trim())).filter(t => /\byou \+\d/.test(t)));
+    if (!seen.length) fail('what you got shows nowhere in sight (strip line or turn card)', tag);
+    const want = Object.entries(g.newest.res).map(([r, n]) => `+${n} ${r}`);
+    const names = g.newest.members.map(d => defById(d).name);
+    if (!/\byou \+\d/.test(line)) fail(`the strip's newest line never says what you got: "${line}"`, tag);
+    for (const n of names) if (!line.includes(n)) fail(`the strip's newest line doesn't name ${n}, which paid you: "${line}"`, tag);
+    await p3.mouse.move(640, 695);
+    await p3.screenshot({ path: `${SHOTS}/10-gift-line.png` });
+    console.log(`turnstory ${tag}: in sight "${seen[0] || ''}"; newest line "${line}" (want ${want.join(' ')} from ${names.join(', ') || 'the space'})`);
+    await p3.close();
   }
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);

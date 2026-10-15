@@ -278,17 +278,18 @@ function rimCost(state, p) {
   }
   return v => {
     let lost = 0, near = 0;
+    const colors = [];
     const saved = { ...p.res };
     try {
       for (const c in v) p.res[c] = (p.res[c] || 0) - (v[c] || 0);
       for (const x of rims) {
         if (!(v[x.r] > 0)) continue;
         const now = x.q.scoring.score(ctx, p);
-        if (x.held && !(now > 0 && now >= x.best)) lost++;
+        if (x.held && !(now > 0 && now >= x.best)) { lost++; colors.push(x.r); }
         if (x.near && x.best - now <= 3 + (v[x.r] || 0)) near += v[x.r];
       }
     } catch { /* leave it unranked */ } finally { Object.assign(p.res, saved); }
-    return { lost, near };
+    return { lost, near, colors };
   };
 }
 
@@ -309,8 +310,13 @@ function orderChoices(state, list, preferred, p) {
     || (a.gold || 0) - (b.gold || 0) || (vecKey(state, b) === pk) - (vecKey(state, a) === pk));
   return out;
 }
-function payOption(state, v, i) {
-  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0 };
+/**
+ * A way to pay, as an option. lost (display only): the colors whose contest p leads or ties now and wouldn't after
+ * paying this way, so the screen can say so and never pays it without asking (wave-2 testers A#4, B#2).
+ */
+function payOption(state, v, i, lost = null) {
+  const breaks = lost ? lost(v).colors : [];
+  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0, ...(breaks.length ? { breaks } : {}) };
 }
 
 /** Paying for a follower buy: needs `colors` different resources; each wild one (gold) covers a color. Gold is spent last. */
@@ -418,9 +424,10 @@ function inputFor(state, task) {
     case 'pay': {
       const list = task.uid !== undefined ? paymentChoices(state, p, task.uid) : followerChoices(state, p, TIERS.find(t => t.key === task.tier));
       const what = task.uid !== undefined ? cardDef(state, task.uid).name : `${TIERS.find(t => t.key === task.tier).get} followers`;
+      const lost = list.length ? rimCost(state, p) : null;
       return {
         kind: 'pay', prompt: `${p.name}: choose how to pay for ${what}`, ...(task.uid !== undefined ? { uid: task.uid } : { tier: task.tier }),
-        options: [...list.map((v, i) => payOption(state, v, i)), { id: 'back', label: 'Back', kind: 'back' }],
+        options: [...list.map((v, i) => payOption(state, v, i, lost)), { id: 'back', label: 'Back', kind: 'back' }],
       };
     }
     default:

@@ -770,6 +770,9 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   const touched = new Set();
   const tracedF = P.map(() => 0);
   let gain = '', hit = '';
+  // what you got on a rival's turn, summed, and the members that paid it (as effectStory's gift)
+  const giftRes = {}, giftWhy = [];
+  const gave = (r, d) => { if (d > 0) giftRes[r] = (giftRes[r] || 0) + d; };
   seg.forEach((ls, k) => {
     const [a, b] = states[k];
     // what members did, on lines of their own; their amounts come off the gross so nothing is counted twice
@@ -784,6 +787,13 @@ export function turnStory(start, end, actor, me = null, mid = null) {
           ...(t.followers ? [`${t.followers > 0 ? '+' : '−'}${fword(t.followers)}`] : []), ...(t.discount ? [`next member costs ${t.discount} less`] : [])].join(', ');
         // "Treasurer: +3 gold" (the actor's own), "Tax Collector: Di +1 gold", "Ana's Retinue: Bo +1 silver"
         const card = t.owner === actor || t.owner === t.target ? t.card : `${whose(t.owner)} ${t.card}`;
+        if (me != null && me !== actor && t.target === me && Object.values(t.res).some(d => d > 0)) {
+          for (const r in t.res) gave(r, t.res[r]);
+          const why = t.owner === me || t.owner === actor ? t.card : `${P[t.owner].name}'s ${t.card}`;
+          if (!giftWhy.includes(why)) giftWhy.push(why);
+          // a plain gain of yours is told once, on the gift line
+          if (Object.values(t.res).every(d => d >= 0) && !t.followers && !t.discount) continue;
+        }
         said.push(`${cap(card)}: ${t.target === actor && t.owner === actor ? '' : `${nm(t.target)} `}${bits}`);
         continue;
       }
@@ -820,7 +830,9 @@ export function turnStory(start, end, actor, me = null, mid = null) {
         out.push(`${plain(lost)} from ${nm(p.id)}`);
         if (p.id === me) hit = `took ${lost.map(([r, x]) => `${Math.abs(x)} of your ${r}`).join(', ')}`;
       }
-      if (got.length) out.push(`${nm(p.id)} ${signed(got)}`);
+      // what you got is told once, on the gift line
+      if (got.length && !(p.id === me && me !== actor)) out.push(`${nm(p.id)} ${signed(got)}`);
+      if (p.id === me) for (const [r, x] of got) gave(r, x);
     }
     out.push(...said);
   });
@@ -860,7 +872,11 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   const convRe = new RegExp(`^${an}'s (.+?): \\d+ \\w+ comes as \\d+ \\w+\\.$`);
   const conv = [...new Set(lines.map(l => (l.match(convRe) || [])[1]).filter(Boolean))];
   const gainSaid = gain && conv.length ? `${gain} (${conv.join(', ')})` : gain;
-  const short = [hit && !(big && big.includes(hit)) ? hit : null, gainSaid, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  const giftBits = Object.entries(giftRes).map(([r, d]) => `+${d} ${r}`);
+  const gift = giftBits.length ? `you ${giftBits.join(' ')}${giftWhy.length ? ` (${giftWhy.join(', ')})` : ''}` : '';
+  // it leads, right after the space's own result (the turn card shows its first lines; the rest fold)
+  if (gift) out.splice(gain ? 1 : 0, 0, gift);
+  const short = [hit && !(big && big.includes(hit)) ? hit : null, gift || null, gainSaid, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
   // what the card names, from the table itself: the space's key, and the uid of each member recruited (hover targets)
   let spaceKey = null;
   if (place) {
@@ -870,7 +886,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   }
   const uids = {};
   for (const u of end.players[actor].members) if (!start.players[actor].members.includes(u) && end.cards[u]) uids[cardDef(end, u).name] = u;
-  return { text: [head, ...out].join(' · '), head, lines: out, space, spaceKey, uids, actor, touched: [...touched], short, hit, conv };
+  return { text: [head, ...out].join(' · '), head, lines: out, space, spaceKey, uids, actor, touched: [...touched], short, hit, gift, conv };
 }
 
 /**
@@ -914,10 +930,33 @@ export function effectStory(start, end, actor, me = null, fx = []) {
   const paidOf = (g, pid) => Object.entries(g.res[pid]).filter(([, d]) => d < 0).map(([r, d]) => `${-d} ${r}`).join(', ');
   const out = [], hits = [];
   let gain = '';
+  // the space's own result first, then what members added to it: a member that fires before the space's gain landed
+  // (Hustler) put "Hustler: +3●" over the space's "+3●", which read as one line twice (w3a #36)
+  const ordered = [...groups.values()].sort((a, b) => (b.key === 'space') - (a.key === 'space'));
+  // what you got on a rival's turn, and from what (wave-2 testers A#3, B#46: "my silver went 3→9 between turns with no
+  // cause shown"): every gain to you summed into one part, naming each member that paid it ("you +3 silver (Silversmith,
+  // P3's Caterer)"); the space's own share is the line's space, already named
+  const giftRes = {}, giftWhy = [];
+  if (me != null && me !== actor) {
+    for (const g of ordered) {
+      const got = Object.entries(g.res[me]).filter(([, d]) => d > 0);
+      if (!got.length && !(g.fol[me] > 0)) continue;
+      for (const [r, d] of got) giftRes[r] = (giftRes[r] || 0) + d;
+      if (g.fol[me] > 0) giftRes[' followers'] = (giftRes[' followers'] || 0) + g.fol[me];
+      const c = g.cause || {};
+      const owner = c.pid ?? actor;
+      const name = c.kind === 'member' ? (c.def ? defById(c.def)?.name : cardName(c.uid)) : (c.kind === 'recruit' || c.kind === 'release') ? cardName(c.uid) : null;
+      if (name) { const why = owner === me || owner === actor ? name : `${P[owner].name}'s ${name}`; if (!giftWhy.includes(why)) giftWhy.push(why); }
+    }
+  }
+  const giftBits = Object.entries(giftRes).map(([r, d]) => (r === ' followers' ? `+${fword(d)}` : `+${d} ${r}`));
+  const gift = giftBits.length ? `you ${giftBits.join(' ')}${giftWhy.length ? ` (${giftWhy.join(', ')})` : ''}` : '';
+  // a gain of yours that the gift line already tells isn't told again in its own group
+  const toldInGift = (g, pid) => !!gift && pid === me && !(g.fol[pid] < 0) && Object.values(g.res[pid]).every(d => d >= 0);
   const others = (g, owner) => {
     const bits = [];
     for (const p of P) {
-      if (p.id === owner) continue;
+      if (p.id === owner || toldInGift(g, p.id)) continue;
       const lost = Object.entries(g.res[p.id]).filter(([, d]) => d < 0), got = Object.entries(g.res[p.id]).filter(([, d]) => d > 0);
       // the actor's own doing reads "from you 3 gold"; a member's reads as its changes ("Raider: you −3 followers")
       if (lost.length && owner === actor && g.cause && g.cause.kind !== 'member' && !got.length && !g.fol[p.id]) bits.push(`${lost.map(([r, d]) => `${-d} ${r}`).join(', ')} from ${nm(p.id)}`);
@@ -936,9 +975,6 @@ export function effectStory(start, end, actor, me = null, fx = []) {
     }
     return bits;
   };
-  // the space's own result first, then what members added to it: a member that fires before the space's gain landed
-  // (Hustler) put "Hustler: +3●" over the space's "+3●", which read as one line twice (w3a #36)
-  const ordered = [...groups.values()].sort((a, b) => (b.key === 'space') - (a.key === 'space'));
   for (const g of ordered) {
     const c = g.cause || {};
     if (g.key === 'space') {
@@ -950,7 +986,7 @@ export function effectStory(start, end, actor, me = null, fx = []) {
       const owner = c.pid ?? actor;
       const def = c.def ? defById(c.def) : null;
       const label = `${owner === actor ? '' : `${whose(owner)} `}${def ? def.name : cardName(c.uid)}`;
-      const bits = [signedOf(g, owner), ...others(g, owner)].filter(Boolean);
+      const bits = [toldInGift(g, owner) ? '' : signedOf(g, owner), ...others(g, owner)].filter(Boolean);
       if (g.disc) bits.push(`next member costs ${g.disc} less`);
       // one line per member (its parts joined with commas: the card splits lines on " · ")
       if (bits.length) out.push(`${label[0].toUpperCase()}${label.slice(1)}: ${bits.join(', ')}`);
@@ -967,6 +1003,8 @@ export function effectStory(start, end, actor, me = null, fx = []) {
       out.push(`released ${cardName(c.uid)}${back ? ` for ${back}` : ''}`);
     }
   }
+  // what you got leads, right after the space's own result (the turn card shows its first lines; the rest fold)
+  if (gift) out.splice(gain ? 1 : 0, 0, gift);
   // what only the log says (an extra turn, a member used, a switch): kept from the log's story
   for (const l of (base ? base.lines : [])) if (/^(used |an extra turn$|\d+ extra turns$|switched )/.test(l) && !out.includes(l) && !(base.head && l.startsWith('used ') && base.head.includes(` ${l}`))) out.push(l);
   if (!base && !out.length) return null;
@@ -976,10 +1014,11 @@ export function effectStory(start, end, actor, me = null, fx = []) {
   const swapLine = out.filter(l => /^(took (your|\S+['’]s) |gave .+ to )/.test(l)).join(', ');
   const big = swapLine || out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
   const conv = base && base.conv && base.conv.length ? base.conv : [];
-  const short = [hit && !(big && big.includes(hit)) ? hit : null, gain && conv.length ? `${gain} (${conv.join(', ')})` : gain, big && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  // the strip's one line: what hit you, then what you got, then the biggest thing the turn did
+  const short = [hit && !(big && big.includes(hit)) ? hit : null, gift || null, gain && conv.length ? `${gain} (${conv.join(', ')})` : gain, big && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
   const head = base ? base.head : (actor === me ? 'You' : P[actor].name);
   const touched = base ? base.touched : [];
-  return { ...(base || {}), text: [head, ...out].join(' · '), head, lines: out, actor, touched, short, hit, fx: true };
+  return { ...(base || {}), text: [head, ...out].join(' · '), head, lines: out, actor, touched, short, hit, gift, fx: true };
 }
 
 /** Who won a finished game: most followers, members breaking a follower tie (the rule; Results ranks the same way). */

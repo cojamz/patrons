@@ -5,6 +5,8 @@
 //       color) and the coins visibly move, and Enter pays.
 //  (p2) A follower buy uses the same sheet: the lifted coins add up to what the tier costs.
 //  (p3) Only one way to pay: no sheet, it pays at once, and the coins fly from your stack.
+//  (p4) Wave-2 testers A#4, B#2: only one way to pay, but it gives up a lead you hold (3 gold leading Most gold, the
+//       price takes all 3): the sheet asks, says "gives up your lead in gold", and Cancel goes back with nothing paid.
 //  (g1) Good Deed on the gift card (Cory, 2026-10-16: the two-step pick on the seats was "very bad/confusing"): a small
 //       card beside the space just taken, headed "Give 2 to a rival"; the table's colors are its lit first row, the
 //       rivals' faces wait quiet under them (no chips, nothing lit on the seats); a color is plainly picked, a click on
@@ -116,8 +118,10 @@ try {
   }
   // (p3) one way to pay: straight through, coins flying
   {
-    const save = paySave({ res: { gold: 2, red: 0, blue: 0, green: 2 } });
+    // the rivals hold more gold and green, so the one way gives up no lead (p4: the one way that does asks)
+    const save = paySave({ res: { gold: 2, red: 0, blue: 0, green: 2 }, rivals: { gold: 4, green: 4 } });
     if (save.state.pending.options.filter(o => o.kind === 'pay').length !== 1) errors.push('(p3) the save has more than one way to pay');
+    if (save.state.pending.options.some(o => o.breaks)) errors.push('(p3) the one way gives up a lead (the save should keep every lead)');
     const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push(`[p3] pageerror: ${e.message}`));
@@ -132,6 +136,24 @@ try {
     if (await page.evaluate(() => window.__sheet)) errors.push('(p3) the pay sheet showed for a single way to pay');
     const flown = await page.evaluate(() => window.__payPieces);
     if (flown < 4) errors.push(`(p3) ${flown} coins flew for a 4-coin payment`);
+    await ctx.close();
+  }
+  // (p4) one way to pay that gives up a lead: the sheet asks, and says why
+  {
+    const save = paySave({ res: { gold: 3, red: 1, blue: 0, green: 0 }, rivals: { gold: 1 } });
+    const ways = save.state.pending.options.filter(o => o.kind === 'pay');
+    if (ways.length !== 1 || !(ways[0].breaks || []).includes('gold')) errors.push(`(p4) the save is not one way that gives up the gold lead (${ways.map(o => o.id).join(' ')})`);
+    const { ctx, page } = await open('p4', save, '.dialog.pay');
+    const note = await page.$eval('[data-pay-lead]', e => e.textContent.trim()).catch(() => '');
+    if (!/gives up your lead in gold/.test(note)) errors.push(`(p4) the sheet doesn't say the lead is lost ("${note}")`);
+    if (await page.$eval('.pay-go', e => e.dataset.option).catch(() => null) !== ways[0].id) errors.push('(p4) Pay is not on the one way');
+    await page.screenshot({ path: `${SHOTS}/p4-lead.png` });
+    if (await moves(page) !== save.state.moves) errors.push('(p4) something was paid before the player answered');
+    await click(page, '.pay-cancel');
+    await page.waitForFunction(() => !document.querySelector('.dialog.pay'), null, { timeout: 4000 }).catch(() => errors.push('(p4) Cancel left the sheet up'));
+    await page.waitForTimeout(300);
+    const left = await page.$eval('.lt-seat[data-pid="0"] .cs-stack[data-res="gold"] b', e => Number(e.textContent)).catch(() => NaN);
+    if (left !== 3) errors.push(`(p4) after Cancel P1 holds ${left} gold, want 3`);
     await ctx.close();
   }
   // (g1) Good Deed: a color, then the rival who gets it, on the gift card beside the space
@@ -378,7 +400,7 @@ try {
   // (a1) Wave-2 tester A: an instant buy flies its coins and closes the hover. The hover says the cost and nothing else
   //      about paying (Cory, 03:40: cut "You pay"; info.mjs (q) holds it too)
   {
-    const save = paySave({ res: { gold: 2, red: 0, blue: 0, green: 2 } });
+    const save = paySave({ res: { gold: 2, red: 0, blue: 0, green: 2 }, rivals: { gold: 4, green: 4 } }); // (no lead lost: p3)
     const st = save.state;
     st.queue[0] = { t: 'buy', p: 0 }; // back to the buy step: the card is clicked from the shop
     const { resume } = await import('../../src/engine/v4/core.js');

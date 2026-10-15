@@ -43,10 +43,12 @@ function playTo(seed, ready) {
  * P1 in the pay step. what: { def } a member (made face up) or { tier } a follower buy ('small' | 'mid' | 'big' | 'top').
  * res: P1's resources; members: P1's member def ids; discount: P1's discount.
  */
-export function paySave({ def = 'gold.prospector', tier = null, res = { gold: 3, red: 2, blue: 2, green: 3 }, members = [], discount = 0, seed = 3 } = {}) {
+export function paySave({ def = 'gold.prospector', tier = null, res = { gold: 3, red: 2, blue: 2, green: 3 }, members = [], discount = 0, seed = 3, rivals = null } = {}) {
   const s = playTo(seed, st => st.round >= 1 && st.pending && st.pending.player === 0 && st.pending.kind === 'buy');
   if (!s) throw new Error('dialog-save: never reached P1’s buy step');
   s.players[0].res = { ...res };
+  // rivals: resources every rival holds (a lead P1 has or hasn't)
+  if (rivals) for (const q of s.players.slice(1)) q.res = { ...q.res, ...rivals };
   // exactly the members asked for (bot play may have recruited a rule-changer, like Freelancer)
   s.pile.push(...s.players[0].members); s.players[0].members = [];
   for (const d of members) give(s, 0, d);
