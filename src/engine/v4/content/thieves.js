@@ -57,7 +57,9 @@ function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
   return got;
 }
 
-// Interactive steals, one pick per resource. data.each: rival ids still owed 1 each; data.left: picks left in all.
+// Interactive steals, one pick per resource. data.each: rival ids still owed 1 each; data.left: picks left in all;
+// data.only: the rivals it may take from at all (Redistribute: the richer ones, data.rich). The prompt and the task's count say
+// the limit, and blocked names, for each rival you can't take from right now, the true reason (the board dims them).
 function stealStep(ctx, p, data) {
   const picked = id => data.picked[id] || {};
   const can = o => stealable(ctx, p, o, picked(o.id)) > 0;
@@ -70,10 +72,22 @@ function stealStep(ctx, p, data) {
       id: `take:${o.id}:${c}`, label: `${o.name}'s ${c} (${n})`, kind: 'take', value: [o.id, c],
       hint: n + 0.05 * ctx.followers(o) + (owed.includes(o) ? 5 : 0),
     });
-    const owing = owed.length ? `, at least 1 from ${owed.map(o => o.name).join(', ')}` : '';
+    const names = list => list.map(o => o.name).join(', ');
+    // the limit, said: "1 each from P3, P4" when the picks left are all owed, else "at least 1 from each of …"
+    const owing = !owed.length ? '' : data.left <= owed.length ? `, 1 each from ${names(owed)}` : `, at least 1 from each of ${names(owed)}`;
+    const blocked = {};
+    for (const o of ctx.rivals(p)) {
+      if (pool.includes(o)) continue;
+      const why = !ctx.canSteal(p, o) ? `${o.name} can’t be stolen from now.`
+        : !can(o) ? `${o.name} has nothing left to take.`
+        : data.only && !data.only.includes(o.id) ? (data.rich && holding(o) <= holding(p) ? `${o.name} holds no more resources than you (${holding(o)} vs your ${holding(p)}).` : `${data.name} can’t take from ${o.name}.`)
+        : data.only && data.picked[o.id] ? `${data.name} takes 1 from each richer rival, and ${o.name} already gave theirs.`
+        : `${data.name}: the ${data.left} left must come 1 each from ${names(owed)}.`;
+      blocked[o.id] = why;
+    }
     // the count rides on the task, so a reload mid-steal keeps "1 of 3 taken"
     const taken = Object.values(data.picked).reduce((t, pk) => t + Object.values(pk).reduce((a, b) => a + b, 0), 0);
-    ctx.choose(p, `${data.name}: take 1 resource (${data.left} left${owing})`, opts, 'thieves.take', data, { count: { of: data.left + taken, left: data.left } });
+    ctx.choose(p, `${data.name}: take 1 resource (${data.left} left${owing})`, opts, 'thieves.take', data, { count: { of: data.left + taken, left: data.left }, blocked });
     return;
   }
   let got = 0;
@@ -139,9 +153,11 @@ const thieves = {
       key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Take 1 resource from each rival holding more resources than you (they arrive as magenta).',
       estimate: (ctx, p) => estimateSteal(ctx, p, richer(ctx, p).length, richer(ctx, p)),
       resolve(ctx, p) {
-        const ids = richer(ctx, p).map(o => o.id);
-        const n = ctx.stealCount(p, ids.length, { say: true });
-        startSteal(ctx, p, 'Redistribute', n, { each: ids, only: ids });
+        // exactly 1 from each richer rival you can take from (one lying low, or with nothing, isn't counted); a
+        // member that makes steals bigger (Sticky Fingers, Desperado) adds picks from those same rivals
+        const ids = richer(ctx, p).filter(o => stealable(ctx, p, o) > 0).map(o => o.id);
+        const n = ids.length ? ctx.stealCount(p, ids.length, { say: true }) : 0;
+        startSteal(ctx, p, 'Redistribute', n, { each: ids, only: ids, rich: true });
       },
     },
     {
@@ -154,7 +170,7 @@ const thieves = {
       },
     },
     {
-      key: 'rob', ring: 2, name: 'Crime Wave', text: 'Take 3 resources from rivals, at least 1 from each (they arrive as magenta).',
+      key: 'rob', ring: 2, name: 'Crime Wave', text: 'Take 3 resources from rivals, at least 1 from each; any more from whoever you like (they arrive as magenta).',
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, 3)),
       resolve(ctx, p) { startSteal(ctx, p, 'Crime Wave', ctx.stealCount(p, 3, { say: true }), { each: ctx.rivals(p).map(o => o.id) }); },
     },

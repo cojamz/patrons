@@ -335,11 +335,22 @@ function TurnCard({ card, root, state }) {
       ox: left ? '0%' : '100%', oy: top ? '0%' : '100%',
     });
   }, [card.pid, card.n, root]);
+  // the card always fits on screen (wave-2: a bot's card ran off the bottom): at most a few lines, the rest summed up
+  // (every line stays in the strip's card and the log), and slid back up if it still reaches past the bottom
+  const box = useRef(null);
+  const [lift, setLift] = useState(0);
+  useLayoutEffect(() => {
+    setLift(0);
+    const b = box.current && box.current.getBoundingClientRect();
+    if (b && b.bottom > innerHeight - 8) setLift(Math.min(b.top - 8, b.bottom - (innerHeight - 8)));
+  }, [pos, card.text]);
   if (!pos) return null;
-  const [head, ...rest] = card.text.split(' · ');
+  const [head, ...all] = card.text.split(' · ');
+  const MAXL = 5;
+  const rest = all.length > MAXL ? [...all.slice(0, MAXL - 1), `+${all.length - MAXL + 1} more: hover the line in the strip`] : all;
   return (
-    <div className={`turn-card${card.live ? ' live' : ''}${card.folding ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
-      style={{ left: pos.left, right: pos.right, top: pos.top, bottom: pos.bottom, width: pos.width, maxWidth: pos.width, transformOrigin: `${pos.ox} ${pos.oy}`, '--pc': playerColor(card.pid) }}>
+    <div ref={box} className={`turn-card${card.live ? ' live' : ''}${card.folding ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
+      style={{ left: pos.left, right: pos.right, top: pos.top != null ? pos.top - lift : undefined, bottom: pos.bottom, width: pos.width, maxWidth: pos.width, transformOrigin: `${pos.ox} ${pos.oy}`, '--pc': playerColor(card.pid) }}>
       <b className="tc-head">{head}</b>
       {rest.map((l, k) => <span key={`${k}:${l}`} className="tc-line"><Rich text={l} /></span>)}
     </div>

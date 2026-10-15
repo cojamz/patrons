@@ -85,6 +85,11 @@
 .lt-cult-seat .cs-member.pick-on:not(.pick-alt) .cs-pick-member{box-shadow:0 0 0 2px rgba(var(--lamp),.9),0 0 12px 2px rgba(var(--lamp),.45)}
 .lt-cult-seat .cs-member.pick-alt .cs-pick-member{box-shadow:0 0 0 1px rgba(243,230,200,.28)}
 
+/* the member of yours asking (Double Agent, just recruited): steady, ringed, never dimmed, so you see who's asking */
+.lt-cult-seat .cs-member.pick-asker{opacity:1}
+.lt-cult-seat .cs-member.pick-asker .fig{filter:drop-shadow(0 0 2px #fffaf0) drop-shadow(0 0 5px rgba(var(--lamp),.9))}
+.lt-cult-seat .cs-member.pick-asker::after{content:"";position:absolute;left:50%;bottom:-6px;width:18px;height:2px;margin-left:-9px;border-radius:1px;background:var(--lamp-ink)}
+
 /* the last pick made: "· 0 left" in the line under the headline while its resource flies, then it's gone */
 .lt-prompt .steps-row .seat-pick-done{animation:pick-done .9s ease-in forwards}
 .seat-pick-done .pick-left{font-weight:700;color:var(--cream)}

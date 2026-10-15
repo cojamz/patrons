@@ -69,14 +69,17 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   // the "✓ after X" ticks for the space under the pointer are ShopTicks' (below): a hover never re-renders the shop
   const after = null, unlocked = [];
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
-  const uids = [...sortShop(state, state.shop, sort), ...pileOpts];
+  // a pick from the top of the pile (Talent Scout): the strip becomes a tray of those 5, in pile order; what you can't
+  // pay for recedes (dialogs pod, wave-2 tester: one text chip, the other four never shown)
+  const tray = picking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, 5).includes(o.value)) ? state.pile.slice(0, 5) : null;
+  const uids = tray || [...sortShop(state, state.shop, sort), ...pileOpts];
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
-    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} aria-label="Shop">
+    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-tray={tray ? 'pile' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
-        <h3 className="lt-h">Members<small>{buying ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
+        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Members'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : buying ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
         <span className="lt-sort" role="group" aria-label="Sort the members">
           <span className="lbl" aria-hidden="true">sort</span>
           {[['cost', 'Cheapest first'], ['color', 'Grouped by color, then cheapest']].map(([k, t]) => (
@@ -120,7 +123,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
                 {/* no "need N" on the face (Cory: "the shouting 'need N' goes"; grammar: what you can't afford is the card
                     fading, not text). What you're short of is the hover's one quiet line. */}
-                {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
+                {fromPile && !tray && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
                 {tick && <span className="tick" title={`You could afford it after ${after}`}>after {after}</span>}
               </span>
               <span className="nm">{breakable(d.name)}</span>
