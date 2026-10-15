@@ -144,3 +144,30 @@ The lead stays in, behind one number (`lead` in useTable's layout effect). The p
 4. The seat-order animation reads every seat's top at each turn change.
 
 Next: make SinceStrip's overflow check a ResizeObserver callback only, out of the commit. Read TurnCard's dock once per layout change, not per step.
+
+## Round 3: the layout reads in each step's commit (c5eda4d → 68749e6 and the working tree)
+**Changes:**
+- **SinceStrip:** overflow is checked from a ResizeObserver on the list and its lines. Reads made inside that callback are free, because the layout has settled. The art director's whole-line fold logic now runs inside that callback.
+- **Focus:** the status line takes focus only when the step's kind changes and focus is really lost.
+- **Chair column:** laid out when the seat order changes, and from a ResizeObserver on the rail and the chairs. The chairs move by transform, which never resizes them, so the observer can't loop.
+- **TurnCard dock:** cached, and recomputed on a window resize, when the column or the strip mounts, or, in the layout that seats the card by its chair, when the chair changes.
+- **measureChain:** deleted.
+
+**Deterministic counts.** These are the jsdom calls that force layout or style, per rival step, counted by the render-budget guard "a rival step reads the layout only where it must". The shop snapshot taken before a card leaves is left out: it runs before the commit, while the layout is clean.
+
+| step | before c5eda4d | after |
+|---|---|---|
+| placement (a new turn card) | 10: dock 3, lift 1, card height 1, column 1, director 4 | 8: dock 3, lift 1, director 4 |
+| buy | 1: column | 0 |
+| pay (turn ends) | 13: strip 3, dock 3, lift 1, card height 1, column 1, director 5 | 6: lift 1, director 5 |
+
+In a real browser the column's read is 6 (the rail, 4 chairs and a computed style), and jsdom shows it as 1. What's left in the commit is the director's own measuring (`placeEl`'s visibility check and its rects, 4–6 a step), plus the card's lift in the chair-seated layout.
+
+**Harness, 4× CPU, frozen production builds, at load 25–30 on 4 CPUs:**
+
+| | pure round-I wait | commits per step | forced layout in the React task |
+|---|---|---|---|
+| before | 14.5 s | 2.9 | 333 ms/step |
+| after | 21.3 s | 3.4 | 422 ms/step |
+
+At this load the CPU is sliced among about 7 runnable processes per core, so these times are noise. One example: React-task script time per step rose too, 563 → 847 ms, with the same code doing less. Judge this round by the counts above. The quiet box should confirm the wall time.

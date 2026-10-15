@@ -137,7 +137,15 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>
               {result && g.uids.includes(result.uid) && <UseResult result={result} />}
-              {pickM && <button type="button" className="cs-pick-member" tabIndex={-1} data-option={pickM.id} aria-label={pickM.say || `${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} title={pickM.say || `${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} onClick={e => pick.onPick(pickM.id, e.currentTarget)}><span className="hitbox" aria-hidden="true" /></button>}
+              {/* a lit member says who it is when pointed at, its card beside it (w3b: Shake Down's lit members opened
+                  nothing, so you ransomed blind); a pick that says more (Release's refund) keeps that on its hover too */}
+              {pickM && (() => {
+                const pickUid = g.uids.find(u => pick.members[u] === pickM) ?? g.uids[0];
+                return <button type="button" className="cs-pick-member" tabIndex={-1} data-option={pickM.id} aria-label={pickM.say || `${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} title={pickM.say || undefined}
+                  onPointerEnter={e => { if (hover && realHover(e)) hover.onCardHover(pickUid, e.currentTarget); }}
+                  onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(pickUid, null); }}
+                  onClick={e => pick.onPick(pickM.id, e.currentTarget)}><span className="hitbox" aria-hidden="true" /></button>;
+              })()}
               {/* a switch shows its state, small under its figure; a click flips it in your buy step (its card says so) */}
               {mine && d.toggle && <MemberSwitch name={d.name} on={g.card.on !== false} option={toggle} onPick={onPick} />}
             </span>

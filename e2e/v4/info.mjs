@@ -342,7 +342,7 @@ try {
           const names = await page.evaluate(() => { try { const st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return st.players.map((p, i) => (i === 0 ? 'You' : p.name)); } catch { return null; } });
           let line = null;
           const lit = page.locator('.slot.can');
-          for (let k = 0; k < Math.min(6, await lit.count()) && !line; k++) {
+          for (let k = 0; k < Math.min(12, await lit.count()) && !line; k++) { // a space that moves no contest has no line (w3b)
             await page.mouse.move(4, 690); await page.waitForTimeout(160);
             await lit.nth(k).hover(); await page.waitForTimeout(700);
             line = await page.evaluate(ns => [...document.querySelectorAll('[data-hover-layer] .lt-yd-row .v')].map(e => e.textContent).find(t => ns.filter(n => new RegExp(`(^|· |: )${n} \\d`).test(t)).length >= 2) || null, names);

@@ -27,6 +27,10 @@
 4. Hustler (2 → 8, the bench reads it at about 7) and Lender (keeps its debt when released). [yes]
 5. Pure follower buying wins only about 10% of games (your band is 15–30%), so members beat it comfortably. Leave it, or nudge buying up? [leave it]
 6. Resources are color-only dots now. Add faint inner marks for colorblind players? [no, unless a friend needs them]
+7. Round-III rims decide the winner in about a third of games, and a quarter of them are won uncontested while everyone else spends out (bots, 336 games). Leave the hoard-or-spend tension as it is? [yes]
+
+## What the game-feel tester said, checked against the bots
+A blind hobby gamer played two full games on a quiet machine and graded it B− ("a lively, readable worker-placement with a gorgeous wheel and real snake-draft tension"). Its worry was that members lose to buying 10→10. The bots disagree on Classic: the top quarter of recruiters win 44% of games, the bottom quarter 16%; on random tables it's flat (design/eval/bench/economy-claims.md). Its other claims (ties at 1 in round I, Rising Tide +10 in round II) were rare in 336 bot games.
 
 ## Still open
 - The bench's second bot (Hard-20) got weaker after the "use members any time" change, so last night's balance readings are provisional. The bench session is fixing the bot and rerunning.

@@ -1,9 +1,10 @@
 // E2E turn-card dock gate (2026-10-15: "Maximum update depth exceeded" in TurnCard on a market/echo/yellow/gold table,
 // right after a buy step, with "You took Echo" docked under the since-strip; the game fell to "Something went wrong").
 // The card docks at a foot that never depends on the story (layout.css --turn-dock), and the story leaves it room
-// (--turn-h). Over 50+ rival turns on that table, at 1270×700 and 1100×700:
+// (--turn-h). On that table, at 1270×700 and 1100×700:
 //  (d1) no page error, no console "Maximum update depth", no recovery screen;
 //  (d2) whenever a turn card is up, it never covers the since-strip (≤ 1px), and stays on screen.
+// It plays until 52+ rival placements have happened (from the save's log) with 20+ distinct rival turn cards seen.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5186.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -11,7 +12,9 @@ import { createServer } from 'node:net';
 import { answerChoice } from './lib/answer.mjs';
 
 const TABLE = ['market', 'echo', 'yellow', 'gold'];
-const WANT = Number(process.env.V4_DOCK_TURNS || 52); // rival turn cards to see per size
+const WANT = Number(process.env.V4_DOCK_TURNS || 52); // rival placements played through per size
+const CARDS = Number(process.env.V4_DOCK_CARDS || 20); // distinct rival turn cards seen per size (bots that move in one
+// commit share one card, so cards are fewer than placements)
 let server = null;
 let base = process.env.V4_URL;
 if (!base) {
@@ -30,8 +33,8 @@ const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromi
 async function run(size) {
   const tag = `${size.width}x${size.height}`;
   const turns = new Set();
-  let worst = 0, off = 0, games = 0;
-  while (turns.size < WANT && games < 3) {
+  let worst = 0, off = 0, games = 0, placed = 0;
+  while (placed < WANT && games < 3) {
     games++;
     // a fresh browser per game: a reload resumes the saved game, so "home" would never show
     const ctx = await browser.newContext({ viewport: size });
@@ -69,8 +72,8 @@ async function run(size) {
       for (const q of TABLE) await page.click(`.sphere[data-sphere="${q}"]`);
       await page.click('[data-start]');
       const t0 = Date.now();
-      let lastMoves = null, still = 0;
-      while (Date.now() - t0 < 420000 && turns.size < WANT) {
+      let lastMoves = null, still = 0, here = 0;
+      while (Date.now() - t0 < 420000 && placed + here < WANT) {
         if (await page.getByText('Something went wrong').count()) { errors.push(`[${tag}] (d1) the game fell to "Something went wrong"`); break; }
         const s = await page.evaluate(() => {
           const c = document.querySelector('.turn-card'), sv = document.querySelector('.lt > .lt-since');
@@ -83,6 +86,8 @@ async function run(size) {
           }
           return out;
         });
+        // rival placements so far in this game, from the saved game's own log
+        here = Math.max(here, await page.evaluate(() => { try { return JSON.parse(localStorage.getItem('patrons.v4.local')).state.log.filter(l => /^P[2-4] took /.test(l)).length; } catch { return 0; } }).catch(() => 0));
         const d = await page.evaluate(() => window.__dock).catch(() => null);
         if (d) { for (const k of d.turns) turns.add(`${games}:${k}`); worst = Math.max(worst, d.worst); off = Math.max(off, d.off); }
         if (s.over) break;
@@ -98,6 +103,7 @@ async function run(size) {
         if (next) await next.click({ timeout: 1500 }).catch(() => {});
         await page.waitForTimeout(120);
       }
+      placed += here;
     } catch (e) {
       errors.push(`[${tag}] run (game ${games}): ${e.message.split('\n')[0]}`);
       await page.screenshot({ path: `/tmp/turndock-${tag}-fail.png` }).catch(() => {});
@@ -106,8 +112,9 @@ async function run(size) {
   }
   if (worst > 1) errors.push(`[${tag}] (d2) a turn card covered the since-strip by ${Math.round(worst)}px`);
   if (off) errors.push(`[${tag}] (d2) a turn card ran off the screen ${off} time(s)`);
-  if (turns.size < WANT) errors.push(`[${tag}] saw only ${turns.size} rival turns in ${games} game(s) (want ${WANT})`);
-  console.log(`turndock [${tag}]: ${turns.size} rival turns over ${games} game(s), worst cover ${Math.round(worst)}px`);
+  if (placed < WANT) errors.push(`[${tag}] played through only ${placed} rival placements in ${games} game(s) (want ${WANT})`);
+  if (turns.size < CARDS) errors.push(`[${tag}] saw only ${turns.size} rival turn cards (want ${CARDS})`);
+  console.log(`turndock [${tag}]: ${placed} rival placements, ${turns.size} rival turn cards, ${games} game(s), worst cover ${Math.round(worst)}px`);
 }
 await Promise.all([{ width: 1270, height: 700 }, { width: 1100, height: 700 }].map(run));
 await browser.close();

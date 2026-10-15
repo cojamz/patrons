@@ -41,9 +41,11 @@ const P = {
   purple: {
     hourly: r => ({ main: `+${3 + r} purple`, note: byRound(4, 5, 6) }),
     catchup: { main: '+1 purple', second: '+2 per rival with more minions', note: 'on the board' },
-    windup: { main: '+1 purple', second: 'per minion out' },
-    planahead: { main: '+1 purple', second: 'per minion left' },
-    overtime: { verb: '2 extra turns', second: 'for 8 purple', note: 'can’t pay? +3 purple' },
+    // "out" and "left" read alike (w3b): where the minions are, in the card's own words
+    windup: { main: '+1 purple', second: 'per minion on the wheel' },
+    planahead: { main: '+1 purple', second: 'per minion to place' },
+    // "2 extra turns for 8" read as 8 a turn (w3b): the price first, as the card says it
+    overtime: { verb: 'Pay 8 purple', second: 'for 2 extra turns', note: 'can’t pay? +3 purple' },
     rally: { verb: 'Extra turns for all purple', second: '1 per 4, plus 1' },
   },
   silver: {

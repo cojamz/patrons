@@ -48,7 +48,9 @@ export function memberGroups(state, p) {
     const g = out[k];
     const same = g.items.find(x => x.name === d.name);
     if (same) { same.n++; continue; }
-    const text = (d.text || '').replace(/^Worth \d+ followers?\.\s*/i, '').trim() || `Worth ${d.f}.`;
+    // a member with no ability says so, as its card does (w2a #36): "No ability: worth 2 followers.", never "No effect."
+    const ability = (d.text || '').replace(/^Worth \d+ followers?\.\s*/i, '').replace(/^(Free\.\s*)?No effect\.?$/i, '').trim();
+    const text = ability || `No ability: worth ${d.f} follower${d.f === 1 ? '' : 's'}.`;
     g.items.push({ uid, name: d.name, text, n: 1 });
   }
   return out.filter(g => g.items.length);
