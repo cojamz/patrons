@@ -90,7 +90,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
         </table>
       </div>
       {/* the columns add up to the total; a word the rulebook doesn't use never explains one ("raids", w3a #40) */}
-      <p className="hint">Point at any number to see what it's made of. During play: followers won or lost through members’ abilities and spaces. Prizes: the rims’ round-end prizes.{endCol ? ' End-game: members that score when the game ends.' : ''}</p>
+      <p className="hint">Each number opens what it’s made of. During play: followers won or lost through members’ abilities and spaces. Prizes: the rims’ round-end prizes.{endCol ? ' End-game: members that score when the game ends.' : ''}</p>
       {brokeTie && <p className="hint">Tied on followers: more members breaks the tie.</p>}
       {ranked.some(p => p.final && p.final.parts.length) && (
         <ul className="parts">
