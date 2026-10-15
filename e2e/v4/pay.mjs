@@ -5,10 +5,12 @@
 //       color) and the coins visibly move, and Enter pays.
 //  (p2) A follower buy uses the same sheet: the lifted coins add up to what the tier costs.
 //  (p3) Only one way to pay: no sheet, it pays at once, and the coins fly from your stack.
-//  (g1) Good Deed, two steps on the board: your stacks light (no chips for the mouse), the caption sits under the
-//       headline, never over the wheel; a color lifts, the rivals' seats light; a seat click gives (the engine's id).
-//  (w1) Even Swap, two steps: your members light; one lifts and the rivals' members it pairs with light (each opens
-//       its own card when pointed at: w3a A3); a click swaps.
+//  (g1) Good Deed on the gift card (Cory, 2026-10-16: the two-step pick on the seats was "very bad/confusing"): a small
+//       card beside the space just taken, headed "Give 2 to a rival"; the table's colors are its lit first row, the
+//       rivals' faces wait quiet under them (no chips, nothing lit on the seats); a color is plainly picked, a click on
+//       another switches it, then the faces light and a face click gives (the engine's id), the coins flying there.
+//  (w1) Even Swap on the same card: your members are the first row; one picked, the rivals' members it pairs with light
+//       (each opens its own card when pointed at: w3a A3); a click swaps.
 //  (k1) The keyboard list: absent for the mouse; Tab from the caption opens it with every pick.
 //  Wave-2 tester B: (s8) Snap Up pays through the sheet; (t1) Talent Scout's top 5 as cards; (y1) Your Call in marks at
 //  the space; (r1) Release from your member's card, no header dropdown; (d1) Double Agent's forced swap explained.
@@ -132,74 +134,99 @@ try {
     if (flown < 4) errors.push(`(p3) ${flown} coins flew for a 4-coin payment`);
     await ctx.close();
   }
-  // (g1) Good Deed: a color, then the rival who gets it
+  // (g1) Good Deed: a color, then the rival who gets it, on the gift card beside the space
   {
     const save = comboSave('gooddeed');
-    const { ctx, page } = await open('g1', save, '.seat-pick.docked');
-    const cap = await page.$eval('.seat-pick.docked .pick-cap', e => e.textContent.replace(/\s+/g, ' ').trim());
-    if (!/^Good Deed: give 2$/.test(cap)) errors.push(`(g1) the caption reads "${cap}"`);
-    const how = await page.$eval('.lt-prompt .pick-how', e => e.textContent).catch(() => '');
-    if (!/pick a color, then who gets it/i.test(how)) errors.push(`(g1) the line under it reads "${how}"`);
-    const docked = await page.evaluate(() => {
-      const c = document.querySelector('.seat-pick.docked').getBoundingClientRect(), w = document.querySelector('.lt-wheel .stage, .lt-wheel svg, .lt-wheel').getBoundingClientRect();
-      return { inPrompt: !!document.querySelector('.lt-prompt .seat-pick.docked'), overlap: c.bottom > w.top + 4 && c.top < w.bottom && c.right > w.left && c.left < w.right };
-    });
-    if (!docked.inPrompt) errors.push('(g1) the caption is not docked in the prompt');
-    const chips = await page.$$eval('.pick-key', els => els.filter(e => e.getBoundingClientRect().width > 2).length);
-    if (chips) errors.push(`(g1) ${chips} list chips show for the mouse`);
-    const lit = await page.$$eval('.lt-seat[data-pid="0"] .cs-stack.pick-on', els => els.map(e => e.dataset.res).sort());
-    if (lit.join() !== [...save.state.resources].sort().join()) errors.push(`(g1) your lit stacks ${lit.join(' ')}`);
-    if (await page.$('.lt-seat:not([data-pid="0"]) .cs-pick-seat:not(.off)')) errors.push('(g1) a rival seat is lit before a color is picked');
+    const slot = save.state.players[0].lastSlot && save.state.players[0].lastSlot.key;
+    const { ctx, page } = await open('g1', save, '.lt-wheel .gift-card[data-gift="give"]');
+    // let the card settle beside the space (GameScreen places it after it renders)
+    await page.waitForTimeout(300);
+    const head = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim());
+    if (head !== 'Give 2 to a rival') errors.push(`(g1) the card's heading reads "${head}"`);
+    const title = await page.$eval('.gift-card .gc-title', e => e.textContent.trim()).catch(() => '');
+    if (!/^good deed$/i.test(title)) errors.push(`(g1) the card names "${title}", not Good Deed`);
+    // beside the space just taken: the card's nearest edge within 40px of the space, never on the seats or in the header
+    const where = await page.evaluate(key => {
+      const c = document.querySelector('.gift-card').getBoundingClientRect();
+      const s = key && document.querySelector(`.lt-wheel [data-slot="${key}"]`);
+      const r = s && s.getBoundingClientRect();
+      const gap = r ? Math.max(0, r.left - c.right, c.left - r.right) + Math.max(0, r.top - c.bottom, c.top - r.bottom) : null;
+      return { gap, inWheel: !!document.querySelector('.lt-wheel > .gift-card'), placed: document.querySelector('.gift-card').classList.contains('at-space') };
+    }, slot);
+    if (!where.inWheel) errors.push('(g1) the gift card is not on the wheel');
+    if (!where.placed || where.gap == null || where.gap > 40) errors.push(`(g1) the gift card is not beside the space just taken (${slot}: ${where.gap == null ? 'not found' : `${Math.round(where.gap)}px away`})`);
+    // nothing picks on the seats, and no grid of combination chips
+    if (await page.$('.lt-seat .cs-stack.pick-on, .lt-seat .cs-pick-seat, .seat-pick.docked')) errors.push('(g1) the seats or the header still take the pick');
+    const chips = await page.$$eval('.pick-key, .prompt.choice .opts .btn', els => els.filter(e => e.getBoundingClientRect().width > 2).length);
+    if (chips) errors.push(`(g1) ${chips} chips show`);
+    const firstRow = await page.$$eval('.gift-card .gc-row[data-row="1"][data-live] .gc-dot:not([disabled])', els => els.map(e => e.dataset.res));
+    if (firstRow.join() !== save.state.resources.join()) errors.push(`(g1) the lit colors are ${firstRow.join(' ')}, want the table's ${save.state.resources.join(' ')}`);
+    const facesQuiet = await page.$$eval('.gift-card .gc-row[data-row="2"] .gc-face', els => els.map(e => [e.dataset.pid, e.disabled]));
+    if (facesQuiet.map(f => f[0]).sort().join() !== '1,2,3' || facesQuiet.some(f => !f[1])) errors.push(`(g1) before a color, the faces read ${JSON.stringify(facesQuiet)} (want P2–P4, waiting)`);
     await page.screenshot({ path: `${SHOTS}/g1-step1.png` });
-    await click(page, '.lt-seat[data-pid="0"] .cs-stack[data-res="red"]');
-    await page.waitForSelector('.lt-seat[data-pid="0"] .cs-stack.pick-chosen[data-res="red"]', { timeout: 4000 }).catch(() => errors.push('(g1) the picked color does not stay lifted'));
-    const seats = await page.$$eval('.lt-seat .cs-pick-seat:not(.off)', els => els.map(e => e.closest('.lt-seat').dataset.pid).sort());
-    if (seats.join() !== '1,2,3') errors.push(`(g1) lit seats after the color: ${seats.join(' ')}`);
+    const box0 = await page.$eval('.gift-card', e => { const r = e.getBoundingClientRect(); return [r.width, r.height]; });
+    // a color is picked plainly, and a click on another switches it
+    await click(page, '.gift-card .gc-dot[data-res="yellow"]');
+    await page.waitForSelector('.gift-card .gc-dot.chosen[data-res="yellow"][aria-pressed="true"]', { timeout: 4000 }).catch(() => errors.push('(g1) the picked color does not show as picked'));
+    await click(page, '.gift-card .gc-dot[data-res="red"]');
+    await page.waitForSelector('.gift-card .gc-dot.chosen[data-res="red"]', { timeout: 4000 }).catch(() => errors.push('(g1) a click on another color does not switch the pick'));
+    if (await page.$$eval('.gift-card .gc-dot.chosen', els => els.length) !== 1) errors.push('(g1) more than one color shows as picked');
+    const head2 = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim());
+    if (!/^Give 2\s*to a rival$/.test(head2) || !(await page.$('.gift-card .gc-what .pip'))) errors.push(`(g1) after the color the heading reads "${head2}" (want the dot in it)`);
+    const faces = await page.$$eval('.gift-card .gc-row[data-row="2"][data-live] .gc-face:not([disabled])', els => els.map(e => [e.dataset.pid, e.dataset.option]));
+    if (faces.map(f => f[0]).sort().join() !== '1,2,3') errors.push(`(g1) lit faces after the color: ${faces.map(f => f[0]).join(' ')}`);
+    if (faces.some(([pid, id]) => id !== `give:${pid}:red`)) errors.push(`(g1) the faces answer ${faces.map(f => f[1]).join(' ')}, not the engine's give:<pid>:red`);
+    const box1 = await page.$eval('.gift-card', e => { const r = e.getBoundingClientRect(); return [r.width, r.height]; });
+    if (Math.abs(box1[0] - box0[0]) > 2 || Math.abs(box1[1] - box0[1]) > 2) errors.push(`(g1) the card changes size between steps (${box0.map(Math.round)} → ${box1.map(Math.round)})`);
     await page.screenshot({ path: `${SHOTS}/g1-step2.png` });
     const before = save.state.players[2].res.red;
     await page.evaluate(() => { window.__flights = 0; const t = () => { for (const g of document.querySelectorAll('.pick-flight')) if (!g.dataset.seen) { g.dataset.seen = '1'; window.__flights++; } requestAnimationFrame(t); }; requestAnimationFrame(t); });
-    await click(page, '.lt-seat[data-pid="2"] .cs-pick-seat');
-    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 6000 }).catch(() => errors.push('(g1) clicking the seat gave nothing'));
+    await click(page, '.gift-card .gc-face[data-pid="2"]');
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 6000 }).catch(() => errors.push('(g1) clicking the face gave nothing'));
     const rec = await lastMove(page);
     if (rec && rec !== 'give:2:red') errors.push(`(g1) recorded ${rec}, not give:2:red`);
     if (!(await page.evaluate(() => window.__flights))) errors.push('(g1) no coins flew to the rival');
     let got = NaN;
     for (let k = 0; k < 30 && got !== before + 2; k++) { got = await page.$eval('.lt-seat[data-pid="2"] .cs-stack[data-res="red"] b', e => Number(e.textContent)).catch(() => NaN); await page.waitForTimeout(100); }
     if (got !== before + 2) errors.push(`(g1) P3 holds ${got} red, want ${before + 2}`);
+    if (await page.$('.gift-card')) errors.push('(g1) the gift card stays up after the gift');
+    await page.screenshot({ path: `${SHOTS}/g1-given.png` });
     await ctx.close();
   }
-  // (w1) Even Swap: yours, then theirs
+  // (w1) Even Swap: yours, then theirs, on the same card
   {
     const save = swapSave('evenswap');
     const st = save.state;
-    const { ctx, page } = await open('w1', save, '.seat-pick.docked');
-    const cap = await page.$eval('.seat-pick.docked .pick-cap', e => e.textContent.replace(/\s+/g, ' ').trim());
-    if (!/^Even Swap: pick yours · then theirs$/.test(cap)) errors.push(`(w1) the caption reads "${cap}"`);
-    if (await page.$('.lt-seat:not([data-pid="0"]) .cs-member.pick-on')) errors.push('(w1) a rival member is lit before yours is picked');
-    const mine = await page.$$eval('.lt-seat[data-pid="0"] .cs-member.pick-on', els => els.length);
-    if (!mine) errors.push('(w1) none of your members is lit');
+    const { ctx, page } = await open('w1', save, '.lt-wheel .gift-card[data-gift="trade"]');
+    const head = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim());
+    if (head !== 'Swap a member with a rival') errors.push(`(w1) the card's heading reads "${head}"`);
+    if (await page.$('.lt-seat .cs-member.pick-on')) errors.push('(w1) members light on the seats');
+    if (await page.$('.gift-card .gc-row[data-row="2"] .gc-member:not([disabled])')) errors.push('(w1) a rival member is live before yours is picked');
+    const mine = await page.$$eval('.gift-card .gc-row[data-row="1"] .gc-member:not([disabled])', els => els.map(e => Number(e.dataset.uid)));
+    const engineMine = [...new Set(st.pending.options.map(o => o.value[0]))];
+    if (mine.slice().sort().join() !== engineMine.slice().sort().join()) errors.push(`(w1) your members on the card ${mine.join(' ')} ≠ the engine's ${engineMine.join(' ')}`);
     await page.screenshot({ path: `${SHOTS}/w1-step1.png` });
-    const btn = await page.$('.lt-seat[data-pid="0"] .cs-member.pick-on .cs-pick-member');
-    const a = Number((await btn.getAttribute('data-option')).split(':')[1]);
-    await click(page, '.lt-seat[data-pid="0"] .cs-member.pick-on .cs-pick-member');
-    await page.waitForSelector('.lt-seat[data-pid="0"] .cs-member.pick-chosen', { timeout: 4000 }).catch(() => errors.push('(w1) your picked member does not stay lifted'));
-    const capB = await page.$eval('.seat-pick.docked .pick-cap', e => e.textContent.replace(/\s+/g, ' ').trim());
-    if (!capB.includes(`give ${cardDef(st, a).name}`)) errors.push(`(w1) step two reads "${capB}"`);
+    const a = mine[0];
+    await click(page, `.gift-card .gc-row[data-row="1"] .gc-member[data-uid="${a}"]`);
+    await page.waitForSelector(`.gift-card .gc-member.chosen[data-uid="${a}"]`, { timeout: 4000 }).catch(() => errors.push('(w1) your picked member does not show as picked'));
+    const headB = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim());
+    if (!headB.includes(cardDef(st, a).name)) errors.push(`(w1) step two reads "${headB}"`);
     const want = st.pending.options.filter(o => o.value[0] === a).map(o => o.id).sort();
-    const lit = await page.$$eval('.lt-seat:not([data-pid="0"]) .cs-member.pick-on .cs-pick-member', els => els.map(e => e.dataset.option).sort());
-    if (lit.join() !== want.join()) errors.push(`(w1) lit rival members ${lit.join(' ')} ≠ the engine's pairs ${want.join(' ')}`);
+    const lit = await page.$$eval('.gift-card .gc-row[data-row="2"] .gc-member:not([disabled])', els => els.map(e => e.dataset.option).sort());
+    if (lit.join() !== want.join()) errors.push(`(w1) live rival members ${lit.join(' ')} ≠ the engine's pairs ${want.join(' ')}`);
+    await page.mouse.move(4, 690); await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/w1-step2.png` });
-    // w3a A3 (blocker): a lit member opens its own card when pointed at (name, cost, whose), at either step
+    // w3a A3 (blocker): a live member opens its own card when pointed at (name, cost, whose)
     {
-      const t = page.locator('.lt-seat:not([data-pid="0"]) .cs-member.pick-on .cs-pick-member').first();
+      const t = page.locator('.gift-card .gc-row[data-row="2"] .gc-member:not([disabled])').first();
       const bb = await t.boundingBox();
       await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2); await page.waitForTimeout(500);
-      const want1 = (await t.getAttribute('data-option')).split(':').pop();
+      const want1 = await t.getAttribute('data-uid');
       const shown = await page.evaluate(() => document.querySelector('[data-hover-layer][data-open="1"] [data-card-hover]')?.dataset.cardHover || null);
-      if (shown !== want1) errors.push(`(w1) pointing at a lit rival member opens ${shown ? `card ${shown}` : 'no card'}, not its own (${want1}): a blind swap (w3a A3)`);
+      if (shown !== want1) errors.push(`(w1) pointing at a live rival member opens ${shown ? `card ${shown}` : 'no card'}, not its own (${want1}): a blind swap (w3a A3)`);
       await page.mouse.move(4, 690); await page.waitForTimeout(200);
     }
-    await click(page, '.lt-seat:not([data-pid="0"]) .cs-member.pick-on .cs-pick-member');
+    await click(page, '.gift-card .gc-row[data-row="2"] .gc-member:not([disabled])');
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 6000 }).catch(() => errors.push('(w1) clicking their member did not swap'));
     const rec = await lastMove(page);
     if (rec && !want.includes(rec)) errors.push(`(w1) recorded ${rec}`);

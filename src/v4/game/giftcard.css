@@ -1,0 +1,60 @@
+/* The gift card (GiftCard.jsx): a small paper card beside the space just used. It rides on the plain question's card
+   (.prompt.choice.plain: paper, its place beside the space, the phone's bottom sheet) and lays out two rows: a label on
+   the left, the things to pick on the right. The row to act on is lit; the other waits, quiet, in its place. */
+.lt .lt-wheel > .prompt.choice.gift-card{display:flex;flex-direction:column;gap:12px;padding:12px 16px 16px}
+/* on the laptop it sits beside the space and is never cut (a hover card opens off a member in it) */
+@media (min-width:861px) and (min-height:500px){ .lt .lt-wheel > .prompt.choice.gift-card{overflow:visible;max-height:none} }
+.gift-card .turn-of{margin:0}
+.gift-card .gc-head{display:flex;flex-direction:column;gap:0;margin:0}
+.gift-card .gc-title{font:700 11px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-2,#5f4e3d)}
+.lt .lt-wheel > .prompt.choice.gift-card .gc-what,.gift-card .gc-what{margin:0;font:600 18px/24px var(--serif);color:var(--paper-ink,#2a1f17);white-space:nowrap}
+.gift-card .gc-what .num{font-family:var(--sans);font-weight:700;margin-left:.05em}
+.gift-card .gc-what .pip.glyph{width:.8em;height:.8em;vertical-align:-.06em;margin:0 .12em 0 .06em}
+
+.gift-card .gc-row{display:grid;grid-template-columns:64px auto;align-items:center;column-gap:12px;transition:opacity .15s ease-out}
+.gift-card .gc-lbl{font:500 14px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-row[data-live] .gc-lbl{font-weight:700;color:var(--paper-ink,#2a1f17)}
+.gift-card .gc-items{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px}
+
+/* every pick: a paper tile that lifts on hover and presses on click */
+.gift-card .gc-item{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:44px;min-height:44px;padding:4px 8px;margin:0;
+  border:0;border-radius:8px;background:rgba(255,255,255,.4);color:var(--paper-ink,#2a1f17);font:700 14px/20px var(--sans);cursor:pointer;
+  box-shadow:0 0 0 1px rgba(42,31,23,.18);transition:transform .1s ease-out,box-shadow .12s ease-out,background .12s ease-out,opacity .15s ease-out}
+.gift-card .gc-item:disabled{cursor:default}
+/* the row to act on: its picks wear the lamp ring (the one glow on screen) */
+.gift-card .gc-row[data-live] .gc-item:not(:disabled){background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px rgba(var(--lamp),.95),0 0 10px 1px rgba(var(--lamp),.55),0 2px 0 rgba(42,31,23,.25)}
+.gift-card .gc-item:not(:disabled):hover{transform:translateY(-2px);background:#fffaf0}
+.gift-card .gc-row[data-live] .gc-item:not(:disabled):hover{box-shadow:0 0 0 2px var(--paper-ink,#2a1f17),0 0 12px 2px rgba(var(--lamp),.7),0 3px 0 rgba(42,31,23,.25)}
+.gift-card .gc-item:not(:disabled):active{transform:translateY(1px)}
+.gift-card .gc-item:focus-visible{outline:2px solid var(--paper-ink,#2a1f17);outline-offset:2px}
+/* the row that waits: its picks show what's coming, quiet and out of reach */
+.gift-card .gc-row:not([data-live]) .gc-item:disabled{opacity:.4;box-shadow:0 0 0 1px rgba(42,31,23,.12);background:transparent}
+/* a second-row item the picked first can't pair with (a swap's member of another cost) */
+.gift-card .gc-row[data-live] .gc-item:disabled{opacity:.3;background:transparent;box-shadow:0 0 0 1px rgba(42,31,23,.12)}
+
+/* what's picked: pressed in ink, plainly the choice; a click on it puts it back, a click on another switches */
+.gift-card .gc-item.chosen{background:var(--paper-ink,#2a1f17);color:var(--paper,#f4ebd7);box-shadow:0 0 0 2px var(--paper-ink,#2a1f17),0 2px 0 rgba(0,0,0,.3)}
+.gift-card .gc-item.chosen:hover{background:var(--paper-ink,#2a1f17);transform:none}
+.gift-card .gc-item.chosen .res-glyph{filter:drop-shadow(0 0 0 #fffaf0) drop-shadow(0 0 1.5px #fffaf0)}
+.gift-card .gc-row[data-row="1"]:not([data-live]) .gc-item:not(.chosen):not(:disabled){background:transparent;box-shadow:0 0 0 1px rgba(42,31,23,.2)}
+
+/* a color: the plain dot (its count, when it's yours to give) */
+.gift-card .gc-dot{min-width:44px;padding:4px 10px}
+/* a rival: their face over their name; what they hold of the color under it */
+.gift-card .gc-face{flex-direction:column;gap:0;min-width:56px;padding:4px 8px 2px}
+.gift-card .gc-face .gc-name{font:700 14px/18px var(--sans)}
+.gift-card .gc-has{display:inline-flex;align-items:center;gap:2px;font:500 11px/16px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-item.chosen .gc-has{color:inherit}
+/* an amount: the number alone */
+.gift-card .gc-amt{min-width:56px;font-size:18px}
+/* a member: its picture over its name */
+.gift-card .gc-member{flex-direction:column;gap:0;width:72px;padding:4px 4px 2px}
+.gift-card .gc-member .gc-name{display:block;max-width:100%;font:700 11px/16px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gift-card .gc-group{display:inline-flex;align-items:center;gap:4px;padding-right:8px}
+.gift-card .gc-group + .gc-group{padding-left:8px;border-left:1px solid rgba(42,31,23,.15)}
+.gift-card .gc-who{display:inline-flex;align-items:center}
+
+.gift-card .gc-rest{display:flex;justify-content:flex-end;gap:8px}
+.lt .lt-wheel > .prompt.choice.gift-card .gc-rest-btn{min-height:32px;padding:0 14px;border-radius:999px;font:500 14px/1 var(--sans)}
+
+@media (prefers-reduced-motion:reduce){ .gift-card .gc-item{transition:none} .gift-card .gc-item:not(:disabled):hover{transform:none} }

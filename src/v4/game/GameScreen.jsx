@@ -38,7 +38,8 @@ import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale } from '../motion.js';
 import { PERF_ON } from '../perf.js';
-import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
+import { boardPicker, giftPick, seatPart, shopLookup, pickCaption } from './boardPick.js';
+import GiftCard from './GiftCard.jsx';
 import { sameSeat } from './seatMemo.js';
 import { holdFlag } from './bodyFlag.js';
 import { friendlyError, isNetworkError } from '../errors.js';
@@ -1040,11 +1041,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const setupHeld = !setupNow && holdStory && lastSetupMoves.current != null && state.moves === lastSetupMoves.current + 1;
   // The board picker: a choice whose options name things on the board (spaces, members, cults, resource stacks) is
   // answered there (boardPick.js); the choice panel shrinks to a caption docked under the headline, the leftover
-  // buttons and a list for the keyboard. A choice of pairs (Good Deed, the swaps…) takes two steps: the first part
-  // picked is kept here, for this question only.
+  // buttons and a list for the keyboard. A gift or a choice of pairs (Good Deed, Kickback, the swaps…) is the gift card
+  // beside the space instead; its first part picked is kept here, for this question only.
   const [pickFirst, setPickFirst] = useState({ pend: null, v: null });
   const first = pickFirst.pend === pend ? pickFirst.v : null;
-  const picker = useMemo(() => (showChoice && pend.kind === 'choose' ? boardPicker(state, pend, first) : null), [showChoice, state, pend, first]);
+  // a gift or a pair is picked on the gift card beside the space (GiftCard.jsx), not on the board
+  const gift = useMemo(() => (showChoice && pend.kind === 'choose' ? giftPick(state, pend, first) : null), [showChoice, state, pend, first]);
+  if (gift && pr.forMe && mine) pr.text = `${gift.title ? `${gift.title}: ` : ''}${gift.kind === 'gift' ? `give ${gift.n}${gift.color ? ` ${gift.color}` : ''} to a rival` : gift.head[0].toLowerCase() + gift.head.slice(1)}`;
+  const picker = useMemo(() => (showChoice && pend.kind === 'choose' && !gift ? boardPicker(state, pend) : null), [showChoice, state, pend, gift]);
   const pickSpaces = picker && picker.spaces.size ? picker.spaces : null;
   // what a copy would give, on the space itself while you hover it (the engine's own words for the option)
   const pickNotes = useMemo(() => (pickSpaces ? new Map([...picker.where].filter(([k]) => k.startsWith('space:')).map(([k, o]) => [k.slice(6), o.label])) : null), [picker, pickSpaces]);
@@ -1079,7 +1083,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       else { left = clampX(dx > 0 ? S.right - W.left - C.width : S.left - W.left); top = up ? below : above; }
     } else { left = clampX(sx - W.left - C.width / 2); top = up ? below : above; }
     setPlainAt(at => (at && at.left === left && at.top === top && at.up === up ? at : { left, top, up }));
-  }, [plainKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [plainKey, gift && gift.chosen]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickerRef = useRef(null);
   pickerRef.current = picker;
   const [seatPicks, setSeatPicks] = useState({ key: null, map: {} }); // this steal's picks so far, for the "−1" on each stack
@@ -1090,23 +1094,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const pk = pickerRef.current;
     const o = pk && pk.options.find(x => x.id === id);
     if (!o) return;
-    // a pair's first step: lift it (or put it back down); nothing goes to the engine yet
-    if (o.kind === 'first') {
-      setPickFirst({ pend: pk.pend, v: o.chosen ? null : o.first });
-      if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '0 -3px' }, { translate: '0 0' }], { duration: 160, easing: 'ease-out' });
-      return;
-    }
     if (!options.has(id)) return;
     const t = o.target || {};
-    // a gift picked on the rival's seat: its coins fly there from your stack of that color
-    if (t.fly != null && el) {
-      const from = root.current && root.current.querySelector(`.lt-seat[data-pid="${pk.actor}"] .cs-stack[data-res="${t.fly}"]`);
-      const g = from && from.querySelector('svg');
-      const html = g ? `<span class="pick-coin">${g.outerHTML}</span>` : '<span class="pick-coin dot"></span>';
-      for (let k = 0; k < Math.max(1, Math.min(3, pk.combo && pk.combo.n || 1)); k++) setTimeout(() => flyToken(from, el, html, { tag: 'pick-flight', duration: 420 }), k * 70);
-      onPick(id);
-      return;
-    }
     const take = Number.isInteger(t.pid) && t.res && !t.give && t.pid !== pk.actor;
     if (take && pk.count && pk.count.left === 1 && pk.title) setPickDone({ title: pk.title, what: `take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`, n: Date.now() });
     const root0 = root.current;
@@ -1126,6 +1115,21 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     }
     onPick(id);
   }, [options, onPick, pickKey]);
+  // the gift card: a first lifts (or is put back); nothing goes to the engine until the second
+  const onGiftFirst = useCallback(a => setPickFirst({ pend, v: a }), [pend]);
+  const onGiftAnswer = useCallback((id, el, b) => {
+    const g = gift;
+    if (!g || !options.has(id)) return;
+    // a gift: its coins fly from the card to the rival's stack of that color, as many as they get (up to 3)
+    const color = g.kind === 'gift' ? g.color : g.kind === 'give' ? g.chosen : null;
+    if (color && Number.isInteger(b) && el && root.current) {
+      const to = root.current.querySelector(`.lt-seat[data-pid="${b}"] .cs-stack[data-res="${color}"]`) || root.current.querySelector(`.lt-seat[data-pid="${b}"]`);
+      const from = root.current.querySelector(g.kind === 'gift' ? '.gift-card .gc-what .pip' : '.gift-card .gc-item.chosen') || el;
+      const html = `<span class="pick-coin">${(from.querySelector('svg') || { outerHTML: '' }).outerHTML}</span>`;
+      if (to) for (let k = 0; k < Math.max(1, Math.min(3, g.n || 1)); k++) setTimeout(() => flyToken(from, to, html, { tag: 'pick-flight', duration: 460 }), k * 70);
+    }
+    onPick(id);
+  }, [gift, options, onPick]);
   const onSeatDenied = useCallback((why, el) => {
     if (why) say(why);
     if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-3px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 220, easing: 'ease-out' });
@@ -1268,7 +1272,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {/* (data-step: after you've placed, the wheel steps back so only your buys are bright; final panel S#27) */}
           <section className="lt-wheel" data-region="wheel" data-step={buyingNow ? 'buy' : undefined}>
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && !picker && !payChoice(pend) && pend.kind !== 'setup' && <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {showChoice && !picker && !payChoice(pend) && pend.kind !== 'setup' && (gift
+              ? <GiftCard state={state} gift={gift} onFirst={onGiftFirst} onAnswer={onGiftAnswer} busy={busy} place={plainAt} hover={hover} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
+              : <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />)}
             {/* the starting picks (motion gaps 1): the row stays on the table while the others pick (read-only), and until the
                 last pick has landed, so each rival's pick lights its coin and flies from it to their seat (director.js) */}
             <AfterChain value={setupNow} hold={holdStory && !(setupNow && showChoice)} step={state.moves}>{v => v && (
