@@ -189,11 +189,58 @@ export function cardLines(def) {
   };
 }
 
-/** How wide a line reads, in ems of its type (marks and dots count as a glyph): the shop card picks the effect's size by it. */
+// ---------- measuring a line (Alegreya Sans advance widths in hundredths of an em, measured in Chromium) ----------
+const CHARS = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u2019\u00d7\u00bd\u2212\u2264\u2192\u00e9\u2026\u00b7\u2713";
+const ADV = {
+  700: [15,26,35,55,45,85,71,20,29,30,38,48,23,30,23,28,52,36,47,43,50,43,48,43,49,48,23,23,48,48,48,34,84,60,58,52,65,51,46,60,70,29,33,58,43,80,69,64,55,65,59,50,50,64,59,90,62,56,55,29,28,29,44,44,39,48,52,38,53,47,33,50,53,26,28,49,26,81,53,49,52,52,35,38,34,52,44,70,46,45,42,29,31,29,48,21,48,74,48,55,100,47,63,23,88],
+  800: [15,26,35,55,45,85,71,20,29,30,38,48,23,30,23,28,52,36,47,43,50,43,48,43,49,48,23,23,48,48,48,34,84,60,58,52,65,51,46,60,70,29,33,58,43,80,69,64,55,65,59,50,50,64,59,90,62,56,55,29,28,29,44,44,39,48,52,38,53,47,33,50,53,26,28,49,26,81,53,49,52,52,35,38,34,52,44,70,46,45,42,29,31,29,48,21,48,74,48,55,100,47,63,23,88],
+};
+const GLYPH_EM = 0.86; // a dot or a mark: .8em plus its small margin
+const RES_WORDS = 'gold|red|blue|green|magenta|silver|yellow|purple|white|any';
+/** The pieces a printed line is drawn from (Info.jsx <Marks> draws the same split): numbers, dots, marks, words. */
+export const TOKENS = new RegExp(`(@[mrft]|->| / |[+−-]?\\d+\\+?|×\\d*|½|≤\\d+|\\b(?:${RES_WORDS})\\b)`);
+export const isGlyph = t => /^@[mrft]$|^->$/.test(t) || new RegExp(`^(?:${RES_WORDS})$`).test(t);
+export const isNum = t => /^(?:[+−-]?\d+\+?|×\d*|½|≤\d+)$/.test(t);
+const adv = (ch, w) => { const i = CHARS.indexOf(ch); return (i < 0 ? 0.55 : ADV[w][i] / 100); };
+/** Words of a line with their widths in ems (a number sticks to the glyph after it, as drawn). */
+export function lineWords(text, weight = 700) {
+  const parts = String(text || '').split(TOKENS);
+  const words = [];
+  let cur = 0, open = false, glue = false;
+  const push = () => { if (open) words.push(cur); cur = 0; open = false; };
+  parts.forEach((p, k) => {
+    if (!p) return;
+    if (k % 2) {
+      if (p === ' / ') { push(); words.push(adv('/', 700) + 0.2); return; }
+      const w = isGlyph(p) ? GLYPH_EM : [...p].reduce((t, ch) => t + adv(ch, 800), 0);
+      if (!(glue && isGlyph(p))) push();
+      cur += w; open = true; glue = isNum(p);
+      return;
+    }
+    if (p === ' ' && glue) { return; }
+    glue = false;
+    for (const [j, seg] of p.split(' ').entries()) {
+      if (j > 0) push();
+      if (seg) { cur += [...seg].reduce((t, ch) => t + adv(ch, weight), 0); open = true; }
+    }
+  });
+  push();
+  return words;
+}
+/** How many lines a line of text takes at `px` in a box `width` px wide (greedy wrap, a space between words). */
+export function linesAt(text, px, width, weight = 700) {
+  const words = lineWords(text, weight).map(w => w * px);
+  const space = adv(' ', weight) * px;
+  let lines = 0, x = 0;
+  for (const w of words) { if (!lines || x + space + w > width) { lines++; x = w; } else x += space + w; }
+  return { lines, widest: Math.max(0, ...words) };
+}
+/** The shop card's inner width (its narrowest: the 10-wide strip at 1270px, the phone's swipe row). */
+export const CARD_INNER = 82;
+/** The effect's size on the shop card: big (19px) when it fits one line, else 15px, else two lines at 11px. */
 export function effSize(eff) {
-  const s = String(eff || '');
-  const glyphs = (s.match(/@[mrft]|\b(?:gold|red|blue|green|magenta|silver|yellow|purple|white|any)\b/g) || []).length;
-  const plain = s.replace(/@[mrft]|\b(?:gold|red|blue|green|magenta|silver|yellow|purple|white|any)\b/g, '').replace(/\s+/g, ' ').trim().length;
-  const ems = plain * 0.5 + glyphs * 0.9;
-  return ems <= 5.2 ? 'l' : ems <= 8.4 ? 'm' : 's';
+  if (!eff) return 'l';
+  if (linesAt(eff, 19, CARD_INNER).lines <= 1) return 'l';
+  if (linesAt(eff, 15, CARD_INNER).lines <= 1) return 'm';
+  return 's';
 }

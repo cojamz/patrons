@@ -282,8 +282,8 @@ function panelLayout({ s, R, rot, k, big, fine }) {
     const w = room(h + 4) * k;
     if (w >= Math.max(needBig, needFine, pic) + 2) return { bigLines: t.bl, fineLines: t.fl, big: t.bp, w: w / k };
   }
-  const t = tries[tries.length - 1];
-  return { bigLines: clauseList.length > 1 ? 2 : 1, fineLines: 0, big: PANEL_PX.bigMin, w: Math.max(room(pic + gap + 2 * t.bp), 20 / k) / (1 || 1) };
+  const bl = clauseList.length > 1 ? 2 : 1;
+  return { bigLines: bl, fineLines: 0, big: PANEL_PX.bigMin, w: Math.max(room(pic + gap + bl * PANEL_PX.bigMin), 24 / k) };
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only

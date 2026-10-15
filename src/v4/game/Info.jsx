@@ -15,6 +15,7 @@ import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
+import { TOKENS, isGlyph, isNum } from '../cardText.js';
 import { MO } from '../motion.js';
 
 /**
@@ -104,23 +105,33 @@ export function Mark({ k }) {
   const m = MARK[k];
   return <svg className={`mk mk-${k}`} viewBox="0 0 16 16" role="img" aria-label={m.label}><title>{m.label}</title>{m.d}</svg>;
 }
-const NUM = /([+−-]?\d+\+?|×\d*|½|≤\d+)/;
-/** Numbers heavy, the rest through Rich (resource words as their dots). */
-function Numbered({ text }) {
-  return <>{String(text).split(NUM).map((p, k) => (!p ? null : k % 2 ? <b key={k} className="n">{p}</b> : p === ' / ' || p === '/ ' || p === ' /' ? <span key={k} className="op"> / </span> : <Rich key={k} text={p} />))}</>;
-}
 /**
- * A printed line in the grammar's form (src/v4/cardText.js): the number first and heavy, resource words as their dots,
- * and the marks: @m a member, @r a rival, @f a follower, @t an extra turn, -> becomes, " / " per.
+ * A printed line in the grammar's form (src/v4/cardText.js): the number first and heavy, resource words as their dots
+ * (a number sits right on its dot: "+1●"), and the marks: @m a member, @r a rival, @f a follower, @t an extra turn,
+ * -> becomes, " / " per. cardText.js measures lines with the same split.
  */
 export function Marks({ text }) {
   if (!text) return null;
-  return <>{String(text).split(/(@[mrft]|->| \/ )/).map((p, k) => (
-    p === '@f' ? <Follower key={k} size={11} title="follower" />
-      : p === '->' ? <Mark key={k} k="a" />
-        : p === ' / ' ? <span key={k} className="op">/</span>
-          : /^@[mrt]$/.test(p) ? <Mark key={k} k={p[1]} />
-            : p ? <Numbered key={k} text={p} /> : null))}</>;
+  const parts = String(text).split(TOKENS);
+  const out = [];
+  let glue = false;
+  parts.forEach((p, k) => {
+    if (!p) return;
+    if (k % 2 === 0) {
+      if (p === ' ' && glue && parts[k + 1] && isGlyph(parts[k + 1])) return; // "+1 gold" draws as "+1●"
+      glue = false;
+      out.push(<span key={k}>{p}</span>);
+      return;
+    }
+    glue = isNum(p);
+    if (p === '@f') out.push(<Follower key={k} size={11} title="follower" />);
+    else if (p === '->') out.push(<Mark key={k} k="a" />);
+    else if (p === ' / ') out.push(<span key={k} className="op">/</span>);
+    else if (/^@[mrt]$/.test(p)) out.push(<Mark key={k} k={p[1]} />);
+    else if (isNum(p)) out.push(<b key={k} className="n">{p}</b>);
+    else out.push(<Pip key={k} color={p} />);
+  });
+  return <>{out}</>;
 }
 /** A cost as the plate prints it: "2● 2◐" (the number before its dot, colored part first, then any; no color names). */
 export function CostDots({ parts }) {
