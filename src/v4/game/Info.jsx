@@ -130,7 +130,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
       {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}
       {ability ? <p className="mc-text"><CardText text={ability} /></p> : null}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
-      {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><i />{owner.id === me ? 'Yours' : `${owner.name}’s`}{card && card.used ? ' · used' : ''}</small>}
+      {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used ? ' · used' : ''}</small>}
       {short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
         : where === 'In the pile' && <small className="mc-live">{where}</small>}
     </div>

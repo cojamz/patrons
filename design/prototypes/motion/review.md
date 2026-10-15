@@ -6,7 +6,7 @@ Instruments:
 - **Plan probe:** `planChain` (src/v4/game/director.js) over whole 4-bot games played by Normal bots with effect streams, P1 counted as "you". It uses the plan's own 450px typical distance, needs no screen, and isn't affected by the box's load. It's bundled with esbuild from the designer's scratchpad (`md/plan-entry.mjs`). It measures the targets H2–H4 and H7–H9 at the level of the plan; the real table can only be slower.
 - **Live trace:** a Playwright run on the designer's dev server (:5414, live tree, `?trace=1&speed=steady`) that logs every `Element.animate`, ghost, held number and phase change with page timestamps. The box ran at load 31–37 on 4 CPUs, so absolute times are noise. The trace is good for order and for numbers that change at the wrong moment.
 
-## Round 1 (05:35, director.js as of 05:08)
+## Round 1 (05:20, director.js as of 05:08)
 
 ### Blocking the budget (H2, H3)
 Plan probe, Steady, 6 games: **a rival's turn is 3.22s p50 and 6.61s p95** (target 2.0 / 3.0). **The wait between your turns is 9.31s p50 and 19.7s p95** (target 6.5 / 9). Placement chains are fine (0.96s p50). The time goes to four things:
@@ -33,7 +33,7 @@ With 1–4, the probe's arithmetic puts a rival turn at about 2.0s p50 and the w
 - Payments before purchases; the owner's gains before the spill; the paired magenta steal; 4+ as one bundle.
 - The held number is set in a layout effect, so the final number never flashes before the hold (checked: the text and the hold change in the same task).
 
-## Round 2 (05:50, live tree as of 05:2x on the designer's frozen-watch server)
+## Round 2 (05:30, live tree as of 05:2x on the designer's frozen-watch server)
 
 Instruments: two more live traces (a gain plus a recruit, then three bot turns; Golden Years with Prospector, round II), one of them with animations slowed to 0.4× through CDP for screenshots. The box was at load 28–37.
 
@@ -49,3 +49,26 @@ Instruments: two more live traces (a gain plus a recruit, then three bot turns; 
 ### Verify on a quiet box (couldn't tell under this load)
 15. P2's placement in trace 2 logged no minion flight: the space pulsed and its pieces flew, but no `minion-flight` ghost appeared for seat 2 (seat 3's did, later). Check that a rival's placement shown while your previous chain is still playing still flies its minion (S2).
 16. P2's release: the refund's piece left about 730ms **before** the member's drop to the pile. M8 has the card leave first, with the refund leaving at 40% of its flight. It may just be timer drift under load (8).
+
+## Round 3 (05:35, director.js and GameScreen.jsx as of 05:27)
+
+Fixes 1–4 have landed: a bot step with nothing to show costs nothing when the same bot continues, a turn-ending pass holds `MO.passHold`, `rivalBuyHold` is 0 at Steady, and the same bot's next step shows at the plan's `handoff`. Plan probe, 8 games, Normal bots, a turn counted from each placement:
+
+| Steady | Round 1 | Now | With 17 | Target |
+|---|---|---|---|---|
+| A rival's turn, p50 / p95 | 3.22s / 6.61s | 1.97s / 2.91s | **1.85s / 2.83s** | ≤ 2.0 / ≤ 3.0 (H3) |
+| Your turn's chains, p50 | 1.90s | 1.49s | 1.43s | about 1.2–1.6 |
+| The wait between your turns, p50 / p95 | 9.31s / 19.7s | 6.84s / 13.3s | **6.44s / 12.7s** | ≤ 6.5 (H2) |
+| A rival's placement chain, p50 | 0.96s | 0.76s | | |
+| A rival's recruit chain, p50 | 1.39s | 1.11s | | |
+
+Quick now: a rival turn 1.25s, the wait 3.99s (both in budget). Relaxed: a rival turn 3.77s, the wait 12.2s (3.35s and 11.7s with 17).
+
+17. **Tighten three Steady holds to land the wait at 6.5s.** A rival's minion flight 380 → 340ms, the read hold 160 → 130, the breath 180 → 120 (Quick 220 / 60 / 60, Relaxed 520 / 280 / 300). Measured by patching those three values into the probe: the wait goes 6.84s → 6.44s, a rival turn 1.97s → 1.85s. A space still gets 130ms of stillness to be read before anything leaves it, and turns still separate. The grammar's table is updated.
+18. **H2's p95 was set wrong.** In snake order your wait is sometimes six rival turns in a row (the turnaround), so the p95 is that gap: 12.7s at 1.85s a turn. No honest pacing gets it to 9s without making those turns unreadable. The grammar now states it as "the snake's long gap ≤ 13s", with H2 judged at p50. Relaxed's targets are now a rival's turn ≤ 3.5s and the wait ≤ 12s: it's slower by design.
+
+Landed as well: 5 (the pulse is now inside the read hold) and 6 (the worth hop's tick uses its own duration). Still open from rounds 1–2: 7 (the turn card before the pieces; not re-checked), 8 / 12 / 13 (the timeline bunches under load; the coins and the count run on their own clocks), 9 (ghosts linger), **10 (a stack showing −37: blocking)**, 11 (the deal before the card lifts), 14 (the bundle label over the number).
+
+### Round 3 re-check (05:37, director.js and flight.js as of 05:32)
+- 10: **not reproduced** on the 05:32 code (one live run: the gold's hold went 5 → 9, then let go at 10). Keep the clamp guard anyway; a held number outside a stack's before and after values should never reach the screen.
+- 7: **still open.** The turn card mounts at +474ms, and the bundle leaves at +1113ms.

@@ -331,7 +331,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot.wait{opacity:.5}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{color:#f6deb0}
 .lt [data-spaces="panels"] .stage .hub-label small{display:none}
-.lt [data-spaces="panels"] .stage .hub-label b{font-family:var(--sans);font-weight:800;font-size:16px}
+/* a serif numeral: "II" in a heavy sans inside the dark disc read as a pause button */
+.lt [data-spaces="panels"] .stage .hub-label b{font-family:var(--serif);font-weight:700;font-size:18px}
 .lt [data-spaces="panels"] .stage .hub-label .pips{gap:3px;margin-top:2px}
 .lt [data-spaces="panels"] .stage .hub-label .pips i{width:5px;height:5px}
 /* the print: an upright box over its panel (its width from the room the panel has where it sits now) */

@@ -28,3 +28,15 @@ Each line: where, the problem in plain words, the fix, and before/after shots (d
 - #47, #75 ("Extra turn: place one more minion" for the snake double turn): now "Your turn again (snake order)", and a real extra turn names its source.
 - #39 (shop row shifting): the shop is sorted by cost now (Cory's call), so a refill lands in its place.
 - #82 (buy warnings on one buy and not the other): the contest warnings were cut from member hovers.
+
+## 05:30–05:45 UTC
+19. **Shop card faces: "need 1●", "need 3●".** Cory: "the shouting 'need N' goes"; the grammar: what you can't afford is the card fading, not text. The tags are gone (the faded card says it; the hover's one quiet line says what you're short of). Rulebook line updated. `ShopCards.jsx`.
+20. **Card text: color as an adjective.** "Whenever you recruit a non-● member", "per ● face-up member": a dot standing for an adjective (Cory on the rim: "a dot is no substitute for the word"). A color that describes a member is a word now; a resource amount stays the dot ("+3●"). `Rich.jsx`.
+21. **Wheel hub in round II.** "II" in a heavy sans inside the dark disc read as a pause button. Serif numeral now. `lamp.css` panels hub.
+22. **Seat card says "P1 (you)" (RC1 #64)** where every other place says "You". Now "You". `HoverCards.jsx` SeatCard.
+23. **Member card owner line.** "● P2's" with a color-only dot. Now the player's emoji and name, as everywhere. `Info.jsx` MemberCard.
+24. **Buy step prompt.** "Your turn — recruit or buy" with "Recruit a member or buy followers, or pass" under it: one thing said twice. Now the headline says it whole ("recruit a member or buy followers"); the line under it appears only for a usable member, as when placing. `format.js`; format.test updated.
+25. **Undo button.** "↶ Undo placement": the ↶ is a mark outside the two-mark alphabet. Now "Undo placement". `GameScreen.jsx`.
+26. **Round summary (RC1 #56, #84).** Column "Contests" (not a rulebook word) → "Prizes"; "Other" → "This round", with "+3 from new members" (it counts the members recruited this round, not all of them) and "+1 from abilities" (was "+1 effects"); each prize chip shows the follower mark ("+2👤", was a bare "+2"); the colored bullet dot before each rule is gone (the row's colored edge says the quadrant). "1 red members" → "1 red member". `RoundEnd.jsx`, `format.js` tiebreakNote, `v4.css`.
+27. **Results table (RC1 #108, #110).** "Yourself" was 1 on every row: gone (the total's hover counts it). "Effects" → "Abilities", "Contests" → "Prizes", "End-game bonuses" → "End-game"; the win sentence says "from the rims' prizes", not "from contests". `Results.jsx`, `format.js`; GameScreen.test expects "Prizes".
+28. **I broke How to play for a few minutes** (the mark-drawing recursion never ended, so the page didn't open); the glossary unit test caught it and it's fixed. If a checkpoint landed between 05:20 and 05:35, it carries the bug: the fix is in `HowToPlay.jsx` `marked()`.

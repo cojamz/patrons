@@ -106,7 +106,9 @@ export function promptFor(state, mine) {
     // the headline is a verb phrase that fits one line at 1270×700; the details go in the line under it (sub)
     case 'buy':
       return mine
-        ? { who: p, text: 'Recruit or buy', sub: `Recruit a member or buy followers, or pass${use ? `; or use ${use}` : ''}` }
+        // the headline says it whole (Pass is the button beside it); the line under it only for a usable member, as
+        // when placing (it said "Recruit or buy" and then "Recruit a member or buy followers, or pass" under it)
+        ? { who: p, text: 'Recruit a member or buy followers', ...(use ? { sub: `…or use ${use}` } : {}) }
         : { who: p, text: `${name} is shopping` };
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };

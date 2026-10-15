@@ -12,7 +12,7 @@ import { realHover } from '../hover.js';
 import { cardColor, onTable, usePreview, Tip } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
-import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
+import { timingOf, unlockedBy, surely } from './cards.js';
 void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
 import { MemberDeck, useDeal } from './MemberDeck.jsx';
@@ -48,11 +48,6 @@ export function CostShapes({ parts }) {
       ))}
     </span>
   );
-}
-/** What recruiting it still needs, quietly, in dots ("need 4● 1◐"): the engine's one price rule (payBreakdown). */
-function ShortDots({ short }) {
-  const parts = [short.colorN ? { color: short.color, n: short.colorN } : null, short.any ? { color: 'any', n: short.any } : null].filter(Boolean);
-  return <>{parts.map((c, k) => <span key={k} className="nd"><b>{c.n}</b><Pip color={c.color} n={c.n} /></span>)}</>;
 }
 
 function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null }) {
@@ -98,7 +93,6 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           // afford yet is quieter, except a card the space under your pointer would unlock
           const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can && !tick));
           const lit = (buying || picking) && !!opt;
-          const short = buying && !opt && viewer ? payBreakdown(state, viewer, uid).short : null;
           const parts = costParts(d, state.resources);
           const fromPile = !state.shop.includes(uid);
           return (
@@ -121,7 +115,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                   tinted field, the name, the cost in dots and the worth; what it does is the hover's one plain sentence */}
               <span className="band" aria-hidden="true" />
               <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
-                {short && <span className="need" title={`You need ${short.text} more (after your discounts)`}>need <ShortDots short={short} /></span>}
+                {/* no "need N" on the face (Cory: "the shouting 'need N' goes"; grammar: what you can't afford is the card
+                    fading, not text). What you're short of is the hover's one quiet line. */}
                 {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
                 {tick && <span className="tick" title={`You could afford it after ${after}`}>after {after}</span>}
               </span>

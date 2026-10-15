@@ -107,8 +107,8 @@ const TABLE = {
   //            quick  steady  relaxed
   ownStamp:    [100,   140,    180],  // your minion stands in the door at once, then settles
   trail:       [140,   180,    240],  // your minion's trail from the column
-  minionFly:   [240,   380,    560],  // a rival's minion flight
-  readHold:    [60,    160,    320],  // after a rival places: which space, before anything flies
+  minionFly:   [220,   340,    520],  // a rival's minion flight
+  readHold:    [60,    130,    280],  // after a rival places: which space, before anything flies
   pulse:       [50,    90,     140],  // a source about to give
   hop:         [120,   180,    260],  // a member acts
   lead:        [40,    80,     120],  // hop or pulse → first piece leaves
@@ -129,7 +129,7 @@ const TABLE = {
   shopSlide:   [180,   240,    320],
   deal:        [220,   300,    420],
   dealStagger: [30,    40,     60],
-  breath:      [80,    180,    360],  // between one player's turn and the next
+  breath:      [60,    120,    300],  // between one player's turn and the next
   minionsHome: [260,   340,    480],
   minionsHomeStagger: [20, 30,   45],
   incomeSeat:  [120,   200,    320],

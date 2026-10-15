@@ -61,7 +61,7 @@ Every row: the path, what flies, the stagger for N, the duration (Steady; sectio
 ### Selection
 **S1. A space is chosen (yours).** Press on the space at pointerdown. Your minion stands in its door on the first frame (stamp, 140ms). A trail: a ghost of the minion leaves the foot of your seat's minion column on an arc and fades onto the space, 180ms; the column closes its gap (the minions above slide down 4px, 160ms). The space then pulses (90ms), and the chain's first beat leaves from it 60ms into the pulse. Nothing waits on the trail.
 
-**S2. A space is chosen (a rival).** The rival's seat already carries the turn light. Their bottom minion lifts out of their column (the first 15% of its flight, no separate hop), flies on an arc to the space (380ms; the space's door stays dark until it lands), and stamps into the door (140ms, overlapping the last 60ms of flight). Then a read hold of 160ms from the landing: the space's words are what the eye lands on, so it reads which space before anything flies. The space's pulse is the last 90ms of that hold, and the first piece leaves as the hold ends.
+**S2. A space is chosen (a rival).** The rival's seat already carries the turn light. Their bottom minion lifts out of their column (the first 15% of its flight, no separate hop), flies on an arc to the space (340ms; the space's door stays dark until it lands), and stamps into the door (140ms, overlapping the last 60ms of flight). Then a read hold of 130ms from the landing: the space's words are what the eye lands on, so it reads which space before anything flies. The space's pulse is the last 90ms of that hold, and the first piece leaves as the hold ends.
 
 **S3. A choice inside an action** (Kickback's "a player you choose", Collect Debts' picks, Echo's target). The chain pauses at the choice: everything before it has landed, nothing after it has left. A rival's choice shows as a 160ms point at what they chose (the chosen seat or space pulses) before its effect flies.
 
@@ -128,8 +128,8 @@ The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hov
 | Press (your input) | 70 | 70 | 70 |
 | Your minion stands on the space | 0 (stamp 100) | 0 (stamp 140) | 0 (stamp 180) |
 | Your minion's trail from the column | 140 | 180 | 240 |
-| A rival's minion flight | 240 | 380 | 560 |
-| Read hold after a rival places | 60 | 160 | 320 |
+| A rival's minion flight | 220 | 340 | 520 |
+| Read hold after a rival places | 60 | 130 | 280 |
 | Pulse (a source about to give) | 50 | 90 | 140 |
 | Hop (a member acts) | 120 | 180 | 260 |
 | Hop or pulse → first piece leaves | 40 | 60–100 | 100–150 |
@@ -155,7 +155,7 @@ The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hov
 | Shop slide | 180 | 240 | 320 |
 | Deal: per card / stagger | 220 / 30 | 300 / 40 | 420 / 60 |
 | Next beat starts when this beat's last piece is … along | half | two-thirds | landed + 60 |
-| Breath between one player's turn and the next | 80 | 180 | 360 |
+| Breath between one player's turn and the next | 60 | 120 | 300 |
 | Reckoning: per rim (light, hop, prize, rest) | 500 | 900 | 1300 |
 | Minions home: each / stagger | 260 / 20 | 340 / 30 | 480 / 45 |
 | Round-start income: seat stagger | 120 | 200 | 320 |
@@ -172,17 +172,19 @@ The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hov
 
 The speed setting also sets the bots' pace: a bot's next turn starts when the last chain (plus the breath) is done, not on a separate timer. `BOT.pace` becomes a floor for a turn with nothing to show (a pass), not a fixed hold on top of the motion.
 
+Tightened after the first measurement (review.md, round 3): a rival's minion flight 380 → 340ms, the read hold 160 → 130, the breath 180 → 120. The storyboards in section 7 were timed with the first values; each rival turn there runs about 110ms shorter now.
+
 ### Hard targets (test these)
 Measured today on the quiet box (design/eval/perf/quiet-baseline-b3ac40c.md): a bot's move is applied in about 0.5s but shows on the table at 2.5s p50 and 5.9s p95, because the animation queue sets the pace; from the end of your turn to your next turn takes about 12.5s p50 with three bots. That wait is most of "it doesn't feel snappy". The budget below brings it to about 6s while every effect stays readable. Steady unless named; Normal bots; 1270×700; numbers at p50 over a whole game unless named, on a quiet box. `scripts/v4-perf.mjs` already records most of these.
 
 | # | What | Target |
 |---|---|---|
 | H1 | Your input → visible response (press, minion standing) | ≤ 100ms (the snappy gate) |
-| H2 | **End of your turn → your next turn's spaces lit**, three bots | **≤ 6.5s p50, ≤ 9s p95** (today 12.5s). Quick ≤ 4s p50. Relaxed ≤ 9.5s p50. |
-| H3 | **A rival's whole turn**, from their minion leaving to the next player's minion leaving | **≤ 2.0s p50, ≤ 3.0s p95** (Quick ≤ 1.2s, Relaxed ≤ 3.0s p50) |
+| H2 | **End of your turn → your next turn's spaces lit**, three bots | **≤ 6.5s p50** (today 12.5s); the snake's long gap (up to six rival turns in a row) ≤ 13s. Quick ≤ 4s p50. Relaxed ≤ 12s p50. |
+| H3 | **A rival's whole turn**, from their minion leaving to the next player's minion leaving | **≤ 2.0s p50, ≤ 3.0s p95** (Quick ≤ 1.3s, Relaxed ≤ 3.5s p50) |
 | H4 | A rival's plain turn (place, simple gain, recruit, no triggers) | ≤ 1.9s |
 | H5 | Engine applied a move → its chain starts on screen | ≤ 1.0s p50, **≤ 2.5s p95** (today 2.5s / 5.9s): the backlog rule (section 5) |
-| H6 | Gap between one player's last landing and the next player's first motion | breath (180ms) + ≤ 50ms: a bot's thinking hides behind the chain in front of it |
+| H6 | Gap between one player's last landing and the next player's first motion | breath (120ms) + ≤ 50ms: a bot's thinking hides behind the chain in front of it |
 | H7 | Your placement chain with a simple gain (click → last landing) | ≤ 0.8s |
 | H8 | Your plain recruit (click → worth landed on the count) | ≤ 1.0s |
 | H9 | Any one chain except the Reckoning | ≤ 3.0s (the cap) |
@@ -222,11 +224,11 @@ A recruit or follower buy is a second move in the same turn, so it is a second c
 ### Bot turns read as a short story
 A rival's turn is five lines, each one beat or a few:
 1. **Who:** the turn marker slides to their seat (200ms, during the last turn's breath).
-2. **Where:** their minion lifts from their column and flies to the space; a 160ms read hold on the space's words.
+2. **Where:** their minion lifts from their column and flies to the space; a 130ms read hold on the space's words.
 3. **What:** the space's effects: main, then spill.
 4. **Who reacts:** members' triggers, in the engine's order; yours land with the extra 60ms.
 5. **What they bought:** the chosen card lifts at the hand-off from their gain, the coins drop into it (that's the "which one"), the card flies, its worth hops to their count. Or the follower buy's exchange. A pass shows nothing; the turn card says "passed".
-Then a 180ms breath and the next player. The bot's own steps inside its turn (its choices, its buy) never wait on a timer of their own: the story plays straight through.
+Then a 120ms breath and the next player. The bot's own steps inside its turn (its choices, its buy) never wait on a timer of their own: the story plays straight through.
 
 **A bot's steps flow into each other.** A bot's turn is several engine steps (place, its choices, what to buy, how to pay). A step with nothing to show costs nothing when the same bot moves again right after it; only a pass that ends the turn holds, and only briefly (Quick 150, Steady 300, Relaxed 500ms, with "passed" on the turn card). And when the same bot moves again, its next step shows at this chain's hand-off (its last piece two-thirds along), not after its last landing: the turn reads as one story, not as three.
 

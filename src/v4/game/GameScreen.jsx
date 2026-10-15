@@ -945,7 +945,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : <span className="say" data-prompt tabIndex={-1} />}
           {buyingNow && <PromptActions state={state} optionFor={live} onPick={onPick} />}
           <span className="undo-slot">
-            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your minion until you buy or pass'}>↶ Undo<span className="undo-word"> {undoWord}</span></button>}
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
         </div>
         <div className="bar-row steps-row">
