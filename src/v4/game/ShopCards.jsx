@@ -250,7 +250,8 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
               <div className="pop-card rate-card" data-rate-card={t.key}>
                 <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
                 <span>Any colors, any mix, as your one buy.</span>
-                {t.limited ? <span>{left} left at this table (2 per player at the start).</span> : <span>No limit: as many as you like.</span>}
+                {/* one buy per placement (the rule): "as many as you like" beside "your one buy" read as a contradiction (w4 A#25) */}
+                {t.limited ? <span>{left} left at this table (2 per player at the start).</span> : <span>No limit: buy it again with any later buy.</span>}
                 <small data-pays={opt ? 'tier' : undefined}>{when(t, opt)}</small>
               </div>
             )}><span className="rt-trade"><b className="num">{t.cost}</b><Pip color="any" n={t.cost} /><span className="to" aria-hidden="true">→</span><b className="num">{t.get}</b><FollowerGlyph size={14} /></span>{t.limited ? <small className="rt-left num">{left} left</small> : t.key === 'top' ? <small className="rt-left" data-unlimited="">no limit</small> : null}<span className="hitbox" aria-hidden="true" /></Tip>
