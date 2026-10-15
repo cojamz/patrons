@@ -69,3 +69,28 @@ lines 1 and 2 alone. Line 3 and the full rule are always in the hover.
 
 Fixed after the read: Kickback, Bandwagon, Harvest, Name Drop, Show Off, Reprise, Greatest Hits. Left close: Catch Up
 ("ahead" means more minions out; line 3 and the hover say so).
+
+## Wave-2 re-check (design pod, 2026-10-15, after tester B's #2, #24, #36, #52)
+
+Tester B (design/eval/wave2/tester-b/report.md) placed on "Gain each color" holding no full sets and got nothing, and read "Take a member" as a free shop recruit. The cause: a condition that decides the gain sat in line 3, which drops whenever the ring has no room, and on the center ring line 2 drops too (the panel falls back to line 1 alone). The rule now: a deciding condition is never only in line 3, and on the center ring it lives in line 1. Every action of every sphere was re-read from its lines alone (round II values), rendered on two tables in rounds I and III at 1270×700 (no clipping, every panel fits).
+
+Changed:
+
+| Sphere | Action | Line 1 | Line 2 | Line 3 | A newcomer reads | Real rule | Verdict |
+|---|---|---|---|---|---|---|---|
+| Yellow | Bumper Crop (center) | +1 each per full set | other colors | | 1 of each color for every full set I hold | +1 of each other color per full set you hold | ok (was "Gain each color": the condition was lost) |
+| Yellow | Branch Out | +1 each other color | per 3 yellow | | 1 of each other color per 3 yellow | +1 of each other color per 3 yellow you have | ok (was "Gain each color") |
+| Yellow | Harvest | +1 ● | +1 per other color | you hold | 1 yellow, plus 1 per other color I hold | +1 yellow, plus 1 per other color you hold | ok ("other" moved out of line 3) |
+| Magenta | Lie Low | Steal 1 | then you're safe | from steals this round | steal 1, and then no one can steal from me | take 1 from a rival; no one can steal from you this round | ok (was "+1 ● from a rival": the protection was in line 3) |
+| Magenta | Poach (center) | Take a rival's member | they recruit free | | take a rival's member; they get a free one | take any rival's member; they recruit one costing up to the same, free | ok (was "Take a member": read as a shop recruit) |
+| Purple | Catch Up | +1 ● | +2 per rival with more minions | on the board | 1 purple, 2 more per rival with more minions out | +1 purple, +2 per rival with more minions on the board | ok (was "+2 per rival ahead": ahead in what?) |
+| Purple | Crunch Time (center) | Extra turns for all purple | 1 per 4, plus 1 | | spend all my purple for extra turns | spend all purple: 1 extra turn per 4, plus 1 (up to 2) | ok (was "Extra turns": "spend all purple" dropped) |
+| White | Sob Story | +2 ● | +1 per higher score | players with more 👤 | 2 white, 1 more per player scoring higher than me | +2 white, +1 per player with more followers | ok (was "+1 per player ahead": turn order or score?) |
+| White | Cheap Seats | Trade for followers | 1 for 1, up to 4 | 2 · 4 · 6 by round | trade resources for followers, 1 each, up to 4 | trade up to 2 per round number for followers, 1 for 1 | ok (was "Buy followers", the follower tiles' name at other rates: #52) |
+| White | Your Call | +2 👤 | or +4 ● | 1 · 2 · 3 by round | 2 followers or 4 white, more later | per round number: +1 follower or +2 white | ok (by-round note added, #2) |
+| White | All In (center) | All for followers | 1 for 1 | | trade everything for followers | trade all your resources for followers, 1 for 1 | ok (was "Cash in", with "all for followers" dropping) |
+| Green | Greatest Hits (center) | Redo all your spaces | from this round | | do every space I took again | copy every space you took this round | ok (was "Redo every space": "you took" dropped) |
+| Red | Even Swap | +1 ● | swap, equal cost | a member with a rival | 1 red, swap a member for one of equal cost | +1 red, swap one of yours for a rival's of equal cost | ok ("equal cost" moved out of line 3) |
+
+Re-read and unchanged (each reads right from lines 1–2): Kickback, Golden Years, Intro Offer, Collect Debts, Tithe, Double Down; Bandwagon, Open Door, Open House, Swap Sides, Hand-pick; the basic Blue and Green; Clock In, Roll Call, Plan Ahead, Overtime; Toast, Goody Bags, Good Deed, Sweet Talk, Rising Tide, Hold Court; Top Up, Trade Seeds, Potluck; Snap Up, New Faces, Name Drop, Half Price, Show Off, Spree; Help Yourself, Redistribute, Crime Wave, Shake Down; Sell High, Dividend; Hum, Crescendo, Echo, Encore, Reprise.
+Not changed, on purpose: verb panels lead with a bold word ("Steal 1", "Top up") where the space gains nothing plain, as Cory's panel rule says (#35).
