@@ -5,17 +5,13 @@
 // cards are mine. GameScreen mounts <HoverCardLayer> once.
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { quadrant, roman, contestTable, cardDef, followers as followersOf, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
+import { quadrant, roman, contestTable, cardDef, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
 import { playerColor, standings } from '../format.js';
 import { Popover } from './parts.jsx';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
-import { ResourceGlyph, SeatFigure } from './Glyphs.jsx';
+import { SeatFigure } from './Glyphs.jsx';
 import { Rich } from './Rich.jsx';
-import { Follower } from '../art/Follower.jsx';
 import { unlockedBy, surely } from './cards.js';
-import { lastMoves } from './seats.js';
-import { memberGroups, incomeOf } from './build.js';
-import { seatRanks } from './RankRow.jsx';
 import { memberCopyTargets } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import { SeatMembers } from './MemberUse.jsx';
@@ -64,6 +60,10 @@ export function createHover() {
     get space() { return card && card.kind === 'space' ? card.key : null; },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     close() { clearTimeout(openT); clearTimeout(closeT); set(null); },
+    /** the pointer is on a card you can use (a seat's members: its Use button, its list scrolled): it stays */
+    hold() { clearTimeout(closeT); },
+    /** the pointer left that card: it closes as if it had left the target */
+    letGo() { clearTimeout(closeT); closeT = setTimeout(() => { if (card && !card.pinned) set(null); }, CLOSE_MS); },
     onSpaceHover: (key, el, o = {}) => show({ kind: 'space', key, el, pinned: !!o.pinned }),
     onPlaqueHover: (qid, el, o = {}) => show({ kind: 'plaque', qid, el, pinned: !!o.pinned }),
     onSeatHover: (pid, el, o = {}) => show({ kind: 'seat', pid, el, pinned: !!o.pinned }),
@@ -105,11 +105,14 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   const side = useRef(null); // { el, side } the side chosen for the current target
   useEffect(() => { if (c && !c.pinned) hover.close(); }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
   // the element the card explains; a target re-drawn under the pointer (a refilled shop card, a chair) is found again
-  const el = c ? anchorFor(c) : null;
+  // a seat's card is one you can use (Cory, 2026-10-15: its Use buttons, a long list scrolls): the pointer may move onto it
+  const live = !!(c && !c.pinned && c.kind === 'seat');
+  const inside = useRef(false);
+  const el = c ? anchorFor(c, live && inside.current) : null;
   const place = () => {
     if (!c || c.pinned || !el || !box.current) { setPos(null); return; }
     const a = el.getBoundingClientRect();
-    const w = Math.min(280, innerWidth - 16);
+    const w = Math.min(c.kind === 'seat' ? 340 : 280, innerWidth - 16);
     const h = box.current.offsetHeight || 160;
     const p = placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
     side.current = { el, side: p.side };
@@ -127,7 +130,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   }, []);
   useEffect(() => {
     if (!c || c.pinned) return undefined;
-    const off = () => hover.close();
+    const off = e => { if (box.current && e.target instanceof Node && box.current.contains(e.target)) return; hover.close(); };
     const key = e => { if (e.key === 'Escape') hover.close(); };
     addEventListener('scroll', off, true);
     addEventListener('keydown', key);
@@ -140,6 +143,9 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   // always mounted: content swaps in place; hidden (not unmounted) between cards
   const layer = (
     <div ref={box} className={`lt-hover popover${body ? ' on' : ''}`} data-hover-layer="" data-open={body ? '1' : '0'} data-side={body && pos ? pos.side : undefined} aria-hidden={!body}
+      data-live={body && live ? '1' : undefined}
+      onPointerEnter={() => { if (!live) return; inside.current = true; hover.hold(); }}
+      onPointerLeave={e => { inside.current = false; if (live && e.pointerType === 'mouse') hover.letGo(); }}
       style={body && pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: -9999, top: 0, width: 280 }}>
       {body && <div className="lt-note" data-hover-card={c.kind} role="tooltip">{body}</div>}
     </div>
@@ -155,14 +161,14 @@ if (typeof addEventListener === 'function') addEventListener('pointermove', e =>
  * (a shop refill, a chair re-rendering: RC1 "Kingpin had no hover"), the same thing found again. A card whose pointer
  * has moved on never comes back.
  */
-function anchorFor(c) {
+function anchorFor(c, held = false) {
   if (c.el && c.el.isConnected) return c.el;
   if (typeof document === 'undefined' || !c.el) return null;
   const sel = c.kind === 'space' ? `[data-slot="${c.key}"]` : c.kind === 'plaque' ? `[data-plaque="${c.qid}"]`
     : c.kind === 'seat' ? `[data-cult="${c.pid}"] .cs-head` : c.kind === 'card' ? `[data-region="shop"] [data-uid="${c.uid}"]` : c.kind === 'deck' ? '[data-deck]' : null;
   const el = sel && document.querySelector(sel);
   if (!el) return null;
-  if (c.pinned) return el;
+  if (c.pinned || held) return el;
   const b = el.getBoundingClientRect();
   return lastPt && lastPt.x >= b.left - 4 && lastPt.x <= b.right + 4 && lastPt.y >= b.top - 4 && lastPt.y <= b.bottom + 4 ? el : null;
 }

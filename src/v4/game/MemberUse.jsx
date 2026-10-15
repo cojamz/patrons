@@ -5,7 +5,7 @@
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { quadrant } from '../../engine/v4/index.js';
-import { CardText, onTable } from './Info.jsx';
+import { CardText, CardName, onTable } from './Info.jsx';
 import { Rich } from './Rich.jsx';
 import { memberRows, useNow } from './memberUse.js';
 import './members.css';
@@ -17,7 +17,7 @@ export function UseButton({ use, uid, name, onPick, big = false }) {
   if (!use || use.blocked) return null;
   return (
     <button type="button" className={`mu-use${big ? ' big' : ''}`} data-use={uid} data-option={use.option} title={`Use ${name} now${use.words ? `: ${use.words}` : ''}`}
-      onClick={e => { e.stopPropagation(); onPick(use.option, e.currentTarget); }}>
+      onClick={e => { e.stopPropagation(); onPick(use.option); }}>
       <Rich text={use.label} />
     </button>
   );
@@ -29,7 +29,7 @@ export function MemberSwitch({ name, on, option = null, onPick = null }) {
   const face = <><i className="mu-track" aria-hidden="true"><i className="mu-knob" /></i><span className="mu-sw-word">{on ? 'on' : 'off'}</span></>;
   return option && onPick
     ? <button type="button" role="switch" aria-checked={on} className={`mu-switch${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} data-option={option.id} title={say} aria-label={say}
-        onClick={e => { e.stopPropagation(); onPick(option.id, e.currentTarget); }}>{face}</button>
+        onClick={e => { e.stopPropagation(); onPick(option.id); }}>{face}</button>
     : <span className={`mu-switch idle${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} title={say} aria-label={say} role="img">{face}</span>;
 }
 
@@ -53,7 +53,7 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
             <span className="mu-art" aria-hidden="true"><Sprite id={[row.def.id, spriteId(row.name)]} kind="member" sphere={sphereOf(state, row.def)} size={24} /></span>
             <span className="mu-body">
               <span className="mu-head">
-                <b className="mu-name">{row.name}{row.n > 1 ? <span className="num"> ×{row.n}</span> : null}</b>
+                <b className="mu-name"><CardName state={state} uid={row.uid} />{row.n > 1 ? <span className="num"> ×{row.n}</span> : null}</b>
                 {row.toggle ? <MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} />
                   : row.tag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
               </span>

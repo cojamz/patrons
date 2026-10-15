@@ -5,6 +5,7 @@ Used to score a critic brief's recall: a finding counts as a hit when it names t
 **Never show this file to a tester.** Testers get only the URL, design/rulebook.md and the brief.
 
 Weights: every item counts 1. Items marked (taste) are design-level calls a sharp critic should still raise.
+Part 2 (items 25–37) is what Cory caught later the same night on newer preview builds (decisions.md after the 03:40 block; his words: the problems "aren't even remotely difficult to spot"). Each item says whether it exists on the frozen RC1 build (fd4d734, :5191) the calibration runs play; an item that isn't on the build under test is scored N/A for that run, and recall is reported over the items present.
 
 1. **Not snappy.** The game as a whole feels sluggish: clicks, transitions and bot turns take too long to answer.
 2. **The wheel spins slowly.** Rotating the wheel (or its turn-to-face motion) drags.
@@ -30,5 +31,20 @@ Weights: every item counts 1. Items marked (taste) are design-level calls a shar
 22. **Action spaces overlap the rim's scoring rules.** The space tokens sit on top of the quadrant's rim text.
 23. **The action spaces look slapdash.** (taste) No clear visual language: icons, labels and sums are a jumble rather than one grammar.
 24. **Blue doesn't work.** (taste) The blue quadrant, built on "badged" members, is confusing and weak; it needs a rework.
+
+## Part 2: later the same night (newer builds)
+25. **The rim shows a dot, not the color word.** "MOST ◯" makes you decode a symbol where the word "BLUE" would do. *RC1: absent* (RC1's rims say "MOST GOLD").
+26. **Action panels speak in cryptic shorthand.** "fresh row", "copy yours", "½ richest": invented abbreviations a first-time player can't decipher. *RC1: present* ("new row", "/badged", "/recruit", "steal 1 each richer").
+27. **Text clips inside the panels.** Lines like "1 follower or …" and "+1 /leader" run past or are cut by their panel. *RC1: present* (space text clipped by its circle).
+28. **You can't tell which spaces are available.** Lit (open) spaces aren't clearly different from taken or not-yet-open ones. *RC1: present* (faint glow).
+29. **Combination choices are grids of chips or button lists.** Good Deed showed 12 chips (player × color) instead of a pick on the board. *RC1: present* as button lists (Kickback's gift, the steal lists).
+30. **The starting picker uses the old shaped coins** (bell, leaf, ring, hexagon) and a stray arrow, unlike the plain dots elsewhere. *RC1: present* (shaped coins; no arrow seen).
+31. **Shop cards carry shorthand ability text** that can't be read; the face should be identity and price, the ability a plain sentence in the hover. *RC1: absent* (RC1 cards show no ability text).
+32. **The seat hover repeats Followers and Has** (already on the seat) instead of listing that player's member abilities and which one-use members are used. *RC1: present* (FOLLOWERS / HAS / MEMBERS / LAST MOVES).
+33. **No discoverable way to use a member.** Nothing shows a member is usable, how to use it, or that it's been used. *RC1: present* (a small "Use" pill with no hover or hint).
+34. **The "since your last turn" strip takes a third of the screen** for two lines; the log gets prime space it doesn't need. *RC1: absent* (no strip; the log is in the menu).
+35. **Seat panels are tall and mostly empty.** *RC1: present* (as item 14; scored separately because Cory called it again on the new layout).
+36. **Unplaced minions float around the leader.** Noisy, and you can't count how many are left at a glance. *RC1: present.*
+37. **Names in the log (and strip) don't open their cards.** Space and member names in the history aren't hoverable like everywhere else. *RC1: present* (space names in the log open nothing).
 
 Not scored: Cory's idea of a discard pile for released members (an idea, not a defect).

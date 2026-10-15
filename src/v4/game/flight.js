@@ -117,7 +117,9 @@ export function flyCards(root, snap, moves) {
  */
 export function flyWorker(root, pid, slotKey, color, { own = false } = {}) {
   if (!root || !motionOK()) return false;
-  const from = playerAnchor(root, pid, '.workers');
+  // from the chair's column of minions still to place (the one that left was at its foot), else the leader
+  const col = root.querySelector(`.lt-seat[data-pid="${pid}"] .cs-minions`);
+  const from = (col && visible(col) && (col.lastElementChild || col)) || playerAnchor(root, pid, '.workers');
   const slot = root.querySelector(`[data-slot="${slotKey}"]`);
   const landed = slot && (slot.querySelector(`.worker[data-seat="${pid}"]`) || slot.querySelector('.worker'));
   const to = landed || (slot && slot.querySelector('.base'));

@@ -465,3 +465,10 @@
 .mc .mc-live .cost-dots{margin:0 .2em}
 /* a card that only counts: its head is the whole card, so its live line sits right under it */
 .mc .mc-head + .mc-live{margin-top:12px}
+
+/* a chair's minions still to place, standing beside its total; each bobs a pixel or two on its own slow phase */
+.lt-cult-seat .cs-minions{display:flex;gap:2px;align-items:center}
+.lt-cult-seat .cs-min{display:block;line-height:0;animation:cs-bob calc(3.6s + var(--ph, 0) * 1.8s) ease-in-out infinite;animation-delay:calc(var(--ph, 0) * -5s)}
+.lt-cult-seat .cs-min svg{display:block;image-rendering:pixelated}
+@keyframes cs-bob{0%,100%{translate:0 0}50%{translate:0 -1.5px}}
+@media (prefers-reduced-motion: reduce){.lt-cult-seat .cs-min{animation:none}}

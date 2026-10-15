@@ -221,13 +221,13 @@ const lineH = px => px + 1;
 function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
   const a0 = s.ang - s.half + rot, a1 = s.ang + s.half + rot;
   // the print may sit a little in from the middle of its band, where an upright box has more room
-  const centres = R.n === 1 ? [R.r - 6, R.r - 3, R.r, R.r + 3, R.r + 6] : [R.r - 4, R.r - 2, R.r, R.r + 2];
+  const centres = R.n === 1 ? [R.r - 8, R.r - 6, R.r - 4, R.r - 2, R.r, R.r + 2, R.r + 4, R.r + 6] : [R.r - 6, R.r - 4, R.r - 2, R.r, R.r + 2, R.r + 4];
   let rc = R.r;
   const room = hPx => {
     let best = 0;
     for (const c of centres) {
       const [cx, cy] = polar(s.ang + rot, c);
-      const w = 2 * fitHalfWidth(cx, cy, hPx / k, R.r0, R.r1, a0, a1, 1.6, PANEL_GUT / 2 + 1.8);
+      const w = 2 * fitHalfWidth(cx, cy, hPx / k, R.r0, R.r1, a0, a1, 1.2, PANEL_GUT / 2 + 1.2);
       if (w > best + 0.01) { best = w; rc = c; }
     }
     return best;
@@ -253,12 +253,12 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
     const h = parts.reduce((x, y) => x + y, 0) + X.gap * (parts.length - 1);
     const needW = Math.max(needOne(t.op, t.ol), needTwo(t.tp, t.tl), t.nl ? noteEm * X.note : 0, taken ? 24 : 0);
     const w = room(h) * k;
-    if (w >= needW + 4) return { one: t.op, oneLines: t.ol, two: t.tp, twoLines: t.tl, noteLines: t.nl, w: w / k, rc };
+    if (w >= needW + 2) return { one: t.op, oneLines: t.ol, two: t.tp, twoLines: t.tl, noteLines: t.nl, w: w / k, rc };
   }
-  // nothing fits (never seen on a 1270×700 table): everything at its smallest; the hover has it all
-  const ol = one ? 2 : 0, tl = two ? 4 : 0;
-  const w = room(ol * lineH(X.verbMin) + (taken ? X.minion : tl * lineH(X.small)) + X.gap);
-  return { one: isGain ? X.mainMin : X.verbMin, oneLines: ol, two: X.small, twoLines: tl, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
+  // nothing fits: line 1 alone at its smallest (never clipped; line 2 and 3 are in the hover)
+  const ol = one ? 2 : 0;
+  const w = room(ol * lineH(X.verbMin) + (taken ? X.minion + X.gap : 0));
+  return { one: isGain ? X.mainMin : X.verbMin, oneLines: ol, two: X.small, twoLines: 0, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only
@@ -840,7 +840,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     // panels: the gain, the effect, the clarification, laid out in the room this panel has where it sits now
     const pl = panels ? panelLays.get(key) : null;
     const said = pl && pl.said, lay = pl && pl.lay;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>

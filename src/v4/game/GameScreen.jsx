@@ -31,7 +31,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT } from '../motion.js';
-import { boardPicker, seatPart, shopLookup } from './boardPick.js';
+import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import { sameSeat } from './seatMemo.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START, ownsLocal } from '../saved.js';
@@ -741,29 +741,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
   // The board picker: a choice whose options name things on the board (spaces, members, cults, resource stacks) is
-  // answered there (boardPick.js); the choice panel shrinks to a caption, the leftover buttons and a keyboard list.
-  const picker = useMemo(() => (showChoice && pend.kind === 'choose' ? boardPicker(state, pend) : null), [showChoice, state, pend]);
+  // answered there (boardPick.js); the choice panel shrinks to a caption docked under the headline, the leftover
+  // buttons and a list for the keyboard. A choice of pairs (Good Deed, the swaps…) takes two steps: the first part
+  // picked is kept here, for this question only.
+  const [pickFirst, setPickFirst] = useState({ pend: null, v: null });
+  const first = pickFirst.pend === pend ? pickFirst.v : null;
+  const picker = useMemo(() => (showChoice && pend.kind === 'choose' ? boardPicker(state, pend, first) : null), [showChoice, state, pend, first]);
   const pickSpaces = picker && picker.spaces.size ? picker.spaces : null;
   // what a copy would give, on the space itself while you hover it (the engine's own words for the option)
   const pickNotes = useMemo(() => (pickSpaces ? new Map([...picker.where].filter(([k]) => k.startsWith('space:')).map(([k, o]) => [k.slice(6), o.label])) : null), [picker, pickSpaces]);
   const shopFor = useMemo(() => (picker ? shopLookup(picker) : null), [picker]);
-  // the caption never hides a lit space: it sits at the foot of the wheel, else wherever covers the fewest lit spaces
-  // (head, or a corner); '' is the foot, centred
-  const [capAt, setCapAt] = useState('');
-  useLayoutEffect(() => {
-    const w = pickSpaces && root.current && root.current.querySelector('.lt-wheel');
-    const cap = w && w.querySelector('.prompt.choice.seat-pick');
-    if (!w || !cap) { setCapAt(''); return; }
-    const box = w.getBoundingClientRect(), c = cap.getBoundingClientRect();
-    const lit = [...w.querySelectorAll('.slot.lit')].map(el => el.getBoundingClientRect());
-    const cx = box.left + (box.width - c.width) / 2;
-    const spots = [['', cx, box.bottom - c.height], ['at-top', cx, box.top], ['at-left', box.left, box.bottom - c.height], ['at-right', box.right - c.width, box.bottom - c.height],
-      ['at-top at-left', box.left, box.top], ['at-top at-right', box.right - c.width, box.top]];
-    const hits = ([, x, y]) => lit.filter(r => r.right > x + 2 && r.left < x + c.width - 2 && r.bottom > y + 2 && r.top < y + c.height - 2).length;
-    let best = spots[0];
-    for (const sp of spots) if (hits(sp) < hits(best)) best = sp;
-    setCapAt(best[0]);
-  }, [pickSpaces]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickerRef = useRef(null);
   pickerRef.current = picker;
   const [seatPicks, setSeatPicks] = useState({ key: null, map: {} }); // this steal's picks so far, for the "−1" on each stack
@@ -773,8 +760,24 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const onSeatPick = useCallback((id, el) => {
     const pk = pickerRef.current;
     const o = pk && pk.options.find(x => x.id === id);
-    if (!o || !options.has(id)) return;
+    if (!o) return;
+    // a pair's first step: lift it (or put it back down); nothing goes to the engine yet
+    if (o.kind === 'first') {
+      setPickFirst({ pend: pk.pend, v: o.chosen ? null : o.first });
+      if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '0 -3px' }, { translate: '0 0' }], { duration: 160, easing: 'ease-out' });
+      return;
+    }
+    if (!options.has(id)) return;
     const t = o.target || {};
+    // a gift picked on the rival's seat: its coins fly there from your stack of that color
+    if (t.fly != null && el) {
+      const from = root.current && root.current.querySelector(`.lt-seat[data-pid="${pk.actor}"] .cs-stack[data-res="${t.fly}"]`);
+      const g = from && from.querySelector('svg');
+      const html = g ? `<span class="pick-coin">${g.outerHTML}</span>` : '<span class="pick-coin dot"></span>';
+      for (let k = 0; k < Math.max(1, Math.min(3, pk.combo && pk.combo.n || 1)); k++) setTimeout(() => flyToken(from, el, html, { tag: 'pick-flight', duration: 420 }), k * 70);
+      onPick(id);
+      return;
+    }
     const take = Number.isInteger(t.pid) && t.res && !t.give && t.pid !== pk.actor;
     if (take && pk.count && pk.count.left === 1 && pk.title) setPickDone({ title: pk.title, what: `take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`, n: Date.now() });
     const root0 = root.current;
@@ -843,7 +846,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
-          {note ? (
+          {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}
+          {picker ? (
+            <ChoicePrompt state={state} onPick={onSeatPick} busy={busy} seatPick={picker} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
+          ) : note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
           ) : pr.text ? (
             <span className={`say${mine ? ' mine' : ''}`} data-prompt tabIndex={-1}>
@@ -862,7 +868,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <div className="bar-row steps-row">
           <span className="round">{roundText}{state.round && !state.over ? <small title="Minions this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
           {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
-          {mine && !needHandoff && pr.sub && !note ? <span className="say-sub" data-prompt-sub>{pr.sub}</span> : state.round > 0 && !state.over && (
+          {picker ? <span className="say-sub pick-how" data-prompt-sub>{note ? note.text : pickCaption(state, picker).how}</span>
+            : pickDone ? <span className="say-sub seat-pick-done" aria-hidden="true"><span className="pick-cap">{pickDone.title}: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</span></span>
+              : mine && !needHandoff && pr.sub && !note ? <span className="say-sub" data-prompt-sub>{pr.sub}</span> : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
               <span className={phase === 'place' || phase === 'choose' ? 'on' : ''}>Place</span>
               <span className={phase === 'buy' || phase === 'pay' ? 'on' : ''}>Recruit or buy</span>
@@ -903,8 +911,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           <section className="lt-wheel" data-region="wheel">
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} seatPick={picker} pickAt={capAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
-            {!showChoice && pickDone && <section className="seat-pick-done" aria-hidden="true"><p className="pick-cap"><b>{pickDone.title}</b>: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</p></section>}
+            {showChoice && !picker && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}

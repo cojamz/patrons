@@ -26,13 +26,15 @@ const CONTROL = 'button, a[href], [data-option], [role="button"]';
 // a pointer resting on something opens its card at once (Cory, 2026-10-15: hovers must feel instant); the beat only
 // keeps a pointer passing across a line of keywords from flashing each one
 const TIP_MS = MO.tipOpen; // src/v4/motion.js
-export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, ...rest }) {
+export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, sticky = false, ...rest }) {
   const [open, setOpen] = useState(null); // { el, pinned }
   const [nested, setNested] = useState(false);
   const ref = useRef(null);
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
   useLayoutEffect(() => { const up = ref.current && ref.current.parentElement; setNested(!!(up && up.closest(CONTROL))); }, []);
+  // sticky: a card with a button on it (a member you can use) stays while the pointer moves onto it
+  const letGo = () => setOpen(o => (o && !o.pinned ? null : o));
   const inControl = () => { const up = ref.current && ref.current.parentElement; return !!(up && up.closest(CONTROL)); };
   const pin = e => {
     // a keyword in an option's text never eats the option's click (a tap there picks the option)
@@ -46,14 +48,15 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
         title={nested ? hint || label || undefined : undefined}
         onPointerEnter={e => { if (!realHover(e)) return; clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(o => o || { el: ref.current, pinned: false }), TIP_MS); }}
-        onPointerLeave={e => { clearTimeout(timer.current); if (e.pointerType === 'mouse') setOpen(o => (o && !o.pinned ? null : o)); }}
+        onPointerLeave={e => { clearTimeout(timer.current); if (e.pointerType === 'mouse') { if (sticky) timer.current = setTimeout(letGo, 150); else letGo(); } }}
         onClick={pin}
         onKeyDown={e => { if (!nested && (e.key === 'Enter' || e.key === ' ')) pin(e); }}
         {...rest}
       >{children}{nested ? null : <span className="hitbox" aria-hidden="true" />}</As>
       {open && (
         <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned}>
-          <div className="tip-body" data-tip-body>{typeof content === 'function' ? content() : content}</div>
+          <div className="tip-body" data-tip-body
+            {...(sticky ? { onPointerEnter: () => clearTimeout(timer.current), onPointerLeave: e => { if (e.pointerType === 'mouse') timer.current = setTimeout(letGo, 150); } } : {})}>{typeof content === 'function' ? content() : content}</div>
         </Popover>
       )}
     </>

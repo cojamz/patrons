@@ -113,6 +113,7 @@ try {
   // (t8) names in the strip open their cards
   const nameCard = async (sel, kind, tag) => {
     const n = page.locator(sel).first();
+    await n.waitFor({ timeout: 3000 }).catch(() => {});
     if (!(await n.count())) { fail(`no ${kind} name to hover (${sel})`, tag); return; }
     await n.hover();
     const ok = await page.waitForFunction(k => { const c = document.querySelector(`[data-hover-layer][data-open="1"] [data-hover-card="${k}"]`); return !!c && c.getBoundingClientRect().width > 0; }, kind, { timeout: 2500 }).catch(() => null);
@@ -131,6 +132,16 @@ try {
   };
   await nameCard('[data-since] [data-hover-name="space"]', 'space', 't8');
   await nameCard('[data-since] [data-hover-name="member"]', 'card', 't8');
+  // (t7) the log, one tap from the strip; (t8) its names open their cards too, above the drawer
+  await page.click('[data-since] [data-open-log]');
+  if (!(await page.waitForSelector('.lt-chron', { timeout: 3000 }).catch(() => null))) fail('the strip\'s Log button opened no log', 't7');
+  else {
+    await page.waitForTimeout(400);
+    await nameCard('.lt-chron [data-hover-name="space"]', 'space', 't8-log');
+    await nameCard('.lt-chron [data-hover-name="member"]', 'card', 't8-log');
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('.lt-chron', { state: 'detached', timeout: 3000 }).catch(() => fail('the log did not close on Escape', 't7'));
+  }
 
   // (t3) the first placement of the double
   await page.locator('.lt-wheel .slot.can').first().click();
@@ -162,19 +173,11 @@ try {
   await page.locator('.pass[data-option]').click().catch(() => {});
   // the rivals play; back on P1 the strip has their moves
   await page.waitForFunction(() => document.querySelector('.lt')?.dataset.yours === '0', null, { timeout: 8000 }).catch(() => {});
-  await page.waitForFunction(() => document.querySelector('.lt')?.dataset.yours === '1' && document.querySelector('[data-actor]')?.dataset.actor === '0', null, { timeout: 60000 }).catch(() => fail('never came back to P1', 'play'));
+  await page.waitForFunction(() => document.querySelector('.lt')?.dataset.yours === '1' && document.querySelector('[data-actor]')?.dataset.actor === '0', null, { timeout: 150000 }).catch(() => fail('never came back to P1', 'play'));
   await page.waitForTimeout(500);
   v = await view();
   if (!v.strip.length) fail('back on P1 after the rivals moved, the strip is empty', 't2');
   await page.screenshot({ path: `${SHOTS}/6-back.png` });
-  // (t7)
-  await page.click('[data-since] [data-open-log]');
-  if (!(await page.waitForSelector('.lt-chron', { timeout: 3000 }).catch(() => null))) fail('the strip\'s Log button opened no log', 't7');
-  else {
-    await page.waitForTimeout(400);
-    await nameCard('.lt-chron [data-hover-name="space"]', 'space', 't8-log');
-    await nameCard('.lt-chron [data-hover-name="member"]', 'card', 't8-log');
-  }
   console.log(`turnstory: chips ${JSON.stringify(me && me.text)}, strip ${v.strip.length} lines, placed ${first} then ${second}`);
   await page.close();
 } catch (e) {

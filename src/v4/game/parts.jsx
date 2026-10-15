@@ -3,11 +3,11 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'rea
 import { createPortal } from 'react-dom';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
 import { logSections, playerColor, costParts, plainLine } from '../format.js';
-import { Rich, CostPips } from './Rich.jsx';
+import { Rich, CostPips, Pip } from './Rich.jsx';
 import { MemberCard, NamedText, CardText, cardColor } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { ResourceGlyph } from './Glyphs.jsx';
-import { pickCaption, pickHow, pickName } from './boardPick.js';
+import { pickCaption, pickName } from './boardPick.js';
 import './boardpick.css';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
@@ -69,21 +69,22 @@ export function TurnOf({ player }) {
   return <p className="turn-of" style={{ '--pc': playerColor(player.id) }}><i />{player.name}’s turn<span> · pass the device</span></p>;
 }
 
-export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null, pickAt = '' }) {
+export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null }) {
   const pend = state.pending;
   const setup = pend.kind === 'setup';
   const box = useRef(null);
   useEffect(() => {
-    const b = box.current && box.current.querySelector('button:not([disabled])');
+    // the docked caption takes focus itself (Tab then reaches its buttons and the list); a panel focuses its first button
+    const b = box.current && (seatPick ? box.current : box.current.querySelector('button:not([disabled])'));
     if (b) b.focus({ preventScroll: true });
-  }, [pend]);
+  }, [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   const trade = pend.options.length > 0 && pend.options.every(o => o.kind === 'trade');
   // counted picks ("Steal: take 1 gold from… (2 left)") show how many are already taken
   const total = useRef(null);
   const left = (pend.prompt.match(/\((\d+) left\)/) || [])[1];
   if (left == null) total.current = null; else if (total.current == null || Number(left) > total.current) total.current = Number(left);
   // the seats are the selector (seatPick.js): the panel shrinks to a caption (after every hook above)
-  if (seatPick) return <SeatPickCaption state={state} pk={seatPick} onPick={onPick} busy={busy} turnOf={turnOf} box={box} at={pickAt} />;
+  if (seatPick) return <SeatPickCaption state={state} pk={seatPick} onPick={onPick} busy={busy} turnOf={turnOf} box={box} />;
   // the engine's own count when the choice carries one (it survives a reload); else counted from the first prompt seen
   const tally = pend.count ? `${pend.count.of - pend.count.left} of ${pend.count.of} taken`
     : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
@@ -113,30 +114,39 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
 }
 
 /**
- * The seat selector's caption (the seats are the selector, seatPick.js): what's asking, how many, how many left, and
- * a compact list of the same picks for the keyboard (Tab, Enter), named from each option's target.
+ * The board picker's caption, docked under the headline (never over the wheel or what you're picking): what's asking
+ * and what it wants ("Help Yourself: take 2 · 1 left"), the step to take in the line under it (GameScreen), the buttons
+ * for what has no place on the board (Pass, "All 3 as green", how many), and the same picks as a list for the keyboard
+ * only: it opens when Tab reaches it, never for the mouse.
  */
-function SeatPickCaption({ state, pk, onPick, busy, turnOf, box, at = '' }) {
+function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
   const pend = state.pending;
   const cap = pickCaption(state, pk);
+  const [keys, setKeys] = useState(false);
+  const what = cap.what && cap.what.map((w, k) => (typeof w === 'string' ? <span key={k}>{w}</span> : <Pip key={k} color={w.dot} />));
   return (
-    <section className={`prompt choice seat-pick${at ? ` ${at}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')}>
+    <section className="prompt choice seat-pick docked" aria-live="polite" ref={box} tabIndex={-1} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')} data-step={pk.combo ? (pk.combo.chosen == null ? '1' : '2') : undefined}
+      onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setKeys(false); }}
+      onKeyDown={e => { if (e.key === 'Escape' && keys) { e.stopPropagation(); setKeys(false); e.currentTarget.focus(); } }}>
       {turnOf && <TurnOf player={turnOf} />}
       <p className="pick-cap" title={pend.prompt}>
-        {cap.title ? <><b>{cap.title}</b>: {cap.what}{cap.left != null && <> · <span className="num pick-left" data-left={cap.left}>{cap.left}</span> left</>}</> : cap.what}
+        {cap.title ? <>{cap.title}{what ? <>: {what}</> : null}</> : what}{cap.left != null && <> · <span className="num pick-left" data-left={cap.left}>{cap.left}</span> left</>}
       </p>
-      <p className="pick-how">{pickHow(pk)}{pk.rest.length ? ', or' : ''} <span className="pick-keys-hint">· Tab for a list</span></p>
-      {/* what has no place on the board (Pass, "All 3 as green") stays a button here */}
+      {/* what has no place on the board (Pass, "All 3 as green", how many) stays a button here */}
       {pk.rest.length > 0 && (
         <div className="pick-rest">
           {pk.rest.map(o => <button key={o.id} type="button" className="btn pick-rest-btn" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{o.label}</button>)}
         </div>
       )}
-      <div className="pick-keys" role="group" aria-label="Or pick from a list">
-        {[...pk.where.values()].map(o => (
-          <button key={o.id} type="button" className="pick-key" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{pickName(state, o)}</button>
-        ))}
-      </div>
+      {/* the keyboard's way in: hidden until Tab lands on it, then the list opens under the caption */}
+      <button type="button" className="pick-keys-open" aria-expanded={keys} onFocus={() => setKeys(true)} onClick={() => setKeys(k => !k)}>Pick from a list</button>
+      {keys && (
+        <div className="pick-keys" role="group" aria-label="Pick from a list">
+          {[...pk.where.values()].map(o => (
+            <button key={o.id} type="button" className="pick-key" data-key-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{pickName(state, o)}</button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -367,7 +377,8 @@ export function Popover({ anchor, onClose, children, float = false }) {
   useEffect(() => {
     const close = e => { if (box.current && !box.current.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) onClose(); };
     const key = e => { if (e.key === 'Escape') onClose(); };
-    const scroll = () => { if (!sheet) onClose(); };
+    // scrolling the page closes a floating card; scrolling inside it (a seat's long member list) doesn't
+    const scroll = e => { if (!sheet && !(box.current && e.target instanceof Node && box.current.contains(e.target))) onClose(); };
     addEventListener('pointerdown', close, true);
     addEventListener('keydown', key);
     addEventListener('scroll', scroll, true);

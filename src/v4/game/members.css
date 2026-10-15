@@ -71,3 +71,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .lt-cult-seat .cs-member .mu-switch.on .mu-track{background:var(--cream-2,#b9a98c)}
 .lt-cult-seat .cs-member .mu-switch.on .mu-knob{transform:translateX(8px);background:var(--table,#191310)}
 @media (prefers-reduced-motion:reduce){.mu-use,.mu-knob,.mu-track{transition:none}}
+.mu-name .card-name{text-decoration:none;color:inherit}
+.mu-name .card-name:hover{text-decoration:underline;text-decoration-color:rgba(43,32,24,.35);text-underline-offset:3px}
+/* a seat card is one you can use: the pointer may rest on it (its Use buttons, its list scrolls) */
+.lt-hover.popover.on[data-live="1"]{pointer-events:auto}

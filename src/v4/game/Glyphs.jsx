@@ -117,11 +117,13 @@ export function SeatMinion({ id, size = 16, dim = false, title = null }) {
  * The leader is the anchor a placed minion flies from (data-leader={id}); each floating minion is data-minion.
  * size: the leader (32); minion: each minion (16). compact packs the ring tighter.
  */
-export function LeaderRing({ state, id, size = 32, minion = 16, compact = false }) {
+export function LeaderRing({ state, id, size = 32, minion = 16, compact = false, orbit = true }) {
   const p = state.players[id];
-  const n = Math.max(0, p.left || 0);
+  // orbit false: the leader alone (the chairs stand their minions in a column beside the total, CultSeat)
+  const n = orbit ? Math.max(0, p.left || 0) : 0;
+  if (!orbit) minion = 0;
   const W = compact ? size + minion * 1.6 : size + minion * 2.2;
-  const H = compact ? Math.max(size, 44) : size + minion * 1.6;
+  const H = compact ? Math.max(size, orbit ? 44 : size) : size + minion * 1.6;
   const cx = W / 2, cy = H / 2 + (compact ? 0 : minion * 0.15);
   const R = size / 2 + minion * (compact ? 0.42 : 0.62);
   // spread over the arc above and beside the leader, widening as more are left
@@ -131,9 +133,10 @@ export function LeaderRing({ state, id, size = 32, minion = 16, compact = false 
     return { left: cx + R * Math.sin(a) - minion / 2, top: cy - R * Math.cos(a) - minion / 2 };
   };
   const name = p.name;
-  const label = `${name}'s leader${n ? ` and ${n} minion${n === 1 ? '' : 's'} still to place` : ', every minion placed'}`;
+  const left = Math.max(0, p.left || 0);
+  const label = `${name}'s leader${left ? ` and ${left} minion${left === 1 ? '' : 's'} still to place` : ', every minion placed'}`;
   return (
-    <span className={`lt-ring${compact ? ' compact' : ''}`} style={{ width: W, height: H }} title={label} aria-label={label} role="img" data-leader-ring={id} data-left={n}>
+    <span className={`lt-ring${compact ? ' compact' : ''}`} style={{ width: W, height: H }} title={label} aria-label={label} role="img" data-leader-ring={id} data-left={left}>
       <span className="lead" data-leader={id} style={{ left: cx - size / 2, top: cy - size / 2 }}>
         <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />
       </span>

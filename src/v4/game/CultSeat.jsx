@@ -5,13 +5,16 @@
 // card (resources, members, last moves); hover or tap a member for that member's card.
 import { useEffect, useRef, useState } from 'react';
 import { followers, quadrant, cardDef } from '../../engine/v4/index.js';
-import { memberChips, playerColor, newLogLines } from '../format.js';
+import { memberChips, playerColor, newLogLines, seatEmoji } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId, sphereShare } from '../art/index.js';
 import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
+import { MemberActions, MemberSwitch } from './MemberUse.jsx';
+import { usableNow } from './memberUse.js';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
+import { Minion } from '../art/Leader.jsx';
 import { turnPlaces } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
 import { incomeOf } from './build.js';
@@ -34,6 +37,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // grouped by color (the approved plate: "the color mix is their lean"), table order, colorless last
   const colorAt = d => (onTable(state, d) ? state.quadrants.indexOf(d.quadrant) : state.quadrants.length);
   const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
+  // your members you can use right now, with an effect (the engine's own dry run; one it would refuse stays unlit)
+  const ready = new Set(mine ? usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid) : []);
   // its place in what's left of this round's turn order (who's up now, who's next)
   const turns = turnPlaces(state, me);
   const place = turns.places[pid];
@@ -56,20 +61,30 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         onPointerLeave={e => { if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
         onClick={e => openSeat(e, true)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSeat(e, true); } }}>
-        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 30} minion={mine ? 15 : 13} compact /></span>
+        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 30} orbit={false} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
           {/* its place in the turns, said like the plate's "You  place a minion"; the rail beside the column marks it too */}
           {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}>
-            <span className="co-t">{place.label === 'now' ? (mine ? 'your turn' : 'placing') : place.label}</span>{place.twice && <b className="co-x"> ×2</b>}
+            <span className="co-t">{place.label}</span>{place.twice && <b className="co-x"> ×2</b>}
           </span>}
         </span>
         <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
+      {/* the minions still to place this round, standing in a column at the panel's right edge (Cory: "way less noisy,
+          and easier to grok quickly how many they have left"); each bobs on its own slow phase. A placement flies from here. */}
+      <span className="cs-minions" data-left={p.left || 0} data-n={Math.max(0, p.left || 0)} title={`${p.left || 0} minion${p.left === 1 ? '' : 's'} to place this round`}>
+        {Array.from({ length: Math.max(0, p.left || 0) }, (_, k) => (
+          <i key={k} className="cs-min" data-minion={pid} data-k={k} style={{ '--ph': (((pid * 3 + k) * 0.618034) % 1).toFixed(3) }}>
+            <Minion color={playerColor(pid)} emoji={seatEmoji(state, pid)} size={mine ? 16 : 14} />
+          </i>
+        ))}
+      </span>
       <div className="cs-crowd" role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
         {shown.map(g => {
           const d = g.def;
-          const use = mine ? g.uids.map(u => optionFor(`use:${u}`)).find(Boolean) : null;
+          // yours to use now (Cory, 2026-10-15): the figure is lit, and its card carries the Use button (MemberUse.jsx)
+          const readyUid = mine ? g.uids.find(u => ready.has(u)) : undefined;
           const toggle = mine ? g.uids.map(u => optionFor(`toggle:${u}`)).find(Boolean) : null;
           const hop = react && react.members && react.members[d.id];
           // its sphere at a glance: a soft ground in the sphere's color, stronger when the clothes alone don't carry it
@@ -78,22 +93,16 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // the board picker: a member the choice offers is clicked right here (seat figure)
           const pickM = pick && pick.members ? g.uids.map(u => pick.members[u]).find(Boolean) : null;
           return (
-            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${readyUid != null ? ' ready' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used ? 'used' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
-              <Tip className="fig" label={`${d.name}: show the card`} content={() => <MemberCard state={state} uid={g.uids[0]} />}>
+              <Tip className="fig" sticky={mine} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : 'show the card'}`}
+                content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>
               {pickM && <button type="button" className="cs-pick-member" tabIndex={-1} data-option={pickM.id} aria-label={`${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} title={`${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} onClick={e => pick.onPick(pickM.id, e.currentTarget)}><span className="hitbox" aria-hidden="true" /></button>}
-              {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use<span className="hitbox" aria-hidden="true" /></button>}
-              {/* a switch shows its state, not the action (RC1: Midas read "Off" while on); a click flips it in your buy step */}
-              {(toggle || (mine && d.toggle)) && (() => {
-                const on = g.card.on !== false;
-                const say = `${d.name} is ${on ? 'on' : 'off'}. ${d.text}${toggle ? ` Click to switch it ${on ? 'off' : 'on'}.` : ' You can switch it in your buy step.'}`;
-                return toggle
-                  ? <button type="button" className={`lt-btn mini cs-switch${on ? ' on' : ''}`} data-option={toggle.id} data-switch={on ? 'on' : 'off'} aria-pressed={on} aria-label={say} onClick={() => onPick(toggle.id)} title={say}>{d.name}: {on ? 'on' : 'off'}<span className="hitbox" aria-hidden="true" /></button>
-                  : <span className={`cs-switch idle${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} title={say}>{d.name}: {on ? 'on' : 'off'}</span>;
-              })()}
+              {/* a switch shows its state, small under its figure; a click flips it in your buy step (its card says so) */}
+              {mine && d.toggle && <MemberSwitch name={d.name} on={g.card.on !== false} option={toggle} onPick={onPick} />}
             </span>
           );
         })}
