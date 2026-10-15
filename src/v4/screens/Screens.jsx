@@ -10,12 +10,17 @@ import { GAME_NAME, VERSION } from '../version.js';
 import { copyText } from '../Recovery.jsx';
 import { EmojiButton, EmojiFace, emojiName } from './EmojiPicker.jsx';
 import { settleEmojis, takeEmoji, lastEmoji, rememberEmoji } from '../emojiPick.js';
+import { SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed } from '../motion.js';
 
 const KINDS = [['human', 'Person'], ['bot', 'Bot'], ['empty', 'Empty']];
 const NAME_MAX = 14;
 // count what a person sees as characters (an emoji or accented letter is one), not UTF-16 units
 const graphemes = str => (typeof Intl !== 'undefined' && Intl.Segmenter ? [...new Intl.Segmenter().segment(str)].length : [...str].length);
 const clip = (str, max) => (typeof Intl !== 'undefined' && Intl.Segmenter ? [...new Intl.Segmenter().segment(str)].slice(0, max).map(x => x.segment).join('') : [...str].slice(0, max).join(''));
+
+// the game's one speed: how fast the bots move and moves play out (the ☰ menu changes it during a game too)
+const SPEED_HINT = { quick: 'Bots move fast; moves play out quickly', steady: 'Clear and steady: you can follow every move', relaxed: 'Slower: time to read each move' };
+const SPEED_OPTS = Object.keys(SPEEDS).map(k => [k, SPEED_NAMES[k], `${SPEED_HINT[k] || SPEED_NAMES[k]}. Also in the ☰ menu during a game.`]);
 
 function Seg({ value, options, onChange, label }) {
   return (
@@ -187,7 +192,8 @@ export function LocalSetup({ initial, onStart, onBack }) {
   const [seats, setSeats] = useState(() => dressSeats(initial?.seats || [
     { kind: 'human', name: 'P1' }, { kind: 'bot', name: 'P2' }, { kind: 'bot', name: 'P3' }, { kind: 'bot', name: 'P4' },
   ]));
-  const [speed, setSpeed] = useState(initial?.speed || 'normal');
+  // one speed (Quick / Steady / Relaxed): the bots' pace and how moves play out, the same setting as the ☰ menu's
+  const [speed, setSpeed] = useState(motionSpeed);
   const [level, setLevel] = useState(initial?.level || DEFAULT_BOT_LEVEL);
   const [table, setTable] = useState(() => initialTable(initial?.table));
   const tableOk = !tableProblem(table.quadrants);
@@ -224,7 +230,7 @@ export function LocalSetup({ initial, onStart, onBack }) {
           </div>
         ))}
         <div className="seat"><span>Bots</span><Seg label="Bot level" value={level} options={BOT_LEVEL_INFO.map(l => [l.level, l.name, l.blurb])} onChange={setLevel} /></div>
-        <div className="seat"><span>Bot speed</span><Seg label="Bot speed" value={speed} options={[['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast']]} onChange={setSpeed} /></div>
+        <div className="seat"><span>Speed</span><Seg label="Speed" value={speed} options={SPEED_OPTS} onChange={v => { setSpeed(v); setMotionSpeed(v); }} /></div>
         <TablePicker value={table} onChange={setTable} />
         <div className="row-btns">
           {/* why Start is off, said beside it (RC1 #8: it dimmed at 3 of 4 with nothing near it) */}

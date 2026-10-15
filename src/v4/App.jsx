@@ -12,7 +12,7 @@ import OnlineBar from './screens/OnlineBar.jsx';
 import { tableProblem } from './tables.js';
 import { Recovered } from './Recovery.jsx';
 import { IntroGate, introOnGameStart } from './Intro.jsx';
-import { BOT } from './motion.js';
+import { BOT, motionSpeed, onMotionSpeed } from './motion.js';
 import { PerfProfiler, traceSession } from './perf.js'; // ?trace=1 only (design/eval/perf/)
 
 // Bots decide quickly; the table paces what you see (each visible bot step holds PACE ms, a pass doesn't wait).
@@ -31,6 +31,9 @@ export default function V4Root() {
 function App() {
   const [screen, setScreen] = useState(() => (loadOnline() && rejoinRoom ? { name: 'rejoining' } : linkRejoin() && joinRoom ? { name: 'rejoining', link: linkRejoin() } : { name: 'home' }));
   const [config, setConfig] = useState(null);
+  // one speed setting (setup's Speed and the ☰ menu's): the bots' pace and the animations, read live (decisions.md)
+  const [speed, setSpeedNow] = useState(motionSpeed);
+  useEffect(() => onMotionSpeed(setSpeedNow), []);
   const [session, setSession] = useState(null);
   const [gameKey, setGameKey] = useState(0);
   const [saved, setSaved] = useState(() => loadLocal());
@@ -122,7 +125,7 @@ function App() {
 
   const startLocal = useCallback(cfg => {
     const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind, ...(s.emoji ? { emoji: s.emoji } : {}) }));
-    const botDelayMs = urlBotDelay() || BOT_DELAY[cfg.speed] || 650;
+    const botDelayMs = () => urlBotDelay() || BOT_DELAY[motionSpeed()] || 650;
     const quadrants = cfg.table && !tableProblem(cfg.table.quadrants) ? cfg.table.quadrants : undefined;
     // this tab takes the one local save (any other tab holding a game lets go), then starts over in it
     claimLocal(); clearLocal(); clearLast(); setLast(null);
@@ -135,7 +138,7 @@ function App() {
     claimLocal();
     const v = loadLocal();
     if (!v) { setSaved(null); return false; }
-    const botDelayMs = urlBotDelay() || BOT_DELAY[v.config?.speed] || 650;
+    const botDelayMs = () => urlBotDelay() || BOT_DELAY[motionSpeed()] || 650;
     begin(createLocalSession({ state: v.state, undo: v.undo, hold: v.hold, botDelayMs, holdRoundEnds: true, isOwner: ownsLocal }), v.config);
     return true;
   }, [begin]);
@@ -196,12 +199,12 @@ function App() {
     if (screen.link) {
       // a reopened invite link: this device's seat if it still has one, else the ordinary join form (code filled in)
       const kind = transportKind();
-      enterLobby(() => joinRoom({ code: screen.link, transport: makeTransport(kind), knownIds: roomIds(screen.link), onlyRejoin: true, botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)
+      enterLobby(() => joinRoom({ code: screen.link, transport: makeTransport(kind), knownIds: roomIds(screen.link), onlyRejoin: true, botDelayMs: urlBotDelay() || BOT_DELAY[motionSpeed()] }), kind)
         .then(err => { if (err) setScreen({ name: 'home' }); });
       return;
     }
     const v = loadOnline();
-    enterLobby(() => rejoinRoom({ code: v.code, playerId: v.playerId, transport: makeTransport(v.transport), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), v.transport)
+    enterLobby(() => rejoinRoom({ code: v.code, playerId: v.playerId, transport: makeTransport(v.transport), botDelayMs: urlBotDelay() || BOT_DELAY[motionSpeed()] }), v.transport)
       .then(err => {
         if (!err) return;
         // offline: keep the seat to try again (Join with the same code takes it back); otherwise it's gone
@@ -225,7 +228,7 @@ function App() {
       {online && <OnlineBar session={session} />}
       <PerfProfiler id="GameScreen">
       <GameScreen
-        key={gameKey} session={session} pace={urlBotDelay() ? Math.min(urlBotDelay() * 2, PACE.normal) : PACE[config?.speed] ?? PACE.normal}
+        key={gameKey} session={session} pace={urlBotDelay() ? Math.min(urlBotDelay() * 2, PACE.steady) : PACE[speed] ?? PACE.steady}
         onHome={screen.lobby ? () => leaveLobby(screen.lobby) : goHome}
         leaveText={online ? 'A bot will play your seat. Open the invite link again to take it back.' : 'You can resume it from the home screen.'}
         onPlayAgain={config && !online ? () => startLocal(config) : null}
@@ -259,8 +262,8 @@ function App() {
       error={homeError}
       lastCode={lastRoomCode()}
       onLocal={() => setScreen({ name: 'setup' })}
-      onHost={(name, emoji) => enterLobby(() => createRoom({ name, emoji, table: initialTable(config?.table), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
-      onJoin={(code, name, emoji) => enterLobby(() => joinRoom({ code, name, emoji, knownIds: roomIds(code), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
+      onHost={(name, emoji) => enterLobby(() => createRoom({ name, emoji, table: initialTable(config?.table), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY[motionSpeed()] }), kind)}
+      onJoin={(code, name, emoji) => enterLobby(() => joinRoom({ code, name, emoji, knownIds: roomIds(code), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY[motionSpeed()] }), kind)}
     />
   );
 }
