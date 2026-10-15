@@ -147,6 +147,9 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
   const [loop, setLoop] = useState(0); // the lab replays its one beat
   const [closing, setClosing] = useState(false);
   const [uk, setUk] = useState(null); // CSS px per stage unit
+  // the heavy later beats join the world a moment after it opens (on the same clock, long before they show), so the
+  // opening frames never wait on them; frozen (the lab, the recorder) mounts everything at once
+  const [mounted, setMounted] = useState(() => (at != null ? BEATS.length : 2));
   const root = useRef(null);
   const stage = useRef(null);
   const cam = useRef(null);
@@ -186,6 +189,11 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
     return () => ids.forEach(clearTimeout);
   }, [beat, still, closing, only, at, loop, t0]);
   useEffect(() => () => clearTimeout(state.current.timer), []);
+  useEffect(() => {
+    if (mounted >= BEATS.length) return undefined;
+    const id = setTimeout(() => setMounted(n => n + 1), 900);
+    return () => clearTimeout(id);
+  }, [mounted]);
   // whole CSS px per stage unit, measured (the camera scales the world by it)
   useLayoutEffect(() => {
     const measure = () => { const el = stage.current; if (el && el.offsetWidth) setUk(el.offsetWidth / STAGE.w); };
@@ -273,7 +281,9 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
                 <div ref={cam} className="in-cam timed" style={uk ? { transform: `scale(${uk * first.cam[2]}) translate(${-first.cam[0]}px, ${-first.cam[1]}px)` } : null}>
                   {only
                     ? <Scene key={`${only}.${loop}`} b={only - 1} still={false} t0={t0} at={at} />
-                    : BEATS.map((_, b) => <Scene key={b} b={b} still={false} t0={t0} at={at} base={STARTS[b]} window={[STARTS[b], b < LAST ? STARTS[b + 1] : null]} />)}
+                    : BEATS.map((_, b) => (b < Math.max(mounted, beat + 1)
+                      ? <Scene key={b} b={b} still={false} t0={t0} at={at} base={STARTS[b]} window={[STARTS[b], b < LAST ? STARTS[b + 1] : null]} />
+                      : null))}
                 </div>
               )}
             </Cast.Provider>

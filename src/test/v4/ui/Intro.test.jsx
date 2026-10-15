@@ -150,9 +150,11 @@ describe('intro', () => {
   it('in motion it is one continuous shot: all four beats live in one world from the start (no remount between beats)', () => {
     render(<Intro onClose={() => {}} still={false} />);
     const scenes = () => [...document.querySelectorAll('.intro-scene')].map(e => e.dataset.scene);
-    expect(scenes()).toEqual(['1', '2', '3', '4']);
+    expect(scenes()).toEqual(['1', '2']); // the heavy later beats join a moment after it opens…
+    act(() => vi.advanceTimersByTime(2000));
+    expect(scenes()).toEqual(['1', '2', '3', '4']); // …long before they show
     const first = document.querySelector('[data-scene="4"]');
-    act(() => vi.advanceTimersByTime(9500));
+    act(() => vi.advanceTimersByTime(7500));
     fireEvent.keyDown(document.body, { key: 'ArrowRight' });
     expect(dialog().dataset.beat).toBe('4');
     expect(document.querySelector('[data-scene="4"]')).toBe(first); // the same world, carried forward
