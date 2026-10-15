@@ -408,3 +408,7 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) "If you activate a member, you can no longer sell them for money": a member whose use is spent can't be released (once-per-game members for good; once-per-round ones until their use comes back). Overturns Claude's earlier "no special rule" gut call. Engine canRelease, rulebook, glossary, tests.
 - ✅ (Cory) Make members pricier: OK to the ×1.25 member-cost lever (the one measured lever that brings pure follower buying toward the 25% target). Applied after balance pass 2, then re-measured.
 - ✅ (Cory) Action names batch 2: "I trust" (Claude's picks stand).
+- ✅ (Cory) Neither action look works (A: printed into the rings, B: bubbles): the action spaces need a redesign. Next: a reference board of how the best worker-placement games show their spaces (design/prototypes/actions/refs/), so Cory can point at what he likes before anything is drawn.
+- ✅ (Cory) Activatable members are usable any time on your own turn, not just in the buy step.
+- ✅ (Cory) Drop "badged" (and the ◆) entirely: "I hate that". Blue scores most blue; cards that counted badged members get simple replacements.
+- ✅ (Cory) Yes to the six balance proposals of pass 1: Tax Collector, Upstart, Shake Down, Plan Ahead, Crunch Time, Open House (texts in design/eval/balance-pass-1.md).
