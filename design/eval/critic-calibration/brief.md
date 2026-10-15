@@ -42,7 +42,7 @@ Visit each one, take its shot, and run the checklist on it:
 1. Home and the How to play screen.
 2. Game setup, with the table from your assignment.
 3. The starting-resource picks.
-4. Your first turn, step by step: before placing, hovering spaces, placing, any choice the space asks, paying, the buy step (look at both kinds of buy), and **passing without buying**. Try every interaction the rulebook says you can do with the board, and time each one.
+4. Your first turn, step by step: before placing, hovering spaces, placing, any choice the space asks, paying, the buy step (look at both kinds of buy), and **passing without buying**. Try every interaction the rulebook says you can do with the board, and time each one. **Spin the wheel by hand now** (drag it, then the arrow keys) with `watch 3000`, before anything else distracts you: four panels in a row skipped it.
 5. A bot's turn, watched (`wait`, then `frames 8 idle`).
 6. Every steal, gift, copy, swap or pair choice your table offers: take each such space at least once over the game.
 7. Paying for a member with a mix of resources. Recruit at least one member you activate yourself and use it.
