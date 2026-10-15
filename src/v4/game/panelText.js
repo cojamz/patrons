@@ -8,6 +8,7 @@
 // space's name opens with its hover, whose rule sentence (the engine's action text) uses the same words for the same
 // idea ("copy", "in the shop", "on the board"). design/eval/words/decipher-w3.md checks every line against the rule.
 import { pipEffect } from '../shorts.js';
+import { contextFor } from '../../engine/v4/core.js';
 
 // A value that grows by round prints this round's number, and says it grows in plain words (w3b #12/#13, w3a #54: the
 // "2 · 4 · 6 by round" run under "+4●" said the number twice, and "+2●" alone read as flat). It takes line 2 when the
@@ -45,7 +46,9 @@ const P = {
     bargain: { main: '+2 blue', second: 'then recruit in any colors' },
     restock: { main: '+2 blue', second: 'refresh the shop' },
     // one wording with the hover: "per blue member in the shop" (w3a #22: "on sale" here, "face-up" there)
-    showroom: { main: '+1 blue', second: '+1 per blue in the shop' },
+    // live (f8): line 1 is this turn's real payout, like a space that grows by round shows this round's number; the
+    // rule goes small under it ("+1 blue" in big type read as the whole gain with three blue members in the shop)
+    showroom: (r, now) => (now == null ? { main: '+1 blue', second: '+1 per blue in the shop' } : { main: `+${now} blue`, second: '1, +1 per blue in the shop' }),
     clearance: { verb: 'Half-price recruit', second: 'as your buy', note: 'in any colors' },
     pricecheck: { verb: 'Gain blue', second: 'half your priciest', note: 'member’s cost' },
     spree: { verb: 'Buy 3 times', second: 'this turn' },
@@ -99,7 +102,8 @@ const P = {
     // "Ransom a member" read as paying to get a member back (w3b #19, w3a #57): what you get, whole in line 1 (ring II
     // drops line 2 when tight), and who decides
     // "A rival's member or its cost" read as "I choose" (w4b #5): line 1 says who decides, line 2 what's picked
-    ransom: { verb: 'A rival pays, or loses a member', second: 'their choice', note: 'costing 4 or less' },
+    // what they pay is the member's cost (f8: the face didn't say how much), whole in line 1, since ring II drops line 2
+    ransom: { verb: 'A rival pays a member’s cost, or loses it', second: 'their choice', note: 'costing 4 or less' },
     heist: { verb: 'Take a rival’s member', second: 'they recruit one free' },
   },
   trading: {
@@ -125,11 +129,22 @@ const P = {
   },
 };
 
-/** { main, verb, second, note } for a space this round (any may be null; note may be { byRound: [a, b, c] }). */
-export function panelText(qid, action, round = 1) {
+// Spaces whose payout hangs on the table right now: with a state, the panel prints what it pays this turn. The engine's
+// own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
+const LIVE = new Set(['market.showroom']);
+function liveYield(qid, action, state) {
+  if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
+  try { const n = action.estimate(contextFor(state)); return Number.isFinite(n) ? n : null; } catch { return null; }
+}
+
+/**
+ * { main, verb, second, note } for a space this round (any may be null; note may be { byRound: [a, b, c] }).
+ * Pass `state` for the board's live face (what a space pays this turn); without it, the printed rule.
+ */
+export function panelText(qid, action, round = 1, state = null) {
   const r = Math.max(1, Math.min(3, round));
   let v = P[qid] && P[qid][action.key];
-  if (typeof v === 'function') v = v(r);
+  if (typeof v === 'function') v = v(r, liveYield(qid, action, state));
   if (v) return { main: v.main || null, verb: v.main ? null : v.verb || null, second: v.second || null, note: v.note || null };
   // the plain spheres: "+2 blue +1 red" is the gain, a clause a line when the panel is narrow
   const [main, ...rest] = String(pipEffect(qid, action, r)).split(' · ');

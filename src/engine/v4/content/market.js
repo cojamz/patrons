@@ -132,7 +132,7 @@ const market = {
       resolve(ctx, p) { offerRow(ctx, p, HALF, 'Half Price'); },
     },
     {
-      key: 'pricecheck', ring: 2, name: 'Show Off', text: 'Gain blue equal to half the cost of your priciest member.',
+      key: 'pricecheck', ring: 2, name: 'Show Off', text: 'Gain blue equal to half the cost of your priciest member (rounded down).',
       estimate: (ctx, p) => Math.floor(priciest(ctx, p) / 2),
       resolve(ctx, p) {
         const k = Math.floor(priciest(ctx, p) / 2);

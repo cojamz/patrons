@@ -2,7 +2,7 @@
 // 3's blind testers). Guards what was fixed: no rulebook jargon on a panel, a gain that grows says so, and "You'd get"
 // gives numbers when a pick decides it ("it depends on your pick / a rival decides part of it" was empty, w3b #20).
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove, chooseBotMove, previewSpace, quadrant, allQuadrantIds } from '../../../engine/v4/index.js';
+import { createGame, applyMove, chooseBotMove, previewSpace, quadrant, allQuadrantIds, cardDef } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { panelText, panelEntries } from '../../../v4/game/panelText.js';
 import { youdWords } from '../../../v4/game/Info.jsx';
@@ -30,8 +30,21 @@ describe('panel words (w3)', () => {
     // w3b #18: "Extra turns for all purple" read as a group effect; w3b #19: "Ransom a member" read backwards
     expect(panelText('purple', { key: 'rally' }, 3).verb).toMatch(/^Take your next 2 turns now$/);
     // w4b #5: "A rival's member or its cost" read as "I choose": the rival pays or loses, in line 1
-    expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^A rival pays, or loses a member$/);
+    expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^A rival pays a member’s cost, or loses it$/);
     expect(panelText('silver', { key: 'jubilee' }, 3).verb).toMatch(/per 2 silver held/);
+    // Shake Down says what the rival pays: the member's cost (f8)
+    expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/pays a member’s cost/);
+  });
+
+  it('Name Drop prints this turn\'s real payout big, with its rule small under it (f8)', () => {
+    const s = createGame({ seats: [{ name: 'A', kind: 'human' }, { name: 'B', kind: 'bot' }], seed: 5, quadrants: ['market', 'red', 'gold', 'yellow'] });
+    const a = quadrant('market').actions.find(x => x.key === 'showroom');
+    const blue = s.shop.filter(u => cardDef(s, u).quadrant === 'market').length;
+    const t = panelText('market', a, 1, s);
+    expect(t.main).toBe(`+${1 + blue} blue`);
+    expect(t.second).toBe('1, +1 per blue in the shop');
+    // without a table (the decipher table, the strip) it's the printed rule
+    expect(panelText('market', a, 1).main).toBe('+1 blue');
   });
 
   it('"You\'d get" says the likely and the best case, or the best pick, or the mix, in numbers', () => {

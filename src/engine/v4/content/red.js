@@ -42,7 +42,7 @@ export default {
     {
       // Cory, 2026-10-15 (balance pass 1, #6): no +2 red, and you choose (was "+2 red, and recruit the cheapest
       // face-up member, free", his own "too strong" anchor: an extra recruit plus +2)
-      key: 'hireup', ring: 2, name: 'Open House', text: `Recruit a face-up member costing ${OPEN_HOUSE_MAX} or less, free.`,
+      key: 'hireup', ring: 2, name: 'Open House', text: `Recruit a face-up member with a printed cost of ${OPEN_HOUSE_MAX} or less, free.`,
       estimate: ctx => Math.max(0, ...openHouseRow(ctx).map(c => c.def.f + cost(c) * 0.8)),
       resolve(ctx, p) {
         const row = openHouseRow(ctx);

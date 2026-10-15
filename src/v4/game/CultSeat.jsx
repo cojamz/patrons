@@ -17,7 +17,7 @@ import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { seatTurns } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
-import { incomeOf, memberGroups } from './build.js';
+import { incomeOf, incomeTerms } from './build.js';
 import Tick from './Tick.jsx';
 import { Rich } from './Rich.jsx';
 import { MO } from '../motion.js';
@@ -57,8 +57,13 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // its build at one glance: its members (grouped by color) and what they hand it each round (the engine's round start)
   const income = incomeOf(state, pid);
   const incomeParts = income ? Object.entries(income.res).filter(([, n]) => n > 0) : [];
-  const incomeFrom = incomeParts.length ? (memberGroups(state, p).find(g => g.label === 'Each round') || { items: [] }).items.map(x => (x.n > 1 ? `${x.name} ×${x.n}` : x.name)) : [];
-  const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
+  // a dry run of next round's start: a part that hangs on a condition says so ("+1 purple per 2 purple"), and the hover
+  // says each member's rule (build.js incomeTerms, f8: Late Bloomer read as a sure +1 every round)
+  const terms = incomeParts.length || (income && income.followers > 0) ? incomeTerms(state, p) : null;
+  const incomeWords = (terms ? terms.groups : []).flatMap(g => g.parts.map(([r, n], i) => `+${n} ${r}${g.cond && i === g.parts.length - 1 ? ` ${g.cond}` : ''}`))
+    .concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
+  // the hover's sentence: a comma after each condition, so "+1 if fewest, +2 per 2 purple" never runs together
+  const incomeText = incomeWords.map((w, i) => (i < incomeWords.length - 1 && /[a-z]$/.test(w) && !/^\+\d+ \w+$/.test(w) ? `${w},` : w)).join(' ');
   // member figures shown before "+N": one row beside the "each round" line, so every chair keeps one fixed height
   // (the seat column is narrower now: six figures ran under "each round +3●"; each income part takes a figure's room)
   // (design pod, w2b #22: figures are 32px on the laptop so a rival's members can be told apart: six and a "+N" to a
@@ -204,10 +209,17 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <div className="cs-build" {...bodyHover}>
           {incomeWords.length > 0 && (
             <Tip className="cs-income" data-income={incomeWords.join(', ')} label={`Each round its members make ${incomeWords.join(', ')}`}
-              content={() => <div className="pop-card gloss"><b>Each round</b><span>At the start of each round, {mine ? 'your' : `${p.name}’s`} members make <Rich text={incomeWords.join(' ')} />{incomeFrom.length ? ` (${incomeFrom.join(', ')})` : ''}.</span></div>}>
+              content={() => <div className="pop-card gloss"><b>Each round</b><span>Next round starts with <Rich text={incomeText} /> for {mine ? 'you' : p.name}, as things stand now.</span>
+                {terms && terms.sources.map(x => <span key={x.name} className="cs-why">{x.name}{x.n > 1 ? ` ×${x.n}` : ''}: <Rich text={x.text} />{x.hold ? ` (${x.hold})` : ''}</span>)}</div>}>
               <small>each round</small>
-              <span className="cs-gains">
-                {incomeParts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
+              <span className={`cs-gains${terms && terms.groups.some(g => g.cond) ? ' has-cond' : ''}`}>
+                {/* a condition and the parts it covers stay together on one line ("+1● +1● +1● if fewest") */}
+                {(terms ? terms.groups : []).map(g => (
+                  <span key={g.cond || '-'} className="cs-grp" {...(g.cond ? { 'data-cond': g.cond } : {})}>
+                    {g.parts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
+                    {g.cond && <small className="cs-cond"><Rich text={g.cond} /></small>}
+                  </span>
+                ))}
                 {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
               </span>
             </Tip>

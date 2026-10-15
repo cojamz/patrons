@@ -897,19 +897,22 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   // for it (the plain-words pass, 2026-10-15: all-or-nothing per ring kept "more each round" off the board at 1270×700
   // on Toast, Help Yourself, Cheap Seats and Your Call); every number on the wheel is one size, the smallest any panel
   // needs
+  const shopSig = (state.shop || []).join(',');
   const panelLays = useMemo(() => {
     if (!panels) return null;
     const k = scale || 1;
     // a taken panel keeps its lines (faded) and its minion stands over them, so taking a space never reflows the wheel
-    const lay = (s, need) => panelLayout({ s, R: rings[s.ring], rot, k, said: panelText(s.qid, s.a, round), taken: false, need });
+    // a live face (Name Drop: what it pays this turn) reads the state; the memo turns over when the shop does (shopSig)
+    const said = s => panelText(s.qid, s.a, round, state);
+    const lay = (s, need) => panelLayout({ s, R: rings[s.ring], rot, k, said: said(s), taken: false, need });
     const out = new Map();
-    for (const s of spaces) out.set(s.key, { said: panelText(s.qid, s.a, round), lay: lay(s) });
+    for (const s of spaces) out.set(s.key, { said: said(s), lay: lay(s) });
     // every gain on the wheel is one size, and every verb in a ring: the smallest any of those panels needs
     const sizeTo = all => { const px = Math.min(...all.map(v => v.lay.one)); for (const v of all) v.lay = { ...v.lay, one: px }; };
     sizeTo([...out.values()].filter(v => v.said.main));
     for (const t of [1, 2, 3]) sizeTo(spaces.filter(x => x.ring === t).map(x => out.get(x.key)).filter(v => v.said.verb));
     return out;
-  }, [panels, state.quadrants, round, rot, scale, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [panels, state.quadrants, round, rot, scale, fontsIn, shopSig]); // eslint-disable-line react-hooks/exhaustive-deps
   live.current = { tap, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');

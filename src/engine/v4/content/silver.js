@@ -242,7 +242,7 @@ const silver = {
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res[S] >= 6,
     }),
     m('dowager', 'Dowager', 2, 2, 'Worth 3 followers.', { f: 3 }),
-    m('grandhost', 'Grand Host', 8, 4, 'Silver spaces give you twice the silver.', { hostDouble: true }),
+    m('grandhost', 'Grand Host', 8, 4, 'Silver spaces you take give you twice the silver.', { hostDouble: true }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6 (the most one pass moves);
     // pass 2's pooled midpoint (5.2) rounds back to 6, so it stays (design/eval/balance-pass-2.md)
     m('saint', 'Patron Saint', 4, 2, 'Game end: +1 follower per 2 silver members in play, anyone’s.', {

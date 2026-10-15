@@ -235,7 +235,7 @@ export default {
     m('apprentice', 'Apprentice', 2, 2, 'Whenever you take an extra turn, your next member costs 4 less.', {
       onExtraTurn(ctx, owner) { owner.discount += 4; },
     }),
-    m('overseer', 'Overseer', 2, 2, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
+    m('overseer', 'Overseer', 2, 2, 'Whenever a rival takes an extra turn, gain half your purple, rounded down (at most 4).', {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
     // fill-in (critic): took the slot of an earlier card called Timekeeper (the name now belongs to the game-end purple card)

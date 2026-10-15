@@ -356,7 +356,7 @@ const echoQ = {
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
     // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
-    m('doppel', 'Doppelganger', 4, 2, 'When recruited: copies the effect of one of your members.', {
+    m('doppel', 'Doppelganger', 4, 2, 'When recruited: becomes a copy of one of your other members (its effect and its followers).', {
       onRecruited(ctx, owner, card) {
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && c.def.key !== 'doppel');
         if (!own.length) return;

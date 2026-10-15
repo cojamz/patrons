@@ -113,6 +113,18 @@ function takeable(ctx, p, maxCost = Infinity) {
   return out;
 }
 const memberHint = c => c.def.f * 1.5 + cost(c) + (c.def.vanilla || c.used ? 0 : 1);
+// What a ransom costs its holder: n from their biggest piles, one at a time ({ color: count }). The prompt names it
+// before they answer (card audit #23: the payment was taken without saying which colors, and could cost a lead).
+function ransomTake(res, n) {
+  const take = {}, left = { ...res };
+  for (let k = 0; k < n; k++) {
+    const col = Object.keys(left).filter(x => left[x] > 0).sort((a, b) => left[b] - left[a])[0];
+    if (!col) break;
+    left[col] -= 1; take[col] = (take[col] || 0) + 1;
+  }
+  return take;
+}
+const takeWords = take => Object.entries(take).map(([k, x]) => `${x} ${k}`).join(', ');
 function pickMember(ctx, p, list, prompt, handler, data = null) {
   ctx.choose(p, prompt, list.map(([o, c]) => ({
     id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid, hint: memberHint(c),
@@ -211,22 +223,19 @@ const thieves = {
     },
     ransomPick(ctx, p, uid) {
       const v = ctx.ownerOf(uid), c = ctx.card(uid), n = cost(c);
+      const can = total(v) >= n, colors = can ? ` (${takeWords(ransomTake(v.res, n))})` : '';
       const opts = [{ id: 'let', label: `Let ${c.def.name} go`, kind: 'ransom', value: 'let', hint: 0 }];
-      if (total(v) >= n) opts.unshift({
-        id: 'pay', label: `Pay ${p.name} ${n} to keep ${c.def.name}`, kind: 'ransom', value: 'pay',
+      if (can) opts.unshift({
+        id: 'pay', label: `Pay ${p.name} ${n}${colors} to keep ${c.def.name}`, kind: 'ransom', value: 'pay',
         hint: c.def.f * 2 + (c.def.vanilla || c.used ? 0 : 2) - n + 0.5,
       });
-      ctx.choose(v, `${p.name} holds your ${c.def.name} to ransom: pay ${n} to keep it?`, opts, 'thieves.ransomAnswer', { uid, thief: p.id });
+      ctx.choose(v, `${p.name} holds your ${c.def.name} to ransom: pay ${n}${colors} to keep it?`, opts, 'thieves.ransomAnswer', { uid, thief: p.id });
     },
     ransomAnswer(ctx, v, answer, data) {
       const p = ctx.player(data.thief), c = ctx.card(data.uid), n = cost(c);
       if (answer === 'pay') {
-        // paid from their biggest piles; it counts as a steal
-        const take = {}, left = { ...v.res };
-        for (let k = 0; k < n; k++) {
-          const col = Object.keys(left).filter(x => left[x] > 0).sort((a, b) => left[b] - left[a])[0];
-          left[col] -= 1; take[col] = (take[col] || 0) + 1;
-        }
+        // paid from their biggest piles, the colors their prompt named; it counts as a steal
+        const take = ransomTake(v.res, n);
         // it counts as a steal; under Lie Low (which only stops thieves taking) the holder still pays by choice
         let got = ctx.steal(p, v, { take, give: x => stash(ctx, p, x) });
         if (!got && !ctx.canSteal(p, v)) {
@@ -234,7 +243,7 @@ const thieves = {
           got = n; stash(ctx, p, n);
         }
         // whose call it was, what they gave and why that much (blind tester: "+4 or a member" paid +2, unexplained)
-        ctx.log(`${v.name} chose to pay ${got} (${Object.entries(take).map(([k, x]) => `${x} ${k}`).join(', ')}) to keep ${c.def.name}: its cost is ${n}.`);
+        ctx.log(`${v.name} chose to pay ${got} (${takeWords(take)}) to keep ${c.def.name}: its cost is ${n}.`);
       } else {
         const short = total(v) < n;
         ctx.steal(p, v, { uid: data.uid });
@@ -262,7 +271,7 @@ const thieves = {
   },
 
   members: [
-    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the rival holding the most resources (it arrives as magenta).', { now: true,
+    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the richest rival you can steal from (it arrives as magenta).', { now: true,
       onRoundStart(ctx, owner) { const t = richest(ctx, owner); if (t) autoSteal(ctx, owner, t, 'Cutpurse'); },
     }),
     m('mole', 'Mole', 2, 2, 'Now and at round start, take 1 resource from each player with more followers than you (they arrive as magenta).', { now: true,
@@ -279,8 +288,8 @@ const thieves = {
         for (let k = 0; k < n; k++) { const t = richest(ctx, owner); if (!t || !autoSteal(ctx, owner, t, 'Grifter')) break; }
       },
     }),
-    m('sticky', 'Sticky Fingers', 4, 4, 'Your steals take 1 more resource.', { stealMore: 1 }),
-    m('desperado', 'Desperado', 2, 2, 'While no one has fewer followers than you, your steals take double.', {
+    m('sticky', 'Sticky Fingers', 4, 4, 'Your steals from spaces take 1 more resource.', { stealMore: 1 }),
+    m('desperado', 'Desperado', 2, 2, 'While no one has fewer followers than you, your steals from spaces take double.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
     m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower.', {

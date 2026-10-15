@@ -21,6 +21,15 @@ describe('Shake Down: the rival chooses, and the card says what they paid and wh
     expect(s.log).toContain('P2 chose to pay 2 (2 red) to keep Intern: its cost is 2.');
     expect(story(s0, s)).toMatch(/P2 paid 2 to keep Intern \(its cost\)/);
   });
+  it('the holder\'s question names the colors they would pay, the same ones taken if they pay (card audit #23)', () => {
+    const s0 = table(Q, { round: 2, res: [{}, { red: 3, gold: 2 }], members: [[], ['red.twins', 'red.intern']], shop: ROW });
+    const asked = move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.twins', 1));
+    expect(asked.pending.player).toBe(1);
+    expect(asked.pending.prompt).toBe('P1 holds your Twins to ransom: pay 4 (2 red, 2 gold) to keep it?');
+    expect(asked.pending.options.find(o => o.id === 'pay').label).toBe('Pay P1 4 (2 red, 2 gold) to keep Twins');
+    const paid = move(asked, 'pay');
+    expect(paid.log).toContain('P2 chose to pay 4 (2 red, 2 gold) to keep Twins: its cost is 4.');
+  });
   it('lets it go: "rather than pay", or "couldn’t pay" when they hold too little', () => {
     const s0 = table(Q, { round: 2, res: [{}, { red: 3 }], members: [[], ['red.twins', 'red.intern']], shop: ROW });
     const let1 = move(move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.intern', 1)), 'let');

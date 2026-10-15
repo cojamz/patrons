@@ -2,7 +2,7 @@
 import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds, turnRail, roundOrder } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 import { defaultEmoji } from './art/emojis.js';
-import { usableNow } from './game/memberUse.js';
+import { usableNow, memberAsks } from './game/memberUse.js';
 
 // Seat colors are an accent now (identity is the player's emoji on their leader, Cory 2026-10-14): ochre, teal,
 // terracotta-rose, lavender-plum, each ΔE ≥ 30 (CIE76) from every resource color on screen (the Lamplit inks) and
@@ -129,7 +129,12 @@ export function promptFor(state, mine) {
         // a second buy (Big Spender) says so and names the card that gave it (w2a #6: it fired with no cue)
         // only a real second buy spends it (core.js boughtOnce): a pass keeps it for a later turn this round, and says so
         // (w3: the game-feel tester thought Big Spender fired twice)
-        ? (pend.extra ? { who: p, text: `Buy again (${extraBuyer(state, p) || 'a second buy'})`, keepCase: false, sub: `Once a round: pass and ${extraBuyer(state, p) || 'it'} keeps it for a later turn${use ? `; or use ${use}` : ''}` }
+        // once the member glows on your seat with its own "Skip, keep it for later" (memberUse.js memberAsks), the line
+        // under the headline would say it a second time: it goes, all but another way out
+        ? (pend.extra ? { who: p, text: `Buy again (${extraBuyer(state, p) || 'a second buy'})`, keepCase: false,
+          ...([...memberAsks(state, p.id).values()].some(a => a.kind === 'again')
+            ? (use ? { sub: `…or use ${use}` } : {})
+            : { sub: `Once a round: pass and ${extraBuyer(state, p) || 'it'} keeps it for a later turn${use ? `; or use ${use}` : ''}` }) }
           // one line for one step (blind testers, 2026-10-15: headline, a subtitle saying it again and the step tabs):
           // the headline says it all; the line under it only when there's another way out
           : { who: p, text: 'Recruit a member or buy followers', ...(use ? { sub: `…or use ${use}` } : {}) })
@@ -149,7 +154,7 @@ export function promptFor(state, mine) {
       // a long question says what it asks, never "Choose below" (RC1 round 3 #55): a ransom is "keep Magnate for 4?",
       // and your own name before the question goes ("P2: take 6 more from the release, in any colors")
       const pr = String(pend.prompt || '');
-      const ransom = pr.match(/^(.+?) holds your (.+) to ransom: pay (\d+) to keep it\?$/);
+      const ransom = pr.match(/^(.+?) holds your (.+) to ransom: pay (\d+(?: \([^)]+\))?) to keep it\?$/);
       if (ransom) {
         // it's the thief's turn and your call (w3b #37: "Your turn — …" during P4's turn); with too little to pay,
         // say so, rather than leave "Let Middleman go" as the only button with no reason

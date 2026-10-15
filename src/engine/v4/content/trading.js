@@ -237,7 +237,7 @@ const trading = {
     m('reinvestor', 'Reinvestor', 2, 2, 'Whenever you sell followers, your next member costs 2 less per follower sold.', {
       onSell(ctx, owner, card, k) { owner.discount += 2 * k; ctx.log(`${owner.name}'s Reinvestor: next member costs ${owner.discount} less.`); },
     }),
-    m('raider', 'Raider', 2, 0, 'Once per game: buy up to 3 followers from the leader for 1 white each. They get the white.', {
+    m('raider', 'Raider', 2, 0, 'Once per game: take up to 3 followers from the leader, paying them 1 white each.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const t = raidTarget(ctx, owner);

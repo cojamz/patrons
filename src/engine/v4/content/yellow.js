@@ -127,7 +127,7 @@ export default {
     m('dyer', 'Dyer', 4, 2, 'At round end, +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
-    m('latebloomer', 'Late Bloomer', 2, 2, 'Now and at round start, if you have the fewest followers (ties count), +1 of each color.', { now: true,
+    m('latebloomer', 'Late Bloomer', 2, 2, 'Now and at round start, if you have the fewest followers (counting this one; ties count), +1 of each color.', { now: true,
       onRoundStart(ctx, owner) {
         const mine = ctx.followers(owner);
         if (ctx.rivals(owner).every(o => ctx.followers(o) >= mine)) eachColor(ctx, owner, 1);

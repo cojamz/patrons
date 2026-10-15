@@ -358,6 +358,14 @@
 .lt-cult-seat .cs-build .cs-income{margin-left:0}
 .lt-cult-seat .cs-build small{font-size:11px;font-weight:500;letter-spacing:0;color:var(--cream-3)}
 .lt-cult-seat .cs-build .cs-inc b{font-weight:800;font-size:14px;color:var(--cream)}
+/* a part that hangs on a condition says it in small words after its dot ("+1● if fewest", f8) */
+.lt-cult-seat .cs-grp{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:0 5px}
+.lt-cult-seat .cs-grp > *{white-space:nowrap}
+/* with a condition the line is words, not a stack of dots: each group starts its own line, right-aligned, a little wider than
+   the 78px dot column (layout.css), and its words wrap under its dots rather than crowd the figures */
+.app.game.lt > .lt-seat .cs-build .cs-gains.has-cond{max-width:104px;flex-direction:column;align-items:flex-end}
+.lt-cult-seat .cs-build .cs-grp .cs-cond{margin-left:-1px}
+.pop-card.gloss .cs-why{display:block;margin-top:4px;color:var(--muted)}
 .lt-cult-seat .cs-last{display:inline-flex;align-items:center;gap:5px;margin-left:auto;min-width:0;cursor:help}
 .lt-cult-seat .cs-last b{font-size:14px;font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis}
 

@@ -168,7 +168,7 @@ export default {
     m('tycoon', 'Tycoon', 4, 2, 'Game end: +1 follower per 2 gold.', { // Cory, 2026-10-15: per 2, was per 3
       onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 2),
     }),
-    m('seed', 'Treasurer', 4, 0, 'When recruited: gain gold equal to your member count.', {
+    m('seed', 'Treasurer', 4, 0, 'When recruited: gain gold equal to your member count (counting this one).', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
     m('hustler', 'Hustler', 4, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {

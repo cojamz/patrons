@@ -155,6 +155,8 @@ describe('a second buy is seen (w2a #6)', () => {
     expect(s.pending.kind).toBe('buy');
     expect(s.pending.extra).toBe(true);
     expect(promptFor(s, true).text).toBe('Buy again (Big Spender)');
+    // its glow on the seat carries "Skip, keep it for later": the header doesn't say it a second time (f8)
+    expect(promptFor(s, true).sub || '').not.toMatch(/keeps it for a later turn/);
     const uid = uidIn(s, 'benders.bigspender', 0);
     const { container } = render(<CultSeat state={s} pid={0} me={0} mine optionFor={optionsOf(s)} onPick={() => {}} />);
     expect(container.querySelector('.cs-member[data-member="benders.bigspender"]').className).toContain('react-hop');
