@@ -43,7 +43,7 @@ const payIds = st => st.pending.options.filter(o => o.kind === 'pay');
 const vec = (st, id) => Object.fromEntries(id.slice(4).split('-').map((n, i) => [st.resources[i], Number(n)]));
 
 describe('v4 payment picker', () => {
-  it('shows the engine price as sockets, preselects the default (one tap pays) and a stack click swaps a coin in', () => {
+  it('lifts the engine’s default coins off your stacks (one tap pays) and a stack click swaps a coin in', () => {
     const state = findPayState();
     const me = state.pending.player;
     const ss = session(state, [me]);
@@ -52,15 +52,17 @@ describe('v4 payment picker', () => {
     const res = state.resources;
     const ways = payIds(state);
     const def = ways.find(o => o.default);
-    // the cost: one socket per unit the engine asks (memberPrice for a member, the tier's cost for followers)
+    // the coins lifted off your stacks pay the engine's price (memberPrice for a member, the tier's cost for followers)
     const p = state.players[me];
     const units = state.pending.uid !== undefined ? memberPrice(state, p, state.pending.uid).total : TIERS.find(t => t.key === state.pending.tier).cost;
-    expect(dlg.querySelectorAll('[data-socket]').length).toBe(units);
+    expect(res.reduce((n, r) => n + def.spend[r], 0)).toBeGreaterThanOrEqual(Math.ceil(units / 2));
+    expect(dlg.querySelectorAll('[data-socket]').length).toBe(0); // no second row of the same coins (wave-2 tester A)
     const pay = dlg.querySelector('.pay-go');
     expect(pay.disabled).toBe(false);
     expect(pay.getAttribute('data-option')).toBe(def.id);
-    // one coin in the sockets per resource the default spends
-    expect(dlg.querySelectorAll('[data-pay-coin]').length).toBe(res.reduce((n, r) => n + def.spend[r], 0));
+    // one lifted coin per resource the default spends, and Pay names them
+    expect(dlg.querySelectorAll('.ps-out .ps-coin').length).toBe(res.reduce((n, r) => n + Math.min(12, def.spend[r]), 0));
+    expect(pay.dataset.payTotal).toBe(res.filter(r => def.spend[r] > 0).map(r => `${def.spend[r]}${r}`).join(' '));
     // a stack whose color can go in for another: the payment moves to the nearest legal way with one more of it
     const ids = new Set(ways.map(o => o.id));
     const r = res.find(c => p.res[c] > def.spend[c] && ways.some(o => o.spend[c] > def.spend[c]));
@@ -109,7 +111,7 @@ describe('v4 payment picker', () => {
     expect(within(dlg).getByRole('button', { name: /^Pay/ }).getAttribute('data-option')).toBe(want);
   });
 
-  it('names every rule-changer in one quiet line each, and the sockets show the price they make', () => {
+  it('names every rule-changer in one quiet line each, and the default pays exactly the price they make', () => {
     // a member with a colored part, paid by someone holding Penny Pincher and a −4 discount
     let state = structuredClone(findPayState());
     const me = state.pending.player;
@@ -133,7 +135,13 @@ describe('v4 payment picker', () => {
     const rules = [...dlg.querySelectorAll('[data-pay-rule]')].map(e => e.textContent);
     expect(rules.some(t => /gold counts double/.test(t))).toBe(true);
     expect(rules.some(t => /−4/.test(t))).toBe(true);
-    expect(dlg.querySelectorAll('[data-socket]').length).toBe(memberPrice(state, state.players[me], target).total);
+    // the default way pays the engine's price (each gold pays 2 here), no coin wasted beyond half a gold
+    const v = vec(state, dlg.querySelector('.pay-go').getAttribute('data-option'));
+    const paid = Object.entries(v).reduce((t, [c, n]) => t + n * (c === 'gold' ? 2 : 1), 0);
+    const price = memberPrice(state, state.players[me], target).total;
+    expect(paid).toBeGreaterThanOrEqual(price);
+    expect(paid - price).toBeLessThan(2);
+    expect(dlg.textContent).not.toMatch(/×2/); // the double gold is the one line, never a "×2" token
   });
 
   it('only one way to pay: no dialog, it pays at once', async () => {

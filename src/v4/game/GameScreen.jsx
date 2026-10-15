@@ -741,6 +741,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (mode === 'all') repeat.current = optionId;
     if ((busy || busyNow.current) && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
     if (!mine || needHandoff || !options.has(optionId)) return;
+    // a commit closes any open hover (wave-2 tester A #40: a 2→1 buy's hover stayed up while the bots played); a
+    // placement keeps the space's card, which shows what you just took
+    if (!String(optionId).startsWith('slot:')) hover.close();
     busyNow.current = true;
     startTransition(() => setBusy(true));
     // the shop as you see it right now (a row you may have scrolled, on a phone): a recruit flies from where you saw it

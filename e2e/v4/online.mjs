@@ -182,8 +182,8 @@ try {
   log('started');
   // the picks are on the leaders, the same on every screen
   for (const [who, pg] of Object.entries(pages)) {
-    await pg.waitForSelector('.lt-seat[data-pid] [data-leader] svg.leader', { timeout: 20000 });
-    const worn = await pg.$$eval('.lt-seat[data-pid] [data-leader] svg.leader', els => Object.fromEntries(els.map(e => [e.closest('.lt-seat').getAttribute('data-pid'), e.getAttribute('data-emoji')])));
+    await pg.waitForSelector('.lt-seat[data-pid] [data-leader] svg[data-emoji]', { timeout: 20000 });
+    const worn = await pg.$$eval('.lt-seat[data-pid] [data-leader] svg[data-emoji]', els => Object.fromEntries(els.map(e => [e.closest('.lt-seat').getAttribute('data-pid'), e.getAttribute('data-emoji')])));
     if (worn['0'] !== hanaPick || worn['1'] !== gusPick || !worn['2'] || new Set(Object.values(worn)).size !== 3) throw new Error(`${who} sees the leaders wearing ${JSON.stringify(worn)} (want Hana ${hanaPick}, Gus ${gusPick}, Pia her own)`);
   }
 

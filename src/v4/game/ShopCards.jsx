@@ -4,12 +4,12 @@
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
 import { memo, useLayoutEffect, useRef, useState } from 'react';
-import { cardDef, paymentPlan, TIERS, tierLeft, quadrant } from '../../engine/v4/index.js';
+import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft, quadrant } from '../../engine/v4/index.js';
 import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip } from './Info.jsx';
+import { cardColor, onTable, usePreview, Tip, CostDots } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { timingOf, unlockedBy, surely } from './cards.js';
@@ -77,6 +77,15 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const [sort, setSortState] = useState(readSort);
   const setSort = v => { setSortState(v); try { localStorage.setItem(SORT_KEY, v); } catch { /* private window: this visit only */ } };
   useDeal(rowRef, deckRef, state); // a refill comes off the deck
+  // a card that just arrived (a refill sliding under the pointer after an instant buy) ignores clicks for half a second
+  // and opens its hover only once the pointer moves (wave-2 tester A #12: it invited a double buy)
+  const arrived = useRef(new Map()), seenShop = useRef(null), waiting = useRef(new Set());
+  useLayoutEffect(() => {
+    const prev = seenShop.current, now = performance.now();
+    if (prev) for (const u of state.shop) if (!prev.has(u)) arrived.current.set(u, now);
+    seenShop.current = new Set(state.shop);
+  }, [state.shop]);
+  const fresh = uid => performance.now() - (arrived.current.get(uid) ?? -1e9) < 500;
   // the "✓ after X" ticks for the space under the pointer are ShopTicks' (below): a hover never re-renders the shop
   const after = null, unlocked = [];
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
@@ -124,9 +133,11 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
-              onPointerEnter={e => { if (hover && realHover(e)) hover.onCardHover(uid, e.currentTarget); }}
-              onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
+              onPointerEnter={e => { if (hover && realHover(e)) { if (fresh(uid)) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } }}
+              onPointerMove={e => { if (waiting.current.has(uid) && hover && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } }}
+              onPointerLeave={e => { waiting.current.delete(uid); if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
               onClick={e => {
+                if (fresh(uid)) return; // just arrived under the pointer: not a deliberate click
                 // touch: a tap reads the card (a sheet with Recruit); it never recruits by itself
                 if (pointer.current === 'touch' && hover) { hover.onCardHover(uid, e.currentTarget, { pinned: true }); return; }
                 if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
@@ -211,7 +222,11 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
   const viewer = me != null ? state.players[me] : null;
   const held = viewer ? Object.values(viewer.res).reduce((a, b) => a + (b || 0), 0) : null;
   const when = (t, opt) => {
-    if (opt) return 'You can buy it now.';
+    // what a click does (wave-2 tester A): one way to pay buys at once and says what it pays; several open the sheet
+    if (opt) {
+      const ways = viewer ? followerChoices(state, viewer, t) : [];
+      return ways.length === 1 ? <>Pays <CostDots parts={Object.entries(ways[0]).filter(([, n]) => n > 0).map(([color, n]) => ({ color, n }))} /></> : 'Choose how to pay';
+    }
     if (viewer && held < t.cost) return `You hold ${held}: ${t.cost - held} short.`;
     if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You buy after you place a minion, in your buy step.';
     if (tierLeft(state, t) <= 0) return 'None left.';
@@ -238,7 +253,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
                 <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
                 <span>Any colors, any mix, as your one buy.</span>
                 {t.limited ? <span>{left} left at this table (2 per player at the start).</span> : <span>Unlimited.</span>}
-                <small>{when(t, opt)}</small>
+                <small data-pays={opt ? 'tier' : undefined}>{when(t, opt)}</small>
               </div>
             )}><span className="rt-trade"><b className="num">{t.cost}</b><Pip color="any" n={t.cost} /><span className="to" aria-hidden="true">→</span><b className="num">{t.get}</b><FollowerGlyph size={14} /></span>{t.limited && <small className="rt-left num">{left} left</small>}<span className="hitbox" aria-hidden="true" /></Tip>
           </button>

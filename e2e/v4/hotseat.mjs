@@ -101,7 +101,7 @@ try {
   }
   await page.waitForSelector('.lt-seat[data-pid]');
   {
-    const leaders = await page.$$eval('.lt-seat[data-pid] [data-leader] svg.leader', els => els.map(e => [e.closest('.lt-seat').getAttribute('data-pid'), e.getAttribute('data-emoji')]));
+    const leaders = await page.$$eval('.lt-seat[data-pid] [data-leader] svg[data-emoji]', els => els.map(e => [e.closest('.lt-seat').getAttribute('data-pid'), e.getAttribute('data-emoji')]));
     const mine = leaders.find(([pid]) => pid === '0');
     if (!mine || mine[1] !== PICK) errors.push(`your leader wears "${mine && mine[1]}", not the ${PICK} you picked`);
     const all = leaders.map(([, e]) => e);
@@ -404,7 +404,7 @@ try {
   await page.click('[data-play-again]');
   await page.waitForSelector('.lt-seat[data-pid]');
   if (await page.$('.results')) throw new Error('Play again did not start a new game');
-  if (!(await page.$(`.lt-seat[data-pid="0"] [data-leader] svg.leader[data-emoji="${PICK}"]`))) errors.push(`Play again dropped your ${PICK}`);
+  if (!(await page.$(`.lt-seat[data-pid="0"] [data-leader] svg[data-emoji="${PICK}"]`))) errors.push(`Play again dropped your ${PICK}`);
   await page.waitForTimeout(500);
   if (await page.$('[data-intro]')) errors.push('the intro showed again on a second game');
   ok = errors.length === 0;
