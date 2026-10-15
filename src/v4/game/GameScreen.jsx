@@ -353,7 +353,7 @@ function TurnCard({ card, root, state }) {
   // at most a few lines, the rest summed up (every line stays in the strip's card and the log)
   const [head, ...all] = card.text.split(' · ');
   const MAXL = 5;
-  const rest = all.length > MAXL ? [...all.slice(0, MAXL - 1), `+${all.length - MAXL + 1} more: hover the line in the strip`] : all;
+  const rest = all.length > MAXL ? [...all.slice(0, MAXL - 1), `+${all.length - MAXL + 1} more`] : all;
   return (
     <div ref={box} className={`turn-card${card.live ? ' live' : ''}${card.folding ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
       style={{ '--pc': playerColor(card.pid) }}>

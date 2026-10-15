@@ -56,3 +56,26 @@ export function heading(p = pt) {
   if (on && (aim.lx !== p.x || aim.ly !== p.y)) { aim.until = now + AIM_MS; aim.lx = p.x; aim.ly = p.y; }
   return on;
 }
+
+/** Is the pointer (at p) over el's box? A see-through card (its surface lets clicks through) is still "under" it. */
+export function over(el, p = pt) {
+  if (!el || !p || !el.isConnected) return false;
+  const r = el.getBoundingClientRect();
+  if (!r.width || !r.height) return false;
+  return p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
+}
+
+// the open card with buttons on it (your member's card), while it's up: what's under it doesn't open its own card
+// (an element, or a function that finds it: a card drawn a frame later than it opened)
+let held = null;
+const heldEl = () => (typeof held === 'function' ? held() : held);
+export const holdCard = el => { held = el || null; };
+export const dropCard = el => { if (!el || held === el) held = null; };
+/** The open card the pointer is on, or heading for (not `mine`): what the pointer crosses shouldn't open over it. */
+export function busyWith(p = pt, mine = null) {
+  const t = aimedAt();
+  if (t && t !== mine && !(mine && t.contains(mine)) && heading(p)) return t;
+  const h = heldEl();
+  if (h && h !== mine && !(mine && h.contains(mine)) && h.isConnected && over(h, p)) return h;
+  return null;
+}

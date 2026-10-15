@@ -35,7 +35,7 @@ export function turnPlaces(state, me = null) {
     const label = now ? 'now' : k === 0 ? 'next' : k === 1 ? 'next' : `in ${k}`;
     const why = twice ? (seq[k + 1].kind === 'snake' ? ', then again right after (snake order: whoever ends a pass starts the next)' : `, then again right after (${seq[k + 1].kind === 'hand' ? 'an extra minion' : 'an extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''})`) : '';
     const what = now ? 'Placing now' : label === 'next' ? 'Places next' : `Places in ${k} turns`;
-    out[p.id] = { place: k, label, twice, text: twice ? `${label}, twice` : label, title: `${what}${ahead(now ? 0 : k)}${why}. Placements still to come: ${list.slice(0, 8).join(', ')}${list.length > 8 ? ', …' : ''}.` };
+    out[p.id] = { place: k, label, twice, text: twice ? `${label}, then again` : label, title: `${what}${ahead(now ? 0 : k)}${why}. Placements still to come: ${list.slice(0, 8).join(', ')}${list.length > 8 ? ', …' : ''}.` };
   }
   return { places: out, order };
 }

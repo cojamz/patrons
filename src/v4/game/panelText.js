@@ -16,7 +16,7 @@ const byRound = (a, b, c) => ({ byRound: [a, b, c] });
 const P = {
   gold: {
     jv: { main: '+3 gold', second: '+1 to anyone', note: 'a player you pick' },
-    rush: r => ({ main: `+${2 * r} gold`, note: byRound(2, 4, 6) }),
+    rush: r => ({ main: `+${2 * r} gold`, rounds: byRound(2, 4, 6) }),
     discount: { verb: 'Save 4', second: 'on next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
     windfall: { main: '+1 gold', second: 'per member' },
@@ -39,7 +39,7 @@ const P = {
     spree: { verb: 'Buy 3 times', second: 'this turn' },
   },
   purple: {
-    hourly: r => ({ main: `+${3 + r} purple`, note: byRound(4, 5, 6) }),
+    hourly: r => ({ main: `+${3 + r} purple`, rounds: byRound(4, 5, 6) }),
     catchup: { main: '+1 purple', second: '+2 per rival with more minions', note: 'on the board' },
     // "out" and "left" read alike (w3b): where the minions are, in the card's own words
     windup: { main: '+1 purple', second: 'per minion on the wheel' },
@@ -49,7 +49,7 @@ const P = {
     rally: { verb: 'Extra turns for all purple', second: '1 per 4, plus 1' },
   },
   silver: {
-    toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', note: byRound(3, 6, 9) }),
+    toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', rounds: byRound(3, 6, 9) }),
     gift: { main: '+2 silver', second: '+2 of a color, others get 1', note: 'of that color' },
     alms: { main: '+4 silver', second: 'a rival gets 2' },
     tongue: { main: '+4 silver', second: 'trade silver', note: 'others get 1 silver' },
@@ -65,7 +65,7 @@ const P = {
     flourish: { verb: '+1 each per full set', second: 'other colors' },
   },
   thieves: {
-    pickpocket: r => ({ main: `+${r + 1} magenta`, second: 'from rivals', note: byRound(2, 3, 4) }),
+    pickpocket: r => ({ main: `+${r + 1} magenta`, second: 'from rivals', rounds: byRound(2, 3, 4) }),
     tipoff: { verb: 'Steal 1 each', second: 'from richer rivals' },
     hideout: { verb: 'Steal 1', second: 'then you’re safe', note: 'from steals this round' },
     rob: { main: '+3 magenta', second: 'from rivals', note: 'at least 1 each' },
@@ -74,14 +74,14 @@ const P = {
   },
   trading: {
     haggle: { main: '+2 white', second: '+1 per higher score', note: 'players with more @f' },
-    buylow: r => ({ verb: 'Trade for followers', second: `1 for 1, up to ${2 * r}`, note: byRound(2, 4, 6) }),
-    pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, note: byRound(1, 2, 3) }),
+    buylow: r => ({ verb: 'Trade for followers', second: `1 for 1, up to ${2 * r}`, rounds: byRound(2, 4, 6) }),
+    pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, rounds: byRound(1, 2, 3) }),
     sellhigh: { verb: 'Sell followers', second: '3 white each', note: 'up to 2' },
     dividend: { main: '+1 white', second: 'per loose @f' },
     boom: { verb: 'All for followers', second: '1 for 1' },
   },
   echo: {
-    chant: r => ({ main: `+${2 * r} green`, note: byRound(2, 4, 6) }),
+    chant: r => ({ main: `+${2 * r} green`, rounds: byRound(2, 4, 6) }),
     echo: { verb: 'Copy a space', second: 'a rival just took' },
     encore: { verb: 'Copy a space', second: 'taken this round' },
     refrain: { main: '+2 green', second: 'and redo a space', note: 'one you took this round' },
@@ -94,7 +94,9 @@ export function panelText(qid, action, round = 1) {
   const r = Math.max(1, Math.min(3, round));
   let v = P[qid] && P[qid][action.key];
   if (typeof v === 'function') v = v(r);
-  if (v) return { main: v.main || null, verb: v.main ? null : v.verb || null, second: v.second || null, note: v.note || null };
+  // a value that grows by round prints this round's number only (w3b #13: "2 · 4 · 6 by round" under "+4●" said it twice);
+  // the progression is the space card's (HoverCards "By round")
+  if (v) return { main: v.main || null, verb: v.main ? null : v.verb || null, second: v.second || null, note: v.note || null, rounds: v.rounds ? v.rounds.byRound : null };
   // the plain spheres: "+2 blue +1 red" is the gain, a clause a line when the panel is narrow
   const [main, ...rest] = String(pipEffect(qid, action, r)).split(' · ');
   return { main, verb: null, second: rest.length ? rest.join(', ') : null, note: null };

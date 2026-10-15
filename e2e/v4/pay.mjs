@@ -302,7 +302,7 @@ try {
     await page.screenshot({ path: `${SHOTS}/d1-double-agent.png` });
     await ctx.close();
   }
-  // (a1) Wave-2 tester A: a member's hover says what a click will do ("Pays 2● 2●" at once, or "Choose how to pay"),
+  // (a1) Wave-2 tester A: a member's hover says what a click will do ("You pay 2● 2●" at once, or "Choose how to pay"),
   //      and an instant buy flies its coins and closes the hover
   {
     const save = paySave({ res: { gold: 2, red: 0, blue: 0, green: 2 } });
@@ -314,7 +314,7 @@ try {
     const { ctx, page } = await open('a1', save, `.lt-shop .card[data-uid="${uid}"]`);
     await page.hover(`.lt-shop .card[data-uid="${uid}"]`);
     const line = await page.waitForSelector('[data-pays]', { timeout: 3000 }).then(e => e.innerText(), () => '');
-    if (!/^Pays\s/.test(line)) errors.push(`(a1) the hover of a one-way card says "${line}", not "Pays …"`);
+    if (!/^You pay\s/.test(line)) errors.push(`(a1) the hover of a one-way card says "${line}", not "You pay …" (w3b #27: "Pays" read as income)`);
     await page.evaluate(() => { window.__a1 = 0; const t = () => { for (const g of document.querySelectorAll('.piece-flight.pay')) if (!g.dataset.a1) { g.dataset.a1 = '1'; window.__a1++; } requestAnimationFrame(t); }; requestAnimationFrame(t); });
     const box = await (await page.$(`.lt-shop .card[data-uid="${uid}"]`)).boundingBox();
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);

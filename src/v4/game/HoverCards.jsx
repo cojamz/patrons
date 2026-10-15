@@ -11,6 +11,7 @@ import { Popover } from './parts.jsx';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
 import { SeatFigure } from './Glyphs.jsx';
 import { Rich } from './Rich.jsx';
+import { panelText } from './panelText.js';
 import { unlockedBy, surely } from './cards.js';
 import { memberCopyTargets } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
@@ -18,7 +19,7 @@ import { SeatMembers } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
-import { aimAt, arrived, heading, aimedAt } from './hoverIntent.js';
+import { aimAt, arrived, heading, aimedAt, over, busyWith } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -62,12 +63,13 @@ export function createHover() {
   const liveBox = () => (typeof document !== 'undefined' ? document.querySelector('[data-hover-layer][data-live="1"]') : null);
   const closeSoon = ms => {
     clearTimeout(closeT);
-    const wait = () => { if (heading()) { closeT = setTimeout(wait, 80); return; } if (card && !card.pinned) set(null); };
+    const wait = () => { if (heading() || over(liveBox())) { closeT = setTimeout(wait, 80); return; } if (card && !card.pinned) set(null); };
     closeT = setTimeout(wait, ms);
   };
   const show = next => {
     // crossing toward the open seat card: nothing on the way opens over it, and its close isn't cancelled
-    if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && heading() && aimedAt() === liveBox()) return;
+    // (its surface is see-through to clicks, so "on it" is measured: the pointer over its box)
+    if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && ((heading() && aimedAt() === liveBox()) || over(liveBox()))) return;
     clearTimeout(closeT);
     if (!next.el) {
       clearTimeout(openT);
@@ -79,7 +81,7 @@ export function createHover() {
       return;
     }
     // crossing toward your member's open card (a Use button on it): the seat card doesn't open over it
-    if (!next.pinned && heading() && aimedAt() && aimedAt() !== liveBox()) return;
+    if (!next.pinned) { const b = busyWith(); if (b && b !== liveBox()) return; }
     // the same card again (the pointer moving on its target): it stays, and a close on its way is called off
     if (card && !card.pinned && !next.pinned && card.kind === next.kind && card.el === next.el && card.pid === next.pid && card.key === next.key && card.uid === next.uid && card.qid === next.qid) { clearTimeout(openT); return; }
     clearTimeout(openT);
@@ -179,6 +181,23 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     ro.observe(box.current);
     return () => ro.disconnect();
   }, []);
+  // a click always acts on what's under the pointer (Cory, via the detail designer: a first click was eaten while a
+  // seat card stood over the wheel): the card's surface is see-through to clicks, only its controls take them, and a
+  // press anywhere else closes it at once while the click goes on to what it was meant for
+  useEffect(() => {
+    if (!live) return undefined;
+    const down = e => { if (box.current && e.target instanceof Node && box.current.contains(e.target)) return; hover.close(); };
+    // its long list still scrolls under the wheel, though the pointer events go through the card
+    const wheel = e => {
+      const list = box.current && box.current.querySelector('.mu-list');
+      if (!list || list.scrollHeight <= list.clientHeight || !over(list, { x: e.clientX, y: e.clientY })) return;
+      e.preventDefault();
+      list.scrollTop += e.deltaY;
+    };
+    addEventListener('pointerdown', down, true);
+    addEventListener('wheel', wheel, { capture: true, passive: false });
+    return () => { removeEventListener('pointerdown', down, true); removeEventListener('wheel', wheel, { capture: true }); };
+  }, [live, hover]);
   useEffect(() => {
     if (!c || c.pinned) return undefined;
     const off = e => { if (box.current && e.target instanceof Node && box.current.contains(e.target)) return; hover.close(); };
@@ -334,6 +353,13 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i) || null;
   const race = pv && pv.race ? raceAfter(state, pv.race, qid, viewer) : null;
   const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
+  // each round's own amount, as its panel prints it then: "+2●", "+1☗ or +2○" (a verb's run stays numbers: "up to 2")
+  let byRounds = null;
+  try {
+    if (panelText(qid, a, round).rounds) {
+      byRounds = [1, 2, 3].map(k => { const t = panelText(qid, a, k); return t.main ? (t.second && /^or\b/.test(t.second) ? `${t.main} ${t.second}` : t.main) : String(t.rounds[k - 1]); });
+    }
+  } catch { /* none */ }
   return (
     <div className="lt-card-body" data-space-card={spaceKey} style={{ '--q': `var(--q-${sphereOf(qid)}, var(--${qid}))` }}>
       {/* plate 1b: the name, its one-sentence rule, then "You'd get" (the picture lives on the space itself) */}
@@ -352,6 +378,8 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {/* on a desktop the shop's own cards say it ("after Kickback" on each): only a pinned sheet (touch) lists them */}
         {unlocks.length && pinned ? <Row k="Then affordable">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
         {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn (the dotted edge)' : ''}{opt ? ' — you can join it' : ''}</Row>}
+        {/* a value that grows by round: the whole run, this round's in bold (the panel prints this round's only) */}
+        {byRounds && <Row k="By round"><span data-by-round>{byRounds.map((v, k) => <span key={k}>{k ? ' · ' : ''}{roman(k + 1)} {k + 1 === round ? <b><Rich text={v} /></b> : <Rich text={v} />}</span>)}</span></Row>}
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}
       </div>
       {opt && pinned && onPick && !past && <button type="button" className="lt-btn pri" data-place={opt.id} onClick={() => onPick(opt.id)}>{opt.squat ? 'Join here' : 'Place here'}</button>}

@@ -13,6 +13,7 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 - Members UX (port 5402): m3/m4, the member hover closing before its Use is clicked.
 - Bench (session_011mMXsYcXHM7NPhc8g63Ki6): fixing Hard-20 after the anchor check failed on 618a8f5, then rerun; balance pass 3 only if anchors pass.
 - Done tonight: motion engineer (hold re-times both ways, hand-off at 2/3, floor only between players), QA (memory, hotseat chair fix, layout), turn-card crash fix (e2e/v4/turndock.mjs).
+- Wave 3 results in (09:40): testers A and B both C+, game-feel B− (design/eval/overnight-wave3.md). New: motion-gaps agent (port 5420, every effect travels), plain-words agent (port 5422, owns panelText.js, decipher pass on every space). Members UX resumed (eaten clicks, seat hovers anchored, follower breakdown, rivals' spending power). Perf pod on forced layout + header lag.
 - Next: merge w3 reports → design/eval/overnight-wave3.md, route; wave 4 freeze ~10:30; final freeze + game-skeptic ~12:45; morning note ~13:45.
 
 ## Earlier roster (history)

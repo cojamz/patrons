@@ -13,6 +13,24 @@ export const spheres = () => {
 /** What the picker calls a sphere: its color name, "(basic)" for a stand-in (w2b #32: "(plain)" read as developer phrasing). */
 export const sphereName = id => `${quadrant(id).name}${quadrant(id).standIn ? ' (basic)' : ''}`;
 export const tableLine = ids => ids.map(sphereName).join(' · ');
+/**
+ * What a sphere does, in one plain line (w3b #1: the picker named quadrants and their rim rule, but not which one
+ * steals). From each sphere's own design note (src/engine/v4/content/*.js).
+ */
+const LINES = {
+  gold: 'Piles up gold, and saves on your next member.',
+  red: 'Recruits: free members, and swaps with rivals.',
+  purple: 'Extra turns: spend purple to place again.',
+  silver: 'Big gains for you, a little for everyone else.',
+  yellow: 'Gathers every color, and scores full sets.',
+  market: 'Bends the shop: recruit outside your buy, pay half, refresh the row.',
+  thieves: 'Steals resources and members from rivals.',
+  trading: 'Sells followers for white, and buys them back cheap.',
+  echo: 'Copies spaces: a rival’s, or your own again.',
+  blue: 'Plain gains: blue, with a little of another color.',
+  green: 'Plain gains: green, with a little of another color.',
+};
+export const sphereLine = id => LINES[id] || '';
 
 // Colors a stand-in hands out besides its own (read off its printed actions).
 const usesColors = id => {

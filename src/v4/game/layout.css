@@ -56,10 +56,18 @@
      online room's code at the top of the chairs' column */
   .lt > .error{left:50%;right:auto;bottom:12px;translate:-50% 0;z-index:45}
   .lt > .room{top:4px;bottom:auto;left:62px}
-  /* setup: the starting-resource picker stands under the chairs (the column is empty until the turns begin), never
-     over the wheel or the members you're choosing toward (layout gate l6) */
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:calc(-1 * var(--col-l) - var(--col-gap) + 44px);width:calc(var(--col-l) - 44px);
-    top:calc(var(--col-top) + var(--seats-end, 0px) + 20px - 78px);translate:none}
+}
+/* setup (w3b #5; Cory: "the starting-resource pick must be an obvious call to action"): the pick stands at the wheel's
+   centre, where the eye lands, as one compact row: it covers only the inner rings, locked until rounds II and III, never a
+   ring-I space you'll take nor a rim (layout gate l6). Sized from the wheel's region (container units), so it fits the
+   inner rings at every laptop width. */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:50%;top:50%;right:auto;bottom:auto;translate:-50% -50%;
+    width:50cqmin;max-width:300px;padding:8px 10px;gap:4px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{text-align:center;font-size:var(--s);line-height:18px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{padding:4px 0;row-gap:2px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{height:22px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .tk-plus{display:none}
 }
 
 /* Narrower laptops (861–1199px) keep lamp.css's grid, with two fixes: the follower buys move to the right column (it

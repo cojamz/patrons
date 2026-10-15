@@ -103,7 +103,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           {/* its place in the turns, said like the plate's "You  place a minion"; the rail beside the column marks it too */}
           {place && <Tip className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined}
             label={place.title} content={() => <div className="pop-card gloss"><b>Turn order: {place.text}</b><span>{place.title}</span></div>}>
-            <span className="co-t">{place.label}</span>{place.twice && <b className="co-x">twice</b>}
+            {/* "again" (w3b #42: "twice" alone took a decode): placing next, then again right after */}
+            <span className="co-t">{place.label}</span>{place.twice && <b className="co-x">again</b>}
           </Tip>}
         </span>
         <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>

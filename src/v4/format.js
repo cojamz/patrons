@@ -86,9 +86,9 @@ export function promptFor(state, mine) {
   const use = usable.length > 2 ? `one of your ${usable.length} lit members` : usable.join(' or ') || null;
   switch (pend.kind) {
     case 'setup': {
-      const k = (pend.prompt.match(/\((\d) of 2\)/) || [])[1] || '';
       return mine
-        ? { who: p, text: `Pick a starting resource${k ? ` (${k} of 2)` : ''}` }
+        // the count is the pick's own title ("Pick 1 of 2"), right where you pick; the header doesn't repeat it (w3b #6)
+        ? { who: p, text: 'Pick a starting resource' }
         : { who: p, text: `${name} is picking a starting resource` };
     }
     case 'place': {

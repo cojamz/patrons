@@ -10,7 +10,7 @@ import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
 import { Popover } from './parts.jsx';
-import { aimAt, arrived, heading, aimedAt } from './hoverIntent.js';
+import { aimAt, arrived, heading, over, holdCard, dropCard, busyWith } from './hoverIntent.js';
 import { Who } from './Glyphs.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
@@ -38,18 +38,29 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
   // (hoverIntent.js: what the pointer crosses on the way doesn't open its own card over it)
   const body = useRef(null);
   const pending = useRef(false);
-  const letGo = () => { if (body.current) arrived(body.current.closest('.popover') || body.current); setOpen(o => (o && !o.pinned ? null : o)); };
+  const cardEl = () => (body.current ? body.current.closest('.popover') || body.current : null);
+  const letGo = () => { const c = cardEl(); if (c) { arrived(c); dropCard(c); } setOpen(o => (o && !o.pinned ? null : o)); };
+  // it stays while the pointer is on it (its surface is see-through to clicks, so that's measured, not an event) or on
+  // its way to it; a route that wanders a little (w3b #47: leaving the figure downward) still has 300ms to get there
   const release = () => {
     clearTimeout(timer.current);
-    const wait = () => { if (heading()) { timer.current = setTimeout(wait, 80); return; } letGo(); };
-    timer.current = setTimeout(wait, 150);
+    const wait = () => { if (heading() || over(cardEl())) { timer.current = setTimeout(wait, 80); return; } letGo(); };
+    timer.current = setTimeout(wait, 300);
   };
+  // while a sticky card is up (not pinned), it's the card the pointer may be on: what's under it doesn't open
+  const seeThrough = !!(sticky && open && !open.pinned);
+  useEffect(() => {
+    if (!seeThrough) return undefined;
+    const find = () => cardEl();
+    holdCard(find);
+    return () => dropCard(find);
+  }, [seeThrough]); // eslint-disable-line react-hooks/exhaustive-deps
   const opening = () => {
     clearTimeout(timer.current); pending.current = true;
     timer.current = setTimeout(() => { pending.current = false; setOpen(o => o || { el: ref.current, pinned: false }); }, TIP_MS);
   };
   // crossing toward another open card: this one stays shut (it opens on the next move once the crossing is over)
-  const crossing = e => { const t = aimedAt(); return !!t && heading(e ? { x: e.clientX, y: e.clientY } : undefined) && !(body.current && t.contains(body.current)); };
+  const crossing = e => !!busyWith(e ? { x: e.clientX, y: e.clientY } : undefined, body.current);
   const inControl = () => { const up = ref.current && ref.current.parentElement; return !!(up && up.closest(CONTROL)); };
   const pin = e => {
     // a keyword in an option's text never eats the option's click (a tap there picks the option)
@@ -75,7 +86,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
       >{children}{nested ? null : <span className="hitbox" aria-hidden="true" />}</As>
       {open && (
         <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned} beside={beside && open.el ? open.el.closest(beside) : null}>
-          <div className="tip-body" data-tip-body ref={body}
+          <div className={`tip-body${seeThrough ? ' see-through' : ''}`} data-tip-body ref={body}
             {...(sticky ? { onPointerEnter: () => { clearTimeout(timer.current); arrived(); }, onPointerLeave: e => { if (e.pointerType === 'mouse') release(); } } : {})}>{typeof content === 'function' ? content() : content}</div>
         </Popover>
       )}
@@ -189,8 +200,9 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
       {ability ? <p className="mc-text"><CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used ? ' · used' : ''}</small>}
-      {paid && <small className="mc-live" data-discount>You pay {paid.length ? <CostDots parts={paid} /> : 'nothing'}: {discountWhy(state, state.players[me])}.</small>}
-      {pays ? <small className="mc-live" data-pays={pays === 'choose' ? 'choose' : 'once'}>{pays === 'choose' ? 'Choose how to pay' : <>Pays <CostDots parts={pays} /></>}</small>
+      {/* one line about paying: "You pay 2● 1●" (w3b #27: "Pays 6●" read as income), with a discount's reason after it */}
+      {paid && !pays && <small className="mc-live" data-discount>You pay {paid.length ? <CostDots parts={paid} /> : 'nothing'}: {discountWhy(state, state.players[me])}.</small>}
+      {pays ? <small className="mc-live" data-pays={pays === 'choose' ? 'choose' : 'once'} data-discount={paid ? '' : undefined}>{pays === 'choose' ? 'Choose how to pay' : <>You pay <CostDots parts={pays} /></>}{paid ? `: ${discountWhy(state, state.players[me])}` : ''}{pays === 'choose' ? '' : '.'}</small>
         : short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
         : where === 'In the pile' && <small className="mc-live">{where}</small>}
     </div>

@@ -4,7 +4,7 @@ import { PLAYER_COLORS, lowColor } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
 import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
-import { CLASSIC, spheres, sphereName, tableProblem, randomTable, urlTable } from '../tables.js';
+import { CLASSIC, spheres, sphereName, sphereLine, tableProblem, randomTable, urlTable } from '../tables.js';
 import { panelWords } from '../game/panelText.js';
 import { GAME_NAME, VERSION } from '../version.js';
 import { copyText } from '../Recovery.jsx';
@@ -146,7 +146,7 @@ export function TablePicker({ value, onChange, readOnly = false }) {
         </div>
       ) : (
         <>
-          <p className="hint">Pick 4: they go round the wheel in the order you pick them (the corner number). <span className="num">{quadrants.length}</span> of 4</p>
+          <p className="hint">Pick 4: they go round the wheel in the order you pick them (the corner number). <span className="nowrap"><span className="num">{quadrants.length}</span> of 4</span></p>
           <div className="sphere-grid">
             {spheres().map(id => {
               const on = quadrants.includes(id);
@@ -156,7 +156,7 @@ export function TablePicker({ value, onChange, readOnly = false }) {
                   disabled={!on && (quadrants.length >= 4 || clash)} style={{ '--c': `var(--${id})` }} onClick={() => toggle(id)}
                   title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : sphereHint(id)}>
                   <i className="dot" />{on && <span className="ord num">{quadrants.indexOf(id) + 1}</span>}
-                  <b>{sphereName(id)}</b><small>{lowColor(quadrant(id).scoring.label)}</small>
+                  <b>{sphereName(id)}</b><small>{lowColor(quadrant(id).scoring.label)}</small><small className="sphere-line">{sphereLine(id)}</small>
                 </button>
               );
             })}
@@ -172,7 +172,7 @@ export function TablePicker({ value, onChange, readOnly = false }) {
 export function sphereHint(id) {
   const q = quadrant(id);
   const lines = q.actions.filter(a => a.ring === 1).map(a => panelWords(id, a, 1).replace(/@f/g, 'follower'));
-  return `${lowColor(q.scoring.label)}. Its round I spaces: ${lines.join(' · ')}.`;
+  return `${sphereLine(id)} ${lowColor(q.scoring.label)} at round end. Its round I spaces: ${lines.join(' · ')}.`;
 }
 function TableChip({ id }) {
   return <span className="table-chip" style={{ '--c': `var(--${id})` }} title={sphereHint(id)}><i className="dot" />{sphereName(id)}</span>;

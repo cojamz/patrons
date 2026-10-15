@@ -1,6 +1,6 @@
 // E2E: "what just happened" at 1270×700 (RC1 panel items 1–4). A resumed hot-seat game where P1 (the only person)
 // ends round I's first pass, so the snake turns round on P1, and P1 holds Midas (on).
-//  (t1) the order chips count the snake's double: P1 reads "now twice" and no other seat reads NEXT (its explanation
+//  (t1) the order chips count the snake's double: P1 reads "now again" and no other seat reads NEXT (its explanation
 //       is its hover card's label now, not a native title);
 //  (t2) the "since your last turn" strip accounts for the rivals' moves (one line per placement, each naming its player,
 //       or folded into "N earlier" when the turn card takes the room; whole lines only),
@@ -101,7 +101,8 @@ try {
   await page.screenshot({ path: `${SHOTS}/1-resumed.png` });
   // (t1)
   const me = v.chips['0'];
-  if (!me || me.order !== 'now' || !me.twice || !/twice/.test(me.text) || !/snake order/.test(me.title)) fail(`P1's chip at the turnaround: ${JSON.stringify(me)}`, 't1');
+  // the chip says "again" (w3b #42: "twice" alone took a decode), its hover the snake order
+  if (!me || me.order !== 'now' || !me.twice || !/again/.test(me.text) || !/snake order/.test(me.title)) fail(`P1's chip at the turnaround: ${JSON.stringify(me)}`, 't1');
   const nexts = Object.entries(v.chips).filter(([pid, c]) => pid !== '0' && c && c.order === 'next');
   if (nexts.length) fail(`another seat reads NEXT while P1 places twice: ${JSON.stringify(nexts)}`, 't1');
   // (t2)

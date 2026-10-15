@@ -18,6 +18,9 @@
 //       its row and hover read a muted "Use: +0" with the reason;
 //  (m10) w2a #1, #44, #45, #16: a use's result shows at the member (even +0) and the prompt drops it at once; a usable
 //       member has a warm ring and a small lift; its card opens beside your seat; a 13-member seat card scrolls on screen.
+//  (m11) a click always acts on what's under the pointer, at once: with your seat's or your member's card open, a
+//       click on a lit space (the one under the card, if any) reaches the space, the card is gone the next frame, and
+//       the minion lands.
 //  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Stunt Double, subdued); a seat no one can
 //       steal from this round says "safe this round" (P3 lies low), in its seat and its card.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/members/).
@@ -265,6 +268,47 @@ try {
     for (const id of ['gold.thrift', 'echo.hourglass']) if (!rc.rows.some(x => x.id === id)) fail(`P2's seat card doesn't list ${id}`, 'm6');
     if (rc.rows.some(x => x.use)) fail('P2\'s seat card offers you a Use button', 'm6');
   }
+  // (m11) a click always acts on what's under the pointer, at once, hover card or not: open a card (your seat's, your
+  // member's), then click a lit space, the one the card stands over if there is one; the press must reach the space,
+  // the card must be gone by the next frame, and the minion must land
+  for (const kind of ['seat', 'member']) {
+    const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
+    const pg = await ctx.newPage();
+    await pg.addInitScript(([v, rs]) => { localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs)); }, [save, roundStart]);
+    await pg.goto(`${base}/?botDelay=300&intro=0`);
+    await pg.waitForSelector('.lt-wheel, [data-home="resume"]');
+    if (!(await pg.$('.lt-wheel'))) await pg.click('[data-home="resume"]');
+    await pg.waitForSelector('.lt-wheel .slot.can');
+    await pg.waitForTimeout(600);
+    const from = kind === 'seat' ? '[data-cult="0"] .cs-leader' : '[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig';
+    const fb = await (await pg.$(from)).boundingBox();
+    await pg.mouse.move(fb.x + fb.width / 2, fb.y + fb.height / 2, { steps: 4 });
+    await pg.waitForTimeout(350);
+    const plan = await pg.evaluate(k => {
+      const card = k === 'seat' ? document.querySelector('[data-hover-layer][data-open="1"]') : document.querySelector('[data-tip-body]')?.closest('.popover');
+      if (!card) return null;
+      const r = card.getBoundingClientRect();
+      const slots = [...document.querySelectorAll('.lt-wheel .slot.can .base')].map(e => { const b = e.getBoundingClientRect(); return { key: e.closest('[data-slot]').dataset.slot, x: b.left + b.width / 2, y: b.top + b.height / 2 }; });
+      const under = slots.filter(t => t.x > r.left + 4 && t.x < r.right - 4 && t.y > r.top + 4 && t.y < r.bottom - 4);
+      const near = slots.sort((a, b) => Math.hypot(a.x - r.right, a.y - r.top) - Math.hypot(b.x - r.right, b.y - r.top));
+      window.__clicks = [];
+      addEventListener('pointerdown', () => { requestAnimationFrame(() => { const open = k === 'seat' ? document.querySelector('[data-hover-layer][data-open="1"] [data-seat-card]') : document.querySelector('[data-tip-body]'); window.__clicks.push({ t: 'frame', open: !!open }); }); }, true);
+      document.addEventListener('click', e => { window.__clicks.push({ t: 'click', slot: e.target.closest?.('[data-slot]')?.dataset.slot || null, on: (e.target.className?.baseVal ?? e.target.className ?? '').toString().slice(0, 40) }); });
+      return { target: under[0] || near[0], covered: !!under[0], moves: Number(document.querySelector('.lt[data-moves]')?.dataset.moves) };
+    }, kind);
+    if (!plan) { fail(`no ${kind} card opened to test a click past it`, 'm11'); await ctx.close(); continue; }
+    await pg.mouse.move(plan.target.x, plan.target.y);
+    await pg.mouse.down(); await pg.mouse.up();
+    await pg.waitForTimeout(80);
+    const log = await pg.evaluate(() => window.__clicks);
+    const click = log.find(x => x.t === 'click'), frame = log.find(x => x.t === 'frame');
+    if (!click || click.slot !== plan.target.key) fail(`with your ${kind} card open, a click on space ${plan.target.key}${plan.covered ? ' (under the card)' : ''} landed on ${click ? `"${click.on}"` : 'nothing'}`, 'm11');
+    if (!frame || frame.open) fail(`with your ${kind} card open, the card was still up the frame after the press`, 'm11');
+    const landed = await pg.waitForFunction(m => Number(document.querySelector('.lt[data-moves]')?.dataset.moves) > m, plan.moves, { timeout: 5000 }).then(() => true, () => false);
+    if (!landed) fail(`with your ${kind} card open, the click on space ${plan.target.key} placed no minion`, 'm11');
+    await ctx.close();
+  }
+
   if (errors.length) fail(`page errors: ${errors.slice(0, 3).join(' | ')}`, 'page');
 } catch (e) {
   fail(`crashed: ${e.message}`, 'run');

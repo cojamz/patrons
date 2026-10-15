@@ -1479,3 +1479,4 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 .tab-away-card p{margin:0 0 16px;color:var(--paper-ink-2,#5f4e3d);font-size:.95rem;line-height:1.4}
 .tab-away-card .btn{min-height:44px;min-width:140px}
 .field .name-need{font-size:inherit;font-weight:400;color:var(--cream-3,#a39078)}
+.nowrap{white-space:nowrap}
