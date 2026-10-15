@@ -174,4 +174,12 @@ describe('v4 format helpers', () => {
     expect(secs[2].lines[0]).toMatch(/Minimalist/);
     for (const x of secs) x.lines.forEach((l, j) => expect(log[x.start + j]).toBe(l)); // start indexes the log
   });
+
+  it('a long question in the headline says what it asks, never "Choose below" (RC1 round 3 #55)', () => {
+    const s = createGame({ seats, seed: 3 });
+    const at = prompt => ({ ...s, pending: { kind: 'choose', player: 1, prompt, options: [{ id: 'a', label: 'Pay 4' }, { id: 'b', label: 'Let it go' }] } });
+    expect(promptFor(at('Cy holds your Magnate to ransom: pay 4 to keep it?'), true).text).toBe('Cy holds Magnate: keep it for 4?');
+    expect(promptFor(at('Bo: take 6 more from the release, in any colors'), true).text).toBe('take 6 more from the release, in any colors');
+  });
 });
+

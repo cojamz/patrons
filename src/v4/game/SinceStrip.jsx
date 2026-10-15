@@ -8,14 +8,14 @@ import { Tip } from './Info.jsx';
 import { HoverName, HoverNames } from './HoverNames.jsx';
 import { Rich } from './Rich.jsx';
 import { quadrant } from '../../engine/v4/index.js';
-import { shortEffect } from '../shorts.js';
+import { panelWords } from './panelText.js';
 import './since.css';
 
 const MAX = 6;
-/** The words the board prints on a space ("+3 gold · gift 1"), for this round. */
+/** The words the board prints on a space ("+3 gold, +1 to anyone"), for this round: the panel's own lines. */
 const words = (state, key) => {
   if (!key) return '';
-  try { const [q, i] = key.split('-').map(Number); const qid = state.quadrants[q]; return shortEffect(qid, quadrant(qid).actions[i], Math.max(1, state.round)) || ''; } catch { return ''; }
+  try { const [q, i] = key.split('-').map(Number); const qid = state.quadrants[q]; return panelWords(qid, quadrant(qid).actions[i], Math.max(1, state.round)) || ''; } catch { return ''; }
 };
 
 /** One placement's full card (the same lines as the turn card by the cult), its names hover targets. */

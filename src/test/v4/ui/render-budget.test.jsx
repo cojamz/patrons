@@ -106,7 +106,7 @@ describe('render budget', () => {
       // the table holds each step for its chain (director.js): wait until it shows this one, then a beat more
       for (let w = 0; w < 200 && container.querySelector('.lt').getAttribute('data-moves') !== String(next.moves); w++) await act(() => new Promise(r => setTimeout(r, 10)));
       await settle(3);
-      perStep.push({ kind: state.pending.kind, actor: state.pending.player, turnEnds: !(next.pending && next.pending.player === state.pending.player), CultSeat: R.n('CultSeat'), GameScreen: R.n('GameScreen'), ShopCards: R.n('ShopCards'), components: R.total() });
+      perStep.push({ kind: state.pending.kind, actor: state.pending.player, turnEnds: !(next.pending && next.pending.player === state.pending.player), Wheel: R.n('Wheel'), Space: R.n('WheelSpace'), CultSeat: R.n('CultSeat'), GameScreen: R.n('GameScreen'), ShopCards: R.n('ShopCards'), components: R.total() });
       state = next;
     }
     console.log('[render-budget] rival steps:', JSON.stringify(perStep));
@@ -117,6 +117,8 @@ describe('render budget', () => {
     expect(inside.length).toBeGreaterThan(1);
     for (const s of inside) expect(s.CultSeat).toBeLessThan(4);
     for (const s of perStep) expect(s.ShopCards).toBeLessThanOrEqual(1); // the shop once per step, at most
+    // the wheel redraws only the spaces whose picture changed: the one just taken and the last placement's (its ring)
+    for (const s of perStep) expect(s.Space).toBeLessThanOrEqual(2);
     // one commit of the table per step: the strip, the turn card and the new minion's flash are read while it renders
     for (const s of perStep) expect(s.GameScreen).toBe(1);
   });

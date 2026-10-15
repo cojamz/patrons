@@ -321,76 +321,79 @@ function Menu({ onRules, onLog, onLeave, getState }) {
  * chair when the turn has passed and had its moment.
  */
 function TurnCard({ card, root, state }) {
-  const [pos, setPos] = useState(null);
-  useLayoutEffect(() => {
-    // the chairs in one ordered column (laptop): the card tells the turn in the right column, just above the shop,
-    // under the story of the turns since yours (it would cover the next chair beside its own)
-    const column = root && root.querySelector('.lt > .lt-snake');
-    // a layout that docks the turn under the story of the turns since yours (layout.css sets --turn-dock: since): the
-    // newest turn reads last, under the ones before it
-    const dock = root && getComputedStyle(root).getPropertyValue('--turn-dock').trim();
-    const since = dock === 'since' && root.querySelector('.lt > .lt-since');
-    if (since && since.getBoundingClientRect().width) {
-      // docked at a foot that never depends on the story or on the card itself: the column's foot (from 1200px), or just
-      // above the follower buys when they share the story's column (861–1199px). The story above leaves the card its
-      // room (--turn-h, below): one way only. (A ResizeObserver that moved the card with the story fed back on itself:
-      // "Maximum update depth exceeded", 2026-10-15.)
-      const b = since.getBoundingClientRect();
-      const rates = root.querySelector('.lt-rates');
-      const rb = rates && rates.getBoundingClientRect();
-      const overRates = !!(rb && rb.width && Math.abs(rb.left - b.left) < 4);
-      setPos({ left: Math.round(b.left), right: undefined, top: undefined, bottom: overRates ? Math.round(innerHeight - rb.top + 12) : 8, width: Math.round(b.width), ox: '0%', oy: '100%' });
-      return;
-    }
-    if (column && column.getBoundingClientRect().width) {
-      const shop = root.querySelector('.lt > .lt-shop');
-      const top = shop ? shop.getBoundingClientRect().top : innerHeight;
-      setPos({ left: undefined, right: 18, top: undefined, bottom: Math.max(8, innerHeight - top + 10), ox: '100%', oy: '100%' });
-      return;
-    }
-    // the card sits in the open space beside its cult: under a top chair, over a bottom one (never over the prompt)
-    const region = root && root.querySelector(`.lt-seat[data-pid="${card.pid}"]`);
-    const seat = region && (region.querySelector('.lt-cult-seat') || region);
-    if (!seat) { setPos(null); return; }
-    const r = seat.getBoundingClientRect();
-    const left = r.left + r.width / 2 < innerWidth / 2;
-    const top = r.top + r.height / 2 < innerHeight / 2;
-    setPos({
-      left: left ? Math.max(10, r.left) : undefined,
-      right: left ? undefined : Math.max(10, innerWidth - r.right),
-      top: top ? r.bottom + 10 : undefined,
-      bottom: top ? undefined : Math.max(8, innerHeight - r.top + 10),
-      ox: left ? '0%' : '100%', oy: top ? '0%' : '100%',
-    });
-  }, [card.pid, card.n, root]);
-  // the card always fits on screen (wave-2: a bot's card ran off the bottom): at most a few lines, the rest summed up
-  // (every line stays in the strip's card and the log), and slid back up if it still reaches past the bottom
+  void state;
+  // Where the card sits, written straight to its style in one layout effect (perf, 2026-10-15): as React state its place
+  // and its lift cost every step one or two more commits of their own, each reading the layout again
   const box = useRef(null);
-  const [lift, setLift] = useState(0);
-  // the story above leaves the card exactly its own height (layout.css --turn-h): measured into a ref and written to the
-  // DOM only when the whole-pixel value changes, never React state (the card's height depends on its text and width only)
+  // the story above leaves the card exactly its own height (layout.css --turn-h), written only when the whole-pixel value
+  // changes (the card's height depends on its text and width only)
   const turnH = useRef(null);
   useLayoutEffect(() => {
-    if (!root || !box.current) return;
-    const h = Math.ceil(box.current.offsetHeight) + 8;
-    if (h !== turnH.current) { turnH.current = h; root.style.setProperty('--turn-h', `${h}px`); }
-  }, [card.text, pos && pos.width, root]); // eslint-disable-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
-    setLift(0);
-    const b = box.current && box.current.getBoundingClientRect();
-    if (b && b.bottom > innerHeight - 8) setLift(Math.min(b.top - 8, b.bottom - (innerHeight - 8)));
-  }, [pos, card.text]);
-  if (!pos) return null;
+    const el = box.current;
+    if (!el) return;
+    const pos = turnCardPlace(card, root);
+    if (!pos) { el.style.display = 'none'; return; }
+    const px = v => (v == null ? '' : `${v}px`);
+    Object.assign(el.style, { display: '', left: px(pos.left), right: px(pos.right), top: px(pos.top), bottom: px(pos.bottom), width: px(pos.width), maxWidth: px(pos.width), transformOrigin: `${pos.ox} ${pos.oy}` });
+    // the card always fits on screen (wave-2: a bot's card ran off the bottom): slid back up if it reaches past the bottom
+    if (pos.top != null) {
+      const b = el.getBoundingClientRect();
+      if (b.bottom > innerHeight - 8) el.style.top = px(pos.top - Math.min(b.top - 8, b.bottom - (innerHeight - 8)));
+    }
+    const h = Math.ceil(el.offsetHeight) + 8;
+    if (root && h !== turnH.current) { turnH.current = h; root.style.setProperty('--turn-h', `${h}px`); }
+  }, [card.pid, card.n, card.text, root]);
+  // at most a few lines, the rest summed up (every line stays in the strip's card and the log)
   const [head, ...all] = card.text.split(' · ');
   const MAXL = 5;
   const rest = all.length > MAXL ? [...all.slice(0, MAXL - 1), `+${all.length - MAXL + 1} more: hover the line in the strip`] : all;
   return (
     <div ref={box} className={`turn-card${card.live ? ' live' : ''}${card.folding ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
-      style={{ left: pos.left, right: pos.right, top: pos.top != null ? pos.top - lift : undefined, bottom: pos.bottom, width: pos.width, maxWidth: pos.width, transformOrigin: `${pos.ox} ${pos.oy}`, '--pc': playerColor(card.pid) }}>
+      style={{ '--pc': playerColor(card.pid) }}>
       <b className="tc-head">{head}</b>
       {rest.map((l, k) => <span key={`${k}:${l}`} className="tc-line"><Rich text={l} /></span>)}
     </div>
   );
+}
+/** Where the turn card goes: { left, right, top, bottom, width, ox, oy } in px, or null (no chair to sit by). */
+function turnCardPlace(card, root) {
+  // the chairs in one ordered column (laptop): the card tells the turn in the right column, just above the shop,
+  // under the story of the turns since yours (it would cover the next chair beside its own)
+  const column = root && root.querySelector('.lt > .lt-snake');
+  // a layout that docks the turn under the story of the turns since yours (layout.css sets --turn-dock: since): the
+  // newest turn reads last, under the ones before it
+  const dock = root && getComputedStyle(root).getPropertyValue('--turn-dock').trim();
+  const since = dock === 'since' && root.querySelector('.lt > .lt-since');
+  if (since && since.getBoundingClientRect().width) {
+    // docked at a foot that never depends on the story or on the card itself: the column's foot (from 1200px), or just
+    // above the follower buys when they share the story's column (861–1199px). The story above leaves the card its
+    // room (--turn-h): one way only. (A ResizeObserver that moved the card with the story fed back on itself:
+    // "Maximum update depth exceeded", 2026-10-15.)
+    const b = since.getBoundingClientRect();
+    const rates = root.querySelector('.lt-rates');
+    const rb = rates && rates.getBoundingClientRect();
+    const overRates = !!(rb && rb.width && Math.abs(rb.left - b.left) < 4);
+    return { left: Math.round(b.left), right: null, top: null, bottom: overRates ? Math.round(innerHeight - rb.top + 12) : 8, width: Math.round(b.width), ox: '0%', oy: '100%' };
+  }
+  if (column && column.getBoundingClientRect().width) {
+    const shop = root.querySelector('.lt > .lt-shop');
+    const top = shop ? shop.getBoundingClientRect().top : innerHeight;
+    return { left: null, right: 18, top: null, bottom: Math.max(8, innerHeight - top + 10), width: null, ox: '100%', oy: '100%' };
+  }
+  // the card sits in the open space beside its cult: under a top chair, over a bottom one (never over the prompt)
+  const region = root && root.querySelector(`.lt-seat[data-pid="${card.pid}"]`);
+  const seat = region && (region.querySelector('.lt-cult-seat') || region);
+  if (!seat) return null;
+  const r = seat.getBoundingClientRect();
+  const left = r.left + r.width / 2 < innerWidth / 2;
+  const top = r.top + r.height / 2 < innerHeight / 2;
+  return {
+    left: left ? Math.max(10, r.left) : null,
+    right: left ? null : Math.max(10, innerWidth - r.right),
+    top: top ? r.bottom + 10 : null,
+    bottom: top ? null : Math.max(8, innerHeight - r.top + 10),
+    width: null, ox: left ? '0%' : '100%', oy: top ? '0%' : '100%',
+  };
 }
 
 /** Which player sits in each corner chair: you bottom left (0), then clockwise from you (1 top left, 2 top right,

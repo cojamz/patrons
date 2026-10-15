@@ -131,10 +131,18 @@ export function promptFor(state, mine) {
       // the question itself is in the note on the board; the headline names what's asking ("Kickback: choose below")
       const asker = (String(pend.prompt || '').match(/^([^:]{2,28}):\s/) || [])[1];
       const short = String(pend.prompt || '').length <= 36;
-      return asker && asker !== name
+      if (asker && asker !== name) {
         // options that all point at seats are answered on the cults (the seat selector, game/seatPick.js)
-        ? { who: p, text: `${asker}: ${pend.options.some(o => o.target) ? 'pick on the board' : 'choose one'}`, keepCase: true }
-        : short ? { who: p, text: pend.prompt } : { who: p, text: 'Choose below' };
+        return { who: p, text: `${asker}: ${pend.options.some(o => o.target) ? 'pick on the board' : 'choose one'}`, keepCase: true };
+      }
+      if (short) return { who: p, text: pend.prompt };
+      // a long question says what it asks, never "Choose below" (RC1 round 3 #55): a ransom is "keep Magnate for 4?",
+      // and your own name before the question goes ("P2: take 6 more from the release, in any colors")
+      const pr = String(pend.prompt || '');
+      const ransom = pr.match(/^(.+?) holds your (.+) to ransom: pay (\d+) to keep it\?$/);
+      if (ransom) return { who: p, text: `${ransom[1]} holds ${ransom[2]}: keep it for ${ransom[3]}?`, keepCase: true };
+      const own = pr.startsWith(`${name}: `) ? pr.slice(name.length + 2) : pr;
+      return { who: p, text: own.length <= 46 ? own : 'answer the question below' };
     }
     default:
       return { who: p, text: pend.prompt };

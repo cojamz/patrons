@@ -197,8 +197,7 @@ function SetupTokens({ state, pend, onPick, busy }) {
           <button key={o.id} type="button" className="token" data-option={o.id} disabled={busy} style={{ '--c': `var(--${o.value})` }} onClick={() => onPick(o.id)} aria-label={`Take 1 ${res}`} title={`Start with 1 ${res}`}>
             {/* a plain dot, its color's name, "+1" quiet beside it (Cory, 2026-10-15: simplify) */}
             <ResourceGlyph r={res} size={28} decorative />
-            <span className="tk-name">{res}</span>
-            <small className="tk-plus num">+1</small>
+            <span className="tk-label"><span className="tk-name">{res}</span> <small className="tk-plus num">+1</small></span>
           </button>
         );
       })}

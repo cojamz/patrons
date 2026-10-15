@@ -34,6 +34,10 @@ import { ResourceGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { MO, spinEase } from '../motion.js';
 
+// One space on the board, drawn once per change of what it shows (perf, 2026-10-15): the wheel keeps each space's
+// element while its picture is the same, so a rival's step redraws only the spaces that changed, not all 24
+const Space = memo(function WheelSpace({ el }) { return el; });
+
 // sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
 const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
 // panels: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45°, ring III: one 90°) on a dark
@@ -842,6 +846,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
   const flashKey = [...flash].join('|');
   const legalKey = [...legal.entries()].map(([k, v]) => `${k}=${v}`).join('|');
+  const built = useRef(new Map()); // key → { sig, el }: each space's last element and what it showed
   const sockets = useMemo(() => spaces.map(s => {
     const { key, q, a, ring: t, qid } = s;
     const [X, Y] = turned(s.xy[0], s.xy[1]);
@@ -854,6 +859,13 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     // panels: the gain, the effect, the clarification, laid out in the room this panel has where it sits now
     const pl = panels ? panelLays.get(key) : null;
     const said = pl && pl.said, lay = pl && pl.lay;
+    // everything this space shows, as one string: the same string, the same element (Space skips it)
+    const crewIds = owner !== undefined ? [owner, ...joiners] : [];
+    const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', joiners.join(','), open ? 1 : 0, opt || '', selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
+      flash.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
+      fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? scale : ''].join('|');
+    const had = built.current.get(key);
+    if (had && had.sig === sig) return <Space key={key} el={had.el} />;
     const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
@@ -878,7 +890,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         );
       }
     }
-    return (
+    const el = (
       <div
         key={key} className={cls} data-slot={key} data-option={opt || undefined} data-pick-note={(opt && pickNotes && pickNotes.get(key)) || undefined} style={style}
         data-panel={lay ? `${lay.oneLines}.${lay.twoLines}.${lay.noteLines}${lay.tight ? ' tight' : ''}` : undefined}
@@ -928,6 +940,8 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         )}
       </div>
     );
+    built.current.set(key, { sig, el });
+    return <Space key={key} el={el} />;
   }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, round, look, Face, custom || panels ? scale : 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

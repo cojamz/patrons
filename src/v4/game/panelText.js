@@ -98,6 +98,21 @@ export function panelText(qid, action, round = 1) {
   return { main, verb: null, second: rest.length ? rest.join(', ') : null, note: null };
 }
 
+/**
+ * The board's own words for a space on one line, for text off the wheel (the strip's "(…)", the setup hints):
+ * "+3 gold, +1 to anyone", "+1 purple per minion left", "Trade for followers: 1 for 1, up to 4". The follower mark
+ * stays "@f" (Rich draws it). The strip used to print an older short table ("4 for followers") the board no longer says.
+ */
+export function panelWords(qid, action, round = 1) {
+  const t = panelText(qid, action, round);
+  const one = t.main || t.verb || '';
+  if (!t.second) return one;
+  // a continuation reads straight on ("Copy a space a rival just took", "+1 purple per minion left"); a verb's terms
+  // after a colon ("Trade for followers: 1 for 1, up to 4"); a second gain after a comma ("+3 gold, +1 to anyone")
+  const glue = /^(a|an|as|taken|this|from|per|then|and|on|in|of|for|to|with)\b/.test(t.second) ? ' ' : t.verb ? ': ' : ', ';
+  return `${one}${glue}${t.second}`;
+}
+
 /** Every entry, for the decipher table and the tests: [qid, key, lines] (round 2). */
 export const panelEntries = () => Object.entries(P).flatMap(([qid, m]) => Object.keys(m).map(key => [qid, key, panelText(qid, { key }, 2)]));
 

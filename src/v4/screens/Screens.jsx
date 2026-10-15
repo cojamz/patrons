@@ -5,7 +5,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
 import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
 import { CLASSIC, spheres, sphereName, tableProblem, randomTable, urlTable } from '../tables.js';
-import { panelText } from '../game/panelText.js';
+import { panelWords } from '../game/panelText.js';
 import { GAME_NAME, VERSION } from '../version.js';
 import { copyText } from '../Recovery.jsx';
 import { EmojiButton, EmojiFace, emojiName } from './EmojiPicker.jsx';
@@ -166,7 +166,7 @@ export function TablePicker({ value, onChange, readOnly = false }) {
  *  round I spaces: +3 gold, pick who gets 1 · +2 gold · Save 4 on next member." The resource dot is a word here. */
 export function sphereHint(id) {
   const q = quadrant(id);
-  const lines = q.actions.filter(a => a.ring === 1).map(a => { const t = panelText(id, a, 1); const glue = t.verb || /^(from|per|then|and|on|in|of|for|to)\b/.test(t.second || '') ? ' ' : ', '; return [t.main || t.verb, t.second].filter(Boolean).join(glue).replace(/@f/g, 'follower'); });
+  const lines = q.actions.filter(a => a.ring === 1).map(a => panelWords(id, a, 1).replace(/@f/g, 'follower'));
   return `${lowColor(q.scoring.label)}. Its round I spaces: ${lines.join(' · ')}.`;
 }
 function TableChip({ id }) {
