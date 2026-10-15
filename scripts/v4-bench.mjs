@@ -23,6 +23,7 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 import { fileURLToPath } from 'node:url';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { cpus } from 'node:os';
 import path from 'node:path';
 import { createGame, applyMove, followers, memberCount, paymentChoices, contestTable, TIERS, actionAt } from '../src/engine/v4/core.js';
@@ -36,6 +37,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'design/eval/bench');
 const SEATS = 4;
 const HARD_BUDGET = 20;
+// the bots' own fingerprint: the rules hash leaves bots.js and thinker.js out, but a bench reading depends on them
+const BOTS_HASH = createHash('sha1').update(['bots.js', 'thinker.js'].map(f => readFileSync(path.join(ROOT, 'src/engine/v4', f), 'utf8')).join('\n')).digest('hex').slice(0, 10);
 const CLASSIC = ['gold', 'red', 'market', 'echo'];
 const ALL_Q = allQuadrantIds();
 const ALL_DEFS = [...ALL_Q.flatMap(q => quadrant(q).members), ...guestMembers()];
@@ -923,7 +926,7 @@ function finalize(cfg, flags, As, Bs, a, { stamp, secs, workers, shards }) {
 
   const { sha, dirty } = stamp;
   const result = {
-    kind: 'patrons.v4.bench', mode: quick ? 'quick' : 'full', only, sha: sha + dirty, content: CONTENT_HASH, date: new Date().toISOString(), secs, coreSecs: (msA + msB) / 1000, workers, shards, params: P, scale: cfg.scale,
+    kind: 'patrons.v4.bench', mode: quick ? 'quick' : 'full', only, sha: sha + dirty, content: CONTENT_HASH, bots: BOTS_HASH, date: new Date().toISOString(), secs, coreSecs: (msA + msB) / 1000, workers, shards, params: P, scale: cfg.scale,
     tables: tablesDesc, throughput,
     printed: Object.fromEntries(ALL_DEFS.map(d => [d.id, priceOf(d)])),
     instruments: {
@@ -1020,7 +1023,7 @@ export function trend(mode, only) {
       const rep = Object.keys(r.printed).filter(id => p.printed[id] !== undefined && p.printed[id] !== r.printed[id]).map(id => `${DEF[id]?.name || id} ${p.printed[id]}→${r.printed[id]}`);
       const added = Object.keys(r.printed).filter(id => p.printed[id] === undefined).map(id => DEF[id]?.name || id);
       const gone = Object.keys(p.printed).filter(id => r.printed[id] === undefined);
-      what = [p.content === r.content ? 'same rules content' : `rules content ${p.content} → ${r.content}`, rep.length ? `repriced ${rep.join(', ')}` : '', added.length ? `new ${added.join(', ')}` : '', gone.length ? `gone ${gone.join(', ')}` : ''].filter(Boolean).join('; ');
+      what = [p.content === r.content ? 'same rules content' : `rules content ${p.content} → ${r.content}`, p.bots === r.bots ? '' : `bots ${p.bots || '?'} → ${r.bots || '?'}`, rep.length ? `repriced ${rep.join(', ')}` : '', added.length ? `new ${added.join(', ')}` : '', gone.length ? `gone ${gone.join(', ')}` : ''].filter(Boolean).join('; ');
     }
     L.push(`- ${head[i]}: ${r.anchors.trusted ? 'anchors pass' : 'ANCHORS FAIL'}; ${what}.`);
   });
@@ -1030,7 +1033,7 @@ export function trend(mode, only) {
   // edges (each run is an independent sample and many cards sit near the line); the pooled reading is the one to act on.
   const latest = runs[runs.length - 1];
   // independent samples only: a rerun with the same seeds replays the same games, so keep the newest of each seed base
-  const same = runs.filter(r => r.content === latest.content).filter((r, i, xs) => !xs.slice(i + 1).some(o => o.params?.seedBase === r.params?.seedBase && o.scale === r.scale));
+  const same = runs.filter(r => r.content === latest.content && r.bots === latest.bots).filter((r, i, xs) => !xs.slice(i + 1).some(o => o.params?.seedBase === r.params?.seedBase && o.scale === r.scale));
   const pool = (xs, val, lo, hi) => {
     const w = xs.filter(x => x && Number.isFinite(x[val]) && Number.isFinite(x[lo]) && x[hi] > x[lo]).map(x => ({ v: x[val], w: 1 / (((x[hi] - x[lo]) / (2 * Z90)) ** 2) }));
     if (!w.length) return null;
@@ -1048,7 +1051,7 @@ export function trend(mode, only) {
     const dir = x => (!x ? null : x.lo > hi ? 'strong' : ring === r && x.hi < lo ? 'weak' : 'in');
     return { cell, N, H: Hh, flag: dir(N) !== 'in' && dir(N) && dir(N) === dir(Hh) ? dir(N) : null };
   });
-  L.push(`## Pooled over the ${same.length} run${same.length > 1 ? 's' : ''} on today's rules content (${latest.content})`, '');
+  L.push(`## Pooled over the ${same.length} run${same.length > 1 ? 's' : ''} on today's rules content (${latest.content}) and bots (${latest.bots || 'unrecorded'})`, '');
   L.push('Flagged when both pooled intervals miss printed by ≥ 1.5 cost points the same way (spaces: miss the band the same way). This is the list to act on.', '');
   const pc = pooledCards.filter(x => x.flag).sort((x, y) => Math.abs(y.N.v - y.T) - Math.abs(x.N.v - x.T));
   L.push(`| card | printed | Normal pooled [90%] | Hard-20 pooled [90%] | reads |`, '|---|---|---|---|---|');
