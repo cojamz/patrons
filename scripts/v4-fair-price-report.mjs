@@ -8,6 +8,8 @@ import { allQuadrantIds, quadrant, guestMembers } from '../src/engine/v4/content
 const flags = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
 const load = f => JSON.parse(readFileSync(f, 'utf8'));
 const P = load(flags.panel), S = flags.screen ? load(flags.screen) : { cards: [] };
+// --confirm: a panel centred on the proposed prices (grid proposed ±4); its fit replaces the main panel's extrapolation
+const CF = flags.confirm ? load(flags.confirm) : null;
 const sweeps = String(flags.sweeps || '').split(',').filter(Boolean).map(load);
 const defs = [...allQuadrantIds().flatMap(q => quadrant(q).members), ...guestMembers()];
 const h = x => (Number.isFinite(x) ? String(Math.round(x * 2) / 2) : '–');
@@ -34,8 +36,10 @@ for (const q of [...allQuadrantIds(), 'guests']) {
   if (!ds.length) continue;
   lines.push('', `### ${q === 'guests' ? 'Guest rule-benders' : (quadrant(q).name || q)}`);
   for (const d of ds) {
-    const c = P.cards.find(x => x.id === d.id), sc = S.cards.find(x => x.id === d.id), T = d.s + d.w;
-    if (!c) continue;
+    const c0 = P.cards.find(x => x.id === d.id), sc = S.cards.find(x => x.id === d.id), T = d.s + d.w;
+    if (!c0) continue;
+    const cf = CF?.cards.find(x => x.id === d.id && x.n >= 300 && CF.printed[x.id] !== T);
+    const c = cf ? { ...cf, mainFair: c0.fair, center: CF.printed[d.id] } : c0;
     const thin = c.n < MIN_N || !Number.isFinite(c.lo) || !Number.isFinite(c.hi);
     const covers = c.lo <= T && T <= c.hi, gap = c.fair - T;
     let verdict;
@@ -54,13 +58,14 @@ for (const q of [...allQuadrantIds(), 'guests']) {
     if (!thin && sc && sc.buyRate < 0.1 && gap >= GAP) fl.push(`bots under-recruit it (${Math.round(sc.buyRate * 100)}% of affordable offers): a bot-valuation gap too`);
     if (fl.some(f => f.startsWith('NEEDS'))) tally.ability++;
     const prof = Object.entries(c.byRound || {}).map(([r, b]) => `${roman(+r)} ${h(b.fair)}`).join(' / ');
+    const conf = c.center ? `; confirmed on a grid around ${c.center} (main panel, extrapolated: ~${h(c.mainFair)})` : '';
     const extra = (sw[d.id] || []).map(r => `${r.hard ? `Hard seat` : 'single-card sweep'} ~${h(r.fair)} (${h(r.lo)}–${h(r.hi)}, ${r.n} seeds)`);
     const demand = sc && Number.isFinite(sc.buyRate) ? `recruited at ${Math.round(sc.buyRate * 100)}% of affordable offers (screen)` : '';
-    lines.push(`- ${d.name} (${d.s}+${d.w}=${T}): fair ~${h(c.fair)} (90% ${h(c.lo)}–${h(c.hi)}, panel n=${c.n}; by round recruited ${prof}${extra.length ? '; ' + extra.join('; ') : ''}); ${demand}; ${verdict}${fl.length ? '. ' + fl.join('; ') : ''}`);
+    lines.push(`- ${d.name} (${d.s}+${d.w}=${T}): fair ~${h(c.fair)} (90% ${h(c.lo)}–${h(c.hi)}, panel n=${c.n}${conf}; by round recruited ${prof}${extra.length ? '; ' + extra.join('; ') : ''}); ${demand}; ${verdict}${fl.length ? '. ' + fl.join('; ') : ''}`);
     if (!thin && !covers && Math.abs(gap) >= GAP && !d.vanilla) {
       const Pp = even(c.fair), [ps, pw] = split(d, Pp);
       proposal.push({ id: d.id, name: d.name, printed: [d.s, d.w], proposed: fl.some(f => f.startsWith('NEEDS')) ? [d.s, d.w] : [ps, pw], fair: +c.fair.toFixed(1), ci90: [+c.lo.toFixed(1), +c.hi.toFixed(1)],
-        evidence: `panel (paired forced recruit, normal bots, random real tables): n=${c.n}, best recruited from round ${roman(c.bestRound)} (net ${c.net >= 0 ? '+' : ''}${c.net.toFixed(1)} followers of margin at printed), by round ${prof}${demand ? '; ' + demand : ''}${extra.length ? '; ' + extra.join('; ') : ''}`,
+        evidence: `panel (paired forced recruit, normal bots, random real tables): n=${c.n}, best recruited from round ${roman(c.bestRound)} (net ${c.net >= 0 ? '+' : ''}${c.net.toFixed(1)} followers of margin at printed), by round ${prof}${conf}${demand ? '; ' + demand : ''}${extra.length ? '; ' + extra.join('; ') : ''}`,
         bestRound: c.bestRound, byRound: Object.fromEntries(Object.entries(c.byRound || {}).map(([r, b]) => [r, +b.fair.toFixed(1)])),
         ...(fl.some(f => f.startsWith('NEEDS')) ? { flags: fl, note: 'proposed = printed: fix the ability first, then re-price' } : fl.length ? { flags: fl } : {}) });
     }
