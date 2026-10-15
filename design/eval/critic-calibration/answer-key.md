@@ -61,3 +61,4 @@ Source: this morning's session with Cory (logged in design/decisions.md, 2026-10
 44. **Hovers feel laggy.** The card opens, then fills in its "You'd get" line; it isn't complete when it appears.
 45. **Animations are too fast even on Relaxed, and not smooth.** Relaxed isn't clearly slow; the motion stutters.
 46. **"The design is still clunky."** (taste) The screen as a whole still doesn't feel polished.
+47. **Catch Up's text can't be decoded.** "what does this mean?" The hover's "+1 ●, and +2 per rival with more minions on the board than you" with a bare "Taken P1" doesn't say what is counted or when. Separate from 42 (it never pays). Source: cor-catches-2026-10-15.md.
