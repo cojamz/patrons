@@ -36,7 +36,7 @@ try {
     }
     if (process.env.PICK) {
       const lit = await page.$$('.cs-stack.pick-on');
-      if (lit.length) { await lit[0].click(); await page.waitForTimeout(250); await page.screenshot({ path: `${out}/steal-${sp}-${tag}-flight.png` }); await page.waitForTimeout(900); await page.screenshot({ path: `${out}/steal-${sp}-${tag}-pick1.png` }); console.log('pick shots'); }
+      if (lit.length) { await lit[0].click(); await page.waitForTimeout(90); await page.screenshot({ path: `${out}/steal-${sp}-${tag}-flight.png` }); await page.waitForTimeout(900); await page.screenshot({ path: `${out}/steal-${sp}-${tag}-pick1.png` }); console.log('pick shots'); }
     }
     await ctx.close();
   }

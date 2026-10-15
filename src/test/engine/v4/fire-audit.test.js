@@ -124,5 +124,7 @@ describe('fire audit gate (Gold, Red, Purple, Silver, Yellow, guests)', () => {
     expect(silent).toEqual([]);
     // the sample reaches most of the cards it judges
     expect(Object.keys(stats).length).toBeGreaterThan(60);
-  });
+    // bounded by its game count, not the clock: 140 normal-bot games take ~2 min alone and well past the 10-minute
+    // default when the whole suite shares a loaded box (it timed out there, 2026-10-15)
+  }, 30 * 60_000);
 });

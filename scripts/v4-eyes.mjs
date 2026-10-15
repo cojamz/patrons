@@ -94,6 +94,12 @@ await ctx.addInitScript(() => {
   window.__eyesEv = [];
   try { new PerformanceObserver(l => { for (const e of l.getEntries()) { window.__eyesEv.push([e.name, performance.timeOrigin + e.startTime, e.duration, e.processingStart - e.startTime, e.processingEnd - e.processingStart]); }
     if (window.__eyesEv.length > 300) window.__eyesEv.splice(0, 150); }).observe({ type: 'event', durationThreshold: 16, buffered: true }); } catch {}
+  // when each input really reached the page (the driver's own round trip doesn't count against the game)
+  window.__eyesIn = [];
+  for (const t of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel']) addEventListener(t, e => {
+    const at = performance.timeOrigin + e.timeStamp, last = window.__eyesIn[window.__eyesIn.length - 1];
+    if (t === 'pointermove' && last && last[0] === t && at - last[1] < 250) return;
+    window.__eyesIn.push([t, at]); if (window.__eyesIn.length > 200) window.__eyesIn.splice(0, 100); }, { capture: true, passive: true });
 });
 const page = await ctx.newPage();
 let pageErrors = 0;
@@ -116,7 +122,7 @@ function diff(a, b) {
   }
   return { idx, box: idx.length ? [minx, miny, maxx, maxy] : null };
 }
-let ambientMask = null;
+let ambientMask = null, maskAt = 0;
 function buildAmbient(now) {
   ambientLog = ambientLog.filter(a => now - a.t < 20000);
   const hits = new Uint8Array(W * H), mask = new Uint8Array(W * H);
@@ -143,11 +149,13 @@ async function startCast() {
     if (!d.idx.length) return;
     const quiet = !act && now - lastSettle > 1500;
     if (quiet && d.idx.length < W * H * 0.01) ambientLog.push({ t: ts, idx: Int32Array.from(d.idx) });
+    if (!act && now - maskAt > 1000) { ambientMask = buildAmbient(now); maskAt = now; }
     let n = d.idx.length, box = d.box;
     const mask = act ? act.mask : ambientMask;
     if (mask) { let minx = 1e9, miny = 1e9, maxx = -1, maxy = -1; n = 0;
       for (const i of d.idx) if (!mask[i]) { n++; const x = i % W, y = (i / W) | 0; if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; }
       box = n ? [minx, miny, maxx, maxy] : null; }
+    if (act && act.map && n >= 6) for (const i of d.idx) if (!mask || !mask[i]) act.map[i] = 1;
     if (n < 6) return; // only idle shimmer changed
     frames.push({ t: ts, jpeg, n, box });
     while (frames.length && (frames.length > 900 || now - frames[0].t > 90000)) frames.shift();
@@ -173,7 +181,7 @@ const toPage = b => b && [Math.round(b[0] * sx()), Math.round(b[1] * sy()), Math
 
 async function measure(label, pointer, fn, { cap = 5000, quiet = 450, noResponse = 1500 } = {}) {
   const t0 = Date.now();
-  act = { label, pointer, t0, first: null, last: null, count: 0, area: 0, box: null, mask: buildAmbient(t0) };
+  act = { label, pointer, t0, first: null, last: null, count: 0, area: 0, box: null, mask: buildAmbient(t0), map: new Uint8Array(W * H) };
   ambientMask = act.mask;
   await fn();
   const tIn = Date.now();
@@ -184,22 +192,47 @@ async function measure(label, pointer, fn, { cap = 5000, quiet = 450, noResponse
     if (act.first != null && now - (t0 + act.last) >= quiet && now - tIn > 150) break;
     if (now - t0 > cap) { act.capped = true; break; }
   }
-  let ev = [];
-  try { ev = await page.evaluate(t => (window.__eyesEv || []).filter(e => e[1] >= t - 30), t0); } catch {}
+  let ev = [], inp = [];
+  try { [ev, inp] = await page.evaluate(t => [(window.__eyesEv || []).filter(e => e[1] >= t - 30), (window.__eyesIn || []).filter(e => e[1] >= t - 30)], t0); } catch {}
   const m = act; act = null; lastSettle = Date.now(); m.events = ev; m.dispatch = tIn - t0; lastAction = m;
+  // re-base on the moment the input reached the page, so a slow driver round trip isn't blamed on the game
+  if (inp.length) { const shift = Math.max(0, Math.min(inp[0][1] - t0, m.dispatch)); m.inputAt = shift;
+    if (m.first != null) { m.first = Math.max(0, m.first - shift); m.last = Math.max(0, m.last - shift); } }
   return m;
 }
+// separate regions that changed (so a popover that opens far from the pointer shows up as its own region)
+function regions(m) {
+  if (!m.map || !W) return [];
+  const C = 8, cw = Math.ceil(W / C), ch = Math.ceil(H / C), cell = new Uint16Array(cw * ch);
+  for (let i = 0; i < m.map.length; i++) if (m.map[i]) { const x = i % W, y = (i / W) | 0; cell[((y / C) | 0) * cw + ((x / C) | 0)]++; }
+  const on = new Uint8Array(cw * ch); for (let k = 0; k < on.length; k++) on[k] = cell[k] >= 3 ? 1 : 0;
+  const seen = new Uint8Array(cw * ch), out = [];
+  for (let k = 0; k < on.length; k++) if (on[k] && !seen[k]) {
+    const st = [k]; seen[k] = 1; let minx = 1e9, miny = 1e9, maxx = -1, maxy = -1, px = 0;
+    while (st.length) { const q = st.pop(), x = q % cw, y = (q / cw) | 0; px += cell[q];
+      if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy, r = yy * cw + xx;
+        if (xx >= 0 && yy >= 0 && xx < cw && yy < ch && on[r] && !seen[r]) { seen[r] = 1; st.push(r); } } }
+    out.push({ px, box: toPage([minx * C, miny * C, Math.min(W - 1, (maxx + 1) * C - 1), Math.min(H - 1, (maxy + 1) * C - 1)]) });
+  }
+  return out.sort((a, b) => b.px - a.px).slice(0, 4);
+}
 function describe(m, { brief = false } = {}) {
-  const pct = W && H ? (m.box ? ((m.box[2] - m.box[0] + 1) * (m.box[3] - m.box[1] + 1)) / (W * H) * 100 : 0) : 0;
+  let lit = 0; if (m.map) for (let i = 0; i < m.map.length; i++) lit += m.map[i];
+  const pct = W && H ? (lit / (W * H)) * 100 : 0;
   const b = toPage(m.box);
   const parts = [`${m.label}`];
   if (m.first == null) parts.push('NO VISIBLE CHANGE within 1.5 s');
   else {
     parts.push(`first change ${Math.round(m.first)} ms`);
     parts.push(m.capped ? `still moving after ${Math.round((Date.now() - m.t0) / 1000)} s` : `settled ${Math.round(m.last)} ms`);
-    parts.push(`changed x ${b[0]}–${b[2]}, y ${b[1]}–${b[3]} (${pct < 1 ? pct.toFixed(1) : Math.round(pct)}% of the screen)`);
-    if (m.pointer) { const [px, py] = m.pointer; const dx = Math.max(b[0] - px, 0, px - b[2]), dy = Math.max(b[1] - py, 0, py - b[3]);
-      const dist = Math.round(Math.hypot(dx, dy)); parts.push(dist === 0 ? 'around the pointer' : `nearest change ${dist} px from the pointer`); }
+    const rs = regions(m);
+    const where = (rs.length ? rs.map(r => r.box) : [b]).map(bb => {
+      let s = `x ${bb[0]}–${bb[2]}, y ${bb[1]}–${bb[3]}`;
+      if (m.pointer) { const [px, py] = m.pointer; const dist = Math.round(Math.hypot(Math.max(bb[0] - px, 0, px - bb[2]), Math.max(bb[1] - py, 0, py - bb[3])));
+        s += dist === 0 ? ' (under the pointer)' : ` (${dist} px from the pointer)`; }
+      return s; });
+    parts.push(`changed ${pct < 1 ? pct.toFixed(1) : Math.round(pct)}% of the screen, in ${where.length > 1 ? where.length + ' places: ' : ''}${where.join('; ')}`);
   }
   const evs = m.events.filter(e => /pointer|mouse|click|key|touch/.test(e[0]));
   if (evs.length) { const worst = evs.reduce((a, e) => (e[2] > a[2] ? e : a)); parts.push(`input→paint ${Math.round(worst[2])} ms (${worst[0]}, handler ${Math.round(worst[4])} ms)`); }

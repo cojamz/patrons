@@ -45,7 +45,8 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
 /* ---------- type ---------- */
 .cap{font-size:var(--s);line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .s{font-size:var(--s);line-height:16px}
-.m{font-size:var(--m);line-height:20px}
+.m{font-size:var(--m);line-height:20px;text-wrap:pretty}
+.pop .m{text-wrap:balance}
 .l{font-size:var(--l);line-height:32px}
 
 /* ---------- spaces ---------- */
@@ -55,6 +56,9 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
 .cc .fine{font-size:var(--s);line-height:16px;color:var(--ink-2);font-weight:700}
 .cc .fine .n{font-weight:800}
 .cc.taken > *{opacity:.5}
+.cc .who{height:16px;display:flex;align-items:flex-end;justify-content:center}
+.cc.taken > .who{opacity:1}
+.cc .who svg{margin-bottom:-4px;filter:drop-shadow(0 2px 0 rgba(43,32,24,.25))}
 .cc.closed{color:var(--cream-2)}
 .cc.closed > *{opacity:.6}
 .cc.closed .cap,.cc.closed .fine{color:var(--cream-3)}
@@ -74,13 +78,15 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
 .px{image-rendering:pixelated;display:block}
 
 /* ---------- member cards ---------- */
-.card{position:absolute;width:140px;height:184px;border-radius:8px;background:var(--paper);color:var(--ink);overflow:hidden;
+.card{position:absolute;width:140px;height:192px;border-radius:8px;background:var(--paper);color:var(--ink);overflow:hidden;
   box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
 .card .art{height:72px;display:grid;place-items:center}
-.card .nm{position:absolute;left:0;right:0;top:80px;text-align:center;color:var(--ink-2)}
-.card .when{position:absolute;left:8px;right:8px;top:104px;text-align:center;color:var(--ink-3)}
-.card .eff{position:absolute;left:0;right:0;top:120px;text-align:center}
-.card .foot{position:absolute;left:12px;right:12px;bottom:8px;height:20px;display:flex;justify-content:space-between;align-items:center}
+.card .nm{position:absolute;left:0;right:0;top:80px;text-align:center;color:var(--ink-3)}
+.card .when{position:absolute;left:12px;right:12px;top:96px;height:32px;display:flex;align-items:flex-end;justify-content:center;text-align:center;
+  font-size:var(--s);line-height:16px;font-weight:700;color:var(--ink-2)}
+.card .eff{position:absolute;left:0;right:0;top:128px;text-align:center}
+.card .foot{position:absolute;left:12px;right:12px;bottom:0;height:32px;display:flex;justify-content:space-between;align-items:center;
+  box-shadow:inset 0 1px 0 rgba(43,32,24,.12)}
 .card.lit{box-shadow:0 0 0 2px var(--light),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
 
 /* ---------- plate captions (not game UI) ---------- */
@@ -92,6 +98,7 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
 </style>
 <script src="../pixel-art/icons.js"></script>
 <script src="../pixel-art/icons-gold-red-guests.js"></script>
+<script src="../pixel-art/icons-blue-white-green-purple.js"></script>
 <script src="../pixel-art/emojis.js"></script>
 <script src="../pixel-art/leaders.js"></script>
 </head>
@@ -112,7 +119,7 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
     <!-- follower: a head and shoulders (the score) -->
     <symbol id="fol" viewBox="0 0 16 16"><circle cx="8" cy="4.4" r="3" fill="currentColor"/><path d="M2.4 15.2 C2.4 10.6 4.9 8.6 8 8.6 C11.1 8.6 13.6 10.6 13.6 15.2 Z" fill="currentColor"/></symbol>
     <!-- member: a card with a person on it -->
-    <symbol id="mem" viewBox="0 0 16 16"><path fill-rule="evenodd" fill="var(--c,currentColor)" d="M5 1 H11 A2 2 0 0 1 13 3 V13 A2 2 0 0 1 11 15 H5 A2 2 0 0 1 3 13 V3 A2 2 0 0 1 5 1 Z M8 4 A2 2 0 1 0 8.001 4 Z M4.9 12.6 C4.9 10.2 6.3 8.9 8 8.9 C9.7 8.9 11.1 10.2 11.1 12.6 Z"/></symbol>
+    <symbol id="mem" viewBox="0 0 16 16"><rect x="3" y="1.5" width="10" height="13" rx="2" fill="none" stroke="var(--c,currentColor)" stroke-width="2"/><circle cx="8" cy="6.2" r="1.9" fill="var(--c,currentColor)"/><path d="M5 12 C5 10 6.3 9 8 9 C9.7 9 11 10 11 12 Z" fill="var(--c,currentColor)"/></symbol>
     <!-- minion: the worker you place -->
     <symbol id="min" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1 A2.9 2.9 0 0 1 10.6 5.2 C12.6 5.6 14.6 6.3 14.6 7.9 C14.6 9 13.6 9.4 12 9.6 L13.6 13.6 C13.9 14.4 13.5 15 12.7 15 H9.8 L8 12.2 L6.2 15 H3.3 C2.5 15 2.1 14.4 2.4 13.6 L4 9.6 C2.4 9.4 1.4 9 1.4 7.9 C1.4 6.3 3.4 5.6 5.4 5.2 A2.9 2.9 0 0 1 8 1 Z"/></symbol>
     <!-- rival: another hooded leader -->
@@ -139,8 +146,9 @@ const op = t => `<span class="op">${t}</span>`;
 const sp = '<span class="gap"></span>';
 const el = (html, style, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.style.cssText = style || ''; d.innerHTML = html; document.getElementById('ui').appendChild(d); return d; };
 const svgEl = (tag, attrs, parent = document.getElementById('board')) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
-const memberIcon = id => (CultIconBatches['gold-red-guests'] || []).find(i => i.id === id);
-const portrait = (id, size) => CultIcons.toSVG(memberIcon(id), size, { title: false }).replace('<svg ', '<svg class="px" ');
+const memberIcon = id => Object.values(CultIconBatches).flat().find(i => i.id === id);
+const bluePortrait = (id, size) => portrait(id, size);
+const portrait = (id, size) => { const i = memberIcon(id); return CultIcons.toSVG({ ...i, px: i.px || i.rows }, size, { title: false }).replace('<svg ', '<svg class="px" '); };
 const minion = (id, size) => CultMinions.toSVG(id, size, { title: false }).replace('<svg ', '<svg class="px" ');
 const leader = (id, accent, size) => CultLeaders.leaderSVG(id, accent, size).replace('<svg ', '<svg class="px" ');
 
@@ -190,17 +198,18 @@ const QUADS = [
   { id: 'gold', a: -135, focus: true },
   { id: 'blue', a: -45 }, { id: 'green', a: 45 }, { id: 'red', a: 135 },
 ];
-const others = svgEl('g', { mask: 'url(#others)', opacity: '.22' });
+const others = svgEl('g', { mask: 'url(#others)', opacity: '.5' });
 for (const q of QUADS) {
   const a0 = rad(q.a), a1 = rad(q.a + 90);
   const parent = q.focus ? document.getElementById('board') : others;
   // rim band: the quadrant's color, deep, engraved
-  svgEl('path', { d: bandPath(R.rim[0], R.rim[1], a0 + 0.004, a1 - 0.004), fill: `color-mix(in srgb, ${COL[q.id]} 58%, #1a120c)` }, parent);
+  svgEl('path', { d: bandPath(R.rim[0], R.rim[1], a0 + 0.004, a1 - 0.004), fill: `color-mix(in srgb, ${COL[q.id]} ${q.focus ? 50 : 30}%, #1a120c)` }, parent);
+  if (q.focus) svgEl('path', { d: bandPath(R.rim[0], R.rim[0] + 1, a0 + 0.004, a1 - 0.004), fill: `color-mix(in srgb, ${COL[q.id]} 80%, #fff)`, opacity: .35 }, parent);
   if (!q.focus) {
     const rings = [[R.i, 3], [R.ii, 2], [R.iii, 1]];
     for (const [[r0, r1], k] of rings) for (let j = 0; j < k; j++) {
       const b0 = a0 + (a1 - a0) * j / k, b1 = a0 + (a1 - a0) * (j + 1) / k;
-      svgEl('path', { d: cellPath(r0, r1, b0, b1), fill: 'var(--paper)' }, parent);
+      svgEl('path', { d: cellPath(r0, r1, b0, b1), fill: 'rgba(242,232,210,.035)', stroke: 'rgba(242,232,210,.16)', 'stroke-width': 1 }, parent);
     }
   }
 }
@@ -212,14 +221,14 @@ const GA = -135;
 const spaces = [
   // ring I (outer): three spaces, round I on
   { ring: 'i', j: 0, k: 3, state: 'taken', who: 'frog', name: 'Kickback',
-    big: `${n('+3')}${dot('gold')}`, fine: `${g('riv')}${sp}${n('+1')}${dot('gold')}` },
+    big: `${n('+3')}${dot('gold')}`, fine: `a rival gets ${n('1')}${dot('gold')}` },
   { ring: 'i', j: 1, k: 3, state: 'open', name: 'Golden Years',
     big: `${n('+4')}${dot('gold')}`, fine: `<span class="dim">2</span>${op('·')}<span class="now">4</span>${op('·')}<span class="dim">6</span>${sp}by round` },
   { ring: 'i', j: 2, k: 3, state: 'taken', who: 'cactus', name: 'Intro Offer',
-    big: `${g('mem')}${sp}${n('−4')}`, fine: 'your next member' },
+    big: `${g('mem')}${n('−4')}`, fine: 'your next member' },
   // ring II (middle): round II on
   { ring: 'ii', j: 0, k: 2, state: 'lit', name: 'Collect Debts',
-    big: `${n('+3')}${dot('gold')}`, fine: `from ${g('riv')} rivals` },
+    big: `${n('+3')}${dot('gold')}`, fine: 'up to 3, from rivals' },
   { ring: 'ii', j: 1, k: 2, state: 'open', name: 'Tithe',
     big: `${n('+1')}${dot('gold')}${op('/')}${g('mem')}`, fine: 'per member you have' },
   // ring III (center): opens in round III
@@ -230,21 +239,18 @@ const cellLayer = svgEl('g', {});
 for (const s of spaces) {
   const [r0, r1] = R[s.ring];
   const a0 = rad(GA + 90 * s.j / s.k), a1 = rad(GA + 90 * (s.j + 1) / s.k);
-  const fill = { open: 'var(--paper)', lit: 'var(--paper-lit)', taken: 'var(--paper-taken)', closed: 'rgba(242,232,210,.07)' }[s.state];
+  const fill = { open: 'var(--paper)', lit: 'var(--paper-lit)', taken: 'var(--paper-taken)', closed: 'rgba(242,232,210,.035)' }[s.state];
   const path = svgEl('path', { d: cellPath(r0, r1, a0, a1), fill }, cellLayer);
   if (s.state === 'lit') {
     path.setAttribute('filter', 'url(#lift)');
     svgEl('path', { d: cellPath(r0, r1, a0, a1), fill: 'none', stroke: 'var(--light)', 'stroke-width': 2 }, cellLayer);
   }
-  if (s.state === 'closed') path.setAttribute('stroke', 'rgba(242,232,210,.14)');
-  const am = (a0 + a1) / 2, rm = s.ring === 'iii' ? (r0 + r1) / 2 + 8 : (r0 + r1) / 2;
+  if (s.state === 'closed') { path.setAttribute('stroke', 'rgba(242,232,210,.22)'); path.setAttribute('stroke-width', 1); }
+  const am = (a0 + a1) / 2, rm = (r0 + r1) / 2;
   const [x, y] = P(rm, am);
   s.x = x; s.y = y; s.a0 = a0; s.a1 = a1;
-  el(`<div class="cap">${s.name}</div><div class="l">${s.big}</div><div class="fine">${s.fine}</div>`,
-    `left:${x}px;top:${y}px`, `cc ${s.state}`);
-  if (s.who) {
-    const m = el(minion(s.who, 32), `left:${x + 40}px;top:${y + 2}px`, 'minion');
-  }
+  const head = s.who ? `<div class="who">${minion(s.who, 32)}</div>` : `<div class="cap">${s.name}</div>`;
+  el(`${head}<div class="l">${s.big}</div><div class="fine">${s.fine}</div>`, `left:${x}px;top:${y}px`, `cc ${s.state}`);
 }
 
 // ---------------------------------------------------------------- rim rule, laid out along the arc
@@ -279,7 +285,7 @@ for (const s of spaces) {
     s += k.w + (gaps[i] || 0);
   });
   // who leads it right now: their minion stands on the rim
-  const la = rad(-90) + (total / 2 + 24) / r;
+    const la = rad(-90) + (total / 2 + 32) / r;
   const [lx, ly] = P(r, la);
   el(minion('frog', 32), `left:${lx}px;top:${ly + 15}px`, 'minion');
 })();
@@ -292,13 +298,13 @@ el(`<div class="cap" style="color:var(--cream-3);font-size:12px">Round</div><div
 // ---------------------------------------------------------------- the lit space's hover, anchored where you point
 (function spaceHover() {
   const s = spaces[3];
-  const w = 232, x = 24, y = 448;
+  const w = 232, x = 32, y = 448;
   const pop = el(`
     <div class="m" style="font-weight:800">Collect Debts</div>
-    <div class="m" style="margin-top:4px">Take up to 3 gold from rivals, split however you like.</div>
+    <div class="m" style="margin-top:4px">Take up to ${n('3')}${dot('gold')} from rivals, split however you like.</div>
     <div class="rule"></div>
     <div class="row s" style="justify-content:space-between;color:var(--ink-2)"><span>You'd get</span><span class="m" style="color:var(--ink)">${n('+3')}${dot('gold')}</span></div>
-    <div class="nub" style="right:28px;top:-6px"></div>`,
+    <div class="nub" style="right:20px;top:-6px"></div>`,
     `left:${x}px;top:${y}px;width:${w}px;padding:12px 16px 12px`, 'pop');
 })();
 
@@ -323,35 +329,39 @@ el(`
   </div>`,
   `left:${RX}px;top:32px;width:${RW}px;height:104px;padding:16px`, 'seat');
 
-// a rival's seat: what they make each round, what they're going for, what they just did
+// a rival's seat: what they hold, who they've recruited, what that makes each round, what they just did
 el(`
   <div class="row" style="gap:12px">
     ${leader('frog', 'slate', 32)}
     <span class="m" style="font-weight:800">P3</span>
-    <span class="s" style="color:var(--cream-2)">${n('3')}${dot('gold')} ${n('1')}${dot('red')} ${n('4')}${dot('blue')} ${n('0')}${dot('green')}</span>
+    <span class="row m" style="gap:16px;margin-left:8px">
+      <span>${n('3')}${dot('gold')}</span><span>${n('1')}${dot('red')}</span><span>${n('4')}${dot('blue')}</span><span style="opacity:.4">${n('0')}${dot('green')}</span>
+    </span>
     <span style="flex:1"></span>
     <span class="m">${n('9')}${g('fol')}</span>
   </div>
-  <div class="row s" style="margin-top:8px;gap:24px;color:var(--cream-2)">
-    <span><span class="cap" style="color:var(--cream-3)">Each round</span>&nbsp; ${n('+3')}${dot('gold')} ${n('+2')}${dot('blue')}</span>
-    <span><span class="cap" style="color:var(--cream-3)">Just took</span>&nbsp; Kickback ${n('+3')}${dot('gold')}</span>
+  <div class="row" style="margin-top:12px;gap:16px;white-space:nowrap">
+    <span class="row" style="gap:4px">${['gold.coinpurse','gold.investor','gold.taxman'].map(id => portrait(id, 24)).join('')}${bluePortrait('market.curator', 24)}</span>
+    <span class="row" style="gap:8px"><span class="s" style="color:var(--cream-3)">each round</span><span class="m">${n('+3')}${dot('gold')}${sp}${n('+2')}${dot('blue')}</span></span>
+    <span style="flex:1"></span>
+    <span class="row" style="gap:8px"><span class="s" style="color:var(--cream-3)">just took</span><span class="m" style="font-weight:700">Kickback</span></span>
   </div>`,
-  `left:${RX}px;top:152px;width:${RW}px;height:80px;padding:12px 16px`, 'seat');
+  `left:${RX}px;top:152px;width:${RW}px;height:104px;padding:16px`, 'seat');
 
 // the shop: three members, the middle one under your pointer
 const shop = [
   { id: 'gold.seed', name: 'Treasurer', c: 'gold', when: 'When recruited', eff: `${n('+1')}${dot('gold')}${op('/')}${g('mem')}`, cost: `${n('4')}${dot('gold')}`, worth: 1 },
-  { id: 'gold.prospector', name: 'Prospector', c: 'gold', when: 'When a space gives', eff: `${n('+1')}${dot('gold')}`, cost: `${n('2')}${dot('gold')}${sp}${n('2')}${g('any')}`, worth: 1, lit: true },
+  { id: 'gold.prospector', name: 'Prospector', c: 'gold', when: `When a space<br>gives you ${dot('gold')}`, eff: `${n('+1')}${dot('gold')}`, cost: `${n('2')}${dot('gold')}${sp}${n('2')}${g('any')}`, worth: 1, lit: true },
   { id: 'red.recruiter', name: 'Recruiter', c: 'red', when: 'When you recruit', eff: `${n('+1')}${dot('red')}`, cost: `${n('4')}${dot('red')}${sp}${n('4')}${g('any')}`, worth: 1 },
 ];
-const CW = 140, CG = 17, CY = 492;
+const CW = 140, CG = 17, CY = 484;
 shop.forEach((m, i) => {
   const x = RX + i * (CW + CG);
   m.x = x;
   el(`
     <div class="art" style="background:color-mix(in srgb, ${COL[m.c]} 16%, var(--paper))">${portrait(m.id, 48)}</div>
     <div class="nm cap">${m.name}</div>
-    <div class="when cap" style="font-size:12px">${m.when}${m.when.endsWith('gives') ? ' ' + dot('gold') : ''}</div>
+    <div class="when"><span>${m.when}</span></div>
     <div class="eff l">${m.eff}</div>
     <div class="foot m"><span>${m.cost}</span><span>${n(m.worth)}${g('fol')}</span></div>`,
     `left:${x}px;top:${CY}px`, `card${m.lit ? ' lit' : ''}`);
@@ -360,7 +370,7 @@ shop.forEach((m, i) => {
 // the member's hover, anchored over its card
 (function memberHover() {
   const m = shop[1];
-  const w = 320, h = 200;
+  const w = 320, h = 192;
   const x = Math.round(m.x + CW / 2 - w / 2), y = CY - 16 - h;
   el(`
     <div class="row" style="gap:16px;align-items:flex-start">
@@ -371,12 +381,12 @@ shop.forEach((m, i) => {
           <span class="m">${n('1')}${g('fol')}</span>
         </div>
         <div class="row s" style="justify-content:space-between;color:var(--ink-2);margin-top:4px">
-          <span>Gold member</span><span>costs ${n('2')}${dot('gold')} ${n('2')}${g('any')}</span>
+          <span>costs ${n('2')}${dot('gold')}${sp}${n('2')}${g('any')}</span>
         </div>
       </div>
     </div>
     <div class="rule"></div>
-    <div class="m">Whenever a space gives you gold ${dot('gold')}, you get ${n('1')} more.</div>
+    <div class="m">Whenever a space gives you ${dot('gold')}, you get ${n('1')} more.</div>
     <div class="rule"></div>
     <div class="s" style="color:var(--ink-2)">Golden Years would give you ${n('5')}${dot('gold')} instead of ${n('4')}${dot('gold')}.</div>
     <div class="nub" style="left:${w / 2 - 6}px;bottom:-6px"></div>`,
@@ -384,7 +394,7 @@ shop.forEach((m, i) => {
 })();
 
 // ---------------------------------------------------------------- the alphabet (plate caption, not game UI)
-el(`<span class="cap" style="color:var(--cream-3)">Cults · visual language · plate 1</span>`, 'left:32px;top:24px', 'note');
+el(`<span class="cap" style="color:var(--cream-3)">Cults · visual language · plate 1</span><span class="s" style="color:var(--cream-3);margin-left:16px">Round II, your turn. You're pointing at Collect Debts; Prospector's card is open.</span>`, 'left:32px;top:24px', 'note');
 el(`
   <span>${dot('gold')}${dot('red')}${dot('blue')}${dot('green')} resources</span>
   <span>${g('any')} any</span>
@@ -393,8 +403,8 @@ el(`
   <span style="color:var(--cream)">${g('min')}<i style="font-style:normal;color:var(--cream-2)">minion</i></span>
   <span style="color:var(--cream)">${g('riv')}<i style="font-style:normal;color:var(--cream-2)">rival</i></span>
   <span style="color:var(--cream)">${g('arr')}<i style="font-style:normal;color:var(--cream-2)">becomes</i></span>
-  <span><b class="n" style="color:var(--cream)">/</b> per</span>
-  <span><b class="n" style="color:var(--cream)">×</b> times</span>
+  <span><b class="n" style="color:var(--cream);font-size:16px;line-height:14px">/</b> per</span>
+  <span><b class="n" style="color:var(--cream);font-size:16px;line-height:14px">×</b> times</span>
   <span style="color:var(--cream)">${g('turn')}<i style="font-style:normal;color:var(--cream-2)">extra turn</i></span>`,
   'left:32px;top:56px', 'key s');
 </script>

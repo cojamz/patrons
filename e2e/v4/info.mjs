@@ -439,6 +439,90 @@ try {
     await pg.close();
   }
 
+  // (q) every shop card and every chair's member opens its card, whole on screen and on top; then the pay dialog
+  {
+    const save = richSave();
+    const st = save.state;
+    // every chair holds members (one with Penny Pincher and a discount: the pay dialog's rule-changers)
+    const give = (pid, def) => {
+      const c = Object.values(st.cards).find(x => x.def === def && !st.players.some(p => p.members.includes(x.uid)));
+      if (!c) return;
+      st.shop = st.shop.filter(u => u !== c.uid); st.pile = st.pile.filter(u => u !== c.uid);
+      st.players[pid].members.push(c.uid); c.recruitedRound = 0; c.recruitedBy = pid;
+    };
+    give(0, 'gold.thrift'); give(0, 'benders.frontrunner'); give(0, 'red.crowd');
+    st.pile.slice(0, 9).forEach((u, k) => give(1 + (k % 3), st.cards[u].def));
+    while (st.shop.length < 10 && st.pile.length) st.shop.push(st.pile.shift());
+    st.players[0].discount = 4;
+    const pg = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    pg.on('pageerror', e => errors.push(`cards pageerror: ${e.message}`));
+    await pg.goto(`${base}/?botDelay=20&intro=0`);
+    await pg.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
+    await pg.reload();
+    await pg.waitForSelector('[data-home="resume"], .lt-shop .card[data-uid]');
+    if (await pg.$('[data-home="resume"]')) await pg.click('[data-home="resume"]');
+    await pg.waitForSelector('.lt-shop .card[data-uid]');
+    await pg.waitForTimeout(400);
+    const shop = await pg.$$eval('.lt-shop .lt-cards .card[data-uid]', els => els.map(e => e.dataset.uid));
+    for (const uid of shop) {
+      await pg.mouse.move(4, 690); await pg.waitForTimeout(170);
+      await pg.locator(`.lt-shop .card[data-uid="${uid}"]`).hover();
+      const ok = await pg.waitForFunction(u => { const c = document.querySelector(`[data-hover-layer][data-open="1"] [data-card-hover="${u}"] .card-face`); return !!c && c.getBoundingClientRect().width > 0; }, uid, { timeout: 1500 }).then(() => true, () => false);
+      if (!ok) { fail(`(q) shop card ${uid} (${st.cards[uid].def}) opens no card`, 'cards'); continue; }
+      await anchorCheck(pg, `shop card ${st.cards[uid].def}`, 'cards', `.lt-shop .card[data-uid="${uid}"]`);
+      const extra = await pg.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]').innerText.match(/You pay|Leaves|you'd lead|you’d lead|Click the card/i) || [])[0]);
+      if (extra) fail(`(q) the shop card's hover still says "${extra}" (Cory: the cost and nothing else about payment)`, 'cards');
+    }
+    let members = 0;
+    for (const seat of [0, 1, 2, 3]) {
+      const figs = pg.locator(`.lt > .lt-seat-${seat} [data-member] .fig`);
+      const n = await figs.count();
+      for (let k = 0; k < n; k++) {
+        await pg.mouse.move(4, 690); await pg.waitForTimeout(170);
+        await figs.nth(k).hover();
+        const r = await pg.waitForFunction(() => {
+          const c = [...document.querySelectorAll('.popover .card-face')].find(e => e.getBoundingClientRect().width > 0);
+          if (!c) return null;
+          const p = c.closest('.popover'), b = p.getBoundingClientRect();
+          const hit = document.elementFromPoint(b.left + b.width / 2, b.top + Math.min(20, b.height / 2));
+          return { name: c.dataset.card, inView: b.top >= 0 && b.left >= 0 && b.bottom <= innerHeight + 0.5 && b.right <= innerWidth + 0.5, onTop: !!hit && p.contains(hit), y: [Math.round(b.top), Math.round(b.bottom)] };
+        }, null, { timeout: 1500 }).then(h => h.jsonValue(), () => null);
+        members++;
+        if (!r) { fail(`(q) a member in chair ${seat} opens no card`, 'cards'); continue; }
+        if (!r.inView) fail(`(q) ${r.name} (chair ${seat}) opens a card off the window (y ${r.y.join('–')})`, 'cards');
+        if (!r.onTop) fail(`(q) ${r.name} (chair ${seat}) opens a card under something else`, 'cards');
+      }
+    }
+    if (members < 6) fail(`(q) only ${members} chair members to check`, 'cards');
+    await pg.screenshot({ path: `${SHOTS}/10-member-card.png` });
+    // the pay dialog: place, then recruit a gold member; the dialog holds focus and names the rule-changers
+    await pg.mouse.move(4, 690);
+    const sp = await pg.$('.slot.can .base');
+    const bb = await sp.boundingBox();
+    await pg.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
+    for (let k = 0; k < 8 && !(await pg.$('.lt[data-phase="buy"][data-yours="1"]')); k++) { const o = await pg.$('.prompt.choice button[data-option]:not([disabled])'); if (o) await o.click().catch(() => {}); await pg.waitForTimeout(250); }
+    const uid = await pg.evaluate(() => { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return s.shop.find(u => s.cards[u].def.startsWith('gold.') && s.cards[u].def !== 'gold.thrift'); });
+    if (uid == null) fail('(q) no gold member in the shop to pay for', 'pay');
+    else {
+      await pg.click(`.lt-shop .card[data-uid="${uid}"]`);
+      const d = await pg.waitForSelector('.dialog.pay', { timeout: 4000 }).catch(() => null);
+      if (!d) fail('(q) recruiting a gold member opened no pay dialog', 'pay');
+      else {
+        await pg.waitForTimeout(400);
+        const r = await pg.evaluate(() => ({ inside: document.querySelector('.dialog.pay').contains(document.activeElement), rules: [...document.querySelectorAll('[data-pay-rule]')].map(e => e.textContent) }));
+        if (!r.inside) fail('(q) the pay dialog does not take focus (Enter would do nothing)', 'pay');
+        if (!r.rules.some(t => /gold counts double/.test(t))) fail(`(q) the pay dialog never says Penny Pincher's gold counts double (${JSON.stringify(r.rules)})`, 'pay');
+        if (!r.rules.some(t => /−4/.test(t))) fail(`(q) the pay dialog never says the −4 discount (${JSON.stringify(r.rules)})`, 'pay');
+        await pg.screenshot({ path: `${SHOTS}/11-pay-rules.png` });
+        await pg.keyboard.press('Enter');
+        const paid = await pg.waitForFunction(() => !document.querySelector('.dialog.pay'), null, { timeout: 3000 }).then(() => true, () => false);
+        if (!paid) fail('(q) Enter in the pay dialog did not pay', 'pay');
+      }
+    }
+    console.log(`info.mjs: ${shop.length} shop cards and ${members} chair members open their cards`);
+    await pg.close();
+  }
+
   // (b) touch: a long-press on a titled element shows its title
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   const phone = await ctx.newPage();

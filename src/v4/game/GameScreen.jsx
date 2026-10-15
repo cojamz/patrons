@@ -672,10 +672,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   pickerRef.current = picker;
   const [seatPicks, setSeatPicks] = useState({ key: null, map: {} }); // this steal's picks so far, for the "−1" on each stack
   const pickKey = picker && picker.count ? `${picker.actor}|${picker.title}|${picker.count.of}|${state.round}` : null;
+  const [pickDone, setPickDone] = useState(null); // the last pick's caption ("· 0 left") stays while its resource flies
+  useEffect(() => { if (!pickDone) return undefined; const t = setTimeout(() => setPickDone(null), 900); return () => clearTimeout(t); }, [pickDone]);
   const onSeatPick = useCallback((id, el) => {
     const pk = pickerRef.current;
     const o = pk && pk.options.find(x => x.id === id);
     if (!o || !options.has(id)) return;
+    if (pk.count && pk.count.left === 1 && pk.title) setPickDone({ title: pk.title, what: `take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`, n: Date.now() });
     const root0 = root.current;
     const home = root0 && (root0.querySelector(`.lt-seat[data-pid="${pk.actor}"] .cs-res`) || root0.querySelector(`.lt-seat[data-pid="${pk.actor}"]`));
     const coin = el && el.querySelector('svg') ? `<span class="pick-coin">${el.querySelector('svg').outerHTML}</span>` : '<span class="pick-coin dot"></span>';
@@ -803,6 +806,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <section className="lt-wheel" data-region="wheel">
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} seatPick={picker} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {!showChoice && pickDone && <section className="seat-pick-done" aria-hidden="true"><p className="pick-cap"><b>{pickDone.title}</b>: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</p></section>}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}

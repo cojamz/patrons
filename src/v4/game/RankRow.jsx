@@ -15,7 +15,8 @@ const ORD = n => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 
 
 /**
  * Each chair's place: { pid: { place, text, lead, f, title } }. place is 1-based and shared on a full tie (followers
- * and members level); lead: this chair leads (or shares the lead) while someone trails; title: the margin in words.
+ * and members level); text: "1st", "2nd"… ('' while everyone is level); lead: this chair leads (or shares the lead)
+ * while someone trails; title: the margin in words.
  * Empty before round I.
  */
 export function seatRanks(state, me = null) {
@@ -33,7 +34,8 @@ export function seatRanks(state, me = null) {
     else if (shared.length > 1 && shared.includes(r)) title = `${shared.map(x => x.name).join(' and ')} share the lead with ${unit(r.f)}`;
     else if (k === 0) title = `${r.name} ${r.name === 'You' ? 'lead' : 'leads'} by ${top.f - second.f || 0}${top.f === second.f ? ` (members break the tie: ${top.m} to ${second.m})` : ''} · ${unit(r.f)}`;
     else title = `${r.name}: ${unit(r.f)}, ${top.f - r.f} behind ${shared.map(x => x.name).join(' and ')}${top.f === r.f ? ` (members break the tie: ${top.m} to ${r.m})` : ''}`;
-    out[r.id] = { place, text: ORD(place), lead: !!second && shared.includes(r), f: r.f, title };
+    // everyone level: no places to show (a row of "1st" says nothing), the margin still on hover
+    out[r.id] = { place, text: second ? ORD(place) : '', lead: !!second && shared.includes(r), f: r.f, title };
   });
   return out;
 }

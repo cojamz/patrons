@@ -4,7 +4,7 @@
 /* ---- the seats ---- */
 .lt-cult-seat.picking{position:relative;transition:opacity .18s ease-out}
 .lt-cult-seat.picking.pick-lit{background:rgba(var(--lamp),.07);box-shadow:0 0 0 1.5px rgba(var(--lamp),.55),0 0 18px rgba(var(--lamp),.18)}
-.lt-cult-seat.picking.pick-dim{opacity:.55}
+.lt-cult-seat.picking.pick-dim > :not(.cs-foot){opacity:.5}
 .lt-cult-seat.picking.pick-dim .cs-stack{filter:grayscale(.6)}
 
 .lt-cult-seat .cs-stack.pick-on,.lt-cult-seat .cs-stack.pick-off{position:relative;border-radius:999px;padding:3px 7px 3px 4px}
@@ -14,6 +14,12 @@
 .lt-cult-seat .cs-stack.pick-on:hover{transform:translateY(-2px) scale(1.08);box-shadow:0 0 0 2px #fffaf0,0 0 16px 4px rgba(var(--lamp),.8),0 5px 0 rgba(0,0,0,.35);animation:none}
 .lt-cult-seat .cs-stack.pick-on:active{transform:translateY(0) scale(.97)}
 .lt-cult-seat .cs-stack.pick-off{opacity:.3;cursor:help}
+/* why a dim stack can't be taken, on hover (a tap says it in the prompt line) */
+.lt-cult-seat .cs-stack.pick-off[data-why]:hover{opacity:1}
+.lt-cult-seat .cs-stack.pick-off[data-why]:hover::after{content:attr(data-why);position:absolute;z-index:30;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  width:max-content;max-width:230px;padding:6px 9px;border-radius:8px;font:500 12px/1.3 var(--sans,inherit);text-align:left;white-space:normal;
+  color:var(--paper-ink);background:var(--paper);box-shadow:0 0 0 1px rgba(42,31,23,.25),0 8px 20px rgba(0,0,0,.5);pointer-events:none}
+.lt-cult-seat.picking.pick-dim .cs-stack.pick-off[data-why]:hover{filter:none}
 .lt-cult-seat .cs-stack > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%)}
 /* what this steal has picked from the stack so far (it moves when the last pick is made) */
 .lt-cult-seat .cs-stack .cs-took{position:absolute;top:-9px;right:-8px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;font-style:normal;
@@ -30,7 +36,7 @@
   padding:8px 14px 9px;max-height:none;overflow:visible;text-align:center}
 .prompt.choice.seat-pick .pick-cap{margin:0;font-family:var(--serif);font-size:17px;line-height:1.25}
 .prompt.choice.seat-pick .pick-cap b{font-weight:700}
-.prompt.choice.seat-pick .pick-left{display:inline-block;min-width:1.1em;font-weight:700;color:#8c2f39}
+.prompt.choice.seat-pick .pick-left{font-weight:700;color:#8c2f39}
 .prompt.choice.seat-pick .pick-how{margin:2px 0 0;font-size:12px;opacity:.75}
 /* the keyboard list: small, quiet, one line that wraps */
 .prompt.choice.seat-pick .pick-keys{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:6px}
@@ -42,6 +48,14 @@
   .prompt.choice.seat-pick .pick-key{min-height:44px;min-width:44px;font-size:13px;padding:0 12px}
   .prompt.choice.seat-pick .pick-keys-hint{display:none}
 }
+
+/* the last pick made: "· 0 left" while its resource flies, then it's gone */
+.lt .lt-wheel > .seat-pick-done{position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:12;width:max-content;max-width:92%;
+  padding:8px 14px;border-radius:12px;color:var(--paper-ink);background:linear-gradient(180deg,var(--paper),var(--paper-2));
+  box-shadow:0 0 0 1px rgba(80,60,30,.25),0 14px 34px rgba(0,0,0,.6);pointer-events:none;animation:pick-done .9s ease-in forwards}
+.seat-pick-done .pick-cap{margin:0;font-family:var(--serif);font-size:17px}
+.seat-pick-done .pick-left{font-weight:700;color:#8c2f39}
+@keyframes pick-done{0%,60%{opacity:1}100%{opacity:0}}
 
 /* the resource on its way */
 .token-flight.pick-flight .pick-coin{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--paper);

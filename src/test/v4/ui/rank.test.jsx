@@ -24,7 +24,7 @@ describe('who is winning, on the chairs (no score row, Cory 2026-10-15)', () => 
     const shown = rows.map(r => {
       const { container } = render(<CultSeat state={s} pid={r.id} me={0} mine={r.id === 0} />);
       const tot = container.querySelector('.cs-total');
-      const out = { id: r.id, f: Number(tot.dataset.followers), place: Number(tot.dataset.rank), lead: /\blead\b/.test(tot.className), title: tot.querySelector('[data-rank] .rk, .rk').title, text: tot.querySelector('.rk').textContent, who: container.querySelector('.cs-who b').textContent };
+      const out = { id: r.id, f: Number(tot.dataset.followers), place: Number(tot.dataset.rank), lead: /\blead\b/.test(tot.className), title: (tot.querySelector('.rk') || tot).title, text: (tot.querySelector('.rk') || { textContent: '' }).textContent, who: container.querySelector('.cs-who b').textContent };
       cleanup();
       return out;
     });
@@ -34,7 +34,7 @@ describe('who is winning, on the chairs (no score row, Cory 2026-10-15)', () => 
     expect(shown[0].place).toBe(1);
     expect(shown.map(e => e.place)).toEqual(rows.map(r => ranks[r.id].place));
     const level = rows.every(r => r.f === rows[0].f && r.m === rows[0].m);
-    if (level) expect(shown.some(e => e.lead)).toBe(false); else expect(shown[0].lead).toBe(true);
+    if (level) expect(shown.some(e => e.lead || e.text)).toBe(false); else { expect(shown[0].lead).toBe(true); expect(shown.map(e => e.text)).toEqual(rows.map(r => ranks[r.id].text)); expect(shown[0].text).toBe('1st'); }
     const top = rows[0], second = rows.find(r => r.f < top.f || r.m < top.m);
     if (second && top.f > second.f) expect(shown[0].title).toContain(`by ${top.f - second.f}`);
     for (const e of shown.slice(1)) if (!e.lead) expect(e.title).toMatch(/behind/);

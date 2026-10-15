@@ -188,28 +188,36 @@
 .lt-hover.popover.on{opacity:1}
 
 /* ---------- a cult at the table (one per corner) ---------- */
-.lt-cult-seat{display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:12px;min-width:0;max-width:300px;color:var(--cream)}
+.lt-cult-seat{display:flex;flex-direction:column;gap:3px;padding:3px 6px 4px;border-radius:12px;min-width:0;color:var(--cream)}
 .lt-cult-seat.now{background:rgba(var(--lamp,255,206,140),.08);box-shadow:0 0 0 1px rgba(var(--lamp,255,206,140),.35)}
-.lt-cult-seat .cs-head{display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:10px;min-height:44px}
-.lt-cult-seat .cs-who{display:flex;flex-direction:column;line-height:1.05;min-width:0}
+.lt-cult-seat .cs-head{display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:10px;min-height:44px}
+.lt-cult-seat .cs-who{display:flex;flex-direction:column;gap:2px;line-height:1.05;min-width:0}
 .lt-cult-seat .cs-who b{font-family:var(--serif);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lt-cult-seat .cs-who small{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--cream-3)}
-.lt-cult-seat .cs-total{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-family:var(--serif);font-size:22px;font-weight:700}
+.lt-cult-seat .cs-who small{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--cream-3);white-space:nowrap}
+.lt-cult-seat .cs-total{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-family:var(--serif);font-size:22px;font-weight:700;white-space:nowrap}
+/* its members' colors at a glance: one dot per member, grouped by color */
+.lt-cult-seat .cs-colors{display:inline-flex;align-items:center;gap:3px;margin-right:2px;cursor:help}
+.lt-cult-seat .cs-colors i{display:block;height:7px;width:calc(var(--n) * 7px);background:radial-gradient(circle at 3.5px 3.5px,var(--c) 2.6px,transparent 3.1px) 0 0/7px 7px repeat-x}
+/* what its members make each round, beside what it holds now */
+.lt-cult-seat .cs-income{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font-size:12px;font-weight:700;color:var(--cream-2);white-space:nowrap;cursor:help}
+.lt-cult-seat .cs-income small{font-size:10.5px;font-weight:500;letter-spacing:.04em;color:var(--cream-3)}
+.lt-cult-seat .cs-inc{display:inline-flex;align-items:center;gap:1px}
+.lt-cult-seat .cs-inc .follower-mark{color:var(--cream-2)}
 .lt-cult-seat .cs-total .follower-mark{color:var(--cream-2)}
 .lt-cult-seat.mine .cs-total{font-size:25px}
 /* yours: the same chair, ~1.15× (type and spacing; pixel figures keep whole-pixel sizes) */
-.lt-cult-seat.mine{padding:7px 9px;gap:5px}
+.lt-cult-seat.mine{padding:4px 7px 5px;gap:4px}
 .lt-cult-seat.mine .cs-who b{font-size:18px}
 .lt-cult-seat.mine .cs-who small{font-size:12.5px}
 .lt-cult-seat.mine .cs-crowd{gap:3px 4px}
-.lt-cult-seat .cs-crowd{display:flex;flex-wrap:wrap;gap:2px 3px;align-items:flex-end;min-height:26px}
+.lt-cult-seat .cs-crowd{display:flex;flex-wrap:wrap;gap:1px 2px;align-items:flex-end;min-height:24px}
 .lt-cult-seat .cs-member{display:inline-flex;flex-direction:column;align-items:center;gap:2px;position:relative}
 .lt-cult-seat .cs-member .fig{display:inline-block;position:relative}
 .lt-cult-seat .cs-member .x{position:absolute;right:-4px;bottom:-2px;font-size:9px;color:var(--cream);background:var(--walnut,#1d1611);border-radius:6px;padding:0 2px}
 .lt-cult-seat .cs-member.used .sprite{opacity:.45}
 .lt-cult-seat .cs-more{font-size:11px;color:var(--cream-3);align-self:center}
-.lt-cult-seat .cs-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.lt-cult-seat .cs-res{display:inline-flex;gap:7px;align-items:center}
+.lt-cult-seat .cs-foot{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0}
+.lt-cult-seat .cs-res{display:inline-flex;gap:6px;align-items:center}
 .lt-cult-seat .cs-stack{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700}
 .lt-cult-seat.mine .cs-stack{font-size:14px}
 .lt-cult-seat .cs-stack.zero{opacity:.35}
@@ -276,8 +284,10 @@
 
 /* ---------- who's winning: on each chair (no score row): its place beside its total, the leader lit ---------- */
 .lt-cult-seat .cs-rank{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--cream-3);margin-right:5px;align-self:center;cursor:help}
-.lt-cult-seat .cs-total.lead .tv{color:var(--lamp-ink)}
-.lt-cult-seat .cs-total.lead .cs-rank{color:var(--lamp-ink)}
+.lt-cult-seat .cs-total.lead .tv{color:var(--lamp-ink);text-shadow:0 0 12px rgba(var(--lamp,255,206,140),.55)}
+.lt-cult-seat .cs-total.lead .cs-rank{color:var(--paper-ink);background:var(--lamp-ink);border-radius:7px;padding:0 5px;line-height:15px}
+.lt-cult-seat .cs-who .cs-order{align-self:flex-start}
+.lt-cult-seat .cs-crowd:empty{display:none}
 /* a seat's place in this round's turn order */
 .cs-order{display:inline-block;margin-left:6px;padding:0 5px;border-radius:7px;font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:14px;color:var(--cream-3);box-shadow:inset 0 0 0 1px rgba(243,230,200,.16);vertical-align:2px;cursor:help}
 .cs-order.now,.cs-order.first{color:var(--paper-ink);background:var(--lamp-ink);box-shadow:none}

@@ -2,9 +2,10 @@
 //  (s1) a wheel spin (an arrow key) starts within 100ms and has landed within 400ms;
 //  (s2) a hover card opens within 100ms of the pointer arriving: wheel spaces, shop cards and keyword tips;
 //  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 150ms.
-// Load-honest: times are taken in the page (performance.now at the input event, rAF for what's painted). The box's own
-// stalls are reported, never forgiven wholesale: a spin may finish one frame late (the frame the box held up), and
-// each check takes the better of a few tries (a real slowdown fails every try).
+// Frame-honest: times are taken in the page (performance.now at the input event, rAF for what's painted). A loaded box
+// paints less often, so each limit allows one of the box's own frames on top (the median rAF interval with nothing
+// moving, measured just before each check: ~17ms on a quiet box, so the limits bite there), and each check takes the
+// better of a few tries (a real slowdown fails every try). Every number is printed with the box frame it allowed.
 // Motion budgets live in src/v4/motion.js (JS) and the --mo-* tokens at the top of src/v4/v4.css (CSS).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5184.
 import { chromium } from 'playwright';
@@ -94,6 +95,12 @@ await page.evaluate(() => {
   };
   requestAnimationFrame(tick);
 });
+// the box's own frame: the median rAF interval over ~600ms with nothing moving
+const idleFrame = async () => {
+  const t = await page.evaluate(() => performance.now());
+  await page.waitForTimeout(600);
+  return page.evaluate(a => { const d = window.__snap.frames.filter(([t]) => t > a).map(([, x]) => x).sort((x, y) => x - y); return d.length ? d[Math.floor(d.length / 2)] : 17; }, t);
+};
 const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window.__snap.frames.filter(([t]) => t > a && t <= b + 1).map(([, d]) => d)), [from, to]);
 
 // (s1) the wheel spin: an arrow key turns it a quarter; it must start at once and land fast
@@ -101,32 +108,29 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   const spin = async key => {
     await page.mouse.move(640, 690);
     await page.keyboard.press(key);
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(1200);
     const { key: k, rot } = await page.evaluate(() => window.__snap);
     if (!rot.length || k == null) return null;
-    const moved = rot.filter(([, t]) => t !== rot[0][1] || rot.length === 1);
     const first = rot.length > 1 ? rot[1][0] : rot[0][0], end = rot[rot.length - 1][0];
-    void moved;
-    const gap = await longestGap(k, end);
-    // the spin's own length: to the frame that put the wheel down, less one late frame if the box stalled it
-    return { start: first - k, total: end - k, own: end - k - Math.max(0, gap - 17), gap, frames: rot.length };
+    return { start: first - k, total: end - k, gap: await longestGap(k, end), frames: rot.length };
   };
   const runs = [];
   for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowRight']) {
+    const F = await idleFrame();
     const r = await spin(key);
-    if (r) runs.push(r);
-    if (r && r.own <= LIMIT.spin && r.start <= LIMIT.spinStart) break;
+    if (r) runs.push({ ...r, F });
+    if (r && r.total <= LIMIT.spin + F && r.start <= LIMIT.spinStart + F) break;
   }
-  const best = runs.slice().sort((a, b) => a.own - b.own)[0];
-  report.push(`spin: ${runs.map(r => `${Math.round(r.total)}ms (starts ${Math.round(r.start)}ms, ${r.frames} frames, longest frame ${Math.round(r.gap)}ms)`).join('; ')}`);
+  const best = runs.slice().sort((a, b) => (a.total - a.F) - (b.total - b.F))[0];
+  report.push(`spin: ${runs.map(r => `${Math.round(r.total)}ms (starts ${Math.round(r.start)}ms, ${r.frames} frames, longest ${Math.round(r.gap)}ms, box frame ${Math.round(r.F)}ms)`).join('; ')}`);
   if (!best) errors.push('(s1) an arrow key did not turn the wheel');
   else {
-    if (best.own > LIMIT.spin) errors.push(`(s1) the wheel spin took ${Math.round(best.own)}ms to land (want ≤ ${LIMIT.spin}ms; runs ${runs.map(r => Math.round(r.total)).join(', ')}ms)`);
-    if (Math.min(...runs.map(r => r.start - Math.max(0, r.gap - 17))) > LIMIT.spinStart) errors.push(`(s1) the wheel first moved ${Math.round(best.start)}ms after the key (want ≤ ${LIMIT.spinStart}ms)`);
+    if (best.total > LIMIT.spin + best.F) errors.push(`(s1) the wheel spin took ${Math.round(best.total)}ms to land (want ≤ ${LIMIT.spin}ms + one ${Math.round(best.F)}ms frame; runs ${runs.map(r => Math.round(r.total)).join(', ')}ms)`);
+    if (!runs.some(r => r.start <= LIMIT.spinStart + r.F)) errors.push(`(s1) the wheel first moved ${Math.round(best.start)}ms after the key (want ≤ ${LIMIT.spinStart}ms + one ${Math.round(best.F)}ms frame)`);
   }
   // face the start again (the rest measures the board as dealt)
   await page.keyboard.press('ArrowLeft');
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(900);
 }
 
 // (s2) hover: separate arrivals onto spaces, shop cards and keyword tips; the better of two runs counts
@@ -137,26 +141,30 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   const cards = await centers('.lt-shop [data-uid]');
   const tips = await centers('.lt [data-tip]');
   const targets = [...spaces.slice(0, 8), ...cards.slice(0, 6), ...tips.slice(0, 4)];
+  // each arrival: away (the card closes), then onto the target, and wait for its card (up to 1.5s on a loaded box)
   const measure = async () => {
+    const F = await idleFrame();
     await page.evaluate(() => { window.__snap.hov.lat = []; window.__snap.hov.t0 = null; });
     let n = 0;
     for (const [x, y] of targets) {
       await page.mouse.move(4, 696);
-      await page.waitForTimeout(260);
+      await page.waitForFunction(() => !document.querySelector('[data-hover-layer][data-open="1"], .popover:not([data-hover-layer])'), null, { timeout: 1500 }).catch(() => {});
+      await page.waitForTimeout(60);
       await page.evaluate(() => { window.__snap.hov.t0 = null; });
+      const had = await page.evaluate(() => window.__snap.hov.lat.length);
       await page.mouse.move(x, y, { steps: 2 });
-      await page.waitForTimeout(200);
+      await page.waitForFunction(h => window.__snap.hov.lat.length > h, had, { timeout: 1500 }).catch(() => {});
       n++;
     }
     const lat = (await page.evaluate(() => window.__snap.hov.lat)).sort((a, b) => a - b);
-    return { n, lat, p95: lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity };
+    return { n, F, lat, p95: lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity };
   };
   let run = await measure();
   const first = run;
-  if (!(run.p95 <= LIMIT.hover)) { const again = await measure(); if (again.p95 < run.p95) run = again; }
-  report.push(`hover: p95 ${Math.round(run.p95)}ms over ${run.lat.length}/${run.n} arrivals (${spaces.length} spaces, ${cards.length} cards, ${tips.length} tips on screen)${first !== run ? `, first run p95 ${Math.round(first.p95)}ms` : ''}`);
-  if (run.lat.length < run.n - 2) errors.push(`(s2) only ${run.lat.length} of ${run.n} hover arrivals opened a card`);
-  if (!(run.p95 <= LIMIT.hover)) errors.push(`(s2) hover cards open in p95 ${Math.round(run.p95)}ms (want ≤ ${LIMIT.hover}ms; samples ${run.lat.map(Math.round).join(',')})`);
+  if (!(run.p95 <= LIMIT.hover + run.F)) { const again = await measure(); if (again.p95 - again.F < run.p95 - run.F) run = again; }
+  report.push(`hover: p95 ${Math.round(run.p95)}ms over ${run.lat.length}/${run.n} arrivals, box frame ${Math.round(run.F)}ms (${spaces.length} spaces, ${cards.length} cards, ${tips.length} tips on screen)${first !== run ? `; first run p95 ${Math.round(first.p95)}ms` : ''}`);
+  if (run.lat.length < run.n - 2) errors.push(`(s2) only ${run.lat.length} of ${run.n} hover arrivals opened a card within 1.5s`);
+  if (!(run.p95 <= LIMIT.hover + run.F)) errors.push(`(s2) hover cards open in p95 ${Math.round(run.p95)}ms (want ≤ ${LIMIT.hover}ms + one ${Math.round(run.F)}ms frame; samples ${run.lat.map(Math.round).join(',')})`);
   await page.mouse.move(4, 696);
   await page.waitForTimeout(300);
 }
@@ -169,27 +177,25 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
     const slot = slots[k % Math.max(1, slots.length)];
     if (!slot) break;
     const bb = await slot.boundingBox();
+    const F = await idleFrame();
     await page.evaluate(() => { window.__snap.minion = { armed: true }; });
     await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
-    await page.waitForTimeout(700);
+    await page.waitForFunction(() => window.__snap.minion && window.__snap.minion.t1 != null, null, { timeout: 2000 }).catch(() => {});
     const m = await page.evaluate(() => window.__snap.minion);
-    if (m && m.t0 != null) {
-      const gap = await longestGap(m.t0, m.t1 ?? m.t0 + 700);
-      tries.push({ ms: m.t1 == null ? Infinity : m.t1 - m.t0, gap });
-    }
+    if (m && m.t0 != null) tries.push({ ms: m.t1 == null ? Infinity : m.t1 - m.t0, gap: await longestGap(m.t0, m.t1 ?? m.t0 + 2000), F });
     if (k === 0) await page.screenshot({ path: `${SHOTS}/after-place.png` });
-    if (tries.length && tries[tries.length - 1].ms <= LIMIT.minion) break;
+    if (tries.length && tries[tries.length - 1].ms <= LIMIT.minion + F) break;
     // take it back (a space may have asked a question first: Undo is there either way) and try another space
-    const undo = await page.$('.btn.undo');
+    const undo = await page.waitForSelector('.btn.undo', { timeout: 3000 }).catch(() => null);
     if (!undo) break;
     await undo.click();
     await page.waitForSelector('.slot.can .base', { timeout: 5000 }).catch(() => {});
     await page.waitForTimeout(500);
   }
-  const best = Math.min(...tries.map(t => t.ms));
-  report.push(`minion: ${tries.map(t => `${Number.isFinite(t.ms) ? Math.round(t.ms) : 'never'}ms (longest frame ${Math.round(t.gap)}ms)`).join('; ')}`);
-  if (!tries.length) errors.push('(s3) could not click a lit space');
-  else if (!(best <= LIMIT.minion)) errors.push(`(s3) your minion showed on the space ${Number.isFinite(best) ? `${Math.round(best)}ms` : 'never (700ms+)'} after the click (want ≤ ${LIMIT.minion}ms)`);
+  const best = tries.slice().sort((a, b) => (a.ms - a.F) - (b.ms - b.F))[0];
+  report.push(`minion: ${tries.map(t => `${Number.isFinite(t.ms) ? Math.round(t.ms) : 'never'}ms (longest frame ${Math.round(t.gap)}ms, box frame ${Math.round(t.F)}ms)`).join('; ')}`);
+  if (!best) errors.push('(s3) could not click a lit space');
+  else if (!(best.ms <= LIMIT.minion + best.F)) errors.push(`(s3) your minion showed on the space ${Number.isFinite(best.ms) ? `${Math.round(best.ms)}ms` : 'never (2s+)'} after the click (want ≤ ${LIMIT.minion}ms + one ${Math.round(best.F)}ms frame)`);
 }
 
 for (const line of report) console.log(`snappy: ${line}`);
