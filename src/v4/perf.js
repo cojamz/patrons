@@ -197,7 +197,7 @@ function summary() {
   const byKind = group(inputs, x => `${x.type} ${x.kind}`);
   const inputRows = [...byKind].map(([k, xs]) => ({ kind: k, ...stats(xs.map(x => x.dur)), delay: stats(xs.map(x => x.inputDelay)).p95, proc: stats(xs.map(x => x.processing)).p95 })).sort((a, b) => (b.p95 || 0) - (a.p95 || 0));
   const all = stats(inputs.map(x => x.dur));
-  const hoverRows = [...group(E.hovers.filter(h => h.domMs != null), h => h.kind)].map(([k, xs]) => ({ kind: k, ...stats(xs.map(h => h.domMs)), content: stats(xs.map(h => h.contentMs)).p95, handler: stats(xs.map(h => h.handlerMs)).p95 }));
+  const hoverRows = [...group(E.hovers.filter(h => h.domMs != null), h => h.kind)].map(([k, xs]) => ({ kind: k, ...stats(xs.map(h => h.domMs)), content: stats(xs.map(h => h.contentMs)).p95, settled: stats(xs.filter(h => h.settledMs != null).map(h => h.settledMs)).p95, handler: stats(xs.map(h => h.handlerMs)).p95 }));
   const missed = E.hovers.filter(h => h.domMs == null).length;
   const loaf = [...E.loaf].sort((a, b) => b.duration - a.duration);
   const compRows = [...group(E.commits.flatMap(c => Object.entries(c.comps).map(([n, v]) => ({ n, ms: v.ms, k: v.n }))), x => x.n)]
@@ -310,6 +310,23 @@ function install() {
     const seat = t.closest('.lt-seat[data-pid]'); if (seat && t.closest('.cs-head')) return { kind: 'seat', key: seat.getAttribute('data-pid'), sel: `[data-seat-card="${seat.getAttribute('data-pid')}"]` };
     return null;
   };
+  // card complete (Cory: "card complete", not "card present"): from the card's first paint, watch its box and words for
+  // 600ms; settledMs is when the last change landed (its words, a node, its height), so a card that fills in over
+  // bursts reads as late as its last burst
+  const settle = (rec, el, t0) => {
+    const box = el.closest('[data-hover-layer], .lt-note.pinned, .popover') || el;
+    let last = now(), h = Math.round(box.getBoundingClientRect().height);
+    const mo = new MutationObserver(() => { last = now(); });
+    mo.observe(box, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'src', 'd', 'href'] });
+    const end = now() + 600;
+    const tick = () => {
+      if (!box.isConnected) { mo.disconnect(); rec.settledMs = last - t0; return; }
+      const h2 = Math.round(box.getBoundingClientRect().height);
+      if (h2 !== h) { h = h2; last = now(); }
+      if (now() < end) requestAnimationFrame(tick); else { mo.disconnect(); rec.settledMs = last - t0; }
+    };
+    requestAnimationFrame(tick);
+  };
   let lastHover = null;
   addEventListener('pointerover', e => {
     if (e.pointerType !== 'mouse') return;
@@ -324,7 +341,7 @@ function install() {
       if (lastHover !== rec) return; // the pointer moved on first
       const ts = now();
       const el = document.querySelector(`[data-hover-layer][data-open="1"] ${h.sel}, .lt-note.pinned ${h.sel}, .popover ${h.sel}`);
-      if (el && rec.domMs == null) rec.domMs = ts - t0;
+      if (el && rec.domMs == null) { rec.domMs = ts - t0; settle(rec, el, t0); }
       if (el && rec.contentMs == null && !el.querySelector('.youd-get.pending')) { rec.contentMs = ts - t0; rec.done = true; return; }
       if (ts - t0 < 2500) requestAnimationFrame(look); else rec.done = true;
     };

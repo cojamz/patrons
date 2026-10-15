@@ -323,8 +323,8 @@ for (const r of results) {
   for (const [w, xs] of Object.entries(byWhat)) { const ok = xs.filter(x => x != null).sort((a, b) => a - b); L.push(`| ${w} | ${xs.length} | ${f(ok[Math.floor((ok.length - 1) / 2)])} | ${f(ok[ok.length - 1])} | ${xs.length - ok.length} |`); }
   void hc;
   L.push('', `Clicks on a live option that changed nothing (tracer, 1.2s): ${s.clicks.eaten} of ${s.clicks.count}${s.clicks.eatenList.length ? ` (${s.clicks.eatenList.map(c => c.option || c.kind).join(', ')})` : ''}.`);
-  L.push('', '### Hover open delay (pointer over → card in the DOM; content = "You\'d get" filled)', '', '| target | n | p50 | p95 | max | content p95 | pointerover handler p95 |', '|---|---|---|---|---|---|---|');
-  for (const x of s.hover.byKind) L.push(`| ${x.kind} | ${x.n} | ${f(x.p50)} | ${f(x.p95)} | ${f(x.max)} | ${f(x.content)} | ${f(x.handler)} |`);
+  L.push('', '### Hover open delay (pointer over → card in the DOM; content = "You\'d get" filled; complete = its last change landed)', '', '| target | n | p50 | p95 | max | content p95 | complete p95 | pointerover handler p95 |', '|---|---|---|---|---|---|---|---|');
+  for (const x of s.hover.byKind) L.push(`| ${x.kind} | ${x.n} | ${f(x.p50)} | ${f(x.p95)} | ${f(x.max)} | ${f(x.content)} | ${f(x.settled)} | ${f(x.handler)} |`);
   L.push('', `Hovers whose card never showed (moved on first, or no card): ${s.hover.missed}.`);
   L.push('', '### Long animation frames', '', `LoAF: ${s.loaf.count} frames ≥50ms, ${s.loaf.over100} over 100ms, total blocking ${f(s.loaf.totalBlocking)}ms. Long tasks: ${s.longtasks.count}, ${f(s.longtasks.total)}ms total, max ${f(s.longtasks.max)}ms.`, '');
   L.push('| at (ms) | duration | blocking | render+layout | top scripts (invoker · fn · source · ms) |', '|---|---|---|---|---|');
