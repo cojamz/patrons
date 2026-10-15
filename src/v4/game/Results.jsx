@@ -20,7 +20,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
   const brokeTie = ranked.some((p, k) => k > 0 && followers(state, p) === followers(state, ranked[k - 1]) && key(p) !== key(ranked[k - 1]));
   return (
     <section className="results" aria-label="Final results">
-      <h2 className="win" style={{ '--pc': playerColor(ranked[0].id) }}>
+      <h2 className="win" style={{ '--pc': playerColor(ranked[0].id) }} data-winners={winners.map(p => p.id).join(',')} data-top={top}>
         <span>{winners.map(nm).join(' & ')}</span> {winners.length > 1 ? 'tie' : winners[0].id === meId ? 'win' : 'wins'} with <span className="num big">{top}</span> followers
       </h2>
       <p className="why" data-why>{meId != null ? asYou(winSentence(state), state.players[meId].name) : winSentence(state)}</p>

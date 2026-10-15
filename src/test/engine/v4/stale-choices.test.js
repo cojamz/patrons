@@ -57,6 +57,31 @@ describe('a queued choice never offers a card that moved', () => {
     expect(s.over).toBe(true);
   });
 
+  // The same, built from today's cards (the fixture above skips once the cards change under it): Stunt Double used in
+  // the buy step copies Open House, and the copy's free-member choice comes before the buy step returns.
+  it('a member used in the buy step resolves its choice first: Stunt Double copying Open House, then a fresh buy', () => {
+    const Q = ['gold', 'red', 'market', 'echo'];
+    const price = d => d.s + d.w;
+    const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.hourglass' && price(d) > 0);
+    const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 2));
+    const tied = defs.filter(d => price(d) === low).slice(0, 2).map(d => d.id);
+    const dear = defs.filter(d => price(d) > low).slice(0, 4).map(d => d.id);
+    let s = table(Q, { round: 2, members: [['echo.hourglass']], shop: [...tied, ...dear] });
+    s = take(s, N('red', 'hireup'));
+    if (s.pending.kind === 'choose') s = move(s, s.pending.options[0].id); // Open Door's tie: either cheapest
+    expect(s.pending.kind).toBe('buy');
+    const use = s.pending.options.find(o => o.kind === 'use');
+    s = move(s, use.id);
+    expect(s.pending.kind).toBe('choose'); // the copy's question now, not after the buy
+    expect(s.pending.prompt).toMatch(new RegExp(`costing ${low} or less`));
+    const pick = cardOf(s.pending.options[0]);
+    s = move(s, `card:${pick}`);
+    expect(where(s, pick)).toBe('p0');
+    expect(s.pending.kind).toBe('buy'); // then the buy step, fresh
+    expect(s.pending.options.map(o => o.id)).not.toContain(`card:${pick}`);
+    expect(s.pending.options.map(o => o.id)).not.toContain(use.id);
+  });
+
   it('Hand-pick: a card taken away is dropped from the choice; all taken, it resolves to nothing with a log line', () => {
     let s = table(['gold', 'red', 'market', 'echo'], { round: 3, left: 5, shop: ['red.twins', 'red.intern', 'gold.taxman', 'red.volunteer'] });
     s = take(s, N('red', 'take'));

@@ -89,8 +89,11 @@ export function flyCards(root, snap, moves) {
     const cell = s && (s.rect ? true : (cells[s.index] || cells[cells.length - 1]));
     const target = playerAnchor(root, to, '.chips');
     if (!s || !cell || !target) continue;
-    const a = s.rect || cell.getBoundingClientRect(), b = target.getBoundingClientRect();
-    if (!a.width || !b.width) continue;
+    const a0 = s.rect || cell.getBoundingClientRect(), b = target.getBoundingClientRect();
+    if (!a0.width || !b.width) continue;
+    // where the card was, kept on screen: a dialog can scroll the page (or a phone's row its cards) away from it
+    // between the click and the move, and a flight that starts off screen is never seen
+    const a = { width: a0.width, height: a0.height, left: Math.max(0, Math.min(innerWidth - a0.width, a0.left)), top: Math.max(0, Math.min(innerHeight - a0.height, a0.top)) };
     // the card lifts off the shop, holds a beat so you see which one, then travels to its new owner
     // land on the new member's own chip (or the "+N more" pill holding it) and make that chip glow
     const chip = root.querySelector(`.lt-seat[data-pid="${to}"] [data-uids~="${uid}"]`) || root.querySelector(`.lt-seat[data-pid="${to}"] [data-uid="${uid}"]`);

@@ -266,11 +266,12 @@ try {
   log('hana reloaded');
 
   await playUntil(atResults, 240000, 'final results');
-  const wins = await Promise.all(Object.values(pages).map(p => p.$eval('.results .win', e => e.textContent)));
-  if (new Set(wins).size !== 1) throw new Error(`players disagree on the result: ${JSON.stringify(wins)}`);
+  // the same winners and score on every device (each says "You win" on the winner's own screen, so compare the seats)
+  const wins = await Promise.all(Object.values(pages).map(p => p.$eval('.results .win', e => ({ winners: e.dataset.winners, top: e.dataset.top, text: e.textContent }))));
+  if (wins.some(w => !w.winners || !w.top) || new Set(wins.map(w => `${w.winners}|${w.top}`)).size !== 1) throw new Error(`players disagree on the result: ${JSON.stringify(wins)}`);
   if ((await seatOf(pages.pia)) !== 3) throw new Error('record has the wrong seat count');
   await pages.gus.screenshot({ path: `${SHOTS}/online-results.png` });
-  log(`game finished: ${wins[0]}`);
+  log(`game finished: ${wins[0].text}`);
   ok = errors.length === 0;
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);
