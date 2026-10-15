@@ -1,6 +1,6 @@
 // The gift card (Cory, 2026-10-16: the two-step pick on the seats was "very bad/confusing"). A choice that gives to a
 // rival, or pairs two things (boardPick.js giftPick: Good Deed, Kickback, Benefactor, Even Swap, Swap Sides, Trade Seeds,
-// Sweet Talk), is a small paper card beside the space just used: a plain heading ("Give 2 to a rival"), then the first
+// Sweet Talk), is a small paper card beside the space just used: a plain heading ("A rival you pick gets 2"), then the first
 // row (your colors, or your members), then the second (the rivals' faces, the color you get, how many, their members).
 // The second row is there from the start, quiet, so the card never changes shape; it lights once a first is picked. The
 // picked one stays pressed, and a click on another switches it. Every answer is the engine's own option id.
@@ -38,8 +38,9 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
   const card = uid => cardDef(state, uid);
   const owner = uid => state.players.find(p => p.members.includes(uid));
   const from = g.kind === 'amount' ? (String(pend.prompt).match(/swap (\w+) for/i) || [])[1] : null;
-  const head = g.kind === 'give' && g.chosen ? <>Give <b className="num">{g.n}</b><Pip color={g.chosen} /> to a rival</>
-    : g.kind === 'gift' ? <>Give <b className="num">{g.n}</b>{g.color ? <Pip color={g.color} /> : null} to a rival</>
+  // the gift comes from the bank, never your own stack (blind testers read "Give 1 to a rival" as paying it, 2026-10-15)
+  const head = g.kind === 'give' && g.chosen ? <>A rival you pick gets <b className="num">{g.n}</b><Pip color={g.chosen} /></>
+    : g.kind === 'gift' ? <>A rival you pick gets <b className="num">{g.n}</b>{g.color ? <Pip color={g.color} /> : null}</>
       : g.kind === 'colors' && g.chosen ? <>Swap <b className="num">1</b><Pip color={g.chosen} /> for another color</>
         : g.kind === 'amount' && from ? <>Swap {g.chosen ? 'your' : ''}<Pip color={from} /> for {g.chosen ? <Pip color={g.chosen} /> : 'another color'}</>
           : g.kind === 'trade' && g.chosen != null ? <>Swap your {card(g.chosen).name} for…</>

@@ -325,7 +325,7 @@ export function deniedText(state, key, meId = null) {
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void, look?:string }} props
  *   (look: 'panels' | 'sockets' | the name of a face in ./faces/, whose contract is at the top of faces/index.js)
  */
-function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
+function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
   const look = useMemo(() => lookProp || spacesLook(), [lookProp]);
   const panels = look === 'panels';
   // a face from ./faces/ (null for the built-in looks, and for a moment while its chunk loads)
@@ -630,8 +630,8 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   // The engraved rule: "MOST MEMBERS · +2 · ties: red members", at least 12px on screen. Its length is worked out
   // from the font (rimWidth: a canvas measure, cached per text), never read back from the drawn page, so drawing it
   // can't feed a re-render (a measure → setState → re-measure cycle crashed frozen builds with React #185). To fit
-  // the arc, a long line first tightens its letter-spacing, then drops the tiebreak to one word ("ties: red"), and
-  // only then steps its size down. The full tiebreak sentence is in the rim's title and hover card.
+  // the arc, a long line first tightens its letter-spacing, then steps its size down (the tiebreak keeps
+  // its words: one word, "ties: red", read as the red player). The full tiebreak sentence is in the rim's title and hover card.
   const RIM_PX = 12.2;
   const rimFont = Math.min(16, Math.max(11, RIM_PX / (scale || 1)));
   const arcHalf = 44; // the path the text runs on (wider than any label)
@@ -642,6 +642,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   // band's height, centred in it. Its room on the line (units) is taken off the room the words have
   const EMOJI_U = (8 * Math.max(1, Math.min(2, Math.floor((0.62 * (RIM.r1 - RIM.r0) * (scale || 1)) / 8)))) / (scale || 1);
   const EMOJI_ROOM = EMOJI_U + 2;
+  // the tiebreak's words on the rim name a count, never a lone color: "ties: red" was read as the red player (blind
+  // testers, 2026-10-15), so it's "ties: red members" or "ties: most yellow", never cut to one word
+  const tieWords = tb => (!tb ? null : / /.test(tb.unit) ? tb.unit : `most ${tb.unit}`);
   const rimLabel = (qid, q, leaders) => {
     const st = stdById[qid];
     const sc = quadrant(qid).scoring;
@@ -662,8 +665,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     // letter-spacing (em) that makes the line fit at size f, between .03 and .11
     const spacing = (t, f) => Math.max(0.03, Math.min(0.11, (room / f - tailK - tieW(t) - base) / n));
     const width = (t, f, ls) => f * (base + ls * n + tieW(t) + tailK);
-    let tie = tb ? tb.unit : null;
-    if (tie && width(tie, rimFont, spacing(tie, rimFont)) > room) tie = tie.split(' ')[0];
+    const tie = tieWords(tb);
     const ls = spacing(tie, rimFont);
     const font = Math.max(9, Math.min(rimFont, room / (base + ls * n + tieW(tie) + tailK)));
     return { rule, prize, tie, tieText: tb ? tb.text : null, top, rr, font, ls, textW: font * (base + ls * n + tieW(tie)) };
@@ -676,7 +678,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const st = stdById[qid];
     const sc = quadrant(qid).scoring;
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
-    const tie = tb ? tb.unit.split(' ')[0] : null;
+    const tie = tieWords(tb);
     const runs = [{ kind: 'text', text: (st ? st.rule : shortLabel(sc.label)).toUpperCase(), tie }, { kind: 'text', text: '·' }, { kind: 'prize', text: `+${RING_VALUE[paying - 1]}` }];
     // widths per unit of font size, and the gaps before each run
     for (const [k, r] of runs.entries()) {
@@ -760,16 +762,18 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     for (const s of spaces) {
       const R = rings[s.ring], open = s.ring <= round, owner = state.slots[s.key];
       const lit = legal.has(s.key);
+      // yours to take but worth nothing right now (its hover says so): placeable, without the lamp's glow
+      const quiet = lit && !!(idle && idle.has(s.key));
       const fresh = freshOf(s.key);
       const a0 = s.ang - s.half, a1 = s.ang + s.half;
       const d = panelPath(a0, a1, R.r0, R.r1);
-      const cls = ['pcell', open ? 'open' : 'locked', lit ? 'lit' : '', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', (peek && peek.pinned && peek.key === s.key) || sent === s.key ? 'sel' : ''].filter(Boolean).join(' ');
+      const cls = ['pcell', open ? 'open' : 'locked', lit ? 'lit' : '', quiet ? 'idle' : '', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', (peek && peek.pinned && peek.key === s.key) || sent === s.key ? 'sel' : ''].filter(Boolean).join(' ');
       paper.push(
         <g key={`pc${s.key}`} className={cls} data-cell={s.key} style={{ '--c': `var(--${s.qid})` }}
           onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, stage.current && stage.current.querySelector(`[data-slot="${s.key}"]`), { x: e.clientX, y: e.clientY }); }}
           onPointerEnter={e => { const h = live.current.hover; e.currentTarget.classList.add('hot'); if (h && realHover(e)) h.onSpaceHover(s.key, e.currentTarget.querySelector('.wash')); }}
           onPointerLeave={e => { const h = live.current.hover; e.currentTarget.classList.remove('hot'); if (h && e.pointerType === 'mouse') h.onSpaceHover(s.key, null); }}>
-          {lit && <path className="glow" d={d} />}
+          {lit && !quiet && <path className="glow" d={d} />}
           <path className="wash" d={d} />
           {lit && <path className="edge-lit" d={d} />}
           {fresh && <path className={`fresh${fresh.newest ? ' newest' : ''}`} d={panelPath(a0, a1, R.r0 + 2.2, R.r1 - 2.2, PANEL_GUT + 4.4, PANEL_RC - 1)} style={{ stroke: playerColor(fresh.pid) }}><title>{`${state.players[fresh.pid].name} took ${fresh.action}`}</title></path>}
@@ -911,6 +915,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
   const flashKey = [...flash].join('|');
   const legalKey = [...legal.entries()].map(([k, v]) => `${k}=${v}`).join('|');
+  const idleKey = idle ? [...idle].join('|') : '';
   const built = useRef(new Map()); // key → { sig, el }: each space's last element and what it showed
   const sockets = useMemo(() => spaces.map(s => {
     const { key, q, a, ring: t, qid } = s;
@@ -919,6 +924,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const joiners = (state.squats && state.squats[key]) || [];
     const open = t <= round;
     const opt = legal.get(key);
+    const quiet = !!(opt && idle && idle.has(key));
     const selected = pinnedKey === key || sent === key;
     const fresh = freshOf(key);
     // panels: the gain, the effect, the clarification, laid out in the room this panel has where it sits now
@@ -926,12 +932,12 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const said = pl && pl.said, lay = pl && pl.lay;
     // everything this space shows, as one string: the same string, the same element (Space skips it)
     const crewIds = owner !== undefined ? [owner, ...joiners] : [];
-    const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', joiners.join(','), open ? 1 : 0, opt || '', selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
+    const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', joiners.join(','), open ? 1 : 0, opt || '', quiet ? 1 : 0, selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
       flash.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
       fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? `${scale}:${fontsIn}` : ''].join('|');
     const had = built.current.get(key);
     if (had && had.sig === sig) return <Space key={key} el={had.el} />;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', quiet ? 'idle' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -1007,7 +1013,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     );
     built.current.set(key, { sig, el });
     return <Space key={key} el={el} />;
-  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [state, rot, legalKey, idleKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>

@@ -12,10 +12,10 @@ const S = {
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },
   purple: {
-    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival ahead', windup: '+1 purple per minion', planahead: '+1 purple per minion left', overtime: '1 extra turn', rally: 'your next 2 turns now',
+    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival who placed more', windup: '+1 purple per minion', planahead: '+1 purple per minion left', overtime: '1 extra turn', rally: 'your next 2 turns now',
   },
   silver: {
-    toast: r => `+${3 * r} silver · all +1`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the richest', jubilee: 'silver for followers',
+    toast: r => `+${3 * r} silver · all +1`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the top rival’s', jubilee: 'silver for followers',
   },
   yellow: {
     harvest: '+1 yellow per color', bloom: '+1 each missing', transmute: 'swap 3 · +1 yellow', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
@@ -27,7 +27,7 @@ const S = {
     pickpocket: r => `steal ${r + 1}`, tipoff: 'steal 1 each richer', hideout: 'steal 1 · safe', rob: 'steal 3', ransom: 'ransom a member', heist: 'steal a member',
   },
   trading: {
-    haggle: '+2 white, +1 per leader', buylow: r => `${2 * r} for followers`, pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per loose follower', boom: 'all for followers',
+    haggle: '+2 white, +1 per leader', buylow: r => `${2 * r} for followers`, pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower bought or won', boom: 'all for followers',
   },
   echo: { hum: '+3 green', chant: r => `+${2 * r} green`, echo: 'copy a rival', encore: 'copy any', refrain: '+2 green · copy yours', eternity: 'copy all yours' },
 };
@@ -38,7 +38,7 @@ const PIPS = {
   gold: { steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold' },
   red: { hireup: 'member up to 4, free', trade: 'swap a member', take: 'any member, free' },
   purple: { overtime: '1 extra turn' },
-  silver: { tide: 'half the richest', jubilee: 'silver for followers' },
+  silver: { tide: 'half the top rival’s', jubilee: 'silver for followers' },
   yellow: { gather: '+1 per member' },
   market: { clearance: 'half price', spree: 'buy 3 times' },
   thieves: { rob: 'take 3 any', ransom: 'ransom a member', heist: 'take a rival’s member' },

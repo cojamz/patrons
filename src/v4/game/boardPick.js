@@ -122,7 +122,7 @@ export function giftPick(state, pend, first = null) {
   else if (kind === 'give' || kind === 'amount') others.sort((x, y) => x - y);
   const n = Number((question.match(/give (\d+)/) || [])[1]) || null;
   const done = (question.match(/\((\d+) swapped so far\)/) || [])[1];
-  const head = { give: n ? `Give ${n} to a rival` : 'Give to a rival', colors: 'Swap one for one', amount: 'Swap for another color', trade: 'Swap a member with a rival' }[kind];
+  const head = { give: n ? `A rival you pick gets ${n}` : 'A rival you pick gets some', colors: 'Swap one for one', amount: 'Swap for another color', trade: 'Swap a member with a rival' }[kind];
   return { ...base, kind, n, color: null, head, chosen, firsts, seconds, others, rest, done: done == null ? null : Number(done), sameCost: /equal cost/i.test(question) };
 }
 
@@ -136,7 +136,10 @@ export function pickCaption(state, pk) {
     // the steal's limit, in the engine's words ("1 each from P3, P4"), leads the how line
     const limit = (String(pk.question).match(/\(\d+ left, ([^)]+)\)/) || [])[1];
     // "· N left" only once the first is taken: at the start it said the count twice ("take 3 · 3 left", w4b #17)
-    return { title: pk.title, what: [`take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`], left: pk.count.left < pk.count.of ? pk.count.left : null, how: `${limit ? `${limit[0].toUpperCase()}${limit.slice(1)}. ` : ''}${pickHow(pk)}` };
+    // never more than the lit stacks hold (blind testers, 2026-10-15: "take 3 gold" with 2 on the table)
+    const lit = Object.entries(pk.seats).reduce((t, [pid, x]) => t + Object.keys(x.res).reduce((u, r) => u + ((state.players[pid] && state.players[pid].res[r]) || 0), 0), 0);
+    const of = Math.min(pk.count.of, pk.count.of - pk.count.left + lit);
+    return { title: pk.title, what: [`take ${of}${pk.only ? ` ${pk.only}` : ''}`], left: pk.count.left < pk.count.of ? Math.min(pk.count.left, lit) : null, how: `${limit ? `${limit[0].toUpperCase()}${limit.slice(1)}. ` : ''}${pickHow(pk)}` };
   }
   const q = pk.title ? pk.question : state.pending.prompt;
   // a member of yours asking (Double Agent just recruited): its rule goes under the headline, so you see why

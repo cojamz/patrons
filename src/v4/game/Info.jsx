@@ -630,6 +630,34 @@ export function youdWords(pv, state, own = null) {
   const sure = sureWords(pv, state);
   return { text: sure || null, note: sure ? 'the rest is your pick' : 'it depends on your pick' };
 }
+/**
+ * The spaces you can take that would give you nothing right now (their hover says "You'd get: nothing right now"), as a
+ * Set of "q-i" keys, filled in as the dry runs arrive (blind testers, 2026-10-15: they glowed exactly like useful ones).
+ * They stay placeable; the wheel only lets them step back.
+ */
+export function useIdleSpaces(state, pid, keys) {
+  const [, bump] = useState(0);
+  const sig = keys.join('|');
+  useEffect(() => {
+    if (pid == null || !keys.length) return undefined;
+    const fn = (st, p, k) => { if (st === state && p === pid && keys.includes(k)) bump(n => n + 1); };
+    listeners.add(fn);
+    requestPreviews(state, pid, keys);
+    return () => { listeners.delete(fn); };
+  }, [state, pid, sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  const out = new Set();
+  if (pid == null) return out;
+  for (const k of keys) {
+    const [q, i] = k.split('-').map(Number);
+    const pv = peekPreview(state, pid, q, i);
+    if (!pv) continue;
+    let own = null;
+    try { own = quadrant(state.quadrants[q]).resource; } catch { /* none */ }
+    const y = youdWords(pv, state, own);
+    if (!y.likely && !y.note && y.text === 'nothing right now') out.add(k);
+  }
+  return out;
+}
 /** "You'd get: +3 ●, +1 member" for player pid on space (q, i), computed just after it shows. */
 export function YoudGet({ state, pid, q, i, now = false }) {
   const pv = usePreview(state, pid, q, i, { now });

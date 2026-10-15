@@ -77,14 +77,15 @@ describe('White actions', () => {
     expect((t.pending?.options || []).some(o => o.label.startsWith(actionName('trading.pawn')))).toBe(false);
   });
 
-  // design critic follow-up (2026-10-14): "loose followers" is defined once (rulebook, glossary); the cards use it
-  it('"loose followers", defined once: Dividend, Sell High, Pawnbroker and Liquidator say it', () => {
+  // one name for one thing (blind testers, 2026-10-15): "loose followers" on the cards and "bought or won" on the faces
+  // read as two things; the cards now say "followers you bought or won", as the faces do (the glossary keeps the old word)
+  it('"followers you bought or won", one name: Dividend, Sell High, Pawnbroker and Liquidator say it', () => {
     expect(term('loose followers').def).toMatch(/^Followers you bought or won, not the ones your members are worth/);
     const W = quadrant('trading'), text = k => [...W.actions, ...W.members].find(c => c.key === k).text;
-    expect(text('dividend')).toBe('+1 white per loose follower you have.');
-    expect(text('sellhigh')).toBe('Sell up to 2 loose followers for 3 white each.');
-    expect(text('pawnbroker')).toBe('Once per round: sell 1 loose follower for 3 white.');
-    expect(text('liquidator')).toBe('Once per game: sell up to 5 loose followers for 2 white each.');
+    expect(text('dividend')).toBe('+1 white per follower you bought or won.');
+    expect(text('sellhigh')).toBe('Sell up to 2 followers you bought or won, for 3 white each.');
+    expect(text('pawnbroker')).toBe('Once per round: sell 1 follower you bought or won, for 3 white.');
+    expect(text('liquidator')).toBe('Once per game: sell up to 5 followers you bought or won, for 2 white each.');
   });
   it('Sell High: sell up to 2 followers for 3 white each; only won or bought followers', () => {
     let s = take(table(Q, { round: 2, bonus: [5], shop: ROW }), 'trading.sellhigh');
@@ -92,21 +93,21 @@ describe('White actions', () => {
     s = move(s, 'amount:2');
     expect([R(s).white, s.players[0].bonus]).toEqual([6, 3]);
     s = take(table(Q, { round: 2, members: [['red.twins']], shop: ROW }), 'trading.sellhigh');
-    expect(s.log).toContain('Sell High: P1 has no loose followers to sell (only followers you bought or won can be sold).');
+    expect(s.log).toContain('Sell High: P1 has no followers to sell (only followers you bought or won can be sold).');
   });
 
   // Cory cut Barter (2026-10-14: "I don't like that"); Dividend fills its ring-II slot (Claude, go-with-your-gut)
-  it('Barter is gone; Dividend: +1 white per loose follower you have (named); members and yourself don\'t count, nothing is sold', () => {
+  it('Barter is gone; Dividend: +1 white per follower you bought or won (named); members and yourself don\'t count, nothing is sold', () => {
     expect(quadrant('trading').actions.map(a => a.key)).not.toContain('barter');
     expect(quadrant('trading').actions.find(a => a.key === 'dividend').ring).toBe(2);
     let s = take(table(Q, { round: 2, bonus: [4], members: [['red.twins', 'trading.dealer']], shop: ROW }), 'trading.dividend');
     expect([R(s).white, s.players[0].bonus]).toEqual([4, 4]);
-    expect(named(s, 'Dividend')).toEqual(["P1's Dividend: +4 white (4 loose followers)."]);
+    expect(named(s, 'Dividend')).toEqual(["P1's Dividend: +4 white (4 followers bought or won)."]);
     expect(named(s, 'Dealer')).toEqual([]); // not a sale
     expect(s.pending.kind).toBe('buy');
     s = take(table(Q, { round: 2, members: [['red.twins']], shop: ROW }), 'trading.dividend');
     expect(R(s).white).toBe(0);
-    expect(s.log).toContain("P1's Dividend: no loose followers yet (followers you bought or won).");
+    expect(s.log).toContain("P1's Dividend: no followers bought or won yet.");
   });
   it('× Echo: a Dividend is copied as the white it gave (the chip), whatever the copier holds', () => {
     const N = (q, k) => quadrant(q).actions.find(a => a.key === k).name; // by key: space names get renamed

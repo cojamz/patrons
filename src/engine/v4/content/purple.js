@@ -241,7 +241,7 @@ export default {
     // fill-in (critic): took the slot of an earlier card called Timekeeper (the name now belongs to the game-end purple card)
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 4 (the most one pass moves);
     // balance pass 2 (pooled bench, midpoint 2.1; design/eval/balance-pass-2.md): 4 → 2
-    m('doubletime', 'Corner-Cutter', 2, 0,'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
+    m('doubletime', 'Corner-Cutter', 2, 0,'When you pay purple for extra turns, pay half (rounded up).', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
     m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last minion of a round, +1 purple per 2 minions you have on the board.', {

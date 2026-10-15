@@ -17,10 +17,13 @@ describe('panel words (w3)', () => {
   });
 
   it('a gain that grows by round says so in rounds I and II, and not in III (w3a #54: "+2●" read as flat)', () => {
-    for (const [qid, key] of [['gold', 'rush'], ['purple', 'hourly'], ['echo', 'chant'], ['silver', 'toast'], ['thieves', 'pickpocket'], ['trading', 'buylow'], ['trading', 'pawn']]) {
+    for (const [qid, key] of [['gold', 'rush'], ['purple', 'hourly'], ['echo', 'chant'], ['silver', 'toast'], ['thieves', 'pickpocket'], ['trading', 'pawn']]) {
       for (const r of [1, 2]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain('more each round');
       expect(lines(panelText(qid, { key }, 3)), `${qid}.${key} round III`).not.toContain('more each round');
     }
+    // a cap that grows says the limit grows (blind testers, 2026-10-15: "up to 2, more each round" read as "+2 each round")
+    for (const r of [1, 2]) expect(lines(panelText('trading', { key: 'buylow' }, r))).toContain('the limit grows by round');
+    expect(lines(panelText('trading', { key: 'buylow' }, 3))).not.toContain('the limit grows by round');
   });
 
   it('a space whose center or ring II panel drops line 2 is whole in line 1', () => {

@@ -8,7 +8,7 @@
 //  (p4) Wave-2 testers A#4, B#2: only one way to pay, but it gives up a lead you hold (3 gold leading Most gold, the
 //       price takes all 3): the sheet asks, says "gives up your lead in gold", and Cancel goes back with nothing paid.
 //  (g1) Good Deed on the gift card (Cory, 2026-10-16: the two-step pick on the seats was "very bad/confusing"): a small
-//       card beside the space just taken, headed "Give 2 to a rival"; the table's colors are its lit first row, the
+//       card beside the space just taken, headed "A rival you pick gets 2"; the table's colors are its lit first row, the
 //       rivals' faces wait quiet under them (no chips, nothing lit on the seats); a color is plainly picked, a click on
 //       another switches it, then the faces light and a face click gives (the engine's id), the coins flying there.
 //  (w1) Even Swap on the same card: your members are the first row; one picked, the rivals' members it pairs with light
@@ -164,7 +164,7 @@ try {
     // let the card settle beside the space (GameScreen places it after it renders)
     await page.waitForTimeout(300);
     const head = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim());
-    if (head !== 'Give 2 to a rival') errors.push(`(g1) the card's heading reads "${head}"`);
+    if (head !== 'A rival you pick gets 2') errors.push(`(g1) the card's heading reads "${head}"`);
     const title = await page.$eval('.gift-card .gc-title', e => e.textContent.trim()).catch(() => '');
     if (!/^good deed$/i.test(title)) errors.push(`(g1) the card names "${title}", not Good Deed`);
     // beside the space just taken: the card's nearest edge within 40px of the space, never on the seats or in the header

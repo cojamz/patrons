@@ -25,7 +25,8 @@ const P = {
     // "+1 to anyone" (w3): the gift goes to a rival only, never to you
     jv: { main: '+3 gold', second: '+1 to a rival', note: 'you pick who' },
     rush: r => ({ main: `+${2 * r} gold`, second: grows(r) }),
-    discount: { verb: 'Save 4', second: 'on next member' },
+    // "Save 4" read as keeping 4 resources (blind testers, 2026-10-15): it's money off, said as a shop says it
+    discount: { verb: '4 off', second: 'your next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
     windfall: { main: '+1 gold', second: 'per member' },
     strike: { verb: 'Double your gold' },
@@ -51,7 +52,8 @@ const P = {
   },
   purple: {
     hourly: r => ({ main: `+${3 + r} purple`, second: grows(r) }),
-    catchup: { main: '+1 purple', second: '+1 per rival ahead', note: 'in minions placed' },
+    // "per rival ahead" read as ahead on score (blind testers, 2026-10-15): it counts minions placed, said in line 2
+    catchup: { main: '+1 purple', second: '+1 per rival who placed more', note: 'minions this round' },
     // "out" and "left" read alike (w3b #16): where the minions are, in the card's own words ("on the board")
     windup: { main: '+1 purple', second: 'per minion on the board' },
     planahead: { main: '+1 purple', second: 'per minion to place' },
@@ -65,12 +67,14 @@ const P = {
     // "+2 of a color": which one? (w3a #56) yours to pick
     gift: { main: '+2 silver', second: '+2 of a color you pick', note: 'others get 1 of it' },
     // said like Kickback's gift ("a rival gets 2" ran on as "+4 silver a rival gets 2" off the wheel)
-    alms: { main: '+4 silver', second: '+2 to a rival' },
+    // "+2 to a rival" left "2 of what?" (blind testers, 2026-10-15): the color is yours to pick too
+    alms: { main: '+4 silver', second: '+2 of a color to a rival', note: 'you pick both' },
     // "trade silver" (w3a #57): with whom? it's a swap of your silver into one other color. Line 2 within 16 letters
     // ("swap silver for a color" didn't fit ring II, and dropped whole)
     tongue: { main: '+4 silver', second: 'swap for a color', note: 'others get 1 silver' },
     // the richest in silver: the hover says "the rival with the most" ("Gain half the silver" left no room for line 2)
-    tide: { verb: 'Gain silver', second: 'half the richest', note: 'others get 1' },
+    // "half the richest" read as half your own pile (blind testers, 2026-10-15): it's the top rival's
+    tide: { verb: 'Gain silver', second: 'half the top rival’s', note: 'others get 1' },
     // on the center line 2 drops: the rate is in line 1, and "held" says the silver stays
     jubilee: { verb: '+1 @f per 2 silver held', second: 'others get 2 silver' },
   },
@@ -101,7 +105,8 @@ const P = {
   trading: {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers
     haggle: { main: '+2 white', second: '+1 per rival with more @f' },
-    buylow: r => ({ verb: 'Trade for followers', second: `1 for 1, up to ${2 * r}`, note: grows(r) }),
+    // "up to 2, more each round" read as "+2 each round" (blind testers, 2026-10-15): the cap is what grows
+    buylow: r => ({ verb: 'Trade for followers', second: `1 for 1, up to ${2 * r}`, note: r < 3 ? 'the limit grows by round' : null }),
     pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, note: grows(r) }),
     // the gain first: "Sell followers" lost its "3 white each" on ring II whenever the panel was tight (w3 words pass)
     sellhigh: { main: '+3 white', second: 'per follower sold', note: 'up to 2' },

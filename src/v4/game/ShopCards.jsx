@@ -40,8 +40,10 @@ export function sortShop(state, uids, by = 'cost') {
 }
 /**
  * The row as it stands (w2b #40: "the shop re-sorts after every recruit, so cards jump under the pointer"): within a
- * round, a card dealt to refill the row takes the place of the one that left, like a real market row, and nothing else
- * moves. The row re-sorts at a calm moment: a new round (behind its summary) or the sort toggle. prev = { key, uids }.
+ * turn, a card dealt to refill the row takes the place of the one that left, like a real market row, and nothing else
+ * moves. The row re-sorts when the turn ends (and on a new round, the sort toggle or a reload), so the order you see
+ * follows the sort (blind testers, 2026-10-15: "sort: cost" kept a refill in the vacated slot, and a reload
+ * reshuffled). prev = { key, uids }.
  */
 export function steadyOrder(prev, key, sorted) {
   if (!prev || prev.key !== key) return sorted;
@@ -92,7 +94,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   // pay for recedes (dialogs pod, wave-2 tester: one text chip, the other four never shown)
   const tray = picking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, 5).includes(o.value)) ? state.pile.slice(0, 5) : null;
   const steady = useRef(null);
-  const rowKey = `${sort}|${state.round}`;
+  // a turn's own key: state.turns grows by one as each turn starts (the engine's record of this round's turns)
+  const rowKey = `${sort}|${state.round}|${(state.turns || []).length}`;
   const row = steadyOrder(steady.current, rowKey, sortShop(state, state.shop, sort));
   steady.current = { key: rowKey, uids: row };
   const uids = tray || [...row, ...pileOpts];

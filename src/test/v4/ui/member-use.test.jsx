@@ -107,7 +107,7 @@ describe('the seat card list', () => {
     expect(a.container.querySelector('[data-use]').className).toContain('big');
     cleanup();
     const b = render(<MemberActions state={s} uid={uidIn(s, 'trading.pawnbroker', 0)} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
-    expect(b.container.textContent).toMatch(/Can’t use it now: no loose followers/);
+    expect(b.container.textContent).toMatch(/Can’t use it now: no followers to sell/);
     cleanup();
     const c = render(<MemberActions state={s} uid={uidIn(s, 'echo.hourglass', 1)} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
     expect(c.container.textContent).toBe('');

@@ -92,11 +92,11 @@ describe('turn order on the cults', () => {
       expect(container.querySelector('.cs-order')).toBeNull();
       cleanup();
     }
-    // your own turn: "your turn" (and "then again" when the snake turns on you); the next rival says "next"
+    // your own turn: "your turn" ("two turns in a row" when the snake turns on you); the next rival says "next"
     let t = until(s, x => x.pending && x.pending.kind === 'place' && x.current === 0);
     const tr = turnRail(t);
     const mine = seatTurns(t, 0);
-    expect(mine[0].say).toBe(tr.next[0] === 0 ? 'your turn, then again' : 'your turn');
+    expect(mine[0].say).toBe(tr.next[0] === 0 ? 'two turns in a row' : 'your turn');
     if (tr.next[0] != null && tr.next[0] !== 0) expect(mine[tr.next[0]].say).toBe('next');
     expect(Object.values(mine).filter(w => w.say === 'next').length).toBeLessThanOrEqual(1);
     // before round I and with no viewer: nothing on yours
@@ -112,7 +112,7 @@ describe('turn order on the cults', () => {
     expect(seq.filter(t => t.kind === 'snake')).toHaveLength(12);
     expect(seq.slice(0, 3).map(t => t.pid)).toEqual([me, me, me]);
     expect(seq.slice(1, 3).map(t => t.early)).toEqual(['Crunch Time', 'Crunch Time']);
-    expect(seatTurns(s, me)[me].say).toBe('your turn, then again');
+    expect(seatTurns(s, me)[me].say).toBe('two turns in a row');
     expect(turnPlaces(s, me).places[me].title).toMatch(/taken early \(Crunch Time\), not an extra one/);
     // the seat after the early turns says next, and every other seat's count matches the queue
     const r = turnRail(s);

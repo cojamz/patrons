@@ -45,7 +45,7 @@ export function turnPlaces(state, me = null) {
     // whoever opened the round because a member says so says which (w3a A2: "P3 picks first" with no reason)
     const firstBy = state.order && state.order[0] === p.id ? firstPickWhy(state, p.id) : null;
     const opened = firstBy && firstBy !== 'fewest followers' ? ` First this round: ${firstBy}.` : '';
-    out[p.id] = { place: k, label, twice, text: twice ? `${label}, then again` : label, title: `${what}${again}.${ahead(now ? 0 : k)}${why}${opened}` };
+    out[p.id] = { place: k, label, twice, text: twice ? `${label}, twice in a row` : label, title: `${what}${again}.${ahead(now ? 0 : k)}${why}${opened}` };
   }
   return { places: out, order };
 }
@@ -74,7 +74,7 @@ export function seatTurns(state, me = null) {
     if (k < 0) out[me] = { say: 'done this round', kind: 'done', n: null, title: 'You have no placements left this round.' };
     else if (k === 0 && playing === me) {
       const twice = order[1] === me;
-      out[me] = { say: twice ? 'your turn, then again' : 'your turn', kind: 'now', n: 0, title: twice ? `Your turn now, then again right after.${tail}` : 'Your turn now.' };
+      out[me] = { say: twice ? 'two turns in a row' : 'your turn', kind: 'now', n: 0, title: twice ? `Your turn now, twice in a row.${tail}` : 'Your turn now.' };
     } else if (k === 0 || (k === 1 && playing != null)) out[me] = { say: 'your turn next', kind: 'soon', n: 1, title: `Your turn comes right after this one.${tail}` };
     else out[me] = { say: `your turn in ${k}`, kind: 'in', n: k, title: `${k} turns before yours.${tail}` };
   }

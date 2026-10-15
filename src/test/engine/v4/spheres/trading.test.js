@@ -131,17 +131,17 @@ describe('White actions', () => {
     expect(ids(s)).toEqual(['amount:0', 'amount:1']);
     s = take(scene({ round: 2 }), 'trading.sellhigh');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.log.join('\n')).toContain('Sell High: P1 has no loose followers to sell');
+    expect(s.log.join('\n')).toContain('Sell High: P1 has no followers to sell');
   });
 
-  it('Dividend (ring II): +1 white per loose follower; never yourself or a member, and nothing leaves', () => {
+  it('Dividend (ring II): +1 white per follower bought or won; never yourself or a member, and nothing leaves', () => {
     expect(() => take(scene({ round: 1, bonus: [4] }), 'trading.dividend')).toThrow();
     let s = take(scene({ round: 2, bonus: [5], members: [['red.twins']] }), 'trading.dividend');
     expect([R(s).white, B(s)]).toEqual([5, 5]);
     expect(s.pending.kind).toBe('buy'); // no question: the buy follows
     s = take(scene({ round: 3, bonus: [0], members: [['red.twins']] }), 'trading.dividend');
     expect(R(s)).toEqual(Z);
-    expect(s.log.join('\n')).toContain("P1's Dividend: no loose followers yet");
+    expect(s.log.join('\n')).toContain("P1's Dividend: no followers bought or won yet");
   });
 
   it('All In (ring III): trade all your resources for followers 1 for 1, or all but your white', () => {

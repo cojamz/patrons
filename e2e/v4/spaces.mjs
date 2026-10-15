@@ -318,7 +318,7 @@ try {
     if (!lit.lit) fail('(s1) nothing is lit during your placement', tag);
     for (const r of await page.evaluate(RIM)) {
       const tb = quadrant(r.qid).scoring.tiebreak;
-      if (tb && !r.text.includes(`ties: ${tb.unit.split(' ')[0]}`)) fail(`(s6) ${r.qid}'s rim doesn't print its tiebreak ("${tb.text}"): "${r.text}"`, tag);
+      if (tb && !r.text.includes(`ties: ${/ /.test(tb.unit) ? tb.unit : `most ${tb.unit}`}`)) fail(`(s6) ${r.qid}'s rim doesn't print its tiebreak ("${tb.text}"): "${r.text}"`, tag);
     }
     // (s6) the rim's hover card is the contest only: a sphere's own rule ("Copies never reach the center…") is not on it
     //      (w4b #33: it read as a scoring rule, and it's general besides); a copy space's "Can copy" row lists what's legal

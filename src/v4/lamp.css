@@ -319,6 +319,13 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .wash,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .wash{filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:1;stroke-width:9}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1;stroke:#fffaf0;stroke-width:2.4}
+/* a space you can take that would give you nothing right now (its hover says so; blind testers, 2026-10-15: it glowed
+   like a useful one): still placeable, but no glow, a fainter edge and its print stepped back. Pointing at it lights
+   the edge as usual */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.idle .wash{fill:var(--pl-paper,#f2e8d2)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.idle:not(.hot):not(.sel) .edge-lit{opacity:.35}
+.lt .stage .slot.lit.idle:not(:hover):not(.sel) .face{opacity:.6}
+.lt .stage .slot.lit.idle .base::after{display:none}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:color-mix(in srgb,var(--paper-taken,#cfc2a6) 52%,var(--board,#2b2119))}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:var(--paper-lit,#fbf6ea)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .wash{fill:rgba(242,232,210,.03);stroke:rgba(242,232,210,.16);stroke-width:1}
@@ -383,6 +390,15 @@ h1,h2,h3{font-family:var(--serif)}
 @keyframes panelland{0%{transform:translate(-50%,calc(-50% - 5px))}60%{transform:translate(-50%,calc(-50% + 1px))}100%{transform:translate(-50%,-50%)}}
 .lt [data-spaces="panels"] .stage .slot.taken .face{opacity:1}
 .lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .main,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .second,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .note{opacity:.35}
+/* emojis never cover words (Cory, 2026-10-15; blind testers saw minions on a taken space's words, bigger than them): a
+   taken space keeps its gain, faded, and the minion stands where its small print was (that print hides, the panel
+   keeps its size), no taller than that print */
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .second,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .note{visibility:hidden}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .worker-fig{top:calc(var(--one,18px) * 1.06 + 2px);transform:translate(-50%,0)}
+.lt [data-spaces="panels"] .stage .slot.taken.wrap1:not(.lit) .face .worker-fig{top:calc(var(--one,18px) * 2.12 + 2px)}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .worker-fig svg{height:14px}
+.lt [data-spaces="panels"] .stage .slot.taken.flash:not(.lit) .face .worker-fig{animation-name:panelland-under}
+@keyframes panelland-under{0%{transform:translate(-50%,-5px)}60%{transform:translate(-50%,1px)}100%{transform:translate(-50%,0)}}
 .lt [data-spaces="panels"] .stage .slot.can:hover .face{transform:translateY(-1px);transition:transform var(--mo-quick,.12s)}
 /* locked: faint on the board */
 .lt [data-spaces="panels"] .stage .slot.locked .face{color:var(--pl-cream-2,#b9a98c)}

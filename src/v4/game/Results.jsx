@@ -30,7 +30,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
             (1 each) joins the members, and End-game shows only when some member scored at game end (w3a #40) */}
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th>You &amp; members</th><th>Bought</th>{playCol && <th>During play</th>}<th>Prizes</th>{endCol && <th>End-game</th>}</tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th title="What your members are worth, plus 1 for you">Members + you (1)</th><th>Bought</th>{playCol && <th>During play</th>}<th>Prizes</th>{endCol && <th>End-game</th>}</tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
@@ -47,7 +47,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
                         <span>{b.self} for {p.id === meId ? 'yourself' : 'their leader'}, {b.members} from members, {b.bought} bought{playCol ? `, ${sign(b.effects)} during play` : ''}, {b.contests} from prizes{endCol ? `, ${sign(b.endGame)} at game end` : ''}</span></div>
                     )}>{followers(state, p)}</Tip>
                   </td>
-                  <td data-label="You & members" data-cult={p.id}>
+                  <td data-label="Members + you (1)" data-cult={p.id}>
                     <Tip label={`${poss(p)} leader and members`} content={() => (
                       <div className="pop-card"><b>{poss(p)} cult: {b.self + b.members}</b>
                         <span>{b.self} for {p.id === meId ? 'yourself' : 'the leader'} (everyone counts as 1), {b.members} from {p.id === meId ? 'your' : 'their'} {n} (the follower mark on each card)</span></div>

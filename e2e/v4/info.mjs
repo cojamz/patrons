@@ -416,7 +416,7 @@ try {
           if (again.moves === again.saved && JSON.stringify(again.byY) !== JSON.stringify(again.first)) fail(`(l) the chairs stand ${JSON.stringify(again.byY)}, the turn order is ${JSON.stringify(again.first)}`, step);
         }
         const mineSays = tops.turns.filter(t => t.mine).map(t => t.say), rivalSays = tops.turns.filter(t => !t.mine && t.say);
-        if (tops.playing && !tops.held && mineSays.length && (mineSays.length !== 1 || !/^(your turn(, then again| next| in \d+)?|done this round)$/.test(mineSays[0] || ''))) fail(`(l) your chair's turn words: ${JSON.stringify(tops.turns)}`, step);
+        if (tops.playing && !tops.held && mineSays.length && (mineSays.length !== 1 || !/^(two turns in a row|your turn( next| in \d+)?|done this round)$/.test(mineSays[0] || ''))) fail(`(l) your chair's turn words: ${JSON.stringify(tops.turns)}`, step);
         if (rivalSays.length > 1 || rivalSays.some(t => t.say !== 'next')) fail(`(l) rival chairs' turn words (want at most one "next"): ${JSON.stringify(tops.turns)}`, step);
       }
     }

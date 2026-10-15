@@ -50,7 +50,7 @@ export function sell(ctx, p, k, each, { fromAction = false, why = 'sold', by = n
 }
 
 // Why a sale finds nothing to sell (Cory: a skipped printed part says so in the log).
-const NOTHING_TO_SELL = 'no loose followers to sell (only followers you bought or won can be sold)';
+const NOTHING_TO_SELL = 'no followers to sell (only followers you bought or won can be sold)';
 function sellChoice(ctx, p, prompt, most, each, why) {
   const max = Math.min(most, sellable(p));
   if (max <= 0) { ctx.log(`${prompt.split(':')[0]}: ${p.name} has ${NOTHING_TO_SELL}.`); return; }
@@ -104,7 +104,7 @@ const trading = {
       },
     },
     {
-      key: 'sellhigh', ring: 2, name: 'Sell High', text: 'Sell up to 2 loose followers for 3 white each.',
+      key: 'sellhigh', ring: 2, name: 'Sell High', text: 'Sell up to 2 followers you bought or won, for 3 white each.',
       estimate: (ctx, p) => Math.min(SELL_HIGH.most, sellable(p)) * (SELL_HIGH.each - fv(ctx)) * (lastTurn(ctx, p) ? 0 : 1),
       resolve(ctx, p) {
         if (!sellable(p)) { ctx.log(`Sell High: ${p.name} has ${NOTHING_TO_SELL}.`); return; }
@@ -114,13 +114,13 @@ const trading = {
     {
       // Cory cut Barter (2026-10-14: "I don't like that"), which had replaced Cash In. Dividend fills the slot
       // (Claude, under go-with-your-gut): your loose followers pay out without being sold, so nothing leaves.
-      key: 'dividend', ring: 2, name: 'Dividend', text: '+1 white per loose follower you have.',
+      key: 'dividend', ring: 2, name: 'Dividend', text: '+1 white per follower you bought or won.',
       estimate: (ctx, p) => sellable(p),
       resolve(ctx, p) {
         const n = sellable(p);
-        if (!n) { ctx.log(`${p.name}'s Dividend: no loose followers yet (followers you bought or won).`); return; }
+        if (!n) { ctx.log(`${p.name}'s Dividend: no followers bought or won yet.`); return; }
         ctx.gain(p, W, n, { fromAction: true });
-        ctx.log(`${p.name}'s Dividend: +${n} white (${plural(n, 'loose follower')}).`);
+        ctx.log(`${p.name}'s Dividend: +${n} white (${plural(n, 'follower')} bought or won).`);
       },
     },
     {
@@ -168,7 +168,7 @@ const trading = {
     m('dealer', 'Dealer', 2, 0, 'Whenever you sell followers, +1 white each.', {
       onSell(ctx, owner, card, k) { ctx.gain(owner, W, k); },
     }),
-    m('pawnbroker', 'Pawnbroker', 2, 2, 'Once per round: sell 1 loose follower for 3 white.', {
+    m('pawnbroker', 'Pawnbroker', 2, 2, 'Once per round: sell 1 follower you bought or won, for 3 white.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -220,7 +220,7 @@ const trading = {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },
     }),
-    m('liquidator', 'Liquidator', 2, 1, `Once per game: sell up to ${LIQUIDATE.most} loose followers for ${LIQUIDATE.each} white each.`, {
+    m('liquidator', 'Liquidator', 2, 1, `Once per game: sell up to ${LIQUIDATE.most} followers you bought or won, for ${LIQUIDATE.each} white each.`, {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name}'s Liquidator: ${NOTHING_TO_SELL}.`); return; }

@@ -89,7 +89,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
           ))}
         </ul>
         <div className="re-totals" role="table" aria-label="Followers after this round">
-          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader" title="The rims' prizes this round (above)">Prizes</span><span role="columnheader" title="Followers gained this round otherwise: what new members are worth, followers bought, and followers won or lost during play (members' abilities, spaces, sales and raids), as the results count them">This round</span><span role="columnheader">Followers</span></div>
+          <div className="re-head" role="row"><span role="columnheader">By followers</span><span role="columnheader" title="The rims' prizes this round (above)">Prizes</span><span role="columnheader" title="Followers gained this round otherwise: what new members are worth, followers bought, and followers won or lost during play (members' abilities, spaces, sales and raids), as the results count them">This round</span><span role="columnheader">Followers</span></div>
           {ranked.map(p => {
             const now = followers(at, at.players[p.id]);
             const was = start && start.players[p.id] ? followers(start, start.players[p.id]) : now;
@@ -99,7 +99,8 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             // RC1 sweep 84: "+2 from members" (they hold 4) meant the members recruited this round; "+1 effects" had no source
             const play = g && g.effects ? `${g.effects > 0 ? '+' : '−'}${Math.abs(g.effects)}` : null;
             // short in the cell (w4b #30: it wrapped to three lines), whole in its hover, as the results' numbers open (w4b #10)
-            const why = g ? [...membersParts(g, true), g.bought && `+${g.bought} bought`, play && `${play} in play`].filter(Boolean).join(' · ') : '';
+            // "+2 in play" was jargon (blind testers, 2026-10-15): won or lost, in plain words; the sources are in its hover
+            const why = g ? [...membersParts(g, true), g.bought && `+${g.bought} bought`, play && `${play} ${g.effects > 0 ? 'won' : 'lost'}`].filter(Boolean).join(' · ') : '';
             const whyLong = g ? [...membersParts(g), g.bought && `+${g.bought} followers bought`, play && `${play} won or lost during play (members' abilities, spaces)`].filter(Boolean) : [];
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>

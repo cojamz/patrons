@@ -130,7 +130,9 @@ export function promptFor(state, mine) {
         // only a real second buy spends it (core.js boughtOnce): a pass keeps it for a later turn this round, and says so
         // (w3: the game-feel tester thought Big Spender fired twice)
         ? (pend.extra ? { who: p, text: `Buy again (${extraBuyer(state, p) || 'a second buy'})`, keepCase: false, sub: `Once a round: pass and ${extraBuyer(state, p) || 'it'} keeps it for a later turn${use ? `; or use ${use}` : ''}` }
-          : { who: p, text: 'Recruit or buy', sub: `A member from the shop, or followers${use ? `; or use ${use}` : ''}` })
+          // one line for one step (blind testers, 2026-10-15: headline, a subtitle saying it again and the step tabs):
+          // the headline says it all; the line under it only when there's another way out
+          : { who: p, text: 'Recruit a member or buy followers', ...(use ? { sub: `…or use ${use}` } : {}) })
         : { who: p, text: pend.extra ? `${name} buys again (${extraBuyer(state, p) || 'a second buy'})` : `${name} is shopping` };
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };
@@ -529,7 +531,8 @@ const sgn = n => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
 export function membersParts(g, short = false) {
   if (!g || !g.members && !g.lost) return [];
   // short: the summary's cell, so it stays a line or two (w4b #30: it wrapped to three); the long words go in its hover
-  const W = short ? { 'from new members': 'new members', 'from a swap': 'swapped', 'from swaps': 'swapped', 'from members that left': 'members lost' } : null;
+  // ("−1 members lost" read as a count of members, and whose? blind testers, 2026-10-15: it's followers, from members who left)
+  const W = short ? { 'from new members': 'new members', 'from a swap': 'swapped', 'from swaps': 'swapped', 'from members that left': 'from members who left' } : null;
   const say = t => (W && W[t]) || t;
   if (!g.left || (g.swapped && g.joined === g.left) || !g.joined) return g.members ? [`${sgn(g.members)} ${say(membersWhy(g))}`] : [];
   return [g.gained ? `${sgn(g.gained)} ${say('from new members')}` : null, g.lost ? `−${g.lost} ${say('from members that left')}` : null].filter(Boolean);

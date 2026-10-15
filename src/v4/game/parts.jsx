@@ -96,7 +96,7 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
       {turnOf && <TurnOf player={turnOf} />}
       {/* setup: the headline says "pick a starting resource (1 of 2)"; the panel says only which pick this is, not the
           same sentence again (RC1 sweep 24) */}
-      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `${watching ? `${watching.name} · pick` : 'Pick'} ${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] || 1} of 2` : pend.prompt}</p>
+      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `${watching ? `${watching.name} · pick` : 'Pick'} ${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] || 1} of 2` : <Rich text={pend.prompt} />}</p>
       {setup ? <><SetupTokens state={state} pend={pend} onPick={pick} busy={busy} /><ForSale state={state} /></>
         : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
       {!setup && left != null && Number(left) > 1 && (
@@ -141,7 +141,7 @@ function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
       {/* what has no place on the board (Pass, "All 3 as green", how many) stays a button here */}
       {pk.rest.length > 0 && (
         <div className="pick-rest">
-          {pk.rest.map(o => <button key={o.id} type="button" className="btn pick-rest-btn" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{o.label}</button>)}
+          {pk.rest.map(o => <button key={o.id} type="button" className="btn pick-rest-btn" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}><Rich text={o.label} /></button>)}
         </div>
       )}
       {/* the keyboard's way in: hidden until Tab lands on it, then the list opens under the caption */}
@@ -149,7 +149,7 @@ function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
       {keys && (
         <div className="pick-keys" role="group" aria-label="Pick from a list">
           {[...pk.where.values()].map(o => (
-            <button key={o.id} type="button" className="pick-key" data-key-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{pickName(state, o)}</button>
+            <button key={o.id} type="button" className="pick-key" data-key-option={o.id} disabled={busy} onClick={() => onPick(o.id)}><Rich text={pickName(state, o)} /></button>
           ))}
         </div>
       )}
