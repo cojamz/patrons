@@ -56,6 +56,7 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 46. **QA: tables market-echo stall** (port 5404).
 47. **Motion: choreography** (resumed motion agent, port 5370). Each move plays as a paced chain from source to destination, with a speed setting (Slow default, Normal, Fast) in the menu and click or Space to skip. Clips in design/eval/perf/.
 48. **Motion designer** (port 5414). Writes design/prototypes/motion/grammar.md, then reviews the engineer's clips in design/prototypes/motion/review.md.
+49. **Wave 2: frozen build w2** (8f93858, .v4-panel/w2 served on :5195 from .v4-wt/w2-8f93858). Two blind screen-only testers on brief v3 (tester-a :5521 and tester-b :5522, with EYES_MAX=2) write to design/eval/wave2/. A quiet remote verdict on the same sha runs in session_019tnx345a6krvbEnQpTpN54. Next: merge the two lists, triage into design/eval/overnight-wave2.md, and feed the design pod plus region fixes.
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).

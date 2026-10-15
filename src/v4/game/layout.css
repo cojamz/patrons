@@ -24,7 +24,8 @@
   /* the shop column: the follower buys first (four fixed offers, always whole: Cory, "too hidden"), then the members,
      the deck heading them like a card, three to a row; the member grid takes whatever height is left, so nothing in
      the column is ever cut off */
-  .app.game.lt > .lt-shop{grid-area:shop;align-self:stretch;overflow:hidden}
+  /* the column never clips: its grid shrinks to fit, and a lit card's or tile's glow at the column's edge stays whole */
+  .app.game.lt > .lt-shop{grid-area:shop;align-self:stretch;overflow:visible}
   .app.game.lt .lt-shop-cards{flex-direction:column;justify-content:flex-start;gap:20px;height:100%}
   .app.game.lt .lt-rates{flex:none;order:-1}
   .app.game.lt .lt-rates-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:52px;gap:8px}
