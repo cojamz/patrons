@@ -420,9 +420,9 @@ export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, ne
   const floored = rivalStep && (!sameNext || nextPlaces) ? floor : 0;
   // a rival's placement hands on at its hand-off (its last piece two-thirds along), even when its turn ends there
   // the turn passing to another player (panel r1: rival turns overlapped your own coins still flying, and each other):
-  // this turn plays out whole, closing breath and all, so every turn is its own beat (a gap on top of that broke the
-  // longest-wait budget, pacing.test.js)
-  if (plan.total && !sameNext) return Math.max(plan.total, floored);
+  // this turn's pieces all land before the next player's turn begins, so every turn is its own beat; only the closing
+  // breath overlaps the next minion's quiet departure (the wait budget, pacing.test.js H2, has no room for more)
+  if (plan.total && !sameNext) return Math.max(passes, floored);
   if (plan.total) return Math.max(sameNext || (placing && rivalStep) ? plan.handoff : passes, floored);
   return rivalStep ? (sameNext ? 0 : MO.passHold) : base;
 }

@@ -184,7 +184,7 @@ const TABLE = {
   turnCardFold: [500,  500],
   // the action stage (stage.js): the space taken flies out to the hub as a card, a member steps off its seat beside it,
   // what they give flows from there; when the chain ends the stage holds a moment, then each flies home
-  stageIn:     [160,   260],
+  stageIn:     [150,   180],
   stageHold:   [220,   420],
   stageOut:    [160,   240],
 };
