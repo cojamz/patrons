@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1270">
-<title>Language Plate</title>
+<title>Language Plate 1b</title>
 <style>
 @font-face{font-family:'AS';src:url(fonts/as-500.woff2) format('woff2');font-weight:500}
 @font-face{font-family:'AS';src:url(fonts/as-700.woff2) format('woff2');font-weight:700}
@@ -59,6 +59,12 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
 .cc .who{height:16px;display:flex;align-items:flex-end;justify-content:center}
 .cc.taken > .who{opacity:1}
 .cc .who svg{margin-bottom:-4px;filter:drop-shadow(0 2px 0 rgba(43,32,24,.25))}
+/* plate 1b: the action's picture */
+.cc .ico{height:20px;display:flex;align-items:flex-end;justify-content:center}
+.cc .ilead{display:flex;align-items:center;gap:8px}
+.cc .mark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);opacity:.16;z-index:0}
+.cc > *{position:relative;z-index:1}
+.cc > .mark{position:absolute;z-index:0}
 .cc.closed{color:var(--cream-2)}
 .cc.closed > *{opacity:.6}
 .cc.closed .cap,.cc.closed .fine{color:var(--cream-3)}
@@ -101,6 +107,7 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
 <script src="../pixel-art/icons-blue-white-green-purple.js"></script>
 <script src="../pixel-art/emojis.js"></script>
 <script src="../pixel-art/leaders.js"></script>
+<script src="icons-actions.js"></script>
 </head>
 <body>
 <!-- The ten primitives. Every glyph lives on a 16-unit grid; strokes are 2 units, ends round. -->
@@ -151,6 +158,17 @@ const bluePortrait = (id, size) => portrait(id, size);
 const portrait = (id, size) => { const i = memberIcon(id); return CultIcons.toSVG({ ...i, px: i.px || i.rows }, size, { title: false }).replace('<svg ', '<svg class="px" '); };
 const minion = (id, size) => CultMinions.toSVG(id, size, { title: false }).replace('<svg ', '<svg class="px" ');
 const leader = (id, accent, size) => CultLeaders.leaderSVG(id, accent, size).replace('<svg ', '<svg class="px" ');
+
+// ---------------------------------------------------------------- plate 1b: an action's picture, in one of three treatments
+const TREAT = (location.hash.match(/t=(\w+)/) || [, 'above'])[1];
+const actionPic = (id, size) => portrait(id, size);
+function cellHTML(s, t) {
+  const who = s.who ? `<div class="who">${minion(s.who, 32)}</div>` : '';
+  const fine = `<div class="fine">${s.fine}</div>`;
+  if (t === 'left') return `<div class="l ilead">${s.who ? minion(s.who, 32) : actionPic(s.icon, 24)}<span>${s.big}</span></div>${fine}`;
+  if (t === 'mark') return `<div class="mark">${actionPic(s.icon, 48)}</div>${who}<div class="l">${s.big}</div>${fine}`;
+  return `${who || `<div class="ico">${actionPic(s.icon, 24)}</div>`}<div class="l">${s.big}</div>${fine}`;
+}
 
 // ---------------------------------------------------------------- the wheel
 const C = { x: 344, y: 568 };
@@ -220,19 +238,19 @@ for (const q of QUADS) { const a = rad(q.a); svgEl('line', { x1: P(R.rim[0], a)[
 const GA = -135;
 const spaces = [
   // ring I (outer): three spaces, round I on
-  { ring: 'i', j: 0, k: 3, state: 'taken', who: 'frog', name: 'Kickback',
+  { ring: 'i', j: 0, k: 3, state: 'taken', who: 'frog', name: 'Kickback', icon: 'gold.jv',
     big: `${n('+3')}${dot('gold')}`, fine: `a rival gets ${n('1')}${dot('gold')}` },
-  { ring: 'i', j: 1, k: 3, state: 'open', name: 'Golden Years',
+  { ring: 'i', j: 1, k: 3, state: 'open', name: 'Golden Years', icon: 'gold.rush',
     big: `${n('+4')}${dot('gold')}`, fine: `<span class="dim">2</span>${op('·')}<span class="now">4</span>${op('·')}<span class="dim">6</span>${sp}by round` },
-  { ring: 'i', j: 2, k: 3, state: 'taken', who: 'cactus', name: 'Intro Offer',
+  { ring: 'i', j: 2, k: 3, state: 'taken', who: 'cactus', name: 'Intro Offer', icon: 'gold.discount',
     big: `${g('mem')}${n('−4')}`, fine: 'off your next member' },
   // ring II (middle): round II on
-  { ring: 'ii', j: 0, k: 2, state: 'lit', name: 'Collect Debts',
+  { ring: 'ii', j: 0, k: 2, state: 'lit', name: 'Collect Debts', icon: 'gold.steal',
     big: `${n('+3')}${dot('gold')}`, fine: 'up to 3, from rivals' },
-  { ring: 'ii', j: 1, k: 2, state: 'open', name: 'Tithe',
+  { ring: 'ii', j: 1, k: 2, state: 'open', name: 'Tithe', icon: 'gold.windfall',
     big: `${n('+1')}${dot('gold')}${op('/')}${g('mem')}`, fine: 'per member you have' },
   // ring III (center): opens in round III
-  { ring: 'iii', j: 0, k: 1, state: 'closed', name: 'Double Down',
+  { ring: 'iii', j: 0, k: 1, state: 'closed', name: 'Double Down', icon: 'gold.strike',
     big: `${n('×2')}${sp}${dot('gold')}`, fine: 'opens in round III' },
 ];
 const cellLayer = svgEl('g', {});
@@ -246,11 +264,10 @@ for (const s of spaces) {
     svgEl('path', { d: cellPath(r0, r1, a0, a1), fill: 'none', stroke: 'var(--light)', 'stroke-width': 2 }, cellLayer);
   }
   if (s.state === 'closed') { path.setAttribute('stroke', 'rgba(242,232,210,.22)'); path.setAttribute('stroke-width', 1); }
-  const am = (a0 + a1) / 2, rm = (r0 + r1) / 2;
+  const am = (a0 + a1) / 2, rm = (r0 + r1) / 2 + (s.ring === 'ii' ? 4 : 0);
   const [x, y] = P(rm, am);
   s.x = x; s.y = y; s.a0 = a0; s.a1 = a1;
-  const head = s.who ? `<div class="who">${minion(s.who, 32)}</div>` : `<div class="cap">${s.name}</div>`;
-  el(`${head}<div class="l">${s.big}</div><div class="fine">${s.fine}</div>`, `left:${x}px;top:${y}px`, `cc ${s.state}`);
+  el(cellHTML(s, TREAT), `left:${x}px;top:${y}px`, `cc ${s.state}`);
 }
 
 // ---------------------------------------------------------------- rim rule, laid out along the arc
@@ -394,7 +411,7 @@ shop.forEach((m, i) => {
 })();
 
 // ---------------------------------------------------------------- the alphabet (plate caption, not game UI)
-el(`<span class="cap" style="color:var(--cream-3)">Cults · visual language · plate 1</span><span class="s" style="color:var(--cream-3);margin-left:16px">Round II, your turn. You're pointing at Collect Debts; Prospector's card is open.</span>`, 'left:32px;top:24px', 'note');
+el(`<span class="cap" style="color:var(--cream-3)">Cults · visual language · plate 1b</span><span class="s" style="color:var(--cream-3);margin-left:16px">Round II, your turn. You're pointing at Collect Debts; Prospector's card is open.</span>`, 'left:32px;top:24px', 'note');
 el(`
   <span>${dot('gold')}${dot('red')}${dot('blue')}${dot('green')} resources</span>
   <span>${g('any')} any</span>

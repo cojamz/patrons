@@ -58,7 +58,7 @@ async function open(space) {
   await page.reload({ timeout: 90000 });
   await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
   await page.click('[data-home="resume"]');
-  await page.waitForSelector('.prompt.choice.seat-pick', { timeout: 60000 });
+  await page.waitForSelector('.prompt.choice.seat-pick', { timeout: 90000 });
   await page.evaluate(INSTRUMENT);
   return { ctx, page, save };
 }

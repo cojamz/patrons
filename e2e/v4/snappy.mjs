@@ -139,7 +139,7 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
     .map(e => { const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; }));
   const spaces = await centers('[data-slot] .base');
   const cards = await centers('.lt-shop [data-uid]');
-  const tips = await centers('.lt [data-tip]');
+  const tips = await centers('.lt [data-tip][role="button"]'); // a tip of its own (one inside a control shows its title)
   const targets = [...spaces.slice(0, 8), ...cards.slice(0, 6), ...tips.slice(0, 4)];
   // each arrival: away (the card closes), then onto the target, and wait for its card (up to 1.5s on a loaded box)
   const measure = async () => {
