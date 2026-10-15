@@ -10,6 +10,20 @@ const load = f => JSON.parse(readFileSync(f, 'utf8'));
 const P = load(flags.panel), S = flags.screen ? load(flags.screen) : { cards: [] };
 // --confirm: a panel centred on the proposed prices (grid proposed ±4); its fit replaces the main panel's extrapolation
 const CF = flags.confirm ? load(flags.confirm) : null;
+// --weights: per card, how many members of it the screen's players got in rounds I / II / III. The price is the
+// per-round fair price weighted by that natural timing (best-round would be optimistic, an even mix pessimistic).
+const W = flags.weights ? load(flags.weights) : null;
+function timed(c) {
+  const rs = Object.entries(c.byRound || {}).filter(([, b]) => b.n >= 100 && Number.isFinite(b.fair));
+  const w = W?.[c.id];
+  if (!w || !rs.length) return c;
+  const tot = rs.reduce((t, [r]) => t + w[r - 1], 0);
+  if (!tot) return c;
+  let f = 0, v = 0;
+  for (const [r, b] of rs) { const k = w[r - 1] / tot, se = (b.hi - b.lo) / 3.29; f += k * b.fair; v += (k * se) ** 2; }
+  const half = 1.645 * Math.sqrt(v);
+  return { ...c, bestFair: c.fair, fair: f, lo: f - half, hi: f + half, mix: rs.map(([r]) => Math.round((100 * w[r - 1]) / tot)) };
+}
 const sweeps = String(flags.sweeps || '').split(',').filter(Boolean).map(load);
 const defs = [...allQuadrantIds().flatMap(q => quadrant(q).members), ...guestMembers()];
 const h = x => (Number.isFinite(x) ? String(Math.round(x * 2) / 2) : '–');
@@ -26,9 +40,12 @@ function split(d, P) {
 const sw = {};
 for (const R of sweeps) for (const r of R.rows) (sw[r.id] ||= []).push({ ...r, n: r.per[0]?.n ?? 0, hard: R.hard || 0 });
 
-const MIN_N = 150, GAP = 2;
+const MIN_N = 150, GAP = 1.5;
+const ANCHORS = new Set(['red.volunteer']); // yardsticks: measured, never proposed
 // the ability's worth floor: a plain 1-follower member (Volunteer) in the same instrument
-const VOL = P.cards.find(x => x.id === 'red.volunteer')?.fair ?? 2;
+const VOL = timed(P.cards.find(x => x.id === 'red.volunteer')).fair;
+// --cross: direct crossings of the confirmation panel, with the share of probes that could pay each grid price
+const CX = flags.cross ? Object.fromEntries(load(flags.cross).map(x => [x.id, x])) : {};
 const roman = r => ['I', 'II', 'III'][r - 1];
 const lines = [], proposal = [], tally = { fair: 0, under: 0, over: 0, thin: 0, ability: 0 };
 for (const q of [...allQuadrantIds(), 'guests']) {
@@ -39,30 +56,35 @@ for (const q of [...allQuadrantIds(), 'guests']) {
     const c0 = P.cards.find(x => x.id === d.id), sc = S.cards.find(x => x.id === d.id), T = d.s + d.w;
     if (!c0) continue;
     const cf = CF?.cards.find(x => x.id === d.id && x.n >= 300 && CF.printed[x.id] !== T);
-    const c = cf ? { ...cf, mainFair: c0.fair, center: CF.printed[d.id] } : c0;
+    const c = timed(cf ? { ...cf, mainFair: timed(c0).fair, center: CF.printed[d.id] } : c0);
     const thin = c.n < MIN_N || !Number.isFinite(c.lo) || !Number.isFinite(c.hi);
     const covers = c.lo <= T && T <= c.hi, gap = c.fair - T;
     let verdict;
     if (thin) { verdict = 'too few probes to call'; tally.thin++; }
-    else if (covers || Math.abs(gap) < GAP) { verdict = 'fair as printed'; tally.fair++; }
+    else if (covers || Math.abs(gap) < GAP || even(c.fair) === T) { verdict = 'fair as printed'; tally.fair++; }
     else if (gap > 0) { verdict = `underpriced, raise to ${even(c.fair)}`; tally.under++; }
     else { verdict = `overpriced, cut to ${even(c.fair)}`; tally.over++; }
     const fl = [];
-    if (d.vanilla) fl.push('plain member: a yardstick, priced by Cory’s rule (old price)');
+    const plain = d.vanilla || /No effect\.$/.test(d.text || '');
+    // the probe is a private copy with its own id; this card's rule looks for itself by id, so the copy never fires it
+    if (d.id === 'echo.translator') fl.push('NOT MEASURED: its rule checks for Translator by id, which the probe copy lacks; the panel number is a floor');
+    if (plain) fl.push('plain member: a yardstick, priced by Cory’s rule (old price)');
     // the ability adds nothing: worth no more than a plain 1-follower member, with the CI agreeing
-    if (!thin && !d.vanilla && T > 0 && c.hi < VOL + 1.5 && c.fair <= VOL) fl.push(`NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~${h(VOL)}) in its best round`);
+    if (!thin && !plain && T > 0 && c.hi < VOL + 1.5 && c.fair <= VOL) fl.push(`NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~${h(VOL)}) when it's recruited`);
     // nobody wants it: under 3% of affordable offers recruited even at jittered prices, and the price is already above its worth
-    else if (!thin && !d.vanilla && !covers && sc && sc.buyRate < 0.03 && gap <= -GAP) fl.push('NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card');
+    else if (!thin && !d.vanilla && !covers && sc && sc.buyRate < 0.03 && gap <= -GAP && c.fair < 0.6 * T) fl.push('NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card');
     // so strong a price can't hold it: it would have to more than double
     if (!thin && c.lo > Math.max(2 * T, T + 6)) fl.push('NEEDS AN ABILITY CHANGE, NOT A PRICE: it would have to cost more than double');
+    const cx = CX[d.id], atC = cx?.grid.find(g => g[0] === cx.center);
+    if (!thin && atC && gap >= GAP && atC[1] < 0.3) fl.push(`NEEDS AN ABILITY CHANGE, NOT A PRICE: at ${cx.center} only ${Math.round(atC[1] * 100)}% of seats ever afford it (confirmation run), so a price that high just removes it; trim the ability and keep it cheap`);
     if (!thin && sc && sc.buyRate < 0.1 && gap >= GAP) fl.push(`bots under-recruit it (${Math.round(sc.buyRate * 100)}% of affordable offers): a bot-valuation gap too`);
     if (fl.some(f => f.startsWith('NEEDS'))) tally.ability++;
-    const prof = Object.entries(c.byRound || {}).map(([r, b]) => `${roman(+r)} ${h(b.fair)}`).join(' / ');
-    const conf = c.center ? `; confirmed on a grid around ${c.center} (main panel, extrapolated: ~${h(c.mainFair)})` : '';
+    const prof = Object.entries(c.byRound || {}).map(([r, b]) => `${roman(+r)} ${h(b.fair)}`).join(' / ') + (c.mix ? ` (recruited ${c.mix.join('/')}% by round in play)` : '');
+    const conf = c.center ? `; confirmed on a grid around ${c.center} (main panel, extrapolated: ~${h(c.mainFair)}${atC ? `; at ${c.center}: ${Math.round(atC[1] * 100)}% of seats could pay, paired Δ ${atC[2] > 0 ? '+' : ''}${atC[2]}` : ''})` : '';
     const extra = (sw[d.id] || []).map(r => `${r.hard ? `Hard seat` : 'single-card sweep'} ~${h(r.fair)} (${h(r.lo)}–${h(r.hi)}, ${r.n} seeds)`);
     const demand = sc && Number.isFinite(sc.buyRate) ? `recruited at ${Math.round(sc.buyRate * 100)}% of affordable offers (screen)` : '';
     lines.push(`- ${d.name} (${d.s}+${d.w}=${T}): fair ~${h(c.fair)} (90% ${h(c.lo)}–${h(c.hi)}, panel n=${c.n}${conf}; by round recruited ${prof}${extra.length ? '; ' + extra.join('; ') : ''}); ${demand}; ${verdict}${fl.length ? '. ' + fl.join('; ') : ''}`);
-    if (!thin && !covers && Math.abs(gap) >= GAP && !d.vanilla) {
+    if (verdict.startsWith('under') || verdict.startsWith('over') || fl.some(f => f.startsWith('NEEDS'))) if (!plain && !ANCHORS.has(d.id)) {
       const Pp = even(c.fair), [ps, pw] = split(d, Pp);
       proposal.push({ id: d.id, name: d.name, printed: [d.s, d.w], proposed: fl.some(f => f.startsWith('NEEDS')) ? [d.s, d.w] : [ps, pw], fair: +c.fair.toFixed(1), ci90: [+c.lo.toFixed(1), +c.hi.toFixed(1)],
         evidence: `panel (paired forced recruit, normal bots, random real tables): n=${c.n}, best recruited from round ${roman(c.bestRound)} (net ${c.net >= 0 ? '+' : ''}${c.net.toFixed(1)} followers of margin at printed), by round ${prof}${conf}${demand ? '; ' + demand : ''}${extra.length ? '; ' + extra.join('; ') : ''}`,

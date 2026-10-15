@@ -1,0 +1,1939 @@
+[
+ {
+  "id": "gold.midas",
+  "name": "Midas",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 1.3,
+  "ci90": [
+   -0.4,
+   3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1322, best recruited from round III (net -2.0 followers of margin at printed), by round I -2 / II 1 / III 3 (recruited 17/42/40% by round in play); recruited at 6% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": -1.9,
+   "2": 1,
+   "3": 3.1
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "gold.banker",
+  "name": "Banker",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 5.6,
+  "ci90": [
+   4.9,
+   6.3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1482, best recruited from round I (net +2.6 followers of margin at printed), by round I 7 / II 5.5 / III 4 (recruited 40/33/27% by round in play); recruited at 54% of affordable offers (screen); single-card sweep ~7.5 (6.5–8.5, 600 seeds)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 6.9,
+   "2": 5.4,
+   "3": 3.8
+  }
+ },
+ {
+  "id": "gold.taxman",
+  "name": "Tax Collector",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   6,
+   4
+  ],
+  "fair": 9.1,
+  "ci90": [
+   7.4,
+   10.9
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1014, best recruited from round I (net -0.4 followers of margin at printed), by round I 11.5 / II 7.5 / III 9.5 (recruited 31/45/24% by round in play); confirmed on a grid around 12 (main panel, extrapolated: ~10.5; at 12: 79% of seats could pay, paired Δ -0.84); recruited at 13% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 11.3,
+   "2": 7.3,
+   "3": 9.7
+  }
+ },
+ {
+  "id": "gold.merchant",
+  "name": "Merchant",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 4,
+  "ci90": [
+   2.8,
+   5.2
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1625, best recruited from round II (net +0.3 followers of margin at printed), by round I 5 / II 6.5 / III 0.5 (recruited 16/45/39% by round in play); recruited at 6% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 5.2,
+   "2": 6.5,
+   "3": 0.7
+  }
+ },
+ {
+  "id": "gold.thrift",
+  "name": "Thrift",
+  "printed": [
+   4,
+   0
+  ],
+  "proposed": [
+   6,
+   0
+  ],
+  "fair": 5.5,
+  "ci90": [
+   4.3,
+   6.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1544, best recruited from round II (net +2.1 followers of margin at printed), by round I 7 / II 7.5 / III 3 (recruited 12/48/40% by round in play); recruited at 6% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 7.1,
+   "2": 7.3,
+   "3": 2.9
+  },
+  "flags": [
+   "bots under-recruit it (6% of affordable offers): a bot-valuation gap too"
+  ]
+ },
+ {
+  "id": "gold.tinker",
+  "name": "Tinker",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   8,
+   4
+  ],
+  "fair": 11.1,
+  "ci90": [
+   9.4,
+   12.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1011, best recruited from round II (net +0.0 followers of margin at printed), by round I 10.5 / II 12 / III 10 (recruited 16/45/39% by round in play); confirmed on a grid around 12 (main panel, extrapolated: ~11; at 12: 67% of seats could pay, paired Δ -0.36); recruited at 6% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 10.5,
+   "2": 12,
+   "3": 10.2
+  },
+  "flags": [
+   "bots under-recruit it (6% of affordable offers): a bot-valuation gap too"
+  ]
+ },
+ {
+  "id": "gold.investor",
+  "name": "Investor",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 1.4,
+  "ci90": [
+   0.1,
+   2.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1613, best recruited from round III (net -1.7 followers of margin at printed), by round I 0 / II 1.5 / III 1.5 (recruited 14/47/40% by round in play); recruited at 7% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": -0.1,
+   "2": 1.7,
+   "3": 1.7
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "gold.speculator",
+  "name": "Speculator",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 6.3,
+  "ci90": [
+   5,
+   7.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1584, best recruited from round III (net +0.1 followers of margin at printed), by round I 5.5 / II 5 / III 8 (recruited 16/45/40% by round in play); recruited at 6% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 5.5,
+   "2": 5,
+   "3": 8.2
+  }
+ },
+ {
+  "id": "gold.seed",
+  "name": "Seed Money",
+  "printed": [
+   4,
+   0
+  ],
+  "proposed": [
+   6,
+   0
+  ],
+  "fair": 5.7,
+  "ci90": [
+   4.3,
+   7.1
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1616, best recruited from round I (net +1.0 followers of margin at printed), by round I 6.5 / II 5.5 / III 6 (recruited 4/41/55% by round in play); recruited at 18% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 6.6,
+   "2": 5.4,
+   "3": 5.9
+  }
+ },
+ {
+  "id": "gold.hustler",
+  "name": "Hustler",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 4.9,
+  "ci90": [
+   4.1,
+   5.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1625, best recruited from round I (net +3.9 followers of margin at printed), by round I 6.5 / II 5 / III 3 (recruited 25/44/31% by round in play); recruited at 14% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 6.4,
+   "2": 5.2,
+   "3": 3.1
+  }
+ },
+ {
+  "id": "red.proselytizer",
+  "name": "Proselytizer",
+  "printed": [
+   6,
+   6
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 8,
+  "ci90": [
+   6.6,
+   9.4
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1605, best recruited from round III (net -1.2 followers of margin at printed), by round I 4.5 / II 7.5 / III 9 (recruited 10/35/55% by round in play); recruited at 14% of affordable offers (screen); Hard seat ~8.5 (-4.5–13.5, 119 seeds)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 4.7,
+   "2": 7.3,
+   "3": 9.1
+  }
+ },
+ {
+  "id": "red.recruiter",
+  "name": "Recruiter",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 5.6,
+  "ci90": [
+   4.4,
+   6.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1551, best recruited from round I (net -0.4 followers of margin at printed), by round I 7.5 / II 5.5 / III 4.5 (recruited 24/46/31% by round in play); recruited at 17% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 7.3,
+   "2": 5.3,
+   "3": 4.7
+  }
+ },
+ {
+  "id": "red.crowd",
+  "name": "Crowd-Pleaser",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 4.1,
+  "ci90": [
+   3.1,
+   5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1611, best recruited from round I (net +2.0 followers of margin at printed), by round I 5 / II 4 / III 3 (recruited 36/33/31% by round in play); recruited at 30% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 5.1,
+   "2": 3.8,
+   "3": 3.1
+  }
+ },
+ {
+  "id": "purple.taskmaster",
+  "name": "Taskmaster",
+  "printed": [
+   6,
+   2
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 3.7,
+  "ci90": [
+   1.9,
+   5.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1186, best recruited from round I (net -1.5 followers of margin at printed), by round I 4 / II 3.5 / III 3.5 (recruited 2/39/58% by round in play); recruited at 5% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 4.2,
+   "2": 3.7,
+   "3": 3.7
+  }
+ },
+ {
+  "id": "purple.lateriser",
+  "name": "Late Riser",
+  "printed": [
+   6,
+   2
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 4.3,
+  "ci90": [
+   2.8,
+   5.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1200, best recruited from round II (net -1.2 followers of margin at printed), by round I 5.5 / II 5.5 / III 3 (recruited 4/41/55% by round in play); recruited at 4% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 5.6,
+   "2": 5.7,
+   "3": 3.1
+  }
+ },
+ {
+  "id": "purple.overseer",
+  "name": "Overseer",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   2,
+   0
+  ],
+  "fair": 3,
+  "ci90": [
+   1.4,
+   4.5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1180, best recruited from round III (net -0.9 followers of margin at printed), by round I 0 / II 3 / III 3.5 (recruited 12/52/35% by round in play); recruited at 8% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": -0.1,
+   "2": 3.2,
+   "3": 3.6
+  }
+ },
+ {
+  "id": "purple.doubletime",
+  "name": "Double Time",
+  "printed": [
+   6,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 3.8,
+  "ci90": [
+   2.1,
+   5.5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1208, best recruited from round I (net -1.9 followers of margin at printed), by round I 4.5 / II 4 / III 3.5 (recruited 0/12/88% by round in play); recruited at 0% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 4.5,
+   "2": 4,
+   "3": 3.7
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "purple.patience",
+  "name": "Patience",
+  "printed": [
+   6,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 4.7,
+  "ci90": [
+   2.7,
+   6.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1222, best recruited from round II (net -1.3 followers of margin at printed), by round I 4 / II 5 / III 4.5 (recruited 0/8/92% by round in play); recruited at 1% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 4.1,
+   "2": 4.8,
+   "3": 4.7
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "silver.guest",
+  "name": "Guest",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 6.2,
+  "ci90": [
+   5.1,
+   7.3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1572, best recruited from round I (net +0.1 followers of margin at printed), by round I 8 / II 5 / III 7 (recruited 19/48/33% by round in play); recruited at 8% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 8.2,
+   "2": 4.9,
+   "3": 6.8
+  }
+ },
+ {
+  "id": "silver.retinue",
+  "name": "Retinue",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   2,
+   2
+  ],
+  "fair": 0.3,
+  "ci90": [
+   -1,
+   1.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1613, best recruited from round III (net -0.9 followers of margin at printed), by round I -2.5 / II -2 / III 1.5 (recruited 10/28/62% by round in play); recruited at 1% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": -2.3,
+   "2": -1.9,
+   "3": 1.7
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "silver.revelers",
+  "name": "Revelers",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 3.2,
+  "ci90": [
+   1.7,
+   4.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1605, best recruited from round I (net -0.4 followers of margin at printed), by round I 5 / II 1.5 / III 4 (recruited 2/28/69% by round in play); recruited at 2% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 4.9,
+   "2": 1.5,
+   "3": 3.9
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "silver.spoon",
+  "name": "Silver Spoon",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   8,
+   4
+  ],
+  "fair": 11.9,
+  "ci90": [
+   10.1,
+   13.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1025, best recruited from round I (net -0.6 followers of margin at printed), by round I 12.5 / II 11.5 / III 12 (recruited 1/45/54% by round in play); confirmed on a grid around 14 (main panel, extrapolated: ~11.5; at 14: 75% of seats could pay, paired Δ -0.32); recruited at 23% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 12.4,
+   "2": 11.7,
+   "3": 12.1
+  }
+ },
+ {
+  "id": "silver.toastmaster",
+  "name": "Toastmaster",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 5.6,
+  "ci90": [
+   4.6,
+   6.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1675, best recruited from round I (net -0.8 followers of margin at printed), by round I 6.5 / II 5.5 / III 5 (recruited 19/48/33% by round in play); recruited at 8% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 6.7,
+   "2": 5.5,
+   "3": 5.1
+  }
+ },
+ {
+  "id": "silver.grandhost",
+  "name": "Grand Host",
+  "printed": [
+   8,
+   4
+  ],
+  "proposed": [
+   8,
+   2
+  ],
+  "fair": 10.1,
+  "ci90": [
+   8.3,
+   11.9
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1670, best recruited from round II (net -0.8 followers of margin at printed), by round I 9.5 / II 10.5 / III 10 (recruited 0/9/91% by round in play); recruited at 0% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 9.3,
+   "2": 10.3,
+   "3": 10
+  }
+ },
+ {
+  "id": "silver.saint",
+  "name": "Patron Saint",
+  "printed": [
+   8,
+   4
+  ],
+  "proposed": [
+   8,
+   4
+  ],
+  "fair": 6.6,
+  "ci90": [
+   5,
+   8.2
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1661, best recruited from round III (net -2.1 followers of margin at printed), by round I 6 / II 5 / III 6.5 (recruited 0/7/93% by round in play); recruited at 2% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 6.1,
+   "2": 5,
+   "3": 6.7
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "yellow.gardener",
+  "name": "Gardener",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 3.9,
+  "ci90": [
+   3,
+   4.9
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1127, best recruited from round III (net +1.1 followers of margin at printed), by round I 3 / II 4 / III 4.5 (recruited 29/36/34% by round in play); recruited at 21% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 3.2,
+   "2": 4.1,
+   "3": 4.3
+  }
+ },
+ {
+  "id": "yellow.peddler",
+  "name": "Peddler",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   6,
+   4
+  ],
+  "fair": 9.8,
+  "ci90": [
+   8.2,
+   11.4
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=720, best recruited from round I (net +0.2 followers of margin at printed), by round I 10.5 / II 10 / III 8.5 (recruited 39/31/30% by round in play); confirmed on a grid around 10 (main panel, extrapolated: ~6.5; at 10: 47% of seats could pay, paired Δ -0.77); recruited at 43% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 10.4,
+   "2": 10.2,
+   "3": 8.5
+  }
+ },
+ {
+  "id": "yellow.admirer",
+  "name": "Admirer",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 3.5,
+  "ci90": [
+   1.8,
+   5.3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1116, best recruited from round III (net -0.1 followers of margin at printed), by round I 5 / II 0.5 / III 6 (recruited 17/42/41% by round in play); recruited at 5% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 5.2,
+   "2": 0.6,
+   "3": 5.8
+  }
+ },
+ {
+  "id": "yellow.gobetween",
+  "name": "Go-Between",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 5.5,
+  "ci90": [
+   3.8,
+   7.3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1054, best recruited from round III (net -0.6 followers of margin at printed), by round I 5 / II 5 / III 6.5 (recruited 16/42/42% by round in play); recruited at 5% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 5.2,
+   "2": 4.8,
+   "3": 6.4
+  }
+ },
+ {
+  "id": "yellow.dyer",
+  "name": "Dyer",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 11,
+  "ci90": [
+   9.5,
+   12.5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=720, best recruited from round III (net +0.1 followers of margin at printed), by round I 10.5 / II 10 / III 12.5 (recruited 21/40/40% by round in play); confirmed on a grid around 12 (main panel, extrapolated: ~9; at 12: 13% of seats could pay, paired Δ -0.12); recruited at 5% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 10.6,
+   "2": 10,
+   "3": 12.3
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: at 12 only 13% of seats ever afford it (confirmation run), so a price that high just removes it; trim the ability and keep it cheap",
+   "bots under-recruit it (5% of affordable offers): a bot-valuation gap too"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "yellow.pilgrim",
+  "name": "Pilgrim",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 6.3,
+  "ci90": [
+   5,
+   7.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1103, best recruited from round III (net +1.2 followers of margin at printed), by round I 5 / II 6.5 / III 7 (recruited 24/32/44% by round in play); recruited at 27% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 5.1,
+   "2": 6.6,
+   "3": 6.9
+  }
+ },
+ {
+  "id": "yellow.farmer",
+  "name": "Farmer",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 3.4,
+  "ci90": [
+   1.7,
+   5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1160, best recruited from round I (net -0.3 followers of margin at printed), by round I 5.5 / II 2.5 / III 3 (recruited 21/38/42% by round in play); recruited at 5% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 5.3,
+   "2": 2.6,
+   "3": 3.1
+  }
+ },
+ {
+  "id": "yellow.weaver",
+  "name": "Weaver",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 7.5,
+  "ci90": [
+   6,
+   9
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1147, best recruited from round III (net +1.2 followers of margin at printed), by round I 4.5 / II 7 / III 9 (recruited 20/38/42% by round in play); recruited at 5% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 4.7,
+   "2": 7.2,
+   "3": 9.1
+  },
+  "flags": [
+   "bots under-recruit it (5% of affordable offers): a bot-valuation gap too"
+  ]
+ },
+ {
+  "id": "yellow.feastmaker",
+  "name": "Feastmaker",
+  "printed": [
+   6,
+   4
+  ],
+  "proposed": [
+   6,
+   4
+  ],
+  "fair": 17.1,
+  "ci90": [
+   15.2,
+   19
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=720, best recruited from round III (net +1.4 followers of margin at printed), by round I 16 / II 12.5 / III 19.5 (recruited 8/30/62% by round in play); confirmed on a grid around 16 (main panel, extrapolated: ~14; at 16: 9% of seats could pay, paired Δ +0.23); recruited at 4% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 16,
+   "2": 12.4,
+   "3": 19.6
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: at 16 only 9% of seats ever afford it (confirmation run), so a price that high just removes it; trim the ability and keep it cheap",
+   "bots under-recruit it (4% of affordable offers): a bot-valuation gap too"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "market.onlooker",
+  "name": "Onlooker",
+  "printed": [
+   6,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 7,
+  "ci90": [
+   5.4,
+   8.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1180, best recruited from round I (net -0.8 followers of margin at printed), by round I 8 / II 7 / III 7 (recruited 9/35/56% by round in play); recruited at 15% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 7.9,
+   "2": 6.8,
+   "3": 7
+  }
+ },
+ {
+  "id": "market.planner",
+  "name": "Planner",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 8.1,
+  "ci90": [
+   6.2,
+   9.9
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=741, best recruited from round III (net -0.4 followers of margin at printed), by round I 7 / II 8 / III 9 (recruited 34/39/27% by round in play); confirmed on a grid around 10 (main panel, extrapolated: ~7; at 10: 48% of seats could pay, paired Δ -1.08); recruited at 14% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 7.2,
+   "2": 8.1,
+   "3": 9.1
+  }
+ },
+ {
+  "id": "market.minimalist",
+  "name": "Minimalist",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 4,
+  "ci90": [
+   2.7,
+   5.3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1168, best recruited from round II (net +1.4 followers of margin at printed), by round I 4 / II 4.5 / III 3.5 (recruited 33/38/29% by round in play); recruited at 22% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 3.8,
+   "2": 4.7,
+   "3": 3.5
+  }
+ },
+ {
+  "id": "market.auctioneer",
+  "name": "Auctioneer",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 7.6,
+  "ci90": [
+   6.7,
+   8.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1172, best recruited from round I (net +3.4 followers of margin at printed), by round I 11 / II 7 / III 6 (recruited 20/45/35% by round in play); recruited at 12% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 10.9,
+   "2": 7.2,
+   "3": 6.2
+  }
+ },
+ {
+  "id": "market.patroness",
+  "name": "Patroness",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 5.4,
+  "ci90": [
+   3.6,
+   7.3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1148, best recruited from round III (net -0.1 followers of margin at printed), by round I 4 / II 3.5 / III 7.5 (recruited 17/40/43% by round in play); recruited at 16% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 4.2,
+   "2": 3.5,
+   "3": 7.7
+  }
+ },
+ {
+  "id": "market.blackmarket",
+  "name": "Black Market",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   2,
+   2
+  ],
+  "fair": 1.6,
+  "ci90": [
+   0,
+   3.3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1190, best recruited from round I (net -0.5 followers of margin at printed), by round I 3 / II 0.5 / III 1.5 (recruited 34/40/27% by round in play); recruited at 14% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 2.9,
+   "2": 0.6,
+   "3": 1.6
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "market.recluse",
+  "name": "Recluse",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 7.6,
+  "ci90": [
+   5.5,
+   9.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=733, best recruited from round III (net +0.1 followers of margin at printed), by round I 6 / II 3.5 / III 10 (recruited 12/33/55% by round in play); confirmed on a grid around 10 (main panel, extrapolated: ~9.5; at 10: 50% of seats could pay, paired Δ -0.91); recruited at 11% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 6.1,
+   "2": 3.7,
+   "3": 10.2
+  }
+ },
+ {
+  "id": "thieves.cutpurse",
+  "name": "Cutpurse",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 7.1,
+  "ci90": [
+   6.2,
+   7.9
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1295, best recruited from round II (net +2.4 followers of margin at printed), by round I 7 / II 7 / III 7 (recruited 40/33/27% by round in play); recruited at 61% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 7,
+   "2": 7.2,
+   "3": 7
+  }
+ },
+ {
+  "id": "thieves.mole",
+  "name": "Mole",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 7.6,
+  "ci90": [
+   6.5,
+   8.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1355, best recruited from round II (net +3.0 followers of margin at printed), by round I 6.5 / II 9 / III 7 (recruited 35/38/27% by round in play); recruited at 61% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 6.7,
+   "2": 8.8,
+   "3": 7
+  }
+ },
+ {
+  "id": "thieves.grifter",
+  "name": "Grifter",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 11.6,
+  "ci90": [
+   10.1,
+   13.2
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=884, best recruited from round I (net +0.3 followers of margin at printed), by round I 12.5 / II 9.5 / III 12.5 (recruited 4/30/66% by round in play); confirmed on a grid around 12 (main panel, extrapolated: ~11.5; at 12: 20% of seats could pay, paired Δ +0.57); recruited at 31% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 12.7,
+   "2": 9.4,
+   "3": 12.6
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: at 12 only 20% of seats ever afford it (confirmation run), so a price that high just removes it; trim the ability and keep it cheap"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "thieves.sticky",
+  "name": "Sticky Fingers",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 6.5,
+  "ci90": [
+   5.1,
+   7.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1331, best recruited from round I (net +0.5 followers of margin at printed), by round I 9 / II 6 / III 6.5 (recruited 6/36/58% by round in play); recruited at 20% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 9.2,
+   "2": 6.1,
+   "3": 6.4
+  }
+ },
+ {
+  "id": "thieves.desperado",
+  "name": "Desperado",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 6.9,
+  "ci90": [
+   5.4,
+   8.4
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=882, best recruited from round II (net -0.9 followers of margin at printed), by round I 7.5 / II 7.5 / III 5 (recruited 36/36/28% by round in play); confirmed on a grid around 10 (main panel, extrapolated: ~7.5; at 10: 43% of seats could pay, paired Δ -1.48); recruited at 40% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 7.7,
+   "2": 7.7,
+   "3": 4.8
+  }
+ },
+ {
+  "id": "thieves.robinhood",
+  "name": "Robin Hood",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 7.5,
+  "ci90": [
+   6.6,
+   8.5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1341, best recruited from round II (net +2.8 followers of margin at printed), by round I 6.5 / II 8.5 / III 8 (recruited 34/38/28% by round in play); recruited at 41% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 6.3,
+   "2": 8.3,
+   "3": 7.9
+  }
+ },
+ {
+  "id": "thieves.lookout",
+  "name": "Lookout",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 7.7,
+  "ci90": [
+   6.4,
+   9
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1279, best recruited from round I (net +2.0 followers of margin at printed), by round I 10 / II 8 / III 6.5 (recruited 10/42/47% by round in play); recruited at 26% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 10.1,
+   "2": 8.2,
+   "3": 6.7
+  }
+ },
+ {
+  "id": "thieves.extortionist",
+  "name": "Extortionist",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 8.3,
+  "ci90": [
+   7.6,
+   9.1
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1301, best recruited from round III (net +2.0 followers of margin at printed), by round I 7.5 / II 8 / III 9 (recruited 14/39/48% by round in play); recruited at 26% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 7.4,
+   "2": 8.1,
+   "3": 8.8
+  }
+ },
+ {
+  "id": "thieves.watchdog",
+  "name": "Watchdog",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 7.9,
+  "ci90": [
+   6.6,
+   9.2
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1317, best recruited from round II (net +1.5 followers of margin at printed), by round I 9 / II 9 / III 6 (recruited 18/46/35% by round in play); recruited at 27% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 8.8,
+   "2": 9.1,
+   "3": 5.8
+  }
+ },
+ {
+  "id": "thieves.doubleagent",
+  "name": "Double Agent",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 8.5,
+  "ci90": [
+   7,
+   10
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1290, best recruited from round III (net +1.3 followers of margin at printed), by round I 6.5 / II 6 / III 9 (recruited 2/20/78% by round in play); recruited at 8% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 6.3,
+   "2": 6.2,
+   "3": 9.2
+  },
+  "flags": [
+   "bots under-recruit it (8% of affordable offers): a bot-valuation gap too"
+  ]
+ },
+ {
+  "id": "thieves.kingpin",
+  "name": "Kingpin",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   2,
+   0
+  ],
+  "fair": 7.3,
+  "ci90": [
+   5.8,
+   8.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=883, best recruited from round III (net -0.0 followers of margin at printed), by round I 6.5 / II 7.5 / III 8 (recruited 38/32/30% by round in play); confirmed on a grid around 8 (main panel, extrapolated: ~6.5; at 8: 23% of seats could pay, paired Δ +1); recruited at 32% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 6.5,
+   "2": 7.7,
+   "3": 7.9
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: at 8 only 23% of seats ever afford it (confirmation run), so a price that high just removes it; trim the ability and keep it cheap"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "trading.shopkeeper",
+  "name": "Shopkeeper",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 5.7,
+  "ci90": [
+   4.8,
+   6.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1174, best recruited from round II (net +2.1 followers of margin at printed), by round I 6.5 / II 7 / III 3.5 (recruited 36/34/30% by round in play); recruited at 47% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 6.4,
+   "2": 6.8,
+   "3": 3.6
+  }
+ },
+ {
+  "id": "trading.dealer",
+  "name": "Dealer",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   2,
+   0
+  ],
+  "fair": 2.4,
+  "ci90": [
+   1.3,
+   3.5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1163, best recruited from round III (net +0.4 followers of margin at printed), by round I 2 / II 2.5 / III 3 (recruited 20/44/36% by round in play); recruited at 14% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 1.8,
+   "2": 2.3,
+   "3": 2.8
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "trading.tipster",
+  "name": "Tipster",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   8,
+   2
+  ],
+  "fair": 10.9,
+  "ci90": [
+   8.9,
+   13
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=572, best recruited from round III (net -0.5 followers of margin at printed), by round I 11.5 / II 10 / III 12.5 (recruited 13/54/34% by round in play); confirmed on a grid around 14 (main panel, extrapolated: ~10; at 14: 41% of seats could pay, paired Δ -1.42); recruited at 7% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 11.3,
+   "2": 9.8,
+   "3": 12.7
+  },
+  "flags": [
+   "bots under-recruit it (7% of affordable offers): a bot-valuation gap too"
+  ]
+ },
+ {
+  "id": "trading.lender",
+  "name": "Lender",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   8,
+   0
+  ],
+  "fair": 8.8,
+  "ci90": [
+   6.8,
+   10.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=584, best recruited from round I (net +0.9 followers of margin at printed), by round I 12 / II 6.5 / III 8.5 (recruited 19/24/57% by round in play); confirmed on a grid around 10 (main panel, extrapolated: ~6; at 10: 34% of seats could pay, paired Δ -1.09); recruited at 49% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 12.1,
+   "2": 6.4,
+   "3": 8.7
+  }
+ },
+ {
+  "id": "trading.magnate",
+  "name": "Magnate",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 3.7,
+  "ci90": [
+   1.7,
+   5.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1198, best recruited from round III (net -1.2 followers of margin at printed), by round I -0.5 / II -1.5 / III 5 (recruited 0/19/81% by round in play); recruited at 1% of affordable offers (screen); Hard seat ~2 (-1.5–4.5, 119 seeds)",
+  "bestRound": 3,
+  "byRound": {
+   "1": -0.6,
+   "2": -1.7,
+   "3": 5.1
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "trading.heiress",
+  "name": "Heiress",
+  "printed": [
+   6,
+   4
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 7.8,
+  "ci90": [
+   6.2,
+   9.4
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1195, best recruited from round III (net -0.1 followers of margin at printed), by round I 5.5 / II 5 / III 9.5 (recruited 4/35/60% by round in play); recruited at 4% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 5.3,
+   "2": 4.9,
+   "3": 9.7
+  }
+ },
+ {
+  "id": "trading.exporter",
+  "name": "Exporter",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 1.7,
+  "ci90": [
+   -0.1,
+   3.4
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1174, best recruited from round I (net -0.9 followers of margin at printed), by round I 5.5 / II -2 / III 5 (recruited 10/49/40% by round in play); recruited at 6% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 5.7,
+   "2": -1.9,
+   "3": 5
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "trading.liquidator",
+  "name": "Liquidator",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 3.9,
+  "ci90": [
+   2.5,
+   5.4
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1207, best recruited from round II (net -0.7 followers of margin at printed), by round I 2 / II 4.5 / III 3.5 (recruited 13/52/35% by round in play); recruited at 7% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 2.2,
+   "2": 4.7,
+   "3": 3.4
+  }
+ },
+ {
+  "id": "trading.raider",
+  "name": "Raider",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   2,
+   0
+  ],
+  "fair": 2.3,
+  "ci90": [
+   1,
+   3.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1223, best recruited from round I (net +0.6 followers of margin at printed), by round I 3.5 / II 2.5 / III 1.5 (recruited 22/42/37% by round in play); recruited at 14% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 3.4,
+   "2": 2.5,
+   "3": 1.6
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "echo.evergreen",
+  "name": "Evergreen",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 6.5,
+  "ci90": [
+   5.7,
+   7.3
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1173, best recruited from round II (net +3.6 followers of margin at printed), by round I 7.5 / II 8 / III 3.5 (recruited 39/32/29% by round in play); recruited at 59% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 7.7,
+   "2": 7.8,
+   "3": 3.6
+  }
+ },
+ {
+  "id": "echo.choir",
+  "name": "Choir",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": -0.4,
+  "ci90": [
+   -2.3,
+   1.5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1203, best recruited from round I (net -1.1 followers of margin at printed), by round I 3.5 / II -2 / III 0 (recruited 0/19/81% by round in play); recruited at 0% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 3.3,
+   "2": -1.8,
+   "3": -0.1
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "echo.muse",
+  "name": "Muse",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   2,
+   2
+  ],
+  "fair": 1.8,
+  "ci90": [
+   0.3,
+   3.2
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1177, best recruited from round II (net +0.0 followers of margin at printed), by round I 1 / II 4 / III 1 (recruited 5/28/67% by round in play); recruited at 1% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 1,
+   "2": 4.1,
+   "3": 0.9
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "echo.groupie",
+  "name": "Groupie",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   4
+  ],
+  "fair": 1.8,
+  "ci90": [
+   0.3,
+   3.4
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1226, best recruited from round I (net -1.2 followers of margin at printed), by round I 5 / II 0 / III 2.5 (recruited 14/42/44% by round in play); recruited at 6% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 4.9,
+   "2": -0.1,
+   "3": 2.7
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "echo.translator",
+  "name": "Translator",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 3.6,
+  "ci90": [
+   1.3,
+   5.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1202, best recruited from round III (net -0.8 followers of margin at printed), by round I 2.5 / II 1 / III 4 (recruited 0/13/87% by round in play); recruited at 0% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 2.3,
+   "2": 0.8,
+   "3": 4
+  },
+  "flags": [
+   "NOT MEASURED: its rule checks for Translator by id, which the probe copy lacks; the panel number is a floor",
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "echo.tuningfork",
+  "name": "Tuning Fork",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   2,
+   2
+  ],
+  "fair": 0.4,
+  "ci90": [
+   -0.9,
+   1.7
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1221, best recruited from round I (net -0.8 followers of margin at printed), by round I 2.5 / II -0.5 / III 0.5 (recruited 9/29/62% by round in play); recruited at 1% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 2.7,
+   "2": -0.6,
+   "3": 0.6
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "echo.wallflower",
+  "name": "Wallflower",
+  "printed": [
+   2,
+   2
+  ],
+  "proposed": [
+   2,
+   2
+  ],
+  "fair": 0,
+  "ci90": [
+   -1.4,
+   1.4
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1190, best recruited from round I (net -1.7 followers of margin at printed), by round I 1.5 / II 0.5 / III -0.5 (recruited 7/27/66% by round in play); recruited at 1% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 1.4,
+   "2": 0.6,
+   "3": -0.4
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "echo.mirror",
+  "name": "Mirror",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 8.1,
+  "ci90": [
+   6.4,
+   9.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1192, best recruited from round III (net +1.4 followers of margin at printed), by round I 6.5 / II 5 / III 9.5 (recruited 1/27/72% by round in play); recruited at 16% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 6.7,
+   "2": 4.8,
+   "3": 9.4
+  }
+ },
+ {
+  "id": "echo.afterimage",
+  "name": "Afterimage",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   6,
+   2
+  ],
+  "fair": 8.1,
+  "ci90": [
+   7.1,
+   9.1
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1215, best recruited from round I (net +2.1 followers of margin at printed), by round I 9 / II 7.5 / III 9 (recruited 8/54/38% by round in play); recruited at 26% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 8.9,
+   "2": 7.5,
+   "3": 8.8
+  }
+ },
+ {
+  "id": "echo.dejavu",
+  "name": "Déjà Vu",
+  "printed": [
+   8,
+   4
+  ],
+  "proposed": [
+   10,
+   4
+  ],
+  "fair": 14.6,
+  "ci90": [
+   13.3,
+   16
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1234, best recruited from round II (net +1.9 followers of margin at printed), by round I 14 / II 15 / III 14.5 (recruited 2/30/68% by round in play); recruited at 4% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 14.2,
+   "2": 15,
+   "3": 14.4
+  },
+  "flags": [
+   "bots under-recruit it (4% of affordable offers): a bot-valuation gap too"
+  ]
+ },
+ {
+  "id": "echo.chronicler",
+  "name": "Chronicler",
+  "printed": [
+   4,
+   4
+  ],
+  "proposed": [
+   4,
+   2
+  ],
+  "fair": 5.7,
+  "ci90": [
+   3.7,
+   7.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=1192, best recruited from round III (net -0.8 followers of margin at printed), by round I 3.5 / II 4 / III 6 (recruited 0/12/87% by round in play); recruited at 2% of affordable offers (screen)",
+  "bestRound": 3,
+  "byRound": {
+   "1": 3.3,
+   "2": 3.8,
+   "3": 6
+  }
+ },
+ {
+  "id": "benders.squatter",
+  "name": "Squatter",
+  "printed": [
+   6,
+   2
+  ],
+  "proposed": [
+   6,
+   0
+  ],
+  "fair": 5.9,
+  "ci90": [
+   5.1,
+   6.6
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=3848, best recruited from round I (net -0.6 followers of margin at printed), by round I 6.5 / II 5.5 / III 6 (recruited 19/42/39% by round in play); recruited at 12% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 6.4,
+   "2": 5.6,
+   "3": 5.9
+  }
+ },
+ {
+  "id": "benders.insider",
+  "name": "Insider",
+  "printed": [
+   4,
+   2
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 3,
+  "ci90": [
+   2.3,
+   3.8
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=3944, best recruited from round II (net -1.0 followers of margin at printed), by round I 3 / II 3.5 / III 2.5 (recruited 25/44/31% by round in play); recruited at 11% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 2.9,
+   "2": 3.5,
+   "3": 2.4
+  }
+ },
+ {
+  "id": "benders.frontrunner",
+  "name": "Front-runner",
+  "printed": [
+   2,
+   0
+  ],
+  "proposed": [
+   2,
+   0
+  ],
+  "fair": 0.8,
+  "ci90": [
+   0.1,
+   1.5
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=3912, best recruited from round I (net +0.3 followers of margin at printed), by round I 2.5 / II 0 / III 0 (recruited 36/34/30% by round in play); recruited at 26% of affordable offers (screen)",
+  "bestRound": 1,
+  "byRound": {
+   "1": 2.6,
+   "2": -0.1,
+   "3": -0.2
+  },
+  "flags": [
+   "NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~2.5) when it's recruited"
+  ],
+  "note": "proposed = printed: fix the ability first, then re-price"
+ },
+ {
+  "id": "benders.straggler",
+  "name": "Straggler",
+  "printed": [
+   6,
+   2
+  ],
+  "proposed": [
+   4,
+   0
+  ],
+  "fair": 4.3,
+  "ci90": [
+   3.4,
+   5.1
+  ],
+  "evidence": "panel (paired forced recruit, normal bots, random real tables): n=3919, best recruited from round II (net -0.5 followers of margin at printed), by round I 5.5 / II 6.5 / III 1 (recruited 17/43/39% by round in play); recruited at 8% of affordable offers (screen)",
+  "bestRound": 2,
+  "byRound": {
+   "1": 5.3,
+   "2": 6.7,
+   "3": 1.1
+  }
+ }
+]

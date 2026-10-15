@@ -1,0 +1,6979 @@
+{
+ "mode": "panel",
+ "seeds": 500,
+ "K": 12,
+ "deltas": [
+  -4,
+  0,
+  4
+ ],
+ "fromSeed": 10000,
+ "rounds": [
+  1,
+  2,
+  3
+ ],
+ "only": [
+  "gold.taxman",
+  "gold.tinker",
+  "purple.errand",
+  "silver.spoon",
+  "yellow.peddler",
+  "yellow.dyer",
+  "yellow.feastmaker",
+  "market.planner",
+  "market.recluse",
+  "thieves.grifter",
+  "thieves.desperado",
+  "thieves.kingpin",
+  "trading.tipster",
+  "trading.lender"
+ ],
+ "printed": {
+  "gold.midas": 8,
+  "gold.banker": 4,
+  "gold.prospector": 4,
+  "gold.taxman": 12,
+  "gold.merchant": 6,
+  "gold.thrift": 4,
+  "gold.coinpurse": 4,
+  "gold.underdog": 6,
+  "gold.tinker": 12,
+  "gold.investor": 6,
+  "gold.jackpot": 10,
+  "gold.speculator": 8,
+  "gold.tycoon": 12,
+  "gold.seed": 4,
+  "gold.hustler": 2,
+  "red.twins": 2,
+  "red.bigfamily": 4,
+  "red.volunteer": 0,
+  "red.intern": 1,
+  "red.mentor": 10,
+  "red.proselytizer": 12,
+  "red.mob": 8,
+  "red.recruiter": 8,
+  "red.drive": 4,
+  "red.host": 6,
+  "red.sponsor": 10,
+  "red.crowd": 2,
+  "red.doppel": 6,
+  "red.patriarch": 10,
+  "red.reserve": 1,
+  "blue.recruit": 1,
+  "blue.hand": 2,
+  "blue.helper": 2,
+  "blue.regular": 3,
+  "blue.devotee": 4,
+  "blue.elder": 4,
+  "blue.pillar": 6,
+  "blue.patron": 6,
+  "green.recruit": 1,
+  "green.hand": 2,
+  "green.helper": 2,
+  "green.regular": 3,
+  "green.devotee": 4,
+  "green.elder": 4,
+  "green.pillar": 6,
+  "green.patron": 6,
+  "purple.secondwind": 12,
+  "purple.errand": 14,
+  "purple.taskmaster": 8,
+  "purple.lateriser": 8,
+  "purple.foreman": 6,
+  "purple.courier": 6,
+  "purple.apprentice": 4,
+  "purple.overseer": 6,
+  "purple.doubletime": 8,
+  "purple.bookkeeper": 6,
+  "purple.clockmaker": 4,
+  "purple.lamplighter": 8,
+  "purple.patience": 8,
+  "purple.crew": 2,
+  "silver.guest": 8,
+  "silver.benefactor": 6,
+  "silver.caterer": 4,
+  "silver.majordomo": 6,
+  "silver.silversmith": 6,
+  "silver.steward": 4,
+  "silver.retinue": 4,
+  "silver.revelers": 6,
+  "silver.heir": 8,
+  "silver.spoon": 14,
+  "silver.toastmaster": 8,
+  "silver.gala": 8,
+  "silver.dowager": 4,
+  "silver.grandhost": 12,
+  "silver.saint": 12,
+  "yellow.gardener": 2,
+  "yellow.peddler": 10,
+  "yellow.gleaner": 10,
+  "yellow.admirer": 6,
+  "yellow.gobetween": 8,
+  "yellow.dyer": 12,
+  "yellow.latebloomer": 4,
+  "yellow.sower": 4,
+  "yellow.harmonist": 8,
+  "yellow.rainmaker": 6,
+  "yellow.pilgrim": 4,
+  "yellow.farmer": 6,
+  "yellow.weaver": 6,
+  "yellow.explorer": 8,
+  "yellow.feastmaker": 16,
+  "market.stylist": 4,
+  "market.onlooker": 10,
+  "market.connoisseur": 4,
+  "market.reseller": 12,
+  "market.curator": 4,
+  "market.planner": 10,
+  "market.underbidder": 2,
+  "market.minimalist": 2,
+  "market.climber": 2,
+  "market.auctioneer": 6,
+  "market.sommelier": 4,
+  "market.patroness": 8,
+  "market.blackmarket": 4,
+  "market.snob": 10,
+  "market.recluse": 10,
+  "thieves.cutpurse": 4,
+  "thieves.mole": 4,
+  "thieves.accomplice": 8,
+  "thieves.grifter": 12,
+  "thieves.sticky": 8,
+  "thieves.desperado": 10,
+  "thieves.robinhood": 4,
+  "thieves.lookout": 6,
+  "thieves.lightfingers": 8,
+  "thieves.extortionist": 6,
+  "thieves.watchdog": 6,
+  "thieves.crew": 2,
+  "thieves.doubleagent": 6,
+  "thieves.bigscore": 4,
+  "thieves.kingpin": 8,
+  "trading.shopkeeper": 4,
+  "trading.dealer": 2,
+  "trading.pawnbroker": 4,
+  "trading.safetynet": 2,
+  "trading.tipster": 14,
+  "trading.lender": 10,
+  "trading.magnate": 8,
+  "trading.shareholder": 3,
+  "trading.heiress": 10,
+  "trading.bulkbuyer": 6,
+  "trading.broker": 2,
+  "trading.exporter": 8,
+  "trading.liquidator": 6,
+  "trading.reinvestor": 4,
+  "trading.raider": 2,
+  "echo.evergreen": 4,
+  "echo.choir": 6,
+  "echo.muse": 4,
+  "echo.understudy": 6,
+  "echo.ensemble": 4,
+  "echo.groupie": 8,
+  "echo.translator": 6,
+  "echo.tuningfork": 4,
+  "echo.wallflower": 4,
+  "echo.keepsake": 6,
+  "echo.mirror": 6,
+  "echo.afterimage": 6,
+  "echo.hourglass": 10,
+  "echo.dejavu": 12,
+  "echo.chronicler": 8,
+  "benders.squatter": 8,
+  "benders.bigspender": 4,
+  "benders.freelancer": 4,
+  "benders.insider": 6,
+  "benders.extrahand": 10,
+  "benders.frontrunner": 2,
+  "benders.straggler": 8
+ },
+ "secs": 1565.692,
+ "slope": [
+  -0.21263567411500492,
+  -0.17898732270073317,
+  -0.08305177322749305
+ ],
+ "rows": 10793,
+ "cards": [
+  {
+   "id": "gold.midas",
+   "name": "Midas",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.banker",
+   "name": "Banker",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.prospector",
+   "name": "Prospector",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.taxman",
+   "name": "Tax Collector",
+   "printed": 12,
+   "n": 1014,
+   "byRound": {
+    "1": {
+     "n": 378,
+     "net": -0.35149531210938534,
+     "netLo": -1.5829964108868904,
+     "netHi": 0.8141532638196275,
+     "fair": 11.264423460112837,
+     "lo": 8.389981132284415,
+     "hi": 13.766097152824909
+    },
+    "2": {
+     "n": 312,
+     "net": -2.0706434967019285,
+     "netLo": -3.321862128890377,
+     "netHi": -0.7674679722206834,
+     "fair": 7.338506493468218,
+     "lo": 3.9058865631716824,
+     "hi": 10.30828398641558
+    },
+    "3": {
+     "n": 324,
+     "net": -0.9090127163720728,
+     "netLo": -1.8479986954772132,
+     "netHi": 0.30707804096999,
+     "fair": 9.727468209069817,
+     "lo": 7.538224504145333,
+     "hi": 12.767695102424975
+    }
+   },
+   "bestRound": 1,
+   "boughtShare": 0.7633136094674556,
+   "meanRound": 2.520671834625323,
+   "net": -0.35149531210938534,
+   "netOwn": -0.1456848782183451,
+   "slope": -0.4778500850004067,
+   "fair": 11.264423460112837,
+   "lo": 9.887703673368723,
+   "hi": 13.83273098015718,
+   "se": 1.2479210636672238
+  },
+  {
+   "id": "gold.merchant",
+   "name": "Merchant",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.thrift",
+   "name": "Thrift",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.coinpurse",
+   "name": "Coin Purse",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.underdog",
+   "name": "Underdog",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.tinker",
+   "name": "Tinker",
+   "printed": 12,
+   "n": 1011,
+   "byRound": {
+    "1": {
+     "n": 377,
+     "net": -0.7956012952986619,
+     "netLo": -1.9131109899303025,
+     "netHi": 0.37173885385684663,
+     "fair": 10.477666029195664,
+     "lo": 8.066543447113878,
+     "hi": 12.559362514422723
+    },
+    "2": {
+     "n": 319,
+     "net": 0.011598286303521709,
+     "netLo": -1.1946102562974228,
+     "netHi": 1.373350047107283,
+     "fair": 12.023719780316494,
+     "lo": 9.538941743377045,
+     "hi": 15.003471500332289
+    },
+    "3": {
+     "n": 315,
+     "net": -0.7390004746285163,
+     "netLo": -1.7887793888787893,
+     "netHi": 0.3852805907148009,
+     "fair": 10.152498813428709,
+     "lo": 7.80229748137057,
+     "hi": 12.922518084774303
+    }
+   },
+   "bestRound": 2,
+   "boughtShare": 0.6646884272997032,
+   "meanRound": 2.6235119047619047,
+   "net": 0.011598286303521709,
+   "netOwn": -0.34096958936168936,
+   "slope": -0.4889710675548127,
+   "fair": 12.023719780316494,
+   "lo": 10.517166885265114,
+   "hi": 15.003471500332289,
+   "se": 1.336461815459013
+  },
+  {
+   "id": "gold.investor",
+   "name": "Investor",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.jackpot",
+   "name": "Jackpot",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.speculator",
+   "name": "Speculator",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.tycoon",
+   "name": "Tycoon",
+   "printed": 12,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.seed",
+   "name": "Seed Money",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "gold.hustler",
+   "name": "Hustler",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.twins",
+   "name": "Twins",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.bigfamily",
+   "name": "Big Family",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.volunteer",
+   "name": "Volunteer",
+   "printed": 0,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 0,
+     "lo": 0,
+     "hi": 0
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.intern",
+   "name": "Intern",
+   "printed": 1,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.mentor",
+   "name": "Mentor & Protégé",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.proselytizer",
+   "name": "Proselytizer",
+   "printed": 12,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.mob",
+   "name": "Mob",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.recruiter",
+   "name": "Recruiter",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.drive",
+   "name": "Recruiting Drive",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.host",
+   "name": "Host",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.sponsor",
+   "name": "Sponsor",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.crowd",
+   "name": "Crowd-Pleaser",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.doppel",
+   "name": "Doppelganger",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.patriarch",
+   "name": "Patriarch",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "red.reserve",
+   "name": "Reserve",
+   "printed": 1,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "blue.recruit",
+   "name": "Blue Recruit",
+   "printed": 1,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "blue.hand",
+   "name": "Blue Hand",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "blue.helper",
+   "name": "Blue Helper",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "blue.regular",
+   "name": "Blue Regular",
+   "printed": 3,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "blue.devotee",
+   "name": "Blue Devotee",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "blue.elder",
+   "name": "Blue Elder",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "blue.pillar",
+   "name": "Blue Pillar",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "blue.patron",
+   "name": "Blue Patron",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "green.recruit",
+   "name": "Green Recruit",
+   "printed": 1,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 1,
+     "lo": 1,
+     "hi": 1
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "green.hand",
+   "name": "Green Hand",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "green.helper",
+   "name": "Green Helper",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "green.regular",
+   "name": "Green Regular",
+   "printed": 3,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "green.devotee",
+   "name": "Green Devotee",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "green.elder",
+   "name": "Green Elder",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "green.pillar",
+   "name": "Green Pillar",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "green.patron",
+   "name": "Green Patron",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.secondwind",
+   "name": "Second Wind",
+   "printed": 12,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.errand",
+   "name": "Errand Runner",
+   "printed": 14,
+   "n": 304,
+   "byRound": {
+    "1": {
+     "n": 188,
+     "net": -1.8338699159083238,
+     "netLo": -3.1514129303193315,
+     "netHi": -0.4040478076608464,
+     "fair": 9.984531385552664,
+     "lo": 6.91132914861796,
+     "hi": 13.423728228128873
+    },
+    "2": {
+     "n": 58,
+     "net": -0.7288013883351334,
+     "netLo": -3.0992379588381715,
+     "netHi": 1.4092370783450892,
+     "fair": 12.277281097490137,
+     "lo": 6.5847880460702815,
+     "hi": 17.08914047353126
+    },
+    "3": {
+     "n": 58,
+     "net": -0.056930844951102254,
+     "netLo": -1.6964591489651761,
+     "netHi": 1.9581033225283593,
+     "fair": 13.857672887622245,
+     "lo": 9.770002656114947,
+     "hi": 18.524070161856706
+    }
+   },
+   "bestRound": 1,
+   "boughtShare": 0.6348684210526315,
+   "meanRound": 2.466321243523316,
+   "net": -1.8338699159083238,
+   "netOwn": -1.4713541417660123,
+   "slope": -0.4567013447223086,
+   "fair": 9.984531385552664,
+   "lo": 6.91132914861796,
+   "hi": 13.423728228128873,
+   "se": 1.8788829993774583
+  },
+  {
+   "id": "purple.taskmaster",
+   "name": "Taskmaster",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.lateriser",
+   "name": "Late Riser",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.foreman",
+   "name": "Foreman",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.courier",
+   "name": "Courier",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.apprentice",
+   "name": "Apprentice",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.overseer",
+   "name": "Overseer",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.doubletime",
+   "name": "Double Time",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.bookkeeper",
+   "name": "Bookkeeper",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.clockmaker",
+   "name": "Clockmaker",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.lamplighter",
+   "name": "Lamplighter",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.patience",
+   "name": "Patience",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "purple.crew",
+   "name": "Shift Crew",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.guest",
+   "name": "Guest",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.benefactor",
+   "name": "Benefactor",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.caterer",
+   "name": "Caterer",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.majordomo",
+   "name": "Majordomo",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.silversmith",
+   "name": "Silversmith",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.steward",
+   "name": "Steward",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.retinue",
+   "name": "Retinue",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.revelers",
+   "name": "Revelers",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.heir",
+   "name": "Heir",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.spoon",
+   "name": "Silver Spoon",
+   "printed": 14,
+   "n": 1025,
+   "byRound": {
+    "1": {
+     "n": 385,
+     "net": -0.6443409839639275,
+     "netLo": -1.7286007470386604,
+     "netHi": 0.42888119153890025,
+     "fair": 12.389147540090182,
+     "lo": 9.678498132403348,
+     "hi": 14.875257103514564
+    },
+    "2": {
+     "n": 320,
+     "net": -0.9211066090266897,
+     "netLo": -2.003389787019655,
+     "netHi": 0.38105962453036557,
+     "fair": 11.697233477433276,
+     "lo": 9.104622804056817,
+     "hi": 14.952649061325914
+    },
+    "3": {
+     "n": 320,
+     "net": -0.7491302742684302,
+     "netLo": -1.5050935565894046,
+     "netHi": 0.38826247930067376,
+     "fair": 12.127174314328926,
+     "lo": 10.237266108526489,
+     "hi": 14.970656198251685
+    }
+   },
+   "bestRound": 1,
+   "boughtShare": 0.6926829268292682,
+   "meanRound": 2.6056338028169015,
+   "net": -0.6443409839639275,
+   "netOwn": -0.4877208842626545,
+   "slope": -0.2967665845587405,
+   "fair": 12.389147540090182,
+   "lo": 11.873972285276377,
+   "hi": 15.830154766169903,
+   "se": 1.2111623881597622
+  },
+  {
+   "id": "silver.toastmaster",
+   "name": "Toastmaster",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.gala",
+   "name": "Gala",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.dowager",
+   "name": "Dowager",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.grandhost",
+   "name": "Grand Host",
+   "printed": 12,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "silver.saint",
+   "name": "Patron Saint",
+   "printed": 12,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.gardener",
+   "name": "Gardener",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.peddler",
+   "name": "Peddler",
+   "printed": 10,
+   "n": 720,
+   "byRound": {
+    "1": {
+     "n": 256,
+     "net": 0.1743945337233369,
+     "netLo": -0.8422667275908824,
+     "netHi": 1.3914487820114043,
+     "fair": 10.435986334308343,
+     "lo": 7.894333181022795,
+     "hi": 13.47862195502851
+    },
+    "2": {
+     "n": 232,
+     "net": 0.06935252167450424,
+     "netLo": -1.0997125556559848,
+     "netHi": 1.2980803356380841,
+     "fair": 10.173381304186261,
+     "lo": 7.250718610860038,
+     "hi": 13.24520083909521
+    },
+    "3": {
+     "n": 232,
+     "net": -0.5831872665714534,
+     "netLo": -1.4810798582252342,
+     "netHi": 0.3628077106557173,
+     "fair": 8.542031833571366,
+     "lo": 6.297300354436914,
+     "hi": 10.907019276639293
+    }
+   },
+   "bestRound": 1,
+   "boughtShare": 0.4708333333333333,
+   "meanRound": 2.424778761061947,
+   "net": 0.1743945337233369,
+   "netOwn": 0.19582831073612073,
+   "slope": -0.09540905914049595,
+   "fair": 10.435986334308343,
+   "lo": 9.571548723327384,
+   "hi": 13.914500199605031,
+   "se": 1.3675469439611736
+  },
+  {
+   "id": "yellow.gleaner",
+   "name": "Gleaner",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.admirer",
+   "name": "Admirer",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.gobetween",
+   "name": "Go-Between",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.dyer",
+   "name": "Dyer",
+   "printed": 12,
+   "n": 720,
+   "byRound": {
+    "1": {
+     "n": 256,
+     "net": -0.5741973041717686,
+     "netLo": -1.7176098412754028,
+     "netHi": 0.6034143489344501,
+     "fair": 10.564506739570579,
+     "lo": 7.7059753968114935,
+     "hi": 13.508535872336125
+    },
+    "2": {
+     "n": 232,
+     "net": -0.7827611851833233,
+     "netLo": -1.9506474218640106,
+     "netHi": 0.4462386140782747,
+     "fair": 10.043097037041692,
+     "lo": 7.123381445339974,
+     "hi": 13.115596535195687
+    },
+    "3": {
+     "n": 232,
+     "net": 0.10419089384561951,
+     "netLo": -0.5912104082787396,
+     "netHi": 0.8724586816160725,
+     "fair": 12.260477234614049,
+     "lo": 10.521973979303151,
+     "hi": 14.18114670404018
+    }
+   },
+   "bestRound": 3,
+   "boughtShare": 0.22777777777777777,
+   "meanRound": 2.5304878048780486,
+   "net": 0.10419089384561951,
+   "netOwn": -0.69326224379142,
+   "slope": -0.04125007216562295,
+   "fair": 12.260477234614049,
+   "lo": 11.105775804195556,
+   "hi": 14.491127810351593,
+   "se": 1.03344863311735
+  },
+  {
+   "id": "yellow.latebloomer",
+   "name": "Late Bloomer",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.sower",
+   "name": "Sower",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.harmonist",
+   "name": "Harmonist",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.rainmaker",
+   "name": "Rainmaker",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.pilgrim",
+   "name": "Pilgrim",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.farmer",
+   "name": "Farmer",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.weaver",
+   "name": "Weaver",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.explorer",
+   "name": "Explorer",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "yellow.feastmaker",
+   "name": "Feastmaker",
+   "printed": 16,
+   "n": 720,
+   "byRound": {
+    "1": {
+     "n": 256,
+     "net": 0.01718295200689192,
+     "netLo": -1.0793186925119675,
+     "netHi": 1.3411375809430062,
+     "fair": 16.04295738001723,
+     "lo": 13.30170326872008,
+     "hi": 19.352843952357514
+    },
+    "2": {
+     "n": 232,
+     "net": -1.4500232374534228,
+     "netLo": -2.666357761821031,
+     "netHi": -0.27192560420187595,
+     "fair": 12.374941906366443,
+     "lo": 9.334105595447422,
+     "hi": 15.320185989495311
+    },
+    "3": {
+     "n": 232,
+     "net": 1.427633275874868,
+     "netLo": 0.42717908168715385,
+     "netHi": 2.5192127193793166,
+     "fair": 19.56908318968717,
+     "lo": 17.067947704217886,
+     "hi": 22.298031798448292
+    }
+   },
+   "bestRound": 3,
+   "boughtShare": 0.11805555555555555,
+   "meanRound": 2.8117647058823527,
+   "net": 1.427633275874868,
+   "netOwn": 0.36553520918799526,
+   "slope": 0.1515613469737304,
+   "fair": 19.56908318968717,
+   "lo": 17.197249146978205,
+   "hi": 22.298031798448292,
+   "se": 1.5561319149372583
+  },
+  {
+   "id": "market.stylist",
+   "name": "Stylist",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.onlooker",
+   "name": "Onlooker",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.connoisseur",
+   "name": "Connoisseur",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.reseller",
+   "name": "Reseller",
+   "printed": 12,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.curator",
+   "name": "Curator",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.planner",
+   "name": "Planner",
+   "printed": 10,
+   "n": 741,
+   "byRound": {
+    "1": {
+     "n": 268,
+     "net": -1.1056269301734039,
+     "netLo": -2.2927968330512667,
+     "netHi": 0.13686058258046266,
+     "fair": 7.235932674566491,
+     "lo": 4.2680079173718335,
+     "hi": 10.342151456451157
+    },
+    "2": {
+     "n": 238,
+     "net": -0.75720616245314,
+     "netLo": -2.0789292325298123,
+     "netHi": 0.6906141698661962,
+     "fair": 8.10698459386715,
+     "lo": 4.80267691867547,
+     "hi": 11.72653542466549
+    },
+    "3": {
+     "n": 235,
+     "net": -0.3712214828172899,
+     "netLo": -1.2202157651387957,
+     "netHi": 0.750369088607494,
+     "fair": 9.071946292956776,
+     "lo": 6.949460587153011,
+     "hi": 11.875922721518736
+    }
+   },
+   "bestRound": 3,
+   "boughtShare": 0.48582995951417,
+   "meanRound": 2.463888888888889,
+   "net": -0.3712214828172899,
+   "netOwn": -0.8800291293973895,
+   "slope": 0.021936507776272346,
+   "fair": 9.071946292956776,
+   "lo": 8.176546652750675,
+   "hi": 12.376179369564262,
+   "se": 1.2880557865581368
+  },
+  {
+   "id": "market.underbidder",
+   "name": "Underbidder",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.minimalist",
+   "name": "Minimalist",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.climber",
+   "name": "Social Climber",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.auctioneer",
+   "name": "Auctioneer",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.sommelier",
+   "name": "Sommelier",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.patroness",
+   "name": "Patroness",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.blackmarket",
+   "name": "Black Market",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.snob",
+   "name": "Snob",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "market.recluse",
+   "name": "Recluse",
+   "printed": 10,
+   "n": 733,
+   "byRound": {
+    "1": {
+     "n": 275,
+     "net": -1.5402678564853731,
+     "netLo": -2.8480123238922195,
+     "netHi": -0.4900384533454805,
+     "fair": 6.1493303587865675,
+     "lo": 2.8799691902694518,
+     "hi": 8.774903866636299
+    },
+    "2": {
+     "n": 231,
+     "net": -2.539839879513965,
+     "netLo": -3.9576547842169396,
+     "netHi": -0.8684598180036387,
+     "fair": 3.650400301215088,
+     "lo": 0.10586303945765074,
+     "hi": 7.828850454990903
+    },
+    "3": {
+     "n": 227,
+     "net": 0.09136137871033197,
+     "netLo": -0.928129896238186,
+     "netHi": 1.4245841575788694,
+     "fair": 10.22840344677583,
+     "lo": 7.679675259404535,
+     "hi": 13.561460393947174
+    }
+   },
+   "bestRound": 3,
+   "boughtShare": 0.5129604365620737,
+   "meanRound": 2.518617021276596,
+   "net": 0.09136137871033197,
+   "netOwn": -0.6657200234066573,
+   "slope": 0.07871066738848168,
+   "fair": 10.22840344677583,
+   "lo": 7.92781344100719,
+   "hi": 13.561460393947174,
+   "se": 1.6624902311418033
+  },
+  {
+   "id": "thieves.cutpurse",
+   "name": "Cutpurse",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.mole",
+   "name": "Mole",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.accomplice",
+   "name": "Accomplice",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.grifter",
+   "name": "Grifter",
+   "printed": 12,
+   "n": 884,
+   "byRound": {
+    "1": {
+     "n": 317,
+     "net": 0.28927588808351695,
+     "netLo": -0.8013531548222503,
+     "netHi": 1.3303806850689321,
+     "fair": 12.723189720208792,
+     "lo": 9.996617112944374,
+     "hi": 15.32595171267233
+    },
+    "2": {
+     "n": 282,
+     "net": -1.0365095025858662,
+     "netLo": -2.1091163584308545,
+     "netHi": 0.03250794199688698,
+     "fair": 9.408726243535334,
+     "lo": 6.727209103922864,
+     "hi": 12.081269854992218
+    },
+    "3": {
+     "n": 285,
+     "net": 0.23755588705884292,
+     "netLo": -0.5779423115422857,
+     "netHi": 1.0115923614320803,
+     "fair": 12.593889717647107,
+     "lo": 10.555144221144285,
+     "hi": 14.528980903580202
+    }
+   },
+   "bestRound": 1,
+   "boughtShare": 0.25452488687782804,
+   "meanRound": 2.76,
+   "net": 0.28927588808351695,
+   "netOwn": 0.24819228271984173,
+   "slope": -0.12533410175219373,
+   "fair": 12.723189720208792,
+   "lo": 11.813305573005985,
+   "hi": 15.52526652314552,
+   "se": 1.1461922574916408
+  },
+  {
+   "id": "thieves.sticky",
+   "name": "Sticky Fingers",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.desperado",
+   "name": "Desperado",
+   "printed": 10,
+   "n": 882,
+   "byRound": {
+    "1": {
+     "n": 314,
+     "net": -0.9344102532794275,
+     "netLo": -1.9874733505568598,
+     "netHi": 0.29537608850724273,
+     "fair": 7.6639743668014315,
+     "lo": 5.031316623607851,
+     "hi": 10.738440221268107
+    },
+    "2": {
+     "n": 285,
+     "net": -0.9124278514164182,
+     "netLo": -1.8887664324818891,
+     "netHi": 0.255360837969826,
+     "fair": 7.7189303714589546,
+     "lo": 5.278083918795278,
+     "hi": 10.638402094924565
+    },
+    "3": {
+     "n": 283,
+     "net": -2.082675707521301,
+     "netLo": -2.832253256449145,
+     "netHi": -1.1926007305888662,
+     "fair": 4.7933107311967476,
+     "lo": 2.9193668588771375,
+     "hi": 7.018498173527835
+    }
+   },
+   "bestRound": 2,
+   "boughtShare": 0.47732426303854875,
+   "meanRound": 2.5724465558194773,
+   "net": -0.9124278514164182,
+   "netOwn": -1.1709866948058045,
+   "slope": -0.0003012915531928062,
+   "fair": 7.7189303714589546,
+   "lo": 6.6426004392885085,
+   "hi": 11.044783799461422,
+   "se": 1.3401672007238283
+  },
+  {
+   "id": "thieves.robinhood",
+   "name": "Robin Hood",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.lookout",
+   "name": "Lookout",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.lightfingers",
+   "name": "Light Fingers",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.extortionist",
+   "name": "Extortionist",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.watchdog",
+   "name": "Watchdog",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.crew",
+   "name": "Crew",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.doubleagent",
+   "name": "Double Agent",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.bigscore",
+   "name": "Big Score",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "thieves.kingpin",
+   "name": "Kingpin",
+   "printed": 8,
+   "n": 883,
+   "byRound": {
+    "1": {
+     "n": 309,
+     "net": -0.6092105130787041,
+     "netLo": -1.7396639787729549,
+     "netHi": 0.3027477125716155,
+     "fair": 6.47697371730324,
+     "lo": 3.650840053067613,
+     "hi": 8.756869281429038
+    },
+    "2": {
+     "n": 286,
+     "net": -0.12710039493386535,
+     "netLo": -1.264751010719494,
+     "netHi": 1.1212215558658094,
+     "fair": 7.682249012665337,
+     "lo": 4.838122473201265,
+     "hi": 10.803053889664524
+    },
+    "3": {
+     "n": 288,
+     "net": -0.04299118331481289,
+     "netLo": -0.7223166122374878,
+     "netHi": 0.8386747822167576,
+     "fair": 7.892522041712968,
+     "lo": 6.194208469406281,
+     "hi": 10.096686955541895
+    }
+   },
+   "bestRound": 3,
+   "boughtShare": 0.3465458663646659,
+   "meanRound": 2.5588235294117645,
+   "net": -0.04299118331481289,
+   "netOwn": -0.8622742795231354,
+   "slope": 0.007436341874543936,
+   "fair": 7.892522041712968,
+   "lo": 7.341308548015651,
+   "hi": 11.081546324756905,
+   "se": 1.1229477250423463
+  },
+  {
+   "id": "trading.shopkeeper",
+   "name": "Shopkeeper",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.dealer",
+   "name": "Dealer",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.pawnbroker",
+   "name": "Pawnbroker",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.safetynet",
+   "name": "Safety Net",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.tipster",
+   "name": "Tipster",
+   "printed": 14,
+   "n": 572,
+   "byRound": {
+    "1": {
+     "n": 236,
+     "net": -1.0676621946986102,
+     "netLo": -2.380421388767453,
+     "netHi": 0.4447427346126759,
+     "fair": 11.330844513253474,
+     "lo": 8.048946528081368,
+     "hi": 15.11185683653169
+    },
+    "2": {
+     "n": 169,
+     "net": -1.694890732732621,
+     "netLo": -2.9240415872210046,
+     "netHi": -0.28093948523373163,
+     "fair": 9.762773168168447,
+     "lo": 6.689896031947489,
+     "hi": 13.297651286915672
+    },
+    "3": {
+     "n": 167,
+     "net": -0.5300388818681174,
+     "netLo": -1.5540625312473095,
+     "netHi": 0.7335971175740498,
+     "fair": 12.674902795329707,
+     "lo": 10.114843671881726,
+     "hi": 15.833992793935124
+    }
+   },
+   "bestRound": 3,
+   "boughtShare": 0.4230769230769231,
+   "meanRound": 2.6735537190082646,
+   "net": -0.5300388818681174,
+   "netOwn": -1.2054020243133128,
+   "slope": -0.12012816145367519,
+   "fair": 12.674902795329707,
+   "lo": 11.032079222817892,
+   "hi": 15.892094577405128,
+   "se": 1.568043896938031
+  },
+  {
+   "id": "trading.lender",
+   "name": "Lender",
+   "printed": 10,
+   "n": 584,
+   "byRound": {
+    "1": {
+     "n": 240,
+     "net": 0.8506828000987622,
+     "netLo": -0.5216596378153431,
+     "netHi": 2.3561953282401595,
+     "fair": 12.126707000246906,
+     "lo": 8.75316410934027,
+     "hi": 15.529247779284912
+    },
+    "2": {
+     "n": 173,
+     "net": -1.4285066826448893,
+     "netLo": -2.9410269902795543,
+     "netHi": 0.0060796601679155675,
+     "fair": 6.428733293387777,
+     "lo": 2.7324221371053605,
+     "hi": 10.01519915041979
+    },
+    "3": {
+     "n": 171,
+     "net": -0.5049201304384361,
+     "netLo": -1.6678582713835326,
+     "netHi": 0.6603170088978612,
+     "fair": 8.73769967390391,
+     "lo": 5.830354321541169,
+     "hi": 11.650792522244654
+    }
+   },
+   "bestRound": 1,
+   "boughtShare": 0.4469178082191781,
+   "meanRound": 2.5057471264367814,
+   "net": 0.8506828000987622,
+   "netOwn": 0.6591273232042169,
+   "slope": -0.28903242556847303,
+   "fair": 12.126707000246906,
+   "lo": 9.419479709366918,
+   "hi": 15.529247779284912,
+   "se": 1.9781825713580201
+  },
+  {
+   "id": "trading.magnate",
+   "name": "Magnate",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.shareholder",
+   "name": "Shareholder",
+   "printed": 3,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 3,
+     "lo": 3,
+     "hi": 3
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.heiress",
+   "name": "Heiress",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.bulkbuyer",
+   "name": "Bulk Buyer",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.broker",
+   "name": "Broker",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.exporter",
+   "name": "Exporter",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.liquidator",
+   "name": "Liquidator",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.reinvestor",
+   "name": "Reinvestor",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "trading.raider",
+   "name": "Raider",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.evergreen",
+   "name": "Evergreen",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.choir",
+   "name": "Choir",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.muse",
+   "name": "Muse",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.understudy",
+   "name": "Understudy",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.ensemble",
+   "name": "Ensemble",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.groupie",
+   "name": "Groupie",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.translator",
+   "name": "Translator",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.tuningfork",
+   "name": "Tuning Fork",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.wallflower",
+   "name": "Wallflower",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.keepsake",
+   "name": "Keepsake",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.mirror",
+   "name": "Mirror",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.afterimage",
+   "name": "Afterimage",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.hourglass",
+   "name": "Hourglass",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.dejavu",
+   "name": "Déjà Vu",
+   "printed": 12,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 12,
+     "lo": 12,
+     "hi": 12
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "echo.chronicler",
+   "name": "Chronicler",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "benders.squatter",
+   "name": "Squatter",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "benders.bigspender",
+   "name": "Big Spender",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "benders.freelancer",
+   "name": "Freelancer",
+   "printed": 4,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 4,
+     "lo": 4,
+     "hi": 4
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "benders.insider",
+   "name": "Insider",
+   "printed": 6,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 6,
+     "lo": 6,
+     "hi": 6
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "benders.extrahand",
+   "name": "Extra Hand",
+   "printed": 10,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 10,
+     "lo": 10,
+     "hi": 10
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "benders.frontrunner",
+   "name": "Front-runner",
+   "printed": 2,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 2,
+     "lo": 2,
+     "hi": 2
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  },
+  {
+   "id": "benders.straggler",
+   "name": "Straggler",
+   "printed": 8,
+   "n": 0,
+   "byRound": {
+    "1": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "2": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    },
+    "3": {
+     "n": 0,
+     "net": 0,
+     "netLo": 0,
+     "netHi": 0,
+     "fair": 8,
+     "lo": 8,
+     "hi": 8
+    }
+   },
+   "bestRound": null,
+   "boughtShare": 0,
+   "meanRound": null,
+   "net": 0,
+   "netOwn": 0,
+   "slope": -0.21263567411500492,
+   "fair": null,
+   "se": 0
+  }
+ ]
+}

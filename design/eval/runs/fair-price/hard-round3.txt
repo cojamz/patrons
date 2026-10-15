@@ -1,0 +1,27 @@
+  1 games crashed (skipped):
+   g=52: Error: Card 49 is not in the shop |     at recruit (file:///home/user/patrons/src/engine/v4/core.js:631:75) |     at recruit (file:///home/user/patrons/src/engine/v4/core.js:891:32) |     at ctx.recruit (file:///home/user/patrons/src/engine/v4/content/echo.js:66:12)
+sweep: test seat Hard (thinker, budget 60) vs 3 normal bots. 119 paired seeds (free-choice arm on the first 0, 2 rollouts a side), forked at round 3. 2821s on 2 workers.
+
+Big Family: printed 4, fair ~3.9 (90% 0.1–6.6; line 1.40 -0.36·P; interpolated 2.7)  [random tables with its sphere]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   0       1.86 ±1.90    97     8   |             –          –     –   |    7.04 (6.81)      3.0
+   4      -0.93 ±1.44    78    -6   |             –          –     –   |    6.83 (6.81)      3.0
+   8      -0.99 ±1.15    56    -4   |             –          –     –   |    6.85 (6.81)      3.0
+
+Proselytizer: printed 12, fair ~8.6 (90% -4.4–13.5; line 1.52 -0.18·P; interpolated 8.7)  [random tables with its sphere]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   8       0.14 ±1.38    56     3   |             –          –     –   |    6.92 (6.81)      3.0
+  12      -0.68 ±1.09    41    -6   |             –          –     –   |    6.85 (6.81)      3.0
+  16      -1.27 ±1.00    30    -3   |             –          –     –   |    6.84 (6.81)      3.0
+
+Shift Crew: printed 2, fair ~1.9 (90% 0.1–3.3; line 1.14 -0.59·P; interpolated 1.3)  [random tables with its sphere]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   0       1.83 ±1.53    89     4   |             –          –     –   |    4.51 (4.23)      3.0
+   2      -1.08 ±1.30    87    -6   |             –          –     –   |    4.43 (4.23)      3.0
+   6      -2.06 ±1.37    84    -8   |             –          –     –   |    4.33 (4.23)      3.0
+
+Magnate: printed 8, fair ~2.1 (90% -1.6–4.4; line 0.96 -0.47·P; interpolated ≤4.0)  [random tables with its sphere]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   4      -1.11 ±1.30    86    -3   |             –          –     –   |    5.18 (5.09)      3.0
+   8      -2.37 ±1.38    83    -8   |             –          –     –   |    5.15 (5.09)      3.0
+  12      -4.84 ±1.47    71   -13   |             –          –     –   |    5.10 (5.09)      3.0
