@@ -717,7 +717,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       )}
       {state.over && !moment ? (
         <div className="main over">
-          <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} />
+          <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} meId={mySeats.length === 1 ? mySeats[0] : null} />
           <div className="side over-cults" aria-label="The cults at the end">
             {(state.ranking || state.players.map(p => p.id)).map((pid, k) => {
               const won = finalWinners(state).includes(pid); // the rule: most followers, members break a tie

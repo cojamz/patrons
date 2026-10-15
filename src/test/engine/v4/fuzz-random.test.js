@@ -17,7 +17,10 @@ describe('random-move fuzz (explores branches bots avoid)', () => {
 
   it('random movers reach every kind of decision', () => {
     const kinds = new Set(), optionKinds = new Set();
-    for (let seed = 1; seed <= 40; seed++) {
+    const WANT = ['card', 'tier', 'pass', 'slot', 'player', 'color', 'trade', 'use', 'toggle', 'member', 'pay', 'back', 'amount'];
+    // seeds until every kind has shown up (prices move the random paths: after balance pass 1 the first "use" came at
+    // seed 43, where 40 seeds used to be enough), capped so a kind that can no longer happen still fails
+    for (let seed = 1; seed <= 120 && !WANT.every(k => optionKinds.has(k)); seed++) {
       const { state, moves } = runGame({ n: 3, seed, kind: 'random', full: false });
       let s = createGame({ seats: state.players.map(p => ({ name: p.name, kind: p.kind })), seed });
       for (const m of moves) {
@@ -27,8 +30,7 @@ describe('random-move fuzz (explores branches bots avoid)', () => {
       }
     }
     expect([...kinds].sort()).toEqual(['buy', 'choose', 'pay', 'place', 'setup']);
-    for (const k of ['card', 'tier', 'pass', 'slot', 'player', 'color', 'trade', 'use', 'toggle', 'member', 'pay', 'back', 'amount'])
-      expect(optionKinds.has(k), k).toBe(true);
+    for (const k of WANT) expect(optionKinds.has(k), k).toBe(true);
   });
 });
 

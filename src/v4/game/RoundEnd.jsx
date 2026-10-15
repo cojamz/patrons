@@ -8,7 +8,7 @@ import { useDialog } from './parts.jsx';
 import { Tip, ContestStandings, NamedText } from './Info.jsx';
 import { Who } from './Glyphs.jsx';
 
-export default function RoundEnd({ info, onNext, autoMs }) {
+export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
   const { result, start, after, board } = info;
   const at = board || after; // the table at the moment of scoring
   // The contests exactly as the engine scored them (state.contests); an old save without the record re-reads the
@@ -41,7 +41,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
     return () => clearTimeout(t);
   }, [autoMs, onNext]);
 
-  const name = id => after.players[id].name;
+  const name = id => (id === meId ? 'You' : after.players[id].name); // you are "You", never your seat's name
   const contest = id => rows.reduce((s, r) => s + (r.winners.includes(id) ? r.v : 0), 0);
   // Sorted by the total shown on this card (end-game bonuses, if any, come next on the results screen).
   const shownTotal = p => followers(at, at.players[p.id]);
@@ -63,7 +63,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
               <span className="re-w">
                 <span className="re-win">
                   {r.winners.length
-                    ? r.winners.map((id, k) => <b key={id}>{k ? ' & ' : ''}<Who state={after} id={id} /></b>)
+                    ? r.winners.map((id, k) => <b key={id}>{k ? ' & ' : ''}<Who state={after} id={id} meId={meId} /></b>)
                     : <em>no one scored</em>}
                 </span>
                 <small className="re-counts num">
@@ -88,7 +88,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
             const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} effects`].filter(Boolean).join(' · ') : '';
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
-                <span className="nm" role="cell"><Who state={after} id={p.id} /></span>
+                <span className="nm" role="cell"><Who state={after} id={p.id} meId={meId} /></span>
                 <span className="re-d num" role="cell">{c ? `+${c}` : '—'}</span>
                 <span className="re-d num" role="cell">{other ? (why || `${other > 0 ? '+' : ''}${other}`) : '—'}</span>
                 <Tick value={now} from={was} color="var(--ink)" className="re-f num" dur={700} float={false} />
@@ -99,10 +99,10 @@ export default function RoundEnd({ info, onNext, autoMs }) {
         {after.over && (
           <p className="hint re-next">
             End-game bonuses come next{finalParts.length ? ': ' : '.'}
-            {finalParts.map((p, k) => <span key={p.id}>{k ? ' · ' : ''}<b style={{ color: playerColor(p.id) }}>{p.name}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
+            {finalParts.map((p, k) => <span key={p.id}>{k ? ' · ' : ''}<b style={{ color: playerColor(p.id) }}>{name(p.id)}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
           </p>
         )}
-        {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.name} picks first</p>}
+        {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first</p>}
         </div>
         {more && <span className="re-more" aria-hidden="true">More below ↓</span>}
         <div className="re-foot">

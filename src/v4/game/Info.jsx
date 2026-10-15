@@ -126,6 +126,25 @@ export function CardName({ state, uid = null, def = null, children, className = 
   );
 }
 
+// ---------- you are "You" ----------
+// The engine writes every line in the third person ("P1 took Rush (Gold).", "P1's Banker: +1 gold."). For the person
+// reading, their own name becomes "You" / "Your" (sentence start) or "you" / "your", and the verb right after agrees
+// ("You have", "you get"). Other players' names are untouched.
+const AGREE = { has: 'have', is: 'are', was: 'were', gets: 'get', pays: 'pay', uses: 'use', takes: 'take', starts: 'start', spends: 'spend', recruits: 'recruit', lies: 'lie', holds: 'hold', goes: 'go', gains: 'gain', flourishes: 'flourish', loses: 'lose', picks: 'pick', leads: 'lead', wins: 'win', ties: 'tie', scores: 'score', keeps: 'keep', buys: 'buy', copies: 'copy', places: 'place', passes: 'pass', needs: 'need', owns: 'own', gives: 'give', moves: 'move', steals: 'steal', trades: 'trade', releases: 'release', swaps: 'swap', joins: 'join' };
+const escRe = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export function asYou(text, name) {
+  if (!text || !name) return text;
+  const n = escRe(name);
+  const start = (str, i) => i === 0 || /[.!?:—–]\s*$/.test(str.slice(Math.max(0, i - 3), i));
+  let out = String(text).replace(new RegExp(`(?<![\\p{L}\\p{N}])${n}(?:'s|’s)(?![\\p{L}\\p{N}])`, 'gu'), (m, i, str) => (start(str, i) ? 'Your' : 'your'));
+  out = out.replace(new RegExp(`(?<![\\p{L}\\p{N}])${n}(?![\\p{L}\\p{N}])( (\\w+))?`, 'gu'), (m, tail, verb, i, str) => {
+    const you = start(str, i) ? 'You' : 'you';
+    if (!tail) return you;
+    return ` ${verb}` === tail && AGREE[verb] ? `${you} ${AGREE[verb]}` : `${you}${tail}`;
+  });
+  return out;
+}
+
 /**
  * Text that names members (a log line, a bonus line): each name of a member in this game opens that card.
  * Longest names first, so "Mentor & Protégé" isn't read as two cards.

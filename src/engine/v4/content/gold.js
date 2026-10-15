@@ -80,7 +80,8 @@ export default {
         if (card.on !== false && g.fromAction && g.color !== 'gold') g.color = 'gold';
       },
     }),
-    m('banker', 'Banker', 2, 2, 'Now and at round start, +3 gold.', { now: true,
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
+    m('banker', 'Banker', 4, 4, 'Now and at round start, +3 gold.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'gold', 3); },
     }),
     m('prospector', 'Prospector', 2, 2, 'Whenever an action gains you gold, +1 more.', {
@@ -142,7 +143,8 @@ export default {
       onActivate(ctx, owner) { ctx.gain(owner, 'gold', owner.res.gold); ctx.log(`${owner.name} used Speculator: gold doubled to ${owner.res.gold}.`); },
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res.gold >= 6,
     }),
-    m('tycoon', 'Tycoon', 8, 4, 'Game end: +1 follower per 3 gold.', {
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6
+    m('tycoon', 'Tycoon', 4, 2, 'Game end: +1 follower per 3 gold.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 3),
     }),
     m('seed', 'Treasurer', 4, 0, 'When recruited: gain gold equal to your member count.', {

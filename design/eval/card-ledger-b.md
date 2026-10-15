@@ -28,7 +28,7 @@ Status key:
 - Connoisseur: OK. Cross: a Bargain recruit counts.
 - Reseller: OK. Cross: a guest that leans to an absent sphere gives nothing.
 - Curator: OK.
-- Planner: FIXED. It was silent, because a discount left no log line. Guard: `Planner: … (named in the log)`. The discount comes off the color part first at the doubled costs (Tycoon 12 costs 8 gold).
+- Planner: FIXED. It was silent, because a discount left no log line. Guard: `Planner: … (named in the log)`. The discount comes off the color part first (its test pins Tycoon at 8 gold + 4; printed 4 gold + 2 since balance pass 1).
 - Underbidder: FIXED. It was silent, same cause. Guard: `Underbidder: …`.
 - Minimalist: OK.
 - Social Climber: OK in tests. Cross: a used Climber that gets stolen stays used.

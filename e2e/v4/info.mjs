@@ -19,7 +19,8 @@
 //      setup picker's labels read on its paper (contrast ≥ 4.5);
 //  (l) who's winning and who's next: a ranked line of every player under the prompt, and each cult's place in the
 //      turn order;
-//  (m) on a laptop the hover card docks in one spot that never overlaps the wheel, the shop or your seat.
+//  (m) on a laptop the hover card docks in one spot that never overlaps the wheel, the shop or your seat;
+//  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary has no text under 12px.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -155,7 +156,7 @@ try {
 
   // play: the first legal option each time; audit at my first placement, my first buy and a round-II placement
   const seen = new Set();
-  let lastShop = null, refills = 0, deckDue = false;
+  let lastShop = null, refills = 0, deckDue = false, summaryChecked = false;
   for (let k = 0; k < 400 && seen.size < 3; k++) {
     // (h) the row refilled (a new face-up card): the deck's count must be the engine's pile
     const shopNow = await page.$$eval('.lt-shop .lt-cards .card[data-uid]', els => els.map(e => e.dataset.uid)).catch(() => []);
@@ -163,7 +164,29 @@ try {
     lastShop = shopNow;
     if (deckDue && (await deckCheck(page)) === 'checked') { deckDue = false; refills++; }
     const next = page.locator('[data-next-round]');
-    if (await next.count()) { await next.first().click().catch(() => {}); await page.waitForTimeout(150); continue; }
+    if (await next.count()) {
+      // (n) the round summary: nothing under 12px, and your own seat reads "You" (never your seat's name)
+      if (!summaryChecked && await page.locator('.roundend').count()) {
+        summaryChecked = true;
+        await page.waitForTimeout(800); // its totals tick up
+        const r = await page.evaluate(() => {
+          const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+          let me = null;
+          try { me = JSON.parse(localStorage.getItem('patrons.v4.local')).state.players[0].name; } catch { /* none */ }
+          const box = document.querySelector('.roundend');
+          const tiny = [...box.querySelectorAll('*')].filter(e => vis(e) && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+            .map(e => ({ t: e.textContent.trim().slice(0, 24), fs: parseFloat(getComputedStyle(e).fontSize) })).filter(x => x.fs < 12);
+          const text = box.innerText;
+          const named = me && new RegExp(`(^|[^\\p{L}\\p{N}])${me.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'u').test(text);
+          return { tiny: tiny.slice(0, 6), me, named, you: /\bYou\b/.test(text) };
+        });
+        for (const x of r.tiny) fail(`(n) round summary text under 12px: "${x.t}" at ${x.fs}px`, 'summary');
+        if (r.named) fail(`(n) the round summary calls you "${r.me}", not "You"`, 'summary');
+        if (!r.you) fail('(n) the round summary never says "You"', 'summary');
+        await page.screenshot({ path: `${SHOTS}/08-round-summary.png` });
+      }
+      await next.first().click().catch(() => {}); await page.waitForTimeout(150); continue;
+    }
     const hand = page.locator('[data-handoff]');
     if (await hand.count()) { await hand.first().click().catch(() => {}); continue; }
     const kind = await page.evaluate(() => {
@@ -232,6 +255,27 @@ try {
     await page.waitForTimeout(80);
   }
   if (seen.size < 3) fail(`only reached ${[...seen].join(', ') || 'no'} steps`, 'play');
+  if (!summaryChecked) fail('(n) never saw a round summary', 'summary');
+  // (n) the Chronicle: your own lines read "You took…", never your seat's name
+  {
+    await page.click('.lt-menu .menu-glyph').catch(() => {});
+    await page.click('.lt-menu .log-btn').catch(() => {});
+    const chron = await page.waitForSelector('.lt-chron', { timeout: 4000 }).catch(() => null);
+    if (!chron) fail('(n) the Chronicle did not open from the menu', 'chronicle');
+    else {
+      const r = await page.evaluate(() => {
+        let me = null;
+        try { me = JSON.parse(localStorage.getItem('patrons.v4.local')).state.players[0].name; } catch { /* none */ }
+        const text = document.querySelector('.lt-chron').innerText;
+        const named = me && new RegExp(`(^|[^\\p{L}\\p{N}])${me.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'u').test(text);
+        return { me, named, you: /\bYou (took|recruited|bought|passed|picked|placed|joined)\b/.test(text) };
+      });
+      if (r.named) fail(`(n) the Chronicle calls you "${r.me}", not "You"`, 'chronicle');
+      if (!r.you) fail('(n) the Chronicle has no "You took / recruited / bought…" line', 'chronicle');
+      await page.screenshot({ path: `${SHOTS}/09-chronicle.png` });
+      await page.keyboard.press('Escape');
+    }
+  }
   if (!refills) fail('(h) the shop row never refilled during the game', 'deck');
   else if (!(await page.evaluate(() => window.__patronsDeals || 0))) fail(`(h) ${refills} refill(s), but no card came off the deck`, 'deck');
   else console.log(`info.mjs: deck matched the engine's pile after ${refills} refill(s); ${await page.evaluate(() => window.__patronsDeals)} card(s) dealt off it`);

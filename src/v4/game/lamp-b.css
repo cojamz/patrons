@@ -270,3 +270,5 @@
 /* a badged member at the table: ◆ on its figure's corner (its title says what badged means; the figure opens the card) */
 .cs-member .fig{position:relative}
 .cs-member .fig .badge-mark{position:absolute;top:-4px;right:-5px;font-size:10px;line-height:1;color:color-mix(in srgb,var(--blue,#4f7ea8) 70%,#fff);text-shadow:0 1px 1px rgba(0,0,0,.8);pointer-events:auto}
+/* the round summary: no text under 12px (meta round 2: its small print measured 10.8–11px) */
+.roundend .re-head,.roundend .re-tb,.roundend small{font-size:12px}

@@ -197,7 +197,8 @@ export default {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
     // fill-in (critic): took the slot of an earlier card called Timekeeper (the name now belongs to the game-end purple card)
-    m('doubletime', 'Corner-Cutter', 4, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 4 (the most one pass moves)
+    m('doubletime', 'Corner-Cutter', 4, 0, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
     m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last minion of a round, +1 purple per 2 minions you have on the board.', {
