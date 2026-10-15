@@ -26,6 +26,7 @@ Updated 2026-10-14 ~21:40 UTC. Agents never commit; the foreman verifies and che
 20. **Emoji pick + online bot level.** Done (EmojiPicker.jsx, emojiPick.js, lobby.setEmoji, bot level in the lobby; tests on the in-memory transport and the emulator).
 21. **Friends docs.** Done: rulebook to tonight's rules (glossary text fixes: Release, tiebreak example, steal), design/friends-guide.md, design/release-notes-v0.2.md.
 22. **Intro v2 + plain robes.** Done (Cory: "amazing"): one continuous shot, ~27 s, gray robes, tests and hotseat pass; spec design/prototypes/intro2/storyboard.md; video design/prototypes/vision/shots/intro2.mp4. Was: Parallel since 23:40 (Cory: faster): the lead owns shared.jsx, the storyboard, Beat1, the shell and integration; builders on Beat2, Beat3, Initiation and Beat4; shared dev server :5330, GIFs via scripts/v4-gif.mjs. Was: Cory's 4-beat script, animated (scheming laugh, minions appear, actions → resources/members/power, three rounds → most followers wins); every leader in the same brown or gray robe. Port 5324.
+23. **Balance pass 1.** Applies the bench's both-instruments-agree reprices (non-plain members; ×2/÷2 cap per pass), flags plain members and bot artifacts, and writes rewording proposals for Cory (Tax Collector, Upstart, the strong spaces) to design/eval/balance-pass-1.md.
 - Release-candidate panel briefs are ready: design/eval/panel-rc-briefs.md.
 
 ## Held
@@ -46,6 +47,6 @@ Limits hit four times on 2026-10-14 (06:30, 11:40, 16:40, 18:55 UTC). The forema
 ## Remote sessions (own machines, started 20:48 UTC): heavy simulation offloaded from this 4-CPU box
 - Fair-price screen for every card → branch claude/cults-fair-price (session_01SAnMH5dXApptnHJqsFTvdV)
 - Bot levels + 4-thinker balance tables → branch claude/cults-bots (session_012LrFkfKC8GG3gLHPuLK2jF)
-- Balance bench (triangulated: cards, spaces, archetypes, fairness, health, anchors, human records) → branch claude/cults-bench (session_011mMXsYcXHM7NPhc8g63Ki6), started 22:35.
+- Balance bench → branch claude/cults-bench (session_011mMXsYcXHM7NPhc8g63Ki6): built (two stages, sharding, trends; 62 Normal games/core-min). First full run: anchors pass; 14 cards and 7 space-rounds flagged by both bots (design/eval/bench/latest.md on that branch). Second run with the new sections going.
 - Purple member replacements + per-turn repricing → branch claude/cults-purple-members (session_01KzNtqok74Xvo1pxX1pqWkS). Done 21:09; report brought in by roster 11.
 The foreman merges each branch after reviewing it (proposals only: no content price changes land without review; design changes go to Cory).

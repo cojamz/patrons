@@ -86,6 +86,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const paced = useRef(false);
   const held = useRef(false);
   const timer = useRef(null);
+  const dwellNext = useRef(0); // the hold the step being committed asks for (started once it's on screen)
   const shownRef = useRef(first);
   const online = session.info?.mode === 'online';
   // read (and, if missing, written) once: as a plain useRef argument this ran on every render, re-saving the
@@ -135,11 +136,20 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       const dwell = myRecruitThenGone ? 1500 : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(400, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
-        timer.current = setTimeout(() => { timer.current = null; pump(); }, dwell);
+        // the hold counts from when this step is on screen (its commit), not from when it was handed to React: under
+        // load a commit can land late, and a timer started here would shorten the next step's time on screen
+        timer.current = 'commit';
+        dwellNext.current = dwell;
         return;
       }
     }
   }, [show, session, rivalDwell]);
+  useLayoutEffect(() => {
+    if (timer.current !== 'commit') return;
+    const d = dwellNext.current;
+    dwellNext.current = 0;
+    timer.current = setTimeout(() => { timer.current = null; pump(); }, d);
+  }, [table.shown, pump]);
 
   useEffect(() => {
     const off = session.subscribe(s => {
