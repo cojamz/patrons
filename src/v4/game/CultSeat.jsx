@@ -68,12 +68,40 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // w3b: a rival's seventh member folded with room to spare), measured from the row's own width, the "each round" block
   // beside it and a figure's width. None of these changes with how many are shown, so measuring can't feed back (the
   // TurnCard lesson, 2026-10-15). Phones keep fixed counts: their crowd wraps.
-  const fit = useFigureFit(rootEl);
+  // yours, on a wide laptop: "each round" goes up beside your name when it clears your turn words ("your turn", short),
+  // so your row holds figures only; beside "your turn, then again" or "your turn in 3" it ran into them (2026-10-15,
+  // design/eval/morning-fixes/pay-gains/strip-after.png), so then it stays beside your figures, as on a rival's seat.
+  // Measured from the words, the total and the block's own width: none moves when the block does, so no feedback.
+  const [incomeUp, setIncomeUp] = useState(false);
+  const incomeKey = incomeWords.join(',');
+  useLayoutEffect(() => {
+    if (!mine) return undefined;
+    const check = () => {
+      const seat = rootEl.current;
+      if (!seat) return;
+      const wide = typeof matchMedia === 'function' && matchMedia('(min-width:1200px) and (min-height:500px)').matches;
+      const build = seat.querySelector(':scope > .cs-build'), total = seat.querySelector('.cs-total'), who = seat.querySelector('.cs-who'), words = seat.querySelector('.cs-turn');
+      let up = false;
+      if (wide && build && total && who) {
+        const right = Math.max(who.getBoundingClientRect().right, words ? words.getBoundingClientRect().right : 0);
+        up = right + 12 + build.getBoundingClientRect().width <= total.getBoundingClientRect().left - 10;
+      }
+      setIncomeUp(u => (u === up ? u : up));
+    };
+    check();
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) document.fonts.ready.then(check);
+    addEventListener('resize', check);
+    return () => removeEventListener('resize', check);
+  }, [mine, turn && turn.say, incomeKey, bonus]); // eslint-disable-line react-hooks/exhaustive-deps
+  const fit = useFigureFit(rootEl, incomeUp);
   const MAX = fit ? (fit.all >= groups.length ? groups.length : fit.withMore) : bonus ? 3 : incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
   // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
   // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
   // coming, w2b #21); each takes the place of the last one shown that's needed less
-  const need = g => (g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u]) || (result && result.uid === u)) || givesExtra(g) ? 2 : g.uids.some(u => loadedUse(state, u)) ? 1 : 0);
+  // then the newest member (the engine appends every arrival: a recruit, a Poach, a swap), so the piece that flies in
+  // lands on its own figure, never on "+N more" (the travel gate's Poach landed on nothing, 2026-10-15)
+  const newest = p.members.length ? p.members[p.members.length - 1] : null;
+  const need = g => (g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u]) || (result && result.uid === u)) || givesExtra(g) ? 2 : g.uids.includes(newest) ? 1.5 : g.uids.some(u => loadedUse(state, u)) ? 1 : 0);
   const keep = groups.slice(0, MAX);
   for (const g of groups.slice(MAX).filter(need).sort((x, y) => need(y) - need(x))) {
     const k = keep.map(need).reduce((at, n, i) => (n < need(g) && (at < 0 || n <= need(keep[at])) ? i : at), -1);
@@ -104,7 +132,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-turn'));
   const railIn = useRef(false);
   return (
-    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-income={mine && incomeUp ? 'up' : undefined} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
       // a click beside the lit picks in this chair (w3a A53: "a click 30px off did nothing, and no 'pick a lit stack'")
       // makes them pulse once, so the miss says where to click
       onClick={pick && pick.lit && !pick.seatMode ? e => {
@@ -314,14 +342,14 @@ export function reactionsBetween(before, state, pid) {
  * the "each round" block when it shares the row, "safe this round", and one figure's width; a block that comes or goes,
  * and the first figure, are watched as they appear. Set only when the numbers change.
  */
-function useFigureFit(rootEl) {
+function useFigureFit(rootEl, layout = null) {
   const [fit, setFit] = useState(null);
-  const ro = useRef(null), watched = useRef(new Set());
+  const ro = useRef(null), watched = useRef(new Set()), measure = useRef(null);
   useLayoutEffect(() => {
     const el = rootEl.current;
     if (!el || typeof ResizeObserver !== 'function') return;
     if (!ro.current) {
-      ro.current = new ResizeObserver(() => {
+      ro.current = new ResizeObserver(measure.current = () => {
         const seat = rootEl.current;
         if (!seat) return;
         const wide = typeof matchMedia === 'function' && matchMedia('(min-width:861px) and (min-height:500px)').matches;
@@ -346,6 +374,8 @@ function useFigureFit(rootEl) {
     for (const x of [...w]) if (!x.isConnected) { r.unobserve(x); w.delete(x); }
     for (const x of [el, el.querySelector(':scope > .cs-crowd'), el.querySelector(':scope > .cs-crowd > .cs-member'), el.querySelector(':scope > .cs-build')]) if (x && !w.has(x)) { r.observe(x); w.add(x); }
   });
+  // the "each round" block moving between the name row and the figures' row resizes nothing the observer watches
+  useLayoutEffect(() => { if (measure.current) measure.current(); }, [layout]);
   useEffect(() => () => { if (ro.current) ro.current.disconnect(); ro.current = null; watched.current.clear(); }, []);
   return fit;
 }

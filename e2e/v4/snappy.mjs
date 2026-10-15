@@ -239,7 +239,11 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
 // publishes each chain's planned length), so a loaded box can't blur it; the wall time is reported beside it.
 // (s5) the gap between your turns at Steady, bots at Normal: from your pass to your next placement, under 8s
 // (Cory's pacing: a rival's whole turn about 1.5–2s). The better of two gaps in round I counts.
+// The first page is done with by now: closed, so a game still live in it can never write over the save a fresh page
+// resumes (one browser context shares one save; the older tab yields to the newer one only once that one is up).
+let mainOpen = true;
 async function freshPage(query) {
+  if (mainOpen) { mainOpen = false; await page.close().catch(() => {}); }
   const pg = await ctx.newPage();
   pg.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
   await seedSave(pg, richSave()); // before the app runs (lib/seed.mjs)
@@ -247,7 +251,15 @@ async function freshPage(query) {
   const r = await pg.waitForSelector('[data-home="resume"]', { timeout: 15000 }).catch(() => null);
   if (!r) { await pg.close(); return null; }
   await r.click();
-  await pg.waitForSelector('.lt[data-phase="place"][data-yours="1"] .slot.can .base', { timeout: 15000 });
+  // a resumed game that never offers your placement is reported with what the screen showed (it threw, and the whole
+  // gate died with a bare TimeoutError: 2026-10-15, twice, then not again in five runs)
+  if (!(await pg.waitForSelector('.lt[data-phase="place"][data-yours="1"] .slot.can .base', { timeout: 15000 }).catch(() => null))) {
+    const at = await pg.evaluate(() => { const l = document.querySelector('.lt'); return l ? `phase ${l.dataset.phase}, yours ${l.dataset.yours}` : (document.body.innerText || '').slice(0, 80); }).catch(() => '?');
+    errors.push(`(${query}) the resumed game never offered your placement within 15s (${at})`);
+    await pg.screenshot({ path: `${SHOTS}/fresh-${query.replace(/\W+/g, '-')}.png` }).catch(() => {});
+    await pg.close();
+    return null;
+  }
   await pg.evaluate(() => {
     window.__chainSeen = [];
     const app = document.querySelector('.app.game');

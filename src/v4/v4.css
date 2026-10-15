@@ -1010,6 +1010,9 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .re-head,.re-p{grid-template-columns:minmax(0,.8fr) 60px minmax(0,1.6fr) 60px}
 .re-foot{flex:none;display:flex;justify-content:center;padding-top:10px;border-top:1px solid var(--rim);background:var(--table-2)}
 .dialog.roundend .re-body{position:relative;padding-bottom:6px}
+/* the totals' hover words keep their 44px touch box, but it never makes the summary scroll: in the last row it hung
+   10px below the table, and the round-III summary scrolled 6px at 700px with "More below" (gate r7, 2026-10-15) */
+.dialog.roundend .re-totals{overflow-y:clip}
 /* header: How to play becomes "?" below 360px */
 .rules-btn .ico{display:none}
 @media (max-width:360px){ .rules-btn .lbl{display:none} .rules-btn .ico{display:inline;font-weight:700;font-size:var(--fs-3)} header.bar h1{font-size:var(--fs-4)} }

@@ -467,7 +467,12 @@ try {
       const visible = () => [...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek')].some(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && getComputedStyle(e).opacity !== '0'; });
       window.__hov = { lat: [], flips: 0, was: false, sweeping: false };
       let t0 = null;
-      addEventListener('pointerover', e => { if (e.target.closest && e.target.closest('[data-slot], [data-uid]') && !visible()) t0 = performance.now(); }, true);
+      // the clock starts at the move's first boundary event: React fires onPointerEnter from the native pointerout (it
+      // comes before pointerover, at the new position), and a card that opens whole in that one event is already up by
+      // pointerover. Timed from pointerover alone, those fastest arrivals went uncounted (17 of 30 on 7373244).
+      const onto = el => el && el.closest && el.closest('[data-slot], [data-uid]');
+      addEventListener('pointerout', e => { if (onto(e.relatedTarget) && !visible()) t0 = performance.now(); }, true);
+      addEventListener('pointerover', e => { if (onto(e.target) && !visible()) t0 = performance.now(); }, true);
       const tick = () => {
         const v = visible();
         if (v && t0 != null) { window.__hov.lat.push(performance.now() - t0); t0 = null; }

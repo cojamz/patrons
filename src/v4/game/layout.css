@@ -229,7 +229,9 @@
 
 /* what a chair's members make each round (w3a A16): the gains under an 11px caps label, so the block takes a figure or
    two of the row instead of four, and the figures fill the rest (CultSeat measures how many fit). The Robin Hood mark in
-   a steal pick stands the same way. Yours, on a wide laptop, moves up beside your name, so your row holds figures only. */
+   a steal pick stands the same way. Yours, on a wide laptop, moves up beside your name when it clears your turn words
+   (CultSeat measures it: data-income="up"), so your row holds figures only; beside "your turn, then again" it ran into
+   them at 1270x700 (2026-10-15), so then it stays beside your figures. */
 .lt-cult-seat .cs-gains{display:inline-flex;align-items:center;gap:5px}
 /* phones: a chair's column is ~120px, so "each round +3● +2◐" ran off its edge (detail designer, 08:05): the gains drop
    under the label when they don't fit beside it */
@@ -243,7 +245,7 @@
   .app.game.lt > .lt-seat .cs-bonus .cs-income small{color:var(--lamp-ink)}
 }
 @media (min-width:1200px) and (min-height:500px){
-  .app.game.lt > .lt-seat.mine .cs-build{grid-column:3;grid-row:1;justify-self:end;align-self:center}
+  .app.game.lt > .lt-seat.mine .lt-cult-seat[data-income="up"] > .cs-build{grid-column:3;grid-row:1;justify-self:end;align-self:center}
 }
 
 /* players are their emoji, never a tint or a dot (w3b #41: P3's pink read as magenta and P4's lavender as purple, "P3
