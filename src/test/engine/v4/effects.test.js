@@ -61,7 +61,8 @@ describe('effects', () => {
   it('stays out of saved state and of the next move', () => {
     let s = createGame({ seats: [{ name: 'A', kind: 'bot' }, { name: 'B', kind: 'bot' }], seed: 9 });
     const rand = seededRandom(9);
-    for (let k = 0; k < 12; k++) s = applyMove(s, chooseBotMove(s, rand), { effects: true });
+    // play on to a move that has effects (a pass has none, and which move that is depends on the prices)
+    for (let k = 0; k < 12 || !s.effects.length; k++) s = applyMove(s, chooseBotMove(s, rand), { effects: true });
     expect(s.effects.length).toBeGreaterThan(0);
     expect(JSON.stringify(s)).not.toContain('"effects"');
     expect(structuredClone(s).effects).toBeUndefined();

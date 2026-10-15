@@ -97,7 +97,7 @@ export default {
   members: [
     m('twins', 'Twins', 1, 1, 'Worth 2 followers.', { f: 2 }),
     m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
-    m('volunteer', 'Volunteer', 0, 0, 'Free. No effect.'),
+    m('volunteer', 'Volunteer', 2, 2, 'No effect.'),
     m('intern', 'Intern', 1, 0, 'No effect.'),
     m('mentor', 'Mentor & Protégé', 6, 4, 'When recruited: also take the cheapest face-up member free.', {
       // card: this Mentor, or a Doppelganger copying it (its free pick says so)
@@ -141,7 +141,7 @@ export default {
         })), 'red.doppelCopy', { uid: card.uid });
       },
     }),
-    m('patriarch', 'Patriarch', 6, 4, 'Game end: +1 follower per 2 members.', {
+    m('patriarch', 'Patriarch', 3, 2, 'Game end: +1 follower per 2 members.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
     m('reserve', 'Benchwarmer', 1, 0, 'No effect.'), // placeholder until Cory designs its hold (then it becomes Seat Saver)

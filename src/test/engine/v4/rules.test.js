@@ -51,7 +51,7 @@ describe('setup', () => {
     expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.pile).toHaveLength(60 - SHOP_SIZE);
     expect(Object.keys(createGame({ seats: seats(2), seed: 9 }).cards)).toHaveLength(60 + guestMembers().length);
-    expect(s.stock).toEqual({ big: 4 }); // only the 6-follower buy is limited (10→10 is unlimited)
+    expect(s.stock).toEqual({ big: 4 }); // only the 8-follower buy is limited (10→10 is unlimited)
     const t = createGame({ seats: seats(2), seed: 10 });
     expect(t.shop).not.toEqual(s.shop);
   });
@@ -98,7 +98,8 @@ describe('turn order and workers', () => {
   });
 
   it('a full game gives 3, 4, 5 turns per player per round', () => {
-    let s = createGame({ seats: seats(3), seed: 42 });
+    // guests off: Extra Hand (a guest) adds a round-III minion, and with cheaper members the bots now buy it here
+    let s = createGame({ seats: seats(3), seed: 42, rules: { guests: false } });
     const rand = seededRandom(42);
     const turns = {};
     let lastSlots = null;
@@ -166,7 +167,7 @@ describe('follower buys', () => {
     expect(fol(s, 0)).toBe(2);
   });
 
-  it('follower buys take any resources, one color is fine (Cory, 2026-10-14): 4 buys 3, 8 buys 6, 10 buys 10', () => {
+  it('follower buys take any resources, one color is fine (Cory, 2026-10-14): 4 buys 4, 8 buys 8, 10 buys 10', () => {
     const s = scene({});
     const p = { res: { gold: 0, red: 9, blue: 0, green: 0 } };
     expect(followerPlan(s, p, tier('mid'))).toEqual({ gold: 0, red: 4, blue: 0, green: 0 });
@@ -202,7 +203,7 @@ describe('follower buys', () => {
     expect(s.log.some(l => /game ends after this round/.test(l))).toBe(false);
   });
 
-  it('a 6-follower buy uses up one of 2 per player and does not end the game', () => {
+  it('an 8-follower buy uses up one of 2 per player and does not end the game', () => {
     let s = scene({ res: [{ gold: 2, red: 3, blue: 3 }], queue: [] });
     s.stock.big = 1;
     s.queue = [{ t: 'turn', p: 0 }];
@@ -212,10 +213,10 @@ describe('follower buys', () => {
     s = move(s, 'tier:big');
     expect(s.stock.big).toBe(0);
     expect(s.over).toBe(false);
-    expect(s.players[0].bonus).toBe(6);
+    expect(s.players[0].bonus).toBe(8);
   });
 
-  it('no 6-follower buy once they are gone', () => {
+  it('no 8-follower buy once they are gone', () => {
     const s = scene({ res: [{ gold: 3, red: 3, blue: 3 }], queue: [] });
     s.stock.big = 0;
     expect(followerPlan(s, s.players[0], tier('big'))).toBe(null);

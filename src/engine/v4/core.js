@@ -13,8 +13,8 @@ export const SHOP_SIZE = 10; // a bigger community pool, so a member you want is
 // always ends after round III. (It was a stock of 4 whose last buy ended the game after that round.)
 export const TIERS = [
   { key: 'small', cost: 2, get: 1, colors: 1, label: '2 of anything' },
-  { key: 'mid', cost: 4, get: 3, colors: 1, label: '4 of anything' },
-  { key: 'big', cost: 8, get: 6, colors: 1, label: '8 of anything', limited: true, stock: n => 2 * n },
+  { key: 'mid', cost: 4, get: 4, colors: 1, label: '4 of anything' },
+  { key: 'big', cost: 8, get: 8, colors: 1, label: '8 of anything', limited: true, stock: n => 2 * n },
   { key: 'top', cost: 10, get: 10, colors: 1, label: '10 of anything' },
 ];
 /** How many buys of a limited tier are left (Infinity for unlimited tiers). */

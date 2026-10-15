@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, resume, followers, contextFor, cardDef } from '../../../engine/v4/core.js';
 import { defById } from '../../../engine/v4/content/index.js';
 import { extraTurns, onBoard } from '../../../engine/v4/content/purple.js';
-import { move, uidOf, ids, hasOpt, actionName } from './helpers.js';
+import { move, uidOf, ids, hasOpt, actionName, pinCosts } from './helpers.js';
 import { SHOP_SIZE } from '../../../engine/v4/core.js';
 
 const DEFAULT = ['gold', 'red', 'blue', 'green'];
@@ -115,7 +115,7 @@ describe('Big Spender: once per round, buy twice in one turn', () => {
     expect(s.pending.kind).toBe('buy');
     expect(s.pending.extra).toBe(true);
     s = move(s, 'tier:mid');
-    expect(s.players[0].bonus).toBe(6);
+    expect(s.players[0].bonus).toBe(8);
     expect(s.pending).toBe(null);
     expect(s.cards[uidOf(s, 'benders.bigspender', 0)].spent.extraBuy).toBe(1);
     // another turn this round: one buy only
@@ -135,13 +135,13 @@ describe('Big Spender: once per round, buy twice in one turn', () => {
     extraTurns(contextFor(s), s.players[0], 1);
     s = move(s, `slot:${RUSH}`);
     s = move(s, 'tier:mid'); s = move(s, 'tier:mid'); // the double buy
-    expect(s.players[0].bonus).toBe(6);
+    expect(s.players[0].bonus).toBe(8);
     expect(s.pending.kind).toBe('place'); // the extra turn
     expect(s.pending.player).toBe(0);
     s = move(s, `slot:${JV}`); s = pickAny(s);
     s = move(s, 'tier:mid');
     expect(s.pending?.kind).not.toBe('buy');
-    expect(s.players[0].bonus).toBe(9);
+    expect(s.players[0].bonus).toBe(12);
   });
 });
 
@@ -317,10 +317,12 @@ describe('Release (base rule): once per round, release a member for its colored 
     expect(ids(s)).toContain('tier:mid');
   });
   it('a member with no colored part gives nothing back, so it is not offered', () => {
+    const restore = pinCosts({ 'red.volunteer': [0, 0] });
     let s = scene({ members: [['red.volunteer', 'red.twins']], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0; s = resume(s);
     expect(ids(s)).not.toContain(`release:${uidOf(s, 'red.volunteer', 0)}`);
     expect(ids(s)).toContain(`release:${uidOf(s, 'red.twins', 0)}`);
+    restore();
   });
 });
 

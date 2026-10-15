@@ -270,7 +270,7 @@ export default {
         extraTurns(ctx, owner, 1, 'Night Owl');
       },
     }),
-    m('patience', 'Timekeeper', 6, 2, 'Game end: +1 follower per 3 purple.', {
+    m('patience', 'Timekeeper', 4, 2, 'Game end: +1 follower per 3 purple.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),
     m('crew', 'Shift Crew', 1, 1, 'Worth 2 followers. No effect.', { f: 2, vanilla: true }),

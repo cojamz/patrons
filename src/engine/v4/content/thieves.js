@@ -321,7 +321,7 @@ const thieves = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 4),
     }),
-    m('kingpin', 'Kingpin', 2, 0, 'Game end: +1 follower per 2 magenta.', {
+    m('kingpin', 'Kingpin', 4, 0, 'Game end: +1 follower per 2 magenta.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res.magenta || 0) / 2),
     }),
   ],

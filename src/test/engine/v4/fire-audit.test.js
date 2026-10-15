@@ -68,7 +68,10 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // follower buy beats that rate, so it fires about 1 hold in 13 (ledger) and 4 holds can all miss. Since the
   // 2026-10-14 White rework changed these seeds' games it does; cards-trading.test.js (Magnate) covers its line.
   // See design/eval/card-ledger-b.md.
-  const EXEMPT = new Set(['thieves.watchdog', 'market.climber', 'trading.magnate']);
+  // Double Agent acts only when recruited, and this audit deals it straight into hands, so a dealt one never acts; it
+  // passed only while a bot happened to recruit a second copy (balance pass 3 moved those games).
+  // cards-thieves.test.js (Double Agent) covers its line.
+  const EXEMPT = new Set(['thieves.watchdog', 'market.climber', 'trading.magnate', 'thieves.doubleagent']);
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
     ['gold', 'market', 'trading', 'echo'], ['red', 'thieves', 'market', 'trading'],

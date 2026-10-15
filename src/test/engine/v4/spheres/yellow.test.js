@@ -248,7 +248,7 @@ describe('Yellow members', () => {
     s = move(s, 'tier:big');
     const after = R(s);
     expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 4 - 8 + 4); // Harvest +4 (1 + 3 other colors), the 6-buy costs 8
-    expect(s.players[0].bonus).toBe(6);
+    expect(s.players[0].bonus).toBe(8);
     let t = scene({ members: [['yellow.weaver']], res: [{ gold: 2, red: 2 }] });
     t.cards[uidOf(t, 'yellow.weaver', 0)].seenBig = t.bigLeft;
     t = take(t, 'gold.rush');
@@ -262,7 +262,7 @@ describe('Yellow members', () => {
     s = move(s, `card:${uidOf(s, 'yellow.weaver', 'shop')}`);
     s = take(s, 'gold.rush');
     s = move(s, 'tier:big');
-    expect(s.players[1].bonus).toBe(6);
+    expect(s.players[1].bonus).toBe(8);
     expect(R(s, 0)).toEqual({ gold: 1, red: 0, yellow: 1, green: 0 }); // untouched by the rival's buy
   });
 

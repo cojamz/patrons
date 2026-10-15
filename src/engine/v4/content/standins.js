@@ -1,3 +1,5 @@
+// Balance pass 3 (Cory, 2026-10-15): both bots read these Green plain members about 2 too dear.
+const GREEN_PASS3 = { 'green:pillar': { s: 2, w: 2 }, 'green:devotee': { s: 1, w: 1 } };
 // Plain stand-in quadrants, so a full table can play while the real spheres are designed.
 function standIn(id, name, other1, other2) {
   const plain = (key, ring, nm, gains) => {
@@ -28,7 +30,7 @@ function standIn(id, name, other1, other2) {
     handlers: {},
     members: vanilla.map(([key, nm, s, w, f, copies]) => ({
       // plain members keep their pre-doubling cost: they don't pay for an ability they lack (Claude, 2026-10-14)
-      key, name: `${name} ${nm}`, s: s / 2, w: w / 2, f, n: 1, copies, text: f > 1 ? `Worth ${f} followers.` : 'Worth 1 follower.', vanilla: true,
+      key, name: `${name} ${nm}`, ...(GREEN_PASS3[`${id}:${key}`] || { s: s / 2, w: w / 2 }), f, n: 1, copies, text: f > 1 ? `Worth ${f} followers.` : 'Worth 1 follower.', vanilla: true,
     })),
   };
 }

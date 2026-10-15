@@ -3,6 +3,8 @@
 // every game; ties split. 95% Wilson interval on the win share.
 // Usage: node scripts/v4-big-followers.mjs [games=200] [firstGame=1] [--level=normal] [--workers=4] [--budget=100]
 //   [--no-release] [--no-guests] [--easy] (same as --level=easy) [--table=classic|default|a,b,c,d] [--split]
+// --tiers=key:cost:get[,…] (runtime patch, not a rule): reprice follower buys, e.g. --tiers=big:8:7,top:10:12.
+// --member-scale=x (runtime patch): every member's price ×x, each part rounded.
 // --split (runtime patch, not a rule): tied contest leaders split the prize, rounded down, instead of each taking it.
 // Also reports the share of each seat's final followers that came from contests, by round, and how often a contest
 // pays 3+ tied leaders (state.contests, the engine's own record of each round's scoring).
@@ -11,6 +13,8 @@
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { createGame, applyMove, followers, memberCount } from '../src/engine/v4/index.js';
+import { TIERS } from '../src/engine/v4/core.js';
+import { quadrant, allQuadrantIds, guestMembers } from '../src/engine/v4/content/index.js';
 import { chooseBotMove, chooseFollowerBuyerMove, chooseGreedyMove, blendProfile } from '../src/engine/v4/bots.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
 
@@ -77,7 +81,22 @@ export function wilson(k, n, z = 1.96) {
   return [Math.max(0, c - h), Math.min(1, c + h)];
 }
 
+function patch({ tiers, memberScale }) {
+  for (const spec of (tiers ? String(tiers).split(',') : [])) {
+    const [key, cost, get] = spec.split(':');
+    const tier = TIERS.find(x => x.key === key);
+    if (!tier) throw new Error(`no follower tier ${key}`);
+    Object.assign(tier, { cost: Number(cost), get: Number(get), label: `${cost} of anything` });
+  }
+  if (memberScale && Number(memberScale) !== 1) {
+    const x = Number(memberScale);
+    const defs = [...allQuadrantIds().flatMap(q => quadrant(q).members), ...guestMembers()];
+    for (const d of new Set(defs)) { d.s = Math.round(d.s * x); d.w = Math.round(d.w * x); }
+  }
+}
+
 if (!isMainThread) {
+  patch(workerData.patch || {});
   // an engine error ends that game only: it's counted and reported, not averaged in
   for (const job of workerData.jobs) {
     try { parentPort.postMessage(playGame(job)); } catch (e) { parentPort.postMessage({ crashed: `game ${job.g}: ${e.message}` }); }
@@ -101,7 +120,7 @@ if (!isMainThread) {
   await Promise.all(Array.from({ length: workers }, (_, w) => new Promise((res, rej) => {
     const mine = jobs.filter((_, k) => k % workers === w);
     if (!mine.length) return res();
-    const wk = new Worker(fileURLToPath(import.meta.url), { workerData: { jobs: mine } });
+    const wk = new Worker(fileURLToPath(import.meta.url), { workerData: { jobs: mine, patch: { tiers: flag.tiers, memberScale: flag['member-scale'] } } });
     wk.on('message', r => { results.push(r); if (results.length % 50 === 0) process.stderr.write(`${results.length}/${games}\n`); });
     wk.on('error', rej);
     wk.on('exit', res);
@@ -113,7 +132,7 @@ if (!isMainThread) {
   const tot = k => results.reduce((a, r) => a + r[k], 0);
   const wins = tot('win');
   const [lo, hi] = wilson(wins, n);
-  console.log(`big followers vs 3 ${blend !== undefined ? `blend ${blend} (0 easy, 1 normal)` : level} bots${level === 'hard' ? ` (budget ${budget})` : ''}, ${n} games (from ${first}), table ${quadrants ? quadrants.join('/') : 'default'}${split ? ', tied leaders SPLIT (patch)' : ''}, release ${rules.release ? 'on' : 'off'}, guests ${rules.guests ? 'on' : 'off'}, ${((performance.now() - t0) / 1000).toFixed(0)}s`);
+  console.log(`big followers vs 3 ${blend !== undefined ? `blend ${blend} (0 easy, 1 normal)` : level} bots${level === 'hard' ? ` (budget ${budget})` : ''}, ${n} games (from ${first}), table ${quadrants ? quadrants.join('/') : 'default'}${split ? ', tied leaders SPLIT (patch)' : ''}${flag.tiers ? `, tiers ${flag.tiers} (patch)` : ''}${flag['member-scale'] ? `, members ×${flag['member-scale']} (patch)` : ''}, release ${rules.release ? 'on' : 'off'}, guests ${rules.guests ? 'on' : 'off'}, ${((performance.now() - t0) / 1000).toFixed(0)}s`);
   console.log(`buyer wins ${(100 * wins / n).toFixed(1)}% [${(100 * lo).toFixed(1)}–${(100 * hi).toFixed(1)}] · buyer followers ${(tot('buyerF') / n).toFixed(1)} (left ${(tot('buyerLeft') / n).toFixed(1)}) · others ${(tot('othersF') / n).toFixed(1)} · their members ${(tot('members') / n).toFixed(1)}, left ${(tot('left') / n).toFixed(1)} · releases/game ${(tot('released') / n).toFixed(1)}`);
   const pct = x => `${(100 * x).toFixed(1)}%`;
   const sh = [0, 1, 2].map(r => results.reduce((a, x) => a + x.share[r], 0) / n);

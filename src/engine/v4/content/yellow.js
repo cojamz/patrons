@@ -110,7 +110,7 @@ export default {
     m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2+ of another color at once, +1 yellow.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== Y && g.n >= 2) owner.res[Y] += 1; },
     }),
-    m('admirer', 'Admirer', 4, 2, 'Whenever a rival recruits a member of a color you have none of, +1 of that color.', {
+    m('admirer', 'Admirer', 3, 1, 'Whenever a rival recruits a member of a color you have none of, +1 of that color.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         const c = colorOf(ctx, recruited);
         if (c && by !== owner && !(owner.res[c] > 0)) ctx.gain(owner, c, 1);
@@ -131,7 +131,7 @@ export default {
         if (ctx.rivals(owner).every(o => ctx.followers(o) >= mine)) eachColor(ctx, owner, 1);
       },
     }),
-    m('sower', 'Sower', 2, 2, 'Round start: plant any of your yellow. Round end: gain that many of each other color.', {
+    m('sower', 'Sower', 1, 1, 'Round start: plant any of your yellow. Round end: gain that many of each other color.', {
       onRoundStartLate(ctx, owner, card) {
         const y = owner.res[Y];
         if (!y) return;
@@ -157,7 +157,7 @@ export default {
     m('harmonist', 'Harmonist', 4, 0,'Game end: +1 follower per full set you hold.', {
       onGameEnd: (ctx, owner) => setsOf(ctx, owner),
     }),
-    m('rainmaker', 'Rainmaker', 4, 2, 'Once per game: raise each of your colors to match your yellow.', {
+    m('rainmaker', 'Rainmaker', 3, 1, 'Once per game: raise each of your colors to match your yellow.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const top = owner.res[Y];

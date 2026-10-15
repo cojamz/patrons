@@ -157,6 +157,8 @@ describe('v4 payment picker', () => {
     p.res = Object.fromEntries(state.resources.map(r => [r, 0]));
     p.res[pr.color || state.resources[0]] = pr.total;
     p.discount = 0;
+    // a rival out-holds that color, so paying gives up no lead (that warning keeps the sheet open on purpose)
+    for (const o of state.players) if (o !== p) o.res[pr.color || state.resources[0]] = pr.total + 3;
     state.queue[0] = { t: 'pay', p: me, uid };
     state = resume(state);
     expect(payIds(state).length).toBe(1);

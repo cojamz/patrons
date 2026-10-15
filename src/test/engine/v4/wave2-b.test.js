@@ -136,7 +136,7 @@ describe('tester A #4: Extra Hand recruited during round III gives its minion th
 });
 
 describe('tester A #5: the suggested payment keeps the rims you lead or tie', () => {
-  it('8-for-6 with leads in gold (6–2) and blue (5–4): the default spends gold down to a tie, not blue below P2', () => {
+  it('8-for-8 with leads in gold (6–2) and blue (5–4): the default spends gold down to a tie, not blue below P2', () => {
     const s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 3, res: [{ gold: 6, blue: 5, red: 3 }, { gold: 2, blue: 4 }] });
     const ways = followerChoices(s, s.players[0], TIERS.find(t => t.key === 'big'));
     const d = ways[0];
