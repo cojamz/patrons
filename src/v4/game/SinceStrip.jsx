@@ -122,6 +122,14 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
         // a line shows whole or not at all, never cut mid-word (blind panel: "took your Tax…"): a newest line too tall
         // for the room first drops the space's board words in brackets (its name still opens its card), which changes
         // its size so this runs again; if it still doesn't fit, or had none to drop, the strip shows only the count
+        // rival turns since yours are the strip's whole point (panel r3: the fold hid three of them): before any line
+        // folds into "N earlier", every line drops its board words in brackets, and the fold is measured again
+        if (l0 === 0 && k > 0 && rows.some(r => r.querySelector('.sp-words'))) {
+          for (const el of rows.slice(0, k)) { el.setAttribute('data-fold-hide', ''); el.style.visibility = 'hidden'; }
+          asked.current = { sig: s0, n: c0, bare: false, lvl: 1 };
+          setDrop(d => (d.sig === s0 && (d.lvl || 0) >= 1 ? d : { sig: s0, n: c0, bare: false, lvl: 1 }));
+          return;
+        }
         const brief = l0 === 0 && !!rows[k].querySelector('.sp-words');
         const lvlNow = !fits(k) && !alone ? (brief ? 1 : 2) : l0;
         if ((!k && !bareNow && lvlNow === l0) || c0 + k > len - 1) return;
