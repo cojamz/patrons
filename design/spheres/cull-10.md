@@ -12,7 +12,7 @@ Cory: "cull member piles down to the best existing 10, per our principles and ba
 7. **Yellow.** Keep Peddler, Admirer, Go-Between, Dyer, Late Bloomer, Rainmaker (priced up, your call), Pilgrim, Weaver, Explorer and Feastmaker. Cut Harmonist (fair 0.1), Sower (remembers what was planted; Investor's twin), Farmer (Prospector's twin; fair 1.9 at 6), Gardener (fair 1.6) and Gleaner (a fiddly "2+ at once" trigger).
 8. **Magenta.** Keep Cutpurse, Grifter, Sticky Fingers, Desperado, Robin Hood, Extortionist, Bodyguard, Crew, Double Agent and Kingpin. Cut Accomplice (Cutpurse's job at twice the price), Mole (Cutpurse's twin), Light Fingers (the cost cutoff you cut from Blue), Safecracker (the pile it halves is always thin) and Lookout (fires on rivals' turns).
 9. **White.** Keep Shopkeeper, Rich Uncle, Magnate, Shareholder, Heiress, Bulk Buyer, Broker, Exporter, Reinvestor and Raider. Cut Lender (your call: hard to track), Tipster (the same card as your new Tax Collector), Dealer (fair below 0), Pawnbroker and Liquidator (both sell "loose followers", the word you flagged).
-10. **Neutral.** Only 7 exist. Keep 6 as placeholders until you design the set: Squatter, Freelancer, Insider, Extra Hand, Front-runner and Straggler. Cut Big Spender (your call).
+10. **Neutral.** No placeholders and no cut to 10 (Cory). Seven exist today: Straggler, Squatter, Freelancer, Insider, Extra Hand, Front-runner and Big Spender (Cory rejected it). Asked whether to keep the six or only Straggler.
 
 ## Small fixes from your verdicts (to build; redesigns stay out)
 11. Tinker becomes Alchemist: "Whenever an action gains you another color, +1 gold."
