@@ -6,6 +6,7 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 The bar (Cory, 2026-10-15): A− or better from a fresh blind panel, on the exact build he'll open, before he sees anything.
 
 ## Now: Cory's notes from this morning, in this order
+- [ ] (Cory, 2026-10-15) End-game scoring animation that shows where every point comes from: followers score on their own; then each member pops a small +x over its head for the people in it, then a second round of pop-ups for followers it grants (like Recluse). First in the next round of work if it doesn't fit the A− loop.
 None of these is done. Each also becomes an answer-key item (design/eval/critic-calibration/answer-key.md, Part 3) and a gate.
 - [ ] **Hover lag.** Hovers feel laggy. Likely cause: the space card opens before its "You'd get" line is ready, then fills in (the best/likely forecast made it costlier). Precompute every open space's "You'd get" at turn start and cache it; keep the card's size fixed; gate on time to "card complete", in a real headed browser. (Today's gates time "card open": snappy.mjs s2 and info.mjs (d) look for the open hover layer, not its filled-in line.)
 - [ ] **Pass is hard to find.** Move it into the shop column as "Done, no buy", under the follower buys. (Today it's a small "Pass" button in the buy step's prompt, `GameScreen.jsx`.)

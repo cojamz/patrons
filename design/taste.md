@@ -25,6 +25,8 @@ You're a senior product designer at a small studio known for beloved digital boa
 - **Snappy is part of the look.** Never put a `filter` (drop-shadow, blur) on a large container whose children animate, and never `:has()` on the page or table root: both made every hover and click wait (2026-10-15). Put shadows on a static layer and flags on the region that changes.
 - **Keep the gates honest.** Never weaken an assertion to make a change pass. If a test pins something Cory changed, update the test to Cory's new intent and say so.
 
+11. **Scoring shows its sources (Cory, 2026-10-15).** At game end, points arrive where they come from: followers on their own, then a +x over each member's head for its people, then pop-ups for the followers it grants. Never a total that just appears.
+
 ## Slop (never ship these)
 - Badge soup: little pills and counters on everything.
 - More than three type sizes on a screen. Ad-hoc font weights.
