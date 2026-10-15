@@ -50,6 +50,7 @@ How Claude works on Cults (the repo is still called patrons). Claude owns this f
 - **Usage limits kill agents mid-work** (four times on 2026-10-14). Keep `design/in-flight.md` current (who's running, their brief, their port) and arm a `send_later` check-in that resumes each paused agent with SendMessage, or relaunches it from its brief.
 
 ## Self-improvement
+- **Retro at every milestone (Cory, 2026-10-15):** a fresh engineer audits the build system (gate wall time, slot waits, agent idle time, failed or stale processes, Cory's corrections) and lands fixes with before/after numbers in design/eval/harness-metrics.md. The expert engineer reviews the build system as well as the code.
 - When Cory corrects how Claude works, fix the rule file in the same turn and add a changelog line. Don't wait to be asked.
 - If the same kind of correction comes up twice, make it stronger: turn it into a hook, a skill, or a hard rule.
 - At the end of a meaty session, add one line to the changelog with what to do differently.
