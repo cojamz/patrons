@@ -3,7 +3,8 @@
 // Heiress), one worth nothing now (Safecracker: no rival holds 2 magenta), one already used (Speculator), switches
 // (Midas on, Translator off), reactions (Prospector, Impressionist), a game-end scorer
 // (Tycoon) and one the engine would refuse now (Pawnbroker: nothing to sell). P2 holds gold, so Lottery Winner has
-// something to win, and Stunt Double (a use still in hand); P3 lies low (safe this round). The round-start snapshot
+// something to win, and Stunt Double (a use still in hand); P3 lies low (safe this round); P4 holds 13
+// members (its card scrolls inside the window). The round-start snapshot
 // is saved too. No round-start income, so the seat has room for six figures.
 import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/index.js';
 import { resume } from '../../../src/engine/v4/core.js';
@@ -39,6 +40,8 @@ export function membersSave(from = 1) {
     const uids = HAND.map(id => give(0, id));
     const theirs = RIVAL.map(id => give(1, id));
     if (uids.includes(false) || theirs.includes(false)) continue;
+    // P4 holds a crowd (w2a #16: a 12+ member seat card ran off the screen): the first 13 members left in the pile
+    for (const u of s.pile.filter(x => !s.players.some(p => p.members.includes(x))).slice(0, 13)) give(3, s.cards[u].def);
     while (s.shop.length < 10 && s.pile.length) s.shop.push(s.pile.shift());
     s.cards[uids[HAND.indexOf('gold.midas')]].on = true;
     s.cards[uids[HAND.indexOf('echo.translator')]].on = false;

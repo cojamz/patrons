@@ -11,7 +11,7 @@ import { spriteId, sphereShare } from '../art/index.js';
 import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
-import { MemberActions, MemberSwitch } from './MemberUse.jsx';
+import { MemberActions, MemberSwitch, useUseResult, UseResult } from './MemberUse.jsx';
 import { usableNow, loadedUse, safeThisRound } from './memberUse.js';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
@@ -39,6 +39,11 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
   // your members you can use right now, with an effect (the engine's own dry run; one it would refuse stays unlit)
   const safe = safeThisRound(state, pid);
+  // what a use just did, over that member for a moment (even "+0"); and the member giving a second buy hops as it does
+  const result = useUseResult(state, pid);
+  const pend = state.pending;
+  const extraBuyNow = !!(mine && pend && pend.player === pid && pend.kind === 'buy' && pend.extra && !state.over);
+  const givesExtra = g => extraBuyNow && g.uids.some(u => { const c = state.cards[u]; return !(c.spent && c.spent.extraBuy === state.round) && !!cardDef(state, u).extraBuy; });
   const ready = new Set(mine ? usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid) : []);
   // its place in what's left of this round's turn order (who's up now, who's next)
   const turns = turnPlaces(state, me);
@@ -57,7 +62,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
   // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
   // coming, w2b #21); each takes the place of the last one shown that's needed less
-  const need = g => (g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u])) ? 2 : g.uids.some(u => loadedUse(state, u)) ? 1 : 0);
+  const need = g => (g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u]) || (result && result.uid === u)) || givesExtra(g) ? 2 : g.uids.some(u => loadedUse(state, u)) ? 1 : 0);
   const keep = groups.slice(0, MAX);
   for (const g of groups.slice(MAX).filter(need).sort((x, y) => need(y) - need(x))) {
     const k = keep.map(need).reduce((at, n, i) => (n < need(g) && (at < 0 || n <= need(keep[at])) ? i : at), -1);
@@ -75,7 +80,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         onPointerLeave={e => { if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
         onClick={e => openSeat(e, true)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSeat(e, true); } }}>
-        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 30} orbit={false} /></span>
+        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 32} orbit={false} face={!mine} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
           {/* its place in the turns, said like the plate's "You  place a minion"; the rail beside the column marks it too */}
@@ -102,7 +107,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // a use still in hand, anyone's: subdued light, so a rival's loaded Raider can be seen coming (w2b #21)
           const loaded = readyUid == null && g.uids.some(u => loadedUse(state, u));
           const toggle = mine ? g.uids.map(u => optionFor(`toggle:${u}`)).find(Boolean) : null;
-          const hop = react && react.members && react.members[d.id];
+          const hop = (react && react.members && react.members[d.id]) || (givesExtra(g) ? 'extra-buy' : null);
           // its sphere at a glance: a soft ground in the sphere's color, stronger when the clothes alone don't carry it
           const sphere = sphereOf(state, d);
           const weak = ['silver', 'white', 'colorless'].includes(sphere) || sphereShare([d.id, spriteId(d.name)]) < 0.33;
@@ -111,11 +116,12 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           return (
             <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
-              <Tip className="fig" sticky={mine} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
+              <Tip className="fig" sticky={mine} beside=".lt-cult-seat" label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>
+              {result && g.uids.includes(result.uid) && <UseResult result={result} />}
               {pickM && <button type="button" className="cs-pick-member" tabIndex={-1} data-option={pickM.id} aria-label={pickM.say || `${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} title={pickM.say || `${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} onClick={e => pick.onPick(pickM.id, e.currentTarget)}><span className="hitbox" aria-hidden="true" /></button>}
               {/* a switch shows its state, small under its figure; a click flips it in your buy step (its card says so) */}
               {mine && d.toggle && <MemberSwitch name={d.name} on={g.card.on !== false} option={toggle} onPick={onPick} />}
@@ -203,7 +209,9 @@ export function reactionsBetween(before, state, pid) {
     for (const u of p.members) { try { const d = cardDef(state, u); defs.set(d.name, d.id); } catch { /* gone */ } }
     for (const [name, id] of defs) {
       const re = new RegExp(`(^|\\(|\\s)${esc(p.name)}'s ${esc(name)}(?![A-Za-z0-9\u00C0-\u024F])`);
-      if (lines.some(l => re.test(l))) members[id] = Date.now();
+      // and its owner using it: "P1 used Lottery Winner: +7 gold.", "P1 uses Big Spender." (w2a #6: it fired unseen)
+      const by = new RegExp(`^${esc(p.name)} (?:uses|used) ${esc(name)}(?![A-Za-z0-9\u00C0-\u024F])`);
+      if (lines.some(l => re.test(l) || by.test(l))) members[id] = Date.now();
     }
     if (lines.some(l => l.startsWith(`${p.name} recruited `))) leader = 'scheme';
   }

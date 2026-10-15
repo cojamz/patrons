@@ -1,8 +1,8 @@
 // Paying (Cory, 2026-10-15: "Using these currencies is rather confusing … something more intuitive"). A paper card in
-// the plate's grammar: what you're buying and its cost exactly as the card prints it ("2● 2◐"), then the cost as a row
-// of sockets with the coins that pay it sitting in them, then your resources as stacks of dots. The suggested way is
-// already in: the coins leaving your stacks show as empty rings at the top of each stack, and the number under a
-// stack is what you keep. Click a stack to pay with that color instead; click a coin in the cost to send it home.
+// the plate's grammar: what you're buying and its cost exactly as the card prints it ("2● 2◐"), then your resources as
+// stacks of dots, then Pay with the coins it pays. The suggested way is already in: the coins that pay are lifted off
+// the top of their stacks, and the number under a stack is what you keep. Click a stack to pay with that color
+// instead; click a lifted coin to put it back.
 // Either way the payment stays whole: the engine's nearest other legal way takes its place, and the coins fly between
 // stack and socket so you see the swap. Pay (Enter, wherever focus is) pays; Space works a focused stack or coin;
 // Cancel (Escape) goes back to the buy step.
@@ -39,23 +39,6 @@ function costShape(state, p, pend, uid, how) {
   const pp = p.members.some(u => defsOf(state.cards[u]).some(d => d.goldPaysDouble));
   const units = [...Array.from({ length: pr.colored }, () => pr.color), ...Array.from({ length: Math.max(0, pr.total - pr.colored) }, () => 'any')];
   return { units, worth: c => (c === 'gold' && pp ? 2 : 1) };
-}
-
-/** The coins in the sockets, in order: the colored part's color first, then table order. Each coin covers `span`
- *  sockets from `at`; key is the coin's place in its stack (the top coins leave first). */
-function seat(res, units, spend, worth, have) {
-  const q = units.find(u => u !== 'any') || null;
-  const order = q ? [q, ...res.filter(r => r !== q)] : res;
-  const out = [];
-  let at = 0;
-  for (const r of order) {
-    for (let j = 0; j < (spend[r] || 0); j++) {
-      const span = Math.max(1, Math.min(worth(r), units.length - at));
-      out.push({ r, at, span, key: `${r}-${(have[r] || 0) - 1 - j}` });
-      at += span;
-    }
-  }
-  return out;
 }
 
 /**
@@ -161,7 +144,6 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
     snap(); setSpend(vecOf(res, o.spend)); setNudge(null);
   };
 
-  const coins = seat(res, shape.units, spend, shape.worth, p.res);
   const tall = Math.min(STACK_MAX, Math.max(1, ...res.map(r => p.res[r] || 0)));
   const payParts = res.filter(r => spend[r] > 0).map(r => ({ color: r, n: spend[r] }));
   const sphere = def ? (onTable(state, def) ? (() => { try { return quadrant(def.quadrant).resource; } catch { return 'colorless'; } })() : 'colorless') : null;
@@ -187,39 +169,34 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
           </div>
         </div>
 
-        {/* the cost as sockets, the coins that pay it sitting in them; a click sends one home */}
-        <div className="pay-sockets" role="group" aria-label={`The cost: ${shape.units.length} to pay. Click a coin to pay that part another way.`}
-          data-units={shape.units.length} style={{ '--units': shape.units.length }}>
-          {shape.units.map((u, k) => <span key={k} className={`pay-socket${u === 'any' ? ' any' : ''}`} data-socket={u} style={{ gridColumn: k + 1, ...(u === 'any' ? {} : { '--c': `var(--${u})` }) }} aria-hidden="true" />)}
-          {coins.map(c => (
-            <button key={c.key} type="button" className={`pay-coin${c.span > 1 ? ' wide' : ''}`} data-pay-coin={c.r} data-coin={c.key}
-              style={{ gridColumn: `${c.at + 1} / span ${c.span}` }} disabled={busy}
-              aria-label={`${c.r}${c.span > 1 ? ` (pays ${c.span})` : ''}: pay this part another way`} title={`${c.r[0].toUpperCase()}${c.r.slice(1)}${c.span > 1 ? `, worth ${c.span} here` : ''}. Click to pay this part another way.`}
-              onClick={() => remove(c.r)}>
-              <ResourceGlyph r={c.r} size={24} decorative />{c.span > 1 && <span className="x num">×{c.span}</span>}
-            </button>
-          ))}
-        </div>
-
-        {/* your resources: a stack of dots per color; the coins paying are empty rings at the top, the number is what you keep */}
-        <div className="pay-stacks" role="group" aria-label="Your resources: click a stack to pay with that color" style={{ '--tall': tall }}>
+        {/* your resources: a stack of dots per color (wave-2 tester A: the payment once showed three times; now the
+            stacks and the Pay button say it). The coins this pays with are lifted off the top of their stack and faded,
+            and the number under a stack is what you keep. Click a stack to pay with one more of it; click a lifted coin
+            to put it back (another color takes its place). */}
+        <div className="pay-stacks" role="group" aria-label="Your resources" style={{ '--tall': tall }}>
           {res.map(r => {
             const have = p.res[r] || 0, out = spend[r] || 0, keep = have - out;
-            const drawn = Math.min(have, STACK_MAX);
-            const say2 = have ? `${have} ${r}: ${out ? `${out} pay${out === 1 ? 's' : ''} this, ` : ''}you keep ${keep}. Click to pay with ${r}.` : `No ${r}`;
+            const drawn = Math.min(have, STACK_MAX), lifted = Math.min(out, drawn), base = have - drawn;
+            const sayAdd = have ? `${have} ${r}: ${out ? `${out} pay${out === 1 ? 's' : ''} this, ` : ''}you keep ${keep}. Click to pay with one more ${r}.` : `No ${r}`;
             return (
-              <button key={r} type="button" className={`pay-stack${have ? '' : ' none'}`} data-pay-add={r} data-keep={keep} disabled={busy || !have}
-                title={say2} aria-label={say2} onClick={() => add(r)}>
-                <span className="ps-coins" aria-hidden="true">
-                  {Array.from({ length: drawn }, (_, k) => {
-                    const leaving = k >= drawn - Math.min(out, drawn);
-                    return leaving
-                      ? <i key={k} className="ps-ghost" style={{ '--k': k }}><ResourceGlyph r={r} size={24} decorative /></i>
-                      : <i key={k} className="ps-coin" data-coin={`${r}-${k + (have - drawn)}`} style={{ '--k': k }}><ResourceGlyph r={r} size={24} decorative /></i>;
-                  })}
+              <div key={r} className={`pay-stack${have ? '' : ' none'}${out ? ' paying' : ''}`} data-stack={r} data-keep={keep} data-out={out}>
+                <button type="button" className="ps-add" data-pay-add={r} data-keep={keep} disabled={busy || !have} title={sayAdd} aria-label={sayAdd} onClick={() => add(r)} />
+                <span className="ps-coins">
+                  {Array.from({ length: drawn - lifted }, (_, k) => (
+                    <i key={k} className="ps-coin" data-coin={`${r}-${k + base}`} style={{ '--k': k }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
+                  ))}
+                  {lifted > 0 && (
+                    <button type="button" className="ps-out" data-pay-coin={r} disabled={busy} style={{ '--k0': drawn - lifted, '--n': lifted }}
+                      title={`${out} ${r} pay${out === 1 ? 's' : ''} this. Click to put one back and pay with another color.`} aria-label={`${out} ${r} paying: put one back`}
+                      onClick={() => remove(r)}>
+                      {Array.from({ length: lifted }, (_, j) => (
+                        <i key={j} className="ps-coin out" data-coin={`${r}-${drawn - lifted + j + base}`} style={{ '--j': j }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
+                      ))}
+                    </button>
+                  )}
                 </span>
-                <b className="ps-n num">{keep}</b>
-              </button>
+                <b className="ps-n num" aria-hidden="true">{keep}</b>
+              </div>
             );
           })}
         </div>

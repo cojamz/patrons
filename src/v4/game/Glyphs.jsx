@@ -98,7 +98,7 @@ export function SeatMinion({ id, size = 16, dim = false, title = null }) {
  * The leader is the anchor a placed minion flies from (data-leader={id}); each floating minion is data-minion.
  * size: the leader (32); minion: each minion (16). compact packs the ring tighter.
  */
-export function LeaderRing({ state, id, size = 32, minion = 16, compact = false, orbit = true }) {
+export function LeaderRing({ state, id, size = 32, minion = 16, compact = false, orbit = true, face = false }) {
   const p = state.players[id];
   // orbit false: the leader alone (the chairs stand their minions in a column beside the total, CultSeat)
   const n = orbit ? Math.max(0, p.left || 0) : 0;
@@ -119,7 +119,9 @@ export function LeaderRing({ state, id, size = 32, minion = 16, compact = false,
   return (
     <span className={`lt-ring${compact ? ' compact' : ''}`} style={{ width: W, height: H }} data-hint={label} aria-label={label} role="img" data-leader-ring={id} data-left={left}>
       <span className="lead" data-leader={id} style={{ left: cx - size / 2, top: cy - size / 2 }}>
-        <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />
+        {/* face: the player's emoji alone, crisp at 2× (a rival's chair: the robed leader at 30px read as a grey padlock,
+            w2a #17); the robe stays where it's drawn large */}
+        {face ? <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={size} /> : <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />}
       </span>
       {Array.from({ length: n }, (_, k) => {
         // its own slow period and phase (golden-ratio spread), so no two bob together

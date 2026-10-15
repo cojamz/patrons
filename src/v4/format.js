@@ -58,6 +58,17 @@ export function costParts(def, resources = null) {
 export const tierCostText = t => (t.colors > 1 ? `${t.cost}, ${t.colors}+ colors` : `${t.cost} of anything`);
 export { TIERS };
 
+/** The member giving p a second buy this round (Big Spender: flag extraBuy), by name, or null. */
+export function extraBuyer(state, p) {
+  for (const u of p.members) {
+    const c = state.cards[u];
+    if (!c || (c.spent && c.spent.extraBuy === state.round)) continue;
+    const d = [c.def, c.copy].filter(Boolean).map(id => defById(id)).find(x => x.extraBuy);
+    if (d) return defById(c.def).name;
+  }
+  return null;
+}
+
 /**
  * Header line, phrased for people. `me` is true when the seat to act is controlled here.
  * Returns { who, text } where who is the acting player (or null).
@@ -109,8 +120,10 @@ export function promptFor(state, mine) {
       return mine
         // the headline stays one short line beside Release and Pass; the line under it finishes it rather than saying it
         // again (it read "Recruit or buy" over "Recruit a member or buy followers, or pass")
-        ? { who: p, text: 'Recruit or buy', sub: `A member from the shop, or followers${use ? `; or use ${use}` : ''}` }
-        : { who: p, text: `${name} is shopping` };
+        // a second buy (Big Spender) says so and names the card that gave it (w2a #6: it fired with no cue)
+        ? (pend.extra ? { who: p, text: `Buy again (${extraBuyer(state, p) || 'a second buy'})`, keepCase: false, sub: `A member from the shop, or followers, or pass${use ? `; or use ${use}` : ''}` }
+          : { who: p, text: 'Recruit or buy', sub: `A member from the shop, or followers${use ? `; or use ${use}` : ''}` })
+        : { who: p, text: pend.extra ? `${name} buys again (${extraBuyer(state, p) || 'a second buy'})` : `${name} is shopping` };
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };
     case 'choose': {

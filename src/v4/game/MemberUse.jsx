@@ -2,9 +2,10 @@
 // player's members as one calm list (the seat card). A member you can use now is lit in your seat; its hover and its
 // row in the seat card carry the same "Use: +7 ●" button; once used it reads "used" everywhere. Switches (Midas,
 // Translator) are a small on/off switch. Everything here is read off the engine (memberUse.js).
+import { useEffect, useRef, useState } from 'react';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
-import { quadrant } from '../../engine/v4/index.js';
+import { quadrant, followers } from '../../engine/v4/index.js';
 import { CardName, onTable } from './Info.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { memberRows, useNow } from './memberUse.js';
@@ -106,4 +107,39 @@ export function MemberActions({ state, uid, me = null, optionFor = () => null, o
       {rel && onPick ? <ReleaseButton option={rel} name={row.name} onPick={onPick} /> : null}
     </div>
   );
+}
+
+/**
+ * What a use just did, shown at the member for a moment (w2a #1: Safecracker spent its use for nothing and nothing
+ * said so): { uid, text: "+7 gold" | "+0", n } for about 1.8s after one of pid's members turns used, else null.
+ */
+export function useUseResult(state, pid) {
+  const prev = useRef(state);
+  const [out, setOut] = useState(null);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    const before = prev.current;
+    prev.current = state;
+    if (!before || before === state || before.seed !== state.seed || !(state.moves > before.moves) || pid == null) return;
+    const p0 = before.players[pid], p1 = state.players[pid];
+    if (!p0 || !p1) return;
+    const uid = p1.members.find(u => state.cards[u] && state.cards[u].used && before.cards[u] && !before.cards[u].used);
+    if (uid == null) return;
+    const parts = [];
+    for (const r of state.resources) { const d = (p1.res[r] || 0) - (p0.res[r] || 0); if (d) parts.push(`${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`); }
+    const f = followers(state, p1) - followers(before, p0);
+    if (f) parts.push(`${f > 0 ? '+' : '−'}${Math.abs(f)} follower${Math.abs(f) === 1 ? '' : 's'}`);
+    if ((p1.left || 0) > (p0.left || 0)) parts.push('extra turn');
+    setOut({ uid, text: parts.join(' ') || '+0', zero: !parts.length, n: Date.now() });
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setOut(null), 1800);
+  }, [state, pid]);
+  return out;
+}
+
+/** The result over the member that was just used ("+7 ●", or a quiet "+0"). */
+export function UseResult({ result }) {
+  if (!result) return null;
+  return <span key={result.n} className={`mu-result${result.zero ? ' zero' : ''}`} data-use-result={result.text} aria-live="polite"><Rich text={result.text} /></span>;
 }

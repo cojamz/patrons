@@ -106,6 +106,7 @@ export function memberRows(state, pid, viewer = null, optionFor = () => null) {
       else if (use && use.blocked) tag = { text: 'can’t use now', tone: 'quiet', title: use.why };
       else tag = { text: eff.activate === 'round' ? 'once a round' : 'not used yet', tone: 'quiet' };
     } else if (spentThisRound(state, c)) tag = { text: 'used this round', tone: 'dim' };
+    else if (t === 'Once a round') tag = { text: 'once a round', tone: 'quiet' }; // Big Spender, Squatter: not spent yet
     else if (kind === 'income') tag = { text: 'pays at round start', tone: 'quiet' };
     else if (kind === 'end') tag = { text: 'scores at game end', tone: 'quiet' };
     // what the card became: "Copying Banker", Hustler's picked color

@@ -16,6 +16,8 @@
 //       whole on screen; never docked away over the wheel;
 //  (m8) w2b #19: a use worth nothing now (Safecracker, no rival holds 2 magenta) is never lit or named in the prompt;
 //       its row and hover read a muted "Use: +0" with the reason;
+//  (m10) w2a #1, #44, #45, #16: a use's result shows at the member (even +0) and the prompt drops it at once; a usable
+//       member has a warm ring and a small lift; its card opens beside your seat; a 13-member seat card scrolls on screen.
 //  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Stunt Double, subdued); a seat no one can
 //       steal from this round says "safe this round" (P3 lies low), in its seat and its card.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/members/).
@@ -96,7 +98,10 @@ try {
   // (m2) the seat: lit, used, refused, switches
   const fig = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-cult="0"] .cs-member')].map(m => [m.dataset.member, {
     state: m.dataset.state || '', lit: m.classList.contains('ready'), sw: (m.querySelector('[data-switch]') || {}).dataset?.switch || '',
+    // w2a #44: a warm ring and a small lift, not a faint glow
+    ring: /rgba?\(/.test(getComputedStyle(m.querySelector('.fig'), '::before').boxShadow || ''), lift: getComputedStyle(m.querySelector('.fig')).transform,
   }])));
+  for (const id of ['gold.jackpot', 'trading.heiress']) if (fig[id] && (!fig[id].ring || !/matrix\(1, 0, 0, 1, 0, -\d/.test(fig[id].lift))) fail(`${id} is lit without its warm ring and lift: ${JSON.stringify(fig[id])}`, 'm2');
   for (const id of ['gold.jackpot', 'trading.heiress']) if (!fig[id] || !fig[id].lit || fig[id].state !== 'ready') fail(`${id} isn't lit in your seat though you can use it now: ${JSON.stringify(fig[id])}`, 'm2');
   if (!fig['gold.speculator'] || fig['gold.speculator'].state !== 'used' || fig['gold.speculator'].lit) fail(`Speculator (used) doesn't read used in your seat: ${JSON.stringify(fig['gold.speculator'])}`, 'm2');
   if (fig['trading.pawnbroker'] && fig['trading.pawnbroker'].lit) fail('Pawnbroker is lit, but using it now would do nothing (no loose followers)', 'm2');
@@ -156,6 +161,9 @@ try {
   if (!btn) fail('the lit member\'s hover has no Use button', 'm3');
   else {
     const label = (await btn.textContent()).trim();
+    // w2a #45: the member's card opens beside your seat, never over it
+    const over = await page.evaluate(() => { const t = document.querySelector('[data-tip-body]').closest('.popover').getBoundingClientRect(), s = document.querySelector('[data-cult="0"]').getBoundingClientRect(); return Math.max(0, Math.min(t.right, s.right) - Math.max(t.left, s.left)) * Math.max(0, Math.min(t.bottom, s.bottom) - Math.max(t.top, s.top)); });
+    if (over > 0) fail(`the member's card covers your seat (${Math.round(over)}px²)`, 'm3');
     if (!/^Use: \+7/.test(label)) fail(`the hover's button reads "${label}" (want "Use: +7 …")`, 'm3');
     await page.screenshot({ path: `${SHOTS}/2-member-hover.png` });
     const b = await btn.boundingBox();
@@ -164,7 +172,11 @@ try {
     if (!(await page.$('[data-tip-body] [data-use]'))) fail('the member\'s hover closed while the pointer moved onto its Use button', 'm3');
     await page.mouse.down(); await page.mouse.up();
     await page.waitForFunction(m => { try { return JSON.parse(localStorage.getItem('patrons.v4.local')).state.moves > m; } catch { return false; } }, before.moves, { timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(150);
+    // w2a #1: the result shows at the member, and the prompt stops naming it at once
+    const shown = await page.waitForFunction(() => document.querySelector('[data-cult="0"] [data-use-result]')?.dataset.useResult || null, null, { timeout: 1500 }).then(h => h.jsonValue(), () => null);
+    if (shown !== '+7 gold') fail(`the use's result at the member reads ${JSON.stringify(shown)} (want "+7 gold")`, 'm3');
+    const sub2 = await page.evaluate(() => document.querySelector('[data-prompt-sub]')?.textContent || '');
+    if (/Lottery Winner/.test(sub2)) fail(`after the use the prompt still names it: "${sub2}"`, 'm3');
     await page.screenshot({ path: `${SHOTS}/3-use-flight.png` });
     const after = await saved();
     const u = uids['gold.jackpot'];
@@ -225,11 +237,15 @@ try {
         const L = document.querySelector('[data-hover-layer][data-open="1"]');
         if (!L || !L.querySelector(`[data-seat-card="${id}"]`)) return null;
         const a = L.getBoundingClientRect(), s = document.querySelector(`[data-cult="${id}"]`).getBoundingClientRect();
-        return { gap: Math.round(Math.max(a.left - s.right, s.left - a.right)), level: a.top <= s.bottom && a.bottom >= s.top, inView: a.top >= 0 && a.left >= 0 && a.bottom <= innerHeight + 0.5 && a.right <= innerWidth + 0.5 };
+        const list = L.querySelector('.mu-list');
+        return { gap: Math.round(Math.max(a.left - s.right, s.left - a.right)), level: a.top <= s.bottom && a.bottom >= s.top, inView: a.top >= 0 && a.left >= 0 && a.bottom <= innerHeight + 0.5 && a.right <= innerWidth + 0.5,
+          scroll: list && list.scrollHeight > list.clientHeight + 1 ? getComputedStyle(list).overflowY : 'fits', rows: L.querySelectorAll('[data-member-row]').length };
       }, pid);
       if (!r) { fail(`pointing at seat ${pid}'s ${part} opened no seat card`, 'm7'); continue; }
       if (r.gap < 0 || r.gap > 16 || !r.level) fail(`seat ${pid}'s card (from ${part}) isn't right beside the seat: ${JSON.stringify(r)}`, 'm7');
       if (!r.inView) fail(`seat ${pid}'s card runs off the window`, 'm7');
+      if (r.scroll !== 'fits' && !/auto|scroll/.test(r.scroll)) fail(`seat ${pid}'s long list overflows without scrolling`, 'm7');
+      if (pid === 3 && part === '.cs-leader') await page.screenshot({ path: `${SHOTS}/8-thirteen-members.png` });
       if (pid === 2 && part === '.cs-leader') {
         const safe = await page.evaluate(() => document.querySelector('[data-hover-layer][data-open="1"] [data-safe]')?.textContent || '');
         if (!/this round/.test(safe)) fail(`P3's card doesn't say it's safe from steals this round: "${safe}"`, 'm9');

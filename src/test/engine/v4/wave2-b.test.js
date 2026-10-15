@@ -109,3 +109,44 @@ describe('#19 a member Use that would change nothing is marked idle', () => {
     expect(s.cards[o.uid].used).toBeFalsy();
   });
 });
+
+// Wave-2 tester A (design/eval/wave2/tester-a/report.md #4, #5)
+import { followerChoices, TIERS } from '../../../engine/v4/core.js';
+describe('tester A #4: Extra Hand recruited during round III gives its minion this round', () => {
+  it('a round-III recruit adds a turn after the others, and the minion count says so', () => {
+    let s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 3, left: 5, res: [{ gold: 20, red: 20, blue: 20, green: 20 }],
+      shop: ['benders.extrahand'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' }] });
+    s = take(s, 'gold.rush');
+    const left0 = s.players[0].left;
+    s = move(s, `card:${uidOf(s, 'benders.extrahand', 'shop')}`);
+    expect(s.players[0].left).toBe(left0 + 1);
+    // P2's turn is under way; P1's extra one waits after it, before the round closes
+    expect(s.pending.player).toBe(1);
+    expect(s.queue.filter(t => t.t === 'turn' || t.t === 'allPlaced').map(t => t.t === 'turn' ? t.p : 'end')).toEqual([0, 'end']);
+    expect(s.log.some(l => /Extra Hand: \+1 minion this round/.test(l))).toBe(true);
+  });
+  it('a round-II recruit still waits for round III', () => {
+    let s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 2, res: [{ gold: 20, red: 20, blue: 20, green: 20 }],
+      shop: ['benders.extrahand'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }, { t: 'endRound' }] });
+    s = take(s, 'gold.rush');
+    s = move(s, `card:${uidOf(s, 'benders.extrahand', 'shop')}`);
+    expect(s.pending.player).toBe(1);
+    expect(s.queue.filter(t => t.t === 'turn').length).toBe(0);
+  });
+});
+
+describe('tester A #5: the suggested payment keeps the rims you lead or tie', () => {
+  it('8-for-6 with leads in gold (6–2) and blue (5–4): the default spends gold down to a tie, not blue below P2', () => {
+    const s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 3, res: [{ gold: 6, blue: 5, red: 3 }, { gold: 2, blue: 4 }] });
+    const ways = followerChoices(s, s.players[0], TIERS.find(t => t.key === 'big'));
+    const d = ways[0];
+    expect(s.players[0].res.blue - (d.blue || 0)).toBeGreaterThanOrEqual(4);
+    expect(s.players[0].res.gold - (d.gold || 0)).toBeGreaterThanOrEqual(2);
+  });
+  it('when every way loses a lead, it loses as few as it can', () => {
+    const s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 3, res: [{ gold: 4, blue: 5, green: 3 }, { gold: 3, blue: 4, green: 2 }] });
+    const d = followerChoices(s, s.players[0], TIERS.find(t => t.key === 'big'))[0];
+    const keeps = ['gold', 'blue', 'green'].filter(c => s.players[0].res[c] - (d[c] || 0) >= s.players[1].res[c]).length;
+    expect(keeps).toBeGreaterThanOrEqual(1);
+  });
+});

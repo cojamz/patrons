@@ -374,7 +374,7 @@ export function Confirm({ title, text, yes, no = 'Stay', onYes, onNo }) {
 /** A small card anchored to an element (member chips on touch). */
 export const sheetMode = () => typeof matchMedia === 'function' && (matchMedia('(pointer: coarse)').matches || matchMedia('(max-width: 520px)').matches);
 
-export function Popover({ anchor, onClose, children, float = false }) {
+export function Popover({ anchor, onClose, children, float = false, beside = null }) {
   const box = useRef(null);
   const [pos, setPos] = useState(null);
   // float: a hover card stays beside what it explains, even on a narrow window (a sheet is for taps)
@@ -384,6 +384,12 @@ export function Popover({ anchor, onClose, children, float = false }) {
     if (sheet) { setPos({}); return; }
     const a = anchor.getBoundingClientRect();
     const w = Math.min(280, innerWidth - 24);
+    // beside: a member in a seat opens beside the whole seat, level with the member, never over the seat (w2a #45)
+    if (beside) {
+      const b = beside.getBoundingClientRect();
+      const left = b.right + 8 + w <= innerWidth - 8 ? b.right + 8 : b.left - 8 - w >= 8 ? b.left - 8 - w : null;
+      if (left != null) { fitted.current = false; setPos({ left, width: w, top: Math.max(8, a.top - 16) }); return; }
+    }
     const left = Math.max(12, Math.min(innerWidth - w - 12, a.left + a.width / 2 - w / 2));
     // the side with more room: a member in a bottom chair opens above it, one up top opens below (then slid on screen)
     const below = innerHeight - a.bottom >= a.top;

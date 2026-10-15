@@ -26,7 +26,7 @@ const CONTROL = 'button, a[href], [data-option], [role="button"]';
 // a pointer resting on something opens its card at once (Cory, 2026-10-15: hovers must feel instant); the beat only
 // keeps a pointer passing across a line of keywords from flashing each one
 const TIP_MS = MO.tipOpen; // src/v4/motion.js
-export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, sticky = false, ...rest }) {
+export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, sticky = false, beside = null, ...rest }) {
   const [open, setOpen] = useState(null); // { el, pinned }
   const [nested, setNested] = useState(false);
   const ref = useRef(null);
@@ -54,7 +54,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         {...rest}
       >{children}{nested ? null : <span className="hitbox" aria-hidden="true" />}</As>
       {open && (
-        <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned}>
+        <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned} beside={beside && open.el ? open.el.closest(beside) : null}>
           <div className="tip-body" data-tip-body
             {...(sticky ? { onPointerEnter: () => clearTimeout(timer.current), onPointerLeave: e => { if (e.pointerType === 'mouse') timer.current = setTimeout(letGo, 150); } } : {})}>{typeof content === 'function' ? content() : content}</div>
         </Popover>

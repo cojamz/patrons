@@ -259,6 +259,39 @@ function protectedColors(state, p) {
   return out;
 }
 
+/**
+ * How a payment `v` would move p's rims: { lost } the contests p leads or ties now and wouldn't after paying (the
+ * others' scores stay put), and { near } the coins spent from colors whose contest p is chasing (behind by 3 or
+ * less). Display/default only.
+ */
+function rimCost(state, p) {
+  const ctx = ctxFor(state);
+  const rims = [];
+  for (const qid of state.quadrants) {
+    const q = quadrant(qid);
+    if (!q.resource || !state.resources.includes(q.resource)) continue;
+    try {
+      const mine = q.scoring.score(ctx, p);
+      const best = Math.max(0, ...state.players.filter(o => o !== p).map(o => q.scoring.score(ctx, o)));
+      rims.push({ q, r: q.resource, best, held: mine > 0 && mine >= best, near: !(mine > 0 && mine >= best) && best > 0 });
+    } catch { /* a scoring rule that can't be read here */ }
+  }
+  return v => {
+    let lost = 0, near = 0;
+    const saved = { ...p.res };
+    try {
+      for (const c in v) p.res[c] = (p.res[c] || 0) - (v[c] || 0);
+      for (const x of rims) {
+        if (!(v[x.r] > 0)) continue;
+        const now = x.q.scoring.score(ctx, p);
+        if (x.held && !(now > 0 && now >= x.best)) lost++;
+        if (x.near && x.best - now <= 3 + (v[x.r] || 0)) near += v[x.r];
+      }
+    } catch { /* leave it unranked */ } finally { Object.assign(p.res, saved); }
+    return { lost, near };
+  };
+}
+
 function orderChoices(state, list, preferred, p) {
   const pk = preferred ? vecKey(state, preferred) : null;
   const guard = p ? protectedColors(state, p) : new Set();
@@ -266,10 +299,14 @@ function orderChoices(state, list, preferred, p) {
   const seen = new Set();
   const out = [];
   for (const v of list) { const k = vecKey(state, v); if (!seen.has(k)) { seen.add(k); out.push(v); } }
-  // The default way to pay comes first. It never spends a color whose contest you lead or tie when another way
-  // exists; then as little gold as possible; then the usual plan (surplus colors first).
-  // Gold is wild and scores its own contest, so among ways that spare your contests, spend the least gold.
-  out.sort((a, b) => risk(a) - risk(b) || (a.gold || 0) - (b.gold || 0) || (vecKey(state, b) === pk) - (vecKey(state, a) === pk));
+  // The default way to pay comes first (Claude, under Cory's go-with-your-gut, 2026-10-15, wave-2 tester A #5): it
+  // breaks as few rim leads or ties you hold as it can (none, when any legal way keeps them all); then it spends as
+  // few coins of colors whose rim you lead or tie, then of colors whose rim you're chasing; then as little gold (wild,
+  // and it scores its own rim); then the usual plan (surplus colors first). Every legal way stays on the sheet.
+  const cost = p ? rimCost(state, p) : () => ({ lost: 0, near: 0 });
+  const rank = new Map(out.map(v => [v, cost(v)]));
+  out.sort((a, b) => rank.get(a).lost - rank.get(b).lost || risk(a) - risk(b) || rank.get(a).near - rank.get(b).near
+    || (a.gold || 0) - (b.gold || 0) || (vecKey(state, b) === pk) - (vecKey(state, a) === pk));
   return out;
 }
 function payOption(state, v, i) {
@@ -769,6 +806,24 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   if (def.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (def[hook]) {
     const before = traceSnapshot(state); def[hook](ctx, p, w); traceChanges(state, before, p, def);
   }
+  workersNow(state, p, def);
+}
+/**
+ * A member that adds minions in this round (Extra Hand: "+1 minion in round III"), recruited during it, adds them at
+ * once: extra turns after everyone else's, before the round closes, as at round start (Claude, under Cory's
+ * go-with-your-gut, 2026-10-15: bought in round III it was a dead buy). Recruited earlier, round start counts it.
+ */
+function workersNow(state, p, def) {
+  const r = state.round;
+  const k = r >= 1 ? (def.extraWorkers || [])[r - 1] || 0 : 0;
+  const at = state.queue.findIndex(t => t.t === 'allPlaced');
+  if (!k || at < 0) return;
+  const turns = Array.from({ length: k }, () => ({ t: 'turn', p: p.id, ...(def.extraWorkerRing ? { ring: def.extraWorkerRing } : {}) }));
+  state.queue.splice(at, 0, ...turns);
+  state.order.push(...turns.map(() => p.id));
+  p.workers = (p.workers ?? WORKERS[r - 1]) + k;
+  p.left += k;
+  log(state, `${p.name}'s ${def.name}: +${k} minion${k > 1 ? 's' : ''} this round, after everyone else's turns.`);
 }
 
 function buyFollowers(state, p, tier, chosen) {

@@ -15,7 +15,7 @@ const byRound = (a, b, c) => ({ byRound: [a, b, c] });
 // (w2b #2/#24: "Gain each color" gave nothing without its "per full set"; "Take a member" hid that it's a rival's).
 const P = {
   gold: {
-    jv: { main: '+3 gold', second: 'pick who gets 1' },
+    jv: { main: '+3 gold', second: '+1 to anyone', note: 'a player you pick' },
     rush: r => ({ main: `+${2 * r} gold`, note: byRound(2, 4, 6) }),
     discount: { verb: 'Save 4', second: 'on next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
@@ -33,7 +33,7 @@ const P = {
   market: {
     bargain: { main: '+2 blue', second: 'then recruit', note: 'in any colors' },
     restock: { main: '+2 blue', second: 'refresh the shop' },
-    showroom: { main: '+1 blue', second: '+1 per blue on sale', note: 'members in the shop' },
+    showroom: { main: '+1 blue', second: '1 per blue on sale', note: 'members in the shop' },
     clearance: { verb: 'Half-price recruit', second: 'as your buy' },
     pricecheck: { verb: 'Gain blue', second: 'half your priciest', note: 'member’s cost' },
     spree: { verb: 'Buy 3 times', second: 'this turn' },
@@ -48,7 +48,7 @@ const P = {
   },
   silver: {
     toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', note: byRound(3, 6, 9) }),
-    gift: { main: '+2 silver', second: '+2 of a color', note: 'others get 1 of it' },
+    gift: { main: '+2 silver', second: '+2 of a color, others get 1', note: 'of that color' },
     alms: { main: '+4 silver', second: 'a rival gets 2' },
     tongue: { main: '+4 silver', second: 'trade silver', note: 'others get 1 silver' },
     tide: { verb: 'Gain silver', second: 'half the richest', note: 'others get 1' },
