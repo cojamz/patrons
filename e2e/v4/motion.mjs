@@ -5,7 +5,8 @@
 //  (m2) your placement sends a worker token flying to the space;
 //  (m3) your recruit flies from the shop as a fixed-size picture (no reflowed text spilling out), starting on screen;
 //  (m4) laptop, Normal bots, Steady animations: after a bot step that shows something (it plays a chain of
-//       animations), the next step waits at least 400ms. This pinned the old fixed bot pace (600ms a step); since
+//       animations), the next player's step (or that bot's next turn) waits at least 400ms; the same bot's own sub-steps
+//       flow at their hand-off. This pinned the old fixed bot pace (600ms a step); since
 //       Cory's 2026-10-15 calls ("clear and steady, not slow"; every action plays a chain) the chain sets the pace, a
 //       bot's next step shows at its chain's hand-off, and a step with nothing to show (a pass) holds no fixed time.
 // Starts from a saved game (e2e/v4/lib/rich-save.mjs) where P1 holds 6 of every color and is about to place.
@@ -159,12 +160,13 @@ for (const prof of PROFILES) {
     const watch = () => {
       const el = document.querySelector('.app.game');
       if (!el) { requestAnimationFrame(watch); return; }
-      let prev = { moves: el.dataset.moves, bot: el.dataset.bot, round: (document.querySelector('header .round') || {}).textContent || '' };
+      let prev = { moves: el.dataset.moves, bot: el.dataset.bot, actor: el.dataset.actor, phase: el.dataset.phase, round: (document.querySelector('header .round') || {}).textContent || '' };
       new MutationObserver(() => {
-        const now = { moves: el.dataset.moves, bot: el.dataset.bot, round: (document.querySelector('header .round') || {}).textContent || '' };
+        const now = { moves: el.dataset.moves, bot: el.dataset.bot, actor: el.dataset.actor, phase: el.dataset.phase, round: (document.querySelector('header .round') || {}).textContent || '' };
         // shows: the step played a chain of its own (director.js counts each one as the table shows it)
         const chains = window.__patronsChains || 0;
-        if (now.moves !== prev.moves) { window.__steps.push({ t: performance.now(), byBot: prev.bot === '1', inRound: /Round/.test(prev.round) && /Round/.test(now.round), modal: !!document.querySelector('.roundend'), shows: chains > (window.__chainsSeen || 0) }); window.__chainsSeen = chains; }
+        // by: who made the step; kind: the step's own phase (a placement starts a turn)
+        if (now.moves !== prev.moves) { window.__steps.push({ t: performance.now(), byBot: prev.bot === '1', by: prev.actor, kind: prev.phase, inRound: /Round/.test(prev.round) && /Round/.test(now.round), modal: !!document.querySelector('.roundend'), shows: chains > (window.__chainsSeen || 0) }); window.__chainsSeen = chains; }
         prev = now;
       }).observe(el, { attributes: true, attributeFilter: ['data-moves'] });
     };
@@ -176,18 +178,29 @@ for (const prof of PROFILES) {
     await page.click('[data-start]');
     await page.waitForSelector('.lt-seat[data-pid]');
     const t0 = Date.now();
-    while (!(await page.$('[data-next-round]')) && Date.now() - t0 < 120000) {
-      const els = await page.$$('[data-option]:not([disabled])');
-      for (const el of els) { const id = await el.getAttribute('data-option').catch(() => null); if (!id || id.startsWith('toggle') || id === 'back') continue; try { await el.click({ timeout: 1000 }); break; } catch { /* moved */ } }
-      await page.waitForTimeout(120);
+    // rounds I and II: the turns between two players (what m4 guards) come a handful a round
+    for (let round = 0; round < 2; round++) {
+      if (round) { const nx = await page.$('[data-next-round]'); if (!nx) break; await nx.click(); await page.waitForTimeout(400); }
+      while (!(await page.$('[data-next-round]')) && Date.now() - t0 < 120000 * (round + 1)) {
+        const els = await page.$$('[data-option]:not([disabled])');
+        for (const el of els) { const id = await el.getAttribute('data-option').catch(() => null); if (!id || id.startsWith('toggle') || id === 'back') continue; try { await el.click({ timeout: 1000 }); break; } catch { /* moved */ } }
+        await page.waitForTimeout(120);
+      }
     }
     const st = await page.evaluate(() => window.__steps || []);
     let pairs = 0, worst = Infinity;
     for (let i = 1; i < st.length; i++) {
-      if (!st[i].byBot || !st[i - 1].byBot || !st[i].inRound || !st[i - 1].inRound || st[i].modal || st[i - 1].modal || !st[i - 1].shows) continue;
-      pairs++; worst = Math.min(worst, st[i].t - st[i - 1].t);
+      if (!st[i].byBot || !st[i - 1].byBot || !st[i].inRound || !st[i - 1].inRound || st[i].modal || st[i - 1].modal) continue;
+      // what it guards: a rival's last visible step stays up at least 400ms before the next player's step (or that
+      // rival's next turn, a new placement); the same bot's own sub-steps (the buy after a choice) flow at their
+      // hand-off, and a pass between shows nothing of its own (Cory's pacing call)
+      if (st[i].by === st[i - 1].by && st[i].kind !== 'place') continue;
+      let j = i - 1;
+      while (j > 0 && !st[j].shows && st[j - 1].by === st[i - 1].by && st[j].kind !== 'place') j--;
+      if (!st[j].shows || st[j].by !== st[i - 1].by || st[j].modal || !st[j].inRound) continue;
+      pairs++; worst = Math.min(worst, st[i].t - st[j].t);
     }
-    console.log(`laptop pacing: ${pairs} bot steps that show something in round I, shortest wait after one ${Math.round(worst)}ms`);
+    console.log(`laptop pacing: ${pairs} hand-overs from a rival's visible step to the next player's (rounds I–II), shortest ${Math.round(worst)}ms`);
     if (pairs < 6) errors.push(`(m4) too few bot steps measured (${pairs})`);
     else if (worst < 380) errors.push(`(m4) bot steps ${Math.round(worst)}ms apart at 1270×700 (need ≥400)`);
   } catch (e) { errors.push(`m4 run: ${e.message}`); }

@@ -23,6 +23,7 @@ The hold is counted from the commit, so drawing time came on top of every hold, 
 |---|---|---|---|---|---|---|---|---|
 | before ee9b0f8 | 14.3 s | 17 / 13 | – | – | – | – | 4.5 / 6.4 | 3313 / 4271 |
 | after 93e0857 | 13.2 s | 17 / 13 | 7.07 s / 7.30 s | 7.68 s / 7.79 s | **4.33 s / 3.39 s** | 0.46 s / 0.54 s | 3.6 / 4.6 | 3189 / 3782 |
+| after2 957c93d (+ lead) | 13.4 s / 12.2 s | 17 / 13 | 6.38 s / 6.19 s | 6.97 s / 6.68 s | 4.60 s / 3.96 s | 150–430 ms a step | 3.2 / 3.6 | 3183 / 3751 |
 
 The two numbers in each cell are the round-I waits: the first includes the bots' setup picks, the second is a pure round-I wait.
 
@@ -89,5 +90,31 @@ The levers on your side:
 - **`passHold` (300 ms)** sits on a placement with nothing to show.
 - **The pay step plans 0.** The buy before it carries the recruit's chain, which is right.
 
-## after2 (with the drawing lead)
-Pending: see the report.
+## after2 (with the drawing lead): it didn't buy time on this box
+**Setup:** 957c93d with the lead, the same harness and seed, load 11 → 20.
+
+- **Waits:** 13.4 s and 12.2 s.
+- **Holds:** the director's holds changed in that commit: 6.38 / 6.19 s planned, 6.97 / 6.68 s retimed.
+- **Commits per step:** down again, to 3.2 / 3.6.
+- **Overhead (wait minus retimed holds):** 5.54 s in the pure wait, against 5.29 s in the after run. The lead didn't shrink it.
+
+Why: each step's timer fires 150–430 ms after its planned time, even when the plan is 0. For about 300–400 ms after every commit the main thread is busy with that step's own post-commit work:
+- `playChain` reads every source and target, so layout is forced
+- the layout effects run
+- the small follow-up commits run (the Tick glow, the AfterChain bump at chain end, TurnCard placing itself)
+- the long style, layout and paint frames of a big DOM at 4× CPU
+
+So the next step can't start drawing until that's done. The lead only helps when the thread is free during the hold. A quiet box may differ: there, drawing is a larger share than post-commit work.
+
+The lead stays in, behind one number (`lead` in useTable's layout effect). The pace records carry it per step, so the quiet box can judge it; if it does nothing there, set it to 0. Per-step detail of the pure wait (moves 26–38) is in the run's `summary().pace`.
+
+## What's left on the render side, ranked
+1. **Post-commit work after each step: about 300–400 ms per step here.**
+   - `playChain`'s reads come right after the commit's DOM writes, which forces a full layout of the page each time.
+   - Fix: read the step's rects in `beforeShow`, before the DOM changes (they're the same places), or in the next frame's rAF before any write.
+   - Fold TurnCard's placement and AfterChain's bump into the step's own commit.
+2. **Drawing a step: about 150–350 ms here, about 600 ms dev at 4×.**
+   - The whole table renders for every step: about 3200–3800 fibers.
+   - The Wheel rebuilds all its sockets when anything in the state changes.
+   - Fix: memoise sockets per space on what each one shows (its owner, legality, flash, recent), not on `state`.
+3. **The round end:** about 90 commits and about 11 s of the Reckoning. That's its own budget (H10).

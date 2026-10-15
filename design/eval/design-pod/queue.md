@@ -61,3 +61,7 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - [ ] P4's "NEXT" pill sits on top of its follower total ("14"): the rail label is inline after the name and the total doesn't make room. shots/phone-wheel-fit-after.png (top right).
 - [ ] A rival's "each round +3● +2◐" runs off the right edge on phone (the third seat's column).
 - [ ] The phone wheel's panels are short of room: I made a tight panel's line 1 shrink to fit on a wheel under 416 units (down to 9px) so words no longer overlap their neighbours (before/after in shots/phone-wheel-overlap-before.png, phone-wheel-fit-after.png), but 2–4 verbs per table still spill 2–9px at 9px ("Swap a member", "Members pay out"). More wheel on phone, or fewer words there, is a composition call.
+
+## For the foreman (from the detail designer, 08:35): two calls
+- [ ] Two speed settings with different words: setup has "Bot speed: Slow / Normal / Fast" (bot delay and pace), the ☰ menu has "Quick / Steady / Relaxed" (animation). A player can't tell which one makes the game faster. One control, one vocabulary? (Needs a call: they set different things.)
+- [ ] RC1 round-3 #33: a shop card's face prints its list cost while a discount applies (Intro Offer: free; Save 4; Underbidder −2). Only the hover's "Pays" line tells the real price. Showing the price you'd pay on the face (the list cost struck, or "free") is a face-design call.

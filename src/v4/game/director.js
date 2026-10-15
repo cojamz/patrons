@@ -231,13 +231,19 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
  * bot moves next, and a turn-ending pass holds MO.passHold. `base`: the hold for anything else (your own steps).
  * Pure: useTable paces with it, and src/test/v4/ui/pacing.test.js checks H2/H3 with it over recorded games.
  */
-export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, nextPlaces = false }) {
+export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, nextPlaces = false, placing = false }) {
   // a turn that passes to a placement: the next player's minion leaves its column during this chain's closing breath
   // (the departure is the next turn's first, quiet motion, at another seat), so the breath and the departure overlap
   const passes = plan.turnPasses && nextPlaces ? plan.total - MO.breath : plan.total;
-  if (plan.total) return Math.max(sameNext ? plan.handoff : passes, rivalStep ? floor : 0);
+  // the floor keeps a rival's visible step on screen before another player's step or the rival's next turn; never
+  // between the same player's own sub-steps (a setup pick, the buy after a choice): those flow at their hand-off
+  const floored = rivalStep && (!sameNext || nextPlaces) ? floor : 0;
+  // a rival's placement hands on at its hand-off (its last piece two-thirds along), even when its turn ends there
+  if (plan.total) return Math.max(sameNext || (placing && rivalStep) ? plan.handoff : passes, floored);
   return rivalStep ? (sameNext ? 0 : MO.passHold) : base;
 }
+/** The longest a step may hold on screen: the chain's cap plus its breath and the floor (re-timing never goes past it). */
+export const holdCap = () => Math.round(2800 * speedScale()) + MO.breath + 400;
 
 // ---------- the screen ----------
 // One clock for every chain on the table, run by requestAnimationFrame. It advances by at most two frames' worth per

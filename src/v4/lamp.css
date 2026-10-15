@@ -559,7 +559,7 @@ h1,h2,h3{font-family:var(--serif)}
     display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 12px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{margin:0;font-weight:700;line-height:1.2}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .tokens{flex:1 1 auto;gap:4px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .tokens{flex:1 1 auto;gap:4px;display:grid;grid-template-columns:repeat(4,max-content);justify-content:space-between} /* each as wide as its name: "Magenta +1" broke over two lines in a quarter */
   /* a clean row of plain dots: the dot, then its color's name with "+1" quiet beside it (Cory, 2026-10-15: simplify) */
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:3px;row-gap:4px;padding:8px 0;min-width:0}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{flex:0 0 100%;height:28px;transition:transform .12s ease-out}

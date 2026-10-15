@@ -64,14 +64,13 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, la
         )}
         <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
         <div className="online-box">
-          <label className="field"><span>Your name</span><input value={name} onChange={e => saveName(clip(e.target.value, NAME_MAX))} placeholder="Name" />{graphemes(name) >= NAME_MAX - 3 && <small className="count num">{graphemes(name)}/{NAME_MAX}</small>}</label>
+          <label className="field"><span>Your name{!name.trim() && onlineReady ? <small className="name-need"> · needed to host or join</small> : null}</span><input value={name} onChange={e => saveName(clip(e.target.value, NAME_MAX))} placeholder="Name" />{graphemes(name) >= NAME_MAX - 3 && <small className="count num">{graphemes(name)}/{NAME_MAX}</small>}</label>
           <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => (name.trim() ? go(() => onHost(name.trim(), lastEmoji() || undefined)) : setErr('Enter a name.'))}>Host online game</button>
           <form className="join" onSubmit={e => { e.preventDefault(); if (!name.trim()) { setErr('Enter a name.'); return; } if (code.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim(), lastEmoji() || undefined)); }}>
             <input aria-label="Room code" value={code} maxLength={8} onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="CODE" disabled={!onlineReady} />
             <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim()}>Join with code</button>
           </form>
           {working && <p className="hint">Connecting…</p>}
-          {!name.trim() && onlineReady && <p className="hint">Needed to host or join.</p>}
           {err && <p className="error" role="alert">{err}{retry && <> <button type="button" className="btn ghost" onClick={() => go(retry)}>Retry</button></>}</p>}
           {!onlineReady && <p className="hint">Online play is being wired up. Hot-seat works now.</p>}
         </div>

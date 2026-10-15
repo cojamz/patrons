@@ -33,7 +33,7 @@ import PayPicker, { payChoice } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
 import { PERF_ON } from '../perf.js';
@@ -172,7 +172,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       const plan = planChain(prev, next, { mine });
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
       // (a rival's step that shows something stays on screen at least 400ms before the same bot's next step: motion.mjs m4)
-      const dwellOf = pl => holdAfter(pl, { sameNext, rivalStep, floor: Math.min(rivalDwell, 400), base, nextPlaces: !!(next.pending && next.pending.kind === 'place') });
+      const dwellOf = pl => holdAfter(pl, { sameNext, rivalStep, floor: Math.min(rivalDwell, 400), base, nextPlaces: !!(next.pending && next.pending.kind === 'place'), placing: !!(prev.pending && prev.pending.kind === 'place') });
       // reduced motion (grammar §6, H14): nothing travels, so a step shows its end state and the next follows a beat later
       const still = !motionOK();
       const dwell = still ? (plan.total || rivalStep ? (sameNext && !plan.total ? 0 : Math.min(150, plan.total || 150)) : base) : dwellOf(plan);
@@ -213,8 +213,9 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     const f = remeasure.current;
     remeasure.current = null;
     if (!f || typeof timer.current !== 'number' || !timerAt.current) return;
-    const d = f(played), left = d - (performance.now() - timerAt.current.t0);
-    if (d <= timerAt.current.d) return; // never sooner than planned
+    // the measured chain sets the hold, sooner or later than the estimate (never past the cap)
+    const d = Math.min(f(played), holdCap()), left = d - (performance.now() - timerAt.current.t0);
+    if (d === timerAt.current.d) return;
     clearTimeout(timer.current);
     timer.current = setTimeout(() => { timer.current = null; if (pace.current) pace.current.fired = performance.now(); pump(); }, Math.max(0, left));
     timerAt.current = { t0: timerAt.current.t0, d };
@@ -330,16 +331,16 @@ function TurnCard({ card, root, state }) {
     const dock = root && getComputedStyle(root).getPropertyValue('--turn-dock').trim();
     const since = dock === 'since' && root.querySelector('.lt > .lt-since');
     if (since && since.getBoundingClientRect().width) {
-      const place = () => {
-        const b = since.getBoundingClientRect();
-        setPos(p => (p && p.top === b.bottom + 8 && p.left === b.left && p.width === b.width ? p
-          : { left: b.left, right: undefined, top: b.bottom + 8, bottom: undefined, width: b.width, ox: '0%', oy: '0%' }));
-      };
-      place();
-      // the story grows a line when a move lands while the card is up: the card keeps to its foot, never over it
-      const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(place) : null;
-      if (ro) ro.observe(since);
-      return () => { if (ro) ro.disconnect(); };
+      // docked at a foot that never depends on the story or on the card itself: the column's foot (from 1200px), or just
+      // above the follower buys when they share the story's column (861–1199px). The story above leaves the card its
+      // room (--turn-h, below): one way only. (A ResizeObserver that moved the card with the story fed back on itself:
+      // "Maximum update depth exceeded", 2026-10-15.)
+      const b = since.getBoundingClientRect();
+      const rates = root.querySelector('.lt-rates');
+      const rb = rates && rates.getBoundingClientRect();
+      const overRates = !!(rb && rb.width && Math.abs(rb.left - b.left) < 4);
+      setPos({ left: Math.round(b.left), right: undefined, top: undefined, bottom: overRates ? Math.round(innerHeight - rb.top + 12) : 8, width: Math.round(b.width), ox: '0%', oy: '100%' });
+      return;
     }
     if (column && column.getBoundingClientRect().width) {
       const shop = root.querySelector('.lt > .lt-shop');
@@ -366,10 +367,16 @@ function TurnCard({ card, root, state }) {
   // (every line stays in the strip's card and the log), and slid back up if it still reaches past the bottom
   const box = useRef(null);
   const [lift, setLift] = useState(0);
+  // the story above leaves the card exactly its own height (layout.css --turn-h): measured into a ref and written to the
+  // DOM only when the whole-pixel value changes, never React state (the card's height depends on its text and width only)
+  const turnH = useRef(null);
+  useLayoutEffect(() => {
+    if (!root || !box.current) return;
+    const h = Math.ceil(box.current.offsetHeight) + 8;
+    if (h !== turnH.current) { turnH.current = h; root.style.setProperty('--turn-h', `${h}px`); }
+  }, [card.text, pos && pos.width, root]); // eslint-disable-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     setLift(0);
-    // the story above leaves the card exactly its own height (layout.css --turn-h), not a guess
-    if (root && box.current) root.style.setProperty('--turn-h', `${Math.ceil(box.current.offsetHeight) + 8}px`);
     const b = box.current && box.current.getBoundingClientRect();
     if (b && b.bottom > innerHeight - 8) setLift(Math.min(b.top - 8, b.bottom - (innerHeight - 8)));
   }, [pos, card.text]);

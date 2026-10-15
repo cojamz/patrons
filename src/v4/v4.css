@@ -290,7 +290,7 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 .app.narrow > .dialog.page{max-height:calc(100dvh - 6vh - 24px)}
 .dialog.page > .row-btns:last-child{position:sticky;bottom:-18px;z-index:2;margin:0 -4px -18px;padding:12px 4px 18px;background:linear-gradient(to bottom,transparent,var(--table-2) 14px)}
 .dialog.page > .row-btns .btn.pri{min-width:112px}
-.row-btns .start-why{margin:0 auto 0 0;align-self:center;font-size:14px;color:var(--cream-2,#d9cbb0)}
+.row-btns .start-why{margin:0 6px 0 0;align-self:center;font-size:14px;color:var(--cream-2,#d9cbb0)}
 .dialog h2{font-family:var(--display);font-weight:400;margin:0;font-size:var(--fs-5)}
 .dialog.confirm{max-width:380px}
 .handoff{align-items:center;text-align:center;border-color:var(--pc)}
@@ -1477,3 +1477,4 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 .tab-away-card h2{margin:0 0 8px;font-family:var(--serif,Georgia,serif);font-size:1.3rem;line-height:1.25}
 .tab-away-card p{margin:0 0 16px;color:var(--paper-ink-2,#5f4e3d);font-size:.95rem;line-height:1.4}
 .tab-away-card .btn{min-height:44px;min-width:140px}
+.field .name-need{font-size:inherit;font-weight:400;color:var(--cream-3,#a39078)}

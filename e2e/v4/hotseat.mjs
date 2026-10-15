@@ -62,10 +62,15 @@ const shot = async (name, size) => {
 };
 // every chair's transform has reached the --y the column gave it (no slide in flight), then one more frame
 async function chairsStand() {
-  await page.waitForFunction(() => [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].every(e => {
-    const y = parseFloat(e.style.getPropertyValue('--y'));
-    return Number.isNaN(y) || Math.abs(new DOMMatrixReadOnly(getComputedStyle(e).transform).m42 - y) < 0.5;
-  }), null, { timeout: 6000, polling: 100 }).catch(() => {});
+  await page.waitForFunction(() => {
+    // while the column shows (laptop), every chair has its --y (the screen sets it on resize; a phone size clears it)
+    const rail = document.querySelector('.lt > .lt-snake');
+    const column = !!(rail && rail.offsetHeight);
+    return [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].every(e => {
+      const y = parseFloat(e.style.getPropertyValue('--y'));
+      return Number.isNaN(y) ? !column : Math.abs(new DOMMatrixReadOnly(getComputedStyle(e).transform).m42 - y) < 0.5;
+    });
+  }, null, { timeout: 6000, polling: 100 }).catch(() => {});
   await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))).catch(() => {});
 }
 
