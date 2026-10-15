@@ -327,21 +327,20 @@ describe('Release (base rule): once per round, release a member for its colored 
 
 describe('Release with once-per-game members, just-bought members and Echo copies', () => {
   const payFirst = s => { while (s.pending?.kind === 'pay') s = move(s, s.pending.options.find(o => o.id !== 'back').id); return s; };
-  it('a once-per-game member can be used and then released in the same buy step; it comes back fresh for the next owner', () => {
+  // Cory (2026-10-15): "if you activate a member, you can no longer sell them for money". Before that call a used
+  // once-per-game member could be released for its colored part in the same buy step.
+  it('a once-per-game member can be released before it is used, but not after', () => {
     let s = scene({ members: [['gold.speculator']], res: [{ gold: 5 }], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0; s = resume(s);
     const u = uidOf(s, 'gold.speculator', 0);
+    expect(ids(s)).toContain(`release:${u}`);
     s = move(s, `use:${u}`);
     expect(R(s).gold).toBe(10);
     expect(ids(s)).not.toContain(`use:${u}`);
-    s = move(s, `release:${u}`);
-    expect(R(s).gold).toBe(10 + defById('gold.speculator').s);
-    expect(s.cards[u]).toEqual({ uid: u, def: 'gold.speculator' });
-    expect(s.pile.at(-1)).toBe(u);
-    // a rival who later gets the card can use it once more
-    s.pile.pop(); s.players[1].members.push(u);
-    s.queue = [{ t: 'buy', p: 1 }]; s.current = 1; s.pending = null; s = resume(s);
-    expect(ids(s)).toContain(`use:${u}`);
+    expect(ids(s)).not.toContain(`release:${u}`);
+    // next round too: a spent member stays unreleasable
+    s.round += 1; s.queue = [{ t: 'buy', p: 0 }]; s.current = 0; s.pending = null; s = resume(s);
+    expect(ids(s)).not.toContain(`release:${u}`);
   });
   // Rewritten for "not in the round you recruited it" (dead-window audit, 2026-10-14). These two used to show a
   // just-bought member released in the same turn (Big Spender's second buy) or the same round (a later buy step).
@@ -379,18 +378,18 @@ describe('Release with once-per-game members, just-bought members and Echo copie
     s.queue = [{ t: 'buy', p: 0 }]; s.current = 0; s.pending = null; s = resume(s);
     expect(ids(s)).toContain(`release:${u}`);
   });
-  it('an Echo copy made with Stunt Double keeps its gains after Stunt Double is released', () => {
+  // Cory (2026-10-15): a member you've activated can't be released for its refund (it used to be, right after).
+  it('an Echo copy made with Stunt Double keeps its gains, and the used Stunt Double can no longer be released', () => {
     const Q = ['gold', 'red', 'echo', 'purple'];
     let s = scene({ quadrants: Q, members: [['echo.hourglass']] });
     s = move(s, `slot:${RUSH}`); s = pickAny(s);
     const g = R(s).gold, u = uidOf(s, 'echo.hourglass', 0);
+    expect(ids(s)).toContain(`release:${u}`);
     s = move(s, `use:${u}`); s = pickAny(s);
     const copied = R(s).gold - g;
     expect(copied).toBeGreaterThan(0);
-    s = move(s, `release:${u}`);
     expect(R(s).gold).toBe(g + copied);
-    expect(R(s).green).toBe(defById('echo.hourglass').s);
-    expect(s.cards[u]).toEqual({ uid: u, def: 'echo.hourglass' });
+    expect(ids(s)).not.toContain(`release:${u}`);
   });
 });
 

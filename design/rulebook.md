@@ -27,7 +27,7 @@ On your turn:
 2. **Buy one thing**, or pass:
    - **Recruit a member** from the shop: 10 face up, refilled from the face-down pile at the head of the row, which shows how many are left. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins are already in the cost; tap one of your resources to swap it in.
    - Or **buy followers** with any resources: 2 for 1 follower, 4 for 3, 8 for 6, 10 for 10. Only the 8-for-6 buy is limited: 2 per player (8 in a 4-player game). Buy 10 for 10 as often as you can pay for it.
-   - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back only its colored part, in its color (in any colors if its color isn't on the table). The "any" part never comes back, so a member with no colored part can't be released.
+   - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back only its colored part, in its color (in any colors if its color isn't on the table). The "any" part never comes back, so a member with no colored part can't be released, and neither can a member you've already used.
 
 Members keep working for you: some pay out at each round start (a member that says "Now and at round start" also pays the moment it joins you), some react to what other players do, and some you use once.
 

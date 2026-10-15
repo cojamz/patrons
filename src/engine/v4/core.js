@@ -836,7 +836,9 @@ export const workersOnBoard = (state, p) => Object.values(state.slots).filter(o 
  * from the dead-window audit, 2026-10-14).
  */
 export const canRelease = (state, p, uid) => !!state.rules?.release && p.releasedRound !== state.round
-  && (uid === undefined || !(state.cards[uid]?.recruitedRound === state.round && state.cards[uid]?.recruitedBy === p.id));
+  && (uid === undefined || (!(state.cards[uid]?.recruitedRound === state.round && state.cards[uid]?.recruitedBy === p.id)
+    // a member whose once-per-game use is spent can't be released for its refund (Cory, 2026-10-15)
+    && !state.cards[uid]?.used));
 /**
  * What releasing a member gives back (Cory, 2026-10-14): only its colored part, in its own color: { n, color, label }.
  * When its color isn't on the table (a guest leaning to an absent sphere), the colored part comes back in any colors
