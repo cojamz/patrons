@@ -364,8 +364,13 @@ function TurnCard({ card, root, state }) {
 let dockCache = null, dockStale = true;
 if (typeof addEventListener === 'function') addEventListener('resize', () => { dockStale = true; }, { passive: true });
 function turnCardDock(card, root) {
-  const key = root ? `${!!root.querySelector(':scope > .lt-snake')}|${!!root.querySelector(':scope > .lt-since')}|${card.pid}` : '';
-  if (dockStale || !dockCache || dockCache.root !== root || dockCache.key !== key) { dockCache = { root, key, pos: turnCardPlace(card, root) }; dockStale = false; }
+  const key = root ? `${!!root.querySelector(':scope > .lt-snake')}|${!!root.querySelector(':scope > .lt-since')}` : '';
+  // (only the seat layout depends on whose card it is: there a new turn's chair moves it)
+  if (dockStale || !dockCache || dockCache.root !== root || dockCache.key !== key || (dockCache.seat && dockCache.pid !== card.pid)) {
+    const pos = turnCardPlace(card, root);
+    dockCache = { root, key, pid: card.pid, seat: !!(pos && pos.seat), pos };
+    dockStale = false;
+  }
   return dockCache.pos;
 }
 /** Where the turn card goes: { left, right, top, bottom, width, ox, oy, since } in px, or null (no chair to sit by). */
@@ -405,7 +410,7 @@ function turnCardPlace(card, root) {
     right: left ? null : Math.max(10, innerWidth - r.right),
     top: top ? r.bottom + 10 : null,
     bottom: top ? null : Math.max(8, innerHeight - r.top + 10),
-    width: null, ox: left ? '0%' : '100%', oy: top ? '0%' : '100%',
+    width: null, ox: left ? '0%' : '100%', oy: top ? '0%' : '100%', seat: true,
   };
 }
 

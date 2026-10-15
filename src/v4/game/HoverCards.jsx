@@ -376,6 +376,11 @@ export function whyLine(reasons) {
 function raceAfter(state, race, qid, pid) {
   const c = race.find(x => x.qid === qid);
   if (!c) return null;
+  // a space that doesn't move its contest says nothing about it (w3b: Intro Offer and Cheap Seats printed a "Most gold"
+  // line they never touch)
+  let now = null;
+  try { now = contestTable(state).find(x => x.qid === qid); } catch { /* say it */ }
+  if (now && now.rows.every(r => { const a = c.rows.find(x => x.player === r.player); return a && a.score === r.score; })) return null;
   const nm = id => (id === pid ? 'You' : state.players[id].name);
   // every player, never just the top three (RC1 panel: the 4th silently dropped off "You 0 · P2 0 · P3 0")
   const top = c.rows.map(r => `${nm(r.player)} ${r.count}`).join(' · ');

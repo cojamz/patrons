@@ -75,10 +75,11 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
                     ? r.winners.map((id, k) => <b key={id}>{k ? ' & ' : ''}<Who state={after} id={id} meId={meId} /></b>)
                     : <em>no one scored</em>}
                 </span>
+                {/* "P2: 2", never "P2 2" (w3b: it read as "P22") */}
                 <small className="re-counts num">
                   {r.rows.map(row => {
                     const tb = tiebreakNote(r, row);
-                    return <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''} data-pid={row.id} data-count={row.shown}>{name(row.id)} <b className="n">{row.shown}</b>{tb ? <small> ({tb})</small> : null}</span>;
+                    return <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''} data-pid={row.id} data-count={row.shown}>{name(row.id)}: <b className="n">{row.shown}</b>{tb ? <small> ({tb})</small> : null}</span>;
                   })}
                 </small>
               </span>

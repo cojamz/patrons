@@ -483,9 +483,9 @@ export function previewWords(pv, state) {
     pv.you.discount && (pv.you.discount[0] || pv.you.discount[1]) ? `next member −${pv.you.discount[0] === pv.you.discount[1] ? pv.you.discount[0] : `${pv.you.discount[0]}–${pv.you.discount[1]}`}` : null,
   ].filter(Boolean);
   // the rivals' line is their summed change: "in all" says so ("rivals +3 silver" read as +3 each, when it was +1 each);
-  // when your pick decides it, only its sure part (a steal's "−1 to 0, −2 to 0…" per color read as algebra)
-  const pick = pv.asks.length > 0 && !pv.exact;
-  const theirs = (r, unit, plural) => (pick && r[0] !== r[1] ? null : span(r, unit, plural));
+  // only its sure parts: a part that varies (a steal's "−1 to 0, −2 to 0…" per color) read as algebra, whether your
+  // pick decides it or the space does (w3b: Lie Low and Crime Wave still printed four ranges); the rule says the rest
+  const theirs = (r, unit, plural) => (r[0] !== r[1] ? null : span(r, unit, plural));
   const others = [...state.resources.map(r => theirs(pv.others.res[r], r, r)), theirs(pv.others.followers, 'follower', 'followers'), theirs(pv.others.members, 'member', 'members')].filter(Boolean);
   const many = state.players.length > 2;
   return { you: you.join(', ') || 'nothing right now', others: others.length ? `rivals ${others.join(', ')}${many ? ' in all' : ''}` : null, choose: pv.asks.length > 0, theyChoose: pv.theirAsks.length > 0, partial: pv.partial };

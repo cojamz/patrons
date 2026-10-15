@@ -5,7 +5,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup, act } from '@testing-library/react';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
 import { createHover, whyLine } from '../../../v4/game/HoverCards.jsx';
-import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker } from '../../../v4/game/Info.jsx';
+import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker, previewWords } from '../../../v4/game/Info.jsx';
 import { tickScene } from '../../../../e2e/v4/lib/tick-save.mjs';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); _setPreviewWorker(null); });
@@ -63,4 +63,14 @@ describe('previews reach the screen', () => {
       .toBe('Gardener: depends on your pick · Planner: next member costs 2 less');
     expect(whyLine(['Underdog: no ×2', 'Underdog: no ×2'])).toBe('Underdog: no ×2');
   });
+
+  it('the rivals line prints only what is sure: no "−1 to 0" per color, even when no pick of yours decides it (w3b: Lie Low)', () => {
+    const z = [0, 0];
+    const st = { resources: ['gold', 'red', 'blue', 'green'], players: [{}, {}, {}, {}] };
+    const pv = { you: { res: { gold: [2, 2], red: z, blue: z, green: z }, followers: z, members: z, turns: z }, others: { res: { gold: [-1, 0], red: [-1, 0], blue: [-1, 0], green: z }, followers: z, members: z }, asks: [], theirAsks: [], exact: true, partial: false };
+    expect(previewWords(pv, st).others).toBeNull();
+    const gift = { ...pv, others: { res: { gold: [1, 1], red: z, blue: z, green: z }, followers: z, members: z } };
+    expect(previewWords(gift, st).others).toBe('rivals +1 gold in all');
+  });
 });
+

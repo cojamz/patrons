@@ -213,4 +213,53 @@ describe('render budget', () => {
     expect(report.values).toBeGreaterThan(3); // it counted through the numbers between
     expect(report.Tick).toBeLessThanOrEqual(4); // the new value, its glow on and off, the end: not one per frame
   });
+
+  it('a rival step reads the layout only where it must (no per-step reads in the commit)', async () => {
+    let state = advanceTo(createGame({ seats: SEATS, seed: 33 }), 'place', 1);
+    const session = drivenSession(state, [0]);
+    const { container } = render(<GameScreen session={session} pace={0} />);
+    await settle();
+    // every call that makes the browser lay the page out (or recompute style) when the DOM has changed
+    const reads = new Map();
+    // each read is counted by name and by the function that made it (the stack's first frame outside the wrapper)
+    const count = name => {
+      reads.set(name, (reads.get(name) || 0) + 1);
+      const fr = (new Error().stack.split('\n')[3] || '').trim().replace(/^at /, '');
+      const fn = fr.split(' ')[0];
+      reads.set(`@${fn}`, (reads.get(`@${fn}`) || 0) + 1);
+    };
+    const restore = [];
+    const wrapFn = (obj, name) => { const orig = obj[name]; obj[name] = function (...a) { count(name); return orig.apply(this, a); }; restore.push(() => { obj[name] = orig; }); };
+    const wrapGet = (obj, name) => { const d = Object.getOwnPropertyDescriptor(obj, name); if (!d || !d.get) return; Object.defineProperty(obj, name, { ...d, get() { count(name); return d.get.call(this); } }); restore.push(() => Object.defineProperty(obj, name, d)); };
+    wrapFn(Element.prototype, 'getBoundingClientRect');
+    wrapFn(window, 'getComputedStyle');
+    wrapFn(HTMLElement.prototype, 'focus');
+    for (const n of ['offsetHeight', 'offsetWidth']) wrapGet(HTMLElement.prototype, n);
+    for (const n of ['scrollHeight', 'clientHeight']) wrapGet(Element.prototype, n);
+    const perStep = [];
+    let lastActor = null;
+    try {
+      for (let k = 0; k < 6 && state.pending && state.pending.player !== 0; k++) {
+        const next = applyMove(state, chooseBotMove(state, () => 0.3));
+        reads.clear();
+        act(() => { session.publish(next); });
+        for (let w = 0; w < 200 && container.querySelector('.lt').getAttribute('data-moves') !== String(next.moves); w++) await act(() => new Promise(r => setTimeout(r, 10)));
+        await settle(3);
+        perStep.push({ newCard: state.pending.player !== lastActor, ...Object.fromEntries(reads) });
+        lastActor = state.pending.player;
+        state = next;
+      }
+    } finally { restore.forEach(f => f()); }
+    const by = (s, re) => Object.entries(s).filter(([k]) => k.startsWith('@') && re.test(k)).reduce((a, [, v]) => a + v, 0);
+    console.log('[render-budget] layout reads per rival step:', JSON.stringify(perStep));
+    for (const s of perStep) {
+      // never per step: the chairs' column (a ResizeObserver lays it out), the strip's overflow (its own observer), the
+      // focus (only when a step's kind changes and focus is lost), and the turn card's dock (once per layout change, and
+      // in the layout that seats the card by its chair, once per turn)
+      expect(by(s, /layColumn/)).toBe(0);
+      expect(by(s, /SinceStrip|ResizeObserver/)).toBe(0);
+      expect(s.focus || 0).toBe(0);
+      if (!s.newCard) expect(by(s, /turnCardPlace/)).toBe(0);
+    }
+  });
 });
