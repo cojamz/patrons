@@ -43,3 +43,11 @@ bounded by online + info 45 s + motion 65 s ≈ 4.2 min), so a verdict ≈ 5–6
 a quiet machine (4 CPUs; `taskset -c 0-3` on a bigger one), from a commit with these changes:
 `npm ci && taskset -c 0-3 npm run check:v4 -- --commit HEAD` and `taskset -c 0-3 npm run check:v4:quick`, then
 `node scripts/v4-retro.mjs` here with the two logs, or paste their summaries into the table above.
+
+## Retro (one row per milestone: `node scripts/v4-retro.mjs`)
+Verdicts (`check:v4 -- --commit`): median wall (worst) and how many were green; unit tests' wall; e2e done (seconds from the start); green `--quick` median; waits for a check slot over all runs; failed stages over all runs; slowest unit files.
+
+| date (UTC) | runs | verdict p50 (max) | unit | e2e done | quick p50 | slot wait p50 (max) | failures | slowest unit files |
+|---|---|---|---|---|---|---|---|---|
+| 2026-10-15 04:07 | baseline, old gate (saved logs, touch included): 3 verdict, 1 live | 58.8m (60.3m), 0/3 green | 12.1m | – | – | 23.1m (31.1m) | touch.mjs ×4, hotseat.mjs ×2, info.mjs ×2, motion.mjs ×2, spaces.mjs ×1, engine + spheres + session + ui tests ×1, layout.mjs ×1, tables.mjs ×1 | – |
+<!-- retro-through: 2026-10-15T04:07:10.100Z -->

@@ -174,7 +174,9 @@ export function perfTransport(t) {
     if (PERF_ON && value && value.mid) E.net.push({ t: now(), ev: 'acked', mid: value.mid });
     return key;
   };
-  const delayCb = cb => (...a) => { if (LAG_MS) setTimeout(() => cb(...a), LAG_MS); else cb(...a); };
+  // a subscription's first value usually comes from the local cache (the lobby already listens to the whole room), so
+  // it isn't delayed: only what changes afterwards crosses the "network"
+  const delayCb = cb => { let first = true; return (...a) => { if (LAG_MS && !first) setTimeout(() => cb(...a), LAG_MS); else cb(...a); first = false; }; };
   out.subscribe = (path, cb) => t.subscribe(path, delayCb((val, ...r) => {
     if (PERF_ON && /\/state$/.test(path) && val && typeof val.version === 'number') {
       // the host stamps `at` with Date.now() (same machine here): convert to this page's clock
