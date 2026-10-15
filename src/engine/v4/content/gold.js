@@ -72,7 +72,7 @@ export default {
   },
 
   members: [
-    m('midas', 'Midas', 4, 4, 'Gains from actions come as gold instead. You can switch it off or on when you buy.', {
+    m('midas', 'Midas', 2, 2, 'Gains from actions come as gold instead. You can switch it off or on when you buy.', {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
       // a conversion: runs before every other gain modifier, so "gold gains" sees the converted gain
@@ -171,7 +171,7 @@ export default {
     m('seed', 'Treasurer', 4, 0, 'When recruited: gain gold equal to your member count.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
-    m('hustler', 'Hustler', 2, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
+    m('hustler', 'Hustler', 4, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
       onRecruited(ctx, owner, card) {
         ctx.choose(owner, 'Hustler: actions in which color give you extra gold?', ctx.state.quadrants.map(q => ({
           id: `color:${q}`, label: ctx.quadrant(q).name, kind: 'color', value: q, hint: q === 'gold' ? 1 : 0,

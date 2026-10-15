@@ -174,7 +174,7 @@ const market = {
     m('connoisseur', 'Connoisseur', 2, 2, 'Whenever you recruit a blue member, +2 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 2); },
     }),
-    m('reseller', 'Reseller', 8, 4, 'Whenever you recruit, +1 of that member’s color.', {
+    m('reseller', 'Reseller', 4, 2, 'Whenever you recruit, +1 of that member’s color.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && colorOf(ctx, rec)) ctx.gain(owner, colorOf(ctx, rec), 1); },
     }),
     m('curator', 'Curator', 2, 2, 'Now and at round start, +1 blue per other blue member you have.', { now: true,
@@ -205,7 +205,7 @@ const market = {
     m('sommelier', 'Sommelier', 2, 2, 'Whenever you recruit a blue member, your next member costs 2 less.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) owner.discount += 2; },
     }),
-    m('patroness', 'Patroness', 4, 4, 'Whenever you recruit a blue member, +1 follower.', {
+    m('patroness', 'Patroness', 2, 2, 'Whenever you recruit a blue member, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) owner.bonus += 1; },
     }),
     m('blackmarket', 'Talent Scout', 2, 2, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
@@ -220,7 +220,7 @@ const market = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && totalRes(owner) >= 8,
     }),
-    m('snob', 'Snob', 6, 4, 'Game end: +1 follower per blue member you have.', {
+    m('snob', 'Snob', 3, 2, 'Game end: +1 follower per blue member you have.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, Q),
     }),
     m('recluse', 'Recluse', 2, 2, 'Game end: +2 followers per rival with more members than you.', {

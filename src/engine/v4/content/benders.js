@@ -54,12 +54,12 @@ const stillMine = (ctx, p, w) => (w.joined ? (ctx.state.squats?.[w.key] || []).i
 
 const members = [
   m('squatter', 'Squatter', 'thieves', 6, 2, 'Once per round: place a minion on a space a rival already took.', { squat: true }),
-  m('bigspender', 'Big Spender', 'gold', 2, 2, 'Once per round: buy twice in one turn.', { extraBuy: true }),
+  m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per round: buy twice in one turn.', { extraBuy: true }),
   m('freelancer', 'Freelancer', 'yellow', 2, 2, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
-  m('insider', 'Insider', 'market', 4, 2, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
-  m('extrahand', 'Extra Hand', 'purple', 6, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
+  m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
+  m('extrahand', 'Extra Hand', 'purple', 6, 3, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
   m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You always pick first in a round.', { pickFirst: true }),
-  m('straggler', 'Straggler', 'purple', 6, 2, 'Once per round, after the last minion is placed: your last minion may move to an unused space and do that action.', {
+  m('straggler', 'Straggler', 'purple', 4, 1, 'Once per round, after the last minion is placed: your last minion may move to an unused space and do that action.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;
       offerFrom(ctx, owner, card.uid);

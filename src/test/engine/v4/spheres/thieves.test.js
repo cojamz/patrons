@@ -277,7 +277,7 @@ describe('Magenta members', () => {
     } finally { back(); }
   });
 
-  it('Extortionist: only when a rival buys 6 followers, take 2 from them', () => {
+  it('Extortionist: only when a rival buys 8 or more followers, take 2 from them', () => {
     let s = scene({ res: [{ gold: 9, red: 1, blue: 1 }], members: [[], ['thieves.extortionist']] });
     s = move(take(s, 'gold.rush'), 'tier:small');
     expect(R(s)[1].magenta).toBe(0);

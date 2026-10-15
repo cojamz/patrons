@@ -271,10 +271,10 @@ describe('White members', () => {
     expect(ids(s)).not.toContain(`use:${u}`);
   });
 
-  it('Bulk Buyer: whenever you buy 3 or 6 followers, +1 more (not the 2-for-1 buy)', () => {
+  it('Bulk Buyer: whenever you buy 4 or 8 followers, +1 more (not the 2-for-1 buy)', () => {
     let s = take(scene({ res: [{ red: 2, blue: 2 }], members: [['trading.bulkbuyer']] }), 'trading.haggle');
     s = move(s, 'tier:mid');
-    expect(B(s)).toBe(4);
+    expect(B(s)).toBe(5);
     s = move(take(scene({ res: [{ red: 2 }], members: [['trading.bulkbuyer']] }), 'trading.haggle'), 'tier:small');
     expect(B(s)).toBe(1);
   });

@@ -159,6 +159,8 @@ describe('v4 payment picker', () => {
     // and no lead or tie given up by paying it (that one way would ask first: decisions.md, 2026-10-15 17:55)
     for (const o of state.players) if (o !== p) o.res[pr.color || state.resources[0]] = pr.total + 5;
     p.discount = 0;
+    // a rival out-holds that color, so paying gives up no lead (that warning keeps the sheet open on purpose)
+    for (const o of state.players) if (o !== p) o.res[pr.color || state.resources[0]] = pr.total + 3;
     state.queue[0] = { t: 'pay', p: me, uid };
     state = resume(state);
     expect(payIds(state).length).toBe(1);

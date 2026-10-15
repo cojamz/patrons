@@ -373,7 +373,7 @@ describe('White sells followers that contests and bonuses counted', () => {
     s = take(s, 'gold.rush');
     s = move(s, 'tier:mid');
     expect(R(s, 0).gold).toBe(1); // the Tax Collector paid
-    expect(s.players[1].bonus).toBe(4); // 3 bought + Bulk Buyer's 1
+    expect(s.players[1].bonus).toBe(5); // 4 bought + Bulk Buyer's 1
   });
   it('Lender at game end can’t take you below what you’ve won or bought', () => {
     const s = scene({ quads: Q, bonus: [1], members: [['trading.lender']], queue: [{ t: 'finish' }] });

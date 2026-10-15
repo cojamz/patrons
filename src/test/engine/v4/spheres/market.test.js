@@ -146,7 +146,7 @@ describe('Blue actions', () => {
     s = move(s, card(s, 'red.twins'));
     expect(s.pending?.kind).not.toBe('buy');
     expect(s.players[0].members).toHaveLength(2);
-    expect(s.players[0].bonus).toBe(6);
+    expect(s.players[0].bonus).toBe(8);
   });
   it('Free recruits from Snap Up trigger recruit hooks (Recruiter pays)', () => {
     let s = take(scene({ res: [{ green: 5 }], members: [['red.recruiter']], shop: SHOP }), 'market.bargain');

@@ -189,7 +189,7 @@ const trading = {
     m('tipster', 'Tipster', 4, 2, 'Whenever a rival buys followers, +1 white.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, W, 1); },
     }),
-    m('lender', 'Lender', 2, 0, 'When it joins you: +5 white. Game end: lose 2 followers.', {
+    m('lender', 'Lender', 4, 0, 'When it joins you: +5 white. Game end: lose 2 followers.', {
       onRecruited(ctx, owner, card) { payLoan(ctx, owner, card); },
       // a Doppelganger copying Lender is a full copy (Cory): it gets the +5 too, at once (the copy runs onRecruited).
       // This turn-end check is a fallback for a copy made some other way (loanPaid unset).
@@ -202,7 +202,7 @@ const trading = {
       onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 3),
     }),
     m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),
-    m('heiress', 'Heiress', 6, 4, 'Once per game: +1 white per member you have.', {
+    m('heiress', 'Heiress', 4, 2, 'Once per game: +1 white per member you have.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const n = ctx.memberCount(owner);
@@ -225,7 +225,7 @@ const trading = {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },
     }),
-    m('liquidator', 'Liquidator', 4, 2, `Once per game: sell up to ${LIQUIDATE.most} loose followers for ${LIQUIDATE.each} white each.`, {
+    m('liquidator', 'Liquidator', 2, 1, `Once per game: sell up to ${LIQUIDATE.most} loose followers for ${LIQUIDATE.each} white each.`, {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name}'s Liquidator: ${NOTHING_TO_SELL}.`); return; }

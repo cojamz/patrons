@@ -313,7 +313,7 @@ const echoQ = {
         if (recruited.uid !== card.uid && recruited.def.id.startsWith('echo.')) ctx.gain(owner, 'green', 1);
       },
     }),
-    m('translator', 'Translator', 4, 2, 'What you copy comes as green. You can switch it off or on when you buy.', {
+    m('translator', 'Translator', 3, 1, 'What you copy comes as green. You can switch it off or on when you buy.', {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
     }),

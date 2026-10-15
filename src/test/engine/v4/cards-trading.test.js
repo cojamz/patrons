@@ -222,7 +222,7 @@ describe('White members', () => {
   it('Bulk Buyer: whenever you buy 3 or more followers, +1 more (not for 1)', () => {
     let s = take(table(Q, { res: [{ gold: 2, red: 2 }], members: [['trading.bulkbuyer']], shop: ROW }), 'trading.haggle');
     s = payDefault(move(s, 'tier:mid'));
-    expect(s.players[0].bonus).toBe(4);
+    expect(s.players[0].bonus).toBe(5);
     expect(named(s, 'Bulk Buyer').length).toBe(1);
     s = payDefault(move(take(table(Q, { res: [{ red: 2 }], members: [['trading.bulkbuyer']], shop: ROW }), 'trading.haggle'), 'tier:small'));
     expect(s.players[0].bonus).toBe(1);

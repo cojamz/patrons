@@ -206,7 +206,7 @@ const silver = {
       // counts after every other round-start income (Benefactor, Banker…), as a player reads it (Cory hit this, 2026-10-14)
       onRoundStartLate(ctx, owner) { ctx.gain(owner, S, Math.floor(owner.res[S] / 3)); },
     }),
-    m('retinue', 'Retinue', 2, 2, 'Worth 2 followers. When recruited, everyone else +1 silver.', {
+    m('retinue', 'Retinue', 1, 1, 'Worth 2 followers. When recruited, everyone else +1 silver.', {
       f: 2,
       onRecruited(ctx, owner) { giveAll(ctx, owner, S, 1); },
     }),
