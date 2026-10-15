@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { quadrant } from '../../../engine/v4/content/index.js';
 import { take, move, ids } from './helpers.js';
 import { table, named, uidIn } from './cards-helpers-b.js';
+import { promptFor } from '../../../v4/format.js';
 
 const Q = ['gold', 'red', 'market', 'echo'];
 const ROW = ['gold.tycoon', 'red.bigfamily', 'red.twins', 'gold.taxman'];
@@ -22,6 +23,7 @@ describe('using a member any time on your turn', () => {
     expect(s.pending.kind).toBe('place');
     expect(ids(s)).toContain(use);
     expect(slots(s).length).toBeGreaterThan(0);
+    expect(promptFor(s, true).sub).toBe('…or use Lottery Winner first'); // the line under the headline names it
     s = move(s, use); // Lottery Winner: gold equal to the richest rival's
     expect(R(s).gold).toBe(5);
     expect(named(s, 'Lottery Winner').length).toBe(1);
@@ -41,6 +43,7 @@ describe('using a member any time on your turn', () => {
     s = take(s, N('gold', 'rush'));
     expect(s.pending.kind).toBe('buy');
     expect(ids(s)).toEqual(expect.arrayContaining([use, `release:${uid}`])); // unused: usable, and releasable
+    expect(promptFor(s, true).sub).toBe('Recruit a member or buy followers, or pass; or use Lottery Winner');
     s = move(s, use);
     expect(s.pending.kind).toBe('buy');
     expect(ids(s)).not.toContain(use);

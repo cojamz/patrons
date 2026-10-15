@@ -21,6 +21,8 @@ const HELP = `npm run check:v4 [-- options]
                        edits land mid-run (a content change between the build and an e2e's engine import makes saves
                        read as "older version", and the resume e2e fail).
   --fast               Skip the browser e2e; seeded-game blocks play a slice (V4_GAMES=fast).
+  V4_E2E_JOBS=<n>      e2e scripts run n at a time (default 3); info, motion and memory always run alone, last.
+  V4_PHONE=1           include touch.mjs (the phone gate; outside the v0.2 verdict).
   --help               This.
 
   V4_OUTDIR=.v4-build-<name>  build dir (default .v4-build; inside the export with --commit)
@@ -87,7 +89,9 @@ const run = async (name, args, opts = {}) => {
   return code === 0;
 };
 
-await run('engine + spheres + session + ui tests', [VITEST, 'run', 'src/test/engine/v4', 'src/test/v4'], { env: fast ? { V4_GAMES: 'fast' } : {} });
+// the unit tests run alongside the build and the parallel e2e (they don't depend on each other); the timing-
+// sensitive e2e still run alone, after both
+const unit = run('engine + spheres + session + ui tests', [VITEST, 'run', 'src/test/engine/v4', 'src/test/v4'], { env: fast ? { V4_GAMES: 'fast' } : {} });
 // COMMIT_REF stamps the build with the exported commit (vite.config.js), not whatever HEAD the live tree has
 const built = await run('production build', [VITE, 'build', '--outDir', outDir, '--emptyOutDir'], { quiet: true, env: sha ? { COMMIT_REF: sha } : {} });
 
@@ -96,12 +100,24 @@ if (e2e) {
   else {
     let server;
     try { server = await servePreview({ outDir, port, root }); } catch (err) { console.error(err.message); process.exit(2); }
-    for (const f of readdirSync(join(root, 'e2e/v4')).filter(f => f.endsWith('.mjs')).sort())
-      await run(`e2e ${f}`, [`e2e/v4/${f}`], { env: { V4_URL: server.url } });
+    // Parallel e2e (Cory: faster). Each script gets its own shots dir (hotseat wipes its root), and the
+    // timing-sensitive ones (hover p95, bot pacing, memory curve) run alone afterwards so load can't skew them.
+    // touch.mjs (phone) is outside the v0.2 verdict (Cory: no phone for a long time): V4_PHONE=1 brings it back.
+    const shotsRoot = process.env.V4_SHOTS || `/tmp/patrons-shots/v4-${port}`;
+    const all = readdirSync(join(root, 'e2e/v4')).filter(f => f.endsWith('.mjs')).sort()
+      .filter(f => f !== 'touch.mjs' || process.env.V4_PHONE);
+    const SOLO = new Set(['info.mjs', 'motion.mjs', 'memory.mjs']);
+    const jobs = Math.max(1, Number(process.env.V4_E2E_JOBS || 3));
+    const one = f => run(`e2e ${f}`, [`e2e/v4/${f}`], { env: { V4_URL: server.url, V4_SHOTS: `${shotsRoot}/${f.replace(/\.mjs$/, '')}` } });
+    const queue = all.filter(f => !SOLO.has(f));
+    await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length) await one(queue.shift()); }));
+    await unit;
+    for (const f of all.filter(f => SOLO.has(f))) await one(f);
     await server.close();
   }
 }
 
+await unit;
 console.log('\n── v4 check ──');
 for (const r of results) console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name}  (${r.s}s)`);
 console.log(`total ${((Date.now() - started) / 1000).toFixed(1)}s${fast ? ' (--fast)' : ''} · ${sha ? `verdict on commit ${sha.slice(0, 7)}` : LIVE_WARNING}`);

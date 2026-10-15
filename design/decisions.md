@@ -412,3 +412,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Activatable members are usable any time on your own turn, not just in the buy step.
 - ✅ (Cory) Drop "badged" (and the ◆) entirely: "I hate that". Blue scores most blue; cards that counted badged members get simple replacements.
 - ✅ (Cory) Yes to the six balance proposals of pass 1: Tax Collector, Upstart, Shake Down, Plan Ahead, Crunch Time, Open House (texts in design/eval/balance-pass-1.md).
+- ✅ (Cory) A member with an activation (once per game / once per round) can be used at any point on your own turn: before you place a minion (offered beside the spaces) and in the buy step. Its whole effect resolves at once, choices included, then the turn resumes with fresh options. Never on a rival's turn. A used member can't be released. Bots keep using members in the buy step, where their rules are tuned.
