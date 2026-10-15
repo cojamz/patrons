@@ -122,8 +122,11 @@ async function nearChecks(page, step) {
     const L = document.querySelector('[data-hover-layer][data-open="1"]');
     const P = [...document.querySelectorAll('body > .popover')].find(vis);
     const e = P || (L && vis(L) ? L : null);
-    return e ? { kind: P ? 'tip' : 'layer', r: e.getBoundingClientRect().toJSON(), nub: P && P.querySelector('.pop-nub') ? P.querySelector('.pop-nub').getBoundingClientRect().toJSON() : null,
-      layer: L && vis(L) ? L.getBoundingClientRect().toJSON() : null, says: e.textContent.slice(0, 50) } : null;
+    const lr = L && vis(L) ? L.getBoundingClientRect() : null, pr = P ? P.getBoundingClientRect() : null;
+    // two cards open at once is fine side by side (a pinned card and a name read in it); stacked is not
+    const stacked = lr && pr ? Math.max(0, Math.min(lr.right, pr.right) - Math.max(lr.left, pr.left)) * Math.max(0, Math.min(lr.bottom, pr.bottom) - Math.max(lr.top, pr.top)) > 64 : false;
+    return e ? { kind: P ? 'tip' : 'layer', r: (lr && !P ? lr : e.getBoundingClientRect()).toJSON(), nub: P && P.querySelector('.pop-nub') ? P.querySelector('.pop-nub').getBoundingClientRect().toJSON() : null,
+      layer: lr ? lr.toJSON() : null, stacked, says: e.textContent.slice(0, 50) } : null;
   });
   const gapOf = (a, x, y) => Math.round(Math.hypot(Math.max(a.left - x, 0, x - a.right), Math.max(a.top - y, 0, y - a.bottom)));
   for (const [what, sel, kind] of [['the turn-order rail', '.lt > .lt-seat .cs-order', 'tip'], ['a seat\'s "each round" line', '.lt > .lt-seat .cs-income', 'tip'], ['a name in the strip', '[data-since] [data-hover-name]', 'layer']]) {
@@ -136,8 +139,23 @@ async function nearChecks(page, step) {
     const c = await card();
     if (!c) fail(`(m) pointing at ${what} opened nothing`, step);
     else if (kind === 'layer' ? !c.layer : c.kind !== kind) fail(`(m) pointing at ${what} opened the ${c.kind === 'layer' ? 'seat\'s or board\'s card' : 'wrong card'} ("${c.says}"), not its own`, step);
-    else if (kind === 'layer' && c.kind === 'tip') fail(`(m) pointing at ${what} opened a second card over its own ("${c.says}")`, step);
-    else if (gapOf(c.r, x, y) > 40) fail(`(m) ${what}'s card opened ${gapOf(c.r, x, y)}px from the pointer`, step);
+    else if (c.stacked) fail(`(m) pointing at ${what} stacked its card on another one ("${c.says}")`, step);
+    else if (gapOf(kind === 'layer' ? c.layer : c.r, x, y) > 40) fail(`(m) ${what}'s card opened ${gapOf(kind === 'layer' ? c.layer : c.r, x, y)}px from the pointer`, step);
+  }
+  // a name read inside a pinned strip card opens its card beside that card, never stacked on it
+  const line = page.locator('[data-since-line]').first();
+  if ((await line.count()) && (await line.isVisible())) {
+    await page.mouse.move(5, 690); await page.waitForTimeout(200);
+    await line.click(); await page.waitForTimeout(400);
+    const inner = page.locator('body > .popover [data-hover-name]').first();
+    if (await inner.count()) {
+      const b = await inner.boundingBox();
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2); await page.waitForTimeout(450);
+      const c = await card();
+      if (!c || !c.layer) fail('(m) a name in a pinned strip card opened nothing', step);
+      else if (c.stacked) fail(`(m) a name in a pinned strip card stacked its card on that card ("${c.says}")`, step);
+    }
+    await page.keyboard.press('Escape'); await page.mouse.move(5, 690); await page.waitForTimeout(250);
   }
   // your first member: its card beside the whole seat (w2a #45), its nub pointing back at the member
   const fig = page.locator('.lt > .lt-seat-0 .cs-member .fig').first();

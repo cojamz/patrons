@@ -129,12 +129,19 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     // a seat's card opens right beside the whole seat, level with its top (w2b #20: it was docked hundreds of px from
     // the pointer, over the wheel); everything else beside the thing itself
     const seatBox = c.kind === 'seat' ? el.closest('.lt-cult-seat') || el : null;
-    const a = c.kind === 'space' ? spaceRect(el, c.key) : (seatBox || el).getBoundingClientRect();
+    // a name inside a card (a pinned strip card, the turn card, the log): its card opens beside that whole card, level
+    // with the name, never stacked on top of the card it was read in (motion engineer's info.mjs run)
+    const holder = !seatBox && el.closest ? el.closest('.popover:not([data-hover-layer]), .turn-card, .lt-drawer') : null;
+    let a = c.kind === 'space' ? spaceRect(el, c.key) : (seatBox || el).getBoundingClientRect();
+    if (holder) {
+      const hb = holder.getBoundingClientRect(), nb = el.getBoundingClientRect();
+      a = { left: hb.left, right: hb.right, width: hb.width, top: nb.top, bottom: nb.bottom, height: nb.height };
+    }
     const w = Math.min(c.kind === 'seat' ? 360 : 280, innerWidth - 16);
     const h = box.current.offsetHeight || 160;
-    const p = (seatBox && besideSeat(a, w, h)) || placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
+    const p = ((seatBox || holder) && besideSeat(holder ? { ...a, top: a.top - 12 } : a, w, h)) || placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
     // the nub points at the middle of what the card explains (for a seat, the part pointed at), clear of the corners
-    const t = seatBox ? el.getBoundingClientRect() : a;
+    const t = seatBox || holder ? el.getBoundingClientRect() : a;
     const across = p.side === 'right' || p.side === 'left';
     p.nub = Math.round(Math.max(16, Math.min((across ? h : w) - 16, across ? t.top + t.height / 2 - p.top : t.left + t.width / 2 - p.left)));
     side.current = { el, side: p.side };

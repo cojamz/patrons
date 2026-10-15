@@ -172,7 +172,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       const plan = planChain(prev, next, { mine });
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
       // (a rival's step that shows something stays on screen at least 400ms before the same bot's next step: motion.mjs m4)
-      const dwellOf = pl => holdAfter(pl, { sameNext, rivalStep, floor: Math.min(rivalDwell, 400), base });
+      const dwellOf = pl => holdAfter(pl, { sameNext, rivalStep, floor: Math.min(rivalDwell, 400), base, nextPlaces: !!(next.pending && next.pending.kind === 'place') });
       // reduced motion (grammar §6, H14): nothing travels, so a step shows its end state and the next follows a beat later
       const still = !motionOK();
       const dwell = still ? (plan.total || rivalStep ? (sameNext && !plan.total ? 0 : Math.min(150, plan.total || 150)) : base) : dwellOf(plan);
@@ -442,8 +442,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const snake = useMemo(() => snakeOrder(state), [state]);
   // the column of chairs (laptop): each chair keeps its own height (compact to its content, like the plate's panels)
   // and they stack in turn order, centred in the column; a new order re-sorts them (they slide, lamp.css). Positions
-  // are set straight on the elements after each commit, so nothing re-renders for it.
-  useLayoutEffect(() => {
+  // are set straight on the elements after each commit, so nothing re-renders for it, and again when the window
+  // changes size (a resize renders nothing: the chairs kept the other size's places, or the 108px fallback when the
+  // column had been hidden, overlapping until the next move; QA, 2026-10-15).
+  const layColumn = () => {
     const r = root.current;
     if (!r) return;
     const rail = r.querySelector(':scope > .lt-snake');
@@ -462,7 +464,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       rail.style.setProperty('--rail-top', `${top + rows[0].h / 2}px`);
       rail.style.setProperty('--rail-bottom', `${rail.offsetHeight - (top + total - rows[rows.length - 1].h / 2)}px`);
     }
-  });
+  };
+  useLayoutEffect(layColumn);
+  const layColumnNow = useRef(layColumn);
+  layColumnNow.current = layColumn;
+  useEffect(() => {
+    const again = () => layColumnNow.current();
+    addEventListener('resize', again);
+    return () => removeEventListener('resize', again);
+  }, []);
   const seatState = useMemo(() => {
     if (!moment || reckoned === moment) return state;
     let unpaid;

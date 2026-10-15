@@ -231,8 +231,11 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
  * bot moves next, and a turn-ending pass holds MO.passHold. `base`: the hold for anything else (your own steps).
  * Pure: useTable paces with it, and src/test/v4/ui/pacing.test.js checks H2/H3 with it over recorded games.
  */
-export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0 }) {
-  if (plan.total) return Math.max(sameNext ? plan.handoff : plan.total, rivalStep ? floor : 0);
+export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, nextPlaces = false }) {
+  // a turn that passes to a placement: the next player's minion leaves its column during this chain's closing breath
+  // (the departure is the next turn's first, quiet motion, at another seat), so the breath and the departure overlap
+  const passes = plan.turnPasses && nextPlaces ? plan.total - MO.breath : plan.total;
+  if (plan.total) return Math.max(sameNext ? plan.handoff : passes, rivalStep ? floor : 0);
   return rivalStep ? (sameNext ? 0 : MO.passHold) : base;
 }
 

@@ -1,0 +1,93 @@
+# The wait between your turns, broken down (2026-10-15)
+
+**Setup.** The harness was `scripts/v4-perf.mjs` with 4× CPU, seed 20261015, a local game (you plus three Normal bots) at Steady. It ran on frozen production builds:
+- **before:** ee9b0f8
+- **after:** 93e0857, plus the chair-reaction change
+- **after2:** 957c93d, plus the drawing lead
+
+The box was loaded (load 11–17 on 4 CPUs), so wall times here are inflated. The proportions, the commit counts and the per-step records are what carry over.
+
+A production build has no component names, so render size is counted as fibers visited per commit. The new `?trace=1` pacing record gives the composition: `summary().pace` holds one entry per table step (handed to React, committed, its hold as planned and as retimed, and when its timer fired). The analysis scripts sit beside the runs in the scratchpad; the numbers are copied here.
+
+## What one wait is made of
+
+The wait runs from the end of your turn to your next turn painted. It is a chain of table steps, and each step costs:
+
+> the previous step's **hold** (the director's plan, retimed with the screen's real distances)
+> \+ that hold's **timer lateness** (long frames)
+> \+ this step's **drawing time** (handed to React → committed: the whole table renders)
+
+The hold is counted from the commit, so drawing time came on top of every hold, in series.
+
+| run | wait p50 | steps | planned holds | retimed holds | drawing (handed → committed) | timers late | commits per step | fibers per step |
+|---|---|---|---|---|---|---|---|---|
+| before ee9b0f8 | 14.3 s | 17 / 13 | – | – | – | – | 4.5 / 6.4 | 3313 / 4271 |
+| after 93e0857 | 13.2 s | 17 / 13 | 7.07 s / 7.30 s | 7.68 s / 7.79 s | **4.33 s / 3.39 s** | 0.46 s / 0.54 s | 3.6 / 4.6 | 3189 / 3782 |
+
+The two numbers in each cell are the round-I waits: the first includes the bots' setup picks, the second is a pure round-I wait.
+
+In the after run, the wait splits like this:
+- **Holds: about 58%.** The director's schedule, plus 8% from retiming.
+- **Drawing: about 33%.** 150–670 ms a step here (a production build on a loaded box). On the quiet box's dev build at 4×, GameScreen p95 was about 600 ms.
+- **Timer lateness: about 4%.**
+- **The last commit to your turn painted: about 0.1–0.4 s.**
+
+## Why the quiet box showed about 3× the plan
+
+The quiet box measured 20 s against a 6.4 s plan. The plan is the holds only. On a dev build at 4×, drawing one step costs about 0.5–0.6 s. Multiplied by 13–17 steps, that adds 7–10 s. Retiming adds about 8% more.
+
+Before this pass, two more things stacked on top:
+
+1. **Rivals' steps were transitions** (from the earlier input fix). Every number ticking on screen (Tick: a React render per frame per count) and every chair reaction interrupted the table's next render and restarted it. So the next step waited for the counts to stop: starvation.
+2. **Extra commits mid-chain:**
+   - a flash fade 2 s after every placement re-rendered GameScreen and the Wheel
+   - each reacting chair rendered twice (on, and off 900 ms later)
+   - a Tick rendered on every painted number
+
+## Render-side fixes (landed in the working tree)
+
+1. **Rivals' steps are plain updates.** Only your own click's table update is a transition. A rival step is one uninterrupted render that can't be starved (`useTable.show`, `userMove`).
+2. **Tick writes every number between straight to its text node.** React renders only the start and the end.
+   - Before: one render per painted number.
+   - After: 4 renders for a 3 → 15 count (the new value, the glow on, the end, the glow off).
+   - Guard: render-budget "a number counting…".
+3. **No flash-fade render.** The landing flash is a one-shot animation, so the space keeps it until the next placement. This removes one whole GameScreen and Wheel render per placement.
+4. **Chair reactions toggle classes on the chair's own elements** (CultSeat `useCultReactions(state, pid, rootEl)`). Chair renders on a step inside a turn went from 2 / 0 / 2 / 0 to 1 / 0 / 1 / 0. The step that ends a turn went from 5–6 to 4 (every chair's turn label changes).
+5. **The drawing lead** (useTable). The next step is handed to React early by a running average of the recent drawing time, capped at 40% of the hold and 500 ms. Its commit then lands about when the hold ends, so drawing overlaps the hold instead of adding to it. This should take back most of the 33%.
+   - The after2 run measures it: see the end of this file.
+   - The `pace` records carry `lead` per step.
+
+Commits per step went from 4.5–6.4 to 3.6–4.6. The rest are the Tick start and end, the chain-end bump of AfterChain, and TurnCard's own placement.
+
+## For the motion engineer (timing is yours)
+
+**Holds alone are 7.1–7.3 s planned per round-I wait on this seed, and 7.7–7.8 s retimed.** So H2's 6.5 s can't be reached by the render side alone, even with drawing at zero.
+
+These are the per-step holds in the after run's pure round-I wait (moves 26–37):
+
+| step | plan | handoff | hold | retimed |
+|---|---|---|---|---|
+| choose | 470 | 470 | 470 | – |
+| place | 935 | 735 | 935 | 1040 |
+| buy (recruit) | 865 | 753 | 753 | 799 |
+| pay | 0 | 0 | 0 | – |
+| place | 1138 | 938 | 1138 | 1313 |
+| buy | 805 | 693 | 693 | – |
+| place | 0 | 0 | 0 | – |
+| buy | 865 | 753 | 753 | 808 |
+| place (pass-like) | 0 | 0 | 300 (passHold) | – |
+| buy | 865 | 753 | 753 | 755 |
+| place | 815 | 615 | 815 | 920 |
+| buy | 805 | 693 | 693 | – |
+
+The levers on your side:
+- **Retime only ever lengthens** ("never sooner than planned").
+  - It added 0.5–0.6 s a wait, and up to +175 ms on a rival placement (1138 → 1313).
+  - Letting it shorten as well, or capping it, gives that back.
+- **A rival placement that ends its turn holds the whole chain** (`total`, not `handoff`): about 0.8–1.2 s.
+- **The 400 ms floor** lifts same-player steps whose handoff is 134–343 ms up to 400 ms: setup picks, and a buy right after a choose.
+- **`passHold` (300 ms)** sits on a placement with nothing to show.
+- **The pay step plans 0.** The buy before it carries the recruit's chain, which is right.
+
+## after2 (with the drawing lead)
+Pending: see the report.

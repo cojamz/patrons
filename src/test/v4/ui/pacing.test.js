@@ -27,7 +27,7 @@ function paceGame(seed, mine = [0]) {
       const plan = planChain(s, next, { mine });
       const sameNext = !!(next.pending && next.pending.player === actor);
       const rivalStep = !mine.includes(actor);
-      const hold = holdAfter(plan, { sameNext, rivalStep, floor: 400, base: 0 });
+      const hold = holdAfter(plan, { sameNext, rivalStep, floor: 400, base: 0, nextPlaces: !!(next.pending && next.pending.kind === 'place') });
       if (rivalStep) {
         // a snake turnaround (the same bot places again right away) is a second turn, not a longer one
         if (turn != null && s.pending.kind === 'place') { rivalTurns.push(turn); turn = null; if (wait != null) between++; }
