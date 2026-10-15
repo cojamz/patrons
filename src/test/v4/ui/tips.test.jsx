@@ -18,7 +18,9 @@ describe('keywords inside controls', () => {
     expect(document.querySelector('[data-tip-body]')).toBeNull();
     expect(t.getAttribute('role')).toBeNull();
     expect(t.querySelector('.hitbox')).toBeNull();
-    expect(t.getAttribute('title')).toMatch(/round start: /i);
+    // its words for a long-press (touch); no native title, which on a desktop would sit on top of its hover card
+    expect(t.getAttribute('data-hint')).toMatch(/round start: /i);
+    expect(t.getAttribute('title')).toBeNull();
   });
   it('in plain text a keyword still opens its definition on click', () => {
     const { container } = render(<p><CardText text="Now and at round start, +1 red per 2 members." /></p>);
