@@ -858,7 +858,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       paper.push(
         <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} shapeRendering="crispEdges" transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(-rot).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap / 2).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
           <title>{`${state.players[id].name} leads`}</title>
-          {art.rects.map((r, j) => <rect key={j} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
+          {art.paths}
         </g>,
       );
     });

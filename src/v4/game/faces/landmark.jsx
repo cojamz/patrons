@@ -9,6 +9,7 @@
 // ring in the mover's color.
 import { FaceMinion, FaceText, quadrant } from './kit.jsx';
 import { placeRuns, padRuns } from './_landmark-art.js';
+import { pixelPaths } from '../../art/index.js';
 import { piecesFor, PieceRow, rowWidth } from './_landmark-pieces.jsx';
 import './landmark.css';
 
@@ -43,13 +44,13 @@ export default function Landmark({ q, action, ring, round, status, minions = [],
       {lit && <ellipse className="lm-pool" cx={0} cy={placeTop + P * 0.62} rx={P * 0.78} ry={P * 0.5} />}
       <g className="lm-place" opacity={taken ? 0.4 : 1}>
         <svg x={-P / 2} y={placeTop} width={P} height={P} style={{ width: P, height: P, overflow: 'visible' }} viewBox="0 0 32 32" shapeRendering="crispEdges" overflow="visible" className={locked ? 'lm-shut' : ''}>
-          {runs.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
+          {pixelPaths(runs)}
           {locked && <g className="lm-shutter">{[9, 13, 17, 21, 25].map(y => <rect key={y} x="5" y={y} width="22" height="3" />)}</g>}
         </svg>
       </g>
       {/* the pad the minion stands on */}
       <svg x={-padW / 2} y={padY} width={padW} height={padH} style={{ width: padW, height: padH }} viewBox="0 0 16 5" shapeRendering="crispEdges" className="lm-pad" opacity={locked ? 0.35 : 1}>
-        {padRuns.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
+        {pixelPaths(padRuns)}
       </svg>
       {locked
         ? <text className="lm-numeral" x={0} y={placeTop + P * 0.56} fontSize={15 * px} textAnchor="middle" dominantBaseline="central">{['', 'I', 'II', 'III'][ring]}</text>

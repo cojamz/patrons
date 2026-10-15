@@ -92,7 +92,8 @@ try {
   {
     await page.click('[data-seat-row="0"] [data-emoji-btn]');
     await page.waitForSelector('[data-emoji-grid]');
-    const cells = await page.$$eval('[data-emoji-grid] [data-pick] svg rect', els => els.length);
+    // pixel runs: a <rect> each, or a subpath each of a colour's <path> (art/index.js pixelPaths)
+    const cells = await page.$$eval('[data-emoji-grid] [data-pick] svg rect, [data-emoji-grid] [data-pick] svg path', els => els.reduce((n, e) => n + (e.tagName === 'path' ? (e.getAttribute('d').match(/M/g) || []).length : 1), 0));
     const n = await page.$$eval('[data-emoji-grid] [data-pick]', els => els.length);
     if (n !== 20 || cells < 20 * 10) errors.push(`emoji picker: ${n} emojis (want 20), drawn with ${cells} pixels`);
     await shot('02-setup-emoji');

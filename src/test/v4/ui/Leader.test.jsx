@@ -6,7 +6,8 @@ import { Leader, ROBE, LEADER_POSES } from '../../../v4/art/Leader.jsx';
 import { playerColor } from '../../../v4/format.js';
 
 afterEach(cleanup);
-const fills = el => [...el.querySelectorAll('svg > rect')].map(r => `${r.getAttribute('x')},${r.getAttribute('y')},${r.getAttribute('width')}:${r.getAttribute('fill')}`).join('|');
+// the drawing is one <path> per colour (art/index.js pixelPaths): its pixels and their fills
+const fills = el => [...el.querySelectorAll('svg > path')].map(r => `${r.getAttribute('d')}:${r.getAttribute('fill')}`).join('|');
 
 describe('Leader', () => {
   it('renders the same robe for every seat, whatever color it is given', () => {
@@ -22,7 +23,7 @@ describe('Leader', () => {
     const b = render(<Leader color="#00ff00" emoji="frog" />).container.querySelector('svg');
     expect(a.dataset.emoji).toBe('cat');
     expect(b.dataset.emoji).toBe('frog');
-    const body = el => [...el.children].filter(n => n.tagName === 'rect').map(r => r.getAttribute('fill')).join();
+    const body = el => [...el.children].filter(n => n.tagName === 'path').map(r => `${r.getAttribute('d')}:${r.getAttribute('fill')}`).join();
     expect(body(a)).toBe(body(b));
   });
 
