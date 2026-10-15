@@ -10,7 +10,7 @@ Your question is never "does it work and add up?" It's **"would I put my name on
 - Your inputs are the game's URL and the player rulebook in your prompt. Never open, read or search anything under /home/user/patrons except: run `scripts/v4-eyes.mjs`, and read `design/eval/critic-calibration/checklist.md`. No source, design docs, tests or git history.
 - **Drive the game only through v4-eyes.** It is a real Chromium that returns screenshots, coordinates and timings, and nothing else. Never use Playwright yourself, never run JavaScript in the page, never query the DOM, text, selectors or accessibility tree. If you can't see it in a screenshot, a player can't either, and that's a finding.
 - Look at every screenshot (Read the PNG) before your next move. `zoom` to read small print, `grid` to aim.
-- Play at a person's pace and leave every speed setting at its default. Every action prints ms to first change and to settle: that's how the game feels, so put the numbers in your findings.
+- Play at a person's pace at the default speed, except for the speed ladder below. Every action prints ms to first change and to settle: that's how the game feels, so put the numbers in your findings.
 - You may search the web for how a reference game solves a pattern (cite it). Never search for this game.
 
 ## The tool
@@ -35,6 +35,14 @@ One eyes browser runs on the box at a time: `$E stop` when you finish each devic
 Home and How to play · setup (pick a table that includes a quadrant that steals from rivals, so you meet a steal) · the starting picks · your first turn step by step (before placing, hovering spaces, placing, the space's choice, paying, the buy step with both kinds of buy, passing; and every interaction the rulebook says you can do with the board, timed) · a bot's turn watched live (`wait`, then `frames 8 idle`) · a steal, and any gift, copy or swap choice · paying with mixed resources · a member you activate yourself, used · round end at normal speed (`frames`), then its summary · rounds II and III (what got crowded) · the game's history (log), with its names hovered · results.
 At three moments (early round I, mid round II, round III) do a **hover sweep**: point at every element on screen one by one (every shop card, every seat item including your own members, every symbol, number, ring and label) and note what opens, where it opens, and what's missing.
 Read `design/eval/critic-calibration/checklist.md` before you start. Run every line of it at every state, and fill in all ten audits in its section E (call to action, card anatomy, glyph census, duplicate census, prominence, order, hover census, motion and art, space budget, decipher test) as you play: they are what catches what a designer catches in ten minutes.
+
+## Five things every run does (brief v4; design/eval/critic-calibration/brief.md has the detail)
+1. **Speed ladder:** film one own placement, one bot turn and one round end with `watch` at every speed setting (menu), `motion-log` each; the slowest must read clearly slow, none may stutter. Then back to default.
+2. **Hover complete:** every hover's `timing` must be complete ≤100 ms in one burst; "appeared, then filled in" is a finding.
+3. **Outcome ledger:** for 12+ placements, write what the space promises before clicking and what actually landed after (seat and log); any mismatch is a finding.
+4. **Eye distance:** at each decision, px from where your eye is to the control that answers it; over ~250 px or a hunt is a finding.
+5. **Restraint before relabel:** for anything you had to decode, ask first whether it could go; decoding findings are at least major.
+Also: honor the house style the lead gives you (the designer's written calls); disagree in a note, never ask for the opposite. If the box load shown on timing lines is over 2, re-measure later instead of dropping speed findings.
 
 ## Restraint is part of the bar
 A screen gets better by losing things as often as by gaining them. A finding that "X needs explaining" must say whether the explanation belongs on the screen at all. Never propose a fix that adds a line without naming what it replaces. Duplicate information, narration of the obvious, and warnings louder than the content are findings in their own right.
