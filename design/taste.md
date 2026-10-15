@@ -25,6 +25,8 @@ You're a senior product designer at a small studio known for beloved digital boa
 - **Snappy is part of the look.** Never put a `filter` (drop-shadow, blur) on a large container whose children animate, and never `:has()` on the page or table root: both made every hover and click wait (2026-10-15). Put shadows on a static layer and flags on the region that changes.
 - **Keep the gates honest.** Never weaken an assertion to make a change pass. If a test pins something Cory changed, update the test to Cory's new intent and say so.
 
+11. **Scoring shows its sources (Cory, 2026-10-15).** At game end, points arrive where they come from: followers on their own, then a +x over each member's head for its people, then pop-ups for the followers it grants. Never a total that just appears.
+
 ## Slop (never ship these)
 - Badge soup: little pills and counters on everything.
 - More than three type sizes on a screen. Ad-hoc font weights.
@@ -58,3 +60,9 @@ Critics and designers can't guess these, so they're written down here. Each trac
 - Every action plays a clear, steady chain from source to destination. The default speed is Steady (not slow), set in the menu.
 - The starting-resource pick must be an obvious call to action.
 - Snappy above all: your input answers at once.
+- (2026-10-15) Choices come to where you act: a picker beside the space, so your eye stays on the wheel. This is Cory's note; the exact card design is pending.
+- (2026-10-15) No board action charges you to use it. Which spaces change is pending.
+- (2026-10-15) Pass sits where you decide the buy.
+- (2026-10-15) Emojis on the wheel are small, upright, and sit in line with the rim lettering. They never cover words.
+- (2026-10-15) Relaxed is clearly slow. Steady is readable, never rushed.
+- (2026-10-15) Hovers open complete, with no fill-in.

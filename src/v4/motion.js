@@ -9,8 +9,13 @@
 //    viewer's animation speed (the ☰ menu): Quick, Steady (the default: "not SLOW slow, just clear and steady enough
 //    for players to see what's happening") or Relaxed. A click or Space skips the rest of a chain to its end.
 
-/** The viewer's animation speed: how much every "show" duration is multiplied by. */
-export const SPEEDS = { quick: 0.5, steady: 1, relaxed: 1.55 };
+/**
+ * The viewer's animation speed: how much every "show" duration is multiplied by, against the base budgets below (the
+ * motion language's first Steady table, design/prototypes/motion/grammar.md §4). Cory's play note (morning fixes,
+ * 2026-10-16): "Animations are too fast even on Relaxed". So Steady plays a little slower than that table (×1.2), and
+ * Relaxed is twice Steady (×2.4). Quick keeps its own numbers. What answers your hand never reads this.
+ */
+export const SPEEDS = { quick: 0.5, steady: 1.2, relaxed: 2.8 };
 export const SPEED_NAMES = { quick: 'Quick', steady: 'Steady', relaxed: 'Relaxed' };
 export const DEFAULT_SPEED = 'steady';
 const KEY = 'patrons.v4.motionSpeed';
@@ -33,11 +38,21 @@ function readSpeed() {
 }
 let speed = readSpeed();
 const subs = new Set();
-const applyCss = () => { try { if (typeof document !== 'undefined') document.documentElement.style.setProperty('--mo-scale', String(SPEEDS[speed])); } catch { /* jsdom */ } };
+// --mo-scale: the speed (what scales both ways); --mo-slow: the same, never below 1 (what Quick leaves as it was)
+const applyCss = () => {
+  try {
+    if (typeof document === 'undefined') return;
+    const st = document.documentElement.style;
+    st.setProperty('--mo-scale', String(SPEEDS[speed]));
+    st.setProperty('--mo-slow', String(Math.max(1, SPEEDS[speed])));
+  } catch { /* jsdom */ }
+};
 applyCss();
 
 export const motionSpeed = () => speed;
 export const speedScale = () => SPEEDS[speed] ?? 1;
+/** A hold or show that Quick leaves as it is and Steady and Relaxed stretch (a turn card's moment, a floating +N). */
+export const slowed = ms => Math.round(ms * Math.max(1, speedScale()));
 /** Change the viewer's speed (kept in this browser; a ?speed= in the address wins for that page). */
 export function setMotionSpeed(s) {
   if (!SPEEDS[s] || s === speed) return;
@@ -103,87 +118,95 @@ const BASE = {
 const SHOW = new Set(['select', 'minionFly', 'hop', 'cardFly', 'chipGlow', 'pieceFly', 'pieceStagger', 'pieceBump', 'chainHold', 'shopSlide',
   'deal', 'dealStagger', 'minionsHome', 'minionsHomeStagger', 'tickBase', 'tickPer', 'tickMax', 'react', 'afterFlight', 'reckonToken']);
 
-// The chain's own numbers at each speed, from the motion language's table (design/prototypes/motion/grammar.md §4).
+// The chain's own numbers, from the motion language's table (design/prototypes/motion/grammar.md §4): Quick's own,
+// and the base (the old Steady) that Steady and Relaxed multiply by their speed, so Relaxed is always twice Steady.
 // Where a key is here, it wins over BASE × scale.
 const TABLE = {
-  //            quick  steady  relaxed
-  ownStamp:    [100,   140,    180],  // your minion stands in the door at once, then settles
-  trail:       [140,   180,    240],  // your minion's trail from the column
-  minionFly:   [220,   280,    520],  // a rival's minion flight
-  readHold:    [60,    90,     280],  // after a rival places: which space, before anything flies
-  pulse:       [50,    90,     140],  // a source about to give
-  hop:         [120,   180,    260],  // a member acts
-  choicePoint: [100,   160,    240],  // a rival's choice: what they chose lights before its effect flies (grammar S3)
-  setupRest:   [60,    160,    300],  // between two players' starting picks: each pick lands and is read before the next lights
-  lead:        [40,    60,     120],  // hop or pulse → first piece leaves
-  tug:         [60,    90,     140],  // a stack being taken from
-  pieceStagger:[35,    50,     90],
-  bundleTrail: [20,    30,     45],
-  fan:         [25,    40,     60],   // groups, colors, seats in one beat
-  settle:      [140,   180,    240],
-  roll:        [160,   240,    360],  // a bundle's number rolling on landing
-  cardLift:    [80,    100,    160],
-  rivalBuyHold:[0,     0,      160],  // a rival's buy: the card stays lifted while its coins fly in (the telegraph)
-  passHold:    [120,   150,    500],  // a turn-ending pass with nothing to show
-  cardFly:     [260,   340,    560],
-  ring:        [200,   260,    340],
-  worthHop:    [180,   200,    340],  // a new member's worth, chip → follower count
-  accept:      [100,   160,    240],  // a rate or space's press-pop in an exchange
-  swap:        [280,   420,    620],
-  shopSlide:   [180,   240,    320],
-  deal:        [220,   300,    420],
-  colorTurn:   [60,    80,     120],  // a piece that changes colour on its way turns at its midpoint (grammar §2)
-  sortBeat:    [350,   500,    700],  // a new round's chairs re-sort into its order (lamp.css slides them 350ms) and are read
-  rowOut:      [100,   160,    240],  // a whole fresh row: each old card drops away toward the pile (grammar B4)
-  rowOutStagger: [15,  25,     40],
-  dealStagger: [30,    40,     60],
-  breath:      [60,    70,     300],  // between one player's turn and the next
-  minionsHome: [260,   340,    480],
-  minionsHomeStagger: [20, 30,   45],
-  incomeSeat:  [120,   200,    320],
-  // the Reckoning (grammar B6, about 1.6s a rim at Steady): the counts stamp in seat by seat and tick up, the leader
-  // hops, the prize arcs from the rim to the winner's count, which rolls as it lands; a rest; the next rim
-  reckonStagger: [60,  100,    150],
-  reckonTick:  [200,   300,    450],
-  reckonRest:  [60,    120,    200],
-  reckonQuiet: [150,   250,    400],  // a rim nobody scores: it pulses once, dim, and the Reckoning moves on
+  //            quick  base
+  ownStamp:    [100,   140],  // your minion stands in the door at once, then settles
+  trail:       [140,   180],  // your minion's trail from the column
+  minionFly:   [220,   280],  // a rival's minion flight
+  readHold:    [60,    90],   // after a rival places: which space, before anything flies
+  pulse:       [50,    90],   // a source about to give
+  hop:         [120,   180],  // a member acts
+  choicePoint: [100,   160],  // a rival's choice: what they chose lights before its effect flies (grammar S3)
+  setupRest:   [60,    160],  // between two players' starting picks: each pick lands and is read before the next lights
+  lead:        [40,    60],   // hop or pulse → first piece leaves
+  tug:         [60,    90],   // a stack being taken from
+  pieceStagger:[35,    50],
+  bundleTrail: [20,    30],
+  fan:         [25,    40],   // groups, colors, seats in one beat
+  settle:      [140,   180],
+  roll:        [160,   240],  // a bundle's number rolling on landing
+  cardLift:    [80,    100],
+  rivalBuyHold:[0,     0],    // a rival's buy: the card stays lifted while its coins fly in (the telegraph)
+  passHold:    [120,   150],  // a turn-ending pass with nothing to show
+  cardFly:     [260,   340],
+  ring:        [200,   260],
+  worthHop:    [180,   200],  // a new member's worth, chip → follower count
+  accept:      [100,   160],  // a rate or space's press-pop in an exchange
+  swap:        [280,   420],
+  shopSlide:   [180,   240],
+  deal:        [220,   300],
+  colorTurn:   [60,    80],   // a piece that changes colour on its way turns at its midpoint (grammar §2)
+  sortBeat:    [350,   500],  // a new round's chairs re-sort into its order (lamp.css slides them .35s × --mo-slow) and are read
+  rowOut:      [100,   160],  // a whole fresh row: each old card drops away toward the pile (grammar B4)
+  rowOutStagger: [15,  25],
+  dealStagger: [30,    40],
+  breath:      [60,    70],   // between one player's turn and the next
+  minionsHome: [260,   340],
+  minionsHomeStagger: [20, 30],
+  incomeSeat:  [120,   200],
+  // a rival's step that showed something stays up at least this long before another player's step (grammar §5)
+  stepFloor:   [350,   400],
+  // the Reckoning (grammar B6, about 1.6s a rim at the base speed): the counts stamp in seat by seat and tick up, the
+  // leader hops, the prize arcs from the rim to the winner's count, which rolls as it lands; a rest; the next rim
+  reckonStagger: [60,  100],
+  reckonTick:  [200,   300],
+  reckonRest:  [60,    120],
+  reckonQuiet: [150,   250],  // a rim nobody scores: it pulses once, dim, and the Reckoning moves on
   // the round's end as its own beat before the first rim lights: "Round II ends" stamps in at the wheel's centre and is
   // read (wave 4 #6: the scoring began while the player looked away)
-  reckonLead:  [450,   800,    1200],
+  reckonLead:  [450,   800],
+  // a passed turn's card holds its moment, then folds into its chair (GameScreen's TurnCard; lamp.css's fold is
+  // --mo-slow scaled to match)
+  turnCardHold: [2600, 2600],
+  turnCardFold: [500,  500],
 };
-const IDX = { quick: 0, steady: 1, relaxed: 2 };
+/** A budget at the viewer's speed: Quick's own number, else the base times the speed. */
+const atSpeed = ([quick, base]) => (speed === 'quick' ? quick : Math.round(base * speedScale()));
 
 /** MO.x reads the budget at the viewer's speed (read it when you use it, never keep a copy). */
 export const MO = {};
 for (const k of new Set([...Object.keys(BASE), ...Object.keys(TABLE)])) {
   Object.defineProperty(MO, k, {
     enumerable: true,
-    get: () => (TABLE[k] ? TABLE[k][IDX[speed] ?? 1] : SHOW.has(k) ? Math.round(BASE[k] * speedScale()) : BASE[k]),
+    get: () => (TABLE[k] ? atSpeed(TABLE[k]) : SHOW.has(k) ? Math.round(BASE[k] * speedScale()) : BASE[k]),
   });
 }
 /** A flight's length by its distance in px (the grammar: constant speed reads more honest than constant time). */
 export function flightMs(d) {
   const x = Math.max(0, d || 0);
   if (speed === 'quick') return Math.round(Math.min(280, Math.max(160, 120 + 0.18 * x)));
-  if (speed === 'relaxed') return Math.round(Math.min(640, Math.max(380, 280 + 0.45 * x)));
-  return Math.round(Math.min(440, Math.max(260, 200 + 0.30 * x)));
+  return Math.round(Math.min(440, Math.max(260, 200 + 0.30 * x)) * speedScale());
 }
-/** When the next beat starts, as a part of this beat's last flight: half (Quick), two-thirds (Steady), landed + 60 (Relaxed). */
-export const nextBeatAt = flight => (speed === 'quick' ? flight * 0.5 : speed === 'relaxed' ? flight + 60 : flight * (2 / 3));
+/** When the next beat starts, as a part of this beat's last flight: half (Quick), two-thirds (Steady and Relaxed). */
+export const nextBeatAt = flight => (speed === 'quick' ? flight * 0.5 : flight * (2 / 3));
 
 /**
  * Bots: how long each visible bot step stays on screen at least (placing, recruiting, buying, passing), by the table's
  * bot speed, and how long the session lets a bot think. A step's own chain of animations can hold it longer.
  */
+const PACE = { quick: 350, steady: Math.round(600 * SPEEDS.steady), relaxed: Math.round(600 * SPEEDS.relaxed) };
 export const BOT = {
   // by the one speed setting (Quick / Steady / Relaxed); an old save's bot speed (fast / normal / slow) reads the same
-  pace: { quick: 350, steady: 600, relaxed: 1000, fast: 350, normal: 600, slow: 1000 },
+  pace: { ...PACE, fast: PACE.quick, normal: PACE.steady, slow: PACE.relaxed },
   think: { quick: 120, steady: 250, relaxed: 400, fast: 120, normal: 250, slow: 400 },
-  recruitExtra: 150,
+  get recruitExtra() { return slowed(150); },
   /** your own recruit that ends your turn gets this long on screen before the next player's move shows */
-  myRecruitHold: 500,
+  get myRecruitHold() { return slowed(500); },
   /** catching up on moves that happened behind the round-end card */
-  catchUp: 320,
+  get catchUp() { return slowed(320); },
 };
 
 /** The spin's easing: a crisp ease-out (quartic). Most of the turn happens in the first frames. */

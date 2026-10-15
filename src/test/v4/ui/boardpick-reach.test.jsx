@@ -2,13 +2,14 @@
 // moves a choice's answers onto the board and keeps the list for the keyboard only, so an answer with no clickable
 // place on the board is one a mouse can't give: the game stands still (tables e2e, market-echo).
 //  - every engine option is reachable: lit on the board in some step, or a button by the caption;
-//  - a pair's second step always lights a real answer, never only "put it back" or "switch yours";
+//  - a gift or a pair (the gift card, GiftCard.jsx) answers every engine option in some step, its second row always
+//    holds a real answer once a first is picked, and its answers are the engine's own ids;
 //  - a lit member is never folded into a chair's "+N" (CultSeat), where nothing can be clicked.
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove, cardDef } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
-import { boardPicker, seatPart } from '../../../v4/game/boardPick.js';
+import { boardPicker, giftPick, seatPart } from '../../../v4/game/boardPick.js';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
 
 afterEach(cleanup);
@@ -20,20 +21,34 @@ const seats = n => Array.from({ length: n }, (_, k) => ({ name: `P${k + 1}`, kin
 /** What's wrong with the picker for this choice (strings), [] when every answer has a click. */
 function unreachable(state) {
   const pend = state.pending;
-  const pk = boardPicker(state, pend, null);
-  if (!pk) return []; // no board picker: the whole list is buttons
   const engine = new Set(pend.options.map(o => o.id));
   const reach = new Set(), bad = [];
-  const steps = [pk, ...(pk.combo ? pk.combo.firsts.map(f => boardPicker(state, pend, f)) : [])];
-  for (const s of steps) {
+  // the gift card: each first picked in turn, its second row and the rest buttons
+  const g = giftPick(state, pend);
+  if (g) {
+    const steps = g.kind === 'gift' ? [g] : g.firsts.map(f => giftPick(state, pend, f.a));
+    for (const s of steps) {
+      if (s.kind !== 'gift' && !s.seconds.length) bad.push(`the second row (after ${s.chosen}) holds nothing to answer with`);
+      for (const { o, b } of s.seconds) {
+        if (!engine.has(o.id)) bad.push(`${o.id} is not an answer the engine offers`);
+        if (!s.others.includes(b)) bad.push(`${o.id} pairs with ${b}, which the quiet second row never shows`);
+        reach.add(o.id);
+      }
+    }
+    for (const o of g.rest) reach.add(o.id);
+    if (g.kind === 'gift' && g.seconds.some(x => x.b === pend.player)) bad.push('a gift offers your own face');
+    for (const id of engine) if (!reach.has(id)) bad.push(`${id} has no click on the gift card`);
+    return bad.map(b => `${pend.prompt}: ${b}`);
+  }
+  const pk = boardPicker(state, pend);
+  if (!pk) return []; // no board picker: the whole list is buttons
+  for (const s of [pk]) {
     // a step the picker gives up on (two answers on one thing) is shown as the full list
     if (!s) { engine.forEach(id => reach.add(id)); continue; }
-    for (const o of s.options) if (o.kind !== 'first' && !engine.has(o.id)) bad.push(`${o.id} is not an answer the engine offers`);
+    for (const o of s.options) if (!engine.has(o.id)) bad.push(`${o.id} is not an answer the engine offers`);
     // a choice of a player lights rival chairs only: your own chair has no button
-    for (const [key, o] of s.where) if (key === `seat:${pk.actor}` && o.kind !== 'first') bad.push(`${o.id} names your own chair, which has no button`);
-    const real = s.options.filter(o => o.kind !== 'first');
-    if (s.combo && s.combo.chosen != null && !real.length) bad.push(`the second step (after ${s.combo.chosen}) lights nothing to answer with`);
-    real.forEach(o => reach.add(o.id));
+    for (const [key, o] of s.where) if (key === `seat:${pk.actor}`) bad.push(`${o.id} names your own chair, which has no button`);
+    s.options.forEach(o => reach.add(o.id));
   }
   for (const id of engine) if (!reach.has(id)) bad.push(`${id} has no click (not lit in any step, not a button)`);
   return bad.map(b => `${pend.prompt}: ${b}`);

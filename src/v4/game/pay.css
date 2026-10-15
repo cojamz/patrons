@@ -53,6 +53,7 @@
 .dialog.pay.pay-card .pay-rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:20px}
 .dialog.pay.pay-card .pay-rules li{padding:0;border:0;color:var(--pl-ink-2,#6e5c49);font-weight:500}
 .pay-nudge{margin:0;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);animation:pay-nudge .26s ease-out}
+.pay-lead{margin:0;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);font-weight:500}
 @keyframes pay-nudge{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 
 /* Cancel, and the one lit thing: Pay, with the coins it pays */

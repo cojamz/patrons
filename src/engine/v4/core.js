@@ -278,17 +278,18 @@ function rimCost(state, p) {
   }
   return v => {
     let lost = 0, near = 0;
+    const colors = [];
     const saved = { ...p.res };
     try {
       for (const c in v) p.res[c] = (p.res[c] || 0) - (v[c] || 0);
       for (const x of rims) {
         if (!(v[x.r] > 0)) continue;
         const now = x.q.scoring.score(ctx, p);
-        if (x.held && !(now > 0 && now >= x.best)) lost++;
+        if (x.held && !(now > 0 && now >= x.best)) { lost++; colors.push(x.r); }
         if (x.near && x.best - now <= 3 + (v[x.r] || 0)) near += v[x.r];
       }
     } catch { /* leave it unranked */ } finally { Object.assign(p.res, saved); }
-    return { lost, near };
+    return { lost, near, colors };
   };
 }
 
@@ -309,8 +310,13 @@ function orderChoices(state, list, preferred, p) {
     || (a.gold || 0) - (b.gold || 0) || (vecKey(state, b) === pk) - (vecKey(state, a) === pk));
   return out;
 }
-function payOption(state, v, i) {
-  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0 };
+/**
+ * A way to pay, as an option. lost (display only): the colors whose contest p leads or ties now and wouldn't after
+ * paying this way, so the screen can say so and never pays it without asking (wave-2 testers A#4, B#2).
+ */
+function payOption(state, v, i, lost = null) {
+  const breaks = lost ? lost(v).colors : [];
+  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0, ...(breaks.length ? { breaks } : {}) };
 }
 
 /** Paying for a follower buy: needs `colors` different resources; each wild one (gold) covers a color. Gold is spent last. */
@@ -353,6 +359,8 @@ function advance(state) {
 function inputFor(state, task) {
   const p = task.p !== undefined ? state.players[task.p] : null;
   switch (task.t) {
+    // the preview's stop (preview.js): the round's turns wait behind it, there for content to read (Crunch Time), never run
+    case 'previewHold': return { kind: 'hold', prompt: '', options: [{ id: 'hold', label: '', kind: 'hold' }] };
     case 'setupPick':
       return {
         kind: 'setup', prompt: `${p.name}: pick a starting resource (${task.k} of 2)`,
@@ -418,9 +426,10 @@ function inputFor(state, task) {
     case 'pay': {
       const list = task.uid !== undefined ? paymentChoices(state, p, task.uid) : followerChoices(state, p, TIERS.find(t => t.key === task.tier));
       const what = task.uid !== undefined ? cardDef(state, task.uid).name : `${TIERS.find(t => t.key === task.tier).get} followers`;
+      const lost = list.length ? rimCost(state, p) : null;
       return {
         kind: 'pay', prompt: `${p.name}: choose how to pay for ${what}`, ...(task.uid !== undefined ? { uid: task.uid } : { tier: task.tier }),
-        options: [...list.map((v, i) => payOption(state, v, i)), { id: 'back', label: 'Back', kind: 'back' }],
+        options: [...list.map((v, i) => payOption(state, v, i, lost)), { id: 'back', label: 'Back', kind: 'back' }],
       };
     }
     default:
@@ -742,6 +751,21 @@ export function turnRail(state) {
   const current = state.current ?? null;
   return { done: current != null ? taken.slice(0, -1) : [...taken], current, next: state.queue.filter(t => t.t === 'turn').map(t => t.p) };
 }
+/**
+ * This round's planned order (state.order: the snake, then extra minions) with the turns players took early moved up
+ * (Crunch Time: "taking two immediate turns with existing minions", Cory 2026-10-15). state.order itself keeps the
+ * round's first pass, which seats and next round's tiebreak read. Returns { order: [pid], early: [why|null], src:
+ * [index each turn had in state.order] }.
+ */
+export function roundOrder(state) {
+  const order = [...(state.order || [])], early = order.map(() => null), src = order.map((_, i) => i);
+  const e = state.early;
+  if (e && e.round === state.round) for (const m of e.moves) {
+    const [pid] = order.splice(m.from, 1); early.splice(m.from, 1); const [i] = src.splice(m.from, 1);
+    order.splice(m.to, 0, pid); early.splice(m.to, 0, m.why); src.splice(m.to, 0, i);
+  }
+  return { order, early, src };
+}
 /** Workers p had this round (Extra Hand adds to the round's count); older saves fall back to the round's count. */
 export const roundWorkers = (state, p) => p.workers ?? WORKERS[Math.max(1, state.round) - 1];
 
@@ -1055,6 +1079,8 @@ function ctxFor(state) {
     price: (p, uid, how) => memberPrice(state, p, uid, how),
     payChoices: (p, uid, how) => paymentChoices(state, p, uid, how),
     log: text => log(state, text),
+    /** This round's order with turns taken early moved up (roundOrder). */
+    roundOrder: () => roundOrder(state),
     cardLeaves: (p, uid) => cardLeaves(state, p, uid),
     /** Run fn on behalf of owner's member `name` (a hook content code calls itself, e.g. Choir reacting to a copy):
      *  whatever it changes and doesn't log is logged under that name, like the engine's own member hooks. */

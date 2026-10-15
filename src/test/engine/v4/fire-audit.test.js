@@ -108,7 +108,7 @@ describe('namesCard: what counts as a line naming a card', () => {
     for (const [l, n] of [
       ["P1's Banker: +3 gold.", 'Banker'], ['P2 +1 silver (P1\'s Retinue).', 'Retinue'], ['P1 uses Big Spender.', 'Big Spender'],
       ['P1 used Lottery Winner: +7 gold.', 'Lottery Winner'], ['Tycoon +3', 'Tycoon'], ['P1 recruited Banker (1 gold; Sponsor saves 2).', 'Sponsor'],
-      ['P1 recruited Banker (2 gold; Penny Pincher: gold counts double).', 'Penny Pincher'], ['P1 pays 3 purple for Overtime (Corner-Cutter: 6 → 3).', 'Corner-Cutter'],
+      ['P1 recruited Banker (2 gold; Penny Pincher: gold counts double).', 'Penny Pincher'], ["P1's Taskmaster: pays 3 purple for an extra turn (Corner-Cutter: 5 → 3).", 'Corner-Cutter'],
       ['Round II begins. P1 picks first. (P1\'s Front-runner: always picks first.)', 'Front-runner'],
     ]) expect(namesCard(l, n), l).toBe(true);
   });

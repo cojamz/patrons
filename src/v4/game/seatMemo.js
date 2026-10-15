@@ -1,10 +1,10 @@
 // When a chair may skip a render (perf, 2026-10-15). The engine clones the whole state on every step, so a chair's
 // memo never held: all four re-rendered on every bot step. A chair now re-renders only when something it shows changed:
-// its player, its members' cards, its place in the turn order, its rank, its income, its last space, the round, or a
+// its player, its members' cards, its turn words ("next", "your turn in 3"), its rank, its income, its last space, the round, or a
 // new log line naming it (its members' hops and its leader's gestures read the log). Every other prop must be the same.
 import { followers } from '../../engine/v4/index.js';
 import { newLogLines } from '../format.js';
-import { lastSpace, turnPlaces } from './seats.js';
+import { lastSpace, seatTurns } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
 import { incomeOf } from './build.js';
 
@@ -13,7 +13,7 @@ function sigOf(state, pid, me) {
   let m = cache.get(state);
   if (!m) { m = new Map(); cache.set(state, m); }
   let v = m.get(me);
-  if (!v) { v = { places: turnPlaces(state, me).places, ranks: seatRanks(state, me), sig: new Map() }; m.set(me, v); }
+  if (!v) { v = { places: seatTurns(state, me), ranks: seatRanks(state, me), sig: new Map() }; m.set(me, v); }
   let s = v.sig.get(pid);
   if (s === undefined) {
     const p = state.players[pid];

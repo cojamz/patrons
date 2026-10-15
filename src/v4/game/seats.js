@@ -40,7 +40,7 @@ export function turnPlaces(state, me = null) {
     const now = k === 0 && state.current === p.id;
     const label = now ? 'now' : k === 0 ? 'next' : k === 1 ? 'next' : `in ${k}`;
     const again = twice ? ', then again right after' : '';
-    const why = twice ? (seq[k + 1].kind === 'snake' ? ' In snake order, whoever ends a pass starts the next.' : ` ${seq[k + 1].kind === 'hand' ? 'An extra minion' : 'An extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''}.`) : '';
+    const why = twice ? (seq[k + 1].early ? ` A turn taken early (${seq[k + 1].early}), not an extra one.` : seq[k + 1].kind === 'snake' ? ' In snake order, whoever ends a pass starts the next.' : ` ${seq[k + 1].kind === 'hand' ? 'An extra minion' : 'An extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''}.`) : '';
     const what = now ? 'Placing now' : label === 'next' ? 'Places next' : `Places in ${k} turns`;
     // whoever opened the round because a member says so says which (w3a A2: "P3 picks first" with no reason)
     const firstBy = state.order && state.order[0] === p.id ? firstPickWhy(state, p.id) : null;
@@ -48,6 +48,37 @@ export function turnPlaces(state, me = null) {
     out[p.id] = { place: k, label, twice, text: twice ? `${label}, then again` : label, title: `${what}${again}.${ahead(now ? 0 : k)}${why}${opened}` };
   }
   return { places: out, order };
+}
+/**
+ * What each seat says about the turns, in plain words (Cory, 2026-10-16: "the turn-order rail is confusing"; the rail is
+ * gone and the seats say it): the seat that places right after the turn being played says "next" (that can be the
+ * seat playing now, when the snake turns on it or it has an extra turn), and your own seat counts the turns until yours:
+ * "your turn", "your turn next", "your turn in 3", or "done this round". Read off the engine's queue (turnPlaces), so
+ * extra turns, extra minions and seats with nothing left to place are counted as the turns they are.
+ * Returns { pid: { say, kind: 'next'|'now'|'soon'|'in'|'done', n, title } }; empty outside the placing rounds.
+ */
+export function seatTurns(state, me = null) {
+  const out = {};
+  const { places, order } = turnPlaces(state, me);
+  if (!(state.round >= 1) || state.over) return out;
+  const playing = order.length && state.current != null && order[0] === state.current ? order[0] : null;
+  const nextPid = order[playing != null ? 1 : 0];
+  const name = id => state.players[id].name;
+  if (nextPid != null && nextPid !== me) {
+    const again = nextPid === playing;
+    out[nextPid] = { say: 'next', kind: 'next', n: 1, title: again ? `${name(nextPid)} goes again right after this turn.` : `${name(nextPid)} places after this turn.` };
+  }
+  if (me != null && places[me]) {
+    const k = order.indexOf(me);
+    const tail = places[me].title ? ` ${places[me].title.replace(/^[^.]*\.\s*/, '')}`.trimEnd() : '';
+    if (k < 0) out[me] = { say: 'done this round', kind: 'done', n: null, title: 'You have no placements left this round.' };
+    else if (k === 0 && playing === me) {
+      const twice = order[1] === me;
+      out[me] = { say: twice ? 'your turn, then again' : 'your turn', kind: 'now', n: 0, title: twice ? `Your turn now, then again right after.${tail}` : 'Your turn now.' };
+    } else if (k === 0 || (k === 1 && playing != null)) out[me] = { say: 'your turn next', kind: 'soon', n: 1, title: `Your turn comes right after this one.${tail}` };
+    else out[me] = { say: `your turn in ${k}`, kind: 'in', n: k, title: `${k} turns before yours.${tail}` };
+  }
+  return out;
 }
 /** A player's last n placements this round, newest first: ["Rush (Gold)", …]. */
 export function lastMoves(state, pid, n = 3) {

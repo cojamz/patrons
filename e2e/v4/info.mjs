@@ -20,7 +20,9 @@
 //  (l) who's winning and who's next, on the chairs (no score row, Cory 2026-10-15): every chair's total carries its
 //      place (data-rank), the places follow the totals, the leader's total is lit, a trailing total's hover says the
 //      margin; the chairs stand in
-//      this round's turn order (top to bottom, the engine's first pass) and each shows its place in the turns;
+//      this round's turn order (top to bottom, the engine's first pass), and the turns are said in words on the chairs
+//      (Cory, 2026-10-16: the rail is gone): your chair says "your turn…" (or "done this round"), and at most one rival
+//      chair says "next", nothing else;
 //  (m) the hover card opens right next to what it explains (Cory, 2026-10-15: never a docked spot elsewhere): whole
 //      on screen, at the page's top level above every strip, beside or above its target and not over it;
 //  (o) the rim: pointing at a quadrant's rule or a leader's emoji opens that quadrant's standings, never a space;
@@ -52,7 +54,7 @@ const GAME = [
   '[data-region] [data-uid]', '[data-cult] .cs-head', '[data-cult] [data-res]',
   '[data-leader-ring]', '.fol-mark', '.follower', '.lt-rate', '.fb', '.slot',
   '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term',
-  '[data-rank]', '.cs-order',
+  '[data-rank]', '.cs-turn',
 ].join(',');
 
 async function audit(page, step) {
@@ -131,7 +133,7 @@ async function nearChecks(page, step) {
       layer: lr ? lr.toJSON() : null, stacked, says: e.textContent.slice(0, 50) } : null;
   });
   const gapOf = (a, x, y) => Math.round(Math.hypot(Math.max(a.left - x, 0, x - a.right), Math.max(a.top - y, 0, y - a.bottom)));
-  for (const [what, sel, kind] of [['the turn-order rail', '.lt > .lt-seat .cs-order', 'tip'], ['a seat\'s "each round" line', '.lt > .lt-seat .cs-income', 'tip'], ['a name in the strip', '[data-since] [data-hover-name]', 'layer']]) {
+  for (const [what, sel, kind] of [['a seat\'s turn words', '.lt > .lt-seat .cs-turn', 'tip'], ['a seat\'s "each round" line', '.lt > .lt-seat .cs-income', 'tip'], ['a name in the strip', '[data-since] [data-hover-name]', 'layer']]) {
     const t = page.locator(sel).first();
     if (!(await t.count()) || !(await t.isVisible())) continue;
     await page.mouse.move(5, 690); await page.waitForTimeout(250);
@@ -389,7 +391,7 @@ try {
         // (m) your own seat's card opens beside it; (l) the ranked line and the turn-order places
         const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
         if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await anchorCheck(page, 'your seat', step, await head.evaluate(e => e.getBoundingClientRect().toJSON())); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
-        // (m) w2a #14/#28/#29: the turn-order rail, the "each round" line, a name in the strip and your member figure
+        // (m) w2a #14/#28/#29: a seat's turn words, the "each round" line, a name in the strip and your member figure
         // each open their own card right by them, never the seat's list or a card across the screen
         if (!near14.has(step)) { near14.add(step); await nearChecks(page, step); }
         const tops = await page.evaluate(() => {
@@ -397,7 +399,7 @@ try {
           try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ }
           const seats = [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].filter(e => e.querySelector('[data-cult]'));
           const rows = seats.map(e => { const t = e.querySelector('.cs-total'); return { pid: Number(e.dataset.pid), f: Number(t.dataset.followers), rank: Number(t.dataset.rank), lead: t.classList.contains('lead'), margin: t.title || '', y: e.getBoundingClientRect().top }; });
-          return { seats: seats.length, rows, first: st && st.order ? st.order.slice(0, st.players.length) : null, held: !!document.querySelector('[data-next-round], .lt-reckon'), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) };
+          return { seats: seats.length, rows, playing: !!st && st.round >= 1 && !st.over, first: st && st.order ? st.order.slice(0, st.players.length) : null, held: !!document.querySelector('[data-next-round], .lt-reckon'), turns: [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(e => { const c = e.querySelector('.cs-turn'); return { mine: e.classList.contains('mine'), say: c ? c.textContent.trim() : null }; }) };
         });
         const level = tops.rows.every(r => r.f === tops.rows[0].f);
         if (tops.rows.some(r => !(r.rank >= 1))) fail(`(l) a chair's total carries no place: ${JSON.stringify(tops.rows)}`, step);
@@ -413,7 +415,9 @@ try {
           const again = await page.evaluate(() => { let st = null; try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ } return { first: st && st.order ? st.order.slice(0, st.players.length) : null, byY: [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].filter(e => e.querySelector('[data-cult]')).sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top).map(e => Number(e.dataset.pid)), moves: Number(document.querySelector('.app.game').dataset.moves), saved: st && st.moves }; });
           if (again.moves === again.saved && JSON.stringify(again.byY) !== JSON.stringify(again.first)) fail(`(l) the chairs stand ${JSON.stringify(again.byY)}, the turn order is ${JSON.stringify(again.first)}`, step);
         }
-        if (tops.order.length !== tops.seats || !tops.order.includes('now')) fail(`(l) turn-order places: ${JSON.stringify(tops.order)}`, step);
+        const mineSays = tops.turns.filter(t => t.mine).map(t => t.say), rivalSays = tops.turns.filter(t => !t.mine && t.say);
+        if (tops.playing && !tops.held && mineSays.length && (mineSays.length !== 1 || !/^(your turn(, then again| next| in \d+)?|done this round)$/.test(mineSays[0] || ''))) fail(`(l) your chair's turn words: ${JSON.stringify(tops.turns)}`, step);
+        if (rivalSays.length > 1 || rivalSays.some(t => t.say !== 'next')) fail(`(l) rival chairs' turn words (want at most one "next"): ${JSON.stringify(tops.turns)}`, step);
       }
     }
     // the first answer in page order, as a person would give it (lib/answer.mjs: board picks, pairs, the pay sheet)
@@ -463,7 +467,12 @@ try {
       const visible = () => [...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek')].some(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && getComputedStyle(e).opacity !== '0'; });
       window.__hov = { lat: [], flips: 0, was: false, sweeping: false };
       let t0 = null;
-      addEventListener('pointerover', e => { if (e.target.closest && e.target.closest('[data-slot], [data-uid]') && !visible()) t0 = performance.now(); }, true);
+      // the clock starts at the move's first boundary event: React fires onPointerEnter from the native pointerout (it
+      // comes before pointerover, at the new position), and a card that opens whole in that one event is already up by
+      // pointerover. Timed from pointerover alone, those fastest arrivals went uncounted (17 of 30 on 7373244).
+      const onto = el => el && el.closest && el.closest('[data-slot], [data-uid]');
+      addEventListener('pointerout', e => { if (onto(e.relatedTarget) && !visible()) t0 = performance.now(); }, true);
+      addEventListener('pointerover', e => { if (onto(e.target) && !visible()) t0 = performance.now(); }, true);
       const tick = () => {
         const v = visible();
         if (v && t0 != null) { window.__hov.lat.push(performance.now() - t0); t0 = null; }

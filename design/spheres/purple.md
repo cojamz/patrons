@@ -3,7 +3,7 @@
 v4 is Claude's rework after Cory's first play, under his "for fixes, go with your gut". Every change is logged in decisions.md and can be overturned by number.
 
 ## The idea
-Purple is time. You gather it, then either spend it to act again or hold it, because the purple you hold at round end is what Purple's ring counts.
+Purple is time. Its spaces hand out extra turns free (Cory, 2026-10-15: "no board action should require spending"), and the purple you hold at round end is what Purple's ring counts. Members (Taskmaster) can still buy a turn with purple.
 In this game an extra turn is one more placement plus one more buy. So a space that only hands back the worker you used is a wasted worker, as Cory said of Rally. Every extra turn a Purple space gives is now a net gain: one worker goes in and two or more come out.
 
 Night Owl and the five reprices (marked) come from the member-value sim in design/eval/purple-members.md (Claude's gut call, logged in decisions.md).
@@ -11,11 +11,11 @@ Night Owl and the five reprices (marked) come from the member-value sim in desig
 ## For Cory (answer by number; "(fill-in)" marks Claude's own, which nobody has approved; costs are colored part + any, after the ×2)
 1. Scoring (changed): most purple at round end. Ties all score. It was "most workers on the board, purple breaks ties", which tied almost every round and so was really most purple under another name.
 2. Ring I, Hourly: +4 / +5 / +6 purple, by round.
-3. Ring I, Catch Up: +1 purple, and +2 per rival with more workers on the board than you.
+3. Ring I, Catch Up (changed 2026-10-15): +1 purple, and +1 per rival who's placed more minions than you this round, counted before yours lands. The old "+2 per rival with more workers on the board" counted the minion just placed, so a rival one ahead (the only lead turn order gives) tied it and the bonus never paid.
 4. Ring I, Wind-up: +1 purple per worker you have on the board, this one included.
 5. Ring II, Plan Ahead (fill-in, replaces Linger): +1 purple per minion you have left to place this round (was +2; Cory, balance pass 1, 2026-10-15).
-6. Ring II, Overtime (changed): pay 8 purple to take 2 extra turns right after this one. If you can't, +3 purple.
-7. Ring III, Rally (changed): spend all your purple. You take 1 extra turn right after this one per 4 spent, plus 1, up to 2 (was 3; Cory, balance pass 1, 2026-10-15). With less than 4 purple, +4 purple. Double Time makes it 1 per 2.
+6. Ring II, Overtime (changed 2026-10-15): take 1 extra turn right after this one. No payment, no fallback (was: pay 8 purple for 2 extra turns, else +3 purple).
+7. Ring III, Crunch Time [Rally] (changed 2026-10-15, twice): take your next 2 turns right away. Cory: "it's not extra turns, it's taking two immediate turns with existing minions." Your own next two queued turns this round move up to right after this one: no new minion, placements per round unchanged, no spare space needed, and the extra-turn members (Foreman, Courier, Apprentice, Overseer) don't fire. With 1 minion left you take 1; with none it does nothing. (Was: take 2 extra turns; before that, pay all your purple, 4 or more, for 2 extra turns, else +4 purple.)
 8. Second Wind (6+2, repriced): once per game, take an extra turn right after this one.
 9. Errand Runner (4+4): when you recruit it, take an extra turn right after this one.
 10. Taskmaster (4+2, repriced): once per round, pay 5 purple to take an extra turn right after this one.
@@ -24,7 +24,7 @@ Night Owl and the five reprices (marked) come from the member-value sim in desig
 13. Courier (4+2): whenever you take an extra turn, +1 of each other color.
 14. Apprentice (2+2): whenever you take an extra turn, your next member costs 4 less.
 15. Overseer (2+2, repriced): whenever a rival takes an extra turn, gain half your purple (up to 4).
-16. Double Time [Corner-Cutter] (2+0; repriced 6+2 → 4+2 → 4+0 → 2+0, the last two in balance passes 1 and 2): extra turns you pay purple for cost you half (rounded up).
+16. Double Time [Corner-Cutter] (2+0; repriced 6+2 → 4+2 → 4+0 → 2+0, the last two in balance passes 1 and 2): extra turns you pay purple for cost you half (rounded up). Since Overtime and Crunch Time went free (2026-10-15) it halves only Taskmaster; rework pending.
 17. Bookkeeper (4+2, changed): when you place your last worker of a round, +1 purple per 2 workers you have on the board.
 18. Clockmaker (2+2): now and at round start, +1 purple per 2 purple you have.
 19. Lamplighter (10+2, was 6+2; balance pass 2): now and at round start, +1 purple per worker you get this round (3 / 4 / 5).
@@ -32,7 +32,7 @@ Night Owl and the five reprices (marked) come from the member-value sim in desig
 21. Patience (6+2): at game end, +1 follower per 3 purple.
 22. Shift Crew (1+1): worth 2 followers. No effect.
 
-House rule: every extra turn needs a spare space (more open spaces than turns still to come), so nobody ever loses the last space. "If you can't" on Overtime covers the board having room for fewer than 2.
+House rule: every extra turn needs a spare space (more open spaces than turns still to come), so nobody ever loses the last space. Overtime gives its turn only when the board has room, and nothing else when it has none. Crunch Time needs no spare space: it moves your own turns, so nobody loses a placement.
 
 Cut in v4:
 23. Linger. Moving a worker to an open space and doing it is the same as placing there, except you also gave up Linger and reopened your old space for a rival. It fizzled whenever your workers sat on Purple.

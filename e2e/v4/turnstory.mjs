@@ -1,7 +1,8 @@
 // E2E: "what just happened" at 1270×700 (RC1 panel items 1–4). A resumed hot-seat game where P1 (the only person)
 // ends round I's first pass, so the snake turns round on P1, and P1 holds Midas (on).
-//  (t1) the order chips count the snake's double: P1 reads "now again" and no other seat reads NEXT (its explanation
-//       is its hover card's label now, not a native title);
+//  (t1) the seats' turn words count the snake's double (Cory, 2026-10-16: the rail is gone, the seats say the turns):
+//       P1's seat reads "your turn, then again" and no other seat reads "next" (the explanation, naming the snake
+//       order, is its hover card's label, not a native title);
 //  (t2) the "since your last turn" strip accounts for the rivals' moves (one line per placement, each naming its player,
 //       or folded into "N earlier" when the turn card takes the room; whole lines only),
 //       sits in the open, clear of the wheel and the shop, and a line opens that placement's card on hover;
@@ -16,6 +17,13 @@
 //  (t7) the full log opens from the strip in one tap;
 //  (t8) a space or member named in the strip, or in the log, opens its card on the board's hover layer (the space card,
 //       the member card), beside the name, whole on screen, above the log drawer.
+//  (t9) Cory, 2026-10-16: "pass is hard to find" and "the turn-order rail is confusing". In your buy step a "Done, no
+//       buy" button stands in the shop column directly under the follower buys, visible and enabled, and it's the one
+//       way to pass on a laptop (no second Pass in the headline); the rail is gone (nothing drawn in the chairs' gutter);
+//       during a rival's turn the seat that places next (the engine's queue) reads "next" and no other rival does, and
+//       your seat reads "your turn next" / "your turn in N", N the turns before yours in the engine's queue.
+//  (t10) wave-2 testers A#3, B#46: what you got on a rival's turn (Silversmith, "everyone else +1") is on the strip's
+//       line for that turn, naming each member that paid it.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5310.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -23,7 +31,8 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { snakeSave } from './lib/snake-save.mjs';
 import { seedSave } from './lib/seed.mjs';
-import { stripSave } from './lib/strip-save.mjs';
+import { stripSave, giftSave } from './lib/strip-save.mjs';
+import { defById } from '../../src/engine/v4/index.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/turnstory';
 mkdirSync(SHOTS, { recursive: true });
@@ -101,7 +110,7 @@ try {
     const r = sel => { const e = document.querySelector(sel); if (!e) return null; const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, r: b.right, b: b.bottom }; };
     return {
       prompt: document.querySelector('[data-prompt]')?.innerText || '',
-      chips: Object.fromEntries([...document.querySelectorAll('.lt > .lt-seat')].filter(s => s.dataset.pid != null).map(s => { const c = s.querySelector('.cs-order'); return [s.dataset.pid, c ? { order: c.dataset.order, twice: c.dataset.twice === '1', text: c.textContent, title: c.title || c.getAttribute('aria-label') || '' } : null]; })),
+      chips: Object.fromEntries([...document.querySelectorAll('.lt > .lt-seat')].filter(s => s.dataset.pid != null).map(s => { const c = s.querySelector('.cs-turn'); return [s.dataset.pid, c ? { order: c.dataset.turn, text: c.textContent, title: c.title || c.getAttribute('aria-label') || '' } : null]; })),
       card: document.querySelector('.turn-card')?.dataset.turnStory || null,
       cardBox: r('.turn-card'),
       strip: [...document.querySelectorAll('[data-since] [data-since-line]')].map(e => e.textContent),
@@ -137,10 +146,10 @@ try {
   await page.screenshot({ path: `${SHOTS}/1-resumed.png` });
   // (t1)
   const me = v.chips['0'];
-  // the chip says "again" (w3b #42: "twice" alone took a decode), its hover the snake order
-  if (!me || me.order !== 'now' || !me.twice || !/again/.test(me.text) || !/snake order/.test(me.title)) fail(`P1's chip at the turnaround: ${JSON.stringify(me)}`, 't1');
+  // your seat says "again" (w3b #42: "twice" alone took a decode), its hover the snake order
+  if (!me || me.order !== 'now' || me.text !== 'your turn, then again' || !/snake order/.test(me.title)) fail(`P1's turn words at the turnaround: ${JSON.stringify(me)}`, 't1');
   const nexts = Object.entries(v.chips).filter(([pid, c]) => pid !== '0' && c && c.order === 'next');
-  if (nexts.length) fail(`another seat reads NEXT while P1 places twice: ${JSON.stringify(nexts)}`, 't1');
+  if (nexts.length) fail(`another seat reads "next" while P1 places twice: ${JSON.stringify(nexts)}`, 't1');
   // (t2)
   // every rival move since yours is accounted for: on a line, or folded into "N earlier" when the turn card takes the room
   if (v.strip.length + v.folded < 3) fail(`the strip accounts for ${v.strip.length} rival moves + ${v.folded} folded (want 3: P2, P3 and P4 placed before P1): ${JSON.stringify(v.strip)}`, 't2');
@@ -212,12 +221,35 @@ try {
   const sw = v.sw[0];
   if (!sw || sw.state !== 'on' || !/\bon$/.test(sw.text) || !/Midas is on/.test(sw.title) || !/switch it off/.test(sw.title)) fail(`the Midas switch: ${JSON.stringify(v.sw)}`, 't6');
   await page.screenshot({ path: `${SHOTS}/3-first-placement.png` });
-  await page.locator('.pass[data-option]').click();
+  // (t9) "Done, no buy" under the follower buys, in your buy step
+  {
+    const d = await page.evaluate(() => {
+      const l = document.querySelector('.lt'), btn = document.querySelector('.lt-shop .lt-rates [data-option="pass"]');
+      const grid = document.querySelector('.lt-shop .lt-rates-grid'), shop = document.querySelector('.lt-shop');
+      const vis = e => { if (!e) return false; const c = getComputedStyle(e); const b = e.getBoundingClientRect(); return c.display !== 'none' && c.visibility !== 'hidden' && +c.opacity > 0.5 && b.width > 0 && b.height > 0; };
+      const r = e => (e ? e.getBoundingClientRect().toJSON() : null);
+      return { phase: `${l?.dataset.phase}:${l?.dataset.yours}`, vis: vis(btn), text: btn?.textContent.trim() || null, disabled: !!btn?.disabled, btn: r(btn), grid: r(grid), shop: r(shop),
+        others: [...document.querySelectorAll('[data-option="pass"]')].filter(e => e !== btn && vis(e)).length,
+        rail: [...document.querySelectorAll('.lt > .lt-snake *, .lt > .lt-seat .cs-order')].filter(vis).length };
+    });
+    if (d.phase !== 'buy:1') fail(`(t9) expected your buy step after the first placement, the table is at ${d.phase}`, 't9');
+    else {
+      if (!d.vis || d.disabled || d.text !== 'Done, no buy') fail(`(t9) no visible, enabled "Done, no buy" in the shop column in your buy step: ${JSON.stringify(d)}`, 't9');
+      else {
+        const under = d.btn.top >= d.grid.bottom - 1 && d.btn.top - d.grid.bottom <= 16 && d.btn.left >= d.grid.left - 1 && d.btn.right <= d.grid.right + 1;
+        if (!under) fail(`(t9) "Done, no buy" isn't directly under the follower buys: button ${JSON.stringify(d.btn)}, buys ${JSON.stringify(d.grid)}`, 't9');
+        if (d.btn.bottom > 700 || d.btn.left < d.shop.left - 1 || d.btn.right > d.shop.right + 1) fail(`(t9) "Done, no buy" sits outside the shop column or off screen: ${JSON.stringify(d.btn)} in ${JSON.stringify(d.shop)}`, 't9');
+      }
+      if (d.others) fail(`(t9) ${d.others} other pass button(s) on screen beside the shop's "Done, no buy"`, 't9');
+    }
+    if (d.rail) fail(`(t9) the turn-order rail still draws ${d.rail} thing(s)`, 't9');
+  }
+  await page.locator('.lt-shop [data-option="pass"]').click();
   await page.waitForTimeout(700);
   v = await view();
   // (t4)
   if (!/^Your turn again \(snake order\)/.test(v.prompt) || /Extra turn/i.test(v.prompt)) fail(`the snake turnaround reads "${v.prompt}"`, 't4');
-  if (!v.chips['0'] || v.chips['0'].twice) fail(`P1's chip on the second of two placements: ${JSON.stringify(v.chips['0'])}`, 't4');
+  if (!v.chips['0'] || v.chips['0'].text !== 'your turn') fail(`P1's turn words on the second of two placements: ${JSON.stringify(v.chips['0'])}`, 't4');
   await page.screenshot({ path: `${SHOTS}/4-again.png` });
   // (t5) the second placement: its own card
   { const before = await cardNow(); await page.locator('.lt-wheel .slot.can').first().click(); await settle(before); }
@@ -227,9 +259,38 @@ try {
   else if (!v.card || !v.card.startsWith(`You took ${second}`)) fail(`after taking ${second} the turn card reads "${v.card}"`, 't5');
   else if (v.card.includes(first)) fail(`the second placement's card mentions the first space (${first}): "${v.card}"`, 't5');
   await page.screenshot({ path: `${SHOTS}/5-second-placement.png` });
-  await page.locator('.pass[data-option]').click().catch(() => {});
+  await page.locator('.lt-shop [data-option="pass"]').click().catch(() => {});
   // the rivals play; back on P1 the strip has their moves
   await page.waitForFunction(() => document.querySelector('.lt')?.dataset.yours === '0', null, { timeout: 8000 }).catch(() => {});
+  // (t9) during a rival's turn: "next" on the seat the engine's queue names, "your turn in N" on yours (read when the
+  // screen has caught up with the save: the chain may still be telling the last move)
+  {
+    let t9 = null, ok = false;
+    for (let k = 0; k < 40 && !ok; k++) {
+      t9 = await page.evaluate(() => {
+        let st = null;
+        try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ }
+        const l = document.querySelector('.lt');
+        const words = Object.fromEntries([...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(s => { const c = s.querySelector('.cs-turn'); return [s.dataset.pid, c && getComputedStyle(c).visibility !== 'hidden' ? c.textContent.trim() : null]; }));
+        const ahead = st ? [...(st.current != null ? [st.current] : []), ...st.queue.filter(t => t.t === 'turn').map(t => t.p)] : [];
+        return { caught: !!st && Number(l?.dataset.moves) === st.moves && l?.dataset.phase !== 'reckon', yours: l?.dataset.yours, current: st ? st.current : null, ahead, words };
+      });
+      ok = t9.caught && t9.yours === '0' && t9.current != null && t9.current !== 0;
+      if (!ok) await page.waitForTimeout(150);
+    }
+    if (!ok) fail(`(t9) never caught a rival's turn with the screen caught up: ${JSON.stringify(t9)}`, 't9');
+    else {
+      const k = t9.ahead.indexOf(0), nextPid = t9.ahead[1];
+      const wantMine = k < 0 ? 'done this round' : k === 1 ? 'your turn next' : `your turn in ${k}`;
+      if (t9.words['0'] !== wantMine) fail(`(t9) your seat reads ${JSON.stringify(t9.words['0'])} during a rival's turn (want "${wantMine}"; queue ${JSON.stringify(t9.ahead)})`, 't9');
+      for (const [pid, w] of Object.entries(t9.words)) {
+        if (pid === '0') continue;
+        const want = nextPid != null && String(nextPid) === pid ? 'next' : null;
+        if (w !== want) fail(`(t9) P${Number(pid) + 1}'s seat reads ${JSON.stringify(w)} (want ${JSON.stringify(want)}; queue ${JSON.stringify(t9.ahead)})`, 't9');
+      }
+      await page.screenshot({ path: `${SHOTS}/5b-rival-turn.png` });
+    }
+  }
   await page.waitForFunction(() => document.querySelector('.lt')?.dataset.yours === '1' && document.querySelector('[data-actor]')?.dataset.actor === '0', null, { timeout: 150000 }).catch(() => fail('never came back to P1', 'play'));
   await page.waitForTimeout(500);
   v = await view();
@@ -272,6 +333,37 @@ try {
     const W2 = await stripFrames(p2, tag);
     console.log(`turnstory ${tag}: ${s2 ? s2.lines : 0} whole lines + ${s2 ? s2.folded : 0} folded with the card up; strip watched ${W2 ? W2.frames : 0} frames, longest part-line run ${W2 ? W2.worst : '?'}`);
     await p2.close();
+  }
+  // (t10) what you got on a rival's turn is named, with its cause (wave-2 testers A#3, B#46: "my silver went 3→9
+  // between turns with no 'you +N' line in the strip"): P1 holds Silversmith on a Silver table; the newest rival turn
+  // paid P1. The strip's newest line says "you +N" (each amount beside its dot) and names each member that paid it.
+  {
+    const tag = 't10';
+    const g = giftSave({ newest: true });
+    g.save.state.build = stamp; g.roundStart.state.build = stamp;
+    const p3 = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    p3.on('pageerror', e => errors.push(`[${tag}] pageerror: ${e.message}`));
+    await seedSave(p3, g.save, { roundStart: g.roundStart });
+    await p3.goto(`${base}/?botDelay=300&intro=0`);
+    await p3.click('[data-home="resume"]', { timeout: 30000 });
+    await p3.waitForSelector('.lt-wheel .slot.can');
+    await p3.waitForTimeout(800);
+    const line = await p3.$$eval('[data-since] .since-row', els => (els.length ? els[els.length - 1].textContent.replace(/\s+/g, ' ').trim() : ''));
+    // and it is in sight: on the strip's newest line, or (when the turn card takes the strip's room) on the card
+    // (the card's text is its data-turn-story: its amounts draw as dots; it shows its first four lines)
+    const seen = await p3.evaluate(() => [...document.querySelectorAll('[data-since] .since-row, .turn-card')].filter(e => {
+      const r = e.getBoundingClientRect();
+      return r.width && r.height && !e.closest('[hidden]') && getComputedStyle(e).visibility !== 'hidden' && r.top >= 0 && r.bottom <= innerHeight;
+    }).map(e => (e.dataset.turnStory ? e.dataset.turnStory.split(' · ').slice(0, 5).join(' · ') : e.textContent.replace(/\s+/g, ' ').trim())).filter(t => /\byou \+\d/.test(t)));
+    if (!seen.length) fail('what you got shows nowhere in sight (strip line or turn card)', tag);
+    const want = Object.entries(g.newest.res).map(([r, n]) => `+${n} ${r}`);
+    const names = g.newest.members.map(d => defById(d).name);
+    if (!/\byou \+\d/.test(line)) fail(`the strip's newest line never says what you got: "${line}"`, tag);
+    for (const n of names) if (!line.includes(n)) fail(`the strip's newest line doesn't name ${n}, which paid you: "${line}"`, tag);
+    await p3.mouse.move(640, 695);
+    await p3.screenshot({ path: `${SHOTS}/10-gift-line.png` });
+    console.log(`turnstory ${tag}: in sight "${seen[0] || ''}"; newest line "${line}" (want ${want.join(' ')} from ${names.join(', ') || 'the space'})`);
+    await p3.close();
   }
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);

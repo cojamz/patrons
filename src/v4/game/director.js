@@ -20,7 +20,9 @@ import { MO, flightMs, nextBeatAt, speedScale } from '../motion.js';
 import { playerColor } from '../format.js';
 import { gainsBetween } from './gains.js';
 import { seatOrder } from './seats.js';
-import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights } from './flight.js';
+import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights, arcFrames, bezier, onScreenBow, relative } from './flight.js';
+
+const CARD_EASE = bezier(0.3, 0.7, 0.2, 1); // a recruited card's flight to its crowd (grammar M7)
 
 // ---------- the plan ----------
 
@@ -507,7 +509,7 @@ const folHtml = (root, pid) => { const g = root.querySelector(`.lt-cult-seat[dat
 // a whole region (the shop strip, a chair: a fallback target) never hops or pops: its box is the furniture, which never
 // moves (hotseat region gate); only the thing inside it does
 const region = el => !!(el && el.matches && el.matches('[data-region]'));
-const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly && !region(el)) track(el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' })); };
+const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly && !region(el)) relative(el, [{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.4 }, { transform: 'translateY(0) scale(1)' }], { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' }); };
 const square = (r, size) => ({ left: r.left + r.width / 2 - size / 2, top: r.top + r.height / 2 - size / 2, width: size, height: size });
 const onFinish = (anim, fn) => { if (anim && anim.finished) anim.finished.then(() => fn(), () => fn()); else fn(); };
 
@@ -667,19 +669,21 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           const total = a.lift + a.wait + a.dur, k1 = a.lift / total, k2 = (a.lift + a.wait) / total;
           const sc = B.width ? Math.max(0.2, Math.min(0.5, B.width / sn.rect.width)) : 0.3;
           chain.flying++;
+          // lift, hold while its coins drop in, then a true arc to the chip (grammar M7; sampled, so the path has no
+          // corner: the five-keyframe version turned at its top and changed speed there)
+          const bow = onScreenBow(sn.rect, B, Math.max(16, Math.min(70, Math.hypot(dx, dy) * 0.18)));
           const anim = track(g.animate([
-            { transform: 'translate(0,0) scale(1)', offset: 0 },
-            { transform: 'translate(0,-10px) scale(1.06)', offset: k1 },
-            { transform: 'translate(0,-10px) scale(1.06)', offset: k2, easing: 'cubic-bezier(.3,.7,.2,1)' },
-            { transform: `translate(${dx * 0.5}px,${dy * 0.5 - 40}px) scale(${(1.06 + sc) / 2})`, offset: k2 + (1 - k2) * 0.5 },
-            { transform: `translate(${dx}px,${dy}px) scale(${sc})`, opacity: 0.2, offset: 1 },
+            { transform: 'translate(0px,0px) scale(1)', offset: 0, easing: 'ease-out' },
+            { transform: 'translate(0px,-10px) scale(1.06)', offset: k1 },
+            ...arcFrames(dx, dy, bow, { from: k2, s0: 1.06, s1: sc, y0: -10, ease: CARD_EASE }),
           ], { duration: total, fill: 'forwards' }));
+          track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k2 + (1 - k2) * 0.6 }, { opacity: 0.2 }], { duration: total, fill: 'forwards' }));
           slideShop(root, snap);
           if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total }));
           onFinish(anim, () => {
             g.remove();
             chain.flying = Math.max(0, chain.flying - 1);
-            if (chip && chip.animate && chip.isConnected && !region(chip)) track(chip.animate([{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' }));
+            if (chip && chip.animate && chip.isConnected && !region(chip)) relative(chip, [{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' });
           });
           return;
         }

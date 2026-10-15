@@ -10,6 +10,7 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
+import { answerChoice } from './lib/answer.mjs';
 
 const SHOTS = process.env.V4_SHOTS || '/tmp/patrons-shots/v4-resume-edge';
 mkdirSync(SHOTS, { recursive: true });
@@ -50,12 +51,9 @@ async function act(page, { next = true } = {}) {
   if (skip) { if (!next) return false; await skip.click().catch(() => {}); return true; }
   const nx = await page.$('[data-next-round]');
   if (nx) { if (next) await nx.click().catch(() => {}); return next; }
-  for (const el of await page.$$('[data-option]:not([disabled])')) {
-    const id = await el.getAttribute('data-option').catch(() => null);
-    if (!id || id.startsWith('toggle:') || id === 'back') continue;
-    try { await el.click({ timeout: 1000 }); return true; } catch { /* moved or covered */ }
-  }
-  return false;
+  // anything else: the shared answerer (lib/answer.mjs). Pairs and gifts are picked on the gift card now (2026-10-15),
+  // where "@unpick" comes first in the page: the first-option click put the pick back forever (Even Swap stalled here)
+  return !!(await answerChoice(page, { timeout: 1000 }));
 }
 async function playUntil(page, cond, { ms = 120000, next = true, label = 'condition' } = {}) {
   const t0 = Date.now();

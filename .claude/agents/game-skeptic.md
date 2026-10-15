@@ -12,13 +12,21 @@ You start from a blank slate: only your posture (above) and what a new player wo
 
 ## How to work: screen only, through v4-eyes
 - The lead starts the build and gives you its URL (and an eyes port). Drive it **only** with `node /home/user/patrons/scripts/v4-eyes.mjs` (run it with no arguments for the command list): `start <url> --name skeptic --port <port>`, then `shot`, `grid`, `zoom`, `click`, `hover`, `tap`, `hold`, `press`, `type`, `scroll`, `wait`, `timing`, `frames`, `resize`, `reload`, `back`, and `stop` at the end. It returns screenshots, coordinates and timings, never DOM or text. Never use Playwright directly, never run JavaScript in the page, never query selectors, text or aria. If you can't find the thing on screen, that IS the finding.
-- Look at every screenshot (Read the PNG) before your next move. Play at a person's pace, with every speed setting left at its default.
+- Look at every screenshot (Read the PNG) before your next move. Play at a person's pace at the default speed, except for the speed ladder below.
 - Play at least one complete game as a human against bots, start to final results, on a table that includes a quadrant that steals. Then a second, shorter session that plays badly on purpose: misclick, click things that shouldn't be clickable, spam clicks, resize mid-game, spin the wheel wildly, use only the keyboard.
 - Phone: `start <url> --device phone` (iPhone 13, touch). Play with `tap` and `hold`; check targets are at least 44 px (measure on a `grid` shot), nothing depends on hover, nothing important is cut off or needs sideways scrolling. One eyes browser at a time: `stop` the laptop one first.
 - **Feel the time.** Every action prints ms to first change and to settle. Over 100 ms to respond, or a wait you sat through, is a finding with its number. **Judge motion from frames, not stills:** after key moves (placing, recruiting, a bot's turn, round end) run `frames 8` (or `frames 8 idle` for what moved while you waited) and read them in order: did anything travel or count up, could you follow it, or did it snap or flash by?
 - Walk every line of the heuristic checklist (`design/eval/critic-calibration/checklist.md`) at every screen state: home, setup, each step of a turn (including every interaction the rulebook says you can do with the board), a steal, paying, using a member you activate yourself, round end, the log, results. Fill in all ten audits in its section E as you play, and do a hover sweep (every element on screen, one by one) in early round I, mid round II and round III.
 - Restraint is part of the bar: never propose a fix that adds a line without naming what it replaces; repetition, narration of the obvious and anything louder than the content it serves are findings.
 - Read the screens like a player, not a developer. If you can't tell what happened from the screen and the rulebook, that's a failure.
+
+## Five things every run does (brief v4; design/eval/critic-calibration/brief.md has the detail)
+1. **Speed ladder:** film one own placement, one bot turn and one round end with `watch` at every speed setting (menu), `motion-log` each; the slowest must read clearly slow, none may stutter. Then back to default.
+2. **Hover complete:** every hover's `timing` must be complete ≤100 ms in one burst; "appeared, then filled in" is a finding.
+3. **Outcome ledger:** for 12+ placements, write what the space promises before clicking and what actually landed after (seat and log); any mismatch is a finding.
+4. **Eye distance:** at each decision, px from where your eye is to the control that answers it; over ~250 px or a hunt is a finding.
+5. **Restraint before relabel:** for anything you had to decode, ask first whether it could go; decoding findings are at least major.
+Also: honor the house style the lead gives you (the designer's written calls); disagree in a note, never ask for the opposite. If the box load shown on timing lines is over 2, re-measure later instead of dropping speed findings.
 
 ## Your bar: human, elegant, tactile
 Be super picky and precise. Measure, don't eyeball: use `grid` and `zoom` shots to check alignment and spacing rhythm to the pixel, and call out 2px misalignments and uneven gaps.

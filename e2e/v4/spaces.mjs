@@ -15,6 +15,10 @@
 //  (s8) the headline prompt fits: no ellipsis, nothing clipped, one line, while placing and while buying;
 //  (s9) panels: the print is tidy: no two spaces' words or minions touch, nothing runs into the rim or the hub, each
 //       space's print is centred in its own panel, and every line stays inside its panel (no clipping, no overflow).
+//  (s10) the leaders' emojis on the rims are small, upright and inside the band (Cory, 2026-10-15: "the emojis on the
+//       wheel are too big and out of line"; a tester once asked for bigger ones and they grew to fill the band): each is
+//       at most 17px square on screen at 1270×700 (an upright square: a tilted one's box grows), every corner inside the
+//       rim band, and none overlaps any word on the wheel (the rim's own line, its follower mark, a panel's print).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -220,6 +224,52 @@ const INSIDE = () => {
   return [...new Set(out)];
 };
 
+const RIM_EMOJI = () => {
+  const out = [];
+  const stage = document.querySelector('.lt-wheel .stage');
+  const vb = stage.querySelector('svg.wheel-paper').viewBox.baseVal;
+  const sb = stage.getBoundingClientRect();
+  const k = sb.width / vb.width, cx = sb.left + (200 - vb.x) * k, cy = sb.top + (200 - vb.y) * k;
+  const r0 = 180 * k, r1 = 200 * k; // the rim band (Wheel.jsx RIM)
+  // every word on the wheel, as screen boxes: the rims' letters one by one (they run on an arc), their follower marks,
+  // and each panel's lines of print
+  const words = [];
+  for (const t of stage.querySelectorAll('[data-rim-text]')) {
+    const m = t.getScreenCTM();
+    for (let i = 0; i < t.getNumberOfChars(); i++) {
+      let e; try { e = t.getExtentOfChar(i); } catch { continue; }
+      if (!e.width) continue;
+      const pts = [[e.x, e.y], [e.x + e.width, e.y], [e.x, e.y + e.height], [e.x + e.width, e.y + e.height]].map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]);
+      const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+      // a letter's ink is about the middle 60% of its line box
+      const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
+      words.push({ what: `rim letter "${t.textContent[i]}"`, x: { left: Math.min(...xs) + w * 0.2, right: Math.max(...xs) - w * 0.2, top: Math.min(...ys) + h * 0.2, bottom: Math.max(...ys) - h * 0.2 } });
+    }
+  }
+  for (const g of stage.querySelectorAll('[data-rim-prize] svg')) { const x = g.getBoundingClientRect(); words.push({ what: 'a rim follower mark', x }); }
+  for (const el of stage.querySelectorAll('.slot .face .nm, .slot .face .yl, .slot .face .note')) {
+    const r = document.createRange(); r.selectNodeContents(el);
+    for (const x of r.getClientRects()) if (x.width > 2 && x.height > 2) words.push({ what: `"${el.textContent.trim().slice(0, 20)}"`, x: { left: x.left, right: x.right, top: x.top + x.height * 0.25, bottom: x.bottom - x.height * 0.16 } });
+  }
+  let n = 0;
+  for (const g of stage.querySelectorAll('[data-rim-leader]')) {
+    n++;
+    const b = g.getBoundingClientRect();
+    const who = `P${Number(g.dataset.rimLeader) + 1}'s emoji`;
+    if (b.width > 17.01 || b.height > 17.01) out.push(`${who} is ${b.width.toFixed(1)}×${b.height.toFixed(1)}px (want at most 17px)`);
+    if (Math.abs(b.width - b.height) > 1) out.push(`${who} isn't upright (its box is ${b.width.toFixed(1)}×${b.height.toFixed(1)}px)`);
+    for (const [px, py] of [[b.left, b.top], [b.right, b.top], [b.left, b.bottom], [b.right, b.bottom]]) {
+      const d = Math.hypot(px - cx, py - cy);
+      if (d < r0 - 0.5 || d > r1 + 0.5) { out.push(`${who} runs out of the rim band (a corner at ${(d / k).toFixed(1)} of 180–200)`); break; }
+    }
+    for (const w of words) {
+      const ox = Math.min(b.right, w.x.right) - Math.max(b.left, w.x.left), oy = Math.min(b.bottom, w.x.bottom) - Math.max(b.top, w.x.top);
+      if (ox > 0.5 && oy > 0.5) { out.push(`${who} covers ${w.what} (${ox.toFixed(1)}×${oy.toFixed(1)}px)`); break; }
+    }
+  }
+  return { out, n };
+};
+
 // three tables cover every sphere (Classic; red/yellow/market/thieves; purple/silver/trading/echo)
 const OTHER = ['purple', 'silver', 'trading', 'echo'], TB = ['red', 'yellow', 'market', 'thieves'];
 const passes = [
@@ -237,6 +287,7 @@ const passes = [
   { look: 'sockets', quadrants: null, play: false, round: 3 },
 ];
 const totals = {};
+let rimEmojis = 0;
 try {
   for (const pass of passes) {
     const tag = `[${pass.look}${pass.quadrants ? ' ' + pass.quadrants.join('/') : ''}${pass.round ? ` round ${pass.round}` : ''}]`;
@@ -287,6 +338,7 @@ try {
     (await page.evaluate(FLOOR)).forEach(m => fail(`(s7) ${m}`, tag));
     (await page.evaluate(PROMPT)).forEach(m => fail(`(s8) placing: ${m}`, tag));
     if (pass.look === 'panels') (await page.evaluate(INSIDE)).forEach(m => fail(`(s9) ${m}`, tag));
+    { const re = await page.evaluate(RIM_EMOJI); re.out.forEach(m => fail(`(s10) ${m}`, tag)); rimEmojis += re.n; }
 
     // (s2) a taken space: shake + "Taken by …" at the pointer
     const taken = await page.$('.lt-wheel .slot.taken:not([data-option])');
@@ -368,8 +420,10 @@ try {
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);
 }
+if (!rimEmojis && !errors.some(e => e.startsWith('run:'))) fail('(s10) no leader emoji on any rim to check');
 await browser.close();
 if (server) server.kill();
+console.log(`spaces (s10): ${rimEmojis} rim emojis checked`);
 for (const [k, v] of Object.entries(totals)) console.log(`spaces ${k}: ${v}`);
 if (notes.length) console.log(`known (not gated):\n${notes.join('\n')}`);
 if (errors.length) console.error(errors.join('\n'));

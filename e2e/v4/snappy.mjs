@@ -3,7 +3,7 @@
 //  (s2) a hover card opens within 100ms of the pointer arriving: wheel spaces, shop cards and keyword tips;
 //  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 150ms;
 //  (s4) the animation speed setting changes a chain's length (Relaxed ≥ 1.8 × Quick);
-//  (s5) the gap between your turns at Steady (bots at Normal) is under 8s;
+//  (s5) the gap between your turns at Steady (bots at Normal) is under 8s × Steady's speed (9.6s);
 //  (s6) with only the table's idle loops running on your turn, the page draws at least 30 frames a second;
 //  (s7) a press on a lit space reaches the screen (the next frame) within 100ms.
 // s1–s3 measure input → first response, never a chain's length: a chain plays after your move has shown.
@@ -19,6 +19,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
 import { seedSave } from './lib/seed.mjs';
+import { SPEEDS } from '../../src/v4/motion.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/snappy';
 mkdirSync(SHOTS, { recursive: true });
@@ -238,7 +239,11 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
 // publishes each chain's planned length), so a loaded box can't blur it; the wall time is reported beside it.
 // (s5) the gap between your turns at Steady, bots at Normal: from your pass to your next placement, under 8s
 // (Cory's pacing: a rival's whole turn about 1.5–2s). The better of two gaps in round I counts.
+// The first page is done with by now: closed, so a game still live in it can never write over the save a fresh page
+// resumes (one browser context shares one save; the older tab yields to the newer one only once that one is up).
+let mainOpen = true;
 async function freshPage(query) {
+  if (mainOpen) { mainOpen = false; await page.close().catch(() => {}); }
   const pg = await ctx.newPage();
   pg.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
   await seedSave(pg, richSave()); // before the app runs (lib/seed.mjs)
@@ -246,7 +251,15 @@ async function freshPage(query) {
   const r = await pg.waitForSelector('[data-home="resume"]', { timeout: 15000 }).catch(() => null);
   if (!r) { await pg.close(); return null; }
   await r.click();
-  await pg.waitForSelector('.lt[data-phase="place"][data-yours="1"] .slot.can .base', { timeout: 15000 });
+  // a resumed game that never offers your placement is reported with what the screen showed (it threw, and the whole
+  // gate died with a bare TimeoutError: 2026-10-15, twice, then not again in five runs)
+  if (!(await pg.waitForSelector('.lt[data-phase="place"][data-yours="1"] .slot.can .base', { timeout: 15000 }).catch(() => null))) {
+    const at = await pg.evaluate(() => { const l = document.querySelector('.lt'); return l ? `phase ${l.dataset.phase}, yours ${l.dataset.yours}` : (document.body.innerText || '').slice(0, 80); }).catch(() => '?');
+    errors.push(`(${query}) the resumed game never offered your placement within 15s (${at})`);
+    await pg.screenshot({ path: `${SHOTS}/fresh-${query.replace(/\W+/g, '-')}.png` }).catch(() => {});
+    await pg.close();
+    return null;
+  }
   await pg.evaluate(() => {
     window.__chainSeen = [];
     const app = document.querySelector('.app.game');
@@ -303,11 +316,13 @@ const plainSpace = pg => pg.evaluateHandle(() => [...document.querySelectorAll('
   report.push(`turns: gap between your turns at Steady, scheduled ${gaps.map(g => `${(g.planned / 1000).toFixed(1)}s (wall ${(g.wall / 1000).toFixed(1)}s, ${g.steps} steps)`).join(', ') || 'not measured'}`);
   if (!gaps.length) errors.push('(s5) could not measure the gap between your turns');
   // the grammar's H2: a usual gap (three rivals' turns) ≤ 8s here (6.5s p50 on a quiet box); the snake's long gap
-  // (up to six rival turns in a row, many more steps) ≤ 13s
+  // (up to six rival turns in a row, many more steps) ≤ 13s. Those were set on the first Steady table; Cory's morning
+  // note ("too fast even on Relaxed") made Steady ×1.2 of it (src/v4/motion.js SPEEDS), so both stretch by the same.
   else {
     const usual = gaps.filter(g => g.steps <= 12), long = gaps.filter(g => g.steps > 12);
-    if (usual.length && Math.min(...usual.map(g => g.planned)) > 8000) errors.push(`(s5) your next turn is scheduled ${(Math.min(...usual.map(g => g.planned)) / 1000).toFixed(1)}s after your last (want ≤ 8s at Steady)`);
-    if (long.length && Math.min(...long.map(g => g.planned)) > 13000) errors.push(`(s5) the snake's long gap is scheduled ${(Math.min(...long.map(g => g.planned)) / 1000).toFixed(1)}s (want ≤ 13s at Steady)`);
+    const U = Math.round(8000 * SPEEDS.steady), L = Math.round(13000 * SPEEDS.steady);
+    if (usual.length && Math.min(...usual.map(g => g.planned)) > U) errors.push(`(s5) your next turn is scheduled ${(Math.min(...usual.map(g => g.planned)) / 1000).toFixed(1)}s after your last (want ≤ ${U / 1000}s at Steady)`);
+    if (long.length && Math.min(...long.map(g => g.planned)) > L) errors.push(`(s5) the snake's long gap is scheduled ${(Math.min(...long.map(g => g.planned)) / 1000).toFixed(1)}s (want ≤ ${L / 1000}s at Steady)`);
   }
 }
 

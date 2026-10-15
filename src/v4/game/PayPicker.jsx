@@ -79,6 +79,8 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
     ...(def ? priceNotes(state, p, uid).filter(n => n.key !== 'total') : []),
   ], [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   const pay = () => { if (match && !busy) onPick(match.id); };
+  // this way gives up a contest lead or tie you hold (the engine's breaks): one quiet line says so
+  const lostLead = match && match.breaks && match.breaks.length ? match.breaks : null;
   const box = useDialog(back ? () => { if (!busy) onPick('back'); } : null);
 
   // Pay holds the keyboard as soon as it can be pressed, so Enter pays; closing hands focus back (useDialog)
@@ -210,9 +212,10 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
             swap after a tap): faded coins pay, the number under a stack is what you keep */}
         <p className="pay-legend" data-pay-legend>Faded coins pay. The number under each stack is what you keep.</p>
 
-        {(notes.length > 0 || nudge) && (
+        {(notes.length > 0 || nudge || lostLead) && (
           <div className="pay-notes">
             {notes.length > 0 && <ul className="pay-rules" data-pay-rules={notes.length}>{notes.map(n => <li key={n.key} data-pay-rule={n.key}>{n.text}</li>)}</ul>}
+            {lostLead && <p className="pay-lead" data-pay-lead={lostLead.join(' ')}>Paying this gives up your lead in {lostLead.join(' and ')}.</p>}
             {nudge && <p key={nudge.n} className="pay-nudge" role="status">{nudge.text}</p>}
           </div>
         )}

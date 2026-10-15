@@ -150,14 +150,25 @@ export const useHoverCard = hover => useSyncExternalStore(hover ? hover.subscrib
 export const useHoverSpace = hover => useSyncExternalStore(hover ? hover.subscribe : NONE, () => (hover ? hover.space : null));
 
 /**
- * Warms the dry runs while nothing else is happening: after each new state, every space the viewer could take
- * gets its preview computed in idle time, so a hover never waits on one.
+ * Warms the dry runs off the hover path: after each new state, every space the viewer could point at and read a "You'd
+ * get" on (every open space this round, and every space they may take or join) is worked out in the background (a
+ * worker in the browser), so a hover finds it ready. On the viewer's own move at once; on a rival's step a moment after
+ * the table settles (bots step every second or so: a state that's gone before then isn't worth the copy).
  */
 export function usePreviewWarmup(state, pid) {
   useEffect(() => {
-    if (pid == null || !state.pending || state.pending.player !== pid || state.pending.kind !== 'place') return;
-    // every space you could take, worked out in the background (a worker in the browser) as soon as it's your move
-    requestPreviews(state, pid, state.pending.options.filter(o => o.q != null && o.i != null).map(o => `${o.q}-${o.i}`));
+    if (pid == null || state.over || !state.players[pid]) return undefined;
+    const round = Math.max(1, state.round || 0);
+    const keys = new Set();
+    state.quadrants.forEach((qid, q) => quadrant(qid).actions.forEach((a, i) => { if (a.ring <= round && state.slots[`${q}-${i}`] === undefined) keys.add(`${q}-${i}`); }));
+    const mine = state.pending && state.pending.player === pid;
+    if (mine && state.pending.options) for (const o of state.pending.options) if (o.q != null && o.i != null) keys.add(`${o.q}-${o.i}`);
+    if (!keys.size) return undefined;
+    // your move: the spaces you can take first (the ones you'll point at), then the rest
+    const list = [...keys];
+    if (mine && state.pending.kind === 'place') { requestPreviews(state, pid, list); return undefined; }
+    const t = setTimeout(() => requestPreviews(state, pid, list), 250);
+    return () => clearTimeout(t);
   }, [state, pid]);
 }
 
@@ -346,7 +357,7 @@ export function besideSeat(a, w, h) {
 function useCopyTargets(c, state, me) {
   const viewer = me != null ? me : state.pending ? state.pending.player : null;
   const space = c && c.kind === 'space' && !c.past ? c.key.split('-').map(Number) : null;
-  const pv = usePreview(state, space && viewer != null && !state.over ? viewer : null, space ? space[0] : 0, space ? space[1] : 0);
+  const pv = usePreview(state, space && viewer != null && !state.over ? viewer : null, space ? space[0] : 0, space ? space[1] : 0, { now: true });
   let keys = pv && pv.copies ? pv.copies : null;
   if (!keys && c && c.kind === 'card' && viewer != null && state.cards[c.uid]) keys = memberCopyTargets(state, viewer, cardDef(state, c.uid));
   const sig = keys ? keys.join(',') : '';
@@ -386,7 +397,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const open = !past && a.ring <= round && (owner === undefined || opt);
   const viewer = me != null ? me : state.pending && state.pending.player;
   // the dry run is read from the cache (warmed in idle time); if it isn't there yet it fills in a moment later
-  const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i) || null;
+  const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i, { now: !past }) || null;
   const race = pv && pv.race ? raceAfter(state, pv.race, qid, viewer, !(pv.theirAsks && pv.theirAsks.length)) : null;
   const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
   return (
@@ -396,7 +407,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
       <p className="sc-rule"><CardText text={a.text} /></p>
       <div className="lt-yd">
         {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
-        {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} /></span></div> : null}
+        {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} now /></span></div> : null}
         {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
         {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={whyLine(pv.reasons)} /></span></Row> : null}
         {race && <Row k={race.rule}><span className="lt-race" data-race={qid}>

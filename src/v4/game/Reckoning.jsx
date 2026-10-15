@@ -10,7 +10,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { scoredStandings, standings, playerColor } from '../format.js';
 import { playerAnchor, motionOK, flyToken, expectArrival, pulse, track } from './flight.js';
-import { MO, flightMs } from '../motion.js';
+import { MO, flightMs, slowed } from '../motion.js';
 import { chainRunning, onChainEnd } from './director.js';
 import Tick from './Tick.jsx';
 
@@ -86,7 +86,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   // one quadrant at a time: light its plaque and count, name the winner, fly the prize, and only then pay the total
   useEffect(() => {
     if (!ready) return undefined;
-    if (step >= rows.length) { const t = setTimeout(finish, reduced ? 0 : 400); return () => clearTimeout(t); }
+    if (step >= rows.length) { const t = setTimeout(finish, reduced ? 0 : slowed(400)); return () => clearTimeout(t); }
     const row = rows[step];
     setBeat(0);
     setSeen(0);

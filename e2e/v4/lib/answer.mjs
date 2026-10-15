@@ -5,7 +5,7 @@
 // answerChoice(page, opts) answers whatever is pending for the person at the device:
 //   - the pay sheet: its Pay button (the suggested way), else Enter in the sheet;
 //   - board targets and buttons alike, by their data-option: seats, stacks, members, spaces, shop cards, plain buttons;
-//   - a pair (boardPick.js comboStep, the trade picker): yours first (@pick:x), then theirs; once one is lifted
+//   - a gift or a pair (the gift card, boardPick.js giftPick): the first row (@pick:x), then the second; once one is picked
 //     (@unpick on screen) it never puts it back or switches, which would only go round in circles;
 //   - never a toggle (a free on/off switch would loop), Back, or @unpick.
 // It returns what it clicked, { id, kind: 'pay'|'pick'|'option' }, or null when nothing on screen answers.
