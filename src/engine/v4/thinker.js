@@ -19,6 +19,7 @@ const margin = (state, id) =>
  * opts.maxMs: a wall-clock cap for the UI (chooseBotMove sets 250). Off by default, so direct calls and sims stay
  *   deterministic; when it bites, rollouts stop early and are scored statically, so a slow machine plays a bit weaker.
  * opts.now: the clock for maxMs (default performance.now).
+ * opts.noMembers: never recruit, here or in its own rollout turns (the buy-followers tester at Hard).
  * opts.grab: false ranks placements the old way, without what grabbing a space first is worth (default on).
  */
 export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
@@ -34,7 +35,7 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   // turns right away") read as an empty space and never got looked at. The rollouts decide; grab's own ranking only
   // nominates (as a ranking it measured no better than normal's: 46–49%, 400 games). opts.grab = false: the old Hard.
   const grab = pend.kind === 'place' && opts.grab !== false;
-  const scored = scoreOptions(state, rand, { grab, grabWeight: opts.grabWeight });
+  const scored = scoreOptions(state, rand, { grab, grabWeight: opts.grabWeight, noMembers: opts.noMembers });
   const ranked = grab ? [...scored].sort((a, b) => b.base - a.base).map(r => ({ o: r.o, v: r.base, g: r.v })) : scored;
   if (!ranked.length) return chooseNormalMove(state, rand);
   if (ranked.length === 1) return { player: me, option: ranked[0].o.id };
@@ -69,7 +70,9 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
         // same turn, and counting it ended rollouts mid-turn (Hard-20 fell from 41% to 33% against 3 Normal when Blue
         // became a held-color contest, where those mid-turn endings misjudge the line; counting only turns: 43%)
         const counted = s.pending && (s.pending.kind === 'place' || s.pending.kind === 'buy');
-        s = applyMove(s, opts.rollout === 'greedy' ? chooseGreedyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, ROLLOUT));
+        // a follower buyer's own future turns stay follower buying (opts.noMembers)
+        const mine = opts.noMembers && s.pending?.player === me;
+        s = applyMove(s, opts.rollout === 'greedy' ? chooseGreedyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, mine ? { ...ROLLOUT, noMembers: true } : ROLLOUT));
         if (counted) steps++;
       }
       // at a round boundary, value what's left the way normal does (followers + resources' worth)

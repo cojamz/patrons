@@ -2,6 +2,7 @@
 // Target (Cory): it wins about 25% of 4-player games (15–30% band) against a good table. The buyer's seat rotates
 // every game; ties split. 95% Wilson interval on the win share.
 // Usage: node scripts/v4-big-followers.mjs [games=200] [firstGame=1] [--level=normal] [--workers=4] [--budget=100]
+//   [--buyer=hard] (the buyer plays with Hard's lookahead too)
 //   [--no-release] [--no-guests] [--easy] (same as --level=easy) [--table=classic|default|a,b,c,d] [--split]
 // --split (runtime patch, not a rule): tied contest leaders split the prize, rounded down, instead of each taking it.
 // Also reports the share of each seat's final followers that came from contests, by round, and how often a contest
@@ -29,14 +30,14 @@ function splitTies(prev, next) {
   }
 }
 
-function playGame({ g, level, rules, budget, blend, quadrants, split }) {
+function playGame({ g, level, rules, budget, blend, quadrants, split, buyerLevel }) {
   const rand = seededRandom(g * 7717 + 3);
   let s = createGame({ seats: Array.from({ length: 4 }, () => ({ kind: 'bot' })), seed: g, rules, ...(quadrants ? { quadrants } : {}) });
   const buyer = g % 4;
   let released = 0;
   while (!s.over) {
     const p = s.pending.player;
-    const m = p === buyer ? chooseFollowerBuyerMove(s, rand)
+    const m = p === buyer ? chooseFollowerBuyerMove(s, rand, buyerLevel === 'hard' ? { level: 'hard', budget, maxMs: Infinity } : {})
       : level === 'greedy' ? chooseGreedyMove(s, rand)
         : chooseBotMove(s, rand, { level, budget, maxMs: Infinity, ...(blend !== undefined ? blendProfile(blend) : {}) });
     if (m.option.startsWith('release:')) released++;
@@ -95,7 +96,7 @@ if (!isMainThread) {
   const tname = String(flag.table || 'default');
   const quadrants = tname in TABLES ? TABLES[tname] : tname.split(',');
   const split = !!flag.split;
-  const jobs = Array.from({ length: games }, (_, k) => ({ g: first + k, level, rules, budget, blend, quadrants, split }));
+  const jobs = Array.from({ length: games }, (_, k) => ({ g: first + k, level, rules, budget, blend, quadrants, split, buyerLevel: flag.buyer }));
   const results = [];
   const t0 = performance.now();
   await Promise.all(Array.from({ length: workers }, (_, w) => new Promise((res, rej) => {
@@ -113,7 +114,7 @@ if (!isMainThread) {
   const tot = k => results.reduce((a, r) => a + r[k], 0);
   const wins = tot('win');
   const [lo, hi] = wilson(wins, n);
-  console.log(`big followers vs 3 ${blend !== undefined ? `blend ${blend} (0 easy, 1 normal)` : level} bots${level === 'hard' ? ` (budget ${budget})` : ''}, ${n} games (from ${first}), table ${quadrants ? quadrants.join('/') : 'default'}${split ? ', tied leaders SPLIT (patch)' : ''}, release ${rules.release ? 'on' : 'off'}, guests ${rules.guests ? 'on' : 'off'}, ${((performance.now() - t0) / 1000).toFixed(0)}s`);
+  console.log(`big followers${flag.buyer === 'hard' ? ' (Hard buyer)' : ''} vs 3 ${blend !== undefined ? `blend ${blend} (0 easy, 1 normal)` : level} bots${level === 'hard' ? ` (budget ${budget})` : ''}, ${n} games (from ${first}), table ${quadrants ? quadrants.join('/') : 'default'}${split ? ', tied leaders SPLIT (patch)' : ''}, release ${rules.release ? 'on' : 'off'}, guests ${rules.guests ? 'on' : 'off'}, ${((performance.now() - t0) / 1000).toFixed(0)}s`);
   console.log(`buyer wins ${(100 * wins / n).toFixed(1)}% [${(100 * lo).toFixed(1)}–${(100 * hi).toFixed(1)}] · buyer followers ${(tot('buyerF') / n).toFixed(1)} (left ${(tot('buyerLeft') / n).toFixed(1)}) · others ${(tot('othersF') / n).toFixed(1)} · their members ${(tot('members') / n).toFixed(1)}, left ${(tot('left') / n).toFixed(1)} · releases/game ${(tot('released') / n).toFixed(1)}`);
   const pct = x => `${(100 * x).toFixed(1)}%`;
   const sh = [0, 1, 2].map(r => results.reduce((a, x) => a + x.share[r], 0) / n);

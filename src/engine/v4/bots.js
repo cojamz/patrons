@@ -620,9 +620,11 @@ export function chooseNormalMove(state, rand = Math.random, opts = {}) {
   }
 }
 
-/** The pure "big followers" strategy: never recruits, plays for follower buys. For balance sims. */
-export const chooseFollowerBuyerMove = (state, rand = Math.random) => {
+/** The pure "big followers" strategy: never recruits, plays for follower buys. For balance sims.
+ * opts.level = 'hard': the same strategy with Hard's lookahead, so it's measured at the table's own skill. */
+export const chooseFollowerBuyerMove = (state, rand = Math.random, opts = {}) => {
   const pend = state.pending;
+  if (opts.level === 'hard' && pend && ['place', 'buy'].includes(pend.kind)) return chooseThinkerMove(state, rand, { ...opts, noMembers: true });
   if (pend?.kind === 'buy') {
     const ranked = scoreOptions(state, rand, { noMembers: true });
     return { player: pend.player, option: (ranked[0]?.o || pend.options.find(o => o.kind === 'pass')).id };
