@@ -228,6 +228,10 @@ A rival's turn is five lines, each one beat or a few:
 5. **What they bought:** the chosen card lifts at the hand-off from their gain, the coins drop into it (that's the "which one"), the card flies, its worth hops to their count. Or the follower buy's exchange. A pass shows nothing; the turn card says "passed".
 Then a 180ms breath and the next player. The bot's own steps inside its turn (its choices, its buy) never wait on a timer of their own: the story plays straight through.
 
+**A bot's steps flow into each other.** A bot's turn is several engine steps (place, its choices, what to buy, how to pay). A step with nothing to show costs nothing when the same bot moves again right after it; only a pass that ends the turn holds, and only briefly (Quick 150, Steady 300, Relaxed 500ms, with "passed" on the turn card). And when the same bot moves again, its next step shows at this chain's hand-off (its last piece two-thirds along), not after its last landing: the turn reads as one story, not as three.
+
+**The timeline bends, it never bunches.** On a slow machine a frame can arrive late. Then everything after it moves later by the same amount; nothing fires in a burst to catch up. Each landing (its tick and settle) happens when that piece's own flight finishes, never on a separate timer that can run ahead of it, and a held number lets go only after its last piece has really landed.
+
 **Thinking never shows as waiting.** The engine runs ahead of the screen: the next bot's move is computed while the current chain plays, and the table plays the queue. The only time the table waits on a bot is when its thinking takes longer than the chain in front of it.
 
 **The backlog stays short.** The screen never falls more than one turn behind the engine. When a whole turn is queued behind the chain that's playing, the queued chains play at Quick; when two are queued, the oldest lands at once (crossfade, 120ms) and the newer one plays. A move is never on screen later than 2.5s after the engine applied it.

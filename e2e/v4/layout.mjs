@@ -95,7 +95,8 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
     await page.waitForTimeout(300);
     for (let k = 0; k < 8 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
-      const o = await page.$('.prompt.choice button[data-option]:not([disabled])');
+      // a choice is answered where it's asked: a button, or on the board (a rival's seat or stack: pick-on-board)
+      const o = await page.$('.prompt.choice button[data-option]:not([disabled]), .lt-seat [data-option]:not(.pass)');
       if (o) await o.click().catch(() => {});
       await page.waitForTimeout(250);
     }

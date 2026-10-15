@@ -119,7 +119,8 @@ const TABLE = {
   settle:      [140,   180,    240],
   roll:        [160,   240,    360],  // a bundle's number rolling on landing
   cardLift:    [80,    120,    160],
-  rivalBuyHold:[100,   200,    360],  // a rival's buy: the card held lifted before paying
+  rivalBuyHold:[0,     0,      160],  // a rival's buy: the card stays lifted while its coins fly in (the telegraph)
+  passHold:    [150,   300,    500],  // a turn-ending pass with nothing to show
   cardFly:     [260,   380,    560],
   ring:        [200,   260,    340],
   worthHop:    [180,   240,    340],  // a new member's worth, chip → follower count

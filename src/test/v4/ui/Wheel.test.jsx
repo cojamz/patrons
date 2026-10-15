@@ -44,7 +44,7 @@ describe('Wheel', () => {
     expect(errors.filter(e => /Maximum update depth|#185|getSnapshot should be cached/.test(e))).toEqual([]);
   });
 
-  it('prints each tiebreak on its rim, compactly, with the full sentence in the rim title', () => {
+  it('prints each tiebreak on its rim, compactly, with the full sentence in the rim label', () => {
     const s = createGame({ seats, seed: 3, quadrants: ['red', 'yellow', 'market', 'gold'] });
     const { container } = render(<Wheel state={s} legal={new Map()} onPick={() => {}} flash={new Set()} facing={0} onFacing={() => {}} />);
     const rim = q => container.querySelector(`[data-plaque="${q}"]`).textContent;
@@ -52,7 +52,10 @@ describe('Wheel', () => {
     expect(rim('yellow')).toMatch(/ties: yellow/);
     expect(rim('market')).not.toMatch(/ties:/); // Blue scores most blue, no tiebreak (Cory dropped badged, 2026-10-15)
     expect(rim('gold')).not.toMatch(/ties/);
-    expect(container.querySelector('[data-rim="red"] title').textContent).toMatch(/Red members break ties\./);
+    // the full sentence is in the rim's label (and its hover card), no native <title>: that tooltip sat on top of the
+    // hover card, saying it twice (design pod, 2026-10-15)
+    expect(container.querySelector('[data-rim="red"]').getAttribute('aria-label')).toMatch(/Red members break ties\./);
+    expect(container.querySelector('[data-rim="red"] title')).toBeNull();
   });
 
   it('says why a space can’t be taken, and splits a yield into short clauses', () => {

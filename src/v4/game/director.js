@@ -281,7 +281,7 @@ function minionColumn(root) {
 }
 let column = new Map();
 /** Note the table as it stands (call after every commit that plays no chain, so the next one flies from the right slot). */
-export const noteTable = root => { column = minionColumn(root); };
+export const noteTable = root => { void root; }; // (kept for callers: the slot is now read when the chain plays)
 
 /**
  * Play the chain for a change of state on the table under `root`. `snap` is the shop as it was (snapshotShop),
@@ -289,7 +289,6 @@ export const noteTable = root => { column = minionColumn(root); };
  */
 export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [] } = {}) {
   const col = column;
-  column = minionColumn(root);
   if (!root || before === state) return { atoms: [], total: 0 };
   if (chain.timers.size) skipChain(); // a new move lands whatever was still playing
   const ctx = { state, before, snap, lifted: new Map() };
@@ -326,14 +325,32 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
     if (a.op !== 'piece' || a.fol) continue;
     for (const w of [a.from, a.to]) if (w.kind === 'stack') { const el = where(w); if (el) { toHold.push([el, w]); pending.set(el, (pending.get(el) || 0) + 1); } }
   }
-  // the writes: the chain is on, and every stack it touches holds its number
+  // where each placed minion stood in its column: the slot past the last one still standing there (read now, with the
+  // rest, before anything is written)
+  for (const a of plan.atoms) {
+    if (a.op !== 'minion') continue;
+    const left = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions [data-minion]`)];
+    const last = left[left.length - 1];
+    if (last) { const r = rectOf(last), prev = left.length > 1 ? rectOf(left[left.length - 2]) : null; const dx = prev ? r.left - prev.left : 0, dy = prev ? r.top - prev.top : r.height + 2; a.fromRect = { left: r.left + dx, top: r.top + dy, width: r.width, height: r.height }; }
+    else { const c = root.querySelector(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions`); if (c) a.fromRect = rectOf(c); }
+  }
+  // the writes wait for the frame (after every layout effect has read the page: a write here made the next reader
+  // lay the whole page out again), but land before it paints, so no number flickers
   chain.root = root;
   chain.until = t0 + plan.total;
-  root.dataset.chain = '1';
-  for (const [el, w] of toHold) holdOf(el, w.pid, w.r);
+  void col;
+  const start = () => {
+    if (chain.seq !== seq) return;
+    root.dataset.chain = '1';
+    for (const [el, w] of toHold) holdOf(el, w.pid, w.r);
+    schedule(performance.now() - t0);
+  };
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(start); else start();
+  return plan;
+  function schedule(late) {
   const release = el => { const n = (pending.get(el) || 1) - 1; pending.set(el, n); if (n <= 0) { const x = chain.holds.get(el); if (x && x.h) x.h.done(); chain.holds.delete(el); } };
   for (const a of plan.atoms) {
-    later(a.at, skip => {
+    later(a.at - late, skip => {
       switch (a.op) {
         case 'minion': {
           const slot = root.querySelector(`[data-slot="${a.key}"]`);
@@ -341,8 +358,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           slot.classList.add('chosen');
           later(a.dur + MO.pulse, () => slot.classList.remove('chosen'));
           const landed = slot.querySelector(`.worker[data-seat="${a.pid}"]`) || slot.querySelector('.worker');
-          const k = Math.max(0, (before.players[a.pid] ? before.players[a.pid].left : 1) - 1);
-          const fr = col.get(`${a.pid}:${k}`);
+          const fr = a.fromRect;
           const from = fr ? { getBoundingClientRect: () => fr } : (root.querySelector(`.lt-seat[data-pid="${a.pid}"] .cs-minions`) || root.querySelector(`[data-leader="${a.pid}"]`));
           const to = landed || slot.querySelector('.base');
           if (!from || !to) return;
@@ -440,9 +456,9 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       }
     });
   }
-  later(plan.total, () => { if (chain.seq === seq) endChain(); });
+  later(plan.total - late, () => { if (chain.seq === seq) endChain(); });
   if (typeof window !== 'undefined') { window.__patronsChains = (window.__patronsChains || 0) + 1; window.__patronsChainMs = plan.total; }
-  return plan;
+  }
 }
 
 /** Install the skip: a press anywhere, or Space (when it isn't pressing a button), lands the chain on screen. */

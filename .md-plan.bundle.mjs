@@ -5285,13 +5285,15 @@ for (let g = 0; g < Number(gamesArg); g++) {
     }
     const plan = planChain(s, next, { mine: [0] });
     const FLOOR = Number(process.env.FLOOR ?? 600);
-    const ms = plan.total || (actor !== 0 ? FLOOR : 0);
+    const ends = !(next.pending && next.pending.player === actor);
+    const floorHere = process.env.FLOORMODE === "end" ? ends ? FLOOR : 0 : FLOOR;
+    const ms = plan.total || (actor !== 0 ? floorHere : 0);
     const kinds = [...new Set((next.effects || []).map((e) => e.cause && e.cause.kind))].join(",");
     chains.push({ ms, actor, kind: pend && pend.kind, kinds, atoms: plan.atoms.length });
     const ck = `${pend && pend.kind}`;
     if (!byCause.has(ck)) byCause.set(ck, []);
     byCause.get(ck).push(ms);
-    if (verbose === "1" && ms > 2600) console.log("long chain", ms, "actor", actor, pend && pend.kind, kinds, plan.atoms.map((a) => `${a.at}:${a.op}`).join(" "));
+    if (verbose === "1" && ms > 2600 || verbose === "pay" && pend && pend.kind === "pay" && actor !== 0 && Math.random() < 0.04 || verbose === "place" && pend && pend.kind === "place" && actor !== 0 && Math.random() < 0.03) console.log("long chain", ms, "actor", actor, pend && pend.kind, kinds, plan.atoms.map((a) => `${a.at}:${a.op}${a.dur ? "(" + a.dur + ")" : ""}${a.n ? "x" + a.n : ""}${a.bundle ? "B" : ""}`).join(" "));
     if (!cur || cur.pid !== actor || cur.round !== s.round) {
       if (cur) (cur.pid === 0 ? mine : turns).push(cur.ms);
       cur = { pid: actor, ms: 0, round: s.round };
