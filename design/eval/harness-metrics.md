@@ -29,6 +29,17 @@ What the gate costs, measured, so every change to the harness has a before and a
 | 10-15 | Verdict plays half of each 200-game sphere block (100) and 85 of the bot fuzz's 170 per seat; the full counts run in `check:v4:full` (nightly/remote). Strength stated in budget.js. | ~1,480 s unit CPU | ~1,080 s | per-game CPU × games |
 | 10-15 | Unit tests at nice 10 for every vitest run (vitest.config.js), all cores in the gate; browsers keep priority (Chromium renderers run at nice −8) | 3 workers, nice 0 | 4 workers, nice 10 | `ps -o nice` |
 | 10-15 | E2E start as soon as the build is served, not after the unit tests; a machine-wide e2e token pool (4) across all gates replaces 3-per-gate; info and motion take every token (alone on the box), memory joins the parallel set (it reads the heap after a forced GC) | e2e solo phase waited for the unit tests | e2e overlap the unit tests | gate log |
-| 10-15 | Check slots 2 → 3, FIFO with an ETA from the run history | "2 of 2 in use", no ETA | "ETA ~4m10s (from recent run times)" | slots.mjs |
+| 10-15 | Check slots in units: a full gate 2, quick/fast 1, capacity 3 (one full gate at a time beside one quick: CPU-bound gates finish sooner in a row than shared); a quick may pass a waiting gate unless it has waited 10 min; ETA from the run history | 2 runs, "2 of 2 in use", no ETA | "ETA ~4m10s (from recent run times)" | scratch pool runs |
+| 10-15 | Agents' bare whole-suite `vitest run` takes a check slot (vitest globalSetup) and every agent vitest run uses 2 workers, not 3 | 6 unslotted suites, 33 workers on 4 CPUs (03:33) | counted and capped | `ps`, lock dir |
+| 10-15 | `check:v4:quick -- --related <files>` / `npm run test:v4:related -- <files>`: only the tests that import what you touched | 80 files | Wheel.jsx → 10 files | vitest related |
+| 10-15 | online.mjs reads every option in 2 round trips, not one `getAttribute` per option per page per poll | ~N+3 CDP calls a poll | 3 | code |
 | 10-15 | `check:v4:quick` (fast slices minus the coverage gates, build, hotseat) | `--fast` had no e2e | quick pre-check | gate log |
 | 10-15 | Per-stage output captured and printed whole; a run record per gate (runs.jsonl); `scripts/v4-retro.mjs` | interleaved logs, no history | retro rows below | — |
+
+**After, on a quiet box: not measured yet.** This box sat at load 30–46 the whole session (eleven agents running suites
+and browsers), so any wall time taken here was the load's, not the gate's. Estimate from the CPU profile: unit tests
+~1,080 s of CPU at the verdict slice on ~3.7 free cores ≈ 5 min, overlapping the e2e (build 10 s + parallel set ~130 s
+bounded by online + info 45 s + motion 65 s ≈ 4.2 min), so a verdict ≈ 5–6 min and `--quick` ≈ 1.5 min. To measure on
+a quiet machine (4 CPUs; `taskset -c 0-3` on a bigger one), from a commit with these changes:
+`npm ci && taskset -c 0-3 npm run check:v4 -- --commit HEAD` and `taskset -c 0-3 npm run check:v4:quick`, then
+`node scripts/v4-retro.mjs` here with the two logs, or paste their summaries into the table above.

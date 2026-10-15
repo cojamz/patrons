@@ -17,7 +17,8 @@
   box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 0 0 1px rgba(80,60,30,.25),0 6px 14px -6px rgba(0,0,0,.7),0 2px 3px rgba(0,0,0,.35)}
 
 /* ---------- shop: a slim strip of small cards (figure, name, cost, worth); text on hover / tap ---------- */
-.lt-shop-cards{display:flex;flex-direction:column;min-width:0}
+.lt-shop-cards{display:flex;flex-direction:row;align-items:stretch;gap:12px;min-width:0}
+.lt-shop-main{flex:1 1 auto;display:flex;flex-direction:column;min-width:0}
 .lt-cards{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
 /* (keeps the .card class for the e2e selectors; v4.css's dark .card look is undone here) */
 .lt-card.card{position:relative;height:96px;border-radius:6px;padding:0;gap:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;text-align:left;border:0;font:inherit;cursor:pointer;transition:transform .12s ease,filter .15s;min-width:0;color:var(--paper-ink)}
@@ -46,15 +47,42 @@
 .lt-card .need{color:var(--paper-ink);background:rgba(244,235,215,.92);box-shadow:0 0 0 1px rgba(42,31,23,.2)}
 .lt-shop-head{display:flex;align-items:center;gap:14px;margin:0 0 5px;min-width:0}
 .lt-shop-head .lt-h{margin:0}
-.lt-rates{display:flex;align-items:center;gap:6px;color:var(--cream-3);font-size:12px;flex-wrap:wrap;margin-left:auto}
-.lt-rates .lbl{font-family:var(--serif);font-size:15px;color:var(--cream-2)}
-.lt-rates .lt-rate{flex-direction:row;opacity:1;text-align:center;display:inline-flex;align-items:center;gap:3px;padding:1px 10px;border-radius:14px;border:1px solid rgba(243,230,200,.16);color:var(--cream-2);background:transparent;font:inherit;cursor:pointer;min-height:24px}
-.lt-rates .lt-rate b{color:var(--cream);font-weight:700}
-.lt-rates .lt-rate small{color:var(--cream-3);font-size:10.5px}
-.lt-rates .lt-rate.can{background:transparent;border-color:rgba(var(--lamp,255,206,140),.55);color:var(--cream)}
-.lt-rates .lt-rate[aria-disabled="true"]{opacity:.55;cursor:default}
+/* the sort: two quiet words in the members' header line (Cory: "a little sort button") */
+.lt-sort{display:inline-flex;align-items:center;gap:2px;margin-left:auto;font-size:12px;color:var(--cream-3)}
+.lt-sort .lbl{margin-right:3px;letter-spacing:.04em}
+.lt-sort-btn{position:relative;font:inherit;font-size:12px;color:var(--cream-3);background:none;border:0;border-radius:10px;padding:0 8px;min-height:20px;cursor:pointer}
+.lt-sort-btn:hover{color:var(--cream-2)}
+.lt-sort-btn.on{color:var(--cream);box-shadow:inset 0 0 0 1px rgba(243,230,200,.28)}
+.lt-sort-btn:focus-visible{outline:2px solid rgba(var(--lamp,255,206,140),.7);outline-offset:1px}
+/* follower buys (Cory, 2026-10-15: "too hidden"): their own block beside the member cards, the same paper and the same
+   grammar (cost left, followers right), lit by the lamp when you can buy one */
+.lt-rates{flex:0 0 auto;display:flex;flex-direction:column;min-width:0;color:var(--cream-3)}
+.lt-rates-head{display:flex;align-items:baseline;gap:8px;height:20px;margin:0 0 5px;white-space:nowrap}
+.lt-rates-head .lbl{font-family:var(--serif);font-weight:500;font-size:17px;color:var(--cream-2)}
+.lt-rates-head small{font-size:11.5px;color:var(--cream-3);letter-spacing:.02em}
+.lt-rates-grid{display:grid;grid-template-columns:repeat(2,88px);grid-auto-rows:45px;gap:6px}
+.lt-rates .lt-rate{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 4px;border:0;border-radius:6px;font:inherit;cursor:pointer;opacity:1;text-align:center;min-width:0;
+  background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--paper-ink) 45%,transparent),inset 0 0 0 2px var(--paper),inset 0 0 0 3px rgba(42,31,23,.18),0 6px 14px -6px rgba(0,0,0,.7);
+  transition:transform .12s ease,filter .15s,box-shadow .15s}
+.lt-rates .lt-rate .fb-tip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0;width:100%;height:100%;cursor:inherit}
+/* the rate's touch target lives inside its hover target, so pointing anywhere on the rate opens its card */
+.lt-rate .fb-tip > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%)}
+.lt-rates .rt-trade{display:inline-flex;align-items:center;gap:2px;font-family:var(--serif);font-size:15px;line-height:1;white-space:nowrap;color:var(--paper-ink-2)}
+.lt-rates .rt-trade b{font-weight:700;font-size:17px;color:var(--paper-ink)}
+.lt-rates .rt-trade .pip.wild{width:12px;height:12px;margin:0 2px 0 1px}
+.lt-rates .rt-trade .follower-mark{width:13px;height:13px;color:var(--paper-ink);margin-left:1px}
+.lt-rates .rt-left{font-family:var(--sans);font-size:10.5px;font-weight:600;line-height:1;color:var(--paper-ink-3);letter-spacing:.02em}
+.lt-rates .lt-rate.lit{box-shadow:0 0 0 1px color-mix(in srgb,var(--paper-ink) 45%,transparent),inset 0 0 0 2px var(--paper),0 0 0 3px rgba(var(--lamp,255,206,140),.55),0 0 18px rgba(var(--lamp,255,206,140),.35)}
+.lt-rates .lt-rate.can:hover{background:linear-gradient(180deg,#fff7e6,var(--paper));transform:translateY(-2px)}
+.lt-rates .lt-rate.dim{filter:brightness(.72) saturate(.75)}
+.lt-rates .lt-rate.recede{filter:brightness(.55) saturate(.55);opacity:.85;cursor:default}
+.lt-rates .lt-rate[aria-disabled="true"]{cursor:default}
+.lt-rates .lt-rate:focus-visible{outline:2px solid rgba(var(--lamp,255,206,140),.8);outline-offset:2px}
 @media (max-width:1100px){.lt-cards{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media (max-width:860px){
+  .lt-shop-cards{flex-direction:column;gap:6px}
+  .lt-rates-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:40px}
   .lt-cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:6px;padding-bottom:4px}
   .lt-card.card{flex:0 0 92px;scroll-snap-align:start}
 }
@@ -223,7 +251,7 @@
 /* ---------- the member deck at the head of the shop strip (face down, cult mark, count; warm when low) ---------- */
 .lt-shop-body{display:flex;gap:6px;min-width:0}
 .lt-shop-body > .lt-cards{flex:1 1 auto;min-width:0}
-.lt-deck{position:relative;flex:0 0 60px;height:96px;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:help;border-radius:6px}
+.lt-deck{position:relative;flex:0 0 60px;height:96px;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:default;border-radius:6px}
 .lt-deck .back,.lt-deck .edge{position:absolute;left:0;top:0;width:calc(100% - 6px);height:calc(100% - 6px);border-radius:6px}
 .lt-deck .edge{transform:translate(calc(var(--k) * 2px),calc(var(--k) * 2px));background:linear-gradient(180deg,#3a2333,#2a1822);box-shadow:0 0 0 1px #120c0a,inset 0 0 0 1px rgba(217,166,58,.32)}
 .lt-deck .edge:first-child{box-shadow:0 0 0 1px #120c0a,inset 0 0 0 1px rgba(217,166,58,.32),0 6px 12px -6px rgba(0,0,0,.7)}
@@ -236,8 +264,6 @@
 .lt-deck.last .n{color:#ec7a4c}
 .lt-deck.empty .back{background:none;box-shadow:none;border:1.5px dashed rgba(243,230,200,.32);box-sizing:border-box}
 .lt-deck.empty .n{font-size:12.5px;font-weight:500;font-style:italic;color:var(--cream-3);text-shadow:none}
-.lt-deck:hover .back{transform:translateY(-2px)}
-.lt-deck:focus-visible{outline:2px solid rgba(var(--lamp),.7);outline-offset:2px}
 .lt-deck-card .lt-deck-mini{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:6px;background:linear-gradient(180deg,#4b2e41,#36202f);box-shadow:inset 0 0 0 1px rgba(217,166,58,.7);flex:none}
 .lt-deck-colors{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
 .lt-deck-colors li{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--paper-ink)}
@@ -248,17 +274,10 @@
 .lt-deck-card p{font-size:13px}
 @media (max-width:860px){.lt-deck{flex-basis:56px}}
 
-/* ---------- who's winning: one quiet line under the prompt (RankRow) ---------- */
-.lt-rank{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--cream-3);white-space:nowrap;min-width:0;overflow:hidden;line-height:16px}
-.lt-rank .follower-mark{color:var(--cream-3);flex:none}
-.lt-rank .rk{display:inline-flex;align-items:baseline;gap:4px;cursor:help}
-.lt-rank .rk i{font-style:normal;color:var(--cream-3);opacity:.6;margin-right:2px}
-.lt-rank .rk b{font-family:var(--serif);font-weight:700;color:var(--cream-2)}
-.lt-rank .rk.me{color:var(--cream-2)}
-.lt-rank .rk.lead{color:var(--lamp-ink)}
-.lt-rank .rk.lead b{color:var(--lamp-ink)}
-.lt-prompt .rank-row{margin-top:1px}
-@media (max-width:860px){.lt-prompt .rank-row{display:none}}
+/* ---------- who's winning: on each chair (no score row): its place beside its total, the leader lit ---------- */
+.lt-cult-seat .cs-rank{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--cream-3);margin-right:5px;align-self:center;cursor:help}
+.lt-cult-seat .cs-total.lead .tv{color:var(--lamp-ink)}
+.lt-cult-seat .cs-total.lead .cs-rank{color:var(--lamp-ink)}
 /* a seat's place in this round's turn order */
 .cs-order{display:inline-block;margin-left:6px;padding:0 5px;border-radius:7px;font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:14px;color:var(--cream-3);box-shadow:inset 0 0 0 1px rgba(243,230,200,.16);vertical-align:2px;cursor:help}
 .cs-order.now,.cs-order.first{color:var(--paper-ink);background:var(--lamp-ink);box-shadow:none}
@@ -290,7 +309,6 @@
 .dialog.pay .pay-rules li{padding-left:10px;border-left:2px solid var(--lamp-ink);color:var(--cream)}
 .dialog.pay .pay-rules li[data-pay-rule="total"]{border-left-color:transparent;color:var(--lamp-ink);font-weight:700}
 /* a follower rate's hover card (ShopCards FollowerRates): the trade, what's left, when you can make it */
-.lt-rates .lt-rate .fb-tip{display:inline-flex;align-items:center;gap:3px;padding:2px 0;cursor:inherit}
 .rate-card{display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.35}
 .rate-card small{color:var(--muted)}
 /* resource symbols in card text at hover size (RC1 strategist: Crowd-Pleaser's "+1 ●" read as +1 follower): the

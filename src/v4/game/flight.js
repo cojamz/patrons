@@ -2,6 +2,7 @@
 // travels from its leader to the space it took, and at round end the minions fly home. All use fixed-position
 // ghosts + Web Animations.
 import { reducedMotion } from './Tick.jsx';
+import { MO } from '../motion.js';
 
 export const motionOK = () => !reducedMotion() && typeof document !== 'undefined' && !!document.body.animate;
 
@@ -73,7 +74,7 @@ function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 
     { transform: `translate(${dx * 0.5}px,${dy * 0.5 - arc}px) scale(${(1 + scaleTo) / 2})`, opacity: 1, offset: 0.55 },
     { transform: `translate(${dx}px,${dy}px) scale(${scaleTo})`, opacity: fadeTo },
   ];
-  const anim = ghost.animate(frames, { duration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+  const anim = ghost.animate(frames, { duration, easing: 'cubic-bezier(.25,.6,.3,1)', fill: 'forwards' }); // quick off the mark, soft landing
   const done = () => ghost.remove();
   anim.onfinish = done;
   anim.oncancel = done;
@@ -99,13 +100,13 @@ export function flyCards(root, snap, moves) {
     const chip = root.querySelector(`.lt-seat[data-pid="${to}"] [data-uids~="${uid}"]`) || root.querySelector(`.lt-seat[data-pid="${to}"] [data-uid="${uid}"]`);
     const land = chip && visibleEl(chip) ? chip : target;
     const lb = land.getBoundingClientRect();
-    ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: 760, scaleTo: 0.28, hold: true });
+    ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: MO.cardFly, scaleTo: 0.28, hold: true });
     if (chip && chip.animate) {
       chip.animate([
         { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' },
         { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.08)' },
         { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' },
-      ], { duration: 900, delay: 620, easing: 'ease-out' });
+      ], { duration: MO.chipGlow, delay: Math.round(MO.cardFly * 0.85), easing: 'ease-out' });
     }
   }
 }
@@ -114,7 +115,7 @@ export function flyCards(root, snap, moves) {
  * A minion leaves its leader and lands on the space (Cory: "placing a minion animates it from the leader to the wheel
  * space"). The ghost is the minion's own sprite; the minion on the space shows once it has landed.
  */
-export function flyWorker(root, pid, slotKey, color) {
+export function flyWorker(root, pid, slotKey, color, { own = false } = {}) {
   if (!root || !motionOK()) return false;
   const from = playerAnchor(root, pid, '.workers');
   const slot = root.querySelector(`[data-slot="${slotKey}"]`);
@@ -127,7 +128,10 @@ export function flyWorker(root, pid, slotKey, color) {
   const a = { left: f.left + f.width / 2 - size / 2, top: f.top + f.height / 2 - size / 2, width: size, height: size };
   const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
   const html = landed ? landed.innerHTML : `<i style="background:${color}"></i>`;
-  const duration = 480;
+  // your own minion already stands on the space (you see your move at once): the ghost is a quick trail from your
+  // leader that fades onto it. A rival's minion travels, and shows on the space as it lands.
+  if (own) { ghostFly(html, 'worker-flight minion-flight trail', a, b, { duration: MO.minionTrail, scaleTo: 1, fadeTo: 0, arc: 30 }); return true; }
+  const duration = MO.minionFly;
   ghostFly(html, 'worker-flight minion-flight', a, b, { duration, scaleTo: 1, fadeTo: 1, arc: 46 });
   if (landed && landed.animate) landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: duration + 30 });
   return true;
@@ -166,7 +170,7 @@ export function flyMinionsHome(root, snap) {
     const h = home.getBoundingClientRect();
     if (!h.width) return;
     const b = { left: h.left + h.width / 2 - m.rect.width / 2, top: h.top + h.height / 2 - m.rect.height / 2, width: m.rect.width, height: m.rect.height };
-    setTimeout(() => ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: 520, scaleTo: 0.8, fadeTo: 0.2, arc: 40 }), k * 45);
+    setTimeout(() => ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: MO.minionsHome, scaleTo: 0.8, fadeTo: 0.2, arc: 40 }), k * MO.minionsHomeStagger);
     n++;
   });
   return n;
@@ -188,6 +192,6 @@ export function slideShop(root, snap) {
     const r = el.getBoundingClientRect();
     const dx = s.rect.left - r.left, dy = s.rect.top - r.top;
     if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
-    el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: MO.shopSlide, easing: 'cubic-bezier(.3,.7,.4,1)' });
   });
 }

@@ -7,6 +7,8 @@ import { Rich, CostPips } from './Rich.jsx';
 import { MemberCard, NamedText, CardText, cardColor } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { CoinMark } from './Glyphs.jsx';
+import { pickCaption, pickHow, pickName } from './seatPick.js';
+import './seatpick.css';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
 export function useDialog(onClose) {
@@ -67,7 +69,7 @@ export function TurnOf({ player }) {
   return <p className="turn-of" style={{ '--pc': playerColor(player.id) }}><i />{player.name}’s turn<span> · pass the device</span></p>;
 }
 
-export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
+export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null }) {
   const pend = state.pending;
   const setup = pend.kind === 'setup';
   const box = useRef(null);
@@ -80,6 +82,8 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
   const total = useRef(null);
   const left = (pend.prompt.match(/\((\d+) left\)/) || [])[1];
   if (left == null) total.current = null; else if (total.current == null || Number(left) > total.current) total.current = Number(left);
+  // the seats are the selector (seatPick.js): the panel shrinks to a caption (after every hook above)
+  if (seatPick) return <SeatPickCaption state={state} pk={seatPick} onPick={onPick} busy={busy} turnOf={turnOf} box={box} />;
   // the engine's own count when the choice carries one (it survives a reload); else counted from the first prompt seen
   const tally = pend.count ? `${pend.count.of - pend.count.left} of ${pend.count.of} taken`
     : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
@@ -104,6 +108,29 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
             ))}
         </div>
       )}
+    </section>
+  );
+}
+
+/**
+ * The seat selector's caption (the seats are the selector, seatPick.js): what's asking, how many, how many left, and
+ * a compact list of the same picks for the keyboard (Tab, Enter), named from each option's target.
+ */
+function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
+  const pend = state.pending;
+  const cap = pickCaption(state, pk);
+  return (
+    <section className={`prompt choice seat-pick pick-${pk.mode}`} aria-live="polite" ref={box} role="group" aria-label={pend.prompt} data-seat-pick={pk.mode}>
+      {turnOf && <TurnOf player={turnOf} />}
+      <p className="pick-cap" title={pend.prompt}>
+        {cap.title ? <><b>{cap.title}</b>: {cap.what}{cap.left != null && <> · <span className="num pick-left" data-left={cap.left}>{cap.left}</span> left</>}</> : cap.what}
+      </p>
+      <p className="pick-how">{pickHow(pk)} <span className="pick-keys-hint">· or Tab to a list</span></p>
+      <div className="pick-keys" role="group" aria-label="Or pick from a list">
+        {pend.options.map(o => (
+          <button key={o.id} type="button" className="pick-key" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{pickName(state, o)}</button>
+        ))}
+      </div>
     </section>
   );
 }

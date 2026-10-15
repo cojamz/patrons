@@ -13,6 +13,7 @@ import { Popover } from './parts.jsx';
 import { Who } from './Glyphs.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
+import { MO } from '../motion.js';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -22,7 +23,7 @@ import { Follower } from '../art/Follower.jsx';
 const CONTROL = 'button, a[href], [data-option], [role="button"]';
 // a pointer resting on something opens its card at once (Cory, 2026-10-15: hovers must feel instant); the beat only
 // keeps a pointer passing across a line of keywords from flashing each one
-const TIP_MS = 50;
+const TIP_MS = MO.tipOpen; // src/v4/motion.js
 export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, ...rest }) {
   const [open, setOpen] = useState(null); // { el, pinned }
   const [nested, setNested] = useState(false);

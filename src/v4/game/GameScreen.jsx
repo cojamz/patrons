@@ -25,15 +25,17 @@ import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } fro
 import PayPicker from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
-import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome } from './flight.js';
+import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken } from './flight.js';
+import { MO, BOT } from '../motion.js';
+import { seatPicker, seatPart } from './seatPick.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START, ownsLocal } from '../saved.js';
 import { restoredMoment } from '../session/moment.js';
 import { gameRecord, recordText } from '../session/record.js';
 import { copyText } from '../Recovery.jsx';
 
-const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
-const RIVAL_DWELL_MS = 700; // each visible bot step (placing, recruiting, buying) holds this long; a pass doesn't wait
+const STEP_MS = BOT.catchUp;      // pace when catching up on moves that happened behind the round-end card
+const RIVAL_DWELL_MS = BOT.pace.normal; // each visible bot step holds this long (src/v4/motion.js)
 
 /** Desktop and laptop frame (the side column is a fixed frame) vs phones and tablets (stacked). */
 function useMedia(q) {
@@ -138,7 +140,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       // every bot step during a round holds the pace (≥600ms at Normal): placing, buying, choosing, passing
       const rivalStep = actor != null && next.round >= 1 && !rivalSetup;
       // a rival's recruit holds a beat longer: the card's flight to their row is the thing to see
-      const dwell = myRecruitThenGone ? 1500 : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(400, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
+      const dwell = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
         // the hold counts from when this step is on screen (its commit), not from when it was handed to React: under
@@ -466,7 +468,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't buy anything.`));
     if (skipped) {
       const msg = humansHere ? skipped.replace("couldn't buy anything.", 'can’t afford anything. Turn passes.') : 'Nothing you can afford. Turn passes.';
-      setTimeout(() => showToast(msg, 2000), flights.length && motionOK() ? 650 : 0);
+      setTimeout(() => showToast(msg, 2000), flights.length && motionOK() ? MO.afterFlight : 0);
     }
 
     // A new minion travels from its leader to the space. The board never turns itself: a rival's move is marked
@@ -476,7 +478,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const key = fresh[fresh.length - 1];
     const owner = state.slots[key];
     setFlash(new Set(fresh));
-    flyWorker(root.current, owner, key, playerColor(owner));
+    flyWorker(root.current, owner, key, playerColor(owner), { own: mySeats.includes(owner) && state.round === before.round });
     const t = setTimeout(() => setFlash(new Set()), 2000);
     return () => clearTimeout(t);
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -566,7 +568,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const lastStep = useRef(null);
   useEffect(() => {
     const step = pend && mine ? `${pend.player}:${pend.kind}` : null;
-    if (step && lastStep.current && step !== lastStep.current && !noLock.current) lockUntil.current = Date.now() + 400;
+    if (step && lastStep.current && step !== lastStep.current && !noLock.current) lockUntil.current = Date.now() + MO.stepLock;
     noLock.current = false;
     lastStep.current = step;
   }, [pend, mine]);
@@ -575,7 +577,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const now = Date.now();
     // counted picks ("take 1 gold… (2 left)") are meant to be clicked fast and repeatedly: every click counts
     const counted = !!(pend && /\(\d+ left\)/.test(pend.prompt || ''));
-    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < 350) return;
+    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < MO.doubleClick) return;
     const d = lastDown.current, p0 = lastPick.current;
     // a fresh pointer press far from the last pick is deliberate; anything else (near it, or a key) waits out the lock
     const farFromLast = d.x != null && p0.x != null && now - d.t < 600 && Math.hypot(d.x - p0.x, d.y - p0.y) >= 48;
@@ -663,6 +665,50 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [modalOpen]);
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
+  // The seat selector: a choice whose options all point at seats (a steal's resource stacks, a player) is answered on
+  // the cults themselves (seatPick.js); the choice panel shrinks to a caption and a keyboard list.
+  const picker = useMemo(() => (showChoice && pend.kind === 'choose' ? seatPicker(state, pend) : null), [showChoice, state, pend]);
+  const pickerRef = useRef(null);
+  pickerRef.current = picker;
+  const [seatPicks, setSeatPicks] = useState({ key: null, map: {} }); // this steal's picks so far, for the "−1" on each stack
+  const pickKey = picker && picker.count ? `${picker.actor}|${picker.title}|${picker.count.of}|${state.round}` : null;
+  const onSeatPick = useCallback((id, el) => {
+    const pk = pickerRef.current;
+    const o = pk && pk.options.find(x => x.id === id);
+    if (!o || !options.has(id)) return;
+    const root0 = root.current;
+    const home = root0 && (root0.querySelector(`.lt-seat[data-pid="${pk.actor}"] .cs-res`) || root0.querySelector(`.lt-seat[data-pid="${pk.actor}"]`));
+    const coin = el && el.querySelector('svg') ? `<span class="pick-coin">${el.querySelector('svg').outerHTML}</span>` : '<span class="pick-coin dot"></span>';
+    // each pick moves: a resource from their seat to yours (a gift: from yours to theirs); a picked seat nods
+    if (pk.mode === 'take') flyToken(el, home, coin, { tag: 'pick-flight', duration: 560 });
+    else if (pk.mode === 'give') flyToken(home, el, coin, { tag: 'pick-flight', duration: 560 });
+    else if (el && el.animate && motionOK()) el.animate([{ boxShadow: '0 0 0 0 rgba(255,220,140,.9)' }, { boxShadow: '0 0 0 10px rgba(255,220,140,0)' }], { duration: 520, easing: 'ease-out' });
+    if (o.target && o.target.res && pickKey) {
+      setSeatPicks(sp => {
+        const map = sp.key === pickKey ? { ...sp.map } : {};
+        const t = o.target;
+        map[t.pid] = { ...(map[t.pid] || {}), [t.res]: ((map[t.pid] || {})[t.res] || 0) + 1 };
+        return { key: pickKey, map };
+      });
+    }
+    onPick(id);
+  }, [options, onPick, pickKey]);
+  const onSeatDenied = useCallback((why, el) => {
+    if (why) say(why);
+    if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-3px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 220, easing: 'ease-out' });
+  }, [say]);
+  const pickParts = useMemo(() => {
+    if (!picker) return {};
+    // the "−1"s show only while they add up to the engine's own count (a reload mid-steal starts them over)
+    const picked = seatPicks.key === pickKey && picker.count
+      && Object.values(seatPicks.map).reduce((t, m) => t + Object.values(m).reduce((a, b) => a + b, 0), 0) === picker.count.of - picker.count.left ? seatPicks.map : {};
+    const out = {};
+    for (const p of state.players) {
+      const part = seatPart(state, picker, p.id, picked[p.id] || {});
+      if (part) out[p.id] = { ...part, title: picker.title, onPick: onSeatPick, onDenied: onSeatDenied };
+    }
+    return out;
+  }, [picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied]);
   const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
@@ -756,14 +802,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           <section className="lt-wheel" data-region="wheel">
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} seatPick={picker} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
           {seatCorners(state, me).map((pid, k) => (
             <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
               {pid == null ? null : (
-                <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} />
+                <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} pick={pickParts[pid] || null} />
               )}
             </section>
           ))}

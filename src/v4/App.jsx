@@ -12,11 +12,12 @@ import OnlineBar from './screens/OnlineBar.jsx';
 import { tableProblem } from './tables.js';
 import { Recovered } from './Recovery.jsx';
 import { IntroGate, introOnGameStart } from './Intro.jsx';
+import { BOT } from './motion.js';
 import { PerfProfiler, traceSession } from './perf.js'; // ?trace=1 only (design/eval/perf/)
 
 // Bots decide quickly; the table paces what you see (each visible bot step holds PACE ms, a pass doesn't wait).
-const BOT_DELAY = { slow: 400, normal: 250, fast: 120 };
-const PACE = { slow: 1100, normal: 700, fast: 350 };
+const BOT_DELAY = BOT.think; // src/v4/motion.js: every pace in one place
+const PACE = BOT.pace;
 const urlBotDelay = () => Number(new URLSearchParams(location.search).get('botDelay')) || 0;
 // An invite link (?join=CODE) reopened on a device that already sat in that room goes straight back to its seat.
 const linkCode = () => (new URLSearchParams(location.search).get('join') || '').trim().toUpperCase();

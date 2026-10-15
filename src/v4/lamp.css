@@ -43,8 +43,9 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt{
     height:100dvh;display:grid;
     grid-template-columns:minmax(210px,1fr) minmax(0,1.85fr) minmax(210px,1fr);
-    /* the prompt holds three short lines: the question, the round and its steps (or the details), who's winning */
-    grid-template-rows:66px minmax(0,1fr) minmax(0,1fr) 128px;
+    /* the prompt holds two short lines: the question, the round and its steps (or the details); who's winning is on
+       the chairs (Cory, 2026-10-15: no score row), so the wheel gets the room back */
+    grid-template-rows:54px minmax(0,1fr) minmax(0,1fr) 128px;
     grid-template-areas:"s1 prompt s2" "s1 wheel s2" "s0 wheel s3" "shop shop shop";
     column-gap:18px;row-gap:8px;padding:6px 18px 10px;overflow:hidden
   }
@@ -54,7 +55,7 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-seat-1{grid-area:s1}
   .lt > .lt-seat-2{grid-area:s2}
   .lt > .lt-seat-3{grid-area:s3}
-  .lt > .lt-seat{min-height:0;min-width:0;overflow:hidden;border-radius:14px;padding:10px 12px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.07);transition:box-shadow .3s,background .3s}
+  .lt > .lt-seat{min-height:0;min-width:0;overflow:hidden;border-radius:14px;padding:10px 12px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.07);transition:box-shadow var(--mo-dim),background var(--mo-dim)}
   .lt > .lt-seat-1,.lt > .lt-seat-2{align-self:start}
   .lt > .lt-seat-0,.lt > .lt-seat-3{align-self:end}
   .lt > .lt-seat.now{background:rgba(var(--lamp),.07);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35)}
@@ -65,7 +66,7 @@ h1,h2,h3{font-family:var(--serif)}
 }
 
 /* the lamp: whichever region holds the decision is lit; the rest sit a little in shadow */
-.lt .lt-wheel,.lt .lt-shop{transition:filter .35s ease}
+.lt .lt-wheel,.lt .lt-shop{transition:filter var(--mo-dim) ease}
 .lt[data-yours="1"][data-phase="buy"] .lt-wheel,.lt[data-yours="1"][data-phase="pay"] .lt-wheel{filter:brightness(.82) saturate(.85)}
 .lt[data-yours="1"][data-phase="place"] .lt-shop{filter:brightness(.86) saturate(.9)}
 
@@ -124,13 +125,13 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .slot.r2{width:10.6%}
 .lt .stage .slot.r3{width:11%}
 .lt .stage .slot .hit{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max(140%, 46px);aspect-ratio:1;border-radius:50%}
-.lt .stage .slot .base{position:absolute;inset:0;border-radius:50%;transition:opacity .25s;
+.lt .stage .slot .base{position:absolute;inset:0;border-radius:50%;transition:opacity var(--mo-fade),transform var(--mo-quick) var(--mo-ease-out);
   background:radial-gradient(circle at 50% 38%, #fbf5e7, #efe3c8 70%);
   box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 72%,#5a4630),inset 0 2px 4px rgba(60,40,15,.25),0 1px 0 rgba(255,255,255,.6)}
 /* not open yet: a hollow pressed into the paper, its round printed faintly (no dashes: those never mean "open") */
 .lt .stage .slot.locked .base{background:rgba(42,31,23,.05);box-shadow:inset 0 1px 3px rgba(42,31,23,.3),0 1px 0 rgba(255,250,238,.45);opacity:.85}
 .lt .stage .slot .seal{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:13px;letter-spacing:.06em;color:color-mix(in srgb,var(--c) 40%,#6e5a40);opacity:.6;pointer-events:none}
-.lt .stage .slot .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 2px;text-align:center;pointer-events:none;color:var(--paper-ink);transition:opacity .25s}
+.lt .stage .slot .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 2px;text-align:center;pointer-events:none;color:var(--paper-ink);transition:opacity var(--mo-fade)}
 .lt .stage .slot .face .ico{line-height:0;margin-top:-2px}
 .lt .stage .slot .face .ico svg{width:clamp(18px, calc(var(--wheel-px) * .046), 24px);height:auto;image-rendering:pixelated}
 .lt .stage .slot.r2 .face .ico svg,.lt .stage .slot.r3 .face .ico svg{width:clamp(14px, calc(var(--wheel-px) * .036), 20px)}
@@ -149,6 +150,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt[data-yours="1"][data-phase="place"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.55}
 .lt .stage .slot.can:hover,.lt .stage .slot.sel{z-index:4}
 .lt .stage .slot.can:hover .base,.lt .stage .slot.sel .base{transform:scale(1.08);box-shadow:inset 0 0 0 2.5px var(--paper-ink),0 0 0 4px var(--lamp-ink),0 8px 18px rgba(0,0,0,.45)}
+/* tactile: a lit space presses down under the pointer (src/v4/motion.js) */
+.lt .stage .slot.can:active .base{transform:scale(.96);transition-duration:var(--mo-press)}
 .lt .stage .slot:focus-visible .base{box-shadow:inset 0 0 0 2.5px var(--paper-ink),0 0 0 4px var(--lamp-ink)}
 /* taken: the space drops to ~40%; the owner's minion stands on it at full strength, over its picture */
 .lt .stage .slot.taken .base,.lt .stage .slot.taken .face{opacity:.4}

@@ -1,6 +1,7 @@
 // The member deck at the head of the shop strip (Cory): a face-down stack of card backs with the cult mark and the
-// count big on it, thinner as it empties, warm when low (≤ 10), an outline "empty" at 0. Hover / tap: what's in it
-// (cards left, how many of each color, colorless counted too) and where released and swept members go (its bottom).
+// count big on it, thinner as it empties, warm when low (≤ 10), an outline "empty" at 0. No hover (Cory, 2026-10-15:
+// "the deck doesn't need a hover"): the count is the whole story. It sits in its own slot at the head of the strip, so
+// a pile for released members can stand beside it later. (DeckCard, what's in it by color, stays for that day.)
 // When the face-up row refills, each new card comes off the deck: a short flip at the deck, then a slide into its slot.
 // Every number is the engine's: state.pile (top first; core.js refill() takes from the top, release() and
 // buryFromShop() push to the bottom).
@@ -11,7 +12,7 @@ import { CultMark } from '../art/CultMark.jsx';
 import { onTable } from './Info.jsx';
 import { ResourceGlyph } from './Glyphs.jsx';
 import { motionOK } from './flight.js';
-import { realHover } from '../hover.js';
+import { MO } from '../motion.js';
 
 /** At or below this many cards the count warms. */
 export const DECK_LOW = 10;
@@ -31,27 +32,22 @@ export function deckColors(state) {
 /** Offset edges under the top card: the pile gets thinner as it empties. */
 export const deckEdges = n => (n >= 30 ? 3 : n >= 12 ? 2 : n >= 4 ? 1 : 0);
 
-export function MemberDeck({ state, hover = null, deckRef = null }) {
+export function MemberDeck({ state, deckRef = null }) {
   const n = state.pile.length;
-  const pointer = useRef('mouse');
   const edges = deckEdges(n);
   const label = n ? `${n} member${n === 1 ? '' : 's'} left in the deck` : 'The deck is empty';
   return (
-    <button
-      ref={deckRef} type="button" data-deck="" data-left={n}
+    <div
+      ref={deckRef} data-deck="" data-left={n} role="img"
       className={`lt-deck${n === 0 ? ' empty' : n <= 3 ? ' low last' : n <= DECK_LOW ? ' low' : ''}`}
-      aria-haspopup="dialog" aria-label={`Member deck: ${label}`} title={label}
-      onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
-      onPointerEnter={e => { if (hover && realHover(e)) hover.onDeckHover(e.currentTarget); }}
-      onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onDeckHover(null); }}
-      onClick={e => { if (hover) hover.onDeckHover(e.currentTarget, { pinned: pointer.current !== 'mouse' }); }}
+      aria-label={`Member deck: ${label}`}
     >
       {Array.from({ length: edges }, (_, k) => <span key={k} className="edge" style={{ '--k': edges - k }} aria-hidden="true" />)}
       <span className="back" aria-hidden="true">
         {n > 0 && <CultMark size={32} />}
         <span className="n num">{n > 0 ? <Tick value={n} float={false} /> : 'empty'}</span>
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -113,7 +109,7 @@ export function useDeal(rowRef, deckRef, state) {
       ghost.dataset.born = String(Date.now());
       Object.assign(ghost.style, { position: 'fixed', left: `${b.left}px`, top: `${b.top}px`, width: `${b.width}px`, height: `${b.height}px`, margin: '0', zIndex: '13', pointerEvents: 'none' });
       document.body.appendChild(ghost);
-      const duration = 560, delay = k * 70;
+      const duration = MO.deal, delay = k * MO.dealStagger;
       const anim = ghost.animate([
         { transform: `translate(${dx}px,${dy}px) ${s} perspective(500px) rotateY(88deg)` },
         { transform: `translate(${dx}px,${dy}px) ${s} perspective(500px) rotateY(0deg)`, offset: 0.32 },

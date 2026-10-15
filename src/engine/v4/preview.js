@@ -84,3 +84,25 @@ export function previewSpace(state, pid, q, i) {
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
   return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0] };
 }
+
+/**
+ * roundStartIncome(state, r?) → { [pid]: { res: { color: n }, followers: n } } or null: what each player's members
+ * would hand them at the start of round r (default: the next round; in round III, round III again), by running the
+ * engine's own round start on a copy, every round-start hook included. Display only (a seat's "each round" line).
+ */
+export function roundStartIncome(state, r = Math.min(3, Math.max(1, (state.round || 0) + 1))) {
+  let s;
+  try {
+    s = structuredClone({ ...state, log: [], pending: null, notes: [], over: false });
+    s.queue = [{ t: 'round', r }];
+    resume(s);
+  } catch { return null; }
+  const out = {};
+  for (const p of state.players) {
+    const q = s.players[p.id];
+    const res = {};
+    for (const c of state.resources) { const d = (q.res[c] || 0) - (p.res[c] || 0); if (d) res[c] = d; }
+    out[p.id] = { res, followers: followers(s, q) - followers(state, p) };
+  }
+  return out;
+}

@@ -13,6 +13,8 @@ import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { lastSpace, turnPlaces } from './seats.js';
+import { seatRanks } from './RankRow.jsx';
+import { incomeOf, memberColors } from './build.js';
 import Tick from './Tick.jsx';
 import './lamp-b.css';
 
@@ -23,7 +25,7 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
  * now (their turn), react (recent reactions: { leader: 'gesture'|'celebrate'|'scheme', members: { defId: n } }),
  * hover (useHoverCards), optionFor/onPick (your members' Use / switch).
  */
-export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {} }) {
+export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {}, pick = null }) {
   const p = state.players[pid];
   const own = useCultReactions(state, pid);
   const react = given || own;
@@ -33,12 +35,19 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // its place in what's left of this round's turn order (who's up now, who's next)
   const turns = turnPlaces(state, me);
   const place = turns.places[pid];
+  // who's winning lives here now (no score row): this chair's place, lit when it leads, the margin on hover
+  const rank = seatRanks(state, me)[pid] || null;
+  // its build at one glance: its members' colors, and what they hand it each round (the engine's own round start)
+  const colors = memberColors(state, p);
+  const income = incomeOf(state, pid);
+  const incomeParts = income ? Object.entries(income.res).filter(([, n]) => n > 0) : [];
+  const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
   const MAX = mine ? 14 : 8; // member figures shown before "+N"
   const shown = groups.slice(0, MAX);
   const rest = groups.slice(MAX).reduce((s, g) => s + g.count, 0);
   const openSeat = (e, pinned) => hover && hover.onSeatHover(pid, e.currentTarget, { pinned });
   return (
-    <section className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}`} data-cult={pid} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+    <section className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking pick-${pick.mode} ${pick.lit ? 'pick-lit' : 'pick-dim'}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : 'off') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
       aria-label={`${mine ? 'Your cult' : `${p.name}'s cult`}: ${f} followers, ${p.members.length} members, ${p.left} minions to place${now ? ', their turn' : ''}`}>
       <header className="cs-head" role="button" tabIndex={0} aria-haspopup="dialog" title={`${p.name}: ${f} followers. Show their cult.`}
         onPointerEnter={e => { if (realHover(e)) openSeat(e, false); }}
@@ -49,9 +58,13 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
           {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}>{place.text}</span>}
-          <small>{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
+          <small>{colors.length > 0 && (
+            <span className="cs-colors" data-colors={colors.map(c => `${c.key}:${c.n}`).join(' ')} title={`Members by color: ${colors.map(c => `${c.n} ${c.res || 'colorless'}`).join(', ')}`}>
+              {colors.map(c => <i key={c.key} style={{ '--c': c.res ? `var(--${c.res})` : 'var(--cream-3)', '--n': c.n }} data-n={c.n} />)}
+            </span>
+          )}{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
         </span>
-        <span className="cs-total" data-followers={f} title={`${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
+        <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}>{rank && <span className="cs-rank rk" title={rank.title}>{rank.text}</span>}<Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
       <div className="cs-crowd" role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
         {shown.map(g => {
@@ -85,13 +98,33 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
       </div>
       <footer className="cs-foot">
         <span className="cs-res" role="group" aria-label="Resources">
-          {state.resources.map(r => (
-            <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}`} data-res={r} title={`${p.res[r] || 0} ${r}`}>
-              <ResourceGlyph r={r} size={mine ? 16 : 13} n={p.res[r] || 0} /><b className="num">{p.res[r] || 0}</b>
-            </span>
-          ))}
+          {state.resources.map(r => {
+            // the seat selector (seatPick.js): a stack you can take lights up and a click takes one; one you can't says why
+            const sp = pick && pick.mode !== 'player' ? pick.stacks[r] : null;
+            const o = sp && sp.option, took = (pick && pick.picked[r]) || 0;
+            const say = o ? (pick.mode === 'give' ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take 1 ${r} from ${p.name} (${p.res[r] || 0}${took ? `, ${took} picked` : ''})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
+            return (
+              <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}${sp ? (o ? ' pick-on' : ' pick-off') : ''}`} data-res={r} title={say}
+                {...(o ? { role: 'button', tabIndex: -1, 'data-option': o.id, 'aria-label': say, onClick: e => pick.onPick(o.id, e.currentTarget) } : sp ? { onClick: e => pick.onDenied && pick.onDenied(sp.why, e.currentTarget) } : {})}>
+                <ResourceGlyph r={r} size={mine ? 16 : 13} n={p.res[r] || 0} /><b className="num">{p.res[r] || 0}</b>
+                {took > 0 && <i className="cs-took num" aria-hidden="true">−{took}</i>}
+                {o && <span className="hitbox" aria-hidden="true" />}
+              </span>
+            );
+          })}
         </span>
+        {incomeWords.length > 0 && (
+          <span className="cs-income" data-income={incomeWords.join(', ')} title={`Each round its members make ${incomeWords.join(', ')} (at the round's start)`}>
+            <small>each round</small>
+            {incomeParts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
+            {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
+          </span>
+        )}
       </footer>
+      {/* a choice that picks a player: the whole seat is the button (or says why it isn't) */}
+      {pick && pick.mode === 'player' && (pick.seat
+        ? <button type="button" className="cs-pick-seat" tabIndex={-1} data-option={pick.seat.id} aria-label={`${pick.title ? `${pick.title}: ` : ''}${p.name}`} title={`${pick.title ? `${pick.title}: ` : ''}${p.name}`} onClick={e => pick.onPick(pick.seat.id, e.currentTarget)} />
+        : <span className="cs-pick-seat off" title={pick.why} aria-hidden="true" />)}
     </section>
   );
 }

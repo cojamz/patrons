@@ -1,12 +1,13 @@
 // A number that changes visibly: small changes roll like an odometer (old number slides out, new slides in),
 // bigger ones count up; either way it lights up in a color and can float a brief +N / −N.
 import { useEffect, useRef, useState } from 'react';
+import { MO } from '../motion.js';
 
 export const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 let floatId = 0;
 
-/** How long a change of d takes to count: long enough to see each step (about 420–650ms). */
-export const countMs = (d, dur = 0) => Math.max(dur, Math.min(650, 400 + 40 * Math.abs(d)));
+/** How long a change of d takes to count: long enough to see each step (about 330–550ms; src/v4/motion.js). */
+export const countMs = (d, dur = 0) => Math.max(dur, Math.min(MO.tickMax, MO.tickBase + MO.tickPer * Math.abs(d)));
 
 export default function Tick({ value, from, color, className = '', float = true, dur = 0 }) {
   const [shown, setShown] = useState(from ?? value);

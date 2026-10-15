@@ -12,7 +12,7 @@
 // shakes it and says why at the pointer ("Taken by P3", "Opens in round II"), never silence.
 // Each quadrant's contest is engraved on its rim (rule, prize, tiebreak, leaders), with the standings on hover/tap.
 // Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes a second tap.
-import { memo, useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { quadrant, roman, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, standings, seatEmoji, shortLabel } from '../format.js';
@@ -26,6 +26,7 @@ import { Rich } from './Rich.jsx';
 import { shortEffect, pipEffect } from '../shorts.js';
 import { Follower } from '../art/Follower.jsx';
 import { lookFromUrl, useFace, boxOf, faceStatus, FaceBox, BUILT_IN } from './faces/index.js';
+import { MO, spinEase } from '../motion.js';
 
 // sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
 const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
@@ -164,6 +165,15 @@ export function Marked({ text }) {
   return <>{parts.map((p, k) => (p === '@m' ? <MemberMark key={k} /> : p === '@r' ? <RivalMark key={k} /> : p === '@f' ? <Follower key={k} size={11} title="follower" /> : p ? <Rich key={k} text={p} /> : null))}</>;
 }
 
+// Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only
+// then: for a mouse player it was a card nobody pointed at (Cory, 2026-10-15: hovers appear right where you point)
+let viaKeys = false;
+if (typeof addEventListener === 'function') {
+  addEventListener('keydown', () => { viaKeys = true; }, true);
+  addEventListener('pointerdown', () => { viaKeys = false; }, true);
+}
+const keyboardLed = () => viaKeys;
+
 /** Why a space can't be taken, in a few words at the pointer (null when it's open: the turn itself explains). */
 export function deniedText(state, key, meId = null) {
   const owner = state.slots[key];
@@ -235,17 +245,42 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     onFacing(facingOf(r, nq));
   }, [nq, onFacing]);
 
+  // A spin or a drag paints straight onto the board, with no render per frame (a whole-wheel render each frame cost
+  // whole frames under load, and the spin read as slow): the paper and the rim turn by their transform, each space
+  // slides round by `translate`. React takes the angle once, when it lands, and the layout effect below hands the board
+  // back to React's own positions (motion budget: MO.spin, src/v4/motion.js).
+  const drawn = useRef(rot); // the angle React last drew
+  const paintRot = r => {
+    rotRef.current = r;
+    const root = stage.current;
+    if (!root) return;
+    for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${r} ${CX} ${CY})`);
+    const d = ((r - drawn.current) * Math.PI) / 180, c = Math.cos(d), s = Math.sin(d), w = root.clientWidth, h = root.clientHeight;
+    for (const el of root.querySelectorAll(':scope > [data-slot]')) {
+      const x = (parseFloat(el.style.left) / 100 - 0.5) * w, y = (parseFloat(el.style.top) / 100 - 0.5) * h;
+      el.style.translate = Number.isFinite(x + y) ? `${(x * c - y * s - x).toFixed(1)}px ${(x * s + y * c - y).toFixed(1)}px` : '';
+    }
+  };
+  useLayoutEffect(() => {
+    drawn.current = rot;
+    const root = stage.current;
+    if (!root) return;
+    for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${rot} ${CX} ${CY})`);
+    for (const el of root.querySelectorAll(':scope > [data-slot]')) if (el.style.translate) el.style.translate = '';
+  }, [rot]);
   const stop = () => { if (anim.current) cancelAnimationFrame(anim.current); anim.current = null; };
   const animateTo = useCallback(to => {
     stop();
-    const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : 420;
+    const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : MO.spin;
+    setPeek(p => (p && !p.pinned ? null : p)); // a hover card doesn't ride along on a turning board
     const step = now => {
-      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-      applyRot(from + (to - from) * e);
-      anim.current = k < 1 ? requestAnimationFrame(step) : null;
+      const k = Math.min(1, (now - t0) / dur);
+      if (k < 1) { paintRot(from + (to - from) * spinEase(k)); anim.current = requestAnimationFrame(step); return; }
+      anim.current = null;
+      applyRot(to);
     };
     anim.current = requestAnimationFrame(step);
-  }, [applyRot]);
+  }, [applyRot]); // eslint-disable-line react-hooks/exhaustive-deps
   const touched = useRef(onTouched);
   touched.current = onTouched;
   const nudge = useCallback(deg => { if (touched.current) touched.current(); animateTo(Math.round((rotRef.current + deg) / 90) * 90); }, [animateTo]);
@@ -334,7 +369,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     // angular speed (deg/ms), smoothed, so a quick flick can carry the wheel on to the next quadrant
     const now = performance.now(), dt = Math.max(1, now - dr.t);
     dr.v = 0.6 * (d / dt) + 0.4 * dr.v; dr.t = now;
-    applyRot(rotRef.current + d);
+    paintRot(rotRef.current + d);
   };
   const onUp = e => {
     if (e && e.pointerType === 'touch' && !moved.current && drag.current) {
@@ -648,7 +683,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
         onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}
         onPointerEnter={e => { const h = live.current.hover; if (engraved) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
         onPointerLeave={e => { const h = live.current.hover; if (engraved) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
-        onFocus={e => { const h = live.current.hover; if (h && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
+        onFocus={e => { const h = live.current.hover; if (h && keyboardLed() && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
         onBlur={() => { const h = live.current.hover; if (h) h.onSpaceHover(key, null); }}
       >
         <span className="hit" aria-hidden="true" />

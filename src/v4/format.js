@@ -111,7 +111,8 @@ export function promptFor(state, mine) {
       const asker = (String(pend.prompt || '').match(/^([^:]{2,28}):\s/) || [])[1];
       const short = String(pend.prompt || '').length <= 36;
       return asker && asker !== name
-        ? { who: p, text: `${asker}: choose below`, keepCase: true }
+        // options that all point at seats are answered on the cults (the seat selector, game/seatPick.js)
+        ? { who: p, text: `${asker}: ${pend.options.length && pend.options.every(o => o.target) ? 'pick on a rival’s cult' : 'choose below'}`, keepCase: true }
         : short ? { who: p, text: pend.prompt } : { who: p, text: 'Choose below' };
     }
     default:

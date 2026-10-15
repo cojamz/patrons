@@ -18,6 +18,7 @@ import { lastMoves } from './seats.js';
 import { memberCopyTargets } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import './lamp-b.css';
+import { MO } from '../motion.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -26,7 +27,7 @@ const sphereOf = qid => quadrant(qid).resource;
  * The hover/pin state: one card at a time. Opens the moment the pointer arrives (Cory: instant); moving to a neighbour swaps the card in place at once; leaving closes it 150ms later
  * (unless the pointer arrives somewhere else first). A tap pins it (a sheet on phones). Cory: instant and seamless.
  */
-export const OPEN_MS = 0, CLOSE_MS = 150;
+export const OPEN_MS = MO.hoverOpen, CLOSE_MS = MO.hoverClose; // src/v4/motion.js
 /**
  * The hover state lives outside React's render path: the object is stable, `card` and `space` are getters, and only
  * the layer (useHoverCard) and the shop's tick (useHoverSpace) subscribe, so a hover never re-renders the table.
