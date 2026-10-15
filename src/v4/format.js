@@ -1005,7 +1005,11 @@ export function effectStory(start, end, actor, me = null, fx = []) {
       if (bits.length) out.push(`${label[0].toUpperCase()}${label.slice(1)}: ${bits.join(', ')}`);
     } else if (c.kind === 'recruit') {
       const paid = paidOf(g, actor);
-      out.push(`recruited ${cardName(c.uid)} (${paid ? `paid ${paid}` : 'free'})`);
+      const line = `recruited ${cardName(c.uid)} (${paid ? `paid ${paid}` : 'free'})`;
+      // two same-named members in one turn read as one line, not the same line twice
+      const k = out.indexOf(line);
+      if (k >= 0) out[k] = line.replace(/^recruited (.+) \(/, 'recruited $1 twice (');
+      else out.push(line);
       out.push(...others(g, actor));
     } else if (c.kind === 'buy') {
       const n = g.fol[actor];

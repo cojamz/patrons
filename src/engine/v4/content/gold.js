@@ -89,12 +89,9 @@ export default {
     }),
     // Cory, 2026-10-15 (balance pass 1, #1): only the top rival pays it, about a third of what any rival paid
     // (both bots read the old card at 8.7 for 4). Ties for the most all count; it's measured before the buy lands.
-    m('taxman', 'Tax Collector', 2, 2, 'Whenever the rival with the most followers buys followers, +1 gold.', {
-      onBuyFollowers(ctx, owner, card, buyer, tier) {
-        if (buyer === owner) return;
-        const before = o => ctx.followers(o) - (o === buyer ? (tier && tier.get) || 0 : 0);
-        if (ctx.rivals(owner).every(o => before(o) <= before(buyer))) ctx.gain(owner, 'gold', 1);
-      },
+    // Cory, 2026-10-15: from any rival buying followers, period
+    m('taxman', 'Tax Collector', 2, 2, 'Whenever a rival buys followers, +1 gold.', {
+      onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, 'gold', 1); },
     }),
     m('merchant', 'Merchant', 4, 2, 'Whenever anyone recruits a gold member, +1 gold.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
@@ -125,8 +122,9 @@ export default {
         return `no ×2 (no one has more gold than your ${owner.res.gold})`;
       },
     }),
-    m('tinker', 'Tinker', 6, 4, 'Whenever an action gains you another resource, also gain half as much gold (rounded up).', {
-      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += Math.ceil(g.n / 2); },
+    // Cory, 2026-10-15: Tinker was way too strong; now +1 gold per other color an action gains you, named Alchemist
+    m('tinker', 'Alchemist', 4, 2, 'Whenever an action gains you another color, +1 gold.', {
+      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
     m('investor', 'Investor', 4, 2, 'Round start: set aside any of your gold. Round end: it comes back doubled.', {
       onRoundStartLate(ctx, owner, card) {
@@ -161,8 +159,8 @@ export default {
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res.gold >= 6,
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6
-    m('tycoon', 'Tycoon', 3, 1, 'Game end: +1 follower per 3 gold.', {
-      onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 3),
+    m('tycoon', 'Tycoon', 4, 2, 'Game end: +1 follower per 2 gold.', { // Cory, 2026-10-15: per 2, was per 3
+      onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 2),
     }),
     m('seed', 'Treasurer', 4, 0, 'When recruited: gain gold equal to your member count.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },

@@ -221,8 +221,8 @@ describe('Gold members', () => {
     }
   });
 
-  it('Tinker: an action gaining another resource also gains half as much gold, rounded up', () => {
-    expect(R(take(scene({ members: [['gold.tinker']] }), 'blue.a1'))[0]).toMatchObject({ blue: 3, gold: 2 });
+  it('Alchemist (was Tinker; Cory 2026-10-15): +1 gold for each other color an action gains you', () => {
+    expect(R(take(scene({ members: [['gold.tinker']] }), 'blue.a1'))[0]).toMatchObject({ blue: 3, gold: 1 });
     expect(R(take(scene({ members: [['gold.tinker']] }), 'blue.a2'))[0]).toMatchObject({ blue: 2, red: 1, gold: 2 });
     expect(R(take(scene({ members: [['gold.tinker']] }), 'gold.rush'))[0]).toMatchObject({ gold: 2 });
     const s = scene({ members: [['gold.tinker']] });
@@ -268,12 +268,12 @@ describe('Gold members', () => {
     expect(hasOpt(s, `use:${uid}`)).toBe(false);
   });
 
-  it('Tycoon: game end +1 follower per 3 gold', () => {
+  it('Tycoon: game end +1 follower per 2 gold (Cory 2026-10-15; was per 3)', () => {
     const s = scene({ members: [['gold.tycoon']], res: [{ gold: 11 }], queue: [{ t: 'finish' }] });
     expect(s.over).toBe(true);
     // (final.cards: the member behind each bonus, for the results' end-game scoring, FinalScore.jsx)
-    expect(s.players[0].final).toEqual({ total: 3, parts: ['Tycoon +3'], cards: [{ uid: s.players[0].members[0], name: 'Tycoon', n: 3 }] });
-    expect(fol(s, 0)).toBe(1 + 1 + 3);
+    expect(s.players[0].final).toEqual({ total: 5, parts: ['Tycoon +5'], cards: [{ uid: s.players[0].members[0], name: 'Tycoon', n: 5 }] });
+    expect(fol(s, 0)).toBe(1 + 1 + 5);
   });
 
   it('Treasurer: gain gold equal to your member count, itself included', () => {
