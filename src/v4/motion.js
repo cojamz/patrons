@@ -177,6 +177,7 @@ const TABLE = {
   scoreStep:   [140,   200],  // one figure's pop to the next
   scoreBeat:   [200,   300],  // between the beats (followers, members, grants)
   scorePop:    [450,   600],  // a pop's life: it rises over the head, holds, and fades (about three alive at once)
+  reckonGap:   [300,   450],  // the round's last move at rest before "Round I ends" comes up (panel r1)
   // a passed turn's card holds its moment, then folds into its chair (GameScreen's TurnCard; lamp.css's fold is
   // --mo-slow scaled to match)
   turnCardHold: [2600, 2600],

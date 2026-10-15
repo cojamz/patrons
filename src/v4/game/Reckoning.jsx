@@ -53,17 +53,20 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   // (wave 4 tester A #29, #54: the scoring ran under the round's last move, still playing on the table, so a player who
   // watched that move found the Reckoning on its last quadrant, and the seats ticked both at once. The round's end
   // waits for the table's chains to land, then has its own beat.)
+  // (panel r1: the card came up about 1s after the round's last move, once over a bot's turn: the table's last move
+  // lands and rests first, and only then does "Round I ends" come up; the rims follow a beat later)
+  const [open, setOpen] = useState(() => !motionOK());
   useEffect(() => {
     if (ready) return undefined;
     let t = null;
-    const lead = () => { if (t == null) t = setTimeout(() => setReady(true), MO.reckonLead); };
+    const lead = () => { if (t == null) t = setTimeout(() => { setOpen(true); t = setTimeout(() => setReady(true), MO.reckonLead); }, MO.reckonGap); };
     if (!chainRunning()) lead();
     const off = onChainEnd(lead);
     const net = setTimeout(lead, 6000); // (a safety net: a chain that never reports its end)
     return () => { clearTimeout(t); clearTimeout(net); off(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // the action stage's last card leaves the hub to the scoring card
-  useLayoutEffect(() => { stageClear(); }, []);
+  useLayoutEffect(() => { if (open) stageClear(); }, [open]);
   const [spots, setSpots] = useState({}); // pid -> { left, top } of that player's chair, for the count chips
   const done = useRef(false);
   const finish = () => { if (!done.current) { done.current = true; onLamp && onLamp(null); onDone(); } };
@@ -192,7 +195,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     : `${name(row.winners[0])} ${row.winners[0] === meId ? 'win' : 'wins'} +${fol(row.prize)}${broke(row)}`;
   const shownBeat = step < rows.length ? beat : 2;
   return (
-    <div className="lt-reckon" role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} onClick={finish}>
+    <div className={`lt-reckon${open ? '' : ' waiting'}`} role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} onClick={finish}>
       <div className={`reckon-head${mid ? ' at-mid' : atTop ? ' at-top' : ''}${!ready ? ' opening' : ''}`} style={{ '--c': row && ready ? `var(--${row.qid})` : undefined, ...(mid ? { left: mid.left, top: mid.top, '--mid-w': `${mid.w}px` } : null) }} aria-live="polite">
         {/* the round's end, as a beat of its own before the first rim lights (wave 4 #6: the scoring began while the player
             looked away): "Round II ends" stamps in at the wheel's centre, with the quadrants still to score */}

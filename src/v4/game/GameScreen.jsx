@@ -43,7 +43,7 @@ import { PERF_ON } from '../perf.js';
 import { boardPicker, giftPick, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import GiftCard from './GiftCard.jsx';
 import ActionStage from './ActionStage.jsx';
-import { stageClear } from './stage.js';
+import { stageClear, stageRelease } from './stage.js';
 import { sameSeat } from './seatMemo.js';
 import { holdFlag } from './bodyFlag.js';
 import { friendlyError, isNetworkError } from '../errors.js';
@@ -182,7 +182,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       // every bot step during a round holds the pace (≥600ms at Normal): placing, buying, choosing, passing
       const rivalStep = actor != null && next.round >= 1 && !rivalSetup;
       // a rival's recruit holds a beat longer: the card's flight to their row is the thing to see
-      const base = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(slowed(250), rivalDwell) : paced.current && queue.current.length ? BOT.catchUp : 0;
+      const base = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? rivalDwell : paced.current && queue.current.length ? BOT.catchUp : 0;
       // the step's chain of animations sets the pace (director.js; grammar.md §4): the next step shows once it has
       // played (a click or Space skips it). The bot pace is the floor only for a step with nothing to show (a pass).
       // the same player's next step shows when this chain's last piece is two-thirds along (its handoff); a turn that
@@ -227,6 +227,13 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     timerAt.current = { t0: now - lead, d };
     if (pace.current) { pace.current.committed = now; pace.current.lead = Math.round(lead); }
   }, [table.shown, pump]);
+  // the board comes into view before any rival moves (panel r1: two rivals picked their starting resources before the
+  // board was on screen); a rival's starting pick holds the bots' pace, like any other rival step
+  useEffect(() => {
+    if (!motionOK()) return undefined;
+    timer.current = setTimeout(() => { timer.current = null; pump(); }, MO.reckonLead);
+    return () => { clearTimeout(timer.current); timer.current = null; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // the director measured this step's chain on screen (real distances): hold the next step for that, not the estimate
   const retime = useCallback(played => {
     const f = remeasure.current;
@@ -526,6 +533,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // a press anywhere, or Space, lands the chain of animations playing on the table (director.js)
   useEffect(() => installChainSkip(), []);
   useEffect(() => stageClear, []);
+  // your turn: whatever the last move left on the stage goes home now, off the open spaces (panel r1 skeptic: leftover
+  // cards sat over the wheel's centre a second into your turn)
+  useEffect(() => { if (mine && !chainRunning()) stageRelease(0); }, [mine, state.moves]);
   const [reckoned, setReckoned] = useState(null); // the round-end moment whose Reckoning has played (then: the summary)
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
   // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
@@ -1054,6 +1064,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // the summary comes last (motion review #7, #27): while a move's chain plays (or this state is about to play one),
   // the turn card and a rival's headline keep telling what was already on the table, and change when the chain has
   // landed or is skipped (AfterChain re-renders only itself then)
+  // whose move is playing on the table: your "Your turn" line waits for a rival's pieces to land (panel r1: it was
+  // announced while their cards were still flying), never for your own
+  const chainActor = useRef(null);
+  if (prevState.current !== state) chainActor.current = prevState.current.pending ? prevState.current.pending.player : null;
+  const rivalPlaying = chainActor.current != null && !mySeats.includes(chainActor.current);
   const holdStory = !state.over && motionOK() && (chainRunning() || (prevState.current !== state && prevState.current.seed === state.seed && planChain(prevState.current, state, { mine: mySeats }).total > 0));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
   // the starting picks' row (and the step right after the last pick, while its chain lands): see the AfterChain below
@@ -1236,17 +1251,19 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
           ) : pr.text ? (
-            <AfterChain value={pr} hold={holdStory && !mine} step={state.moves}>{held => {
+            <AfterChain value={pr} hold={holdStory && (!mine || rivalPlaying)} step={state.moves}>{held => {
               // a held line addressed to someone else is never shown in this one's voice (w3b: your "Choose how to
               // pay" stayed up, dotted like a rival's, while the bots moved): it gives way to the current line
               const p = turnOver ? { who: turnOver, text: humansHere ? `${turnOver.name}’s turn is over` : 'Your turn is over', over: true }
-                : held.forMe === pr.forMe ? held : pr;
+                : held.forMe === pr.forMe || (!held.forMe && rivalPlaying) ? held : pr;
+              // a rival's line held while their pieces land is said in their voice, never as "Your turn — p4 is paying"
+              const voice = mine && (p === pr || !!p.forMe);
               return (
-              <span className={`say${mine ? ' mine' : ''}`} data-prompt tabIndex={-1}>
+              <span className={`say${voice ? ' mine' : ''}`} data-prompt tabIndex={-1}>
                 {p.who && <i style={{ background: playerColor(p.who.id) }} />}
                 <span className="say-text">
-                  {mine && humansHere && p.who ? <b>{p.who.name}: </b> : null}
-                  {mine ? <><span className="lead">{p.lead ?? 'Your turn — '}</span><em>{p.text && !p.keepCase ? p.text[0].toLowerCase() + p.text.slice(1) : p.text}</em></> : state.over || p.over ? <span data-turn-over={p.over ? '' : undefined}>{p.text}</span> : <>{p.text}<span className="dots" aria-hidden="true"> ···</span></>}
+                  {voice && humansHere && p.who ? <b>{p.who.name}: </b> : null}
+                  {voice ? <><span className="lead">{p.lead ?? 'Your turn — '}</span><em>{p.text && !p.keepCase ? p.text[0].toLowerCase() + p.text.slice(1) : p.text}</em></> : state.over || p.over ? <span data-turn-over={p.over ? '' : undefined}>{p.text}</span> : <>{p.text}<span className="dots" aria-hidden="true"> ···</span></>}
                 </span>
               </span>
               );
