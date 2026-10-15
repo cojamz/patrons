@@ -53,10 +53,10 @@ const SPACES = Object.fromEntries(ALL_Q.flatMap(q => quadrant(q).actions.map((a,
 // The anchors: cards whose worth is known well enough that a bench reading outside these ranges means the instrument
 // is off, not the card. Fair price in cost points. Sources in design/eval/bench/README.md.
 const ANCHORS = [
-  { id: 'gold.banker', lo: 4.5, hi: 10.5, why: 'Banker (4: "Now and at round start, +3 gold"). By arithmetic +9/+6/+3 gold by round recruited, ~7 averaged, plus a follower; the Normal sweep read 7.3 [6.3–8.3] recruited in round I.' },
+  { id: 'gold.banker', lo: 4.5, hi: 10.5, why: 'Banker ("Now and at round start, +3 gold"; 4, repriced to 8 in balance pass 1; the range is absolute). By arithmetic +9/+6/+3 gold by round recruited, ~7 averaged, plus a follower; the Normal sweep read 7.3 [6.3–8.3] recruited in round I.' },
   { id: 'red.bigfamily', lo: 0.5, hi: 6, why: 'Big Family (4: "Worth 3 followers", no ability), the plain worth-N member: 3 followers ≈ 4 resources at 4→3, less the follower buy it displaces. The Normal sweep read 2.4 [0.6–3.6].' },
-  { id: 'red.sponsor', lo: 8, hi: Infinity, why: 'Sponsor (10: "Your members cost 2 less"), rework-candidates #1, known strong: must not read cheaper than printed − 2.' },
-  { id: 'gold.tycoon', lo: -Infinity, hi: 10, why: 'Tycoon (12: "Game end: +1 follower per 3 gold"), rework-candidates #3, known weak: must read at least 2 under printed.' },
+  { id: 'red.sponsor', lo: 8, hi: Infinity, why: 'Sponsor (10: "Your members cost 2 less"), rework-candidates #1, known strong: must read 8 or more (printed − 2).' },
+  { id: 'gold.tycoon', lo: -Infinity, hi: 10, why: 'Tycoon ("Game end: +1 follower per 3 gold"), rework-candidates #3, known weak at its old 12: must read 10 or less (absolute; repriced to 6 in balance pass 1, so it no longer has to read under printed).' },
 ];
 const ANCHOR_IDS = ANCHORS.map(a => a.id);
 
