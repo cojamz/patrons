@@ -144,7 +144,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // yours to use now (Cory, 2026-10-15): the figure is lit, and its card carries the Use button (MemberUse.jsx)
           const readyUid = mine ? g.uids.find(u => ready.has(u)) : undefined;
           // a use still in hand, anyone's: subdued light, so a rival's loaded Raider can be seen coming (w2b #21)
-          const loaded = readyUid == null && g.uids.some(u => loadedUse(state, u));
+          // (not at game over: the results' seats show who holds what, never a use state, w3b #53)
+          const loaded = !state.over && readyUid == null && g.uids.some(u => loadedUse(state, u));
           const toggle = mine ? g.uids.map(u => optionFor(`toggle:${u}`)).find(Boolean) : null;
           const hop = (react && react.members && react.members[d.id]) || (givesExtra(g) ? 'extra-buy' : null);
           // its sphere at a glance: a soft ground in the sphere's color, stronger when the clothes alone don't carry it
@@ -153,7 +154,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // the board picker: a member the choice offers is clicked right here (seat figure)
           const pickM = pick && pick.members ? g.uids.map(u => pick.members[u]).find(Boolean) : null;
           return (
-            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+            <span key={g.key} className={`cs-member${g.card.used && !state.over ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used && !state.over ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
               <Tip className="fig" sticky={mine} beside=".fig" label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>

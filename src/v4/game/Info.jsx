@@ -205,7 +205,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {ability ? <p className="mc-text"><CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {!onTable(state, d) && <small className="mc-live" data-colorless=""><Colorless state={state} def={d} /> here: it counts as a member of no color.</small>}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
-      {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used ? ' · used' : ''}</small>}
+      {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used && !state.over ? ' · used' : ''}</small>}
       {/* the cost and nothing else about paying (Cory, 03:40: cut "You pay"); a discount on you says only why the face's
           price is struck ("Your next member costs 4 less.") */}
       {paid && <small className="mc-live" data-discount>{upFirst(discountWhy(state, state.players[me]))}.</small>}

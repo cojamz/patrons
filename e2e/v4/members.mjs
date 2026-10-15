@@ -301,18 +301,19 @@ try {
       const under = slots.filter(t => t.x > r.left + 4 && t.x < r.right - 4 && t.y > r.top + 4 && t.y < r.bottom - 4 && !onCtrl(t));
       const near = slots.filter(t => !onCtrl(t)).sort((a, b) => Math.hypot(a.x - r.right, a.y - r.top) - Math.hypot(b.x - r.right, b.y - r.top));
       window.__clicks = [];
-      addEventListener('pointerdown', () => { requestAnimationFrame(() => { const open = k === 'seat' ? document.querySelector('[data-hover-layer][data-open="1"] [data-seat-card]') : document.querySelector('[data-tip-body]'); window.__clicks.push({ t: 'frame', open: !!open }); }); }, true);
+      addEventListener('pointerdown', () => { requestAnimationFrame(() => { const open = k === 'seat' ? document.querySelector('[data-hover-layer][data-open="1"] [data-seat-card]') : document.querySelector('[data-tip-body]'); const L = document.querySelector('[data-hover-layer]'); window.__clicks.push({ t: 'frame', open: !!open, saw: `layer ${L.dataset.open}/${L.querySelector('[data-hover-card]')?.dataset.hoverCard || '-'}, tips ${document.querySelectorAll('[data-tip-body]').length}` }); }); }, true);
       document.addEventListener('click', e => { window.__clicks.push({ t: 'click', slot: e.target.closest?.('[data-slot]')?.dataset.slot || null, on: (e.target.className?.baseVal ?? e.target.className ?? '').toString().slice(0, 40) }); });
       return { target: under[0] || near[0], covered: !!under[0], moves: Number(document.querySelector('.lt[data-moves]')?.dataset.moves) };
     }, kind);
     if (!plan) { fail(`no ${kind} card opened to test a click past it`, 'm11'); await ctx.close(); continue; }
     await pg.mouse.move(plan.target.x, plan.target.y);
     await pg.mouse.down(); await pg.mouse.up();
-    await pg.waitForTimeout(80);
+    // the first frame after the press, whenever the (busy) machine draws it
+    await pg.waitForFunction(() => window.__clicks.some(x => x.t === 'frame'), null, { timeout: 2000 }).catch(() => {});
     const log = await pg.evaluate(() => window.__clicks);
     const click = log.find(x => x.t === 'click'), frame = log.find(x => x.t === 'frame');
     if (!click || click.slot !== plan.target.key) fail(`with your ${kind} card open, a click on space ${plan.target.key}${plan.covered ? ' (under the card)' : ''} landed on ${click ? `"${click.on}"` : 'nothing'}`, 'm11');
-    if (!frame || frame.open) fail(`with your ${kind} card open, the card was still up the frame after the press`, 'm11');
+    if (!frame || frame.open) fail(`with your ${kind} card open, the card was still up the frame after the press (space ${plan.target.key}${plan.covered ? ', under the card' : ''}; ${frame ? frame.saw : 'no frame'})`, 'm11');
     const landed = await pg.waitForFunction(m => Number(document.querySelector('.lt[data-moves]')?.dataset.moves) > m, plan.moves, { timeout: 5000 }).then(() => true, () => false);
     if (!landed) fail(`with your ${kind} card open, the click on space ${plan.target.key} placed no minion`, 'm11');
     await ctx.close();
@@ -381,7 +382,9 @@ try {
   if (await page.$('[data-cult="3"] .cs-order')) {
     await pointAt('[data-cult="3"] .cs-order');
     await page.waitForTimeout(400);
-    const cards = await page.evaluate(() => [...document.querySelectorAll('.popover')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && getComputedStyle(e).opacity !== '0'; }).length);
+    // cards up (fading in counts): the hover layer when it holds a card, and every other card on the page's top level
+    const cards = await page.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]') ? 1 : 0)
+      + [...document.querySelectorAll('body > .popover:not([data-hover-layer])')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000; }).length);
     if (cards !== 1) fail(`${cards} cards on screen at once after pointing from P4's seat to its turn-order note (want 1)`, 'm13');
   }
 

@@ -102,7 +102,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
-        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Members'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : buying ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
+        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Members'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : buying && affordable ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
         <span className="lt-sort" role="group" aria-label="Sort the members">
           <span className="lbl" aria-hidden="true">sort</span>
           {[['cost', 'Cheapest first'], ['color', 'Grouped by color, then cheapest']].map(([k, t]) => (

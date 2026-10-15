@@ -3,7 +3,6 @@ import { followers, memberCount, TIERS } from '../../engine/v4/index.js';
 import { breakdown, playerColor, winSentence, plural, contestLines, finalWinners } from '../format.js';
 import { Tip, NamedText, asYou } from './Info.jsx';
 import { Who } from './Glyphs.jsx';
-import { Follower } from '../art/Follower.jsx';
 
 export default function Results({ state, onPlayAgain, onHome, meId = null }) {
   // you are "You" ("Your contests"), never your seat's name
@@ -17,6 +16,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
   const shared = r => rankOf.filter(x => x === r).length > 1;
   // the winners are the rule's (format.js finalWinners), the same call the game-over cults use, so the two never disagree
   const winners = finalWinners(state).map(id => state.players[id]);
+  const endCol = ranked.some(p => breakdown(state, p).endGame !== 0);
   const brokeTie = ranked.some((p, k) => k > 0 && followers(state, p) === followers(state, ranked[k - 1]) && key(p) !== key(ranked[k - 1]));
   return (
     <section className="results" aria-label="Final results">
@@ -25,27 +25,45 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
       </h2>
       <p className="why" data-why>{meId != null ? asYou(winSentence(state), state.players[meId].name) : winSentence(state)}</p>
       <div className="table-scroll">
+        {/* every number opens what it's made of (w3b #52); a column that's the same for everyone folds away: "Yourself"
+            (1 each) joins the members, and End-game shows only when some member scored at game end (w3a #40) */}
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th title="You count as 1 follower">Yourself</th><th title="Followers your members are worth (the follower mark on each card)">From members <Follower /></th><th title={`The ${TIERS.map(t => `+${t.get}`).join(' / ')} follower buys`}>Bought</th><th title="Followers won or lost during play: members' abilities (e.g. Robin Hood), spaces (e.g. Your Call), sales and raids">During play</th><th title="The rims' prizes won at round end">Prizes</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game</th></tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th>You &amp; members</th><th>Bought</th><th>During play</th><th>Prizes</th>{endCol && <th>End-game</th>}</tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
               const b = breakdown(state, p);
+              const n = plural(p.members.length, 'member');
+              const sign = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v)}`;
               return (
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
                   <td className="rank" data-label="#">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
                   <td className="who"><Who state={state} id={p.id} meId={meId} />{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
-                  <td className="tot" data-label="Followers" title={`${followers(state, p)} = 1 (yourself) + ${b.members} from members + ${b.bought} bought + ${b.effects} during play + ${b.contests} from prizes + ${b.endGame} end-game`}>{followers(state, p)}</td>
-                  <td data-label="Yourself">{b.self}</td>
-                  <td data-label="From members" title={`What ${p.id === meId ? 'your' : `${p.name}'s`} ${plural(p.members.length, 'member')} are worth at the end`}>{b.members}</td>
-                  <td data-label="Bought" title={`Follower buys: ${b.bought} followers bought with resources`}>{b.bought}</td>
+                  <td className="tot" data-label="Followers">
+                    <Tip label={`${poss(p)} followers`} content={() => (
+                      <div className="pop-card"><b>{poss(p)} {followers(state, p)} followers</b>
+                        <span>{b.self} for {p.id === meId ? 'yourself' : 'their leader'}, {b.members} from members, {b.bought} bought, {sign(b.effects)} during play, {b.contests} from prizes{endCol ? `, ${sign(b.endGame)} at game end` : ''}</span></div>
+                    )}>{followers(state, p)}</Tip>
+                  </td>
+                  <td data-label="You & members" data-cult={p.id}>
+                    <Tip label={`${poss(p)} leader and members`} content={() => (
+                      <div className="pop-card"><b>{poss(p)} cult: {b.self + b.members}</b>
+                        <span>{b.self} for {p.id === meId ? 'yourself' : 'the leader'} (everyone counts as 1), {b.members} from {p.id === meId ? 'your' : 'their'} {n} (the follower mark on each card)</span></div>
+                    )}>{b.self + b.members}</Tip>
+                  </td>
+                  <td data-label="Bought">
+                    <Tip label={`${poss(p)} follower buys`} content={() => (
+                      <div className="pop-card"><b>{poss(p)} follower buys: {b.bought}</b>
+                        <span>{b.bought ? `${b.bought} followers bought with resources (the ${TIERS.map(t => `${t.cost}→${t.get}`).join(', ')} trades)` : 'No followers bought.'}</span></div>
+                    )}>{b.bought}</Tip>
+                  </td>
                   <td data-label="During play" data-play={p.id}>
                     {/* each cause on its own line, losses negative: "Robin Hood +2 · P2's Raider −3 · Your Call +4" */}
                     <Tip label={`${poss(p)} followers during play`} content={() => (
-                      <div className="pop-card"><b>{poss(p)} followers during play: {b.effects > 0 ? '+' : ''}{b.effects}</b>
+                      <div className="pop-card"><b>{poss(p)} followers during play: {sign(b.effects)}</b>
                         {b.play.length ? b.play.map(l => <span key={l.label} data-play-line>{l.label} {l.n > 0 ? '+' : '−'}{Math.abs(l.n)}</span>) : <span>None won or lost during play.</span>}</div>
-                    )}>{b.effects}</Tip>
+                    )}>{sign(b.effects)}</Tip>
                   </td>
                   <td data-label="Prizes" data-contests={p.id}>
                     {/* each contest won, with its own followers (never the contests' total under one name) */}
@@ -59,20 +77,20 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
                       );
                     }}>{b.contests}</Tip>
                   </td>
-                  <td data-label="End-game">
+                  {endCol && <td data-label="End-game">
                     <Tip label={`${poss(p)} end-game bonuses`} content={() => (
-                      <div className="pop-card"><b>{poss(p)} end-game bonuses: {b.endGame >= 0 ? '+' : ''}{b.endGame}</b>
+                      <div className="pop-card"><b>{poss(p)} end-game bonuses: {sign(b.endGame)}</b>
                         {b.parts.length ? <span><NamedText state={state} text={b.parts.join(', ')} /></span> : <span>No member scored at game end.</span>}</div>
-                    )}>{b.endGame}</Tip>
-                  </td>
+                    )}>{sign(b.endGame)}</Tip>
+                  </td>}
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      {/* every column adds up to the total: Yourself (1) is a column, and During play nets gains and losses */}
-      <p className="hint">During play: followers won or lost by members’ abilities, spaces, sales and raids. Prizes: the rims’ round-end prizes. End-game: members that score when the game ends.</p>
+      {/* the columns add up to the total; a word the rulebook doesn't use never explains one ("raids", w3a #40) */}
+      <p className="hint">Point at any number to see what it's made of. During play: followers won or lost through members’ abilities and spaces. Prizes: the rims’ round-end prizes.{endCol ? ' End-game: members that score when the game ends.' : ''}</p>
       {brokeTie && <p className="hint">Tied on followers: more members breaks the tie.</p>}
       {ranked.some(p => p.final && p.final.parts.length) && (
         <ul className="parts">

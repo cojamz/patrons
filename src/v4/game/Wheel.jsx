@@ -249,10 +249,13 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
   // how wide a line set on n lines needs to be: a gain breaks between clauses, words wrap between words
   const needOne = (px, n) => (!one ? 0 : n === 1 ? oneEm * px : isGain ? Math.max(...oneClauses.map(c => saidEm(c, 800))) * px : Math.max(words(one), (oneEm / n) * 1.15) * px);
   const needTwo = (px, n) => (!two ? 0 : n === 1 ? twoEm * px : Math.max(words(two) * (700 / 800), (twoEm / n) * 1.15) * px);
-  const oneSizes = !one ? [0] : isGain ? [X.main, X.mainMin] : [X.main, X.mainMin, 14, X.verbMin];
+  // a verb heads its panel a size under a gain (w3b #59, w3a A51: "Trade for followers" and "Save 4" set huge beside
+  // "Ransom a member" and "Sell followers" tiny; the gain is the panel's hero): verbs 16, 14 or 12, gains 18 or 16
+  const oneSizes = !one ? [0] : isGain ? [X.main, X.mainMin] : [X.mainMin, 14, X.verbMin];
   const oneLines = !one ? [0] : isGain ? (oneClauses.length > 1 ? [1, 2] : [1]) : [1, 2, 3];
   const tries = [];
-  for (const op of oneSizes) for (const ol of oneLines) for (const tp of two ? [X.second, X.small] : [0])
+  // line 2 never sets larger than line 1 (a verb at 14 over a 14 detail lost its lead)
+  for (const op of oneSizes) for (const ol of oneLines) for (const tp of two ? [X.second, X.small].filter(x => x < op || x === X.small) : [0])
     for (const tl of two ? (tp === X.small ? [1, 2, 3, 4] : [1, 2, 3]) : [0]) for (const nl of note && !need.noNote ? [1, 0] : [0]) tries.push({ op, ol, tp, tl, nl });
   // prefer: line 1 bigger and whole, line 2 on at most two lines at its own size, then line 3 shown, then fewer lines
   tries.sort((x, y) => y.op - x.op || (y.tl <= 2) - (x.tl <= 2) || y.tp - x.tp || x.ol - y.ol || (y.nl > 0) - (x.nl > 0) || x.tl - y.tl);

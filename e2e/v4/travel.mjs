@@ -99,25 +99,33 @@ async function check(kind, label) {
         fromR = await page.evaluate(RECT, from);
         toR = to.kind === 'member' ? await page.evaluate(RECT, { kind: 'seat', pid: to.pid }) : await page.evaluate(RECT, to);
         await page.evaluate(() => { window.__fl = []; window.__clickAt = window.__t(); });
+        await page.evaluate(([to, want]) => {
+          window.__landed = null;
+          const seat = document.querySelector(`.lt-cult-seat[data-seat="${to.pid}"]`);
+          // a gain lands when the number first rises above what it showed before the click (a bot may spend it again
+          // at once, so its final value can come and go between two frames)
+          const shown = () => { const b = seat.querySelector(`.cs-stack[data-res="${to.r}"] b.num`); return b ? Number(b.dataset.hold ?? b.textContent.trim()) : NaN; };
+          const was = to.kind === 'member' ? null : shown();
+          const look = () => {
+            if (window.__landed != null) return;
+            if (to.kind === 'member') { const c = seat.querySelector(`.cs-member[data-uids~="${to.uid}"]`); if (c && getComputedStyle(c).opacity === '1') window.__landed = window.__t(); return; }
+            if (shown() > was) window.__landed = window.__t();
+          };
+          new MutationObserver(look).observe(seat, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['data-hold'] });
+          const raf = () => { look(); if (window.__landed == null) requestAnimationFrame(raf); };
+          requestAnimationFrame(raf);
+        }, [to, want]);
       }
       const inSlot = await el.evaluate(e => !!e.closest('[data-slot]'));
       const target = inSlot ? (await el.$('.base')) || el : el;
       await target.click();
       if (!last) await page.waitForTimeout(450); // (a person's next click; the double-tap guard is 400ms)
     }
-    // when the destination shows its new number (a stack), or when the member's chip shows in your seat
+    // when the destination's number first rises (a stack: what's shown, data-hold while its pieces land), or when
+    // the member's chip shows in your seat; watched in the page, so a value shown for one frame still counts
     const t0 = Date.now();
     let landedAt = null;
-    while (Date.now() - t0 < 12000) {
-      landedAt = await page.evaluate(([to, want]) => {
-        if (to.kind === 'member') { const c = document.querySelector(`.lt-cult-seat[data-seat="${to.pid}"] .cs-member[data-uids~="${to.uid}"]`); return c && getComputedStyle(c).opacity === '1' ? window.__t() : null; }
-        // the number as shown: a stack held for its pieces shows data-hold until its last piece lands
-        const s = document.querySelector(`.lt-cult-seat[data-seat="${to.pid}"] .cs-stack[data-res="${to.r}"] b.num`);
-        return s && s.dataset.hold == null && s.textContent.trim() === want ? window.__t() : null;
-      }, [to, want]);
-      if (landedAt != null) break;
-      await page.waitForTimeout(16);
-    }
+    while (Date.now() - t0 < 12000 && landedAt == null) { landedAt = await page.evaluate(() => window.__landed); if (landedAt == null) await page.waitForTimeout(50); }
     const fl = await page.evaluate(() => window.__fl);
     const clickAt = await page.evaluate(() => window.__clickAt);
     await page.screenshot({ path: `${SHOTS}/${label}.png` });
