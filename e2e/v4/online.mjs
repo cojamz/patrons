@@ -103,7 +103,9 @@ async function stepFirstOption(page) {
   // step, three pages per loop, and slow on a loaded box). The choice panel's (or dialog's) own options come first.
   const els = await page.$$('[data-option]:not([disabled])');
   const meta = els.length ? await page.evaluate(es => es.map(e => [e.getAttribute('data-option'), !!e.parentElement?.closest('.prompt.choice, [role="dialog"]')]), els).catch(() => []) : [];
-  const usable = i => { const id = meta[i]?.[0]; return !!id && !id.startsWith('toggle:') && id !== 'back'; };
+  // a pair is picked in two steps (boardPick.js comboStep, the trade picker): yours (@pick:x), then theirs, never back
+  const second = meta.some(m => m[0] === '@unpick');
+  const usable = i => { const id = meta[i]?.[0]; return !!id && !id.startsWith('toggle:') && id !== 'back' && id !== '@unpick' && !(second && id.startsWith('@pick:')); };
   const inPanel = els.filter((_, i) => usable(i) && meta[i][1]);
   const all = els.filter((_, i) => usable(i));
   const cands = [...inPanel, ...all.filter(e => !inPanel.includes(e))];

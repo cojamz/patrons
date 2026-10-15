@@ -68,7 +68,7 @@ Every row: the path, what flies, the stagger for N, the duration (Steady; sectio
 ### Movement
 **M1. Gain** (`gain`, from a space, quadrant, member, rim or bank to a stack). Arc. Dots, or a bundle at 4+. Stagger 60ms between single pieces. Flight by distance (~320ms). Each landing ticks the stack by one and settles it; a bundle rolls the number from old to new over 240ms and settles at 1.24. Emphasis: the source's pulse (a space) or hop (a member) before the first piece leaves. Several colors from one source (Peddler's "+1 of each other color", "+2 silver and +2 of another color") fly as one beat, each color its own group, groups 40ms apart.
 
-**M2. Pay** (`pay`, from stacks to a shop card, a rate, a space, or the bank). Drop. Dots or bundles, one group per color, groups 40ms apart, pieces in a group 60ms apart. ~300ms. The source stack's number drops as each piece leaves (dip: the stack goes to .88 and back, 140ms). The receiver presses (.96, 100ms) once, when the last piece is in. A payment to "the bank" (no place on the board) drops into the space that caused it if there is one, else into the wheel's hub. Payments come before what they buy, always (the engine's order already says so).
+**M2. Pay** (`pay`, from stacks to a shop card, a rate, a space, or the bank). Drop. Dots or bundles, one group per color, groups 40ms apart, pieces in a group 60ms apart. Flight by distance (~350ms from a seat to the shop). The source stack's number drops as each piece leaves (dip: the stack goes to .88 and back, 140ms). The receiver presses (.96, 100ms) once, when the last piece is in. A payment to "the bank" (no place on the board) drops into the space that caused it if there is one, else into the wheel's hub. Payments come before what they buy, always (the engine's order already says so).
 
 **M3. Take** (`transfer` where the cause's owner receives: a steal, Collect Debts, Cutpurse, Raider). Line, straight from the victim's stack to the taker's. First the victim's stack tugs toward the taker (90ms); then the pieces leave one by one (60ms apart), the victim's number dropping as each goes. Flight by distance, with the snatch easing. A take that "arrives as magenta" turns color at the midpoint. Several victims (Collect Debts split 2 and 1, "1 from each rival") are one beat: each victim's tug and pieces start 40ms after the last, in seat order, and land in one stack. If you're the victim, your stack's settle-down is full size; between two rivals it's lighter. Build note: the engine records a magenta steal as the victim's `pay` plus the taker's `gain` under the same cause (different colors, so not a `transfer`). Pair them: a non-owner's `pay` and the owner's `gain` of the same total under one cause play as one take.
 
@@ -121,7 +121,7 @@ Rivals' triggers on a buy (Tax Collector, Tipster, Extortionist) play after the 
 
 ## 4. Speeds
 
-The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hover and your own minion standing on the space never change with the setting. Every other number does.
+The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hover and your own minion standing on the space never change with the setting. Every other number does. Taste rule 7's 150–350ms still holds for Quick and for every response to your own input; Steady flights run up to 440ms on the longest throws because Cory asked for "clear and steady enough for players to see what's happening" (2026-10-15).
 
 | Pattern | Quick | Steady | Relaxed |
 |---|---|---|---|

@@ -178,6 +178,24 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 .piece-flight{position:fixed;z-index:14;pointer-events:none;will-change:transform;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
 .piece-flight svg{width:100%;height:100%;image-rendering:pixelated}
 .piece-flight .piece-dot{width:70%;height:70%;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.3)}
+/* paths (flight.js flyPath): an outer layer travels, an inner one rises and falls; a bundle carries its count on its left */
+.piece-flight .path-inner,.worker-flight .path-inner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.piece-flight .path-inner > svg{width:100%;height:100%}
+.piece-flight .bundle-n{position:absolute;right:100%;margin-right:3px;font:800 14px/1 var(--body);color:var(--cream,#f3e6c8);text-shadow:0 0 1px #120c0a,0 1px 0 #120c0a,1px 0 0 #120c0a,-1px 0 0 #120c0a,0 -1px 0 #120c0a;white-space:nowrap}
+.piece-flight .path-turn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.piece-flight .path-turn > svg{width:100%;height:100%}
+.piece-member .piece-dot.member{width:100%;height:100%;border-radius:4px;background:var(--paper,#f4ebd7);box-shadow:0 0 0 1px rgba(42,31,23,.5)}
+.worker-flight.trail{opacity:.75}
+/* the chosen space lights before anything leaves it (director.js) */
+.lt .stage .slot.chosen .base{box-shadow:inset 0 0 0 2.5px var(--paper-ink,#2a1f17),0 0 0 4px var(--lamp-ink,#ffd99a),0 0 18px 6px rgba(255,217,154,.55)}
+/* while a move plays out, the glows that say "act here" wait (the next decision appears when the chain finishes;
+   a click still acts and lands the chain at once) */
+.app.game[data-chain="1"] .slot.lit .base::after{opacity:0;animation:none}
+/* the animation speed setting in the menu */
+.menu-speed{display:flex;align-items:center;gap:4px;padding:4px 6px}
+.menu-speed-label{font-size:13px;opacity:.8;margin-right:4px}
+.menu-speed-opt{min-height:30px;padding:2px 8px;font-size:13px}
+.menu-speed-opt.on{box-shadow:inset 0 0 0 1.5px currentColor}
 /* a stack counts what has landed so far (flight.js), then shows its own number again */
 b.num[data-hold]{position:relative;visibility:hidden}
 b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:absolute;left:0;top:0;right:0;text-align:inherit}

@@ -55,7 +55,10 @@ export default function Tick({ value, from, color, className = '', float = true,
       if (k < 1 || next !== value) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
-    return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); };
+    // a skipped chain (a click, Space: director.js) lands the count at once
+    const skip = () => { cancelAnimationFrame(raf); setShown(value); };
+    addEventListener('patrons:chain-skip', skip);
+    return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); removeEventListener('patrons:chain-skip', skip); };
   }, [value, float, dur]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <span ref={box} className={`tick ${className}${bump > 0 ? ' bump' : bump < 0 ? ' dip' : ''}`} style={bump && color ? { '--tc': color } : undefined}>

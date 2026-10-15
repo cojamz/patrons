@@ -32,7 +32,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
 import { playChain, planChain, installChainSkip, onChainSkip, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
-import { MO, BOT } from '../motion.js';
+import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
 import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import { sameSeat } from './seatMemo.js';
 import { friendlyError, isNetworkError } from '../errors.js';
@@ -154,7 +154,11 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       // every bot step during a round holds the pace (≥600ms at Normal): placing, buying, choosing, passing
       const rivalStep = actor != null && next.round >= 1 && !rivalSetup;
       // a rival's recruit holds a beat longer: the card's flight to their row is the thing to see
-      const dwell = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
+      const base = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
+      // the step's chain of animations sets the pace (director.js; grammar.md §4): the next step shows once it has
+      // played (a click or Space skips it). The bot pace is the floor only for a step with nothing to show (a pass).
+      const chainMs = planChain(prev, next, { mine }).total;
+      const dwell = chainMs || base;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
         // the hold counts from when this step is on screen (its commit), not from when it was handed to React: under
@@ -172,6 +176,12 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     timer.current = setTimeout(() => { timer.current = null; pump(); }, d);
   }, [table.shown, pump]);
 
+  // a skipped chain (a click, Space) lets the next step show at once
+  useEffect(() => onChainSkip(() => {
+    if (typeof timer.current !== 'number' && typeof timer.current !== 'object') return;
+    if (timer.current == null || timer.current === 'commit') return;
+    clearTimeout(timer.current); timer.current = null; pump();
+  }), [pump]);
   useEffect(() => {
     const off = session.subscribe(s => {
       if (s === shownRef.current || queue.current.includes(s)) return;
@@ -189,6 +199,20 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   }, [pump]);
 
   return [table.shown, table.moment, dismiss, rs0];
+}
+
+/** The viewer's animation speed (Cory: a setting in the menu; Steady by default), kept in this browser. */
+function SpeedSetting() {
+  const [sp, setSp] = useState(motionSpeed);
+  useEffect(() => onMotionSpeed(setSp), []);
+  return (
+    <div className="menu-speed" role="radiogroup" aria-label="Animation speed" title="How fast moves play out on the table. Your own clicks always answer at once.">
+      <span className="menu-speed-label">Animations</span>
+      {Object.keys(SPEEDS).map(k => (
+        <button key={k} type="button" role="radio" aria-checked={sp === k} className={`btn ghost menu-speed-opt${sp === k ? ' on' : ''}`} data-speed={k} onClick={() => setMotionSpeed(k)}>{SPEED_NAMES[k]}</button>
+      ))}
+    </div>
+  );
 }
 
 /** One glyph for the rest (How to play, the log, Leave): the table carries no header buttons. */
@@ -219,6 +243,7 @@ function Menu({ onRules, onLog, onLeave, getState }) {
           <button type="button" role="menuitem" className="btn ghost rules-btn" onClick={pick(onRules)}>How to play</button>
           <button type="button" role="menuitem" className="btn ghost intro-btn" onClick={pick(replayIntro)}>How it works (20s)</button>
           <button type="button" role="menuitem" className="btn ghost log-btn" onClick={pick(onLog)}>The log</button>
+          <SpeedSetting />
           <button type="button" role="menuitem" className="btn ghost record-btn" data-copy-record onClick={copyRecord}
             title="Copies this game, move by move, so a problem can be replayed exactly">{copied === 'copied' ? 'Copied ✓' : 'Copy game record'}</button>
           {copied && copied !== 'copied' && (
@@ -349,6 +374,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, []);
   useEffect(() => () => clearTimeout(hoverTimer.current), []);
   const hover = useHoverCards(); // UI-B's one hover layer: spaces, plaques, seats, shop cards
+  // a press anywhere, or Space, lands the chain of animations playing on the table (director.js)
+  useEffect(() => installChainSkip(), []);
   const [reckoned, setReckoned] = useState(null); // the round-end moment whose Reckoning has played (then: the summary)
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
   // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it

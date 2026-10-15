@@ -223,6 +223,7 @@ export function skipChain() {
   clearFlights(0);
   endChain();
   for (const fn of skipSubs) fn();
+  try { dispatchEvent(new Event('patrons:chain-skip')); } catch { /* no window */ }
   return true;
 }
 
