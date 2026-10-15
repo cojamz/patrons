@@ -280,13 +280,15 @@ function TradePicker({ state, pend, onPick, busy }) {
     return (
       <div className="trade">
         <span className="step">1 · Give one of yours</span>
-        <div className="opts">{mine.map(g => <TradeCard key={g.k} state={state} busy={busy} g={g} onClick={() => setGive(g.k)} extra={pend.options.find(o => g.uids.includes(o.value[0]))?.id} />)}</div>
+        {/* step one only lifts yours (nothing goes to the engine yet), so it says "@pick:", like the board picker's
+            pairs: an engine id here made every driver (and the perf tracer) read the step as a dead click */}
+        <div className="opts">{mine.map(g => <TradeCard key={g.k} state={state} busy={busy} g={g} onClick={() => setGive(g.k)} extra={`@pick:${g.uids[0]}`} />)}</div>
       </div>
     );
   }
   return (
     <div className="trade">
-      <span className="step">2 · Take one of theirs for your {chosen.d.name} <button type="button" className="btn ghost" onClick={() => setGive(null)}>Change</button></span>
+      <span className="step">2 · Take one of theirs for your {chosen.d.name} <button type="button" className="btn ghost" data-option="@unpick" onClick={() => setGive(null)}>Change</button></span>
       <div className="opts">
         {theirs.map(g => {
           const opt = pend.options.find(o => chosen.uids.includes(o.value[0]) && g.uids.includes(o.value[1]));

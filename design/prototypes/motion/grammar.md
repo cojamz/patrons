@@ -61,7 +61,7 @@ Every row: the path, what flies, the stagger for N, the duration (Steady; sectio
 ### Selection
 **S1. A space is chosen (yours).** Press on the space at pointerdown. Your minion stands in its door on the first frame (stamp, 140ms). A trail: a ghost of the minion leaves the foot of your seat's minion column on an arc and fades onto the space, 180ms; the column closes its gap (the minions above slide down 4px, 160ms). The space then pulses (90ms), and the chain's first beat leaves from it 60ms into the pulse. Nothing waits on the trail.
 
-**S2. A space is chosen (a rival).** The rival's seat already carries the turn light. Their bottom minion lifts out of their column (hop, 120ms), flies on an arc to the space (380ms; the space's door stays dark until it lands), and stamps into the door (140ms, overlapping the last 60ms of flight). Then a read hold of 160ms: the space's words are what the eye lands on, so it reads which space before anything flies. Then the space pulses and the chain begins.
+**S2. A space is chosen (a rival).** The rival's seat already carries the turn light. Their bottom minion lifts out of their column (the first 15% of its flight, no separate hop), flies on an arc to the space (380ms; the space's door stays dark until it lands), and stamps into the door (140ms, overlapping the last 60ms of flight). Then a read hold of 160ms from the landing: the space's words are what the eye lands on, so it reads which space before anything flies. The space's pulse is the last 90ms of that hold, and the first piece leaves as the hold ends.
 
 **S3. A choice inside an action** (Kickback's "a player you choose", Collect Debts' picks, Echo's target). The chain pauses at the choice: everything before it has landed, nothing after it has left. A rival's choice shows as a 160ms point at what they chose (the chosen seat or space pulses) before its effect flies.
 
@@ -79,14 +79,14 @@ Every row: the path, what flies, the stagger for N, the duration (Steady; sectio
 **M6. Copy** (a space's cause carrying a copied space: Echo, Encore, Reprise, Greatest Hits, Understudy, Stunt Double, Sleepwalker). A link: a 2px cream line draws from the copy space to the space being copied, straight across the wheel, 160ms, ease-out; it fades as the copied space pulses (its original taker's minion still in the door). Then the copied space's own effect plays exactly as it did for its taker (its gains arc from the copied space to the copier). The pieces come from the copied space, not the copy space: that's what makes it read as an echo. Copying several spaces (Greatest Hits, Tribute Band) is one link and one beat per space, in the order they were taken.
 
 **M7. Recruit** (`recruit` with its `pay`, from a shop card to a crowd). Three steps.
-1. Lift: the card rises 10px and scales to 1.06 (120ms). On a rival's buy, it holds lifted another 200ms first (the telegraph: which card).
-2. Pay: the coins drop from the buyer's stacks into the lifted card (M2), starting with the lift.
-3. Fly: when the last coin is in, the card leaves on an arc to the buyer's crowd, shrinking to its chip (380ms, `cubic-bezier(.3,.7,.2,1)`). The chip lands with a settle and a light ring (260ms, the one exception to "one glow"). Then the member's worth: its follower marks hop from the chip to the follower count (a short arc, ~240ms), and the count ticks. The follower count never jumps on the card's landing without that hop.
+1. Lift: the card rises 10px and scales to 1.06 (120ms). Your buy: the lift starts on your press. A rival's buy: the lift starts at the hand-off from their gain (two-thirds rule), and the coins leave when the lift ends; the card stays lifted while the coins fly into it, and that is the telegraph of which card (no extra hold).
+2. Pay: the coins drop from the buyer's stacks into the lifted card (M2). They aim at the lifted card's spot and fade in their last 15%, so a card already leaving never shows a miss.
+3. Fly: when the last coin is two-thirds of the way, the card leaves on an arc to the buyer's crowd, shrinking to its chip (380ms, `cubic-bezier(.3,.7,.2,1)`). The chip lands with a settle and a light ring (260ms, the one exception to "one glow"). Then the member's worth: its follower marks hop from the chip to the follower count (a short arc, ~240ms), and the count ticks. The follower count never jumps on the card's landing without that hop.
 The shop closes its gap (shop slide) as soon as the card has left its slot, and the deal (B4) follows, both as bookkeeping. A "When recruited" or "Now and at round start" member plays its effect next, as a trigger (M9) from the new chip.
 
 **M8. Release** (`release`, a member to the pile, with its refund `gain`). The chip presses, then flies on a drop to the face-down pile at the head of the shop row, shrinking to the pile's card size and sliding under it (its last 20% goes behind the pile). 380ms. The follower count drops by its worth as it leaves (the follower marks don't fly back; the number ticks down at departure). The refund arcs from where the chip was to the stack, leaving when the card is 40% along. The pile's count ticks up when the card is under it.
 
-**M9. Member trigger** (any effect whose cause is a `member`). The member hops (180ms); its payload leaves the member 100ms into the hop, on the path its type calls for (a gain arcs, a take is a line, followers rise). Several members of one player that fire on the same cause hop left to right, 80ms apart, each sending its own pieces. A trigger plays after the effect that set it off has landed (two-thirds rule, section 3·Sequencing), never before; a rival's member reacting to your move plays after your own members.
+**M9. Member trigger** (any effect whose cause is a `member`). The member hops (180ms); its payload leaves the member 100ms into the hop, on the path its type calls for (a gain arcs, a take is a line, followers rise). Several members of one player that fire on the same cause hop left to right, 80ms apart, each sending its own pieces. A trigger plays after the effect that set it off has landed (the two-thirds rule, section 5), never before; a rival's member reacting to your move plays after your own members.
 
 **M10. Swap** (`member-move` both ways under one cause: Even Swap, Double Agent, Poach). Both chips lift (hop, 120ms), then cross (420ms) on mirrored arcs and land with settles. Each follower count ticks by the worth difference as the cards land. A one-way `member-move` (a member taken) is a take: the victim's chip tugs, then flies on a line.
 
@@ -141,7 +141,7 @@ The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hov
 | Settle on landing | 140 | 180 | 240 |
 | Number roll (a bundle) | 160 | 240 | 360 |
 | Card lift | 80 | 120 | 160 |
-| A rival's buy: card held lifted before paying | 100 | 200 | 360 |
+| A rival's buy: extra hold before the coins leave | 0 | 0 | 160 |
 | Card flight to the crowd | 260 | 380 | 560 |
 | New member's landing ring | 200 | 260 | 340 |
 | Worth hop (chip → follower count) | 180 | 240 | 340 |
@@ -164,10 +164,70 @@ The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hov
 | | Quick | Steady | Relaxed |
 |---|---|---|---|
 | Your placement with a simple gain (click → last landing) | ~0.45s | ~0.75s | ~1.1s |
-| Your recruit with its worth hop | ~0.55s | ~0.9s | ~1.35s |
+| Your recruit with its worth hop | ~0.55s | ~0.85s | ~1.3s |
 | Your whole turn's motion (both chains) | ~1.0s | ~1.6s | ~2.4s |
-| A rival's turn: place, gain, recruit, breath | ~1.1s | ~1.9s | ~2.9s |
-| A rival's turn with no buy | ~0.8s | ~1.3s | ~2.0s |
+| A rival's turn: place, gain, recruit, breath | ~1.1s | ~1.85s | ~2.9s |
+| A rival's turn with no buy | ~0.75s | ~1.2s | ~1.9s |
 | The Reckoning, four rims | ~2.2s | ~3.8s | ~5.6s |
 
 The speed setting also sets the bots' pace: a bot's next turn starts when the last chain (plus the breath) is done, not on a separate timer. `BOT.pace` becomes a floor for a turn with nothing to show (a pass), not a fixed hold on top of the motion.
+
+### Hard targets (test these)
+Measured today on the quiet box (design/eval/perf/quiet-baseline-b3ac40c.md): a bot's move is applied in about 0.5s but shows on the table at 2.5s p50 and 5.9s p95, because the animation queue sets the pace; from the end of your turn to your next turn takes about 12.5s p50 with three bots. That wait is most of "it doesn't feel snappy". The budget below brings it to about 6s while every effect stays readable. Steady unless named; Normal bots; 1270×700; numbers at p50 over a whole game unless named, on a quiet box. `scripts/v4-perf.mjs` already records most of these.
+
+| # | What | Target |
+|---|---|---|
+| H1 | Your input → visible response (press, minion standing) | ≤ 100ms (the snappy gate) |
+| H2 | **End of your turn → your next turn's spaces lit**, three bots | **≤ 6.5s p50, ≤ 9s p95** (today 12.5s). Quick ≤ 4s p50. Relaxed ≤ 9.5s p50. |
+| H3 | **A rival's whole turn**, from their minion leaving to the next player's minion leaving | **≤ 2.0s p50, ≤ 3.0s p95** (Quick ≤ 1.2s, Relaxed ≤ 3.0s p50) |
+| H4 | A rival's plain turn (place, simple gain, recruit, no triggers) | ≤ 1.9s |
+| H5 | Engine applied a move → its chain starts on screen | ≤ 1.0s p50, **≤ 2.5s p95** (today 2.5s / 5.9s): the backlog rule (section 5) |
+| H6 | Gap between one player's last landing and the next player's first motion | breath (180ms) + ≤ 50ms: a bot's thinking hides behind the chain in front of it |
+| H7 | Your placement chain with a simple gain (click → last landing) | ≤ 0.8s |
+| H8 | Your plain recruit (click → worth landed on the count) | ≤ 1.0s |
+| H9 | Any one chain except the Reckoning | ≤ 3.0s (the cap) |
+| H10 | The Reckoning, first rim lit → last count settled | ≤ 4.5s |
+| H11 | Skip (click or Space) → every number final and every ghost gone | ≤ 120ms |
+| H12 | Your turn starts → your spaces accept a click | 0ms (the glow may still be fading in) |
+| H13 | Truth: 50ms after a chain ends or is skipped, every number on the table equals the engine's | always (a gate) |
+| H14 | Reduced motion: a rival's whole turn | ≤ 0.8s, in order |
+
+## 5. Sequencing
+
+### The order inside one action
+One move of the engine becomes one **chain**. A chain is a row of **beats**; a beat is one cause doing one visible thing (one source sending, one place or one fan receiving). Play the engine's effects in their order (`n`), grouped into beats by their cause frame:
+1. **Selection** (S1 or S2).
+2. **What the action costs** (a `pay` under the space's own cause: Overtime's 8 purple, Rally's purple). Give before get, as the visual language reads left to right.
+3. **The main effect:** what the cause's owner gets or takes.
+4. **The spill:** the same cause's effects on everyone else, as a fan inside the same beat (M5).
+5. **Triggers:** each `member` cause is its own beat, in the engine's order, which is the order of causes. The owner's members come before rivals' members because the engine resolves them that way; where the engine's order and seat order disagree, the engine wins.
+6. **Followers that follow from it** (a recruit's worth, a bonus) ride at the end of the beat that caused them, never as a separate jump.
+7. **Bookkeeping** (refill, `shop-out`, the discount sweep, the pile's count) runs underneath the next beat and never holds the chain.
+
+A recruit or follower buy is a second move in the same turn, so it is a second chain; for a rival it follows the first chain with no breath (section 5, bot turns).
+
+### Overlap: the hand-off
+- Inside a beat: single pieces 60ms apart, groups and fans 40ms apart.
+- Between beats: the next beat's first motion (its pulse, hop or tug) starts when this beat's **last** piece is **two-thirds** of the way. There's always one thing landing while the next thing wakes: that hand-off is the rhythm, and it is what makes a chain read as cause and effect instead of a list.
+- No overlap (wait for the landing) in two cases: a choice (S3), and a beat whose source is the last beat's destination (a "When recruited" member can't hop before its chip has landed: it hops 90ms after the landing).
+- A landing on **your** seat from someone else's action (a steal from you, a gift to you, your member reacting) holds 60ms longer before the hand-off, so "that hit me" registers.
+- At most one beat has the eye. At most 12 ghosts in the air (bundle trails count), and at most 4 flight groups at once (one per seat).
+
+### Ten pieces, ten beats
+- Per group: up to 3 single pieces; 4 or more fly as one bundle with its count.
+- Per beat: if the groups would put more than 12 ghosts in the air, the smallest groups fly as bundles too ("+2●" as one piece with a count).
+- Per chain: beats 7 onward play at Quick timings; beats 11 onward land together in one sweep of settles 30ms apart. Back-to-back beats with the same cause, type and destination merge into one (their counts add).
+- A chain's cap (not the Reckoning): 3.0s at Steady. If a chain's plan runs longer, every remaining duration scales down to fit, never below Quick.
+
+### Bot turns read as a short story
+A rival's turn is five lines, each one beat or a few:
+1. **Who:** the turn marker slides to their seat (200ms, during the last turn's breath).
+2. **Where:** their minion lifts from their column and flies to the space; a 160ms read hold on the space's words.
+3. **What:** the space's effects: main, then spill.
+4. **Who reacts:** members' triggers, in the engine's order; yours land with the extra 60ms.
+5. **What they bought:** the chosen card lifts at the hand-off from their gain, the coins drop into it (that's the "which one"), the card flies, its worth hops to their count. Or the follower buy's exchange. A pass shows nothing; the turn card says "passed".
+Then a 180ms breath and the next player. The bot's own steps inside its turn (its choices, its buy) never wait on a timer of their own: the story plays straight through.
+
+**Thinking never shows as waiting.** The engine runs ahead of the screen: the next bot's move is computed while the current chain plays, and the table plays the queue. The only time the table waits on a bot is when its thinking takes longer than the chain in front of it.
+
+**The backlog stays short.** The screen never falls more than one turn behind the engine. When a whole turn is queued behind the chain that's playing, the queued chains play at Quick; when two are queued, the oldest lands at once (crossfade, 120ms) and the newer one plays. A move is never on screen later than 2.5s after the engine applied it.

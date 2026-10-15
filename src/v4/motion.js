@@ -101,11 +101,57 @@ const BASE = {
 const SHOW = new Set(['select', 'minionFly', 'hop', 'cardFly', 'chipGlow', 'pieceFly', 'pieceStagger', 'pieceBump', 'chainHold', 'shopSlide',
   'deal', 'dealStagger', 'minionsHome', 'minionsHomeStagger', 'tickBase', 'tickPer', 'tickMax', 'react', 'afterFlight', 'reckonToken']);
 
+// The chain's own numbers at each speed, from the motion language's table (design/prototypes/motion/grammar.md §4).
+// Where a key is here, it wins over BASE × scale.
+const TABLE = {
+  //            quick  steady  relaxed
+  ownStamp:    [100,   140,    180],  // your minion stands in the door at once, then settles
+  trail:       [140,   180,    240],  // your minion's trail from the column
+  minionFly:   [240,   380,    560],  // a rival's minion flight
+  readHold:    [60,    160,    320],  // after a rival places: which space, before anything flies
+  pulse:       [50,    90,     140],  // a source about to give
+  hop:         [120,   180,    260],  // a member acts
+  lead:        [40,    80,     120],  // hop or pulse → first piece leaves
+  tug:         [60,    90,     140],  // a stack being taken from
+  pieceStagger:[35,    60,     90],
+  bundleTrail: [20,    30,     45],
+  fan:         [25,    40,     60],   // groups, colors, seats in one beat
+  settle:      [140,   180,    240],
+  roll:        [160,   240,    360],  // a bundle's number rolling on landing
+  cardLift:    [80,    120,    160],
+  rivalBuyHold:[100,   200,    360],  // a rival's buy: the card held lifted before paying
+  cardFly:     [260,   380,    560],
+  ring:        [200,   260,    340],
+  worthHop:    [180,   240,    340],  // a new member's worth, chip → follower count
+  accept:      [100,   160,    240],  // a rate or space's press-pop in an exchange
+  swap:        [280,   420,    620],
+  shopSlide:   [180,   240,    320],
+  deal:        [220,   300,    420],
+  dealStagger: [30,    40,     60],
+  breath:      [80,    180,    360],  // between one player's turn and the next
+  minionsHome: [260,   340,    480],
+  minionsHomeStagger: [20, 30,   45],
+  incomeSeat:  [120,   200,    320],
+};
+const IDX = { quick: 0, steady: 1, relaxed: 2 };
+
 /** MO.x reads the budget at the viewer's speed (read it when you use it, never keep a copy). */
 export const MO = {};
-for (const k of Object.keys(BASE)) {
-  Object.defineProperty(MO, k, { enumerable: true, get: () => (SHOW.has(k) ? Math.round(BASE[k] * speedScale()) : BASE[k]) });
+for (const k of new Set([...Object.keys(BASE), ...Object.keys(TABLE)])) {
+  Object.defineProperty(MO, k, {
+    enumerable: true,
+    get: () => (TABLE[k] ? TABLE[k][IDX[speed] ?? 1] : SHOW.has(k) ? Math.round(BASE[k] * speedScale()) : BASE[k]),
+  });
 }
+/** A flight's length by its distance in px (the grammar: constant speed reads more honest than constant time). */
+export function flightMs(d) {
+  const x = Math.max(0, d || 0);
+  if (speed === 'quick') return Math.round(Math.min(280, Math.max(160, 120 + 0.18 * x)));
+  if (speed === 'relaxed') return Math.round(Math.min(640, Math.max(380, 280 + 0.45 * x)));
+  return Math.round(Math.min(440, Math.max(260, 200 + 0.30 * x)));
+}
+/** When the next beat starts, as a part of this beat's last flight: half (Quick), two-thirds (Steady), landed + 60 (Relaxed). */
+export const nextBeatAt = flight => (speed === 'quick' ? flight * 0.5 : speed === 'relaxed' ? flight + 60 : flight * (2 / 3));
 
 /**
  * Bots: how long each visible bot step stays on screen at least (placing, recruiting, buying, passing), by the table's

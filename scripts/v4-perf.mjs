@@ -106,7 +106,14 @@ async function hoverSel(p, sel, n, dwell) {
 }
 // a click, then how long until the table shows a new state (the person's view of "it worked")
 async function clickAndWait(p, el, what) {
-  const before = await p.page.evaluate(() => document.querySelector('.app.game')?.dataset.moves).catch(() => null);
+  // what the person sees change: a new move, the round card opening or closing (dismissing it moves nothing when no one
+  // has played behind it), or the answers on screen (a pair's first step lifts yours and lights theirs: @pick, no move)
+  const look = () => ({
+    moves: document.querySelector('.app.game')?.dataset.moves,
+    card: !!document.querySelector('[data-next-round]'),
+    ids: [...document.querySelectorAll('[data-option]')].map(e => e.getAttribute('data-option')).sort().join(' '),
+  });
+  const before = await p.page.evaluate(look).catch(() => null);
   const c = await center(el);
   if (!c) return false;
   const t = Date.now();
@@ -115,8 +122,10 @@ async function clickAndWait(p, el, what) {
   let ms = null;
   try {
     await p.page.waitForFunction(b => {
-      const m = document.querySelector('.app.game')?.dataset.moves;
-      return (m != null && m !== b) || !!document.querySelector('[data-place], [data-next-round]');
+      const moves = document.querySelector('.app.game')?.dataset.moves;
+      const card = !!document.querySelector('[data-next-round]');
+      const ids = [...document.querySelectorAll('[data-option]')].map(e => e.getAttribute('data-option')).sort().join(' ');
+      return !b || (moves != null && moves !== b.moves) || card !== b.card || ids !== b.ids || !!document.querySelector('[data-place]');
     }, before, { timeout: 4000, polling: 'raf' });
     ms = Date.now() - t;
   } catch { /* nothing changed: an eaten click, or a step that opens a dialog */ }

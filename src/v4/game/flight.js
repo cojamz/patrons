@@ -258,11 +258,19 @@ export function pieceHtml(root, m) {
 export function holdStack(stackEl, from) {
   const b = stackEl && stackEl.querySelector('b.num');
   if (!b) return null;
-  let v = from;
+  let v = from, raf = 0;
   b.dataset.hold = String(v);
   return {
-    step(by) { v += by; b.dataset.hold = String(v); },
-    done() { delete b.dataset.hold; },
+    step(by) { cancelAnimationFrame(raf); v += by; b.dataset.hold = String(v); },
+    /** a bundle lands: the number rolls from what it shows to v + by over ms */
+    roll(by, ms) {
+      cancelAnimationFrame(raf);
+      const from0 = v, to = v + by, t0 = performance.now();
+      v = to;
+      const tick = now => { const k = Math.min(1, (now - t0) / Math.max(1, ms)); b.dataset.hold = String(Math.round(from0 + (to - from0) * k)); if (k < 1) raf = requestAnimationFrame(tick); };
+      raf = requestAnimationFrame(tick);
+    },
+    done() { cancelAnimationFrame(raf); delete b.dataset.hold; },
   };
 }
 export const bump = (el, down = false) => {
@@ -323,4 +331,73 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
   if (holds.size) setTimeout(() => holds.forEach(x => x.h && x.h.done()), t + MO.pieceMax * MO.pieceStagger + MO.pieceFly + 200);
   if (flown && typeof window !== 'undefined') window.__patronsPieces = (window.__patronsPieces || 0) + flown;
   return flown;
+}
+
+// ---------- paths (design/prototypes/motion/grammar.md §2): the shape of a flight says what kind of move it is ----------
+// arc: gains, gifts, a card to its crowd, followers scored (a true parabola: an outer layer travels the straight line,
+//      an inner one rises and falls) · line: a take (a steal), straight, a snatch · drop: a payment, lifts 6px then falls
+//      into what it pays, shrinking and fading (it's spent) · cross: a swap, the arc bowing the other way.
+// `turnTo`: a piece that changes color on its way (a steal that arrives as magenta) turns at its midpoint.
+export function flyPath(html, className, a, b, { path = 'arc', duration = 320, label = '', trail = 0, trailGap = 30, turnTo = null } = {}) {
+  if (typeof document === 'undefined' || !document.body.animate) return null;
+  const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+  const dist = Math.hypot(dx, dy);
+  const h = path === 'arc' || path === 'cross' ? Math.max(16, Math.min(70, dist * 0.18)) * (path === 'cross' ? -1 : 1) : 0;
+  const one = (k, scale, opacity, delay) => {
+    const outer = document.createElement('div');
+    outer.className = `${className} ghost-layer path-${path}`;
+    outer.dataset.born = String(Date.now());
+    Object.assign(outer.style, { left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, height: `${a.height}px` });
+    const inner = document.createElement('div');
+    inner.className = 'path-inner';
+    inner.innerHTML = html + (k === 0 && label ? `<b class="bundle-n">${label}</b>` : '');
+    if (k > 0) Object.assign(inner.style, { transform: `scale(${scale})`, opacity: String(opacity) });
+    outer.appendChild(inner);
+    document.body.appendChild(outer);
+    const travel = path === 'line' ? 'cubic-bezier(.55,0,.1,1)' : path === 'drop' ? 'cubic-bezier(.5,0,.75,0)' : 'cubic-bezier(.45,0,.2,1)';
+    const frames = path === 'drop'
+      ? [{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(0,-6px) scale(1)', opacity: 1, offset: 0.2, easing: travel },
+        { transform: `translate(${dx * 0.85}px,${dy * 0.85}px) scale(.85)`, opacity: 1, offset: 0.85 }, { transform: `translate(${dx}px,${dy}px) scale(.6)`, opacity: 0 }]
+      : [{ transform: 'translate(0,0)' }, { transform: `translate(${dx}px,${dy}px)` }];
+    const anim = outer.animate(frames, { duration, delay, easing: path === 'drop' ? 'linear' : travel, fill: 'both' });
+    track(anim);
+    if (h) track(inner.animate([{ translate: '0 0' }, { translate: `0 ${-h}px`, offset: 0.5, easing: 'ease-in' }, { translate: '0 0' }], { duration, delay, easing: 'ease-out', fill: 'both' }));
+    if (turnTo && k === 0) {
+      const tint = document.createElement('div');
+      tint.className = 'path-turn';
+      tint.innerHTML = turnTo;
+      inner.appendChild(tint);
+      track(tint.animate([{ opacity: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1, offset: 0.55 }, { opacity: 1 }], { duration, delay, fill: 'both' }));
+    }
+    const done = () => outer.remove();
+    anim.addEventListener('finish', done);
+    anim.addEventListener('cancel', done);
+    setTimeout(done, duration + delay + 500);
+    return anim;
+  };
+  const lead = one(0, 1, 1, 0);
+  for (let k = 1; k <= trail; k++) one(k, 0.7, k === 1 ? 0.6 : 0.3, k * trailGap);
+  if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
+  return lead;
+}
+
+/** A place pulses (a source about to give: a space, a rim, a rate) or presses (a payment taken in). */
+export function pulse(el, ms, { press = false } = {}) {
+  if (!el || !el.animate || el.rectOnly) return;
+  track(el.animate(press
+    ? [{ transform: 'scale(1)' }, { transform: 'scale(.96)', offset: 0.5 }, { transform: 'scale(1)' }]
+    : [{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(1.04)', filter: 'brightness(1.25)', offset: 0.45 }, { transform: 'scale(1)', filter: 'brightness(1)' }],
+  { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' }));
+}
+/** A stack being taken from shifts toward the taker and back, once. */
+export function tug(el, toward, ms) {
+  if (!el || !el.animate || !toward) return;
+  const a = el.getBoundingClientRect(), b = toward.getBoundingClientRect();
+  const dx = b.left - a.left, dy = b.top - a.top, d = Math.hypot(dx, dy) || 1;
+  track(el.animate([{ translate: '0 0' }, { translate: `${(3 * dx / d).toFixed(1)}px ${(3 * dy / d).toFixed(1)}px`, offset: 0.4 }, { translate: '0 0' }], { duration: ms, easing: 'ease-out' }));
+}
+/** The destination settles as a piece lands (lighter between two rivals, fuller for a bundle). */
+export function settle(el, ms, k = 1.18) {
+  if (!el || !el.animate || el.rectOnly) return;
+  track(el.animate([{ transform: 'scale(1)' }, { transform: `scale(${k})`, offset: 0.35 }, { transform: 'scale(1)' }], { duration: ms, easing: 'cubic-bezier(.3,1.5,.5,1)' }));
 }

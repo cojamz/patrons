@@ -1,0 +1,41 @@
+/* The game screen's composition, while the design pod compares variants (?layout=a|b; design/eval/design-pod/layout.md).
+   Only the laptop frame changes; phones keep their stacked layout (lamp.css). */
+@media (min-width:861px) and (min-height:500px){
+  /* ---------- A: who | where | what to buy ----------
+     The chairs in turn order on the left, the story of the turns since yours under them; the wheel takes the full
+     height in the middle; the shop is a column on the right: the deck and the members, then the followers. */
+  .app.game.lt[data-layout="a"]{
+    grid-template-columns:minmax(260px,314px) minmax(0,1fr) minmax(200px,288px);
+    grid-template-rows:54px minmax(0,1fr);
+    grid-template-areas:"seats prompt shop" "seats wheel shop";
+    padding:8px 18px
+  }
+  .app.game.lt[data-layout="a"] > .lt-snake{grid-area:seats;--seats-align:start}
+  .app.game.lt[data-layout="a"] > .lt-since{grid-area:seats;align-self:start;margin:calc(var(--seats-end, 0px) + 20px) 0 0 44px;
+    max-height:calc(100% - var(--seats-end, 0px) - 20px - 112px)}
+  .app.game.lt[data-layout="a"] > .lt-shop{grid-area:shop;align-self:stretch;overflow:hidden}
+  .lt[data-layout="a"] .lt-shop-cards{flex-direction:column;gap:20px;height:100%}
+  .lt[data-layout="a"] .lt-shop-main{flex:none}
+  .lt[data-layout="a"] .lt-shop-body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .lt[data-layout="a"] .lt-shop-body > .lt-cards{display:contents}
+  .lt[data-layout="a"] .lt-deck{height:auto;min-height:104px;flex:none}
+  .lt[data-layout="a"] .lt-rates-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:52px;gap:8px}
+
+  /* ---------- B: the followers get the right column ----------
+     The bottom strip keeps the deck and the members, wider; the right column holds the story of the turns since yours,
+     the turn being told, and the four follower buys. */
+  .app.game.lt[data-layout="b"]{
+    grid-template-rows:54px minmax(0,1fr) auto var(--shop-h,128px);
+    grid-template-areas:"seats prompt since" "seats wheel since" "seats wheel follow" "shop shop shop"
+  }
+  .app.game.lt[data-layout="b"] > .lt-since{grid-area:since;align-self:start;margin-top:8px;max-height:calc(100% - 120px)}
+  .app.game.lt[data-layout="b"] > .lt-shop,.lt[data-layout="b"] > .lt-shop > .lt-shop-cards{display:contents}
+  .lt[data-layout="b"] .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}
+  .lt[data-layout="b"] .lt-rates{grid-area:follow;position:relative;z-index:3;align-self:end;padding-bottom:4px}
+  .lt[data-layout="b"] .lt-rates-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:56px;gap:8px}
+  .lt[data-layout="b"][data-yours="1"][data-phase="place"] .lt-shop-main,.lt[data-layout="b"][data-yours="1"][data-phase="place"] .lt-rates{filter:brightness(.86) saturate(.9)}
+  .lt[data-layout="b"][data-phase="reckon"] .lt-shop-main,.lt[data-layout="b"][data-phase="reckon"] .lt-rates{filter:brightness(.55) saturate(.7)}
+
+  /* both: the story of the turns clips its oldest lines first, never the newest */
+  .lt[data-layout] > .lt-since .since-list{min-height:0;overflow:hidden;justify-content:flex-end}
+}

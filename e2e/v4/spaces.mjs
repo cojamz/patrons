@@ -10,7 +10,8 @@
 //  (s5) no flying ghost (a minion, a card, a "+N" of followers) outlives its flight;
 //  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …"); a sphere with its own rule ("Whatever
 //       you steal turns magenta…") gives it in its rim's hover card;
-//  (s7) every word on the wheel is at least 12px on screen (the rim's text included), and a panel's gain at least 16px;
+//  (s7) every word on the wheel is at least 12px on screen (the rim's text included), and a panel's gain at least 16px
+//       (a verb in its place may step down, Cory: "cut words or step the size down");
 //  (s8) the headline prompt fits: no ellipsis, nothing clipped, one line, while placing and while buying;
 //  (s9) panels: the print is tidy: no two spaces' words or minions touch, nothing runs into the rim or the hub, each
 //       space's print is centred in its own panel, and every line stays inside its panel (no clipping, no overflow).
@@ -130,8 +131,8 @@ const FLOOR = () => {
     const fs = parseFloat(getComputedStyle(e).fontSize);
     if (fs < 11.95) out.push(`"${e.textContent.trim().slice(0, 24)}" at ${fs}px`);
   }
-  // a panel's gain is its hero: at least 16px
-  for (const e of stage.querySelectorAll('[data-spaces="panels"] .slot .face .main')) {
+  // a panel's gain is its hero: its number at least 16px (a verb in its place may step down, never below 12)
+  for (const e of stage.querySelectorAll('[data-spaces="panels"] .slot .face .main:not(.verb)')) {
     const fs = parseFloat(getComputedStyle(e).fontSize);
     if (fs < 15.95) out.push(`gain "${e.textContent.trim()}" at ${fs}px`);
   }

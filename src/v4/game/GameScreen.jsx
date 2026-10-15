@@ -39,7 +39,10 @@ import { ROUND_START, ownsLocal } from '../saved.js';
 import { restoredMoment } from '../session/moment.js';
 import { gameRecord, recordText } from '../session/record.js';
 import { copyText } from '../Recovery.jsx';
+import './layout.css';
 
+// Layout variants while the design pod compares them (?layout=a|b; design/eval/design-pod/layout.md)
+const LAYOUT = (() => { try { return new URLSearchParams(location.search).get('layout') || ''; } catch { return ''; } })();
 const STEP_MS = BOT.catchUp;      // pace when catching up on moves that happened behind the round-end card
 const RIVAL_DWELL_MS = BOT.pace.normal; // each visible bot step holds this long (src/v4/motion.js)
 
@@ -237,6 +240,13 @@ function TurnCard({ card, root, state }) {
     // the chairs in one ordered column (laptop): the card tells the turn in the right column, just above the shop,
     // under the story of the turns since yours (it would cover the next chair beside its own)
     const column = root && root.querySelector('.lt > .lt-snake');
+    // a layout that docks the turn under the story of the turns since yours (?layout=a|b): the newest turn reads last
+    const since = root && root.dataset.layout && root.querySelector('.lt > .lt-since');
+    if (since && since.getBoundingClientRect().width) {
+      const b = since.getBoundingClientRect();
+      setPos({ left: b.left, right: undefined, top: b.bottom + 8, bottom: undefined, width: b.width, ox: '0%', oy: '0%' });
+      return;
+    }
     if (column && column.getBoundingClientRect().width) {
       const shop = root.querySelector('.lt > .lt-shop');
       const top = shop ? shop.getBoundingClientRect().top : innerHeight;
@@ -262,7 +272,7 @@ function TurnCard({ card, root, state }) {
   const [head, ...rest] = card.text.split(' · ');
   return (
     <div className={`turn-card${card.live ? ' live' : ''}${card.folding ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
-      style={{ left: pos.left, right: pos.right, top: pos.top, bottom: pos.bottom, transformOrigin: `${pos.ox} ${pos.oy}`, '--pc': playerColor(card.pid) }}>
+      style={{ left: pos.left, right: pos.right, top: pos.top, bottom: pos.bottom, width: pos.width, maxWidth: pos.width, transformOrigin: `${pos.ox} ${pos.oy}`, '--pc': playerColor(card.pid) }}>
       <b className="tc-head">{head}</b>
       {rest.map((l, k) => <span key={`${k}:${l}`} className="tc-line"><Rich text={l} /></span>)}
     </div>
@@ -356,8 +366,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const GAP = 8;
     const rows = seats.map(e => ({ e, slot: Number(e.dataset.slot) || 0, h: e.offsetHeight })).sort((a, b) => a.slot - b.slot);
     const total = rows.reduce((t, x) => t + x.h, 0) + GAP * Math.max(0, rows.length - 1);
-    let y = Math.max(0, Math.round((rail.offsetHeight - total) / 2));
+    const fromTop = getComputedStyle(rail).getPropertyValue('--seats-align').trim() === 'start';
+    let y = fromTop ? 0 : Math.max(0, Math.round((rail.offsetHeight - total) / 2));
     const top = y;
+    // whatever sits under the chairs in their column (the story of the turns, in some layouts) starts below the last one
+    r.style.setProperty('--seats-end', `${top + total}px`);
     for (const x of rows) { x.e.style.setProperty('--y', `${y}px`); y += x.h + GAP; }
     if (rows.length) {
       rail.style.setProperty('--rail-top', `${top + rows[0].h / 2}px`);
@@ -872,7 +885,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const phase = state.over && !moment ? 'over' : moment ? 'reckon' : !pend ? 'wait' : pend.kind === 'pay' ? 'pay' : pend.kind === 'buy' ? 'buy' : pend.kind === 'place' ? 'place' : pend.kind === 'setup' ? 'setup' : 'choose';
   const yours = mine && !needHandoff;
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'} data-layout={LAYOUT || undefined}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}

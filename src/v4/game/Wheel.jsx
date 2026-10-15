@@ -209,7 +209,7 @@ function saidEm(text, weight = 700) {
   return w;
 }
 // the three lines, in screen pixels: line 1 (a gain's number at least 16; a verb may step down to 14), line 2, line 3
-const PANEL_PX = { main: 18, mainMin: 16, verbMin: 14, second: 14, small: 12, note: 12, minion: 21, gap: 2 };
+const PANEL_PX = { main: 18, mainMin: 16, verbMin: 12, second: 14, small: 12, note: 12, minion: 21, gap: 2 };
 const lineH = px => px + 1;
 /**
  * How a panel's lines lay out in the room it has where it sits now. Line 1 (the gain, or the verb) and line 2 always
@@ -241,8 +241,8 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
   // how wide a line set on n lines needs to be: a gain breaks between clauses, words wrap between words
   const needOne = (px, n) => (!one ? 0 : n === 1 ? oneEm * px : isGain ? Math.max(...oneClauses.map(c => saidEm(c, 800))) * px : Math.max(words(one), (oneEm / n) * 1.15) * px);
   const needTwo = (px, n) => (!two ? 0 : n === 1 ? twoEm * px : Math.max(words(two) * (700 / 800), (twoEm / n) * 1.15) * px);
-  const oneSizes = !one ? [0] : isGain ? [X.main, X.mainMin] : [X.main, X.mainMin, X.verbMin];
-  const oneLines = !one ? [0] : isGain ? (oneClauses.length > 1 ? [1, 2] : [1]) : [1, 2];
+  const oneSizes = !one ? [0] : isGain ? [X.main, X.mainMin] : [X.main, X.mainMin, 14, X.verbMin];
+  const oneLines = !one ? [0] : isGain ? (oneClauses.length > 1 ? [1, 2] : [1]) : [1, 2, 3];
   const tries = [];
   for (const op of oneSizes) for (const ol of oneLines) for (const tp of two ? [X.second, X.small] : [0])
     for (const tl of two ? (tp === X.small ? [1, 2, 3, 4] : [1, 2, 3]) : [0]) for (const nl of note && !need.noNote ? [1, 0] : [0]) tries.push({ op, ol, tp, tl, nl });
@@ -255,8 +255,8 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
     const w = room(h) * k;
     if (w >= needW + 2) return { one: t.op, oneLines: t.ol, two: t.tp, twoLines: t.tl, noteLines: t.nl, w: w / k, rc };
   }
-  // nothing fits: line 1 alone at its smallest (never clipped; line 2 and 3 are in the hover)
-  const ol = one ? 2 : 0;
+  // nothing fits: line 1 alone at its smallest (line 2 and 3 are in the hover)
+  const ol = one ? (isGain ? Math.min(2, oneClauses.length) : 3) : 0;
   const w = room(ol * lineH(X.verbMin) + (taken ? X.minion + X.gap : 0));
   return { one: isGain ? X.mainMin : X.verbMin, oneLines: ol, two: X.small, twoLines: 0, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
 }
@@ -815,12 +815,10 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const f = first.get(s.key);
       out.set(s.key, { said: f.said, lay: !group[`${s.q}-${s.ring}`] && f.lay.noteLines ? lay(s, { noNote: true }) : f.lay });
     }
-    // every gain on the wheel is one size, and every verb: the smallest any panel needs
-    for (const kind of ['main', 'verb']) {
-      const all = [...out.values()].filter(v => v.said[kind]);
-      const px = Math.min(...all.map(v => v.lay.one));
-      for (const v of all) v.lay = { ...v.lay, one: px };
-    }
+    // every gain on the wheel is one size, and every verb in a ring: the smallest any of those panels needs
+    const sizeTo = all => { const px = Math.min(...all.map(v => v.lay.one)); for (const v of all) v.lay = { ...v.lay, one: px }; };
+    sizeTo([...out.values()].filter(v => v.said.main));
+    for (const t of [1, 2, 3]) sizeTo(spaces.filter(x => x.ring === t).map(x => out.get(x.key)).filter(v => v.said.verb));
     return out;
   }, [panels, state.quadrants, state.slots, round, rot, scale]); // eslint-disable-line react-hooks/exhaustive-deps
   live.current = { tap, onPick, hover, anchorOf };

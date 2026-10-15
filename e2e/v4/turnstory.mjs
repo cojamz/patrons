@@ -126,6 +126,7 @@ try {
     if (!r.on) fail(`the ${kind} card from the name runs off the screen`, tag);
     if (r.near > 420) fail(`the ${kind} card opened ${Math.round(r.near)}px from its name`, tag);
     if (r.under >= 0 && r.z <= r.under) fail(`the ${kind} card (z ${r.z}) sits under the log drawer (z ${r.under})`, tag);
+    await page.waitForTimeout(250);
     await page.screenshot({ path: `${SHOTS}/name-${tag}-${kind}.png` });
     await page.mouse.move(5, 5);
     await page.waitForTimeout(300);

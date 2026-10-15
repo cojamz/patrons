@@ -11,7 +11,7 @@
 //  (h) the page never scrolls sideways: scrollWidth <= clientWidth and scrollX stays 0 after every tap;
 //  (i) no hover card ever opens from a touch (or a synthetic hover after a tap);
 //  (j) setup: the starting-resource chips are fully on screen without scrolling (iPhone 13, taps and clicks);
-//  (l) paying: the suggested coins sit in the cost, a tap takes one back, a tap on your resource puts it in;
+//  (l) paying: the suggested coins sit in the cost, a tap on a coin or a stack swaps to another legal way;
 //  (m) reading a shop card never recruits it: a tap opens the card, and its Recruit button recruits;
 //  (k) setup: the face-up members for sale are in the setup tray (its strip on screen, each card a swipe away at
 //      most), and each opens its card on a tap.
@@ -249,25 +249,26 @@ try {
       if (recruit) await recruit.tap().catch(() => {});
       await page.waitForSelector('.dialog.pay', { timeout: 3000 }).catch(() => {});
       await audit(`pay ${steps}`);
-      // (l) paying is tactile: the suggested coins sit in the cost ("Paid in full"); tapping one takes it back,
-      // tapping that color in your resources puts it back in; no steppers
+      // (l) paying is tactile: the suggested coins sit in the cost and Pay is live; tapping a coin sends it home and
+      // another legal way takes its place (the payment never goes short); tapping a stack swaps one of its coins in
       if (await page.$('.dialog.pay')) {
-        const st = () => page.$eval('[data-pay-status]', e => e.textContent).catch(() => '');
+        const go = () => page.$eval('.dialog.pay .pay-go', e => (e.disabled ? '' : e.dataset.option || '')).catch(() => '');
         if (await page.$('.dialog.pay .stepper')) note('(l) the pay sheet still has steppers', 'pay');
-        if (!/Paid in full/.test(await st())) note(`(l) the suggested payment isn't shown as paid ("${await st()}")`, 'pay');
+        const first = await go();
+        if (!first) note('(l) the suggested payment is not ready to pay', 'pay');
         const coin = await page.$('.dialog.pay [data-pay-coin]');
         if (!coin) note('(l) no coins in the cost', 'pay');
         else {
           const color = await coin.getAttribute('data-pay-coin');
           await coin.tap(); await page.waitForTimeout(150);
-          if (!/more to pay/.test(await st())) note(`(l) taking a coin back didn't open its slot ("${await st()}")`, 'pay');
-          if (!(await page.$('.dialog.pay .btn.pri[disabled]'))) note('(l) Confirm stayed live with a coin missing', 'pay');
+          const after = await go();
+          if (!after) note('(l) tapping a coin left the payment short', 'pay');
           await (await page.$(`.dialog.pay [data-pay-add="${color}"]`)).tap(); await page.waitForTimeout(150);
-          if (!/Paid in full/.test(await st())) note(`(l) tapping ${color} back in didn't pay the cost ("${await st()}")`, 'pay');
+          if (!(await go())) note(`(l) tapping ${color} left the payment short`, 'pay');
           await page.screenshot({ path: `${SHOTS}/pay-sheet.png` });
         }
       }
-      const confirm = await page.$('.dialog.pay .btn.pri[data-option]');
+      const confirm = await page.$('.dialog.pay .pay-go[data-option]');
       if (confirm) {
         await page.waitForTimeout(450);
         await confirm.tap();
