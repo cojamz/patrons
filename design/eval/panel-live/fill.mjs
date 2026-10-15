@@ -18,7 +18,8 @@ for (const [role, t] of Object.entries(tables)) {
   const port = { 'tester-a': 9521, 'tester-b': 9522, skeptic: 9523 }[role];
   let p;
   if (role === 'skeptic') {
-    p = `You are game-skeptic (your agent brief is your posture). Fresh and blind: you've never seen this game.\n\nURL: http://localhost:5190/ · eyes port: ${port} (\`export EYES_PORT=${port}\`, start with \`--name skeptic --port ${port}\`). Write to /tmp/patrons-skeptic/.\n\n## Your table\n${t}\n\n## Also, every run\n${turnClarity.replace('{DIR}', '/tmp/patrons-skeptic')}\n${extra}\n## House style (the designer's written calls; a violation is a finding)\n${house}\n\n## The checklist\n${checklist}\n\n## The rulebook\n${rulebook}\n`;
+    const posture = show('.claude/agents/game-skeptic.md').split('\n---\n').slice(1).join('\n---\n').trim();
+    p = `${posture}\n\n---\n# This run\nFresh and blind: you've never seen this game. The checklist is below, so you needn't open the repo's copy.\n\nURL: http://localhost:5190/ · eyes port: ${port} (\`export EYES_PORT=${port}\`, start with \`--name skeptic --port ${port}\`). Write to /tmp/patrons-skeptic/.\n\n## Your table\n${t}\n\n## Also, every run\n${turnClarity.replace('{DIR}', '/tmp/patrons-skeptic')}\n${extra}\n## House style (the designer's written calls; a violation is a finding)\n${house}\n\n## The checklist\n${checklist}\n\n## The rulebook\n${rulebook}\n`;
   } else {
     p = body.replace('## Five things every run must do (the misses that cost the last panel)', '## Six things every run must do (the misses that cost the last panel)')
       .replace(/(5\. \*\*Restraint before relabel\.\*\*[^\n]*\n)/, `$1${turnClarity}\n`)
