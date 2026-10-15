@@ -4,7 +4,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup, act } from '@testing-library/react';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
-import { createHover } from '../../../v4/game/HoverCards.jsx';
+import { createHover, whyLine } from '../../../v4/game/HoverCards.jsx';
 import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker } from '../../../v4/game/Info.jsx';
 import { tickScene } from '../../../../e2e/v4/lib/tick-save.mjs';
 
@@ -56,5 +56,11 @@ describe('previews reach the screen', () => {
     act(() => { vi.advanceTimersByTime(4500); });
     expect(fake.terminate).toHaveBeenCalled();
     expect(peekPreview(s, 0, q, i)).toBeTruthy();
+  });
+
+  it('the Why line names each member once: a choice\'s branches repeated it (Snap Up: "Gardener … · Gardener … · Gardener …")', () => {
+    expect(whyLine(['Gardener: +1 blue, +1 yellow', 'Gardener: +1 green, +1 yellow', 'Planner: next member costs 2 less']))
+      .toBe('Gardener: depends on your pick · Planner: next member costs 2 less');
+    expect(whyLine(['Underdog: no ×2', 'Underdog: no ×2'])).toBe('Underdog: no ×2');
   });
 });

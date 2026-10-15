@@ -314,7 +314,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
         {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} /></span></div> : null}
         {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
-        {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={pv.reasons.join(' · ')} /></span></Row> : null}
+        {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={whyLine(pv.reasons)} /></span></Row> : null}
         {race && <Row k={race.rule}><Rich text={race.text} /></Row>}
         {/* a few by name; the whole row is said as one (it listed all ten names, the row you can already see) */}
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.length > 3
@@ -328,6 +328,20 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
       {opt && pinned && onPick && !past && <button type="button" className="lt-btn pri" data-place={opt.id} onClick={() => onPick(opt.id)}>{opt.squat ? 'Join here' : 'Place here'}</button>}
     </div>
   );
+}
+/**
+ * The dry run's reasons, one per member: a choice runs one branch per pick, so the same member came back once per
+ * branch ("Gardener: +1●, +1● · Gardener: +1●, +1● · Gardener: …", Snap Up). A member whose part differs by pick says so.
+ */
+export function whyLine(reasons) {
+  const by = new Map();
+  for (const r of reasons) {
+    const m = String(r).match(/^([^:]+):\s*(.*)$/);
+    const k = m ? m[1] : String(r);
+    if (!by.has(k)) by.set(k, new Set());
+    by.get(k).add(m ? m[2] : '');
+  }
+  return [...by].map(([k, v]) => (v.size > 1 ? `${k}: depends on your pick` : [...v][0] ? `${k}: ${[...v][0]}` : k)).join(' · ');
 }
 /** "You 5 · Ossian 2 · Bo 1 · Kay 0 · you'd lead it (+2 followers)": the space's own contest after taking it, every player (the dry run's first branch). */
 function raceAfter(state, race, qid, pid) {

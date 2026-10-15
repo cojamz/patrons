@@ -231,7 +231,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
  * Pure: useTable paces with it, and src/test/v4/ui/pacing.test.js checks H2/H3 with it over recorded games.
  */
 export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0 }) {
-  if (plan.total) return sameNext ? Math.max(plan.handoff, rivalStep ? floor : 0) : plan.total;
+  if (plan.total) return Math.max(sameNext ? plan.handoff : plan.total, rivalStep ? floor : 0);
   return rivalStep ? (sameNext ? 0 : MO.passHold) : base;
 }
 

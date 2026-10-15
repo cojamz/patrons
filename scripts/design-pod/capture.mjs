@@ -52,8 +52,16 @@ const SAVES = {
 };
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: x2 ? 2 : 1 });
-const page = await ctx.newPage();
+// every state gets a fresh context (empty storage): the app saves the game it's leaving (save-on-leave), so a shared page
+// would overwrite the next state's save with the last one's
+let ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: x2 ? 2 : 1 });
+let page = await ctx.newPage();
+async function freshPage() {
+  await ctx.close().catch(() => {});
+  ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: x2 ? 2 : 1 });
+  page = await ctx.newPage();
+  page.on('pageerror', e => errs.push(e.message));
+}
 const errs = [];
 page.on('pageerror', e => errs.push(e.message));
 const url = (extra = '') => `${base}/?intro=0${query ? '&' + query : ''}${extra}`;
@@ -75,13 +83,12 @@ async function load(pack, tries = 3) {
   try { await load1(pack); } catch (e) { if (tries <= 1) throw e; await settle(1500); await load(pack, tries - 1); }
 }
 async function load1(pack) {
-  await page.goto(url());
-  await page.evaluate(async ({ save, rs }) => {
-    // the dev server's stamp was fixed when it started: stamp the save the way this page expects
-    const m = await import('/src/v4/session/record.js');
-    save.state.build = { ...m.BUILD };
-    if (rs) rs.state.build = { ...m.BUILD };
-    localStorage.clear(); sessionStorage.clear();
+  await freshPage();
+  // the save goes in before the app's own scripts run (as e2e/v4/lib/seed.mjs does); a dev server accepts a save whose
+  // rules shape matches (record.js), so the node-made stamp is fine
+  await page.addInitScript(({ save, rs }) => {
+    if (sessionStorage.getItem('pod.seeded')) return;
+    sessionStorage.setItem('pod.seeded', '1');
     localStorage.setItem('patrons.v4.local', JSON.stringify(save));
     if (rs) localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs));
     localStorage.setItem('patrons.v4.introSeen', '1');
@@ -114,8 +121,8 @@ async function passBuy() {
 for (const st of want) {
   try {
     if (st === 'home') {
-      await page.goto(url());
-      await page.evaluate(() => { localStorage.clear(); localStorage.setItem('patrons.v4.introSeen', '1'); });
+      await freshPage();
+      await page.addInitScript(() => localStorage.setItem('patrons.v4.introSeen', '1'));
       await page.goto(url()); await page.waitForSelector('[data-home]', { timeout: 90000 }); await settle(800); await shot('home');
     } else if (st === 'setup') {
       await load(SAVES.setup()); await page.waitForSelector('.prompt.choice.setup', { timeout: 8000 }).catch(() => {}); await settle(500); await shot('setup');

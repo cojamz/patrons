@@ -53,8 +53,21 @@ const shot = async (name, size) => {
     if (wide > 0) errors.push(`horizontal scroll of ${wide}px at ${size.width}px on ${name}`);
     await page.screenshot({ path: `${SHOTS}/${name}-full.png`, fullPage: true });
   }
-  if (size) await page.setViewportSize(DESKTOP);
+  if (size) {
+    await page.setViewportSize(DESKTOP);
+    // back at the laptop size the column re-lays itself and the chairs slide (.35s) to their places: the region gate
+    // read them mid-slide (1–20px off, the same --y, the transform still travelling). Wait until they stand.
+    await chairsStand();
+  }
 };
+// every chair's transform has reached the --y the column gave it (no slide in flight), then one more frame
+async function chairsStand() {
+  await page.waitForFunction(() => [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].every(e => {
+    const y = parseFloat(e.style.getPropertyValue('--y'));
+    return Number.isNaN(y) || Math.abs(new DOMMatrixReadOnly(getComputedStyle(e).transform).m42 - y) < 0.5;
+  }), null, { timeout: 6000, polling: 100 }).catch(() => {});
+  await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))).catch(() => {});
+}
 
 let ok = false;
 const carried = { flights: 0, ticks: 0 }; // motion counters live in the page: keep them across reloads
@@ -188,10 +201,7 @@ try {
           // fixed 900ms measured mid-slide on a loaded box (the slide's frames lag), which read as chairs moving 3–9px
           // within the round: wait until every chair stands where the column put it (its transform reached --y)
           await page.waitForTimeout(400);
-          await page.waitForFunction(() => [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].every(e => {
-            const y = parseFloat(e.style.getPropertyValue('--y'));
-            return Number.isNaN(y) || Math.abs(new DOMMatrixReadOnly(getComputedStyle(e).transform).m42 - y) < 0.5;
-          }), null, { timeout: 6000, polling: 100 }).catch(() => {});
+          await chairsStand();
           const now = await page.evaluate(() => Object.fromEntries(['seat-0', 'seat-1', 'seat-2', 'seat-3'].map(k => { const e = document.querySelector(`.lt [data-region="${k}"]`); if (!e) return [k, null]; const b = e.getBoundingClientRect(); return [k, [b.left, b.top, b.width, b.height].map(Math.round).join(',')]; })));
           for (const k of Object.keys(now)) { regionBoxes[k] = now[k]; r.regions[k] = now[k]; }
           regionBoxes.round = r.round;
@@ -315,7 +325,9 @@ try {
       const before = await page.$$eval('.slot .worker', e => e.length);
       await shot('05-undo-offered');
       await page.click('.undo:not(:has-text("pick"))');
-      await page.waitForTimeout(150);
+      // the worker leaves as the table shows the undone step: wait for it (up to 3s) rather than a fixed 150ms, which
+      // a loaded box missed (the undo landed ~200ms later; QA trace, 2026-10-15)
+      await page.waitForFunction(b => document.querySelectorAll('.slot .worker').length === b - 1, before, { timeout: 3000, polling: 50 }).catch(() => {});
       const after = await page.$$eval('.slot .worker', e => e.length);
       if (after !== before - 1) errors.push(`undo did not take the worker back (${before} -> ${after})`);
       // a click on the exact center of a glowing space places there (the dot and label never eat it)
@@ -323,7 +335,7 @@ try {
       const bb = base && await base.boundingBox();
       if (bb) {
         await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
-        await page.waitForTimeout(250);
+        await page.waitForFunction(a => document.querySelectorAll('.slot .worker').length === a + 1, after, { timeout: 3000, polling: 50 }).catch(() => {});
         const again = await page.$$eval('.slot .worker', e => e.length);
         if (again !== after + 1) errors.push(`center click after undo did not place (${after} -> ${again})`);
         // the "Placement undone" note goes with the step it was about: the pill now tracks the real prompt
