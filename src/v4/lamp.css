@@ -75,6 +75,9 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-seat .cs-order{position:absolute;left:-38px;top:50%;translate:0 -50%;margin:0;width:28px;padding:2px 0;display:flex;flex-direction:column;align-items:center;gap:0;
     text-align:center;font-size:9px;line-height:11px;letter-spacing:.04em;border-radius:8px;background:var(--walnut);z-index:2}
   .lt > .lt-seat .cs-order .co-x{font-size:10px;line-height:11px;letter-spacing:0;color:inherit}
+  .lt > .lt-seat .cs-order{top:22px}
+  .lt > .lt-seat .cs-order.now{background:var(--lamp-ink);color:var(--paper-ink);box-shadow:0 0 10px rgba(var(--lamp),.6)}
+  .lt > .lt-seat .cs-order.next{color:var(--lamp-ink);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.7)}
   .lt > .lt-seat.now{background:rgba(var(--lamp),.07);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35)}
   .lt > .lt-seat:empty{visibility:hidden}
   .lt > .lt-shop{grid-area:shop;min-height:0;overflow:hidden}

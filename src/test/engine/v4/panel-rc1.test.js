@@ -192,3 +192,48 @@ describe('19 · Collect Debts keeps its count through a save and load', () => {
     expect(loaded.pending.options.find(o => o.id === 'player:1').label).toBe('P2 · 1 gold');
   });
 });
+
+// The online gate stalled on a Snap Up pay choice (a seat in round III, 2026-10-15). Drive Snap Up → pay to the end
+// with Penny Pincher and an Intro Offer, by the bot and by the first option, also through a JSON save (the online
+// session stores stateJson), and check every offered pay option is legal and finishes.
+import { chooseBotMove } from '../../../engine/v4/bots.js';
+const json = v => JSON.parse(JSON.stringify(v)); // the online session stores the state as a JSON string
+describe('Snap Up → pay always finishes', () => {
+  const start = (extra = {}) => {
+    const s = sceneQ({ quadrants: CLASSIC, round: 3, res: [{ gold: 3, red: 2, green: 2 }], members: [['gold.thrift']], discount: [4], ...extra });
+    row(s, ['gold.underdog', 'red.patriarch', 'gold.jackpot', 'red.sponsor', 'echo.evergreen'], ['red.mob', 'red.intern']);
+    return take(s, 'market.bargain');
+  };
+  const finish = (s, pickFn, save = x => x) => {
+    let guard = 0;
+    while (s.pending && s.pending.kind === 'choose' && s.pending.player === 0 && guard++ < 10) {
+      const m = pickFn(s);
+      expect(core.isLegal(s, m)).toBe(true);
+      s = save(applyMove(save(s), m));
+    }
+    expect(s.pending?.kind === 'choose' && s.pending.player === 0).toBe(false);
+    return s;
+  };
+  it('every member and every pay option completes (first option, each option, bot), JSON saves too', () => {
+    const s0 = start();
+    const members = s0.pending.options.filter(o => o.kind === 'card');
+    expect(members.length).toBeGreaterThan(1);
+    for (const save of [x => x, json]) for (const mo of members) {
+      const s1 = save(applyMove(save(s0), { player: 0, option: mo.id }));
+      const pays = s1.pending?.kind === 'choose' && s1.pending.player === 0 ? s1.pending.options : [null];
+      for (const po of pays) {
+        const s2 = po ? save(applyMove(s1, { player: 0, option: po.id })) : s1;
+        expect(s2.players[0].members).toContain(mo.value);
+        expect(Object.values(s2.players[0].res).every(n => n >= 0)).toBe(true);
+      }
+    }
+    for (const save of [x => x, json]) {
+      finish(start(), s => ({ player: 0, option: s.pending.options[0].id }), save);
+      finish(start(), s => chooseBotMove(s, () => 0.5, { level: 'normal' }), save);
+      finish(start(), s => chooseBotMove(s, () => 0.5, { level: 'easy' }), save);
+      expect(start().pending.options.at(-1).id).toBe('none');
+      const s = finish(start(), () => ({ player: 0, option: 'none' }), save);
+      expect(s.players[0].members.length).toBe(1);
+    }
+  });
+});

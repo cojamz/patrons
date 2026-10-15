@@ -459,17 +459,21 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const RIM_PX = 12.2;
   const rimFont = Math.min(16, Math.max(11, RIM_PX / (scale || 1)));
   const arcHalf = 44; // the path the text runs on (wider than any label)
+  const RIM_MARK = 1.25; // the follower mark's room after the prize, per unit of font size
   const rimLabel = (qid, q, leaders) => {
     const st = stdById[qid];
     const sc = quadrant(qid).scoring;
-    // the prize says what it pays (Cory, 2026-10-15: "+2" alone didn't say followers)
-    const rule = `${(st ? st.rule : shortLabel(sc.label)).toUpperCase()}  ·  +${RING_VALUE[paying - 1]} FOLLOWERS`;
+    // the prize ends the line with the follower mark after it (Cory, 2026-10-15: "+2" alone didn't say followers; he
+    // asked for the symbol), then whoever leads: "MOST BLUE · ties: red · +2 👤 🐱"
+    const rule = (st ? st.rule : shortLabel(sc.label)).toUpperCase();
+    const prize = `  ·  +${RING_VALUE[paying - 1]}`;
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
     const room = (2 * arcHalf * Math.PI / 180) * rr - 18; // the arc, less a little air at each end
-    const tailK = leaders.length ? 0.9 + 1.55 * leaders.length : 0; // the leaders' emojis, per unit of font size
-    const head = `${rule}${leaders.length ? '  ·' : ''}`;
+    // the follower mark, then the leaders' emojis, per unit of font size
+    const tailK = RIM_MARK + (leaders.length ? 0.45 + 1.55 * leaders.length : 0);
+    const head = `${rule}${prize}`;
     const base = rimWidth(head, 700, 0), n = collapse(head).length;
     const tieW = t => (t ? rimWidth(`  ·  ties: ${t}`, 600, 0.04) : 0);
     // letter-spacing (em) that makes the line fit at size f, between .03 and .11
@@ -479,7 +483,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     if (tie && width(tie, rimFont, spacing(tie, rimFont)) > room) tie = tie.split(' ')[0];
     const ls = spacing(tie, rimFont);
     const font = Math.max(9, Math.min(rimFont, room / (base + ls * n + tieW(tie) + tailK)));
-    return { rule, tie, tieText: tb ? tb.text : null, top, rr, font, ls, textW: font * (base + ls * n + tieW(tie)) };
+    return { rule, prize, tie, tieText: tb ? tb.text : null, top, rr, font, ls, textW: font * (base + ls * n + tieW(tie)) };
   };
   const rimAnchor = qid => stage.current && stage.current.querySelector(`[data-plaque="${qid}"]`);
   // once the web font has loaded, its widths replace the fallback's: one more render, once
@@ -566,7 +570,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const rr = lab.rr, F = lab.font, textW = lab.textW;
     const arcLen = (2 * arcHalf * Math.PI / 180) * rr;
     const EM = F * 1.55; // one emoji's room on the line
-    const tail = leaders.length ? F * 0.9 + leaders.length * EM : 0;
+    const tail = F * RIM_MARK + (leaders.length ? F * 0.45 + leaders.length * EM : 0);
     const startS = Math.max(0, (arcLen - textW - tail) / 2);
     paper.push(<path key={`ra${q}`} id={`rim-arc-${q}`} d={textArc(c, arcHalf, rr, rot)} fill="none" />);
     const lit = lampQid === qid ? ' lit' : lampQid ? ' wait' : '';
@@ -575,15 +579,28 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         <textPath href={`#rim-arc-${q}`} startOffset={startS.toFixed(1)}>
           {lab.rule}
           {lab.tie ? <tspan className="rim-tie" data-rim-tie={lab.tie}>{`  ·  ties: ${lab.tie}`}</tspan> : null}
-          {leaders.length ? '  ·' : ''}
+          {lab.prize}
         </textPath>
       </text>,
     );
+    // the follower mark right after the prize, on the same arc, upright like the letters
+    {
+      const sAt = startS + textW + (F * RIM_MARK) / 2;
+      const deg = (sAt / rr) * 180 / Math.PI;
+      const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
+      const [mx, my] = polar(a, rr);
+      const cap = F * 0.95;
+      paper.push(
+        <g key={`rf${q}`} className={`rim-mark${lit}`} data-rim-prize={qid} transform={`translate(${mx.toFixed(2)} ${my.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap * 0.86).toFixed(2)})`}>
+          <Follower size={cap} title={`${RING_VALUE[paying - 1]} followers`} />
+        </g>,
+      );
+    }
     // each leader's emoji, placed along the same arc right after the text, upright like the letters
     leaders.forEach((id, k) => {
       const art = emojiArt(seatEmoji(state, id));
       if (!art) return;
-      const sAt = startS + textW + F * 0.9 + k * EM + EM / 2;
+      const sAt = startS + textW + F * RIM_MARK + F * 0.45 + k * EM + EM / 2;
       const deg = (sAt / rr) * 180 / Math.PI;
       const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
       const [ex, ey] = polar(a, rr);

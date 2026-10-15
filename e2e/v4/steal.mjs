@@ -1,10 +1,15 @@
-// E2E steal gate: the rivals' cults are the selector (src/v4/game/seatPick.js), at laptop size (1270×700).
+// E2E board-picker gate: a choice is answered on the board (src/v4/game/boardPick.js), at laptop size (1270×700).
 //  (s1) Help Yourself: exactly the stacks the engine offers light up on the rival seats (own seat never), every other
 //       rival stack is dim and says why on hover; clicking two lit stacks takes them, the counter runs 2 → 1 → 0, a
 //       resource flies for each pick, and the right resources move (they arrive as magenta).
 //  (s2) Collect Debts: only gold stacks light; three clicks on gold stacks take 3 gold from the right rivals.
 //  (s3) Redistribute: the rival holding less than you is dim; picks from the richer two land.
 //  (s4) Kickback ("give 1 gold to…"): clicking a rival's seat picks that player.
+//  (s5) Echo: exactly the copyable spaces light on the wheel, the caption covers none of them, a lit space's hover says
+//       what the copy gives, and clicking it copies (your resources match the engine's).
+//  (s6) Snap Up: exactly the offered face-up members light in the shop; clicking one recruits it ("Recruit nothing"
+//       stays a button by the caption).
+//  (s7) Shake Down: the offered members glow on the rivals' seats; clicking one picks it.
 // Starts from saved games stopped on each choice (e2e/v4/lib/steal-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
 import { chromium } from 'playwright';
@@ -12,6 +17,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { stealSave } from './lib/steal-save.mjs';
+import { applyMove } from '../../src/engine/v4/index.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/steal';
 mkdirSync(SHOTS, { recursive: true });
@@ -150,11 +156,60 @@ try {
     await expectCounts(page, 's4', { '3:gold': save.state.players[3].res.gold + 1 });
     await ctx.close();
   }
+  // (s5) Echo: copy a space on the wheel
+  {
+    const { ctx, page, save } = await open('echo');
+    const want = save.state.pending.options.filter(o => o.target && o.target.space).map(o => o.target.space).sort();
+    const got = await page.$$eval('.lt-wheel .slot.lit[data-slot]', els => els.map(e => e.dataset.slot).sort());
+    if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`(s5) lit spaces ${got.join(' ')} ≠ the engine's ${want.join(' ')}`);
+    const covered = await page.evaluate(() => {
+      const c = document.querySelector('.prompt.choice.seat-pick').getBoundingClientRect();
+      return [...document.querySelectorAll('.lt-wheel .slot.lit')].filter(e => { const r = e.getBoundingClientRect(); return r.right > c.left + 2 && r.left < c.right - 2 && r.bottom > c.top + 2 && r.top < c.bottom - 2; }).map(e => e.dataset.slot);
+    });
+    if (covered.length) errors.push(`(s5) the caption covers lit space(s) ${covered.join(' ')}`);
+    const o = save.state.pending.options.find(x => x.target && x.target.space);
+    const sel = `.lt-wheel .slot[data-slot="${o.target.space}"]`;
+    await page.hover(sel);
+    await page.waitForTimeout(200);
+    const note = await page.$eval(sel, e => getComputedStyle(e, '::after').content).catch(() => '');
+    if (!note.includes(o.label)) errors.push(`(s5) hovering ${o.target.space} says ${note || 'nothing'}, not "${o.label}"`);
+    await page.screenshot({ path: `${SHOTS}/s5-echo.png` });
+    const after = applyMove(save.state, { player: 0, option: o.id });
+    await click(page, sel);
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s5) clicking the lit space did nothing'));
+    const mine = Object.fromEntries(Object.entries(after.players[0].res).map(([r, n]) => [`0:${r}`, n]));
+    await expectCounts(page, 's5', mine);
+    await ctx.close();
+  }
+  // (s6) Snap Up: recruit from the shop strip
+  {
+    const { ctx, page, save } = await open('snapup');
+    const want = save.state.pending.options.filter(o => o.target && Number.isInteger(o.target.uid)).map(o => String(o.target.uid)).sort();
+    const got = await page.$$eval('.lt-shop .card.lit[data-uid]', els => els.map(e => e.dataset.uid).sort());
+    if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`(s6) lit shop cards ${got.join(' ')} ≠ the engine's ${want.join(' ')}`);
+    if (!(await page.$('.prompt.choice.seat-pick .pick-rest-btn[data-option="none"]'))) errors.push('(s6) "Recruit nothing" is not a button by the caption');
+    await click(page, `.lt-shop .card.lit[data-uid="${want[0]}"]`);
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s6) clicking the lit card did nothing'));
+    await ctx.close();
+  }
+  // (s7) Shake Down: a rival's member, on their seat
+  {
+    const { ctx, page, save } = await open('shakedown');
+    const lit = await page.$$eval('.cs-member.pick-on', els => els.map(e => e.dataset.uids));
+    if (!lit.length) errors.push('(s7) no member glows on a rival seat');
+    const btn = await page.$('.cs-member.pick-on .cs-pick-member');
+    const id = btn && await btn.getAttribute('data-option');
+    if (id && !save.state.pending.options.some(o => o.id === id)) errors.push(`(s7) a lit member points at ${id}, not an engine option`);
+    await page.screenshot({ path: `${SHOTS}/s7-shakedown.png` });
+    if (btn) await click(page, '.cs-member.pick-on .cs-pick-member');
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s7) clicking the lit member did nothing'));
+    await ctx.close();
+  }
 } catch (e) {
   errors.push(`crashed: ${e.stack || e.message}`);
 } finally {
   await browser.close();
   if (server) server.kill();
 }
-if (errors.length) { console.error(`steal gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('steal gate: ok (seats are the selector; Help Yourself, Collect Debts, Redistribute, Kickback)');
+if (errors.length) { console.error(`board-picker gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
+console.log('board-picker gate: ok (Help Yourself, Collect Debts, Redistribute, Kickback, Echo, Snap Up, Shake Down)');
