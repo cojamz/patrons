@@ -583,6 +583,39 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const font = Math.max(9, Math.min(rimFont, room / (base + ls * n + tieW(tie) + tailK)));
     return { rule, prize, tie, tieText: tb ? tb.text : null, top, rr, font, ls, textW: font * (base + ls * n + tieW(tie)) };
   };
+  // panels: the plate's rim, "MOST ● +4 👤 🐸": the rule in short words with a dot for its color, the prize a size up,
+  // then the follower mark and whoever leads. Each run's width comes from the font (rimWidth), never from the page.
+  const RIM_LS = 0.08;
+  const rimRuns = (qid, q, leaders) => {
+    const st = stdById[qid];
+    const sc = quadrant(qid).scoring;
+    const words = (st ? st.rule : shortLabel(sc.label)).split(/\s+/);
+    const runs = [];
+    for (const w of words) {
+      const color = w.toLowerCase();
+      if (PANEL_RES.has(color) && color !== 'any') { runs.push({ kind: 'dot', color }); continue; }
+      const last = runs[runs.length - 1];
+      if (last && last.kind === 'text') last.text += ` ${w.toUpperCase()}`; else runs.push({ kind: 'text', text: w.toUpperCase() });
+    }
+    const tb = (st && st.tiebreak) || sc.tiebreak || null;
+    const tie = tb ? tb.unit.split(' ')[0] : null;
+    if (tie) { const last = runs[runs.length - 1]; if (last.kind === 'text') last.tie = tie; else runs.push({ kind: 'text', text: '·', tie }); }
+    runs.push({ kind: 'prize', text: `+${RING_VALUE[paying - 1]}` });
+    // widths per unit of font size, and the gaps before each run
+    for (const [k, r] of runs.entries()) {
+      r.w = r.kind === 'dot' ? 1.1 : r.kind === 'prize' ? 1.3 * rimWidth(r.text, 800, 0) : rimWidth(r.text, 700, 0) + RIM_LS * r.text.length + (r.tie ? rimWidth(`  ·  ties: ${r.tie}`, 600, 0.04) : 0);
+      r.gap = !k ? 0 : r.kind === 'prize' ? 0.75 : 0.4;
+    }
+    const top = Math.abs(norm(qCenter(q) + rot)) < 90;
+    const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
+    const room = (2 * arcHalf * Math.PI / 180) * rr - 18;
+    const lineK = runs.reduce((a, r) => a + r.gap + r.w, 0);
+    const tailK = RIM_MARK + (leaders.length ? 0.45 + 1.55 * leaders.length : 0);
+    const font = Math.max(9, Math.min(rimFont, room / (lineK + tailK)));
+    let at = 0;
+    for (const r of runs) { at += r.gap * font; r.s = at; at += r.w * font; }
+    return { runs, tie, tieText: tb ? tb.text : null, top, rr, font, ls: RIM_LS, textW: lineK * font };
+  };
   const rimAnchor = qid => stage.current && stage.current.querySelector(`[data-plaque="${qid}"]`);
   // once the web font has loaded, its widths replace the fallback's: one more render, once
   const [, setFontsIn] = useState(0);
@@ -666,7 +699,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     // their pixel emoji inline at the end of the line, on the same arc and baseline: "MOST BLUE · +2 · 🐱"
     const st = stdById[qid];
     const leaders = st && st.leaders.length ? st.leaders : [];
-    const lab = rimLabel(qid, q, leaders);
+    const lab = panels ? rimRuns(qid, q, leaders) : rimLabel(qid, q, leaders);
     const rr = lab.rr, F = lab.font, textW = lab.textW;
     const arcLen = (2 * arcHalf * Math.PI / 180) * rr;
     const EM = F * 1.55; // one emoji's room on the line
@@ -674,7 +707,36 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const startS = Math.max(0, (arcLen - textW - tail) / 2);
     paper.push(<path key={`ra${q}`} id={`rim-arc-${q}`} d={textArc(c, arcHalf, rr, rot)} fill="none" />);
     const lit = lampQid === qid ? ' lit' : lampQid ? ' wait' : '';
-    paper.push(
+    // a point on the line, s along it from its start: where it sits and which way is up
+    const onLine = sAt => {
+      const deg = (sAt / rr) * 180 / Math.PI;
+      const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
+      return { xy: polar(a, rr), up: lab.top ? a : a + 180 };
+    };
+    if (lab.runs) {
+      // panels: each run of words on its own stretch of the arc, the color as its dot between them, the prize a size up
+      paper.push(
+        <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={F.toFixed(2)} style={{ letterSpacing: `${lab.ls.toFixed(3)}em` }} data-plaque={qid} data-rim-text={q}>
+          {lab.runs.filter(r => r.kind !== 'dot').map((r, k) => (
+            <textPath key={k} href={`#rim-arc-${q}`} startOffset={(startS + r.s).toFixed(1)}>
+              {r.kind === 'prize' ? <tspan className="rim-prize" fontSize={(F * 1.3).toFixed(2)} style={{ letterSpacing: 0 }}>{r.text}</tspan> : r.text}
+              {r.tie ? <tspan className="rim-tie" data-rim-tie={r.tie}>{`  ·  ties: ${r.tie}`}</tspan> : null}
+            </textPath>
+          ))}
+        </text>,
+      );
+      lab.runs.filter(r => r.kind === 'dot').forEach((r, k) => {
+        const { xy: [x, y], up } = onLine(startS + r.s + (r.w * F) / 2);
+        const D = F * 1.1;
+        paper.push(
+          <g key={`rd${q}-${k}`} className={`rim-dot${lit}`} data-rim-dot={r.color} transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${up.toFixed(2)}) translate(${(-D / 2).toFixed(2)} ${(-D * 0.55).toFixed(2)})`}>
+            <title>{r.color}</title>
+            <circle cx={D / 2} cy={D / 2} r={D / 2} className="rim-dot-ring" />
+            <g transform={`translate(${(D * 0.12).toFixed(2)} ${(D * 0.12).toFixed(2)}) scale(${((D * 0.76) / 16).toFixed(4)})`}><ResourceGlyph r={r.color} decorative /></g>
+          </g>,
+        );
+      });
+    } else paper.push(
       <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={F.toFixed(2)} style={{ letterSpacing: `${lab.ls.toFixed(3)}em` }} data-plaque={qid} data-rim-text={q}>
         <textPath href={`#rim-arc-${q}`} startOffset={startS.toFixed(1)}>
           {lab.rule}

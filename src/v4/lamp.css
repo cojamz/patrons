@@ -305,6 +305,13 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh.newest{stroke-width:2.6}
 /* while you place, open panels you can't take (a pick that names a few) recede into the board */
 .lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--pl-paper,#f2e8d2) 74%,var(--board,#2b2119))}
+/* the rim (plate 1b): light type on the quadrant's deep band; the color as its dot in a light ring; the prize a size up */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule{fill:#f6deb0;stroke:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule .rim-prize{font-weight:800}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot{pointer-events:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot .rim-dot-ring{fill:#f6deb0}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot.wait{opacity:.5}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{color:#f6deb0}
 .lt [data-spaces="panels"] .stage .hub-label small{display:none}
 .lt [data-spaces="panels"] .stage .hub-label b{font-family:var(--sans);font-weight:800;font-size:22px}
 .lt [data-spaces="panels"] .stage .hub-label .pips{gap:3px;margin-top:2px}
