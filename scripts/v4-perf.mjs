@@ -199,6 +199,7 @@ async function takeTurn(p, tab) {
     const pass = await page.$('[data-option="pass"]');
     const pick = card || rate || pass;
     if (pick) await clickAndWait(p, pick, card ? 'recruit' : rate ? 'followers' : 'pass');
+    if (MAX_TURNS && p.turns >= MAX_TURNS) p.finishing = true; // a smoke run ends once this turn is through
     return;
   }
   // anything else on your turn: the first live option
@@ -221,9 +222,9 @@ async function play(p) {
     }
     if (tab.reckoning && roundEndAt == null) roundEndAt = Date.now();
     if (tab.phase === 'handoff') { const h = await p.page.$('[data-handoff]'); if (h) await h.click().catch(() => {}); continue; }
+    if (MAX_TURNS && p.turns >= MAX_TURNS && (tab.phase === 'place' || (p.finishing && !tab.yours))) { await sleep(2500); p.done = true; break; }
     if (!tab.yours) { await sleep(40); lastNotMine = Date.now(); continue; }
     if (tab.round === 'II' && p.r2turns >= TURNS_R2 && tab.phase === 'place') { p.done = true; break; }
-    if (MAX_TURNS && p.turns >= MAX_TURNS && tab.phase === 'place') { p.done = true; break; }
     await takeTurn(p, tab);
     void lastNotMine;
   }
