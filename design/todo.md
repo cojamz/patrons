@@ -5,6 +5,10 @@ Checked against the code (src/v4, src/engine/v4), the gates (e2e/v4, src/test/v4
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 The bar (Cory, 2026-10-15): A− or better from a fresh blind panel, on the exact build he'll open, before he sees anything.
 
+## Later: gate failures seen while shipping White's "Fewest followers" (2026-10-16, a729aa6, quick check on the live tree)
+- [ ] hotseat e2e: shop member names overflow their box (Lottery Winner by 3px; Sponsor, Patriarch, Speculator, Stunt Double cut by the app frame).
+- [ ] fire-audit unit test "every recruited member with an effect is named acting at least once" fails (one member never named); the audit's table skips White, so not White's. Re-run alone first: the box was loaded.
+
 ## Now: Cory's notes from this morning, in this order
 - [ ] (Cory, 2026-10-15) End-game scoring animation that shows where every point comes from: followers score on their own; then each member pops a small +x over its head for the people in it, then a second round of pop-ups for followers it grants (like Recluse). First in the next round of work if it doesn't fit the A− loop.
 None of these is done. Each also becomes an answer-key item (design/eval/critic-calibration/answer-key.md, Part 3) and a gate.
