@@ -3,6 +3,7 @@
 // state), and the turn record (turnRail) and round workers (roundWorkers) match the engine's own accounting.
 import { describe, it, expect } from 'vitest';
 import { contestTable, turnRail, roundWorkers, quadrant } from '../../../engine/v4/index.js';
+import { sceneQ } from './cards-helpers.js';
 import { oracleCount, oracleTiebreak, oracleWinners, playMixedGames } from './contest-oracle.js';
 
 function checkTable(s, table, where) {
@@ -25,6 +26,27 @@ function checkTable(s, table, where) {
 }
 
 describe('v4 contests: one function decides and describes them', () => {
+  it('Red and Yellow ties all earn the full prize, regardless of former tiebreak counts', () => {
+    const s = sceneQ({
+      quadrants: ['gold', 'red', 'yellow'], n: 3,
+      members: [['red.volunteer'], ['gold.tycoon'], []],
+      res: [{ gold: 1, red: 1, yellow: 7 }, { gold: 1, red: 1, yellow: 1 }, {}],
+      queue: [{ t: 'endRound' }],
+    });
+    const scored = s.contests.at(-1).results;
+    for (const qid of ['red', 'yellow']) {
+      const contest = scored.find(c => c.qid === qid);
+      expect(contest.winners).toEqual([0, 1]);
+      expect(contest.tiebreak).toBeNull();
+      expect(contest.rows.every(r => r.tiebreak === undefined)).toBe(true);
+    }
+    // Gold, Red and Yellow all tie; each winner gets three complete 2-follower prizes.
+    expect(s.players.map(p => p.contest)).toEqual([6, 6, 0]);
+  });
+  it('Red and Yellow still award no prize when nobody has a member or a full set', () => {
+    const s = sceneQ({ quadrants: ['gold', 'red', 'yellow'], n: 3, res: [{ yellow: 9 }, {}, {}] });
+    for (const c of contestTable(s).filter(c => ['red', 'yellow'].includes(c.qid))) expect(c.winners).toEqual([]);
+  });
   it('awards, records and describes every round of 24 mixed-table games the same way', () => {
     let rounds = 0, live = 0;
     playMixedGames(24, {

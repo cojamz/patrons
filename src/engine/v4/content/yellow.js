@@ -1,6 +1,6 @@
 // Yellow: abundance. Gather every color, keep them in balance, and score on full sets.
 // A full set is one of each color on the table. Most full sets at round end takes the ring's followers;
-// yellow breaks ties. The tension: the 6-follower buy eats 3 colors, which breaks the sets you're holding.
+// Ties all score. The tension: the 6-follower buy eats 3 colors, which breaks the sets you're holding.
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 
 const Y = 'yellow';
@@ -23,11 +23,9 @@ export default {
   resource: Y,
   scoring: {
     label: 'Most full sets',
-    // a full set is one of each color; you need at least one to score; yellow breaks ties
-    score: (ctx, p) => { const s = setsOf(ctx, p); return s > 0 ? s * 1000 + p.res[Y] : 0; },
-    show: (ctx, p) => ({ count: setsOf(ctx, p), tiebreak: p.res[Y] || 0 }),
+    // A full set is one of each color; every player tied for most scores.
+    score: (ctx, p) => setsOf(ctx, p),
     counts: 'full sets: how many times you hold one of each color on the table',
-    tiebreak: { unit: 'yellow', text: 'yellow breaks ties' },
   },
 
   actions: [
@@ -127,9 +125,10 @@ export default {
     m('dyer', 'Dyer', 4, 2, 'At round end, +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
-    m('latebloomer', 'Late Bloomer', 2, 2, 'Now and at round start, if you have the fewest followers (counting this one; ties count), +1 of each color.', { now: true,
-      onRoundStart(ctx, owner) {
-        const mine = ctx.followers(owner);
+    m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. On recruit and at round start, if you have the fewest followers (excluding this card; ties count), +1 of each color.', { now: true, f: 2,
+      onRoundStart(ctx, owner, card) {
+        // Exclude this physical card, including its value when a Doppelganger copies it.
+        const mine = ctx.followers(owner) - Math.max(2, card.def.f);
         if (ctx.rivals(owner).every(o => ctx.followers(o) >= mine)) eachColor(ctx, owner, 1);
       },
     }),

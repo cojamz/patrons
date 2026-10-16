@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: every game-meaningful element explains itself (Cory, 2026-10-14: every UI element has a hover with more info,
 // long-press/tap on phone), and followers are never a star. Build-failing assertions, at several steps of a real
 // hot-seat game (1 person + 3 bots):
@@ -68,7 +69,7 @@ const GAME = [
   '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term',
   '[data-rank]', '.cs-turn',
   // live panel r1 (G4): a chair's member count and its "+N" cell explain themselves too
-  '[data-cult] [data-member-count]', '[data-cult] .cs-more', '[data-cult] .cs-income',
+  '[data-cult] .cs-more',
 ].join(',');
 
 async function audit(page, step) {
@@ -147,7 +148,7 @@ async function nearChecks(page, step) {
       layer: lr ? lr.toJSON() : null, stacked, says: e.textContent.slice(0, 50) } : null;
   });
   const gapOf = (a, x, y) => Math.round(Math.hypot(Math.max(a.left - x, 0, x - a.right), Math.max(a.top - y, 0, y - a.bottom)));
-  for (const [what, sel, kind] of [['a seat\'s turn words', '.lt > .lt-seat .cs-turn', 'tip'], ['a seat\'s "each round" line', '.lt > .lt-seat .cs-income', 'tip'], ['a name in the strip', '[data-since] [data-hover-name]', 'layer']]) {
+  for (const [what, sel, kind] of [['a seat\'s turn words', '.lt > .lt-seat .cs-turn', 'tip'], ['a name in the strip', '[data-since] [data-hover-name]', 'layer']]) {
     const t = page.locator(sel).first();
     if (!(await t.count()) || !(await t.isVisible())) continue;
     await page.mouse.move(5, 690); await page.waitForTimeout(250);
@@ -282,7 +283,7 @@ async function deckCheck(page) {
   return 'checked';
 }
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 const errors = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });

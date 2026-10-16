@@ -84,19 +84,21 @@ describe('online session over the memory transport', () => {
     const [hs, gs] = await Promise.all([started(host.lobby), started(guests[0].lobby), host.lobby.start()]);
     await until(() => hs.getState() && gs.getState());
     const st = hs.getState();
-    const move = { player: 0, option: st.pending.options[0].id };
+    const actor = st.pending.player === 0 ? hs : gs;
+    const actorId = st.pending.player === 0 ? host.playerId : guests[0].playerId;
+    const move = { player: st.pending.player, option: st.pending.options[0].id };
     // same call twice -> same promise
-    const p1 = hs.submit(move), p2 = hs.submit(move);
+    const p1 = actor.submit(move), p2 = actor.submit(move);
     expect(p2).toBe(p1);
     await p1;
     expect(hs.info.version).toBe(2);
     // a raw record delivered twice (same mid) is applied once
     const t = guests[0].t;
-    const st2 = gs.getState();
     await until(() => gs.info.version === 2);
-    expect(st2.pending.player).toBe(0); // host still picking setup
+    const st2 = gs.getState();
+    expect(st2.pending.player).toBe(move.player); // same player picks both starting resources
     const base = `${ROOM_ROOT}/${host.code}`;
-    const rec = { by: host.playerId, seat: 0, move: { player: 0, option: hs.getState().pending.options[0].id }, n: 2, mid: 'dupmid' };
+    const rec = { by: actorId, seat: move.player, move: { player: move.player, option: hs.getState().pending.options[0].id }, n: 2, mid: 'dupmid' };
     await t.push(`${base}/moves`, rec);
     await t.push(`${base}/moves`, rec);
     await until(() => hs.info.version === 3 && !room(store, host.code).moves, { label: 'moves drained' });
@@ -110,13 +112,17 @@ describe('online session over the memory transport', () => {
     const { host, guests, store } = await table(1);
     const [hs, gs] = await Promise.all([started(host.lobby), started(guests[0].lobby), host.lobby.start()]);
     await until(() => hs.getState() && gs.getState());
-    // local checks
-    await expect(gs.submit({ player: 0, option: 'color:gold' })).rejects.toThrow(/isn't yours/);
-    await expect(gs.submit({ player: 1, option: 'color:gold' })).rejects.toThrow(/Not your turn/);
-    // host-side checks (skip the guest's local pre-check)
-    await expect(gs.submit({ player: 1, option: 'color:gold' }, { skipLocalCheck: true })).rejects.toThrow(/Not your turn/);
-    await expect(hs.submit({ player: 0, option: 'bogus' }, { skipLocalCheck: true })).rejects.toThrow(/Illegal move/);
-    await expect(gs.submit({ player: 0, option: hs.getState().pending.options[0].id }, { skipLocalCheck: true })).rejects.toThrow(/isn't yours/);
+    const activeSeat = hs.getState().pending.player;
+    const active = activeSeat === 0 ? hs : gs;
+    const inactiveSeat = 1 - activeSeat;
+    const inactive = inactiveSeat === 0 ? hs : gs;
+    // Local checks: neither impersonation nor acting from the inactive seat is allowed.
+    await expect(inactive.submit({ player: activeSeat, option: 'color:gold' })).rejects.toThrow(/isn't yours/);
+    await expect(inactive.submit({ player: inactiveSeat, option: 'color:gold' })).rejects.toThrow(/Not your turn/);
+    // Repeat the same attacks at the host, bypassing only local validation.
+    await expect(inactive.submit({ player: inactiveSeat, option: 'color:gold' }, { skipLocalCheck: true })).rejects.toThrow(/Not your turn/);
+    await expect(active.submit({ player: activeSeat, option: 'bogus' }, { skipLocalCheck: true })).rejects.toThrow(/Illegal move/);
+    await expect(inactive.submit({ player: activeSeat, option: hs.getState().pending.options[0].id }, { skipLocalCheck: true })).rejects.toThrow(/isn't yours/);
     expect(hs.info.version).toBe(1);
     await until(() => !room(store, host.code).moves && !room(store, host.code).rejects, { label: 'queues drained' });
     host.lobby.destroy(); guests[0].lobby.destroy();
@@ -127,7 +133,8 @@ describe('online session over the memory transport', () => {
     const [hs, gs] = await Promise.all([started(host.lobby), started(guests[0].lobby), host.lobby.start()]);
     await until(() => hs.getState() && gs.getState());
     const oldNode = room(store, host.code).state;
-    await hs.submit({ player: 0, option: hs.getState().pending.options[0].id });
+    const initial = hs.getState().pending;
+    await (initial.player === 0 ? hs : gs).submit({ player: initial.player, option: initial.options[0].id });
     await until(() => gs.info.version === 2);
     const fpBefore = fingerprint(gs.getState());
     // a stale writer republishes version 1

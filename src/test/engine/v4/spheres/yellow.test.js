@@ -53,7 +53,7 @@ const Z = { gold: 0, red: 0, yellow: 0, green: 0 };
 const pass = s => move(s, 'pass');
 const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
 
-describe('Yellow scoring: most full sets, yellow breaks ties', () => {
+describe('Yellow scoring: most full sets, ties all score', () => {
   const sc = (res, j = 0) => yellow.scoring.score({ state: { resources: Q } }, { res: { ...Z, ...res } });
   it('a full set is one of each color', () => {
     expect(setsOf({ state: { resources: Q } }, { res: { gold: 3, red: 2, yellow: 5, green: 2 } })).toBe(2);
@@ -61,9 +61,9 @@ describe('Yellow scoring: most full sets, yellow breaks ties', () => {
   it('no full set scores nothing, even with yellow', () => {
     expect(sc({ yellow: 9, gold: 9, red: 9 })).toBe(0);
   });
-  it('more sets beat more yellow; equal sets go to more yellow', () => {
+  it('more sets beat more yellow; equal sets stay tied', () => {
     expect(sc({ gold: 2, red: 2, yellow: 2, green: 2 })).toBeGreaterThan(sc({ gold: 1, red: 1, yellow: 9, green: 1 }));
-    expect(sc({ gold: 1, red: 1, yellow: 3, green: 1 })).toBeGreaterThan(sc({ gold: 5, red: 1, yellow: 2, green: 1 }));
+    expect(sc({ gold: 1, red: 1, yellow: 3, green: 1 })).toBe(sc({ gold: 5, red: 1, yellow: 2, green: 1 }));
   });
   it('pays the ring value at round end to the leader', () => {
     let s = scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }, { gold: 5 }], queue: [{ t: 'endRound' }] });
@@ -189,9 +189,9 @@ describe('Yellow members', () => {
     expect(R(s).yellow).toBe(2);
   });
 
-  it('Late Bloomer: round start, +1 of each color if you have the fewest followers (ties count)', () => {
-    // the Late Bloomer itself is a follower, so the rival needs 1 more to tie
-    expect(R(start([['yellow.latebloomer']], [{}, {}], { bonus: [0, 1] }))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
+  it('Late Bloomers: round start, +1 of each color if you have the fewest followers (ties count)', () => {
+    // Its own two followers are excluded, so an otherwise tied table pays.
+    expect(R(start([['yellow.latebloomer']], [{}, {}], { bonus: [0, 0] }))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
     expect(R(start([['yellow.latebloomer']], [{}, {}], { bonus: [3, 0] }))).toEqual(Z);
   });
 

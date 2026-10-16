@@ -8,6 +8,7 @@ import CultSeat from '../../../v4/game/CultSeat.jsx';
 import { SeatCard } from '../../../v4/game/HoverCards.jsx';
 import { Log, ChoicePrompt, CardFace } from '../../../v4/game/parts.jsx';
 import { MemberCard, NamedText, CardText } from '../../../v4/game/Info.jsx';
+import { memberTimingWords } from '../../../v4/game/memberTiming.js';
 import { GLOSSARY, splitTerms, term } from '../../../v4/glossary.js';
 
 afterEach(cleanup);
@@ -195,4 +196,14 @@ describe('How to play lists the glossary', () => {
     expect(dts).toEqual(GLOSSARY.map(t => t.word));
     expect(container.querySelector('[data-glossary]').textContent).toMatch(/Full set/);
   });
+});
+
+// v0.5 timing stays consistent between a member card and the seat list, without changing engine text.
+it('member timing names recruitment and round starts precisely', () => {
+  expect(memberTimingWords('Now and at round start, +3 gold.')).toBe('On recruit and at round start, +3 gold.');
+  expect(memberTimingWords('When recruited: +2 red.')).toBe('On recruit: +2 red.');
+  expect(memberTimingWords('Round start: plant any yellow.')).toBe('At round start: plant any yellow.');
+  const { container } = render(<CardText text="Now and at round start, +3 gold." />);
+  expect(container.textContent).toMatch(/^On recruit and at round start/);
+  expect(container.textContent).not.toMatch(/Now/);
 });

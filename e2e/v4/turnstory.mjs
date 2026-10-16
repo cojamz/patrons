@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: "what just happened" at 1270×700 (RC1 panel items 1–4). A resumed hot-seat game where P1 (the only person)
 // ends round I's first pass, so the snake turns round on P1, and P1 holds Midas (on).
 //  (t1) the seats' turn words count the snake's double (Cory, 2026-10-16: the rail is gone, the seats say the turns):
@@ -52,7 +53,7 @@ if (!base) {
 
 const errors = [];
 const fail = (msg, tag) => errors.push(`[${tag}] ${msg}`);
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 // (t2) whole lines, every frame: a line of the strip (a story or the "N earlier" line) that is drawn and cut by the
 // list's top or foot is a part-line; the longest run of frames one stays is kept, with what it was
 async function watchStrip(page) {

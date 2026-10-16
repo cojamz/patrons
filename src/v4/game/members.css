@@ -134,3 +134,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .fol-card .fol-rows li{display:flex;justify-content:space-between;gap:12px;font-family:var(--sans);font-size:14px;line-height:19px;color:var(--pl-ink,#2b2018)}
 .fol-card .fol-rows li span{color:var(--pl-ink-2,#6e5c49)}
 .fol-card .fol-rows li b{font-weight:800}
+
+/* Informational mouse hovers explain the target without blocking the next click beneath them. Pinned tips and
+   sticky member cards retain their controls. */
+.popover:has(> .tip-body.passive),.tip-body.passive,.tip-body.passive *{pointer-events:none !important}

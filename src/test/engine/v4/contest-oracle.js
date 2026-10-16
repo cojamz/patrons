@@ -20,25 +20,14 @@ export function oracleCount(state, qid, p) {
     default: return null;
   }
 }
-/** The tiebreak a rule names, by the rule's own words, or null. */
-export function oracleTiebreak(state, qid, p) {
-  switch (qid) {
-    case 'red': return countMembersOfColor(state, p, 'red');
-    case 'purple': return /purple breaks ties/.test(quadrant(qid).scoring.label) ? p.res.purple || 0 : null;
-    case 'yellow': return p.res.yellow || 0;
-    default: return null;
-  }
-}
-/** Winners by the oracle: most count, then most tiebreak; nobody when the best is 0 (with no tiebreak to lean on). */
+/** Contests have no secondary tiebreakers. Kept for callers rendering older records. */
+export function oracleTiebreak() { return null; }
+/** Every player tied for the largest count gets the full prize; zero never scores. */
 export function oracleWinners(state, qid) {
-  const rows = state.players.map(p => ({ id: p.id, c: oracleCount(state, qid, p), t: oracleTiebreak(state, qid, p) ?? 0 }));
+  const rows = state.players.map(p => ({ id: p.id, c: oracleCount(state, qid, p) }));
   if (rows.some(r => r.c == null)) return null;
-  // a full-set rule needs at least one of the measured thing; workers and members can win on the tiebreak
-  const needsOne = ['yellow'].includes(qid);
-  const better = (a, b) => a.c - b.c || a.t - b.t;
-  const best = rows.reduce((a, b) => (better(b, a) > 0 ? b : a));
-  if (best.c === 0 && (needsOne || best.t === 0)) return [];
-  return rows.filter(r => better(r, best) === 0).map(r => r.id).sort((a, b) => a - b);
+  const best = Math.max(...rows.map(r => r.c));
+  return best > 0 ? rows.filter(r => r.c === best).map(r => r.id).sort((a, b) => a - b) : [];
 }
 
 const SEAT_NAMES = ['Ana', 'Bo', 'Cy', 'Di'];

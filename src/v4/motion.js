@@ -6,8 +6,8 @@
 //    minion leaving. Input shows a response within 100ms.
 //  - What tells what happened is a show: "whenever somebody does something it should be obvious, and it triggers a
 //    chain of animations ... all timed well, paced well, and obvious". Its every duration and gap scales with the
-//    viewer's animation speed (the ☰ menu): Quick, Steady (the default: "not SLOW slow, just clear and steady enough
-//    for players to see what's happening") or Relaxed. A click or Space skips the rest of a chain to its end.
+//    viewer's animation speed (the ☰ menu): Quick, Steady or Relaxed (the default, Cory's v0.5 call).
+//    A click or Space skips the rest of a chain to its end.
 
 /**
  * The viewer's animation speed: how much every "show" duration is multiplied by, against the base budgets below (the
@@ -19,7 +19,7 @@
  */
 export const SPEEDS = { quick: 0.5, steady: 1.62, relaxed: 3.75 };
 export const SPEED_NAMES = { quick: 'Quick', steady: 'Steady', relaxed: 'Relaxed' };
-export const DEFAULT_SPEED = 'steady';
+export const DEFAULT_SPEED = 'relaxed';
 const KEY = 'patrons.v4.motionSpeed';
 
 const urlSpeed = () => {
@@ -142,7 +142,7 @@ const TABLE = {
   roll:        [160,   240],  // a bundle's number rolling on landing
   cardLift:    [80,    100],
   rivalBuyHold:[0,     0],    // a rival's buy: the card stays lifted while its coins fly in (the telegraph)
-  passHold:    [120,   150],  // a turn-ending pass with nothing to show
+  passHold:    [0,     0],  // a turn-ending pass with nothing to show
   cardFly:     [260,   340],
   ring:        [200,   260],
   worthHop:    [180,   200],  // a new member's worth, chip → follower count

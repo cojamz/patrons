@@ -4,6 +4,7 @@
 import { applyMove, cardDef, defById, followers, quadrant, TIERS, tierLeft } from '../../engine/v4/index.js';
 import { contextFor } from '../../engine/v4/core.js';
 import { timingOf } from './cards.js';
+import { memberTimingWords } from './memberTiming.js';
 
 // the order a list reads in: what you can act on first, then what pays you, what reacts, the standing rules, the end
 const KIND_ORDER = ['use', 'income', 'reacts', 'always', 'end', 'joined', 'worth'];
@@ -153,8 +154,8 @@ export function memberRows(state, pid, viewer = null, optionFor = () => null) {
     else if (kind === 'end') tag = { text: 'scores at game end', tone: 'quiet' };
     // what the card became: once a Doppelganger has copied, its own "When recruited: becomes a copy…" is spent and only
     // the copy reads (Cory, 2026-10-15: "once doppelganger has copied, it doesnt need the extra text anymore")
-    let text = (d.text || '').trim();
-    if (copy) text = `Copy of ${copy.name}: ${(copy.text || '').trim()}`;
+    let text = memberTimingWords((d.text || '').trim());
+    if (copy) text = `Copy of ${copy.name}: ${memberTimingWords((copy.text || '').trim())}`;
     if (c.color) { try { text = `${text} Picked: ${quadrant(c.color).name}.`; } catch { /* no such quadrant */ } }
     const key = [d.id, c.used ? 'u' : '', c.on === false ? 'off' : '', c.copy || '', c.color || '', spentThisRound(state, c) ? 's' : '', ask ? 'ask' : ''].join('|');
     const row = rows.get(key);

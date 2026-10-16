@@ -116,7 +116,8 @@ describe('round summary and results (live panel r1)', () => {
 
   it('a rule that counts a resource says so; one that counts members or sets keeps its words', () => {
     expect(ruleWords('purple', 'Most purple')).toBe('Most purple resources');
-    expect(ruleWords('trading', 'Most white')).toBe('Most white resources');
+    expect(ruleWords('silver', 'Most silver')).toBe('Most silver resources');
+    expect(ruleWords('trading', 'Fewest followers')).toBe('Fewest followers');
     expect(ruleWords('red', 'Most members')).toBe('Most members');
     expect(ruleWords('thieves', 'Most magenta members')).toBe('Most magenta members');
     expect(ruleWords('yellow', 'Most full sets')).toBe('Most full sets');

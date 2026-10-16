@@ -140,7 +140,8 @@ describe('online rooms from another version', () => {
     room(store, host.code).build = { ...BUILD, content: 'olderContent' };
     // nudge a room change so the lobby re-evaluates hosting
     await createMemoryTransport(store).update(`${ROOM_ROOT}/${host.code}`, { touched: 1 });
-    hs.submit({ option: hs.getState().pending.options[0].id }).catch(() => {}); // never answered: nobody hosts
+    // Queue deliberately even if the pending seat is a bot: this tests the host backstop, not local turn validation.
+    hs.submit({ option: hs.getState().pending.options[0].id }, { skipLocalCheck: true }).catch(() => {}); // never answered: nobody hosts
     await new Promise(r => setTimeout(r, 30));
     expect(room(store, host.code).moves).toBeTruthy(); // the move sits unconsumed
     expect(room(store, host.code).state.version).toBe(v0); // nobody applied the move: no host for a mismatched room

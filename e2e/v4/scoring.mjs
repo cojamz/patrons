@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: the end-game scoring on the results' cults, at 1270×700 (Cory, 2026-10-15; taste rule 11: "points arrive where
 // they come from: followers on their own, then a +x over each member's head for its people, then pop-ups for the
 // followers it grants. Never a total that just appears."). From a saved game at P1's last placement of round III
@@ -50,7 +51,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 
 // in-page: every pop as it's added (with the seat totals at that moment) and every value each seat's count shows
 const WATCH = () => {

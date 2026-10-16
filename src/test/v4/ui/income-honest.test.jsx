@@ -1,5 +1,5 @@
 // The seat's "each round" line is a dry run of next round's start, so conditional income read as guaranteed (f8):
-// Late Bloomer showed +1 every round, and Clockmaker's +2 fell to +1 after a steal with no word why. A part that
+// Late Bloomers showed +1 every round, and Clockmaker's +2 fell to +1 after a steal with no word why. A part that
 // hangs on a condition now says it ("if fewest", "per 2 purple"), and the hover gives each member's rule.
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
@@ -35,13 +35,11 @@ describe('seat income says its conditions', () => {
     expect(p2.cond).toBe('per 2 purple');
 
     const { container } = render(<CultSeat state={s2} pid={0} me={0} mine />);
-    const inc = container.querySelector('.cs-income');
-    expect(inc.dataset.income).toMatch(/\+1 purple per 2 purple/);
-    expect(container.querySelector('[data-cond="per 2 purple"]')).not.toBeNull();
-    expect(container.querySelector('.cs-cond').textContent).toMatch(/per 2/);
+    expect(container.querySelector('.cs-income')).toBeNull();
+    expect(container.querySelector('[data-member="purple.clockmaker"]')).not.toBeNull();
   });
 
-  it('Late Bloomer is never shown as a sure +1: every part it touches says "if fewest"', () => {
+  it('Late Bloomers is never shown as a sure +1: every part it touches says "if fewest"', () => {
     const s = toPlace(createGame({ seats, seed: 6, quadrants }));
     give(s, 0, 'yellow.latebloomer');
     for (const p of s.players.slice(1)) p.bonus = (p.bonus || 0) + 5; // Ana has the fewest followers
@@ -51,9 +49,8 @@ describe('seat income says its conditions', () => {
     expect(parts.length).toBe(s.resources.length);
     for (const [, cond] of parts) expect(cond).toBe('if fewest');
     const { container } = render(<CultSeat state={s} pid={0} me={0} mine />);
-    // the words appear once, after the last part they cover, not four times
-    expect(container.querySelectorAll('.cs-cond').length).toBe(1);
-    expect(container.querySelector('.cs-income').dataset.income).toMatch(/if fewest$/);
+    expect(container.querySelector('.cs-income')).toBeNull();
+    expect(container.querySelector('[data-member="yellow.latebloomer"]')).not.toBeNull();
   });
 
   it('a member that always pays the same has no condition; an unknown "if" or "per" still gets one', () => {
@@ -75,14 +72,13 @@ describe('seat income says its conditions', () => {
   });
 
   // live panel r1 (G4): "+N more" hid members, so the "Most members" prize couldn't be counted off the seats
-  it('every seat shows its whole member count, folded figures or not', () => {
+  it('seats free their labels for figures, retain accessible counts', () => {
     const s = toPlace(createGame({ seats, seed: 4, quadrants }));
     for (const c of Object.values(s.cards).filter(x => s.pile.includes(x.uid)).slice(0, 14)) give(s, 1, c.def);
     const { container } = render(<CultSeat state={s} pid={1} me={0} />);
-    const count = container.querySelector('[data-member-count]');
-    expect(count).not.toBeNull();
-    expect(Number(count.dataset.memberCount)).toBe(s.players[1].members.length);
-    expect(count.textContent).toMatch(new RegExp(`members\\s*${s.players[1].members.length}`));
+    expect(container.querySelector('[data-member-count]')).toBeNull();
+    expect(container.querySelector('.lt-cult-seat').getAttribute('aria-label')).toContain(`${s.players[1].members.length} members`);
+    expect(container.querySelectorAll('.cs-member').length).toBeGreaterThan(6);
     // a rival's figures are off the keyboard's path (their seat's head opens the card listing them)
     for (const f of container.querySelectorAll('.cs-member .fig')) expect(f.getAttribute('tabindex')).toBe('-1');
   });

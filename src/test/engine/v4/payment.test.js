@@ -5,7 +5,7 @@ import { scene, move, uidOf, play, useTestCosts } from './helpers.js';
 useTestCosts();
 import { memberCount, followers } from '../../../engine/v4/core.js';
 
-const buyPhase = opts => scene({ ...opts, queue: [{ t: 'buy', p: 0 }] });
+const buyPhase = opts => scene({ quadrants: ['gold', 'red', 'blue', 'green'], ...opts, queue: [{ t: 'buy', p: 0 }] });
 
 describe('choosing how to pay', () => {
   it('offers every no-waste way to pay "any", default first, and charges exactly that', () => {

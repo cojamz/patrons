@@ -621,3 +621,12 @@ His notes below were made on the preview, which was stuck on a build from before
 - 2026-10-16 — (Cory) Member end-game bonuses land with the end-of-round animations, not only on the final screen. Why: he won by 1 thinking he'd lost.
 - 2026-10-16 — (Cory) Keep the member card design and the player-card hover (hover anywhere on its empty space opens the member list). He likes the money selector. Player-card hovers drop "you're short".
 - 2026-10-16 — (Cory) Remove "EACH ROUND X" and "Members X" from player boxes; show more members instead. Heir is too expensive. Hold Court, Sweet Talk, Cheap Seats, Goody Bags get replaced (designs his).
+
+- 2026-10-15 — (Cory) Replies warmer but still terse, very efficient in language so they read quickly, and clear on updates. Why: the clipped, performative foreman voice felt stiff.
+
+- 2026-10-15 — (Cory) The assistant owns effective harness design and use: deploy resources for fast delivery without losing integrity, continuously improve the system, keep project documents regularly current and everything tidy. Visual verification is extremely important.
+- 2026-10-15 — (Cory) Really likes the current game design; iterate on the existing version without dramatic changes. Preserve the money selector, charming member-card design and player-card hover. Re-pasted v0.5 play notes match the existing logged calls and ideas; no new approval of tentative ideas is implied.
+
+- 2026-10-15 — (Cory) Deliver fixes live as quickly as possible without cutting corners; the assistant chooses the effective harness and resource setup. Hover/animation work should improve performance, preserving content.
+- 2026-10-15 — (Codex, implementation fill-in) Previous-action copying also applies to Understudy; occupied center actions are copyable under Encore/Greatest Hits, with the existing prohibition on recursive copies retained. Reason: consistent interpretation of Cory’s general copying rule.
+- 2026-10-15 — (Codex, performance fix) Remove the empty-pass pause (no effect to animate), preserving actual animation durations and the unchanged pacing budget. Longest modeled Steady wait drops 21540→21054 ms, inside the 21060 ms cap.

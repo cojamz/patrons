@@ -44,7 +44,7 @@ describe('Green actions', () => {
     expect(R(go(table(Q, { shop: ROW }), 'echo.chant')).green).toBe(2);
     expect(R(go(table(Q, { shop: ROW, round: 3, left: 5 }), 'echo.chant')).green).toBe(6);
   });
-  it('Echo: copy a space a rival took since your last turn (exactly its chip)', () => {
+  it('Echo: copy the previous action (exactly its chip)', () => {
     const s = humThenEcho();
     expect(R(s).green).toBe(3);
     expect(s.log.some(l => /P1 copied Hum \(P2's\): \+3 green/.test(l))).toBe(true);
@@ -62,27 +62,27 @@ describe('Green actions', () => {
     // the copy is a Lie Low of P1's own: it may lift 1 from P2, never from P3
     expect(ids(t).every(id => id.startsWith('take:1:'))).toBe(true);
   });
-  it('Encore: any space taken this round, not the center', () => {
-    let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(1, 1, 0) });
+  it('Encore: any space with a minion, including the center', () => {
+    let s = table(Q, { round: 3, left: 5, shop: ROW, res: [{}, { gold: 2 }], queue: turns(1, 1, 0) });
     s = go(s, 'echo.chant'); s = go(s, 'gold.strike');
     s = take(s, 'echo.encore');
-    expect(s.pending.options.map(o => o.label)).toEqual(['Crescendo (P2): +6 green']);
+    expect(s.pending.options.map(o => o.label)).toEqual(['Crescendo (P2): +6 green', 'Double Down (P2): +2 gold']);
   });
-  it('Reprise: +2 green, and copy one of your spaces from this round (named in the log)', () => {
+  it('Reprise: copy one of your occupied spaces without a green bonus (named in the log)', () => {
     let s = table(Q, { round: 2, shop: ROW, queue: turns(0, 1, 0) });
     s = go(s, 'echo.chant'); s = go(s, 'echo.hum');
     s = take(s, 'echo.refrain');
     expect(s.pending.options.map(o => o.label)).toEqual(['Crescendo (P1): +4 green']); // P2's Hum isn't yours
     s = pass(move(s, s.pending.options[0].id));
-    expect(R(s).green).toBe(4 + 2 + 4);
+    expect(R(s).green).toBe(4 + 4);
     expect(s.log.some(l => /P1 copied Crescendo: \+4 green/.test(l))).toBe(true);
   });
   // design critic follow-up (2026-10-14): the rule is printed once (sphere rule, rulebook, glossary), not per card
-  it('One Green rule, printed once: copies never reach the center or another copy (Echo, Understudy, Encore, Reprise, Greatest Hits)', () => {
+  it('One Green rule, printed once: copies never copy another copy (Echo, Understudy, Encore, Reprise, Greatest Hits)', () => {
     const echo = quadrant('echo');
-    expect(echo.rule).toMatch(/^Copies never reach the center or another copy\./);
-    expect(term('copy').def).toMatch(/never reach the center or another copy/);
-    expect(readFileSync(new URL('../../../../design/rulebook.md', import.meta.url), 'utf8')).toMatch(/Copies never reach the center \(the inner ring\) or another copy/);
+    expect(echo.rule).toMatch(/^Copies never copy another copy\./);
+    expect(term('copy').def).toMatch(/never copy another copy/);
+    expect(readFileSync(new URL('../../../../design/rulebook.md', import.meta.url), 'utf8')).toMatch(/Copies never copy another copy/);
     for (const t of [...echo.actions.map(a => a.text), ...echo.members.map(d => d.text)]) expect(t).not.toMatch(/center/);
     const [center, chant, echoN, encore, hum, refrain, eternity] = [N('gold', 'strike'), ...['chant', 'echo', 'encore', 'hum', 'refrain', 'eternity'].map(k => N('echo', k))];
     let s = table(Q, { round: 3, left: 5, shop: ['echo.understudy', ...ROW], res: [{ red: 2 }], queue: turns(1, 1, 0, 0, 0, 0, 0) });
@@ -127,7 +127,7 @@ describe('Greatest Hits with a copy space among yours', () => {
     s = go(s, N('echo', 'echo'), sp('echo.hum'));           // P1: Echo copies P2's Hum, +3 green
     s = go(s, N('gold', 'steal'), () => true, () => true, () => true); // P1: Collect Debts, 3 gold from P2
     s = go(s, N('red', 'hireup'), o => o.kind === 'card');  // P1: Open House, Intern free
-    s = go(s, N('echo', 'refrain'), sp('purple.windup'));   // P1: Reprise, +2 green and Roll Call again
+    s = go(s, N('echo', 'refrain'), sp('purple.windup'));   // P1: Reprise repeats Roll Call
     return go(s, N('red', 'turnout'));                      // P1: Bandwagon, +1 red (one recruit this round)
   };
   it('names what it skips and why, copies the rest in order, and offers the steal’s choices', () => {
@@ -188,7 +188,7 @@ describe('Green members', () => {
     expect(R(s, 1).green).toBe(3 + 2);
     expect(named(s, 'Muse')).toEqual(["P2's Muse: +2 green."]);
   });
-  it('Understudy: when recruited, copy a space a rival took since your last turn (named)', () => {
+  it('Understudy: when recruited, copy the previous action (named)', () => {
     let s = table(Q, { round: 2, shop: ['echo.understudy', ...ROW], res: [{ green: 4, red: 2 }], queue: turns(1, 0) });
     s = go(s, 'echo.chant');
     s = move(take(s, 'echo.hum'), cardOpt(s, 'echo.understudy', 'shop'));
@@ -210,7 +210,7 @@ describe('Green members', () => {
     let t = table(Q, { round: 2, shop: ROW, queue: turns(0, 0), members: [['echo.ensemble']] });
     t = go(t, hum);
     t = go(t, refrain, sp(hum));
-    expect([R(t).green, t.players[0].bonus, named(t, ens)]).toEqual([3 + 2 + 3, 0, []]);
+    expect([R(t).green, t.players[0].bonus, named(t, ens)]).toEqual([3 + 3, 0, []]);
     // and no game-end bonus any more
     const f = table(Q, { members: [['echo.ensemble', 'echo.muse', 'red.twins']], shop: ROW, queue: [{ t: 'finish' }] });
     expect(f.players[0].final.parts.join(' ')).not.toMatch(new RegExp(ens));

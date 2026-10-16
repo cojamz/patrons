@@ -28,7 +28,7 @@ const S = {
     hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival who placed more', windup: '+1 purple per minion', planahead: '+1 purple per minion left', overtime: '1 extra turn', rally: 'your next 2 turns now',
   },
   silver: {
-    toast: r => `+${3 * r} silver · others +1 silver`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the top rival’s', jubilee: 'silver for followers',
+    toast: r => `+${3 * r} silver · others +${r} silver`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the top rival’s', jubilee: 'silver for followers',
   },
   yellow: {
     harvest: '+1 yellow per color', bloom: '+1 each missing', transmute: 'swap 3 · +1 yellow', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
@@ -42,7 +42,7 @@ const S = {
   trading: {
     haggle: '+2 white, +1 per leader', buylow: '+1 follower per 3 white', pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower bought or won', boom: 'all for followers',
   },
-  echo: { hum: '+3 green', chant: r => `+${2 * r} green`, echo: 'copy a rival', encore: 'copy any', refrain: '+2 green · copy yours', eternity: 'copy all yours' },
+  echo: { hum: '+3 green', chant: r => `+${2 * r} green`, echo: 'copy previous', encore: 'copy any taken', refrain: 'copy yours', eternity: 'copy all yours' },
 };
 
 // The shortest form, for the inner rings. Two symbols only (Cory, 2026-10-15: "just simplify visual language
@@ -56,7 +56,7 @@ const PIPS = {
   market: { clearance: 'half price', spree: 'buy 3 times' },
   thieves: { rob: 'take 3 any', ransom: 'ransom a member', heist: 'take a rival’s member' },
   trading: { sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower', boom: 'all for followers' },
-  echo: { refrain: '+2 green · copy', eternity: 'copy all' },
+  echo: { refrain: 'copy yours', eternity: 'copy all' },
 };
 /** The pips-first form of a space's yield (falls back to the few words). */
 export function pipEffect(qid, action, round = 1) {

@@ -39,7 +39,7 @@ import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.j
 import { createLocalSession } from '../../../v4/session/local.js';
 import { createEmitter } from '../../../v4/session/emitter.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
-import Tick from '../../../v4/game/Tick.jsx';
+import Tick, { countMs } from '../../../v4/game/Tick.jsx';
 import { saveLocalSoon, flushLocalSave, clearLocal, claimLocal, loadLocal } from '../../../v4/saved.js';
 
 afterEach(() => { cleanup(); globalThis.IS_REACT_ACT_ENVIRONMENT = true; });
@@ -206,8 +206,8 @@ describe('render budget', () => {
     await settle(2);
     R.reset();
     const seen = new Set();
-    act(() => { rerender(<Tick value={15} float={false} />); });
-    try { for (let k = 0; k < 50; k++) { await act(() => new Promise(r => setTimeout(r, 20))); seen.add(container.querySelector('.tv').textContent); } } finally { globalThis.requestAnimationFrame = raf0; globalThis.cancelAnimationFrame = caf0; }
+    act(() => { rerender(<Tick value={15} float={false} dur={600} />); });
+    try { for (let k = 0; k < Math.ceil(countMs(12, 600) / 20) + 5; k++) { await act(() => new Promise(r => setTimeout(r, 20))); seen.add(container.querySelector('.tv').textContent); } } finally { globalThis.requestAnimationFrame = raf0; globalThis.cancelAnimationFrame = caf0; }
     const report = { Tick: R.n('Tick'), commits: R.commits, values: seen.size };
     console.log('[render-budget] one count 3 → 15:', JSON.stringify(report));
     expect(container.querySelector('.tv').textContent).toBe('15');

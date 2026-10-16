@@ -18,6 +18,7 @@ import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { HOVER_DELAY_MS } from './hoverDelay.js';
 import { withRace } from './race.js';
+import { memberTimingWords } from './memberTiming.js';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -112,7 +113,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
       >{children}{nested ? null : <span className="hitbox" aria-hidden="true" />}</As>
       {open && (
         <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned} hidden={!!open.hidden} beside={beside && open.el ? open.el.closest(beside) : null}>
-          <div className={`tip-body${seeThrough ? ' see-through' : ''}`} data-tip-body ref={body}
+          <div className={`tip-body${seeThrough ? ' see-through' : ''}${!sticky && !open.pinned ? ' passive' : ''}`} data-tip-body ref={body}
             {...(sticky ? { onPointerEnter: () => { clearTimeout(timer.current); arrived(); }, onPointerLeave: e => { if (e.pointerType === 'mouse') release(); } } : {})}>{shownContent}</div>
         </Popover>
       )}
@@ -137,7 +138,7 @@ export function Definition({ k }) {
 /** Rules text: resource words as symbols (Rich), game keywords underlined (each opens its definition). */
 export function CardText({ text }) {
   if (!text) return null;
-  const parts = splitTerms(text);
+  const parts = splitTerms(memberTimingWords(text));
   // each piece knows what follows it, so a color before a keyword ("blue | face-up member") stays a word
   const after = k => parts.slice(k + 1).map(x => x.text).join('');
   return <>{parts.map((part, k) => (part.key
@@ -205,13 +206,6 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
   const ability = String((copied || d).text || '').replace(/^Worth \d+ followers?\.\s*/i, '').replace(/^(Free\.\s*)?No effect\.?$/i, '').trim();
   const worth = d.f != null ? d.f : 1;
   const sphere = onTable(state, d) ? (() => { try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } })() : 'colorless';
-  // the quiet live line: what you're short of, in dots (Cory: "need N" never shouts), from the engine's one price rule
-  let short = null;
-  // not during a choice: a recruit it offers pays its own way (Snap Up: in any colors), so the buy step's "short" misled
-  // (w2b #28: lit cards said "You're short 2")
-  if (where === 'In the shop' && me != null && state.players[me] && !state.over && !(state.pending && state.pending.kind === 'choose')) {
-    try { const pr = memberPrice(state, state.players[me], uid); if (!pr.afford && pr.short) short = pr; } catch { /* no price: say nothing */ }
-  }
   // a discount on you (the shop face shows the price, the list price struck beside it): its reason
   const paid = where === 'In the shop' && me != null && state.players[me] ? paidParts(state, state.players[me], uid, d) : null;
   return (
@@ -239,19 +233,10 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
           price is struck ("Your next member costs 4 less.") */}
       {/* the shop's header says a discount once; a face beside its hover shows the price (w4 A#23: the sentence on all 10) */}
       {paid && !onFace && discountWhy(state, state.players[me]) && <small className="mc-live" data-discount>{upFirst(discountWhy(state, state.players[me]))}.</small>}
-      {short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
-        : where === 'In the pile' && <small className="mc-live">{where}</small>}
+      {where === 'In the pile' && <small className="mc-live">{where}</small>}
     </div>
   );
 }
-/** "4● 1◐": what's missing, colored part first, as dots. */
-function shortDots(state, pr) {
-  const parts = [];
-  if (pr.color && pr.short[pr.color]) parts.push({ color: pr.color, n: pr.short[pr.color] });
-  if (pr.short.any) parts.push({ color: 'any', n: pr.short.any });
-  return <CostDots parts={parts} />;
-}
-
 /** A member's name anywhere (log, pickers, bonuses, rival chips): hover or tap opens the full card. */
 export function CardName({ state, uid = null, def = null, children, className = '' }) {
   const d = def || (uid != null && state.cards[uid] ? cardDef(state, uid) : null);

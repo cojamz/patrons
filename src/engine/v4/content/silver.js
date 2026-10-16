@@ -72,14 +72,14 @@ const spillCost = (ctx, n) => 0.25 * n * (ctx.state.players.length - 1);
 
 export const silverActions = [
   {
-    key: 'toast', ring: 1, name: 'Toast', text: '+3 silver in round I, +6 in round II, +9 in round III, and everyone else +1 silver.',
-    estimate: ctx => 3 * ctx.state.round - spillCost(ctx, 1),
+    key: 'toast', ring: 1, name: 'Toast', text: '+3 silver in round I, +6 in round II, +9 in round III. Everyone else +1 / +2 / +3 silver.',
+    estimate: ctx => 3 * ctx.state.round - spillCost(ctx, ctx.state.round),
     resolve(ctx, p) {
       const n = 3 * ctx.state.round;
       const got = hostGain(ctx, p, n);
-      giveAll(ctx, p, S, 1);
+      giveAll(ctx, p, S, ctx.state.round);
       // what the taker got (Grand Host's doubling included), so the line matches the count
-      ctx.log(`${p.name} raised a toast: +${got} silver, +1 silver to everyone else.`);
+      ctx.log(`${p.name} raised a toast: +${got} silver, +${ctx.state.round} silver to everyone else.`);
     },
   },
   {

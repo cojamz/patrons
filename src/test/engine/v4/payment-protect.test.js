@@ -5,7 +5,7 @@ import { resume } from '../../../engine/v4/core.js';
 
 // Q's scene: 1 green, leading green alone (and then tied); a buy that could spend green or something else.
 function scene(resP0, resP1) {
-  const s = createGame({ seats: [{ name: 'Q' }, { name: 'B' }], seed: 3 });
+  const s = createGame({ seats: [{ name: 'Q' }, { name: 'B' }], seed: 3, quadrants: ['gold', 'red', 'blue', 'green'] });
   s.players[0].res = { ...resP0 }; s.players[1].res = { ...resP1 };
   return s;
 }

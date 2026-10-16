@@ -2,6 +2,12 @@
 
 How Claude works on Cults (the repo is still called patrons). Claude owns this file and updates it when something works better.
 
+## Current operating priorities (Cory, 2026-10-15)
+- Own the harness: choose and coordinate resources to shorten delivery while preserving correctness and visual quality. Diagnose bottlenecks; do not equate more agents with more throughput.
+- Visual verification is essential, including motion and transitions. Use available authorized browser checks; native screen capture was declined, so do not request it again. Never claim a visual check that did not happen.
+- Keep decisions, tasks and handoff current as work lands; remove stale active instructions, record evidence, and clean up temporary processes and outputs. At milestones, review delays and misses and make a concrete process improvement when warranted.
+- Current shipping: use the shared v4 branch, ship individually after the required quick checks, then run scripts/v4-play.sh and verify the published build. README.md and the latest working-with-cory.md shipping instruction supersede the historical Netlify/WIP funnel below. A− is the finished-build bar, not a reason to withhold iterations.
+
 ## The loop
 1. Cory dictates a voice note.
 2. Claude runs the `/note` routine (even when Cory doesn't type `/note`):

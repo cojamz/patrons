@@ -56,11 +56,11 @@ export function plan(state, order, seatEl) {
   return out;
 }
 
-export default function FinalScore({ state, me, hover, onPick, CultSeat, children }) {
+export default function FinalScore({ state, me, hover, onPick, CultSeat, children, animate = true }) {
   const order = state.ranking || state.players.map(p => p.id);
   const winners = finalWinners(state);
   const box = useRef(null);
-  const [run, setRun] = useState(() => (motionOK() ? 'lead' : 'done'));
+  const [run, setRun] = useState(() => (animate && motionOK() ? 'lead' : 'done'));
   const [sums, setSums] = useState(() => Object.fromEntries(order.map(pid => [pid, 0])));
   const [pops, setPops] = useState([]); // on screen now: { id, pid, beat, n, x, y }
   const timers = useRef([]);

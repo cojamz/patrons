@@ -13,9 +13,9 @@ import { STRAYS, stray } from './stray.js';
  */
 export function scene({
   n = 2, seed = 7, round = 1, res = [], members = [], shop = null, bonus = [],
-  turn = 0, queue = null, discount = [], pileFirst = null,
+  turn = 0, queue = null, discount = [], pileFirst = null, quadrants,
 } = {}) {
-  const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed });
+  const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, ...(quadrants ? { quadrants } : {}) });
   s.queue = [];
   s.pending = null;
   s.round = round;

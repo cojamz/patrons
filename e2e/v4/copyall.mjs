@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: Greatest Hits ("Copy all your spaces / from this round") at 1270×700, from a real round III where you took a
 // mix of spaces, an Echo or Reprise among them. Cory's play (2026-10-16): "Copy all your spaces doesn't work quite
 // right": a copy space you took was skipped without a word. Green's rule stands (copies never copy a copy), and now:
@@ -56,7 +57,7 @@ function copyAllSave() {
 const fails = [];
 const fail = (m, tag) => fails.push(`[${tag}] ${m}`);
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 try {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
   const page = await ctx.newPage();

@@ -1,8 +1,9 @@
-// "Now and at round start" members (Cory, 2026-10-14): the round-start effect also fires once when recruited,
+// "On recruit and at round start" members (Cory, 2026-10-14): the round-start effect also fires once when recruited,
 // is named in the log, and still fires at the next round start.
 import { describe, it, expect } from 'vitest';
 import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 import { move } from './helpers.js';
+import { memberTimingWords } from '../../../v4/game/memberTiming.js';
 import { defById } from '../../../engine/v4/content/index.js';
 
 const payDefault = s => (s.pending?.kind === 'pay' ? move(s, s.pending.options.find(o => o.default).id) : s);
@@ -25,10 +26,11 @@ describe('now and at round start', () => {
     expect(linesNaming(s.log, 'Steward').length).toBe(1);
   });
 
-  it('every card with the flag says "Now and at round start" and has a round-start effect', async () => {
+  it('every card with the flag says "On recruit and at round start" and has a round-start effect', async () => {
     const { allQuadrantIds, quadrant } = await import('../../../engine/v4/content/index.js');
     for (const id of allQuadrantIds()) for (const d of quadrant(id).members) if (d.now) {
-      expect(d.text.startsWith('Now and at round start')).toBe(true);
+      expect(memberTimingWords(d.text)).toMatch(/On recruit and at round start/);
+      expect(memberTimingWords(d.text)).not.toMatch(/\bNow\b/);
       expect(!!(d.onRoundStart || d.onRoundStartLate)).toBe(true);
     }
   });

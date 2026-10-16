@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: the game's sounds (src/v4/sound.js; Cory, 2026-10-15: a click when you place a minion, coins as resources
 // land, a fanfare for the round winner, a little voice when followers join; a mute toggle).
 //  (s1) from a save at P1's last placement of round I, played to the round's summary, the game asks for every sound:
@@ -28,7 +29,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--autoplay-policy=no-user-gesture-required'] });
+const browser = await chromium.launch({ executablePath: browserPath, args: ['--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
 const asked = () => page.evaluate(() => ({ ...(window.__patronsSounds || {}) }));

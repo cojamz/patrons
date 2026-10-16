@@ -72,7 +72,7 @@ const P = {
   },
   silver: {
     // "others get 1" left "1 of what?" (live panel r1): silver
-    toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1 silver', note: grows(r) }),
+    toast: r => ({ main: `+${3 * r} silver`, second: `others get ${r} silver`, note: grows(r) }),
     // "+2 of a color": which one? (w3a #56) yours to pick
     gift: { main: '+2 silver', second: '+2 of a color you pick', note: 'others get 1 of it' },
     // said like Kickback's gift ("a rival gets 2" ran on as "+4 silver a rival gets 2" off the wheel)
@@ -129,11 +129,11 @@ const P = {
   echo: {
     chant: r => ({ main: `+${2 * r} green`, second: grows(r) }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
-    echo: { verb: 'Copy a space', second: 'taken since your last turn' },
-    encore: { verb: 'Copy a space', second: 'taken this round' },
+    echo: { verb: 'Copy the previous action' },
+    encore: { verb: 'Copy any space', second: 'with a minion' },
     // one word for it, the hover's (w3a #22: "redo" here, "copy" there)
-    refrain: { main: '+2 green', second: 'copy a space you took', note: 'this round' },
-    eternity: { verb: 'Copy all your spaces', second: 'from this round' },
+    refrain: { verb: 'Copy a space', second: 'where you have a minion' },
+    eternity: { verb: 'Copy every action', second: 'where you have a minion' },
   },
 };
 

@@ -7,17 +7,21 @@ import {
 } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
-import { scene, take, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
+import { scene as baseScene, take, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
 import { SHOP_SIZE } from '../../../engine/v4/core.js';
 
 useTestCosts();
+
+// These shared-rule fixtures exercise all four colors regardless of the seat-count default.
+const TABLE = ['gold', 'red', 'blue', 'green'];
+const scene = opts => baseScene({ quadrants: TABLE, ...opts });
 
 const R = s => s.players.map(p => p.res);
 const tier = key => TIERS.find(t => t.key === key);
 const seats = n => Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' }));
 
 function orderOf(seed) {
-  let s = createGame({ seats: [{}, {}, {}, {}], seed });
+  let s = createGame({ quadrants: TABLE, seats: [{}, {}, {}, {}], seed });
   while (s.pending?.kind === 'setup') s = applyMove(s, { player: s.pending.player, option: s.pending.options[0].id });
   return s.order[0];
 }
@@ -26,7 +30,7 @@ describe('setup', () => {
   // (Cory, 2026-10-15: "it had us pick resources THEN it randomized the order???") round I's order is drawn first, and
   // the starting picks run in it
   it('each player picks 2 starting resources in round I\'s turn order, then round I starts', () => {
-    let s = createGame({ seats: seats(3), seed: 3 });
+    let s = createGame({ quadrants: TABLE, seats: seats(3), seed: 3 });
     expect(s.round).toBe(0);
     const picks = [['gold', 'gold'], ['red', 'blue'], ['green', 'red']];
     for (const p of [...s.firstOrder]) for (let k = 0; k < 2; k++) {
@@ -44,7 +48,7 @@ describe('setup', () => {
 
   it('fixes round I\'s turn order before the first pick, and round I keeps it whatever is picked', () => {
     for (let seed = 1; seed <= 12; seed++) {
-      let s = createGame({ seats: seats(4), seed });
+      let s = createGame({ quadrants: TABLE, seats: seats(4), seed });
       const first = [...s.firstOrder];
       expect([...first].sort()).toEqual([0, 1, 2, 3]);
       expect(s.pending.kind).toBe('setup');
@@ -63,20 +67,20 @@ describe('setup', () => {
   });
 
   it('rejects bad seat counts', () => {
-    expect(() => createGame({ seats: seats(1) })).toThrow();
-    expect(() => createGame({ seats: seats(5) })).toThrow();
+    expect(() => createGame({ quadrants: TABLE, seats: seats(1) })).toThrow();
+    expect(() => createGame({ quadrants: TABLE, seats: seats(5) })).toThrow();
   });
 
   it('starts with a shuffled deck of every table sphere\'s members (plus the guest rule-benders) and a full row face up', () => {
-    const s = createGame({ seats: seats(2), seed: 9, rules: { guests: false } });
+    const s = createGame({ quadrants: TABLE, seats: seats(2), seed: 9, rules: { guests: false } });
     // 59 on this table since Doppelganger left Red for Green (Cory, 2026-10-15); the deck is whatever the spheres hold
     const deck = 59;
     expect(Object.keys(s.cards)).toHaveLength(deck);
     expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.pile).toHaveLength(deck - SHOP_SIZE);
-    expect(Object.keys(createGame({ seats: seats(2), seed: 9 }).cards)).toHaveLength(deck + guestMembers().length);
+    expect(Object.keys(createGame({ quadrants: TABLE, seats: seats(2), seed: 9 }).cards)).toHaveLength(deck + guestMembers().length);
     expect(s.stock).toEqual({ big: 4 }); // only the 8-follower buy is limited (10→10 is unlimited)
-    const t = createGame({ seats: seats(2), seed: 10 });
+    const t = createGame({ quadrants: TABLE, seats: seats(2), seed: 10 });
     expect(t.shop).not.toEqual(s.shop);
   });
 });
@@ -100,7 +104,7 @@ describe('turn order and workers', () => {
 
   it('round I order is random and seeded', () => {
     const firsts = new Set();
-    for (let seed = 1; seed <= 40; seed++) firsts.add(createGame({ seats: [{}, {}, {}, {}], seed }).players.length && orderOf(seed));
+    for (let seed = 1; seed <= 40; seed++) firsts.add(createGame({ quadrants: TABLE, seats: [{}, {}, {}, {}], seed }).players.length && orderOf(seed));
     expect(firsts.size).toBe(4);
     expect(orderOf(9)).toBe(orderOf(9));
   });
@@ -124,7 +128,7 @@ describe('turn order and workers', () => {
 
   it('a full game gives 3, 4, 5 turns per player per round', () => {
     // guests off: Extra Hand (a guest) adds a round-III minion, and with cheaper members the bots now buy it here
-    let s = createGame({ seats: seats(3), seed: 42, rules: { guests: false } });
+    let s = createGame({ quadrants: TABLE, seats: seats(3), seed: 42, rules: { guests: false } });
     const rand = seededRandom(42);
     const turns = {};
     let lastSlots = null;
@@ -256,10 +260,10 @@ describe('round-end contests', () => {
     }
   });
 
-  it('most members wins red; red members break member ties', () => {
+  it('most members wins red; tied member counts all score', () => {
     let s = scene({ n: 3, members: [['gold.banker', 'gold.midas'], ['red.intern', 'gold.tycoon'], ['red.twins', 'red.crowd']], queue: [{ t: 'endRound' }] });
     // all have 2 members; P2 has 1 red, P3 has 2 red
-    expect(s.players.map(p => p.contest)).toEqual([0, 0, 2]);
+    expect(s.players.map(p => p.contest)).toEqual([2, 2, 2]);
     s = scene({ n: 3, members: [['red.intern', 'gold.midas'], ['red.mob', 'gold.tycoon'], ['gold.banker']], queue: [{ t: 'endRound' }] });
     expect(s.players.map(p => p.contest)).toEqual([2, 2, 0]);
     // more members beats more red members, and Twins' 2 followers don't make it 2 members
@@ -340,7 +344,7 @@ describe('followers and the end', () => {
   });
 
   it('a full game ends after round III', () => {
-    let s = createGame({ seats: seats(2), seed: 5 });
+    let s = createGame({ quadrants: TABLE, seats: seats(2), seed: 5 });
     const rand = seededRandom(5);
     while (s.pending) s = applyMove(s, chooseBotMove(s, rand));
     expect(s.over).toBe(true);
@@ -352,7 +356,7 @@ describe('followers and the end', () => {
 
 describe('move validation', () => {
   it('rejects the wrong player, bogus options and moves after the end', () => {
-    const s = createGame({ seats: seats(2), seed: 1 });
+    const s = createGame({ quadrants: TABLE, seats: seats(2), seed: 1 });
     const [a, b] = s.firstOrder; // round I's order, drawn before the picks
     expect(isLegal(s, { player: a, option: 'color:gold' })).toBe(true);
     expect(() => applyMove(s, { player: b, option: 'color:gold' })).toThrow(/Illegal/);
@@ -364,7 +368,7 @@ describe('move validation', () => {
   });
 
   it('legalMoves lists exactly the pending options', () => {
-    const s = createGame({ seats: seats(2), seed: 1 });
+    const s = createGame({ quadrants: TABLE, seats: seats(2), seed: 1 });
     expect(legalMoves(s)).toEqual(['gold', 'red', 'blue', 'green'].map(c => ({ player: s.firstOrder[0], option: `color:${c}` })));
   });
 

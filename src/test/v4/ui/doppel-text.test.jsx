@@ -5,6 +5,7 @@ import { render, cleanup } from '@testing-library/react';
 import { defById } from '../../../engine/v4/index.js';
 import { table, uidIn } from '../../engine/v4/cards-helpers-b.js';
 import { memberRows } from '../../../v4/game/memberUse.js';
+import { memberTimingWords } from '../../../v4/game/memberTiming.js';
 import { MemberCard } from '../../../v4/game/Info.jsx';
 
 afterEach(cleanup);
@@ -34,6 +35,6 @@ describe('a Doppelganger that has copied shows only the copy', () => {
   it('before it copies, it still reads its own rule', () => {
     const t = table(['gold', 'echo', 'trading', 'silver'], { members: [['echo.doppel']], res: [{}, {}] });
     const u = uidIn(t, 'echo.doppel', 0);
-    expect(memberRows(t, 0, 0).find(r => r.uids.includes(u)).text).toBe(own);
+    expect(memberRows(t, 0, 0).find(r => r.uids.includes(u)).text).toBe(memberTimingWords(own));
   });
 });

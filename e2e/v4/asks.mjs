@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: a member asking you something shows itself on your seat (blind testers, 2026-10-15: "usable members don't show
 // themselves"; the house rule: a member you can act on now glows on your seat, and its card, right beside it, carries
 // the control). Saved hot-seat games (e2e/v4/lib/asks-save.mjs), P1 the only person, 1270×700. Build-failing:
@@ -17,7 +18,7 @@ mkdirSync(SHOTS, { recursive: true });
 const base = process.env.V4_URL || 'http://localhost:5180';
 const fails = [];
 const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 const errors = [];
 
 async function open(name) {

@@ -1,3 +1,4 @@
+import { browserPath } from '../e2e/v4/lib/browser.mjs';
 // Render the game's sounds (src/v4/sound.js) to .wav files, offline in Chromium, with the same code the game plays.
 //   node scripts/v4-sounds.mjs [outDir] [--loud]       (default design/eval/sounds)
 // Writes place, coins (1, 3, a handful at once), fanfare, followers (1, 3, many at once) and a whole turn; prints peaks.
@@ -30,7 +31,7 @@ const JOBS = [
   ['all-in-a-turn', [['place', 0.05, 3], ['coin', 0.55, 11], ['coin', 0.633, 12], ['coin', 0.716, 13], ['coin', 1.0, 14, 6], ['follower', 1.35, 202, 2], ['fanfare', 2.1, 1], ['follower', 2.9, 404, 8]], 3.8],
 ];
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 const page = await browser.newPage();
 await page.setContent('<!doctype html><title>sounds</title>');
 await page.addScriptTag({ content: `${src}\nwindow.__voice = voice;` });

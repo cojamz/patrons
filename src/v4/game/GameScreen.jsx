@@ -28,7 +28,7 @@ import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import FinalScore from './FinalScore.jsx';
 import RoundEnd from './RoundEnd.jsx';
-import Reckoning, { reckonRows } from './Reckoning.jsx';
+import Reckoning, { unpaidFollowers } from './Reckoning.jsx';
 import { snakeOrder } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
@@ -638,11 +638,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, []);
   const seatState = useMemo(() => {
     if (!moment || reckoned === moment) return state;
-    let unpaid;
-    try { unpaid = reckonRows(moment).slice(paid.moment === moment ? paid.n : 0); } catch { return state; }
-    const owed = id => unpaid.reduce((n, r) => n + (r.winners.includes(id) ? r.prize : 0), 0);
-    if (!state.players.some(p => owed(p.id))) return state;
-    return { ...state, players: state.players.map(p => (owed(p.id) ? { ...p, bonus: p.bonus - owed(p.id), contest: (p.contest || 0) - owed(p.id) } : p)) };
+    const owed = unpaidFollowers(moment, paid.moment === moment ? paid.n : 0);
+    if (!state.players.some(p => owed[p.id]?.bonus)) return state;
+    return { ...state, players: state.players.map(p => owed[p.id] ? { ...p, bonus: p.bonus - owed[p.id].bonus, contest: (p.contest || 0) - owed[p.id].contest } : p) };
   }, [state, moment, reckoned, paid]);
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
   // re-render when undo comes or goes, so Undo disappears the moment control passes even while the table catches up
@@ -1337,7 +1335,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <div className="main over">
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} meId={mySeats.length === 1 ? mySeats[0] : null} />
           {/* the cults at the end, scored where their followers come from (FinalScore.jsx, taste rule 11) */}
-          <FinalScore state={state} me={me} hover={hover} onPick={onPick} CultSeat={CultSeat}>
+          <FinalScore animate={false} state={state} me={me} hover={hover} onPick={onPick} CultSeat={CultSeat}>
             <Log state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} />
           </FinalScore>
         </div>

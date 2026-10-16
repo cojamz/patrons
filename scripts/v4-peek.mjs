@@ -1,3 +1,4 @@
+import { browserPath } from '../e2e/v4/lib/browser.mjs';
 // Foreman's own eyes: freeze a build and screenshot it, so no UI claim rests on an agent's word.
 //   node scripts/v4-peek.mjs freeze <n> [port]   build into .v4-panel/<n> and serve it (stays up; Ctrl-C or kill to stop;
 //        refuses a busy port, and the server dies with this process)
@@ -23,7 +24,7 @@ if (cmd === 'freeze') {
 } else if (cmd === 'shots') {
   const url = a, out = b, query = c || '';
   mkdirSync(out, { recursive: true });
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const browser = await chromium.launch({ executablePath: browserPath });
   for (const [tag, ctxOpts] of [['laptop', { viewport: { width: 1270, height: 700 } }], ['phone', devices['iPhone 13']]]) {
     const ctx = await browser.newContext(ctxOpts);
     const page = await ctx.newPage();

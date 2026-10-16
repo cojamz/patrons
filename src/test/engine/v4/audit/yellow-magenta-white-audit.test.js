@@ -25,15 +25,15 @@ describe('base rules', () => {
 });
 
 describe('Yellow', () => {
-  it('MISMATCH Late Bloomer "Now": tied for fewest when you recruit it, but the card itself makes you no longer fewest', () => {
+  it('Late Bloomers on recruit: excludes itself when checking tied for fewest', () => {
     const Q = ['gold', 'red', 'yellow', 'trading'];
     let s = table(Q, { res: [{ yellow: 4 }], shop: ['yellow.latebloomer', ...ROW] });
     s = take(s, 'yellow.harvest');
     expect(followers(s, s.players[0])).toBe(followers(s, s.players[1])); // 1 v 1: tied for fewest
     s = move(s, `card:${uidIn(s, 'yellow.latebloomer', 'shop')}`);
     expect(s.players[0].members.length).toBe(1);
-    // the text promises +1 of each color now; it gives nothing (P1 is at 2 followers once it joins)
-    expect(R(s)).toEqual({ gold: 0, red: 0, yellow: 1, white: 0 });
+    // The two followers from the card do not stop the recruit income.
+    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 2, white: 1 });
   });
 
   it('Potluck and Go-Between: a guest member whose color is not on the table brings nothing', () => {

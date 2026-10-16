@@ -1,11 +1,11 @@
-// Green: the echo. You copy what spaces gave: a rival's (since your last turn, or any this round), or your own.
+// Green: the echo. Copy the previous action, an occupied space, or your own occupied spaces.
 // Scoring: most green at round end.
 //
 // The copy rule: a copy gives the space's own printed gain, as its chip shows: the resources and discount the
 // action itself handed its taker, never their members' bonuses and never what they paid. A free member copies as
 // "a face-up member costing no more, free". A space that took or traded (Collect Debts, Swap Sides…) is copied by doing the
 // action yourself. Green's one rule, printed once (the sphere's `rule`, the rulebook and the glossary's "copy"), not
-// on each card: copies never reach the center or another copy (copyable() below: ring < 3, not an echo).
+// on each card: copies never copy another copy. Occupied center spaces can be copied too.
 //
 // Prototype notes (engine changes this module would like, see design/spheres/echo.md):
 // - The engine doesn't record what a space gave. install() wraps every action's resolve and every handler,
@@ -123,7 +123,7 @@ export function entryValue(ctx, e, p = null) {
   }
   return v;
 }
-const copyable = e => !e.echo && e.ring < 3 && (e.redo || spaceTotal(e) > 0 || e.discount > 0 || e.members.length > 0);
+const copyable = e => !e.echo && (e.redo || spaceTotal(e) > 0 || e.discount > 0 || e.members.length > 0);
 const has = (ctx, p, key) => ctx.membersOf(p).filter(c => c.def.id === `echo.${key}` || c.copy === `echo.${key}`).length;
 /** The chip on a taken space: exactly what a copy gives. */
 export const describe = (ctx, e) => {
@@ -139,21 +139,24 @@ export const describe = (ctx, e) => {
   return bits.join(', ') || 'nothing';
 };
 /**
- * Spaces p could copy this round: which = 'since' (a rival's, taken since p's last turn: the "since your turn"
- * line) | 'any' | 'own'. skip: the key of the space p is taking right now (an echo resolving, or this turn's
- * space when a member copies in the buy step), so "your last turn" means the one before it.
+ * Targets: 'previous' is the immediately preceding placement; 'any' is any occupied space; 'own' is your spaces.
+ * 'since' remains for legacy callers. skip excludes the current placement while a copy action or recruit resolves.
  */
 export const VARIANT = { plus: 0 }; // sim switch: +N green on every copy action (idea 29); 0 is the pitched rule
 const plus = (ctx, p) => { if (VARIANT.plus) ctx.gain(p, 'green', VARIANT.plus, { fromAction: true }); };
 export function targets(ctx, p, which, skip = null) {
   const L = ledger(ctx.state);
   const pool = Object.values(L.now);
+  if (which === 'previous') {
+    const previous = pool.filter(e => e.key !== skip).sort((a, b) => (b.seq || 0) - (a.seq || 0))[0];
+    return previous && copyable(previous) ? [previous] : [];
+  }
   const since = which === 'since' ? Math.max(0, ...pool.filter(e => e.p === p.id && e.key !== skip).map(e => e.seq || 0)) : 0;
   return pool.filter(e => copyable(e) && (which === 'since' ? e.p !== p.id && (e.seq || 0) > since : which === 'own' ? e.p === p.id : true));
 }
 /**
  * "Copy every space you took this round" (Greatest Hits, Tribute Band): the spaces it copies, in the order taken, and
- * the ones it skips with why (Green's rule: never another copy or the center; a space that gave nothing has nothing to
+ * the ones it skips with why (Green's rule: never another copy; a space that gave nothing has nothing to
  * copy). self: the space doing the copying (Greatest Hits as it resolves), which is never listed. Cory's play
  * (2026-10-16): a skipped Echo or Reprise vanished without a word, so every skip is said, in the log and on the hover.
  */
@@ -161,7 +164,7 @@ export function ownPlan(ctx, p, self = null) {
   const L = ledger(ctx.state);
   const mine = Object.values(L.now).filter(e => e.p === p.id && e.key !== self).sort((a, b) => (a.seq || 0) - (b.seq || 0));
   const take = mine.filter(copyable);
-  const skip = mine.filter(e => !copyable(e)).map(e => ({ e, why: e.echo ? 'copy' : e.ring >= 3 ? 'center' : 'nothing' }));
+  const skip = mine.filter(e => !copyable(e)).map(e => ({ e, why: e.echo ? 'copy' : 'nothing' }));
   return { take, skip };
 }
 const SKIP_WHY = { copy: 'copies never copy a copy', center: 'the center', nothing: 'gave nothing' };
@@ -183,8 +186,8 @@ function copyOwn(ctx, p, self, by, who) {
   copyAll(ctx, p, take, by, who);
   return true;
 }
-/** A rival's spaces since p's last turn, from inside p's own turn (the space p just took doesn't count as "last turn"). */
-const sinceNow = (ctx, p) => { const L = ledger(ctx.state); return targets(ctx, p, 'since', L.now[L.open]?.p === p.id ? L.open : null); };
+/** Previous placement before this turn's action, including p's own placement on a snake double turn. */
+const previousNow = (ctx, p) => { const L = ledger(ctx.state); return targets(ctx, p, 'previous', L.now[L.open]?.p === p.id ? L.open : null); };
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
 // by: the member making the copy (Understudy, Sleepwalker…), so the log names it. who: the card or space asking
 // (the prompt's own name), so a copied space's free member is titled with it ("Encore: take a face-up member…").
@@ -252,7 +255,7 @@ const echoQ = {
   id: 'echo',
   name: 'Green',
   resource: 'green',
-  rule: 'Copies never reach the center or another copy. Most green at round end wins.',
+  rule: 'Copies never copy another copy. Most green at round end wins.',
   scoring: { label: 'Most green', counts: 'the green you hold when the round ends', score: (ctx, p) => p.res.green || 0 },
 
   actions: [
@@ -267,28 +270,27 @@ const echoQ = {
       resolve(ctx, p) { ctx.gain(p, 'green', 2 * ctx.state.round, { fromAction: true }); },
     },
     {
-      // the rivals' spaces since your last turn: what the "since your turn" line shows, so you know before you place
-      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy a space a rival took since your last turn.',
-      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'since'), p),
-      resolve(ctx, p) { plus(ctx, p); offer(ctx, p, sinceNow(ctx, p), 'Echo: copy which rival’s space (taken since your last turn)?', 'now'); },
+      // The previous placement can be your own on a snake double turn.
+      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy the previous action.',
+      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'previous'), p),
+      resolve(ctx, p) { plus(ctx, p); offer(ctx, p, previousNow(ctx, p), 'Echo: copy the previous action?', 'now'); },
     },
     {
-      key: 'encore', ring: 2, name: 'Encore', echo: true, text: 'Copy any space taken this round.',
+      key: 'encore', ring: 2, name: 'Encore', echo: true, text: 'Copy any space with a minion.',
       estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'any'), p),
       resolve(ctx, p) { plus(ctx, p); offer(ctx, p, targets(ctx, p, 'any'), 'Encore: copy which space?', 'now'); },
     },
     {
       // your own spaces are on the board in your color: no memory of last round needed (it replaced Recall)
-      key: 'refrain', ring: 2, name: 'Reprise', echo: true, text: '+2 green, and copy a space you took this round.',
-      estimate: (ctx, p) => 2 + VARIANT.plus + bestValue(ctx, targets(ctx, p, 'own'), p),
+      key: 'refrain', ring: 2, name: 'Reprise', echo: true, text: 'Copy a space where you have a minion.',
+      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'own'), p),
       resolve(ctx, p) {
         plus(ctx, p);
-        ctx.gain(p, 'green', 2, { fromAction: true });
         offer(ctx, p, targets(ctx, p, 'own'), 'Reprise: copy which of your spaces?', 'now');
       },
     },
     {
-      key: 'eternity', ring: 3, name: 'Greatest Hits', echo: true, text: 'Copy every space you took this round.',
+      key: 'eternity', ring: 3, name: 'Greatest Hits', echo: true, text: 'Copy every action where you have a minion.',
       estimate: (ctx, p) => VARIANT.plus + targets(ctx, p, 'own').reduce((s, e) => s + entryValue(ctx, e, p), 0),
       resolve(ctx, p) {
         plus(ctx, p);
@@ -332,8 +334,8 @@ const echoQ = {
     m('muse', 'Muse', 2, 2, 'Whenever a rival copies one of your spaces, +2 green.'),
     // Understudy and Ensemble replaced Choirmaster (green for a rival's copy: a gift for doing nothing, and Muse's
     // twin) and Fan (green when a rival takes the center: nothing to do with copying). Claude, 2026-10-14.
-    m('understudy', 'Understudy', 4, 2, 'When recruited: copy a space a rival took since your last turn.', {
-      onRecruited(ctx, owner) { offer(ctx, owner, sinceNow(ctx, owner), 'Understudy: copy which rival’s space (taken since your last turn)?', 'now', 'Understudy'); },
+    m('understudy', 'Understudy', 4, 2, 'When recruited: copy the previous action.', {
+      onRecruited(ctx, owner) { offer(ctx, owner, previousNow(ctx, owner), 'Understudy: copy the previous action?', 'now', 'Understudy'); },
     }),
     // was "Game end: +1 follower per green member." (2+2) until the design critic's follow-ups (2026-10-14): now it
     // pays for the copy itself, a rival's space only, and the follower counts at once (heard() above).

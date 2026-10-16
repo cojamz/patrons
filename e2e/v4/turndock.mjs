@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E turn-card dock gate (2026-10-15: "Maximum update depth exceeded" in TurnCard on a market/echo/yellow/gold table,
 // right after a buy step, with "You took Echo" docked under the since-strip; the game fell to "Something went wrong").
 // The card docks at a foot that never depends on the story (layout.css --turn-dock), and the story leaves it room
@@ -29,7 +30,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 async function run(size) {
   const tag = `${size.width}x${size.height}`;
   const turns = new Set();

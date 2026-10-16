@@ -6,7 +6,7 @@ Lead a cult for three rounds. Most **followers** after round III wins.
 - **Minions** are your workers, small copies of your emoji: 3 in round I, 4 in round II, 5 in round III.
 - **Followers** are your score, shown by a little-person mark. You start with 1. Each member is worth the followers beside the mark on its card (usually 1). Only followers you bought or won can be sold or stolen.
 - **Resources** come in one color per quadrant, and there is one quadrant per player. A resource is a plain dot in its color; a dot split into the table's colors means "any resources".
-- **Members** are recruited from the shop. Each is worth followers, and most have an ability.
+- **Members** are recruited from the shop. Each is worth followers, and most have an ability. "On recruit" happens when it joins you; "at round start" happens before anyone places a minion.
 
 ## Setup
 In seat order, each player chooses 2 starting resources.
@@ -15,7 +15,7 @@ In seat order, each player chooses 2 starting resources.
 One colored quadrant per player, each with its own spaces and its own contest, printed on its rim.
 - The **outer ring** opens in round I, the **middle ring** in round II, the **inner ring** in round III. Open rings stay open.
 - Each space holds one minion per round. All minions return at round end.
-- To **copy** a space is to gain that space's own gain this round, as printed. The taker's member bonuses (like Grand Host's double) and gifts to others are not copied. Copies never reach the center (the inner ring) or another copy.
+- To **copy** a space is to gain that space's own gain this round, as printed. The taker's member bonuses (like Grand Host's double) and gifts to others are not copied. Copies never copy another copy. Occupied inner-ring spaces can be copied. Echo copies the previous action, including your own on a snake double turn; Encore copies any space with a minion; Greatest Hits copies every space with your minion.
 - To **steal** is to take from a rival. Resources a Magenta card steals arrive as magenta.
 
 ## A turn
@@ -26,12 +26,10 @@ Turns go in snake order (1-2-3-4, 4-3-2-1, …). Round I's order is random; from
    - Or **buy followers** with any resources: 2 for 2 followers, 4 for 4, 8 for 8, 10 for 10. Only the 8-for-8 buy is limited: 2 per player (8 in a 4-player game). Buy 10 for 10 as often as you can pay for it.
    - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back only its colored part, in its color (in any colors if its color isn't on the table). The "any" part never comes back, so a member with no colored part can't be released, and neither can a member you've already used.
 
-An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while a space is open. A member whose color isn't on the table is **colorless**: it gives nothing to cards that pay "its color".
-
-An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while the board has a space to spare.
+An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while the board has a space to spare after every remaining minion lands. A member whose color isn't on the table is **colorless**: it gives nothing to cards that pay "its color".
 
 ## Round end
-Each contest's leader gains +2 followers in round I, +4 in round II, +6 in round III. Ties all score unless the rim's tiebreak settles it. You need at least 1 of what's counted. The count is taken at round end.
+Each contest's leader gains +2 followers in round I, +4 in round II, +6 in round III. Tied leaders each gain the full prize. You need at least 1 of what's counted. The count is taken at round end.
 
 ## Game end
 After round III, add game-end member bonuses. Most followers wins; ties go to more members.

@@ -2,9 +2,12 @@
 // Gold: every action and every member hook, with exact numbers.
 import { describe, it, expect } from 'vitest';
 import { resume } from '../../../engine/v4/core.js';
-import { scene, take, play, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
+import { scene as baseScene, take, play, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
 
 useTestCosts();
+
+// These cross-sphere fixtures exercise the original four-sphere table explicitly.
+const scene = options => baseScene({ quadrants: ['gold', 'red', 'blue', 'green'], ...options });
 
 const R = s => s.players.map(p => p.res);
 
@@ -242,9 +245,10 @@ describe('Gold members', () => {
     s.cards[uidOf(s, 'gold.investor', 0)].invested = 3;
     s.queue = [{ t: 'endRound' }];
     s = resume(s);
-    // 4 + 6 = 10 beats 9, so P1 takes the round-I gold contest (P2 wins the member tie on red)
+    // 4 + 6 = 10 beats 9, so P1 takes the round-I gold contest. Other spheres score independently.
     expect(R(s)[0].gold).toBe(10);
-    expect(s.players[0].contest).toBe(2);
+    expect(s.contests[0].results.find(c => c.qid === 'gold').winners).toEqual([0]);
+    expect(s.contests[0].prize).toBe(2);
     expect(s.cards[uidOf(s, 'gold.investor', 0)].invested).toBe(0);
   });
 

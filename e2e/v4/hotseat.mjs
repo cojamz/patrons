@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: a full hot-seat game in a real browser. 1 person + 3 bots; the person clicks the first legal option each time.
 // Fails on any console error or page error. Screenshots go to /tmp/patrons-shots/v4/.
 //
@@ -39,7 +40,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 const page = await browser.newPage({ viewport: DESKTOP });
 page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));

@@ -1,3 +1,4 @@
+import { browserPath } from '../../e2e/v4/lib/browser.mjs';
 // Design pod: print the boxes of the game screen's regions for a saved state (default: P1 placing in round II).
 //   node scripts/design-pod/measure.mjs [--q layout=a] [--size 1270x700]
 import { chromium } from 'playwright';
@@ -14,7 +15,7 @@ const rand = seededRandom(5);
 const ok = st => st.round === round && st.pending && st.pending.player === 0 && st.pending.kind === 'place' && Object.values(st.slots).filter(v => v === 0).length >= 1;
 for (let n = 0; n < 6000 && !ok(s); n++) s = applyMove(s, chooseBotMove(s, rand));
 const save = { config: { seats: SEATS, speed: 'normal' }, state: s, undo: null, savedAt: Date.now() };
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const b = await chromium.launch({ executablePath: browserPath });
 const page = await (await b.newContext({ viewport: { width: W, height: H } })).newPage();
 const url = `${base}/?intro=0${q ? '&' + q : ''}`;
 await page.goto(url);

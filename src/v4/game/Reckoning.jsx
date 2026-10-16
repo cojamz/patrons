@@ -18,6 +18,8 @@ import { chainRunning, onChainEnd } from './director.js';
 import Tick from './Tick.jsx';
 import { ruleWords } from '../shorts.js';
 import { play } from '../sound.js';
+import { cardDef } from '../../engine/v4/index.js';
+import { finalGrants } from './finalScore.js';
 
 // The pace (the motion language's B6, grammar.md; Cory: "readable, one quadrant at a time"): about 1.6s a rim at
 // Steady, every step moving. The rim lights; the counts stamp in seat by seat and tick up (no still "counting…"); the
@@ -34,8 +36,33 @@ export function reckonRows(info) {
   return base.map(st => ({ qid: st.qid, rule: ruleWords(st.qid, st.rule), counts: st.counts || null, tiebreak: st.tiebreak || null, prize: st.prize ?? result.rows.find(r => r.qid === st.qid)?.v ?? 0, rows: st.rows, winners: st.leaders || [] }));
 }
 
+/** End-game member bonuses follow the contests, each credited to its member on the table. */
+export function reckonSteps(info) {
+  const contests = reckonRows(info);
+  if (!info.after.over) return contests;
+  const bonuses = info.after.players.flatMap(p => finalGrants(info.after, p).filter(g => g.n).map(g => ({
+    key: `bonus:${p.id}:${g.uid ?? g.name}`, kind: 'bonus', uid: g.uid, pid: p.id,
+    qid: g.uid != null ? cardDef(info.after, g.uid).quadrant : null,
+    rule: g.name, counts: g.uid != null ? cardDef(info.after, g.uid).text : null,
+    prize: g.n, rows: [{ id: p.id, shown: g.n }], winners: [p.id],
+  })));
+  return [...contests, ...bonuses];
+}
+
+/** Totals still to arrive, shared by the animation and seat display. */
+export function unpaidFollowers(info, paid = 0) {
+  return reckonSteps(info).slice(paid).reduce((out, r) => {
+    for (const id of r.winners) {
+      const p = out[id] ||= { bonus: 0, contest: 0 };
+      p.bonus += r.prize;
+      if (r.kind !== 'bonus') p.contest += r.prize;
+    }
+    return out;
+  }, {});
+}
+
 export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = null }) {
-  const rows = useRef(reckonRows(info)).current;
+  const rows = useRef(reckonSteps(info)).current;
   const [step, setStep] = useState(0); // which quadrant is paying (rows.length = finished)
   const [beat, setBeat] = useState(0); // within it: 0 counting, 1 the verdict (the prize in the air), 2 landed
   const [seen, setSeen] = useState(0); // how many seats' counts have stamped in so far
@@ -100,10 +127,11 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     const row = rows[step];
     setBeat(0);
     setSeen(0);
-    if (onLamp) onLamp(row.qid);
+    if (onLamp) onLamp(row.kind === 'bonus' ? null : row.qid);
     if (typeof window !== 'undefined') window.__patronsReckon = (window.__patronsReckon || 0) + 1;
     const won = row.winners.length > 0;
-    const plaque = root && root.querySelector(`[data-plaque="${row.qid}"]`);
+    const member = row.kind === 'bonus' && root && [...root.querySelectorAll(`.lt-seat[data-pid="${row.pid}"] .cs-member[data-uids]`)].find(el => el.dataset.uids.split(' ').includes(String(row.uid)));
+    const plaque = row.kind === 'bonus' ? member || (root && playerAnchor(root, row.pid)) : root && root.querySelector(`[data-plaque="${row.qid}"]`);
     // the card never covers the rim it scores: a rim in the wheel's lower half sends it to the top
     if (root && plaque) {
       const stage = root.querySelector('.lt-wheel .stage') || root.querySelector('.stage');
@@ -158,13 +186,13 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         const home = root && (root.querySelector(`.lt-cult-seat[data-seat="${id}"] .cs-total`) || playerAnchor(root, id));
         // the followers leave the winner's column on the card (their score), else the rim's engraving
         const col = document.querySelector(`.lt-reckon [data-reckon-col="${id}"] .rc-n`);
-        const src = col && col.getBoundingClientRect().width ? col : plaque;
+        const src = row.kind === 'bonus' ? plaque : col && col.getBoundingClientRect().width ? col : plaque;
         if (!src || !home) { land(); return; }
         const a = src.getBoundingClientRect(), b = home.getBoundingClientRect();
         const d = flightMs(Math.hypot(b.left - a.left, b.top - a.top));
         longest = Math.max(longest, d);
         const go = () => {
-          const anim = flyToken(src, home, `<b class="reckon-token" style="--pc:${playerColor(id)}">+${row.prize}</b>`, { tag: 'reckon', duration: d });
+          const anim = flyToken(src, home, `<b class="reckon-token" style="--pc:${playerColor(id)}">${row.prize < 0 ? '−' : '+'}${Math.abs(row.prize)}</b>`, { tag: 'reckon', duration: d });
           if (anim && anim.finished) anim.finished.then(land, land); else land();
         };
         if (k) timers.push(setTimeout(go, k * MO.fan)); else go();
@@ -191,20 +219,20 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     const level = w && r.rows.some(x => x.id !== w.id && x.shown === w.shown);
     return level && r.tiebreak && r.tiebreak.unit ? ` (more ${r.tiebreak.unit})` : '';
   };
-  const verdict = !row ? '' : !row.winners.length ? 'no one scores'
+  const verdict = !row ? '' : row.kind === 'bonus' ? `${name(row.pid)}: ${row.prize < 0 ? '−' : '+'}${fol(Math.abs(row.prize))} from ${row.rule}` : !row.winners.length ? 'no one scores'
     : row.winners.length > 1 ? `${row.winners.map(name).join(' and ')} tie: +${fol(row.prize)} each`
     : `${name(row.winners[0])} ${row.winners[0] === meId ? 'win' : 'wins'} +${fol(row.prize)}${broke(row)}`;
   const shownBeat = step < rows.length ? beat : 2;
   return (
-    <div className={`lt-reckon${open ? '' : ' waiting'}`} role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} onClick={finish}>
+    <div className={`lt-reckon${open ? '' : ' waiting'}`} role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} data-bonus-member={row?.kind === 'bonus' ? row.uid : undefined} onClick={finish}>
       <div className={`reckon-head${mid ? ' at-mid' : atTop ? ' at-top' : ''}${!ready ? ' opening' : ''}`} style={{ '--c': row && ready ? `var(--${row.qid})` : undefined, ...(mid ? { left: mid.left, top: mid.top, '--mid-w': `${mid.w}px` } : null) }} aria-live="polite">
         {/* the round's end, as a beat of its own before the first rim lights (wave 4 #6: the scoring began while the player
             looked away): "Round II ends" stamps in at the wheel's centre, with the quadrants still to score */}
         {!ready ? <b className="reckon-rule reckon-ends">Round {info.result.round} ends</b> : (
           <>
-          <small>Round {info.result.round} scoring · {Math.min(step + 1, rows.length)} of {rows.length}</small>
+          <small>{row?.kind === 'bonus' ? 'End-game bonuses' : `Round ${info.result.round} scoring`} · {Math.min(step + 1, rows.length)} of {rows.length}</small>
           {row && <b className="reckon-rule">{row.rule}</b>}
-          {row && row.counts && <span className="reckon-counts">Counts {row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
+          {row && row.counts && <span className="reckon-counts">{row.kind === 'bonus' ? '' : 'Counts '}{row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
           {/* the four scores side by side (Cory, 2026-10-15: "show the 4 players' scores for the various competitions"):
               each player's count stamps in and ticks up under their minion; the winner's column jiggles */}
           {row && mid && step < rows.length && (
@@ -225,7 +253,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
           <b data-reckon-head className={`reckon-verdict${shownBeat ? ' on' : ''}${row && !row.winners.length ? ' none' : ''}`}>{shownBeat ? verdict : '\u00a0'}</b>
           </>
         )}
-        <span className="reckon-dots" aria-hidden="true">{rows.map((r, k) => <i key={r.qid} className={k < step ? 'done' : ready && k === step ? 'on' : ''} style={{ '--c': `var(--${r.qid})` }} />)}</span>
+        <span className="reckon-dots" aria-hidden="true">{rows.map((r, k) => <i key={r.key || r.qid} className={k < step ? 'done' : ready && k === step ? 'on' : ''} style={{ '--c': `var(--${r.qid})` }} />)}</span>
         {/* skip on the card the player is reading (the skeptic, w4 #16: the Skip pill sat far away, bottom right) */}
         <button type="button" className="btn ghost reckon-skip in-card" data-reckon-skip onClick={e => { e.stopPropagation(); finish(); }}>Skip</button>
       </div>

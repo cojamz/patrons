@@ -6,6 +6,7 @@ import { render, cleanup } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove, followers, cardDef } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { scoreSteps, finalGrants, BEATS } from '../../../v4/game/finalScore.js';
+import { reckonSteps, unpaidFollowers } from '../../../v4/game/Reckoning.jsx';
 import FinalScore, { plan } from '../../../v4/game/FinalScore.jsx';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
 
@@ -73,4 +74,41 @@ describe('end-game scoring pops', () => {
     }
     expect(container.querySelectorAll('.over-seat.won').length).toBeGreaterThan(0);
   });
+  it('pays end-game grants after contests, with totals changing only as each award arrives', () => {
+    const s = games.find(s => s.players.some(p => p.final.total));
+    const info = { result: { round: 'III', rows: [] }, after: s, board: s };
+    const steps = reckonSteps(info);
+    const firstBonus = steps.findIndex(r => r.kind === 'bonus');
+    expect(firstBonus).toBeGreaterThan(0);
+    expect(steps.slice(firstBonus).every(r => r.kind === 'bonus')).toBe(true);
+    for (const p of s.players) {
+      const bonus = steps.filter(r => r.kind === 'bonus' && r.pid === p.id);
+      expect(bonus.reduce((n, r) => n + r.prize, 0)).toBe(p.final.total);
+      for (const row of bonus) {
+        expect(p.members).toContain(row.uid);
+        expect(row.rule).toBe(finalGrants(s, p).find(g => g.uid === row.uid).name);
+      }
+    }
+    for (let paid = 0; paid <= steps.length; paid++) {
+      const unpaid = unpaidFollowers(info, paid);
+      for (const p of s.players) {
+        const landed = steps.slice(0, paid).filter(r => r.winners.includes(p.id)).reduce((n, r) => n + r.prize, 0);
+        const all = steps.filter(r => r.winners.includes(p.id)).reduce((n, r) => n + r.prize, 0);
+        expect(followers(s, p) - (unpaid[p.id]?.bonus || 0)).toBe(followers(s, p) - all + landed);
+      }
+    }
+    expect(unpaidFollowers(info, steps.length)).toEqual({});
+  });
+
+  it('keeps the results totals final after the round-scoring sequence', () => {
+    const s = games[0];
+    const { container } = render(<FinalScore animate={false} state={s} me={0} hover={null} onPick={() => {}} CultSeat={CultSeat} />);
+    expect(container.querySelector('.over-cults').dataset.scored).toBe('done');
+    expect(container.querySelectorAll('[data-score-pop]').length).toBe(0);
+    for (const el of container.querySelectorAll('.over-seat')) {
+      const pid = Number(el.dataset.pid);
+      expect(el.querySelector('.cs-total').dataset.followers).toBe(String(followers(s, s.players[pid])));
+    }
+  });
+
 });

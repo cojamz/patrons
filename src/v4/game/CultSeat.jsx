@@ -17,9 +17,7 @@ import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { seatTurns } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
-import { incomeOf, incomeTerms } from './build.js';
 import Tick from './Tick.jsx';
-import { Rich } from './Rich.jsx';
 import { MO } from '../motion.js';
 import './lamp-b.css';
 
@@ -54,36 +52,14 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const turn = seatTurns(state, me)[pid] || null;
   // who's winning lives here now (no score row): this chair's place, lit when it leads, the margin on hover
   const rank = seatRanks(state, me)[pid] || null;
-  // its build at one glance: its members (grouped by color) and what they hand it each round (the engine's round start)
-  const income = incomeOf(state, pid);
-  const incomeParts = income ? Object.entries(income.res).filter(([, n]) => n > 0) : [];
-  // a dry run of next round's start: a part that hangs on a condition says so ("+1 purple per 2 purple"), and the hover
-  // says each member's rule (build.js incomeTerms, f8: Late Bloomer read as a sure +1 every round)
-  const terms = incomeParts.length || (income && income.followers > 0) ? incomeTerms(state, p) : null;
-  const incomeWords = (terms ? terms.groups : []).flatMap(g => g.parts.map(([r, n], i) => `+${n} ${r}${g.cond && i === g.parts.length - 1 ? ` ${g.cond}` : ''}`))
-    .concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
-  // the hover's sentence: a comma after each condition, so "+1 if fewest, +2 per 2 purple" never runs together
-  const incomeText = incomeWords.map((w, i) => (i < incomeWords.length - 1 && /[a-z]$/.test(w) && !/^\+\d+ \w+$/.test(w) ? `${w},` : w)).join(' ');
-  // member figures shown before "+N": one row beside the "each round" line, so every chair keeps one fixed height
-  // (the seat column is narrower now: six figures ran under "each round +3●"; each income part takes a figure's room)
-  // (design pod, w2b #22: figures are 32px on the laptop so a rival's members can be told apart: six and a "+N" to a
-  // row, and the "each round" line takes about one figure per part plus its label)
-  // a steal pick that pays the thief's Robin Hood here (boardPick.js seatPart): the second row says so, in place of the
-  // "each round" line, so the figures fold early to leave it room
+  // Member figures use the room freed by the retired income and member-count labels.
   const bonus = pick && pick.bonus ? pick.bonus : null;
-  // On a laptop the row shows as many figures as fit (w3a A16: yours folded to three and a "+1" beside "each round",
-  // w3b: a rival's seventh member folded with room to spare), measured from the row's own width, the "each round" block
-  // beside it and a figure's width. None of these changes with how many are shown, so measuring can't feed back (the
-  // TurnCard lesson, 2026-10-15). Phones keep fixed counts: their crowd wraps.
-  // "each round" stands in one spot on every seat, yours too: beside the figures, at the row's right. Yours used to move
-  // up beside your name whenever it cleared your turn words, so it jumped between rounds (blind testers, 2026-10-15).
-  // (live panel r1, G4: "+N more" hid members, so "Most members" couldn't be counted) the row now leads with the count,
-  // always in view, and the figures stand 24px (the sprites' own pixels) two rows deep, so twice as many show
+  // Measure the existing crowd row so the freed space shows more figures; phones wrap a fixed crowd.
   const fit = useFigureFit(rootEl);
   // a choice that picks one of this seat's members (Doppelganger, Echo, a swap, a steal) shows every member, never "+N"
   // (Cory, 2026-10-15: "doppleganger can only copy whats available"); the row grows for the choice and folds after
   const pickAll = !!(pick && pick.members && groups.some(g => g.uids.some(u => pick.members[u])));
-  const MAX = pickAll ? groups.length : fit ? (fit.all >= groups.length ? groups.length : fit.withMore) : bonus ? 3 : incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
+  const MAX = pickAll ? groups.length : fit ? (fit.all >= groups.length ? groups.length : fit.withMore) : bonus ? 5 : 10;
   const nMembers = p.members.length;
   // your starting pick, when it's yours to make here (the engine's options, through the same optionFor as Use)
   const setupPick = mine && pend && pend.kind === 'setup' && pend.player === pid && !state.over
@@ -118,7 +94,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   };
   // the seat's body and resource row open its card too (w3b #47), but a member figure opens its own card
   // (a stack in a pick says its own thing: why it's dim, or nothing while lit; the seat card over it hid the reason, w4b #8)
-  const onFig = e => !!(e.target && e.target.closest && e.target.closest('.cs-member, .cs-pick-seat, button, .cs-stack[data-why], .cs-stack.pick-on'));
+  const onFig = e => !!(e.target && e.target.closest && e.target.closest('.cs-member, .cs-turn, .cs-pick-seat, button, .cs-stack[data-why], .cs-stack.pick-on'));
   const bodyHover = {
     onPointerEnter: e => { if (realHover(e) && !onFig(e)) openSeat(e, false); },
     onPointerMove: e => { if (realHover(e) && hover && !onFig(e)) openSeat(e, false); },
@@ -129,7 +105,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-turn'));
   const railIn = useRef(false);
   return (
-    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${setupPick || setupWait ? ' setup-pick' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}${pickAll ? ' pick-all' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${setupPick || setupWait ? ' setup-pick' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}${pickAll ? ' pick-all' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} {...bodyHover} style={{ '--pc': playerColor(pid) }}
       // a click beside the lit picks in this chair (w3a A53: "a click 30px off did nothing, and no 'pick a lit stack'")
       // makes them pulse once, so the miss says where to click
       onClick={pick && pick.lit && !pick.seatMode ? e => {
@@ -197,12 +173,6 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         </div>
       )}
       <div className="cs-crowd" {...bodyHover} role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members: ${nMembers}`}>
-        {/* how many members, always in view (live panel r1: "Most members" is a prize, so the count can never fold away);
-            the label above the number, like "each round" across the row. Pointing at it opens the seat's card, which
-            lists every member. */}
-        <span className="cs-count" data-member-count={nMembers} title={`${mine ? 'You have' : `${p.name} has`} ${nMembers} member${nMembers === 1 ? '' : 's'}`}>
-          <small>{nMembers === 1 ? 'member' : 'members'}</small><b className="num">{nMembers}</b>
-        </span>
         <span className="cs-figs" style={fit ? { maxWidth: `${fit.per * fit.cell}px` } : undefined}>
         {shown.map(g => {
           const d = g.def;
@@ -249,30 +219,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
         {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </div>
-      {/* what its members make each round, and what it just did (the approved plate's rival panel) */}
-      {bonus ? (
+      {bonus && (
         <div className="cs-build cs-bonus" data-pick-bonus={bonus.n} title={bonus.why}>
           <span className="cs-income"><small>Robin Hood</small><span className="cs-gains"><span className="cs-inc"><b className="num">+{bonus.n}</b><Follower size={12} title="follower" /></span></span></span>
-        </div>
-      ) : incomeWords.length > 0 && (
-        <div className="cs-build" {...bodyHover}>
-          {incomeWords.length > 0 && (
-            <Tip className="cs-income" data-income={incomeWords.join(', ')} label={`Each round its members make ${incomeWords.join(', ')}`}
-              content={() => <div className="pop-card gloss"><b>Each round</b><span>Next round starts with <Rich text={incomeText} /> for {mine ? 'you' : p.name}, as things stand now.</span>
-                {terms && terms.sources.map(x => <span key={x.name} className="cs-why">{x.name}{x.n > 1 ? ` ×${x.n}` : ''}: <Rich text={x.text} />{x.hold ? ` (${x.hold})` : ''}</span>)}</div>}>
-              <small>each round</small>
-              <span className={`cs-gains${terms && terms.groups.some(g => g.cond) ? ' has-cond' : ''}`}>
-                {/* a condition and the parts it covers stay together on one line ("+1● +1● +1● if fewest") */}
-                {(terms ? terms.groups : []).map(g => (
-                  <span key={g.cond || '-'} className="cs-grp" {...(g.cond ? { 'data-cond': g.cond } : {})}>
-                    {g.parts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
-                    {g.cond && <small className="cs-cond"><Rich text={g.cond} /></small>}
-                  </span>
-                ))}
-                {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
-              </span>
-            </Tip>
-          )}
         </div>
       )}
       <footer className="cs-foot" {...bodyHover}>
@@ -379,7 +328,7 @@ export function reactionsBetween(before, state, pid) {
 /**
  * How many member figures fit a laptop chair's row: { all, withMore } (all of them, or with room kept for "+N"), or null
  * on a phone (fixed counts there). Read in a ResizeObserver (after layout, so the reads are free) from the row's width,
- * the "each round" block when it shares the row, "safe this round", and one figure's width; a block that comes or goes,
+ * a temporary pick-bonus block when it shares the row, "safe this round", and one figure's width; a block that comes or goes,
  * and the first figure, are watched as they appear. Set only when the numbers change.
  */
 function useFigureFit(rootEl, layout = null) {
@@ -408,9 +357,8 @@ function useFigureFit(rootEl, layout = null) {
         const rows = Math.max(1, Math.floor((c.height + (parseFloat(getComputedStyle(box).rowGap) || 0)) / (figH + (parseFloat(getComputedStyle(box).rowGap) || 0))));
         const b = build && build.getBoundingClientRect();
         const beside = b && b.width && b.top < c.bottom - 1 && b.bottom > c.top + 1 ? b.width + 8 : 0;
-        const count = crowd.querySelector(':scope > .cs-count');
         const safe = crowd.querySelector(':scope > .cs-safe');
-        const room = c.width - beside - (count ? count.getBoundingClientRect().width + gap : 0) - (safe ? safe.getBoundingClientRect().width + gap : 0);
+        const room = c.width - beside - (safe ? safe.getBoundingClientRect().width + gap : 0);
         const per = Math.max(1, Math.floor((room + fgap) / cell));
         const all = per * rows;
         const withMore = Math.max(1, all - 1); // "+N" takes the last cell

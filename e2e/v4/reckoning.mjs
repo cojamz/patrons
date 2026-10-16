@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: the Reckoning and the minions, at 1270×700 (Cory: "a little animation showing which cult wins each round
 // prize"; "placing a minion animates it from the leader to the wheel space; at round end they fly home").
 //  (r1) at round end each quadrant pays in turn: the header names every quadrant's result;
@@ -35,7 +36,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
 page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });

@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: a full game on a phone (390×844, touch), at Normal pace, with build-failing assertions:
 //  (a) every visible button / [role=button] / input has a hit box of at least 44×44 at every step
 //      (wheel spaces are measured by their invisible hit circle);
@@ -42,7 +43,7 @@ if (!base) {
 const errors = [];
 const fail = new Map(); // de-duplicated failures: message -> first step
 const note = (msg, step) => { if (!fail.has(msg)) fail.set(msg, step); };
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
 const page = await ctx.newPage();
 page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });

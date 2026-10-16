@@ -27,7 +27,7 @@ describe('the hover delay', () => {
     expect(layer.hasAttribute('data-prep')).toBe(true);
     const drawn = layer.querySelector('.lt-note');
     expect(drawn).not.toBeNull();
-    expect(drawn.textContent).toMatch(/Round end/);
+    expect(drawn.textContent).toMatch(/at this round’s end/);
     act(() => { vi.advanceTimersByTime(HOVER_DELAY_MS - 1); });
     expect(layer.dataset.open).toBe('0');
     act(() => { vi.advanceTimersByTime(1); });

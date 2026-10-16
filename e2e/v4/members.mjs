@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E: a player's members, clearly, and using one, obviously (Cory, 2026-10-15: the seat hover "should cleanly show a list
 // of member ability/passives, if they've been activated … I still don't know how to activate a member / the UI for it").
 // A saved hot-seat game (e2e/v4/lib/members-save.mjs): P1 holds eleven members of every kind on a Gold/Echo/Trading/
@@ -47,7 +48,7 @@ const texts = Object.fromEntries(HAND.map(id => [id, cardDef(s0, uids[id]).text]
 // the words of a sentence, as the screen prints them: resource and follower words become marks, so compare the rest
 const norm = t => String(t).replace(/(?<![A-Za-z])(gold|green|white|purple|red|blue|silver|yellow|magenta|any|followers?)(?![A-Za-z])/g, '').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
 const errors = [];
 page.on('pageerror', e => errors.push(e.message));

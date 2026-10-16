@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E board-picker gate: a choice is answered on the board (src/v4/game/boardPick.js), at laptop size (1270×700).
 // Steals and recruits from a space ask on the card beside that space (live panel round 1: their targets sat 420–600 px
 // from the space while the prompt sat top centre), and their targets stay lit on the board as well.
@@ -47,7 +48,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 
 // every value the counter shows and every resource flight, frame by frame
 const INSTRUMENT = () => {

@@ -6,10 +6,10 @@ import { targets as echoTargets, ownPlan, skipWords } from '../../engine/v4/cont
 
 // The card's timing, from how its text opens (the tag above the name).
 const TIMINGS = [
-  [/^now and at round start\b/i, 'Now + round start'],
-  [/^(?:at )?round start\b/i, 'Round start'],
+  [/^(?:now|on recruit) and at round start\b/i, 'On recruit + at round start'],
+  [/^(?:at )?round start\b/i, 'At round start'],
   [/^round end\b/i, 'Round end'],
-  [/^(?:when recruited|when it joins you)\b/i, 'On recruit'],
+  [/^(?:on recruit|when recruited|when it joins you)\b/i, 'On recruit'],
   [/^whenever\b/i, 'Whenever'],
   [/^game end\b/i, 'Game end'],
   [/^once per round\b/i, 'Once a round'],
@@ -90,8 +90,8 @@ export const surely = pv => (pv ? Object.fromEntries(Object.entries(pv.you.res).
  * board keys, from Green's own target rule; null for any other member or when Green isn't on the table.
  */
 export function memberCopyTargets(state, pid, def) {
-  if (!state.quadrants.includes('echo') || !/copy a space a rival took since your last turn/i.test(def.text || '')) return null;
-  try { return [...new Set(echoTargets(contextFor(state), state.players[pid], 'since').map(e => String(e.key).split('+')[0]))]; } catch { return null; }
+  if (!state.quadrants.includes('echo') || !/copy the previous action/i.test(def.text || '')) return null;
+  try { return [...new Set(echoTargets(contextFor(state), state.players[pid], 'previous').map(e => String(e.key).split('+')[0]))]; } catch { return null; }
 }
 
 /**
@@ -108,4 +108,4 @@ export function ownCopyPlan(state, pid) {
   } catch { return null; }
 }
 /** Is this the copy-all card (Greatest Hits as a space, Tribute Band as a member)? */
-export const copiesAll = text => /^(?:once per game: )?copy every space you took this round/i.test(text || '');
+export const copiesAll = text => /^(?:once per game: )?copy every (?:action where you have a minion|space you took this round)/i.test(text || '');

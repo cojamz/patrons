@@ -2,6 +2,13 @@
 
 Rewritten 2026-10-15 (afternoon), so a fresh thread loses nothing. Read this first, then the files it points to. Where this doc and a source disagree, the source wins: `design/decisions.md` for design calls, the code for what's built.
 
+## Current collaboration update (2026-10-15, Codex)
+- Cory likes the current design and wants focused iteration, no dramatic redesign. Preserve the money selector, member-card character and player-card hover.
+- Voice: warm but terse, efficient to scan, clear updates; no performative foreman voice.
+- The assistant owns the harness: coordinate resources for speed with integrity, verify visually, improve from friction, keep documents current and work tidy. Native screenshots were declined; do not request them again.
+- The re-pasted play notes match the v0.5 calls and ideas already in todo.md and decisions.md. The approved first batch is implemented locally and being verified; deployment status and assignments are at the top of in-flight.md. Tentative redesigns remain for Cory.
+- Current shipping follows README.md: shared v4 branch, checked increments, scripts/v4-play.sh, published-build verification. Historical Netlify/WIP instructions below are superseded.
+
 ## 0. Latest (2026-10-15, 10:40pm Eastern)
 Cory played and called it v0.5 ("quite good"). His notes are logged, not built: todo.md top section, decisions.md 2026-10-16, answer key 48–53. Start there. Open to him: follower buys 1/5/10 or 2/5/10 [1/5/10]; end-game tiebreaker most members, shown [yes]; remove member release [keep, make findable].
 

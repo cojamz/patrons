@@ -1,3 +1,4 @@
+import { browserPath } from '../../e2e/v4/lib/browser.mjs';
 // Design pod: every font size on the game screen with visible text, how much text uses it, and where.
 //   node scripts/design-pod/typescale.mjs [--state place|buy] [--size 1270x700]
 import { chromium } from 'playwright';
@@ -13,7 +14,7 @@ const rand = seededRandom(5);
 const ok = st => st.round === 2 && st.pending && st.pending.player === 0 && st.pending.kind === 'place' && Object.values(st.slots).filter(v => v === 0).length >= 1;
 for (let n = 0; n < 6000 && !ok(s); n++) s = applyMove(s, chooseBotMove(s, rand));
 const save = { config: { seats: SEATS, speed: 'normal' }, state: s, undo: null, savedAt: Date.now() };
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const b = await chromium.launch({ executablePath: browserPath });
 const page = await (await b.newContext({ viewport: { width: W, height: H } })).newPage();
 await page.goto(`${base}/?intro=0`);
 await page.evaluate(async v => { const m = await import('/src/v4/session/record.js'); v.state.build = { ...m.BUILD }; localStorage.clear(); localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.introSeen', '1'); }, save);

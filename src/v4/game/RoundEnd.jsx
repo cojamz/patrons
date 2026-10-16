@@ -131,7 +131,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
                 {/* the parts whenever there are any, even when they cancel out (live panel r1: P4 recruited 3 and lost 3 to a
                     sale, and the cell said "—") */}
                 <span className="re-d num" role="cell" data-this-round={p.id}>{other || whyLong.length ? (whyLong.length ? <Tip label={`${p.id === meId ? 'Your' : `${p.name}’s`} followers this round`} content={() => <div className="pop-card"><b>{p.id === meId ? 'Your' : `${p.name}’s`} followers this round, besides prizes: {other > 0 ? '+' : other < 0 ? '−' : ''}{Math.abs(other)}</b>{whyLong.map(t => <span key={t}>{t}</span>)}</div>}>{why}</Tip> : `${other > 0 ? '+' : '−'}${Math.abs(other)}`) : '—'}</span>
-                <Tick value={now} from={was} color="var(--ink)" className="re-f num" dur={700} float={false} />
+                <Tick value={now} from={now} color="var(--ink)" className="re-f num" dur={0} float={false} />
               </div>
             );
           })}

@@ -19,7 +19,7 @@ describe('keywords inside controls', () => {
     expect(t.getAttribute('role')).toBeNull();
     expect(t.querySelector('.hitbox')).toBeNull();
     // its words for a long-press (touch); no native title, which on a desktop would sit on top of its hover card
-    expect(t.getAttribute('data-hint')).toMatch(/round start: /i);
+    expect(t.getAttribute('data-hint')).toMatch(/on recruit: /i);
     expect(t.getAttribute('title')).toBeNull();
   });
   it('in plain text a keyword still opens its definition on click', () => {
@@ -27,6 +27,7 @@ describe('keywords inside controls', () => {
     const t = container.querySelector('.term');
     act(() => { fireEvent.click(t); });
     expect(document.querySelector('[data-tip-body]')).not.toBeNull();
+    expect(document.querySelector('[data-tip-body]').classList.contains('passive')).toBe(false); // pinned definitions remain interactive
     expect(t.getAttribute('role')).toBe('button');
   });
 });

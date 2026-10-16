@@ -63,6 +63,7 @@ const rivalTurnsAt = sp => {
 
 describe('the table\'s pace at Steady (H2, H3)', () => {
   it('a rival\'s turn and the wait between your turns stay inside the motion budget', () => {
+    setMotionSpeed('steady');
     expect(motionSpeed()).toBe('steady');
     const turns = [], waits = [], r1 = [], r3 = [];
     // you sit in every seat in turn (the snake gives an end seat long and short gaps, a middle seat even ones)

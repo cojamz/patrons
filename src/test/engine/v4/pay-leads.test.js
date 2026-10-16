@@ -1,6 +1,6 @@
 // One pay rule everywhere (decisions.md 2026-10-15 17:55; panel tester C): a payment with one way pays at once unless
 // it gives up a contest lead or tie you hold; then it asks, saying so. More than one way, the player picks. This covers
-// the recruits outside the buy step (Snap Up, Half Price, Talent Scout) and the spaces that spend your coins (Cheap Seats).
+// the recruits outside the buy step (Snap Up, Half Price, Talent Scout) and follower purchases. Cheap Seats grants followers for held white and no longer spends coins.
 import { describe, it, expect, afterEach } from 'vitest';
 import { sceneQ } from './cards-helpers.js';
 import { take, pinCosts } from './helpers.js';
@@ -49,29 +49,29 @@ describe('one way to pay that gives up a lead asks first', () => {
   });
 });
 
-describe('a space that spends your coins marks the answers that give up a lead', () => {
-  it('Cheap Seats: paying silver while tied for silver is marked; gold (no lead) is not', () => {
-    let s = sceneQ({ quadrants: Q, res: [{ silver: 3, gold: 2 }, { silver: 3, gold: 4 }] });
-    s = take(s, 'trading.buylow');
-    expect(s.pending.kind).toBe('choose');
-    const by = id => s.pending.options.find(o => o.id === id);
-    expect(by('color:silver').breaks).toEqual(['silver']);
-    expect(by('color:gold').breaks).toBeUndefined();
+describe('follower payments mark the answers that give up a lead', () => {
+  it('buying followers: paying silver while tied for silver is marked; gold (no lead) is not', () => {
+    let s = sceneQ({ quadrants: Q, res: [{ silver: 3, gold: 2 }, { silver: 3, gold: 4 }], queue: [{ t: 'buy', p: 0 }] });
+    s = applyMove(s, { player: 0, option: 'tier:small' });
+    expect(s.pending.kind).toBe('pay');
+    const by = color => s.pending.options.find(o => o.spend?.[color] === (color === 'gold' ? 2 : 1) && o.spend?.gold === (color === 'gold' ? 2 : 1));
+    expect(by('silver').breaks).toEqual(['silver']);
+    expect(by('gold').breaks).toBeUndefined();
     // a tie is called a tie, never a lead (blind tester B), and the picker's caption says it before the click
-    expect(by('color:silver').ties).toEqual(['silver']);
+    expect(by('silver').ties).toEqual(['silver']);
     expect(leadWarning(s.pending.options)).toBe('Spending silver gives up your tie for most silver.');
   });
 });
 
 describe('a payment that breaks your only full set is marked (live panel r1)', () => {
-  it('Cheap Seats: paying silver breaks the one full set P1 leads Most full sets with; paying gold keeps it', () => {
-    let s = sceneQ({ quadrants: ['yellow', 'silver', 'trading', 'gold'], res: [{ yellow: 1, silver: 1, white: 1, gold: 3 }, { gold: 4 }] });
-    s = take(s, 'trading.buylow');
-    expect(s.pending.kind).toBe('choose');
-    const by = id => s.pending.options.find(o => o.id === id);
+  it('buying followers: paying silver breaks the one full set P1 leads Most full sets with; paying gold keeps it', () => {
+    let s = sceneQ({ quadrants: ['yellow', 'silver', 'trading', 'gold'], res: [{ yellow: 1, silver: 1, white: 1, gold: 3 }, { gold: 4 }], queue: [{ t: 'buy', p: 0 }] });
+    s = applyMove(s, { player: 0, option: 'tier:small' });
+    expect(s.pending.kind).toBe('pay');
+    const by = color => s.pending.options.find(o => o.spend?.[color] === (color === 'gold' ? 2 : 1) && o.spend?.gold === (color === 'gold' ? 2 : 1));
     // Most full sets is yellow's rim: spending silver gives it up, though no yellow is spent
-    expect(by('color:silver').breaks).toEqual(['yellow', 'silver']); // and its silver lead
-    expect(by('color:gold').breaks).toBeUndefined();
+    expect(by('silver').breaks).toEqual(['yellow', 'silver']); // and its silver lead
+    expect(by('gold').breaks).toBeUndefined();
   });
   it('the default way to pay for a member keeps your only full set when another way can', () => {
     restore = pinCosts({ 'gold.taxman': [1, 1] });
@@ -86,12 +86,13 @@ describe('a payment that breaks your only full set is marked (live panel r1)', (
 });
 
 describe('a payment that cuts a member’s game-end bonus is marked (tester A: Kingpin paid +0 unwarned)', () => {
-  it('Cheap Seats: paying magenta cuts Kingpin (+1 per 2 magenta); paying gold does not', () => {
-    let s = sceneQ({ quadrants: ['thieves', 'silver', 'trading', 'gold'], res: [{ magenta: 2, gold: 3 }, { magenta: 9, gold: 9 }], members: [['thieves.kingpin'], []] });
-    s = take(s, 'trading.buylow');
-    const by = id => s.pending.options.find(o => o.id === id);
-    expect(by('color:magenta').cuts).toEqual([{ member: 'Kingpin', from: 1, to: 0 }]);
-    expect(by('color:gold').cuts).toBeUndefined();
+  it('buying followers: paying magenta cuts Kingpin (+1 per 2 magenta); paying gold does not', () => {
+    let s = sceneQ({ quadrants: ['thieves', 'silver', 'trading', 'gold'], res: [{ magenta: 2, gold: 3 }, { magenta: 9, gold: 9 }], members: [['thieves.kingpin'], []], queue: [{ t: 'buy', p: 0 }] });
+    s = applyMove(s, { player: 0, option: 'tier:small' });
+    expect(s.pending.kind).toBe('pay');
+    const by = color => s.pending.options.find(o => o.spend?.[color] === (color === 'gold' ? 2 : 1) && o.spend?.gold === (color === 'gold' ? 2 : 1));
+    expect(by('magenta').cuts).toEqual([{ member: 'Kingpin', from: 1, to: 0 }]);
+    expect(by('gold').cuts).toBeUndefined();
   });
 });
 

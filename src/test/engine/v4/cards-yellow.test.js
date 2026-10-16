@@ -2,7 +2,7 @@
 // Card-by-card: every Yellow action and member, through real moves, against the printed text, with a log line naming
 // the card whenever it changes a number. Plus one cross-sphere case per member.
 import { describe, it, expect } from 'vitest';
-import { resume } from '../../../engine/v4/core.js';
+import { resume, followers } from '../../../engine/v4/core.js';
 import { take, move, uidOf, pinCosts } from './helpers.js';
 import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 
@@ -78,19 +78,34 @@ describe('Yellow members', () => {
     expect(R(s).yellow).toBe(2);
     expect(named(s, 'Dyer')).toHaveLength(1);
   });
-  it('Late Bloomer: round start +1 of each color with the fewest followers (ties count), named; not when ahead', () => {
-    let s = sc({ members: [['yellow.latebloomer']], bonus: [0, 1], queue: [{ t: 'round', r: 2 }] });
+  it('Late Bloomers: round start +1 of each color with the fewest followers (ties count), named; not when ahead', () => {
+    let s = sc({ members: [['yellow.latebloomer']], bonus: [0, 0], queue: [{ t: 'round', r: 2 }] });
     expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
-    expect(named(s, 'Late Bloomer')).toHaveLength(1);
+    expect(named(s, 'Late Bloomers')).toHaveLength(1);
     s = sc({ members: [['yellow.latebloomer']], bonus: [3, 0], queue: [{ t: 'round', r: 2 }] });
     expect(R(s).gold).toBe(0);
   });
   // "now" (dead-window audit, 2026-10-14): recruited in round III it used to give nothing
-  it('Late Bloomer recruited with the fewest followers: +1 of each color right away, named', () => {
+  it('Late Bloomers recruited with the fewest followers: +1 of each color right away, named', () => {
     let s = sc({ round: 3, res: [{ yellow: 4 }], bonus: [0, 2], shop: ['yellow.latebloomer'], queue: [{ t: 'buy', p: 0 }] });
     s = buy(s, 'yellow.latebloomer');
     expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
-    expect(named(s, 'Late Bloomer')).toHaveLength(1);
+    expect(named(s, 'Late Bloomers')).toHaveLength(1);
+  });
+  it('Late Bloomers is worth 2 followers and excludes only itself from the comparison', () => {
+    const s = sc({ members: [['yellow.latebloomer', 'gold.tycoon']], queue: [{ t: 'round', r: 2 }] });
+    expect(followers(s, s.players[0])).toBe(4);
+    expect(followers(s, s.players[1])).toBe(1);
+    // The other member leaves the owner ahead even after Late Bloomers is excluded.
+    expect(R(s)).toEqual({ gold: 0, red: 0, yellow: 0, green: 0 });
+  });
+  it('a Doppelganger copying Late Bloomers excludes its copied follower value at round start', () => {
+    let s = sc({ members: [['echo.doppel']] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'yellow.latebloomer';
+    s.queue = [{ t: 'round', r: 2 }];
+    s = resume(s);
+    expect(followers(s, s.players[0])).toBe(3);
+    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
   });
   it('Sower: plant at round start, harvest that many of each other color at round end; both named', () => {
     let s = sc({ res: [{ yellow: 4 }], members: [['yellow.sower']], queue: [{ t: 'round', r: 2 }] });

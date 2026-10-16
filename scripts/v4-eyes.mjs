@@ -1,3 +1,4 @@
+import { browserPath } from '../e2e/v4/lib/browser.mjs';
 // v4-eyes: a screen-only browser that a tester drives from Bash. It hands back screenshots, coordinates and timings,
 // never DOM, text or selectors, so the tester sees exactly what a person sees and feels what a person waits for.
 //
@@ -115,7 +116,7 @@ const phone = device === 'phone';
 // a plain start wipes it, so every fresh tester starts from a clean browser
 const profile = join(dir, 'profile');
 if (!keep) rmSync(profile, { recursive: true, force: true });
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: '/opt/pw-browsers/chromium', ...(phone ? { ...devices['iPhone 13'] } : { viewport: { width: 1270, height: 700 } }) });
+const ctx = await chromium.launchPersistentContext(profile, { executablePath: browserPath, ...(phone ? { ...devices['iPhone 13'] } : { viewport: { width: 1270, height: 700 } }) });
 await ctx.addInitScript(() => {
   // the browser's own Event Timing: input → next paint, per event (numbers only, read back below)
   window.__eyesEv = [];

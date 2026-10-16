@@ -3,7 +3,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@testing-library/react';
 import { LocalSetup } from '../../../v4/screens/Screens.jsx';
-import { BOT, motionSpeed, setMotionSpeed, speedName } from '../../../v4/motion.js';
+import { BOT, DEFAULT_SPEED, motionSpeed, setMotionSpeed, speedName } from '../../../v4/motion.js';
 
 afterEach(() => { cleanup(); setMotionSpeed('steady'); });
 
@@ -27,6 +27,7 @@ describe('one speed setting', () => {
     expect(BOT.pace.relaxed).toBeGreaterThan(BOT.pace.steady);
     expect(speedName('fast')).toBe('quick');
     expect(speedName('slow')).toBe('relaxed');
-    expect(speedName('nonsense')).toBe('steady');
+    expect(DEFAULT_SPEED).toBe('relaxed');
+    expect(speedName('nonsense')).toBe('relaxed');
   });
 });

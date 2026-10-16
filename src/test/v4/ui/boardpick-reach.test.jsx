@@ -112,7 +112,8 @@ describe('CultSeat: a lit member is never folded into "+N"', () => {
     const pk = boardPicker(s, s.pending);
     const part = seatPart(s, pk, 1);
     const { container } = render(<CultSeat state={s} pid={1} me={0} pick={{ ...part, title: pk.title, onPick: () => {}, onDenied: () => {} }} />);
-    expect(container.querySelector('.cs-more'), 'the chair folds some members').not.toBeNull();
+    // A member picker expands the crowd so every offered member stays reachable.
+    expect(container.querySelectorAll('.cs-member').length).toBe(uids.length);
     expect(container.querySelector(`.cs-pick-member[data-option="take:${last}"]`), 'the lit member has its button').not.toBeNull();
   });
 });

@@ -1,3 +1,4 @@
+import { browserPath } from '../../e2e/v4/lib/browser.mjs';
 // Design pod: the widest member name, as the shop card draws it, against the card's name box.
 //   node scripts/design-pod/names.mjs [--size 1270x700]
 import { chromium } from 'playwright';
@@ -6,7 +7,7 @@ const argv = process.argv.slice(2);
 const i = argv.indexOf('--size'); const [W, H] = (i >= 0 ? argv[i + 1] : '1270x700').split('x').map(Number);
 const base = process.env.V4_URL || 'http://127.0.0.1:5410';
 const names = [...new Set(allQuadrantIds().flatMap(q => (quadrant(q).members || []).map(c => c.name)))];
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const b = await chromium.launch({ executablePath: browserPath });
 const page = await (await b.newContext({ viewport: { width: W, height: H } })).newPage();
 await page.goto(`${base}/?intro=0`); await page.waitForSelector('[data-home]', { timeout: 90000 });
 const r = await page.evaluate(names => {

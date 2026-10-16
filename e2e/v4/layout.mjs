@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E layout gate (panel 7, laptop V): text you need is never cut off.
 //  (l1) while you place, every compact shop card shows its whole name and whole list cost (no ellipsis, no clip);
 //  (l2) every follower buy shows its whole label and price, while placing and while buying;
@@ -41,7 +42,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 
 // elements whose text must be whole: cut means it overflows its own box or its nearest clipping ancestor
 const CUT = sels => {
@@ -203,7 +204,7 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
     await page.goto(`${base}/?botDelay=300&intro=0`);
     await page.waitForSelector('.lt-wheel, [data-home="resume"]');
     if (!(await page.$('.lt-wheel'))) await page.click('[data-home="resume"]');
-    await page.waitForSelector('.lt > .lt-seat .cs-count');
+    await page.waitForSelector('.lt > .lt-seat .cs-crowd');
     await page.mouse.move(640, 695);
     await page.waitForTimeout(700);
     await page.screenshot({ path: `${SHOTS}/${tag.replace(' ', '-')}.png` });
@@ -224,10 +225,9 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
       const inside = parts.every(b => b.left >= box.left - 0.5 && b.right <= box.right + 0.5 && b.top >= box.top - 0.5 && b.bottom <= box.bottom + 0.5);
       const mins = [...seat.querySelectorAll('.cs-minions .cs-min')].map(e => Math.round(r(e).left + r(e).width / 2));
       const zero = [...seat.querySelectorAll('.cs-stack.zero')].map(e => parseFloat(getComputedStyle(e).opacity));
-      const cs = count && getComputedStyle(count);
+      const accessible = seat.getAttribute('aria-label') || '';
       return {
-        pid: Number(seat.dataset.seat), count: count ? Number(count.dataset.memberCount) : null, words: count ? count.textContent : '',
-        countSeen: !!count && cs.display !== 'none' && cs.visibility !== 'hidden' && r(count).width > 0 && count.scrollWidth <= count.clientWidth + 1,
+        pid: Number(seat.dataset.seat), countRemoved: !count, accessible,
         figs: figs.length, groups: seat.querySelectorAll('.cs-member').length, more: more ? Number(more.dataset.more) : 0,
         n: [...seat.querySelectorAll('.cs-member')].reduce((s, m) => s + m.dataset.uids.split(' ').length, 0) + (more ? Number(more.dataset.more) : 0),
         clash, rows, inside, built: !!build, cols: new Set(mins).size, zero: zero.length ? Math.min(...zero) : 1,
@@ -236,9 +236,8 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
     }));
     for (const x of seats) {
       const want = save.state.players[x.pid].members.length;
-      if (x.count !== want) errors.push(`[${tag}] (l7) P${x.pid + 1}'s chair says ${x.count} members; the game says ${want}`);
-      if (!x.countSeen) errors.push(`[${tag}] (l7) P${x.pid + 1}'s member count isn't whole and in view`);
-      if (!new RegExp(`member`, 'i').test(x.words)) errors.push(`[${tag}] (l7) P${x.pid + 1}'s count doesn't say what it counts ("${x.words}")`);
+      if (!x.countRemoved) errors.push(`[${tag}] (l7) P${x.pid + 1}'s retired member-count label still occupies the crowd`);
+      if (!x.accessible.includes(`${want} member`)) errors.push(`[${tag}] (l7) P${x.pid + 1}'s accessible count misses ${want} members`);
       if (x.n !== want) errors.push(`[${tag}] (l7) P${x.pid + 1}'s figures and "+N" add up to ${x.n}, not ${want}`);
       if (x.clash) errors.push(`[${tag}] (l7) P${x.pid + 1}'s count, figures, "+N" and "each round" overlap (${x.clash} pair(s))`);
       if (x.rows > 2) errors.push(`[${tag}] (l7) P${x.pid + 1}'s figures stand in ${x.rows} rows`);

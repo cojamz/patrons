@@ -1,4 +1,4 @@
-// Red: quantity over quality. Most members at round end takes the ring's followers; red members break ties.
+// Red: quantity over quality. Most members at round end takes the ring's followers; ties all score.
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
 /** Open House: the face-up members it can recruit. */
@@ -10,13 +10,9 @@ export default {
   name: 'Red',
   resource: 'red',
   scoring: {
-    label: 'Most members (red members break ties)',
-    // red members only break ties, so they weigh less than one whole member
-    score: (ctx, p) => ctx.memberCount(p) * 1000 + ctx.countMembersOfColor(p, 'red'),
-    // display: what the score is made of (every screen shows these numbers, never its own count)
-    show: (ctx, p) => ({ count: ctx.memberCount(p), tiebreak: ctx.countMembersOfColor(p, 'red') }),
+    label: 'Most members',
+    score: (ctx, p) => ctx.memberCount(p),
     counts: 'the members you hold (a card that counts as 2 members counts 2)',
-    tiebreak: { unit: 'red members', text: 'red members break ties' },
   },
 
   actions: [

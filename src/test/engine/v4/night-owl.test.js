@@ -85,13 +85,14 @@ describe('Night Owl', () => {
 // Cory, 2026-10-15: "I bought Night Owl in round 1 and it didn't seem to give me an extra." With 4 players round I
 // has no free space, and a Night Owl recruited after your last minion waits a round: either way the log says why.
 describe('Night Owl says why it gave no extra turn', () => {
-  it('4 players, round I: every space fills, so the last minion gets the no-free-space line naming Night Owl', () => {
+  it('4 players, round I: no extra minions even on the final free space', () => {
     const probe = sceneQ({ quadrants: Q, n: 4 });
     const free = spaceOf(probe, 'purple.hourly');
     const slots = Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => k !== free).map(k => [k, 1]));
     const s = take(sceneQ({ quadrants: Q, n: 4, round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0) }), 'purple.hourly');
     expect(queuedTurns(s, 0)).toBe(0);
-    expect(owl(s)).toEqual(["P1's Night Owl: no free space this round, so no extra turn."]);
+    expect(owl(s)).toEqual([]);
+    expect(s.log).toContain('No extra minions in round I: P1 gets no extra turn from Night Owl.');
   });
   it('recruited in the buy step after your last minion: it says the extra turn starts next round', () => {
     const cost = defById('purple.nightowl');

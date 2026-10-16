@@ -13,13 +13,19 @@ const S = (s, i = 0) => s.players[i].res.silver;
 const rich = { gold: 30, red: 30, silver: 30, green: 30 };
 
 describe('Silver actions', () => {
-  it('Toast 3 / 6 / 9 and everyone else +1; Goody Bags +2 silver +2 of a color, others 1 of it; Good Deed +4, a rival gets 2', () => {
+  it('Toast 3 / 6 / 9 and everyone else +1 / +2 / +3; Goody Bags +2 silver +2 of a color, others 1 of it; Good Deed +4, a rival gets 2', () => {
     let s = take(sc({ n: 3, round: 2 }), 'silver.toast');
-    expect(s.players.map(p => p.res.silver)).toEqual([6, 1, 1]);
+    expect(s.players.map(p => p.res.silver)).toEqual([6, 2, 2]);
     s = move(take(sc({ n: 3 }), 'silver.gift'), 'color:red');
     expect(s.players.map(p => [p.res.silver, p.res.red])).toEqual([[2, 2], [0, 1], [0, 1]]);
     s = move(take(sc({ n: 3 }), 'silver.alms'), 'give:2:green');
     expect(s.players.map(p => [p.res.silver, p.res.green])).toEqual([[4, 0], [0, 0], [0, 2]]);
+  });
+  it.each([1, 2, 3])('Toast round %i scales each rival gift, with Guest, Caterer and Grand Host', round => {
+    const s = take(sc({ n: 3, round, members: [['silver.grandhost', 'silver.caterer'], ['silver.guest']] }), 'silver.toast');
+    expect(s.players.map(p => p.res.silver)).toEqual([6 * round + 1, round + 1, round]);
+    expect(named(s, 'Caterer')).toHaveLength(1); // one gift, not one per recipient
+    expect(s.log).toContain(`P1 raised a toast: +${6 * round} silver, +${round} silver to everyone else.`);
   });
   it('Sweet Talk +4 then swap; Rising Tide: others +1 then half the richest rival’s, rounded up; Hold Court', () => {
     let s = move(take(sc({ round: 2 }), 'silver.tongue'), 'swap:red:4');

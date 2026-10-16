@@ -1,3 +1,4 @@
+import { browserPath } from './lib/browser.mjs';
 // E2E dialogs gate (dialogs pod, 2026-10-15), at laptop size (1270×700):
 //  (p1) Paying: the coins lifted off your stacks pay the engine's price (memberPrice), shown once (stacks + Pay, no
 //       second row), the printed cost reads as on the card, the default way
@@ -53,7 +54,7 @@ if (!base) {
   if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
 }
 const errors = [];
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 
 async function open(tag, save, ready) {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });

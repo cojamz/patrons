@@ -61,14 +61,14 @@ describe('Silver scoring: most silver', () => {
 });
 
 describe('Silver actions', () => {
-  it('Toast: +3 silver per round number, everyone else +1 silver', () => {
+  it('Toast: +3 silver per round number, everyone else +1 / +2 / +3 silver', () => {
     let s = take(scene({ res: [{}, { gold: 2 }] }), 'silver.toast');
     expect(R(s)).toEqual({ ...Z, silver: 3 });
     expect(R(s, 1)).toEqual({ ...Z, gold: 2, silver: 1 });
     expect(R(s, 2)).toEqual({ ...Z, silver: 1 });
     s = take(scene({ round: 3 }), 'silver.toast');
     expect(R(s).silver).toBe(9);
-    expect(R(s, 1).silver).toBe(1);
+    expect(R(s, 1).silver).toBe(3);
   });
 
   it('Goody Bags: +2 silver and +2 of the color you pick; everyone else 1 of it; silver is not a pick', () => {
@@ -227,7 +227,7 @@ describe('Silver members', () => {
   it('Grand Host: silver from Silver spaces is doubled; gifts and other spaces are not', () => {
     let s = take(scene({ round: 2, members: [['silver.grandhost']] }), 'silver.toast');
     expect(R(s).silver).toBe(12);
-    expect(R(s, 1).silver).toBe(1);
+    expect(R(s, 1).silver).toBe(2);
     s = move(take(scene({ members: [['silver.grandhost']] }), 'silver.gift'), 'color:red');
     expect(R(s)).toEqual({ ...Z, silver: 4, red: 2 });
     s = take(scene({ members: [['silver.grandhost'], ['silver.guest']] }), 'silver.toast');

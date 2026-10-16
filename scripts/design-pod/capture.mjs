@@ -1,3 +1,4 @@
+import { browserPath } from '../../e2e/v4/lib/browser.mjs';
 // Design pod: capture the key states of the game screen at 1270×700, for critique against design/taste.md.
 //   node scripts/design-pod/capture.mjs <outdir> [state ...] [--q "layout=b"] [--url http://127.0.0.1:5410] [--size 1270x700] [--x2]
 // States: home setup place buy rival pick pay shophover seathover reckon summary round3 results (default: all).
@@ -55,7 +56,7 @@ const SAVES = {
   last3: () => playTo(SEED, s => s.round === 3 && mine(s, 'place') && s.players[0].left === 1),
 };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: browserPath });
 // every state gets a fresh context (empty storage): the app saves the game it's leaving (save-on-leave), so a shared page
 // would overwrite the next state's save with the last one's
 let ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: x2 ? 2 : 1 });

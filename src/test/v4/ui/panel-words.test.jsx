@@ -21,9 +21,12 @@ describe('panel words (w3)', () => {
       for (const r of [1, 2]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain('more each round');
       expect(lines(panelText(qid, { key }, 3)), `${qid}.${key} round III`).not.toContain('more each round');
     }
-    // a cap that grows says the limit grows (blind testers, 2026-10-15: "up to 2, more each round" read as "+2 each round")
-    for (const r of [1, 2]) expect(lines(panelText('trading', { key: 'buylow' }, r))).toContain('the limit grows by round');
-    expect(lines(panelText('trading', { key: 'buylow' }, 3))).not.toContain('the limit grows by round');
+    // Cheap Seats now pays for held white at the same rate in every round, without a growing cap.
+    for (const r of [1, 2, 3]) {
+      const cheap = lines(panelText('trading', { key: 'buylow' }, r));
+      expect(cheap).toContain('per 3 white you hold');
+      expect(cheap.join(' ')).not.toMatch(/limit|more each round|buy/i);
+    }
   });
 
   it('a space whose center or ring II panel drops line 2 is whole in line 1', () => {
@@ -40,12 +43,14 @@ describe('panel words (w3)', () => {
     // "Others get 1" / "+1 to a rival": 1 of what
     expect(lines(panelText('gold', { key: 'jv' }, 1))).toContain('+1 gold to a rival');
     expect(lines(panelText('gold', { key: 'jv' }, 1)).join(' ')).not.toMatch(/you pick who/);
-    for (const key of ['toast', 'tide']) expect(lines(panelText('silver', { key }, 2)), key).toContain('others get 1 silver');
+    expect(lines(panelText('silver', { key: 'toast' }, 2))).toContain('others get 2 silver');
+    expect(lines(panelText('silver', { key: 'tide' }, 2))).toContain('others get 1 silver');
     for (const [qid, key, t] of panelEntries()) for (const l of lines(t)) expect(l, `${qid}.${key}`).not.toMatch(/\bget 1$/);
-    // Cheap Seats spends your resources: it's a follower buy, said as one, at its price
+    // Cheap Seats grants followers for held white; it never describes a purchase or payment.
     const cs = panelText('trading', { key: 'buylow' }, 2);
-    expect(cs.verb).toBe('Buy followers');
-    expect(cs.second).toBe('1 resource each, up to 4');
+    expect(cs.main).toBe('+1 @f');
+    expect(cs.second).toBe('per 3 white you hold');
+    expect(lines(cs).join(' ')).not.toMatch(/buy|spend|resource each/i);
     // Show Off: half a member's cost, never "half your priciest" alone (read as half your biggest pile); whole in line 1
     expect(panelText('market', { key: 'pricecheck' }, 2).verb).toMatch(/^Gain half your priciest member’s cost$/);
   });
