@@ -1,0 +1,194 @@
+<title>Patrons Wheel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout: one round table seen from your seat — the wheel fills the top, the quadrant facing you opens into a tray below. Single dark "table" look by choice. */
+:root{
+  --table:#16201f; --table-2:#1f2b2a; --rim:#2c3a38; --ink:#ece6d6; --muted:#9aa7a2;
+  --gold:#e0b44a; --black:#8f7bb8; --green:#5fb37c; --yellow:#e8d55a;
+  --you:#f2efe6; --them:#e0745a;
+  --display:"Marcellus", Georgia, serif; --body:"Figtree", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:radial-gradient(120% 80% at 50% 30%, var(--table-2), var(--table) 70%);color:var(--ink);font-family:var(--body);font-size:15px;padding-inline:16px;padding-block:12px;box-sizing:border-box}
+.app{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px;min-height:100%}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h1{font-family:var(--display);font-weight:400;font-size:26px;margin:0;letter-spacing:.04em}
+.status{font-size:13px;color:var(--muted);text-align:right}
+.status b{color:var(--ink)}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pl{border:1px solid var(--rim);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;transition:border-color .3s, box-shadow .3s}
+.pl.active{border-color:currentColor;box-shadow:0 0 0 1px currentColor inset}
+.pl.you{color:var(--you)} .pl.them{color:var(--them)}
+.pl .name{font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between}
+.pl .name span{font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0}
+.res{display:flex;gap:8px;flex-wrap:wrap;font-variant-numeric:tabular-nums;color:var(--ink);font-size:14px}
+.res i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:3px;vertical-align:-1px}
+.stage{position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:0 auto;touch-action:none;user-select:none}
+.stage svg{width:100%;height:100%;display:block;overflow:visible}
+#wheel{transition:transform .55s cubic-bezier(.2,.9,.25,1.15);transform-origin:200px 200px;cursor:grab}
+#wheel.dragging{transition:none;cursor:grabbing}
+.pointer{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.spin{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:1px solid var(--rim);background:var(--table);color:var(--ink);font-size:20px;cursor:pointer}
+.spin:focus-visible,.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.spin.l{left:-6px}.spin.r{right:-6px}
+.tray{border-top:1px solid var(--rim);padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.tray h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;display:flex;align-items:baseline;gap:10px}
+.tray h2 small{font-family:var(--body);font-size:13px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{position:relative;text-align:left;border:1px solid var(--rim);background:var(--table-2);color:var(--ink);border-radius:10px;padding:10px;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:transform .15s, border-color .15s}
+.card:hover:not(:disabled){transform:translateY(-2px);border-color:var(--c)}
+.card b{font-size:15px}
+.card span{font-size:13px;color:var(--muted)}
+.card:disabled{cursor:default;opacity:.55}
+.card .who{position:absolute;top:8px;right:8px;width:14px;height:14px;border-radius:50%}
+.shop{border:1px dashed var(--rim);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--muted)}
+.log{font-size:13px;color:var(--muted);min-height:1.4em}
+.again{align-self:flex-start;border:1px solid var(--ink);background:none;color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;cursor:pointer}
+@media (prefers-reduced-motion:reduce){#wheel,.card{transition:none}}
+</style>
+
+<div class="app">
+  <header>
+    <h1>Patrons</h1>
+    <div class="status" id="status"></div>
+  </header>
+  <div class="players" id="players"></div>
+
+  <div class="stage" id="stage">
+    <svg viewBox="-10 -10 420 420" aria-label="Board wheel">
+      <g id="wheel"></g>
+      <circle cx="200" cy="200" r="46" fill="var(--table)" stroke="var(--rim)"/>
+      <text x="200" y="196" text-anchor="middle" fill="var(--muted)" font-size="11" letter-spacing="2">ROUND</text>
+      <text x="200" y="218" text-anchor="middle" fill="var(--ink)" font-family="Marcellus, serif" font-size="22">I</text>
+    </svg>
+    <button class="spin l" id="left" aria-label="Spin left">‹</button>
+    <button class="spin r" id="right" aria-label="Spin right">›</button>
+    <div class="pointer">▲ your side</div>
+  </div>
+
+  <section class="tray" id="tray"></section>
+  <div class="log" id="log"></div>
+</div>
+
+<script>
+const GODS=[
+  {id:'gold',name:'Aurum',color:'var(--gold)',actions:[
+    ['Patronage','+2 gold',{gold:2}],['Hoard','+3 gold',{gold:3}],['Levy','+1 gold',{gold:1}],['Haggle','+1 gold, cheaper shop',{gold:1}]],
+    shop:'Spend gold → Favor'},
+  {id:'black',name:'Noctis',color:'var(--black)',actions:[
+    ['Skulk','+3 black',{black:3}],['Ransack','+2 black',{black:2}],['Pickpocket','+1 black, +1 Favor',{black:1,favor:1}],['Tribute','+1 black, +1 Favor',{black:1,favor:1}]],
+    shop:'Spend black → steal Favor'},
+  {id:'green',name:'Chronis',color:'var(--green)',actions:[
+    ['Gather','+3 green',{green:3}],['Relive','+2 green',{green:2}],['Echo','+1 green, +1 gold',{green:1,gold:1}],['Recall','+2 green',{green:2}]],
+    shop:'Spend green → extra turn'},
+  {id:'yellow',name:'Solara',color:'var(--yellow)',actions:[
+    ['Harvest','+2 yellow',{yellow:2}],['Forage','+1 yellow, +1 green',{yellow:1,green:1}],['Transmute','+2 yellow',{yellow:2}],['Siphon','+1 yellow, +1 black',{yellow:1,black:1}]],
+    shop:'Spend yellow → any 2'}
+];
+const RES=['gold','black','green','yellow','favor'];
+const CX=200,CY=200,R=200;
+let rot=0, facing=0, slots, players, turnIdx, order, busy=false;
+
+function newGame(){
+  slots=GODS.map(g=>g.actions.map(()=>null));
+  players=[{id:0,name:'You',cls:'you',res:{},left:3},{id:1,name:'Rival',cls:'them',res:{},left:3}];
+  players.forEach(p=>RES.forEach(r=>p.res[r]=0));
+  order=[0,1,1,0,0,1]; turnIdx=0; busy=false;
+  drawWheel(); render(); say('Spin the wheel toward you, then pick a space.');
+}
+
+function polar(a,r){const t=(a-90)*Math.PI/180;return [CX+r*Math.cos(t),CY+r*Math.sin(t)]}
+function wedge(a0,a1,r0,r1){
+  const [x0,y0]=polar(a0,r1),[x1,y1]=polar(a1,r1),[x2,y2]=polar(a1,r0),[x3,y3]=polar(a0,r0);
+  return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
+}
+// Quadrant q is centered at angle 180 + q*90 (so q=0 starts at the bottom, facing you).
+function qCenter(q){return 180+q*90}
+
+function drawWheel(){
+  const w=document.getElementById('wheel'); let s='';
+  s+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/>`;
+  GODS.forEach((g,q)=>{
+    const c=qCenter(q), a0=c-45, a1=c+45;
+    s+=`<path d="${wedge(a0+1,a1-1,52,R-4)}" fill="${g.color}" fill-opacity="${q===facing?.22:.09}" stroke="${g.color}" stroke-opacity=".5"/>`;
+    const [lx,ly]=polar(c,92);
+    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${g.color}" font-family="Marcellus, serif" font-size="17" transform="rotate(${c+180} ${lx} ${ly})">${g.name}</text>`;
+    g.actions.forEach((act,i)=>{
+      const a=a1-12-i*22, [x,y]=polar(a,158), o=slots[q][i];
+      s+=`<circle cx="${x}" cy="${y}" r="17" fill="var(--table)" stroke="${g.color}" stroke-width="1.5"/>`;
+      if(o!==null) s+=`<circle cx="${x}" cy="${y}" r="11" fill="var(--${players[o].cls})"/>`;
+      else s+=`<circle cx="${x}" cy="${y}" r="3" fill="${g.color}"/>`;
+    });
+  });
+  w.innerHTML=s;
+  w.style.transform=`rotate(${rot}deg)`;
+}
+
+function render(){
+  const cur=players[order[turnIdx]];
+  document.getElementById('status').innerHTML = turnIdx<order.length
+    ? `<b>${cur.name==='You'?'Your':"Rival's"} pick</b> · ${order.length-turnIdx} left`
+    : '<b>Round over</b>';
+  document.getElementById('players').innerHTML=players.map(p=>`
+    <div class="pl ${p.cls} ${turnIdx<order.length&&order[turnIdx]===p.id?'active':''}">
+      <div class="name">${p.name}<span>${'●'.repeat(p.left)}${'○'.repeat(3-p.left)}</span></div>
+      <div class="res">${RES.map(r=>`<span><i style="background:${r==='favor'?'var(--ink)':`var(--${r})`}"></i>${p.res[r]}</span>`).join('')}</div>
+    </div>`).join('');
+  const g=GODS[facing], myTurn=turnIdx<order.length&&order[turnIdx]===0&&!busy;
+  document.getElementById('tray').innerHTML=`
+    <h2 style="color:${g.color}">${g.name}<small>facing you</small></h2>
+    <div class="cards">${g.actions.map((a,i)=>{const o=slots[facing][i];return `
+      <button class="card" style="--c:${g.color}" data-i="${i}" ${o!==null||!myTurn?'disabled':''}>
+        ${o!==null?`<i class="who" style="background:var(--${players[o].cls})"></i>`:''}
+        <b>${a[0]}</b><span>${a[1]}</span></button>`}).join('')}</div>
+    <div class="shop">Shop · ${g.shop}</div>
+    ${turnIdx>=order.length?'<button class="again" id="again">Play again</button>':''}`;
+  document.querySelectorAll('.card').forEach(b=>b.onclick=()=>place(0,facing,+b.dataset.i));
+  const again=document.getElementById('again'); if(again) again.onclick=newGame;
+}
+
+function say(t){document.getElementById('log').textContent=t}
+
+function place(pid,q,i){
+  if(slots[q][i]!==null) return;
+  const p=players[pid], a=GODS[q].actions[i];
+  slots[q][i]=pid; p.left--;
+  Object.entries(a[2]).forEach(([k,v])=>p.res[k]+=v);
+  say(`${p.name==='You'?'You':'Rival'} took ${a[0]} (${GODS[q].name}): ${a[1]}`);
+  turnIdx++; drawWheel(); render();
+  if(turnIdx<order.length&&order[turnIdx]===1){busy=true;render();setTimeout(rivalMove,900)}
+  else if(turnIdx>=order.length) say('Round over. Next round adds a worker and opens new spaces.');
+}
+
+function rivalMove(){
+  const open=[];slots.forEach((row,q)=>row.forEach((o,i)=>{if(o===null)open.push([q,i])}));
+  const [q,i]=open[Math.floor(Math.random()*open.length)];
+  busy=false; place(1,q,i);
+}
+
+function spinTo(q){
+  const target=((q%4)+4)%4;
+  // rotate so quadrant center lands at 180° (bottom); shortest path from current rot
+  let want=180-qCenter(target);
+  while(want-rot>180)want-=360; while(want-rot<-180)want+=360;
+  rot=want; facing=target; drawWheel(); render();
+}
+document.getElementById('left').onclick=()=>spinTo(facing+1);
+document.getElementById('right').onclick=()=>spinTo(facing-1);
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft')spinTo(facing+1);if(e.key==='ArrowRight')spinTo(facing-1)});
+
+// Drag to spin
+const stage=document.getElementById('stage'), wheel=document.getElementById('wheel');
+let drag=null;
+function angAt(e){const b=stage.getBoundingClientRect();return Math.atan2(e.clientY-(b.top+b.height/2),e.clientX-(b.left+b.width/2))*180/Math.PI}
+stage.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;drag={a:angAt(e),r:rot};wheel.classList.add('dragging');stage.setPointerCapture(e.pointerId)});
+stage.addEventListener('pointermove',e=>{if(!drag)return;let d=angAt(e)-drag.a;rot=drag.r+d;wheel.style.transform=`rotate(${rot}deg)`});
+stage.addEventListener('pointerup',()=>{if(!drag)return;drag=null;wheel.classList.remove('dragging');
+  // snap: which quadrant is closest to the bottom?
+  let best=0,bd=1e9;GODS.forEach((g,q)=>{let a=((qCenter(q)+rot-180)%360+540)%360-180;if(Math.abs(a)<bd){bd=Math.abs(a);best=q}});
+  spinTo(best)});
+
+newGame();
+</script>

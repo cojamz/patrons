@@ -1,0 +1,87 @@
+<title>Patrons Quadrants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout: four quadrant columns like cards laid on the table (two on phones), fixtures and interplay notes beneath. Same table palette as the board. */
+:root{--bg:#141d1c;--panel:#1d2928;--rim:#2d3b39;--ink:#ece6d6;--muted:#97a49f;
+  --gold:#e3b23c;--black:#9c86c9;--green:#5fb37c;--yellow:#6fb3d6;
+  --display:"Marcellus",Georgia,serif;--body:"Figtree",system-ui,sans-serif;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:24px;margin:0}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--display);font-weight:400;font-size:32px;margin:0}
+.lede{color:var(--muted);margin:4px 0 0;max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+.q{background:var(--panel);border:1px solid var(--rim);border-top:4px solid var(--c);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.q h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0;color:var(--c)}
+.q .who{color:var(--muted);margin:-6px 0 0;font-style:italic}
+.rule{border:1px solid var(--c);border-radius:8px;padding:8px 10px;font-size:13px;background:color-mix(in srgb,var(--c) 10%,transparent)}
+.rule b{color:var(--c);letter-spacing:.06em;font-size:11px;text-transform:uppercase;display:block;margin-bottom:2px}
+.tier{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.act{display:grid;grid-template-columns:22px 1fr;gap:6px;align-items:baseline}
+.act i{font-style:normal;font-family:var(--display);color:var(--c);font-size:12px;text-align:center}
+.act b{font-weight:700}
+.act span{color:var(--muted)}
+.items{display:flex;flex-direction:column;gap:5px;border-top:1px dashed var(--rim);padding-top:8px}
+.it{display:grid;grid-template-columns:1fr auto;gap:2px 8px}
+.it b{font-weight:600}.it .c{font-variant-numeric:tabular-nums;color:var(--c);font-weight:700}
+.it span{grid-column:1/-1;color:var(--muted);font-size:12.5px}
+.below{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:14px}
+@media (max-width:800px){.below{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--rim);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.box h3{font-family:var(--display);font-weight:400;font-size:20px;margin:0}
+.box p{margin:0}.box p b{font-weight:700}
+.fx{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fx div{border:1px solid var(--ink);border-radius:10px;padding:8px;text-align:center}
+.fx strong{font-family:var(--display);font-weight:400;font-size:17px;display:block}
+.fx small{color:var(--muted)}
+</style>
+<main>
+  <header>
+    <h1>Four quadrants</h1>
+    <p class="lede">Each one is a separate personality with a single way to score. They connect through shared things (resources, spaces, items, rivals, the leader), so any quadrant can leave the table without breaking the rest.</p>
+  </header>
+  <section class="grid" id="grid"></section>
+  <section class="below">
+    <div class="box">
+      <h3>Fixtures</h3>
+      <div class="fx">
+        <div><strong>Laurel</strong>+1 ★<br><small>2 of anything</small></div>
+        <div><strong>Garland</strong>+3 ★<br><small>5 of anything</small></div>
+        <div><strong>Diadem</strong>+6 ★<br><small>8 of anything · 2 per player</small></div>
+      </div>
+      <p style="color:var(--muted)">The last Diadem ends the game when that round closes. That's the clock anyone can push.</p>
+    </div>
+    <div class="box">
+      <h3>How they touch, without naming each other</h3>
+      <p><b>Spillover.</b> Sponsor, Bounty, Zenith, Echo Chamber and Gift Basket give rivals a little too.</p>
+      <p><b>Watching the table.</b> Tithe Box, Informant, Cuttings and Beacon pay off when rivals act. Echo and Graft borrow whatever others built.</p>
+      <p><b>Harm only points up.</b> Pilfer, Extort, Heist and the Shadow's scoring only reach players ahead of you. Vault and Veil guard against any thief.</p>
+      <p><b>Bending shared rules.</b> Slip shares an occupied space, Smuggle buys from any stall, and Kaleidoscope and Broker's Scale bend costs.</p>
+    </div>
+  </section>
+</main>
+<script>
+const Q=[
+ {c:'gold',n:'Gold',who:'The merchant. Turns anything into gold and profits from traffic.',rule:['The Crown','Most gold at each round’s end: +1 / +2 / +4 Favor. Ties share.'],
+  a:[['I','Mint','+2 gold'],['I','Sponsor','+1 gold. Mark an empty space: whoever takes it, you both gain 1 gold'],['I','Exchange','Trade up to 2 resources for gold one-for-one, then +1 gold'],['II','Interest','+1 gold for every 2 you hold'],['II','Commission','+1 gold for every item bought this round, by anyone'],['III','Treasury','Double your gold']],
+  i:[['Ledger',2,'Mint gives +1 more'],['Broker’s Scale',2,'Once per round, pay gold in place of any other color'],['Guild Charter',3,'When anyone takes your sponsored space, you both gain +1 more'],['Tithe Box',3,'Whenever a rival buys an item, gain 1 gold'],['Vault',4,'Rivals can’t take your gold'],['Crown Jewel',7,'+2 Favor. Counts as 2 gold toward the Crown']]},
+ {c:'black',n:'Shadow',who:'The thief. Goes where others can’t, and only robs the rich.',rule:['The Shadow','Most shadow at each round’s end takes 1 / 2 / 3 Favor from the leader (or from second place, if you lead).'],
+  a:[['I','Skulk','+2 shadow'],['I','Slip','+1 shadow. Your next worker may share an occupied space'],['I','Pilfer','+1 shadow. Take 1 resource from someone ahead of you (if no one is ahead, +1 shadow)'],['II','Smuggle','+2 shadow. This turn, buy from any stall'],['II','Extort','Each player ahead of you gives you 1 resource of their choice'],['III','Heist','Take 2 resources from each player ahead of you']],
+  i:[['Lockpick',2,'When you share a space, +1 shadow'],['Veil',2,'Rivals can’t take resources from you'],['Informant',3,'When a rival buys an item, you may pay 1 shadow for 1 of its color'],['Dagger',3,'When you take from a player, take 1 more'],['Smuggler’s Map',4,'You may always buy from any stall'],['Black Pearl',7,'+2 Favor. +1 shadow each round start']]},
+ {c:'green',n:'Verdant',who:'The gardener. Copies, repeats, and lets things grow.',rule:['The Echo','+1 Favor for every echo you make (any repeat or copy).'],
+  a:[['I','Gather','+2 verdant'],['I','Echo','Copy the space a rival took most recently'],['I','Plant','Set aside up to 3 resources. They come back doubled at round end'],['II','Relive','Echo one of your own spaces from this round'],['II','Graft','Use one rival’s item once, as if it were yours'],['III','Eternity','Echo every space you’ve taken this round']],
+  i:[['Trellis',2,'Plant holds up to 5'],['Perennial',2,'+1 verdant each round start'],['Echo Chamber',3,'When you echo a rival’s space, they gain 1 resource too'],['Cuttings',3,'Whenever a rival echoes anything, gain 1 verdant'],['Hourglass',4,'Once per round, echo the space you just took'],['World Tree',7,'+2 Favor. Plant returns triple']]},
+ {c:'yellow',n:'Sunlight',who:'The giver. Trades in variety and shares the harvest.',rule:['Harmony','+1 Favor for every full set (one of each color) you hold at each round’s end.'],
+  a:[['I','Harvest','+2 sunlight'],['I','Forage','+2 resources, each a different color'],['I','Bounty','+3 of one color. Each rival gains 1 of it'],['II','Transmute','Change any of your resources into other colors, one-for-one'],['II','Prism','+1 of every color'],['III','Zenith','+2 of every color. Each rival gains 1 of every color']],
+  i:[['Lens',2,'Forage gives 3'],['Sundial',2,'+1 resource of your choice each round start'],['Beacon',3,'Whenever a rival gains 3+ resources at once, gain 1 sunlight'],['Gift Basket',3,'Once per turn, give a rival 1 resource to gain 2 sunlight'],['Kaleidoscope',4,'Once per round, pay an item’s cost in any colors'],['Golden Sun',7,'+2 Favor. Counts as one of every color for sets']]}
+];
+document.getElementById('grid').innerHTML=Q.map(q=>{
+  let tiers='',last='';
+  q.a.forEach(([r,n,e])=>{ if(r!==last){tiers+=`<div class="tier">Round ${r}</div>`;last=r}
+    tiers+=`<div class="act"><i>${r}</i><div><b>${n}</b> <span>${e}</span></div></div>`;});
+  return `<article class="q" style="--c:var(--${q.c})"><h2>${q.n}</h2><p class="who">${q.who}</p>
+    <div class="rule"><b>${q.rule[0]}</b>${q.rule[1]}</div>${tiers}
+    <div class="items"><div class="tier">Items</div>${q.i.map(([n,c,e])=>`<div class="it"><b>${n}</b><span class="c">${c}</span><span>${e}</span></div>`).join('')}</div></article>`;
+}).join('');
+</script>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Initiation lab</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,500&family=Alegreya+Sans:wght@400;500;700&display=swap">
+  <style>html,body{margin:0;background:#1d1611}</style>
+</head>
+<body>
+<div id="root"></div>
+<!-- Scratch page (dev server only): beat 3's initiation alone, on the kit's clock and camera, looping.
+     ?at=MS freezes it MS in (the piece starts at ?start=MS, default 300). The leader, pile and followers here are
+     stand-ins for Beat3's, only so the moment can be judged in place. -->
+<script type="module">
+import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+import '/src/v4/lamp.css';
+import '/src/v4/intro.css';
+import { emojiIds } from '/src/v4/art/emojis.js';
+import { Clock, Cast, Camera, Lamp, Act, At, LeadFrames, Res, Fol, PILE, FSLOT, LEAD, STAGE, Z, nowT0 } from '/src/v4/intro/shared.jsx';
+import Initiation, { BECKON, DURATION, SETTLE, WALK_MS, T } from '/src/v4/intro/Initiation.jsx';
+
+const h = React.createElement;
+const q = new URLSearchParams(location.search);
+const frozen = q.get('at') != null ? Number(q.get('at')) : null;
+const AT = q.get('start') != null ? Number(q.get('start')) : 300; // Beat3 starts it at 3100
+const shot = { t: 0, cam: [4, 11, Z.mid], d: 1, lamp: [6, 6, 200, 150] };
+const ids = emojiIds();
+const cast = { you: ids.includes('ghost') ? 'ghost' : ids[0], a: null, b: null, c: null };
+const PILE_R = ['green', 'green', 'blue', 'blue', 'gold', 'gold'];
+
+function Scene() {
+  const [t0] = useState(nowT0);
+  const seq = [[0, 'idle'], ...BECKON.map(([ms, p]) => [AT + ms, p])];
+  return h(Clock.Provider, { value: { still: false, t0, at: frozen } },
+    h('div', { className: 'intro-scene' },
+      h(Act, { track: [{ x: LEAD[0], y: LEAD[1] }] }, h(LeadFrames, { emoji: cast.you, seq, stillAs: 'idle' })),
+      PILE_R.map((r, i) => {
+        const [x, y] = PILE(i);
+        const track = r === 'gold' ? [{ x: x - 4.5, y: y - 4.5 }, [AT + T.pay + 100 * (i - 4), 1, { o: 0 }, 'lin']] : [{ x: x - 4.5, y: y - 4.5 }];
+        return h(Act, { key: i, track }, h(Res, { r }));
+      }),
+      h(Initiation, { at: AT }),
+      [0, 1, 2].map(j => {
+        const [x, y] = FSLOT(j, 0), [, y2] = FSLOT(j, 1);
+        return h(Act, { key: j, track: [{ x, y }, [AT + SETTLE, WALK_MS, { y: y2 }, 'io']] }, h(Fol));
+      })));
+}
+
+function Lab() {
+  const stage = useRef(null);
+  const [uk, setUk] = useState(null);
+  const [k, setK] = useState(0);
+  useLayoutEffect(() => { const el = stage.current; if (el) setUk(el.offsetWidth / STAGE.w); }, []);
+  useEffect(() => {
+    if (frozen != null) return undefined;
+    const id = setInterval(() => setK(n => n + 1), AT + DURATION + 900);
+    return () => clearInterval(id);
+  }, []);
+  return h('div', { className: 'intro', 'data-intro': 'motion' },
+    h('div', { className: 'intro-main' },
+      h('div', { className: 'intro-stage', ref: stage, style: uk ? { '--uk': uk } : null },
+        h(Lamp, { shot }),
+        h('div', { className: 'in-view' },
+          h(Cast.Provider, { value: cast },
+            h(Camera, { shot }, uk ? h(Scene, { key: k }) : null))))));
+}
+createRoot(document.getElementById('root')).render(h(Lab));
+</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magenta Silver Yellow Icons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="pix.css">
+<style>
+.page{max-width:1240px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;border-bottom:1px solid color-mix(in srgb,var(--rim) 60%,transparent);padding-bottom:10px}
+header h1{font-size:var(--fs-6)}
+header p{margin:0;color:var(--muted);font-size:var(--fs-2);flex:1;min-width:260px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:var(--fs-2);color:var(--muted)}
+section{display:flex;flex-direction:column;gap:10px;padding-top:6px}
+h2{font-size:var(--fs-5);display:flex;align-items:baseline;gap:10px;color:var(--c)}
+h2 small{font-family:var(--body);font-size:var(--fs-2);color:var(--muted);letter-spacing:0}
+h3{margin:4px 0 0;font:600 var(--fs-1)/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* the 24px check: every icon at 1x beside its name, and the members as one crowd */
+.strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;border:1px dashed var(--rim);border-radius:10px;padding:10px 14px;font-size:var(--fs-3)}
+.strip span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.crowd{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;padding:8px 12px;border-radius:10px;background:var(--table-2);border:1px solid var(--rim)}
+.crowd b{font-weight:600;font-size:var(--fs-2);color:var(--muted);margin-right:8px;align-self:center}
+
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile{display:flex;flex-direction:column;gap:8px;border:1px solid var(--rim);border-top:3px solid var(--c);border-radius:10px;background:var(--table-2);padding:10px 12px;min-width:0}
+.tile.old{opacity:.62}
+.sizes{display:flex;align-items:flex-end;gap:8px}
+.sizes figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:3px}
+.sizes figcaption{font-size:10px;color:var(--muted)}
+.well{display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--bg,var(--table))}
+.info{display:flex;flex-direction:column;gap:3px;min-width:0}
+.info b{font-family:var(--display);font-weight:400;font-size:var(--fs-4);color:var(--c);line-height:1.1}
+.info .tag{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.info .rule{font-size:var(--fs-2);line-height:1.35}
+.info .idea{font-size:var(--fs-1);color:var(--muted);font-style:italic;line-height:1.35}
+@media (max-width:1000px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:560px){ .grid{grid-template-columns:minmax(0,1fr)} }
+</style>
+<script src="icons.js"></script>
+<script src="icons-magenta-silver-yellow.js"></script>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Cults · Magenta, Silver, Yellow</h1>
+    <p>Every action and member of three spheres, 24×24, shown at 24, 48 and 96px. Members are distinct characters dressed in their sphere's color, each with one prop that says the ability. Actions are hands and objects. Faded tiles are the calibration icons already in icons.js.</p>
+    <div class="tools">
+      <span>Outline</span><button class="btn" id="tOutline" aria-pressed="true">on</button>
+      <span>Behind</span><button class="btn bg" data-bg="var(--table)" aria-pressed="true">table</button><button class="btn bg" data-bg="var(--table-2)" aria-pressed="false">card</button><button class="btn bg" data-bg="tint" aria-pressed="false">sphere tint</button>
+    </div>
+  </header>
+  <div id="spheres"></div>
+</div>
+<script>
+(function () {
+  const P = window.CultIcons;
+  const NEW = window.CultIconBatches['magenta-silver-yellow'].map(i => ({ ...i, px: i.rows }));
+  // Calibration icons from icons.js that belong to these spheres, mapped to their card ids.
+  const OLD_IDS = { pickpocket: 'thieves.pickpocket', heist: 'thieves.heist', cutpurse: 'thieves.cutpurse', toast: 'silver.toast' };
+  const OLD = P.ICONS.filter(i => OLD_IDS[i.id]).map(i => ({ ...i, id: OLD_IDS[i.id], old: true }));
+  // The batch file's own (card) order, with each calibration icon slotted where its card sits.
+  const seq = []; NEW.forEach(i => seq.push(i));
+  const slot = { 'thieves.pickpocket': 'thieves.tipoff', 'thieves.heist': 'thieves.mole', 'thieves.cutpurse': 'thieves.mole', 'silver.toast': 'silver.gift' };
+  OLD.forEach(o => { const at = seq.findIndex(i => i.id === slot[o.id]); seq.splice(at, 0, o); });
+
+  const SPHERES = [
+    ['thieves', 'magenta', 'Magenta', 'thieves: masks, gloves, lifted loot'],
+    ['silver', 'silver', 'Silver', 'hosts and servants: goblets, platters, gifts'],
+    ['yellow', 'yellow', 'Yellow', 'growers and makers: wheat, flowers, every colour'],
+  ];
+  const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white'];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const rich = t => esc(t).replace(new RegExp(`\\b(${COLORS.join('|')})\\b`, 'g'), m => `<span class="pip" style="--c:var(--${m})" title="${m}"></span>`)
+    .replace(/(\d )any\b/g, '$1<span class="pip wild" title="any"></span>');
+  let outline = true, bg = 'var(--table)';
+  const errs = NEW.flatMap(P.validate);
+  if (errs.length) console.error(errs.join('\n'));
+
+  function render() {
+    const svg = (i, n) => P.toSVG(i, n, { outline });
+    document.getElementById('spheres').innerHTML = SPHERES.map(([q, sphere, label, motif]) => {
+      const list = seq.filter(i => i.id.startsWith(q + '.'));
+      const c = P.SPHERES[sphere];
+      const b = bg === 'tint' ? `color-mix(in srgb, ${c} 16%, var(--table-2))` : bg;
+      const tile = i => {
+        const well = n => `<figure><div class="well" style="--bg:${b};width:${n + 16}px;height:${n + 16}px">${svg(i, n)}</div><figcaption>${n}px</figcaption></figure>`;
+        return `<article class="tile ${i.old ? 'old' : ''}" style="--c:${c}">
+          <div class="sizes">${well(96)}${well(48)}${well(24)}</div>
+          <div class="info"><span class="tag">${i.kind}${i.old ? ' · calibration' : ''}</span><b>${esc(i.name)}</b>
+            <span class="rule">${rich(i.text)}</span><span class="idea">${esc(i.idea)}</span></div>
+        </article>`;
+      };
+      const members = list.filter(i => i.kind === 'member');
+      return `<section style="--c:${c}">
+        <h2>${label} <small>${list.length} icons · ${motif}</small></h2>
+        <div class="strip">${list.map(i => `<span>${svg(i, 24)}${esc(i.name)}</span>`).join('')}</div>
+        <div class="crowd"><b>A table of ${label} members, 24px</b>${members.map(i => svg(i, 24)).join('')}</div>
+        <h3>Actions</h3><div class="grid">${list.filter(i => i.kind === 'action').map(tile).join('')}</div>
+        <h3>Members</h3><div class="grid">${members.map(tile).join('')}</div>
+      </section>`;
+    }).join('');
+  }
+  document.getElementById('tOutline').addEventListener('click', e => { outline = !outline; e.currentTarget.setAttribute('aria-pressed', outline); e.currentTarget.textContent = outline ? 'on' : 'off'; render(); });
+  document.querySelectorAll('.btn.bg').forEach(b => b.addEventListener('click', () => {
+    bg = b.dataset.bg; document.querySelectorAll('.btn.bg').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
+  }));
+  render();
+})();
+</script>
+</body>
+</html>

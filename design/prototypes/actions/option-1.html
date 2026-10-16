@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1270">
+<title>Actions: Spoils</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,500&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
+<script src="art.js"></script>
+<script src="kit.js"></script>
+<script src="glyphs.js"></script>
+<script>
+// Option 1: the Spoils. Each space is a shallow tray printed into the board, holding what you'd take, drawn as the
+// game's own objects (chips in their resource shapes, member cards, rivals' hoods, price tags). No words on the board:
+// the name and full text live in the hover. Lords of Waterdeep / Splendor clarity.
+const U = { 1: 19, 2: 15, 3: 15 };
+const SIZE = { 1: [62, 54], 2: [48, 44], 3: [52, 46] };
+const PX = 200 / 209; // px → wheel units
+window.OPT = {
+  n: '1', title: 'The Spoils',
+  tag: 'What you get, drawn as the game’s own pieces. The name lives in the hover (Gold and Red names there are proposals).',
+  blurb: 'Each space is a shallow tray holding what you’d take, drawn as the game’s own pieces: resource chips in their shapes, member cards, a rival’s hood, a price tag. No words on the board; the name and full text are one hover away.',
+  minionPx: 24,
+  ringR: { 1: 160 * PX, 2: 112 * PX, 3: 58 * PX }, spans: { 1: 60, 2: 30 }, hubR: 33,
+  after(doc) {
+    // a taken tray: its pieces in one row under the minion, as large as fits
+    doc.querySelectorAll('.sp.taken .bounty').forEach(b => {
+      const tray = b.parentElement, w = b.scrollWidth, room = tray.clientWidth - 8;
+      const k = Math.min(0.8, room / w);
+      b.style.transform = `translateY(${tray.clientHeight * 0.24}px) scale(${k.toFixed(3)})`;
+    });
+  },
+  space(sp, st) {
+    const [w, h] = SIZE[sp.ring];
+    return `<div class="tray" style="width:${w}px;height:${h}px"><div class="bounty">${G1.bounty(sp.a, U[sp.ring], !st.open)}</div></div>`;
+  },
+  vocab(a) {
+    return `<div class="sp r1 open" style="position:relative;transform:none;zoom:2;--c:${AK.INK[a.res]}"><div class="tray" style="width:62px;height:54px"><div class="bounty">${G1.bounty(a, 19)}</div></div></div>`;
+  },
+  css: `
+  .tray{position:relative;border-radius:13px;background:linear-gradient(180deg,#fbf6ea,#efe4cb);
+    box-shadow:inset 0 0 0 1.6px color-mix(in srgb,var(--c) 78%,#4a3824),inset 0 3px 5px rgba(70,45,15,.28),inset 0 -1px 0 rgba(255,255,255,.7),0 1px 0 rgba(255,255,255,.55);
+    display:grid;place-items:center}
+  .bounty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .2s}
+  .bounty .ln{display:flex;align-items:center;justify-content:center;gap:2px;line-height:0}
+  .bounty .ln.sm{gap:1px;margin-top:1px}
+  .bounty svg{display:block;overflow:visible}
+  .bounty .chips{display:flex}
+  .bounty .chips svg + svg{margin-left:-4px}
+  .bounty .chips svg{filter:drop-shadow(0 1px .5px rgba(50,30,10,.35))}
+  .bounty .card,.bounty .tag,.bounty .hood{filter:drop-shadow(0 1px .5px rgba(50,30,10,.3))}
+  .bounty .tag{margin-left:-5px;margin-top:9px}
+  .bounty .w{font-family:'Alegreya',serif;font-weight:700;color:#2a1f17;line-height:1}
+  .bounty .w.big{font-size:17px;letter-spacing:-.02em;margin-right:1px}
+  .bounty .w.per{font-size:17px;color:#5f4e3d;margin:0 1px}
+  .bounty .w.qual{font-family:'Alegreya Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-left:2px}
+  .r2 .bounty .w.big,.r3 .bounty .w.big,.r2 .bounty .w.per,.r3 .bounty .w.per{font-size:15px}
+  /* your turn: open trays catch the lamp */
+  .sp.can .tray{box-shadow:inset 0 0 0 1.6px color-mix(in srgb,var(--c) 85%,#4a3824),inset 0 3px 5px rgba(70,45,15,.28),0 0 12px 2px rgba(255,206,140,.55)}
+  /* not open yet: an empty printed outline, its pieces only sketched, with the round it opens */
+  .sp.locked .tray{background:rgba(255,250,238,.18);box-shadow:none;outline:1.3px dashed color-mix(in srgb,var(--c) 55%,#6e5a40);outline-offset:-1.3px}
+  .sp.locked .bounty{opacity:.42;filter:grayscale(1) sepia(.35)}
+  .sp.locked .bounty .chips svg{filter:none}
+  .sp.locked .seal{position:absolute;top:-7px;left:50%;transform:translateX(-50%);font-family:'Alegreya',serif;font-weight:700;font-size:9.5px;line-height:1;color:#f4ebd7;background:color-mix(in srgb,var(--c) 55%,#2a1f17);border-radius:7px;padding:2px 5px 1px;letter-spacing:.04em;opacity:.7}
+  /* a minion stands in the middle of the tray; the pieces it took slide to its feet, smaller */
+  .sp.taken .bounty{flex-direction:row;gap:4px;transform-origin:50% 50%}
+  .sp.taken .bounty .ln.sm{margin-top:0}
+  .sp.taken .tray{background:linear-gradient(180deg,#f3ead6,#e6d8b9)}
+  .sp .minion{left:50%;top:34%;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.5))}
+  .sp .minion::after{content:"";position:absolute;left:50%;bottom:-3px;width:26px;height:6px;transform:translateX(-50%);border-radius:50%;background:rgba(42,31,23,.35);z-index:-1;filter:blur(1px)}
+  .sp .fresh-ring{position:absolute;inset:-5px;border-radius:17px;border:2px dashed #e0a23a;pointer-events:none}
+  `,
+};
+</script>
+<script src="page.js"></script>
+</head>
+<body></body>
+</html>

@@ -41,11 +41,11 @@ if [[ "$TOOL_NAME" == "Bash" ]]; then
     exit 2
   fi
   if echo "$COMMAND" | grep -qE 'git\s+reset\s+--hard'; then
-    echo "BLOCKED: git reset --hard is destructive. Use git stash or git checkout <file> instead." >&2
+    echo "BLOCKED: git reset --hard is destructive. Other agents share this working tree, so don't stash either (it takes their work too): make a WIP commit instead (git add -A && git commit -m 'WIP: <what>')." >&2
     exit 2
   fi
   if echo "$COMMAND" | grep -qE 'git\s+checkout\s+\.$'; then
-    echo "BLOCKED: git checkout . discards all changes. Use git stash or revert specific files." >&2
+    echo "BLOCKED: git checkout . discards all changes, including other agents' work in this shared tree. Don't stash either: make a WIP commit instead (git add -A && git commit -m 'WIP: <what>')." >&2
     exit 2
   fi
   if echo "$COMMAND" | grep -qE 'git\s+clean\s+-f'; then

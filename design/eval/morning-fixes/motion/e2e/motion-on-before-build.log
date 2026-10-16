@@ -1,0 +1,4 @@
+laptop: +6 buy showed 1 > 2 > 3 > 4 > 5 > 6 > 7
+laptop pacing: 15 hand-overs from a rival's visible step to the next player's (rounds I–II), shortest 489ms
+rival turns, round I: Steady p50 1078ms (7: 1921 1878 1677 823 1078 1032 747); Relaxed p50 2570ms (7: 3649 3559 3227 2016 2570 2411 1901); Relaxed/Steady 2.38
+PASS motion

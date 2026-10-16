@@ -1,0 +1,67 @@
+# Tester A sweep (running notes)
+## 1. Home / How to play
+- [major] (24) How to play opens 298 ms first / 449 settle, input->paint 264 ms. shot 002
+- [polish] (3) How to play Close is a small ghost pill at top-right far from text; Esc works.
+- [polish] (30) Home logo wheel rotates between visits (orientation differs 001 vs 003) - idle motion on home, harmless but unexplained.
+- NOTE: tool collision: shared scratchpad wrapper got overwritten by another tester; one stray click landed on skeptic's empty home bg (no effect).
+## 2. Setup
+- [major] (A2) "Pick 4 more spheres" - "spheres" never used in rulebook (rulebook says quadrants/colors). shot 011
+- [polish] (15) "0 of 4" counter under the instruction AND "Pick 4 more spheres" by Start - same fact twice.
+- [major] (A2) Setup tiles say "Most purple", "Most white", "Most silver" - most what? resources? (Magenta says "Most magenta members" so the others read as ambiguous). shot 016
+- [polish] (30) Custom: cannot pick a 5th to replace; must deselect first (4 clicks to clear Classic). No "clear" affordance.
+- [polish] (29) Tile body copy ~9-10px, corner order number ~8px - tiny on a laptop. Custom click complete 201 ms (WARNING >100).
+- [polish] (25) Start → intro "Cults in thirty seconds" auto-plays ~15 s with 4 slides; nice art. Start response first change 1222 ms (load 4.9, re-check). Intro is skippable (top-right). Pixel art reads finished.
+## 3-4. Picks / first turns (round I)  [box load 6-14 the whole time; all timings below re-measured later]
+- [major] (11/28d) Starting pick panel sits bottom-left (60-360,555-680) while the header prompt is top-center and the eye is on the wheel; it's cream and readable, but the wheel is louder. shot 020
+- [blocker] (28/1) After my 2nd pick, P2 AND P4 played whole turns (placed, recruited) before I saw the board; when I looked, two rival turns had happened. After my pass, P3's two snake turns finished in ~4 s while my eye was on the Done button at top-right. shot 027, 058
+- [major] (28d) "Done, no buy" (pass) sits at 1112,165 top-right; my eye is on the space I just took (458,390): ~690 px. House style: Pass sits where you decide the buy. shot 054
+- [major] (12) The 4-for-4 followers hover drops down over "Done, no buy" and covers it while you decide. shot 056
+- [major] (28d/20) Help Yourself choice: "Click a lit stack on a rival's cult" — targets are on the left seat column, 500-600 px from the space at 767,210; the prompt is at top-center. House style: picker beside the space. shot 063
+- [major] (28d) Cheap Seats: payment stacks lit on my seat ~420 px from the space; "Trade nothing" sits top-center. shot 073
+- [major] (28d/12) Member pay dialog opens centered over the wheel (635,350), ~580 px from the card I clicked (1205,280), and dims the whole board. shot 068
+- [major] (28g/28c) Redistribute ("Steal 1 each from rivals with more resources") glows as available but hover says "nothing right now" (I held 6 vs 5/5/3). Face gives no hint it's dead for the leader. shot 062
+- [major] (28g) Cheap Seats charges resources; its face just says "Trade for followers 1 for 1, up to 2". House style 2026-10-15: no board action charges you. shot 046
+- [major] (A2 decipher) Toast face "+3● others get 1" but hover says +3/+6/+9 by round — face is round-specific without saying so; same for Your Call (+1/+2/+3), Cheap Seats (2/4/6), Help Yourself (2/3/4). OK-ish, but "others get 1" reads as "1 each of what?" shot 042
+- [major] (A1/28e) Rival follower jumps (P2 2->6, P4 2->7) appeared with no strip line and no visible animation I caught; only the round summary ("+4 bought") explained them. shot 072
+- [polish] (15) Turn toast "You took Help Yourself" appears first with no gain line, then fills in ~1 s later with "+2 / 1 from P2 / 1 from P4". shot 065 vs 067
+- [polish] (15/30) "Since your last turn" strip loses lines during my own turn ("1 earlier", "2 earlier", "3 earlier… open the log") while I'm acting — the strip I'm reading shrinks under me. shots 067, 073, 075
+- [major] (24) Hover popovers on spaces: every one 2-4 bursts, first 190-660 ms, complete 436-1069 ms (load 12-13, re-measure). shots 034-052
+- [polish] (22) Hover for Good Deed covers the shop's Kingpin/Exporter cards; Toast hover covers adjacent space faces. shot 040, 042
+- [polish] (A2) Freelancer hover: "Its color isn't on this table: it counts as a member of no color." developer-ish; and card has no colored cost so it's grey — fine, but sentence is noise for a newcomer.
+- [major] (14/21) Seat resource counts: number then dot, zeros shown as empty rings in dark colors (purple/magenta rings almost invisible on the dark seat). Counting P3's resources took me >2 s. shot 061
+- [polish] (17) Followers buy panel header "FOLLOWERS any resources" + split dot on every tile = "any" said twice.
+- [major] (1) Header says "Your turn — place a minion" in shot 058 while P3's Toast card still flies in the wheel center and a banner "P3 took 1 purple from you" is up: status flipped before the rival's turn visibly ended.
+- [polish] (30) Round summary: "+1 new members" (plural with 1). shot 077
+- [major] (27) Round I scoring (4 overlays "ROUND I SCORING 1 OF 4 / Most purple") ran and finished within the 5 s after my pass click, while P3 was also taking a turn; I saw one frame of it. shot 076
+- [good] Payment dialog pre-suggests coins and swapping by tapping a stack works (1 click). Prompt warns "Spending white gives up your tie for most white". Rim leader emojis update live.
+## Round II (load 11-15 throughout)
+- [major] (28a) Speed menu: picking a speed answers 480-819 ms first change (Quick 819, Steady 595, Relaxed 490). Menu opens 29 ms (good).
+- [major] (28a) Speed ladder weak: own placement moving time Quick 1177 / Steady 1216 / Relaxed 1519 ms (ratios 1.03x, 1.25x). Quick and Steady are indistinguishable by eye for my own placement.
+- [major] (A2/28g) Rising Tide face "Gain silver half the top rival's" hides "Everyone else +1 silver" (a gift to all 3 rivals) — only in hover. Also breaks house style (no "+N" lead gain). shot 137
+- [major] (28g) Shake Down: rival's choice ("they pay or you take it") – face "A rival pays, or loses a member" has no amount; hover "up to +4". While P3 decided, header flashed "Your turn is over" then came back to "Your turn — recruit": confusing. shot 102
+- [major] (22/28f) My minion token sits on top of the words of "A rival pays, or loses a member" (covers "member"). House style: tokens never cover words. shot 100
+- [polish] (22) "extra turn" badge on my seat overlaps the purple count "1" (reads "extra turn1"). shot 133, 134
+- [major] (1/15) Round II summary: P4 row says "This round —" yet P4 recruited Shopkeeper, Benefactor and Grifter this round and went 6->15 followers. Summary contradicts the log. shot 142
+- [major] (21) Seats collapse members into "+2 more"/"+3 more" text after 3 members; the counting test fails for P3/P4 members (can't see who they have without hovering). shot 141
+- [major] (A1/28) Follower jumps on rival seats (P2 14->18 Crime Wave turn, P3 11->8 during P2's turn) have no visible cause on board or strip. Turn read lost each time.
+- [polish] (24) Shop card hovers: 1-3 bursts, complete 261-608 ms (load 14). Seat member hover 386 ms 3 bursts.
+- [major] (12) Shop card hovers open to the LEFT over the wheel's silver quadrant, covering 3-4 space faces; Night Owl/Lamplighter hovers cover the shop cards above them. shots 104,105,108,109
+- [polish] (A2) Go-Getter hover in shop: "Once it's yours, use it on your turn: it lights up in your seat." is narration; "USE" chip + "Use: an extra turn" button on seat hover - works and is obvious (good: gold ring glow on my seat).
+- [polish] (30) Pay dialog for "4 followers" shows a pictogram of three follower marks in two sizes; the purchase isn't a person; a "4" + mark would do.
+- [major] (28d) Redistribute: "Click a lit stack on a rival's cult" – 3 clicks on 3 seats at x 150-255, while space at 665,175 (~430-560 px away), prompt top center.
+- [good] Relaxed: P2's Goody Bags gift dot flew visibly to my seat; I could narrate the gift. Pay dialog warns "Paying this gives up your lead in purple".
+- [good] Extra turn header "Extra turn (Go-Getter): place one more minion" is clear.
+## Round III / results (load 11-15 throughout; never dropped below 11, so timing re-measure was impossible)
+- [major] (28c) Poach hover "+1 follower, +1 member"; taking P4's Crew gave +2 followers (Crew worth 2). Hover undercounts.
+- [major] (28c/A2) Help Yourself face "+4 from rivals", hover "You'd get +8" with no reason given (Desperado doubles); Redistribute hover text "Take 1 from each" vs "You'd get +6". Number without cause.
+- [major] (20/7) Help Yourself +8 = 8 separate clicks on rival seats; Cheap Seats up to 6 = 6 clicks on my own stack. No "take the rest"/"max" shortcut.
+- [major] (28c) Ransom (P4 Shake Down on my Kingpin): paying 4 auto-picked 1 of each of my colors; I got no say which resources to give.
+- [major] (9/5) 8-for-8 follower buy and exact-cost Kingpin buy spend instantly with no pay step/confirm (only "Undo buy" link after). Inconsistent with 2-/4-for buys that open a pay dialog.
+- [major] (21) My own seat collapses members to "+2 more" once I hold 5; can't see my own Crew/Kingpin without hovering.
+- [major] (1) Strip after a 6-move rival run showed only "6 moves" link, no lines; followers jumped P4 16->26, P2 18->29, P3 22->31 unexplained.
+- [major] (28) Double Agent swap: picking the target instantly ended my turn and the bots ran 2 turns (P4 released the swapped Double Agent at once) in <5 s.
+- [polish] (15) Results hover on a followers number repeats the four columns beside it ("1 leader, 2 members, 40 bought, +3, 22") - pure duplicate of the row. shot 243
+- [polish] (2) Results header "Members + you (1)" column - awkward label.
+- [polish] (30) Results: P2 seat card shows 2 members though P2 recruited Broker, Majordomo, etc. (they left?) - "members who left" is never explained on screen.
+- [good] Kingpin hover in shop "Game end: +1 per 2 magenta" plain; the results line "End-game bonuses came to nothing: You Kingpin +0" is honest. Rim hover with standings is excellent (opens beside the rim).
+- [good] Results headline "P2 won by 15, mostly by buying followers (+40), then from the rims' prizes" is exactly what a player wants.

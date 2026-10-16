@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lamplit Table · Phone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,500&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="vision.css">
+<script src="px.js"></script>
+<script src="board.js"></script>
+<script src="scene.js"></script>
+<style>
+.table{width:390px;height:844px}
+.top{position:absolute;left:10px;right:10px;top:12px;display:flex;align-items:center;gap:4px}
+.chip{display:flex;align-items:center;gap:3px;padding:3px 8px 3px 3px;border-radius:20px;color:var(--cream);font-family:var(--serif);font-weight:700;font-size:17px;position:relative}
+.chip .px svg{display:block}
+.chip.now{background:rgba(var(--lamp),.14);box-shadow:0 0 0 1px rgba(var(--lamp),.4)}
+.chip .f svg{width:12px;height:12px;opacity:.85}
+.chip .w{display:flex;gap:1px;margin-left:2px}.chip .w i{width:3px;height:8px;border-radius:2px;background:var(--cream-2)}.chip .w i.u{background:transparent;box-shadow:inset 0 0 0 1px rgba(203,184,148,.4)}
+.top .ar{color:var(--cream-3);font-size:10px;opacity:.6}
+.top .menu{position:static;margin-left:auto;width:32px;height:32px}
+.prompt .big{font-size:23px}
+.shopstrip{position:absolute;left:0;right:0;top:562px;height:122px;overflow:hidden}
+.shopstrip .lbl{position:absolute;left:14px;top:0;font-family:var(--serif);font-size:14px;color:var(--cream-2)}
+.shopstrip .lbl small{font-family:var(--sans);font-size:11.5px;color:var(--cream-3)}
+.shoprow{position:absolute;left:14px;top:22px;display:flex;gap:8px}
+.mc{width:72px;height:96px;border-radius:6px;position:relative;display:flex;flex-direction:column;overflow:hidden;filter:brightness(.8) saturate(.85)}
+.mc .band{height:4px;background:var(--q)}
+.mc .art{height:40px;margin:4px 4px 0;border-radius:3px;display:grid;place-items:center;background:color-mix(in srgb,var(--q) 20%,var(--paper))}
+.mc .nm{font-family:var(--serif);font-weight:700;font-size:11px;color:var(--ink);margin:3px 5px 0;line-height:1.05}
+.mc .ct{margin-top:auto;padding:2px 5px 4px;display:flex;gap:4px;font-size:11px;font-weight:700;color:var(--ink);border-top:1px solid var(--rule)}
+.mc .ct .rz svg{width:10px;height:10px}
+.mc.ok{filter:none}
+.mc .tick{position:absolute;top:7px;right:4px;font-size:9px;font-weight:700;color:#3e7a2c;background:#eef6d9;border-radius:6px;padding:0 4px}
+.dock{position:absolute;left:8px;right:8px;top:694px;height:112px;border-radius:16px;padding:10px 14px;background:linear-gradient(180deg,rgba(243,230,200,.07),rgba(243,230,200,.03));box-shadow:inset 0 0 0 1px rgba(243,230,200,.1),0 -8px 20px rgba(0,0,0,.25)}
+.dock .row{display:flex;align-items:flex-end;justify-content:space-between;height:100%}
+.dock .stacks{gap:10px}
+.dock .stack{min-width:26px}
+.dock .stack .n{font-size:16px}
+.dock .stack .coins span{margin-bottom:-11px}
+.dock .stack .coins span:first-child{margin-bottom:0}
+.dock .wk{display:flex;flex-direction:column;align-items:center}
+.dock .wk .figs{display:flex;gap:0}
+.dock .cap{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3);margin-top:5px}
+.home{position:absolute;left:50%;bottom:8px;width:134px;height:5px;border-radius:3px;background:rgba(243,230,200,.55);transform:translateX(-50%)}
+.press{position:absolute;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,rgba(255,240,210,.35),rgba(255,240,210,0) 70%);box-shadow:0 0 0 2px rgba(255,240,210,.45);z-index:6}
+.note{width:250px}
+.note.up::before{left:calc(50% - 7px);bottom:-7px;box-shadow:1px 1px 0 rgba(80,60,30,.25)}
+.note h4{font-size:19px}
+.note p{font-size:14px;margin-top:7px}
+.note .yd{font-size:13.5px}
+.note .placebtn{margin-top:10px;display:flex;align-items:center;justify-content:space-between}
+.note .placebtn .btn{font-family:var(--serif);font-weight:700;font-size:16px;background:#2a1f17;color:#f6eedb;border-radius:20px;padding:9px 20px}
+.note .placebtn small{font-size:11.5px;color:var(--ink-3);max-width:110px;line-height:1.25;text-align:right}
+</style>
+</head>
+<body>
+<div class="table" id="T" style="--lx:195px;--ly:330px">
+  <div class="top" id="top"></div>
+  <div class="prompt" style="left:16px;top:58px">
+    <div class="big">Your turn — <em>place a worker.</em></div>
+  </div>
+  <div class="shopstrip"><div class="lbl">Shop <small>· 10 face up · swipe</small></div><div class="shoprow" id="shop"></div></div>
+  <div class="dock"><div class="row">
+    <div><div class="stacks" id="stacks"></div></div>
+    <div class="wk"><div class="figs" id="figs"></div><div class="cap">2 left · drag up</div></div>
+    <div class="wk"><div id="hand"></div><div class="cap">1 member</div></div>
+  </div></div>
+  <div class="home"></div>
+</div>
+<script>
+const { sp, inl, SEAT: S, Q, CARDS, SHOP, QUADS } = Scene;
+const T = document.getElementById('T');
+const quads = QUADS({ joint: S.you, gift: S.ossian, hum: S.wren, pickpocket: { ...S.ilse, fresh: 1 }, tipoff: { ...S.ilse, fresh: 1 } });
+quads[0].leader = S.you; quads[1].leader = S.ossian; quads[2].leader = null; quads[3].leader = S.wren;
+Board.render(T, { x: 195, y: 334, size: 372, round: 1, hover: 'gold-1', ghost: S.you, quads, compact: 1 });
+// rail: four chips, figure + followers + workers left; the snake arrows sit between
+const seats = [['wren', 2, 1], ['ossian', 3, 1], ['you', 2, 1, 1], ['ilse', 1, 2]];
+document.getElementById('top').innerHTML = seats.map(([w, f, u, now], i) => `${i ? '<span class="ar">◂</span>' : ''}<span class="chip ${now ? 'now' : ''}">${sp('acolyte', 2, S[w])}${f}<span class="f">${sp('follower', 1)}</span><span class="w">${[0, 1, 2].map(k => `<i class="${k < u ? 'u' : ''}"></i>`).join('')}</span></span>`).join('') + `<span class="menu"><i></i></span>`;
+// shop: a swipe row of art cards, dim while you place; long-press any card for its full text
+const ok = { underdog: 'after Rush', seed: 'after Rush' };
+document.getElementById('shop').innerHTML = SHOP.map(id => { const c = CARDS[id]; return `<div class="mc paper ${ok[id] ? 'ok' : ''}" style="--q:${Q[c.q]}"><div class="band"></div><div class="art">${sp('acolyte', 2, { robe: c.q, prop: c.p })}</div><div class="nm">${c.n}</div><div class="ct"><span class="rz">${c.cost[0]}${sp(c.cost[1], 1)}</span>${c.cost[2] ? `<span class="rz">${c.cost[2]}${sp('any', 1)}</span>` : ''}<span style="margin-left:auto" class="rz">${c.f}${sp('follower', 1)}</span></div>${ok[id] ? `<span class="tick">✓</span>` : ''}</div>`; }).join('');
+document.getElementById('stacks').innerHTML = Scene.stacks([['gold', 3], ['silver', 0], ['magenta', 1], ['green', 1]], {}, 2);
+document.getElementById('figs').innerHTML = sp('acolyte', 3, S.you) + sp('acolyte', 3, S.you);
+document.getElementById('hand').innerHTML = `<div class="mc paper ok" style="--q:${Q.gold};width:56px;height:70px"><div class="band"></div><div class="art" style="height:34px">${sp('acolyte', 2, { robe: 'gold', prop: 'coin' })}</div><div class="nm" style="font-size:10px">Banker</div></div>`;
+// long-press on Rush = hover on desktop: same note, same place (over the closed rings), plus a real Place button for thumbs
+const [rx, ry] = Board.pol(195, 334, .748 * 186, 90);
+T.insertAdjacentHTML('beforeend', `<div class="press" style="left:${rx - 32}px;top:${ry - 26}px"></div>
+<div class="note paper up" style="left:70px;top:${ry - 288}px">
+  <div class="t">${sp('rush', 3)}<h4>Rush<small>Gold · outer ring</small></h4></div>
+  <p>+2 gold per round number <span style="color:var(--ink-3)">(2 / 4 / 6)</span>.</p>
+  <div class="yd">
+    <div class="row"><span class="k">You get</span><b>+2</b>${sp('gold', 2)} → <b>5</b>${sp('gold', 2)}</div>
+    <div class="row"><span class="k">Gold race</span>You 5 · Ossian 2</div>
+    <div class="row"><span class="k">Unlocks</span>Underdog, Seed Money</div>
+  </div>
+  <div class="placebtn"><span class="btn">Place here</span><small>or lift your thumb onto it</small></div>
+</div>`);
+</script>
+</body>
+</html>

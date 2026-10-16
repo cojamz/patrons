@@ -1,0 +1,14 @@
+/* Variant B (not shipped; kept to photograph the comparison): the bottom strip keeps the deck and the members; the right
+   column holds the story of the turns since yours, the turn being told, and the four follower buys.
+   Used with: capture.mjs --strip layout.css --css design/eval/design-pod/layout/variant-b.css */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt{--turn-dock:since;grid-template-rows:54px minmax(0,1fr) auto var(--shop-h,128px);
+    grid-template-areas:"seats prompt since" "seats wheel since" "seats wheel follow" "shop shop shop"}
+  .app.game.lt > .lt-since{grid-area:since;align-self:start;margin-top:8px;max-height:calc(100% - 120px)}
+  .app.game.lt > .lt-shop,.lt > .lt-shop > .lt-shop-cards{display:contents}
+  .lt .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}
+  .lt .lt-rates{grid-area:follow;position:relative;z-index:3;align-self:end;padding-bottom:4px}
+  .lt .lt-rates-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:56px;gap:8px}
+  .lt > .lt-since .since-list{min-height:0;overflow:hidden;justify-content:flex-end}
+  .lt > .lt-since .since-list > li{flex:none}
+}
