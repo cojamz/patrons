@@ -5,6 +5,10 @@ Checked against the code (src/v4, src/engine/v4), the gates (e2e/v4, src/test/v4
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 The bar (Cory, 2026-10-15): A− or better from a fresh blind panel, on the exact build he'll open, before he sees anything.
 
+## Later: gate failures seen while shipping White's "Fewest followers" (2026-10-16, a729aa6, quick check on the live tree)
+- [ ] hotseat e2e: shop member names overflow their box (Lottery Winner by 3px; Sponsor, Patriarch, Speculator, Stunt Double cut by the app frame).
+- [ ] fire-audit unit test "every recruited member with an effect is named acting at least once" fails (one member never named); the audit's table skips White, so not White's. Re-run alone first: the box was loaded.
+
 ## Now: Cory's notes from this morning, in this order
 - [ ] **Balance calls waiting on Cory (2026-10-16, from the balance thread).** Live and built: six prices, Trade Seeds +2 then swap, Cheap Seats +1 follower per 3 white, 2 for 2 followers. Open, each with Claude's default in brackets: (1) Rush Hour "+1 purple per 2 minions on the board" in Overtime's place is built and live; the name and rule are Claude's fill-in [keep]. (2) Intro Offer "your next member costs 4 less" → "+2 gold, plus 1 per gold member you have" [yes]. (3) Sweet Talk → "+4 silver, then swap up to 4 of your silver for one other color" [yes]. (4) Red's contest counts members, not their followers [keep the count]. (5) Magenta keeps "most magenta members" [yes]. Overtime's "show the extra turn on screen" no longer applies (it's off the board). Also check: White now scores fewest followers (another thread), while Cheap Seats pays for white held.
 - [ ] **Pacing gate red since 2-for-2** (src/test/v4/ui/pacing.test.js, "wait between your turns"): the longest wait is 15973 ms against 15600 (seed 7, seat 3, six rival turns). Tune the pace, not the cap. Global trims barely move it (pieceStagger 50→30: 15709). An unfinished director.js attempt is in the balance thread's scratchpad (director-wip.patch), unverified.
