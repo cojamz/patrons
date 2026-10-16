@@ -54,7 +54,7 @@ describe('follower payments mark the answers that give up a lead', () => {
     let s = sceneQ({ quadrants: Q, res: [{ silver: 3, gold: 2 }, { silver: 3, gold: 4 }], queue: [{ t: 'buy', p: 0 }] });
     s = applyMove(s, { player: 0, option: 'tier:small' });
     expect(s.pending.kind).toBe('pay');
-    const by = color => s.pending.options.find(o => o.spend?.[color] === (color === 'gold' ? 2 : 1) && o.spend?.gold === (color === 'gold' ? 2 : 1));
+    const by = color => s.pending.options.find(o => o.spend?.[color] === 1 && o.spend?.gold === (color === 'gold' ? 1 : 0));
     expect(by('silver').breaks).toEqual(['silver']);
     expect(by('gold').breaks).toBeUndefined();
     // a tie is called a tie, never a lead (blind tester B), and the picker's caption says it before the click
@@ -68,7 +68,7 @@ describe('a payment that breaks your only full set is marked (live panel r1)', (
     let s = sceneQ({ quadrants: ['yellow', 'silver', 'trading', 'gold'], res: [{ yellow: 1, silver: 1, white: 1, gold: 3 }, { gold: 4 }], queue: [{ t: 'buy', p: 0 }] });
     s = applyMove(s, { player: 0, option: 'tier:small' });
     expect(s.pending.kind).toBe('pay');
-    const by = color => s.pending.options.find(o => o.spend?.[color] === (color === 'gold' ? 2 : 1) && o.spend?.gold === (color === 'gold' ? 2 : 1));
+    const by = color => s.pending.options.find(o => o.spend?.[color] === 1 && o.spend?.gold === (color === 'gold' ? 1 : 0));
     // Most full sets is yellow's rim: spending silver gives it up, though no yellow is spent
     expect(by('silver').breaks).toEqual(['yellow', 'silver']); // and its silver lead
     expect(by('gold').breaks).toBeUndefined();
@@ -90,7 +90,7 @@ describe('a payment that cuts a member’s game-end bonus is marked (tester A: K
     let s = sceneQ({ quadrants: ['thieves', 'silver', 'trading', 'gold'], res: [{ magenta: 2, gold: 3 }, { magenta: 9, gold: 9 }], members: [['thieves.kingpin'], []], queue: [{ t: 'buy', p: 0 }] });
     s = applyMove(s, { player: 0, option: 'tier:small' });
     expect(s.pending.kind).toBe('pay');
-    const by = color => s.pending.options.find(o => o.spend?.[color] === (color === 'gold' ? 2 : 1) && o.spend?.gold === (color === 'gold' ? 2 : 1));
+    const by = color => s.pending.options.find(o => o.spend?.[color] === 1 && o.spend?.gold === (color === 'gold' ? 1 : 0));
     expect(by('magenta').cuts).toEqual([{ member: 'Kingpin', from: 1, to: 0 }]);
     expect(by('gold').cuts).toBeUndefined();
   });

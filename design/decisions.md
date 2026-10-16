@@ -637,3 +637,9 @@ His notes below were made on the preview, which was stuck on a build from before
 - 2026-10-16 — (Codex, hosting fix) Public /patrons/ served raw source index and 404ed /src/main.jsx. main index now forwards to built /patrons/play/, preserving query/hash. Commit a4b46277, verified live through a clean browser.
 
 - 2026-10-16 — (Cory) Keep member release in; immediately withdrew the proposed removal. No release rule was changed.
+
+- 2026-10-16 — (Cory) Eight members in the shop; simplify and compact the follower shop. (Assistant, under go-with-your-gut) Use 1 for 1, 5 for 5 and 10 for 10, all unlimited; smallest buy defaults to 1 from the recorded 1-or-2 choice.
+- 2026-10-16 — (Cory / friends) Echo could strand a turn until Undo; reproduce with the real placement-to-choice transition. Wheel liked, but playing areas took too long to recognize. Preserve the look while clarifying.
+- 2026-10-16 — (Cory) Animations overlap and obscure the action. They should be snappy, smooth and clear. Resource-bank idea; immediate direction is resources originating/returning at the wheel ring, with member effects still originating at the member.
+- 2026-10-16 — (Cory) Light colored outlines around wheel slices to distinguish its playing areas; subtle sphere-colored seams, retaining availability contrast.
+- 2026-10-16 — (Cory) Members and follower buys still too dim on live build. Remove compounded region/card dimming; keep paper/art legible when unaffordable, use existing actionable glow and interaction state to distinguish purchases.

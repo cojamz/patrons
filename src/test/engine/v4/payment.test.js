@@ -64,10 +64,10 @@ describe('choosing how to pay', () => {
     let s = buyPhase({ res: [{ gold: 2, red: 2, blue: 2 }] });
     s = move(s, 'tier:mid', { manualPay: true });
     const pays = s.pending.options.filter(o => o.kind === 'pay').map(o => o.id);
-    expect(pays).toContain('pay:2-2-0-0');
-    expect(pays).toContain('pay:0-2-2-0');
-    s = move(s, 'pay:0-2-2-0');
-    expect(s.players[0].res).toMatchObject({ gold: 2, red: 0, blue: 0 });
+    expect(pays).toContain('pay:2-2-1-0');
+    expect(pays).toContain('pay:1-2-2-0');
+    s = move(s, 'pay:1-2-2-0');
+    expect(s.players[0].res).toMatchObject({ gold: 1, red: 0, blue: 0 });
   });
 });
 

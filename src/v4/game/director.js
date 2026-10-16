@@ -9,8 +9,7 @@
 //     pulses (a space) or hops (a member), then its pieces fly. Payments drop, gains and gifts arc, takes go straight
 //     (the victim's stack tugs first), a recruit lifts, takes its coins, flies to the crowd and sends its worth to the
 //     count, a follower buy takes its coins, presses and pops, and sends followers. 1–3 of a thing fly as single pieces,
-//     4 or more as one bundle with its count. The next beat starts when this one's last piece is two-thirds along
-//     (Steady). Every stack and count changes as its pieces leave and land, never before.
+//     4 or more as one bundle with its count. Each named cause finishes its payout before the next enters; short flights keep the chain snappy. Every stack and count changes as its pieces leave and land, never before.
 //
 // planChain is the plan in time (the table's pacing reads its length); playChain puts it on screen with Web Animations
 // and timers (no React state). A click or Space skips the rest of a chain to its end (skipChain). Every duration comes
@@ -106,7 +105,8 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     return { atoms, total: 0, handoff: 0 };
   }
   const dist = (a, b) => (measure ? measure(a, b) : TYPICAL);
-  const fly = (a, b) => flightMs(dist(a, b));
+  // Shorter travel replaces overlapping named causes, preserving the overall turn budget.
+  const fly = (a, b) => Math.round(flightMs(dist(a, b)) * 0.65);
   let t = 0, end = 0;
   const at = (time, op) => { atoms.push({ at: Math.round(time), ...op }); return time; };
   const ends = x => { end = Math.max(end, x); return x; };
@@ -155,7 +155,10 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   const onStage = w => (!w ? w : w.kind === 'space' && stagedKeys.has(w.key) ? { kind: 'stage', slot: stagedKeys.get(w.key) }
     : w.kind === 'member' && w.uid != null && stagedUids.has(w.uid) && w.pid === stagedUids.get(w.uid).pid ? { kind: 'stage', slot: stagedUids.get(w.uid).spot, uid: w.uid } : w);
   const pieces = (time, from0, to0, n, opt = {}) => {
-    const from = onStage(from0), to = onStage(to0);
+    // Resources live at their matching wheel rim; members still give from their own portrait.
+    const rim = { kind: 'rim', r: opt.r };
+    const from = opt.r && ['space', 'bank'].includes(from0.kind) ? rim : onStage(from0);
+    const to = opt.r && opt.pay ? rim : onStage(to0);
     // 1–3 single pieces, 60ms apart (Steady); 4 or more one bundle carrying its count
     const d = opt.dur || fly(from, to);
     hand = Math.max(hand, (n >= 4 ? time : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
@@ -200,7 +203,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     // a rival's member that pays out because of the mover's move (Tax Collector on your follower buy) is part of that
     // move's beat: it hops in its seat as the move plays, and what it gets flies from where the move happened, at once
     const reactive = c.kind === 'member' && mover != null && c.pid !== mover && !!movePlace && lastStart != null;
-    if (reactive) s = lastStart + MO.lead;
+    // Reactions follow the triggering payout: rewinding to lastStart put two named causes on top of one another.
     const fromMove = reactive && c.uid == null ? movePlace : null;
     // the source acts first: it flies out of its place onto the stage (a space as a card at the hub, a member beside
     // it), and gives from there (Cory, 2026-10-15: "a card shows up showing the action, and resources flow to/from that
@@ -214,7 +217,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
         const spot = stagedUids.size;
         stagedUids.set(c.uid, { pid: c.pid, spot });
         at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot, dur: MO.stageIn, got: did(m, c.pid) });
-        s += reactive ? MO.stageIn * 0.35 : MO.stageIn * 0.5;
+        s += MO.stageIn;
       }
     } else if (c.kind === 'space' && !stagedKeys.has(c.key)) {
       // a space just taken: the card leaving it is the read of which space it was, so it leaves as the minion lands;
@@ -245,8 +248,8 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       const card = m.cards.find(e => e.type === 'recruit');
       const hold = mine.includes(card.to.pid) ? 0 : MO.rivalBuyHold;
       let paid = s + MO.cardLift + hold;
-      // the coins fly in while the card is lifted; it leaves when the last one is two-thirds of the way there
-      for (const [i, p] of m.pays.entries()) { const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, { kind: 'shop', index: c.index, uid: c.uid }, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid }); paid = Math.max(paid, r.last + r.d * (2 / 3)); }
+      // The card stays lifted until its payment has landed on the wheel.
+      for (const [i, p] of m.pays.entries()) { const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, { kind: 'shop', index: c.index, uid: c.uid }, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid }); paid = Math.max(paid, r.last + r.d); }
       const d = fly(card.from, card.to);
       hand = Math.max(hand, paid + d * (2 / 3));
       at(s, { op: 'card', uid: card.what.uid, to: card.to.pid, from: card.from, lift: MO.cardLift, wait: paid - s - MO.cardLift, dur: d });
@@ -338,16 +341,17 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       cur += nextBeatAt(d);
     }
     phase(m.fols.map(f => (f.what.n > 0 ? { from: f.from.kind === 'bank' && pulsed ? { kind: 'space', key: pulsed } : f.from, to: f.to, n: f.what.n, opt: { fol: true } } : { from: f.from, to: f.to, n: -f.what.n, opt: { fol: true, pay: true } })));
-    t = Math.max(t, cur);
+    // Each named cause gets a clear landing before the next source enters. Color fans within a cause stay together.
+    t = Math.max(t, cur, end);
   }
   const turnPasses = !!(state.pending && before.pending && state.pending.player !== before.pending.player);
   // starting picks read one at a time: the next pick lights only when this one has landed, and a short rest between two
   // players' picks (the first placements follow the last one)
   if (setup && end) { hand = end; if (turnPasses) end += MO.setupRest; }
   if (resort) { at(end, { op: 'sort' }); end += MO.sortBeat; hand = end; }
-  // a chain's cap (grammar §5: 3.0s at Steady; fitted from 2.8s so a run of six rival turns stays inside H2's 13s):
+  // Dense chains tighten proportionally, preserving cause order within the existing turn-wait budget.
   // a longer plan plays faster to fit, never faster than Quick (half)
-  const cap = Math.round(2800 * speedScale());
+  const cap = Math.round(2400 * speedScale());
   if (end > cap) {
     const k = Math.max(0.5, cap / end);
     for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); }
@@ -442,7 +446,7 @@ export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, ne
   return rivalStep ? (sameNext ? 0 : MO.passHold) : base;
 }
 /** The longest a step may hold on screen: the chain's cap plus its breath and the floor (re-timing never goes past it). */
-export const holdCap = () => Math.round(2800 * speedScale()) + MO.breath + 400;
+export const holdCap = () => Math.round(2400 * speedScale()) + MO.breath + 400;
 
 // ---------- the screen ----------
 // One clock for every chain on the table, run by requestAnimationFrame. It advances by at most two frames' worth per
@@ -563,6 +567,20 @@ function placeEl(root, w, ctx) {
       if (sn && sn.rect) return { getBoundingClientRect: () => sn.rect, rectOnly: true };
       return shown(root.querySelector(`.lt-shop .card[data-uid="${w.uid}"]`)) || shown(root.querySelector('.lt-shop'));
     }
+    case 'rim': {
+      const rim = shown(root.querySelector(`.rim[data-rim-res="${w.r}"]`));
+      if (!rim) return shown(root.querySelector('.lt-wheel'));
+      // The middle of the outer arc, transformed with the wheel (not the quadrant's bounding-box centre).
+      if (rim.getTotalLength && rim.getPointAtLength && rim.getScreenCTM) {
+        return { rectOnly: true, getBoundingClientRect: () => {
+          const p = rim.getPointAtLength(rim.getTotalLength() / 4), m = rim.getScreenCTM();
+          if (!m) return rim.getBoundingClientRect();
+          const x = m.a * p.x + m.c * p.y + m.e, y = m.b * p.x + m.d * p.y + m.f;
+          return { left: x - 8, top: y - 8, width: 16, height: 16, right: x + 8, bottom: y + 8 };
+        } };
+      }
+      return rim;
+    }
     case 'rate': return (w.tier && shown(root.querySelector(`.lt-rate[data-rate="${w.tier}"]`))) || (w.n && shown(root.querySelector(`.lt-rate[aria-label*="+${w.n} follower"]`))) || shown(root.querySelector('.lt-rates'));
     case 'pile': return shown(root.querySelector('.lt-deck')) || shown(root.querySelector('.lt-shop'));
     case 'stage': {
@@ -620,7 +638,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // read everything first; every write waits for the clock's next frame (before it paints): a write here made the
   // next layout effect lay the whole page out again
   const found = new Map(), rects = new Map();
-  const where = w => { if (!w) return null; const k = JSON.stringify(w); if (!found.has(k)) found.set(k, placeEl(root, w, ctx)); return found.get(k); };
+  const where = w => { if (!w) return null; if (w.kind === 'stage') return placeEl(root, w, ctx); const k = JSON.stringify(w); if (!found.has(k)) found.set(k, placeEl(root, w, ctx)); return found.get(k); };
   const rectOf = e => { if (!rects.has(e)) rects.set(e, e.getBoundingClientRect()); return rects.get(e); };
   const measure = (a, b) => { const A = where(a), B = where(b); if (!A || !B) return TYPICAL; const ra = rectOf(A), rb = rectOf(B); return Math.hypot(rb.left + rb.width / 2 - ra.left - ra.width / 2, rb.top + rb.height / 2 - ra.top - ra.height / 2); };
   const plan = planChain(before, state, { mine, measure });

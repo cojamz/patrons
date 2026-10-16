@@ -238,15 +238,15 @@ describe('Yellow members', () => {
     let s = scene({ members: [['yellow.weaver']], res: [{ gold: 2, red: 2, green: 2 }] });
     s.cards[uidOf(s, 'yellow.weaver', 0)].seenBig = s.bigLeft;
     s = take(s, 'yellow.harvest'); // +3 yellow
-    s = move(s, 'tier:big');
+    s = move(s, 'tier:top');
     const after = R(s);
-    expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 4 - 8 + 4); // Harvest +4 (1 + 3 other colors), the 6-buy costs 8
-    expect(s.players[0].bonus).toBe(8);
+    expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 4 - 10 + 4); // Harvest +4 (1 + 3 other colors), the top buy costs 10
+    expect(s.players[0].bonus).toBe(10);
     let t = scene({ members: [['yellow.weaver']], res: [{ gold: 2, red: 2 }] });
     t.cards[uidOf(t, 'yellow.weaver', 0)].seenBig = t.bigLeft;
     t = take(t, 'gold.rush');
     t = move(t, 'tier:mid');
-    expect(Object.values(R(t)).reduce((a, b) => a + b, 0)).toBe(6 - 4);
+    expect(Object.values(R(t)).reduce((a, b) => a + b, 0)).toBe(6 - 5);
   });
 
   it('Weaver: remembers the pile when recruited, and a rival’s 6-buy doesn’t trigger it', () => {
@@ -254,8 +254,8 @@ describe('Yellow members', () => {
     s = take(s, 'yellow.harvest');
     s = move(s, `card:${uidOf(s, 'yellow.weaver', 'shop')}`);
     s = take(s, 'gold.rush');
-    s = move(s, 'tier:big');
-    expect(s.players[1].bonus).toBe(8);
+    s = move(s, 'tier:top');
+    expect(s.players[1].bonus).toBe(10);
     expect(R(s, 0)).toEqual({ gold: 1, red: 0, yellow: 1, green: 0 }); // untouched by the rival's buy
   });
 

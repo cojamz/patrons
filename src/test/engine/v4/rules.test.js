@@ -79,7 +79,7 @@ describe('setup', () => {
     expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.pile).toHaveLength(deck - SHOP_SIZE);
     expect(Object.keys(createGame({ quadrants: TABLE, seats: seats(2), seed: 9 }).cards)).toHaveLength(deck + guestMembers().length);
-    expect(s.stock).toEqual({ big: 4 }); // only the 8-follower buy is limited (10→10 is unlimited)
+    expect(s.stock).toEqual({}); // all three buys are unlimited
     const t = createGame({ quadrants: TABLE, seats: seats(2), seed: 10 });
     expect(t.shop).not.toEqual(s.shop);
   });
@@ -186,30 +186,26 @@ describe('shop', () => {
 });
 
 describe('follower buys', () => {
-  it('2 of anything buys 2 followers', () => {
-    let s = scene({ res: [{ gold: 2 }] });
-    s = take(s, 'blue.a1');
+  it('1 of anything buys 1 follower', () => {
+    let s = take(scene({ res: [{ gold: 2 }] }), 'blue.a1');
     expect(hasOpt(s, 'tier:small')).toBe(true);
     s = move(s, 'tier:small');
-    // gold is spent last
-    expect(R(s)[0]).toEqual({ gold: 2, red: 0, blue: 1, green: 0 });
-    expect(fol(s, 0)).toBe(3);
+    expect(R(s)[0]).toEqual({ gold: 2, red: 0, blue: 2, green: 0 });
+    expect(fol(s, 0)).toBe(2);
   });
 
-  it('follower buys take any resources, one color is fine (Cory, 2026-10-14): 4 buys 4, 8 buys 8, 10 buys 10', () => {
+  it('offers exactly 1, 5 and 10, unlimited and payable in any colors', () => {
+    expect(TIERS.map(t => [t.cost, t.get])).toEqual([[1, 1], [5, 5], [10, 10]]);
     const s = scene({});
-    const p = { res: { gold: 0, red: 9, blue: 0, green: 0 } };
-    expect(followerPlan(s, p, tier('mid'))).toEqual({ gold: 0, red: 4, blue: 0, green: 0 });
-    expect(followerPlan(s, p, tier('big'))).toEqual({ gold: 0, red: 8, blue: 0, green: 0 });
-    expect(followerPlan(s, p, tier('top'))).toBe(null); // only 9
-    p.res = { gold: 0, red: 10, blue: 0, green: 0 };
-    expect(followerPlan(s, p, tier('top'))).toEqual({ gold: 0, red: 10, blue: 0, green: 0 });
-    // gold is spent last by default
-    p.res = { gold: 5, red: 7, blue: 1, green: 0 };
-    expect(followerPlan(s, p, tier('big'))).toEqual({ gold: 0, red: 7, blue: 1, green: 0 });
-    for (const t of ['mid', 'big', 'top']) expect(tier(t).colors).toBe(1);
-    expect(tier('top')).toMatchObject({ cost: 10, get: 10 });
-    expect([tier('top').limited, tier('top').clock, tier('top').oncePerRound]).toEqual([undefined, undefined, undefined]);
+    for (const t of TIERS) {
+      const p = { res: { gold: 0, red: t.cost, blue: 0, green: 0 } };
+      expect(followerPlan(s, p, t)).toEqual(p.res);
+      expect(t.limited).toBeUndefined();
+      p.res.red--;
+      expect(followerPlan(s, p, t)).toBe(null);
+    }
+    const p = { res: { gold: 5, red: 4, blue: 1, green: 0 } };
+    expect(followerPlan(s, p, tier('mid'))).toEqual({ gold: 0, red: 4, blue: 1, green: 0 });
   });
 
   // Cory, 2026-10-14: "the turns are the end game clock. there should basically be unlimited number of the 10 follower
@@ -232,24 +228,7 @@ describe('follower buys', () => {
     expect(s.log.some(l => /game ends after this round/.test(l))).toBe(false);
   });
 
-  it('an 8-follower buy uses up one of 2 per player and does not end the game', () => {
-    let s = scene({ res: [{ gold: 2, red: 3, blue: 3 }], queue: [] });
-    s.stock.big = 1;
-    s.queue = [{ t: 'turn', p: 0 }];
-    resume(s);
-    s = take(s, 'green.a1');
-    expect(hasOpt(s, 'tier:big')).toBe(true);
-    s = move(s, 'tier:big');
-    expect(s.stock.big).toBe(0);
-    expect(s.over).toBe(false);
-    expect(s.players[0].bonus).toBe(8);
-  });
 
-  it('no 8-follower buy once they are gone', () => {
-    const s = scene({ res: [{ gold: 3, red: 3, blue: 3 }], queue: [] });
-    s.stock.big = 0;
-    expect(followerPlan(s, s.players[0], tier('big'))).toBe(null);
-  });
 });
 
 describe('round-end contests', () => {

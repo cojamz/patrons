@@ -26,16 +26,16 @@
   /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */
   .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px - var(--turn-h, 112px))}
 
-  /* the shop column: the follower buys first (four fixed offers, always whole: Cory, "too hidden"), then the members,
+  /* the shop column: the follower buys first (three fixed offers, always whole: Cory, "too hidden"), then the members,
      the deck heading them like a card, three to a row; the member grid takes whatever height is left, so nothing in
      the column is ever cut off */
   /* the column never clips: its grid shrinks to fit, and a lit card's or tile's glow at the column's edge stays whole */
   .app.game.lt > .lt-shop{grid-area:shop;align-self:stretch;overflow:visible}
   .app.game.lt .lt-shop-cards{flex-direction:column;justify-content:flex-start;gap:20px;height:100%}
   .app.game.lt .lt-rates{flex:none;order:-1}
-  .app.game.lt .lt-rates-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:52px;gap:8px}
+  .app.game.lt .lt-rates-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:52px;gap:6px}
   .app.game.lt .lt-shop-main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
-  .app.game.lt .lt-shop-body{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,150px));align-content:start;gap:8px}
+  .app.game.lt .lt-shop-body{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,150px));align-content:start;gap:8px}
   .app.game.lt .lt-shop-body > .lt-cards{display:contents}
   /* cards grow toward the plate's portrait shape; the picture's band takes the extra height (and gives it back first
      on a short screen) */
@@ -93,9 +93,9 @@
   .app.game.lt > .lt-shop,.app.game.lt > .lt-shop > .lt-shop-cards{display:contents;overflow:visible}
   .app.game.lt .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}
   .app.game.lt .lt-rates{grid-column:3;grid-row:1 / 4;align-self:end;position:relative;z-index:3;padding-bottom:6px}
-  .app.game.lt .lt-rates-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:52px;gap:8px}
-  .app.game.lt .lt-cards{grid-template-columns:repeat(10,minmax(0,1fr))}
-  .lt[data-yours="1"][data-phase="place"] .lt-shop-main,.lt[data-yours="1"][data-phase="place"] .lt-rates{opacity:.86}
+  .app.game.lt .lt-rates-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:52px;gap:6px}
+  .app.game.lt .lt-cards{grid-template-columns:repeat(8,minmax(0,1fr))}
+  .lt[data-yours="1"][data-phase="place"] .lt-shop-main,.lt[data-yours="1"][data-phase="place"] .lt-rates{opacity:1}
   .lt[data-phase="reckon"] .lt-shop-main,.lt[data-phase="reckon"] .lt-rates{opacity:.55}
 }
 /* the narrowest laptops (861–1049px): ten cards of ~76px; their footers take the room the margins had */
@@ -110,7 +110,7 @@
    wheel steps back like it does in your buy step, and the members you're choosing toward stay readable */
 /* (the stage only: the picker lives inside the wheel's region and keeps its light) */
 .lt.in-setup[data-yours="1"] .lt-wheel .stage{filter:brightness(.7) saturate(.8)}
-.lt.in-setup[data-yours="1"] .lt-shop{opacity:.9}
+.lt.in-setup[data-yours="1"] .lt-shop{opacity:1}
 /* the log (w2b #48: "covers a third of the board"): a modest drawer out of the left column, where the story of the turns
    and its Log button live, as wide as that column; the wheel and the shop stay in view, under a light shade */
 @media (min-width:861px) and (min-height:500px){
@@ -240,7 +240,7 @@
    opacity over the dark table, never a filter: rivals' cards deal in under it, and a filter re-rasterized the column
    every frame they moved (perf, 2026-10-15) */
 .lt[data-yours="0"][data-phase]:not([data-phase="over"]):not([data-phase="reckon"]) .lt-shop-main,
-.lt[data-yours="0"][data-phase]:not([data-phase="over"]):not([data-phase="reckon"]) .lt-rates{opacity:.78}
+.lt[data-yours="0"][data-phase]:not([data-phase="over"]):not([data-phase="reckon"]) .lt-rates{opacity:1}
 
 /* A42 (w3a): Pass (final: it ends your turn) and Undo (forgiving) were twin ghost pills. Pass keeps the firm outlined
    pill; Undo is a quiet text button with its arrow, a step back in color, so the two never read as a pair */
@@ -296,7 +296,7 @@
 /* a member you can't afford steps back without going dark (w3a A55: in round I nine of ten cards faded and the shop read
    as a disabled panel); the label counts what you can afford only when there is something ("0 you can afford" said what
    the fade already says) */
-.lt-shop .lt-card.dim{opacity:.74;filter:saturate(.72)}
+.lt-shop .lt-card.dim{opacity:.94;filter:none}
 
 /* a miss beside a chair's lit picks: they pulse once (CultSeat .pick-nudge) */
 .lt-cult-seat.pick-nudge .cs-stack.pick-on,.lt-cult-seat.pick-nudge .cs-member.pick-on{animation:pick-nudge .6s ease-out}

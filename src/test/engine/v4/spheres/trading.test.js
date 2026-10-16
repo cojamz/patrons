@@ -256,12 +256,12 @@ describe('White members', () => {
     expect(ids(s)).not.toContain(`use:${u}`);
   });
 
-  it('Bulk Buyer: whenever you buy 4 or 8 followers, +1 more (not the 2-for-2 buy)', () => {
+  it('Bulk Buyer: whenever you buy 5 or 10 followers, +1 more (not the 1-for-1 buy)', () => {
     let s = take(scene({ res: [{ red: 2, blue: 2 }], members: [['trading.bulkbuyer']] }), 'trading.haggle');
     s = move(s, 'tier:mid');
-    expect(B(s)).toBe(5);
+    expect(B(s)).toBe(6);
     s = move(take(scene({ res: [{ red: 2 }], members: [['trading.bulkbuyer']] }), 'trading.haggle'), 'tier:small');
-    expect(B(s)).toBe(2);
+    expect(B(s)).toBe(1);
   });
 
   it('Broker: whenever a White action gives you followers, +1 more (once per action)', () => {
@@ -278,7 +278,7 @@ describe('White members', () => {
     s = take(scene({ round: 3, members: [['trading.broker']] }), 'trading.boom');
     expect(B(s)).toBe(0); // nothing traded, no bonus
     s = move(take(scene({ res: [{ red: 2 }], members: [['trading.broker']] }), 'gold.rush'), 'tier:small');
-    expect(B(s)).toBe(2); // follower buys aren't White actions
+    expect(B(s)).toBe(1); // follower buys aren't White actions
   });
 
   it('Exporter: whenever you recruit a non-white member, +1 white', () => {

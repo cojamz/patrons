@@ -8,14 +8,11 @@ import { startEffects, stopEffects, abandonEffects, underCause } from './effects
 
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
-export const SHOP_SIZE = 10; // a bigger community pool, so a member you want is more often still there (Cory, 2026-10-14)
-// Follower buys take any resources (Cory, 2026-10-14: no color requirements). A limited tier has a stock per game (stock: seats -> count).
-// 10→10 is unlimited and nothing ends the game early (Cory, 2026-10-14: "the turns are the end game clock"): the game
-// always ends after round III. (It was a stock of 4 whose last buy ended the game after that round.)
+export const SHOP_SIZE = 8;
+// Any colors, no stock limit. The three rounds remain the game clock.
 export const TIERS = [
-  { key: 'small', cost: 2, get: 2, colors: 1, label: '2 of anything' }, // Cory, 2026-10-15: 2 for 2 (was 2 for 1)
-  { key: 'mid', cost: 4, get: 4, colors: 1, label: '4 of anything' },
-  { key: 'big', cost: 8, get: 8, colors: 1, label: '8 of anything', limited: true, stock: n => 2 * n },
+  { key: 'small', cost: 1, get: 1, colors: 1, label: '1 of anything' },
+  { key: 'mid', cost: 5, get: 5, colors: 1, label: '5 of anything' },
   { key: 'top', cost: 10, get: 10, colors: 1, label: '10 of anything' },
 ];
 /** How many buys of a limited tier are left (Infinity for unlimited tiers). */

@@ -2,12 +2,13 @@
 
 Updated 2026-10-15, afternoon. Agents never commit; the foreman verifies and checkpoints to `claude/cults-wip`. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT`. If a thread dies, relaunch from its line below and tell it to read `git log` first. State of the project: `design/HANDOFF.md`. Done items are ticked in `design/todo.md`.
 
-## Current Codex work (2026-10-15, Eastern)
-- First v0.5 iteration implemented, being verified: approved Green rules, Late Bloomers, Toast, contest ties, Relaxed default, timing wording, brighter cards/buys, less seat clutter, end-game bonuses in the Reckoning and results without recounting. Existing design preserved.
-- Three fix agents completed rule/UI batches; a fresh screen-only reviewer is inspecting a frozen build; UI agent is profiling hover/animation performance for the next small patch.
-- Harness adapted from hardcoded Linux Chromium to platform-native browser; publishing now exports one checked commit, bounds polling and verifies the live build stamp/HTML. GitHub access confirmed. Native desktop capture declined; isolated game-browser verification works.
-- Initial quick check found stale tests from prior rules plus a genuine hover intercept bug. Fixtures corrected to explicit intended tables and shuffled setup order; informational mouse hovers no longer intercept clicks. Re-run on committed snapshot before publishing.
-- No deployment yet. Root owns integration, release and current docs. Next: publish first checked batch, then measured hover/animation performance fixes. Unconfirmed design ideas remain open.
+## Current Codex work (2026-10-16, Eastern)
+- `ffc44bc` source published to main/play via `177d964`. Root redirect repaired. Verify build.json before saying a newer batch is live.
+- Root: finish eight-member shop + 1/5/10 buys; regression checks, laptop/phone visuals, publish and live verification. Fix publish polling Unicode variable parsing and main fetch tracking.
+- feedback_audit agent: complete original-note audit and final-score tiebreak wording. echo_bug agent: reproduce friend’s Echo dead end and add regression. No other active work assumed.
+- Original note preserved verbatim. New friend note: wheel liked, playing areas hard to parse; retained in todo/audit.
+- Earlier batches: 1156 unit tests passed, build/hotseat/scoring/phone checks passed. Current rules change must re-run checks and refresh replay fixture before shipping.
+- Historical sections below are context, not current assignments or deploy instructions.
 
 ## 2026-10-16 (10:40pm Eastern, Oct 15): Cory's v0.5 play notes, logged only
 - Nothing built. Everything is in design/todo.md, top section "Cory's play notes, 2026-10-16"; his clear calls in decisions.md (2026-10-16); catches 48–53 in the answer key.

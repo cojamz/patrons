@@ -1,4 +1,4 @@
-// The Lamplit shop: ten cream cards (5×2 on a laptop, a swipe row on a phone) and one quiet follower-rate line.
+// The Lamplit shop: eight cream cards (three rows beside the wheel, a swipe row on a phone) and three follower buys.
 // The member deck (face down, its count) heads the strip (MemberDeck.jsx). A card: timing tag, pixel figure, name, cost as shapes, worth. While placing, cards you can't
 // afford are dim, and the ones the space under your pointer would unlock brighten (engine dry run).
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card

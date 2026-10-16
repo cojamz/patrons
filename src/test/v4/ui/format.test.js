@@ -197,6 +197,24 @@ describe('v4 format helpers', () => {
     }
   });
 
+  it('explains when members decide a follower tie, and when the win is shared', () => {
+    const s = createGame({ seats, seed: 1 });
+    const cards = Object.keys(s.cards).map(Number).filter(uid => {
+      const d = defById(s.cards[uid].def);
+      return d.f === 1 && d.n === 1;
+    });
+    s.players.forEach(p => { p.members = []; p.bonus = 0; });
+    s.players[0].members = cards.slice(0, 2);
+    s.players[1].members = cards.slice(2, 3);
+    s.players[1].bonus = 1;
+    s.ranking = [0, 1, 2];
+    expect(followers(s, s.players[0])).toBe(followers(s, s.players[1]));
+    expect(winSentence(s)).toBe('Ana won the 3-follower tie with 2 members.');
+    s.players[1].members = cards.slice(2, 4);
+    s.players[1].bonus = 0;
+    expect(winSentence(s)).toBe('Ana and Bo tie on 3 followers and 2 members.');
+  });
+
   it('a member whose color is not on the table costs "any" (no color nobody can hold)', () => {
     const s = createGame({ seats, seed: 1 }); // classic table: no magenta
     const def = { quadrant: 'thieves', s: 6, w: 2 };

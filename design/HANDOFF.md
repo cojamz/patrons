@@ -2,15 +2,16 @@
 
 Rewritten 2026-10-15 (afternoon), so a fresh thread loses nothing. Read this first, then the files it points to. Where this doc and a source disagree, the source wins: `design/decisions.md` for design calls, the code for what's built.
 
-## Current collaboration update (2026-10-15, Codex)
-- Cory likes the current design and wants focused iteration, no dramatic redesign. Preserve the money selector, member-card character and player-card hover.
-- Voice: warm but terse, efficient to scan, clear updates; no performative foreman voice.
-- The assistant owns the harness: coordinate resources for speed with integrity, verify visually, improve from friction, keep documents current and work tidy. Native screenshots were declined; do not request them again.
-- The re-pasted play notes match the v0.5 calls and ideas already in todo.md and decisions.md. The approved first batch is implemented locally and being verified; deployment status and assignments are at the top of in-flight.md. Tentative redesigns remain for Cory.
-- Current shipping follows README.md: shared v4 branch, checked increments, scripts/v4-play.sh, published-build verification. Historical Netlify/WIP instructions below are superseded.
+## Current collaboration update (2026-10-16, Codex)
+- Cory wants warm, terse, clear updates; fast delivery with integrity, assistant-owned harness, visual checks and current docs. Preserve the existing design. Native screenshots were declined; isolated browser screenshots are authorized.
+- Source branch: `claude/gifted-newton-3lcy3i`. Publish checked commits with `scripts/v4-play.sh` to main/play, verify full live build stamp. Root `/patrons/` redirects to `/patrons/play/`. Historical Netlify instructions below are superseded.
+- First fixes published through `ffc44bc`: Green copy rules, Late Bloomers, Toast, contest ties, timing, Relaxed default, seats/hover, final bonuses, member-origin resources, landing sound and speed-change stall. Phone touch smoke passed 390/412px (emulation).
+- Current batch: eight shop members; compact three follower buys, 1/5/10, all unlimited; full original-note audit; friend’s Echo dead end under investigation. Release stays.
+- Original feedback is preserved verbatim in `play-feedback-2026-10-16-original.txt`; `feedback-audit-2026-10-16.md` maps it to code and remaining work. `todo.md` is refreshed, not a claim every note has shipped.
+- Free recruit with owned Go-Between/Exporter: three action regression cases pass; no engine defect reproduced. Do not claim this fixed without distinguishing visible attribution from rules.
 
 ## 0. Latest (2026-10-15, 10:40pm Eastern)
-Cory played and called it v0.5 ("quite good"). His notes are logged, not built: todo.md top section, decisions.md 2026-10-16, answer key 48–53. Start there. Open to him: follower buys 1/5/10 or 2/5/10 [1/5/10]; end-game tiebreaker most members, shown [yes]; remove member release [keep, make findable].
+Cory played and called it v0.5 ("quite good"). Historical state at that time; superseded by current update above. Notes: todo.md top section, decisions.md 2026-10-16, answer key 48–53. Start there. Open to him: follower buys 1/5/10 or 2/5/10 [1/5/10]; end-game tiebreaker most members, shown [yes]; remove member release [keep, make findable].
 
 ## 0b. Before that (2026-10-15, 8:25pm Eastern)
 Cory rated his own play B+ and switched us from grading to fixing his notes. Shipped today, live at https://cojamz.github.io/patrons/play/ (build bc019a2): one sphere per player; turn order drawn and shown before the starting picks, with your pick inside your seat; the Paying/Keeping pay picker; "Done, no buy" lit and only in the buy step; seats show a member count and every member during a member pick; Free Recruit's hover lights the cheapest card(s); Greatest Hits says what it copies and skips; no extra minions in round I; Banker by swap pays; Night Owl explains itself; speed slices (hovers in one frame, bot turns in slices, cached pixel art); price calls (Rush Hour for Overtime, 2-for-2, Cheap Seats). How to ship now: `.claude/rules/working-with-cory.md` ("Ship straight away"); times go to Cory in US Eastern 12-hour. Unfinished work: `design/in-flight.md` top section. Open question to Cory: should Greatest Hits repeat what a copied Echo gave instead of skipping it [no]; deck too thin at 2–3 players (25/35 cards; shop ran short in a third of bot games).

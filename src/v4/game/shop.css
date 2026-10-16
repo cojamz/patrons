@@ -32,3 +32,6 @@
   .lt-shop-cards .lt-card .ft .val{padding-left:1px}
   .lt-shop-cards .lt-card .ft .cost-now .lt-res{margin-right:0}
 }
+
+/* Three buys in one row leave room for the eight-member shop below. */
+.lt-shop-cards .lt-rates-grid{grid-template-columns:repeat(3,minmax(0,1fr))}

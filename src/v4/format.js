@@ -341,7 +341,13 @@ export function winSentence(state) {
   const f = p => engineFollowers(state, p);
   const w = ranked[0];
   const tied = ranked.filter(p => f(p) === f(w));
-  if (tied.length > 1) return `${tied.map(p => p.name).join(' and ')} tie on ${f(w)} followers.`;
+  if (tied.length > 1) {
+    const most = Math.max(...tied.map(p => memberCount(state, p)));
+    const winners = tied.filter(p => memberCount(state, p) === most);
+    return winners.length === 1
+      ? `${winners[0].name} won the ${f(w)}-follower tie with ${most} members.`
+      : `${winners.map(p => p.name).join(' and ')} tie on ${f(w)} followers and ${most} members.`;
+  }
   const b = breakdown(state, w);
   const lead = ranked[1] ? `${w.name} won by ${f(w) - f(ranked[1])}` : `${w.name} won`;
   // Name the biggest real sources, in the words the results table uses.

@@ -170,7 +170,7 @@ describe('Yellow members', () => {
   it('Weaver: buying 6+ followers gives +1 of each color, named; a 3-buy does not', () => {
     let s = sc({ res: [{ gold: 3, red: 3, yellow: 3, green: 3 }], members: [['yellow.weaver']] });
     s = take(s, 'gold.rush');
-    s = move(s, 'tier:big');
+    s = move(s, 'tier:top');
     expect(named(s, 'Weaver')).toHaveLength(1);
     s = take(sc({ res: [{ gold: 3, red: 3 }], members: [['yellow.weaver']] }), 'gold.rush');
     s = move(s, 'tier:mid');

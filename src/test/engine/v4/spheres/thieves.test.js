@@ -282,7 +282,7 @@ describe('Magenta members', () => {
     s = move(take(s, 'gold.rush'), 'tier:small');
     expect(R(s)[1].magenta).toBe(0);
     s = scene({ res: [{ gold: 9, red: 1, blue: 1 }], members: [[], ['thieves.extortionist']] });
-    s = move(take(s, 'gold.rush'), 'tier:big');
+    s = move(take(s, 'gold.rush'), 'tier:top');
     expect(R(s)[1].magenta).toBe(2);
   });
 

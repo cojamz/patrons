@@ -11,3 +11,8 @@ dist/
 vite.config.js.timestamp-*
 .snap-probe/
 .*.tmp.*
+
+# Disposable local visual/performance builds
+.v4-baseline/
+.v4-ui-perf/
+.v4-shop-visual/

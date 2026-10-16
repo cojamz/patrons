@@ -1,7 +1,7 @@
 # Cults (repo: patrons)
 
 A digital worker-placement board game for friends playing online (2–4 players). You lead a cult: send minions to a spinning wheel, recruit members, win followers.
-The game was called Patrons; since 2026-10-14 it's **Cults** (v0.2). Code ids and storage keys keep "patrons" on purpose. Cory is the designer; Claude is the foreman (builder, tester, simulator, critic).
+The game was called Patrons; since 2026-10-14 it's **Cults** (v0.5). Code ids and storage keys keep "patrons" on purpose. Cory is the designer; Claude is the foreman (builder, tester, simulator, critic).
 
 ## Read first, every session
 - `design/HANDOFF.md` — full state of the project, how to work with Cory, the harness. Start here after any break.
@@ -14,11 +14,12 @@ The game was called Patrons; since 2026-10-14 it's **Cults** (v0.2). Code ids an
 - `design/decisions.md` — every design call Cory has made (append-only). The game is whatever this says, not whatever old code or docs say.
 - `design/prototypes/vision/build-plan.md` — the UI being built (the Lamplit Table).
 
-## Branches
-- `main` = the old game (v3), frozen. It's the restore point; `?v=3` opens it. Don't build on it.
-- Cults (v4) lives on `claude/gifted-newton-3lcy3i`. PR #1's Netlify preview is the working link. No new PR unless asked. main's CLAUDE.md still describes v3; this file replaces it when PR #1 merges.
-- `claude/cults-wip` = checkpoints. `claude/cults-final` = the last frozen build (0c1cd51). `claude/cults-freeze-<wave>` = frozen builds for remote testers. `claude/cults-perf-final` = quiet-machine reports.
-- **Deploy rule:** only gate-green commits go to the PR branch. Every push there redeploys the preview and spends deploy credits; checkpoints go to `claude/cults-wip`.
+## Branches and shipping (current)
+- Work on `claude/gifted-newton-3lcy3i`; PR #1 already exists. Do not create a replacement PR.
+- Check each increment, push source, then `bash scripts/v4-play.sh <checked-sha>` publishes the immutable commit to main/play and verifies the served build stamp and HTML.
+- Live: https://cojamz.github.io/patrons/ redirects to https://cojamz.github.io/patrons/play/. GitHub Pages serves main, not gh-pages. Historical Netlify instructions are superseded.
+- main outside play/ contains the old v3 game; preserve it and the root redirect. Do not merge v4 source over main wholesale.
+- Current original-note status: `design/feedback-audit-2026-10-16.md`; retain unfinished items instead of treating a shipped subset as the whole batch.
 
 ## Code map (v4)
 - `src/engine/v4/` — the rules, nothing else: `core.js` (task queue, options, buys, Release, contests), `content/*.js` (one file per sphere, `benders.js` for the guest members, `index.js` registers them), `bots.js` (Easy/Normal/Hard), `thinker.js` (rollouts), `preview.js` ("you'd get").
@@ -33,4 +34,4 @@ The game was called Patrons; since 2026-10-14 it's **Cults** (v0.2). Code ids an
 - This box has 4 CPUs: throttle heavy sims.
 
 ## Stack
-React 18, Vite 5, plain CSS for v4, Firebase Realtime DB, Vitest, Playwright. Deployed on Netlify (a move to Cloudflare Pages is pending Cory).
+React 18, Vite 5, plain CSS for v4, Firebase Realtime DB, Vitest, Playwright. Deployed on GitHub Pages via the checked-commit publishing script.

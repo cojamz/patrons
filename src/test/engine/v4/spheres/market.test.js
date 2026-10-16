@@ -141,12 +141,12 @@ describe('Blue actions', () => {
     let s = take(scene({ round: 3, res: [{ red: 10, gold: 8, green: 8 }], shop: CHEAP }), 'market.spree');
     s = move(s, card(s, 'red.intern'));
     expect(s.pending.kind).toBe('buy');
-    s = move(s, 'tier:big');
+    s = move(s, 'tier:mid');
     expect(s.pending.kind).toBe('buy');
     s = move(s, card(s, 'red.twins'));
     expect(s.pending?.kind).not.toBe('buy');
     expect(s.players[0].members).toHaveLength(2);
-    expect(s.players[0].bonus).toBe(8);
+    expect(s.players[0].bonus).toBe(5);
   });
   it('Free recruits from Snap Up trigger recruit hooks (Recruiter pays)', () => {
     let s = take(scene({ res: [{ green: 5 }], members: [['red.recruiter']], shop: SHOP }), 'market.bargain');

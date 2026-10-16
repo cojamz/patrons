@@ -955,11 +955,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // the starting picks repeat one kind of step with the same buttons, so no step lock covers them: a slow double-click
     // on one color spent both picks (w4 skeptic #9); there the same color again within 700ms is one pick
     const twin = pend && pend.kind === 'setup' ? Math.max(700, MO.doubleClick) : MO.doubleClick;
-    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < twin) return;
+    // Automatic copy answers aren't pointer events: they must not be swallowed by
+    // the place→choose double-tap guard (350 ms auto-copy versus a 400 ms lock).
+    const inputGuard = mode !== 'replay' && mode !== 'automatic';
+    if (inputGuard && !counted && lastPick.current.id === optionId && now - lastPick.current.t < twin) return;
     const d = lastDown.current, p0 = lastPick.current;
     // a fresh pointer press far from the last pick is deliberate; anything else (near it, or a key) waits out the lock
     const farFromLast = d.x != null && p0.x != null && now - d.t < 600 && Math.hypot(d.x - p0.x, d.y - p0.y) >= 48;
-    if (mode !== 'replay' && !counted && now < lockUntil.current && !farFromLast) return;
+    if (inputGuard && !counted && now < lockUntil.current && !farFromLast) return;
     lastPick.current = { id: optionId, t: now, x: now - d.t < 600 ? d.x : null, y: now - d.t < 600 ? d.y : null };
     if (mode === 'all') repeat.current = optionId;
     if ((busy || busyNow.current) && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
@@ -1209,7 +1212,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (!only || only.kind !== 'space' || !(only.target && only.target.space) || picker.rest.length) return undefined;
     autoCopied.current = pend;
     // not cleared on a re-render (the guard above would then never fire it): it checks the question is still up instead
-    setTimeout(() => { if (session.getState().pending === pend) handlers.current.onPick(only.id); }, 350);
+    setTimeout(() => { if (session.getState().pending === pend) handlers.current.onPick(only.id, 'automatic'); }, 350);
     return undefined;
   }, [picker, pend, mine, needHandoff]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickParts = useMemo(() => {

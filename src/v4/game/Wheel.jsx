@@ -784,6 +784,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
           onPointerLeave={e => { const h = live.current.hover; e.currentTarget.classList.remove('hot'); if (h && e.pointerType === 'mouse') h.onSpaceHover(s.key, null); }}>
           {lit && !quiet && <path className="glow" d={d} />}
           <path className="wash" d={d} />
+          <path className="slice-outline" d={d} aria-hidden="true" />
           {lit && <path className="edge-lit" d={d} />}
           {fresh && <path className={`fresh${fresh.newest ? ' newest' : ''}`} d={panelPath(a0, a1, R.r0 + 2.2, R.r1 - 2.2, PANEL_GUT + 4.4, PANEL_RC - 1)} style={{ stroke: playerColor(fresh.pid) }}><title>{`${state.players[fresh.pid].name} took ${fresh.action}`}</title></path>}
         </g>,

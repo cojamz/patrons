@@ -39,7 +39,7 @@ describe('a full board', () => {
 
 describe('Late Riser on a full board', () => {
   it('2 players, 2 spheres, round III: Extra Hand twice fills all 12 spaces, so Late Riser gives no turn', () => {
-    let s = createGame({ seats: [{ kind: 'bot' }, { kind: 'bot' }], seed: 7, quadrants: ['purple', 'red'] });
+    let s = createGame({ seats: [{ kind: 'bot' }, { kind: 'bot' }], seed: 7, quadrants: ['purple', 'red'], rules: { release: false } });
     const give = id => {
       const uid = Object.values(s.cards).find(c => c.def === id).uid;
       s.pile = s.pile.filter(u => u !== uid); s.shop = s.shop.filter(u => u !== uid);

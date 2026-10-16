@@ -33,24 +33,24 @@ it('+1 follower (2 of anything) with gold, blue and red: pays without gold', () 
   const w = followerChoices(s, s.players[0], TIERS[0]);
   expect(w[0].gold || 0).toBe(0);
 });
-it('+3 followers (4, 2+ colors) with gold 2, red 1, blue 3: pays 1 red + 3 blue, not gold', () => {
-  const s = scene({ gold: 2, red: 1, blue: 3, green: 0 }, { gold: 5, red: 5, blue: 5, green: 0 });
+it('5 followers with gold 2, red 2, blue 3: spends red and blue before gold', () => {
+  const s = scene({ gold: 2, red: 2, blue: 3, green: 0 }, { gold: 5, red: 5, blue: 5, green: 0 });
   const w = followerChoices(s, s.players[0], TIERS[1]);
-  expect(w[0]).toMatchObject({ gold: 0, red: 1, blue: 3 });
+  expect(w[0]).toMatchObject({ gold: 0, red: 2, blue: 3 });
 });
 
 // Wave-2 testers A#4, B#2: a single way to pay that spent a lead was paid at once, with no step to see or cancel it.
 // The engine marks such a way (breaks: the colors whose lead or tie it gives up), so the screen asks before paying it.
 it('a way to pay that gives up a lead says which colors (breaks); one that keeps them all says nothing', () => {
-  const s = scene({ gold: 3, red: 1, blue: 0, green: 0 }, { gold: 1, red: 0, blue: 0, green: 0 });
-  // a 4-any follower buy with 3 gold and 1 red: one way, and it spends the gold that leads Most gold
+  const s = scene({ gold: 3, red: 2, blue: 0, green: 0 }, { gold: 1, red: 0, blue: 0, green: 0 });
+  // a 5-any follower buy with 3 gold and 2 red: one way, and it spends the gold that leads Most gold
   s.queue.unshift({ t: 'pay', p: 0, tier: 'mid' });
   resume(s);
   const ways = s.pending.options.filter(o => o.kind === 'pay');
   expect(ways).toHaveLength(1);
   expect(ways[0].breaks).toEqual(['gold']);
   // with red to spend instead, the default way keeps the lead and carries no mark; the gold-heavy way still does
-  s.players[0].res.red = 4;
+  s.players[0].res.red = 5;
   s.queue.unshift({ t: 'pay', p: 0, tier: 'mid' });
   resume(s);
   const more = s.pending.options.filter(o => o.kind === 'pay');

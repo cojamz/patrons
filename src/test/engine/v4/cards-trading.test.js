@@ -216,13 +216,13 @@ describe('White members', () => {
     expect(R(s).white).toBe(2 + 3);
     expect(named(s, 'Heiress').length).toBe(1);
   });
-  it('Bulk Buyer: whenever you buy 3 or more followers, +1 more (not for the 2-for-2 buy)', () => {
+  it('Bulk Buyer: whenever you buy 3 or more followers, +1 more (not for the 1-for-1 buy)', () => {
     let s = take(table(Q, { res: [{ gold: 2, red: 2 }], members: [['trading.bulkbuyer']], shop: ROW }), 'trading.haggle');
     s = payDefault(move(s, 'tier:mid'));
-    expect(s.players[0].bonus).toBe(5);
+    expect(s.players[0].bonus).toBe(6);
     expect(named(s, 'Bulk Buyer').length).toBe(1);
     s = payDefault(move(take(table(Q, { res: [{ red: 2 }], members: [['trading.bulkbuyer']], shop: ROW }), 'trading.haggle'), 'tier:small'));
-    expect(s.players[0].bonus).toBe(2);
+    expect(s.players[0].bonus).toBe(1);
   });
   it('Broker: whenever a White action gives you followers, +1 more (Your Call)', () => {
     let s = move(take(table(Q, { round: 2, members: [['trading.broker']], shop: ROW }), 'trading.pawn'), 'amount:0');

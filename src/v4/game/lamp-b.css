@@ -408,8 +408,8 @@
 .lt-card .lt-res{gap:0;margin-right:5px}
 .lt-card .lt-res:last-child{margin-right:0}
 /* what you can't afford dims quietly; "need" is small print, never a badge */
-.lt-card.dim{filter:saturate(.8);opacity:.76}
-.lt-card.recede{filter:saturate(.6);opacity:.62}
+.lt-card.dim{filter:none;opacity:.94}
+.lt-card.recede{filter:none;opacity:.9}
 .lt-card .need{top:2px;right:3px;background:none;box-shadow:none;padding:0;font-size:9px;line-height:11px;font-weight:700;color:var(--pl-ink-2,#6e5c49);opacity:.85}
 .lt-card .need .nd{display:inline-flex;align-items:center;margin-left:2px}
 .lt-card .need b{font-weight:800}
@@ -419,8 +419,8 @@
 .lt-rates .lt-rate{border-radius:var(--corner,8px);background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
 .lt-rates .lt-rate.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
 .lt-rates .lt-rate.can:hover{background:var(--paper-lit,#fbf6ea)}
-.lt-rates .lt-rate.dim{filter:none;opacity:.72}
-.lt-rates .lt-rate.recede{filter:saturate(.6);opacity:.62}
+.lt-rates .lt-rate.dim{filter:none;opacity:.94}
+.lt-rates .lt-rate.recede{filter:none;opacity:.9}
 .lt-rates .rt-trade{font-family:var(--sans);font-size:var(--m);gap:0;color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-trade b{font-weight:800;font-size:var(--m);color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-trade .follower-mark{color:var(--pl-ink,#2b2018)}

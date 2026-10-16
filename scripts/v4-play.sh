@@ -31,7 +31,7 @@ echo "Building checked commit $SHORT"
 ( cd "$TMP/source" && COMMIT_REF="$SHA" "$ROOT/node_modules/.bin/vite" build --base ./ --outDir "$TMP/play" )
 node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({commit:process.argv[2]})+"\n")' "$TMP/play/build.json" "$SHA"
 
-git fetch -q origin main
+git fetch -q origin main:refs/remotes/origin/main
 git worktree add -q --detach "$WT" origin/main
 # Replace only play/, including dotfiles, and preserve every other main path.
 rm -rf "$WT/play"
@@ -46,7 +46,7 @@ for attempt in 1 2 3 4; do
   if git -C "$WT" push -q origin HEAD:main; then PUSHED=1; break; fi
   [ "$attempt" -lt 4 ] || break
   echo "main advanced; retrying publish ($attempt/4)"
-  git -C "$WT" fetch -q origin main
+  git -C "$WT" fetch -q origin main:refs/remotes/origin/main
   git -C "$WT" rebase -q origin/main
 done
 [ "$PUSHED" = 1 ] || { echo 'Publishing failed after four push attempts.' >&2; exit 1; }
@@ -69,7 +69,7 @@ while [ "$SECONDS" -le "$DEADLINE" ]; do
     if ! node -e 'const runs=JSON.parse(require("fs").readFileSync(process.argv[1])); const r=runs.find(r=>r.headSha===process.argv[2]&&/pages/i.test(r.name)); if(r?.status==="completed"&&r.conclusion!=="success"){console.error(`Pages failed: ${r.conclusion}`);process.exit(1)}' "$TMP/runs.json" "$MAIN_SHA"; then exit 1; fi
   fi
   [ "$SECONDS" -lt "$DEADLINE" ] || break
-  echo "Waiting for Pages to serve $SHORT…"
+  echo "Waiting for Pages to serve ${SHORT}..."
   sleep 10
 done
 echo "Pages did not serve verified build $SHORT within ${WAIT}s. main was pushed; inspect its Pages deployment before retrying." >&2

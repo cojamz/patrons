@@ -31,7 +31,7 @@ describe('Guest members (rule-benders)', () => {
     s = move(s, 'tier:small');
     expect(s.pending.extra).toBe(true);
     s = move(s, 'tier:small');
-    expect(s.players[0].bonus).toBe(4);
+    expect(s.players[0].bonus).toBe(2);
     expect(named(s, 'Big Spender')).toHaveLength(1);
   });
   it('Big Spender × Crowd-Pleaser: two follower buys, two payouts', () => {
