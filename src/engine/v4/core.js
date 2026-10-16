@@ -58,9 +58,13 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rul
   };
   shuffleInPlace(state, state.pile);
   refill(state);
-  for (const p of state.players) state.queue.push({ t: 'setupPick', p: p.id, k: 1 }, { t: 'setupPick', p: p.id, k: 2 });
+  // Round I's turn order is drawn now, before the starting picks, and the picks run in it (Cory, 2026-10-15: "it had us
+  // pick resources THEN it randomized the order???"). Everyone is tied at round I, so it's random (Cory, 2026-10-14);
+  // nothing between here and round I draws from the rng, so a seed deals the same order it always did.
+  state.firstOrder = shuffleInPlace(state, state.players.map(p => p.id));
+  for (const id of state.firstOrder) state.queue.push({ t: 'setupPick', p: id, k: 1 }, { t: 'setupPick', p: id, k: 2 });
   state.queue.push({ t: 'round', r: 1 });
-  log(state, 'Each player picks 2 starting resources, first seat to last.');
+  log(state, `Round I's turn order: ${state.firstOrder.map(id => state.players[id].name).join(', ')}. Each player picks 2 starting resources, in that order.`);
   advance(state);
   return state;
 }
@@ -280,20 +284,37 @@ function rimCost(state, p) {
       rims.push({ q, r: q.resource, best, held: mine > 0 && mine >= best, tie: mine > 0 && mine === best, near: !(mine > 0 && mine >= best) && best > 0 });
     } catch { /* a scoring rule that can't be read here */ }
   }
+  // members whose game-end bonus counts what you hold (Kingpin: +1 per 2 magenta; Magnate): spending can cut it, and
+  // Kingpin paid +0 with no warning (tester A, live panel r1)
+  const endBonus = () => {
+    const out = [];
+    for (const uid of p.members) for (const def of effectiveDefs(state.cards[uid])) {
+      if (!def.onGameEnd) continue;
+      try { out.push([def.name, def.onGameEnd(ctx, p, wrap(state, state.cards[uid])) || 0]); } catch { /* unread */ }
+    }
+    return out;
+  };
+  const ends0 = endBonus();
   return v => {
     let lost = 0, near = 0;
-    const colors = [], ties = [];
+    const colors = [], ties = [], cuts = [];
     const saved = { ...p.res };
     try {
       for (const c in v) p.res[c] = (p.res[c] || 0) - (v[c] || 0);
+      if (ends0.length && Object.values(v).some(n => n > 0)) endBonus().forEach(([name, n], k) => {
+        if (ends0[k] && n < ends0[k][1]) { cuts.push({ member: name, from: ends0[k][1], to: n }); lost++; }
+      });
+      // every rim, not only the spent color's: paying silver can break your only full set (Most full sets, keyed to
+      // yellow), and the default way paid it without a word (live panel r1)
+      const any = Object.values(v).some(n => n > 0);
       for (const x of rims) {
-        if (!(v[x.r] > 0)) continue;
+        if (!any) continue;
         const now = x.q.scoring.score(ctx, p);
         if (x.held && !(now > 0 && now >= x.best)) { lost++; colors.push(x.r); if (x.tie) ties.push(x.r); }
-        if (x.near && x.best - now <= 3 + (v[x.r] || 0)) near += v[x.r];
+        if (v[x.r] > 0 && x.near && x.best - now <= 3 + (v[x.r] || 0)) near += v[x.r];
       }
-    } catch { /* leave it unranked */ } finally { Object.assign(p.res, saved); }
-    return { lost, near, colors, ties };
+    } catch { /* leave it unranked */ } finally { for (const c in p.res) if (!(c in saved)) delete p.res[c]; Object.assign(p.res, saved); }
+    return { lost, near, colors, ties, cuts };
   };
 }
 
@@ -320,10 +341,10 @@ function orderChoices(state, list, preferred, p) {
  */
 function payOption(state, v, i, lost = null) {
   const got = lost ? lost(v) : { colors: [], ties: [] };
-  const breaks = got.colors, ties = got.ties || [];
+  const breaks = got.colors, ties = got.ties || [], cuts = got.cuts || [];
   // ties: the broken ones that were a share of the lead, so the sheet says "your tie for most gold", never "your lead"
   // when you only tied (blind tester B read the warning as wrong: they didn't lead)
-  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0, ...(breaks.length ? { breaks } : {}), ...(ties.length ? { ties } : {}) };
+  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0, ...(breaks.length ? { breaks } : {}), ...(ties.length ? { ties } : {}), ...(cuts.length ? { cuts } : {}) };
 }
 
 /** Paying for a follower buy: needs `colors` different resources; each wild one (gold) covers a color. Gold is spent last. */
@@ -663,7 +684,7 @@ function startRound(state, r) {
   const lastPos = id => prev.indexOf(id);
   // Round I: everyone is tied, so the order is random (Cory, 2026-10-14).
   const base = r === 1 && state.order.length === 0
-    ? shuffleInPlace(state, state.players.map(p => p.id))
+    ? (Array.isArray(state.firstOrder) && state.firstOrder.length === state.players.length ? [...state.firstOrder] : shuffleInPlace(state, state.players.map(p => p.id)))
     : [...state.players].sort((a, b) => followers(state, a) - followers(state, b) || lastPos(b.id) - lastPos(a.id)).map(p => p.id);
   // Whoever always picks first (Front-runner: flag pickFirst) moves to the front. Two of them keep their usual order.
   const first = id => sumMemberFlag(state, state.players[id], 'pickFirst') > 0;
@@ -849,11 +870,26 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   eachMember(state, (owner, c, d) => { if (d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, w); });
   // a when-recruited effect leaves a trace like any other member hook (Seed Money, Pilgrim, Retinue…)
   if (def.onRecruited) { const before = traceSnapshot(state); def.onRecruited(ctx, p, w); traceChanges(state, before, p, def); }
-  // "Now and at round start" members (flag now): their round-start effect also fires once when recruited (Cory, 2026-10-14)
-  if (def.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (def[hook]) {
+  joinNow(state, p, w, [def]);
+  workersNow(state, p, def);
+}
+/**
+ * A member's "now" part, as it joins p: "Now and at round start" members (flag now) fire their round-start effect once
+ * (Cory, 2026-10-14). It fires however the member arrives, recruited, swapped or stolen: the card says "now", and a
+ * Banker taken by Even Swap paid nothing (live panel r1 blocker; Claude, under Cory's go-with-your-gut, 2026-10-15).
+ * defs: the member's own def on a recruit (a Doppelganger fires its copy itself), every effective def on a move.
+ */
+function joinNow(state, p, w, defs) {
+  const ctx = ctxFor(state);
+  for (const def of defs) if (def.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (def[hook]) {
     const before = traceSnapshot(state); def[hook](ctx, p, w); traceChanges(state, before, p, def);
   }
-  workersNow(state, p, def);
+}
+/** A member that moved to p by a swap or a steal: its "now" part fires (Lender's +5 stays once a game: cards-trading test). */
+function memberJoined(state, p, uid) {
+  const card = state.cards[uid], w = wrap(state, card), defs = effectiveDefs(card), ctx = ctxFor(state);
+  joinNow(state, p, w, defs);
+  for (const def of defs) if (def.onJoined) { const before = traceSnapshot(state); def.onJoined(ctx, p, w); traceChanges(state, before, p, def); }
 }
 /**
  * A member that adds minions in this round (Extra Hand: "+1 minion in round III"), recruited during it, adds them at
@@ -1106,7 +1142,7 @@ function ctxFor(state) {
     payChoices: (p, uid, how) => paymentChoices(state, p, uid, how),
     /** The colors whose contest lead or tie p holds now and would give up by spending `v` ({ color: n }; a negative n
      *  is a gain, for a swap). Display and asking only: a one-way payment that gives up a lead asks first. */
-    leadsLost: (p, v) => rimCost(state, p)(v).colors,
+    leadsLost: (p, v) => { const g = rimCost(state, p)(v); return [...g.colors, ...g.cuts.map(c => c.member)]; },
     log: text => log(state, text),
     /** A preview's reason for a member's effect content applies itself (Grand Host's double): the "Why" row. */
     note: (p, member, text, res = null) => note(state, p, member, text, res),
@@ -1133,6 +1169,7 @@ function ctxFor(state) {
       cardLeaves(state, from, uid);
       from.members.splice(from.members.indexOf(uid), 1);
       to.members.push(uid);
+      memberJoined(state, to, uid);
     },
     // ---- stealing: one shared verb, so protections and reactions apply to every sphere's steals ----
     /** May `thief` steal from `victim`? kind is 'res' (resources, piles) or 'member'. Quadrants and the
@@ -1147,14 +1184,18 @@ function ctxFor(state) {
     /** How many a steal of `base` takes for this thief (members: stealMore adds, stealDouble(ctx, owner) doubles). */
     stealCount(thief, base, { say = false } = {}) {
       let n = base, double = false;
-      const who = [];
+      const who = [], why = [];
       eachMemberOf(state, thief, (card, def) => {
-        if (typeof def.stealMore === 'number') { n += def.stealMore; if (def.stealMore) who.push(`${thief.name}'s ${def.name}: +${def.stealMore}`); }
-        if (def.stealDouble && def.stealDouble(ctx, thief)) { double = true; who.push(`${thief.name}'s ${def.name}: doubled`); }
+        if (typeof def.stealMore === 'number') { n += def.stealMore; if (def.stealMore) { who.push(`${thief.name}'s ${def.name}: +${def.stealMore}`); why.push([def.name, `+${def.stealMore} to steal`]); } }
+        if (def.stealDouble && def.stealDouble(ctx, thief)) { double = true; who.push(`${thief.name}'s ${def.name}: doubled`); why.push([def.name, 'steal doubled']); }
       });
       const out = double ? n * 2 : n;
-      // say: a real steal (not an estimate) names the members that changed its size
-      if (say && base > 0 && out !== base) log(state, `${thief.name}'s steal takes ${out}, not ${base} (${who.join('; ')}).`);
+      // say: a real steal (not an estimate) names the members that changed its size, in the log and in a hover's Why
+      // (live panel r1: Help Yourself's face said +4 and its hover +8, and neither named Desperado)
+      if (say && base > 0 && out !== base) {
+        log(state, `${thief.name}'s steal takes ${out}, not ${base} (${who.join('; ')}).`);
+        for (const [name, text] of why) note(state, thief, name, `${text} (${base} → ${out})`);
+      }
       return out;
     },
     /** One steal event from one victim. what: { take: {color: n} } moves resources (clamped to what they hold),
@@ -1248,7 +1289,8 @@ function withBreaks(state, p, options) {
     const v = spendOf(o);
     if (!v) return o;
     const got = cost(v);
-    return got.colors.length ? { ...o, breaks: got.colors, ...(got.ties.length ? { ties: got.ties } : {}) } : o;
+    // cuts: a member's game-end bonus this spend lowers ({ member, from, to }: "Kingpin +2 → +0")
+    return got.colors.length || got.cuts.length ? { ...o, ...(got.colors.length ? { breaks: got.colors } : {}), ...(got.ties.length ? { ties: got.ties } : {}), ...(got.cuts.length ? { cuts: got.cuts } : {}) } : o;
   });
 }
 

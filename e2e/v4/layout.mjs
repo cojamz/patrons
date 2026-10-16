@@ -4,11 +4,16 @@
 //  (l3) nothing makes the page scroll sideways;
 //  (l4) a member whose color isn't on the table never prints that color as its cost;
 //  (l5) no color rule for follower buys anywhere (they take anything);
-//  (l6) at setup the starting-resource pick never covers a ring-I space or a rim (RC1: a note over the lower half hid
-//       that the wheel spins), and the whole disc is on screen. Narrow laptops (<1200px): it stands at the wheel's
-//       centre, on the inner rings (w3b #5). From 1200px it stands at the foot of the chairs' column and covers no space
-//       at all, no chair and no shop card (blind panel, f4: at the centre it hid the 8 middle and 4 inner spaces and the
-//       shop's hover cards, just when the rulebook says to pick toward a member), all of it on screen.
+//  (l6) the starting pick stands in your own chair, lit, whole and on screen, with no other pick panel (Cory,
+//       2026-10-15: it replaces the panel at the column's foot, which he hunted for); round I's turn order is set
+//       before the picks, so the chairs don't reshuffle after them (Cory: "it had us pick resources THEN it randomized
+//       the order???").
+//  (l7) live panel r1 (G4): every chair says how many members it has, whole and in view ("+N more" hid them, so "Most
+//       members" couldn't be counted): its count equals the engine's, the figures and "+N" add up to it, the figures
+//       stand in at most two rows inside the chair, overlapping nothing; a chair with no "each round" line shows at
+//       least ten figures; the minions still to place stand in one column; an empty stack's ring stays visible;
+//  (l8) keyboard: a rival's member figures are off the Tab path (their seat's head opens the card that lists them),
+//       and the follower buys and "Done, no buy" wear a visible cream focus ring, never the lamp's gold of a lit tile.
 // Checked at 1270×700, 900×700 (the "900px clipping") and 1100×700, from a saved game (e2e/v4/lib/rich-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5186.
 import { chromium } from 'playwright';
@@ -18,6 +23,7 @@ import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
 import { answerChoice } from './lib/answer.mjs';
 import { seedSave } from './lib/seed.mjs';
+import { membersSave } from './lib/members-save.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/layout';
 mkdirSync(SHOTS, { recursive: true });
@@ -109,6 +115,23 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${SHOTS}/${tag}-buy.png` });
     await check('buy', ['.lt-shop .lt-rate b', '.lt-shop .lt-rate', '.lt-shop .card .nm']);
+    // (l8) the follower buys and "Done, no buy" show keyboard focus: a cream ring, not the lamp's gold a lit tile wears
+    // (a key pressed first, so the browser treats the focus as the keyboard's)
+    const rings = [];
+    const nFocus = await page.$$eval('.lt-rates .lt-rate[data-option], .lt-rates .lt-done:not(.idle)', els => els.length);
+    for (let i = 0; i < nFocus; i++) {
+      await page.keyboard.press('Shift');
+      rings.push(await page.evaluate(i => {
+        const e = document.querySelectorAll('.lt-rates .lt-rate[data-option], .lt-rates .lt-done:not(.idle)')[i];
+        e.focus();
+        const st = getComputedStyle(e), ok = e.matches(':focus-visible');
+        const c = (st.outlineColor.match(/[\d.]+/g) || []).map(Number);
+        return { what: e.dataset.option || e.textContent.trim(), ok, style: st.outlineStyle, w: parseFloat(st.outlineWidth), light: c.length >= 3 && Math.min(c[0], c[1], c[2]) > 225 && (c[3] ?? 1) > 0.8 };
+      }, i));
+    }
+    if (!rings.length) errors.push(`[${tag} buy] (l8) no follower buy to focus`);
+    for (const r of rings) if (!r.ok || r.style === 'none' || r.w < 2 || !r.light) errors.push(`[${tag} buy] (l8) "${r.what}" shows no cream focus ring (${r.style} ${r.w}px, focus-visible ${r.ok})`);
+    await page.evaluate(() => document.activeElement && document.activeElement.blur());
   } catch (e) {
     errors.push(`[${tag}] run: ${e.message}`);
     await page.screenshot({ path: `${SHOTS}/${tag}-fail.png` }).catch(() => {});
@@ -116,7 +139,9 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
   await ctx.close();
 }
 
-// (l6) the setup picker and the wheel, side by side at laptop sizes
+// (l6) the starting pick stands in your own chair, lit (Cory, 2026-10-15: "I looked around for 10s before I realized
+// that's what I needed to do. It could just show it IN the player card"): all of it inside your chair and on screen,
+// no other pick panel on screen, and round I's turn order already set when you pick (the chairs don't reshuffle after)
 for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }]) {
   const tag = `${size.width}x${size.height}`;
   const ctx = await browser.newContext({ viewport: size });
@@ -126,38 +151,107 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
     await page.goto(`${base}/?botDelay=20&intro=0`);
     await page.click('[data-home="local"]');
     await page.click('[data-start]');
-    await page.waitForSelector('.prompt.choice.setup [data-option]', { timeout: 20000 });
-    await page.waitForTimeout(700); // the wheel settles to its setup size
+    await page.waitForSelector('.lt > .lt-seat.mine .cs-setup [data-option]', { timeout: 20000 });
+    await page.waitForTimeout(700);
+    const order0 = await page.$$eval('.lt > .lt-seat[data-pid]', els => els.map(e => [Number(e.dataset.pid), Math.round(e.getBoundingClientRect().top)]).sort((x, y) => x[1] - y[1]).map(x => x[0]).join());
     const r = await page.evaluate(() => {
-      const st = document.querySelector('.lt-wheel .stage').getBoundingClientRect();
-      const pk = document.querySelector('.prompt.choice.setup').getBoundingClientRect();
-      // the paper disc: radius 200 of the board's square (its viewBox), centred in the stage
-      const vb = document.querySelector('.lt-wheel svg.wheel-paper').viewBox.baseVal;
-      const cx = st.left + st.width / 2, cy = st.top + st.height / 2, rad = st.width * 200 / vb.width;
-      // the pick may stand on the inner rings (locked at setup), never on a ring-I space or a rim
-      const over = [...document.querySelectorAll('.lt-wheel .slot.r1')].map(e => e.getBoundingClientRect())
-        .filter(b => b.width && Math.min(b.right, pk.right) - Math.max(b.left, pk.left) > 1 && Math.min(b.bottom, pk.bottom) - Math.max(b.top, pk.top) > 1).length;
-      const far = Math.max(...[[pk.left, pk.top], [pk.right, pk.top], [pk.left, pk.bottom], [pk.right, pk.bottom]].map(([x, y]) => Math.hypot(x - cx, y - cy)));
-      const off = Math.hypot((pk.left + pk.right) / 2 - cx, (pk.top + pk.bottom) / 2 - cy);
-      const hits = sel => [...document.querySelectorAll(sel)].map(e => e.getBoundingClientRect())
-        .filter(b => b.width && Math.min(b.right, pk.right) - Math.max(b.left, pk.left) > 1 && Math.min(b.bottom, pk.bottom) - Math.max(b.top, pk.top) > 1).length;
-      // (from 1200px the pick stands off the wheel: none of it may reach the disc at all)
-      const near = Math.hypot(Math.max(pk.left - cx, 0, cx - pk.right), Math.max(pk.top - cy, 0, cy - pk.bottom));
-      return { over, rim: innerWidth >= 1200 ? near < rad : far > rad * 0.9, off: Math.round(off), disc: [cy - rad, cy + rad].map(Math.round), h: innerHeight, size: Math.round(rad * 2),
-        wide: innerWidth >= 1200, anySlot: hits('.lt-wheel .slot'), seats: hits('.lt > .lt-seat'), shop: hits('.lt-card.card, .lt-deck'),
-        onScreen: pk.left >= 0 && pk.top >= 0 && pk.right <= innerWidth && pk.bottom <= innerHeight };
+      const seat = document.querySelector('.lt > .lt-seat.mine').getBoundingClientRect();
+      const toks = [...document.querySelectorAll('.lt > .lt-seat.mine .cs-setup [data-option]')].map(e => ({ b: e.getBoundingClientRect(), lit: /rgba?\(/.test(getComputedStyle(e).boxShadow), whole: [...e.querySelectorAll('.tk-name')].every(n => n.scrollWidth <= n.clientWidth + 1) && e.scrollWidth <= e.clientWidth + 1 && e.scrollHeight <= e.clientHeight + 1 && [...e.children].every(c => { const cb = c.getBoundingClientRect(), eb = e.getBoundingClientRect(); return cb.top >= eb.top - 0.5 && cb.bottom <= eb.bottom + 0.5; }) }));
+      const vis = e => { const st = getComputedStyle(e); const b = e.getBoundingClientRect(); return st.display !== 'none' && st.visibility !== 'hidden' && b.width > 0 && b.height > 0; };
+      return {
+        n: toks.length, inSeat: toks.every(t => t.b.left >= seat.left && t.b.right <= seat.right && t.b.top >= seat.top && t.b.bottom <= seat.bottom),
+        onScreen: toks.every(t => t.b.left >= 0 && t.b.top >= 0 && t.b.right <= innerWidth && t.b.bottom <= innerHeight),
+        lit: toks.every(t => t.lit), whole: toks.every(t => t.whole), big: toks.every(t => t.b.height >= 24),
+        panel: [...document.querySelectorAll('.prompt.choice.setup')].filter(vis).length,
+      };
     });
-    if (r.over) errors.push(`[${tag} setup] (l6) the starting-resource picker covers ${r.over} ring-I space(s)`);
-    if (r.rim) errors.push(`[${tag} setup] (l6) the starting-resource picker reaches the rim`);
-    if (!r.wide && r.off > 40) errors.push(`[${tag} setup] (l6) the starting-resource picker isn't at the wheel's centre (${r.off}px off): the pick is where the eye lands (w3b #5)`);
-    if (r.wide && r.anySlot) errors.push(`[${tag} setup] (l6) the starting-resource picker covers ${r.anySlot} wheel space(s): the inner rings are what you pick toward`);
-    if (r.wide && (r.seats || r.shop)) errors.push(`[${tag} setup] (l6) the starting-resource picker covers ${r.seats} chair(s) and ${r.shop} shop card(s)`);
-    if (!r.onScreen) errors.push(`[${tag} setup] (l6) the starting-resource picker runs off the window`);
-    if (r.disc[0] < 0 || r.disc[1] > r.h) errors.push(`[${tag} setup] (l6) the wheel runs off the window at setup (${r.disc.join('–')})`);
-    if (r.size < 300) errors.push(`[${tag} setup] (l6) the wheel shrank to ${r.size}px at setup`);
+    if (r.n !== 4) errors.push(`[${tag} setup] (l6) your chair offers ${r.n} starting picks, not 4`);
+    if (!r.inSeat) errors.push(`[${tag} setup] (l6) the starting pick runs out of your chair`);
+    if (!r.onScreen) errors.push(`[${tag} setup] (l6) the starting pick runs off the window`);
+    if (!r.lit) errors.push(`[${tag} setup] (l6) the starting pick isn't lit`);
+    if (!r.whole) errors.push(`[${tag} setup] (l6) a starting pick's word is cut`);
+    if (!r.big) errors.push(`[${tag} setup] (l6) the starting picks are under 24px tall`);
+    if (r.panel) errors.push(`[${tag} setup] (l6) a second pick panel still shows outside your chair`);
     await page.screenshot({ path: `${SHOTS}/${tag}-setup.png` });
+    // pick both, then round I: the chairs keep the order they showed during the picks
+    for (let k = 0; k < 2; k++) {
+      await page.waitForSelector('.lt > .lt-seat.mine .cs-setup [data-option]', { timeout: 20000 });
+      await page.click('.lt > .lt-seat.mine .cs-setup [data-option]');
+      await page.waitForTimeout(800);
+    }
+    await page.waitForSelector('.lt[data-round="1"]', { timeout: 20000 });
+    await page.waitForTimeout(1200);
+    const order1 = await page.$$eval('.lt > .lt-seat[data-pid]', els => els.map(e => [Number(e.dataset.pid), Math.round(e.getBoundingClientRect().top)]).sort((x, y) => x[1] - y[1]).map(x => x[0]).join());
+    if (order0 !== order1) errors.push(`[${tag} setup] (l6) the chairs reshuffled after the starting picks (${order0} then ${order1}): round I's order is set before the picks`);
   } catch (e) {
     errors.push(`[${tag} setup] run: ${e.message}`);
+    await page.screenshot({ path: `${SHOTS}/${tag}-setup-fail.png` }).catch(() => {});
+  }
+  await ctx.close();
+}
+
+// (l7, l8) the chairs' members, countable at a glance, and the keyboard's path past them (members-save: you hold 10
+// members, P4 13; P3 lies low and holds none)
+for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }]) {
+  const tag = `${size.width}x${size.height} seats`;
+  const ctx = await browser.newContext({ viewport: size });
+  const page = await ctx.newPage();
+  page.on('pageerror', e => errors.push(`[${tag}] pageerror: ${e.message}`));
+  try {
+    const { save } = membersSave();
+    await seedSave(page, save);
+    await page.goto(`${base}/?botDelay=300&intro=0`);
+    await page.waitForSelector('.lt-wheel, [data-home="resume"]');
+    if (!(await page.$('.lt-wheel'))) await page.click('[data-home="resume"]');
+    await page.waitForSelector('.lt > .lt-seat .cs-count');
+    await page.mouse.move(640, 695);
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: `${SHOTS}/${tag.replace(' ', '-')}.png` });
+    const seats = await page.evaluate(() => [...document.querySelectorAll('.lt > .lt-seat > .lt-cult-seat')].map(seat => {
+      const r = e => e.getBoundingClientRect();
+      const box = r(seat.parentElement);
+      const count = seat.querySelector('.cs-count');
+      // (each figure's own box: its sprite breathes and hops a pixel or two inside it)
+      const figs = [...seat.querySelectorAll('.cs-figs > .cs-member')].map(r);
+      const more = seat.querySelector('.cs-more');
+      const build = seat.querySelector(':scope > .cs-build');
+      const over = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+      const parts = [...figs, ...(more ? [r(more)] : []), ...(count ? [r(count)] : []), ...(build ? [r(build)] : [])];
+      let clash = 0;
+      for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) if (over(parts[i], parts[j])) clash++;
+      // (rows by layout, not paint: a lit member lifts 2px and the crowd breathes)
+      const rows = new Set([...seat.querySelectorAll('.cs-figs > .cs-member, .cs-figs > .cs-more')].map(m => m.offsetTop)).size;
+      const inside = parts.every(b => b.left >= box.left - 0.5 && b.right <= box.right + 0.5 && b.top >= box.top - 0.5 && b.bottom <= box.bottom + 0.5);
+      const mins = [...seat.querySelectorAll('.cs-minions .cs-min')].map(e => Math.round(r(e).left + r(e).width / 2));
+      const zero = [...seat.querySelectorAll('.cs-stack.zero')].map(e => parseFloat(getComputedStyle(e).opacity));
+      const cs = count && getComputedStyle(count);
+      return {
+        pid: Number(seat.dataset.seat), count: count ? Number(count.dataset.memberCount) : null, words: count ? count.textContent : '',
+        countSeen: !!count && cs.display !== 'none' && cs.visibility !== 'hidden' && r(count).width > 0 && count.scrollWidth <= count.clientWidth + 1,
+        figs: figs.length, groups: seat.querySelectorAll('.cs-member').length, more: more ? Number(more.dataset.more) : 0,
+        n: [...seat.querySelectorAll('.cs-member')].reduce((s, m) => s + m.dataset.uids.split(' ').length, 0) + (more ? Number(more.dataset.more) : 0),
+        clash, rows, inside, built: !!build, cols: new Set(mins).size, zero: zero.length ? Math.min(...zero) : 1,
+        rivalTabs: seat.closest('.mine') ? 0 : [...seat.querySelectorAll('.cs-member .fig')].filter(f => f.tabIndex >= 0).length,
+      };
+    }));
+    for (const x of seats) {
+      const want = save.state.players[x.pid].members.length;
+      if (x.count !== want) errors.push(`[${tag}] (l7) P${x.pid + 1}'s chair says ${x.count} members; the game says ${want}`);
+      if (!x.countSeen) errors.push(`[${tag}] (l7) P${x.pid + 1}'s member count isn't whole and in view`);
+      if (!new RegExp(`member`, 'i').test(x.words)) errors.push(`[${tag}] (l7) P${x.pid + 1}'s count doesn't say what it counts ("${x.words}")`);
+      if (x.n !== want) errors.push(`[${tag}] (l7) P${x.pid + 1}'s figures and "+N" add up to ${x.n}, not ${want}`);
+      if (x.clash) errors.push(`[${tag}] (l7) P${x.pid + 1}'s count, figures, "+N" and "each round" overlap (${x.clash} pair(s))`);
+      if (x.rows > 2) errors.push(`[${tag}] (l7) P${x.pid + 1}'s figures stand in ${x.rows} rows`);
+      if (!x.inside) errors.push(`[${tag}] (l7) P${x.pid + 1}'s members run out of the chair`);
+      if (!x.built && want >= 10 && x.figs < 10) errors.push(`[${tag}] (l7) P${x.pid + 1}'s chair, with room, shows only ${x.figs} of ${want} members`);
+      if (x.cols > 1) errors.push(`[${tag}] (l7) P${x.pid + 1}'s minions stand in ${x.cols} columns, not one`);
+      if (x.zero < 0.55) errors.push(`[${tag}] (l7) P${x.pid + 1}'s empty stacks fade to ${x.zero} (their rings vanish on purple and magenta)`);
+      if (x.rivalTabs) errors.push(`[${tag}] (l8) P${x.pid + 1}'s ${x.rivalTabs} member figure(s) are on the Tab path`);
+    }
+    if (seats.length !== 4) errors.push(`[${tag}] (l7) ${seats.length} chairs on screen`);
+  } catch (e) {
+    errors.push(`[${tag}] run: ${e.message}`);
+    await page.screenshot({ path: `${SHOTS}/${tag.replace(' ', '-')}-fail.png` }).catch(() => {});
   }
   await ctx.close();
 }

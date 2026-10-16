@@ -3,6 +3,7 @@ import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, foll
 import { contextFor } from '../engine/v4/core.js';
 import { defaultEmoji } from './art/emojis.js';
 import { usableNow, memberAsks } from './game/memberUse.js';
+import { panelWords } from './game/panelText.js';
 
 // Seat colors are an accent now (identity is the player's emoji on their leader, Cory 2026-10-14): ochre, teal,
 // terracotta-rose, lavender-plum, each ΔE ≥ 30 (CIE76) from every resource color on screen (the Lamplit inks) and
@@ -551,6 +552,37 @@ function lastAction(log, i, actor) {
   for (let k = i - 1; k >= 0 && k >= i - 12; k--) { const m = log[k].match(re); if (m) return m[1]; }
   return null;
 }
+/** The round line i falls in, from the log's own "Round II begins." lines (1 before the first). */
+function roundAt(log, i) {
+  for (let k = i; k >= 0; k--) { const m = /^Round (I{1,3}) begins\./.exec(log[k]); if (m) return m[1].length; }
+  return 1;
+}
+/**
+ * The words the board prints on a space, said plainly ("Copy a space taken this round"), by its name and, when the line
+ * gives it, its sphere's name; '' when no space has that name. The board shows these words, not the space's name (blind
+ * panel r1: the log said "Encore", the board "Copy a space taken this round"; wave-2 B#3: "which space is Crime Wave?").
+ */
+export function boardWords(name, round = 1, sphere = null) {
+  for (const id of allQuadrantIds()) {
+    const q = quadrant(id);
+    if (sphere && q.name !== sphere) continue;
+    const a = q.actions.find(x => x.name === name);
+    if (!a) continue;
+    let w = '';
+    try { w = panelWords(id, a, Math.max(1, Math.min(3, round))) || ''; } catch { w = ''; }
+    return w.replace(/(^|[^\d])1 @f/g, '$11 follower').replace(/@f/g, 'followers').replace(/@\w/g, '').trim();
+  }
+  return '';
+}
+/** "P1 took Encore (Echo)." → "P1 took Encore (Copy a space taken this round)."; a copy names its space's words too. */
+function withBoardWords(log, i, line) {
+  let m = line.match(/^(.+? took )(.+?) \(([A-Z][\w ]*)\)\.$/);
+  if (m) { const w = boardWords(m[2], roundAt(log, i), m[3]); return w ? `${m[1]}${m[2]} (${w}).` : line; }
+  m = line.match(/^(.*?\bcop(?:ied|ies) )(.+?)( \([^)]*'s\))?(:.*)$/);
+  // "Cy copied Rising Tide (Di's): +6 silver." → "Cy copied Di's Rising Tide (Gain silver: half the top rival’s): +6 silver."
+  if (m) { const w = boardWords(m[2], roundAt(log, i)); const whose = m[3] ? `${m[3].slice(2, -1)} ` : ''; return w ? `${m[1]}${whose}${m[2]} (${w})${m[4]}` : line; }
+  return line;
+}
 /**
  * Rewrites log lines whose wording teaches the wrong rule. Gifts in the engine create resources for the receiver
  * (nobody loses them), so "P1 gave 1 gold to P2" reads as "P2 gains 1 gold (P1's Kickback)".
@@ -603,7 +635,8 @@ export function explainLine(log, i) {
   if (m) return { text: `${m[1]}'s Hustler picks ${m[2]}: ${m[2]} actions give ${m[1]} +1 gold per round number.` };
   return { text: line };
 }
-export const plainLine = (log, i) => explainLine(log, i).text;
+/** A log line said plainly, its spaces in the words the board shows them by. */
+export const plainLine = (log, i) => withBoardWords(log, i, explainLine(log, i).text);
 
 /** The unit a contest's tiebreak counts ("red members", "purple"), from the engine's scoring, or null. */
 export function tiebreakWord(label) {

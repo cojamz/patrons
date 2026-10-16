@@ -31,7 +31,8 @@
 //      none; bottom-seat member cards ran under the shop strip); the pay dialog takes focus (Enter pays) and names
 //      each rule-changer bending the price (Penny Pincher, a discount);
 //  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary keeps the type scale (caps labels 11, words 14 at least);
-//  (r) every hover card opened in (m) reads whole (lib/textclip.mjs) and keeps to the two marks (lib/legacy.mjs).
+//  (r) every hover card opened in (m) reads whole (lib/textclip.mjs) and keeps to the two marks (lib/legacy.mjs);
+//  (a) also covers each chair's member count, its "+N" cell and its "each round" line (live panel r1, G4).
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -55,6 +56,8 @@ const GAME = [
   '[data-leader-ring]', '.fol-mark', '.follower', '.lt-rate', '.fb', '.slot',
   '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term',
   '[data-rank]', '.cs-turn',
+  // live panel r1 (G4): a chair's member count and its "+N" cell explain themselves too
+  '[data-cult] [data-member-count]', '[data-cult] .cs-more', '[data-cult] .cs-income',
 ].join(',');
 
 async function audit(page, step) {

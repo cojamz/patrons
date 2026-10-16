@@ -65,6 +65,17 @@ describe('Even Swap', () => {
     expect(defs(t, 0)).toEqual(['red.twins']);
   });
 
+  it('a "Now and at round start" member pays its now part to whoever swaps for it (live panel r1 blocker)', () => {
+    let s = sceneQ({ quadrants: T, members: [['red.twins'], ['gold.banker']] });
+    s = take(s, 'red.evenswap');
+    const gold = R(s).gold || 0;
+    s = move(s, `trade:${uidOf(s, 'red.twins', 0)}:${uidOf(s, 'gold.banker', 1)}`);
+    expect(defs(s, 0)).toEqual(['gold.banker']);
+    expect(R(s).gold).toBe(gold + 3);
+    expect(R(s, 1).gold || 0).toBe(0);
+    expect(s.log.some(l => /Banker/.test(l) && /\+3 gold/.test(l))).toBe(true);
+  });
+
   it('Lie Low doesn’t stop it (it shields resources only)', () => {
     let s = sceneQ({ quadrants: T, members: [['red.twins'], ['gold.banker']] });
     s.players[1].hideout = s.round;

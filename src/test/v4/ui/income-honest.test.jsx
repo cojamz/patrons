@@ -61,4 +61,29 @@ describe('seat income says its conditions', () => {
     expect(incomeCondition({ key: 'zz', text: 'Now and at round start, if you lead, +2 red.' })).toBe('not always');
     expect(incomeCondition({ key: 'zz', text: 'Now and at round start, +1 red per member.' })).toBe('varies');
   });
+
+  // live panel r1 (G4): a seat's "each round +3" named no member: Heir pays "at the start of round III", which the
+  // round-start test missed, so the hover had no source
+  it('Heir (round III only) is named as the source of its silver, "per member"', () => {
+    const s = toPlace(createGame({ seats, seed: 4, quadrants: ['silver', 'yellow', 'gold', 'red'] }));
+    s.round = 2;
+    give(s, 0, 'silver.heir');
+    const t = incomeTerms(structuredClone(s), s.players[0]);
+    expect(t, 'Heir pays at the start of round III').not.toBeNull();
+    expect(t.sources.map(x => x.name)).toContain('Heir');
+    expect(t.groups.find(g => g.parts.some(([r]) => r === 'silver')).cond).toBe('per member');
+  });
+
+  // live panel r1 (G4): "+N more" hid members, so the "Most members" prize couldn't be counted off the seats
+  it('every seat shows its whole member count, folded figures or not', () => {
+    const s = toPlace(createGame({ seats, seed: 4, quadrants }));
+    for (const c of Object.values(s.cards).filter(x => s.pile.includes(x.uid)).slice(0, 14)) give(s, 1, c.def);
+    const { container } = render(<CultSeat state={s} pid={1} me={0} />);
+    const count = container.querySelector('[data-member-count]');
+    expect(count).not.toBeNull();
+    expect(Number(count.dataset.memberCount)).toBe(s.players[1].members.length);
+    expect(count.textContent).toMatch(new RegExp(`members\\s*${s.players[1].members.length}`));
+    // a rival's figures are off the keyboard's path (their seat's head opens the card listing them)
+    for (const f of container.querySelectorAll('.cs-member .fig')) expect(f.getAttribute('tabindex')).toBe('-1');
+  });
 });

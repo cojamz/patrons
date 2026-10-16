@@ -23,11 +23,13 @@ function orderOf(seed) {
 }
 
 describe('setup', () => {
-  it('each player picks 2 starting resources, first seat to last, then round I starts', () => {
+  // (Cory, 2026-10-15: "it had us pick resources THEN it randomized the order???") round I's order is drawn first, and
+  // the starting picks run in it
+  it('each player picks 2 starting resources in round I\'s turn order, then round I starts', () => {
     let s = createGame({ seats: seats(3), seed: 3 });
     expect(s.round).toBe(0);
     const picks = [['gold', 'gold'], ['red', 'blue'], ['green', 'red']];
-    for (let p = 0; p < 3; p++) for (let k = 0; k < 2; k++) {
+    for (const p of [...s.firstOrder]) for (let k = 0; k < 2; k++) {
       expect(s.pending.kind).toBe('setup');
       expect(s.pending.player).toBe(p);
       expect(ids(s)).toEqual(['color:gold', 'color:red', 'color:blue', 'color:green']);
@@ -38,6 +40,26 @@ describe('setup', () => {
     ]);
     expect(s.round).toBe(1);
     expect(s.pending.kind).toBe('place');
+  });
+
+  it('fixes round I\'s turn order before the first pick, and round I keeps it whatever is picked', () => {
+    for (let seed = 1; seed <= 12; seed++) {
+      let s = createGame({ seats: seats(4), seed });
+      const first = [...s.firstOrder];
+      expect([...first].sort()).toEqual([0, 1, 2, 3]);
+      expect(s.pending.kind).toBe('setup');
+      expect(s.pending.player).toBe(first[0]); // the first pick is the first seat in the order
+      expect(s.log.join(' ')).toMatch(/turn order/i);
+      const seen = [];
+      while (s.pending && s.pending.kind === 'setup') {
+        if (seen[seen.length - 1] !== s.pending.player) seen.push(s.pending.player);
+        const opts = s.pending.options;
+        s = applyMove(s, { player: s.pending.player, option: opts[(seed + seen.length) % opts.length].id });
+      }
+      expect(seen).toEqual(first);
+      expect(s.round).toBe(1);
+      expect(s.order.slice(0, 4)).toEqual(first);
+    }
   });
 
   it('rejects bad seat counts', () => {
@@ -331,18 +353,19 @@ describe('followers and the end', () => {
 describe('move validation', () => {
   it('rejects the wrong player, bogus options and moves after the end', () => {
     const s = createGame({ seats: seats(2), seed: 1 });
-    expect(isLegal(s, { player: 0, option: 'color:gold' })).toBe(true);
-    expect(() => applyMove(s, { player: 1, option: 'color:gold' })).toThrow(/Illegal/);
-    expect(() => applyMove(s, { player: 0, option: 'color:purple' })).toThrow(/Illegal/);
+    const [a, b] = s.firstOrder; // round I's order, drawn before the picks
+    expect(isLegal(s, { player: a, option: 'color:gold' })).toBe(true);
+    expect(() => applyMove(s, { player: b, option: 'color:gold' })).toThrow(/Illegal/);
+    expect(() => applyMove(s, { player: a, option: 'color:purple' })).toThrow(/Illegal/);
     expect(() => applyMove(s, null)).toThrow(/Illegal/);
-    expect(() => applyMove(s, { player: 0 })).toThrow(/Illegal/);
+    expect(() => applyMove(s, { player: a })).toThrow(/Illegal/);
     const done = scene({ queue: [{ t: 'finish' }] });
     expect(() => applyMove(done, { player: 0, option: 'pass' })).toThrow(/Illegal/);
   });
 
   it('legalMoves lists exactly the pending options', () => {
     const s = createGame({ seats: seats(2), seed: 1 });
-    expect(legalMoves(s)).toEqual(['gold', 'red', 'blue', 'green'].map(c => ({ player: 0, option: `color:${c}` })));
+    expect(legalMoves(s)).toEqual(['gold', 'red', 'blue', 'green'].map(c => ({ player: s.firstOrder[0], option: `color:${c}` })));
   });
 
   it('the game does not share arrays with the caller', () => {

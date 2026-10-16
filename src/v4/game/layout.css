@@ -19,14 +19,8 @@
   /* the chairs stack from the column's top (GameScreen reads --seats-align and writes --seats-end, their foot) */
   .app.game.lt > .lt-snake{grid-area:seats;--seats-align:start;margin-top:var(--col-top)}
   .app.game.lt > .lt-seat{margin-top:var(--col-top)}
-  /* members you can tell apart (w2b #22: "16px sprites, packed 6–11 to a row"; wave-4 B #14: at ~30px they were still
-     smaller than the turn card's type, though they're the readout of a rival's plan): figures at 40px in a 42px row;
-     the chair shows as many as fit and folds the rest into "+N" (CultSeat), its card lists them all */
-  .app.game.lt > .lt-seat > .lt-cult-seat{grid-template-rows:32px 42px}
-  .app.game.lt > .lt-seat.mine > .lt-cult-seat{grid-template-rows:40px 24px 42px}
-  .app.game.lt > .lt-seat .cs-member .sprite{width:40px;height:40px}
-  .app.game.lt > .lt-seat .cs-member .aura{width:46px;height:16px}
-  .app.game.lt > .lt-seat .cs-member .aura.strong{width:50px;height:46px}
+  /* the members' row (live panel r1, G4: "+N more" hid members, so "Most members" couldn't be counted): the count
+     first, then the figures at the sprites' own 24px, two rows deep in a 50px row (the rules are at the file's foot) */
   .app.game.lt > .lt-since{grid-area:seats;align-self:start;margin:calc(var(--col-top) + var(--seats-end, 0px) + 20px) 0 0 44px;
     max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px)}
   /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */
@@ -163,7 +157,10 @@
 }
 .table-chip .chip-line{display:none}
 /* a fifth sphere with four picked: dim like a tile you can't take, but it answers a click with a quiet note by the count */
-.sphere.over{opacity:.38;cursor:default}
+.sphere.over{opacity:.72} /* with four picked, a click swaps it in for the last one picked (its hover says so) */
+.table-pick .link-btn{background:none;border:0;padding:0 2px;font:inherit;color:var(--cream-2,#b9a98c);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
+.table-pick .link-btn:hover{color:var(--cream)}
+.table-pick .link-btn:focus-visible{outline:2px solid rgba(var(--lamp),.9);outline-offset:2px;border-radius:3px}
 .table-pick .full-note{color:var(--muted)}
 
 /* Home (the first screen Cory sees): the brand, then the choices, each group with air (the brand sat 8px over its first
@@ -321,7 +318,7 @@
    name (the column has the height: the story sits on the right at this width; from 680px tall, since at 900×600 the
    taller chairs ran into the shop strip); yours keeps clear of its minions. */
 @media (min-width:861px) and (max-width:1049px) and (min-height:680px){
-  .app.game.lt > .lt-seat:not(.mine) > .lt-cult-seat{grid-template-rows:32px 20px 34px}
+  .app.game.lt > .lt-seat:not(.mine) > .lt-cult-seat{grid-template-rows:32px 20px 50px} /* the members' row: count, then two rows of figures (G4) */
   .app.game.lt > .lt-seat:not(.mine) .cs-foot{grid-column:1 / 5;grid-row:2;justify-self:start}
   .app.game.lt > .lt-seat:not(.mine) .cs-res{justify-content:flex-start;gap:10px}
   .app.game.lt > .lt-seat:not(.mine) .cs-crowd,.app.game.lt > .lt-seat:not(.mine) .cs-build{grid-row:3}
@@ -379,3 +376,87 @@
 .lt-wheel[data-step="buy"] .stage{opacity:.8;transition:opacity .2s}
 .lt-cult-seat .cs-more{white-space:nowrap;cursor:help}
 
+
+/* ---------- a chair's members, countable at a glance (live panel r1, G4) ----------
+   "Most members" is a prize, so the count can never fold away: the row leads with it, its small caps label over the
+   number, like "each round" at the row's other end. The figures stand at the sprites' own 24px (crisp, one screen
+   pixel per pixel), two rows deep, so a chair shows about twice the members it did at 40px; any left over fold into one
+   quiet "+N" cell, and the seat's card lists every one. Chosen over smaller one-row portraits (at 24px in one row the
+   "each round" block left room for five) and over a count alone (the figures are the read of a rival's plan). */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt > .lt-seat > .lt-cult-seat{grid-template-rows:32px 50px}
+  .app.game.lt > .lt-seat.mine > .lt-cult-seat{grid-template-rows:40px 24px 50px}
+  .app.game.lt > .lt-seat .cs-crowd{display:flex;flex-wrap:nowrap;align-items:center;column-gap:8px;height:50px;min-height:0}
+  .app.game.lt > .lt-seat .cs-figs{display:flex;flex-wrap:wrap;align-content:center;align-items:flex-end;gap:2px;min-width:0;max-height:50px}
+  .app.game.lt > .lt-seat .cs-figs:empty{display:none}
+  /* every member shows while a choice picks one of them (CultSeat pickAll): the row grows over the seat's foot */
+  .app.game.lt > .lt-seat .lt-cult-seat.pick-all .cs-crowd{height:auto;min-height:50px;position:relative;z-index:6}
+  .app.game.lt > .lt-seat .lt-cult-seat.pick-all .cs-figs{max-height:none}
+  .app.game.lt > .lt-seat .cs-member .sprite{width:24px;height:24px}
+  .app.game.lt > .lt-seat .cs-more{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;font-size:11px;font-weight:700;color:var(--cream-2,#b9a98c)}
+  /* at 24px a lit member's ring and a switch keep inside their own cell, so two rows never collide */
+  .app.game.lt > .lt-seat .cs-member.ready .fig::before{width:calc(100% + 4px);box-shadow:0 0 0 1.5px rgba(var(--lamp,255,206,140),.85),0 0 8px 2px rgba(var(--lamp,255,206,140),.4)}
+  .app.game.lt > .lt-seat .cs-member .mu-switch,.app.game.lt > .lt-seat .cs-member .mu-sw-tip{bottom:-5px}
+  /* "each round" with a condition: its words wrap under its dots in the label's width, so the figures keep their room */
+  .app.game.lt > .lt-seat .cs-build .cs-gains.has-cond{max-width:84px}
+  .app.game.lt > .lt-seat .cs-build .cs-grp > .cs-cond{white-space:normal;text-align:right;letter-spacing:.04em;line-height:12px}
+}
+.lt-cult-seat .cs-count{display:inline-flex;flex-direction:column;align-items:flex-start;flex:none;line-height:1;cursor:help}
+.lt-cult-seat .cs-count small{font-size:11px;line-height:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--cream-3)}
+.lt-cult-seat .cs-count b{font-family:var(--sans);font-size:18px;line-height:20px;font-weight:800;color:var(--cream)}
+.lt-cult-seat .cs-figs{display:contents}
+@media (min-width:861px) and (min-height:500px){ .app.game.lt > .lt-seat .cs-figs{display:flex} }
+
+/* the minions still to place stand in one column, never a 2×2 block (Cory, 2026-10-15: "a neat column at the right
+   of each player card"): up to five high, as round III deals five */
+.lt > .lt-seat .cs-minions{grid-template-rows:repeat(5,14px)}
+.lt > .lt-seat.mine .cs-minions{grid-template-rows:repeat(5,16px)}
+
+/* an empty stack's hollow ring stays visible on the dark seat in every color (live panel r1: purple's and magenta's
+   rings all but vanished): the ring is its color lifted toward cream, and the dim is lighter; the number stays quiet */
+.lt > .lt-seat .cs-stack.zero,.lt-cult-seat .cs-stack.zero{opacity:.62}
+.cs-stack.zero .res-glyph .res-ring{stroke:color-mix(in srgb,currentColor 55%,var(--cream,#f2e8d2));stroke-width:1.5}
+.lt > .lt-seat .cs-stack.zero .num,.lt-cult-seat .cs-stack.zero .num{opacity:.5}
+
+/* what a use just did ("extra turn", "+7 ●") rises over the row above it: it stands on its own dark ground, so it never
+   runs into a count under it (live panel r1: "extra turn1") */
+.lt-cult-seat .cs-member .mu-result{background:rgba(25,19,16,.94);border-radius:6px;padding:0 6px;box-shadow:0 0 0 1px rgba(243,230,200,.18)}
+
+/* keyboard focus on the follower buys and "Done, no buy" (live panel r1: invisible): a lit tile already wears the lamp's
+   ring, so focus is a cream ring outside it, with a dark gap between, never the lamp's gold (the rims' rule, wave-4 B #34) */
+.lt .lt-rates .lt-rate:focus-visible,.lt .lt-rates .lt-done:focus-visible{outline:2px solid #fffaf0;outline-offset:5px}
+/* a seat's head and your own members take the same cream ring */
+.lt-cult-seat .cs-head:focus-visible,.lt-cult-seat .cs-member .fig:focus-visible{outline:2px solid #fffaf0;outline-offset:2px;border-radius:6px}
+
+/* ---------- your starting pick, in your own chair (Cory, 2026-10-15) ----------
+   "I looked around for 10s before I realized that's what I needed to do. It could just show it IN the player card."
+   On a laptop the pick stands in your chair, lit, where your members will stand; the panel at the column's foot goes
+   (a rival's pick shows as its dot landing on their chair). Phones keep the docked pick at the screen's foot. */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{display:none}
+  .app.game.lt > .lt-seat.mine .lt-cult-seat.setup-pick > .cs-crowd,.app.game.lt > .lt-seat.mine .lt-cult-seat.setup-pick > .cs-build{display:none}
+  .app.game.lt > .lt-seat.mine:has(> .lt-cult-seat.setup-pick){box-shadow:inset 0 0 0 2px rgba(var(--lamp),.85),0 0 22px 2px rgba(var(--lamp),.35)}
+  .lt-cult-seat .cs-setup{grid-column:1 / -1;grid-row:3;display:flex;flex-direction:column;gap:4px;align-self:center;min-width:0}
+  .lt-cult-seat .cs-setup-say{font-size:14px;line-height:16px;font-weight:700;color:var(--lamp-ink,#ffd98c)}
+  .lt-cult-seat .cs-setup-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .app.game.lt > .lt-seat.mine > .lt-cult-seat.setup-pick{grid-template-rows:40px 24px auto}
+  .lt-cult-seat .cs-setup-token{min-width:0;display:inline-flex;flex-direction:row;flex-wrap:nowrap;row-gap:0;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 8px;
+    border-radius:8px;border:0;cursor:pointer;background:var(--paper,#f3e6c8);color:var(--paper-ink,#2b2018);font:600 14px/1 var(--sans);
+    box-shadow:0 0 0 1px rgba(var(--lamp),.9),0 0 12px 2px rgba(var(--lamp),.45);transition:transform .1s}
+  .lt-cult-seat .cs-setup-token:hover{transform:translateY(-2px);background:#fff7e6}
+  .lt-cult-seat .cs-setup-token:active{transform:translateY(1px)}
+  .lt-cult-seat .cs-setup-token:focus-visible{outline:2px solid #fffaf0;outline-offset:3px}
+  .lt-cult-seat .cs-setup-token .tk-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:16px;text-transform:capitalize}
+  .lt-cult-seat .cs-setup-token .res-glyph{flex:none;width:16px;height:16px}
+}
+@media (max-width:860px), (max-height:499px){ .lt-cult-seat .cs-setup{display:none} }
+
+/* a rival's stacks stand on their own row under the name at every laptop width (round 3 skeptic: lit steal pills ran
+   over the follower total, "6 ●16", and two-digit piles touched it even unlit); the narrowest laptops did this already */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt > .lt-seat:not(.mine) > .lt-cult-seat{grid-template-rows:32px 20px 50px}
+  .app.game.lt > .lt-seat:not(.mine) .cs-foot{grid-column:1 / 5;grid-row:2;justify-self:start}
+  .app.game.lt > .lt-seat:not(.mine) .cs-res{justify-content:flex-start;gap:10px}
+  .app.game.lt > .lt-seat:not(.mine) .cs-crowd,.app.game.lt > .lt-seat:not(.mine) .cs-build{grid-row:3}
+  .app.game.lt > .lt-seat:not(.mine) .lt-cult-seat.picking .cs-res{gap:4px}
+}

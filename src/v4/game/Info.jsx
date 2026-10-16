@@ -641,9 +641,17 @@ export function youdWords(pv, state, own = null) {
     // your best pick spends what the space just gave (Snap Up: +2 blue, then pay for a member): the two ends, so the
     // space's own gain is never dropped (blind tester B: Snap Up's hover left out its +2 blue)
     const spends = d => state.resources.some(r => d.res[r] < 0);
-    const w0 = pv.worst, worst = w0 ? changeWords(w0, state) : '';
+    // the branch that spends nothing (you decline the recruit), else the worst one
+    const w0 = pv.keep || pv.worst, worst = w0 ? changeWords(w0, state) : '';
     const spentGain = w0 && state.resources.some(r => w0.res[r] > 0 && pv.best.res[r] < w0.res[r]);
-    if (spentGain && !spends(w0) && worst !== 'nothing' && worst !== best) return { text: `${worst} or ${best}`, note: 'your pick' };
+    // the recruit is said by what it costs, never as a net loss: "−4" after a +2 gain matched nothing paid (live
+    // panel r1: Snap Up's "−4●"). "+2 blue, or +1 member (Big Family), +3 followers for 4"
+    if (spentGain && !spends(w0) && worst !== 'nothing' && worst !== best) {
+      const paid = state.resources.reduce((t, r) => t + Math.max(0, (w0.res[r] || 0) - (pv.best.res[r] || 0)), 0);
+      const kept = Object.fromEntries(state.resources.map(r => [r, Math.max(0, (pv.best.res[r] || 0) - (w0.res[r] || 0))]));
+      const gets = changeWords({ ...pv.best, res: kept }, state);
+      return { text: paid > 0 && gets !== 'nothing' ? `${worst}, or ${gets} for ${paid}` : `${worst} or ${best}`, note: 'your pick' };
+    }
     const sure = named(sureWords(pv, state));
     const sureParts = sure ? sure.split(', ') : [];
     const bare = x => x.replace(/ \(.*\)$/, '');

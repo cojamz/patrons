@@ -63,6 +63,38 @@ describe('a space that spends your coins marks the answers that give up a lead',
   });
 });
 
+describe('a payment that breaks your only full set is marked (live panel r1)', () => {
+  it('Cheap Seats: paying silver breaks the one full set P1 leads Most full sets with; paying gold keeps it', () => {
+    let s = sceneQ({ quadrants: ['yellow', 'silver', 'trading', 'gold'], res: [{ yellow: 1, silver: 1, white: 1, gold: 3 }, { gold: 4 }] });
+    s = take(s, 'trading.buylow');
+    expect(s.pending.kind).toBe('choose');
+    const by = id => s.pending.options.find(o => o.id === id);
+    // Most full sets is yellow's rim: spending silver gives it up, though no yellow is spent
+    expect(by('color:silver').breaks).toEqual(['yellow', 'silver']); // and its silver lead
+    expect(by('color:gold').breaks).toBeUndefined();
+  });
+  it('the default way to pay for a member keeps your only full set when another way can', () => {
+    restore = pinCosts({ 'gold.taxman': [1, 1] });
+    const s = sceneQ({ quadrants: ['yellow', 'silver', 'trading', 'gold'], res: [{ yellow: 1, silver: 1, white: 1, gold: 3 }, { yellow: 2, silver: 2, gold: 5 }],
+      shop: ['gold.taxman'], queue: [{ t: 'buy', p: 0 }] });
+    const o = s.pending.options.find(x => x.kind === 'card' && s.cards[x.uid].def === 'gold.taxman');
+    const t = applyMove(s, { player: 0, option: o.id });
+    const pays = t.pending.options.filter(x => x.kind === 'pay');
+    expect(pays.find(x => x.default).spend).toMatchObject({ gold: 2, silver: 0, white: 0, yellow: 0 });
+    expect(pays.find(x => x.spend.silver === 1).breaks).toEqual(['yellow']);
+  });
+});
+
+describe('a payment that cuts a member’s game-end bonus is marked (tester A: Kingpin paid +0 unwarned)', () => {
+  it('Cheap Seats: paying magenta cuts Kingpin (+1 per 2 magenta); paying gold does not', () => {
+    let s = sceneQ({ quadrants: ['thieves', 'silver', 'trading', 'gold'], res: [{ magenta: 2, gold: 3 }, { magenta: 9, gold: 9 }], members: [['thieves.kingpin'], []] });
+    s = take(s, 'trading.buylow');
+    const by = id => s.pending.options.find(o => o.id === id);
+    expect(by('color:magenta').cuts).toEqual([{ member: 'Kingpin', from: 1, to: 0 }]);
+    expect(by('color:gold').cuts).toBeUndefined();
+  });
+});
+
 describe('the warning words', () => {
   it('say lead for a lead and tie for a tie', () => {
     expect(leadsLost(['gold'])).toBe('your lead in gold');

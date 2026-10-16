@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant, defById } from '../../../engine/v4/index.js';
-import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn, plainLine } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor, useIdle } from '../../../engine/v4/core.js';
 
@@ -123,6 +123,9 @@ describe('v4 format helpers', () => {
         if (use) {
           const start = s, pid = pend.player, name = s.players[pid].name;
           let t = applyMove(s, { player: pid, option: use.id });
+          // a copier with nothing to copy keeps its use and says so ("Bo's Stunt Double has nothing to copy."): no use
+          // happened, so the head rightly says only what was taken; this guard is about a use that went through
+          if (!t.cards[use.uid]?.used) { s = applyMove(s, chooseBotMove(s, () => 0.4)); continue; }
           // only the Use so far: "Ana used X", never a bare "Ana"
           const mid = turnStory(start, t, pid);
           if (mid) expect(mid.head).toMatch(new RegExp(`^${name} used \\S`));
@@ -164,6 +167,14 @@ describe('v4 format helpers', () => {
     end.players[0].res.gold = (end.players[0].res.gold || 0) + 6;
     const st = turnStory(s, end, 0);
     expect(st.short).toMatch(/^\+6 gold \(Midas\)/);
+  });
+
+  it('the log names a space by the words the board shows on it too (panel r1: "Encore"; wave-2 B#3: "which is Crime Wave?")', () => {
+    const log = ['Round II begins. Bo picks first.', 'P1 took Encore (Green).', "Cy copied Rising Tide (Di's): +6 silver.", 'P1 took Kickback (Gold).', 'P1 took Nowhere (Gold).'];
+    expect(plainLine(log, 1)).toBe('P1 took Encore (Copy a space taken this round).');
+    expect(plainLine(log, 2)).toBe('Cy copied Di\'s Rising Tide (Gain silver: half the top rival’s): +6 silver.');
+    expect(plainLine(log, 3)).toBe('P1 took Kickback (+3 gold, +1 to a rival).');
+    expect(plainLine(log, 4)).toBe('P1 took Nowhere (Gold).'); // no such space: the line as the engine wrote it
   });
 
   it('finds new log lines even when lines repeat', () => {
@@ -209,7 +220,7 @@ describe('v4 format helpers', () => {
       // exactly one placement per card, and the head names it
       expect(st.text.match(/ (took|joined) /g) || []).toHaveLength(st.space ? 1 : 0);
       if (st.space) expect(st.head).toMatch(new RegExp(`${st.space.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
-      for (const id of st.touched) { touched++; expect(st.text).toMatch(new RegExp(`(from |· |: )${id === 0 ? 'you' : s.players[id].name} `)); }
+      for (const id of st.touched) { touched++; expect(st.text).toMatch(new RegExp(`(from |· |: )${id === 0 ? 'you' : s.players[id].name}( |$)`)); }
       if (/recruited /.test(st.text)) { recruits++; expect(st.text).toMatch(/recruited [^·]+\((paid [^)]+|free)\)/); }
     });
     expect(trail.stories.length).toBeGreaterThan(40);

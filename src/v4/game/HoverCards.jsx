@@ -475,13 +475,19 @@ export function raceAfter(state, race, qid, pid, yours = true) {
   // best first by what's sure (the first branch's order put whoever got the gift on top)
   const rivals = c.rows.filter(r => r.player !== pid).map(r => r.player).sort((a, b) => low(b) - low(a) || Math.max(...counts[b]) - Math.max(...counts[a]) || a - b);
   const unsure = rivals.filter(r => uniq(counts[r]).length > 1);
+  // a rival's count now: a steal (Collect Debts) can only lower it, and "P3 has 0" read as now while P3 held 3 (live
+  // panel r1), so a count your pick can lower says now and after
+  const nowOf = r => { const row = now && now.rows.find(x => x.player === r); return row ? row.count : null; };
+  const drops = r => nowOf(r) != null && low(r) < nowOf(r);
   let one = null;
-  if (unsure.length > 1) {
+  // "+N goes to the one you pick" is a gift's sentence (Kickback): never when your pick takes from them
+  if (unsure.length > 1 && !rivals.some(drops)) {
     const ups = Array.from({ length: n }, (_, b) => unsure.filter(r => counts[r][b] > low(r)).map(r => counts[r][b] - low(r)));
     const k = ups.flat();
     if (ups.every(u => u.length <= 1) && k.length && k.every(x => x === k[0])) one = k[0];
   }
-  const them = rivals.map(r => ({ pid: r, text: `${state.players[r].name} has ${one != null ? low(r) : amount(counts[r])}` }));
+  const them = rivals.map(r => ({ pid: r, text: one != null ? `${state.players[r].name} has ${low(r)}`
+    : drops(r) ? `${state.players[r].name} has ${nowOf(r)} now, ${amount(counts[r])} after` : `${state.players[r].name} has ${amount(counts[r])}` }));
   const tail = one != null ? `, and +${one} goes to the one ${yours ? 'you pick' : 'picked'}` : '';
   return { rule: c.rule.replace(/^\w/, ch => ch.toUpperCase()), you, them, tail };
 }

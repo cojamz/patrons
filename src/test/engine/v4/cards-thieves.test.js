@@ -28,7 +28,7 @@ describe('Magenta actions', () => {
     let s = table(Q, { n: 3, res: [{}, { gold: 3 }, { red: 3 }], shop: ROW });
     s = play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:2:red');
     expect([R(s).magenta, R(s, 1).gold, R(s, 2).red]).toEqual([2, 2, 2]);
-    expect(s.log).toContain('P1 stole 2 (1 from P2, 1 from P3).');
+    expect(s.log).toContain('P1 stole 2 (1 gold from P2, 1 red from P3), now magenta.');
     s = table(Q, { round: 3, left: 5, res: [{}, { gold: 9 }], shop: ROW });
     s = play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold', 'take:1:gold');
     expect(R(s).magenta).toBe(4);
@@ -121,10 +121,11 @@ describe('Magenta actions', () => {
     // Twins 4 and Intern 2; not Doppelganger (6) or Big Family (8)
     expect(ids(s).sort()).toEqual([cardOpt(s, 'red.twins', 1), cardOpt(s, 'red.intern', 1)].sort());
     // Twins (4): P2 holds only 3, so they can't pay
+    // no question with one answer (skeptic r2): it simply goes, and the log says why
     let t = move(s, cardOpt(s, 'red.twins', 1));
-    expect(ids(t)).toEqual(['let']);
-    t = move(t, 'let');
+    expect(t.pending?.player).not.toBe(1);
     expect(owns(t, 0, 'red.twins')).toBe(true);
+    expect(t.log).toContain("P2 couldn't pay 4 (held 3), so lost Twins to P1.");
     // Intern (2): P2 pays 2, and it turns magenta for P1
     t = move(move(s, cardOpt(s, 'red.intern', 1)), 'pay');
     expect([R(t).magenta, R(t, 1).red]).toEqual([2, 1]);

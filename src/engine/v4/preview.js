@@ -152,7 +152,11 @@ export function previewSpace(state, pid, q, i) {
   const mix = tied && !exact ? [...new Map(leaves.map(s => { const c = change(s); return [JSON.stringify(c), c]; })).values()].slice(0, 12) : null;
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
   // samples: the tables after the first branches (up to 16), so a contest line can tell what depends on a pick
-  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0], samples: leaves.slice(0, 16),
+  // the best branch that spends nothing and recruits no one (Snap Up declined: "+2 blue"), so the screen can say a
+  // recruit by its price after the space's own gain, never as a net "−4" (live panel r1)
+  const spendsNothing = s => state.resources.every(r => (s.players[pid].res[r] || 0) >= (me0.res[r] || 0)) && s.players[pid].members.length === me0.members.length;
+  const keepLeaf = leaves.filter(spendsNothing).reduce((a, s) => (!a || worth(s, pid) > worth(a, pid) ? s : a), null);
+  return { exact, partial, leaves: leaves.length, keep: keepLeaf ? change(keepLeaf) : null, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0], samples: leaves.slice(0, 16),
     best: change(top.best), likely: change(top.likely), worst: change(top.worst), tied, mix,
     // every member some branch brings you (Open Door's tied cheapest: all four, not the best one's name)
     joins: [...new Set(leaves.flatMap(s => s.players[pid].members.filter(u => !me0.members.includes(u))))] };

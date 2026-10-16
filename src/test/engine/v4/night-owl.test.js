@@ -69,7 +69,7 @@ describe('Night Owl', () => {
     let s = take(sc({ round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.hourly');
     expect(s.players[0].left).toBe(0);
     expect(queuedTurns(s, 0)).toBe(0);
-    expect(s.log).toContain('No space to spare: P1 gets no extra turn from Night Owl.');
+    expect(s.log).toContain("P1's Night Owl: no free space this round, so no extra turn.");
     expect(nextPlacer(s).who).toBe(1);
   });
 
@@ -78,5 +78,26 @@ describe('Night Owl', () => {
     // Clock In +5 in round II, then Foreman: +1 per minion on the board (3)
     expect(s.players[0].res.purple).toBe(5 + 3);
     expect(linesNaming(s.log, 'Foreman')).toHaveLength(1);
+  });
+});
+
+// Cory, 2026-10-15: "I bought Night Owl in round 1 and it didn't seem to give me an extra." With 4 players round I
+// has no free space, and a Night Owl recruited after your last minion waits a round: either way the log says why.
+describe('Night Owl says why it gave no extra turn', () => {
+  it('4 players, round I: every space fills, so the last minion gets the no-free-space line naming Night Owl', () => {
+    const probe = sceneQ({ quadrants: Q, n: 4 });
+    const free = spaceOf(probe, 'purple.hourly');
+    const slots = Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => k !== free).map(k => [k, 1]));
+    const s = take(sceneQ({ quadrants: Q, n: 4, round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0) }), 'purple.hourly');
+    expect(queuedTurns(s, 0)).toBe(0);
+    expect(owl(s)).toEqual(["P1's Night Owl: no free space this round, so no extra turn."]);
+  });
+  it('recruited in the buy step after your last minion: it says the extra turn starts next round', () => {
+    const cost = defById('purple.nightowl');
+    const s0 = sceneQ({ quadrants: Q, round: 1, left: 0, res: [{ purple: cost.s + cost.w }], shop: ['purple.nightowl'], queue: [{ t: 'buy', p: 0 }] });
+    let s = move(s0, s0.pending.options.find(o => o.kind === 'card' && s0.cards[o.uid].def === 'purple.nightowl').id);
+    if (s.pending?.kind === 'choose' && s.pending.options.some(o => o.kind === 'pay')) s = move(s, s.pending.options.find(o => o.default).id);
+    expect(s.players[0].members.map(u => s.cards[u].def)).toContain('purple.nightowl');
+    expect(owl(s)).toEqual(["P1's Night Owl: P1's last minion this round is already placed, so its extra turn starts next round."]);
   });
 });

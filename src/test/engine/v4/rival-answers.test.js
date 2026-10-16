@@ -35,7 +35,9 @@ describe('Shake Down: the rival chooses, and the card says what they paid and wh
     const let1 = move(move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.intern', 1)), 'let');
     expect(let1.log).toContain('P2 chose to let Intern go to P1 rather than pay 2.');
     expect(story(s0, let1)).toMatch(/P2 let Intern go rather than pay 2/);
-    const cant = move(move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.twins', 1)), 'let');
+    // too little to pay: no question with one answer (skeptic r2), it just goes
+    const cant = move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.twins', 1));
+    expect(cant.pending?.player).not.toBe(1);
     expect(cant.log).toContain('P2 couldn\'t pay 4 (held 3), so lost Twins to P1.');
     expect(story(s0, cant)).toMatch(/P2 couldn’t pay 4, so lost Twins/);
   });

@@ -3,6 +3,7 @@ import { createLocalSession } from '../../../v4/session/index.js';
 import { chooseBotMove } from '../../../engine/v4/index.js';
 import { until, autoPlay } from './helpers.js';
 import { revealed } from '../../../v4/session/local.js';
+import { seededRandom } from '../../../engine/v4/rng.js';
 
 // No wall clock: bots and the host run on fake timers, and until() advances them (helpers.js).
 beforeEach(() => { vi.useFakeTimers(); });
@@ -33,7 +34,8 @@ describe('local session', () => {
   });
 
   it('rejects wrong seat, wrong turn, and illegal options', async () => {
-    const s = createLocalSession({ seats: [{ name: 'A' }, { name: 'B', kind: 'bot' }], seed: 5, botDelayMs: 10_000 });
+    // (seed 7: the human draws first place in round I, whose order is set before the starting picks)
+    const s = createLocalSession({ seats: [{ name: 'A' }, { name: 'B', kind: 'bot' }], seed: 7, botDelayMs: 10_000 });
     const st = s.getState();
     expect(st.pending.player).toBe(0);
     await expect(s.submit({ player: 1, option: st.pending.options[0].id })).rejects.toThrow(/isn't yours/);
@@ -49,15 +51,16 @@ describe('local session', () => {
 
 const humans2 = [{ name: 'A' }, { name: 'B' }];
 
-/** Plays pending moves with the bot brain (through submit) until `stop(state)` is true. Humans only. */
-async function driveUntil(s, stop) {
-  for (let i = 0; i < 500 && !stop(s.getState()); i++) await s.submit(chooseBotMove(s.getState()));
+/** Plays pending moves with the bot brain (through submit) until `stop(state)` is true. Humans only. `rand` seeds the
+ *  bot brain where a test must play the same game every run. */
+async function driveUntil(s, stop, rand = Math.random) {
+  for (let i = 0; i < 500 && !stop(s.getState()); i++) await s.submit(chooseBotMove(s.getState(), rand));
   if (!stop(s.getState())) throw new Error('driveUntil: condition never reached');
 }
 
 /** Drives to the first placement, makes it, and returns the state from just before it. */
-async function placeOnce(s) {
-  await driveUntil(s, st => st.pending && st.pending.kind === 'place');
+async function placeOnce(s, rand = Math.random) {
+  await driveUntil(s, st => st.pending && st.pending.kind === 'place', rand);
   const pre = s.getState();
   await s.submit({ option: pre.pending.options[0].id });
   return pre;
@@ -148,13 +151,18 @@ describe('local session: undo', () => {
   });
 
   it('after a buy it undoes the buy (back to the buy step); after a follow-up choice only while that choice goes on', async () => {
+    // the bot brain is seeded: on Math.random it passed about 3 runs in 4
     let bought = false, followedUp = false;
     for (let seed = 1; seed < 60 && !(bought && followedUp); seed++) {
+      const rand = seededRandom(seed * 7919);
       const s = createLocalSession({ seats: humans2, seed, botDelayMs: 0 });
       for (let turn = 0; turn < 12 && !s.getState().over; turn++) {
-        const pre = await placeOnce(s);
+        const pre = await placeOnce(s, rand);
         const st = s.getState();
-        if (!st.pending || st.pending.player !== pre.pending.player || st.round !== pre.round) continue;
+        // only a placement that leaves the placer a decision (not a snake double's next placement) is undoable
+        if (!st.pending || st.pending.player !== pre.pending.player || st.round !== pre.round || st.pending.kind === 'place') continue;
+        // ...and never once it showed hidden cards (Open Door's free recruit refills the row): undo would leak the deck
+        if (revealed(pre, st)) { expect(s.canUndo()).toBe(false); await driveUntil(s, x => x.over || x.pending.kind === 'place', rand); continue; }
         expect(s.canUndo()).toBe(true);
         const buy = st.pending.kind === 'buy' && st.pending.options.find(o => o.kind === 'card' || o.kind === 'tier');
         if (buy) {
@@ -174,10 +182,10 @@ describe('local session: undo', () => {
             expect(s.getState().pending.player).toBe(pre.pending.player);
             expect(s.canUndo()).toBe(false);
           }
-          await driveUntil(s, x => x.over || x.pending.kind === 'place');
+          await driveUntil(s, x => x.over || x.pending.kind === 'place', rand);
           continue;
         }
-        await s.submit(chooseBotMove(st)); followedUp = true; // a 'choose' from the action, etc.
+        await s.submit(chooseBotMove(st, rand)); followedUp = true; // a 'choose' from the action, etc.
         // a choice that goes on, one pick at a time (a steal coin by coin), keeps Undo placement until it ends (live
         // panel round 3, Cory's lane brief: it vanished after the first pick); a finished choice ends it
         const mid = s.getState();
@@ -191,7 +199,7 @@ describe('local session: undo', () => {
           expect(s.getState().pending.player).toBe(pre.pending.player);
           expect(s.getState().moves).toBe(pre.moves);
         } else expect(s.undo()).toBe(false);
-        await driveUntil(s, x => x.over || x.pending.kind === 'place');
+        await driveUntil(s, x => x.over || x.pending.kind === 'place', rand);
       }
       s.destroy();
     }

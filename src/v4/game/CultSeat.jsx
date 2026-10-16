@@ -77,8 +77,18 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // TurnCard lesson, 2026-10-15). Phones keep fixed counts: their crowd wraps.
   // "each round" stands in one spot on every seat, yours too: beside the figures, at the row's right. Yours used to move
   // up beside your name whenever it cleared your turn words, so it jumped between rounds (blind testers, 2026-10-15).
+  // (live panel r1, G4: "+N more" hid members, so "Most members" couldn't be counted) the row now leads with the count,
+  // always in view, and the figures stand 24px (the sprites' own pixels) two rows deep, so twice as many show
   const fit = useFigureFit(rootEl);
-  const MAX = fit ? (fit.all >= groups.length ? groups.length : fit.withMore) : bonus ? 3 : incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
+  // a choice that picks one of this seat's members (Doppelganger, Echo, a swap, a steal) shows every member, never "+N"
+  // (Cory, 2026-10-15: "doppleganger can only copy whats available"); the row grows for the choice and folds after
+  const pickAll = !!(pick && pick.members && groups.some(g => g.uids.some(u => pick.members[u])));
+  const MAX = pickAll ? groups.length : fit ? (fit.all >= groups.length ? groups.length : fit.withMore) : bonus ? 3 : incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
+  const nMembers = p.members.length;
+  // your starting pick, when it's yours to make here (the engine's options, through the same optionFor as Use)
+  const setupPick = mine && pend && pend.kind === 'setup' && pend.player === pid && !state.over
+    ? (() => { const options = pend.options.filter(o => optionFor(o.id)); const m = /\((\d) of 2\)/.exec(pend.prompt || ''); return options.length ? { options, k: m ? Number(m[1]) : 1 } : null; })()
+    : null;
   // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
   // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
   // coming, w2b #21); each takes the place of the last one shown that's needed less
@@ -116,7 +126,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-turn'));
   const railIn = useRef(false);
   return (
-    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${setupPick ? ' setup-pick' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}${pickAll ? ' pick-all' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
       // a click beside the lit picks in this chair (w3a A53: "a click 30px off did nothing, and no 'pick a lit stack'")
       // makes them pulse once, so the miss says where to click
       onClick={pick && pick.lit && !pick.seatMode ? e => {
@@ -145,7 +155,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           {turn && <Tip className={`cs-turn ${turn.kind}`} data-turn={turn.kind} data-turn-n={turn.n ?? undefined}
             label={turn.title} content={() => <div className="pop-card gloss"><b>Turn order</b><span>{turn.title}</span></div>}>{turn.say}</Tip>}
         </span>
-        <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
+        <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={`Score: ${f} follower${f === 1 ? '' : 's'}. Most followers at the end wins.${rank && rank.title ? ` ${rank.title}` : ''}`} data-hint={`Score: ${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
       {/* the minions still to place this round, standing in a column at the panel's right edge (Cory: "way less noisy,
           and easier to grok quickly how many they have left"); each bobs on its own slow phase. A placement flies from here. */}
@@ -156,7 +166,33 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           </i>
         ))}
       </span>
-      <div className="cs-crowd" {...bodyHover} role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
+      {/* the starting pick, in your own chair, lit (Cory, 2026-10-15: "I looked around for 10s before I realized that's
+          what I needed to do. It could just show it IN the player card"): it stands where your members will, until both
+          picks are in */}
+      {setupPick && (
+        <div className="cs-setup" role="group" aria-label={`Pick a starting resource (${setupPick.k} of 2)`} data-setup-k={setupPick.k}>
+          <small className="cs-setup-say">Pick a starting resource <span className="num">{setupPick.k}</span> of 2</small>
+          <span className="cs-setup-row">
+            {setupPick.options.map(o => {
+              const res = state.quadrants.includes(o.value) ? quadrant(o.value).resource : o.value;
+              return (
+                <button key={o.id} type="button" className="token cs-setup-token" data-option={o.id} style={{ '--c': `var(--${o.value})` }}
+                  onClick={e => onPick(o.id, e.currentTarget)} aria-label={`Take 1 ${res}`} title={`Start with 1 ${res}`}>
+                  <ResourceGlyph r={res} size={18} decorative /><span className="tk-name">{res}</span>
+                </button>
+              );
+            })}
+          </span>
+        </div>
+      )}
+      <div className="cs-crowd" {...bodyHover} role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members: ${nMembers}`}>
+        {/* how many members, always in view (live panel r1: "Most members" is a prize, so the count can never fold away);
+            the label above the number, like "each round" across the row. Pointing at it opens the seat's card, which
+            lists every member. */}
+        <span className="cs-count" data-member-count={nMembers} title={`${mine ? 'You have' : `${p.name} has`} ${nMembers} member${nMembers === 1 ? '' : 's'}`}>
+          <small>{nMembers === 1 ? 'member' : 'members'}</small><b className="num">{nMembers}</b>
+        </span>
+        <span className="cs-figs" style={fit ? { maxWidth: `${fit.per * fit.cell}px` } : undefined}>
         {shown.map(g => {
           const d = g.def;
           // yours to use now (Cory, 2026-10-15): the figure is lit, and its card carries the Use button (MemberUse.jsx)
@@ -174,7 +210,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           return (
             <span key={g.key} className={`cs-member${g.card.used && !state.over ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used && !state.over ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
-              <Tip className="fig" sticky={mine} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
+              <Tip className="fig" sticky={mine} {...(mine ? {} : { tabIndex: -1 })} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
@@ -196,7 +232,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         })}
         {/* says what it counts ("+3" alone read as followers, final panel S#32); pointing at it opens the chair's card,
             which lists every member */}
-        {rest > 0 && <span className="cs-more" data-more={rest} aria-label={`${rest} more member${rest === 1 ? '' : 's'}`}>+{rest} more</span>}
+        {/* the figures that don't fit fold into one quiet "+N" cell (the count beside them says the whole) */}
+        {rest > 0 && <span className="cs-more num" data-more={rest} aria-label={`${rest} more member${rest === 1 ? '' : 's'}`} title={`${rest} more: point at the seat for every member`}>+{rest}</span>}
+        </span>
         {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
         {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </div>
@@ -345,25 +383,32 @@ function useFigureFit(rootEl, layout = null) {
         if (!seat) return;
         const wide = typeof matchMedia === 'function' && matchMedia('(min-width:861px) and (min-height:500px)').matches;
         const crowd = seat.querySelector(':scope > .cs-crowd'), build = seat.querySelector(':scope > .cs-build');
-        const figs = crowd ? [...crowd.querySelectorAll(':scope > .cs-member')] : [];
-        if (!wide || !crowd || !figs.length) { setFit(f => (f === null ? f : null)); return; }
+        const box = crowd && crowd.querySelector(':scope > .cs-figs');
+        const figs = box ? [...box.querySelectorAll(':scope > .cs-member')] : [];
+        if (!wide || !crowd || !box || !figs.length) { setFit(f => (f === null ? f : null)); return; }
         const c = crowd.getBoundingClientRect();
         if (!c.width) return;
+        // the row: the count, then the figures in a box of whole cells (two rows of them where the row is tall enough),
+        // then "safe this round"; the "each round" block stands over the row's right end
         const gap = parseFloat(getComputedStyle(crowd).columnGap) || 0;
-        const per = Math.max(...figs.map(x => x.getBoundingClientRect().width)) + gap;
+        const fgap = parseFloat(getComputedStyle(box).columnGap) || 0;
+        const cell = Math.max(...figs.map(x => x.getBoundingClientRect().width)) + fgap;
+        const figH = Math.max(...figs.map(x => x.getBoundingClientRect().height));
+        const rows = Math.max(1, Math.floor((c.height + (parseFloat(getComputedStyle(box).rowGap) || 0)) / (figH + (parseFloat(getComputedStyle(box).rowGap) || 0))));
         const b = build && build.getBoundingClientRect();
-        const beside = b && b.width && b.top < c.bottom - 1 && b.bottom > c.top + 1 ? b.width + 12 : 0;
+        const beside = b && b.width && b.top < c.bottom - 1 && b.bottom > c.top + 1 ? b.width + 8 : 0;
+        const count = crowd.querySelector(':scope > .cs-count');
         const safe = crowd.querySelector(':scope > .cs-safe');
-        const more = crowd.querySelector(':scope > .cs-more');
-        const room = c.width - beside - (safe ? safe.getBoundingClientRect().width + gap : 0);
-        const all = Math.max(1, Math.floor((room + gap) / per));
-        const withMore = Math.max(1, Math.floor((room - (more ? more.getBoundingClientRect().width : 44)) / per));
-        setFit(f => (f && f.all === all && f.withMore === withMore ? f : { all, withMore }));
+        const room = c.width - beside - (count ? count.getBoundingClientRect().width + gap : 0) - (safe ? safe.getBoundingClientRect().width + gap : 0);
+        const per = Math.max(1, Math.floor((room + fgap) / cell));
+        const all = per * rows;
+        const withMore = Math.max(1, all - 1); // "+N" takes the last cell
+        setFit(f => (f && f.all === all && f.withMore === withMore && f.per === per && f.cell === cell ? f : { all, withMore, per, cell }));
       });
     }
     const r = ro.current, w = watched.current;
     for (const x of [...w]) if (!x.isConnected) { r.unobserve(x); w.delete(x); }
-    for (const x of [el, el.querySelector(':scope > .cs-crowd'), el.querySelector(':scope > .cs-crowd > .cs-member'), el.querySelector(':scope > .cs-build')]) if (x && !w.has(x)) { r.observe(x); w.add(x); }
+    for (const x of [el, el.querySelector(':scope > .cs-crowd'), el.querySelector(':scope > .cs-crowd > .cs-figs > .cs-member'), el.querySelector(':scope > .cs-build')]) if (x && !w.has(x)) { r.observe(x); w.add(x); }
   });
   // the "each round" block moving between the name row and the figures' row resizes nothing the observer watches
   useLayoutEffect(() => { if (measure.current) measure.current(); }, [layout]);

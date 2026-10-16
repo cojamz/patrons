@@ -54,7 +54,11 @@ export function membersSave(from = 1) {
     const roundStart = s;
     for (let n = 0; n < 400 && !(s.pending && s.pending.player === 0 && s.pending.kind === 'place'); n++) s = play(s, chooseBotMove(s, rand));
     if (!(s.round === 1 && s.pending && s.pending.player === 0 && s.pending.kind === 'place')) continue;
-    if (!(s.players[1].res.gold >= 2) || s.players.slice(1).some(o => (o.res.magenta || 0) >= 2) || s.players[2].hideout !== 1) continue;
+    // P2 still holds the 7 gold Lottery Winner wins (the gate's "Use: +7"), and Stunt Double still in hand (m9): a bot
+    // that spent gold or used Stunt Double before P1's turn moves to the next seed (the cull's deck made seed 1 do both)
+    const stunt = s.players[1].members.find(u => s.cards[u].def === 'echo.hourglass');
+    if (s.players[1].res.gold !== 7 || stunt == null || s.cards[stunt].used) continue;
+    if (s.players.slice(1).some(o => (o.res.magenta || 0) >= 2) || s.players[2].hideout !== 1) continue;
     return {
       seed, uids: Object.fromEntries(HAND.map((id, k) => [id, uids[k]])),
       save: { config: { seats: SEATS.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal', quadrants: QUADS }, state: s, undo: null, savedAt: Date.now() },

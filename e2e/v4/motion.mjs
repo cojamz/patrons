@@ -255,7 +255,7 @@ async function rivalTurns(speed) {
       if (ph) {
         let el = ph === 'buy' ? await page.$('[data-option="pass"]:not([disabled])') : ph === 'place' ? await page.$('.slot.can .base') : null;
         // anything else (a setup pick, a rival's seat to target, a color, a payment): the first open option, as m4 does
-        if (!el) for (const o of await page.$$('[data-option]:not([disabled]):not([aria-disabled="true"])')) { const id = await o.getAttribute('data-option').catch(() => null); if (id && !id.startsWith('toggle') && id !== 'back' && id !== '@unpick') { el = o; break; } }
+        if (!el) for (const o of await page.$$('[data-option]:not([disabled]):not([aria-disabled="true"])')) { const id = await o.getAttribute('data-option').catch(() => null); if (id && !id.startsWith('toggle') && id !== 'back' && id !== '@unpick' && await o.isVisible().catch(() => false)) { el = o; break; } }
         if (el) { await el.click({ timeout: 1000 }).catch(() => {}); const conf = await page.$('[data-place]'); if (conf) await conf.click().catch(() => {}); }
       }
       await page.waitForTimeout(150);

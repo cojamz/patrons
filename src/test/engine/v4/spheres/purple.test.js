@@ -135,7 +135,7 @@ describe('Purple actions', () => {
     s = take(scene({ round: 2, slots: { ...slots, [RUSH]: 1 }, queue: turns(0, 1) }), 'purple.overtime');
     expect(s.players[0].left).toBe(2);
     expect(R(s).purple).toBe(0);
-    expect(s.log).toContain('No space to spare: P1 gets no extra turn from Overtime.');
+    expect(s.log).toContain("P1's Overtime: no free space this round, so no extra turn.");
     expect(nextPlacer(s)).toBe(1);
   });
   // Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing minions"
@@ -159,7 +159,7 @@ describe('Purple actions', () => {
     const taken = { ...fullRoundI('0-0', '0-1', '0-2'), '0-3': 1, '0-4': 1, '1-3': 1, '1-4': 1, '2-3': 1, '3-3': 1, '3-4': 1, '0-5': 1, '1-5': 1, '3-5': 1 };
     const s = take(scene({ round: 3, slots: taken, queue: turns(0, 1, 1, 0, 0) }), 'purple.rally');
     expect(after1(s)).toEqual([0, 0, 1, 1]);
-    expect(s.log.some(l => l.startsWith('No space to spare'))).toBe(false);
+    expect(s.log.some(l => /no free space this round/i.test(l))).toBe(false);
   });
   it('Crunch Time with 1 minion left takes that 1; with none, nothing happens', () => {
     let s = take(scene({ round: 3, queue: turns(0, 1, 1, 0, 1) }), 'purple.rally');

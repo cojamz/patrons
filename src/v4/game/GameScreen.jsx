@@ -705,6 +705,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const minionSnap = useRef([]);
   const noteTimer = useRef(null);
   const toastTimer = useRef(null);
+  const robBase = useRef(null); // your resources when the rival now moving placed (the robbed toast counts from there)
   const showToast = useCallback((text, ms = 2200) => {
     clearTimeout(toastTimer.current);
     setToast({ text, n: Date.now() });
@@ -797,10 +798,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), slowed(2400));
       }
     }
-    // Getting robbed is never silent: a rival's move that took your resources says so.
+    // Getting robbed is never silent: a rival's move that took your resources says so. Counted from where the rival's
+    // placement began, as the strip counts it: a steal taken one pick at a time (Redistribute, 2 per rival in round III)
+    // read "took 1 green" in the toast and "took 2" in the strip (skeptic round 2)
+    const an = actor != null ? state.players[actor].name : null;
+    if (actor != null && (!robBase.current || robBase.current.actor !== actor || robBase.current.round !== state.round || lines.some(l => l.startsWith(`${an} took `) || l.startsWith(`${an} joined `)))) {
+      robBase.current = { actor, round: state.round, res: before.players.map(p => ({ ...p.res })) };
+    }
     if (actor != null && !mySeats.includes(actor)) {
       for (const id of mySeats) {
-        const lost = state.resources.map(r => [r, before.players[id].res[r] - state.players[id].res[r]]).filter(([, d]) => d > 0);
+        const lost = state.resources.map(r => [r, (robBase.current.res[id][r] || 0) - (state.players[id].res[r] || 0)]).filter(([, d]) => d > 0);
         if (lost.length) {
           showToast(`${state.players[actor].name} took ${lost.map(([r, d]) => `${d} ${r}`).join(', ')} from ${humansHere ? state.players[id].name : 'you'}`, slowed(2400));
           setRobbed({ pid: id, n: Date.now() });
@@ -1321,7 +1328,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               : <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />)}
             {/* the starting picks (motion gaps 1): the row stays on the table while the others pick (read-only), and until the
                 last pick has landed, so each rival's pick lights its coin and flies from it to their seat (director.js) */}
-            <AfterChain value={setupNow} hold={holdStory && !(setupNow && showChoice)} step={state.moves}>{v => v && (
+            {/* your own starting pick lives in your seat on a laptop (CultSeat .cs-setup); only phones keep it here */}
+            <AfterChain value={setupNow} hold={holdStory && !(setupNow && showChoice)} step={state.moves}>{v => v && !(wide && v === state && showChoice) && (
               <ChoicePrompt state={v} onPick={v === state && showChoice ? onPick : NOOP} busy={busy || !(v === state && showChoice)} watching={v === state && showChoice ? null : v.players[v.pending.player]} turnOf={v === state && humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
             )}</AfterChain>
           </section>

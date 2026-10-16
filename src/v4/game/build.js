@@ -62,15 +62,17 @@ export function memberGroups(state, p) {
 // a plain condition ("if fewest", "per 2 purple"); members that always pay the same leave theirs bare.
 const INCOME_IF = {
   latebloomer: 'if fewest', // "if you have the fewest followers"
-  safetynet: 'if you have none', // Rich Uncle: "if you have no white"
-  gardener: 'if you have none', // "+1 of each color you have none of"
+  safetynet: 'if none', // Rich Uncle: "if you have no white" (round 3 skeptic: the seat's small print ran long; the hover says the rule)
+  gardener: 'if none', // "+1 of each color you have none of"
   clockmaker: 'per 2 purple',
   steward: 'per 3 silver',
   host: 'per 2 members',
+  heir: 'per member', // "Now and at the start of round III: +1 silver per member you have"
+
   curator: 'per blue member',
   minimalist: 'per bigger cult', // "per rival with more members than you"
   mole: 'per rival ahead', // "from each player with more followers than you"
-  cutpurse: 'if one can be robbed',
+  cutpurse: 'if any to rob',
   afterimage: 'copied', // Sleepwalker: what last round's space gives
 };
 const ALL_COLORS = /\beach (other )?colou?r\b|\bof each\b|\bcopy\b/i;
@@ -93,11 +95,15 @@ export function incomeTerms(state, p) {
   if (!parts.length && !followers) return null;
   const sources = [];
   const condOf = {}; // color -> condition words
-  for (const uid of p.members) {
-    let d;
-    try { d = cardDef(state, uid); } catch { continue; }
-    if (!/round start/i.test(timingOf(d))) continue;
-    const cond = incomeCondition(d);
+  // (live panel r1: a seat's "+6" named no member) a member paying at "the start of round III" (Heir) counts too, and when
+  // no round-start member explains the line, the members that answer what others do then (a steal, an extra turn) do
+  const defs = [];
+  for (const uid of p.members) { try { defs.push(cardDef(state, uid)); } catch { /* gone */ } }
+  const atStart = d => /round start/i.test(timingOf(d)) || /\bstart of round\b/i.test(d.text || '');
+  const reacts = d => timingOf(d) === 'Whenever' || /^once per round, when\b/i.test(d.text || '');
+  const paying = defs.some(atStart) ? defs.filter(atStart) : defs.filter(reacts);
+  for (const d of paying) {
+    const cond = atStart(d) ? incomeCondition(d) : 'not always';
     const same = sources.find(x => x.name === d.name);
     if (same) same.n++;
     else sources.push({ name: d.name, text: (d.text || '').replace(/^Now and at round start,\s*/i, '').replace(/^At round start,\s*/i, ''), cond, n: 1, hold: holdNote(state, p, d) });

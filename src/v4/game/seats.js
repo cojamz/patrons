@@ -2,10 +2,12 @@
 import { turnRail, quadrant } from '../../engine/v4/index.js';
 import { turnSequence, firstPickWhy } from '../format.js';
 
-/** This round's seats in their turn order (the first pass of the snake); before round I, seat order. */
+/** This round's seats in their turn order (the first pass of the snake); before round I, round I's order, drawn before
+ *  the starting picks (the engine's firstOrder), so the column never reshuffles after the picks (Cory, 2026-10-15). */
 export function seatOrder(state) {
   const n = state.players.length;
-  return state.order && state.order.length >= n ? state.order.slice(0, n) : state.players.map(p => p.id);
+  if (state.order && state.order.length >= n) return state.order.slice(0, n);
+  return Array.isArray(state.firstOrder) && state.firstOrder.length === n ? [...state.firstOrder] : state.players.map(p => p.id);
 }
 /** { pid: workers still to place }, and who's up now / next, from the engine's turn record (turnRail). */
 export function railInfo(state) {

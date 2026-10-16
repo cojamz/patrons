@@ -71,15 +71,23 @@ async function play(t) {
       sizes.push(await box());
       if (new Set(sizes.map(z => `${z.w}|${z.left}`)).size > 1) err(`the setup page changes width with the table mode: ${JSON.stringify(sizes)}`);
       if (new Set(sizes.map(z => z.start.join())).size > 1) err(`Start moves with the table mode: ${JSON.stringify(sizes.map(z => z.start))}`);
-      // four picked: a fifth says why it won't join, quietly, by the count
+      // four picked: a fifth swaps in for the last one picked, in its place, and says so quietly by the count (live panel
+      // r1, G4: "you can't swap a colour once 4 are picked"; it used to say only "take one off")
       const fifth = await page.$('.sphere.over');
-      if (!fifth) err('with four picked, no fifth sphere shows as full');
+      if (!fifth) err('with four picked, no fifth sphere offers a swap');
       else {
-        await fifth.click({ force: true });
-        if (!(await page.waitForSelector('[data-full-note]', { timeout: 2000 }).catch(() => null))) err('a fifth sphere\'s click with four picked says nothing');
+        const id5 = await fifth.getAttribute('data-sphere');
+        await fifth.click();
+        const now = await page.$eval('[data-table]', e => e.getAttribute('data-table'));
+        if (now !== [...r2.split(',').slice(0, 3), id5].join(',')) err(`a fifth sphere's click with four picked didn't swap out the last one: ${r2} then ${now}`);
+        if (!(await page.waitForSelector('[data-full-note]', { timeout: 2000 }).catch(() => null))) err('a swap with four picked says nothing');
       }
-      for (const id of r2.split(',')) await page.click(`[data-sphere="${id}"]`); // clear
-      if (await page.$('[data-full-note]')) err('the "take one off" note stays after one is taken off');
+      // Clear takes all four off in one click (live panel r1: setup had no "clear")
+      const clearBtn = await page.$('[data-table-clear]');
+      if (!clearBtn) err('the custom table has no Clear');
+      else await clearBtn.click();
+      if ((await page.$eval('[data-table]', e => e.getAttribute('data-table'))) !== '') err('Clear left spheres picked');
+      if (await page.$('[data-full-note]')) err('the swap note stays after Clear');
       if (!(await page.$('[data-start][disabled]'))) err('Start was enabled with fewer than 4 spheres');
       for (const id of t.ids) await page.click(`[data-sphere="${id}"]`);
       // the plain Blue can't join a table that already has a blue

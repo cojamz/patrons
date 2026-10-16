@@ -1,5 +1,5 @@
 // The intro (Cory's four-beat script): shows once per browser on a new game, Skip closes it, the flag sticks (and
-// storage failures don't break it), Esc/tap only work after the first beat, replay always works, reduced motion gets
+// storage failures don't break it), Esc and a tap skip it from the first beat, replay always works, reduced motion gets
 // a still storyboard, and the line's box never changes height between beats.
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
@@ -63,23 +63,23 @@ describe('intro', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('Esc and a tap anywhere close it only after the first beat', () => {
+  // live panel r1 (G4): "a 23 s intro before Begin": Esc skips it at once, and so does a tap anywhere, past the first
+  // moment (the click that started the game can't close it on its way through)
+  it('Esc and a tap anywhere close it at once, from the first beat', () => {
     const onClose = vi.fn();
     render(<Intro onClose={onClose} still={false} />);
-    fireEvent.keyDown(document.body, { key: 'Escape' });
-    fireEvent.click(dialog());
+    fireEvent.click(dialog()); // the moment it opens: held
     act(() => vi.advanceTimersByTime(300));
     expect(onClose).not.toHaveBeenCalled();
-    act(() => vi.advanceTimersByTime(3600)); // beat 2
-    expect(dialog().dataset.beat).toBe('2');
+    act(() => vi.advanceTimersByTime(200));
+    expect(dialog().dataset.beat).toBe('1');
     fireEvent.click(dialog());
     act(() => vi.advanceTimersByTime(300));
     expect(onClose).toHaveBeenCalledTimes(1);
     cleanup();
     const onClose2 = vi.fn();
     render(<Intro onClose={onClose2} still={false} />);
-    fireEvent.keyDown(document.body, { key: 'ArrowRight' });
-    expect(dialog().dataset.beat).toBe('2');
+    expect(dialog().dataset.beat).toBe('1');
     fireEvent.keyDown(document.body, { key: 'Escape' });
     act(() => vi.advanceTimersByTime(300));
     expect(onClose2).toHaveBeenCalledTimes(1);

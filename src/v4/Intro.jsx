@@ -262,7 +262,8 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
       const el = root.current;
       if (!el) return;
       const inside = el.contains(e.target);
-      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (state.current.beat >= 1 || still) close(); return; }
+      // (live panel r1: "a 23 s intro before Begin") Esc skips it at once, from the first beat
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
       if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(state.current.beat + 1); return; }
       if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); go(state.current.beat - 1); return; }
       if (e.key === 'Tab') {
@@ -282,8 +283,11 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // a click anywhere skips it, from the first beat (live panel r1); only the first moment after it opens is held, so the
+  // click that started the game can't close it on its way through
+  const opened = useRef(Date.now());
   const onBackdrop = e => {
-    if (still || beat < 1 || (e.target.closest && e.target.closest('button'))) return;
+    if (still || Date.now() - opened.current < 400 || (e.target.closest && e.target.closest('button'))) return;
     close();
   };
   const { mod } = BEATS[beat];

@@ -62,7 +62,7 @@ const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
 /** A free space: n extra turns right after this one, as many as the board has room for. */
 const freeTurnsEstimate = (ctx, n) => Math.max(0, Math.min(n, room(ctx) - 1)) * turnValue(ctx);
 function freeTurns(ctx, p, n, what) {
-  if (!spareSpace(ctx)) { ctx.log(`No space to spare: ${p.name} gets no extra turn from ${what}.`); return 0; }
+  if (!spareSpace(ctx)) { ctx.log(`${p.name}'s ${what}: no free space this round, so no extra turn.`); return 0; }
   return extraTurns(ctx, p, n);
 }
 
@@ -93,7 +93,9 @@ export function extraTurns(ctx, p, n = 1, why = null) {
     // why: the member that gave it (Errand Runner, Go-Getter), so the turn traces to the card
     ctx.log(`${why ? `${p.name}'s ${why}: ${p.name}` : p.name} takes ${k === 1 ? 'an extra turn' : `${k} extra turns`}.`);
     for (let i = 0; i < k; i++) extraHooks(ctx, p);
-  } else ctx.log(`No space to spare: ${p.name} gets no extra turn${why ? ` from ${why}` : ''}.`);
+  // said with the card or space first, so the turn card names it (Cory, 2026-10-15: "I bought Night Owl in round 1 and it
+  // didn't seem to give me an extra"; with 4 players round I has no free space)
+  } else ctx.log(why ? `${p.name}'s ${why}: no free space this round, so no extra turn.` : `No free space this round: ${p.name} gets no extra turn.`);
   return k;
 }
 
@@ -273,6 +275,13 @@ export default {
     // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
     // pays from round II. Fires once per round (owlRound), whether or not the board had room.
     m('nightowl', 'Night Owl', 8, 2, 'Each round, after your last minion, take an extra turn: place one more and buy again.', {
+      // recruited after your last minion of the round (its buy step): it waits for next round, and says so
+      onRecruited(ctx, owner, card) {
+        if (owner.left !== 0 || ctx.state.round < 1) return;
+        card.owlRound = ctx.state.round;
+        ctx.log(ctx.state.round < 3 ? `${owner.name}'s Night Owl: ${owner.name}'s last minion this round is already placed, so its extra turn starts next round.`
+          : `${owner.name}'s Night Owl: ${owner.name}'s last minion is already placed, and this is the last round, so it gives no extra turn.`);
+      },
       afterAction(ctx, owner, card) {
         if (owner.left !== 0 || card.owlRound === ctx.state.round) return;
         card.owlRound = ctx.state.round;

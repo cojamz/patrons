@@ -37,7 +37,8 @@ describe("You'd get", () => {
       const s = sceneQ({ quadrants: ['market', 'silver', 'gold', 'red'], res: [{ silver: 3 }, { silver: 9 }], shop: ['market.stylist'] });
       s.shop = s.shop.filter(u => s.cards[u].def === 'market.stylist');
       const y = youdWords(pv(s, 'market.bargain'), s, 'blue');
-      expect(y.text).toMatch(/^\+2 blue or \+1 member \(Stylist\).*, −3 silver$/);
+      // the recruit by its price, never a net "−3 silver" (live panel r1: Snap Up's "−4" matched nothing paid)
+      expect(y.text).toMatch(/^\+2 blue, or \+1 member \(Stylist\).* for 5$/);
       expect(y.note).toBe('your pick');
     } finally { restore(); }
   });

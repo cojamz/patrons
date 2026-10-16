@@ -13,7 +13,8 @@
 //  (t3) after a placement, the turn card names the space actually taken (the engine's log is the truth);
 //  (t4) the snake turnaround reads "Your turn again (snake order)", never "Extra turn";
 //  (t5) the second placement gets its own card: its space, and nothing from the first;
-//  (t6) the Midas switch shows its state (on), and its hover says so and what a click does;
+//  (t6) the Midas switch shows its state (on), and its hover says so and what a click does (its label: since blind
+//       panel 1 the seat's switch opens a hover card instead of a native title, and the label is that card's label);
 //  (t7) the full log opens from the strip in one tap;
 //  (t8) a space or member named in the strip, or in the log, opens its card on the board's hover layer (the space card,
 //       the member card), beside the name, whole on screen, above the log drawer.
@@ -119,7 +120,7 @@ try {
       folded: Number((document.querySelector('[data-since] .since-more')?.textContent.match(/\d+/) || [0])[0]),
       partial: (() => { const l = document.querySelector('[data-since] .since-list'); if (!l) return 0; const b = l.getBoundingClientRect(); return [...l.children].filter(x => { const a = x.getBoundingClientRect(); return a.height && (a.top < b.top - 1 || a.bottom > b.bottom + 1); }).length; })(),
       since: r('[data-since]'), wheel: r('.lt-wheel svg.wheel-paper') || r('.lt-wheel'), shop: r('.lt-shop'),
-      sw: [...document.querySelectorAll('.lt-seat-0 [data-switch]')].map(e => ({ state: e.dataset.switch, text: e.textContent.trim(), title: e.title })),
+      sw: [...document.querySelectorAll('.lt-seat-0 [data-switch]')].map(e => ({ state: e.dataset.switch, text: e.textContent.trim(), title: e.getAttribute('aria-label') || e.title })),
       took, players: st ? st.players.map(p => p.name) : [],
     };
   });

@@ -128,16 +128,20 @@ export function TablePicker({ value, onChange, readOnly = false }) {
     else if (m === 'random') onChange({ mode: m, quadrants: randomTable() });
     else onChange({ mode: m, quadrants: [...quadrants] });
   };
-  // a fifth sphere with four picked: the tile stays clickable and says, quietly beside the count, what to do (blind
-  // panel: the click did nothing and said nothing)
-  const [full, setFull] = useState(null);
+  // a fifth sphere with four picked swaps in for the last one picked, in its place on the wheel, and says so quietly
+  // beside the count (live panel r1: "you can't swap a colour once 4 are picked"; before, it only said "take one off")
+  const [swapped, setSwapped] = useState(null); // { out, in }
+  const full = quadrants.length >= 4;
+  const last = full ? quadrants[quadrants.length - 1] : null;
   const toggle = id => {
-    setFull(null);
+    setSwapped(null);
     if (quadrants.includes(id)) onChange({ mode, quadrants: quadrants.filter(x => x !== id) });
     else if (quadrants.length < 4) onChange({ mode, quadrants: [...quadrants, id] });
-    else setFull(id);
+    else { onChange({ mode, quadrants: [...quadrants.slice(0, -1), id] }); setSwapped({ out: last, in: id }); }
   };
-  const usedRes = quadrants.map(id => quadrant(id).resource);
+  const clear = () => { setSwapped(null); onChange({ mode, quadrants: [] }); };
+  // a sphere clashes with a color already on the table; with four picked, the last one is the one a click swaps out
+  const usedRes = (full ? quadrants.slice(0, -1) : quadrants).map(id => quadrant(id).resource);
   const problem = quadrants.length === 4 ? tableProblem(quadrants) : '';
   return (
     <div className={`table-pick${readOnly ? '' : ' editable'}`} data-table={quadrants.join(',')}>
@@ -155,16 +159,17 @@ export function TablePicker({ value, onChange, readOnly = false }) {
       ) : (
         <>
           <p className="hint">Pick 4: they go round the wheel in the order you pick them (the corner number). <span className="nowrap"><span className="num">{quadrants.length}</span> of 4</span>
-            {full && quadrants.length >= 4 && <span className="full-note" data-full-note role="status"> · take one off to add {sphereName(full)}</span>}</p>
+            {quadrants.length > 0 && <> · <button type="button" className="link-btn" data-table-clear onClick={clear} title="Take all four off and pick again">Clear</button></>}
+            {swapped && <span className="full-note" data-full-note data-swapped={swapped.out} role="status"> · {sphereName(swapped.in)} in for {sphereName(swapped.out)}</span>}</p>
           <div className="sphere-grid">
             {spheres().map(id => {
               const on = quadrants.includes(id);
               const clash = !on && usedRes.includes(quadrant(id).resource);
-              const over = !on && !clash && quadrants.length >= 4;
+              const over = !on && !clash && full;
               return (
                 <button key={id} type="button" className={`sphere${on ? ' on' : ''}${over ? ' over' : ''}`} aria-pressed={on} data-sphere={id}
-                  disabled={clash} aria-disabled={over || undefined} style={{ '--c': `var(--${id})` }} onClick={() => toggle(id)}
-                  title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : over ? `Four are picked: take one off to add ${sphereName(id)}.` : sphereHint(id)}>
+                  disabled={clash} style={{ '--c': `var(--${id})` }} onClick={() => toggle(id)}
+                  title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : over ? `Swap ${sphereName(id)} in for ${sphereName(last)} (the last one picked). ${sphereHint(id)}` : sphereHint(id)}>
                   <i className="dot" />{on && <span className="ord num">{quadrants.indexOf(id) + 1}</span>}
                   <b>{sphereName(id)}</b><small>{lowColor(quadrant(id).scoring.label)}</small><small className="sphere-line">{sphereLine(id)}</small>
                 </button>

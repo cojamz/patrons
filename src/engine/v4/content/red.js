@@ -32,7 +32,12 @@ export default {
     {
       key: 'turnout', ring: 1, name: 'Bandwagon', text: '+1 red per member recruited this round, by anyone.',
       estimate: ctx => ctx.state.recruits,
-      resolve(ctx, p) { ctx.gain(p, 'red', ctx.state.recruits, { fromAction: true }); },
+      resolve(ctx, p) {
+        // the hover's Why says the count, so its number is never read as missing a base +1 (live panel r1)
+        const n = ctx.state.recruits;
+        ctx.note(p, 'Bandwagon', n ? `${n} member${n === 1 ? '' : 's'} recruited this round, 1 red each` : 'no one has recruited this round yet');
+        ctx.gain(p, 'red', n, { fromAction: true });
+      },
     },
     {
       key: 'hire', ring: 1, name: 'Open Door', text: 'Recruit the cheapest face-up member, free.',

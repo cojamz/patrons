@@ -154,9 +154,9 @@ describe('Magenta actions', () => {
     const mob = uidOf(s, 'red.mob', 1), fam = uidOf(s, 'red.bigfamily', 1);
     // Volunteer costs 0 and Speculator 5 (over 4), so only Mob (3) and Big Family (4) are targets
     expect(ids(s).sort()).toEqual([`card:${mob}`, `card:${fam}`].sort());
+    // can't pay: no question with one answer (skeptic r2), it just goes
     s = move(s, `card:${mob}`);
-    expect(ids(s)).toEqual(['let']);
-    s = move(s, 'let');
+    expect(s.pending?.player).not.toBe(1);
     expect(defs(s, 0)).toEqual(['red.mob']);
   });
 

@@ -139,7 +139,8 @@ try {
 
   // Setup: what's for sale decides the starting picks, so every face-up member is on screen (no scrolling)
   {
-    await page.waitForSelector('.prompt.choice.setup');
+    // (laptop: the pick stands in your own chair, Cory 2026-10-15; a rival picking first shows no panel)
+    await page.waitForFunction(() => [...document.querySelectorAll('.lt-cult-seat .cs-setup [data-option], .prompt.choice.setup')].some(e => e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden'), null, { timeout: 30000 });
     await page.waitForTimeout(300);
     const r = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('.lt-shop .card')];

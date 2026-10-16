@@ -32,12 +32,15 @@ const clickable = container => [...container.querySelectorAll('[data-option]')].
 describe('v4 game screen', () => {
   it('setup: offers each starting color and submits the option id', () => {
     const state = createGame({ seats, seed: 7 });
-    const session = fakeSession(state, [0]);
+    const me = state.pending.player; // round I's first seat picks first (the order is drawn before the picks)
+    const session = fakeSession(state, [me]);
     const { container } = render(<GameScreen session={session} />);
     const ids = new Set(clickable(container));
     expect(ids).toEqual(new Set(state.pending.options.map(o => o.id)));
-    fireEvent.click(within(container.querySelector('.prompt')).getByRole('button', { name: 'Take 1 gold' }));
-    expect(session.submit).toHaveBeenCalledWith({ player: 0, option: 'color:gold' });
+    // the pick stands in your own chair (Cory, 2026-10-15); the wheel's panel stays for phones
+    expect(container.querySelector('.lt-cult-seat.mine .cs-setup [data-option="color:gold"]')).not.toBeNull();
+    fireEvent.click(within(container.querySelector('.lt-cult-seat.mine .cs-setup')).getByRole('button', { name: 'Take 1 gold' }));
+    expect(session.submit).toHaveBeenCalledWith({ player: me, option: 'color:gold' });
     expect(screen.getByText(/pick a starting resource/i, { selector: '[data-prompt] *' })).toBeTruthy();
   });
 
@@ -103,15 +106,19 @@ describe('v4 game screen', () => {
   it('hot-seat: a choice that opens a turn carries the hand-over in its own header (no extra screen)', () => {
     const two = [{ name: 'Ana', kind: 'human' }, { name: 'Bea', kind: 'human' }];
     let state = createGame({ seats: two, seed: 2 });
-    state = applyMove(state, { player: 0, option: 'color:gold' });
-    state = applyMove(state, { player: 0, option: 'color:red' });
-    expect(state.pending.player).toBe(1);
+    const [first, second] = state.firstOrder;
+    state = applyMove(state, { player: first, option: 'color:gold' });
+    state = applyMove(state, { player: first, option: 'color:red' });
+    expect(state.pending.player).toBe(second);
     const session = fakeSession(state, [0, 1]);
     const { container } = render(<GameScreen session={session} />);
     // setup is a choice: the hand-over is folded into it ("Bea's turn · pass the device"), one step not two
-    expect(screen.queryByRole('dialog', { name: /Bea.s turn/ })).toBeNull();
-    expect(container.querySelector('.prompt.choice .turn-of').textContent).toMatch(/Bea.s turn/);
-    expect(clickable(container).length).toBe(state.pending.options.length);
+    const who = two[second].name;
+    expect(screen.queryByRole('dialog', { name: new RegExp(`${who}.s turn`) })).toBeNull();
+    expect(container.querySelector('.prompt.choice .turn-of').textContent).toMatch(new RegExp(`${who}.s turn`));
+    // every pick once in the chair and once in the phone's panel (CSS shows one of the two per screen)
+    expect(new Set(clickable(container))).toEqual(new Set(state.pending.options.map(o => o.id)));
+    expect(clickable(container).length).toBeLessThanOrEqual(2 * state.pending.options.length);
   });
 
   it('hot-seat: a second person gets a handoff screen before placing', () => {

@@ -96,9 +96,12 @@ function stealStep(ctx, p, data) {
   const led = new Set(ctx.state.players.filter(o => isLeader(ctx, o)).map(o => o.id));
   for (const [id, pick] of Object.entries(data.picked)) {
     const v = ctx.player(Number(id)), x = commit(ctx, p, v, pick, false, true, led.has(v.id));
-    if (x) { got += x; from.push(`${x} from ${v.name}`); }
+    // each pile by its color, and what it turns into (live panel r1: the recap said "1 gold from P3" while the stack
+    // that landed was magenta)
+    const what = Object.entries(pick).filter(([, k]) => k > 0).map(([c, k]) => `${k} ${c}`).join(' and ');
+    if (x) { got += x; from.push(x === Object.values(pick).reduce((a, b) => a + b, 0) ? `${what} from ${v.name}` : `${x} from ${v.name}`); }
   }
-  ctx.log(got ? `${p.name} stole ${got} (${from.join(', ')}).` : `${p.name} found nothing to steal.`);
+  ctx.log(got ? `${p.name} stole ${got} (${from.join(', ')}), now magenta.` : `${p.name} found nothing to steal.`);
 }
 const startSteal = (ctx, p, name, n, extra = {}) => stealStep(ctx, p, { name, left: n, each: [], picked: {}, ...extra });
 const estimateSteal = (ctx, p, n, who = ctx.rivals(p)) => Math.min(n, who.reduce((s, o) => s + stealable(ctx, p, o), 0)) * 1.33;
@@ -224,6 +227,8 @@ const thieves = {
     ransomPick(ctx, p, uid) {
       const v = ctx.ownerOf(uid), c = ctx.card(uid), n = cost(c);
       const can = total(v) >= n, colors = can ? ` (${takeWords(ransomTake(v.res, n))})` : '';
+      // can't pay: no question with one answer (skeptic r2: "keep it for 4?" offered only "Let it go"); it just goes
+      if (!can) { thieves.handlers.ransomAnswer(ctx, v, 'let', { uid, thief: p.id }); return; }
       const opts = [{ id: 'let', label: `Let ${c.def.name} go`, kind: 'ransom', value: 'let', hint: 0 }];
       if (can) opts.unshift({
         id: 'pay', label: `Pay ${p.name} ${n}${colors} to keep ${c.def.name}`, kind: 'ransom', value: 'pay',
