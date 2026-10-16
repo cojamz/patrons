@@ -1,7 +1,7 @@
 // Small game-screen pieces: the choice prompt, the log, the hot-seat handoff, a confirm dialog and a popover.
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { quadrant, cardDef } from '../../engine/v4/index.js';
+import { quadrant, cardDef, defById } from '../../engine/v4/index.js';
 import { logSections, playerColor, costParts, plainLine, turnGroups, foldRepeats, plural } from '../format.js';
 import { Rich, CostPips, Pip } from './Rich.jsx';
 import { MemberCard, NamedText, CardText, cardColor, asYou, CostDots } from './Info.jsx';
@@ -48,7 +48,9 @@ function optionDetail(state, o) {
       const cost = costParts(d, state.resources); // shown as dots (CostDots), never color words
       // whose it is (Ransom, Heist, Trade pick a rival's member) and what it costs, on every member option
       const owner = state.players.find(p => p.members.includes(o.value)) || null;
-      return { name: d.name, text: d.text, f: d.f, color: d.quadrant, id: d.id, def: d, cost, owner: owner ? owner.id : null };
+      // a Doppelganger that has copied reads as the copy alone (Cory, 2026-10-15)
+      const cp = state.cards[o.value].copy ? (() => { try { return defById(state.cards[o.value].copy); } catch { return null; } })() : null;
+      return { name: d.name, text: cp ? `Copy of ${cp.name}: ${cp.text}` : d.text, f: d.f, color: d.quadrant, id: d.id, def: d, cost, owner: owner ? owner.id : null };
     }
   }
   if (o.kind === 'trade' && Array.isArray(o.value)) {

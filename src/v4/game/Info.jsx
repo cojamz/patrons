@@ -197,7 +197,9 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
   const card = uid != null ? state.cards[uid] : null;
   const where = uid == null ? null : owner ? null : state.shop.includes(uid) ? 'In the shop' : 'In the pile';
   // "Free. No effect." is no ability too (its cost line already says free)
-  const ability = String(d.text || '').replace(/^Worth \d+ followers?\.\s*/i, '').replace(/^(Free\.\s*)?No effect\.?$/i, '').trim();
+  // a Doppelganger that has copied reads as the copy alone (Cory: its own recruit text is spent); "Copy of" says so below
+  const copied = card && card.copy ? (() => { try { return defById(card.copy); } catch { return null; } })() : null;
+  const ability = String((copied || d).text || '').replace(/^Worth \d+ followers?\.\s*/i, '').replace(/^(Free\.\s*)?No effect\.?$/i, '').trim();
   const worth = d.f != null ? d.f : 1;
   const sphere = onTable(state, d) ? (() => { try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } })() : 'colorless';
   // the quiet live line: what you're short of, in dots (Cory: "need N" never shouts), from the engine's one price rule
@@ -224,11 +226,11 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {/* a member with no ability says so, never an empty card (w2a #36: Twins and Intern showed only a header) */}
       {/* a member you use (once a game, once a round) says so first (w3a #5: "you can't find out which members you use");
           in the shop, also how: on your turn, from your seat */}
-      {ability ? <p className="mc-text">{d.activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
+      {ability ? <p className="mc-text">{(copied || d).activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {d.activate && where && !state.over && <small className="mc-live" data-use-how="">Once it’s yours, use it on your turn: it lights up in your seat.</small>}
       {/* in plain words, no term to look up (w4b #26: "Colorless here" was a word the rulebook never defines) */}
       {!onTable(state, d) && <small className="mc-live" data-colorless="">Its color isn’t on this table: it counts as a member of no color.</small>}
-      {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
+      {copied && <small className="mc-live" data-copy-of="">Copy of <CardName state={state} def={copied} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used && !state.over ? ' · used' : ''}</small>}
       {/* the cost and nothing else about paying (Cory, 03:40: cut "You pay"); a discount on you says only why the face's
           price is struck ("Your next member costs 4 less.") */}
