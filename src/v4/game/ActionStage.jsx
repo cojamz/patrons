@@ -8,6 +8,7 @@ import { Rich } from './Rich.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { MO } from '../motion.js';
+import { play } from '../sound.js';
 import './stage.css';
 
 const EASE_OUT = 'cubic-bezier(.2,.9,.25,1.15)'; // lands with a little give, like a card slapped on the table
@@ -34,7 +35,8 @@ function StageItem({ it }) {
     const frames = from
       ? [{ transform: over(it.at, size, from), opacity: 0.6, offset: 0 }, { transform: 'translate(0,-8px) scale(1.04)', opacity: 1, offset: 0.78 }, { transform: 'none', opacity: 1 }]
       : [{ transform: 'scale(.8)', opacity: 0 }, { transform: 'none', opacity: 1 }];
-    e.animate(frames, { duration: it.dur, easing: EASE_OUT, fill: 'backwards' });
+    const arrival = e.animate(frames, { duration: it.dur, easing: EASE_OUT, fill: 'backwards' });
+    if (it.kind === 'member') arrival.finished.then(() => { if (e.isConnected && !it.leaving) play('member'); }, () => {});
     return () => { if (it.homeEl && it.homeEl.classList) it.homeEl.classList.remove('on-stage'); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // a member that acts again while it's out hops again
@@ -52,7 +54,7 @@ function StageItem({ it }) {
     const done = () => { if (it.homeEl && it.homeEl.classList) it.homeEl.classList.remove('on-stage'); stageGone(it.id); };
     if (!e || !e.animate || !home) { done(); return; }
     const a = e.animate([{ transform: 'none', opacity: 1 }, { transform: over(it.at, size, home), opacity: 0.15 }], { duration: it.out || MO.stageOut, easing: EASE_HOME, fill: 'forwards' });
-    a.finished.then(done, done);
+    a.finished.then(() => { if (e.isConnected && it.kind === 'member') play('member'); done(); }, done);
   }, [it.leaving]); // eslint-disable-line react-hooks/exhaustive-deps
   const style = { left: it.at.left, top: it.at.top, width: size.w, height: size.h, '--q': it.color, '--pc': it.pc };
   if (it.kind === 'space') {

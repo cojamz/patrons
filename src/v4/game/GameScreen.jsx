@@ -263,6 +263,9 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       queue.current.push(s);
       pump();
     });
+    // A pace change replaces pump and cancels the old timer. The latest state may already be queued,
+    // so subscribe's duplicate guard must not leave that queue without a timer to drain it.
+    pump();
     return () => { off(); clearTimeout(timer.current); timer.current = null; };
   }, [session, pump]);
 

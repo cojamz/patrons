@@ -630,3 +630,10 @@ His notes below were made on the preview, which was stuck on a build from before
 - 2026-10-15 — (Cory) Deliver fixes live as quickly as possible without cutting corners; the assistant chooses the effective harness and resource setup. Hover/animation work should improve performance, preserving content.
 - 2026-10-15 — (Codex, implementation fill-in) Previous-action copying also applies to Understudy; occupied center actions are copyable under Encore/Greatest Hits, with the existing prohibition on recursive copies retained. Reason: consistent interpretation of Cory’s general copying rule.
 - 2026-10-15 — (Codex, performance fix) Remove the empty-pass pause (no effect to animate), preserving actual animation durations and the unchanged pacing budget. Longest modeled Steady wait drops 21540→21054 ms, inside the 21060 ms cap.
+
+- 2026-10-16 — (Cory) Phone must work, even without optimization. Basic load, touch setup, placement and purchases are now part of release verification.
+- 2026-10-16 — (Cory) Resources a member produces leave that member; members make a small sound on landing. A universal sound is fine for now because designs and names may change.
+- 2026-10-16 — (Codex, verified fix) Changing speed while bot states were queued canceled their playback timer and stranded the view. Resume the existing queue after resubscribing; regression fails before the fix and passes after.
+- 2026-10-16 — (Codex, hosting fix) Public /patrons/ served raw source index and 404ed /src/main.jsx. main index now forwards to built /patrons/play/, preserving query/hash. Commit a4b46277, verified live through a clean browser.
+
+- 2026-10-16 — (Cory) Keep member release in; immediately withdrew the proposed removal. No release rule was changed.

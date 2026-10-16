@@ -153,7 +153,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   const stagedKeys = new Map(); // a staged space's key → its slot: 'card', or 'card2' for the space it copies
   const stagedUids = new Map(); // a staged member's uid → its spot
   const onStage = w => (!w ? w : w.kind === 'space' && stagedKeys.has(w.key) ? { kind: 'stage', slot: stagedKeys.get(w.key) }
-    : w.kind === 'member' && w.uid != null && stagedUids.has(w.uid) && w.pid === stagedUids.get(w.uid).pid ? { kind: 'stage', slot: stagedUids.get(w.uid).spot } : w);
+    : w.kind === 'member' && w.uid != null && stagedUids.has(w.uid) && w.pid === stagedUids.get(w.uid).pid ? { kind: 'stage', slot: stagedUids.get(w.uid).spot, uid: w.uid } : w);
   const pieces = (time, from0, to0, n, opt = {}) => {
     const from = onStage(from0), to = onStage(to0);
     // 1–3 single pieces, 60ms apart (Steady); 4 or more one bundle carrying its count
@@ -565,7 +565,15 @@ function placeEl(root, w, ctx) {
     }
     case 'rate': return (w.tier && shown(root.querySelector(`.lt-rate[data-rate="${w.tier}"]`))) || (w.n && shown(root.querySelector(`.lt-rate[aria-label*="+${w.n} follower"]`))) || shown(root.querySelector('.lt-rates'));
     case 'pile': return shown(root.querySelector('.lt-deck')) || shown(root.querySelector('.lt-shop'));
-    case 'stage': { const r = stageRect(w.slot); return r ? { getBoundingClientRect: () => r, rectOnly: true } : null; }
+    case 'stage': {
+      // Member gains leave the portrait itself, including while its caption card is still landing.
+      if (w.uid != null) {
+        const portrait = shown(document.querySelector(`.action-stage [data-stage-uid="${w.uid}"] .as-fig`));
+        if (portrait) return portrait;
+      }
+      const r = stageRect(w.slot);
+      return r ? { getBoundingClientRect: () => r, rectOnly: true } : null;
+    }
     default: return shown(root.querySelector('.stage .hub-label'));
   }
 }
@@ -755,6 +763,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           slideShop(root, snap);
           if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total }));
           onFinish(anim, () => {
+            if (anim.playState === 'finished') play('member');
             g.remove();
             chain.flying = Math.max(0, chain.flying - 1);
             if (chip && chip.animate && chip.isConnected && !region(chip)) relative(chip, [{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' });

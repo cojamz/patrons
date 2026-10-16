@@ -170,7 +170,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 {/* the worth is what the member brings, not part of its price (live panel r1: "1 follower" read as a third
                     cost): a gain's "+", behind the hairline, at the card's right edge */}
                 <span className="val" data-worth={d.f} title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
-                  <span className="plus" aria-hidden="true">+</span><b className="num">{d.f}</b><FollowerGlyph size={11} title={`worth ${d.f}`} />
+                  <b className="num">{d.f}</b><FollowerGlyph size={11} title={`worth ${d.f}`} />
                 </span>
               </span>
             </button>

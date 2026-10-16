@@ -18,6 +18,7 @@ const RATE = 44100;
 // [file, [[voice, at seconds, seed, followers], …], length]
 const JOBS = [
   ['place', [['place', 0.02, 3]], 0.25],
+  ['member', [['member', 0.02, 7]], 0.6],
   ['place-x3', [['place', 0.02, 3], ['place', 0.5, 4], ['place', 1.0, 5]], 1.3],
   ['coin', [['coin', 0.02, 11]], 0.5],
   ['coins-3', [0, 1, 2].map(k => ['coin', 0.02 + k * 0.083, 20 + k]), 0.6],

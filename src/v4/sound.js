@@ -216,9 +216,13 @@ function crowd(ctx, dest, t, r, n = 1) {
   return len;
 }
 
-export const VOICES = { place, coin, fanfare, follower: crowd };
+// A shared quiet two-syllable greeting for a member landing; independent of its changing name/art.
+function member(ctx, dest, t, r) {
+  return follower(ctx, dest, t, r, { word: [['h', 'u'], ['m', 'a']], pitch: 0.82, rise: false });
+}
+export const VOICES = { place, coin, fanfare, follower: crowd, member };
 // each voice's loudness against the others (set by ear and by peak, scripts/v4-sounds.mjs)
-export const LEVEL = { place: 0.55, coin: 0.7, fanfare: 0.75, follower: 0.32 };
+export const LEVEL = { place: 0.55, coin: 0.7, fanfare: 0.75, follower: 0.32, member: 0.2 };
 
 /** Render a voice into ctx at time t (offline rendering uses this too). Returns its length in seconds. */
 export function voice(ctx, dest, name, t, seed = Math.floor(Math.random() * 1e9), n = 1) {
@@ -270,7 +274,7 @@ if (typeof addEventListener === 'function') {
 }
 
 // how close the same sound may repeat, and how many may ring at once (a dozen coins is a handful, not a din)
-const GAP = { place: 0.04, coin: 0.04, fanfare: 0.5, follower: 0.1 };
+const GAP = { place: 0.04, coin: 0.04, fanfare: 0.5, follower: 0.1, member: 0.12 };
 const last = {};
 let ringing = 0;
 // Followers line up with their number (Cory, 2026-10-15). One to three fly as single pieces 60ms apart, and each one
