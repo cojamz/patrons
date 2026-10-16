@@ -2,7 +2,15 @@
 
 Updated 2026-10-15, afternoon. Agents never commit; the foreman verifies and checkpoints to `claude/cults-wip`. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT`. If a thread dies, relaunch from its line below and tell it to read `git log` first. State of the project: `design/HANDOFF.md`. Done items are ticked in `design/todo.md`.
 
-## Now (2026-10-15, afternoon)
+## End of 2026-10-15 (8:25pm Eastern): stopped at Cory's usage limit
+- **One line ships everything.** `claude/gifted-newton-3lcy3i` at 8e47530+ is the one branch. Every thread pulls it, pushes its own quick-green work (build + `e2e/v4/hotseat.mjs` on the bundle), then runs `bash scripts/v4-play.sh` to refresh the play link (https://cojamz.github.io/patrons/play/, the play/ folder on main). Live build: bc019a2.
+- **Stopped unfinished (relaunch from these briefs):**
+  - *Strip room:* the taller seats (MEMBERS count, two figure rows) squeeze the "since your last turn" strip at 1270×700; turnstory t2/t2b fail. Fix without hiding members (one figure row until two are needed, or a tighter header).
+  - *Unit suite to the new rules:* rules.test (written for 4 spheres; spheres = players now gives 2 at 2 seats: pass the 4-sphere table), full-board Late Riser (Overtime is gone), night-owl round I (no extra minions in round I), format.test (Kickback, Squatter), boardpick-reach ("+N" fold is gone during a member pick), records.test (refresh).
+  - *Stale e2e save:* pay.mjs "dialog-save: never reached P1 on cheap" since the new Cheap Seats.
+- Nothing else running. No check-ins pending.
+
+## Earlier (2026-10-15, afternoon)
 - **Cory's morning notes, in code** (one thread): hover lag ("card complete" gate), Pass as "Done, no buy" in the shop column, remove the turn-order rail ("next" / "your turn in 3" on the seats), smaller upright wheel emojis, the gift card beside the space, animation pace (Relaxed about 2× Steady, Steady a little slower). Brief: HANDOFF.md section 5.
 - **Doc refresh** (this thread): HANDOFF, in-flight and the other docs on this morning's list brought up to today. Docs only, no game code.
 - **Tester and design pod upgrade** (thread on `claude/project-thread-rwmsop`): done. Panel v4 calibrated at 82% (90% on Cory's morning catches) on the wave-2 replay; handed to the fix thread for its A− loop. Why the old panel missed: `design/eval/critic-calibration/miss-matrix-2026-10-15.md`.

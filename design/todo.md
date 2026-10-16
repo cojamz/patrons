@@ -9,7 +9,15 @@ The bar (Cory, 2026-10-15): A− or better from a fresh blind panel, on the exac
 - [ ] hotseat e2e: shop member names overflow their box (Lottery Winner by 3px; Sponsor, Patriarch, Speculator, Stunt Double cut by the app frame).
 - [ ] fire-audit unit test "every recruited member with an effect is named acting at least once" fails (one member never named); the audit's table skips White, so not White's. Re-run alone first: the box was loaded.
 
-## Now: Cory's notes from this morning, in this order
+## Now (2026-10-15 evening, after Cory's B+ play)
+- [ ] Strip room at 1270×700 (turnstory t2/t2b): taller seats squeeze "since your last turn".
+- [ ] Unit suite to today's rules (see in-flight.md).
+- [ ] pay.mjs save for the new Cheap Seats.
+- [ ] Cory's call: thin deck at 2–3 players (deal guest members from other spheres? [yes]).
+- [ ] Cory's call: Greatest Hits repeating a copied Echo's gain [no].
+- [ ] Still from his notes: gold vs yellow members more distinct; animation lag late in the game; Sweet Talk simpler (incremental); "follower claims" visibility (incremental).
+
+## Earlier: Cory's notes from this morning, in this order
 - [ ] **Balance calls waiting on Cory (2026-10-16, from the balance thread).** Live and built: six prices, Trade Seeds +2 then swap, Cheap Seats +1 follower per 3 white, 2 for 2 followers. Open, each with Claude's default in brackets: (1) Rush Hour "+1 purple per 2 minions on the board" in Overtime's place is built and live; the name and rule are Claude's fill-in [keep]. (2) Intro Offer "your next member costs 4 less" → "+2 gold, plus 1 per gold member you have" [yes]. (3) Sweet Talk → "+4 silver, then swap up to 4 of your silver for one other color" [yes]. (4) Red's contest counts members, not their followers [keep the count]. (5) Magenta keeps "most magenta members" [yes]. Overtime's "show the extra turn on screen" no longer applies (it's off the board). Also check: White now scores fewest followers (another thread), while Cheap Seats pays for white held.
 - [ ] **Pacing gate red since 2-for-2** (src/test/v4/ui/pacing.test.js, "wait between your turns"): the longest wait is 15973 ms against 15600 (seed 7, seat 3, six rival turns). Tune the pace, not the cap. Global trims barely move it (pieceStagger 50→30: 15709). An unfinished director.js attempt is in the balance thread's scratchpad (director-wip.patch), unverified.
 - [ ] (Cory, 2026-10-15) End-game scoring animation that shows where every point comes from: followers score on their own; then each member pops a small +x over its head for the people in it, then a second round of pop-ups for followers it grants (like Recluse). First in the next round of work if it doesn't fit the A− loop.
