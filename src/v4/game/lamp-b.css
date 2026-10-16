@@ -80,7 +80,7 @@
 .lt-rates .lt-rate:focus-visible{outline:2px solid rgba(var(--lamp,255,206,140),.8);outline-offset:2px}
 /* Cory, 2026-10-15: "should definitely be more noticeable": a lit, filled button, the strongest thing in the shop while
    you buy; the follower buys' hovers open beside the column, never over it */
-.lt-rates .lt-done{margin-top:10px;height:44px;min-height:44px;width:100%;padding:0 16px;font-family:var(--sans);font-size:16px;font-weight:700;
+.lt-rates .lt-done{margin-top:10px;height:44px;min-height:44px;width:100%;padding:0 16px;font-family:var(--sans);font-size:18px;font-weight:700;
   color:#2a1d12;background:rgb(var(--lamp));border:1px solid rgb(var(--lamp));
   box-shadow:0 0 0 3px rgba(var(--lamp),.18),0 2px 10px rgba(var(--lamp),.28);transition:background var(--mo-dim, .15s),transform .1s}
 .lt-rates .lt-done:hover:not(:disabled){background:#ffe2b0}
