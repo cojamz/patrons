@@ -1,15 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Favored - Worker Placement Game</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cults</title>
+<meta http-equiv="refresh" content="0;url=./play/">
+<script>
+  const game = new URL('./play/', location.href);
+  game.search = location.search;
+  game.hash = location.hash;
+  location.replace(game.href);
+</script>
 </head>
-<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-</body>
+<body><a href="./play/">Open Cults</a></body>
 </html>
