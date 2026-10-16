@@ -12,7 +12,8 @@ The bar (Cory, 2026-10-15): A− or better from a fresh blind panel, on the exac
 ## Now (2026-10-15 evening, after Cory's B+ play)
 - [ ] Strip room at 1270×700 (turnstory t2/t2b): taller seats squeeze "since your last turn".
 - [ ] Unit suite to today's rules (see in-flight.md).
-- [ ] pay.mjs save for the new Cheap Seats.
+- [ ] pay.mjs save for the new Cheap Seats ("dialog-save: never reached P1 on cheap"; the price thread stopped before fixing it).
+- [ ] Pacing tune: pacing.test "a rival's turn and the wait between your turns" longest wait 15973 ms vs the 15600 cap since the price calls (more buys per turn). Trim the pace; never raise the cap.
 - [ ] Cory's call: thin deck at 2–3 players (deal guest members from other spheres? [yes]).
 - [ ] Cory's call: Greatest Hits repeating a copied Echo's gain [no].
 - [ ] Still from his notes: gold vs yellow members more distinct; animation lag late in the game; Sweet Talk simpler (incremental); "follower claims" visibility (incremental).
