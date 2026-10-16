@@ -37,7 +37,7 @@ const S = {
 const PIPS = {
   gold: { steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold' },
   red: { hireup: 'member up to 4, free', trade: 'swap a member', take: 'any member, free' },
-  purple: { overtime: '1 extra turn' },
+  purple: { rushhour: '+1 purple per 2 minions' },
   silver: { tide: 'half the richest', jubilee: 'silver for followers' },
   yellow: { gather: '+1 per member' },
   market: { clearance: 'half price', spree: 'buy 3 times' },

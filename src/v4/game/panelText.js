@@ -56,7 +56,7 @@ const P = {
     windup: { main: '+1 purple', second: 'per minion on the board' },
     planahead: { main: '+1 purple', second: 'per minion to place' },
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
-    overtime: { verb: 'Take 1 extra turn', second: 'right after this' },
+    rushhour: { main: '+1 purple', second: 'per 2 minions on the board' },
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     rally: { verb: 'Take your next 2 turns now' },
   },

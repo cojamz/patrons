@@ -158,7 +158,7 @@ const S = {
     catchup: [['1', 'purple'], ['1', '/', 'rup']],
     windup: [['1', 'purple', '/', 'w']],
     planahead: [['1', 'purple', '/', 'wo']],
-    overtime: [['1', 'turn']],
+    rushhour: [['1', 'purple', '/', '2', 'w']],
     rally: [['2', 'wo']], // your next 2 minions, now (not extra turns)
   },
   silver: {
