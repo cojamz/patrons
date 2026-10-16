@@ -1,5 +1,6 @@
 // @vitest-environment node
-// Night Owl (Purple, Relay's slot): "Each round, after your last minion, take an extra turn: place one more and buy again."
+// Night Owl (Purple, Relay's slot): "From round II, after your last minion each round, take an extra turn: place one more and buy again."
+// No extra minions in round I (Cory, 2026-10-15).
 // In the engine this is one extra turn (glossary: "you place one more minion and may buy again", only while the board
 // has a space to spare), queued right after the turn of your last minion. Through real moves: only after the last
 // minion, one more minion with its own buy, before the next player; once per round; nothing when no space is spare.
@@ -24,7 +25,7 @@ describe('Night Owl', () => {
   it('is printed as decided: 8 purple + 2 any, worth 1 follower, in plain words', () => {
     const d = defById('purple.nightowl');
     expect([d.s, d.w, d.f]).toEqual([8, 2, 1]);
-    expect(d.text).toBe('Each round, after your last minion, take an extra turn: place one more and buy again.');
+    expect(d.text).toBe('From round II, after your last minion each round, take an extra turn: place one more and buy again.');
   });
 
   it('does nothing on a minion that is not your last', () => {
@@ -61,7 +62,7 @@ describe('Night Owl', () => {
     expect(s.players[0].left).toBe(1);
   });
 
-  it('no space to spare, no minion more: it says so, and does not try again that round', () => {
+  it('round I, no minion more: it says so, and does not try again that round', () => {
     // round I, two players: every space taken but two, and P2 still has a turn to come
     const probe = sc({});
     const free = [spaceOf(probe, 'purple.hourly'), spaceOf(probe, 'gold.rush')];
@@ -69,7 +70,7 @@ describe('Night Owl', () => {
     let s = take(sc({ round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.hourly');
     expect(s.players[0].left).toBe(0);
     expect(queuedTurns(s, 0)).toBe(0);
-    expect(s.log).toContain("P1's Night Owl: no free space this round, so no extra turn.");
+    expect(s.log).toContain('No extra minions in round I: P1 gets no extra turn from Night Owl.');
     expect(nextPlacer(s).who).toBe(1);
   });
 

@@ -82,6 +82,8 @@ function extraHooks(ctx, p) {
 
 /** Give p up to n extra turns right after the current one. Returns how many it got. */
 export function extraTurns(ctx, p, n = 1, why = null) {
+  // no extra minions in round I (Cory, 2026-10-15): every space there is already spoken for
+  if (ctx.state.round === 1) { ctx.log(`No extra minions in round I: ${p.name} gets no extra turn${why ? ` from ${why}` : ''}.`); return 0; }
   let k = 0;
   for (; k < n && spareSpace(ctx); k++) {
     const q = ctx.state.queue;
@@ -203,7 +205,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 6, 2, 'Once per game: take an extra turn right after this one.', {
+    m('secondwind', 'Go-Getter', 6, 2, 'Once per game, from round II: take an extra turn right after this one.', {
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -274,7 +276,7 @@ export default {
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win
     // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
     // pays from round II. Fires once per round (owlRound), whether or not the board had room.
-    m('nightowl', 'Night Owl', 8, 2, 'Each round, after your last minion, take an extra turn: place one more and buy again.', {
+    m('nightowl', 'Night Owl', 8, 2, 'From round II, after your last minion each round, take an extra turn: place one more and buy again.', {
       // recruited after your last minion of the round (its buy step): it waits for next round, and says so
       onRecruited(ctx, owner, card) {
         if (owner.left !== 0 || ctx.state.round < 1) return;

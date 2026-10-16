@@ -26,7 +26,7 @@ Turns go in snake order (1-2-3-4, 4-3-2-1, …). Round I's order is random; from
    - Or **buy followers**: 2 resources for 1, 4 for 4, 8 for 8, 10 for 10. The table holds 2 of the 8-for-8 buy per player, first come, first served.
    - Once per round, before you buy, you may **release** a member you didn't recruit this round and haven't used: it goes under the pile and you take back its colored part, in its color (any colors if its color isn't on the table).
 
-An **extra turn** happens only while a space is open; round I has none, since every round-I space fills. A member whose color isn't on the table is **colorless**: it gives nothing to cards that pay "its color".
+An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while a space is open. A member whose color isn't on the table is **colorless**: it gives nothing to cards that pay "its color".
 
 ## Round end
 Each contest's leader gains +2 followers in round I, +4 in round II, +6 in round III. Ties all score unless the rim's tiebreak settles it. You need at least 1 of what's counted. The count is taken at round end.
