@@ -2,7 +2,10 @@
 
 Rewritten 2026-10-15 (afternoon), so a fresh thread loses nothing. Read this first, then the files it points to. Where this doc and a source disagree, the source wins: `design/decisions.md` for design calls, the code for what's built.
 
-## 0. Latest (2026-10-15, 8:25pm Eastern)
+## 0. Latest (2026-10-15, 10:40pm Eastern)
+Cory played and called it v0.5 ("quite good"). His notes are logged, not built: todo.md top section, decisions.md 2026-10-16, answer key 48–53. Start there. Open to him: follower buys 1/5/10 or 2/5/10 [1/5/10]; end-game tiebreaker most members, shown [yes]; remove member release [keep, make findable].
+
+## 0b. Before that (2026-10-15, 8:25pm Eastern)
 Cory rated his own play B+ and switched us from grading to fixing his notes. Shipped today, live at https://cojamz.github.io/patrons/play/ (build bc019a2): one sphere per player; turn order drawn and shown before the starting picks, with your pick inside your seat; the Paying/Keeping pay picker; "Done, no buy" lit and only in the buy step; seats show a member count and every member during a member pick; Free Recruit's hover lights the cheapest card(s); Greatest Hits says what it copies and skips; no extra minions in round I; Banker by swap pays; Night Owl explains itself; speed slices (hovers in one frame, bot turns in slices, cached pixel art); price calls (Rush Hour for Overtime, 2-for-2, Cheap Seats). How to ship now: `.claude/rules/working-with-cory.md` ("Ship straight away"); times go to Cory in US Eastern 12-hour. Unfinished work: `design/in-flight.md` top section. Open question to Cory: should Greatest Hits repeat what a copied Echo gave instead of skipping it [no]; deck too thin at 2–3 players (25/35 cards; shop ran short in a third of bot games).
 
 ## 1. Who's who, and how to work with Cory

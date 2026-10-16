@@ -5,6 +5,86 @@ Checked against the code (src/v4, src/engine/v4), the gates (e2e/v4, src/test/v4
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 The bar (Cory, 2026-10-15): A− or better from a fresh blind panel, on the exact build he'll open, before he sees anything.
 
+## Cory's play notes, 2026-10-16 (logged, nothing built yet)
+Calls he made are in decisions.md (2026-10-16). Lines marked *idea* are his "maybe"s: not approved, ask before building.
+
+Cards and wording
+- [ ] Late Bloomer → Late Bloomers, worth 2 followers, not counted in the follower comparison. *idea:* maybe 3; start making members worth more followers.
+- [ ] Crescendo: "more each round" is confusing. *idea:* show I: 2 green, II: 4 green, III: 6 green on the card, gray out the rounds that don't apply.
+- [ ] Golden Years: same fix as Crescendo.
+- [ ] Card timing reads "on recruit" and "at round start" (not "Now").
+- [ ] Language pass on every action text and how each is shown; many are easy to misread.
+- [ ] Snap Up wording is bad for what it does.
+- [ ] Night Owl wording is awful.
+- [ ] "Copy space taken since your last turn" → copy the previous action (the one picked on the previous turn, rival or you on a snake double turn).
+- [ ] Encore → copy any space with a minion (phrase it elegantly and precisely).
+- [ ] Greatest Hits → repeat all actions where you have a minion.
+- [ ] Reprise drops its +2 green; copying is good enough.
+- [ ] Crescendo and Hum don't fit the card.
+- [ ] Member texts WAY more efficient, keeping elegance and precision.
+- [ ] Sweet Talk is awkward: something completely different.
+- [ ] Hold Court: he doesn't like it; reads like a member ability.
+- [ ] Heir is too expensive.
+- [ ] Goody Bags is a better Toast and a better Good Deed: needs something more clever.
+- [ ] Cheap Seats needs to be different. Sob Story is good.
+- [ ] Toast: the gift to rivals grows 1 → 2 → 3 by round.
+- [ ] Rising Tide is good. *idea:* give everyone else TWO silver.
+- [ ] Competitions drop tiebreakers; ties all score.
+- [ ] *idea:* some members worth 2 followers (Snob, maybe renamed Chatterboxes or Gossips).
+
+Spheres and themes
+- [ ] Action names: bring them in line with a "Cults" theme.
+- [ ] *idea:* blue as sophisticated/social; tease deeper themes out of each sphere; members themed with their sphere.
+- [ ] Silver members play on everyone having lots of silver: pricier, or a dynamic other than spending it. Silver's round III action is bad; tie it to that theme.
+- [ ] *idea:* silver rounds II–III reward getting RID of silver members (discard one for lots of resources or followers).
+- [ ] White needs a rework he can't pin down yet. Likes fewer followers as a catch-up.
+- [ ] Patron Saint is perfect for silver. *idea:* 1 follower per silver member in play (max 10); maybe then it costs more, though cheap lets people fight for it early.
+- [ ] *idea:* every sphere has an end-game member for members (usually of its color; yellow maybe "+2 per color you have a member in", phrased better) and one for resources: two paths to end-game points, at odds.
+- [ ] *idea:* one reverse sphere: actions gain followers and its members cost followers plus wilds (synergy with green).
+- [ ] *idea:* one sphere about action manipulation, defensive, blocking what others want. Goal: clearer what rivals are after, more counterplay in action picks.
+
+Economy and follower buys
+- [ ] Fewer follower buys: 1 or 2, then 5 for 5, 10 for 10 (see open call). Lets you grind followers on turns you can't buy a member.
+- [ ] *idea:* tone resource gain down. Spheres give too much; balance actions that do interesting things vs ones that give resources, and buying members for effects.
+- [ ] *idea:* fewer members in the shop, maybe 8, freeing a row.
+- [ ] *idea:* remove member release entirely (see open call).
+
+Board layout and player cards
+- [ ] Member card text on the card itself if it fits; "1 [follower]" or just the follower mark instead of "+1". Keep their charming design.
+- [ ] Take-a-free-member screen: bigger member cards so text fits.
+- [ ] Remove "EACH ROUND X" from player boxes; drop "Members X" and SHOW more members, collapsing only rarely.
+- [ ] *idea:* log in the middle of the player boxes, two on each side.
+- [ ] Minion display on the player box more efficient; follower number better, or different text than the player name.
+- [ ] Currencies sit in a weird spot.
+- [ ] Shop: drop some members (a whole row), redo the follower shop more noticeable and more compact, give player cards a bit more room. Not a huge change.
+- [ ] Hover anywhere on a player card's empty space opens their member list (keep the current hover).
+- [ ] Player-card hovers don't say "you're short".
+- [ ] Members too dim, both tinted and active. Follower shops not lit enough either.
+- [ ] Can't find how to release a member.
+- [ ] Contest arc: followers and emoji off-center from the text. Follower mark distinct from text: a sheen or glimmer, charming-sinister.
+- [ ] Opponents' points and engine aren't intuitive even with numbers shown.
+
+Animation and lag
+- [ ] Default animation speed Relaxed.
+- [ ] Round scorecard screens laggy and slow to fade in (likely the broader lag).
+- [ ] Action order top to bottom, everything shown: Toast +3 silver to you, +1 silver to rivals, then Majordomo pops in with +2 silver. *idea:* everything that goes in the log flies into the log.
+- [ ] *idea:* members pop out of the right side of the player card when they act, maybe with a speech bubble.
+- [ ] Unexplained animation right before round end: followers fly out of the piles toward every player (not the contest followers).
+
+End of round and end of game
+- [ ] Member end-game bonuses go in with the end-of-round animations (he won by 1 thinking he'd lost).
+- [ ] End-of-round animations: good design, need smoothing.
+- [ ] End-game screen loads slowly, layout is bad, totals animate being calculated for no reason. Polish.
+- [ ] End-game tiebreaker unclear (is it members? see open call).
+
+Rules clarity
+- [ ] Make it clear the turn order is a snake draft.
+
+Open calls for Cory (sent 2026-10-16, defaults in brackets)
+- [ ] Follower buys 1/5/10 or 2/5/10 [1/5/10].
+- [ ] End-game tiebreaker: most members, shown on the final screen [yes].
+- [ ] Remove member release [keep it, make it findable].
+
 ## Later: gate failures seen while shipping White's "Fewest followers" (2026-10-16, a729aa6, quick check on the live tree)
 - [ ] hotseat e2e: shop member names overflow their box (Lottery Winner by 3px; Sponsor, Patriarch, Speculator, Stunt Double cut by the app frame).
 - [ ] fire-audit unit test "every recruited member with an effect is named acting at least once" fails (one member never named); the audit's table skips White, so not White's. Re-run alone first: the box was loaded.

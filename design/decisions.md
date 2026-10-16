@@ -609,3 +609,15 @@ His notes below were made on the preview, which was stuck on a build from before
 - 2026-10-15 21:29 — (Cory) Hovers wait a small moment before opening, so a mouse sweeping across the board doesn't fire hovers nonstop; he'll judge it on the playable build. (Claude, under Cory's go-with-your-gut) One constant, HOVER_DELAY_MS = 200 in src/v4/game/hoverDelay.js, for every hover (spaces, rims, shop cards, seats, members, tips); clicks and taps never wait. The card is drawn hidden during the wait and shown complete in one frame; the under-100 ms bar counts from the end of the wait. Why 200: long enough that a sweep opens nothing, short enough that a deliberate rest still feels immediate.
 - 2026-10-15 23:20 · (Claude, under Cory's go-with-your-gut, safety fix) An extra turn needs a free space beyond every minion still to land, counting the one about to land (Go-Getter used before placing took a rival's last space at 4 players, round I). Late Riser checks for that space too (2 players, 2 spheres, round III with Extra Hand twice is full). A minion with nowhere to go is logged, never dropped silently.
 - 2026-10-15 23:30 · Cory: no extra minion placement in round I. Extra turns from any card or space don't happen there; Night Owl and Go-Getter now say "from round II". Idea, parked by Cory for now: a full board could let an extra minion join a rival's space, like Squatter.
+- 2026-10-16 — (Cory) This build is v0.5. Why: "Overall this is quite good."
+- 2026-10-16 — (Cory) Late Bloomer → Late Bloomers, worth 2 followers, not counted in the follower comparison. Why: start making members worth more followers, going easy for now (3 parked as an idea).
+- 2026-10-16 — (Cory) Default animation speed is Relaxed.
+- 2026-10-16 — (Cory) Card timing reads "on recruit" and "at round start", not "Now". Why: clearer.
+- 2026-10-16 — (Cory) Reprise loses its +2 green. Why: copying an action is good enough.
+- 2026-10-16 — (Cory) Greatest Hits repeats every action where you have a minion. Encore copies any space with a minion. "Copy a space taken since your last turn" becomes copy the previous action (rival's, or yours on a snake double turn). Why: simpler, more precise.
+- 2026-10-16 — (Cory) Competitions drop tiebreakers; ties all score. Why: frees words and adds game theory.
+- 2026-10-16 — (Cory) Toast's gift to rivals grows 1, 2, 3 by round. Why: in proportion with its own gain.
+- 2026-10-16 — (Cory) A turn's effects show top to bottom in order, everything shown (Toast +3 silver to you, +1 to rivals, then Majordomo pops in +2). Why: the Majordomo silver didn't read as his.
+- 2026-10-16 — (Cory) Member end-game bonuses land with the end-of-round animations, not only on the final screen. Why: he won by 1 thinking he'd lost.
+- 2026-10-16 — (Cory) Keep the member card design and the player-card hover (hover anywhere on its empty space opens the member list). He likes the money selector. Player-card hovers drop "you're short".
+- 2026-10-16 — (Cory) Remove "EACH ROUND X" and "Members X" from player boxes; show more members instead. Heir is too expensive. Hold Court, Sweet Talk, Cheap Seats, Goody Bags get replaced (designs his).

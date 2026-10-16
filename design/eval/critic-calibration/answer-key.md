@@ -62,3 +62,12 @@ Source: this morning's session with Cory (logged in design/decisions.md, 2026-10
 45. **Animations are too fast even on Relaxed, and not smooth.** Relaxed isn't clearly slow; the motion stutters.
 46. **"The design is still clunky."** (taste) The screen as a whole still doesn't feel polished.
 47. **Catch Up's text can't be decoded.** "what does this mean?" The hover's "+1 ●, and +2 per rival with more minions on the board than you" with a bare "Taken P1" doesn't say what is counted or when. Separate from 42 (it never pays). Source: cor-catches-2026-10-15.md.
+
+Source: Cory's play notes, 2026-10-16 (v0.5 build).
+
+48. **End-game member bonuses are hidden until the final screen.** He won by 1 thinking he'd lost; the bonuses should land with the end-of-round animations.
+49. **Round scorecard lags.** The round scorecard screens are slow to fade in.
+50. **Members and follower shops are too dim.** Members are dim both tinted and active; the follower shops aren't lit enough.
+51. **No way to find how to release a member.** "I can't figure out the UI to release a member."
+52. **The snake draft is unclear.** Nothing tells players the turn order is a snake.
+53. **Unexplained follower fly-out before round end.** Followers fly from the piles toward every player; not the contest followers, and nothing says what it is.
