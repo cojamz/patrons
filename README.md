@@ -1,135 +1,31 @@
-# Patrons - A Strategic Worker Placement Game
+# Cults
 
-## 🎯 Overview
+A digital worker-placement game for 2–4 friends playing online. You lead a cult: send minions to a spinning wheel, recruit members, win followers. Three rounds; most followers wins.
 
-Patrons is a fully functional worker placement board game built with modern React and Vite. Play solo or with friends in real-time multiplayer, featuring 8 unique resource types, strategic worker placement, and a dynamic shop system across 3 rounds of gameplay.
+Play it: https://cojamz.github.io/patrons/play/
 
-*Originally built as a single 9,459-line HTML file (now archived), Patrons has evolved into a modern React application with proper tooling and modular architecture.*
+(The repo is still called patrons. The game was Patrons until 2026-10-14; code ids keep the old name on purpose.)
 
-## 🎮 Play Now
-
-### Development Mode
+## Run it locally
 ```bash
 npm install
-npm run dev
+npm run dev               # opens v4 (Cults); ?v=3 opens the old game
+npm run check:v4:quick    # ~2 min check while iterating
+npm run check:v4          # the full gate
+npm run sim:v4 -- 300 4   # bot balance read
 ```
-Then open `http://localhost:5173` in your browser.
 
-### Production Build
+## Ship it
+Work lives on `claude/gifted-newton-3lcy3i` (PR #1). Push there once the quick check passes, then:
 ```bash
-npm run build
-npm run preview
+bash scripts/v4-play.sh
 ```
+It builds HEAD, commits `play/` to `main` and waits for GitHub Pages. A push to a branch alone never changes the play link.
 
-### Multiplayer
-Enter a room code to play with friends in real-time. Multiplayer support via Firebase Realtime Database.
-
-## 🌟 Features
-
-- **Complete worker placement game** with 3 rounds of strategic gameplay
-- **8 unique resource types** with different powers and strategies
-- **Shop system** with tiered purchases and victory point conversions
-- **Snake draft turn order** based on current victory points
-- **Local and multiplayer modes** via Firebase
-- **No build process required** - just open and play!
-
-## 📊 Current Status
-
-The game is **fully playable** and feature-complete for local play. We've moved beyond early development into a working product that provides the complete game experience.
-
-### What's Working Well
-- ✅ All core game mechanics implemented and tested
-- ✅ Complete UI with responsive design
-- ✅ All 8 resource types (Red, Yellow, Blue, Purple, Gold, White, Black, Silver) with unique abilities
-- ✅ Shop system with proper cost validation
-- ✅ Victory point calculation and automatic VP triggers
-- ✅ Round progression and game end conditions
-- ✅ Debug mode for testing and development
-- ✅ Multiplayer connectivity and basic gameplay functions properly
-
-### Recent Improvements (January 12, 2025)
-- 🔧 Fixed shop cost modifier display to show only on affected player's card
-- 🔧 Fixed "Play 2 more workers" effect persisting correctly when workers run out
-- 🔧 Fixed screen layout shift when modals open with dynamic scrollbar compensation
-- 🔧 Improved multiplayer synchronization with timestamp deduplication
-- 🔧 Enhanced worker placement validation and effect management
-
-### Known Issues (Multiplayer)
-- ⚠️ Targeted actions (steal/give) may have minor UI delays in multiplayer
-- ⚠️ Occasional visual update lag when multiple players act simultaneously
-- ⚠️ Some edge cases in complex multi-player resource exchanges
-
-**Note**: Multiplayer is significantly more stable after recent fixes but still has some known issues. For the best experience, we recommend local play or small multiplayer groups (2-3 players).
-
-For detailed development information, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
-
-## 🛠️ Technical Stack
-
-Built with modern web technologies:
-- **React 18** with JSX for component creation
-- **Vite** for fast development and optimized builds
-- **Tailwind CSS** for styling
-- **Firebase Realtime Database** for multiplayer
-- **Vitest** for testing
-- **Complex game state management** with useReducer
-
-## 🎲 How to Play
-
-1. **Place Workers**: Take turns placing workers on action spaces
-2. **Gain Resources**: Each colored resource has unique actions and benefits
-3. **Use Shops**: Spend resources for powerful effects and victory points
-4. **Score Points**: Multiple paths to victory through shops, automatic VPs, and resource sets
-5. **Win**: Most victory points after 3 rounds wins!
-
-## 🔧 Development
-
-### Project Structure
-```
-src/
-├── App.jsx              # Main game component (~7,778 lines)
-├── main.jsx             # Application entry point
-├── state/
-│   └── gameReducer.js   # Game state management
-├── data/
-│   ├── allGameLayers.js # Action definitions
-│   ├── shopData.js      # Shop definitions
-│   └── constants.js     # Game constants
-├── firebase-compat.js   # Firebase configuration
-└── test/                # Test files
-```
-
-### Development Commands
-```bash
-npm run dev          # Start dev server (http://localhost:5173)
-npm run build        # Production build
-npm run preview      # Preview production build
-npm run test         # Run tests
-npm run test:ui      # Run tests with UI
-```
-
-### Key Files
-- `DEVELOPER_GUIDE.md` - Comprehensive development guide
-- `CODE_NAVIGATION.md` - File structure and navigation
-- `IMPLEMENTATION_SPEC.md` - Complete game specification
-- `CLAUDE.md` - AI-assisted development guide
-
-## 🤝 Contributing
-
-This is a working game! Any changes should preserve existing functionality. Please:
-1. Create a feature branch for changes
-2. Test thoroughly with `npm run dev`
-3. Run tests with `npm run test`
-4. Check multiplayer compatibility
-5. Document any changes
-
-## 📚 Historical Note
-
-Patrons began as an experimental single-file HTML application (9,459 lines!) demonstrating what's possible without a build process. The original v0 implementation is preserved in `archive/v0-monolith/` for historical reference. The project successfully migrated to a modern architecture in November 2025 while preserving all game functionality.
-
-## 📝 License
-
-This project is open source and available for learning and enjoyment.
-
----
-
-*Built with passion, React, and a single HTML file. Because sometimes, simplicity is the ultimate sophistication.*
+## Where things live
+- `design/` — the design record. Start with `HANDOFF.md`, then `in-flight.md`, `todo.md`, `decisions.md` (every call Cory has made; it wins over code and docs), `taste.md`, `rulebook.md`.
+- `design/notes/` — notes and sounds from the project chat.
+- `design/eval/` — tester reports, answer key, perf and balance measurements.
+- `src/engine/v4/` — the rules, pure JS. `src/v4/` — the React UI.
+- `play/` on `main` — the built game GitHub Pages serves.
+- `main` is otherwise the frozen old game (v3). `src/engine/v3`, `src/v3`, v0 files and `archive/` are raw material only.
