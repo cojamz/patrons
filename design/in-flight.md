@@ -7,6 +7,8 @@ Updated 2026-10-15, afternoon. Agents never commit; the foreman verifies and che
 - Next thread: build his calls (Late Bloomers, Relaxed default, "on recruit"/"at round start", Reprise, Greatest Hits/Encore/copy-previous, no contest tiebreakers, Toast 1/2/3, end-game bonuses in the round-end animation), then the open calls once he answers (follower buys 1/5/10 vs 2/5/10, end-game tiebreaker, member release).
 - Nothing running. No check-ins pending.
 
+- **Speed thread** (`claude/project-thread-z7shxv`): stopped at Cory's usage limit. Shipped to the play link at df5eac1: hover delay + whole-on-open, pixel art as paths (7,124 → 1,532 nodes), bot steps as transitions. Open items and the unshipped diffs: design/todo.md "Speed, open". Shared lock for timing runs: /tmp/v4-heavy.lock (builds and correctness checks at nice 19, no lock).
+
 ## End of 2026-10-15 (8:25pm Eastern): stopped at Cory's usage limit
 - **One line ships everything.** `claude/gifted-newton-3lcy3i` at 8e47530+ is the one branch. Every thread pulls it, pushes its own quick-green work (build + `e2e/v4/hotseat.mjs` on the bundle), then runs `bash scripts/v4-play.sh` to refresh the play link (https://cojamz.github.io/patrons/play/, the play/ folder on main). Live build: bc019a2.
 - **Stopped unfinished (relaunch from these briefs):**

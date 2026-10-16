@@ -80,6 +80,11 @@ End of round and end of game
 Rules clarity
 - [ ] Make it clear the turn order is a snake draft.
 
+Parked on other branches (not on this line; re-fit before shipping)
+- [ ] Minion on press, spin on the compositor: 6543c7f on `claude/project-thread-z7shxv` (also /mnt/project-files/handoff/speed/minion-port-on-df5eac1.patch); conflicts with the 2/3/4-sector wheel, re-port Wheel.jsx.
+- [ ] Bots never swap back a member they swapped away: b1ae1db on `claude/project-thread-gw4tce`. Its decisions line (87f94fc) is here, the code fix is not. Cherry-pick and quick-check.
+- [ ] Smarter Hard bot, parked on purpose: 041dc63 and e527a80 on `claude/project-thread-gw4tce`.
+
 Open calls for Cory (sent 2026-10-16, defaults in brackets)
 - [ ] Follower buys 1/5/10 or 2/5/10 [1/5/10].
 - [ ] End-game tiebreaker: most members, shown on the final screen [yes].
