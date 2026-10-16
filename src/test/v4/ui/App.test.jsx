@@ -1,10 +1,10 @@
 // App flow: Home → Play on this device → setup → game, with the real local session.
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import App from '../../../v4/App.jsx';
 
-afterEach(cleanup);
-beforeEach(() => localStorage.clear());
+afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+beforeEach(() => { localStorage.clear(); vi.spyOn(Math, 'random').mockReturnValue(0); }); // seed 0: the human picks first, so this flow test never waits for a bot
 
 describe('v4 app', () => {
   it('goes from Home through local setup into a game', async () => {

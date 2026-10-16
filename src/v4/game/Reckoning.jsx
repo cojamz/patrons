@@ -61,6 +61,15 @@ export function unpaidFollowers(info, paid = 0) {
   }, {});
 }
 
+/** Keep the scored board's positions, with final bonuses withheld until their animation lands. */
+export function scoringSeatState(board, info, paid) {
+  const owed = unpaidFollowers(info, paid);
+  return { ...board, players: board.players.map(p => {
+    const scored = info.after.over ? info.after.players[p.id] : p;
+    return { ...p, bonus: scored.bonus - (owed[p.id]?.bonus || 0), contest: (scored.contest || 0) - (owed[p.id]?.contest || 0) };
+  }) };
+}
+
 export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = null }) {
   const rows = useRef(reckonSteps(info)).current;
   const [step, setStep] = useState(0); // which quadrant is paying (rows.length = finished)

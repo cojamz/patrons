@@ -6,7 +6,7 @@ import { render, cleanup } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove, followers, cardDef } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { scoreSteps, finalGrants, BEATS } from '../../../v4/game/finalScore.js';
-import { reckonSteps, unpaidFollowers } from '../../../v4/game/Reckoning.jsx';
+import { reckonSteps, unpaidFollowers, scoringSeatState } from '../../../v4/game/Reckoning.jsx';
 import FinalScore, { plan } from '../../../v4/game/FinalScore.jsx';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
 
@@ -98,6 +98,18 @@ describe('end-game scoring pops', () => {
       }
     }
     expect(unpaidFollowers(info, steps.length)).toEqual({});
+  });
+
+  it('does not subtract final bonuses twice on a board snapshot captured before game-end scoring', () => {
+    const s = games.find(s => s.players.some(p => p.final.total));
+    const board = { ...s, over: false, players: s.players.map(p => ({ ...p, final: null, bonus: p.bonus - p.final.total })) };
+    const info = { result: { round: 'III', rows: [] }, after: s, board };
+    const steps = reckonSteps(info);
+    const firstBonus = steps.findIndex(r => r.kind === 'bonus');
+    const beforeBonuses = scoringSeatState(board, info, firstBonus);
+    for (const p of s.players) expect(followers(beforeBonuses, beforeBonuses.players[p.id])).toBe(followers(s, p) - p.final.total);
+    const finished = scoringSeatState(board, info, Infinity);
+    for (const p of s.players) expect(followers(finished, finished.players[p.id])).toBe(followers(s, p));
   });
 
   it('keeps the results totals final after the round-scoring sequence', () => {

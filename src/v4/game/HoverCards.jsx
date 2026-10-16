@@ -232,16 +232,16 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     // with the name, never stacked on top of the card it was read in (motion engineer's info.mjs run)
     // (the log is a wide panel, not a card: a name in it opens its card right next to the name, w3 quiet t8-log)
     const holder = !seatBox && el.closest ? el.closest('.popover:not([data-hover-layer]), .turn-card') : null;
-    let a = c.kind === 'space' ? spaceRect(el, c.key) : (seatBox || el).getBoundingClientRect();
+    let a = c.kind === 'space' ? spaceRect(el, c.key) : r0;
     if (holder) {
-      const hb = holder.getBoundingClientRect(), nb = el.getBoundingClientRect();
+      const hb = holder.getBoundingClientRect(), nb = r0;
       a = { left: hb.left, right: hb.right, width: hb.width, top: nb.top, bottom: nb.bottom, height: nb.height };
     }
     const w = cardWidth(c.kind);
-    const h = box.current.offsetHeight || 160;
+    const h = h0 || 160;
     const p = (holder && besideSeat({ ...a, top: a.top - 12 }, w, h)) || ((c.kind === 'seat' || c.kind === 'followers') && besideSeat({ ...a, top: a.top - 12 }, w, h)) || placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
     // the nub points at the middle of what the card explains (for a seat, the part pointed at), clear of the corners
-    const t = seatBox || holder ? el.getBoundingClientRect() : a;
+    const t = holder ? r0 : a;
     const across = p.side === 'right' || p.side === 'left';
     p.nub = Math.round(Math.max(16, Math.min((across ? h : w) - 16, across ? t.top + t.height / 2 - p.top : t.left + t.width / 2 - p.left)));
     side.current = { el, side: p.side };

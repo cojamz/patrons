@@ -1,17 +1,7 @@
 import { browserPath } from './lib/browser.mjs';
-// E2E: the end-game scoring on the results' cults, at 1270×700 (Cory, 2026-10-15; taste rule 11: "points arrive where
-// they come from: followers on their own, then a +x over each member's head for its people, then pop-ups for the
-// followers it grants. Never a total that just appears."). From a saved game at P1's last placement of round III
-// (lib/late-save.mjs, seed 21, with Mob and Tycoon handed to P1 so the end-game bonuses never hang on the cull's deal), played to the results:
-//  (s1) every seat's total starts below its final count and counts up (never the total at once);
-//  (s2) a "+x" pops over each member figure of every seat with members, after the leader's followers and before
-//       what members grant;
-//  (s3) the members that score at game end pop what they grant over their own figure, and those pops add up to the
-//       table's End-game column;
-//  (s4) every seat's pops add up to its final total, the table's Followers and the seat's own count, once landed;
-//  (s5) Play again is there to press throughout (the scoring never makes anyone wait);
-//  (s6) a click mid-scoring lands every total at once.
-// Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
+// End-game bonuses must arrive during round III's Reckoning, named by member, after contests.
+// Results must immediately show those already-landed totals without a second recount.
+// A second run skips during a bonus and verifies every remaining bonus is settled.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -19,6 +9,7 @@ import { createServer } from 'node:net';
 import { lateSave } from './lib/late-save.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { freeCard } from './lib/deal.mjs';
+import { countMembersOfColor } from '../../src/engine/v4/core.js';
 
 /** Seed 21 at P1's last placement of round III, with Mob (+1 per red member; P1 holds two more) and Tycoon (+1 per 2
  *  gold; P1 gets 10) in P1's cult, minted if the cull leaves them out of the deck (lib/deal.mjs). */
@@ -53,56 +44,77 @@ if (!base) {
 const errors = [];
 const browser = await chromium.launch({ executablePath: browserPath });
 
-// in-page: every pop as it's added (with the seat totals at that moment) and every value each seat's count shows
+// Observe actual rendered totals and source captions on every animation frame.
 const WATCH = () => {
-  window.__fs = { pops: [], seen: {} };
-  const tick = () => {
-    for (const s of document.querySelectorAll('.over-cults .over-seat[data-pid]')) {
-      const v = (s.querySelector('.cs-total .tv') || {}).textContent;
-      const seq = window.__fs.seen[s.dataset.pid] || (window.__fs.seen[s.dataset.pid] = []);
-      if (v != null && seq[seq.length - 1] !== v) seq.push(v);
-    }
-    requestAnimationFrame(tick);
-  };
+  window.__fs = { bonuses: [], order: [], results: [], resultPops: 0 };
   addEventListener('DOMContentLoaded', () => {
-    new MutationObserver(ms => {
-      for (const m of ms) for (const g of m.addedNodes) {
-        if (!g.dataset || !g.dataset.scorePop) continue;
-        const [pid, beat, n] = g.dataset.scorePop.split(':');
-        const seat = g.closest('.over-seat');
-        const fig = (g.dataset.uids || '').split(' ').filter(Boolean)[0];
-        const onFig = !!fig && !!(seat && seat.querySelector(`.cs-member[data-uids~="${fig}"], .cs-more`));
-        const playAgain = document.querySelector('[data-play-again]');
-        window.__fs.pops.push({ pid, beat, n: Number(n), uids: g.dataset.uids || '', onFig, t: performance.now(), canPlay: !!playAgain && !playAgain.disabled });
+    const seenOrder = [];
+    const tick = () => {
+      const log = window.__fs;
+      const r = document.querySelector('.lt-reckon:not(.waiting)');
+      if (r && !r.querySelector('.opening') && (r.hasAttribute('data-bonus-member') || r.dataset.reckon)) {
+        const uid = r.getAttribute('data-bonus-member');
+        const key = uid == null ? `contest:${r.dataset.reckon}` : `bonus:${uid}`;
+        if (seenOrder.at(-1) !== key) { seenOrder.push(key); log.order.push(key); }
+        if (uid != null) {
+          const pid = r.querySelector('[data-reckon-col]')?.dataset.reckonCol;
+          if (pid != null) {
+            let b = log.bonuses.at(-1);
+            if (!b || b.uid !== uid) {
+              b = { uid, pid, name: r.querySelector('.reckon-rule')?.textContent, values: [], verdict: '' };
+              log.bonuses.push(b);
+            }
+            const value = Number(document.querySelector(`.lt-seat[data-pid="${pid}"] .cs-total .tv`)?.textContent);
+            if (Number.isFinite(value) && b.values.at(-1) !== value) b.values.push(value);
+            const verdict = r.querySelector('[data-reckon-head]')?.textContent.trim();
+            if (verdict) b.verdict = verdict;
+          }
+        }
       }
-    }).observe(document.body, { childList: true, subtree: true });
+      const results = document.querySelector('.over-cults');
+      if (results) {
+        const totals = Object.fromEntries([...results.querySelectorAll('.over-seat')].map(el => [el.dataset.pid, {
+          expected: Number(el.dataset.final), shown: Number(el.querySelector('.cs-total .tv')?.textContent),
+        }]));
+        log.results.push({ done: results.dataset.scored, totals });
+        log.resultPops += results.querySelectorAll('[data-score-pop]').length;
+      }
+      requestAnimationFrame(tick);
+    };
     requestAnimationFrame(tick);
   });
 };
 
-/** A tab on the saved game, played to the round-III summary (the Reckoning skipped), then "See results". */
-async function toResults() {
+/** Play the fixture's final turn, then leave the Reckoning running so its bonuses can be observed. */
+async function toReckoning() {
   const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
   page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+  const save = scoringSave();
+  const sources = ['red.mob', 'gold.tycoon'].map(def => ({ uid: save.state.players[0].members.find(u => save.state.cards[u].def === def), def }));
   await page.addInitScript(WATCH);
-  await seedSave(page, scoringSave());
-  // Steady, the default speed (botDelay alone would make it Quick)
+  await seedSave(page, save);
   await page.goto(`${base}/?botDelay=20&intro=0&speed=steady`);
   await page.click('[data-home="resume"]');
   await page.waitForSelector('.lt-wheel .slot');
   const t0 = Date.now();
-  while (!(await page.$('.roundend')) && Date.now() - t0 < 60000) {
-    const sk = await page.$('[data-reckon-skip]');
-    if (sk) { await sk.click().catch(() => {}); continue; }
+  while (!(await page.$('.lt-reckon')) && Date.now() - t0 < 60000) {
     const o = await page.$('.slot.can, [data-option]:not([disabled]):not([data-option^="toggle:"]):not([data-option^="release:"]):not([data-option="back"])');
     if (o) await o.click({ timeout: 800 }).catch(() => {});
     await page.waitForTimeout(80);
   }
-  if (!(await page.$('.roundend'))) throw new Error('the round-III summary never appeared');
+  if (!(await page.$('.lt-reckon'))) throw new Error('round-III Reckoning never appeared');
+  return { page, sources };
+}
+
+async function results(page) {
+  await page.waitForSelector('.roundend', { timeout: 60000 });
+  // Flush the real final state; compare the browser's bonus steps with the engine's saved source ledger.
+  const state = await page.evaluate(() => { dispatchEvent(new Event('pagehide')); return JSON.parse(localStorage.getItem('patrons.v4.local')).state; });
   await page.click('[data-next-round]');
-  await page.waitForSelector('.over-cults');
-  return page;
+  await page.waitForSelector('.over-cults[data-scored="done"]', { timeout: 1000 });
+  await page.waitForTimeout(700);
+  return state;
 }
 
 /** What the results' table and seats say each player ended on. */
@@ -118,56 +130,54 @@ const finals = page => page.evaluate(() => Object.fromEntries([...document.query
 
 let ok = false;
 try {
-  const page = await toResults();
-  const t1 = Date.now();
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: `${SHOTS}/s1-scoring.png` }).catch(() => {});
-  await page.waitForSelector('.over-cults[data-scored="done"]', { timeout: 20000 }).catch(() => errors.push('the scoring never finished (20s)'));
-  const took = Date.now() - t1;
-  await page.waitForTimeout(800); // the last counts roll home
-  await page.screenshot({ path: `${SHOTS}/s4-scored.png` }).catch(() => {});
+  const { page, sources } = await toReckoning();
+  await page.waitForSelector('[data-bonus-member]', { timeout: 40000 });
+  await page.screenshot({ path: `${SHOTS}/s1-member-bonus.png` });
+  const state = await results(page);
   const fs = await page.evaluate(() => window.__fs);
   const end = await finals(page);
-  for (const [pid, f] of Object.entries(end)) {
-    const mine = fs.pops.filter(p => p.pid === pid);
-    const sum = mine.reduce((t, p) => t + p.n, 0);
-    // (s1) counted up, not shown at once
-    const seen = (fs.seen[pid] || []).map(Number);
-    if (!(seen[0] < f.table) || new Set(seen).size < 3) errors.push(`(s1) P${+pid + 1}'s count didn't climb to ${f.table} (showed ${seen.join(' → ')})`);
-    // (s2) members pop over their own figures, in order
-    const mem = mine.filter(p => p.beat === 'members');
-    if (f.figs && !mem.length) errors.push(`(s2) P${+pid + 1} has ${f.figs} member figures and none popped a "+x"`);
-    if (mem.some(p => !p.onFig)) errors.push(`(s2) P${+pid + 1}: a member's "+x" popped away from its figure`);
-    const beats = mine.map(p => ['followers', 'members', 'grants'].indexOf(p.beat));
-    if (beats.some((b, k) => k && b < beats[k - 1])) errors.push(`(s2) P${+pid + 1}'s pops out of order: ${mine.map(p => p.beat).join(', ')}`);
-    if (!mine.length || mine[0].beat !== 'followers') errors.push(`(s2) P${+pid + 1}'s scoring didn't start with its followers`);
-    // (s3) what members grant at game end, over their own figures, adds up to the End-game column
-    const grants = mine.filter(p => p.beat === 'grants');
-    const g = grants.reduce((t, p) => t + p.n, 0);
-    if (g !== f.endGame) errors.push(`(s3) P${+pid + 1}'s end-game pops add to ${g}, the table says ${f.endGame}`);
-    if (grants.some(p => !p.onFig)) errors.push(`(s3) P${+pid + 1}: an end-game "+x" popped away from its member`);
-    // (s4) every pop adds up to the total, everywhere it's shown
-    if (sum !== f.table || f.seat !== f.table || f.final !== f.table) errors.push(`(s4) P${+pid + 1}: pops add to ${sum}, table ${f.table}, seat ${f.seat}, engine ${f.final}`);
+  const expected = state.players.flatMap(p => (p.final?.cards || []).filter(g => g.n).map(g => ({ ...g, pid: String(p.id), uid: String(g.uid) })));
+  for (const source of sources) {
+    const grant = expected.find(g => g.uid === String(source.uid) && g.pid === '0');
+    const amount = source.def === 'gold.tycoon' ? Math.floor(state.players[0].res.gold / 2) : countMembersOfColor(state, state.players[0], 'red');
+    if (!grant || grant.n <= 0 || grant.n !== amount) errors.push(`fixture: ${source.def} should grant ${amount}, engine recorded ${grant?.n}`);
   }
-  const granted = fs.pops.filter(p => p.beat === 'grants').length;
-  if (!granted) errors.push('(s3) no member popped an end-game bonus (P1 ends holding Mob and Tycoon)');
-  // (s5) Play again stood ready all along
-  if (fs.pops.some(p => !p.canPlay)) errors.push('(s5) Play again was missing or disabled during the scoring');
-  console.log(`scoring: ${fs.pops.length} pops (${fs.pops.filter(p => p.beat === 'members').length} members, ${granted} end-game) in ${took}ms; totals ${Object.entries(end).map(([pid, f]) => `P${+pid + 1} ${f.table}`).join(', ')}`);
+  if (fs.bonuses.length !== expected.length) errors.push(`showed ${fs.bonuses.length} bonus steps; engine granted ${expected.length}`);
+  for (const g of expected) {
+    const seen = fs.bonuses.filter(b => b.uid === g.uid && b.pid === g.pid);
+    if (seen.length !== 1) { errors.push(`${g.name}: expected one sourced step, saw ${seen.length}`); continue; }
+    const b = seen[0];
+    if (b.name !== g.name || !b.verdict.includes(`from ${g.name}`)) errors.push(`${g.name}: missing source name in bonus caption (${b.verdict})`);
+    const amount = b.verdict.match(/([+−-])(\d+) follower/);
+    const n = amount ? Number(amount[2]) * (amount[1] === '+' ? 1 : -1) : NaN;
+    if (n !== g.n) errors.push(`${g.name}: caption grants ${n}, engine grants ${g.n}`);
+    if (b.values.length < 2 || b.values.at(-1) - b.values[0] !== g.n) errors.push(`${g.name}: chair should gain ${g.n} during its step, showed ${b.values.join(' → ')}`);
+  }
+  const firstBonus = fs.order.findIndex(k => k.startsWith('bonus:'));
+  if (firstBonus !== state.quadrants.length || fs.order.slice(firstBonus).some(k => k.startsWith('contest:'))) errors.push(`bonuses did not follow every contest: ${fs.order.join(', ')}`);
+  for (const [pid, f] of Object.entries(end)) {
+    const sum = expected.filter(g => g.pid === pid).reduce((n, g) => n + g.n, 0);
+    if (sum !== f.endGame || f.seat !== f.table || f.final !== f.table) errors.push(`P${+pid + 1}: bonuses ${sum}, end-game column ${f.endGame}, table ${f.table}, chair ${f.seat}, engine ${f.final}`);
+  }
+  for (const frame of fs.results) {
+    if (frame.done !== 'done' || Object.values(frame.totals).some(t => t.shown !== t.expected)) errors.push('results reset/recounted totals instead of immediately showing final followers');
+  }
+  if (!fs.results.length || fs.resultPops) errors.push('results were missing or replayed scoring pops');
+  if (!(await page.locator('[data-play-again]').isEnabled())) errors.push('Play again is unavailable');
+  await page.screenshot({ path: `${SHOTS}/s4-final.png` });
+  console.log(`scoring: ${fs.bonuses.length} sourced bonuses after ${state.quadrants.length} contests; final totals ${Object.values(end).map(f => f.table).join(', ')}`);
   await page.close();
 
-  // (s6) a click mid-scoring lands every total at once
-  {
-    const p2 = await toResults();
-    await p2.waitForFunction(() => window.__fs.pops.some(p => p.beat === 'members'), null, { timeout: 8000 }).catch(() => errors.push('(s6) no member popped within 8s'));
-    await p2.mouse.click(640, 80);
-    const tc = Date.now();
-    await p2.waitForSelector('.over-cults[data-scored="done"]', { timeout: 1000 }).catch(() => errors.push('(s6) a click did not land the scoring'));
-    if (Date.now() - tc > 600) errors.push(`(s6) the scoring took ${Date.now() - tc}ms to land after a click`);
-    await p2.waitForTimeout(900);
-    for (const [pid, f] of Object.entries(await finals(p2))) if (f.seat !== f.table) errors.push(`(s6) after the click P${+pid + 1}'s seat shows ${f.seat}, the table ${f.table}`);
-    await p2.close();
-  }
+  // Skipping mid-bonus settles the current bonus and every unpaid bonus before results.
+  const skipped = await toReckoning();
+  await skipped.page.waitForSelector('[data-bonus-member]', { timeout: 40000 });
+  await skipped.page.click('[data-reckon-skip]');
+  await skipped.page.waitForSelector('.roundend', { timeout: 1500 });
+  await results(skipped.page);
+  for (const [pid, f] of Object.entries(await finals(skipped.page))) if (f.seat !== f.table || f.final !== f.table) errors.push(`skip: P${+pid + 1} did not settle all bonuses (${JSON.stringify(f)})`);
+  const skippedFrames = await skipped.page.evaluate(() => window.__fs.results);
+  if (!skippedFrames.length || skippedFrames.some(frame => frame.done !== 'done' || Object.values(frame.totals).some(t => t.shown !== t.expected))) errors.push('skip: results restarted or omitted final followers');
+  await skipped.page.close();
   ok = errors.length === 0;
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);

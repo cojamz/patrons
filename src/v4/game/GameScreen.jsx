@@ -28,7 +28,7 @@ import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import FinalScore from './FinalScore.jsx';
 import RoundEnd from './RoundEnd.jsx';
-import Reckoning, { unpaidFollowers } from './Reckoning.jsx';
+import Reckoning, { scoringSeatState } from './Reckoning.jsx';
 import { snakeOrder } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
@@ -637,10 +637,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     return () => removeEventListener('resize', again);
   }, []);
   const seatState = useMemo(() => {
-    if (!moment || reckoned === moment) return state;
-    const owed = unpaidFollowers(moment, paid.moment === moment ? paid.n : 0);
-    if (!state.players.some(p => owed[p.id]?.bonus)) return state;
-    return { ...state, players: state.players.map(p => owed[p.id] ? { ...p, bonus: p.bonus - owed[p.id].bonus, contest: (p.contest || 0) - owed[p.id].contest } : p) };
+    if (!moment) return state;
+    return scoringSeatState(state, moment, reckoned === moment ? Infinity : paid.moment === moment ? paid.n : 0);
   }, [state, moment, reckoned, paid]);
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
   // re-render when undo comes or goes, so Undo disappears the moment control passes even while the table catches up
