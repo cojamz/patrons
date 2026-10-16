@@ -50,9 +50,12 @@ Verdicts (`check:v4 -- --commit`): median wall (worst) and how many were green; 
 | date (UTC) | runs | verdict p50 (max) | unit | e2e done | quick p50 | slot wait p50 (max) | failures | slowest unit files |
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-15 04:07 | baseline, old gate (saved logs, touch included): 3 verdict, 1 live | 58.8m (60.3m), 0/3 green | 12.1m | – | – | 23.1m (31.1m) | touch.mjs ×4, hotseat.mjs ×2, info.mjs ×2, motion.mjs ×2, spaces.mjs ×1, engine + spheres + session + ui tests ×1, layout.mjs ×1, tables.mjs ×1 | – |
-<!-- retro-through: 2026-10-15T04:07:10.100Z -->
+| 2026-10-16 16:15 | 6 quick; box load at start p50 4.2 | – (–), 0/0 green | – | – | 2.2m | 0s (0s) | unit tests ×3, hotseat.mjs ×1 | – |
 
 ## Quiet-box measurements (remote, 4 CPUs, 2026-10-15 ~04:30 UTC)
 - ce03bc3: `check:v4:quick` 146s; full `check:v4 --commit` 1103s (18.4 min). During the gate the load averaged 8.5 and peaked at 25 on 4 CPUs, so the gate saturates even an idle box. The 5–6 min estimate was too low.
 - b7a2b76: full verdict 1117s.
 - The old serial gate on the loaded local box took 37–60 min. So the parallel gate is about 2–3× faster, but the e2e set still dominates. Next lever: e2e jobs bounded by CPU (not 3 + 4 slots), and the motion/snappy timing gates run alone after everything else.
+<!-- retro-through: 2026-10-16T16:12:21.580Z -->
+
+2026-10-16 local shipping lesson: the complete original-note audit caught scope omissions (shop size / follower tiers) that a green code gate cannot detect. Keep the verbatim note and 59-item mapping beside release status. Fixed deploy-script single-branch main tracking and Unicode variable parsing; final publish verified full SHA and byte-identical HTML, then public browser checked actual UI. Frozen quick check c8dd8a9 took 132s; full unit set 1163 passed / 1 skipped, build and hotseat passed.

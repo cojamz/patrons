@@ -3,11 +3,13 @@
 Updated 2026-10-15, afternoon. Agents never commit; the foreman verifies and checkpoints to `claude/cults-wip`. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT`. If a thread dies, relaunch from its line below and tell it to read `git log` first. State of the project: `design/HANDOFF.md`. Done items are ticked in `design/todo.md`.
 
 ## Current Codex work (2026-10-16, Eastern)
-- `ffc44bc` source published to main/play via `177d964`. Root redirect repaired. Verify build.json before saying a newer batch is live.
-- Root: finish eight-member shop + 1/5/10 buys; regression checks, laptop/phone visuals, publish and live verification. Fix publish polling Unicode variable parsing and main fetch tracking.
-- feedback_audit agent: complete original-note audit and final-score tiebreak wording. echo_bug agent: reproduce friend’s Echo dead end and add regression. No other active work assumed.
-- Original note preserved verbatim. New friend note: wheel liked, playing areas hard to parse; retained in todo/audit.
-- Earlier batches: 1156 unit tests passed, build/hotseat/scoring/phone checks passed. Current rules change must re-run checks and refresh replay fixture before shipping.
+- Source commit `c8dd8a997c527f4e19ed2529b214f463aa5b1b50` checked and pushed. Published main/play commit `53200b7`; verified live via full manifest SHA, identical index HTML and browser root redirect. Public browser showed eight members, 1/5/10 buys, 24 slice outlines, zero load/runtime errors.
+- This batch: eight members; compact 1/5/10 follower buys; brighter readable shop/rates; subtle slice outlines; Echo input-lock fix; ordered effects and wheel-ring resource anchors; final tiebreak explanation.
+- Immutable quick check: 119 files / 1163 passed, 1 skipped; production build and full browser game pass. Touch setup/placement/purchase pass at 390 and 412px. Laptop/phone screenshots inspected; browser game runs without runtime errors.
+- Echo was a real UI transition bug: sole target auto-answer at 350ms hit 400ms step lock. Fail-before/pass-after regression added. Action-recruit Go-Between/Exporter rules still pass; reported rule failure not reproduced.
+- Original note preserved verbatim and all 59 items mapped in feedback-audit-2026-10-16.md. Remaining concrete polish and design work explicitly open there and in todo.md.
+- Friend feedback: initial tutorial did not make lit options or future II/III rings obvious, though the availability cues became clear during play. First-play clarity remains open.
+- All agents finished. Public deployment verified; no active work remains in this batch. Next work is the explicitly open items in the feedback audit. No scheduled check-ins.
 - Historical sections below are context, not current assignments or deploy instructions.
 
 ## 2026-10-16 (10:40pm Eastern, Oct 15): Cory's v0.5 play notes, logged only

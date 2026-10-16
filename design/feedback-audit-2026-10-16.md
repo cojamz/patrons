@@ -2,7 +2,7 @@
 
 Source: [verbatim original notes](play-feedback-2026-10-16-original.txt). This audit follows those notes in order. **Implemented** means code exists; visual quality claims still require visual verification. **Partial** means a specific part landed, with the remainder explicit. **Open** means requested work remains. **Idea** means exploratory design, not a settled replacement rule.
 
-Release boundary: `ffc44bc` is the earlier published source batch, including member portrait origins and landing sound. The eight-member shop and 1/5/10 follower buys are later local changes being verified; do not infer they were in `ffc44bc`. This document does not certify a later live deployment.
+Release boundary: latest verified live source is `c8dd8a997c527f4e19ed2529b214f463aa5b1b50`, published main/play `53200b7`. Root redirect, full manifest SHA, identical index HTML, eight members, 1/5/10 offers, 24 slice outlines and zero load/runtime errors verified in the public browser. Earlier batch `ffc44bc` included member portrait origins and landing sound. “Local follow-up” below now belongs to this checked, live batch; open/partial quality items remain open.
 
 | # | Original feedback | Status and evidence / remaining work |
 |---|---|---|
@@ -75,7 +75,7 @@ Release boundary: `ffc44bc` is the earlier published source batch, including mem
 - Root `/patrons/` must work: main index redirects to built `/patrons/play/`; deployment manifest identifies which source batch is actually served.
 
 - Echo stall reproduced at place→choose transition: auto-copy hit the input lock and never retried. Local fix and fail-before/pass-after regression ready.
-- Animation overlap: local sequencing work separates named payouts and waits for member landing. Pending final checks; do not claim shipped from this audit.
+- Animation overlap: local sequencing work separates named payouts and waits for member landing. Shipped in c8dd8a9; sequencing regressions, pacing and full browser game pass. Smoothness remains a user-observed quality item.
 - Wheel areas: subtle sphere-colored slice outlines added and visually checked locally.
 - Resource source: wheel-ring anchors requested for action gains/spending; member bonuses remain portrait-sourced. Visible bank remains an idea for later.
 - Friend first-play detail: initially missed inner round-II/III rings and did not see tiles as “lit” when tutorial asked for a lit tile. During play they understood gold = available, dim = taken, dark = future. Treat as onboarding/first-impression issue, not proof that state cues are entirely broken; verify slice outlines help without competing with gold availability.
