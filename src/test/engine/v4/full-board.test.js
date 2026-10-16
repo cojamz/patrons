@@ -53,7 +53,7 @@ describe('Late Riser on a full board', () => {
       // Extra Hand and a Doppelganger copying it, handed over after round II's last minion (so no bot releases them)
       if (!dealt && s.round === 2 && !s.queue.some(t => t.t === 'turn' || t.t === 'place')) {
         give('benders.extrahand');
-        s.cards[999] = { uid: 999, def: 'red.doppel', copy: 'benders.extrahand' }; s.players[0].members.push(999);
+        s.cards[999] = { uid: 999, def: 'echo.doppel', copy: 'benders.extrahand' }; s.players[0].members.push(999);
         dealt = true;
       }
       s = applyMove(s, chooseBotMove(s, rand));

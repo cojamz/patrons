@@ -47,7 +47,7 @@ describe('audit', () => {
       if (!s.queue.some(t => t.t === 'turn') && s.pending?.kind !== 'place' && s.pending?.kind !== 'buy') break;
     }
     expect(p0).toBe(3);
-    expect(s.log.some(l => /No space to spare: P1 gets no extra turn from Night Owl/.test(l))).toBe(true);
+    expect(s.log.some(l => /No extra minions in round I: P1 gets no extra turn from Night Owl/.test(l))).toBe(true);
   });
 
   it('Bookkeeper pays once the extra (true last) minion\'s turn ends, not on the Overtime minion (Cory 2026-10-15)', () => {
