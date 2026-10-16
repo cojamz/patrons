@@ -445,6 +445,8 @@
     box-shadow:0 0 0 1px rgba(var(--lamp),.9),0 0 12px 2px rgba(var(--lamp),.45);transition:transform .1s}
   .lt-cult-seat .cs-setup-token:hover{transform:translateY(-2px);background:#fff7e6}
   .lt-cult-seat .cs-setup-token:active{transform:translateY(1px)}
+  .lt-cult-seat .cs-setup.wait .cs-setup-say{color:var(--cream-2,#cdbf9f);font-weight:600}
+  .lt-cult-seat .cs-setup.wait .cs-setup-token{opacity:.18;pointer-events:none}
   .lt-cult-seat .cs-setup-token:focus-visible{outline:2px solid #fffaf0;outline-offset:3px}
   .lt-cult-seat .cs-setup-token .tk-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:16px;text-transform:capitalize}
   .lt-cult-seat .cs-setup-token .res-glyph{flex:none;width:16px;height:16px}

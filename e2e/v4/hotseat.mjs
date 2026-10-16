@@ -326,7 +326,7 @@ try {
       seen.add('undo-pick');
       await page.click('.undo:has-text("pick")');
       await page.waitForTimeout(200);
-      const p = await page.$eval('.prompt.choice p', e => e.textContent).catch(() => '');
+      const p = await page.$eval('.cs-setup:not(.wait), .prompt.choice p', e => e.textContent).catch(() => ''); // on a laptop the pick sits in your seat
       if (!/1 of 2/.test(p)) errors.push(`undoing the first starting pick did not reopen it ("${p}")`);
       continue;
     }

@@ -89,6 +89,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const setupPick = mine && pend && pend.kind === 'setup' && pend.player === pid && !state.over
     ? (() => { const options = pend.options.filter(o => optionFor(o.id)); const m = /\((\d) of 2\)/.exec(pend.prompt || ''); return options.length ? { options, k: m ? Number(m[1]) : 1 } : null; })()
     : null;
+  // the rest of the setup (a rival picking, or your picks in): the same box stays, quiet, so your seat never changes
+  // height between picks (hotseat region gate)
+  const setupWait = !setupPick && mine && pend && pend.kind === 'setup' && !state.over ? state.players[pend.player] : null;
   // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
   // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
   // coming, w2b #21); each takes the place of the last one shown that's needed less
@@ -126,7 +129,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-turn'));
   const railIn = useRef(false);
   return (
-    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${setupPick ? ' setup-pick' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}${pickAll ? ' pick-all' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${setupPick || setupWait ? ' setup-pick' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}${pickAll ? ' pick-all' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
       // a click beside the lit picks in this chair (w3a A53: "a click 30px off did nothing, and no 'pick a lit stack'")
       // makes them pulse once, so the miss says where to click
       onClick={pick && pick.lit && !pick.seatMode ? e => {
@@ -182,6 +185,14 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
                 </button>
               );
             })}
+          </span>
+        </div>
+      )}
+      {setupWait && (
+        <div className="cs-setup wait" aria-live="polite" data-setup-wait="">
+          <small className="cs-setup-say">{setupWait.id === pid ? 'Your pick is next' : `${setupWait.name} is picking`}</small>
+          <span className="cs-setup-row" aria-hidden="true">
+            {(state.quadrants || []).slice(0, 4).map(q => <span key={q} className="token cs-setup-token" style={{ '--c': `var(--${q})` }} />)}
           </span>
         </div>
       )}

@@ -24,3 +24,11 @@
 .lt-shop-cards .lt-rates .rt-trade b{font-size:14px;color:var(--pl-ink-2,#6e5c49)}
 .lt-shop-cards .lt-rates .rt-trade b.get{font-size:18px;font-weight:800;color:var(--pl-ink,#2b2018)}
 .lt-shop-cards .lt-rates .rt-trade b.get + .follower-mark{width:16px;height:16px;color:var(--pl-ink,#2b2018)}
+
+/* A narrow laptop (900px: five cards a row) has no room for the worth's "+" and the price's spacing: the foot keeps the
+   price and the worth, side by side, inside the card (layout gate, 900x700) */
+@media (max-width:1100px){
+  .lt-shop-cards .lt-card .ft .val .plus{display:none}
+  .lt-shop-cards .lt-card .ft .val{padding-left:1px}
+  .lt-shop-cards .lt-card .ft .cost-now .lt-res{margin-right:0}
+}

@@ -99,6 +99,8 @@
 .gift-card[data-dense] .gc-row{grid-template-columns:48px minmax(0,1fr);column-gap:8px}
 .gift-card[data-dense] .gc-lbl{padding-top:8px}
 .gift-card[data-dense] .gc-member{width:64px;min-height:0;padding:2px 2px 2px}
+/* the longest names (Doppelganger) set a hair tighter in a dense tile, never cut (hotseat text gate) */
+.gift-card[data-dense] .gc-member .gc-name{letter-spacing:-.03em}
 .gift-card[data-dense] .gc-pic{min-height:24px}
 .gift-card[data-dense] .gc-items,.gift-card[data-dense] .gc-group-items{gap:4px}
 .gift-card[data-dense] .gc-items.gc-theirs{gap:4px}
