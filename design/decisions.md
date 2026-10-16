@@ -643,3 +643,6 @@ His notes below were made on the preview, which was stuck on a build from before
 - 2026-10-16 — (Cory) Animations overlap and obscure the action. They should be snappy, smooth and clear. Resource-bank idea; immediate direction is resources originating/returning at the wheel ring, with member effects still originating at the member.
 - 2026-10-16 — (Cory) Light colored outlines around wheel slices to distinguish its playing areas; subtle sphere-colored seams, retaining availability contrast.
 - 2026-10-16 — (Cory) Members and follower buys still too dim on live build. Remove compounded region/card dimming; keep paper/art legible when unaffordable, use existing actionable glow and interaction state to distinguish purchases.
+
+- 2026-10-16 — (Cory, screenshot) Shop still dim, including a space-highlighted member. Remove remaining placement-phase whole-shop brightness filter, use fully opaque bright paper/portraits and a crisp warm outline for the space’s target. Verify the actual Open Door hover, not setup alone.
+- 2026-10-16 — (Cory) Remove “no limit” from follower shop; omit redundant unlimited wording from its hover too.

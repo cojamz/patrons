@@ -165,7 +165,7 @@ h1,h2,h3{font-family:var(--serif)}
 /* the lamp: whichever region holds the decision is lit; the rest sit a little in shadow */
 .lt .lt-wheel,.lt .lt-shop{transition:filter var(--mo-dim) ease}
 .lt[data-yours="1"][data-phase="buy"] .lt-wheel,.lt[data-yours="1"][data-phase="pay"] .lt-wheel{filter:brightness(.82) saturate(.85)}
-.lt[data-yours="1"][data-phase="place"] .lt-shop{filter:brightness(.86) saturate(.9)}
+.lt[data-yours="1"][data-phase="place"] .lt-shop{filter:none}
 
 /* ---------- prompt: one question, italic emphasis; Undo inline; one menu glyph ---------- */
 .lt header.bar.lt-prompt{

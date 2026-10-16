@@ -35,3 +35,10 @@
 
 /* Three buys in one row leave room for the eight-member shop below. */
 .lt-shop-cards .lt-rates-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* Shop paper stays readable while placing; availability belongs to the edge, never a darkened portrait. */
+.lt-shop .lt-card.card.paper,.lt-shop .lt-rates .lt-rate{background:#fff3da;opacity:1;filter:none}
+.lt-shop .lt-card.card .art{background:color-mix(in srgb,var(--q) 18%,#fff8eb)}
+.lt-shop .lt-card.card.lit,.lt-shop .lt-rates .lt-rate.lit{background:#fffaf0;box-shadow:inset 0 0 0 2px #ffe0a1,0 0 0 2px #ffe0a1,0 0 18px rgba(255,224,161,.45)}
+.lt-shop .lt-card.card[data-aim]{background:#fffaf0;outline:3px solid #ffe0a1;outline-offset:1px;box-shadow:inset 0 0 0 2px #ffe0a1,0 0 0 1px #382516,0 0 24px rgba(255,224,161,.65)}
+.lt-shop .lt-card.card[data-aim] .art{background:color-mix(in srgb,var(--q) 8%,#fffaf0)}
