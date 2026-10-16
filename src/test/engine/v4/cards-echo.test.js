@@ -113,6 +113,59 @@ describe('Green actions', () => {
   });
 });
 
+// Cory's play (2026-10-16): "Copy all your spaces doesn't work quite right". A copy space taken earlier in the round
+// (Echo, Reprise) was skipped by Greatest Hits without a word. The rule stays (copies never copy a copy); every skip is
+// now said in the log and on the space's hover, and the rest is copied in the order taken, the scaling ones at what
+// they paid, the steal done again with its own choices.
+describe('Greatest Hits with a copy space among yours', () => {
+  const QP = ['gold', 'red', 'purple', 'echo'];
+  const round3 = () => {
+    let s = table(QP, { round: 3, left: 7, shop: ['red.intern', 'red.volunteer', 'gold.taxman', 'gold.tycoon', 'red.twins'], res: [{}, { gold: 6 }], queue: turns(1, 0, 1, 0, 0, 0, 0, 0, 0) });
+    s = go(s, N('purple', 'hourly'));                       // P2: Clock In
+    s = go(s, N('purple', 'windup'));                       // P1: Roll Call, +1 purple (its first minion)
+    s = go(s, N('echo', 'hum'));                            // P2: Hum
+    s = go(s, N('echo', 'echo'), sp('echo.hum'));           // P1: Echo copies P2's Hum, +3 green
+    s = go(s, N('gold', 'steal'), () => true, () => true, () => true); // P1: Collect Debts, 3 gold from P2
+    s = go(s, N('red', 'hireup'), o => o.kind === 'card');  // P1: Open House, Intern free
+    s = go(s, N('echo', 'refrain'), sp('purple.windup'));   // P1: Reprise, +2 green and Roll Call again
+    return go(s, N('red', 'turnout'));                      // P1: Bandwagon, +1 red (one recruit this round)
+  };
+  it('names what it skips and why, copies the rest in order, and offers the steal’s choices', () => {
+    let s = round3();
+    const before = { ...R(s) }, at = s.log.length;
+    s = take(s, N('echo', 'eternity'));
+    // Collect Debts is done again: its picks are offered, one gold at a time, not skipped or made for you
+    const asked = [];
+    while (s.pending?.kind === 'choose') { asked.push(s.pending.prompt); s = move(s, s.pending.options[0].id); }
+    expect(asked).toEqual(['Collect Debts: take 1 gold from… (3 left)', 'Collect Debts: take 1 gold from… (2 left)', 'Collect Debts: take 1 gold from… (1 left)',
+      // Open House's free member (Intern, 2 here) copies as "a face-up member costing 2 or less", picked last
+      `${N('echo', 'eternity')}: take a face-up member costing 2 or less, free`]);
+    const log = s.log.slice(at);
+    expect(log).toContain(`${N('echo', 'eternity')} skips ${N('echo', 'echo')}, ${N('echo', 'refrain')} (copies never copy a copy).`);
+    expect(log.filter(l => /^P1 cop(ied|ies) /.test(l)).map(l => l.split(':')[0])).toEqual(
+      ['P1 copied Roll Call', 'P1 copies Collect Debts', 'P1 copied Open House', 'P1 copied Bandwagon'].map(l => l.replace('Roll Call', N('purple', 'windup')).replace('Collect Debts', N('gold', 'steal')).replace('Open House', N('red', 'hireup')).replace('Bandwagon', N('red', 'turnout'))));
+    // the printed gains as they paid: +1 purple, +3 gold (done again), +1 red; Echo and Reprise's green isn't copied
+    expect({ gold: R(s).gold - before.gold, red: R(s).red - before.red, purple: R(s).purple - before.purple, green: R(s).green - before.green }).toEqual({ gold: 3, red: 1, purple: 1, green: 0 });
+  });
+  it('with only copies to copy, it says so', () => {
+    let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(1, 0, 0) });
+    s = go(s, 'echo.hum');
+    s = go(s, 'echo.echo', sp('echo.hum'));
+    const at = s.log.length;
+    s = go(s, 'echo.eternity');
+    expect(s.log.slice(at)).toContain(`P1 had nothing to copy: it skips ${N('echo', 'echo')} (copies never copy a copy).`);
+  });
+  it('Tribute Band names its skips too', () => {
+    let s = table(Q, { round: 3, left: 5, shop: ROW, members: [['echo.dejavu']], queue: turns(1, 0, 0) });
+    s = go(s, 'echo.hum');
+    s = go(s, 'echo.echo', sp('echo.hum'));
+    s = take(s, 'echo.chant');
+    const at = s.log.length;
+    s = move(s, ids(s).find(id => id.startsWith('use:')));
+    expect(s.log.slice(at)).toContain(`Tribute Band skips ${N('echo', 'echo')} (copies never copy a copy).`);
+  });
+});
+
 describe('Green members', () => {
   it('Busker: at round start, +3 green (named)', () => {
     const s = table(Q, { members: [['echo.evergreen']], shop: ROW, queue: [{ t: 'round', r: 2 }] });

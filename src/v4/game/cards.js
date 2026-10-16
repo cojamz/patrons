@@ -2,7 +2,7 @@
 // and which face-up cards a space would make affordable. All read off the engine; nothing here is a rule.
 import { cardDef, paymentPlan, memberPrice, contestTable } from '../../engine/v4/index.js';
 import { contextFor } from '../../engine/v4/core.js';
-import { targets as echoTargets } from '../../engine/v4/content/echo.js';
+import { targets as echoTargets, ownPlan, skipWords } from '../../engine/v4/content/echo.js';
 
 // The card's timing, from how its text opens (the tag above the name).
 const TIMINGS = [
@@ -93,3 +93,19 @@ export function memberCopyTargets(state, pid, def) {
   if (!state.quadrants.includes('echo') || !/copy a space a rival took since your last turn/i.test(def.text || '')) return null;
   try { return [...new Set(echoTargets(contextFor(state), state.players[pid], 'since').map(e => String(e.key).split('+')[0]))]; } catch { return null; }
 }
+
+/**
+ * "Copy every space you took this round" (Greatest Hits, Tribute Band) for player pid right now: the spaces it would
+ * copy (board keys and names, in the order taken) and what it skips, in the engine's own words ("Echo (copies never
+ * copy a copy)"). Null when it isn't such a card or Green isn't on the table. Read on a copy of the ledger.
+ */
+export function ownCopyPlan(state, pid) {
+  if (!state.quadrants.includes('echo') || pid == null) return null;
+  try {
+    const s = { ...state, echo: state.echo ? structuredClone(state.echo) : undefined };
+    const { take, skip } = ownPlan(contextFor(s), s.players[pid]);
+    return { keys: [...new Set(take.map(e => String(e.key).split('+')[0]))], names: take.map(e => e.name), skips: skipWords(skip) };
+  } catch { return null; }
+}
+/** Is this the copy-all card (Greatest Hits as a space, Tribute Band as a member)? */
+export const copiesAll = text => /^(?:once per game: )?copy every space you took this round/i.test(text || '');

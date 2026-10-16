@@ -13,7 +13,7 @@ import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, 
 import { SeatFigure } from './Glyphs.jsx';
 import { Rich } from './Rich.jsx';
 import { unlockedBy, surely } from './cards.js';
-import { memberCopyTargets } from './cards.js';
+import { memberCopyTargets, ownCopyPlan, copiesAll } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
@@ -361,6 +361,9 @@ function useCopyTargets(c, state, me) {
   const pv = usePreview(state, space && viewer != null && !state.over ? viewer : null, space ? space[0] : 0, space ? space[1] : 0, { now: true });
   let keys = pv && pv.copies ? pv.copies : null;
   if (!keys && c && c.kind === 'card' && viewer != null && state.cards[c.uid]) keys = memberCopyTargets(state, viewer, cardDef(state, c.uid));
+  // Greatest Hits / Tribute Band: every space of yours it would copy lights up
+  const all = !keys && viewer != null && (space ? copiesAll(quadrant(state.quadrants[space[0]]).actions[space[1]].text) : c && c.kind === 'card' && state.cards[c.uid] && copiesAll(cardDef(state, c.uid).text));
+  if (all) { const plan = ownCopyPlan(state, viewer); if (plan) keys = plan.keys; }
   const sig = keys ? keys.join(',') : '';
   useEffect(() => {
     if (!sig) return undefined;
@@ -368,6 +371,47 @@ function useCopyTargets(c, state, me) {
     for (const el of els) el.classList.add('copy-target');
     return () => { for (const el of els) el.classList.remove('copy-target'); };
   }, [sig]);
+  // the seat members the space acts on (Shake Down's and Poach's rival members, a swap's two sides) light with its
+  // hover, as the shop's targets do (ShopCards ShopTicks): an attribute on the seat's member, nothing that moves
+  const t = pv && pv.targets ? pv.targets : null;
+  const seatSig = t ? [...new Set([...t.seats, ...t.pairs.flat()])].join(',') : '';
+  useEffect(() => {
+    if (!seatSig) return undefined;
+    const els = seatSig.split(',').flatMap(u => [...document.querySelectorAll(`.cs-member[data-uids~="${u}"]`)]);
+    for (const el of els) el.setAttribute('data-aim', '');
+    return () => { for (const el of els) el.removeAttribute('data-aim'); };
+  }, [seatSig, state]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+/**
+ * The hover's one plain line naming what the space lights (Cory, 2026-10-16: the lit cards say why): "Would recruit:
+ * Intern (cheapest, 1)", "Could recruit: Intern or Benchwarmer (cheapest, 1)", "Could take: Bo's Twins (2)", "Could
+ * swap: your Banker for Bo's Twins". Past three, the count (the lit cards name themselves). { k, text } rows, or [].
+ */
+export function targetLines(state, viewer, t) {
+  if (!t) return [];
+  const def = u => cardDef(state, u);
+  const cost = u => (def(u).s || 0) + (def(u).w || 0);
+  const whose = u => { const o = state.players.find(p => p.members.includes(u)); return o ? (o.id === viewer ? 'your' : `${o.name}’s`) : ''; };
+  const list = names => (names.length === 2 ? names.join(' or ') : names.join(', ').replace(/, ([^,]*)$/, ', or $1'));
+  const out = [];
+  if (t.shop.length) {
+    // "cheapest" only when that's what the lit set is: every face-up member at the row's lowest cost, and only those
+    const low = Math.min(...state.shop.map(cost));
+    const cheapest = state.shop.length > t.shop.length && t.shop.every(u => cost(u) === low) && state.shop.filter(u => cost(u) === low).length === t.shop.length;
+    const same = t.shop.every(u => cost(u) === cost(t.shop[0]));
+    const names = t.shop.length > 3 ? `${t.shop.length} lit members` : list(t.shop.map(u => def(u).name));
+    const tail = cheapest ? ` (cheapest, ${low})` : t.shop.length <= 3 && same ? ` (${cost(t.shop[0])})` : '';
+    out.push({ k: t.sure ? 'Would recruit' : 'Could recruit', text: names + tail, uids: t.shop });
+  }
+  if (t.seats.length) {
+    const names = t.seats.length > 3 ? `${t.seats.length} lit members` : list(t.seats.map(u => `${whose(u)} ${def(u).name} (${cost(u)})`.trim()));
+    out.push({ k: 'Could take', text: names, uids: t.seats });
+  }
+  if (t.pairs.length) {
+    const text = t.pairs.length > 2 ? `${t.pairs.length} lit pairs` : t.pairs.map(([a, b]) => `your ${def(a).name} for ${whose(b)} ${def(b).name}`).join(', or ');
+    out.push({ k: 'Could swap', text, uids: [...new Set(t.pairs.flat())] });
+  }
+  return out;
 }
 function cardBody(c, state, me, optionFor, pick) {
   // a rival's move since your last turn: its card says so (the wheel's dotted edge was removed, art director 10:40)
@@ -401,6 +445,10 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i, { now: !past }) || null;
   const race = pv && pv.race ? raceAfter(state, pv.race, qid, viewer, !(pv.theirAsks && pv.theirAsks.length)) : null;
   const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
+  // the shop brightens those cards while you place (ShopCards ShopTicks): then the row says why
+  const placingNow = !!(state.pending && state.pending.kind === 'place' && state.pending.player === viewer);
+  // copy every space you took this round (Greatest Hits): which it copies and which it skips, before you place
+  const all = open && viewer != null && !state.over && copiesAll(a.text) ? ownCopyPlan(state, viewer) : null;
   return (
     <div className="lt-card-body" data-space-card={spaceKey} style={{ '--q': `var(--q-${sphereOf(qid)}, var(--${qid}))` }}>
       {/* plate 1b: the name, its one-sentence rule, then "You'd get" (the picture lives on the space itself) */}
@@ -408,6 +456,8 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
       <p className="sc-rule"><CardText text={a.text} /></p>
       <div className="lt-yd">
         {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
+        {all ? <Row k="Copies"><span data-copies-all>{all.names.length ? all.names.join(', ') : 'nothing yet'}</span></Row> : null}
+        {all && all.skips ? <Row k="Skips"><span data-copies-skip>{all.skips}</span></Row> : null}
         {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} now /></span></div> : null}
         {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
         {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={whyLine(pv.reasons)} /></span></Row> : null}
@@ -419,8 +469,11 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.length > 3
           ? <span data-swept={pv.swept.join(' ')}>{pv.swept.length === state.shop.length ? `the whole row (${pv.swept.length})` : `${pv.swept.length} face-up members`}</span>
           : pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
-        {/* on a desktop the shop's own cards say it ("after Kickback" on each): only a pinned sheet (touch) lists them */}
-        {unlocks.length && pinned ? <Row k="Then affordable">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
+        {/* the members the space lights, named (Cory, 2026-10-16: the lit cards say why) */}
+        {open && pv ? targetLines(state, viewer, pv.targets).map(l => <Row key={l.k} k={l.k}><span data-aims={l.uids.join(' ')}>{l.text}</span></Row>) : null}
+        {/* the shop's cards it makes affordable brighten with the hover; this row says why (a lit Kingpin under Lie Low
+            had no reason on screen) */}
+        {unlocks.length && (pinned || placingNow) ? <Row k="Can afford">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
         {/* a second minion on it says why (w4 skeptic #13: two minions on one space, no reason): Squatter's join */}
         {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn' : ''}{((state.squats && state.squats[spaceKey]) || []).map(j => `; ${j === viewer ? 'you' : state.players[j].name} joined (Squatter)`).join('')}{opt ? ' — you can join it' : ''}</Row>}
         {/* a value that grows by round: its run is the rule sentence's ("+2● in round I, +4 in round II…"), said once

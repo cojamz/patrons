@@ -45,6 +45,8 @@ export function previewSpace(state, pid, q, i) {
   // the spaces this copy space could take, as board keys: only the space's own first choice, and only this round's
   // spaces. A member it might recruit (Hand-pick → Sleepwalker, copying last round) is a branch, not the space's copy.
   let copies = null;
+  // your first pick's options (the engine's own list): which face-up or seat members the space acts on (targets below)
+  let first = null;
   let nodes = 0, partial = false;
   // worth of a branch to a player (see above); the extra turns only for pid (a rival's minions don't move here)
   const worthOf = new Map();
@@ -66,6 +68,7 @@ export function previewSpace(state, pid, q, i) {
     if (s === base && s.pending.player === pid && s.pending.options.some(o => o.kind === 'space')) {
       copies = [...new Set(s.pending.options.filter(o => o.kind === 'space' && typeof o.value === 'string' && !String(o.id).startsWith('space:last:')).map(o => o.value.split('+')[0]))];
     }
+    if (s === base && s.pending.player === pid) first = s.pending.options;
     const opts = s.pending.options;
     // out of budget: follow only the first and last option (the extremes a list is usually ordered by)
     const list = nodes + opts.length > NODE_BUDGET ? (partial = true, [opts[0], opts[opts.length - 1]].filter((o, k, a) => a.indexOf(o) === k)) : opts;
@@ -156,10 +159,34 @@ export function previewSpace(state, pid, q, i) {
   // recruit by its price after the space's own gain, never as a net "−4" (live panel r1)
   const spendsNothing = s => state.resources.every(r => (s.players[pid].res[r] || 0) >= (me0.res[r] || 0)) && s.players[pid].members.length === me0.members.length;
   const keepLeaf = leaves.filter(spendsNothing).reduce((a, s) => (!a || worth(s, pid) > worth(a, pid) ? s : a), null);
+  // every member some branch brings you (Open Door's tied cheapest: all four, not the best one's name)
+  const joins = [...new Set(leaves.flatMap(s => s.players[pid].members.filter(u => !me0.members.includes(u))))];
   return { exact, partial, leaves: leaves.length, keep: keepLeaf ? change(keepLeaf) : null, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0], samples: leaves.slice(0, 16),
     best: change(top.best), likely: change(top.likely), worst: change(top.worst), tied, mix,
-    // every member some branch brings you (Open Door's tied cheapest: all four, not the best one's name)
-    joins: [...new Set(leaves.flatMap(s => s.players[pid].members.filter(u => !me0.members.includes(u))))] };
+    joins, targets: spaceTargets(state, pid, first, joins, leaves) };
+}
+
+/**
+ * The members a space acts on, so the screen can light them while its hover is up (Cory, 2026-10-16: "hovering over
+ * Free Recruit should highlight the cheapest recruit(s) in the shop"). Read off the engine, never re-derived from the
+ * card's words: your first pick's own options when the space asks (Open Door's tied cheapest, Open House's and Snap
+ * Up's row, Shake Down's and Poach's rival members, Even Swap's and Swap Sides' pairs), else the face-up members every
+ * branch brought you (Open Door with one cheapest recruits it without asking). A card option counts only when a branch
+ * really brings it to you (a pick that buries a face-up card isn't a recruit).
+ * → { shop: [uid], seats: [uid], pairs: [[yours, theirs]], sure } or null. sure: the one face-up member comes to you
+ * whatever happens ("Would recruit" rather than "Could").
+ */
+export function spaceTargets(state, pid, first, joins, leaves) {
+  const inShop = u => state.shop.includes(u);
+  const ownerOf = u => state.players.find(o => o.members.includes(u));
+  const opts = first || [];
+  const picked = opts.filter(o => o.kind === 'card' && inShop(o.value) && joins.includes(o.value)).map(o => o.value);
+  const shop = [...new Set(picked.length ? picked : joins.filter(inShop))];
+  const seats = [...new Set(opts.filter(o => o.kind === 'member' && ownerOf(o.value) && ownerOf(o.value).id !== pid).map(o => o.value))];
+  const pairs = opts.filter(o => o.kind === 'trade' && Array.isArray(o.value) && o.value.length === 2).map(o => [...o.value]);
+  if (!shop.length && !seats.length && !pairs.length) return null;
+  const sure = shop.length === 1 && leaves.every(s => s.players[pid].members.includes(shop[0]));
+  return { shop, seats, pairs, sure };
 }
 
 /**

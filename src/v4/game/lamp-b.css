@@ -550,3 +550,16 @@
 .lt-cult-seat.now .cs-min{animation-duration:1.1s;animation-name:cs-bob-eager}
 @keyframes cs-bob-eager{0%,100%{translate:0 0}50%{translate:0 -3px}}
 @media (prefers-reduced-motion: reduce){.lt-cult-seat.now .cs-member .fig .sprite,.lt-cult-seat.now .cs-leader .lead,.lt-cult-seat.now .cs-min{animation:none}}
+
+/* what the space under the pointer acts on (Cory, 2026-10-16: "hovering over Free Recruit should highlight the cheapest
+   recruit(s) in the shop"): the lamp's own lit-card look, on with the hover and off with it, quick. Shadow and paper
+   only, so nothing moves; it wins over "can't afford" (a free recruit needs no money). */
+.lt-card.card{transition:transform .12s ease,filter .15s,box-shadow .12s ease-out,background-color .12s ease-out}
+.lt-shop .lt-card.card[data-aim]{background:var(--paper-lit,#fbf6ea);opacity:1;filter:none;
+  box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 0 4px rgba(var(--lamp,255,206,140),.55),0 0 22px rgba(255,236,190,.5),0 4px 12px rgba(0,0,0,.35)}
+/* a seat member it acts on (a steal's pick, a swap's two sides): the ring a member you can use wears */
+.lt-cult-seat .cs-member[data-aim] .fig::before{content:"";position:absolute;left:50%;top:50%;width:calc(100% + 8px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(var(--lamp,255,206,140),.22),rgba(var(--lamp,255,206,140),.06) 70%,transparent);
+  box-shadow:0 0 0 1.5px rgba(var(--lamp,255,206,140),.85),0 0 16px 5px rgba(var(--lamp,255,206,140),.4)}
+.lt-cult-seat .cs-member.used[data-aim] .fig .sprite{opacity:1;filter:none}
+@media (prefers-reduced-motion:reduce){.lt-card.card{transition:none}}

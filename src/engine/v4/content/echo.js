@@ -151,6 +151,38 @@ export function targets(ctx, p, which, skip = null) {
   const since = which === 'since' ? Math.max(0, ...pool.filter(e => e.p === p.id && e.key !== skip).map(e => e.seq || 0)) : 0;
   return pool.filter(e => copyable(e) && (which === 'since' ? e.p !== p.id && (e.seq || 0) > since : which === 'own' ? e.p === p.id : true));
 }
+/**
+ * "Copy every space you took this round" (Greatest Hits, Tribute Band): the spaces it copies, in the order taken, and
+ * the ones it skips with why (Green's rule: never another copy or the center; a space that gave nothing has nothing to
+ * copy). self: the space doing the copying (Greatest Hits as it resolves), which is never listed. Cory's play
+ * (2026-10-16): a skipped Echo or Reprise vanished without a word, so every skip is said, in the log and on the hover.
+ */
+export function ownPlan(ctx, p, self = null) {
+  const L = ledger(ctx.state);
+  const mine = Object.values(L.now).filter(e => e.p === p.id && e.key !== self).sort((a, b) => (a.seq || 0) - (b.seq || 0));
+  const take = mine.filter(copyable);
+  const skip = mine.filter(e => !copyable(e)).map(e => ({ e, why: e.echo ? 'copy' : e.ring >= 3 ? 'center' : 'nothing' }));
+  return { take, skip };
+}
+const SKIP_WHY = { copy: 'copies never copy a copy', center: 'the center', nothing: 'gave nothing' };
+/** "Echo, Reprise (copies never copy a copy); Double Down (the center)", or '' when nothing is skipped. */
+export function skipWords(skip) {
+  return ['copy', 'center', 'nothing'].map(why => {
+    const names = skip.filter(x => x.why === why).map(x => x.e.name);
+    return names.length ? `${names.join(', ')} (${SKIP_WHY[why]})` : '';
+  }).filter(Boolean).join('; ');
+}
+/** Greatest Hits and Tribute Band: copy p's spaces from this round, and say what was left out and why. */
+function copyOwn(ctx, p, self, by, who) {
+  const { take, skip } = ownPlan(ctx, p, self);
+  const skipped = skipWords(skip);
+  const name = `${p.name}${by ? `'s ${by}` : ''}`;
+  // a member says it in the present ("P1's Tribute Band has nothing to copy"), a space in the past ("P1 had…")
+  if (!take.length) { ctx.log(`${name} ${by ? 'has' : 'had'} nothing to copy${skipped ? `: it skips ${skipped}` : ''}.`); return false; }
+  if (skipped) ctx.log(`${who} skips ${skipped}.`);
+  copyAll(ctx, p, take, by, who);
+  return true;
+}
 /** A rival's spaces since p's last turn, from inside p's own turn (the space p just took doesn't count as "last turn"). */
 const sinceNow = (ctx, p) => { const L = ledger(ctx.state); return targets(ctx, p, 'since', L.now[L.open]?.p === p.id ? L.open : null); };
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
@@ -260,9 +292,7 @@ const echoQ = {
       estimate: (ctx, p) => VARIANT.plus + targets(ctx, p, 'own').reduce((s, e) => s + entryValue(ctx, e, p), 0),
       resolve(ctx, p) {
         plus(ctx, p);
-        const list = targets(ctx, p, 'own');
-        if (!list.length) { ctx.log(`${p.name} had nothing to copy.`); return; }
-        copyAll(ctx, p, list, null, 'Greatest Hits');
+        copyOwn(ctx, p, ledger(ctx.state).open, null, 'Greatest Hits');
       },
     },
   ],
@@ -347,10 +377,8 @@ const echoQ = {
     m('dejavu', 'Tribute Band', 8, 4, 'Once per game: copy every space you took this round.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
-        const list = targets(ctx, owner, 'own');
         // nothing to copy: the once-per-game use isn't spent (as Stunt Double's isn't)
-        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Tribute Band has nothing to copy.`); return; }
-        copyAll(ctx, owner, list, 'Tribute Band');
+        if (!copyOwn(ctx, owner, null, 'Tribute Band', 'Tribute Band')) card.used = false;
       },
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),

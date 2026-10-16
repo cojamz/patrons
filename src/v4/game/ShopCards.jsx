@@ -192,11 +192,23 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
  */
 function ShopTicks({ state, viewer, placing, hover, rowRef }) {
   const space = useHoverSpace(hover);
-  const sp = placing && space && viewer ? space.split('-').map(Number) : null;
+  const sp = space && viewer && !state.over ? space.split('-').map(Number) : null;
   const pv = usePreview(state, sp ? viewer.id : null, sp ? sp[0] : 0, sp ? sp[1] : 0, { now: true });
-  const after = sp && pv ? quadrant(state.quadrants[sp[0]]).actions[sp[1]].name : null;
+  const after = placing && sp && pv ? quadrant(state.quadrants[sp[0]]).actions[sp[1]].name : null;
   const unlocked = after ? unlockedBy(state, viewer, surely(pv)) : [];
   const sig = after && unlocked.length ? `${after}|${unlocked.join(',')}` : '';
+  // the face-up members the space itself acts on light up with its hover and go with it (Cory, 2026-10-16: "hovering
+  // over Free Recruit should highlight the cheapest recruit(s) in the shop"): the engine's own list (preview targets),
+  // drawn as a data attribute only, so React's classes and the layout never move
+  const aims = sp && pv && pv.targets ? pv.targets.shop : [];
+  const aimSig = aims.join(',');
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!aimSig || !row) return undefined;
+    const els = aimSig.split(',').map(u => row.querySelector(`[data-uid="${u}"]`)).filter(Boolean);
+    for (const el of els) el.setAttribute('data-aim', '');
+    return () => { for (const el of els) el.removeAttribute('data-aim'); };
+  }, [aimSig, state]); // eslint-disable-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     const row = rowRef.current;
     if (!sig || !row) return undefined;
