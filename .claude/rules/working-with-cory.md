@@ -33,6 +33,7 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - **Do it the way he said.** No added restrictions or "improvements" on his calls (the Steal and bribe exceptions). If I see a risk, build it his way and flag it in one line.
 - **My fill-ins are labeled and never treated as approved** (Patron, Steward and Gambler slipped in as if agreed).
 - **Sanity-check the direction of every balance suggestion** before sending it (I once proposed giving the advantaged player more).
+- **Ship straight away (Cory, 2026-10-15: "with this project shit its like crazy slow").** Every thread pushes its own quick-green work (build + hotseat on the bundle) to `claude/gifted-newton-3lcy3i`, one change at a time, then runs `bash scripts/v4-play.sh` to refresh the play link (play/ on main) and confirms it. No funnel, no batching.
 - **Times in his clock.** Cory is on US Eastern (UTC−4 in October); the container runs UTC. Say every time as his local 12-hour time, like "7:43pm".
 - **Status = what's running / what's next / rough ETA**, in 3 lines. Give an ETA whenever work will take longer than a few minutes.
 - **Five lines at most**, no tables, headers or bold-label report voice, no AI tics (the full voice rules live in foreman.md).
@@ -107,3 +108,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-15 — Reconciled with the brief Cory approved today (project-instructions.md): defaults in brackets, five lines max, no AI tics, tokens are not a constraint.
 - 2026-10-15 — Cory: don't hold back iterations. Send him each fix with a screenshot, and what blind testers find, as it lands, before the full check passes. A− is still the bar for calling a build finished, and only gate-green builds go to the play link.
 - 2026-10-15 — Cory: "your time is all off. it's 7:43pm right now." Every time goes to him in US Eastern, 12-hour.
+- 2026-10-15 — Cory: the project shipped far slower than his single thread. No merge funnel: each thread pushes its own quick-green work to gifted-newton and refreshes the play link itself (scripts/v4-play.sh).
