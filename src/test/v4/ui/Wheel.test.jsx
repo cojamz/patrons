@@ -101,4 +101,36 @@ describe('Wheel', () => {
       picks.length = 0;
     }
   });
+  // snappy s3/s7 (2026-10-15): locally, your minion stands on the space in the click's own frame, before the table's
+  // update renders; only when the table took the move (onPick answered true), and the engine's state then replaces it
+  it('local: a placement the table took shows your minion at once; one it ignored shows nothing', () => {
+    for (const look of ['panels', 'sockets']) {
+      const s = createGame({ seats, seed: 3 });
+      s.round = 1;
+      const me = s.pending ? s.pending.player : 0;
+      const st = { ...s, pending: { ...(s.pending || {}), player: me } };
+      for (const took of [true, false]) {
+        const picks = [];
+        const props = (x, legal) => ({ state: x, legal, onPick: id => { picks.push(id); return took; }, flash: new Set(), facing: 0, onFacing: () => {}, look });
+        const w = render(<Wheel {...props(st, new Map([['0-0', 'slot:0-0'], ['0-1', 'slot:0-1']]))} />);
+        fireEvent.click(w.container.querySelector('[data-slot="0-0"]'));
+        expect(picks).toEqual(['slot:0-0']);
+        const minion = () => w.container.querySelector(`[data-slot="0-0"] .worker[data-seat="${me}"]`);
+        expect(!!minion()).toBe(took);
+        expect(w.container.querySelector('[data-slot="0-0"]').classList.contains('can')).toBe(!took);
+        if (took) {
+          // a second click while it's on its way does nothing
+          fireEvent.click(w.container.querySelector('[data-slot="0-1"]'));
+          expect(picks).toEqual(['slot:0-0']);
+          // the engine's state arrives: it draws the same minion, from the state
+          act(() => { w.rerender(<Wheel {...props({ ...st, slots: { ...st.slots, '0-0': me }, moves: (st.moves || 0) + 1 }, new Map())} />); });
+          expect(!!minion()).toBe(true);
+          // a state without it (an undo) shows none: the ghost belonged to the old state only
+          act(() => { w.rerender(<Wheel {...props({ ...st, moves: (st.moves || 0) + 2 }, new Map([['0-0', 'slot:0-0']]))} />); });
+          expect(!!minion()).toBe(false);
+        }
+        w.unmount();
+      }
+    }
+  });
 });

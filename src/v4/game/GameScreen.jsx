@@ -910,6 +910,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     noLock.current = false;
     lastStep.current = step;
   }, [pend, mine]);
+  // answers true when the move was taken there and then (local), false when it was ignored or waits on an answer
   const onPick = useCallback((optionId, mode) => {
     // a double-click is one choice: the same option again within 350ms is ignored (replays are exempt)
     const now = Date.now();
@@ -918,15 +919,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // the starting picks repeat one kind of step with the same buttons, so no step lock covers them: a slow double-click
     // on one color spent both picks (w4 skeptic #9); there the same color again within 700ms is one pick
     const twin = pend && pend.kind === 'setup' ? Math.max(700, MO.doubleClick) : MO.doubleClick;
-    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < twin) return;
+    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < twin) return false;
     const d = lastDown.current, p0 = lastPick.current;
     // a fresh pointer press far from the last pick is deliberate; anything else (near it, or a key) waits out the lock
     const farFromLast = d.x != null && p0.x != null && now - d.t < 600 && Math.hypot(d.x - p0.x, d.y - p0.y) >= 48;
-    if (mode !== 'replay' && !counted && now < lockUntil.current && !farFromLast) return;
+    if (mode !== 'replay' && !counted && now < lockUntil.current && !farFromLast) return false;
     lastPick.current = { id: optionId, t: now, x: now - d.t < 600 ? d.x : null, y: now - d.t < 600 ? d.y : null };
     if (mode === 'all') repeat.current = optionId;
-    if ((busy || busyNow.current) && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
-    if (!mine || needHandoff || !options.has(optionId)) return;
+    if ((busy || busyNow.current) && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return false; }
+    if (!mine || needHandoff || !options.has(optionId)) return false;
     // a commit closes any open hover (wave-2 tester A #40: a 2→1 buy's hover stayed up while the bots played); a
     // placement keeps the space's card, which shows what you just took
     if (!String(optionId).startsWith('slot:')) hover.close();
@@ -938,6 +939,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const token = ++sendToken.current;
     let sent;
     userMove = true; // the table's update for this move is a transition (useTable.show): the click's frame paints first
+    const before = session.getState();
     try { sent = session.submit({ player: pend.player, option: optionId }); } catch (e) { sent = Promise.reject(e); } finally { userMove = false; }
     // Don't lock the table forever if an answer never comes (online): give up waiting after a while.
     const timer = setTimeout(() => { if (sendToken.current === token) { busyNow.current = false; setBusy(false); setError('No answer yet. Try again.'); } }, 8000);
@@ -952,6 +954,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         busyNow.current = false;
         startTransition(() => setBusy(false));
       });
+    // taken: the session's state moved on in this call (a local game; online answers later, so false). The Wheel then
+    // stands your minion on its space at once, before the table's update renders
+    return session.getState() !== before;
   }, [mine, busy, needHandoff, options, session, pend]);
   useEffect(() => {
     if (busy) return;

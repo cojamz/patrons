@@ -6,7 +6,7 @@
 //       them; it opens complete: its words, its size and its place 400ms later are the ones it first painted (no "You'd get" or
 //       member list filling in after: testers saw cards fill in late, in bursts); and a quick sweep across several spaces
 //       (the pointer moving on within the delay) opens no card at all;
-//  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 150ms;
+//  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 100ms;
 //  (s4) the animation speed setting changes a chain's length (Relaxed ≥ 1.8 × Quick);
 //  (s5) the gap between your turns at Steady (bots at Normal) is under 8s × Steady's speed (9.6s);
 //  (s6) with only the table's idle loops running on your turn, the page draws at least 30 frames a second;
@@ -29,7 +29,7 @@ import { HOVER_DELAY_MS } from '../../src/v4/game/hoverDelay.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/snappy';
 mkdirSync(SHOTS, { recursive: true });
-const LIMIT = { spinStart: 100, spin: 400, hover: 100, minion: 150 };
+const LIMIT = { spinStart: 100, spin: 400, hover: 100, minion: 100 }; // minion: 150 → 100 (2026-10-15, drawn in the click's frame)
 let server = null;
 let base = process.env.V4_URL;
 if (!base) {
@@ -51,6 +51,8 @@ const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
 await seedSave(page, richSave()); // before the app runs (lib/seed.mjs)
 await page.goto(`${base}/?intro=0`);
+// V4_CPU=4: the slow laptop (CDP CPU throttling), for checking the limits where the squad's bar is set
+if (Number(process.env.V4_CPU) > 1) await (await ctx.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.V4_CPU) });
 // the saved game (P1 about to place); a dev server whose rules hash went stale sets it aside: then a fresh game,
 // picking the starting resources until a space lights
 const resume = await page.waitForSelector('[data-home="resume"]', { timeout: 8000 }).catch(() => null);
@@ -104,9 +106,14 @@ await page.evaluate(delay => {
     if (last != null) W.frames.push([now, now - last]);
     if (W.frames.length > 600) W.frames.splice(0, 300);
     last = now;
+    // the angle the board shows: its group's rotate() plus any CSS turn on its layer (a spin runs on the compositor as a
+    // Web Animation on the layer; the computed transform reads the animated value)
     const g = wheelG();
     if (g && W.key != null) {
-      const t = g.getAttribute('transform') || '';
+      const m = /rotate\((-?[\d.e]+)/.exec(g.getAttribute('transform') || '');
+      const tf = getComputedStyle(g.ownerSVGElement).transform;
+      const mm = /^matrix\((-?[\d.e]+),\s*(-?[\d.e]+)/.exec(tf || '');
+      const t = ((m ? Number(m[1]) : 0) + (mm ? (Math.atan2(Number(mm[2]), Number(mm[1])) * 180) / Math.PI : 0)).toFixed(1);
       if (!W.rot.length || W.rot[W.rot.length - 1][1] !== t) W.rot.push([performance.now(), t]);
     }
     const up = hoverUp();
@@ -250,7 +257,7 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   await page.waitForTimeout(300);
 }
 
-// (s3) click a lit space: your minion stands on it within 150ms. Undo between tries; the best of three counts.
+// (s3) click a lit space: your minion stands on it within 100ms. Undo between tries; the best of three counts.
 {
   const tries = [];
   for (let k = 0; k < 3; k++) {
