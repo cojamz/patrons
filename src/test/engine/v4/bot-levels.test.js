@@ -134,4 +134,28 @@ describe('bot levels', () => {
       expect(left / seats).toBeLessThan(16);
     }
   });
+
+  // Blind tester, 2026-10-15: "P4 swapped Guest for Busker, then swapped back" (two turns, no change). Seeds below
+  // took a member back 6 times in 100 games before the fix (Reprise copying Even Swap among them).
+  it('bots never swap back a member they swapped away', () => {
+    const tables = [['red', 'gold', 'blue', 'green'], ['red', 'market', 'echo', 'gold'], ['red', 'thieves', 'trading', 'blue']];
+    let swaps = 0;
+    for (const level of ['easy', 'normal']) for (const quadrants of tables) for (const seed of [1, 4, 5, 18, 19]) {
+      const rand = seededRandom(seed);
+      let s = createGame({ seats: Array.from({ length: 4 }, () => ({ kind: 'bot' })), seed, quadrants });
+      const given = s.players.map(() => new Set());
+      while (!s.over) {
+        const pend = s.pending, m = chooseBotMove(s, rand, { level });
+        const o = pend.options.find(x => x.id === m.option);
+        if (o?.kind === 'trade') {
+          const [mine, theirs] = o.value.map(u => engine.cardDef(s, u).name);
+          expect(given[pend.player].has(theirs), `${level} seed ${seed}: P${pend.player + 1} takes back ${theirs}`).toBe(false);
+          given[pend.player].add(mine);
+          swaps++;
+        }
+        s = applyMove(s, m);
+      }
+    }
+    expect(swaps).toBeGreaterThan(20);
+  });
 });

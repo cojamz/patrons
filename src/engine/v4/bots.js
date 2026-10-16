@@ -123,7 +123,7 @@ export function chooseGreedyMove(state, rand = Math.random, { noise = 1.6 } = {}
       if (mid && state.round >= 2 && held >= 7) return move(mid);
       return move(pend.options.find(o => o.kind === 'pass'));
     }
-    default: return followUp(pend, rand);
+    default: return followUp(pend, rand, state);
   }
 }
 
@@ -134,12 +134,84 @@ function setupPick(pend, rand) {
   return { player: pend.player, option: pend.options[0].id };
 }
 
-// pay: the default way (it already spares colors whose contest you lead). choose: the content's hint.
-function followUp(pend, rand) {
+// pay: the default way (it already spares colors whose contest you lead). choose: the content's hint; a swap is
+// valued on a copy of the game (chooseSwap).
+function followUp(pend, rand, state) {
   const move = o => ({ player: pend.player, option: o.id });
+  if (state && pend.kind === 'choose' && pend.options.length > 1 && pend.options.every(o => o.kind === 'trade')) return move(chooseSwap(state, pend));
   if (pend.kind === 'pay') return move(pend.options.find(o => o.default) || pend.options[0]);
-  if (pend.kind === 'choose') return move(pend.options.reduce((a, b) => ((b.hint || 0) + rand() * 0.01 > (a.hint || 0) ? b : a)));
+  if (pend.kind === 'choose') {
+    const opts = state && pend.options.length > 1 ? avoidUndo(state, pend) : pend.options;
+    return move(opts.reduce((a, b) => ((b.hint || 0) + rand() * 0.01 > (a.hint || 0) ? b : a)));
+  }
   return move(pend.options[0]);
+}
+
+// A choice that leads into a swap handing back a member you swapped away (Reprise: "copy which of your spaces?" →
+// Even Swap) is dropped while another choice is left.
+function avoidUndo(state, pend) {
+  const me = pend.player, task = state.queue[0];
+  if (!task || task.t !== 'choose' || !task.h || !givenAway(state, me).size) return pend.options;
+  const ok = pend.options.filter(o => {
+    try {
+      const s = lightClone(state);
+      const ctx = contextFor(s);
+      handlerById(task.h)(ctx, s.players[me], o.value, task.data);
+      let undo = false;
+      settle(s, ctx, t => { undo = undo || undoesSwap(state, s, me, t); });
+      return !undo;
+    } catch { return true; }
+  });
+  return ok.length ? ok : pend.options;
+}
+
+// Swaps (Even Swap, Swap Sides) must take one when any fits, so a bot facing only even trades used to pick at random
+// and could hand a rival back the very member it swapped for a turn earlier: two turns gone, nothing changed (blind
+// tester, 2026-10-15). Each swap is valued on a copy of the game (followers, contests, what the members still do), and
+// taking back a member you gave away is ruled out while anything else fits.
+/** Is choice t (queued on copy s by the move just tried) a swap whose every option takes back a member `me` swapped away? */
+function undoesSwap(state, s, me, t) {
+  if (t.p !== me || !t.options.every(o => o.kind === 'trade')) return false;
+  const given = givenAway(state, me);
+  return given.size > 0 && t.options.every(o => given.has(cardDef(s, o.value[1]).name));
+}
+
+/** Names of members player `me` has swapped away this game (read from the log). */
+function givenAway(state, me) {
+  const p = state.players[me], given = new Set();
+  for (const line of state.log || []) {
+    const m = typeof line === 'string' && line.startsWith(`${p.name} traded `) && line.match(/ traded (.+) for .+'s (.+)\.$/);
+    if (m) given.add(m[1]);
+  }
+  return given;
+}
+// A space whose only swap hands back a member you swapped for: the turn undoes your own earlier one, and people read it
+// as a broken bot, even when the bot rates the member it gets back higher now. Rated this much worse, in followers:
+// enough that it's never taken while any other space is open.
+const UNDO_SWAP = 20;
+
+function chooseSwap(state, pend) {
+  const me = pend.player;
+  const given = givenAway(state, me);
+  const { turns, roundLeft } = horizon(state);
+  const lt = laterTurns(state);
+  const placesLeft = turns[me] + lt.turns;
+  const buys = state.players.map((_, i) => turns[i] + lt.turns + (i === me ? 1 : 0));
+  const income = turns.map(t => (t * INCOME[Math.max(1, state.round) - 1] + lt.income) * INCOME_SCALE);
+  const rated = pend.options.map(o => {
+    const [mine, theirs] = o.value;
+    let v;
+    try {
+      const s = lightClone(state);
+      const ctx = contextFor(s);
+      handlerById('red.trade')(ctx, s.players[me], o.value);
+      const ability = abilityValue(cardDef(s, theirs), placesLeft) - abilityValue(cardDef(s, mine), placesLeft);
+      v = marginOf(evaluate(s, buys, income, roundLeft, { [me]: ability }), me);
+    } catch { v = (o.hint || 0) - 100; }
+    if (given.has(cardDef(state, theirs).name)) v -= 100;
+    return { o, v };
+  });
+  return rated.reduce((a, b) => (b.v > a.v ? b : a)).o;
 }
 
 function useOption(state, pend, ctx, p) {
@@ -313,10 +385,11 @@ function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}, future)
 const marginOf = (vals, me, spite = SPITE) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
 
 // Resolve follow-up choices a hypothetical move queued (Hand-pick, Open Door ties, Kickback's gift…) by their hints.
-function settle(s, ctx) {
+function settle(s, ctx, seen) {
   for (let k = 0; k < 40 && s.queue.length; k++) {
     const t = s.queue.shift();
     if (t.t !== 'choose' || !t.options?.length) continue;
+    seen?.(t);
     // the options still good (a card an option names may have moved since the choice was queued)
     const live = liveOptions(s, t);
     if (!live.length) continue;
@@ -371,11 +444,14 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         // buys the action queues (Spree…) are buys still ahead, like this turn's own
         const moreBuys = s.queue.filter(t => t.t === 'buy' && t.p === me && !t.extra).length;
         const moreTurns = Math.max(0, turnsQueued(s) - turns0);
-        settle(s, ctx);
+        // a swap the space queues, directly or through a copy (Reprise copying Even Swap)
+        let undo = false;
+        settle(s, ctx, t => { undo = undo || undoesSwap(state, s, me, t); });
         // members the action brought in (Open Door, Hand-pick…) bring their abilities too
         const gained = p.members.filter(u => !had.has(u)).reduce((a, u) => a + abilityValue(cardDef(s, u), placesLeft, opts.k), 0);
         v = marginOf(evaluate(s, buysAt(s, 1 + moreBuys + moreTurns), incomeAt(s, moreTurns), roundLeft, { [me]: gained }, opts.future), me, opts.spite);
         if (opts.noMembers && memberCount(s, p) > before) v -= 100;
+        if (undo) v -= UNDO_SWAP;
       } catch {
         v = -50 + actionAt(state, o.q, o.i).estimate(contextFor(state), state.players[me]);
       }
@@ -524,9 +600,9 @@ export function chooseNormalMove(state, rand = Math.random, opts = {}) {
     }
     case 'pay': {
       const ranked = scoreOptions(state, rand, opts);
-      return ranked.length ? move(ranked[0].o) : followUp(pend, rand);
+      return ranked.length ? move(ranked[0].o) : followUp(pend, rand, state);
     }
-    default: return followUp(pend, rand);
+    default: return followUp(pend, rand, state);
   }
 }
 
