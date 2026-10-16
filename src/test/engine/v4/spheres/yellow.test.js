@@ -86,43 +86,36 @@ describe('Yellow actions', () => {
     expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
   });
 
-  it('Trade Seeds: up to 3 one-for-one swaps, then +1 yellow', () => {
+  it('Trade Seeds: +2 yellow first, then up to 3 one-for-one swaps (the new yellow can be swapped too)', () => {
     let s = take(scene({ res: [{ gold: 5, red: 1 }] }), 'yellow.transmute');
     expect(s.pending.kind).toBe('choose');
+    expect(R(s)).toEqual({ gold: 5, red: 1, yellow: 2, green: 0 });
     expect(ids(s)).toContain('swap:gold:yellow');
-    expect(ids(s)).not.toContain('swap:yellow:gold'); // nothing to swap from yellow
+    expect(ids(s)).toContain('swap:yellow:gold');
     s = move(s, 'swap:gold:yellow');
     s = move(s, 'swap:gold:green');
-    expect(R(s)).toEqual({ gold: 3, red: 1, yellow: 1, green: 1 });
+    expect(R(s)).toEqual({ gold: 3, red: 1, yellow: 3, green: 1 });
     s = move(s, 'done');
-    expect(R(s)).toEqual({ gold: 3, red: 1, yellow: 2, green: 1 });
+    expect(R(s)).toEqual({ gold: 3, red: 1, yellow: 3, green: 1 });
     expect(s.pending.kind).toBe('buy');
     expect(s.log.join('\n')).toContain('P1 transmuted 1 gold → yellow, 1 gold → green.');
   });
 
-  it('Trade Seeds: stops after 3 swaps (or what you held); with nothing held it still gives +1 yellow', () => {
+  it('Trade Seeds: stops after 3 swaps; with nothing held it still gives +2 yellow', () => {
     let s = take(scene({ res: [{ gold: 9 }] }), 'yellow.transmute');
     s = move(s, 'swap:gold:red');
     s = move(s, 'swap:gold:green');
     s = move(s, 'swap:gold:yellow');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(R(s)).toEqual({ gold: 6, red: 1, yellow: 2, green: 1 });
-    let t = take(scene({ res: [{ gold: 2 }] }), 'yellow.transmute');
-    t = move(t, 'swap:gold:red');
-    t = move(t, 'swap:red:green');
-    expect(t.pending?.kind).not.toBe('choose');
-    expect(R(t)).toEqual({ gold: 1, red: 0, yellow: 1, green: 1 });
-    expect(R(take(scene({}), 'yellow.transmute'))).toEqual({ ...Z, yellow: 1 });
+    expect(R(s)).toEqual({ gold: 6, red: 1, yellow: 3, green: 1 });
+    expect(R(take(scene({}), 'yellow.transmute')).yellow).toBe(2);
   });
 
-  it('Trade Seeds: swap up to 3 resources for other colors, then +1 yellow (the rule, whatever a bot picks)', () => {
+  it('Trade Seeds: +2 yellow, then swap up to 3 resources for other colors (the rule, whatever a bot picks)', () => {
     let s = take(scene({ res: [{ gold: 7, red: 1 }] }), 'yellow.transmute');
     while (s.pending?.kind === 'choose') s = applyMove(s, chooseBotMove(s, () => 0.5));
     const r = R(s), total = Object.values(r).reduce((a, b) => a + b, 0);
-    expect(total).toBe(8 + 1); // swaps keep the count; then +1 yellow
-    const moved = (7 - r.gold) + Math.max(0, 1 - r.red);
-    expect(moved).toBeLessThanOrEqual(3);
-    expect(r.yellow).toBeGreaterThanOrEqual(1);
+    expect(total).toBe(8 + 2); // +2 yellow; swaps keep the count
   });
 
   it('Branch Out (ring II): +1 of each other color per 3 yellow you have, and keeps the yellow', () => {

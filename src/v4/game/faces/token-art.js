@@ -158,7 +158,7 @@ const S = {
     catchup: [['1', 'purple'], ['1', '/', 'rup']],
     windup: [['1', 'purple', '/', 'w']],
     planahead: [['1', 'purple', '/', 'wo']],
-    overtime: [['1', 'turn']],
+    rushhour: [['1', 'purple', '/', '2', 'w']],
     rally: [['2', 'wo']], // your next 2 minions, now (not extra turns)
   },
   silver: {
@@ -195,7 +195,7 @@ const S = {
   },
   trading: {
     haggle: [['2', 'white'], ['1', '/', 'rup']],
-    buylow: r => [[`${2 * r}`, 'any', '→', 'f']],
+    buylow: [['1', 'f', '/', '3', 'white']],
     pawn: r => [[`${r}`, 'f', '|', `${2 * r}`, 'white']],
     sellhigh: [['2', 'f', '→', '6', 'white']],
     dividend: [['1', 'white', '/', 'f']],

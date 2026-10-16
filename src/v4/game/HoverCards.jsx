@@ -3,7 +3,7 @@
 // YOU GET from the dry run (previewSpace), standings from contestTable, pay from paymentPlan.
 // UI-A's wheel calls onSpaceHover(key, el|null, { pinned }), plaques onPlaqueHover(qid, el|null); seats and shop
 // cards are mine. GameScreen mounts <HoverCardLayer> once.
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { quadrant, roman, spaceOpen, contestTable, cardDef, botLevel, BOT_LEVEL_INFO, RING_VALUE } from '../../engine/v4/index.js';
 import { ruleWords } from '../shorts.js';
@@ -19,16 +19,19 @@ import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
+import { HOVER_DELAY_MS } from './hoverDelay.js';
 import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim, stillOn } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
 
 /**
- * The hover/pin state: one card at a time. Opens the moment the pointer arrives (Cory: instant); moving to a neighbour swaps the card in place at once; leaving closes it 150ms later
- * (unless the pointer arrives somewhere else first). A tap pins it (a sheet on phones). Cory: instant and seamless.
+ * The hover/pin state: one card at a time. Opens once the pointer has rested on its target HOVER_DELAY_MS (Cory,
+ * 2026-10-15: a mouse sweeping across the board shouldn't fire hovers nonstop), drawn hidden meanwhile so it shows
+ * whole in one frame; with a card already up, moving to a neighbour swaps it in place at once; leaving closes it 150ms
+ * later (unless the pointer arrives somewhere else first). A tap pins it at once (a sheet on phones).
  */
-export const OPEN_MS = MO.hoverOpen, CLOSE_MS = MO.hoverClose; // src/v4/motion.js
+export const CLOSE_MS = MO.hoverClose; // src/v4/motion.js (opening: hoverDelay.js)
 /** Between two spaces: a pointer crossing the wheel's gutters keeps the card this long before it closes. */
 export const GRACE_MS = 450;
 const onWheel = from => {
@@ -49,19 +52,37 @@ export function useHoverCards() {
   return api.current;
 }
 const LAYER = Symbol('hover layer');
-const SEAT_OPEN_MS = 60; // a pointer passing over a seat doesn't open its card; one resting there does, at once to the eye
+// the same target (a seat or its follower total: any part of that seat)
+const sameTarget = (a, b) => !!a && !!b && a.kind === b.kind && ((b.kind === 'seat' || b.kind === 'followers') ? a.pid === b.pid
+  : a.el === b.el && a.pid === b.pid && a.key === b.key && a.uid === b.uid && a.qid === b.qid);
 export function createHover() {
   let card = null, openT = null, closeT = null, want = null, heldBack = null, retryT = null;
+  // prep: the card waiting out the hover delay, drawn hidden in the meantime (the layer renders it off screen), so when
+  // the delay ends only its place and its paint are left (speed squad 2026-10-15: testers saw cards fill in late)
+  let prep = null;
   const subs = new Set();
+  const notify = () => { for (const fn of subs) fn(); };
+  const unprep = () => { want = null; if (prep) { prep = null; notify(); } };
   const set = next => {
     if (next === card) return;
     // a seat card that closes or gives way ends any crossing toward it (the layer itself stays mounted, off screen)
     if (card && card.kind === 'seat' && typeof document !== 'undefined') arrived(document.querySelector('[data-hover-layer]'));
     card = next;
     // one card on screen at a time (w3a A30): the layer's card closes any Tip that was up, and gives way to one
-    if (card) claim(LAYER, () => { clearTimeout(openT); clearTimeout(closeT); if (card) { card = null; for (const fn of subs) fn(); } });
+    if (card) claim(LAYER, () => { clearTimeout(openT); clearTimeout(closeT); want = null; prep = null; if (card) { card = null; notify(); } });
     else unclaim(LAYER);
-    for (const fn of subs) fn();
+    notify();
+  };
+  // after the rest: the prepared card becomes the card (one notice: the layer reads the same object, already drawn)
+  const later = (next, draw) => {
+    want = next;
+    if (draw) { prep = next; notify(); }
+    openT = setTimeout(() => {
+      want = null;
+      if (card && card.pinned) { unprep(); return; }
+      prep = null;
+      set(next);
+    }, HOVER_DELAY_MS);
   };
   // a seat's card has buttons and a list to scroll: it stays while the pointer is on it or on its way to it, and what
   // the pointer crosses on the way (the seat's own members, the next seat) doesn't take its place (hoverIntent.js)
@@ -94,7 +115,7 @@ export function createHover() {
     if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && ((heading() && aimedAt() === liveBox()) || overControls(liveBox()))) { holdBack(next); return; }
     clearTimeout(closeT);
     if (!next.el) {
-      clearTimeout(openT); want = null;
+      clearTimeout(openT); unprep();
       if (card && !card.pinned && card.kind === 'seat' && liveBox()) { aimAt(liveBox()); closeSoon(CLOSE_MS); return; }
       // leaving a space for the wheel's gutter keeps the card a moment longer, so sweeping across the spaces hands it
       // from one to the next without a close/open flicker; leaving the wheel closes it at the usual pace
@@ -106,30 +127,26 @@ export function createHover() {
     if (!next.pinned) { const b = busyWith(); if (b && b !== liveBox()) { holdBack(next); return; } }
     // the same card again (the pointer moving on its target, or on another part of the same seat): it stays where it
     // opened, and a close on its way is called off
-    const sameSeat = (card && card.kind === next.kind && (next.kind === 'seat' || next.kind === 'followers') && card.pid === next.pid);
-    if (card && !card.pinned && !next.pinned && (sameSeat || (card.kind === next.kind && card.el === next.el && card.pid === next.pid && card.key === next.key && card.uid === next.uid && card.qid === next.qid))) { clearTimeout(openT); want = null; return; }
-    // a seat card already on its way to open for this same seat: let it come
-    if (!next.pinned && want && want.kind === next.kind && want.pid === next.pid) return;
-    clearTimeout(openT); want = null;
-    if (next.pinned) { set(next); return; }
+    if (card && !card.pinned && !next.pinned && sameTarget(card, next)) { clearTimeout(openT); unprep(); return; }
+    // a card already on its way to open for this same target: let it come (the rest isn't restarted)
+    if (!next.pinned && want && sameTarget(want, next)) return;
+    clearTimeout(openT); unprep();
+    if (next.pinned) { set(next); return; } // a click or a tap: at once
     if (card && card.pinned) return; // a pinned card stays until it's closed
-    // a seat's card opens once the pointer rests on the seat a moment (hover intent): a seat it only passes over on
-    // its way somewhere (another seat's name, the wheel) never pops a card over that place
-    if (next.kind === 'seat' || next.kind === 'followers') {
-      want = next;
-      openT = setTimeout(() => { want = null; if (!(card && card.pinned)) set(next); }, SEAT_OPEN_MS);
-      return;
-    }
+    // a seat's card is a big one you can use: with another card up it still waits out the rest (a seat only passed over
+    // on the way somewhere never pops a card over that place); the card that's up stays meanwhile
+    if (card && (next.kind === 'seat' || next.kind === 'followers')) { later(next, false); return; }
     if (card) { set(next); return; } // a card is up: swap its content in place, no delay, no flicker
-    if (!OPEN_MS) { set(next); return; } // at once: the layer only swaps, so crossing something can't flicker
-    openT = setTimeout(() => { if (!(card && card.pinned)) set(next); }, OPEN_MS);
+    later(next, true); // nothing up: it opens after the rest, drawn hidden meanwhile
   };
   return {
     get card() { return card; },
+    /** the card waiting out the hover delay (drawn hidden), or null */
+    get prep() { return prep; },
     /** the space under the pointer (the shop ticks "✓ after X" for it) */
     get space() { return card && card.kind === 'space' && !card.past ? card.key : null; },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
-    close() { clearTimeout(openT); clearTimeout(closeT); clearTimeout(retryT); want = null; heldBack = null; set(null); },
+    close() { clearTimeout(openT); clearTimeout(closeT); clearTimeout(retryT); heldBack = null; unprep(); set(null); },
     /** the pointer is on a card you can use (a seat's members: its Use button, its list scrolled): it stays */
     hold() { clearTimeout(closeT); arrived(); },
     /** the pointer left that card: it closes as if it had left the target */
@@ -147,6 +164,8 @@ export function createHover() {
 const NONE = () => () => {};
 /** The card on screen (re-renders only the subscriber). */
 export const useHoverCard = hover => useSyncExternalStore(hover ? hover.subscribe : NONE, () => (hover ? hover.card : null));
+/** The card waiting out the hover delay, drawn hidden (re-renders only the layer). */
+const useHoverPrep = hover => useSyncExternalStore(hover ? hover.subscribe : NONE, () => (hover ? hover.prep : null));
 /** The space under the pointer, or null (re-renders only when it changes). */
 export const useHoverSpace = hover => useSyncExternalStore(hover ? hover.subscribe : NONE, () => (hover ? hover.space : null));
 
@@ -182,6 +201,8 @@ export function usePreviewWarmup(state, pid) {
  */
 export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPick }) {
   const c = useHoverCard(hover);
+  // the card waiting out the hover delay is drawn now, hidden; when it opens, the same body (memoized below) is shown
+  const prep = useHoverPrep(hover);
   useCopyTargets(c, state, me);
   const box = useRef(null);
   const [pos, setPos] = useState(null);
@@ -192,10 +213,18 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   const live = !!(c && !c.pinned && c.kind === 'seat');
   const inside = useRef(false);
   const el = c ? anchorFor(c, live && inside.current) : null;
+  // what's drawn: the card that's up, else the one waiting out the delay (off screen until it opens)
+  const drawn = c || (prep && !prep.pinned && prep.el && prep.el.isConnected ? prep : null);
+  const drawEl = c ? el : drawn ? drawn.el : null;
   // a pinned card whose target is gone for good closes, so it can't hold the layer shut against every later hover
   useEffect(() => { if (c && c.pinned && !el) hover.close(); });
-  const place = () => {
-    if (!c || c.pinned || !el || !box.current) { setPos(null); return; }
+  const placed = useRef(null); // { el, at, h }: what the last placement measured (opening a prepared card re-measures only if it moved)
+  const place = (force = true) => {
+    const c = drawn, el = drawEl; // eslint-disable-line no-shadow
+    if (!c || c.pinned || !el || !box.current) { placed.current = null; setPos(null); return; }
+    const r0 = el.getBoundingClientRect(), at = `${r0.left},${r0.top},${r0.width},${r0.height}`, h0 = box.current.offsetHeight;
+    if (!force && placed.current && placed.current.el === el && placed.current.at === at && placed.current.h === h0) return;
+    placed.current = { el, at, h: h0 };
     // a seat's card opens right next to the part of the seat pointed at (w3a A8, Cory: "hovers open right next to what
     // you point at"; beside the whole seat it sat 136–488px from the pointer), level with it; so does everything else
     const seatBox = null;
@@ -208,7 +237,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
       const hb = holder.getBoundingClientRect(), nb = el.getBoundingClientRect();
       a = { left: hb.left, right: hb.right, width: hb.width, top: nb.top, bottom: nb.bottom, height: nb.height };
     }
-    const w = Math.min(c.kind === 'seat' ? 360 : c.kind === 'followers' ? 260 : 280, innerWidth - 16);
+    const w = cardWidth(c.kind);
     const h = box.current.offsetHeight || 160;
     const p = (holder && besideSeat({ ...a, top: a.top - 12 }, w, h)) || ((c.kind === 'seat' || c.kind === 'followers') && besideSeat({ ...a, top: a.top - 12 }, w, h)) || placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
     // the nub points at the middle of what the card explains (for a seat, the part pointed at), clear of the corners
@@ -218,13 +247,16 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     side.current = { el, side: p.side };
     setPos(old => (old && old.left === p.left && old.top === p.top && old.width === p.width && old.nub === p.nub ? old : p));
   };
-  useLayoutEffect(place, [c, el]); // eslint-disable-line react-hooks/exhaustive-deps
+  // placed while it's drawn hidden; when it opens, only checked again (the target may have moved in the meantime)
+  const shown = !!c;
+  const prevDrawn = useRef(null);
+  useLayoutEffect(() => { const again = prevDrawn.current === drawn; prevDrawn.current = drawn; place(!again); }, [drawn, drawEl, shown]); // eslint-disable-line react-hooks/exhaustive-deps
   // content that fills in a moment later (the dry run's "You'd get") re-fits the card on screen
   const placeNow = useRef(place);
   placeNow.current = place;
   useEffect(() => {
     if (!box.current || typeof ResizeObserver === 'undefined') return undefined;
-    const ro = new ResizeObserver(() => placeNow.current());
+    const ro = new ResizeObserver(() => placeNow.current(true));
     ro.observe(box.current);
     return () => ro.disconnect();
   }, []);
@@ -253,23 +285,30 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     addEventListener('keydown', key);
     return () => { removeEventListener('scroll', off, true); removeEventListener('keydown', key); };
   }, [c, hover]);
-  const body = el ? cardBody(c, state, me, optionFor, id => { hover.close(); onPick(id); }) : null;
+  const onPickNow = useRef(onPick);
+  onPickNow.current = onPick;
+  const pickHere = useCallback(id => { hover.close(); onPickNow.current(id); }, [hover]);
+  // the same element while nothing it reads has changed: opening a prepared card re-renders the layer, not the card
+  const drawnBody = useMemo(() => (drawn && drawEl ? cardBody(drawn, state, me, optionFor, pickHere) : null), [drawn, drawEl, state, me, optionFor, pickHere]);
+  const body = c && el ? drawnBody : null;
   if (c && c.pinned && body) {
     return <Popover anchor={el} onClose={hover.close}><div className="lt-note pinned" data-hover-card={c.kind}>{body}</div></Popover>;
   }
   // always mounted: content swaps in place; hidden (not unmounted) between cards
   const layer = (
-    <div ref={box} className={`lt-hover popover${body ? ' on' : ''}`} data-hover-layer="" data-open={body ? '1' : '0'} data-side={body && pos ? pos.side : undefined} aria-hidden={!body}
+    <div ref={box} className={`lt-hover popover${body ? ' on' : ''}`} data-hover-layer="" data-open={body ? '1' : '0'} data-prep={!body && drawnBody ? '' : undefined} data-side={body && pos ? pos.side : undefined} aria-hidden={!body}
       data-live={body && live ? '1' : undefined}
       onPointerEnter={() => { if (!live) return; inside.current = true; hover.hold(); }}
       onPointerLeave={e => { inside.current = false; if (live && e.pointerType === 'mouse') hover.letGo(); }}
-      style={body && pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: -9999, top: 0, width: 280 }}>
+      style={body && pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: -9999, top: 0, width: pos ? pos.width : drawn ? cardWidth(drawn.kind) : 280 }}>
       {body && pos ? <span className={`lt-nub ${pos.side}`} aria-hidden="true" style={pos.side === 'right' || pos.side === 'left' ? { top: pos.nub } : { left: pos.nub }} /> : null}
-      {body && <div className="lt-note" data-hover-card={c.kind} role="tooltip">{body}</div>}
+      {drawnBody && <div className="lt-note" data-hover-card={body ? c.kind : undefined} role={body ? 'tooltip' : undefined}>{drawnBody}</div>}
     </div>
   );
   return typeof document !== 'undefined' ? createPortal(layer, document.body) : layer;
 }
+
+const cardWidth = kind => Math.min(kind === 'seat' ? 360 : kind === 'followers' ? 260 : 280, innerWidth - 16);
 
 // where the pointer last was: a hover card whose target was re-drawn re-links only while the pointer is still on it
 let lastPt = null;
@@ -365,7 +404,8 @@ function useCopyTargets(c, state, me) {
   const all = !keys && viewer != null && (space ? copiesAll(quadrant(state.quadrants[space[0]]).actions[space[1]].text) : c && c.kind === 'card' && state.cards[c.uid] && copiesAll(cardDef(state, c.uid).text));
   if (all) { const plan = ownCopyPlan(state, viewer); if (plan) keys = plan.keys; }
   const sig = keys ? keys.join(',') : '';
-  useEffect(() => {
+  // lit in the same frame the card opens (a layout effect), not a frame after it
+  useLayoutEffect(() => {
     if (!sig) return undefined;
     const els = sig.split(',').flatMap(k => [...document.querySelectorAll(`[data-slot="${k}"]`)]);
     for (const el of els) el.classList.add('copy-target');

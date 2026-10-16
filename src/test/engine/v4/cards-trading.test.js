@@ -37,14 +37,10 @@ describe('White actions', () => {
     expect(named(s, 'Midas').length).toBe(1);
   });
 
-  it('Cheap Seats: trade up to 2 per round number for followers, 1 for 1', () => {
-    let s = table(Q, { res: [{ red: 5 }], shop: ROW });
-    s = play(take(s, 'trading.buylow'), 'color:red', 'color:red');
-    expect([R(s).red, s.players[0].bonus]).toEqual([3, 2]);
-    expect(s.pending.kind).toBe('buy'); // cap of 2 in round I
-    s = take(table(Q, { round: 3, left: 5, res: [{ red: 9 }], shop: ROW }), 'trading.buylow');
-    for (let k = 0; k < 6; k++) s = move(s, 'color:red');
-    expect([R(s).red, s.players[0].bonus]).toEqual([3, 6]);
+  it('Cheap Seats: +1 follower per 3 white you hold (white kept), named', () => {
+    const s = take(table(Q, { res: [{ white: 9 }], shop: ROW }), 'trading.buylow');
+    expect([R(s).white, s.players[0].bonus]).toEqual([9, 3]);
+    expect(named(s, 'Cheap Seats').length).toBe(1);
   });
 
   it('Your Call: per round number, +1 follower or +2 white (named)', () => {
@@ -220,13 +216,13 @@ describe('White members', () => {
     expect(R(s).white).toBe(2 + 3);
     expect(named(s, 'Heiress').length).toBe(1);
   });
-  it('Bulk Buyer: whenever you buy 3 or more followers, +1 more (not for 1)', () => {
+  it('Bulk Buyer: whenever you buy 3 or more followers, +1 more (not for the 2-for-2 buy)', () => {
     let s = take(table(Q, { res: [{ gold: 2, red: 2 }], members: [['trading.bulkbuyer']], shop: ROW }), 'trading.haggle');
     s = payDefault(move(s, 'tier:mid'));
     expect(s.players[0].bonus).toBe(5);
     expect(named(s, 'Bulk Buyer').length).toBe(1);
     s = payDefault(move(take(table(Q, { res: [{ red: 2 }], members: [['trading.bulkbuyer']], shop: ROW }), 'trading.haggle'), 'tier:small'));
-    expect(s.players[0].bonus).toBe(1);
+    expect(s.players[0].bonus).toBe(2);
   });
   it('Broker: whenever a White action gives you followers, +1 more (Your Call)', () => {
     let s = move(take(table(Q, { round: 2, members: [['trading.broker']], shop: ROW }), 'trading.pawn'), 'amount:0');
@@ -234,8 +230,7 @@ describe('White members', () => {
     expect(named(s, 'Broker').length).toBe(1);
   });
   it('× Broker on Cheap Seats: +1 once per action, not per traded resource (ledger question 6, gut call)', () => {
-    let s = table(Q, { res: [{ red: 5 }], members: [['trading.broker']], shop: ROW });
-    s = play(take(s, 'trading.buylow'), 'color:red', 'color:red');
+    const s = take(table(Q, { res: [{ white: 6 }], members: [['trading.broker']], shop: ROW }), 'trading.buylow');
     expect(s.players[0].bonus).toBe(3);
     expect(named(s, 'Broker').length).toBe(1);
   });

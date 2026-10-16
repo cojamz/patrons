@@ -321,7 +321,9 @@ export function Confirm({ title, text, yes, no = 'Stay', onYes, onNo }) {
 /** A small card anchored to an element (member chips on touch). */
 export const sheetMode = () => typeof matchMedia === 'function' && (matchMedia('(pointer: coarse)').matches || matchMedia('(max-width: 520px)').matches);
 
-export function Popover({ anchor, onClose, children, float = false, beside = null }) {
+// hidden: a hover card waiting out the hover delay (hoverDelay.js): placed and drawn now, invisible and off screen, so
+// when it shows only its paint is left
+export function Popover({ anchor, onClose, children, float = false, beside = null, hidden = false }) {
   const box = useRef(null);
   const [pos, setPos] = useState(null);
   // float: a hover card stays beside what it explains, even on a narrow window (a sheet is for taps)
@@ -344,7 +346,7 @@ export function Popover({ anchor, onClose, children, float = false, beside = nul
     const below = innerHeight - a.bottom >= a.top;
     fitted.current = false;
     setPos({ left, width: w, top: below ? a.bottom + 8 : undefined, bottom: below ? undefined : innerHeight - a.top + 8 });
-  }, [anchor]);
+  }, [anchor, hidden && 'hidden']); // placed again as it shows (its target may have moved during the delay)
   // once it's drawn, a card that would run off the top or the bottom of the window slides back on (RC1 saboteur: a
   // member card from the bottom seats measured y=609–791 on a 700px window)
   const fitted = useRef(false);
@@ -382,7 +384,8 @@ export function Popover({ anchor, onClose, children, float = false, beside = nul
   }
   const { nub, mid, ...style } = pos;
   const nubAt = nub && typeof style.top === 'number' ? Math.round(Math.max(14, mid - style.top)) : null;
-  return out(<div className={`popover${nub ? ' beside' : ''}`} ref={box} role="dialog" style={style}>
+  return out(<div className={`popover${nub ? ' beside' : ''}`} ref={box} role={hidden ? undefined : 'dialog'} aria-hidden={hidden || undefined} data-prep={hidden ? '' : undefined}
+    style={hidden ? { ...style, left: -9999, right: 'auto', visibility: 'hidden' } : style}>
     {nubAt != null && <span className={`pop-nub ${nub}`} aria-hidden="true" style={{ top: `min(${nubAt}px, calc(100% - 14px))` }} />}{children}</div>);
 }
 

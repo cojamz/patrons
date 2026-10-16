@@ -5,7 +5,7 @@
 // Until the drawings are imported (scripts/v4-art-import.mjs), figures.js templates and the seat's sigil stand in.
 import { memo } from 'react';
 import SETS from './icons/index.js';
-import { palette, withOutline } from './index.js';
+import { palette, withOutline, pixelPaths } from './index.js';
 import { LEADER, LEADER_PANEL, MINION } from './figures.js';
 import { emojiArt, minionArt } from './emojis.js';
 
@@ -98,10 +98,10 @@ export const Leader = memo(function Leader({ emoji = null, sigil = 'circle', siz
     <svg className={`leader${dim ? ' dim' : ''}`} viewBox="0 0 32 32" width={size} height={tall ? Math.round(size * TALL) : size} preserveAspectRatio={tall ? 'none' : undefined} style={tall ? { marginTop: size - Math.round(size * TALL) } : undefined} shapeRendering="crispEdges"
       role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'} data-emoji={art ? emoji : undefined} data-pose={p || undefined}>
       {title ? <title>{title}</title> : null}
-      {body.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
+      {pixelPaths(body)}
       {eyes.length > 0 && <g className="blink">{eyes.map(([x, y, w]) => <rect key={x} x={x} y={y} width={w} height="1" fill={lid} />)}</g>}
       {art
-        ? <g transform={`translate(${E.x} ${E.y})${tall ? ` translate(0 4) scale(1 ${1 / TALL}) translate(0 -4)` : ''}`}>{!DRAWN && <rect x="0" y="0" width="8" height="8" fill="#20160f" />}{art.rects.map((r, k) => <rect key={`e${k}`} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}</g>
+        ? <g transform={`translate(${E.x} ${E.y})${tall ? ` translate(0 4) scale(1 ${1 / TALL}) translate(0 -4)` : ''}`}>{!DRAWN && <rect x="0" y="0" width="8" height="8" fill="#20160f" />}{pixelPaths(art.rects)}</g>
         : <path transform={`translate(${E.x - 2} ${E.y - 2})${tall ? ` translate(0 6) scale(1 ${1 / TALL}) translate(0 -6)` : ''}`} d={SIGILS[sigil] || SIGILS.circle} fill={DRAWN ? DRAWN.base.y : palette(ROBE)[1]} />}
     </svg>
   );
@@ -115,7 +115,7 @@ export const Minion = memo(function Minion({ color, emoji = null, size = 16, tit
     <svg className={`minion${dim ? ' dim' : ''}`} viewBox="0 0 16 16" width={size} height={size} shapeRendering="crispEdges"
       role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'} data-emoji={art ? emoji : undefined}>
       {title ? <title>{title}</title> : null}
-      {body.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
+      {pixelPaths(body)}
     </svg>
   );
 });

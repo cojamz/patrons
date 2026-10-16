@@ -66,7 +66,7 @@ const P = {
     // "per minion to place" read as +2 (round 3 skeptic): live, it's the count after this one
     planahead: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion to place' } : { main: `+${now} purple`, second: '1 per minion left after this' }),
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
-    overtime: { verb: 'Take 1 extra turn', second: 'right after this' },
+    rushhour: { main: '+1 purple', second: 'per 2 minions on the board' },
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     rally: { verb: 'Take your next 2 turns now' },
   },
@@ -117,10 +117,7 @@ const P = {
   trading: {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers
     haggle: (r, now) => ({ main: `+${now ?? 2} white`, second: now == null ? '+1 per rival with more @f' : '2, +1 per rival with more @f' }),
-    // "up to 2, more each round" read as "+2 each round" (blind testers, 2026-10-15): the cap is what grows
-    // "Trade for followers" hid that it costs you resources (live panel r1; the charge is Cory's call): it's a follower
-    // buy, in the shop's own words, at 1 resource each
-    buylow: r => ({ verb: 'Buy followers', second: `1 resource each, up to ${2 * r}`, note: r < 3 ? 'the limit grows by round' : null }),
+    buylow: { main: '+1 @f', second: 'per 3 white you hold' },
     pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, note: grows(r) }),
     // the gain first: "Sell followers" lost its "3 white each" on ring II whenever the panel was tight (w3 words pass)
     sellhigh: { main: '+3 white', second: 'per follower sold', note: 'up to 2' },

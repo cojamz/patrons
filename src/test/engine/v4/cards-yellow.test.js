@@ -25,10 +25,10 @@ describe('Yellow actions', () => {
     expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +1 of each.", "P1's Top Up: +1 red, +1 yellow."]);
     expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
   });
-  it('Trade Seeds: up to 3 one-for-one swaps, then +1 yellow', () => {
+  it('Trade Seeds: +2 yellow, then up to 3 one-for-one swaps', () => {
     let s = take(sc({ res: [{ gold: 4 }] }), 'yellow.transmute');
     s = move(s, 'swap:gold:red'); s = move(s, 'swap:gold:green'); s = move(s, 'swap:gold:red');
-    expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 1, green: 1 });
+    expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 2, green: 1 });
   });
   it('Branch Out: +1 of each other color per 3 yellow (yellow kept); Potluck: 1 per member of its color; Bumper Crop: per full set', () => {
     expect(R(take(sc({ round: 2, res: [{ yellow: 7 }] }), 'yellow.prism'))).toEqual({ gold: 2, red: 2, yellow: 7, green: 2 });

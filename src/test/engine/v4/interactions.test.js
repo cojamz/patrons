@@ -8,6 +8,9 @@ import { createGame, resume, followers } from '../../../engine/v4/core.js';
 import { quadrant } from '../../../engine/v4/content/index.js';
 import { take, move, play, uidOf, ids, pinCosts } from './helpers.js';
 import { STRAYS, stray } from './stray.js';
+import { useRetiredOvertime } from './retired-overtime.js';
+
+useRetiredOvertime();
 
 // Costs these scenes are written against (the real cards get repriced; these don't move).
 const PINNED = {
@@ -85,23 +88,6 @@ describe('Green copies the risky spaces', () => {
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(opt('Help Yourself')).id);
     expect(ids(s).every(id => id.startsWith('take:1:'))).toBe(true); // never P3
-  });
-
-  it('copying Purple’s Overtime gives you its extra turn too, free (nothing to pay, no fallback)', () => {
-    const P = ['gold', 'red', 'purple', 'echo'];
-    let s = scene({ quads: P, round: 2, turns: [1, 0, 1, 0] });
-    s = take(s, 'purple.overtime');
-    expect(R(s, 1).purple).toBe(0);
-    s = pass(s);
-    expect(s.pending.player).toBe(1); // P2's extra turn
-    s = go(s, 'echo.hum');
-    expect(s.pending.player).toBe(0);
-    s = take(s, 'echo.encore');
-    expect(labels(s)).toContain('Overtime (P2): do Overtime yourself');
-    s = move(s, s.pending.options.find(opt('Overtime')).id);
-    expect(R(s, 0).purple).toBe(0);
-    s = pass(s);
-    expect(s.pending.player).toBe(0); // P1's own extra turn
   });
 
   it('copying a White sale means selling followers yourself, not free white', () => {

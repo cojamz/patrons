@@ -1,6 +1,11 @@
 // E2E snappy gate (Cory, 2026-10-15: "it just doesn't feel snappy", "the wheel spins really slow"). Laptop, 1270×700.
 //  (s1) a wheel spin (an arrow key) starts within 100ms and has landed within 400ms;
-//  (s2) a hover card opens within 100ms of the pointer arriving: wheel spaces, shop cards and keyword tips;
+//  (s2) a hover card opens within 100ms of the end of the hover delay (Cory, 2026-10-15: hovers wait HOVER_DELAY_MS,
+//       src/v4/game/hoverDelay.js, so a mouse sweeping across the board doesn't fire them nonstop; timed from the
+//       pointer's arrival + HOVER_DELAY_MS): wheel spaces, shop cards, keyword tips, rivals' seats and the members in
+//       them; it opens complete: its words, its size and its place 400ms later are the ones it first painted (no "You'd get" or
+//       member list filling in after: testers saw cards fill in late, in bursts); and a quick sweep across several spaces
+//       (the pointer moving on within the delay) opens no card at all;
 //  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 150ms;
 //  (s4) the animation speed setting changes a chain's length (Relaxed ≥ 1.8 × Quick);
 //  (s5) the gap between your turns at Steady (bots at Normal) is under 8s × Steady's speed (9.6s);
@@ -20,6 +25,7 @@ import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { SPEEDS } from '../../src/v4/motion.js';
+import { HOVER_DELAY_MS } from '../../src/v4/game/hoverDelay.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/snappy';
 mkdirSync(SHOTS, { recursive: true });
@@ -64,16 +70,23 @@ await page.waitForSelector('.slot.can .base', { timeout: 15000 });
 await page.waitForTimeout(600);
 
 // one rAF loop for the whole page: frame times (the box's own stalls), the wheel's turn, hover visibility, minions
-await page.evaluate(() => {
-  const W = window.__snap = { frames: [], rot: [], key: null, hov: { lat: [], t0: null }, minion: null };
+await page.evaluate(delay => {
+  const W = window.__snap = { frames: [], rot: [], key: null, hov: { lat: [], t0: null }, minion: null, delay, sweep: null };
   const wheelG = () => document.querySelector('.lt-wheel svg.wheel-paper g.wheel, .stage svg g.wheel');
-  const hoverUp = () => [...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek, .popover:not([data-hover-layer])')]
-    .some(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && Number(getComputedStyle(e).opacity) > 0.05; });
+  // a card on screen (one waiting out the hover delay is drawn off screen and hidden: data-prep, never counted)
+  const upEl = () => [...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek, .popover:not([data-hover-layer]):not([data-prep])')]
+    .find(e => { const b = e.getBoundingClientRect(); const cs = getComputedStyle(e); return b.width > 0 && b.left > -1000 && Number(cs.opacity) > 0.05 && cs.visibility !== 'hidden'; });
+  const hoverUp = () => !!upEl();
+  // what a card says and how tall it is: the same 400ms later, or it filled in after it opened
+  // (its place too: a card that slides or jumps after it shows hasn't opened whole either)
+  W.cardSig = () => { const e = upEl(); if (!e) return null; const b = e.getBoundingClientRect(); return `${Math.round(b.left)},${Math.round(b.top)} ${Math.round(b.height)}|${e.innerText}`; };
+  W.hoverUp = hoverUp;
   addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { W.key = performance.now(); W.rot = []; } }, true);
   // each arrival starts with no card up (the loop waits for that), so the arrival arms on the target alone: under load
   // the target's own card was sometimes already up when this listener ran, and a "no card up" check never armed it
   addEventListener('pointerover', e => {
-    if (e.target.closest && e.target.closest('[data-slot], [data-uid], [data-tip]') && W.hov.t0 == null) W.hov.t0 = performance.now();
+    if (e.target.closest && e.target.closest('[data-slot], [data-uid], [data-tip], [data-cult]') && W.hov.t0 == null) W.hov.t0 = performance.now();
+    if (W.sweep) W.sweep.at.push(performance.now());
   }, true);
   // the minion check: from the click on a lit space to the first frame it stands there, painted
   // the press: from the pointer going down on a lit space to the next frame (the one that paints it)
@@ -97,7 +110,9 @@ await page.evaluate(() => {
       if (!W.rot.length || W.rot[W.rot.length - 1][1] !== t) W.rot.push([performance.now(), t]);
     }
     const up = hoverUp();
-    if (up && W.hov.t0 != null) { W.hov.lat.push(performance.now() - W.hov.t0); W.hov.t0 = null; }
+    // from the end of the hover delay (the arrival + HOVER_DELAY_MS)
+    if (up && W.hov.t0 != null) { W.hov.lat.push(performance.now() - W.hov.t0 - W.delay); W.hov.t0 = null; W.hov.sig0 = W.cardSig(); }
+    if (up && W.sweep) W.sweep.opened = W.sweep.opened || W.cardSig();
     if (!up && W.hov.t0 == null) W.hov.idle = true;
     const m = W.minion;
     if (m && m.key && m.t1 == null) {
@@ -107,7 +122,7 @@ await page.evaluate(() => {
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
-});
+}, HOVER_DELAY_MS);
 // the box's own frame: the median rAF interval over ~600ms with nothing moving
 const idleFrame = async () => {
   const t = await page.evaluate(() => performance.now());
@@ -157,23 +172,28 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   if (F > 34) errors.push(`(s6) with nothing happening on your turn the page draws a frame every ${Math.round(F)}ms (want ≤ 34ms, 30 a second): something re-renders an expensive effect on every frame`);
 }
 
-// (s2) hover: separate arrivals onto spaces, shop cards and keyword tips; the better of two runs counts
+// (s2) hover: separate arrivals onto spaces, shop cards, keyword tips, seats and members; the better of two runs counts
 {
   const centers = sel => page.$$eval(sel, els => els.filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.top > 0 && b.bottom < innerHeight; })
     .map(e => { const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; }));
   const spaces = await centers('[data-slot] .base');
   const cards = await centers('.lt-shop [data-uid]');
-  const tips = await centers('.lt [data-tip][role="button"]'); // a tip of its own (one inside a control shows its title)
-  const targets = [...spaces.slice(0, 8).map(c => [...c, 'space']), ...cards.slice(0, 6).map(c => [...c, 'card']), ...tips.slice(0, 4).map(c => [...c, 'tip'])];
+  // a tip of its own (one inside a control shows its title): the chairs' turn words and "each round" lines
+  const tips = await centers('[data-tip]:not(.fig)');
+  // a rival's seat (its leader) and the members sitting in the seats
+  const seats = await centers('[data-cult]:not([data-cult="0"]) .cs-leader');
+  const members = await centers('.cs-member .fig');
+  const targets = [...spaces.slice(0, 8).map(c => [...c, 'space']), ...cards.slice(0, 6).map(c => [...c, 'card']), ...tips.slice(0, 4).map(c => [...c, 'tip']),
+    ...seats.slice(0, 3).map(c => [...c, 'seat']), ...members.slice(0, 3).map(c => [...c, 'member'])];
   // each arrival: away (the card closes), then onto the target, and wait for its card (up to 1.5s on a loaded box)
   const measure = async () => {
     const F = await idleFrame();
     await page.evaluate(() => { window.__snap.hov.lat = []; window.__snap.hov.t0 = null; });
     let n = 0;
-    const misses = [];
+    const misses = [], staged = [];
     for (const [x, y, kind] of targets) {
       await page.mouse.move(4, 696);
-      const closed = await page.waitForFunction(() => !document.querySelector('[data-hover-layer][data-open="1"], .popover:not([data-hover-layer])'), null, { timeout: 1500 }).then(() => true, () => false);
+      const closed = await page.waitForFunction(() => !document.querySelector('[data-hover-layer][data-open="1"], .popover:not([data-hover-layer]):not([data-prep])'), null, { timeout: 1500 }).then(() => true, () => false);
       const stuck = closed ? '' : await page.evaluate(() => { const up = document.querySelector('[data-hover-layer][data-open="1"] [data-hover-card], .popover:not([data-hover-layer])'); return up ? ` (the last card never closed: ${up.dataset.hoverCard || up.className}${up.querySelector('[data-space-card]') ? ` ${up.querySelector('[data-space-card]').dataset.spaceCard}` : ''})` : ''; });
       await page.waitForTimeout(60);
       await page.evaluate(() => { window.__snap.hov.t0 = null; });
@@ -181,21 +201,51 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
       // one step, straight onto the target: a two-step move from the parking spot crossed a shop card first, whose card
       // opened before the pointer reached the target, so the arrival was never armed (5 of 18 "misses" on the quiet box)
       await page.mouse.move(x, y);
-      const hit = await page.waitForFunction(h => window.__snap.hov.lat.length > h, had, { timeout: 1500 }).then(() => true, () => false);
+      const hit = await page.waitForFunction(h => window.__snap.hov.lat.length > h, had, { timeout: 1500 + HOVER_DELAY_MS }).then(() => true, () => false);
+      // complete on its first paint: the same words at the same height 400ms on
+      if (hit) {
+        await page.waitForTimeout(400);
+        const [a, b] = await page.evaluate(() => [window.__snap.hov.sig0, window.__snap.cardSig()]);
+        if (a && b && a !== b) staged.push(`${kind} at ${Math.round(x)},${Math.round(y)}: opened as "${a.slice(0, 90).replace(/\s+/g, ' ')}", 400ms later "${b.slice(0, 90).replace(/\s+/g, ' ')}"`);
+      }
       // a miss names what was under the pointer and whether a card was already up, so a flaky target can be found
       if (!hit) misses.push(`${kind} at ${Math.round(x)},${Math.round(y)}: ${await page.evaluate(([px, py]) => { const e = document.elementFromPoint(px, py); const t = e && e.closest('[data-slot], [data-uid], [data-tip]'); const up = document.querySelector('[data-hover-layer][data-open="1"]'); return `${e ? `${e.tagName.toLowerCase()}.${String(e.className && e.className.baseVal != null ? e.className.baseVal : e.className).split(' ').join('.')}` : 'nothing'}${t ? ` in ${t.getAttribute('data-slot') ? `slot ${t.getAttribute('data-slot')}` : t.getAttribute('data-uid') ? `card ${t.getAttribute('data-uid')}` : 'tip'}` : ' (no target)'}${up ? `, card up: ${(up.querySelector('[data-hover-card]') || {}).dataset?.hoverCard} ${(up.querySelector('[data-space-card]') || up.querySelector('[data-card-hover]') || { dataset: {} }).dataset.spaceCard || (up.querySelector('[data-card-hover]') || { dataset: {} }).dataset.cardHover || ''} at ${Math.round(up.getBoundingClientRect().left)},${Math.round(up.getBoundingClientRect().top)} opacity ${getComputedStyle(up).opacity}` : ''}, arrival ${window.__snap.hov.t0 == null ? 'never seen' : 'seen'}`; }, [x, y])}${stuck}`);
       n++;
     }
     const lat = (await page.evaluate(() => window.__snap.hov.lat)).sort((a, b) => a - b);
-    return { n, F, lat, misses, p95: lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity };
+    return { n, F, lat, misses, staged, p95: lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity };
   };
   let run = await measure();
   const first = run;
-  if (!(run.p95 <= LIMIT.hover + run.F)) { const again = await measure(); if (again.p95 - again.F < run.p95 - run.F) run = again; }
-  report.push(`hover: p95 ${Math.round(run.p95)}ms over ${run.lat.length}/${run.n} arrivals, box frame ${Math.round(run.F)}ms (${spaces.length} spaces, ${cards.length} cards, ${tips.length} tips on screen)${first !== run ? `; first run p95 ${Math.round(first.p95)}ms` : ''}`);
+  if (!(run.p95 <= LIMIT.hover + run.F) || run.staged.length) { const again = await measure(); if (again.p95 - again.F < run.p95 - run.F || again.staged.length < run.staged.length) run = again; }
+  report.push(`hover: p95 ${Math.round(run.p95)}ms from the end of the ${HOVER_DELAY_MS}ms delay over ${run.lat.length}/${run.n} arrivals, box frame ${Math.round(run.F)}ms, ${run.staged.length} filled in after opening (${spaces.length} spaces, ${cards.length} cards, ${tips.length} tips, ${seats.length} seats, ${members.length} members on screen)${first !== run ? `; first run p95 ${Math.round(first.p95)}ms` : ''}`);
   if (run.misses.length) report.push(`hover misses: ${run.misses.join('; ')}`);
-  if (run.lat.length < run.n - 2) errors.push(`(s2) only ${run.lat.length} of ${run.n} hover arrivals opened a card within 1.5s (missed: ${run.misses.join('; ')})`);
-  if (!(run.p95 <= LIMIT.hover + run.F)) errors.push(`(s2) hover cards open in p95 ${Math.round(run.p95)}ms (want ≤ ${LIMIT.hover}ms + one ${Math.round(run.F)}ms frame; samples ${run.lat.map(Math.round).join(',')})`);
+  if (run.lat.length < run.n - 2) errors.push(`(s2) only ${run.lat.length} of ${run.n} hover arrivals opened a card within 1.5s of the delay (missed: ${run.misses.join('; ')})`);
+  if (run.staged.length) errors.push(`(s2) ${run.staged.length} hover card(s) filled in after they opened (want each whole on its first paint): ${run.staged.join('; ')}`);
+  if (!(run.p95 <= LIMIT.hover + run.F)) errors.push(`(s2) hover cards open in p95 ${Math.round(run.p95)}ms after the ${HOVER_DELAY_MS}ms delay (want ≤ ${LIMIT.hover}ms + one ${Math.round(run.F)}ms frame; samples ${run.lat.map(Math.round).join(',')})`);
+  // a quick sweep: the pointer crosses several spaces, resting on none as long as the delay, then leaves the board; no
+  // card may open (Cory, 2026-10-15: no nonstop hovers as a mouse moves across the screen). A sweep the box itself
+  // slowed (a step longer than the delay, timed in the page) proves nothing, so it's tried again
+  const sweepOn = spaces.slice(0, 6);
+  let swept = null;
+  for (let k = 0; k < 3 && sweepOn.length >= 3; k++) {
+    await page.mouse.move(4, 696);
+    await page.waitForFunction(() => !window.__snap.hoverUp(), null, { timeout: 1500 }).catch(() => {});
+    await page.waitForTimeout(300);
+    await page.evaluate(() => { window.__snap.sweep = { at: [], opened: null }; });
+    for (const [x, y] of sweepOn) { await page.mouse.move(x, y); await page.waitForTimeout(Math.round(HOVER_DELAY_MS / 4)); }
+    await page.mouse.move(4, 696);
+    const t = await page.evaluate(() => performance.now());
+    await page.waitForTimeout(HOVER_DELAY_MS + 300);
+    const sw = await page.evaluate(t1 => { const s = window.__snap.sweep; window.__snap.sweep = null; const at = [...s.at, t1]; return { opened: s.opened, step: Math.max(...at.slice(1).map((v, i) => v - at[i])), n: s.at.length }; }, t);
+    swept = sw;
+    if (sw.step < HOVER_DELAY_MS - 20) break;
+  }
+  if (swept) {
+    report.push(`sweep across ${sweepOn.length} spaces: longest step ${Math.round(swept.step)}ms, ${swept.opened ? `a card opened ("${swept.opened.slice(0, 60).replace(/\s+/g, ' ')}")` : 'no card opened'}`);
+    if (swept.opened && swept.step < HOVER_DELAY_MS - 20) errors.push(`(s2) a quick sweep across ${sweepOn.length} spaces (each step under ${Math.round(swept.step)}ms, the delay is ${HOVER_DELAY_MS}ms) opened a card: "${swept.opened.slice(0, 80).replace(/\s+/g, ' ')}"`);
+    if (swept.step >= HOVER_DELAY_MS - 20) report.push(`sweep: the box never managed a step under ${HOVER_DELAY_MS - 20}ms in 3 tries, not judged`);
+  } else errors.push('(s2) no sweep across the spaces could be made (fewer than 3 spaces on screen)');
   await page.mouse.move(4, 696);
   await page.waitForTimeout(300);
 }

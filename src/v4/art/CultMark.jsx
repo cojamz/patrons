@@ -2,7 +2,7 @@
 // card (the deck). Same rules as the other pixel art: palette keys, outline added by the renderer, shown at 1× or 2×
 // so pixels stay square. Hood and eyes echo the cult leaders (leaders.js: hood shadow d, eye glow o, gold g y G).
 import { memo } from 'react';
-import { rectsFor } from './index.js';
+import { rectsFor, pixelPaths } from './index.js';
 
 const N = 16, C = 7.5;
 // hood over the medallion ground (clipped to the inside of the ring): h cloth, H its highlight, d face shadow, o eyes
@@ -46,7 +46,7 @@ export const CultMark = memo(function CultMark({ size = 32, title = null }) {
     <svg className="cult-mark" viewBox={`0 0 ${N} ${N}`} width={size} height={size} shapeRendering="crispEdges"
       role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'}>
       {title ? <title>{title}</title> : null}
-      {rects.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
+      {pixelPaths(rects)}
     </svg>
   );
 });

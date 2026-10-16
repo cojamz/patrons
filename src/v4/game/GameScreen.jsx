@@ -133,10 +133,12 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     const end = fresh.filter(isRoundEnd).pop();
     // the DOM still shows `prev` here: whatever must be measured before it changes is measured now (a card leaving)
     if (beforeShow && beforeShow.current && prev !== next) beforeShow.current(prev, next);
-    // Your own move's table update is a transition (perf fix 1): the click's own frame (the press, the focus) paints first,
-    // and the table follows without blocking input. A bot's step (a timer) is a plain update: one uninterrupted render.
-    // As a transition it was restarted by every number ticking on screen and waited for the ticks to stop (turn-wait.md).
-    const paint = userMove ? startTransition : f => f();
+    // Every table step is a transition (perf fix 1; table speed pass, 2026-10-15): React draws it in slices of a few ms,
+    // so a hover or a click that lands while a bot's step is being drawn answers at once instead of waiting out one
+    // 100–300ms task (4× CPU). (A bot's step was a plain update while every ticking number re-rendered once a frame and
+    // restarted it, turn-wait.md; Tick now writes its digits straight to the DOM, so nothing restarts it each frame.)
+    void userMove;
+    const paint = startTransition;
     if (end) {
       held.current = true;
       const start = roundStart.current;
@@ -264,10 +266,12 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     return () => { off(); clearTimeout(timer.current); timer.current = null; };
   }, [session, pump]);
 
+  // the round card's button: the card closes in the click's own frame (GameScreen hides it at once), and the table that
+  // follows (the new round, every minion going home) is drawn as a transition behind it (it took the click ~1s at 4×)
   const dismiss = useCallback(() => {
     held.current = false;
     paced.current = true;
-    setTable(t => ({ ...t, moment: null }));
+    startTransition(() => setTable(t => ({ ...t, moment: null })));
     pump();
   }, [pump]);
 
@@ -297,11 +301,22 @@ function AfterChain({ value, hold, step = null, children }) {
 function SpeedSetting() {
   const [sp, setSp] = useState(motionSpeed);
   useEffect(() => onMotionSpeed(setSp), []);
+  // the pick shows in the click's own frame; the speed itself is set a frame later (blind testers: 490–819ms to answer at
+  // 4×): setMotionSpeed writes --mo-scale on the page's root, which re-styles every element, and re-renders the table
+  const pending = useRef(null);
+  // (closed before then: the speed is set at once, never lost)
+  useEffect(() => () => { const p = pending.current; if (p) { cancelAnimationFrame(p.raf); clearTimeout(p.t); pending.current = null; setMotionSpeed(p.k); } }, []);
+  const pick = k => {
+    setSp(k);
+    if (pending.current) { cancelAnimationFrame(pending.current.raf); clearTimeout(pending.current.t); }
+    const p = pending.current = { raf: 0, t: 0, k };
+    p.raf = requestAnimationFrame(() => { p.t = setTimeout(() => { pending.current = null; setMotionSpeed(k); }, 0); });
+  };
   return (
     <div className="menu-speed" role="radiogroup" aria-label="Speed" title="How fast the bots move and moves play out on the table. Your own clicks always answer at once.">
       <span className="menu-speed-label">Speed</span>
       {Object.keys(SPEEDS).map(k => (
-        <button key={k} type="button" role="radio" aria-checked={sp === k} className={`btn ghost menu-speed-opt${sp === k ? ' on' : ''}`} data-speed={k} onClick={() => setMotionSpeed(k)}>{SPEED_NAMES[k]}</button>
+        <button key={k} type="button" role="radio" aria-checked={sp === k} className={`btn ghost menu-speed-opt${sp === k ? ' on' : ''}`} data-speed={k} onClick={() => pick(k)}>{SPEED_NAMES[k]}</button>
       ))}
     </div>
   );
@@ -537,6 +552,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // cards sat over the wheel's centre a second into your turn)
   useEffect(() => { if (mine && !chainRunning()) stageRelease(0); }, [mine, state.moves]);
   const [reckoned, setReckoned] = useState(null); // the round-end moment whose Reckoning has played (then: the summary)
+  // the round card closes in the click's own frame: this commit only unmounts it, and the new round's table follows as a
+  // transition (useTable dismiss), so the button answers at once instead of after the whole table has redrawn
+  const [closedMoment, setClosedMoment] = useState(null);
+  const nextRound = useCallback(() => { setClosedMoment(moment); dismissMoment(); }, [moment, dismissMoment]);
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
   // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
   // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)
@@ -1370,7 +1389,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {receipt && <PayReceipt key={receipt.key} receipt={receipt} onDone={() => setReceipt(r => (r && r.key === receipt.key ? null : r))} />}
       {mine && !needHandoff && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)) && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={rootEl} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
-      {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
+      {moment && reckoned === moment && closedMoment !== moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={nextRound} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
       {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} onClose={() => setLogOpen(false)} />}
       {!state.over && <ActionStage />}

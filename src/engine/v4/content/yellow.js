@@ -50,9 +50,9 @@ export default {
       },
     },
     {
-      key: 'transmute', ring: 1, name: 'Trade Seeds', text: 'Swap up to 3 of your resources for other colors, then +1 yellow.',
-      estimate: (ctx, p) => 1 + Math.min(3, Math.max(0, Math.floor(total(ctx, p) / colors(ctx).length) - setsOf(ctx, p))) * 0.8,
-      resolve(ctx, p) { transmuteStep(ctx, p, { left: Math.min(3, total(ctx, p)), done: 0 }); },
+      key: 'transmute', ring: 1, name: 'Trade Seeds', text: '+2 yellow, then swap up to 3 of your resources for other colors.', // Cory, 2026-10-15: the gain first, then the swap (was swap, then +1)
+      estimate: (ctx, p) => 2 + Math.min(3, Math.max(0, Math.floor(total(ctx, p) / colors(ctx).length) - setsOf(ctx, p))) * 0.8,
+      resolve(ctx, p) { ctx.gain(p, Y, 2, { fromAction: true }); transmuteStep(ctx, p, { left: Math.min(3, total(ctx, p)), done: 0 }); },
     },
     {
       key: 'prism', ring: 2, name: 'Branch Out', text: '+1 of each other color per 3 yellow you have (you keep the yellow).',
@@ -205,7 +205,7 @@ function harvestAmount(ctx, p) {
   return 1 + others(ctx).filter(c => p.res[c] > 0).length;
 }
 
-// Trade Seeds is up to 3 one-for-one swaps, with Done at any time, then +1 yellow.
+// Trade Seeds is +2 yellow, then up to 3 one-for-one swaps, with Done at any time.
 function transmuteStep(ctx, p, data) {
   const cs = colors(ctx);
   const opts = [];
@@ -223,7 +223,6 @@ function transmuteStep(ctx, p, data) {
   ctx.choose(p, `Trade Seeds: swap one for one, or stop (${data.done} swapped so far)`, opts, 'yellow.swap', data);
 }
 function finishTransmute(ctx, p, data) {
-  ctx.gain(p, Y, 1, { fromAction: true });
   const what = Object.entries(data.tally || {}).map(([k, n]) => `${n} ${k.replace('>', ' → ')}`).join(', ');
   ctx.log(data.done ? `${p.name} transmuted ${what}.` : `${p.name} swapped nothing.`);
 }

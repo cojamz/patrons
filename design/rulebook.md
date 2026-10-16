@@ -22,11 +22,13 @@ One colored quadrant per player, each with its own spaces and its own contest, p
 Turns go in snake order (1-2-3-4, 4-3-2-1, …). Round I's order is random; from round II, fewest followers goes first (ties: whoever went later last round).
 1. **Place a minion** on an open space and resolve it. A space that recruits does not use your buy, unless it says "as your buy".
 2. **Buy one thing**, or pass:
-   - **Recruit a member** from the shop (10 face up, refilled from the pile). Pay its colored part in that color, and its "any" part in any resources. Discounts and price-changing members apply to every member you pay for.
-   - Or **buy followers**: 2 resources for 1, 4 for 4, 8 for 8, 10 for 10. The table holds 2 of the 8-for-8 buy per player, first come, first served.
-   - Once per round, before you buy, you may **release** a member you didn't recruit this round and haven't used: it goes under the pile and you take back its colored part, in its color (any colors if its color isn't on the table).
+   - **Recruit a member** from the shop: 10 face up, refilled from the face-down pile at the head of the row, which shows how many are left. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins are already in the cost; tap one of your resources to swap it in. A discount ("your next member costs 4 less") and any member that changes a price (Penny Pincher's gold counts double) apply to every member you pay for, including one a space lets you recruit (Snap Up, Half Price). While a discount is yours, each card shows what you'd pay, with its list price small and struck beside it ("free" when it costs you nothing). A card you can't afford yet is faded; point at it to see what you're short of.
+   - Or **buy followers** with any resources: 2 for 2 followers, 4 for 4, 8 for 8, 10 for 10. Only the 8-for-8 buy is limited: 2 per player (8 in a 4-player game). Buy 10 for 10 as often as you can pay for it.
+   - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back only its colored part, in its color (in any colors if its color isn't on the table). The "any" part never comes back, so a member with no colored part can't be released, and neither can a member you've already used.
 
 An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while a space is open. A member whose color isn't on the table is **colorless**: it gives nothing to cards that pay "its color".
+
+An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while the board has a space to spare.
 
 ## Round end
 Each contest's leader gains +2 followers in round I, +4 in round II, +6 in round III. Ties all score unless the rim's tiebreak settles it. You need at least 1 of what's counted. The count is taken at round end.

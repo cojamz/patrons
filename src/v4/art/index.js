@@ -1,6 +1,7 @@
 // Pixel art: 24×24 icons as palette-key grids (see design/prototypes/pixel-art/style.md). Each icon recolors by
 // sphere: digits 1/2/3 are the sphere's shade/base/highlight, letters are shared neutrals. Icons come from the
 // drawing batches (scripts/v4-art-import.mjs → ./icons/); anything not drawn yet falls back to a template.
+import { createElement } from 'react';
 import SETS from './icons/index.js';
 
 const TABLE = '#101817';
@@ -106,6 +107,31 @@ export function rectsFor(icon, sphere) {
   });
   rectCache.set(k, out);
   return out;
+}
+
+/**
+ * Pixel runs ({ x, y, w, fill }) as <path> elements, one per colour, built once per runs array and fillOf and reused
+ * on every render. A sprite drew ~140 <rect>s and the game screen ~6,000 of its ~7,100 nodes were pixel rects (speed
+ * squad 2026-10-15: each one a node to create, style, lay out and paint whenever a seat or a hover card drew it).
+ * The same squares, the same crisp edges: the runs never overlap, so the union of one colour's runs is the same set
+ * of pixels. The elements are cached (same objects every render), so React skips them when a figure re-renders.
+ */
+const byFill = r => r.fill;
+const pathCache = new WeakMap();
+export function pixelPaths(runs, fillOf = byFill) {
+  let per = pathCache.get(runs);
+  if (!per) { per = new Map(); pathCache.set(runs, per); }
+  let els = per.get(fillOf);
+  if (els) return els;
+  const m = new Map();
+  for (const r of runs) {
+    const f = fillOf(r);
+    if (f == null) continue;
+    m.set(f, (m.get(f) || '') + `M${r.x} ${r.y}h${r.w}v1h${-r.w}z`);
+  }
+  els = [...m].map(([fill, d], k) => createElement('path', { key: k, d, fill }));
+  per.set(fillOf, els);
+  return els;
 }
 
 /** How much of an icon is its sphere's color (keys 1/2/3) among its filled cells: 0..1. */

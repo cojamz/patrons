@@ -28,6 +28,7 @@ import { memo } from 'react';
 import { Sprite, iconFor, spriteId, withOutline, Follower, FaceMinion, FaceText, quadrant } from './kit.jsx';
 import { ResourceGlyph } from '../Glyphs.jsx';
 import './sum.css';
+import { pixelPaths } from '../../art/index.js';
 
 const INK = '#2a1f17', INK2 = '#5f4e3d', CARD = '#f8f0dd', HOODC = '#6b5440', LAMP = '#ffcf6b', TAG = '#7a2f22', CREAM = '#fff6e4';
 const INKS = { gold: '#c99327', red: '#b4533e', blue: '#4f7ea8', green: '#3d8c66', magenta: '#b2386c', purple: '#7d5ba6', silver: '#8794a2', yellow: '#c4a93a', white: '#e6dcc6' };
@@ -77,7 +78,7 @@ const SUMS = {
   'purple.catchup': ({ n }) => [R('purple', plus(n(0, 1))), NUM(plus(n(1, 1))), PER, HOOD({ mod: 'high' })], // +1⧗ +1/▴☗
   'purple.windup': ({ n }) => [R('purple', plus(n(0, 1))), PER, MIN()], //                         +1⧗ / ♟       (on the board)
   'purple.planahead': ({ n }) => [R('purple', plus(n(0, 2))), PER, MIN({ left: true })], //         +2⧗ / ♙       (still to place)
-  'purple.overtime': ({ n }) => [AGAIN(n(0, 1))], //                                                 1↻           (free)
+  'purple.rushhour': () => [R('purple', '+1'), PER, NUM('2'), MIN()], //                              +1⧗ / 2♟      (everyone's)
   'purple.rally': ({ n }) => [NUM(n(0, 2)), MIN({ left: true }), TAGT('now')], //                    2♙ [now]     (your next turns, not extra)
   // silver: generous gains that spill on everyone
   'silver.toast': ({ n, r }) => [R('silver', plus(n(0, 3) * r)), DOT, HOOD({ all: true }), R('silver', '+1')], // +6🔔 · ☗☗+1🔔
@@ -111,7 +112,7 @@ const SUMS = {
   'thieves.heist': () => [MEM({ rival: true }), ARROW, MEM()], //                                  ☗▢ → ▢        (they recruit one back: hover)
   // trading (white): followers
   'trading.haggle': ({ n }) => [R('white', plus(n(0, 2))), NUM(plus(n(1, 1))), PER, HOOD({ mod: 'high' })], // +2⬡ +1/▴☗
-  'trading.buylow': ({ n, r }) => [R('any', n(0, 2) * r), ARROW, FOL(n(0, 2) * r)], //       2◌ → 2☺
+  'trading.buylow': () => [FOL('+1'), PER, R('white', '3')], //                                   +1☺ / 3⬡
   'trading.pawn': ({ r }) => [FOL(plus(r)), WORD('or'), R('white', plus(2 * r))], //               +1☺ or +2⬡
   'trading.sellhigh': ({ n }) => [FOL(n(0, 2)), ARROW, R('white', n(0, 2) * n(1, 3))], //            2☺ → 6⬡
   'trading.dividend': () => [R('white', '+1'), PER, FOL()], //                                     +1⬡ / ☺
@@ -402,16 +403,17 @@ function hatchRects(id) {
   const out = [];
   withOutline(icon.px).forEach((row, y) => [...row].forEach((ch, x) => {
     if (ch === '.') return;
-    if (ch === 'k') out.push({ x, y, o: 1 });
-    else if ((x + y) % 3 === 0) out.push({ x, y, o: 0 });
+    if (ch === 'k') out.push({ x, y, w: 1, o: 1 });
+    else if ((x + y) % 3 === 0) out.push({ x, y, w: 1, o: 0 });
   }));
   hatchCache.set(icon.id, out);
   return out;
 }
+const hatchFill = p => (p.o ? 'rgba(42,31,23,.5)' : 'rgba(42,31,23,.3)');
 const Hatched = memo(function Hatched({ id, size }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} style={{ width: size, height: size }} shapeRendering="crispEdges" aria-hidden="true" className="sum-hatch">
-      {hatchRects(id).map((p, k) => <rect key={k} x={p.x} y={p.y} width="1" height="1" fill={p.o ? 'rgba(42,31,23,.5)' : 'rgba(42,31,23,.3)'} />)}
+      {pixelPaths(hatchRects(id), hatchFill)}
     </svg>
   );
 });

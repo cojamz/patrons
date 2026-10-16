@@ -2,7 +2,7 @@
 // wears it as an 8×8 emblem. Drawings: design/prototypes/pixel-art/emojis.js → scripts/v4-art-import.mjs →
 // ./icons/emojis.js. An emoji not drawn yet falls back to the hooded minion and the seat's sigil.
 import SETS from './icons/index.js';
-import { withOutline, NEUTRALS } from './index.js';
+import { withOutline, NEUTRALS, pixelPaths } from './index.js';
 
 const EMOJIS = SETS.filter(i => i.kind === 'emoji');
 /** The emoji ids drawn so far, in the order a picker should offer them. */
@@ -24,11 +24,13 @@ const art = (id, which) => {
   if (cache.has(k)) return cache.get(k);
   const e = EMOJIS.find(x => x.id === id);
   const grid = e && (which === 'em' ? e.em : e.px);
-  const out = grid ? { size: grid.length, rects: runs(grid, { ...NEUTRALS, ...e.palette }, which !== 'em') } : null;
+  const rects = grid && runs(grid, { ...NEUTRALS, ...e.palette }, which !== 'em');
+  // paths: the runs as cached <path> elements, one per colour (pixelPaths): what every drawing of it renders
+  const out = grid ? { size: grid.length, rects, paths: pixelPaths(rects) } : null;
   cache.set(k, out);
   return out;
 };
-/** The 8×8 emblem for a leader's medallion: { size, rects } or null. */
+/** The 8×8 emblem for a leader's medallion: { size, rects, paths } or null. */
 export const emojiArt = id => (id ? art(id, 'em') : null);
-/** The 16×16 minion: { size, rects } or null. */
+/** The 16×16 minion: { size, rects, paths } or null. */
 export const minionArt = id => (id ? art(id, 'px') : null);

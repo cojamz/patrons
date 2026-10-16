@@ -21,6 +21,8 @@ const TURN_VALUE = [3, 5, 7]; // a placement plus its buy, by round
 /** Workers p has on the board right now (a worker sharing a rival's space counts too). */
 export const onBoard = (ctx, p) => Object.values(ctx.state.slots).filter(o => o === p.id).length
   + Object.values(ctx.state.squats || {}).reduce((s, list) => s + list.filter(o => o === p.id).length, 0);
+/** Every minion on the board right now, everyone's (a worker sharing a space counts too). */
+const allOnBoard = ctx => Object.keys(ctx.state.slots).length + Object.values(ctx.state.squats || {}).reduce((n, l) => n + l.length, 0);
 /** Open spaces right now, as [quadrant index, action index]. */
 function openSpaces(ctx) {
   const out = [];
@@ -153,6 +155,15 @@ const turnsNowEstimate = (ctx, p, n) => {
   return v;
 };
 
+/** Overtime, off the board since 2026-10-15 (Rush Hour took its space). Kept for the extra-turn member tests only:
+ *  test/engine/v4/retired-overtime.js puts it back on Purple's quadrant for one test file. */
+export const RETIRED_OVERTIME = {
+  key: 'overtime', ring: 2, name: 'Overtime', text: 'Take 1 extra turn right after this one.',
+  copyDoesIt: true,
+  estimate: ctx => freeTurnsEstimate(ctx, 1),
+  resolve(ctx, p) { freeTurns(ctx, p, 1, 'Overtime'); },
+};
+
 export default {
   id: 'purple',
   name: 'Purple',
@@ -187,12 +198,11 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, p.left, { fromAction: true }); },
     },
     {
-      // free (Cory, 2026-10-15: "no board action should require spending"): was "pay 8 purple for 2 extra turns, else +3"
-      key: 'overtime', ring: 2, name: 'Overtime', text: 'Take 1 extra turn right after this one. Closed in round III.',
-      lastRound: 2, // shut in round III (Cory, 2026-10-15: the bench read it ~20u there against a 5–9 band)
-      copyDoesIt: true, // Echo: a copy takes the extra turn itself (there's no resource to copy)
-      estimate: ctx => freeTurnsEstimate(ctx, 1),
-      resolve(ctx, p) { freeTurns(ctx, p, 1, 'Overtime'); },
+      // replaces Overtime (Cory, 2026-10-15: "overtime fucking SUCKS": it spent a minion to hand one back, a space
+      // for a space). Name and rule are Claude's fill-in, built while Cory looks: purple for a busy table.
+      key: 'rushhour', ring: 2, name: 'Rush Hour', text: '+1 purple per 2 minions on the board (everyone’s, this one included).',
+      estimate: ctx => Math.floor(allOnBoard(ctx) / 2),
+      resolve(ctx, p) { ctx.gain(p, P, Math.floor(allOnBoard(ctx) / 2), { fromAction: true }); },
     },
     {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"

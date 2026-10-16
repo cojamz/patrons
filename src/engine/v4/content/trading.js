@@ -1,5 +1,6 @@
 // White: the exchange. Your followers are liquid: sell them for white when you need fuel, draw white on them
-// (Dividend), buy them back cheap. Most white at round end takes the ring's followers.
+// (Dividend), buy them back cheap. Fewest followers at round end takes the ring's followers (Cory, 2026-10-15):
+// sell before the round ends to dip under the table, buy back after.
 //
 // Rules this module adds:
 // - You can only sell or spend loose followers: the ones you've won or bought (p.bonus). Never yourself, never your members
@@ -27,7 +28,8 @@ const lastTurn = (ctx, p) => ctx.state.round === 3 && p.left === 0;
 
 export const SELL_HIGH = { most: 2, each: 3 };
 export const PAWN = { each: 2 }; // Your Call: per round number, +1 follower or this much white
-export const BUY_LOW = { per: 2 }; // up to this many resources per round number, 1 for 1
+export const BUY_LOW = { per: 2 }; // the old Cheap Seats (1 for 1, this many per round number); its handler stays for old saves
+export const CHEAP_SEATS = { per: 3 }; // white held per follower
 export const LIQUIDATE = { most: 5, each: 2 };
 // All In pays this many followers per resource (experiments try 0.5: 2 resources per follower)
 export const BOOM = { per: 1 };
@@ -71,7 +73,14 @@ const trading = {
   id: 'trading',
   name: 'White',
   resource: W,
-  scoring: { label: 'Most white', counts: 'the white you hold when the round ends', score: (ctx, p) => p.res[W] },
+  // Cory, 2026-10-15: "do number 1", no white requirement. Fewest followers takes the ring's followers; everyone
+  // has at least 1, so someone always scores, and ties all score. The score is inverted so higher is better for
+  // the engine and bots; show() keeps the number on screen the plain follower count.
+  scoring: {
+    label: 'Fewest followers', counts: 'your followers when the round ends',
+    score: (ctx, p) => 1000 - ctx.followers(p),
+    show: (ctx, p) => ({ count: ctx.followers(p) }),
+  },
 
   actions: [
     {
@@ -80,11 +89,15 @@ const trading = {
       resolve(ctx, p) { ctx.gain(p, W, 2 + ahead(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'buylow', ring: 1, name: 'Cheap Seats', text: `Trade resources for followers, 1 for 1: up to ${BUY_LOW.per} in round I, ${2 * BUY_LOW.per} in round II, ${3 * BUY_LOW.per} in round III.`,
-      estimate: (ctx, p) => Math.min(BUY_LOW.per * ctx.state.round, totalRes(p)) * (fv(ctx) - 0.9) + 0.4,
+      // Cory, 2026-10-15: was "trade resources for followers, 1 for 1, up to 2 per round number" (the shop does that,
+      // and it charged you): now it pays for holding white, which is what White scores
+      key: 'buylow', ring: 1, name: 'Cheap Seats', text: `+1 follower per ${CHEAP_SEATS.per} white you hold (you keep the white).`,
+      estimate: (ctx, p) => Math.floor((p.res[W] || 0) / CHEAP_SEATS.per) * fv(ctx),
       resolve(ctx, p) {
-        if (!totalRes(p)) { ctx.log(`${p.name} had nothing to trade.`); return; }
-        buyLowStep(ctx, p, { left: BUY_LOW.per * ctx.state.round, done: 0 });
+        const n = Math.floor((p.res[W] || 0) / CHEAP_SEATS.per);
+        if (!n) { ctx.log(`${p.name}'s Cheap Seats: fewer than ${CHEAP_SEATS.per} white, no followers.`); return; }
+        actionFollowers(ctx, p, n);
+        ctx.log(`${p.name}'s Cheap Seats: +${n} follower${n > 1 ? 's' : ''} (${p.res[W]} white held).`);
       },
     },
     {

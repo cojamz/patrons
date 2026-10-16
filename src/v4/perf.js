@@ -7,10 +7,12 @@
 //   - every animation and transition (Element.animate, CSS animation/transition events) and the wheel's rAF spins;
 //   - session steps: local bot step scheduled → applied → shown → painted; online move sent → host applied →
 //     state received → shown → painted. `?lag=MS` (works without ?trace) delays the online transport both ways;
-//   - hover open delay: pointer over a hover target → its card in the DOM (and its "You'd get" filled in).
+//   - hover open delay: pointer over a hover target → its card on screen (and its "You'd get" filled in, and its last
+//     change), each timed from the end of the hover delay (hoverDelay.js: pointer arrival + HOVER_DELAY_MS).
 // window.__perf = { entries, summary(), reset(), mark(name) }. A corner overlay shows p50/p95 input→paint.
 // Harness: node scripts/v4-perf.mjs <url> <label> [--cpu=4] [--online]
 import { Profiler, createElement } from 'react';
+import { HOVER_DELAY_MS } from './game/hoverDelay.js';
 
 const qs = (() => { try { return new URLSearchParams(globalThis.location?.search || ''); } catch { return new URLSearchParams(''); } })();
 export const PERF_ON = typeof window !== 'undefined' && qs.get('trace') === '1';
@@ -197,7 +199,7 @@ function summary() {
   const byKind = group(inputs, x => `${x.type} ${x.kind}`);
   const inputRows = [...byKind].map(([k, xs]) => ({ kind: k, ...stats(xs.map(x => x.dur)), delay: stats(xs.map(x => x.inputDelay)).p95, proc: stats(xs.map(x => x.processing)).p95 })).sort((a, b) => (b.p95 || 0) - (a.p95 || 0));
   const all = stats(inputs.map(x => x.dur));
-  const hoverRows = [...group(E.hovers.filter(h => h.domMs != null), h => h.kind)].map(([k, xs]) => ({ kind: k, ...stats(xs.map(h => h.domMs)), content: stats(xs.map(h => h.contentMs)).p95, handler: stats(xs.map(h => h.handlerMs)).p95 }));
+  const hoverRows = [...group(E.hovers.filter(h => h.domMs != null), h => h.kind)].map(([k, xs]) => ({ kind: k, ...stats(xs.map(h => h.domMs)), content: stats(xs.map(h => h.contentMs)).p95, settled: stats(xs.filter(h => h.settledMs != null).map(h => h.settledMs)).p95, handler: stats(xs.map(h => h.handlerMs)).p95 }));
   const missed = E.hovers.filter(h => h.domMs == null).length;
   const loaf = [...E.loaf].sort((a, b) => b.duration - a.duration);
   const compRows = [...group(E.commits.flatMap(c => Object.entries(c.comps).map(([n, v]) => ({ n, ms: v.ms, k: v.n }))), x => x.n)]
@@ -306,25 +308,56 @@ function install() {
     const slot = t.closest('[data-slot]'); if (slot) return { kind: 'space', key: slot.getAttribute('data-slot'), sel: `[data-space-card="${slot.getAttribute('data-slot')}"]` };
     const card = t.closest('.lt-shop [data-uid]'); if (card) return { kind: 'shop-card', key: card.getAttribute('data-uid'), sel: `[data-card-hover="${card.getAttribute('data-uid')}"]` };
     const rim = t.closest('[data-rim]'); if (rim) return { kind: 'rim', key: rim.getAttribute('data-rim'), sel: '[data-hover-card="plaque"]' };
-    const tip = t.closest('[data-tip]'); if (tip) return { kind: 'tip', key: '', sel: '[data-tip-body]' };
-    const seat = t.closest('.lt-seat[data-pid]'); if (seat && t.closest('.cs-head')) return { kind: 'seat', key: seat.getAttribute('data-pid'), sel: `[data-seat-card="${seat.getAttribute('data-pid')}"]` };
+    const tip = t.closest('[data-tip]'); if (tip) return { kind: tip.closest('.cs-member') ? 'member' : 'tip', key: '', sel: '[data-tip-body]' };
+    const seat = t.closest('[data-cult]');
+    if (seat && t.closest('.cs-total')) return { kind: 'followers', key: seat.getAttribute('data-cult'), sel: `[data-followers-card="${seat.getAttribute('data-cult')}"]` };
+    if (seat && t.closest('.cs-head')) return { kind: 'seat', key: seat.getAttribute('data-cult'), sel: `[data-seat-card="${seat.getAttribute('data-cult')}"]` };
     return null;
+  };
+  // card complete (Cory: "card complete", not "card present"): from the card's first paint, watch its box, its words,
+  // its place and its size for 600ms; settledMs is when the last change landed, so a card that fills in over bursts
+  // reads as late as its last burst. Only while it is still THIS card on screen: its closing, or the layer swapping to
+  // the next target, is the pointer moving on, not the card filling in (the first tracer counted the close at the end
+  // of each dwell: "complete" p95 650-710ms on cards that never changed after their first paint)
+  const settle = (rec, el, t0, sel) => {
+    const box = el.closest('[data-hover-layer], .lt-note.pinned, .popover') || el;
+    const shape = () => { const b = box.getBoundingClientRect(); return `${Math.round(b.left)},${Math.round(b.top)},${Math.round(b.width)},${Math.round(b.height)}`; };
+    const still = () => box.isConnected && el.isConnected && box.contains(el) && el.matches(sel)
+      && !box.hasAttribute('data-prep') && (!box.hasAttribute('data-hover-layer') || box.getAttribute('data-open') === '1');
+    let last = now(), at = shape(), done = false;
+    const stop = () => { if (done) return; done = true; mo.disconnect(); rec.settledMs = last - t0; };
+    const mo = new MutationObserver(() => { if (!done && !still()) { stop(); return; } last = now(); });
+    mo.observe(box, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'src', 'd', 'href', 'style', 'hidden'] });
+    const end = now() + 600;
+    const tick = () => {
+      if (done) return;
+      if (!still()) { stop(); return; }
+      const a2 = shape();
+      if (a2 !== at) { at = a2; last = now(); }
+      if (now() < end) requestAnimationFrame(tick); else stop();
+    };
+    requestAnimationFrame(tick);
   };
   let lastHover = null;
   addEventListener('pointerover', e => {
     if (e.pointerType !== 'mouse') return;
     const h = hoverTarget(e.target);
-    if (!h || (lastHover && lastHover.kind === h.kind && lastHover.key === h.key && !lastHover.done)) return;
-    const rec = { ...h, t: e.timeStamp, domMs: null, contentMs: null, handlerMs: null, done: false };
+    if (!h || (lastHover && lastHover.base === h.kind && lastHover.key === h.key && !lastHover.done)) return;
+    // every time is from the end of the hover delay: the pointer's arrival + HOVER_DELAY_MS. A card already up swaps to
+    // the next space or shop card at once (no delay): that's its own row ("space·swap"), timed from the arrival
+    const swap = !['tip', 'member', 'seat', 'followers'].includes(h.kind) && !!document.querySelector('[data-hover-layer][data-open="1"]');
+    const delayMs = swap ? 0 : HOVER_DELAY_MS;
+    const rec = { ...h, kind: swap ? `${h.kind}·swap` : h.kind, base: h.kind, t: e.timeStamp, delayMs, domMs: null, contentMs: null, handlerMs: null, done: false };
     delete rec.sel;
     lastHover = rec;
     E.hovers.push(rec);
-    const t0 = e.timeStamp;
+    const t0 = e.timeStamp + delayMs;
     const look = () => {
       if (lastHover !== rec) return; // the pointer moved on first
       const ts = now();
-      const el = document.querySelector(`[data-hover-layer][data-open="1"] ${h.sel}, .lt-note.pinned ${h.sel}, .popover ${h.sel}`);
-      if (el && rec.domMs == null) rec.domMs = ts - t0;
+      // on screen: the layer open, or a card that isn't waiting out its delay off screen (data-prep)
+      const el = document.querySelector(`[data-hover-layer][data-open="1"] ${h.sel}, .lt-note.pinned ${h.sel}, .popover:not([data-prep]):not([data-hover-layer]) ${h.sel}`);
+      if (el && rec.domMs == null) { rec.domMs = ts - t0; settle(rec, el, t0, h.sel); }
       if (el && rec.contentMs == null && !el.querySelector('.youd-get.pending')) { rec.contentMs = ts - t0; rec.done = true; return; }
       if (ts - t0 < 2500) requestAnimationFrame(look); else rec.done = true;
     };

@@ -9,6 +9,9 @@ import purple, { onBoard, spareSpace, turnsNow } from '../../../../engine/v4/con
 import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { games } from '../budget.js';
+import { useRetiredOvertime } from '../retired-overtime.js';
+
+useRetiredOvertime();
 
 // seeded games in the table block below: a game count, not a time budget (budget.js). The verdict plays 100 (catches a
 // bug in ≥3% of this table's games with 95% confidence), the nightly full run (check:v4:full) all 200, the fast gate 20.
@@ -124,8 +127,8 @@ describe('Purple actions', () => {
     expect(s.pending).toMatchObject({ kind: 'place', player: 0 });
   });
   it('extra turns never squeeze a later player out of the last space', () => {
-    // round II: only Overtime and two other spaces open, P2 still has a turn
-    const slots = { ...fullRoundI(JV, RUSH), '0-3': 1, '0-4': 1, '1-3': 1, '1-4': 1, '3-3': 1, '3-4': 1, '2-3': 1 };
+    // round II: only Overtime and two other spaces open (Rush Hour taken), P2 still has a turn
+    const slots = { ...fullRoundI(JV, RUSH), '0-3': 1, '0-4': 1, '1-3': 1, '1-4': 1, '3-3': 1, '3-4': 1, '2-3': 1, '2-4': 1 }; // 2-4: Rush Hour, where Overtime stood (Overtime is a test-only 7th space)
     const s0 = scene({ round: 2, slots, queue: turns(0, 1) });
     expect(spareSpace(contextFor(s0))).toBe(true); // 3 open, 1 turn queued
     let s = take(s0, 'purple.overtime');

@@ -4,7 +4,7 @@
 // - CardName / MemberCard: a member named anywhere opens the full card (color, cost, owner).
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { cardDef, defById, quadrant, previewSpace, memberPrice } from '../../engine/v4/index.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
@@ -16,7 +16,7 @@ import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
-import { MO } from '../motion.js';
+import { HOVER_DELAY_MS } from './hoverDelay.js';
 import { withRace } from './race.js';
 
 /**
@@ -25,11 +25,10 @@ import { withRace } from './race.js';
  */
 // Inside a control (an option button, a card): the control owns the click, the tip only explains on hover/long-press.
 const CONTROL = 'button, a[href], [data-option], [role="button"]';
-// a pointer resting on something opens its card at once (Cory, 2026-10-15: hovers must feel instant); the beat only
-// keeps a pointer passing across a line of keywords from flashing each one
-const TIP_MS = MO.tipOpen; // src/v4/motion.js
+// a pointer resting on something opens its card after the one hover delay (Cory, 2026-10-15: a mouse sweeping across
+// the screen shouldn't fire hovers nonstop), drawn hidden meanwhile so it shows whole in one frame; a click or tap at once
 export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, sticky = false, beside = null, ...rest }) {
-  const [open, setOpen] = useState(null); // { el, pinned }
+  const [open, setOpen] = useState(null); // { el, pinned, hidden } (hidden: waiting out the hover delay, drawn off screen)
   const [nested, setNested] = useState(false);
   const ref = useRef(null);
   const timer = useRef(null);
@@ -51,7 +50,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
   // one card on screen at a time (w3a A30): opening this one closes whatever card was up, the hover layer's included
   const me = useRef(null);
   if (!me.current) me.current = Symbol('tip');
-  const isOpen = !!open;
+  const isOpen = !!open && !open.hidden;
   useEffect(() => {
     if (!isOpen) return undefined;
     const id = me.current;
@@ -59,7 +58,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     return () => unclaim(id);
   }, [isOpen]);
   // while a sticky card is up (not pinned), it's the card the pointer may be on: what's under it doesn't open
-  const seeThrough = !!(sticky && open && !open.pinned);
+  const seeThrough = !!(sticky && isOpen && !open.pinned);
   useEffect(() => {
     if (!seeThrough) return undefined;
     const find = () => cardEl();
@@ -68,7 +67,8 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
   }, [seeThrough]); // eslint-disable-line react-hooks/exhaustive-deps
   const opening = () => {
     clearTimeout(timer.current); pending.current = true;
-    timer.current = setTimeout(() => { pending.current = false; setOpen(o => o || { el: ref.current, pinned: false }); }, TIP_MS);
+    setOpen(o => o || { el: ref.current, pinned: false, hidden: true });
+    timer.current = setTimeout(() => { pending.current = false; setOpen(o => (!o ? { el: ref.current, pinned: false } : o.hidden ? { ...o, hidden: false } : o)); }, HOVER_DELAY_MS);
   };
   // crossing toward another open card: this one stays shut (it opens on the next move once the crossing is over)
   // (the short detour allowance doesn't hold back a neighbour: moving along the row opens the next member at once,
@@ -84,6 +84,9 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     const again = () => { if (!onIt.current) return; if (crossing()) { retry.current = setTimeout(again, 60); return; } opening(); };
     retry.current = setTimeout(again, 60);
   };
+  // built once per opening (and again only when what it reads changes): the reveal after the delay draws nothing new
+  const drawing = !!open;
+  const shownContent = useMemo(() => (drawing ? (typeof content === 'function' ? content() : content) : null), [drawing, content]);
   const inControl = () => { const up = ref.current && ref.current.parentElement; return !!(up && up.closest(CONTROL)); };
   const pin = e => {
     // a keyword in an option's text never eats the option's click (a tap there picks the option)
@@ -94,23 +97,23 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     <>
       <As
         ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role={nested ? undefined : 'button'} tabIndex={nested ? undefined : 0}
-        aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
+        aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : isOpen} aria-label={label}
         data-hint={nested ? hint || label || undefined : undefined}
         onPointerEnter={e => { if (!realHover(e)) return; onIt.current = true; if (crossing(e)) { heldBack(); return; } opening(); }}
         onPointerMove={e => { if (open || pending.current || !realHover(e) || crossing(e)) return; opening(); }}
         onPointerLeave={e => {
           clearTimeout(timer.current); pending.current = false; onIt.current = false; clearTimeout(retry.current);
           if (e.pointerType !== 'mouse') return;
-          if (sticky && open && !open.pinned && body.current) { aimAt(body.current.closest('.popover') || body.current); release(); } else letGo();
+          if (sticky && isOpen && !open.pinned && body.current) { aimAt(body.current.closest('.popover') || body.current); release(); } else letGo();
         }}
         onClick={pin}
         onKeyDown={e => { if (!nested && (e.key === 'Enter' || e.key === ' ')) pin(e); }}
         {...rest}
       >{children}{nested ? null : <span className="hitbox" aria-hidden="true" />}</As>
       {open && (
-        <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned} beside={beside && open.el ? open.el.closest(beside) : null}>
+        <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned} hidden={!!open.hidden} beside={beside && open.el ? open.el.closest(beside) : null}>
           <div className={`tip-body${seeThrough ? ' see-through' : ''}`} data-tip-body ref={body}
-            {...(sticky ? { onPointerEnter: () => { clearTimeout(timer.current); arrived(); }, onPointerLeave: e => { if (e.pointerType === 'mouse') release(); } } : {})}>{typeof content === 'function' ? content() : content}</div>
+            {...(sticky ? { onPointerEnter: () => { clearTimeout(timer.current); arrived(); }, onPointerLeave: e => { if (e.pointerType === 'mouse') release(); } } : {})}>{shownContent}</div>
         </Popover>
       )}
     </>
