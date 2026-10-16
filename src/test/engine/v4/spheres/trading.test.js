@@ -51,17 +51,17 @@ const F = (s, i = 0) => followers(s, s.players[i]);
 const Z = { gold: 0, red: 0, blue: 0, white: 0 };
 const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
 
-describe('White scoring: most white', () => {
-  it('scores white held', () => {
-    expect(trading.scoring.score({}, { res: { ...Z, white: 4 } })).toBe(4);
+describe('White scoring: fewest followers', () => {
+  it('scores fewer followers higher, and shows the follower count', () => {
+    const ctx = { followers: p => p.f };
+    expect(trading.scoring.score(ctx, { f: 2 })).toBeGreaterThan(trading.scoring.score(ctx, { f: 5 }));
+    expect(trading.scoring.show(ctx, { f: 5 }).count).toBe(5);
   });
-  it('pays the ring value to the leader at round end; no white, no score; ties all score', () => {
-    let s = scene({ n: 3, res: [{ white: 3 }, { white: 1 }, {}], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most white: P1 +2');
-    s = scene({ n: 3, res: [{ white: 2 }, { white: 2 }, {}], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most white: P1 & P2 +2');
-    s = scene({ n: 2, res: [{ gold: 2 }, {}], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).not.toContain('Most white');
+  it('pays the ring value to whoever has fewest followers, white or not; ties all score', () => {
+    let s = scene({ n: 3, res: [{}, { white: 5 }, {}], bonus: [0, 2, 1], queue: [{ t: 'endRound' }] });
+    expect(s.log.at(-1)).toContain('Fewest followers: P1 +2');
+    s = scene({ n: 3, bonus: [0, 0, 3], queue: [{ t: 'endRound' }] });
+    expect(s.log.at(-1)).toContain('Fewest followers: P1 & P2 +2');
   });
 });
 

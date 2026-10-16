@@ -1,5 +1,6 @@
 // White: the exchange. Your followers are liquid: sell them for white when you need fuel, draw white on them
-// (Dividend), buy them back cheap. Most white at round end takes the ring's followers.
+// (Dividend), buy them back cheap. Fewest followers at round end takes the ring's followers (Cory, 2026-10-15):
+// sell before the round ends to dip under the table, buy back after.
 //
 // Rules this module adds:
 // - You can only sell or spend loose followers: the ones you've won or bought (p.bonus). Never yourself, never your members
@@ -68,29 +69,18 @@ function sellChoice(ctx, p, prompt, most, each, why) {
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-// bench knob (White rework, 2026-10-15): which round-end rule White scores. 'white' is today's Most white.
-export const SCORING = { mode: (typeof process !== 'undefined' && process.env?.WHITE_SCORING) || 'white', gate: Number((typeof process !== 'undefined' && process.env?.WHITE_GATE) || 1) };
-const SCORINGS = {
-  white: { label: 'Most white', counts: 'the white you hold when the round ends', score: (ctx, p) => p.res[W] },
-  // fewest followers wins; you need white to enter (so the player furthest behind doesn't score it for free)
-  fewest: {
-    label: 'Fewest followers (you need white)', counts: 'your followers, if you hold any white',
-    score: (ctx, p) => (p.res[W] >= SCORING.gate ? 1000 - ctx.followers(p) : 0),
-    show: (ctx, p) => ({ count: ctx.followers(p) }),
-  },
-  // most white, but whoever leads in followers can't take it
-  noleader: {
-    label: 'Most white (not the follower leader)', counts: 'the white you hold, unless you have the most followers',
-    score: (ctx, p) => (ctx.followers(p) >= Math.max(...ctx.state.players.map(o => ctx.followers(o))) ? 0 : p.res[W]),
-    show: (ctx, p) => ({ count: p.res[W] }),
-  },
-  most: { label: 'Most followers', counts: 'your followers', score: (ctx, p) => ctx.followers(p) },
-};
 const trading = {
   id: 'trading',
   name: 'White',
   resource: W,
-  get scoring() { return SCORINGS[SCORING.mode]; },
+  // Cory, 2026-10-15: "do number 1", no white requirement. Fewest followers takes the ring's followers; everyone
+  // has at least 1, so someone always scores, and ties all score. The score is inverted so higher is better for
+  // the engine and bots; show() keeps the number on screen the plain follower count.
+  scoring: {
+    label: 'Fewest followers', counts: 'your followers when the round ends',
+    score: (ctx, p) => 1000 - ctx.followers(p),
+    show: (ctx, p) => ({ count: ctx.followers(p) }),
+  },
 
   actions: [
     {
