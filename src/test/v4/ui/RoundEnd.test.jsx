@@ -15,7 +15,7 @@ describe('round end card', () => {
     // 120 s was a budget after all: at load 31, niced, the round took 151 s (2026-10-15). Now just under the 600 s hang
     // backstop, so only a round that never ends fails.
     const dlg = await waitFor(() => screen.getByRole('dialog', { name: /Round I scoring/ }), { timeout: 540000 });
-    expect(within(dlg).getAllByRole('listitem')).toHaveLength(4);
+    expect(within(dlg).getAllByRole('listitem')).toHaveLength(2); // one quadrant per player (Cory, 2026-10-15)
     const held = session.getState().moves;
     // behind the card the board stays as it was scored: round I, workers still on their spaces
     expect(container.querySelector('header .round').textContent).toMatch(/Round I\b/);

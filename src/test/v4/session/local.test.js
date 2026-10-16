@@ -155,7 +155,7 @@ describe('local session: undo', () => {
     let bought = false, followedUp = false;
     for (let seed = 1; seed < 60 && !(bought && followedUp); seed++) {
       const rand = seededRandom(seed * 7919);
-      const s = createLocalSession({ seats: humans2, seed, botDelayMs: 0 });
+      const s = createLocalSession({ seats: humans2, seed, botDelayMs: 0, quadrants: ['gold', 'red', 'blue', 'green'] });
       for (let turn = 0; turn < 12 && !s.getState().over; turn++) {
         const pre = await placeOnce(s, rand);
         const st = s.getState();

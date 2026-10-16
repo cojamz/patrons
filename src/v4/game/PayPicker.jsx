@@ -1,10 +1,12 @@
 // Paying (Cory, 2026-10-15: "Using these currencies is rather confusing … something more intuitive"). A paper card in
-// the plate's grammar: what you're buying and its cost exactly as the card prints it ("2● 2◐"), then your resources as
-// stacks of dots, then Pay with the coins it pays. The suggested way is already in: the coins that pay are lifted off
-// the top of their stacks, and the number under a stack is what you keep. Click a stack to pay with that color
-// instead; click a lifted coin to put it back.
+// the plate's grammar: what you're buying and the price you pay (as the card's face shows it), then your resources in
+// two rows, then Pay with the coins it pays. The suggested way is already in: the coins that pay sit in a PAYING row
+// under the price, and what stays is a KEEPING row of stacks with their numbers (Cory, 2026-10-15: the faded coins were
+// "hard to decipher"). Click a kept stack to pay with that color instead; click a paying coin to keep it. On a laptop
+// the card stands beside what you're buying, which stays lit in a hole in the dimmed table (live panel r1: centred,
+// 580px from the card).
 // Either way the payment stays whole: the engine's nearest other legal way takes its place, and the coins fly between
-// stack and socket so you see the swap. Pay (Enter, wherever focus is) pays; Space works a focused stack or coin;
+// the rows so you see the swap. Pay (Enter, wherever focus is) pays; Space works a focused stack or coin;
 // Cancel (Escape) goes back to the buy step.
 // The engine lists every legal spend (pending.options of kind 'pay'); this only ever moves between those options.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -76,6 +78,18 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const title = def ? `Recruit ${def.name}` : `Buy ${tier.get} follower${tier.get > 1 ? 's' : ''}`;
   const shape = useMemo(() => costShape(state, p, pend, uid, how), [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   const printed = def ? costParts(def, res) : [{ color: 'any', n: tier.cost }];
+  // the price you pay, as the shop card's face shows it (live panel r1: the card showed the discounted price, the sheet
+  // the list price plus a discount line): the engine's price under the rule it's paid by, the list price struck before
+  // it when they differ
+  const price = useMemo(() => {
+    if (!def) return null;
+    let pr;
+    try { pr = memberPrice(state, p, uid, how); } catch { return null; }
+    const list = printed.reduce((t, c) => t + c.n, 0);
+    if (pr.total >= list) return null;
+    const any = pr.total - pr.colored;
+    return { list, parts: [...(pr.color && pr.colored ? [{ color: pr.color, n: pr.colored }] : []), ...(any > 0 ? [{ color: 'any', n: any }] : [])] };
+  }, [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   // every rule-changer bending this price, one quiet line each (the sockets already show what it comes to); a pay
   // choice says first what it's paid under ("Half Price: half its cost, in any colors")
   const asker = asChoice ? (String(pend.prompt || '').match(/^([^:]{2,40}):/) || [])[1] : null;
@@ -87,7 +101,39 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const pay = () => { if (match && !busy) onPick(match.id); };
   // this way gives up a contest lead or tie you hold (the engine's breaks): one quiet line says so
   const lostLead = match && match.breaks && match.breaks.length ? match.breaks : null;
+  // when any way gives up a lead, the line's room is kept while the way you're on keeps them all, so Pay never jumps as
+  // you move coins (skeptic round 2: Pay jumped 40px when "gives up your tie" appeared)
+  const someLost = ways.some(o => o.breaks && o.breaks.length);
   const box = useDialog(back ? () => { if (!busy) onPick('back'); } : null);
+
+  // beside what you're buying: the card (or follower tile) you clicked stays lit in a hole in the dimmed table, and the
+  // sheet stands next to it, on the side with room, its middle level with the card's; a phone keeps the bottom sheet
+  const hole = useRef(null);
+  const anchorSel = def ? `.lt-shop .lt-card[data-uid="${uid}"]` : tier ? `.lt-rates [data-rate="${tier.key}"]` : null;
+  useLayoutEffect(() => {
+    const el = box.current, ho = hole.current;
+    if (!el || !ho) return undefined;
+    const place = () => {
+      const a = anchorSel && document.querySelector(anchorSel);
+      const r = a && a.getBoundingClientRect();
+      const wide = innerWidth > 860;
+      const ov = el.parentElement;
+      if (!r || !r.width || !wide) { el.removeAttribute('data-at'); ho.removeAttribute('data-at'); if (ov) ov.removeAttribute('data-at'); el.style.left = el.style.top = ''; return; }
+      const w = el.offsetWidth, h = el.offsetHeight, gap = 16, edge = 16;
+      let left = r.left - gap - w;
+      if (left < edge) left = r.right + gap;
+      if (left + w > innerWidth - edge) left = Math.max(edge, (innerWidth - w) / 2);
+      const top = Math.min(Math.max(edge, r.top + r.height / 2 - h / 2), Math.max(edge, innerHeight - edge - h));
+      el.style.left = `${Math.round(left)}px`; el.style.top = `${Math.round(top)}px`;
+      el.dataset.at = anchorSel;
+      Object.assign(ho.style, { left: `${r.left - 4}px`, top: `${r.top - 4}px`, width: `${r.width + 8}px`, height: `${r.height + 8}px` });
+      ho.dataset.at = '1';
+      if (ov) ov.dataset.at = '1';
+    };
+    place();
+    addEventListener('resize', place);
+    return () => removeEventListener('resize', place);
+  }, [pend]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pay holds the keyboard as soon as it can be pressed, so Enter pays; closing hands focus back (useDialog)
   useEffect(() => {
@@ -135,7 +181,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
     if (busy) return;
     const have = p.res[r] || 0;
     if (!have) return;
-    if ((spend[r] || 0) >= have) { say(`All your ${r} is already in.`); return; }
+    if ((spend[r] || 0) >= have) { say(`All your ${r} already pays this.`); return; }
     const o = nearest(v => (v[r] || 0) > (spend[r] || 0));
     if (!o) { say(`No more ${r} fits this cost.`); return; }
     snap(); setSpend(vecOf(res, o.spend)); setNudge(null);
@@ -158,6 +204,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
 
   return (
     <div className="overlay sheet pay-overlay" role="dialog" aria-modal="true" aria-label={title}>
+      <span className="pay-hole" ref={hole} aria-hidden="true" />
       <div className="dialog pay pay-card" ref={box}
         onKeyDown={e => { if (e.key === 'Enter' && !e.target.closest('[data-option="back"]')) { e.preventDefault(); pay(); } }}>
         {turnOf && <TurnOf player={turnOf} />}
@@ -175,52 +222,75 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
                 <h2 className="mc-name">{def ? def.name : `${tier.get} follower${tier.get > 1 ? 's' : ''}`}</h2>
                 {def && <span className="mc-worth" title={`Worth ${def.f} follower${def.f === 1 ? '' : 's'}`}><b className="n">{def.f}</b><Follower size={14} title={`worth ${def.f} follower${def.f === 1 ? '' : 's'}`} /></span>}
               </span>
-              <small className="mc-cost" data-pay-cost={printed.map(c => `${c.n}${c.color}`).join(' ')}>costs <CostDots parts={printed} /></small>
+              <small className="mc-cost" data-pay-cost={printed.map(c => `${c.n}${c.color}`).join(' ')} data-pay-price={(price ? price.parts : printed).map(c => `${c.n}${c.color}`).join(' ')}>
+                costs {price ? <><s className="pay-was num" title="List price">{price.list}</s> {price.parts.length ? <CostDots parts={price.parts} /> : 'nothing'}</> : <CostDots parts={printed} />}
+              </small>
             </span>
           </div>
         </div>
 
-        {/* your resources: a stack of dots per color (wave-2 tester A: the payment once showed three times; now the
-            stacks and the Pay button say it). The coins this pays with are lifted off the top of their stack and faded,
-            and the number under a stack is what you keep. Click a stack to pay with one more of it; click a lifted coin
-            to put it back (another color takes its place). */}
-        <div className="pay-stacks" role="group" aria-label="Your resources" style={{ '--tall': tall }}>
-          {/* only the colors you hold (blind tester B: a faint coin for a color you hold none of read as "this pays") */}
-          {res.filter(r => (p.res[r] || 0) > 0).map(r => {
-            const have = p.res[r] || 0, out = spend[r] || 0, keep = have - out;
-            const drawn = Math.min(have, STACK_MAX), lifted = Math.min(out, drawn), base = have - drawn;
-            const sayAdd = have ? `${have} ${r}: ${out ? `${out} pay${out === 1 ? 's' : ''} this, ` : ''}you keep ${keep}. Click to pay with one more ${r}.` : `No ${r}`;
-            return (
-              <div key={r} className={`pay-stack${have ? '' : ' none'}${out ? ' paying' : ''}`} data-stack={r} data-keep={keep} data-out={out}>
-                <button type="button" className="ps-add" data-pay-add={r} data-keep={keep} disabled={busy || !have} title={sayAdd} aria-label={sayAdd} onClick={() => add(r)} />
-                <span className="ps-coins">
-                  {Array.from({ length: drawn - lifted }, (_, k) => (
-                    <i key={k} className="ps-coin" data-coin={`${r}-${k + base}`} style={{ '--k': k }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
-                  ))}
-                  {lifted > 0 && (
-                    <button type="button" className="ps-out" data-pay-coin={r} disabled={busy} style={{ '--k0': drawn - lifted, '--n': lifted }}
-                      title={`${out} ${r} pay${out === 1 ? 's' : ''} this. Click to put one back and pay with another color.`} aria-label={`${out} ${r} paying: put one back`}
-                      onClick={() => remove(r)}>
+        {/* your resources in two rows (Cory, 2026-10-15, on the old lifted-and-faded coins: "hard to decipher … not
+            intuitive"): PAYING holds the coins that leave, grouped by color right under the cost they pay; KEEPING holds
+            a stack per color with what stays and its number. A click on a paying coin sends one home (another color
+            takes its place); a click on a kept stack pays with one more of it. The payment is always whole, and the
+            coins fly between the rows so you see the swap. */}
+        <div className="pay-rows" style={{ '--tall': tall }}>
+          <div className="pay-row paying" role="group" aria-label="Paying">
+            <span className="pr-lbl">Paying</span>
+            <span className="pr-items">
+              {res.filter(r => (spend[r] || 0) > 0).map(r => {
+                const have = p.res[r] || 0, out = spend[r] || 0;
+                const drawn = Math.min(have, STACK_MAX), lifted = Math.min(out, drawn), base = have - drawn;
+                return (
+                  <button key={r} type="button" className="ps-out" data-pay-coin={r} data-out={out} disabled={busy}
+                    title={`${out} ${r} pay${out === 1 ? 's' : ''} this. Click to keep one and pay with another color.`} aria-label={`${out} ${r} paying: keep one`}
+                    onClick={() => remove(r)}>
+                    <span className="po-coins">
                       {Array.from({ length: lifted }, (_, j) => (
-                        <i key={j} className="ps-coin out" data-coin={`${r}-${drawn - lifted + j + base}`} style={{ '--j': j }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
+                        <i key={j} className="ps-coin out" data-coin={`${r}-${drawn - lifted + j + base}`} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
                       ))}
-                    </button>
-                  )}
-                </span>
-                <b className="ps-n num" aria-hidden="true">{keep}</b>
-              </div>
-            );
-          })}
+                    </span>
+                    {out > lifted && <b className="po-n num" aria-hidden="true">{out}</b>}
+                  </button>
+                );
+              })}
+            </span>
+          </div>
+          <div className="pay-row keeping" role="group" aria-label="Keeping">
+            <span className="pr-lbl">Keeping</span>
+            <div className="pay-stacks">
+              {/* only the colors you hold (blind tester B: a faint coin for a color you hold none of read as "this pays") */}
+              {res.filter(r => (p.res[r] || 0) > 0).map(r => {
+                const have = p.res[r] || 0, out = spend[r] || 0, keep = have - out;
+                const drawn = Math.min(have, STACK_MAX), lifted = Math.min(out, drawn), base = have - drawn;
+                const sayAdd = `${have} ${r}: ${out ? `${out} pay${out === 1 ? 's' : ''} this, ` : ''}you keep ${keep}. Click to pay with one more ${r}.`;
+                return (
+                  <div key={r} className={`pay-stack${out ? ' paying' : ''}${keep ? '' : ' spent'}`} data-stack={r} data-keep={keep} data-out={out}>
+                    <button type="button" className="ps-add" data-pay-add={r} data-keep={keep} disabled={busy} aria-disabled={!keep || undefined} title={keep ? sayAdd : `All your ${r} pays this.`} aria-label={keep ? sayAdd : `All your ${r} pays this`} onClick={() => add(r)} />
+                    <span className="ps-coins">
+                      {drawn - lifted === 0 && <i className="ps-socket" aria-hidden="true" />}
+                      {Array.from({ length: drawn - lifted }, (_, k) => (
+                        <i key={k} className="ps-coin" data-coin={`${r}-${k + base}`} style={{ '--k': k }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
+                      ))}
+                    </span>
+                    <b className="ps-n num" data-keep-label={keep} aria-hidden="true">{keep}</b>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* the stacks' one legend (w3b #25: the numbers read as "cost per color", and the faded coins' meaning seemed to
-            swap after a tap): faded coins pay, the number under a stack is what you keep */}
-        <p className="pay-legend" data-pay-legend>Faded coins pay. The number under each stack is what you keep.</p>
+        {/* why the sheet is up (live panel r1: testers couldn't tell why some buys ask and some pay at once): a buy with
+            one way to pay pays at once; this one has several, so the line says so and how to change it. A sheet up for
+            a lost lead (one way) says that instead, below. */}
+        {ways.length > 1 && <p className="pay-legend" data-pay-legend>You can pay this more than one way: click a coin to move it.</p>}
 
-        {(notes.length > 0 || nudge || lostLead) && (
+        {(notes.length > 0 || nudge || someLost) && (
           <div className="pay-notes">
             {notes.length > 0 && <ul className="pay-rules" data-pay-rules={notes.length}>{notes.map(n => <li key={n.key} data-pay-rule={n.key}>{n.text}</li>)}</ul>}
-            {lostLead && <p className="pay-lead" data-pay-lead={lostLead.join(' ')}>Paying this gives up {leadsLost(lostLead, match.ties || [])}.</p>}
+            {lostLead ? <p className="pay-lead" data-pay-lead={lostLead.join(' ')}>Paying this gives up {leadsLost(lostLead, match.ties || [])}.</p>
+              : someLost ? <p className="pay-lead" aria-hidden="true" style={{ visibility: 'hidden' }}>Paying this gives up your lead.</p> : null}
             {nudge && <p key={nudge.n} className="pay-nudge" role="status">{nudge.text}</p>}
           </div>
         )}
@@ -233,6 +303,37 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** How long the receipt of an instant payment stays at what you bought. */
+export const RECEIPT_MS = 1800;
+
+/**
+ * The receipt of a payment made at once (only one way to pay, no lead lost): what it paid and where, read from the
+ * pay step before it's answered (the card or follower tile is still where you clicked it). Null when that isn't on
+ * screen.
+ */
+export function receiptFor(state, pend, way) {
+  if (!pend || !way || typeof document === 'undefined') return null;
+  const sel = pend.uid !== undefined ? `.lt-shop .lt-card[data-uid="${pend.uid}"]` : pend.tier ? `.lt-rates [data-rate="${pend.tier}"]` : null;
+  const a = sel && document.querySelector(sel);
+  const r = a && a.getBoundingClientRect();
+  if (!r || !r.width) return null;
+  const v = way.spend || way.value || {};
+  const parts = state.resources.filter(c => (v[c] || 0) > 0).map(c => ({ color: c, n: v[c] }));
+  return { key: `${state.moves}:${way.id}`, parts, x: r.left + r.width / 2, y: r.bottom, what: pend.uid !== undefined ? 'card' : 'tier' };
+}
+
+/** "Paid 4● 4●" over the foot of what you bought, for a moment; it never takes a click. */
+export function PayReceipt({ receipt, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, RECEIPT_MS); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const said = receipt.parts.map(c => `${c.n} ${c.color}`).join(', ');
+  return (
+    <div className="pay-receipt" role="status" aria-label={`Paid ${said || 'nothing'}`} data-pay-receipt={receipt.parts.map(c => `${c.n}${c.color}`).join(' ')} data-on={receipt.what}
+      style={{ left: `${Math.round(receipt.x)}px`, top: `${Math.round(receipt.y)}px`, '--life': `${RECEIPT_MS}ms` }}>
+      Paid {receipt.parts.length ? <CostDots parts={receipt.parts} /> : 'nothing'}
     </div>
   );
 }

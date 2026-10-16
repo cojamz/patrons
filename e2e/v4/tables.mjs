@@ -1,4 +1,5 @@
-// E2E: the table picker, and one hot-seat game on each of 4 tables that between them seat every newer sphere.
+// E2E: the table picker, and one hot-seat game on each of 6 tables that between them seat every newer sphere, two of
+// them with fewer players (2 and 3 seats play 2 and 3 spheres).
 // One person + 3 bots; the person clicks the first legal option each time. The four games run side by side.
 // Checks: the picker (custom by clicks, random + reroll, ?table= in the URL), each game reaching results with no
 // console or page errors, the wheel using the picked spheres, and every resource color rendering (4 distinct,
@@ -36,6 +37,9 @@ const TABLES = [
   { tag: 'thieves-purple-silver', ids: ['gold', 'thieves', 'purple', 'silver'], how: 'url' },
   { tag: 'trading-yellow-echo', ids: ['red', 'trading', 'yellow', 'echo'], how: 'url' },
   { tag: 'yellow-market-thieves-trading', ids: ['yellow', 'market', 'thieves', 'trading'], how: 'url', url: 'yellow,market,magenta,white' },
+  // one sphere per player (Cory, 2026-10-15): two seats play Classic's first two; three seats play a 3-sphere table
+  { tag: '2p-classic', ids: ['gold', 'red'], how: 'classic', seats: 2 },
+  { tag: '3p-thieves-yellow-silver', ids: ['thieves', 'yellow', 'silver'], how: 'url', url: 'thieves,yellow,silver', seats: 3 },
 ];
 
 const errors = [];
@@ -52,6 +56,12 @@ async function play(t) {
     await page.goto(`${base}/?botDelay=30&intro=0${t.how === 'url' ? `&table=${t.url || t.ids.join(',')}` : ''}`);
     await page.click('[data-home="local"]');
     await page.waitForSelector('[data-start]');
+    // fewer players: empty the last seats; the table follows the seats (one sphere each)
+    for (let i = 3; i >= (t.seats || 4); i--) await page.click(`[data-seat-row="${i}"] [role="radio"]:has-text("Empty")`);
+    if (t.seats) {
+      const hint = await page.$eval('.table-pick', e => e.textContent).catch(() => '');
+      if (!hint.includes(`Random ${t.seats}`)) err(`the picker doesn't offer "Random ${t.seats}" with ${t.seats} seats: ${hint.slice(0, 120)}`);
+    }
     if (t.how === 'click') {
       // wave f4 (blind panel): the click that opened setup focused P4's name box under the pointer; the page held one
       // width at 520px and jumped to 1000px on Custom, moving every control; a fifth sphere's click said nothing
@@ -102,10 +112,16 @@ async function play(t) {
     // every resource renders: 4 distinct, visible colors on P1's cult (each dot carries its color, filled, or as a hollow
     // ring when P1 holds none of it)
     const cols = await page.$$eval('.lt-seat[data-pid="0"] [data-res] .res-glyph', els => els.map(e => getComputedStyle(e).color));
-    if (cols.length !== 4 || new Set(cols).size !== 4 || cols.some(c => !c || c === 'rgba(0, 0, 0, 0)' || c === 'transparent')) err(`resource colors: ${cols.join(' | ')}`);
+    if (cols.length !== t.ids.length || new Set(cols).size !== t.ids.length || cols.some(c => !c || c === 'rgba(0, 0, 0, 0)' || c === 'transparent')) err(`resource colors: ${cols.join(' | ')}`);
     const tabs = await page.$$eval('.lt-wheel .plaque', els => els.map(e => getComputedStyle(e).getPropertyValue('--c').trim()));
     const unresolved = await page.evaluate(ids => ids.filter(id => !getComputedStyle(document.documentElement).getPropertyValue(`--${id}`).trim()), t.ids);
     if (unresolved.length) err(`no color for ${unresolved.join(', ')}`);
+    // the wheel has one quadrant per sphere: its rims, and 6 spaces each
+    const rims = await page.$$eval('[data-rim]', els => els.map(e => e.getAttribute('data-rim')));
+    const slots = await page.$$eval('.stage > [data-slot]', els => els.length);
+    if (rims.join(',') !== t.ids.join(',') || slots !== 6 * t.ids.length) err(`the wheel has rims ${rims.join(',')} and ${slots} spaces, wanted ${t.ids.join(',')} and ${6 * t.ids.length}`);
+    await page.waitForTimeout(400);
+    await shot('wheel');
 
     const t0 = Date.now();
     let clicks = 0, shotMid = false;

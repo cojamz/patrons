@@ -86,7 +86,7 @@ try {
     const price = memberPrice(st, p, st.pending.uid);
     const lifted = await page.$$eval('.dialog.pay .ps-out .ps-coin', els => els.length);
     if (lifted !== price.total) errors.push(`(p1) ${lifted} coins lifted for a price of ${price.total}`);
-    const liftedColor = await page.$$eval(`.dialog.pay [data-stack="${price.color}"] .ps-out .ps-coin`, els => els.length);
+    const liftedColor = await page.$$eval(`.dialog.pay .pay-row.paying [data-pay-coin="${price.color}"] .ps-coin`, els => els.length);
     if (price.color && liftedColor < price.colored) errors.push(`(p1) ${liftedColor} ${price.color} lifted, the engine asks ${price.colored}`);
     if (await page.$('.dialog.pay [data-socket], .dialog.pay .pay-sockets')) errors.push('(p1) the payment shows a second row of coins');
     const printed = costParts(cardDef(st, st.pending.uid), res).map(c => `${c.n}${c.color}`).join(' ');

@@ -31,7 +31,7 @@ import RoundEnd from './RoundEnd.jsx';
 import Reckoning, { reckonRows } from './Reckoning.jsx';
 import { snakeOrder } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
-import PayPicker, { payChoice } from './PayPicker.jsx';
+import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
@@ -998,9 +998,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // click spent the gold that led Most gold, and the round ended before Undo could take it back)
   const onePay = pend && pend.kind === 'pay' ? pend.options.filter(o => o.kind === 'pay') : [];
   const onlyPay = mine && !needHandoff && onePay.length === 1 && !(onePay[0].breaks && onePay[0].breaks.length) ? onePay[0].id : null;
+  // ...and it never pays silently (live panel r1: "the 8 for 8 skips the dialog, 2 for 1 opens it: I can't predict
+  // which"): a "Paid 4● 4●" receipt stands at the card or follower tile you clicked for a moment, so the rule shows
+  // itself (one way pays at once and says so; several ways ask)
+  const [receipt, setReceipt] = useState(null);
   useEffect(() => {
     if (!onlyPay || busy) return undefined;
-    const t = setTimeout(() => onPick(onlyPay, 'replay'), 0);
+    const t = setTimeout(() => { setReceipt(receiptFor(state, pend, onePay[0])); onPick(onlyPay, 'replay'); }, 0);
     return () => clearTimeout(t);
   }, [onlyPay, pend, busy]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1363,6 +1367,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <CardFace state={state} uid={cardDetail.uid} />
         </Popover>
       )}
+      {receipt && <PayReceipt key={receipt.key} receipt={receipt} onDone={() => setReceipt(r => (r && r.key === receipt.key ? null : r))} />}
       {mine && !needHandoff && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)) && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={rootEl} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}

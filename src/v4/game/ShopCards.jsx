@@ -17,6 +17,7 @@ void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
 import { MemberDeck, useDeal } from './MemberDeck.jsx';
 import './lamp-b.css';
+import './shop.css'; // live panel r1 (G2): the deck, the struck price and the worth
 import { breakable } from './hyphen.js'; // long names break at a seam on the narrow card (Doppel-ganger)
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
@@ -160,13 +161,16 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               <span className="ft">
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>
-                    <CostShapes parts={paid} />
-                    {/* the list price as one struck number: two parts of dots beside the paid price ran into the worth */}
+                    {/* the list price as one struck number, BEFORE the price you pay (a shop's "was 4, now 2"): after it, it
+                        ran into the worth and read "101" (live panel r1, G2) */}
                     <s className="cost-was num" title={`List price ${parts.map(c => `${c.n} ${c.color === 'any' ? 'any' : c.color}`).join(' + ')}`} aria-label={`list price ${parts.reduce((t, c) => t + c.n, 0)}`}>{parts.reduce((t, c) => t + c.n, 0)}</s>
+                    <CostShapes parts={paid} />
                   </span>
                 ) : <CostShapes parts={parts} />}
+                {/* the worth is what the member brings, not part of its price (live panel r1: "1 follower" read as a third
+                    cost): a gain's "+", behind the hairline, at the card's right edge */}
                 <span className="val" data-worth={d.f} title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
-                  <b className="num">{d.f}</b><FollowerGlyph size={11} title={`worth ${d.f}`} />
+                  <span className="plus" aria-hidden="true">+</span><b className="num">{d.f}</b><FollowerGlyph size={11} title={`worth ${d.f}`} />
                 </span>
               </span>
             </button>
@@ -259,7 +263,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
                 {t.limited ? <span>{left} left at this table (2 per player at the start).</span> : <span>No limit: buy it again with any later buy.</span>}
                 <small data-pays={opt ? 'tier' : undefined}>{when(t, opt)}</small>
               </div>
-            )}><span className="rt-trade"><b className="num">{t.cost}</b><Pip color="any" n={t.cost} /><span className="to" aria-hidden="true">→</span><b className="num">{t.get}</b><FollowerGlyph size={14} /></span>{t.limited ? <small className="rt-left num">{left} left</small> : t.key === 'top' ? <small className="rt-left" data-unlimited="">no limit</small> : null}<span className="hitbox" aria-hidden="true" /></Tip>
+            )}><span className="rt-trade"><b className="num">{t.cost}</b><Pip color="any" n={t.cost} /><span className="to" aria-hidden="true">→</span><b className="num get">{t.get}</b><FollowerGlyph size={14} /></span>{t.limited ? <small className="rt-left num">{left} left</small> : t.key === 'top' ? <small className="rt-left" data-unlimited="">no limit</small> : null}<span className="hitbox" aria-hidden="true" /></Tip>
           </button>
         );
       })}

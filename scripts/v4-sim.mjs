@@ -1,5 +1,6 @@
 // Bot-vs-bot simulation for quick balance reads. Usage: npm run sim:v4 -- [games=300] [players=4]
-import { createGame, applyMove, chooseBotMove, followers, memberCount } from '../src/engine/v4/index.js';
+// The table has one sphere per player (the engine's default for that seat count: defaultQuadrants).
+import { createGame, applyMove, chooseBotMove, followers, memberCount, defaultQuadrants } from '../src/engine/v4/index.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
 
 const games = Number(process.argv[2] || 300), n = Number(process.argv[3] || 4);
@@ -15,6 +16,6 @@ for (let g = 1; g <= games; g++) {
   stats.moves.push(s.moves);
 }
 const avg = a => (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1);
-console.log(`${games} games, ${n} players`);
+console.log(`${games} games, ${n} players, table ${defaultQuadrants(n).join(',')}`);
 console.log(`wins by seat: ${stats.wins.join(' / ')}`);
 console.log(`avg followers ${avg(stats.followers)} · avg members ${avg(stats.members)} · avg leftover gold ${avg(stats.leftoverGold)} · avg moves ${avg(stats.moves)}`);

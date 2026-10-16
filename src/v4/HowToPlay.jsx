@@ -12,7 +12,7 @@ import { ResourceGlyph } from './game/Glyphs.jsx';
 const MARKS = [
   [/little-person mark/, () => <Follower size={14} title="followers" />],
   [/plain dot in its color/, () => <>{['gold', 'red', 'blue', 'green'].map(r => <ResourceGlyph key={r} r={r} size={14} />)}</>],
-  [/split into the table's four colors/, () => <ResourceGlyph r="any" size={14} />],
+  [/split into the table's colors/, () => <ResourceGlyph r="any" size={14} />],
 ];
 function marked(text, key) {
   for (const [re, draw] of MARKS) {

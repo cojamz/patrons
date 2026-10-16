@@ -1,4 +1,5 @@
-// The board: a printed paper wheel of 4 quadrants (the Lamplit Table). Outer ring = round I, middle = round II,
+// The board: a printed paper wheel of one quadrant per sphere (2 to 4: one per player, Cory 2026-10-15; each takes
+// 360/n degrees, its rings tiled the same way) (the Lamplit Table). Outer ring = round I, middle = round II,
 // inner = round III. It still spins (drag, arrow keys, a sideways swipe), but everything on it stays upright and
 // nothing else on screen changes with its orientation. The looks for the spaces (`?spaces=<look>`):
 //  - panels (default; the visual language, plate 1b, design/prototypes/language/): a dark board where each ring's
@@ -51,12 +52,15 @@ const RIM_HIT = { r0: 181, r1: 216 };
 // the board's square: the disc (r 200) and a thin margin for its knurled edge (w2a E9: the old 26-unit margin left dead
 // wood around the wheel while the seats were cramped; the rim's leaders now sit inside the band)
 const CX = 200, CY = 200, VB0 = -8, VBS = 416;
-const qCenter = q => 180 + q * 90;
+// quadrant q of n: n quadrants share the wheel (one per player), q0 at the bottom, then clockwise
+const sector = n => 360 / (n || 4);
+const qCenter = (q, n = 4) => 180 + q * sector(n);
 const norm = a => ((a % 360) + 540) % 360 - 180;
 function polar(a, r) { const t = (a - 90) * Math.PI / 180; return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; }
 function arc(a0, a1, r0, r1) {
   const [x0, y0] = polar(a0, r1), [x1, y1] = polar(a1, r1), [x2, y2] = polar(a1, r0), [x3, y3] = polar(a0, r0);
-  return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
+  const big = a1 - a0 > 180 ? 1 : 0;
+  return `M${x0},${y0} A${r1},${r1} 0 ${big} 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 ${big} 0 ${x3},${y3}Z`;
 }
 /** A ring cell inset by `pad` board units on every side (the same width at the inner and the outer edge). */
 function cellPath(a0, a1, r0, r1, pad = 0) {
@@ -77,7 +81,7 @@ function textArc(center, half, r, rot) {
 
 export const facingOf = (rot, count) => {
   let best = 0, bd = 1e9;
-  for (let q = 0; q < count; q++) { const d = Math.abs(norm(qCenter(q) + rot - 180)); if (d < bd) { bd = d; best = q; } }
+  for (let q = 0; q < count; q++) { const d = Math.abs(norm(qCenter(q, count) + rot - 180)); if (d < bd) { bd = d; best = q; } }
   return best;
 };
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -91,14 +95,15 @@ export function spacesLook() {
 export function spaceGeometry(state, look = 'sockets') {
   const rings = ringsOf(look);
   const out = [];
+  const nq = state.quadrants.length, k = sector(nq) / 90; // a ring's spans are drawn for a quarter; k scales them to the sector
   state.quadrants.forEach((qid, q) => {
     const Q = quadrant(qid);
     Q.actions.forEach((a, i) => {
       const t = a.ring, R = rings[t];
       const idx = Q.actions.filter((x, j) => x.ring === t && j < i).length;
-      const c = qCenter(q);
-      const ang = R.n === 1 ? c : (c + R.span / 2) - idx * (R.span / (R.n - 1));
-      out.push({ key: `${q}-${i}`, q, i, idx, qid, a, ring: t, ang, half: 45 / R.n, xy: polar(ang, R.r) });
+      const c = qCenter(q, nq);
+      const ang = R.n === 1 ? c : (c + (R.span * k) / 2) - idx * ((R.span * k) / (R.n - 1));
+      out.push({ key: `${q}-${i}`, q, i, idx, qid, a, ring: t, ang, half: (45 * k) / R.n, xy: polar(ang, R.r) });
     });
   });
   return out;
@@ -333,7 +338,9 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   const custom = !BUILT_IN.includes(look);
   const Face = useFace(custom ? look : null);
   const rings = ringsOf(look);
-  const [rot, setRot] = useState(() => -90 * facing);
+  const nq = state.quadrants.length;
+  const SEC = sector(nq); // one quadrant's angle: 90 at four players, 120 at three, 180 at two
+  const [rot, setRot] = useState(() => -SEC * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
   const [deny, setDeny] = useState(null); // { text, x, y, n }: the note at the pointer after a click on a space you can't take
   // online: the space just picked, lit as chosen while its move crosses to the host and back (until the table moves on),
@@ -364,7 +371,6 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   const drag = useRef(null);
   const moved = useRef(false);
   const lastPointer = useRef('mouse');
-  const nq = state.quadrants.length;
   // On-screen scale of the board, so text is sized in real pixels.
   const [scale, setScale] = useState(1);
   // measured before the first paint (wave-4 B #32: measured after it, the first frame laid the panels out for a 416px
@@ -449,25 +455,25 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   }, [applyRot]); // eslint-disable-line react-hooks/exhaustive-deps
   const touched = useRef(onTouched);
   touched.current = onTouched;
-  const nudge = useCallback(deg => { if (touched.current) touched.current(); animateTo(Math.round((rotRef.current + deg) / 90) * 90); }, [animateTo]);
+  const nudge = useCallback(deg => { if (touched.current) touched.current(); animateTo(Math.round((rotRef.current + deg) / SEC) * SEC); }, [animateTo, SEC]);
 
   // Parent asked to face a quadrant (a tab, or a rival's move): spin there the short way.
   useEffect(() => {
     if (anim.current || drag.current) return;
-    if (facingOf(rotRef.current, nq) !== facing) animateTo(rotRef.current + norm(-90 * facing - rotRef.current));
-  }, [facing, nq, animateTo]);
+    if (facingOf(rotRef.current, nq) !== facing) animateTo(rotRef.current + norm(-SEC * facing - rotRef.current));
+  }, [facing, nq, SEC, animateTo]);
 
   useEffect(() => {
     const onKey = e => {
       const t = e.target;
       if (t && t.closest && t.closest('input,textarea,select,[contenteditable],[role="tablist"],[role="dialog"]')) return;
-      if (e.key === 'ArrowLeft') { e.preventDefault(); nudge(-90); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); nudge(90); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); nudge(-SEC); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); nudge(SEC); }
       if (e.key === 'Escape') setPeek(null);
     };
     addEventListener('keydown', onKey);
     return () => { removeEventListener('keydown', onKey); stop(); };
-  }, [nudge]);
+  }, [nudge, SEC]);
 
   // A pinned peek (touch) closes on any tap elsewhere.
   useEffect(() => {
@@ -561,14 +567,14 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     drag.current = null;
     if (!moved.current) return;
     // swipe right moves the facing quadrant right (the wheel turns counter-clockwise), and the other way round
-    if (dr.swipe) { const dx = (e && e.type !== 'pointercancel' && e.clientX != null ? e.clientX : dr.lastX ?? dr.x) - dr.x; if (Math.abs(dx) > 24) nudge(dx > 0 ? -90 : 90); setTimeout(() => { moved.current = false; }, 0); return; }
+    if (dr.swipe) { const dx = (e && e.type !== 'pointercancel' && e.clientX != null ? e.clientX : dr.lastX ?? dr.x) - dr.x; if (Math.abs(dx) > 24) nudge(dx > 0 ? -SEC : SEC); setTimeout(() => { moved.current = false; }, 0); return; }
     // a fling (fast and recent) steps one quadrant in its direction; a slow drag settles on the nearest
-    const home = Math.round(dr.start / 90) * 90;
-    let target = Math.round(rotRef.current / 90) * 90;
-    if (Math.abs(dr.v) > 0.18 && performance.now() - dr.t < 120 && target === home) target = home + Math.sign(dr.v) * 90;
+    const home = Math.round(dr.start / SEC) * SEC;
+    let target = Math.round(rotRef.current / SEC) * SEC;
+    if (Math.abs(dr.v) > 0.18 && performance.now() - dr.t < 120 && target === home) target = home + Math.sign(dr.v) * SEC;
     // a deliberate drag never springs back home (the skeptic, w4 #19: "it won't stay where I put it"): past 12° it turns
     // on to the next quarter its way, where the rims read upright
-    else if (target === home && Math.abs(rotRef.current - home) > 12) target = home + Math.sign(rotRef.current - home) * 90;
+    else if (target === home && Math.abs(rotRef.current - home) > 12) target = home + Math.sign(rotRef.current - home) * SEC;
     animateTo(target);
     setTimeout(() => { moved.current = false; }, 0);
   };
@@ -656,7 +662,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     const rule = `${EACH}${ruleWords(qid, st ? st.rule : shortLabel(sc.label))}`.toUpperCase();
     const prize = `  ·  +${RING_VALUE[paying - 1]}`;
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
-    const top = Math.abs(norm(qCenter(q) + rot)) < 90;
+    const top = Math.abs(norm(qCenter(q, nq) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
     // the arc, less air at each end (clear of the dividers, w2a #52) and the leaders' emojis
     const room = (2 * arcHalf * Math.PI / 180) * rr - 26 - leaders.length * EMOJI_ROOM;
@@ -688,7 +694,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
       r.w = r.kind === 'dot' ? 1.1 : r.kind === 'prize' ? 1.3 * rimWidth(r.text, 800, 0) : rimWidth(r.text, 700, 0) + RIM_LS * r.text.length + (r.tie ? rimWidth(`  ·  ties: ${r.tie}`, 600, 0.04) : 0);
       r.gap = !k ? 0 : 0.45;
     }
-    const top = Math.abs(norm(qCenter(q) + rot)) < 90;
+    const top = Math.abs(norm(qCenter(q, nq) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
     const room = (2 * arcHalf * Math.PI / 180) * rr - 26 - leaders.length * EMOJI_ROOM;
     const lineK = runs.reduce((a, r) => a + r.gap + r.w, 0);
@@ -726,7 +732,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   const live = useRef({});
   const paper = [];
   state.quadrants.forEach((qid, q) => {
-    const c = qCenter(q), a0 = c - 45, a1 = c + 45;
+    const c = qCenter(q, nq), a0 = c - SEC / 2, a1 = c + SEC / 2;
     const col = `var(--${qid})`;
     if (!panels && !(Face && Face.bands === false)) {
       [1, 2, 3].forEach(t => {
@@ -746,8 +752,8 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   if (Face && Face.Cell) {
     const Cell = Face.Cell;
     for (const s of spaces) {
-      const R = rings[s.ring], c = qCenter(s.q), w = 90 / R.n;
-      const a1 = c + 45 - s.idx * w, a0 = a1 - w;
+      const R = rings[s.ring], c = qCenter(s.q, nq), w = SEC / R.n;
+      const a1 = c + SEC / 2 - s.idx * w, a0 = a1 - w;
       const owner = state.slots[s.key], fresh = freshOf(s.key);
       const status = faceStatus({ legal: legal.has(s.key), owner, open: spaceOpen(s.a, round), fresh });
       paper.push(
@@ -786,7 +792,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   }
   const rimHits = [];
   state.quadrants.forEach((qid, q) => {
-    const c = qCenter(q), a0 = c - 45, a1 = c + 45;
+    const c = qCenter(q, nq), a0 = c - SEC / 2, a1 = c + SEC / 2;
     // the quadrant's rule, engraved along its rim, upright wherever the wheel is turned, with whoever leads it as
     // their pixel emoji inline at the end of the line, on the same arc and baseline: "MOST BLUE · +2 · 🐱"
     const st = stdById[qid];
@@ -889,7 +895,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   const hubR = panels ? rings[3].r0 - 3 : rings[3].r0;
   if (!panels) for (const r of [RIM.r0, rings[1].r0, rings[2].r0, hubR]) paper.push(<circle key={`c${r}`} cx={CX} cy={CY} r={r} fill="none" className="ring-line" />);
   state.quadrants.forEach((qid, q) => {
-    const [x0, y0] = polar(qCenter(q) - 45, panels ? RIM.r0 : hubR), [x1, y1] = polar(qCenter(q) - 45, panels ? 202 : 200);
+    const [x0, y0] = polar(qCenter(q, nq) - SEC / 2, panels ? RIM.r0 : hubR), [x1, y1] = polar(qCenter(q, nq) - SEC / 2, panels ? 202 : 200);
     paper.push(<line key={`seam${q}`} x1={x0} y1={y0} x2={x1} y2={y1} className="seam" />);
   });
 

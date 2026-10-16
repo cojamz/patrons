@@ -20,6 +20,14 @@ const ANY_WEDGES = [
   ['bottom', 'M8 8L12.42 12.42A6.25 6.25 0 0 1 3.58 12.42Z'],
   ['left', 'M8 8L3.58 12.42A6.25 6.25 0 0 1 3.58 3.58Z'],
 ];
+// A table of 2 or 3 spheres (one per player, Cory 2026-10-15) splits the dot in halves or thirds, each where its
+// quadrant sits (quadrant k at 180 + k·360/n degrees, 0 = top, clockwise), filled by --any-q0… (useAnyDot)
+let anyCount = 4;
+const dotAt = a => { const t = (a * Math.PI) / 180; return `${(8 + 6.25 * Math.sin(t)).toFixed(2)} ${(8 - 6.25 * Math.cos(t)).toFixed(2)}`; };
+const anyWedges = n => Array.from({ length: n }, (_, k) => {
+  const a0 = 180 + (k * 360) / n - 180 / n, a1 = a0 + 360 / n;
+  return [k, `M8 8L${dotAt(a0)}A6.25 6.25 0 0 1 ${dotAt(a1)}Z`, `M8 8L${dotAt(a0)}`];
+});
 
 /** One resource as a plain dot in its color; r="any" is the split dot. decorative: no title / role (inside something
  *  that already says it). */
@@ -37,10 +45,11 @@ export function ResourceGlyph({ r, size = 16, n = null, decorative = false }) {
       {decorative ? null : <title>{label}</title>}
       {r === 'white' && <defs><radialGradient id={pearl} cx="40%" cy="35%" r="70%"><stop offset="0" stopColor="#ffffff" /><stop offset="1" stopColor="#cdc5b6" /></radialGradient></defs>}
       {r === 'any'
-        ? ANY_WEDGES.map(([k, d]) => <path key={k} d={d} fill={`var(--any-${k})`} />)
+        ? (anyCount === 4 ? ANY_WEDGES.map(([k, d]) => <path key={k} d={d} fill={`var(--any-${k})`} />)
+          : anyWedges(anyCount).map(([k, d]) => <path key={k} d={d} fill={`var(--any-q${k})`} />))
         : <path d={DISC} fill={fill} />}
       {/* "any": a hairline cross keeps its four colors apart at 10px (it read as one magenta blob, w3a A4) */}
-      {r === 'any' && <path className="any-cross" d="M3.58 3.58L12.42 12.42M12.42 3.58L3.58 12.42" stroke="rgba(30,18,8,.5)" strokeWidth=".8" fill="none" />}
+      {r === 'any' && <path className="any-cross" d={anyCount === 4 ? 'M3.58 3.58L12.42 12.42M12.42 3.58L3.58 12.42' : anyWedges(anyCount).map(w => w[2]).join('')} stroke="rgba(30,18,8,.5)" strokeWidth=".8" fill="none" />}
       <circle className="res-ring" cx="8" cy="8" r="5.75" fill="none" stroke={r === 'white' ? 'rgba(30,18,8,.45)' : r === 'silver' ? 'rgba(30,18,8,.55)' : 'rgba(30,18,8,.28)'} strokeWidth={r === 'silver' ? 1.3 : 1} />
     </svg>
   );
@@ -49,6 +58,7 @@ export function ResourceGlyph({ r, size = 16, n = null, decorative = false }) {
 /** The live table's colors in the "any" dot: quadrant q sits at 180 + 90q degrees on the wheel (0 = top, clockwise),
  *  so q0 is the bottom, q1 the left, q2 the top, q3 the right. Pass resource colors in quadrant order. */
 export function anyDotVars(colors) {
+  if (colors && (colors.length === 2 || colors.length === 3)) return Object.fromEntries(colors.map((c, k) => [`--any-q${k}`, `var(--${c})`]));
   if (!colors || colors.length !== 4) return null;
   const [bottom, left, top, right] = colors.map(c => `var(--${c})`);
   return { '--any-top': top, '--any-right': right, '--any-bottom': bottom, '--any-left': left };
@@ -56,6 +66,8 @@ export function anyDotVars(colors) {
 /** Puts the table's colors on the page (hover cards and dialogs live outside the board), and takes them off after. */
 export function useAnyDot(colors) {
   const key = (colors || []).join(',');
+  // how many parts the dot has, set as the table renders (before any dot in it draws); a table changes between games only
+  anyCount = colors && colors.length >= 2 && colors.length <= 3 ? colors.length : 4;
   useEffect(() => {
     const vars = anyDotVars(key ? key.split(',') : null);
     if (!vars || typeof document === 'undefined') return undefined;

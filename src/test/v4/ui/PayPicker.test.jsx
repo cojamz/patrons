@@ -74,9 +74,20 @@ describe('v4 payment picker', () => {
     expect(vec(state, chosen)[r]).toBe(def.spend[r] + 1);
     // the number under each stack is what you keep
     for (const c of res.filter(c => p.res[c] > 0)) expect(Number(dlg.querySelector(`[data-pay-add="${c}"]`).dataset.keep)).toBe(p.res[c] - vec(state, chosen)[c]);
-    // ...and the sheet says so in words (w3b #25); a color you hold none of has no stack at all (blind tester B, aminus
-    // r1: its faint coin read as "this pays")
-    expect(dlg.querySelector('[data-pay-legend]').textContent).toMatch(/what you keep/);
+    // ...and the sheet shows it as two rows (Cory, 2026-10-15: the faded lifted coins were "hard to decipher"): the
+    // coins that pay sit in the Paying row by color, and the Keeping row's stacks are numbered with what stays
+    const paying = dlg.querySelector('.pay-row.paying'), keeping = dlg.querySelector('.pay-row.keeping');
+    expect(paying.textContent).toMatch(/^Paying/);
+    expect(keeping.textContent).toMatch(/^Keeping/);
+    for (const c of res) {
+      const out = vec(state, chosen)[c], group = paying.querySelector(`[data-pay-coin="${c}"]`);
+      if (out) expect(group.querySelectorAll('.ps-coin').length).toBe(Math.min(12, out));
+      else expect(group).toBeNull();
+      if (p.res[c] > 0) expect(keeping.querySelector(`[data-stack="${c}"] [data-keep-label]`).textContent).toBe(String(p.res[c] - out));
+    }
+    // and why it asks: there's more than one way to pay (live panel r1: which buys ask looked random)
+    expect(dlg.querySelector('[data-pay-legend]').textContent).toMatch(/more than one way/);
+    // a color you hold none of has no stack at all (blind tester B, aminus r1: its faint coin read as "this pays")
     for (const c of res) expect(!!dlg.querySelector(`[data-stack="${c}"]`)).toBe(p.res[c] > 0);
     expect(dlg.querySelector('.ps-none')).toBeNull();
     fireEvent.click(dlg.querySelector('.pay-go'));

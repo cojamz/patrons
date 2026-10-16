@@ -1,7 +1,7 @@
 // Patrons v4 engine. Pure and deterministic: state in, move in, state out.
 // Everything runs through a task queue. When a task needs a decision, the engine stops and publishes
 // state.pending = { player, kind, prompt, options:[{ id, label, kind, ... }] }. A move is { player, option }.
-import { quadrant, defById, handlerById, DEFAULT_QUADRANTS, guestMembers } from './content/index.js';
+import { quadrant, defById, handlerById, defaultQuadrants, guestMembers } from './content/index.js';
 import { shuffleInPlace } from './rng.js';
 import { CUT, FULL_DECK } from './content/cull.js';
 import { startEffects, stopEffects, abandonEffects, underCause } from './effects.js';
@@ -31,8 +31,11 @@ export const DEFAULT_RULES = { release: true, guests: true, cull: true };
 /**
  * @param {{ seats: { name?: string, kind?: 'human'|'bot' }[], seed?: number, quadrants?: string[], rules?: object }} opts
  */
-export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rules = {} }) {
+export function createGame({ seats, seed = 1, quadrants, rules = {} }) {
   if (!Array.isArray(seats) || seats.length < 2 || seats.length > 4) throw new Error('Patrons needs 2 to 4 seats.');
+  // as many spheres as players by default (Cory, 2026-10-15); a test or a sim may still pass any table of 2 to 4
+  if (!quadrants) quadrants = defaultQuadrants(seats.length);
+  if (!Array.isArray(quadrants) || quadrants.length < 2 || quadrants.length > 4) throw new Error('A table has 2 to 4 spheres.');
   const resources = quadrants.map(q => quadrant(q).resource);
   const zero = Object.fromEntries(resources.map(r => [r, 0]));
   const cards = {};

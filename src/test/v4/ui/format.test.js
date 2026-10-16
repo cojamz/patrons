@@ -14,10 +14,10 @@ describe('v4 format helpers', () => {
     const L = q => quadrant(q).scoring.label;
     const r = parseRoundEnd(s, `Round II ends. ${L('gold')}: Ana & Bo +4 · ${L('red')}: Cy +4`);
     expect(r.round).toBe('II');
-    expect(r.rows).toHaveLength(4);
+    expect(r.rows).toHaveLength(3); // three players, three spheres (Cory, 2026-10-15)
     expect(r.rows.find(x => x.qid === 'gold').winners).toEqual([0, 1]);
     expect(r.rows.find(x => x.qid === 'red').winners).toEqual([2]);
-    expect(r.rows.find(x => x.qid === 'blue').winners).toEqual([]);
+    expect(r.rows.find(x => x.qid === 'market').winners).toEqual([]);
     expect(parseRoundEnd(s, 'Round I ends. No one scored.').rows.every(x => !x.winners.length)).toBe(true);
   });
 

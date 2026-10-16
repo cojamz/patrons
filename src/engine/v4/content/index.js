@@ -35,6 +35,15 @@ function index(q) {
 for (const q of Object.values(QUADRANTS)) index(q);
 
 export const DEFAULT_QUADRANTS = ['gold', 'red', 'blue', 'green'];
+// A game has as many spheres as players (Cory, 2026-10-15: "there are only X number of spheres for X number of
+// players"), so every round-I space still fills (3 per sphere, 3 minions each). Classic, by table size: four seats
+// play Gold, Red, Blue (market) and Green (echo); three drop Green (echo); two play Gold and Red (Claude, under
+// Cory's go-with-your-gut: the two longest-tested real spheres, and the economy/recruit pair the game is about).
+export const CLASSIC = ['gold', 'red', 'market', 'echo'];
+export const classicFor = n => CLASSIC.slice(0, Math.max(2, Math.min(4, n)));
+/** The engine's default table for n seats: the plain 4-sphere test table, or Classic's first n when fewer play (the
+ *  plain Blue and Green hand out each other's colors, so they don't split). */
+export const defaultQuadrants = n => (n >= 4 ? [...DEFAULT_QUADRANTS] : classicFor(n));
 export const quadrant = id => {
   const q = QUADRANTS[id];
   if (!q) throw new Error(`Unknown quadrant: ${id}`);

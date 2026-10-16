@@ -9,7 +9,7 @@ import GameScreen from './game/GameScreen.jsx';
 import { friendlyError, OFFLINE } from './errors.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
 import OnlineBar from './screens/OnlineBar.jsx';
-import { tableProblem } from './tables.js';
+import { tableProblem, fitTable } from './tables.js';
 import { Recovered } from './Recovery.jsx';
 import { IntroGate, introOnGameStart } from './Intro.jsx';
 import { BOT, motionSpeed, onMotionSpeed } from './motion.js';
@@ -126,7 +126,9 @@ function App() {
   const startLocal = useCallback(cfg => {
     const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind, ...(s.emoji ? { emoji: s.emoji } : {}) }));
     const botDelayMs = () => urlBotDelay() || BOT_DELAY[motionSpeed()] || 650;
-    const quadrants = cfg.table && !tableProblem(cfg.table.quadrants) ? cfg.table.quadrants : undefined;
+    // one sphere per player (Cory, 2026-10-15): the table fitted to the seats that play
+    const fit = cfg.table ? fitTable(cfg.table, seats.length) : null;
+    const quadrants = fit && !tableProblem(fit.quadrants, seats.length) ? fit.quadrants : undefined;
     // this tab takes the one local save (any other tab holding a game lets go), then starts over in it
     claimLocal(); clearLocal(); clearLast(); setLast(null);
     begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs, quadrants, botLevel: cfg.level, holdRoundEnds: true, isOwner: ownsLocal }), cfg);

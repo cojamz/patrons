@@ -43,11 +43,16 @@ export function MemberDeck({ state, deckRef = null }) {
       className={`lt-deck${n === 0 ? ' empty' : n <= 3 ? ' low last' : n <= DECK_LOW ? ' low' : ''}`}
       aria-label={`Member deck: ${label}`}
     >
-      {Array.from({ length: edges }, (_, k) => <span key={k} className="edge" style={{ '--k': edges - k }} aria-hidden="true" />)}
-      <span className="back" aria-hidden="true">
-        {n > 0 && <CultMark size={32} />}
-        <span className="n num">{n > 0 ? <Tick value={n} float={false} /> : 'empty'}</span>
+      {/* a pile, not a card (live panel r1: at member size in the first slot it read as a member to buy): smaller than a
+          card, its edges showing, named underneath */}
+      <span className="pile">
+        {Array.from({ length: edges }, (_, k) => <span key={k} className="edge" style={{ '--k': edges - k }} aria-hidden="true" />)}
+        <span className="back" aria-hidden="true">
+          {n > 0 && <CultMark size={28} />}
+          <span className="n num">{n > 0 ? <Tick value={n} float={false} /> : 'empty'}</span>
+        </span>
       </span>
+      {n > 0 && <span className="cap" aria-hidden="true">deck</span>}
     </div>
   );
 }

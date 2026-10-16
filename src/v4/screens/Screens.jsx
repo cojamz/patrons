@@ -4,7 +4,7 @@ import { PLAYER_COLORS, lowColor } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
 import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
-import { CLASSIC, spheres, sphereName, sphereLine, tableProblem, randomTable, urlTable } from '../tables.js';
+import { CLASSIC, spheres, sphereName, sphereLine, tableProblem, randomTable, urlTable, fitTable, sphereCount } from '../tables.js';
 import { panelWords } from '../game/panelText.js';
 import { GAME_NAME, VERSION } from '../version.js';
 import { copyText } from '../Recovery.jsx';
@@ -120,8 +120,9 @@ export function initialTable(prev) {
 }
 const sameTable = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
 
-/** Pick the 4 spheres: Classic, random 4, or your own. `value` = { mode, quadrants }. */
-export function TablePicker({ value, onChange, readOnly = false }) {
+/** Pick the spheres, one per player (`n`): Classic, random, or your own. `value` = { mode, quadrants }, already fitted
+ *  to n (fitTable); a change hands back the whole pick. */
+export function TablePicker({ value, onChange, readOnly = false, n = 4 }) {
   const { mode, quadrants } = value;
   const setMode = m => {
     if (m === 'classic') onChange({ mode: m, quadrants: [...CLASSIC] });
@@ -131,35 +132,35 @@ export function TablePicker({ value, onChange, readOnly = false }) {
   // a fifth sphere with four picked swaps in for the last one picked, in its place on the wheel, and says so quietly
   // beside the count (live panel r1: "you can't swap a colour once 4 are picked"; before, it only said "take one off")
   const [swapped, setSwapped] = useState(null); // { out, in }
-  const full = quadrants.length >= 4;
+  const full = quadrants.length >= n;
   const last = full ? quadrants[quadrants.length - 1] : null;
   const toggle = id => {
     setSwapped(null);
     if (quadrants.includes(id)) onChange({ mode, quadrants: quadrants.filter(x => x !== id) });
-    else if (quadrants.length < 4) onChange({ mode, quadrants: [...quadrants, id] });
+    else if (quadrants.length < n) onChange({ mode, quadrants: [...quadrants, id] });
     else { onChange({ mode, quadrants: [...quadrants.slice(0, -1), id] }); setSwapped({ out: last, in: id }); }
   };
   const clear = () => { setSwapped(null); onChange({ mode, quadrants: [] }); };
   // a sphere clashes with a color already on the table; with four picked, the last one is the one a click swaps out
   const usedRes = (full ? quadrants.slice(0, -1) : quadrants).map(id => quadrant(id).resource);
-  const problem = quadrants.length === 4 ? tableProblem(quadrants) : '';
+  const problem = quadrants.length === n ? tableProblem(quadrants) : '';
   return (
     <div className={`table-pick${readOnly ? '' : ' editable'}`} data-table={quadrants.join(',')}>
       <div className="seat">
         <span>Table</span>
-        {readOnly ? <span className="hint">{mode === 'random' ? 'Random 4' : mode === 'custom' ? 'Custom' : 'Classic'}</span>
-          : <Seg label="Table" value={mode} options={[['classic', 'Classic'], ['random', 'Random 4'], ['custom', 'Custom']]} onChange={setMode} />}
+        {readOnly ? <span className="hint">{mode === 'random' ? `Random ${n}` : mode === 'custom' ? 'Custom' : 'Classic'}</span>
+          : <Seg label="Table" value={mode} options={[['classic', 'Classic'], ['random', `Random ${n}`], ['custom', 'Custom']]} onChange={setMode} />}
       </div>
       {mode !== 'custom' || readOnly ? (
         <div className="table-chips">
           {/* Reroll first, so it stays under the pointer while the names after it change width (w2b #33) */}
-          {mode === 'random' && !readOnly && <button type="button" className="btn ghost" data-reroll onClick={() => { let t; do { t = randomTable(); } while (sameTable(t, quadrants)); onChange({ mode, quadrants: t }); }}>Reroll</button>}
+          {mode === 'random' && !readOnly && <button type="button" className="btn ghost" data-reroll onClick={() => { let t; do { t = randomTable(); } while (sameTable(t.slice(0, n), quadrants)); onChange({ mode, quadrants: t }); }}>Reroll</button>}
           {quadrants.map(id => <TableChip key={id} id={id} />)}
         </div>
       ) : (
         <>
-          <p className="hint">Pick 4: they go round the wheel in the order you pick them (the corner number). <span className="nowrap"><span className="num">{quadrants.length}</span> of 4</span>
-            {quadrants.length > 0 && <> · <button type="button" className="link-btn" data-table-clear onClick={clear} title="Take all four off and pick again">Clear</button></>}
+          <p className="hint">Pick {n}, one per player: they go round the wheel in the order you pick them (the corner number). <span className="nowrap"><span className="num">{quadrants.length}</span> of {n}</span>
+            {quadrants.length > 0 && <> · <button type="button" className="link-btn" data-table-clear onClick={clear} title="Take them all off and pick again">Clear</button></>}
             {swapped && <span className="full-note" data-full-note data-swapped={swapped.out} role="status"> · {sphereName(swapped.in)} in for {sphereName(swapped.out)}</span>}</p>
           <div className="sphere-grid">
             {spheres().map(id => {
@@ -220,10 +221,13 @@ export function LocalSetup({ initial, onStart, onBack }) {
   const [speed, setSpeed] = useState(motionSpeed);
   const [level, setLevel] = useState(initial?.level || DEFAULT_BOT_LEVEL);
   const [table, setTable] = useState(() => initialTable(initial?.table));
-  const tableOk = !tableProblem(table.quadrants);
   const filled = seats.filter(s => s.kind !== 'empty');
-  const short = 4 - table.quadrants.length;
-  const startWhy = filled.length < 2 ? 'Needs at least 2 seats' : short > 0 ? `Pick ${short} more sphere${short === 1 ? '' : 's'}` : tableOk ? '' : tableProblem(table.quadrants);
+  // one sphere per player (Cory, 2026-10-15): the table follows the seats as they're filled or emptied
+  const nSph = sphereCount(filled.length);
+  const fitted = fitTable(table, filled.length);
+  const tableOk = !tableProblem(fitted.quadrants, nSph);
+  const short = nSph - fitted.quadrants.length;
+  const startWhy = filled.length < 2 ? 'Needs at least 2 seats' : short > 0 ? `Pick ${short} more sphere${short === 1 ? '' : 's'}` : tableOk ? '' : tableProblem(fitted.quadrants, nSph);
   const set = (i, patch) => setSeats(settleEmojis(seats.map((s, k) => (k === i ? { ...s, ...patch } : s))));
   const pickEmoji = (i, id) => {
     const next = takeEmoji(seats, i, id);
@@ -259,12 +263,12 @@ export function LocalSetup({ initial, onStart, onBack }) {
         ))}
         <div className="seat"><span>Bots</span><Seg label="Bot level" value={level} options={BOT_LEVEL_INFO.map(l => [l.level, l.name, l.blurb])} onChange={setLevel} /></div>
         <div className="seat"><span>Speed</span><Seg label="Speed" value={speed} options={SPEED_OPTS} onChange={v => { setSpeed(v); setMotionSpeed(v); }} /></div>
-        <TablePicker value={table} onChange={setTable} />
+        <TablePicker value={fitted} n={nSph} onChange={setTable} />
         <div className="row-btns">
           {/* why Start is off, said beside it (RC1 #8: it dimmed at 3 of 4 with nothing near it) */}
           {startWhy && <span className="hint start-why" data-start-why>{startWhy}</span>}
           <button type="button" className="btn" onClick={onBack}>Back</button>
-          <button type="button" className="btn pri" data-start disabled={!!startWhy} title={startWhy || undefined} onClick={() => onStart({ seats: named(), speed, level, table })}>Start</button>
+          <button type="button" className="btn pri" data-start disabled={!!startWhy} title={startWhy || undefined} onClick={() => onStart({ seats: named(), speed, level, table: fitted })}>Start</button>
         </div>
       </div>
     </div>
@@ -299,7 +303,9 @@ export function Lobby({ lobby, myId, onLeave }) {
     ? () => navigator.share({ title: GAME_NAME, text: `Join my ${GAME_NAME} game: room ${view.code}`, url: link }).catch(() => {}) : null;
   const act = fn => Promise.resolve().then(fn).catch(e => setErr(friendlyError(e)));
   const roomTable = view.table && view.table.quadrants ? view.table : { mode: 'classic', quadrants: [...CLASSIC] };
-  const shownTable = isHost && draft ? draft : roomTable;
+  // one sphere per player (Cory, 2026-10-15): everyone sees the room's table fitted to the seats taken now
+  const nSph = sphereCount(players.length);
+  const shownTable = fitTable(isHost && draft ? draft : roomTable, players.length);
   const pickTable = t => { setDraft(t); if (!tableProblem(t.quadrants) && lobby.setTable) act(() => lobby.setTable(t)); };
   // one emoji per table: another person's is dimmed; a bot's can be taken (the bot picks another)
   const held = kind => new Map(players.filter(p => p.id !== me && p.kind === kind && p.emoji).map(p => [p.emoji, p.name]));
@@ -339,14 +345,14 @@ export function Lobby({ lobby, myId, onLeave }) {
             <Seg label="Bot level" value={botLevel} options={BOT_LEVEL_INFO.map(l => [l.level, l.name, l.blurb])} onChange={setBotLevel} />
           </div>
         )}
-        <TablePicker value={shownTable} onChange={pickTable} readOnly={!isHost || !lobby.setTable} />
+        <TablePicker value={shownTable} n={nSph} onChange={pickTable} readOnly={!isHost || !lobby.setTable} />
         {err && <p className="error">{err}</p>}
         {!isHost && <p className="hint">Waiting for {view.hostName || 'the host'} to start…</p>}
         {isHost && view.startHint && <p className="hint" data-start-hint>{view.startHint}</p>}
         {/* Leave beside Start, as Back sits beside Start on the setup page (one footer, one pattern) */}
         <div className="row-btns">
           <button type="button" className="btn" onClick={onLeave}>Leave</button>
-          {isHost && <button type="button" className="btn pri" disabled={view.canStart === false || players.length < 2 || !!tableProblem(shownTable.quadrants)} onClick={() => act(() => lobby.start())}>Start game</button>}
+          {isHost && <button type="button" className="btn pri" disabled={view.canStart === false || players.length < 2 || !!tableProblem(shownTable.quadrants, nSph)} onClick={() => act(() => lobby.start())}>Start game</button>}
         </div>
       </div>
     </div>

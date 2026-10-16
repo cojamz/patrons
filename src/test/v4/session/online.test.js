@@ -46,7 +46,7 @@ describe('online session over the memory transport', () => {
     host.lobby.destroy(); guests[0].lobby.destroy();
   });
 
-  it('table: the host picks any 4 spheres; the guest sees it in the lobby and every client plays on it', async () => {
+  it('table: the host picks the spheres; the guest sees it in the lobby and every client plays on it, one sphere per player', async () => {
     const store = createMemoryStore();
     const host = await createRoom({ name: 'Host', transport: createMemoryTransport(store), seed: 5, botDelayMs: DELAY, table: { mode: 'custom', quadrants: ['gold', 'red', 'thieves', 'echo'] } });
     const guest = await joinRoom({ code: host.code, name: 'G1', transport: createMemoryTransport(store), botDelayMs: DELAY });
@@ -58,8 +58,9 @@ describe('online session over the memory transport', () => {
     await expect(host.lobby.setTable({ mode: 'custom', quadrants: ['gold', 'red', 'blue', 'market'] })).rejects.toThrow();
     const [hs, gs] = await Promise.all([started(host.lobby), started(guest.lobby), host.lobby.start()]);
     await until(() => hs.getState() && gs.getState(), { label: 'first state' });
-    expect(hs.getState().quadrants).toEqual(['yellow', 'market', 'thieves', 'trading']);
-    expect(gs.getState().quadrants).toEqual(['yellow', 'market', 'thieves', 'trading']);
+    // one sphere per player (Cory, 2026-10-15): two players play the table's first two
+    expect(hs.getState().quadrants).toEqual(['yellow', 'market']);
+    expect(gs.getState().quadrants).toEqual(['yellow', 'market']);
     host.lobby.destroy(); guest.lobby.destroy();
   });
 

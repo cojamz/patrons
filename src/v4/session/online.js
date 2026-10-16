@@ -14,7 +14,7 @@
 // Codes are 5 characters, so they can't collide with v3's 4-character rooms.
 import { isLegal, chooseBotMove, setBotLevels, BOT_LEVELS } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
-import { parseTable } from '../tables.js';
+import { parseTable, fitTable, tableProblem } from '../tables.js';
 import { randomFreeEmoji, settleEmojis } from '../emojiPick.js';
 import { createEmitter, randomId } from './emitter.js';
 import { moveProblem, normalizeMove } from './local.js';
@@ -509,7 +509,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       await hostOnly('set the seed');
       await transport.update(base, { seed: Number(seed) >>> 0 });
     },
-    /** Host: which 4 spheres the game uses ({ mode, quadrants }). Guests see it in the lobby view. */
+    /** Host: which spheres the game uses ({ mode, quadrants }), fitted to the players at start (one each). Guests see it in the lobby view. */
     async setTable(table) {
       await hostOnly('pick the table');
       const t = roomTable(table);
@@ -518,6 +518,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     },
     async start() {
       await hostOnly('start');
+      let tableWhy = '';
       const res = await transport.transaction(base, r => {
         if (r === null || r === undefined) return null;
         if ((r.status || 'lobby') !== 'lobby' || r.hostId !== playerId) return undefined;
@@ -527,8 +528,11 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
         const list = settleEmojis(seatList(r), seededRandom((seed ^ 0x5eed) >>> 0));
         const seats = {};
         list.forEach((s, i) => { seats[`s${i}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}), ...withEmoji(s.emoji), ...withBot(s.bot) }; });
-        const quadrants = parseTable(r.table);
-        const game = newGame({ seats: list.map(s => ({ name: s.name, kind: s.kind, ...withEmoji(s.emoji) })), seed, ...(quadrants ? { quadrants } : {}) });
+        // one sphere per player (Cory, 2026-10-15): the room's table fitted to the seats that play
+        const quadrants = fitTable({ mode: r.table ? r.tableMode || 'custom' : 'classic', quadrants: parseTable(r.table) || [] }, list.length).quadrants;
+        tableWhy = tableProblem(quadrants, list.length);
+        if (tableWhy) return undefined;
+        const game = newGame({ seats: list.map(s => ({ name: s.name, kind: s.kind, ...withEmoji(s.emoji) })), seed, quadrants });
         setBotLevels(game, list.map(s => (s.kind === 'bot' ? s.bot : null))); // the level the host picked for each bot
         return {
           ...r, seats, seed, status: 'playing', startedAt: Date.now(), build: { ...BUILD },
@@ -536,6 +540,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
           moves: null, rejects: null,
         };
       });
+      if (tableWhy) throw new Error(tableWhy);
       if (!res.committed || res.value?.status !== 'playing') throw new Error(`Need ${MIN_SEATS} to ${MAX_SEATS} seats to start.`);
     },
     async leave() {
