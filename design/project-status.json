@@ -1,101 +1,45 @@
 {
-  "live": "October17 rules, multiplayer and market interaction batch",
+  "live": "Verified October17 rules/multiplayer/market release",
   "liveCommit": "6c1e97eb4bef2d4050f6dba1a70c94886f0ddd36",
   "work": [
     {
-      "id": "performance",
-      "name": "Animation performance",
-      "owner": "Perf agent",
-      "status": "Live \u00b7 follow-up",
-      "scope": "Wheel spins use compositor motion; round-end cheers avoid forced layouts; full-region dimming uses opacity.",
-      "evidence": "Quiet normal/4\u00d7 CPU profiles stayed within 17.7ms frames. Interaction gate passed; one cold first-spin stall remains a follow-up.",
-      "next": "Trace and fix the cold first-spin layout hitch; require first-spin performance separately from retries.",
-      "label": "Motion"
-    },
-    {
-      "id": "wheel",
-      "name": "Wheel clarity",
-      "owner": "Words agent",
-      "status": "Live",
-      "scope": "Precise, minimal wording: corrected seven misleading descriptions, reviewed all 54 specialized actions and shortened crowded wheel phrases. Golden Years/Crescendo use exact 2 \u00d7 round formulas.",
-      "evidence": "All 54 specialized descriptions reviewed. Full suite: 1,174 passed; formula follow-up: 286 related checks plus full browser game passed. Wording changes preserve mechanics.",
-      "next": "Continue the remaining member-text pass using precise, minimal rules; verify newcomer comprehension.",
-      "label": "Wheel"
-    },
-    {
-      "id": "deck",
-      "name": "Member cards & deck",
-      "owner": "Codex",
-      "status": "Live",
-      "scope": "Larger free-recruit cards show abilities directly. Clicking the deck opens a color-by-price member gallery; Cost/Color becomes a compact toggle.",
-      "evidence": "Compact gallery inspected at 1270px and 390px; selecting details works, no sideways overflow. Grouping, hidden-order isolation and dialog exit tests pass.",
-      "next": "Gather play feedback on browsing; keep the existing visual style.",
-      "label": "Members"
-    },
-    {
-      "id": "release",
-      "name": "Release verification",
-      "owner": "QA agent",
-      "status": "Live",
-      "scope": "Fixed immediate retaking after Undo. Added a visible Release entry and clearer wheel/snake guidance. Project tracking stays outside the game.",
-      "evidence": "Source eecddbae published and verified by full public build stamp. Public browser passed root redirect, eight members, deck selection/Escape/focus and zero load/runtime errors. Full-game and Undo regression passed. Public phone touch setup, placement and purchase passed at 390/412px (emulation).",
-      "next": "Keep release evidence and the original-feedback audit current at delivery checkpoints.",
-      "label": "Release"
+      "id": "handoff",
+      "name": "Source and backlog handoff",
+      "owner": "Next agent",
+      "status": "Checkpointed \u00b7 not live",
+      "scope": "Own-color contests, Poach/Cutpurse/Extortionist, actual animation boundaries, payment and small UI fixes.",
+      "evidence": "Targeted repaired regressions green; no final combined gate.f00f20e1 is a source checkpoint, not public release.",
+      "next": "Read HANDOFF finalcheckpoint and run required immutable release checks.",
+      "label": "Handoff"
     }
   ],
   "next": [
     {
-      "name": "Ambiguous design calls",
-      "next": "Drafting, multi-person member counts, tie splitting, discounts and terminology wait for specific answers; clear fixes continue."
-    },
-    {
-      "name": "Cold first-spin hitch",
-      "next": "Trace first-spin layout at laptop width; cache repeated panel geometry and require the first spin to pass independently of retries."
-    },
-    {
-      "name": "Opponent engines & scoring polish",
-      "next": "Review what players can understand at a glance; keep scoring sources visible and check end screens visually."
-    },
-    {
-      "name": "Member-language pass",
-      "next": "Compress the remaining member descriptions while preserving every trigger and condition."
-    },
-    {
-      "name": "First-play guidance",
-      "next": "Test whether newcomers notice future rings and recognize playable tiles; assess the revised snake explanation."
-    },
-    {
-      "name": "Balance and replacement designs",
-      "next": "Heir pricing, Sweet Talk, Hold Court, Goody Bags and Cheap Seats; broader Silver/White themes and sphere ideas remain explicitly open."
+      "name": "Start here",
+      "next": "Read design/HANDOFF.md, final check evidence and feedback-addendum-2026-10-17.md."
     }
   ],
-  "releaseSummary": "Reverse resource draft \u00b7 printed member counts \u00b7 tie rewards \u00b7 current online turns \u00b7 market controls",
+  "releaseSummary": "Verified live6c1e97eb \u00b7 newer fixes checkpointed for handoff",
   "upNext": [
     {
-      "source": "Motion sequencing",
-      "name": "Motion \u00b7 agent follow-up",
-      "summary": "Swap loop and duplicate steals fixed in candidate. Round-start income follow-up tested; full choreography remains partial.",
-      "doneWhen": "Integrated swap/steal/round-start visuals verified."
+      "source": "Release blocker",
+      "name": "Full-game progression \u00b7 first",
+      "summary": "Prior19regressions repaired with focused proof; actual held-click stall fixed. Run combined immutable gate onf00f20e1 before release.",
+      "doneWhen": "Complete local/online games and phone checks pass on final immutable source."
     },
     {
-      "source": "Wheel performance",
-      "name": "Wheel cache \u00b7 integration checks",
-      "summary": "Exact layout across40 configurations;66% fewer geometry checks in fixture. Browser timing still pending.",
-      "doneWhen": "Quiet concurrent-animation profile verifies improvement."
+      "source": "Confirmed rule",
+      "name": "Extra Hand \u00b7 implemented, verify",
+      "summary": "Source-tagged unplaced-only transfer implemented; focused tests pass, integrated proof pending.",
+      "doneWhen": "No duplication after copies, repeated transfers or already-used grants."
     },
     {
-      "source": "Member polish",
-      "name": "Cards \u00b7 ready; glossary agent active",
-      "summary": "Two-person Late Bloomers and named discount sources in candidate. Confirmed-rule glossary/help corrections underway.",
-      "doneWhen": "Full checks and artwork/discount visuals pass."
-    },
-    {
-      "source": "Release integration",
-      "name": "Codex \u00b7 integration and shipping",
-      "summary": "October17 batch6c1e97eb verified live. Next candidateae2fc11 is undergoing immutable build/tests/full-game checks.",
-      "doneWhen": "Next candidate passes checks and public verification."
+      "source": "New intake",
+      "name": "All feedback \u00b7 triaged",
+      "summary": "Original113notes plus new24-row addendum, including copy-chain pressure tests, scoring redesign, purchase cues and Undo reversal.",
+      "doneWhen": "Continue clear batches; park only unresolved design calls."
     }
   ],
-  "batchStatus": "Next animation batch \u00b7 checking",
-  "batchNote": "113 notes \u00b7 38 live, 5 partial, 9 verified, 61 open before next batch"
+  "batchStatus": "Stopped \u00b7 GitHub handoff ready",
+  "batchNote": "v0.6.0 candidatef00f20e1 \u00b7 not deployed \u00b7 final immutable checks pending"
 }

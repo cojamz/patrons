@@ -5,32 +5,34 @@ Current feedback section reconciled 2026-10-16; later historical sections retain
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 Shipping: checked incremental fixes ship promptly under current working instructions. A− is the finished-build goal; historical panel requirements do not block authorized iterations.
 
-## Active batches — October 17
+## Handoff batches — October 17
+
+Implementation checkmarks below mean focused code/tests passed, NOT public deployment. Sourcef27be278; combined full-game progression remains blocked by ea timeout. See HANDOFF.md for exact next steps.
 
 Every report is recorded here before implementation. Root owns triage, assignment, integration, verification and publication; status questions do not pause execution. Original113-note ledger: `feedback-audit-2026-10-17.md`. Additional reports below are separate from those113. A batch is shipped only after its immutable checks and public verification.
 
 ### Batch A — animation boundaries and round transitions (P0, in progress)
-- [ ] A1: Legal-space lighting, taken dimming, turn ownership and options advance together only after actual sequence completion. Local and online; no stale input. Owner: motion agent. Check: controlled chain-end UI tests plus real browser local/online transitions.
-- [ ] A2: Include home flights and final settle/roll in completion; skip and reduced motion land cleanly, no deadlock. Owner: performance agent. Check: director lifecycle regressions and real swap/end-round visual verification.
-- [ ] A3: Remove “Round X Ends” pre-screen. Start competition directly; use existing animation for necessary cues. Owner: card/UI agent. Check: no pre-screen and competition/results still complete.
+- [x] A1: Legal-space lighting, taken dimming, turn ownership and options advance together only after actual sequence completion. Local and online; no stale input. Owner: motion agent. Check: controlled chain-end UI tests plus real browser local/online transitions.
+- [x] A2: Include home flights and final settle/roll in completion; skip and reduced motion land cleanly, no deadlock. Owner: performance agent. Check: director lifecycle regressions and real swap/end-round visual verification.
+- [x] A3: Remove “Round X Ends” pre-screen. Start competition directly; use existing animation for necessary cues. Owner: card/UI agent. Check: no pre-screen and competition/results still complete.
 - [ ] A4: Diagnose and fix result-card appearance lag. Owner: card/UI agent. Check: isolated production browser transition and measured frame gaps; no claim from static review alone.
-- [ ] A5: Swap loop leak, aggregate-steal duplicate flights, shared wheel geometry cache and round-start net income. Implemented526abdda;1220tests/build/fullgame green. Root visual verification pending; no live claim. Broader round-start choreography remains partial.
+- [ ] A5: Swap loop leak, aggregate-steal duplicate flights, shared wheel geometry cache and round-start net income. Implemented526abdda;1220tests/build/fullgame green. Exactea desktop/phone swap/steal visual proof passed; no live claim. Broader round-start choreography remains partial.
 
-- [ ] A6: Round-end award totals and “+followers” indicators appear only after that reward lands, never before competition animation. Owner: motion/UI agent. Check: pre-award oldtotal/no+tag; postlanding update; final bonuses follow same boundary.
+- [x] A6: Round-end award totals and “+followers” indicators appear only after that reward lands, never before competition animation. Owner: motion/UI agent. Check: pre-award oldtotal/no+tag; postlanding update; final bonuses follow same boundary.
 
 ### Batch B — precise card behavior and wording (P1, implemented awaiting integration)
-- [ ] B1: Sticky Fingers must not imply it doubles. Text: “Your steals from spaces take +1 resource.” Prospector also states only its own bonus. Owner: card agent. Check: unchanged engine ordering and exact text.
-- [ ] B2: Shakedown artwork advertises≤4, matching legal targets (was≤6). Owner: card agent. Check: engine/art contract regression.
-- [ ] B3: Newly bought Go-Getter remains usable after final placement, when spaces remain. Offer activation or Done without a second purchase; correct UI labels. Owners: card engine + motion UI. Check: engine activation/Done/full-board/JSON-resume and browser UI.
-- [ ] B4: Two-person Late Bloomers, named discount-source explanations, confirmed-rule glossary/help corrections and cancelled stale fallback previews. Implemented526abdda; focused/full checks green, card/tap visuals pending. Owner: root integration.
+- [x] B1: Sticky Fingers must not imply it doubles. Text: “Your steals from spaces take +1 resource.” Prospector also states only its own bonus. Owner: card agent. Check: unchanged engine ordering and exact text.
+- [x] B2: Shakedown artwork advertises≤4, matching legal targets (was≤6). Owner: card agent. Check: engine/art contract regression.
+- [x] B3: Newly bought Go-Getter remains usable after final placement, when spaces remain. Offer activation or Done without a second purchase; correct UI labels. Owners: card engine + motion UI. Check: engine activation/Done/full-board/JSON-resume and browser UI.
+- [ ] B4: Two-person Late Bloomers, named discount-source explanations, confirmed-rule glossary/help corrections and cancelled stale fallback previews. Implemented526abdda; focused/full checks green, 526card/tap visuals passed; later changes need integrated visual check. Owner: root integration.
 
-- [ ] B5: Extortionist triggers when a rival buys5or more followers in one purchase (existing6threshold→5). Owner: card/rules agent. Check:4excluded,5included; exact card text and engine agree.
+- [x] B5: Extortionist triggers when a rival buys5or more followers in one purchase (existing6threshold→5). Owner: card/rules agent. Check:4excluded,5included; exact card text and engine agree.
 
-- [ ] B6: Cutpurse does not offer resource choice. Implemented explicit color choice on recruit and round start;1resource from richest eligible rival, no space multipliers. Regression selects gold over larger red pile and excludes poorer rival. Integrated checks pending. Owner: card/rules agent. Check: chosen victim/color/amount resolve exactly.
+- [x] B6: Cutpurse does not offer resource choice. Implemented explicit color choice on recruit and round start;1resource from richest eligible rival, no space multipliers. Regression selects gold over larger red pile and excludes poorer rival. Integrated checks pending. Owner: card/rules agent. Check: chosen victim/color/amount resolve exactly.
 
-- [ ] B7: Arc competitions default to members; Silver/Gold/Yellow unchanged. Confirmed own-color members; preserve printed member quantities. Owner: card/rules agent. Independent fixes continue.
+- [x] B7: Arc competitions default to members; Silver/Gold/Yellow unchanged. Confirmed own-color members; preserve printed member quantities. Owner: card/rules agent. Independent fixes continue.
 
-- [ ] B8: Magenta roundIII Poach takes rival member with no replacement recruit. Owner: card/rules agent. Check: ownership/guards intact, shop unchanged, no replacement pending; text agrees.
+- [x] B8: Magenta roundIII Poach takes rival member with no replacement recruit. Owner: card/rules agent. Check: ownership/guards intact, shop unchanged, no replacement pending; text agrees.
 
 ### Batch C — remaining original feedback (triage continues)
 - [ ] Suspected Good Deed misclick: all tested color/recipient branches resolve correctly; no defect reproduced. Keep report open for actual reproduction, do not mark fixed.
@@ -241,3 +243,12 @@ Finish every running process and to-do, then a multiplayer version Cory can play
 
 Settled 2026-10-14 (Cory's calls or Claude's logged gut calls, see decisions.md): Lamplit Table look; spinning wheel kept; pay by coins; Watchdog blocks Trade; loot stays magenta; Release on, refunds the colored part only, not in the round recruited; Late Riser; doubled discounts; the game always ends after round III and 10→10 is unlimited; Barter cut (Dividend); Even Swap replaces Scout; action names batch 1 and member renames applied; Investor/Sower set-asides return undoubled; only loose followers sell (White rework fixes Pawn); shop of 10; pixel art good enough for now.
 Settled 2026-10-15 (decisions.md): plate 1b look (plain dots, follower mark, words, no names or pictures on spaces); every choice picked on the board; one Speed setting (Quick / Steady / Relaxed); shop cards show identity and price, ability in the hover; seats in turn order, re-sorted each round; minions in a column; action spaces' redesign (doorways and the three looks rejected; plate 1b instead).
+
+## Latest handoff intake
+See feedback-addendum-2026-10-17.md for every new report. Six small UI fixes implemented with focused checks. ExtraHand only-unplaced transfer is confirmed but NOT IMPLEMENTED; correct sourceUID provenance required. The round-end redesign, Undo reverse motion and hard Green copy-chain pressure tests remain open.
+
+## Continued release work after handoff request
+Cory authorized continued work and shipping while usage remained. Original f27fast result:1244pass/19fail/1skip, buildpass; full log in eval/handoff-2026-10-17/final-check.log. Those failures are being repaired with preserved independent coverage. New numbering/changelog workflow in releasing.md. Green chain pressuretests32pass. Motion lane resolving real Kickback progression and stale reverse-draft harness assumption; ExtraHand source-entitlement transfer assigned core lane. Do not read earlier “no agents running” as current state.
+
+## FINAL STOP / next agent
+User requested immediate stop and GitHub handoff. Sourcef00f20e1 contains targeted regression repairs, version/changelog workflow and ExtraHandtransfer implementation.19prior failures have targeted green proof; combined immutable gate/fullbrowser verification NOTRUN on this source. Start with HANDOFF finalcheckpoint; no further work was authorized in this ending turn. All remaining original/addendum ideas retained.
