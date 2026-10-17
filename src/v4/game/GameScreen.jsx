@@ -295,7 +295,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     pump();
   }, [pump, session]);
 
-  return [table.shown, table.interaction === table.shown ? table.moment : null, dismiss, rs0, retime, table.interaction, table.moment?.board || table.shown];
+  return [table.shown, table.interaction === table.shown ? table.moment : null, dismiss, rs0, retime, table.interaction, table.moment?.board || table.shown, table.moment];
 }
 
 /**
@@ -538,7 +538,7 @@ const verbFor = kind => ({ setup: 'drafting a resource', place: 'placing a minio
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
   const beforeShow = useRef(null);
-  const [live0, moment, dismissMoment, roundStart0, retimeTable, settled0, physical0] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
+  const [live0, moment, dismissMoment, roundStart0, retimeTable, settled0, physical0, scoringMoment] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
   const physicalState = physical0;
   const interactionState = moment && moment.board ? moment.board : settled0;
   // Counters and flying targets use physical state; ownership/options/order share one settled boundary.
@@ -659,9 +659,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     return () => removeEventListener('resize', again);
   }, []);
   const seatState = useMemo(() => {
-    if (!moment) return state;
-    return scoringSeatState(state, moment, reckoned === moment ? Infinity : paid.moment === moment ? paid.n : 0);
-  }, [state, moment, reckoned, paid]);
+    // The engine has already awarded prizes while the last action is still playing.
+    // Withhold them from the very first scoring-board commit, before the Reckoning is visible.
+    if (!scoringMoment) return state;
+    return scoringSeatState(state, scoringMoment, reckoned === scoringMoment ? Infinity : paid.moment === scoringMoment ? paid.n : 0);
+  }, [state, scoringMoment, reckoned, paid]);
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
   // re-render when undo comes or goes, so Undo disappears the moment control passes even while the table catches up
   // (perf fix 2: only then, not on every session change, a held bot step included)
@@ -812,7 +814,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (before === state) { if (!shopSnap.current.size) shopSnap.current = snapshotShop(root.current); noteTable(root.current); return undefined; }
     // the move plays as a chain (director.js, the motion language in design/prototypes/motion/grammar.md): the
     // selection, then each cause's effects from the engine's stream, in order, every count ticking as pieces land
-    const played = playChain(root.current, before, state, { snap: shopSnap.current, minionsBefore: state.round !== before.round && before.round >= 1 ? wasOnWheel : null, mine: mySeats, chips: chipSnap.current });
+    // Contest and final bonuses belong exclusively to the Reckoning's landing callbacks.
+    // The fallback diff must not turn those already-scored followers into a closing-action payout/tag.
+    const animationState = scoringMoment ? scoringSeatState(state, scoringMoment, 0) : state;
+    const played = playChain(root.current, before, animationState, { snap: shopSnap.current, minionsBefore: state.round !== before.round && before.round >= 1 ? wasOnWheel : null, mine: mySeats, chips: chipSnap.current });
     retimeTable(played);
 
     const lines = newLogLines(before, state);

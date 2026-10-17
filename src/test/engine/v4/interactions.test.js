@@ -264,13 +264,13 @@ describe('Blue’s out-of-buy recruits with Pied Piper and Proselytizer', () => 
     expect(R(s, 0).red).toBe(20 + 2 - 1 - 3);
     expect(s.pending?.kind).not.toBe('buy');
   });
-  it('a recruit on someone else’s turn doesn’t complete your Drive (Poach’s free recruit)', () => {
+  it('Poach does not grant a replacement or complete the victim’s Drive', () => {
     let s = scene({ quads: ['gold', 'red', 'thieves', 'market'], round: 3, members: [[], ['red.drive', 'red.twins']] });
     s.players[1].turnRecruits = 1; // P2 recruited once on their own last turn
     s = take(s, 'thieves.heist');
     s = move(s, `card:${uidOf(s, 'red.twins', 1)}`);
-    s = move(s, `card:${uidOf(s, 'red.intern', 'shop')}`); // P2's free recruit
-    expect(defs(s, 1)).toContain('red.intern');
+    expect(defs(s, 1)).toEqual(['red.drive']);
+    expect(s.pending?.prompt || '').not.toContain('Poach: recruit');
     expect(R(s, 1).red).toBe(0);
   });
 });
@@ -282,7 +282,6 @@ describe('Magenta takes members that carry state', () => {
     let s = scene({ quads: Q, round: 3, members: [[], ['gold.speculator']] });
     s.cards[uidOf(s, 'gold.speculator', 1)].used = true;
     s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'gold.speculator', 1)}`);
-    s = move(s, s.pending.options[0].id); // P2's free recruit
     expect(defs(s, 0)).toEqual(['gold.speculator']);
     expect(ids(s)).not.toContain(`use:${uidOf(s, 'gold.speculator', 0)}`);
   });
@@ -290,7 +289,6 @@ describe('Magenta takes members that carry state', () => {
     let s = scene({ quads: Q, round: 3, res: [{ gold: 2 }, {}], members: [[], ['gold.midas']] });
     s.cards[uidOf(s, 'gold.midas', 1)].on = false;
     s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'gold.midas', 1)}`);
-    s = move(s, s.pending.options[0].id);
     expect(s.cards[uidOf(s, 'gold.midas', 0)].on).toBe(false);
     expect(s.pending.options.find(o => o.kind === 'toggle').label).toContain('switch on');
   });
@@ -298,7 +296,6 @@ describe('Magenta takes members that carry state', () => {
     let s = scene({ quads: Q, round: 3, members: [[], ['gold.investor']] });
     s.cards[uidOf(s, 'gold.investor', 1)].invested = 4;
     s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'gold.investor', 1)}`);
-    s = move(s, s.pending.options[0].id);
     s = resume(Object.assign(s, { queue: [{ t: 'endRound' }] }));
     expect(defs(s, 0)).toContain('gold.investor');
     expect(R(s, 0).gold).toBe(0);
@@ -368,7 +365,7 @@ describe('White sells followers that contests and bonuses counted', () => {
     const s = scene({ quads: Q, bonus: [1], members: [['trading.lender']], queue: [{ t: 'finish' }] });
     expect(s.players[0].bonus).toBe(0);
   });
-  it('Weaver and Extortionist fire on the 10-follower buy too (6 or more)', () => {
+  it('Weaver and Extortionist fire on the 10-follower buy too (5 or more)', () => {
     const Y = ['gold', 'red', 'thieves', 'yellow'];
     let s = scene({ quads: Y, turns: [1, 0], res: [{}, { gold: 4, red: 2, magenta: 2, yellow: 2 }], members: [['thieves.extortionist'], ['yellow.weaver']] });
     s = take(s, 'gold.rush');

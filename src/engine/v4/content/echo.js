@@ -1,3 +1,4 @@
+import { memberScoring } from './member-scoring.js';
 // Green: the echo. Copy the previous action, an occupied space, or your own occupied spaces.
 // Scoring: most green at round end.
 //
@@ -256,7 +257,7 @@ const echoQ = {
   name: 'Green',
   resource: 'green',
   rule: 'Copies never copy another copy. Most green at round end wins.',
-  scoring: { label: 'Most green', counts: 'the green you hold when the round ends', score: (ctx, p) => p.res.green || 0 },
+  scoring: memberScoring('echo', 'green'),
 
   actions: [
     {

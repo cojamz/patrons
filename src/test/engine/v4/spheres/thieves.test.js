@@ -160,16 +160,14 @@ describe('Magenta actions', () => {
     expect(defs(s, 0)).toEqual(['red.mob']);
   });
 
-  it('Poach: take any rival member; they recruit any face-up member costing up to the same, free', () => {
+  it('Poach takes a rival member with no replacement', () => {
     let s = scene({ round: 3, members: [[], ['red.proselytizer']], shop: ['red.volunteer', 'red.intern', 'gold.tycoon', 'red.mentor', 'red.patriarch', 'red.sponsor'] });
-    s = take(s, 'thieves.heist');
-    s = move(s, `card:${uidOf(s, 'red.proselytizer', 1)}`);
+    const shop = [...s.shop];
+    s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'red.proselytizer', 1)}`);
     expect(defs(s, 0)).toEqual(['red.proselytizer']);
-    expect(s.pending.player).toBe(1);
-    // Proselytizer costs 6 (3+3): every face-up card costs 6 or less
-    expect(s.pending.options).toHaveLength(6); // the hand-made scene has 6 face up
-    s = move(s, `card:${uidOf(s, 'red.patriarch', 'shop')}`);
-    expect(defs(s, 1)).toEqual(['red.patriarch']);
+    expect(defs(s, 1)).toEqual([]);
+    expect(s.shop).toEqual(shop);
+    expect(s.pending?.player).not.toBe(1);
   });
 });
 

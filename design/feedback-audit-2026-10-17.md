@@ -11,7 +11,7 @@ Original: `play-feedback-2026-10-17-original.txt`. All 113 nonempty notes retain
 | 5 | Draft 1 to start the round | Confirmed fix / clarified rule | Codex | LIVE6c1e97eb: One resource each, reverse firstOrder, no replacement; final color assigned automatically. |
 | 6 | Make pants taller | Question / hold | UI | Open: needs specific design answer or referent; not silently changed. |
 | 7 | Outer circle looks dim, colors don’t look bright enough | Confirmed fix / clarified rule | UI | LIVE6c1e97eb: Rim color mixture brightened and inactive-rim opacity raised; frozen and public desktop/phone visual checks passed. |
-| 8 | Default to members for scoring | Question / hold | Codex | Open: needs specific design answer or referent; not silently changed. |
+| 8 | Default to members for scoring | Question / hold | Codex | CHECKPOINT, not live: confirmed own-color member competition; Gold/Silver/Yellow unchanged. Weighted scoring and UI rules implemented; final integration pending. |
 | 9 | Asking for confirmation to place - NO. Only on phone/small screen | Confirmed fix / clarified rule | UI | LIVE6c1e97eb: Desktop direct placement; small screens retain confirmation (GameScreen confirmPlace={!wide}). |
 | 10 | The extras should count as members | Confirmed fix / clarified rule | Codex | LIVE6c1e97eb: Printed memberWeight counts in quantities, colored contests, recruit counters and previews; hooks once per card. |
 | 11 | Frontrunner neutral too cheap | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
@@ -30,11 +30,11 @@ Original: `play-feedback-2026-10-17-original.txt`. All 113 nonempty notes retain
 | 24 | Extra Hand - Probably fine | Preserve / positive feedback | Codex | Verified / preserved: Preserved; no balance change requested. |
 | 25 | Extortionist is out of whack | Investigate / design idea | Magenta rules | Open: queued for investigation or balance/design work; not shipped. |
 | 26 | Steal when you buy a member - should be essential to magenta | Investigate / design idea | Magenta rules | Partial / not shipped: Recruit-theft hooks verified for paid/free recruitment; Accomplice/Light Fingers are currently culled. Recurring own-recruit theft design needs binding. |
-| 27 | Should EVERY wheel just be members reward? I think yes | Question / hold | Codex | Open: needs specific design answer or referent; not silently changed. |
-| 28 | Run some games without the follower shop | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
+| 27 | Should EVERY wheel just be members reward? I think yes | Question / hold | Codex | CHECKPOINT, not live: own-color member condition implemented on all non-exempt arcs; Gold/Silver/Yellow retained. |
+| 28 | Run some games without the follower shop | Investigate / design idea | Codex | Verified experiment:48paired Normal-bot games completed; eval/2026-10-17-no-follower-shop.md. No human-balance conclusion or production removal. |
 | 29 | Rising Tide +2 | Confirmed fix / clarified rule | Codex | LIVE6c1e97eb: Rising Tide gifts each rival 2 silver before measuring the richest pile. |
 | 30 | Knob tweak on shakedown | Investigate / design idea | Magenta rules | Open: queued for investigation or balance/design work; not shipped. |
-| 31 | Shakedown didnt seem to work? Counted as a misclick | Investigate / design idea | Magenta rules | Open: queued for investigation or balance/design work; not shipped. |
+| 31 | Shakedown didnt seem to work? Counted as a misclick | Investigate / design idea | Magenta rules | Partial checkpoint, not live: Shakedown artwork limit corrected6→4; real target/art contract passes. Original reported misclick not independently reproduced. |
 | 32 | “You lose your tie for silver” is unnecessary | Confirmed fix / clarified rule | UI | LIVE6c1e97eb: Removed payment tie-loss prose; engine legality unchanged. |
 | 33 | Show Off is trash | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
 | 34 | Snap up is good | Preserve / positive feedback | Codex | Verified / preserved: Preserved Snap Up; duplicate UI corrected under #14. |
@@ -47,19 +47,19 @@ Original: `play-feedback-2026-10-17-original.txt`. All 113 nonempty notes retain
 | 41 | Crime wave not named correctly or text is wrong | Investigate / design idea | Magenta rules | Open: queued for investigation or balance/design work; not shipped. |
 | 42 | Too many words in the hover over on actions we dont need to tell players how it will help them | Confirmed fix / clarified rule | UI | LIVE6c1e97eb: Action hovers retain exact rules, gains and causes; remove advice/contest prediction rows. |
 | 43 | Retinue more followers | Question / hold | Codex | Open: needs specific design answer or referent; not silently changed. |
-| 44 | Sounds and animation sound off | Investigate / design idea | UI | Partial / not shipped: Wheel cold-layout cache implemented and layout-equivalence checked; browser timing pending. Broader sound/motion pass remains. |
+| 44 | Sounds and animation sound off | Investigate / design idea | UI | Partial checkpoint, not live: shared geometry cache and actual-motion completion implemented.526quiet normal/4x profile passes; ea full-game timeout remains a blocker. |
 | 45 | Redistribute - more elegant solution | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
-| 46 | Sequencing of member effects is not always intuitive | Investigate / design idea | UI | Partial / not shipped: Online state sequencing corrected; full member-effect choreography remains open. |
+| 46 | Sequencing of member effects is not always intuitive | Investigate / design idea | UI | Partial checkpoint, not live: local/online options, lights and ownership gate on actual animation end;1238tests pass on ea but full-game timed out. Later score-arrival regression added. |
 | 47 | Silver round 2 actions need work | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
 | 48 | Freelancer maybe more expensive | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
 | 49 | Grifter is kinda cool | Preserve / positive feedback | Codex | Verified / preserved: Preserved Grifter concept; choice/log defects corrected. |
-| 50 | Start of round needs dedicated animations | Investigate / design idea | UI | Open: queued for investigation or balance/design work; not shipped. |
+| 50 | Start of round needs dedicated animations | Investigate / design idea | UI | Partial checkpoint, not live: home then net round-start income; full offsetting hook/market choreography still open. |
 | 51 | Log doesnt show what was gained for taking show off | Confirmed fix / clarified rule | UI | LIVE6c1e97eb: Show Off now logs actual gain color/amount, including conversion. |
 | 52 | Silver puts the game on steroids, needs some counterweight | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
 | 53 | Desperado double let me pick twice instead of doubling the steal from one person | Confirmed fix / clarified rule | Magenta rules | LIVE6c1e97eb: Doubled steal takes 2 from the selected rival; base doubles before additions. |
 | 54 | Lie Low should protect members and resources | Confirmed fix / clarified rule | Magenta rules | LIVE6c1e97eb: Lie Low protects members and resources (ransom, trade, steal regressions). |
 | 55 | Maybe discount is good/fun | Question / hold | Codex | Open: needs specific design answer or referent; not silently changed. |
-| 56 | Discount needs to show where its coming from | Question / hold | Codex | Partial / not shipped: Existing payment metadata retained; whether to keep/remove discounts and the desired origin display remain unresolved. |
+| 56 | Discount needs to show where its coming from | Question / hold | Codex | CHECKPOINT, not live: named persistent discount sources and legacy fallback implemented, payment/header hover/tap visible; focused tests and526desktop/phone render passed. |
 | 57 | Get rid of release a member | Confirmed fix / clarified rule | Codex | LIVE6c1e97eb: Same explicit Release removal as #40. |
 | 58 | Why is squatter in magenta | Investigate / design idea | Magenta rules | Open: queued for investigation or balance/design work; not shipped. |
 | 59 | This should straight up steal | Question / hold | Magenta rules | Open: needs specific design answer or referent; not silently changed. |
@@ -79,7 +79,7 @@ Original: `play-feedback-2026-10-17-original.txt`. All 113 nonempty notes retain
 | 73 | Should shop refresh in between rounds? | Confirmed fix / clarified rule | Codex | LIVE6c1e97eb: Market refresh between rounds implemented; no new draft after Round I. |
 | 74 | Are there two freelancers | Investigate / design idea | Codex | Verified / preserved: Source audit: one Freelancer definition/copy; no accidental duplicate reproduced. |
 | 75 | Front runner purple not neutral? Whats happening with the neutrals | Question / hold | Codex | Verified / preserved: Source audit: Front-runner is a purple-leaning guest, rendered colorless when Purple absent; placement decision still open. |
-| 76 | Late bloomers need two people in the pics | Investigate / design idea | UI | Open: queued for investigation or balance/design work; not shipped. |
+| 76 | Late bloomers need two people in the pics | Investigate / design idea | UI | CHECKPOINT, not live: two-person Late Bloomers art implemented and visually inspected in526desktop card screenshot. |
 | 77 | Lets actually keep # of ghosts. I know I had | Question / hold | UI | Open: needs specific design answer or referent; not silently changed. |
 | 78 | Catch up should be better | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
 | 79 | Is frontrunner too strong or weak? Balance test. Not important | Investigate / design idea | Codex | Open: queued for investigation or balance/design work; not shipped. |
@@ -107,13 +107,13 @@ Original: `play-feedback-2026-10-17-original.txt`. All 113 nonempty notes retain
 | 101 | Night Owl should be 2 followers | Confirmed fix / clarified rule | Codex | LIVE6c1e97eb: Night Owl printed follower value is 2. |
 | 102 | Log did not indicate a night owl turn | Firm change | Multiplayer | Partial / not shipped: Named Night Owl grant and visible subsequent-turn log verified with actual-engine UI test; new wording/display feedback still welcome. |
 | 103 | Trade Seeds - one at a time. As expected. | Preserve / positive feedback | Codex | Verified / preserved: Trade Seeds already swaps one resource at a time; preserved. |
-| 104 | If i buy go getter on last turn can i use | Investigate / design idea | Multiplayer | Open: queued for investigation or balance/design work; not shipped. |
+| 104 | If i buy go getter on last turn can i use | Investigate / design idea | Multiplayer | CHECKPOINT, not live: post-purchase use/Done window enables Go-Getter on final placement; no second purchase; unavailable/full-board cases auto-skip. |
 | 105 | Rush hour doesnt show what you’d actually get like other actions do | Confirmed fix / clarified rule | UI | LIVE6c1e97eb: Rush Hour live panel includes the newly placed minion and shows actual payout. |
 | 106 | Something is definitely fucked up in multiplayer games with the glowing spaces. Sometimes it seems as though it doesnt even think its my turn | Confirmed fix / clarified rule | Multiplayer | LIVE6c1e97eb: Immediate online ownership/legal-option snapshots; multi-client and frozen browser checks pending. |
-| 107 | Magenta animations are awkward - shows multiple animation for the same resource gain? | Investigate / design idea | UI | Open: queued for investigation or balance/design work; not shipped. |
+| 107 | Magenta animations are awkward - shows multiple animation for the same resource gain? | Investigate / design idea | UI | CHECKPOINT, not live: aggregate Magenta steal paired into one direct unit stream; ea actual browser verifies3units once each. |
 | 108 | Members with multiple “people” should count as additional members | Confirmed fix / clarified rule | Codex | LIVE6c1e97eb: Same clarified printed-weight rule as #10, preserving explicit larger member counts. |
 | 109 | Yeah when things are lit or not is all off | Confirmed fix / clarified rule | Multiplayer | LIVE6c1e97eb: Same online stale-snapshot correction as #106. |
-| 110 | The swapping animation for members via actions should have them go to them middle, just clearly swap between the player cards. Maybe a LITTLE exaggerated… | Firm change | UI | Open: queued for investigation or balance/design work; not shipped. |
+| 110 | The swapping animation for members via actions should have them go to them middle, just clearly swap between the player cards. Maybe a LITTLE exaggerated… | Firm change | UI | CHECKPOINT, not live: both swapped members travel via side-by-side hub to new seats; fourlegs/68px separation/ownership/chainidle verified on ea desktop+phone. |
 | 111 | Steal UI isn’t particularly intuitive. Well, the UI is maybe intuitive but sometimes wording on the cards isnt | Investigate / design idea | UI | Open: queued for investigation or balance/design work; not shipped. |
 | 112 | Didn’t we say end of round sphere rewards should divide up evenly on a tie? | Confirmed fix / clarified rule | Codex | LIVE6c1e97eb: Clarified: every tied leader receives half the round prize, independent of tie count. |
 | 113 | Sometimes turn status is desync’d or wrong | Confirmed fix / clarified rule | Multiplayer | LIVE6c1e97eb: Online header, legal options and log use current authoritative snapshot. |
@@ -137,3 +137,6 @@ Original: `play-feedback-2026-10-17-original.txt`. All 113 nonempty notes retain
 - No duplicate Freelancer definition/copy found. Guest color changes are intentional under the current rules, not accidental shuffling.
 - Recruit-theft hooks exist, but some relevant members are culled from normal decks. The intended recurring own-recruit design remains a question.
 - 48 paired Normal-bot games with/without follower-shop choices completed; report: `eval/2026-10-17-no-follower-shop.md`. This is not human balance validation.
+
+## Final handoff boundary
+Later source checkpoint contains additional fixes beyond the verified live6c1e97eb. See HANDOFF.md for exact final SHA/check outcomes. ea406700: build+1238tests pass; full hotseat timed out4minutes. Latest source must not be deployed without resolving progression and rerunning immutable checks. New25-item intake is feedback-addendum-2026-10-17.md.

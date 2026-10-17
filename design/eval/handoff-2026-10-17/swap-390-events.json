@@ -1,0 +1,94 @@
+[
+  {
+    "className": "piece-flight piece-member staged ghost-layer path-arc",
+    "left": 81.8281,
+    "top": 139.188,
+    "frames": [
+      {
+        "transform": "translate(0,0)"
+      },
+      {
+        "transform": "translate(53.1640625px,140.9921875px)"
+      }
+    ],
+    "text": "Big Family"
+  },
+  {
+    "className": "piece-flight piece-member staged ghost-layer path-arc",
+    "left": 58.8281,
+    "top": 809.172,
+    "frames": [
+      {
+        "transform": "translate(0,0)"
+      },
+      {
+        "transform": "translate(144.1640625px,-528.9921875px)"
+      }
+    ],
+    "text": "Twins"
+  },
+  {
+    "className": "piece-flight piece-member staged ghost-layer",
+    "left": 134.992,
+    "top": 280.18,
+    "frames": [
+      {
+        "transform": "none"
+      },
+      {
+        "transform": "translateY(-6px) scale(1.08)",
+        "offset": 0.35
+      },
+      {
+        "transform": "none"
+      }
+    ],
+    "text": "Big Family"
+  },
+  {
+    "className": "piece-flight piece-member staged ghost-layer",
+    "left": 202.992,
+    "top": 280.18,
+    "frames": [
+      {
+        "transform": "none"
+      },
+      {
+        "transform": "translateY(-6px) scale(1.08)",
+        "offset": 0.35
+      },
+      {
+        "transform": "none"
+      }
+    ],
+    "text": "Twins"
+  },
+  {
+    "className": "piece-flight piece-member staged ghost-layer path-arc",
+    "left": 134.992,
+    "top": 280.18,
+    "frames": [
+      {
+        "transform": "translate(0,0)"
+      },
+      {
+        "transform": "translate(-48.1640625px,528.9921875px)"
+      }
+    ],
+    "text": "Big Family"
+  },
+  {
+    "className": "piece-flight piece-member staged ghost-layer path-cross",
+    "left": 202.992,
+    "top": 280.18,
+    "frames": [
+      {
+        "transform": "translate(0,0)"
+      },
+      {
+        "transform": "translate(-121.1640625px,-140.9921875px)"
+      }
+    ],
+    "text": "Twins"
+  }
+]

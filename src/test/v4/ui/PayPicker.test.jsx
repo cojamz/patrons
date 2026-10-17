@@ -6,6 +6,7 @@ import { render, screen, fireEvent, cleanup, within } from '@testing-library/rea
 import { createGame, applyMove, chooseBotMove, memberPrice, TIERS } from '../../../engine/v4/index.js';
 import { resume } from '../../../engine/v4/core.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
+import PayPicker from '../../../v4/game/PayPicker.jsx';
 import HowToPlay from '../../../v4/HowToPlay.jsx';
 import { RULEBOOK } from '../../../v4/rulebook.js';
 import { readFileSync } from 'node:fs';
@@ -85,8 +86,8 @@ describe('v4 payment picker', () => {
       else expect(group).toBeNull();
       if (p.res[c] > 0) expect(keeping.querySelector(`[data-stack="${c}"] [data-keep-label]`).textContent).toBe(String(p.res[c] - out));
     }
-    // and why it asks: there's more than one way to pay (live panel r1: which buys ask looked random)
-    expect(dlg.querySelector('[data-pay-legend]').textContent).toMatch(/more than one way/);
+    expect(dlg.querySelector('[data-pay-legend]')).toBeNull();
+    expect(dlg.textContent).not.toContain('more than one way');
     // a color you hold none of has no stack at all (blind tester B, aminus r1: its faint coin read as "this pays")
     for (const c of res) expect(!!dlg.querySelector(`[data-stack="${c}"]`)).toBe(p.res[c] > 0);
     expect(dlg.querySelector('.ps-none')).toBeNull();
@@ -195,4 +196,17 @@ describe('how to play', () => {
     fireEvent.click(screen.getByRole('button', { name: /close/i }));
     expect(onClose).toHaveBeenCalled();
   });
+});
+
+
+it('payment selector keeps the selected member ability visible without the payment legend', () => {
+  const s = createGame({ seats: [{ name: 'Ana' }, { name: 'Bo' }], seed: 7 });
+  for (const r of s.resources) s.players[0].res[r] = 12;
+  const uid = s.shop.find(u => s.cards[u].def.startsWith('gold.')) || s.shop[0];
+  s.queue = [{ t: 'pay', p: 0, uid }];
+  resume(s);
+  const { container } = render(<PayPicker state={s} onPick={() => {}} busy={false} />);
+  expect(container.querySelector('[data-pay-ability]')).not.toBeNull();
+  expect(container.querySelector('[data-pay-ability]').textContent.length).toBeGreaterThan(0);
+  expect(container.querySelector('[data-pay-legend]')).toBeNull();
 });

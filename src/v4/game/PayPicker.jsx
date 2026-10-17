@@ -17,7 +17,7 @@ import { Follower } from '../art/Follower.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { ResourceGlyph } from './Glyphs.jsx';
-import { CostDots, cardColor, onTable } from './Info.jsx';
+import { CostDots, cardColor, onTable, CardText } from './Info.jsx';
 import { priceNotes } from './priceNotes.js';
 import { motionOK } from './flight.js';
 import './pay.css';
@@ -221,6 +221,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
               </small>
             </span>
           </div>
+          {def && <p className="ability" data-pay-ability><CardText text={def.text} /></p>}
         </div>
 
         {/* your resources in two rows (Cory, 2026-10-15, on the old lifted-and-faded coins: "hard to decipher … not
@@ -274,11 +275,6 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
             </div>
           </div>
         </div>
-
-        {/* why the sheet is up (live panel r1: testers couldn't tell why some buys ask and some pay at once): a buy with
-            one way to pay pays at once; this one has several, so the line says so and how to change it. A sheet up for
-            a lost lead (one way) says that instead, below. */}
-        {ways.length > 1 && <p className="pay-legend" data-pay-legend>You can pay this more than one way: click a coin to move it.</p>}
 
         {(notes.length > 0 || nudge) && (
           <div className="pay-notes">

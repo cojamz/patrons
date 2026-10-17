@@ -109,7 +109,7 @@ const SUMS = {
   'thieves.hideout': () => [HOOD(), ARROW, R('magenta', 1), DOT, SAFE], //                         ☗ → 1◆ · ⛨
   'thieves.rob': ({ n }) => [HOOD({ all: true }), ARROW, R('magenta', n(0, 3))], //                ☗☗ → 3◆      (at least 1 from each)
   'thieves.ransom': () => [MEM({ rival: true }), ARROW, R('magenta'), WORD('or'), MEM()], //       ☗▢ → ◆ or ▢   (cost cap, their choice: hover)
-  'thieves.heist': () => [MEM({ rival: true }), ARROW, MEM()], //                                  ☗▢ → ▢        (they recruit one back: hover)
+  'thieves.heist': () => [MEM({ rival: true }), ARROW, MEM()], //                                  ☗▢ → ▢        (transfer only; no replacement)
   // trading (white): followers
   'trading.haggle': ({ n }) => [R('white', plus(n(0, 2))), NUM(plus(n(1, 1))), PER, HOOD({ mod: 'high' })], // +2⬡ +1/▴☗
   'trading.buylow': () => [FOL('+1'), PER, R('white', '3')], //                                   +1☺ / 3⬡

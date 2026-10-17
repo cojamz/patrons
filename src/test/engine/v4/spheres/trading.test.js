@@ -1,7 +1,7 @@
 // @vitest-environment node
 // White (trading): every action and every member with exact numbers, plus 200 seeded bot games on a White table.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createGame, applyMove, resume, followers } from '../../../../engine/v4/core.js';
+import { createGame, applyMove, resume, followers, contextFor } from '../../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
 import trading, { install, SELL_HIGH } from '../../../../engine/v4/content/trading.js';
@@ -51,17 +51,17 @@ const F = (s, i = 0) => followers(s, s.players[i]);
 const Z = { gold: 0, red: 0, blue: 0, white: 0 };
 const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
 
-describe('White scoring: fewest followers', () => {
-  it('scores fewer followers higher, and shows the follower count', () => {
-    const ctx = { followers: p => p.f };
-    expect(trading.scoring.score(ctx, { f: 2 })).toBeGreaterThan(trading.scoring.score(ctx, { f: 5 }));
-    expect(trading.scoring.show(ctx, { f: 5 }).count).toBe(5);
+describe('White scoring: most white members', () => {
+  it('counts white member quantity, ignoring followers and resource piles', () => {
+    const s = scene({ members: [['trading.shopkeeper'], []], bonus: [20,0], res: [{}, {white: 30}] });
+    expect(trading.scoring.score(contextFor(s), s.players[0])).toBe(1);
+    expect(trading.scoring.score(contextFor(s), s.players[1])).toBe(0);
   });
-  it('pays the ring value to whoever has fewest followers, white or not; ties split the prize', () => {
-    let s = scene({ n: 3, res: [{}, { white: 5 }, {}], bonus: [0, 2, 1], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Fewest followers: P1 +2');
-    s = scene({ n: 3, bonus: [0, 0, 3], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Fewest followers: P1 & P2 +1');
+  it('pays the ring to the white-member leader, ties each receive half', () => {
+    const s = scene({ n: 3, members: [['trading.shopkeeper'], [], []], queue: [{ t: 'endRound' }] });
+    expect(s.log.at(-1)).toContain('Most white members: P1 +2');
+    const t = scene({ n: 3, members: [['trading.shopkeeper'], ['trading.dealer'], []], queue: [{ t: 'endRound' }] });
+    expect(t.log.at(-1)).toContain('Most white members: P1 & P2 +1');
   });
 });
 

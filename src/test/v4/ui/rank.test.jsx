@@ -79,7 +79,7 @@ describe('turn order on the cults', () => {
     const r = turnRail(s);
     const seq = [r.current, ...r.next].filter(p => p != null);
     const k = seq.indexOf(0);
-    const want = { 0: k < 0 ? 'done this round' : k === 1 ? 'your turn next' : `your turn in ${k}` };
+    const want = { 0: k < 0 ? 'done this round' : k === 1 ? '→' : `your turn in ${k}` };
     const words = seatTurns(s, 0);
     expect(Object.fromEntries(Object.entries(words).map(([p, w]) => [p, w.say]))).toEqual(want);
     for (const p of s.players) {

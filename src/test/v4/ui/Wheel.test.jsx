@@ -48,7 +48,7 @@ describe('Wheel', () => {
     const s = createGame({ seats, seed: 3, quadrants: ['red', 'yellow', 'market', 'gold'] });
     const { container } = render(<Wheel state={s} legal={new Map()} onPick={() => {}} flash={new Set()} facing={0} onFacing={() => {}} />);
     const rim = q => container.querySelector(`[data-plaque="${q}"]`).textContent;
-    expect(rim('red')).toMatch(/MOST MEMBERS/);
+    expect(rim('red')).toMatch(/MOST RED MEMBERS/);
     expect(rim('yellow')).toMatch(/MOST FULL SETS/);
     for (const q of s.quadrants) {
       expect(rim(q)).toMatch(/\+2/);
@@ -57,7 +57,7 @@ describe('Wheel', () => {
     }
     // the full sentence is in the rim's label (and its hover card), no native <title>: that tooltip sat on top of the
     // hover card, saying it twice (design pod, 2026-10-15)
-    expect(container.querySelector('[data-rim="red"]').getAttribute('aria-label')).toMatch(/most members, \+2 followers/);
+    expect(container.querySelector('[data-rim="red"]').getAttribute('aria-label')).toMatch(/most red members, \+2 followers/);
     expect(container.querySelector('[data-rim="red"] title')).toBeNull();
   });
 
@@ -124,4 +124,18 @@ it('holds legal light and taken dimming together while the new minion is physica
   expect(slot().classList.contains('taken')).toBe(true);
   expect(cell().classList.contains('lit')).toBe(false);
   expect(cell().classList.contains('taken')).toBe(true);
+});
+
+
+it('keeps Squatter targets fully lit and marks their occupied-space color distinction', () => {
+  const state = createGame({ seats, seed: 3 });
+  state.round = 1; state.slots = { '0-0': 1 };
+  const view = render(<Wheel state={state} legal={new Map([['0-0', 'squat:0-0']])} idle={new Set(['0-0'])}
+    onPick={() => {}} flash={new Set()} facing={0} onFacing={() => {}} look="panels" />);
+  for (const el of [view.container.querySelector('[data-slot="0-0"]'), view.container.querySelector('.pcell[data-cell="0-0"]')]) {
+    expect(el.classList.contains('squat')).toBe(true);
+    expect(el.classList.contains('lit')).toBe(true);
+    expect(el.classList.contains('taken')).toBe(true);
+    expect(el.classList.contains('idle')).toBe(false);
+  }
 });

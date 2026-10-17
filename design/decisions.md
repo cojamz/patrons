@@ -783,4 +783,10 @@ User confirmed batch complete; every original line is retained in `play-feedback
 Extortionist triggers when a rival buys5or more followers in one purchase; change existing6threshold to5, retaining the purchase trigger. Update engine/text together; boundary tests at4and5.
 
 ## 2026-10-17 — arc competition defaults (Cory)
-Use member-based victory conditions except Silver, Gold and Yellow, which retain their existing rules. Own-color versus total-member criterion asked explicitly and pending; do not silently pick one.
+Use member-based victory conditions except Silver, Gold and Yellow, which retain their existing rules. Confirmed: each arc counts members of its own color, with printed multi-member quantity.
+
+## 2026-10-17 — scoring award visibility (Cory)
+Round-end follower totals and +followers indicators update only after the corresponding reward animation lands. Do not reveal awards early on seats.
+
+## 2026-10-17 — Poach (Cory)
+Magenta roundIII Poach takes a rival member without giving the victim a replacement. Remove replacement recruitment and its wording, preserve protection and transfer rules.

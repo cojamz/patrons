@@ -129,23 +129,23 @@ describe('Magenta actions', () => {
     expect(s.log).toContain('P1 found nothing worth a heist.');
   });
 
-  it('Poach: take any rival\'s member; they recruit any face-up member costing up to the same, free', () => {
+  it('Poach: take a rival member without a replacement or market changes', () => {
     let s = table(Q, { round: 3, left: 5, members: [[], ['red.bigfamily']], shop: ROW });
+    const shop = [...s.shop], pile = [...s.pile], recruits = s.recruits;
     s = move(take(s, 'thieves.heist'), cardOpt(s, 'red.bigfamily', 1));
     expect(owns(s, 0, 'red.bigfamily')).toBe(true);
-    // up to 8: not Tycoon (12)
-    expect(ids(s)).not.toContain(cardOpt(s, 'gold.tycoon', 'shop'));
-    expect(s.pending.player).toBe(1);
-    s = move(s, cardOpt(s, 'red.twins', 'shop'));
-    expect(owns(s, 1, 'red.twins')).toBe(true);
-    expect(s.log.some(l => /P2 recruited Twins \(free\)/.test(l))).toBe(true);
+    expect(s.players[1].members).toEqual([]);
+    expect(s.shop).toEqual(shop);
+    expect(s.pile).toEqual(pile);
+    expect(s.recruits).toBe(recruits);
+    expect(s.pending?.player).not.toBe(1);
   });
-  it('× Light Fingers: the Poach victim\'s free recruit costing 8+ sets off a third player\'s Light Fingers', () => {
+  it('Poach does not grant a replacement recruit or trigger Light Fingers', () => {
     let s = table(Q, { n: 3, round: 3, left: 5, res: [{}, { red: 2 }], members: [[], ['gold.tycoon'], ['thieves.lightfingers']], shop: ROW });
     s = move(take(s, 'thieves.heist'), cardOpt(s, 'gold.tycoon', 1));
-    s = move(s, cardOpt(s, 'red.bigfamily', 'shop'));
-    expect(R(s, 2).magenta).toBe(1);
-    expect(named(s, 'Light Fingers').length).toBe(1);
+    expect(s.players[1].members).toEqual([]);
+    expect(R(s, 2).magenta).toBe(0);
+    expect(named(s, 'Light Fingers').length).toBe(0);
   });
 });
 

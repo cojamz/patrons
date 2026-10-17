@@ -16,6 +16,8 @@ Every report is recorded here before implementation. Root owns triage, assignmen
 - [ ] A4: Diagnose and fix result-card appearance lag. Owner: card/UI agent. Check: isolated production browser transition and measured frame gaps; no claim from static review alone.
 - [ ] A5: Swap loop leak, aggregate-steal duplicate flights, shared wheel geometry cache and round-start net income. Implemented526abdda;1220tests/build/fullgame green. Root visual verification pending; no live claim. Broader round-start choreography remains partial.
 
+- [ ] A6: Round-end award totals and “+followers” indicators appear only after that reward lands, never before competition animation. Owner: motion/UI agent. Check: pre-award oldtotal/no+tag; postlanding update; final bonuses follow same boundary.
+
 ### Batch B — precise card behavior and wording (P1, implemented awaiting integration)
 - [ ] B1: Sticky Fingers must not imply it doubles. Text: “Your steals from spaces take +1 resource.” Prospector also states only its own bonus. Owner: card agent. Check: unchanged engine ordering and exact text.
 - [ ] B2: Shakedown artwork advertises≤4, matching legal targets (was≤6). Owner: card agent. Check: engine/art contract regression.
@@ -26,7 +28,9 @@ Every report is recorded here before implementation. Root owns triage, assignmen
 
 - [ ] B6: Cutpurse does not offer resource choice. Implemented explicit color choice on recruit and round start;1resource from richest eligible rival, no space multipliers. Regression selects gold over larger red pile and excludes poorer rival. Integrated checks pending. Owner: card/rules agent. Check: chosen victim/color/amount resolve exactly.
 
-- [ ] B7: Arc competitions default to members; Silver/Gold/Yellow unchanged. Exact own-color versus total-member criterion awaiting Cory answer; preserve printed member quantities. Owner: card/rules agent. Independent fixes continue.
+- [ ] B7: Arc competitions default to members; Silver/Gold/Yellow unchanged. Confirmed own-color members; preserve printed member quantities. Owner: card/rules agent. Independent fixes continue.
+
+- [ ] B8: Magenta roundIII Poach takes rival member with no replacement recruit. Owner: card/rules agent. Check: ownership/guards intact, shop unchanged, no replacement pending; text agrees.
 
 ### Batch C — remaining original feedback (triage continues)
 - [ ] Suspected Good Deed misclick: all tested color/recipient branches resolve correctly; no defect reproduced. Keep report open for actual reproduction, do not mark fixed.

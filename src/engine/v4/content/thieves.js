@@ -12,7 +12,7 @@ const holding = p => total(p);
 
 // ---------- scoring: most Magenta members (what you hold right now) ----------
 // Most Magenta members: a member stolen from a rival counts if it's magenta, so Poach and Shake Down move the ring too.
-export const SCORING = { members: { label: 'Most Magenta members', counts: 'the magenta members you hold right now (stolen ones count)', score: (ctx, p) => ctx.countMembersOfColor(p, 'thieves') } };
+export const SCORING = { members: { label: 'Most Magenta members', counts: 'the magenta members you hold (each card counts its printed member quantity; stolen ones count)', score: (ctx, p) => ctx.countMembersOfColor(p, 'thieves') } };
 
 // ---------- helpers ----------
 const fewestFollowers = (ctx, p) => ctx.state.players.every(o => ctx.followers(o) >= ctx.followers(p));
@@ -205,7 +205,7 @@ const thieves = {
       },
     },
     {
-      key: 'heist', ring: 3, name: 'Poach', text: 'Take any rival’s member. They recruit any face-up member costing up to the same, free.',
+      key: 'heist', ring: 3, name: 'Poach', text: 'Take any rival’s member.',
       estimate: (ctx, p) => { const l = takeable(ctx, p); return l.length ? Math.max(...l.map(([, c]) => memberHint(c))) : 0; },
       resolve(ctx, p) {
         const list = takeable(ctx, p);
@@ -254,15 +254,9 @@ const thieves = {
       }
     },
     heist(ctx, p, uid) {
-      const v = ctx.ownerOf(uid), c = ctx.card(uid), n = cost(c);
-      ctx.steal(p, v, { uid });
+      const v = ctx.ownerOf(uid), c = ctx.card(uid);
+      if (!ctx.steal(p, v, { uid })) return;
       ctx.log(`${p.name} pulled a heist: ${v.name}'s ${c.def.name}.`);
-      const shop = ctx.shopCards().filter(x => cost(x) <= n);
-      // nothing to replace it with: said plainly, on the log and the turn card (blind tester: no replacement, no reason)
-      if (!shop.length) { ctx.log(`${v.name} gets no replacement: nothing in the shop costs ${n} or less.`); return; }
-      ctx.choose(v, `Poach: recruit any face-up member costing up to ${n}, free`, shop.map(x => ({
-        id: `card:${x.uid}`, label: `${x.def.name} (${cost(x)})`, kind: 'card', value: x.uid, hint: x.def.f * 1.5 + cost(x) + (x.def.vanilla ? 0 : 1),
-      })), 'thieves.recruitFree');
     },
     recruitFree(ctx, p, uid) { if (ctx.state.shop.includes(uid)) ctx.recruit(p, uid, { free: true }); },
     doubleAgent(ctx, p, uid, data) {

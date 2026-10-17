@@ -787,11 +787,12 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       const R = rings[s.ring], open = spaceOpen(s.a, round), owner = interactionState.slots[s.key];
       const lit = legal.has(s.key);
       // yours to take but worth nothing right now (its hover says so): placeable, without the lamp's glow
-      const quiet = lit && !!(idle && idle.has(s.key));
+      const squat = String(legal.get(s.key) || '').startsWith('squat:');
+      const quiet = lit && !squat && !!(idle && idle.has(s.key));
       const fresh = freshOf(s.key);
       const a0 = s.ang - s.half, a1 = s.ang + s.half;
       const d = panelPath(a0, a1, R.r0, R.r1);
-      const cls = ['pcell', open ? 'open' : 'locked', lit ? 'lit' : '', quiet ? 'idle' : '', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', (peek && peek.pinned && peek.key === s.key) || sent === s.key ? 'sel' : ''].filter(Boolean).join(' ');
+      const cls = ['pcell', open ? 'open' : 'locked', lit ? 'lit' : '', squat ? 'squat' : '', quiet ? 'idle' : '', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', (peek && peek.pinned && peek.key === s.key) || sent === s.key ? 'sel' : ''].filter(Boolean).join(' ');
       paper.push(
         <g key={`pc${s.key}`} className={cls} data-cell={s.key} style={{ '--c': `var(--${s.qid})` }}
           onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, stage.current && stage.current.querySelector(`[data-slot="${s.key}"]`), { x: e.clientX, y: e.clientY }); }}
@@ -955,7 +956,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     const joiners = (state.squats && state.squats[key]) || [];
     const open = t <= round;
     const opt = legal.get(key);
-    const quiet = !!(opt && idle && idle.has(key));
+    const squat = String(opt || '').startsWith('squat:');
+    const quiet = !!(opt && !squat && idle && idle.has(key));
     const selected = pinnedKey === key || sent === key;
     const fresh = freshOf(key);
     // panels: the gain, the effect, the clarification, laid out in the room this panel has where it sits now
@@ -968,7 +970,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? `${scale}:${fontsIn}` : ''].join('|');
     const had = built.current.get(key);
     if (had && had.sig === sig) return <Space key={key} el={had.el} />;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', quiet ? 'idle' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', shadeOwner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', squat ? 'squat' : '', quiet ? 'idle' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', shadeOwner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>

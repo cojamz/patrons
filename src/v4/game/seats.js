@@ -55,7 +55,7 @@ export function turnPlaces(state, me = null) {
  * What each seat says about the turns, in plain words (Cory, 2026-10-16: "the turn-order rail is confusing"; the rail is
  * gone and the seats say it): your own seat counts the turns until yours. A rival's seat says nothing (Cory, 2026-10-15:
  * "next" on the seat after the current player is dropped; the glow and the header say whose turn it is):
- * "your turn", "your turn next", "your turn in 3", or "done this round". Read off the engine's queue (turnPlaces), so
+ * "your turn", an arrow for next, "your turn in 3", or "done this round". Read off the engine's queue (turnPlaces), so
  * extra turns, extra minions and seats with nothing left to place are counted as the turns they are.
  * Returns { [me]: { say, kind: 'now'|'soon'|'in'|'done', n, title } }; empty outside the placing rounds or without a me.
  */
@@ -71,7 +71,7 @@ export function seatTurns(state, me = null) {
     else if (k === 0 && playing === me) {
       const twice = order[1] === me;
       out[me] = { say: twice ? 'two turns in a row' : 'your turn', kind: 'now', n: 0, title: twice ? `Your turn now, twice in a row.${tail}` : 'Your turn now.' };
-    } else if (k === 0 || (k === 1 && playing != null)) out[me] = { say: 'your turn next', kind: 'soon', n: 1, title: `Your turn comes right after this one.${tail}` };
+    } else if (k === 0 || (k === 1 && playing != null)) out[me] = { say: '→', kind: 'soon', n: 1, title: `Your turn comes right after this one.${tail}` };
     else out[me] = { say: `your turn in ${k}`, kind: 'in', n: k, title: `${k} turns before yours.${tail}` };
   }
   return out;

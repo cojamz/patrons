@@ -1,3 +1,4 @@
+import { memberScoring } from './member-scoring.js';
 // Purple: extra turns. Its spaces give them free (Cory, 2026-10-15: no board action requires spending); purple held
 // counts for the ring, and members (Taskmaster) can still buy a turn with it.
 // Most purple at round end takes the ring's followers.
@@ -170,7 +171,7 @@ export default {
   resource: P,
   // Most purple: honest about what the old "most workers on the board" measured (everyone places every worker, so
   // purple's tiebreak decided it). Holding purple for the ring is the price of spending it on turns.
-  scoring: { label: 'Most purple', counts: 'the purple you hold when the round ends', score: (ctx, p) => p.res[P] || 0 },
+  scoring: memberScoring('purple', 'purple'),
 
   actions: [
     {

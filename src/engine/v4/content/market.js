@@ -1,3 +1,4 @@
+import { memberScoring } from './member-scoring.js';
 // Blue (the market): bend the shop. Recruit outside your buy, ignore colors, pay half, churn the row.
 // Scoring: most blue (Cory, 2026-10-15; the old rule counted members costing 8 or more, a cutoff he cut).
 // Blue's members watch who recruits blue members, and Blue's spaces pay out in blue.
@@ -103,7 +104,7 @@ const market = {
   id: Q,
   name: 'Blue',
   resource: B,
-  scoring: { label: 'Most blue', counts: 'the blue you hold when the round ends', score: (ctx, p) => p.res[B] || 0 },
+  scoring: memberScoring('market', 'blue'),
 
   actions: [
     {

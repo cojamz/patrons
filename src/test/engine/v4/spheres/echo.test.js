@@ -1,7 +1,7 @@
 // @vitest-environment node
 // Green (echo): every action and every member, with exact numbers. Plus 200 seeded bot games.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createGame, applyMove, resume, followers } from '../../../../engine/v4/core.js';
+import { createGame, applyMove, resume, followers, contextFor } from '../../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
 import echo, { install, ledger } from '../../../../engine/v4/content/echo.js';
@@ -249,9 +249,11 @@ describe('Green actions', () => {
 });
 
 describe('Green scoring', () => {
-  it('Most green at round end', () => {
-    expect(echo.scoring.score(null, { res: { green: 4 } })).toBe(4);
-    expect(echo.scoring.label).toBe('Most green');
+  it('Most green members at round end, not held green', () => {
+    const s = scene({ members: [['echo.evergreen'], []], res: [{}, {green: 40}] });
+    expect(echo.scoring.score(contextFor(s), s.players[0])).toBe(1);
+    expect(echo.scoring.score(contextFor(s), s.players[1])).toBe(0);
+    expect(echo.scoring.label).toBe('Most green members');
   });
 });
 

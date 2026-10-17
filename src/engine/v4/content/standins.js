@@ -1,3 +1,4 @@
+import { memberScoring } from './member-scoring.js';
 // Balance pass 3 (Cory, 2026-10-15): both bots read these Green plain members about 2 too dear.
 const GREEN_PASS3 = { 'green:pillar': { s: 2, w: 2 }, 'green:devotee': { s: 1, w: 1 } };
 // Plain stand-in quadrants, so a full table can play while the real spheres are designed.
@@ -18,7 +19,7 @@ function standIn(id, name, other1, other2) {
   ];
   return {
     id, name, resource: id, standIn: true,
-    scoring: { label: `Most ${id}`, counts: `the ${id} you hold when the round ends`, score: (ctx, p) => p.res[id] },
+    scoring: memberScoring(id, id),
     actions: [
       plain('a1', 1, name === 'Blue' ? 'Tide' : 'Sprout', { [id]: 3 }),
       plain('a2', 1, name === 'Blue' ? 'Current' : 'Graft', { [id]: 2, [other1]: 1 }),

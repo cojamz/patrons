@@ -8,12 +8,12 @@ import { seededRandom } from '../engine/v4/rng.js';
 export { CLASSIC, classicFor };
 /** How many spheres a table of `players` plays: one each, 2 to 4. */
 export const sphereCount = players => Math.max(2, Math.min(4, Number(players) || 4));
-const ALIAS = { magenta: 'thieves', white: 'trading' };
+const ALIAS = { magenta: 'thieves', white: 'trading', blue: 'market', green: 'echo' };
 
-/** Every sphere a table can use, real ones first, the plain stand-ins last. */
+/** Current playable arcs. Legacy Basic definitions remain only for replay compatibility. */
 export const spheres = () => {
   const ids = allQuadrantIds();
-  return [...ids.filter(id => !quadrant(id).standIn), ...ids.filter(id => quadrant(id).standIn)];
+  return ids.filter(id => !quadrant(id).standIn);
 };
 /** What the picker calls a sphere: its color name, "(basic)" for a stand-in (w2b #32: "(plain)" read as developer phrasing). */
 export const sphereName = id => `${quadrant(id).name}${quadrant(id).standIn ? ' (basic)' : ''}`;
@@ -50,6 +50,7 @@ export function tableProblem(ids, n = null) {
   if (!Array.isArray(ids) || ids.length < 2 || ids.length > 4) return 'Pick 2 to 4 spheres.';
   const known = new Set(allQuadrantIds());
   if (ids.some(id => !known.has(id))) return 'Unknown sphere.';
+  if (ids.some(id => quadrant(id).standIn)) return 'Basic arcs are retired. Choose Blue or Green.';
   if (new Set(ids).size !== ids.length) return 'Each sphere once.';
   const res = ids.map(id => quadrant(id).resource);
   for (let i = 0; i < ids.length; i++) for (let k = 0; k < i; k++)
@@ -90,7 +91,7 @@ export function randomTable(rand = Math.random, n = 4) {
 export function fitTable(table, players) {
   const n = sphereCount(players);
   const mode = table && table.mode ? table.mode : 'classic';
-  const ids = table && Array.isArray(table.quadrants) ? table.quadrants : [];
+  const ids = table && Array.isArray(table.quadrants) ? table.quadrants.map(id => ALIAS[id] || id) : [];
   if (mode === 'classic') return { mode, quadrants: classicFor(n) };
   if (ids.length >= n) return { mode, quadrants: ids.slice(0, n) };
   if (mode !== 'random') return { mode, quadrants: [...ids] };

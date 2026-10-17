@@ -56,23 +56,23 @@ const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.pr
 const CHEAP = ['red.intern', 'red.volunteer', 'red.twins', 'gold.taxman', 'red.drive', 'gold.thrift'];
 const card = (s, def) => `card:${uidOf(s, def, 'shop')}`;
 
-describe('Blue scoring: most blue (Cory, 2026-10-15)', () => {
+describe('Blue scoring: most blue members', () => {
   it('member value (a helper the sims use) counts printed cost, not what was paid', () => {
     const s = scene({ members: [['gold.midas', 'red.volunteer', 'red.twins'], ['red.intern']] });
     const ctx = contextFor(s);
     expect(memberValue(ctx, s.players[0])).toBe(5 + 0 + 2);
     expect(memberValue(ctx, s.players[1])).toBe(1);
   });
-  it('counts the blue you hold; members, blue or pricey, count for nothing', () => {
+  it('counts blue member quantity; resources and other colors do not count', () => {
     const s = scene({ res: [{ blue: 3 }, { blue: 5 }], members: [['gold.midas', 'gold.tycoon', 'market.snob', 'market.stylist'], []] });
     const ctx = contextFor(s);
-    expect(market.scoring.label).toBe('Most blue');
-    expect(market.scoring.score(ctx, s.players[0])).toBe(3);
-    expect(market.scoring.score(ctx, s.players[1])).toBe(5);
+    expect(market.scoring.label).toBe('Most blue members');
+    expect(market.scoring.score(ctx, s.players[0])).toBe(2);
+    expect(market.scoring.score(ctx, s.players[1])).toBe(0);
   });
   it('pays the ring value at round end', () => {
     const s = scene({ res: [{ blue: 2 }, { blue: 1 }], members: [[], ['gold.midas', 'market.snob']], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most blue: P1 +2');
+    expect(s.log.at(-1)).toContain('Most blue members: P2 +2');
   });
 });
 
@@ -185,9 +185,9 @@ describe('Blue members', () => {
   it('Reseller: whenever you recruit, +1 of that member’s color', () => {
     let s = take(scene({ res: [{ gold: 9 }], members: [['market.reseller']], shop: SHOP }), 'market.showroom');
     s = move(s, card(s, 'gold.tycoon'));
-    // the suggested payment keeps the blue you lead the rim with (decisions.md, 2026-10-15: payment keeps your rims), so
-    // Tycoon's 4 comes all from gold; Reseller then gives 1 gold back
-    expect(R(s)).toEqual({ gold: 9 - 4 + 1, red: 0, blue: 1, green: 0 });
+    // Member-based Blue scoring no longer protects the blue coin from payment.
+    // A 4-cost purchase plus Reseller's +1 gold leaves seven resources.
+    expect(R(s)).toEqual({ gold: 7, red: 0, blue: 0, green: 0 });
   });
   it('Curator: round start, +1 blue per other blue member', () => {
     expect(R(start([['market.curator', 'market.stylist', 'market.planner', 'gold.midas']])).blue).toBe(2); // Stylist, Planner

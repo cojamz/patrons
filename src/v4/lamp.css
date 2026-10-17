@@ -648,3 +648,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .slice-outline{fill:none;stroke:color-mix(in srgb,var(--c) 60%,#fff4df);stroke-width:1.1;opacity:.6;pointer-events:none}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .slice-outline{opacity:.28}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .slice-outline{opacity:.38}
+
+/* Squatter's occupied legal targets remain bright, with a cooler edge than empty spaces. */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.squat.lit .wash{fill:color-mix(in srgb,#d2c0eb 18%,var(--paper-lit,#fbf6ea))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.squat.lit .edge-lit{stroke:#d7baff}
+.lt .stage .slot.squat.lit .base{box-shadow:inset 0 0 0 2px #d7baff}

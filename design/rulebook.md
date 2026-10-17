@@ -29,6 +29,7 @@ Turns go down the player column, then back up: 1-2-3-4, 4-3-2-1, repeating. The 
 An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while the board has a space to spare after every remaining minion lands. A member whose color isn't on the table is **colorless**: it gives nothing to cards that pay "its color".
 
 ## Round end
+Most arcs reward members of their own color, counting each card’s printed member quantity. Gold rewards held gold, Silver held silver, and Yellow full resource sets.
 Each contest's leader gains +2 followers in round I, +4 in round II, +6 in round III. Tied leaders each gain half the prize: +1 / +2 / +3, regardless of how many players tie. You need at least 1 of what's counted. The count is taken at round end.
 
 ## Game end

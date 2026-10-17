@@ -1,4 +1,5 @@
-// Red: quantity over quality. Most members at round end takes the ring's followers; ties all score.
+import { memberScoring } from './member-scoring.js';
+// Red: quantity over quality. Most red members at round end takes the ring's followers; ties all score.
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
 /** Open House: the face-up members it can recruit. */
@@ -9,11 +10,7 @@ export default {
   id: 'red',
   name: 'Red',
   resource: 'red',
-  scoring: {
-    label: 'Most members',
-    score: (ctx, p) => ctx.memberCount(p),
-    counts: 'the members you hold (a card that counts as 2 members counts 2)',
-  },
+  scoring: memberScoring('red', 'red'),
 
   actions: [
     {

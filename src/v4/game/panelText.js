@@ -112,7 +112,7 @@ const P = {
     // what they pay is the member's cost (f8: the face didn't say how much), whole in line 1, since ring II drops line 2
     // the limit in line 2 (skeptic round 2: "costing 4 or less" sat in line 3, which ring II drops); who decides goes small
     ransom: { verb: 'A rival pays a member’s cost, or loses it', second: 'a member costing 4 or less', note: 'their choice' },
-    heist: { verb: 'Take a rival’s member', second: 'they recruit one free' },
+    heist: { verb: 'Take a rival’s member' },
   },
   trading: {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers

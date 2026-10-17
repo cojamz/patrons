@@ -2,13 +2,17 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createGame, applyMove } from '../../../engine/v4/index.js';
 import { createEmitter } from '../../../v4/session/emitter.js';
+import { sceneQ } from '../../engine/v4/cards-helpers.js';
 import { useTable } from '../../../v4/game/GameScreen.jsx';
 
-const animation = vi.hoisted(() => ({ enabled: true, running: false, listeners: new Set() }));
+const animation = vi.hoisted(() => ({ enabled: true, running: false, restored: null, listeners: new Set() }));
 vi.mock('../../../v4/game/flight.js', async original => ({ ...await original(), motionOK: () => animation.enabled }));
 vi.mock('../../../v4/game/director.js', async original => ({ ...await original(),
   chainRunning: () => animation.running,
   onChainEnd: fn => { animation.listeners.add(fn); return () => animation.listeners.delete(fn); },
+}));
+vi.mock('../../../v4/session/moment.js', async original => ({ ...await original(),
+  restoredMoment: () => animation.restored,
 }));
 const seats = ['Cory', 'Ana', 'Bo'].map(name => ({ name, kind: 'human' }));
 function sessionAt(state, mode) {
@@ -22,7 +26,7 @@ function sessionAt(state, mode) {
 }
 const next = s => applyMove(s, { player: s.pending.player, option: s.pending.options[0].id });
 const finish = async () => act(async () => { animation.running = false; for (const fn of [...animation.listeners]) fn(); });
-afterEach(() => { cleanup(); animation.listeners.clear(); animation.running = false; animation.enabled = true; vi.useRealTimers(); });
+afterEach(() => { cleanup(); animation.listeners.clear(); animation.running = false; animation.restored = null; animation.enabled = true; vi.useRealTimers(); });
 
 describe('one presentation boundary for local and online tables', () => {
   for (const mode of ['local', 'online']) it(`${mode}: holds ownership/options until actual completion, even after estimated time passes`, async () => {
@@ -64,4 +68,26 @@ describe('one presentation boundary for local and online tables', () => {
     expect(result.current[0]).toBe(second);
     expect(result.current[5]).toBe(second);
   });
+
+  it('holds the opening round through minion return and income after the scoring card is dismissed', async () => {
+    vi.useFakeTimers();
+    const board = sceneQ({ quadrants: ['gold', 'silver'], members: [['gold.banker']] });
+    const after = { ...board, round: board.round + 1, players: board.players.map(p => ({ ...p, res: { ...p.res } })),
+      log: [...board.log, "P1's Banker: +3 gold."] };
+    after.players[0].res.gold += 3;
+    animation.restored = { board, after, result: { round: 'I' } };
+    const session = sessionAt(after, 'local');
+    const { result } = renderHook(() => useTable(session, 1000));
+    await act(async () => vi.advanceTimersByTimeAsync(10000));
+    animation.running = true;
+    await act(async () => result.current[2]());
+    expect(result.current[1]).toBeNull();
+    expect(result.current[6]).toBe(after);
+    expect(result.current[5]).toBe(board);
+    await act(async () => vi.advanceTimersByTimeAsync(60000));
+    expect(result.current[5]).toBe(board);
+    await finish();
+    expect(result.current[5]).toBe(after);
+  });
+
 });

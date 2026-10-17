@@ -1,3 +1,4 @@
+import { memberScoring } from './member-scoring.js';
 // White: the exchange. Your followers are liquid: sell them for white when you need fuel, draw white on them
 // (Dividend), buy them back cheap. Fewest followers at round end takes the ring's followers (Cory, 2026-10-15):
 // sell before the round ends to dip under the table, buy back after.
@@ -73,14 +74,8 @@ const trading = {
   id: 'trading',
   name: 'White',
   resource: W,
-  // Cory, 2026-10-15: "do number 1", no white requirement. Fewest followers takes the ring's followers; everyone
-  // has at least 1, so someone always scores, and ties all score. The score is inverted so higher is better for
-  // the engine and bots; show() keeps the number on screen the plain follower count.
-  scoring: {
-    label: 'Fewest followers', counts: 'your followers when the round ends',
-    score: (ctx, p) => 1000 - ctx.followers(p),
-    show: (ctx, p) => ({ count: ctx.followers(p) }),
-  },
+  // Cory, 2026-10-17: competitions count their own-color members, except Gold/Silver/Yellow.
+  scoring: memberScoring('trading', 'white'),
 
   actions: [
     {

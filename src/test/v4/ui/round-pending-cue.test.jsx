@@ -1,0 +1,20 @@
+import { afterEach, expect, it } from 'vitest';
+import { cleanup, render } from '@testing-library/react';
+import CultSeat from '../../../v4/game/CultSeat.jsx';
+import { sceneQ } from '../../engine/v4/cards-helpers.js';
+afterEach(cleanup);
+it('keeps Straggler pending until its move is spent in this round, then resets next round', () => {
+  const state = sceneQ({ quadrants: ['purple', 'gold'], members: [['benders.straggler']] });
+  const uid = state.players[0].members[0];
+  const view = render(<CultSeat state={state} pid={0} me={0} mine />);
+  const mark = () => view.container.querySelector('[data-member="benders.straggler"] .round-pending-mark');
+  expect(mark()).toBeTruthy();
+  expect(view.container.querySelector('[aria-label^="Straggler: pending this round"]')).toBeTruthy();
+  const spent = { ...state, cards: { ...state.cards, [uid]: { ...state.cards[uid], usedRound: state.round } } };
+  view.rerender(<CultSeat state={spent} pid={0} me={0} mine />);
+  expect(mark()).toBeNull();
+  view.rerender(<CultSeat state={{ ...spent, round: state.round + 1 }} pid={0} me={0} mine />);
+  expect(mark()).toBeTruthy();
+  view.rerender(<CultSeat state={{ ...state, over: true }} pid={0} me={0} mine />);
+  expect(mark()).toBeNull();
+});
