@@ -124,14 +124,31 @@ export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0,
   anim.oncancel = done;
   setTimeout(done, duration + delay + 400);
   if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
-  live.add(anim);
-  anim.addEventListener('finish', () => live.delete(anim));
-  anim.addEventListener('cancel', () => live.delete(anim));
-  return anim;
+  return track(anim);
 }
 // every flight in the air, so a skip (a click or Space during a chain) can land them all at once
-const live = new Set();
-export const track = anim => { if (anim) { live.add(anim); anim.addEventListener('finish', () => live.delete(anim)); anim.addEventListener('cancel', () => live.delete(anim)); } return anim; };
+const live = new Set(), countedMotions = new Set(), motionSubs = new Set();
+const motionChanged = () => { for (const fn of motionSubs) fn(); };
+/** Explicit finite action motion only; ambient CSS breathing/bobbing never enters this registry. */
+export const motionPending = () => live.size > 0 || countedMotions.size > 0;
+export const onMotionChange = fn => { motionSubs.add(fn); return () => motionSubs.delete(fn); };
+/** Register a DOM-written count roll, with an idempotent completion/cleanup function. */
+export function beginCountMotion(finish = null) {
+  const token = { finish };
+  countedMotions.add(token);
+  motionChanged();
+  return () => { if (countedMotions.delete(token)) motionChanged(); };
+}
+export const track = anim => {
+  if (!anim || live.has(anim)) return anim;
+  live.add(anim);
+  const done = () => { if (live.delete(anim)) motionChanged(); };
+  anim.addEventListener('finish', done, { once: true });
+  anim.addEventListener('cancel', done, { once: true });
+  if (anim.finished?.then) anim.finished.then(done, done);
+  motionChanged();
+  return anim;
+};
 // A place's own small motions (a settle, a dip, a pulse, a hop) are relative: scale or lift from where it stands and
 // back. Two on one element at once (a stack settling as its next piece leaves, a count settling as the Reckoning's
 // prize lands) used to snap the first away mid-move (the filmstrip probe counted them). The second now rides on the
@@ -146,7 +163,7 @@ export function relative(el, frames, opts) {
   anim.addEventListener('cancel', off, { once: true });
   return track(anim);
 }
-export function landAll() { for (const a of [...live]) { try { a.finish(); } catch { try { a.cancel(); } catch { /* gone */ } } } live.clear(); }
+export function landAll() { for (const a of [...live]) { try { a.finish(); } catch { try { a.cancel(); } catch { /* gone */ } } } live.clear(); for (const token of [...countedMotions]) { if (token.finish) token.finish(); countedMotions.delete(token); } motionChanged(); }
 
 export function flyCards(root, snap, moves) {
   if (!root || !motionOK()) return;
@@ -337,10 +354,10 @@ export function holdStack(stackEl, from) {
   if (!b) return null;
   // v: where the number is going (what has landed); cur: what it shows. A roll moves cur toward v; an arrival mid-roll
   // retargets it (never a jump); done() while rolling lets go only when the roll has finished
-  let v = from, cur = from, raf = 0, dead = false, rolling = false, ending = false, rate = 0;
+  let v = from, cur = from, raf = 0, dead = false, rolling = false, ending = false, rate = 0, finishMotion = null;
   // a held number never shows below 0, whatever arrives out of order
   const show = x => { b.dataset.hold = String(Math.max(0, Math.round(x))); };
-  const end = () => { dead = true; cancelAnimationFrame(raf); delete b.dataset.hold; };
+  const end = () => { dead = true; cancelAnimationFrame(raf); if (finishMotion) { finishMotion(); finishMotion = null; } delete b.dataset.hold; };
   show(cur);
   let last = 0;
   const tick = now => {
@@ -351,6 +368,7 @@ export function holdStack(stackEl, from) {
     show(cur);
     if (cur !== v) { raf = requestAnimationFrame(tick); return; }
     rolling = false; last = 0;
+    if (finishMotion) { finishMotion(); finishMotion = null; }
     if (ending) end();
   };
   return {
@@ -360,7 +378,7 @@ export function holdStack(stackEl, from) {
       if (dead) return;
       v += by;
       rate = Math.max(rate, Math.abs(v - cur) / Math.max(1, ms));
-      if (!rolling) { rolling = true; last = 0; raf = requestAnimationFrame(tick); }
+      if (!rolling) { rolling = true; finishMotion = beginCountMotion(() => { cur = v; show(cur); end(); }); last = 0; raf = requestAnimationFrame(tick); }
     },
     /** let go (after a roll in progress has finished; `now`: at once, the real number shows, as a skip wants) */
     done(now = false) { if (dead) return; if (rolling && !now) ending = true; else end(); },

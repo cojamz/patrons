@@ -413,6 +413,12 @@ function inputFor(state, task) {
       return { kind: 'place', prompt: `${p.name}: place a minion`, options: slots.length ? [...slots, ...useOptions(state, p)] : [], onEmpty: () => { p.left -= 1; log(state, `No open space: ${p.name}'s minion sits out.`); } };
     }
     case 'buy': {
+      // Buying ends the purchase allowance, not the player's ability to use a member this turn.
+      if (task.afterPurchase) {
+        const uses = useOptions(state, p).filter(o => !useIdle(state, p, o.uid));
+        return { kind: 'buy', afterPurchase: true, prompt: `${p.name}: use a member, or finish your turn`,
+          options: uses.length ? [...uses, { id: 'pass', label: 'Done', kind: 'pass' }] : [] };
+      }
       // a second buy (Big Spender) is offered only after a real first buy, while an unspent one is held
       if (task.extra && !(p.turnBuys > 0 && allowance(state, p, 'extraBuy'))) return { kind: 'buy', prompt: '', options: [] };
       const opts = [];
@@ -555,7 +561,7 @@ function resolveTask(state, task, optionId) {
         // One way to buy: always the payment step (the suggestion preselected), unless there's nothing to pay.
         const uid = Number(rest), list = paymentChoices(state, p, uid);
         const nothing = list.length === 1 && Object.values(list[0]).every(v => !v);
-        if (nothing) { boughtOnce(state, p, task); recruit(state, p, uid, { free: false, spend: list[0] }); }
+        if (nothing) { boughtOnce(state, p, { ...task, uid }); recruit(state, p, uid, { free: false, spend: list[0] }); }
         else state.queue.unshift({ t: 'pay', p: p.id, uid, ...extraOf(task) });
         return;
       }
@@ -1054,12 +1060,13 @@ function spendAllowance(state, p, flag) {
   card.spent = { ...(card.spent || {}), [flag]: state.round };
   log(state, `${p.name} uses ${defById(card.def).name}.`);
 }
-// Queue tasks stay plain JSON: only a second buy carries the flag.
-const extraOf = task => (task.extra ? { extra: true } : {});
+// Preserve purchase allowance and the activation-only window across member uses.
+const extraOf = task => ({ ...(task.extra ? { extra: true } : {}), ...(task.afterPurchase ? { afterPurchase: true } : {}) });
 // A real buy (member or followers) in a buy step. The second one spends a Big Spender.
 function boughtOnce(state, p, task) {
   if (task.extra) spendAllowance(state, p, 'extraBuy');
   p.turnBuys = (p.turnBuys || 0) + 1;
+  if (task.uid !== undefined) state.queue.unshift({ t: 'buy', p: p.id, afterPurchase: true });
 }
 /** How many cards off the top of the pile p may recruit from (Insider: flag pileReach; copies don't stack). */
 export function pileReach(state, p) {

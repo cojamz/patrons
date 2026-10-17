@@ -199,8 +199,9 @@ describe('Scoring and stolen goods', () => {
 });
 
 describe('Magenta members', () => {
-  it('Cutpurse: round start, take 1 from the rival holding the most (their biggest pile)', () => {
-    const s = scene({ res: [{}, { gold: 2, red: 1 }, { blue: 2 }], members: [['thieves.cutpurse']], queue: [{ t: 'round', r: 2 }] });
+  it('Cutpurse: round start, choose 1 resource from the rival holding the most', () => {
+    let s = scene({ res: [{}, { gold: 2, red: 1 }, { blue: 2 }], members: [['thieves.cutpurse']], queue: [{ t: 'round', r: 2 }] });
+    s = move(s, 'take:1:gold');
     expect(R(s)[0].magenta).toBe(1);
     expect(R(s)[1]).toEqual({ ...Z, gold: 1, red: 1 });
   });

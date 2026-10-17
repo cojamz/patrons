@@ -9,6 +9,7 @@ import { Sprite } from '../art/Sprite.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { MO } from '../motion.js';
 import { play } from '../sound.js';
+import { track } from './flight.js';
 import './stage.css';
 
 const EASE_OUT = 'cubic-bezier(.2,.9,.25,1.15)'; // lands with a little give, like a card slapped on the table
@@ -35,7 +36,7 @@ function StageItem({ it }) {
     const frames = from
       ? [{ transform: over(it.at, size, from), opacity: 0.6, offset: 0 }, { transform: 'translate(0,-8px) scale(1.04)', opacity: 1, offset: 0.78 }, { transform: 'none', opacity: 1 }]
       : [{ transform: 'scale(.8)', opacity: 0 }, { transform: 'none', opacity: 1 }];
-    const arrival = e.animate(frames, { duration: it.dur, easing: EASE_OUT, fill: 'backwards' });
+    const arrival = track(e.animate(frames, { duration: it.dur, easing: EASE_OUT, fill: 'backwards' }));
     if (it.kind === 'member') arrival.finished.then(() => { if (e.isConnected && !it.leaving) play('member'); }, () => {});
     return () => { if (it.homeEl && it.homeEl.classList) it.homeEl.classList.remove('on-stage'); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -43,7 +44,7 @@ function StageItem({ it }) {
   useLayoutEffect(() => {
     const e = el.current;
     if (!it.again || !e || !e.animate) return;
-    e.animate([{ transform: 'none' }, { transform: 'translateY(-8px) scale(1.06)', offset: 0.4 }, { transform: 'none' }], { duration: MO.hop, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+    track(e.animate([{ transform: 'none' }, { transform: 'translateY(-8px) scale(1.06)', offset: 0.4 }, { transform: 'none' }], { duration: MO.hop, easing: 'cubic-bezier(.3,1.4,.5,1)' }));
   }, [it.again]);
   // out: back to where it lives on the board (wherever that is now), and its home lights back up as it lands
   useLayoutEffect(() => {
@@ -53,7 +54,7 @@ function StageItem({ it }) {
     const home = live(it.homeEl) || it.from;
     const done = () => { if (it.homeEl && it.homeEl.classList) it.homeEl.classList.remove('on-stage'); stageGone(it.id); };
     if (!e || !e.animate || !home) { done(); return; }
-    const a = e.animate([{ transform: 'none', opacity: 1 }, { transform: over(it.at, size, home), opacity: 0.15 }], { duration: it.out || MO.stageOut, easing: EASE_HOME, fill: 'forwards' });
+    const a = track(e.animate([{ transform: 'none', opacity: 1 }, { transform: over(it.at, size, home), opacity: 0.15 }], { duration: it.out || MO.stageOut, easing: EASE_HOME, fill: 'forwards' }));
     a.finished.then(() => { if (e.isConnected && it.kind === 'member') play('member'); done(); }, done);
   }, [it.leaving]); // eslint-disable-line react-hooks/exhaustive-deps
   const style = { left: it.at.left, top: it.at.top, width: size.w, height: size.h, '--q': it.color, '--pc': it.pc };

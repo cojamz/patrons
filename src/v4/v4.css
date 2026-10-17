@@ -362,7 +362,7 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 
 /* round end: a centered, opaque scoring card */
 .overlay.moment{background:color-mix(in srgb,var(--table) 78%,transparent);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-.dialog.roundend{background:var(--table-2);border-color:var(--gold);box-shadow:0 20px 60px rgba(0,0,0,.6);max-width:440px;gap:14px;animation:settle .32s cubic-bezier(.3,.7,.4,1) both;max-height:calc(100dvh - 24px);overflow:auto}
+.dialog.roundend{background:var(--table-2);border-color:var(--gold);box-shadow:0 20px 60px rgba(0,0,0,.6);max-width:440px;gap:14px;animation:settle var(--mo-quick,.12s) cubic-bezier(.3,.7,.4,1) both;max-height:calc(100dvh - 24px);overflow:auto}
 @keyframes settle{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 .roundend h2{text-align:center;font-size:var(--fs-6)}
 .re-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}

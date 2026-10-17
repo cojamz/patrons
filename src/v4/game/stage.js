@@ -19,6 +19,8 @@ const subs = new Set();
 const emit = () => { ver++; items = items.slice(); for (const fn of subs) fn(); };
 export const subscribeStage = fn => { subs.add(fn); return () => subs.delete(fn); };
 export const stageItems = () => items;
+/** Includes the readable hold and the actual return flight, until ActionStage removes each item. */
+export const stageBusy = () => items.length > 0;
 export const stageVersion = () => ver;
 
 /** The stage's centre on screen: the wheel's hub (null off the board). */
@@ -54,17 +56,21 @@ export function stageShow(item) {
   emit();
 }
 let holdT = 0;
+const releaseTimers = new Set();
 /** The chain has played out: the stage holds a moment, then everything flies home. */
 export function stageRelease(hold = MO.stageHold, chain = null) {
   const these = items.filter(it => !it.leaving && (chain == null || it.chain === chain));
   if (!these.length) return;
   if (chain == null) clearTimeout(holdT);
-  const t = setTimeout(() => { for (const it of these) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; } emit(); }, hold);
+  const t = setTimeout(() => { releaseTimers.delete(t); for (const it of these) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; } emit(); }, hold);
+  releaseTimers.add(t);
   if (chain == null) holdT = t;
 }
 /** Everything off the stage at once (a skip, a new round, the game leaving the screen). */
 export function stageClear() {
   clearTimeout(holdT);
+  for (const t of releaseTimers) clearTimeout(t);
+  releaseTimers.clear();
   if (!items.length) return;
   items = [];
   ver++;

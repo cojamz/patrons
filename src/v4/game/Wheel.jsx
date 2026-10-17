@@ -351,7 +351,7 @@ export function deniedText(state, key, meId = null) {
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void, look?:string }} props
  *   (look: 'panels' | 'sockets' | the name of a face in ./faces/, whose contract is at the top of faces/index.js)
  */
-function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
+function Wheel({ state, interactionState = state, legal, idle = null, pickNotes = null, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
   const look = useMemo(() => lookProp || spacesLook(), [lookProp]);
   const panels = look === 'panels';
   // a face from ./faces/ (null for the built-in looks, and for a moment while its chunk loads)
@@ -594,7 +594,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     setTimeout(() => { moved.current = false; }, 0);
   };
 
-  const round = Math.max(1, state.round);
+  const round = Math.max(1, interactionState.round);
   const spaces = spaceGeometry(state, look);
 
   // a small shake (the space, and its printed cell) that says "not this one"
@@ -769,7 +769,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     for (const s of spaces) {
       const R = rings[s.ring], c = qCenter(s.q, nq), w = SEC / R.n;
       const a1 = c + SEC / 2 - s.idx * w, a0 = a1 - w;
-      const owner = state.slots[s.key], fresh = freshOf(s.key);
+      const owner = interactionState.slots[s.key], fresh = freshOf(s.key);
       const status = faceStatus({ legal: legal.has(s.key), owner, open: spaceOpen(s.a, round), fresh });
       paper.push(
         <g key={`fc${s.key}`} className={`face-cell ${status}`} data-cell={s.key} style={{ '--c': `var(--${s.qid})`, pointerEvents: 'none' }}>
@@ -784,7 +784,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   // outline). The wedge is the space's click and hover target; its print is the upright box above it (sockets below).
   if (panels) {
     for (const s of spaces) {
-      const R = rings[s.ring], open = spaceOpen(s.a, round), owner = state.slots[s.key];
+      const R = rings[s.ring], open = spaceOpen(s.a, round), owner = interactionState.slots[s.key];
       const lit = legal.has(s.key);
       // yours to take but worth nothing right now (its hover says so): placeable, without the lamp's glow
       const quiet = lit && !!(idle && idle.has(s.key));
@@ -951,6 +951,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     const { key, q, a, ring: t, qid } = s;
     const [X, Y] = turned(s.xy[0], s.xy[1]);
     const owner = state.slots[key];
+    const shadeOwner = interactionState.slots[key];
     const joiners = (state.squats && state.squats[key]) || [];
     const open = t <= round;
     const opt = legal.get(key);
@@ -962,12 +963,12 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     const said = pl && pl.said, lay = pl && pl.lay;
     // everything this space shows, as one string: the same string, the same element (Space skips it)
     const crewIds = owner !== undefined ? [owner, ...joiners] : [];
-    const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', joiners.join(','), open ? 1 : 0, opt || '', quiet ? 1 : 0, selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
+    const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', shadeOwner ?? '', joiners.join(','), open ? 1 : 0, opt || '', quiet ? 1 : 0, selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
       flash.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', said ? `${said.main || said.verb}/${said.second || ''}` : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
       fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? `${scale}:${fontsIn}` : ''].join('|');
     const had = built.current.get(key);
     if (had && had.sig === sig) return <Space key={key} el={had.el} />;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', quiet ? 'idle' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', quiet ? 'idle' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', shadeOwner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -986,7 +987,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
         const crew = owner !== undefined ? [owner, ...joiners].map(id => ({ emoji: seatEmoji(state, id), pid: id, fresh: !!(fresh && fresh.pid === id), color: playerColor(id), name: state.players[id].name })) : [];
         face = (
           <FaceBox Face={Face} q={qid} action={a} ring={t} round={round} name={a.name} effect={pipEffect(qid, a, round)}
-            status={faceStatus({ legal: !!opt, owner, open, fresh })} minions={crew} onPick={opt ? () => live.current.onPick(opt) : null}
+            status={faceStatus({ legal: !!opt, owner: shadeOwner, open, fresh })} minions={crew} onPick={opt ? () => live.current.onPick(opt) : null}
             px={1 / (scale || 1)} color={`var(--${qid})`} angle={(norm(s.ang + rot) + 360) % 360} flash={flash.has(key)} selected={selected} />
         );
       }
@@ -1043,7 +1044,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     );
     built.current.set(key, { sig, el });
     return <Space key={key} el={el} />;
-  }), [state, rot, legalKey, idleKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [state, interactionState, rot, legalKey, idleKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>

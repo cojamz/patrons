@@ -422,6 +422,7 @@ describe('gain changers on stolen goods', () => {
   const Q = ['gold', 'red', 'thieves', 'green'];
   it('a member’s steal isn’t a gain from an action: Midas leaves it magenta', () => {
     let s = scene({ quads: Q, round: 1, queue: [{ t: 'round', r: 2 }], res: [{}, { red: 3 }], members: [['thieves.cutpurse', 'gold.midas', 'gold.prospector'], []] });
+    s = play(s, 'take:1:red');
     s = pass(s);
     expect(R(s, 0)).toMatchObject({ magenta: 1, gold: 0 });
   });

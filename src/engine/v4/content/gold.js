@@ -85,7 +85,7 @@ export default {
     m('banker', 'Banker', 4, 4, 'Now and at round start, +3 gold.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'gold', 3); },
     }),
-    m('prospector', 'Prospector', 2, 2, 'When an action gains you gold, add 1 gold after doubling.', {
+    m('prospector', 'Prospector', 2, 2, 'When an action gains you gold, +1 gold.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && !g.again && g.color === 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
     // Cory, 2026-10-15 (balance pass 1, #1): only the top rival pays it, about a third of what any rival paid

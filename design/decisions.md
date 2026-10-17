@@ -773,3 +773,14 @@ User confirmed batch complete; every original line is retained in `play-feedback
 - ✅ Replace initial resource picks with a Round-I-only resource draft: one of each available color, in reverse of drawn first-turn order; last remaining color goes to first actor.
 - ✅ Printed follower quantity also counts as member quantity; preserve larger explicit member-count rules. Do not inflate counts with bonus followers or fire recruitment hooks multiple times per card.
 - ✅ Tied sphere leaders each get half the round prize, regardless of tie size.
+
+## 2026-10-17 — presentation boundary (Cory)
+- Lit legal spaces, taken-state dimming, turn ownership and interaction options advance together only when the current animation sequence finishes (or explicitly lands through skip/reduced motion).
+- Applies to local and online play. Authoritative session state may arrive earlier; presentation waits and stale input is rejected. This supersedes the earlier online immediate-display approach.
+- Status questions do not end ongoing authorized work. Codex owns queue assignment, integration, checks and shipping without repeated prompts.
+
+## 2026-10-17 — Extortionist threshold (Cory)
+Extortionist triggers when a rival buys5or more followers in one purchase; change existing6threshold to5, retaining the purchase trigger. Update engine/text together; boundary tests at4and5.
+
+## 2026-10-17 — arc competition defaults (Cory)
+Use member-based victory conditions except Silver, Gold and Yellow, which retain their existing rules. Own-color versus total-member criterion asked explicitly and pending; do not silently pick one.

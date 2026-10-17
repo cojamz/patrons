@@ -35,7 +35,7 @@ import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, installChainSkip, skipChain, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
 import { soundOn, onSound, setSound } from '../sound.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale, slowed } from '../motion.js';
@@ -107,8 +107,12 @@ export function loadRoundStart(st, online = false) {
 export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   const first = session.getState();
   // a local game reloaded while its round summary was up reopens it (session/moment.js; the session holds its bots)
-  const [table, setTable] = useState(() => ({ shown: first, moment: restoredMoment(session, first) }));
+  const [table, setTable] = useState(() => ({ shown: first, interaction: first, moment: restoredMoment(session, first) }));
+  const tableRef = useRef(table);
+  tableRef.current = table;
   const queue = useRef([]);
+  const waiting = useRef(null); // physical state whose animation must finish before interaction advances
+  const pumpRef = useRef(() => {});
   const paced = useRef(false);
   const held = useRef(!!table.moment);
   const timer = useRef(null);
@@ -118,7 +122,6 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   const timerAt = useRef(null);
   const pace = useRef(null); // ?trace=1: this step's pacing record (perf.js summary().pace)
   const handedAt = useRef(null); // when the step now being drawn was handed to React
-  const renderEst = useRef(null); // how long the box has been taking to draw a step (a running average)
   const shownRef = useRef(first);
   const online = session.info?.mode === 'online';
   // read (and, if missing, written) once: as a plain useRef argument this ran on every render, re-saving the
@@ -126,7 +129,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   const [rs0] = useState(() => loadRoundStart(first, online) || first);
   const roundStart = useRef(rs0);
 
-  const show = useCallback(next => {
+  const show = useCallback((next, animate = false) => {
     const prev = shownRef.current;
     shownRef.current = next;
     const fresh = prev === next ? [] : newLogLines(prev, next);
@@ -146,17 +149,17 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
       saveRoundStart(next, online);
       // Keep the board as it was when the round was scored until the card is dismissed.
       const board = scoringSnapshot(prev, next);
-      paint(() => setTable({ shown: next, moment: { result: parseRoundEnd(next, end), start, after: next, board } }));
+      paint(() => setTable(t => ({ shown: next, interaction: animate ? t.interaction : next, moment: { result: parseRoundEnd(next, end), start, after: next, board } })));
     } else {
       if (next.round !== prev.round) { roundStart.current = next; saveRoundStart(next, online); }
-      paint(() => setTable(t => ({ ...t, shown: next })));
+      paint(() => setTable(t => ({ ...t, shown: next, interaction: animate ? t.interaction : next })));
     }
   }, []);
 
   const pump = useCallback(() => {
     // Show queued states in order. A rival's placement holds on screen long enough to read (the worker travels,
     // the card shows its delta); after the round-end card, the backlog replays at a readable pace too.
-    while (!held.current && !timer.current && queue.current.length) {
+    while (!held.current && !timer.current && !waiting.current && queue.current.length) {
       let next = queue.current.shift();
       const prev = shownRef.current;
       // a rival's run of follower buys plays as one beat (director.js foldBuys); when the bot's next buy is still on its
@@ -170,7 +173,6 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
       }
       foldSince.current = null;
       if (fold.used) next = queue.current.splice(0, fold.used).pop();
-      show(next);
       const mine = session.mySeats || [];
       const rivalPlaced = Object.keys(next.slots).some(k => prev.slots[k] === undefined && !mine.includes(next.slots[k]));
       // a rival's recruit or follower buy is a visible step too; a pass or a hidden bookkeeping step isn't
@@ -191,6 +193,8 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
       // passes waits for the whole chain and a breath. A bot step with nothing to show doesn't wait, except a turn-ending
       // pass, which holds a moment (MO.passHold).
       const plan = planChain(prev, next, { mine });
+      waiting.current = motionOK() && plan.total > 0 ? next : null;
+      show(next, !!waiting.current);
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
       // (a rival's step that shows something stays on screen at least 400ms before the same bot's next step: motion.mjs m4)
       const dwellOf = pl => holdAfter(pl, { sameNext, rivalStep, floor: Math.min(rivalDwell, MO.stepFloor), base, nextPlaces: !!(next.pending && next.pending.kind === 'place'), placing: !!(prev.pending && prev.pending.kind === 'place') });
@@ -214,17 +218,24 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
       }
     }
   }, [show, session, rivalDwell]);
+  pumpRef.current = pump;
+  const finishPresentation = useCallback(() => {
+    const completed = waiting.current;
+    if (!completed) return;
+    waiting.current = null;
+    setTable(t => t.shown === completed ? { ...t, interaction: completed } : t);
+    // The transport can be ahead; reveal its queued snapshots only after this sequence lands.
+    if (!timer.current) startTransition(() => pumpRef.current());
+  }, []);
+  useEffect(() => onChainEnd(finishPresentation), [finishPresentation]);
   useLayoutEffect(() => {
     if (timer.current !== 'commit') return;
     const d = dwellNext.current;
     dwellNext.current = 0;
-    // Drawing a step costs the box time between handing it to React and its commit (the whole table renders, about
-    // 150–600ms at 4× CPU): with the hold counted from the commit, that cost came on top of every step's hold, a third of
-    // the wait between your turns (design/eval/perf/turn-wait.md). The next step is handed over that much early, so its
-    // commit lands about when the hold ends: a lead of the recent drawing time, never more than 40% of the hold.
-    const now = performance.now();
-    if (handedAt.current != null) { const took = now - handedAt.current; renderEst.current = renderEst.current == null ? took : renderEst.current * 0.6 + took * 0.4; handedAt.current = null; }
-    const lead = d > 0 ? Math.max(0, Math.min(renderEst.current || 0, d * 0.4, 500)) : 0;
+    // Timers retain the chosen viewing pace; only the actual completion event releases interaction.
+    // Never render a later snapshot ahead of this sequence to compensate for rendering cost.
+    const now = performance.now(), lead = 0;
+    handedAt.current = null;
     timer.current = setTimeout(() => { timer.current = null; if (pace.current) pace.current.fired = performance.now(); pump(); }, d - lead);
     timerAt.current = { t0: now - lead, d };
     if (pace.current) { pace.current.committed = now; pace.current.lead = Math.round(lead); }
@@ -238,6 +249,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // the director measured this step's chain on screen (real distances): hold the next step for that, not the estimate
   const retime = useCallback(played => {
+    if (!chainRunning()) finishPresentation();
     const f = remeasure.current;
     remeasure.current = null;
     if (!f || typeof timer.current !== 'number' || !timerAt.current) return;
@@ -248,7 +260,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     timer.current = setTimeout(() => { timer.current = null; if (pace.current) pace.current.fired = performance.now(); pump(); }, Math.max(0, left));
     timerAt.current = { t0: timerAt.current.t0, d };
     if (pace.current) pace.current.retimed = d;
-  }, [pump]);
+  }, [pump, finishPresentation]);
 
   // a skipped chain (a click, Space) lets the next step show at once
   useEffect(() => onChainSkip(() => {
@@ -260,14 +272,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   useEffect(() => {
     const off = session.subscribe(s => {
       if (s === shownRef.current || queue.current.includes(s)) return;
-      // Human clients advance independently. Never replay a stale turn as actionable while the
-      // host is already waiting on another seat. Local bots retain the paced animation queue.
-      if (online && !held.current) {
-        clearTimeout(timer.current); timer.current = null;
-        queue.current.length = 0;
-        show(s);
-        return;
-      }
+      // Authoritative transport remains current; every client presents complete sequences in order.
       queue.current.push(s);
       pump();
     });
@@ -281,13 +286,16 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   // follows (the new round, every minion going home) is drawn as a transition behind it (it took the click ~1s at 4×)
   const dismiss = useCallback(() => {
     held.current = false;
-    paced.current = !online;
-    if (online && queue.current.length > 1) queue.current.splice(0, queue.current.length - 1);
-    startTransition(() => setTable(t => ({ ...t, moment: null })));
+    paced.current = true;
+    const current = tableRef.current;
+    const board = current.moment?.board;
+    const opening = board && motionOK() && planChain(board, current.shown, { mine: session.mySeats || [] }).total > 0;
+    if (opening) waiting.current = current.shown;
+    startTransition(() => setTable(t => ({ ...t, moment: null, interaction: opening ? board : t.shown })));
     pump();
-  }, [pump, online]);
+  }, [pump, session]);
 
-  return [table.shown, table.moment, dismiss, rs0, retime];
+  return [table.shown, table.interaction === table.shown ? table.moment : null, dismiss, rs0, retime, table.interaction, table.moment?.board || table.shown];
 }
 
 /**
@@ -299,10 +307,7 @@ function AfterChain({ value, hold, step = null, children }) {
   const latest = useRef({ value, step });
   const [, bump] = useState(0);
   if (!hold) shown.current = value;
-  // `step` given: back-to-back chains (a bot's next step shows at the last one's hand-off) never leave it stuck on the
-  // value from before them all. When a new step is drawn, the step before it has handed over, so its value shows, in
-  // the same commit as the hand-off (the header lagged a whole run of bot steps behind, waiting for a gap between chains)
-  else if (step != null && latest.current.step !== step) shown.current = latest.current.value;
+  // Physical commits do not advance a held caption; only completion does.
   latest.current = { value, step };
   useEffect(() => onChainEnd(() => { if (shown.current !== latest.current.value) { shown.current = latest.current.value; bump(n => n + 1); } }), []);
   return children(shown.current);
@@ -520,11 +525,11 @@ function seatCorners(state, me) {
 /** On phones the buy step's other answer also lives with the question (the shop and its "Done, no buy" are a scroll
  *  away). On a laptop it lives only in the shop column, under the follower buys (Cory, 2026-10-16: "pass is hard to
  *  find"; ShopCards FollowerRates). Release is a seat action (MemberUse.jsx ReleaseButton). */
-function PromptActions({ optionFor, onPick }) {
+function PromptActions({ optionFor, onPick, afterPurchase = false }) {
   const pass = optionFor('pass');
   return (
     <span className="pr-actions">
-      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without recruiting or buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>Done, no buy</button>
+      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title={afterPurchase ? "Finish your turn" : "End your turn without recruiting or buying"} data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>{afterPurchase ? 'End turn' : 'Done, no buy'}</button>
     </span>
   );
 }
@@ -533,8 +538,13 @@ const verbFor = kind => ({ setup: 'drafting a resource', place: 'placing a minio
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
   const beforeShow = useRef(null);
-  const [live0, moment, dismissMoment, roundStart0, retimeTable] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
-  const state = moment && moment.board ? moment.board : live0;
+  const [live0, moment, dismissMoment, roundStart0, retimeTable, settled0, physical0] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
+  const physicalState = physical0;
+  const interactionState = moment && moment.board ? moment.board : settled0;
+  // Counters and flying targets use physical state; ownership/options/order share one settled boundary.
+  const state = useMemo(() => physicalState === interactionState ? physicalState : ({ ...physicalState,
+    pending: interactionState.pending, current: interactionState.current, over: interactionState.over, order: interactionState.order, turns: interactionState.turns, queue: interactionState.queue,
+  }), [physicalState, interactionState]);
   useAnyDot((state.quadrants || []).map(q => quadrant(q).resource)); // the "any" dot's four colors, where their quadrants sit
   const mySeats = session.mySeats || NO_SEATS;
   const pend = state.pending;
@@ -558,7 +568,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   useEffect(() => () => clearTimeout(hoverTimer.current), []);
   const hover = useHoverCards(); // UI-B's one hover layer: spaces, plaques, seats, shop cards
   // a press anywhere, or Space, lands the chain of animations playing on the table (director.js)
-  useEffect(() => installChainSkip(), []);
+  useEffect(() => { const off = installChainSkip(); return () => { off(); skipChain(); }; }, []);
   useEffect(() => stageClear, []);
   // your turn: whatever the last move left on the stage goes home now, off the open spaces (panel r1 skeptic: leftover
   // cards sat over the wheel's centre a second into your turn)
@@ -661,11 +671,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   useEffect(() => session.subscribe(() => { const u = undoSig(); if (u !== undoSeen.current) { undoSeen.current = u; if (userMove) startTransition(() => setUndoSeen(u)); else setUndoSeen(u); } }), [session]); // eslint-disable-line react-hooks/exhaustive-deps
   // A local game's bots wait at a round end (session roundHold) until its summary is gone; they go on once the table
   // shows that state with no summary up (dismissed, or never detected: never a stalled table).
-  useEffect(() => { if (!moment && session.roundHold && live0 === session.getState() && session.continueRound) session.continueRound(); }, [moment, live0, session]);
+  useEffect(() => { if (!moment && live0 === settled0 && session.roundHold && live0 === session.getState() && session.continueRound) session.continueRound(); }, [moment, live0, settled0, session]);
   // results open at the top, on the winner
   // The results are on screen: only now may the app forget the saved game.
-  useEffect(() => { if (live0.over && !moment && onResults) onResults(); }, [live0.over, moment]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (live0.over && !moment && typeof window !== 'undefined' && window.scrollTo) { try { window.scrollTo(0, 0); } catch { /* jsdom */ } } }, [live0.over, moment]);
+  useEffect(() => { if (live0.over && live0 === settled0 && !moment && onResults) onResults(); }, [live0.over, settled0, moment]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (live0.over && live0 === settled0 && !moment && typeof window !== 'undefined' && window.scrollTo) { try { window.scrollTo(0, 0); } catch { /* jsdom */ } } }, [live0.over, settled0, moment]);
   const [turnCard, setTurnCard] = useState(null); // { pid, text, live, n, folding }: the current turn, told by its cult
   const turnTimer = useRef([]);
   useEffect(() => () => turnTimer.current.forEach(clearTimeout), []);
@@ -696,7 +706,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const since = story.since;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const prevState = useRef(state); // the state the table last committed (the flight effect moves it on)
+  const prevState = useRef(physicalState); // the state the table last committed (the flight effect moves it on)
   // the spaces just taken (a new minion lands): worked out while rendering, kept until the next placement
   const lastFlash = useRef(NO_FLASH);
   const freshFlash = useMemo(() => {
@@ -753,7 +763,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   useEffect(() => { setNote(n => { if (n && n.at !== (state.pending ? state.moves : null) && n.at !== state.moves) { clearTimeout(noteTimer.current); return null; } return n; }); }, [stepKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A fresh state means our move (or someone's) landed: the table is live again.
-  useEffect(() => { sendToken.current += 1; busyNow.current = false; setBusy(false); }, [state]);
+  useEffect(() => { sendToken.current += 1; busyNow.current = false; setBusy(false); }, [interactionState]);
 
   // not yours: one shared empty map, so your chair's optionFor holds through rivals' steps
   const options = useMemo(() => (mine ? new Map(pend.options.map(o => [o.id, o])) : NO_OPTS), [mine, pend]);
@@ -775,7 +785,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   usePreviewWarmup(state, needHandoff ? null : me);
   // the spaces you can take that would give you nothing right now step back (Wheel: .idle), still placeable
   const legalKeys = useMemo(() => [...legalSlots.keys()], [legalSlots]);
-  const idleSlots = useIdleSpaces(state, mine && pend.kind === 'place' && !needHandoff ? me : null, legalKeys);
+  const idleSlots = useIdleSpaces(interactionState, mine && pend.kind === 'place' && !needHandoff ? me : null, legalKeys);
 
   // What just happened, made physical: a rival's move turns the wheel to face it, a worker travels from its
   // owner to the space, a recruited card flies from the shop to its new owner.
@@ -790,6 +800,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     }
   };
   useLayoutEffect(() => {
+    const state = physicalState;
     const before = prevState.current;
     prevState.current = state;
     clearFlights(1200); // nothing from earlier moves lingers
@@ -802,7 +813,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // the move plays as a chain (director.js, the motion language in design/prototypes/motion/grammar.md): the
     // selection, then each cause's effects from the engine's stream, in order, every count ticking as pieces land
     const played = playChain(root.current, before, state, { snap: shopSnap.current, minionsBefore: state.round !== before.round && before.round >= 1 ? wasOnWheel : null, mine: mySeats, chips: chipSnap.current });
-    if (state === live0) retimeTable(played);
+    retimeTable(played);
 
     const lines = newLogLines(before, state);
     // Gifts float onto the receiver's card, worded as what they are: the receiver gains (nobody loses).
@@ -860,7 +871,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // the flash is a one-shot landing animation: it stays on that space until the next placement replaces it (fading it
     // after 2s re-rendered the whole table and the wheel mid-chain, once per placement, for no visible change)
     return undefined;
-  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [physicalState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Every turn is told in one place (Cory): a turn card by the acting cult builds line by line as the turn goes
   // (placed → gained → bought), the players it touched pulse, and when the turn passes the card holds a beat, then
@@ -958,6 +969,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     lastStep.current = step;
   }, [pend, mine]);
   const onPick = useCallback((optionId, mode) => {
+    // A still-lit old option is presentation only, never a stale command to a newer authoritative state.
+    if (interactionState !== physicalState || session.getState() !== physicalState) return;
     // a double-click is one choice: the same option again within 350ms is ignored (replays are exempt)
     const now = Date.now();
     // counted picks ("take 1 gold… (2 left)") are meant to be clicked fast and repeatedly: every click counts
@@ -1002,7 +1015,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         busyNow.current = false;
         startTransition(() => setBusy(false));
       });
-  }, [mine, busy, needHandoff, options, session, pend]);
+  }, [mine, busy, needHandoff, options, session, pend, interactionState, physicalState]);
   useEffect(() => {
     if (busy) return;
     const q = queuedClick.current.shift();
@@ -1085,7 +1098,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     return () => { document.body.style.overflow = prev; };
   }, [modalOpen]);
   const prForMe = mine || (!!pend && mySeats.includes(pend.player) && !state.over);
-  const pr = { ...promptFor(state, prForMe), forMe: prForMe };
+  const pr = { ...promptFor(interactionState, prForMe), forMe: prForMe };
+  if (pend?.afterPurchase && prForMe) { pr.text = 'Use a member ability, or finish your turn'; pr.sub = ''; }
   // your turn just ended (the table moved from a step of yours to someone else's): for a beat the header says so, then
   // the next player's line (w3b #58: after the second Pass the next frame was already a bot's line). It lasts until the
   // next step lands or the beat runs out, whichever is first.
@@ -1297,7 +1311,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   if (phase === 'place') stepRef.current = 'place'; else if (phase === 'buy' || phase === 'pay') stepRef.current = 'buy';
   const step = phase === 'choose' ? stepRef.current : phase === 'pay' ? 'buy' : phase;
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-shop-details={shopDetails || undefined} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-shop-details={shopDetails || undefined} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-presentation-moves={interactionState.moves} data-animating={physicalState !== interactionState || undefined} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}
@@ -1306,7 +1320,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
           ) : pr.text ? (
-            <AfterChain value={pr} hold={session.info?.mode !== 'online' && holdStory && (!mine || rivalPlaying)} step={state.moves}>{held => {
+            <AfterChain value={pr} hold={false} step={state.moves}>{held => {
               // a held line addressed to someone else is never shown in this one's voice (w3b: your "Choose how to
               // pay" stayed up, dotted like a rival's, while the bots moved): it gives way to the current line
               const p = turnOver ? { who: turnOver, text: humansHere ? `${turnOver.name}’s turn is over` : 'Your turn is over', over: true }
@@ -1324,7 +1338,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               );
             }}</AfterChain>
           ) : <span className="say" data-prompt tabIndex={-1} />}
-          {buyingNow && !wide && <PromptActions optionFor={live} onPick={onPick} />}
+          {buyingNow && !wide && <PromptActions optionFor={live} onPick={onPick} afterPurchase={pend.afterPurchase} />}
           <span className="undo-slot">
             {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your draft pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
@@ -1369,7 +1383,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           {/* (data-step: after you've placed, the wheel steps back so only your buys are bright; final panel S#27) */}
           <section className="lt-wheel" data-region="wheel" data-step={buyingNow ? 'buy' : undefined}>
-            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} idle={pickSpaces ? null : idleSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={!wide} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            <Wheel state={state} interactionState={interactionState} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} idle={pickSpaces ? null : idleSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={!wide} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
             {showChoice && (!picker || (gift && !shopRecruit)) && !payChoice(pend) && pend.kind !== 'setup' && (gift
               ? <GiftCard state={state} gift={gift} onFirst={onGiftFirst} onAnswer={gift.board === 'seats' ? onSeatPick : onGiftAnswer} onBack={canUndo ? undo : null} busy={busy} place={plainAt} hover={hover} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
               : <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />)}

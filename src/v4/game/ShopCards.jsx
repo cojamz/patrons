@@ -296,7 +296,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
           step starts or ends (it's hidden then, and on phones folded away). */}
       <button type="button" className={`btn lt-done${done ? '' : ' idle'}`} data-option={done ? 'pass' : undefined} data-done-no-buy={done ? 'on' : 'off'}
         disabled={!done} tabIndex={done ? 0 : -1} aria-hidden={done ? undefined : 'true'}
-        title={done ? 'End your turn without recruiting or buying' : undefined} onClick={() => done && onPick('pass')}>Done, no buy</button>
+        title={done ? (state.pending?.afterPurchase ? 'Finish your turn' : 'End your turn without recruiting or buying') : undefined} onClick={() => done && onPick('pass')}>{state.pending?.afterPurchase ? 'End turn' : 'Done, no buy'}</button>
     </div>
   );
 }

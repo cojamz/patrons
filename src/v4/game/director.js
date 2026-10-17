@@ -20,12 +20,12 @@ import { playerColor } from '../format.js';
 import { play } from '../sound.js';
 import { gainsBetween } from './gains.js';
 import { seatOrder } from './seats.js';
-import { stageRect, stageShow, stageRelease, stageClear } from './stage.js';
+import { stageRect, stageShow, stageRelease, stageClear, stageBusy, subscribeStage } from './stage.js';
 import { panelText } from './panelText.js';
 import { quadrant, defById } from '../../engine/v4/index.js';
 import { seatEmoji } from '../format.js';
 import { spriteId } from '../art/index.js';
-import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights, arcFrames, bezier, onScreenBow, relative } from './flight.js';
+import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights, arcFrames, bezier, onScreenBow, relative, motionPending, onMotionChange } from './flight.js';
 
 const CARD_EASE = bezier(0.4, 0.1, 0.6, 1); // a recruited card's flight to its crowd (grammar M7); no long creep at the end (Cory, 22:48)
 
@@ -492,7 +492,7 @@ export const onChainSkip = fn => { skipSubs.add(fn); return () => skipSubs.delet
 const endSubs = new Set();
 /** Called whenever the table's chains have all played out (or were skipped): the summary may show. */
 export const onChainEnd = fn => { endSubs.add(fn); return () => endSubs.delete(fn); };
-export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0;
+export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0 || !!chain.draining;
 
 function tick(now) {
   chain.raf = 0;
@@ -515,7 +515,14 @@ function schedule(at, fn) {
   while (k > 0 && chain.queue[k - 1].at > at) k--;
   chain.queue.splice(k, 0, item);
 }
-function endChain(now = false) {
+const cancelDrain = () => {
+  if (chain.drainCleanup) chain.drainCleanup();
+  chain.drainCleanup = null;
+  chain.drainToken = null;
+  chain.draining = false;
+};
+function finishChain(now = false) {
+  cancelDrain();
   for (const { h } of chain.holds.values()) if (h) h.done(now);
   chain.holds.clear();
   chain.pending.clear();
@@ -523,8 +530,30 @@ function endChain(now = false) {
   chain.counts.clear();
   if (chain.root) delete chain.root.dataset.chain;
   chain.last = null;
-  if (now) stageClear(); else stageRelease();
   for (const fn of endSubs) fn();
+}
+function endChain(now = false) {
+  if (now) { stageClear(); finishChain(true); return; }
+  if (chain.draining) return;
+  chain.draining = true;
+  const token = chain.drainToken = {};
+  for (const { h } of chain.holds.values()) if (h) h.done();
+  // The final landing starts its settle/count; the stage then returns home. Those actual completions,
+  // not the nominal plan length, release the next action. Ambient CSS animation is never tracked here.
+  stageRelease();
+  let scheduled = false;
+  const check = () => {
+    if (scheduled) return;
+    scheduled = true;
+    queueMicrotask(() => {
+      scheduled = false;
+      if (chain.drainToken !== token || chain.queue.length || chain.flying > 0) return;
+      if (!motionPending() && !stageBusy()) finishChain();
+    });
+  };
+  const offMotion = onMotionChange(check), offStage = subscribeStage(check);
+  chain.drainCleanup = () => { offMotion(); offStage(); };
+  check();
 }
 /** Skip the rest of the chain on screen: every step jumps to its end state at once (a click, Space). */
 export function skipChain() {
@@ -615,7 +644,11 @@ const folHtml = (root, pid) => { const g = root.querySelector(`.lt-cult-seat[dat
 const region = el => !!(el && el.matches && el.matches('[data-region]'));
 const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly && !region(el)) relative(el, [{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.4 }, { transform: 'translateY(0) scale(1)' }], { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' }); };
 const square = (r, size) => ({ left: r.left + r.width / 2 - size / 2, top: r.top + r.height / 2 - size / 2, width: size, height: size });
-const onFinish = (anim, fn) => { if (anim && anim.finished) anim.finished.then(() => fn(), () => fn()); else fn(); };
+const onFinish = (anim, fn) => {
+  const epoch = chain.epoch || 0;
+  const done = () => { if ((chain.epoch || 0) === epoch) fn(); };
+  if (anim && anim.finished) anim.finished.then(done, done); else done();
+};
 
 /**
  * When the shop's new card may be dealt, in ms from this state's commit: after a recruited card has left its slot and
@@ -643,6 +676,7 @@ export const noteTable = root => { void root; };
 export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [], chips = null } = {}) {
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
   const ctx = { state, before, snap, chips };
+  if (chain.draining) cancelDrain(); // an externally delivered step adopts any explicit motion still finishing
   const chainId = (chain.n = (chain.n || 0) + 1);
   // read everything first; every write waits for the clock's next frame (before it paints): a write here made the
   // next layout effect lay the whole page out again

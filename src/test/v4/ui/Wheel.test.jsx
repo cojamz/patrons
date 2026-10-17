@@ -105,3 +105,23 @@ describe('Wheel', () => {
     }
   });
 });
+
+it('holds legal light and taken dimming together while the new minion is physically landing', () => {
+  const before = createGame({ seats, seed: 3, quadrants: ['red', 'yellow', 'market', 'gold'] });
+  before.round = 1;
+  const after = { ...before, slots: { ...before.slots, '0-0': 0 } };
+  const props = { onPick: vi.fn(), flash: new Set(), facing: 0, onFacing: vi.fn(), look: 'panels' };
+  const view = render(<Wheel {...props} state={after} interactionState={before} legal={new Map([['0-0', 'slot:0-0']])} />);
+  const slot = () => view.container.querySelector('[data-slot="0-0"]');
+  const cell = () => view.container.querySelector('.pcell[data-cell="0-0"]');
+  expect(slot().querySelector('.worker[data-seat="0"]')).toBeTruthy();
+  expect(slot().classList.contains('lit')).toBe(true);
+  expect(slot().classList.contains('taken')).toBe(false);
+  expect(cell().classList.contains('lit')).toBe(true);
+  expect(cell().classList.contains('taken')).toBe(false);
+  view.rerender(<Wheel {...props} state={after} interactionState={after} legal={new Map()} />);
+  expect(slot().classList.contains('lit')).toBe(false);
+  expect(slot().classList.contains('taken')).toBe(true);
+  expect(cell().classList.contains('lit')).toBe(false);
+  expect(cell().classList.contains('taken')).toBe(true);
+});

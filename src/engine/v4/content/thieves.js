@@ -137,12 +137,6 @@ function pickMember(ctx, p, list, prompt, handler, data = null) {
     id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid, hint: memberHint(c),
   })), handler, data);
 }
-function richest(ctx, p) {
-  const list = ctx.rivals(p).filter(o => stealable(ctx, p, o) > 0);
-  if (!list.length) return null;
-  return list.reduce((a, b) => (holding(b) > holding(a) ? b : a));
-}
-
 // ---------- the quadrant ----------
 const thieves = {
   id: 'thieves',
@@ -281,7 +275,7 @@ const thieves = {
 
   members: [
     m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the richest rival you can steal from (it arrives as magenta).', { now: true,
-      onRoundStart(ctx, owner) { const t = richest(ctx, owner); if (t) autoSteal(ctx, owner, t, 'Cutpurse'); },
+      onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Cutpurse', 1, { fromAction: false, richest: true }); },
     }),
     m('mole', 'Mole', 2, 2, 'Now and at round start, take 1 resource from each player with more followers than you (they arrive as magenta).', { now: true,
       onRoundStart(ctx, owner) {
@@ -297,7 +291,7 @@ const thieves = {
         startSteal(ctx, owner, 'Grifter', n, { fromAction: false, richest: true });
       },
     }),
-    m('sticky', 'Sticky Fingers', 4, 4, 'Your steals from spaces take +1 resource after doubling.', { stealMore: 1 }),
+    m('sticky', 'Sticky Fingers', 4, 4, 'Your steals from spaces take +1 resource.', { stealMore: 1 }),
     m('desperado', 'Desperado', 2, 2, 'While you have the fewest followers (ties count), double the base resources stolen from spaces.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
@@ -318,9 +312,9 @@ const thieves = {
       },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 10
-    m('extortionist', 'Extortionist', 8, 2, 'Whenever a rival buys 6 or more followers, take 2 resources from them (they arrive as magenta).', {
+    m('extortionist', 'Extortionist', 8, 2, 'Whenever a rival buys 5 or more followers, take 2 resources from them (they arrive as magenta).', {
       onBuyFollowers(ctx, owner, card, buyer, tier) {
-        if (buyer !== owner && tier && tier.get >= 6) autoSteal(ctx, owner, buyer, 'Extortionist', 2);
+        if (buyer !== owner && tier && tier.get >= 5) autoSteal(ctx, owner, buyer, 'Extortionist', 2);
       },
     }),
     m('watchdog', 'Bodyguard', 4, 2, 'Rivals can’t take your members.', {

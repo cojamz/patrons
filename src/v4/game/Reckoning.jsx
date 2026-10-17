@@ -71,7 +71,7 @@ export function scoringSeatState(board, info, paid) {
 }
 
 export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = null }) {
-  const rows = useRef(reckonSteps(info)).current;
+  const [rows] = useState(() => reckonSteps(info));
   const [step, setStep] = useState(0); // which quadrant is paying (rows.length = finished)
   const [beat, setBeat] = useState(0); // within it: 0 counting, 1 the verdict (the prize in the air), 2 landed
   const [seen, setSeen] = useState(0); // how many seats' counts have stamped in so far
@@ -85,25 +85,17 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     if (!b || !b.width || typeof matchMedia !== 'function' || !matchMedia('(min-width:861px) and (min-height:500px)').matches) { setMid(null); return; }
     setMid({ left: Math.round(b.left + b.width / 2), top: Math.round(b.top + b.height / 2), w: Math.round(b.width * 0.78) });
   }, [root, info]);
-  // a beat after the round's last move (its "Turn passes." note) before the first rim lights (tester B #23)
-  const [ready, setReady] = useState(() => !motionOK());
-  // (wave 4 tester A #29, #54: the scoring ran under the round's last move, still playing on the table, so a player who
-  // watched that move found the Reckoning on its last quadrant, and the seats ticked both at once. The round's end
-  // waits for the table's chains to land, then has its own beat.)
-  // (panel r1: the card came up about 1s after the round's last move, once over a bot's turn: the table's last move
-  // lands and rests first, and only then does "Round I ends" come up; the rims follow a beat later)
-  const [open, setOpen] = useState(() => !motionOK());
+  // Start the first competition as soon as the last action lands. Its own caption carries
+  // the round cue; there is no separate pre-screen or fixed delay before scoring.
+  const [ready, setReady] = useState(() => !chainRunning());
   useEffect(() => {
     if (ready) return undefined;
-    let t = null;
-    const lead = () => { if (t == null) t = setTimeout(() => { setOpen(true); t = setTimeout(() => setReady(true), MO.reckonLead); }, MO.reckonGap); };
-    if (!chainRunning()) lead();
-    const off = onChainEnd(lead);
-    const net = setTimeout(lead, 6000); // (a safety net: a chain that never reports its end)
-    return () => { clearTimeout(t); clearTimeout(net); off(); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  // the action stage's last card leaves the hub to the scoring card
-  useLayoutEffect(() => { if (open) stageClear(); }, [open]);
+    const start = () => setReady(true);
+    const off = onChainEnd(start);
+    if (!chainRunning()) start(); // close the subscription race
+    return off;
+  }, [ready]);
+  useLayoutEffect(() => { if (ready) stageClear(); }, [ready]);
   const [spots, setSpots] = useState({}); // pid -> { left, top } of that player's chair, for the count chips
   const done = useRef(false);
   const finish = () => { if (!done.current) { done.current = true; onLamp && onLamp(null); onDone(); } };
@@ -132,7 +124,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   // one quadrant at a time: light its plaque and count, name the winner, fly the prize, and only then pay the total
   useEffect(() => {
     if (!ready) return undefined;
-    if (step >= rows.length) { const t = setTimeout(finish, reduced ? 0 : slowed(400)); return () => clearTimeout(t); }
+    if (step >= rows.length) { finish(); return undefined; }
     const row = rows[step];
     setBeat(0);
     setSeen(0);
@@ -233,11 +225,9 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     : `${name(row.winners[0])} ${row.winners[0] === meId ? 'win' : 'wins'} +${fol(row.prize)}${broke(row)}`;
   const shownBeat = step < rows.length ? beat : 2;
   return (
-    <div className={`lt-reckon${open ? '' : ' waiting'}`} role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} data-bonus-member={row?.kind === 'bonus' ? row.uid : undefined} onClick={finish}>
-      <div className={`reckon-head${mid ? ' at-mid' : atTop ? ' at-top' : ''}${!ready ? ' opening' : ''}`} style={{ '--c': row && ready ? `var(--${row.qid})` : undefined, ...(mid ? { left: mid.left, top: mid.top, '--mid-w': `${mid.w}px` } : null) }} aria-live="polite">
-        {/* the round's end, as a beat of its own before the first rim lights (wave 4 #6: the scoring began while the player
-            looked away): "Round II ends" stamps in at the wheel's centre, with the quadrants still to score */}
-        {!ready ? <b className="reckon-rule reckon-ends">Round {info.result.round} ends</b> : (
+    <div className={`lt-reckon${ready ? '' : ' waiting'}`} role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} data-bonus-member={row?.kind === 'bonus' ? row.uid : undefined} onClick={finish}>
+      <div className={`reckon-head${mid ? ' at-mid' : atTop ? ' at-top' : ''}`} style={{ '--c': row && ready ? `var(--${row.qid})` : undefined, ...(mid ? { left: mid.left, top: mid.top, '--mid-w': `${mid.w}px` } : null) }} aria-live="polite">
+        {ready && (
           <>
           <small>{row?.kind === 'bonus' ? 'End-game bonuses' : `Round ${info.result.round} scoring`} · {Math.min(step + 1, rows.length)} of {rows.length}</small>
           {row && <b className="reckon-rule">{row.rule}</b>}

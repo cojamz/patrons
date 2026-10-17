@@ -190,7 +190,7 @@ const S = {
     tipoff: [['1', 'magenta', '/', 'rup']],
     hideout: [['r', '→', '1', 'magenta'], ['shield']],
     rob: [['rr', '→', '3', 'magenta']],
-    ransom: [['mr', 'tag:≤6', '→', 'magenta']],
+    ransom: [['mr', 'tag:≤4', '→', 'magenta']],
     heist: [['mr', '→', 'm']],
   },
   trading: {

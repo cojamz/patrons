@@ -2,7 +2,7 @@
 // bigger ones count up; either way it lights up in a color and can float a brief +N / −N.
 import { useEffect, useRef, useState } from 'react';
 import { MO, slowed } from '../motion.js';
-import { arrivalFor } from './flight.js';
+import { arrivalFor, beginCountMotion } from './flight.js';
 
 export const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 let floatId = 0;
@@ -48,6 +48,7 @@ export default function Tick({ value, from, color, className = '', float = true,
     if (reducedMotion() || typeof requestAnimationFrame !== 'function') { disp.current = value; setShown(value); return () => timers.forEach(clearTimeout); }
     // with pieces coming, the count starts when the first one lands (the director says so; the plan's time is the
     // fallback), however late a loaded box paints it
+    const finishMotion = beginCountMotion(() => skip());
     let t0 = coming && !coming.landed ? Infinity : performance.now();
     const go = () => {
       if (t0 !== Infinity) return;
@@ -73,13 +74,13 @@ export default function Tick({ value, from, color, className = '', float = true,
       const next = Math.abs(aim - was) > stride ? was + Math.sign(aim - was) * stride : aim;
       write(next);
       if (k < 1 || next !== value) raf = requestAnimationFrame(step);
-      else setShown(value); // one render, at the end
+      else { finishMotion(); setShown(value); } // one render, at the end
     };
     raf = requestAnimationFrame(step);
     // a skipped chain (a click, Space: director.js) lands the count at once
-    const skip = () => { cancelAnimationFrame(raf); t0 = 0; write(value); setShown(value); if (coming) coming.el.removeEventListener('patrons:land', go); };
+    const skip = () => { cancelAnimationFrame(raf); finishMotion(); t0 = 0; write(value); setShown(value); if (coming) coming.el.removeEventListener('patrons:land', go); };
     addEventListener('patrons:chain-skip', skip);
-    return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); removeEventListener('patrons:chain-skip', skip); if (coming) coming.el.removeEventListener('patrons:land', go); };
+    return () => { cancelAnimationFrame(raf); finishMotion(); timers.forEach(clearTimeout); removeEventListener('patrons:chain-skip', skip); if (coming) coming.el.removeEventListener('patrons:land', go); };
   }, [value, float, dur]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <span ref={box} className={`tick ${className}${bump > 0 ? ' bump' : bump < 0 ? ' dip' : ''}`} style={bump && color ? { '--tc': color } : undefined}>

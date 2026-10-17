@@ -3,7 +3,35 @@
 Current feedback section reconciled 2026-10-16; later historical sections retain their original context. Exact verified live source and current checks: `design/in-flight.md`. A box is ticked only when code or a gate proves it, not on an agent's report; where it isn't obvious, the proof is in brackets.
 
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
-The bar (Cory, 2026-10-15): A− or better from a fresh blind panel, on the exact build he'll open, before he sees anything.
+Shipping: checked incremental fixes ship promptly under current working instructions. A− is the finished-build goal; historical panel requirements do not block authorized iterations.
+
+## Active batches — October 17
+
+Every report is recorded here before implementation. Root owns triage, assignment, integration, verification and publication; status questions do not pause execution. Original113-note ledger: `feedback-audit-2026-10-17.md`. Additional reports below are separate from those113. A batch is shipped only after its immutable checks and public verification.
+
+### Batch A — animation boundaries and round transitions (P0, in progress)
+- [ ] A1: Legal-space lighting, taken dimming, turn ownership and options advance together only after actual sequence completion. Local and online; no stale input. Owner: motion agent. Check: controlled chain-end UI tests plus real browser local/online transitions.
+- [ ] A2: Include home flights and final settle/roll in completion; skip and reduced motion land cleanly, no deadlock. Owner: performance agent. Check: director lifecycle regressions and real swap/end-round visual verification.
+- [ ] A3: Remove “Round X Ends” pre-screen. Start competition directly; use existing animation for necessary cues. Owner: card/UI agent. Check: no pre-screen and competition/results still complete.
+- [ ] A4: Diagnose and fix result-card appearance lag. Owner: card/UI agent. Check: isolated production browser transition and measured frame gaps; no claim from static review alone.
+- [ ] A5: Swap loop leak, aggregate-steal duplicate flights, shared wheel geometry cache and round-start net income. Implemented526abdda;1220tests/build/fullgame green. Root visual verification pending; no live claim. Broader round-start choreography remains partial.
+
+### Batch B — precise card behavior and wording (P1, implemented awaiting integration)
+- [ ] B1: Sticky Fingers must not imply it doubles. Text: “Your steals from spaces take +1 resource.” Prospector also states only its own bonus. Owner: card agent. Check: unchanged engine ordering and exact text.
+- [ ] B2: Shakedown artwork advertises≤4, matching legal targets (was≤6). Owner: card agent. Check: engine/art contract regression.
+- [ ] B3: Newly bought Go-Getter remains usable after final placement, when spaces remain. Offer activation or Done without a second purchase; correct UI labels. Owners: card engine + motion UI. Check: engine activation/Done/full-board/JSON-resume and browser UI.
+- [ ] B4: Two-person Late Bloomers, named discount-source explanations, confirmed-rule glossary/help corrections and cancelled stale fallback previews. Implemented526abdda; focused/full checks green, card/tap visuals pending. Owner: root integration.
+
+- [ ] B5: Extortionist triggers when a rival buys5or more followers in one purchase (existing6threshold→5). Owner: card/rules agent. Check:4excluded,5included; exact card text and engine agree.
+
+- [ ] B6: Cutpurse does not offer resource choice. Implemented explicit color choice on recruit and round start;1resource from richest eligible rival, no space multipliers. Regression selects gold over larger red pile and excludes poorer rival. Integrated checks pending. Owner: card/rules agent. Check: chosen victim/color/amount resolve exactly.
+
+- [ ] B7: Arc competitions default to members; Silver/Gold/Yellow unchanged. Exact own-color versus total-member criterion awaiting Cory answer; preserve printed member quantities. Owner: card/rules agent. Independent fixes continue.
+
+### Batch C — remaining original feedback (triage continues)
+- [ ] Suspected Good Deed misclick: all tested color/recipient branches resolve correctly; no defect reproduced. Keep report open for actual reproduction, do not mark fixed.
+- [ ] Separate clear defects from balance changes and unresolved referents in remaining113-note ledger. Implement independent clear fixes; park only the ambiguous decision itself.
+- [ ] Follower-shop experiment already completed48 paired Normal-bot games; reconcile ledger status with report `eval/2026-10-17-no-follower-shop.md` rather than rerunning.
 
 ## Cory's play notes, 2026-10-16 (implementation tracked)
 Original note: `play-feedback-2026-10-16-original.txt`. Item-by-item code audit: `feedback-audit-2026-10-16.md`. Checked items are implemented; see in-flight.md for the verified live commit. Ideas remain design backlog; use Cory’s current instructions and go-with-your-gut defaults rather than old open-call lists.

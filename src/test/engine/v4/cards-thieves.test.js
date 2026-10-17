@@ -152,7 +152,8 @@ describe('Magenta actions', () => {
 describe('Magenta members', () => {
   const roundStart = (opts) => table(Q, { shop: ROW, queue: [{ t: 'round', r: 2 }], ...opts });
   it('Cutpurse: at round start, take 1 from the rival holding the most (named)', () => {
-    const s = roundStart({ n: 3, res: [{}, { gold: 2 }, { red: 3 }], members: [['thieves.cutpurse']] });
+    let s = roundStart({ n: 3, res: [{}, { gold: 2 }, { red: 3 }], members: [['thieves.cutpurse']] });
+    s = move(s, 'take:2:red');
     expect([R(s).magenta, R(s, 2).red]).toEqual([1, 2]);
     expect(named(s, 'Cutpurse').length).toBe(1);
   });
@@ -165,8 +166,9 @@ describe('Magenta members', () => {
   it('Cutpurse and Mole recruited: their steal happens right away too (named)', () => {
     let s = table(Q, { n: 3, round: 3, left: 5, res: [{ magenta: 4 }, { gold: 2 }, { red: 3 }], shop: ['thieves.cutpurse', ...ROW] });
     s = move(take(s, 'gold.rush'), cardOpt(s, 'thieves.cutpurse', 'shop'));
+    s = move(s, 'take:2:red');
     expect([R(s).magenta, R(s, 2).red]).toEqual([1, 2]);
-    expect(named(s, 'Cutpurse')).toEqual(["P1's Cutpurse: took 1 from P3."]);
+    expect(named(s, 'Cutpurse')).toEqual(["P1's Cutpurse stole 1 (1 red from P3), now magenta."]);
     let t = table(Q, { n: 3, round: 3, left: 5, res: [{ magenta: 4 }, { gold: 2 }, { red: 3 }], bonus: [0, 2, 0], shop: ['thieves.mole', ...ROW] });
     t = move(take(t, 'gold.rush'), cardOpt(t, 'thieves.mole', 'shop'));
     expect([R(t).magenta, R(t, 1).gold, R(t, 2).red]).toEqual([1, 1, 3]);
@@ -241,16 +243,16 @@ describe('Magenta members', () => {
     expect(R(s, 1).magenta).toBe(0); // Twins costs 4
   });
 
-  it('Extortionist: whenever a rival buys 10 followers, take 2 from them (not for 5) (named)', () => {
+  it('Extortionist: whenever a rival buys 5 or more followers, take 2 from them (named)', () => {
     let s = table(Q, { res: [{ gold: 6, red: 3, magenta: 3 }], members: [[], ['thieves.extortionist']], shop: ROW });
     s = move(take(s, 'thieves.tipoff'), 'tier:top');
     expect(s.players[0].bonus).toBe(10);
     expect(R(s, 1).magenta).toBe(2);
     expect(sum(R(s))).toBe(0);
     expect(named(s, 'Extortionist').length).toBe(1);
-    s = table(Q, { res: [{ gold: 3, red: 2 }, {}], members: [[], ['thieves.extortionist']], shop: ROW });
+    s = table(Q, { res: [{ gold: 5, red: 2 }, {}], members: [[], ['thieves.extortionist']], shop: ROW });
     s = move(take(s, 'thieves.tipoff'), 'tier:mid');
-    expect(R(s, 1).magenta).toBe(0);
+    expect(R(s, 1).magenta).toBe(2);
   });
 
   it('Double Agent: when recruited, swap it for any rival\'s member (named)', () => {

@@ -4,6 +4,12 @@ import { createGame, applyMove } from '../../../engine/v4/index.js';
 import { createEmitter } from '../../../v4/session/emitter.js';
 import { useTable } from '../../../v4/game/GameScreen.jsx';
 
+const animation = vi.hoisted(() => ({ enabled: true, running: false, listeners: new Set() }));
+vi.mock('../../../v4/game/flight.js', async original => ({ ...await original(), motionOK: () => animation.enabled }));
+vi.mock('../../../v4/game/director.js', async original => ({ ...await original(),
+  chainRunning: () => animation.running,
+  onChainEnd: fn => { animation.listeners.add(fn); return () => animation.listeners.delete(fn); },
+}));
 const seats = ['Cory', 'Ana', 'Bo'].map(name => ({ name, kind: 'human' }));
 function sessionAt(state, mode) {
   let current = state;
@@ -15,36 +21,47 @@ function sessionAt(state, mode) {
   };
 }
 const next = s => applyMove(s, { player: s.pending.player, option: s.pending.options[0].id });
-afterEach(() => { cleanup(); vi.useRealTimers(); });
+const finish = async () => act(async () => { animation.running = false; for (const fn of [...animation.listeners]) fn(); });
+afterEach(() => { cleanup(); animation.listeners.clear(); animation.running = false; animation.enabled = true; vi.useRealTimers(); });
 
-describe('multiplayer table synchronization', () => {
-  it('shows both remote updates during a paced chain without stale ownership or a frozen log', async () => {
+describe('one presentation boundary for local and online tables', () => {
+  for (const mode of ['local', 'online']) it(`${mode}: holds ownership/options until actual completion, even after estimated time passes`, async () => {
     vi.useFakeTimers();
     const initial = createGame({ seats, seed: 21 });
-    const session = sessionAt(initial, 'online');
+    const session = sessionAt(initial, mode);
     const beforeShow = { current: vi.fn() };
     const { result } = renderHook(() => useTable(session, 1000, beforeShow));
-    const first = next(initial);
+    await act(async () => vi.advanceTimersByTimeAsync(10000));
+    const first = next(initial), second = next(first);
+    animation.running = true;
     await act(async () => session.publish(first));
-    expect(result.current[0]).toBe(first);
-    const second = next(first);
+    expect(result.current[0]).toBe(first); // physical targets exist while pieces travel
+    expect(result.current[5]).toBe(initial); // interaction is one settled snapshot
     await act(async () => session.publish(second));
+    expect(session.getState()).toBe(second); // transport is always current
+    await act(async () => vi.advanceTimersByTimeAsync(60000));
+    expect(result.current[0]).toBe(first);
+    expect(result.current[5].pending).toBe(initial.pending);
+    await finish();
     expect(result.current[0]).toBe(second);
-    expect(result.current[0].pending.player).toBe(session.getState().pending.player);
-    expect(result.current[0].log).toEqual(second.log);
-    expect(result.current[0].moves).toBe(second.moves);
+    expect(result.current[5]).toBe(first);
+    animation.running = true;
+    await act(async () => vi.advanceTimersByTimeAsync(60000));
+    expect(result.current[5]).toBe(first);
+    await finish();
+    expect(result.current[5]).toBe(second);
     expect(beforeShow.current.mock.calls).toEqual([[initial, first], [first, second]]);
   });
 
-  it('keeps the local rival pacing queue', async () => {
-    vi.useFakeTimers();
+  it('reduced motion settles without waiting for an animation event that cannot exist', async () => {
+    vi.useFakeTimers(); animation.enabled = false;
     const initial = createGame({ seats, seed: 21 });
-    const session = sessionAt(initial, 'local');
+    const session = sessionAt(initial, 'online');
     const { result } = renderHook(() => useTable(session, 1000));
     const first = next(initial), second = next(first);
     await act(async () => { session.publish(first); session.publish(second); });
-    expect(result.current[0]).not.toBe(second);
-    await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
+    await act(async () => vi.advanceTimersByTimeAsync(10000));
     expect(result.current[0]).toBe(second);
+    expect(result.current[5]).toBe(second);
   });
 });
