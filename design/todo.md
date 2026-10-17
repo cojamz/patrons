@@ -164,10 +164,10 @@ None of these is done. Each also becomes an answer-key item (design/eval/critic-
 
 ## The design pod's closing lists (what's left, worst first)
 Full lists: design/eval/design-pod/log.md ("Closing (art director…)"), details.md and queue.md ("Closing (detail designer, 12:55)"). Laptop items first; phone is out of scope.
-- [ ] The turn card can credit the previous move's lines (trail.js turn segmentation).
+- [x] The turn card can credit the previous move's lines (trail.js turn segmentation): a member used before placing (Tribute Band) now keeps its own gains (turn-story-fixes.test.js).
 - [ ] At 900×600 a rival's four stacks crowd its total and minions (the three-row chair applies from 680px tall only).
 - [ ] Silver, white and colorless members look alike at card size; white/silver colour ground reads as a grey status halo.
-- [ ] The steal toast tells the same coins twice (magenta and "from P2/P4").
+- [x] The steal toast tells the same coins twice (magenta and "from P2/P4"): one line, "1 gold from P2, 1 red from P3, as magenta".
 - [ ] Hover p95 117–222 ms on a loaded box (info.mjs (d)). Folds into hover lag above.
 - [ ] A minion runs past its panel's edge on space 0-1, red/yellow/market/thieves table (spaces.mjs s9). Folds into the emoji item above.
 - [ ] Shop refill seen sliding cards once; not reproduced.

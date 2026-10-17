@@ -821,6 +821,24 @@ export function traceLine(line, players, resources) {
   return null;
 }
 
+/** A turn card's line for extra turns: "an extra turn", or with the card that gave it ("Night Owl: an extra turn after this one"). */
+const EXTRA_LINE = /^(?:[^:]+: )?(an extra turn|\d+ extra turns)(?: after this one)?$/;
+
+/**
+ * A steal that arrives in another color, told once (rule-style: "…, as magenta." once, at the end):
+ * "1 gold from P2, 1 red from you, as magenta" in place of "+2 magenta" and a "from" line per rival, which told the same
+ * coins twice. gain: the taker's [[r, d]]; lost: [[who, [[r, d]]]] per rival. Null unless the taker gained one color
+ * only, the rivals only lost other colors, and what they lost adds up to the gain.
+ */
+function stolenAs(gain, lost) {
+  if (gain.length !== 1 || !(gain[0][1] > 0) || !lost.length) return null;
+  const [c, n] = gain[0];
+  let sum = 0;
+  for (const [, list] of lost) for (const [r, d] of list) { if (r === c || !(d < 0)) return null; sum -= d; }
+  if (sum !== n) return null;
+  return `${lost.map(([who, list]) => `${list.map(([r, d]) => `${-d} ${r}`).join(', ')} from ${who}`).join(', ')}, as ${c}`;
+}
+
 /**
  * One placement told in plain words, for the turn card by the acting cult (Cory: "too hard to tell what's going on").
  * A turn is one placement and its buy, so a snake turnaround or an extra turn gets a card of its own (RC1 panel: the
@@ -912,6 +930,8 @@ export function turnStory(start, end, actor, me = null, mid = null) {
       else if (/^ couldn't buy anything\.$/.test(own)) said.push('nothing affordable to buy');
       else if ((m = own.match(/^ traded (.+)\.$/))) said.push(youName(`traded ${m[1]}`));
       else if ((m = own.match(/^ pulled a heist: (.+)\.$/))) said.push(youName(`took ${m[1]}`));
+      // the card that gave it, named (Cory: "Log did not indicate a Night Owl turn"): "Night Owl: an extra turn after this one"
+      else if ((m = own.match(/^'s (.+?): .+? takes (an extra turn|(\d+) extra turns)\.$/))) said.push(`${m[1]}: ${m[3] ? `${m[3]} extra turns` : 'an extra turn'} after this one`);
       else if ((m = own.match(/takes (an extra turn|(\d+) extra turns)\.$/))) said.push(m[2] ? `${m[2]} extra turns` : 'an extra turn');
       else if ((m = own.match(/^'s next member costs (\d+) less\.$/))) said.push(`next member costs ${m[1]} less`);
       else if ((m = own.match(/^ recruited (.+?)(?: from the pile with .+?)? \((.+)\)\.$/))) said.push(m[2] === 'free' ? `recruited ${m[1]} (free)` : `recruited ${m[1]} (paid ${m[2]})`);
@@ -923,12 +943,13 @@ export function turnStory(start, end, actor, me = null, mid = null) {
     }
     const gross = id => res.map(r => [r, (b.players[id].res[r] || 0) - (a.players[id].res[r] || 0) - (traced[id][r] || 0)]).filter(([, d]) => d);
     // the action's own numbers (k 0); in the buy step the payment is told by its own line, so only rivals count
-    if (k === 0) { const g = gross(actor); if (g.length) { gain = signed(g); out.push(gain); } }
-    for (const p of P) {
-      if (p.id === actor) continue;
-      const d = gross(p.id);
+    // a steal that arrives as magenta is one line, naming each rival and what they lost (as its flight shows it)
+    const rivals = P.filter(p => p.id !== actor).map(p => [p, gross(p.id)]);
+    const as = k === 0 ? stolenAs(gross(actor), rivals.filter(([, d]) => d.length).map(([p, d]) => [nm(p.id), d])) : null;
+    if (as) { gain = as; out.push(as); } else if (k === 0) { const g = gross(actor); if (g.length) { gain = signed(g); out.push(gain); } }
+    for (const [p, d] of rivals) {
       const lost = d.filter(([, x]) => x < 0), got = d.filter(([, x]) => x > 0);
-      if (lost.length) {
+      if (lost.length && as) { if (p.id === me) hit = `took ${lost.map(([r, x]) => `${Math.abs(x)} of your ${r}`).join(', ')}`; } else if (lost.length) {
         // the amount first ("1● from P2"): "from P2 1●" read as "P21" (w3b, as the summary's counts did)
         out.push(`${plain(lost)} from ${nm(p.id)}`);
         if (p.id === me) hit = `took ${lost.map(([r, x]) => `${Math.abs(x)} of your ${r}`).join(', ')}`;
@@ -970,7 +991,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   // a member changing hands names both and whose it was first ("took your Retinue, gave Broker"; w4 A#62: the strip said
   // "Swap Sides · bought 10" with no word of the swap)
   const swapLine = out.filter(l => /^(took (your|\S+['’]s) |gave .+ to )/.test(l)).join(', ');
-  const big = swapLine || out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
+  const big = swapLine || out.find(l => /^(recruited|bought|traded|released) /.test(l) || EXTRA_LINE.test(l));
   // a gain that came in another color names the member that changed it (w4 skeptic #18: "Bandwagon (+1 red …): +6 gold")
   const convRe = new RegExp(`^${an}'s (.+?): \\d+ \\w+ comes as \\d+ \\w+\\.$`);
   const conv = [...new Set(lines.map(l => (l.match(convRe) || [])[1]).filter(Boolean))];
@@ -983,8 +1004,8 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   // recipients, so "+3 gold" read as found money): "2 gold from P4, 1 gold from P2", "P2 +1 gold"
   const names = P.filter(p => p.id !== actor).map(p => esc(nm(p.id))).join('|');
   const flowRe = names ? new RegExp(`^(?:\\d+ \\w+(?:, \\d+ \\w+)* from (?:${names})|(?:${names}) [+−]\\d)`) : null;
-  const flows = flowRe ? out.filter(l => flowRe.test(l) && l !== gift).join(', ') : '';
-  const short = [hit && !flows.includes('from you') && !(big && big.includes(hit)) ? hit : null, gift || null, gainSaid, flows || null, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 3).join(' · ');
+  const flows = flowRe ? out.filter(l => flowRe.test(l) && l !== gift && l !== gain).join(', ') : '';
+  const short = [hit && !`${flows} ${gain}`.includes('from you') && !(big && big.includes(hit)) ? hit : null, gift || null, gainSaid, flows || null, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 3).join(' · ');
   // what the card names, from the table itself: the space's key, and the uid of each member recruited (hover targets)
   let spaceKey = null;
   if (place) {
@@ -1061,13 +1082,20 @@ export function effectStory(start, end, actor, me = null, fx = []) {
   const gift = giftBits.length ? `you ${giftBits.join(' ')}${giftWhy.length ? ` (${giftWhy.join(', ')})` : ''}` : '';
   // a gain of yours that the gift line already tells isn't told again in its own group
   const toldInGift = (g, pid) => !!gift && pid === me && !(g.fol[pid] < 0) && Object.values(g.res[pid]).every(d => d >= 0);
-  const others = (g, owner) => {
+  // a steal that arrives as magenta: one line naming each rival and what they lost (stolenAs), or null
+  const stolen = (g, owner) => {
+    if (g.moved.length || g.fol.some(n => n)) return null;
+    const res = pid => Object.entries(g.res[pid]).filter(([, d]) => d);
+    return stolenAs(res(owner), P.filter(p => p.id !== owner && res(p.id).length).map(p => [nm(p.id), res(p.id)]));
+  };
+  // told: the rivals' losses are already told (a steal as magenta): only what it took from you is noted
+  const others = (g, owner, told = false) => {
     const bits = [];
     for (const p of P) {
       if (p.id === owner || toldInGift(g, p.id)) continue;
       const lost = Object.entries(g.res[p.id]).filter(([, d]) => d < 0), got = Object.entries(g.res[p.id]).filter(([, d]) => d > 0);
       // the actor's own doing reads "from you 3 gold"; a member's reads as its changes ("Raider: you −3 followers")
-      if (lost.length && owner === actor && g.cause && g.cause.kind !== 'member' && !got.length && !g.fol[p.id]) bits.push(`${lost.map(([r, d]) => `${-d} ${r}`).join(', ')} from ${nm(p.id)}`);
+      if (told) { /* said in the steal's line */ } else if (lost.length && owner === actor && g.cause && g.cause.kind !== 'member' && !got.length && !g.fol[p.id]) bits.push(`${lost.map(([r, d]) => `${-d} ${r}`).join(', ')} from ${nm(p.id)}`);
       else if (lost.length || got.length || g.fol[p.id]) bits.push(`${nm(p.id)} ${signedOf(g, p.id)}`);
       if (p.id === me) {
         const c = g.cause || {};
@@ -1086,15 +1114,17 @@ export function effectStory(start, end, actor, me = null, fx = []) {
   for (const g of ordered) {
     const c = g.cause || {};
     if (g.key === 'space') {
-      const mine = signedOf(g, actor);
+      const as = stolen(g, actor);
+      const mine = as || signedOf(g, actor);
       if (mine) { gain = mine; out.push(mine); }
-      out.push(...others(g, actor));
+      out.push(...others(g, actor, !!as));
       if (g.disc) out.push(`next member costs ${g.disc} less`);
     } else if (c.kind === 'member') {
       const owner = c.pid ?? actor;
       const def = c.def ? defById(c.def) : null;
       const label = `${owner === actor ? '' : `${whose(owner)} `}${def ? def.name : cardName(c.uid)}`;
-      const bits = [toldInGift(g, owner) ? '' : signedOf(g, owner), ...others(g, owner)].filter(Boolean);
+      const as = toldInGift(g, owner) ? null : stolen(g, owner);
+      const bits = [as || (toldInGift(g, owner) ? '' : signedOf(g, owner)), ...others(g, owner, !!as)].filter(Boolean);
       if (g.disc) bits.push(`next member costs ${g.disc} less`);
       // one line per member (its parts joined with commas: the card splits lines on " · ")
       if (bits.length) out.push(`${label[0].toUpperCase()}${label.slice(1)}: ${bits.join(', ')}`);
@@ -1118,16 +1148,16 @@ export function effectStory(start, end, actor, me = null, fx = []) {
   // what you got leads, right after the space's own result (the turn card shows its first lines; the rest fold)
   if (gift) out.splice(gain ? 1 : 0, 0, gift);
   // what only the log says (an extra turn, a member used, a switch): kept from the log's story
-  for (const l of (base ? base.lines : [])) if (/^(used |an extra turn$|\d+ extra turns$|switched )/.test(l) && !out.includes(l) && !(base.head && l.startsWith('used ') && base.head.includes(` ${l}`))) out.push(l);
+  for (const l of (base ? base.lines : [])) if ((/^(used |switched )/.test(l) || EXTRA_LINE.test(l)) && !out.includes(l) && !(base.head && l.startsWith('used ') && base.head.includes(` ${l}`))) out.push(l);
   if (!base && !out.length) return null;
   const hit = hits.join(', ');
   // a member changing hands names both and whose it was first ("took your Retinue, gave Broker"; w4 A#62: the strip said
   // "Swap Sides · bought 10" with no word of the swap)
   const swapLine = out.filter(l => /^(took (your|\S+['’]s) |gave .+ to )/.test(l)).join(', ');
-  const big = swapLine || out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
+  const big = swapLine || out.find(l => /^(recruited|bought|traded|released) /.test(l) || EXTRA_LINE.test(l));
   const conv = base && base.conv && base.conv.length ? base.conv : [];
   // the strip's one line: what hit you, then what you got, then the biggest thing the turn did
-  const short = [hit && !(big && big.includes(hit)) ? hit : null, gift || null, gain && conv.length ? `${gain} (${conv.join(', ')})` : gain, big && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  const short = [hit && !(big && big.includes(hit)) && !(gain && gain.includes('from you')) ? hit : null, gift || null, gain && conv.length ? `${gain} (${conv.join(', ')})` : gain, big && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
   const head = base ? base.head : (actor === me ? 'You' : P[actor].name);
   const touched = base ? base.touched : [];
   return { ...(base || {}), text: [head, ...out].join(' · '), head, lines: out, actor, touched, short, hit, gift, fx: true };
