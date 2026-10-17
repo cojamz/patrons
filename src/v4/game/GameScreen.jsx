@@ -244,8 +244,11 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   }, [table.shown, pump]);
   // the board comes into view before any rival moves (panel r1: two rivals picked their starting resources before the
   // board was on screen); a rival's starting pick holds the bots' pace, like any other rival step
+  // When the table opens on your own decision (a resumed game at your turn), no rival can move before you, so there is
+  // nothing to hold: the lead would only hold back your own first click (up to 3s at Relaxed) while its space is lit.
   useEffect(() => {
     if (!motionOK()) return undefined;
+    if (first && first.pending && (session.mySeats || []).includes(first.pending.player)) return undefined;
     timer.current = setTimeout(() => { timer.current = null; pump(); }, MO.reckonLead);
     return () => { clearTimeout(timer.current); timer.current = null; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
