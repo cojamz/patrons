@@ -1,0 +1,55 @@
+<div id="cults-project-board">
+  <style>
+    #cults-project-board .cpb-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-right:90px;margin-bottom:20px}
+    #cults-project-board h2,#cults-project-board h3{margin:0}
+    #cults-project-board .cpb-stamp{margin-top:4px;color:var(--muted-foreground)}
+    #cults-project-board .cpb-release{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+    #cults-project-board .cpb-release p{margin:5px 0 0}
+    #cults-project-board .cpb-kicker{font-weight:500}
+    #cults-project-board .cpb-next{margin:24px 0}
+    #cults-project-board .cpb-next-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+    #cults-project-board .cpb-queue{list-style:none;padding:0;margin:0}
+    #cults-project-board .cpb-queue>li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+    #cults-project-board .cpb-number{font-weight:500;color:var(--muted-foreground);padding-top:2px}
+    #cults-project-board .cpb-queue p{margin:4px 0;color:var(--muted-foreground)}
+    #cults-project-board details{margin:0}
+    #cults-project-board summary{padding:7px 0}
+    #cults-project-board .cpb-check{margin:5px 0 0;color:var(--muted-foreground)}
+    #cults-project-board .cpb-archive{padding:6px 0;border-bottom:1px solid var(--border)}
+    #cults-project-board .cpb-history{padding-top:8px}
+    #cults-project-board .cpb-history details{padding:8px 0;border-top:1px solid var(--border)}
+    #cults-project-board .cpb-history p{margin:6px 0}
+    #cults-project-board .cpb-footer{margin-top:12px;color:var(--muted-foreground)}
+    #cults-project-board .cpb-feedback{list-style:none;margin:8px 0;padding:0}
+    #cults-project-board .cpb-feedback>li{padding:10px 0;border-top:1px solid var(--border)}
+    #cults-project-board .cpb-feedback p{margin:5px 0;color:var(--muted-foreground)}
+    @media(max-width:480px){#cults-project-board .cpb-header{padding-right:90px;min-height:50px}#cults-project-board .cpb-release{align-items:flex-start;flex-direction:column;gap:12px}}
+  </style>
+  <header class="cpb-header"><div><h2>Cults</h2><div id="cpb-updated" class="text-small cpb-stamp"></div></div></header>
+  <section class="cpb-release" aria-label="Latest release"><div><span class="cpb-kicker">Live · ready to test</span><p id="cpb-live"></p></div><a class="btn btn-primary" href="https://cojamz.github.io/patrons/" target="_blank" rel="noopener noreferrer">Play latest</a></section>
+  <section class="cpb-next" aria-labelledby="cpb-next-heading"><div class="cpb-next-head"><h3 id="cpb-next-heading">Next batch</h3><span class="text-small text-muted">Queued</span></div><ol id="cpb-priorities" class="cpb-queue"></ol></section>
+  <details class="cpb-archive" data-section="shipped"><summary class="cursor-interaction">Shipped · changes &amp; checks</summary><div id="cpb-shipped" class="cpb-history"></div></details>
+  <details class="cpb-archive" data-section="later"><summary class="cursor-interaction">After that</summary><div id="cpb-later" class="cpb-history"></div></details>
+  <details class="cpb-archive" data-section="feedback"><summary id="cpb-feedback-label" class="cursor-interaction">Original feedback</summary><ol id="cpb-feedback" class="cpb-feedback"></ol></details>
+  <div class="text-small cpb-footer">Checkpoint snapshot · refreshed when work ships</div>
+  <script type="application/json" id="cpb-data">{}</script>
+  <script>
+    (()=>{
+      const root=document.getElementById('cults-project-board');
+      const data=JSON.parse(root.querySelector('#cpb-data').textContent);
+      const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      root.querySelector('#cpb-updated').textContent=data.updated;
+      root.querySelector('#cpb-live').textContent=data.releaseSummary||data.live;
+      root.querySelector('#cpb-priorities').innerHTML=data.upNext.map((w,i)=>'<li><span class="cpb-number tabular-nums">'+(i+1)+'</span><div><span class="cpb-kicker">'+esc(w.name)+'</span><p>'+esc(w.summary)+'</p><details data-section="next-'+i+'"><summary class="text-small cursor-interaction">Finish line</summary><div class="cpb-check">'+esc(w.doneWhen)+'</div></details></div></li>').join('');
+      root.querySelector('#cpb-shipped').innerHTML=data.work.map(w=>'<details data-section="ship-'+esc(w.id)+'"><summary class="cursor-interaction">'+esc(w.name)+'</summary><p>'+esc(w.scope)+'</p><p class="text-small text-muted">'+esc(w.owner)+' · delivered</p><p class="text-small">'+esc(w.evidence)+'</p></details>').join('');
+      root.querySelector('#cpb-later').innerHTML=data.next.filter(n=>!data.upNext.some(w=>w.source===n.name)).map(n=>'<details><summary class="cursor-interaction">'+esc(n.name)+'</summary><p>'+esc(n.next)+'</p></details>').join('');
+      root.querySelector('#cpb-feedback-label').textContent='Original feedback · '+data.feedback.length+' items';
+      root.querySelector('#cpb-feedback').innerHTML=data.feedback.map((f,i)=>'<li><span class="cpb-kicker">'+(i+1)+'. '+esc(f.name)+'</span><p class="text-small">'+esc(f.status)+'</p></li>').join('');
+      const restore=s=>{const open=Array.isArray(s?.openSections)?s.openSections:[];root.querySelectorAll('[data-section]').forEach(el=>el.open=open.includes(el.dataset.section));};
+      const apply=s=>restore(s);
+      apply(window.openai?.widgetState?.privateContent);
+      root.querySelectorAll('[data-section]>summary').forEach(el=>el.addEventListener('click',()=>setTimeout(()=>{const openSections=[...root.querySelectorAll('[data-section][open]')].map(e=>e.dataset.section);window.openai?.setWidgetState?.({modelContent:{expandedProjectSections:openSections},privateContent:{openSections}})?.catch(()=>{});},0)));
+      window.addEventListener('openai:set_globals',e=>{const s=e.detail?.globals?.widgetState;if(s)apply(s.privateContent);});
+    })();
+  </script>
+</div>

@@ -8,7 +8,7 @@ Release boundary: verified live source is `eecddbae08ebd4e747eaec053d7c630f2846e
 |---|---|---|
 | 1 | Late Bloomer → Late Bloomers; worth 2; excludes itself | **Implemented:** `src/engine/v4/content/yellow.js` latebloomer. Worth 3 remains an **idea**. |
 | 2 | Default Relaxed | **Implemented:** `src/v4/motion.js` DEFAULT_SPEED. |
-| 3 | Crescendo scaling clear; optional I/II/III gray schedule | **Partial:** `content/echo.js` lists +2/+4/+6 by round; `src/v4/shorts.js` shows current-round gain. Gray schedule not built. |
+| 3 | Crescendo scaling clear; optional I/II/III gray schedule | **Partial:** `content/echo.js` lists +2/+4/+6 by round; `src/v4/shorts.js` and wheel show the exact `2 green × round` formula. Gray schedule not built. |
 | 4 | On recruit / at round start | **Implemented:** `src/v4/game/memberTiming.js`, used in member presentations. |
 | 5 | Every action's language and visual representation | **Implemented and live:** all 54 current specialized actions checked against wheel/short text; seven misleading descriptions corrected, six crowded phrases shortened, and exact `2 resource × round` formulas used for Golden Years/Crescendo. Full member-language compression remains open. See wording-pass and wheel-readable reports. |
 | 6 | Golden Years same scaling clarity | **Partial:** `content/gold.js` lists +2/+4/+6 explicitly; no gray schedule. |

@@ -64,5 +64,26 @@
       "name": "Balance and replacement designs",
       "next": "Heir pricing, Sweet Talk, Hold Court, Goody Bags and Cheap Seats; broader Silver/White themes and sphere ideas remain explicitly open."
     }
+  ],
+  "releaseSummary": "Deck browser \u00b7 brighter market \u00b7 clearer wording \u00b7 smoother motion",
+  "upNext": [
+    {
+      "source": "Cold first-spin hitch",
+      "name": "Smooth the first spin",
+      "summary": "Remove the remaining hitch when the wheel first turns.",
+      "doneWhen": "The first spin passes the frame budget at laptop width, without relying on a smoother retry."
+    },
+    {
+      "source": "Member-language pass",
+      "name": "Make member text precise and minimal",
+      "summary": "Shorten abilities without losing a condition.",
+      "doneWhen": "Each revised ability matches its amount, trigger, target, timing and limits in the game rules."
+    },
+    {
+      "source": "Opponent engines & scoring polish",
+      "name": "Make points easier to follow",
+      "summary": "Clarify opponents\u2019 bonuses and where scores come from.",
+      "doneWhen": "Point sources remain clear through play and round-end scoring, verified visually."
+    }
   ]
 }
