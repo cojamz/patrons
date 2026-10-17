@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.0, source 41f09d8 (main 11c3ee2), published 2026-10-17. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.6.1 — 2026-10-17 — unreleased
+
+- When Crunch Time puts a player back to back, the turn line says so ("P1 took turns early with Crunch Time") instead of blaming snake order.
+
 ## v0.6.0 — 2026-10-17 — shipped (source 41f09d8, main 11c3ee2)
 
 - Member competitions count members of that arc's own color; Gold, Silver and Yellow keep their conditions.
