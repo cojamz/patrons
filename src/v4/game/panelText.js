@@ -26,7 +26,7 @@ const P = {
     // "+1 to anyone" (w3): the gift goes to a rival only, never to you. "1 of what?" says gold; "you pick who" read
     // awkwardly (live panel r1): the note runs on from line 2 ("…to a rival / of your choice")
     jv: { main: '+3 gold', second: '+1 gold to a rival', note: 'of your choice' },
-    rush: r => ({ main: `+${2 * r} gold`, second: r < 3 ? '+2 each new round' : null }),
+    rush: () => ({ main: '+2 gold × round' }),
     // "Save 4" read as keeping 4 resources (blind testers, 2026-10-15): it's money off, said as a shop says it
     discount: { verb: '4 off', second: 'your next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
@@ -127,7 +127,7 @@ const P = {
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
   },
   echo: {
-    chant: r => ({ main: `+${2 * r} green`, second: r < 3 ? '+2 each new round' : null }),
+    chant: () => ({ main: '+2 green × round' }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
     echo: { verb: 'Copy previous action' },
     encore: { verb: 'Copy any space', second: 'with a minion' },

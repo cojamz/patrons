@@ -29,12 +29,12 @@ describe('panel words (w3)', () => {
     }
   });
 
-  it('Crescendo and Golden Years say the exact increase instead of an unspecified growing gain', () => {
+  it('Crescendo and Golden Years use the exact round multiplier', () => {
     for (const [qid, key, color] of [['echo', 'chant', 'green'], ['gold', 'rush', 'gold']]) {
       for (const r of [1, 2, 3]) {
         const t = panelText(qid, { key }, r);
-        expect(t.main).toBe(`+${2 * r} ${color}`);
-        expect(t.second).toBe(r < 3 ? '+2 each new round' : null);
+        expect(t.main).toBe(`+2 ${color} × round`);
+        expect(t.second).toBeNull();
       }
     }
   });

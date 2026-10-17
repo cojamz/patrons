@@ -17,7 +17,7 @@ export function ruleWords(qid, rule) {
 // Keys are "<sphere id>.<action key>". A space with no entry here falls back to its first clause (shortEffect).
 const S = {
   gold: {
-    jv: '+3 gold · 1 gold to a rival', rush: r => `+${2 * r} gold`, discount: '−4 cost', steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold',
+    jv: '+3 gold · 1 gold to a rival', rush: '+2 gold × round', discount: '−4 cost', steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold',
   },
   red: {
     evenswap: '+1 red · swap', turnout: '+1 red per recruit', hire: 'cheapest, free', hireup: 'member up to 4, free', trade: 'swap a member', take: 'any member, free',
@@ -42,7 +42,7 @@ const S = {
   trading: {
     haggle: '+2 white, +1 per leader', buylow: '+1 follower per 3 white', pawn: r => `${r} follower · may take 2 white each instead`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower bought or won', boom: 'all for followers',
   },
-  echo: { hum: '+3 green', chant: r => `+${2 * r} green`, echo: 'copy previous', encore: 'copy any taken', refrain: 'copy yours', eternity: 'copy all yours' },
+  echo: { hum: '+3 green', chant: '+2 green × round', echo: 'copy previous', encore: 'copy any taken', refrain: 'copy yours', eternity: 'copy all yours' },
 };
 
 // The shortest form, for the inner rings. Two symbols only (Cory, 2026-10-15: "just simplify visual language
