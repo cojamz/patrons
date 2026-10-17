@@ -2,6 +2,7 @@
 // everything else gained this round), then the button that starts the next round.
 import { useEffect, useRef, useState } from 'react';
 import { followers } from '../../engine/v4/index.js';
+import { snakeWords } from './order.js';
 import { playerColor, roman, standings, scoredStandings, roundGains, membersParts, tiebreakNote, workersNote, firstPickWhy } from '../format.js';
 import Tick from './Tick.jsx';
 import { ruleWords } from '../shorts.js';
@@ -142,6 +143,8 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
           : <p className="hint re-final" data-final-bonuses="0">No end-game bonuses: these totals are final.</p>)}
         {/* why they pick first, in words (live panel r1: "P3 picks first: Front-runner" never said what Front-runner was) */}
         {first && <p className="hint" data-first-pick>Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first{whyFirst ? <>: <NamedText state={after} text={whyFirst} /></> : ''}</p>}
+        {/* the round's turn order as the snake it is, in names (Cory's todo: "make it clear the turn order is a snake draft") */}
+        {first && <p className="hint" data-snake-order>{snakeWords(after, meId)}</p>}
         {/* the spaces change with the round: say so as it happens (live panel r1: "faces change by round without saying so") */}
         {first && after.round >= 2 && <p className="hint" data-round-news>New this round: the {after.round === 2 ? 'middle' : 'inner'} ring opens, and spaces that say “more each round” pay more.</p>}
         </div>

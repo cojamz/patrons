@@ -102,6 +102,26 @@ describe('round summary and results (live panel r1)', () => {
     expect(container.querySelector('[data-round-news]').textContent).toMatch(/middle ring opens/);
   });
 
+  it('the next round\'s turn order is said once as the snake it is, in names, "You" for the viewer (Cory\'s todo)', () => {
+    const { ends } = play(5);
+    for (const info of ends.filter(e => !e.after.over)) {
+      const o = info.after.order.slice(0, 3), nm = id => info.after.players[id].name;
+      const { container } = render(<RoundEnd info={info} onNext={() => {}} autoMs={0} />);
+      expect(container.querySelector('[data-snake-order]').textContent).toBe(`Snake order: ${[...o, ...[...o].reverse()].map(nm).join(', ')} …`);
+      cleanup();
+      const me = o[2];
+      const { container: c2 } = render(<RoundEnd info={info} onNext={() => {}} autoMs={0} meId={me} />);
+      // the last of the first pass places twice in a row, at the turn: "You, You"
+      expect(c2.querySelector('[data-snake-order]').textContent).toBe(`Snake order: ${nm(o[0])}, ${nm(o[1])}, You, You, ${nm(o[1])}, ${nm(o[0])} …`);
+      cleanup();
+    }
+    // nothing to say once the game is over
+    const last = ends[ends.length - 1];
+    expect(last.after.over).toBe(true);
+    const { container } = render(<RoundEnd info={last} onNext={() => {}} autoMs={0} />);
+    expect(container.querySelector('[data-snake-order]')).toBeNull();
+  });
+
   it('"bought" is the engine\'s count, the results\' number, never re-read from the log (round 3 skeptic: +5 for 4)', () => {
     const { ends } = play(5);
     const info = structuredClone(ends[1]);

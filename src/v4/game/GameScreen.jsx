@@ -29,7 +29,7 @@ import Results from './Results.jsx';
 import FinalScore from './FinalScore.jsx';
 import RoundEnd from './RoundEnd.jsx';
 import Reckoning, { scoringSeatState } from './Reckoning.jsx';
-import { snakeOrder, tableView } from './order.js';
+import { snakeOrder, tableView, snakeWords } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
@@ -1353,7 +1353,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <div className="bar-row steps-row">
           {/* the round only: "5 minions each · Bo has 6" was trivia, the seats show their own minions (blind testers,
               2026-10-15); the round's start card still says it */}
-          <span className="round">{roundText}</span>
+          {/* the round's snake in names, on hover (round II and III say it on their start card too) */}
+          <span className="round" title={snakeWords(state, me) || undefined}>{roundText}</span>
           {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
           {picker && (!gift || shopRecruit) ? <span className="say-sub pick-how" data-prompt-sub title={!note ? pickCaption(state, picker).rule : undefined}>{note ? note.text : pickCaption(state, picker).how}</span>
             : pickDone ? <span className="say-sub seat-pick-done" aria-hidden="true"><span className="pick-cap">{pickDone.title}: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</span></span>

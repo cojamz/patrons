@@ -38,3 +38,16 @@ export function tableView(physical, interaction) {
     turns: interaction.turns, queue: interaction.queue, early: interaction.early,
   };
 }
+
+/**
+ * The round's snake said once, in names (Cory's todo, 2026-10-17: "make it clear the turn order is a snake draft"):
+ * "Snake order: You, P3, P2, P2, P3, You …" — the first pass, then the way back, so the double turn at each end shows.
+ * Read off the engine's order (seatOrder); '' outside the placing rounds.
+ */
+export function snakeWords(state, me = null) {
+  if (!(state.round >= 1) || state.over) return '';
+  const first = seatOrder(state);
+  if (first.length < 2) return '';
+  const name = id => (id === me ? 'You' : state.players[id].name);
+  return `Snake order: ${[...first, ...[...first].reverse()].map(name).join(', ')} …`;
+}
