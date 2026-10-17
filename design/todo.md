@@ -5,6 +5,9 @@ Current feedback section reconciled 2026-10-16; later historical sections retain
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 Shipping: checked incremental fixes ship promptly under current working instructions. A− is the finished-build goal; historical panel requirements do not block authorized iterations.
 
+## Cory's ideas, 2026-10-17 evening (triaged into batches by the backlog thread)
+- [ ] "The follower shop needs to be a bit bigger." On-screen size at ~1270×700, a modest bump that keeps the layout. Batch: laptop layout.
+
 ## Handoff batches — October 17
 
 Implementation checkmarks below mean focused code/tests passed, NOT public deployment. Sourcef27be278; combined full-game progression remains blocked by ea timeout. See HANDOFF.md for exact next steps.
