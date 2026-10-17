@@ -14,7 +14,7 @@ try {
   await page.click('[data-home="resume"]');
   await page.waitForSelector('.slot.can .base');
   await page.waitForTimeout(1500);
-  if (process.env.V4_PERF_SHOTS) { mkdirSync(process.env.V4_PERF_SHOTS,{recursive:true}); await page.screenshot({path:`${process.env.V4_PERF_SHOTS}/wheel-weight600.png`}); const style=await page.addStyleTag({content:'.lt [data-spaces=panels] .stage .slot .face .second{font-weight:500}'}); await page.screenshot({path:`${process.env.V4_PERF_SHOTS}/wheel-weight500.png`}); await style.evaluate(el=>el.remove()); }
+  if (process.env.V4_PERF_SHOTS) { mkdirSync(process.env.V4_PERF_SHOTS,{recursive:true}); await page.screenshot({path:`${process.env.V4_PERF_SHOTS}/wheel-current.png`}); }
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Performance.enable');
   for (const rate of [1,4]) {
@@ -67,10 +67,10 @@ try {
     const session=await roundPage.context().newCDPSession(roundPage);
     await session.send('Emulation.setCPUThrottlingRate',{rate});
     await roundPage.addInitScript(()=>{
-      window.__roundPerf={frames:[],longtasks:[],seen:false};const p=window.__roundPerf;let prior=null;
-      new PerformanceObserver(list=>{for(const e of list.getEntries())if(p.active)p.longtasks.push(e.duration)}).observe({type:'longtask',buffered:true});
-      const tick=t=>{p.active=!!document.querySelector('.lt-reckon:not(.waiting)');
-        if(p.active){if(prior!=null)p.frames.push(t-prior);p.seen=true;prior=t;}else prior=null;
+      window.__roundPerf={frames:[],summaryFrames:[],longtasks:[],seen:false};const p=window.__roundPerf;let prior=null;
+      new PerformanceObserver(list=>{for(const e of list.getEntries())if(p.active||p.summary)p.longtasks.push({duration:e.duration,phase:p.summary?'summary':'scoring'})}).observe({type:'longtask',buffered:true});
+      const tick=t=>{p.active=!!document.querySelector('.lt-reckon:not(.waiting)');p.summary=!!document.querySelector('.roundend');
+        if(p.active||p.summary){if(prior!=null)(p.summary?p.summaryFrames:p.frames).push(t-prior);p.seen=true;prior=t;}else prior=null;
         requestAnimationFrame(tick);
       };requestAnimationFrame(tick);
     });
@@ -85,7 +85,8 @@ try {
       await roundPage.waitForTimeout(80);
     }
     await roundPage.waitForSelector('.roundend',{timeout:60000});
-    console.log(JSON.stringify({kind:'round-end',rate,...await roundPage.evaluate(()=>{const p=window.__roundPerf;const sorted=[...p.frames].sort((a,b)=>a-b);return{frames:sorted.length,p95:sorted[Math.floor(sorted.length*.95)],maxGap:Math.max(...sorted),over33:sorted.filter(x=>x>34).length,longtasks:p.longtasks}})}));
+    await roundPage.waitForTimeout(800); // include the summary card's entrance, not just the scoring sequence
+    console.log(JSON.stringify({kind:'round-end',rate,...await roundPage.evaluate(()=>{const p=window.__roundPerf;const sorted=[...p.frames].sort((a,b)=>a-b);return{frames:sorted.length,p95:sorted[Math.floor(sorted.length*.95)],maxGap:Math.max(...sorted),over33:sorted.filter(x=>x>34).length,summary:{frames:p.summaryFrames.length,maxGap:Math.max(...p.summaryFrames),over33:p.summaryFrames.filter(x=>x>34).length},longtasks:p.longtasks}})}));
     if(process.env.V4_PERF_SHOTS)await roundPage.screenshot({path:`${process.env.V4_PERF_SHOTS}/round-end-${rate}x.png`});
     await roundPage.close();
   }

@@ -1,16 +1,17 @@
 # In flight
 
-Updated 2026-10-15, afternoon. Agents never commit; the foreman verifies and checkpoints to `claude/cults-wip`. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT`. If a thread dies, relaunch from its line below and tell it to read `git log` first. State of the project: `design/HANDOFF.md`. Done items are ticked in `design/todo.md`.
+Updated 2026-10-16, Eastern. Current assignments and release evidence are below; older sections are historical. Source branch: `claude/gifted-newton-3lcy3i`. Codex coordinates agents, integrates, checks and publishes. State of the project: `design/HANDOFF.md`.
 
 ## Current Codex work (2026-10-16, Eastern)
-- Source commit `c8dd8a997c527f4e19ed2529b214f463aa5b1b50` checked and pushed. Published main/play commit `53200b7`; verified live via full manifest SHA, identical index HTML and browser root redirect. Public browser showed eight members, 1/5/10 buys, 24 slice outlines, zero load/runtime errors.
-- This batch: eight members; compact 1/5/10 follower buys; brighter readable shop/rates; subtle slice outlines; Echo input-lock fix; ordered effects and wheel-ring resource anchors; final tiebreak explanation.
-- Immutable quick check: 119 files / 1163 passed, 1 skipped; production build and full browser game pass. Touch setup/placement/purchase pass at 390 and 412px. Laptop/phone screenshots inspected; browser game runs without runtime errors.
-- Echo was a real UI transition bug: sole target auto-answer at 350ms hit 400ms step lock. Fail-before/pass-after regression added. Action-recruit Go-Between/Exporter rules still pass; reported rule failure not reproduced.
-- Original note preserved verbatim and all 59 items mapped in feedback-audit-2026-10-16.md. Remaining concrete polish and design work explicitly open there and in todo.md.
-- Friend feedback: initial tutorial did not make lit options or future II/III rings obvious, though the availability cues became clear during play. First-play clarity remains open.
-- All agents finished. Public deployment verified; no active work remains in this batch. Next work is the explicitly open items in the feedback audit. No scheduled check-ins.
-- Historical sections below are context, not current assignments or deploy instructions.
+- Verified live source `eecddbae08ebd4e747eaec053d7c630f2846e683`, main/play `be2c240`; public root redirects correctly. Exact manifest/HTML and real public browser load verified.
+- Shipped: bright shop/target outline and spacing, deck gallery by color/price, Cost/Color toggle, readable free-member cards, precise wheel wording/formulas, visible Release entry, snake/ring guidance, Undo-retake correction, compositor wheel motion and smoother scoring effects.
+- Checks: full base suite 1,174 passed / 1 skipped, build and full game; wording follow-up 286 related checks plus build/full game. Public deck selection, Escape and focus return pass with zero resource/runtime errors. Laptop/phone gallery screenshots inspected.
+- Performance: quiet normal/4× profile clean (worst frame 17.7ms), frozen interaction gate passed. **Open:** first laptop spin had a 450ms cold stall before a smooth retry. Suspect uncached panel layout; trace before fixing. Do not call performance finished.
+- Phone touch setup, placement and purchase pass publicly at 390/412px (emulation).
+- Performance, wording and verification agents finished. No scheduled check-ins. Codex owns release records and project board checkpoint refreshes.
+- Original 59-item feedback audit remains the scope record. Board data: `design/project-status.json`; generator: `scripts/v4-status-board.mjs`.
+- Next: cold first-spin fix, opponents’ engine/points clarity, member wording, first-play comprehension, then open balance/design items. “Precise and minimal” is the language standard.
+- Historical sections below are context, not current assignments or deployment instructions.
 
 ## 2026-10-16 (10:40pm Eastern, Oct 15): Cory's v0.5 play notes, logged only
 - Nothing built. Everything is in design/todo.md, top section "Cory's play notes, 2026-10-16"; his clear calls in decisions.md (2026-10-16); catches 48–53 in the answer key.
@@ -36,10 +37,9 @@ Updated 2026-10-15, afternoon. Agents never commit; the foreman verifies and che
 - No scheduled check-ins pending. The new session found none, so the seven leftovers from the overnight session appear to be gone.
 
 ## Next
-- Get the current build live (the preview is stale; Cloudflare Pages move if Cory says yes), and confirm its version stamp before any link.
-- Purple and Catch Up once Cory answers; the morning note's calls 1–10.
-- The 4× CPU regression on 0c1cd51 (`design/eval/perf/quiet-final-0c1cd51.md` on `claude/cults-perf-final`).
-- A fresh blind panel (two testers merged + game-skeptic) on quiet remote machines, graded to A−.
+- Trace the cold first-spin layout hitch, cache repeated geometry if confirmed, and require first-spin performance independently of retries.
+- Opponent-engine/points clarity and endgame polish; remaining member-language compression; newcomer ring/snake comprehension.
+- Then the explicitly open balance/replacement designs in the audit. Preserve the current design; no blanket redesign or claim the whole feedback list is done.
 
 ## History (short)
 - 2026-10-14: about 30 workstreams (UI, multiplayer, hardening, spheres, intro, names, balance, release candidate 1). All done or folded into later work.

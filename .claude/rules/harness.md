@@ -71,6 +71,7 @@ How Claude works on Cults (the repo is still called patrons). Claude owns this f
 - **Check-in hygiene:** at most one check-in pending at a time; delete it when the work ends. Seven leftovers flooded Cory on 2026-10-15.
 
 ## Self-improvement
+- **Project visibility (Cory, 2026-10-16):** maintain `design/project-status.json` and the conversation project board at meaningful work/release checkpoints. Show workstream ownership, checks/evidence, exact verified live source and the next queue. Reconcile all 59 original feedback items in the audit. Distinguish checked local work from verified live work; the inline board is a checkpoint snapshot, never imply continuous updates. Project tracking belongs outside the game.
 - **Retro at every milestone (Cory, 2026-10-15):** a fresh engineer audits the build system (gate wall time, slot waits, agent idle time, failed or stale processes, Cory's corrections) and lands fixes with before/after numbers in design/eval/harness-metrics.md. The expert engineer reviews the build system as well as the code.
 - When Cory corrects how Claude works, fix the rule file in the same turn and add a changelog line. Don't wait to be asked.
 - If the same kind of correction comes up twice, make it stronger: turn it into a hook, a skill, or a hard rule.

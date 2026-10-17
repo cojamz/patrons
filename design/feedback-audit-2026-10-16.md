@@ -2,7 +2,7 @@
 
 Source: [verbatim original notes](play-feedback-2026-10-16-original.txt). This audit follows those notes in order. **Implemented** means code exists; visual quality claims still require visual verification. **Partial** means a specific part landed, with the remainder explicit. **Open** means requested work remains. **Idea** means exploratory design, not a settled replacement rule.
 
-Release boundary: latest verified live source is `c8dd8a997c527f4e19ed2529b214f463aa5b1b50`, published main/play `53200b7`. Root redirect, full manifest SHA, identical index HTML, eight members, 1/5/10 offers, 24 slice outlines and zero load/runtime errors verified in the public browser. Earlier batch `ffc44bc` included member portrait origins and landing sound. “Local follow-up” below now belongs to this checked, live batch; open/partial quality items remain open.
+Release boundary: verified live source is `eecddbae08ebd4e747eaec053d7c630f2846e683`, published main/play `be2c240`. Root redirect, exact manifest and HTML, eight members, Cost/Color toggle, deck browsing/selection/Escape/focus and no resource/runtime errors verified publicly. Full base suite: 1,174 passed / 1 skipped; wording follow-up: 286 related checks and full game passed. Quiet animation profile passed, but the first-spin check exposed a cold layout hitch: that remains open. No claim that all feedback is finished.
 
 | # | Original feedback | Status and evidence / remaining work |
 |---|---|---|
@@ -10,14 +10,14 @@ Release boundary: latest verified live source is `c8dd8a997c527f4e19ed2529b214f4
 | 2 | Default Relaxed | **Implemented:** `src/v4/motion.js` DEFAULT_SPEED. |
 | 3 | Crescendo scaling clear; optional I/II/III gray schedule | **Partial:** `content/echo.js` lists +2/+4/+6 by round; `src/v4/shorts.js` shows current-round gain. Gray schedule not built. |
 | 4 | On recruit / at round start | **Implemented:** `src/v4/game/memberTiming.js`, used in member presentations. |
-| 5 | Every action's language and visual representation | **Implemented in working follow-up:** all 54 current specialized actions checked against wheel/short text; seven misleading descriptions corrected, plus six crowded phrases shortened. Full member-language compression remains open. See wording-pass and wheel-readable reports. |
+| 5 | Every action's language and visual representation | **Implemented and live:** all 54 current specialized actions checked against wheel/short text; seven misleading descriptions corrected, six crowded phrases shortened, and exact `2 resource × round` formulas used for Golden Years/Crescendo. Full member-language compression remains open. See wording-pass and wheel-readable reports. |
 | 6 | Golden Years same scaling clarity | **Partial:** `content/gold.js` lists +2/+4/+6 explicitly; no gray schedule. |
 | 7 | Cult-themed action names | **Idea / open design:** no replacement naming batch applied. |
-| 8 | Round scorecard slow; broader lag | **Partial:** playback and hover fixes landed; complete scorecard/performance quality remains a visual verification task. |
+| 8 | Round scorecard slow; broader lag | **Partial:** playback and hover fixes landed; wheel compositor and round-end changes profiled at normal/4× CPU with clean steady frames. A cold first-spin layout hitch remains open; broader endgame polish remains. |
 | 9 | Members too dim, active and tinted | **Live correction bd2bb87:** removed the remaining placement-phase whole-shop brightness filter; full-opacity bright cards and a crisp 3px target outline verified in the actual Open Door hover. Still subject to Cory’s visual judgment. |
-| 10 | Release hard to find | **Implemented in working follow-up:** explicit “Release a member…” entry appears on your seat when legal and opens the existing list without releasing immediately; click regression passes. |
+| 10 | Release hard to find | **Implemented and live:** explicit “Release a member…” entry appears on your seat when legal and opens the existing list without releasing immediately; click regression passes. |
 | 11 | Likes money selector | **Preserve:** no redesign requested. |
-| 12 | Snap Up wording poor | **Implemented in working follow-up:** Snap Up explicitly describes an optional paid extra recruit using any colors, in addition to the normal buy. |
+| 12 | Snap Up wording poor | **Implemented and live:** Snap Up explicitly describes an optional paid extra recruit using any colors, in addition to the normal buy. |
 | 13 | Opponents' points / engine not intuitive | **Partial:** seat member lists, follower breakdowns and staged effects exist. Intuitive understanding needs observed play, not a checkbox. |
 | 14 | Copy previous action, including own snake turn | **Implemented:** `content/echo.js` previous targets and previousNow; Understudy consistent. |
 | 15 | Encore any occupied space | **Implemented:** Green targets; `design/rulebook.md` copy rule. Existing no-recursive-copy rule retained. |
@@ -25,19 +25,19 @@ Release boundary: latest verified live source is `c8dd8a997c527f4e19ed2529b214f4
 | 17 | Perhaps reduce resource gain | **Idea:** economy rebalance not applied wholesale. |
 | 18 | Reprise no +2 green | **Implemented:** Green copy action drops gain. |
 | 19 | Crescendo / Hum names do not fit | **Open naming:** names retained in `content/echo.js`. |
-| 20 | Larger free-member choice cards | **Implemented in working follow-up:** member choices use larger cards with full abilities in the existing shop; ordinary shopping stays compact. Desktop and phone screenshots checked; integrated check pending. |
+| 20 | Larger free-member choice cards | **Implemented and live:** member choices use larger cards with full abilities in the existing shop; ordinary shopping stays compact. Desktop and phone screenshots checked; integrated release check passed. |
 | 21 | Fit abilities on member cards; remove worth plus | **Partial:** worth is numeral + follower mark (`ShopCards.jsx`); ability remains hover-only. Preserve charming design. |
-| 22 | Shop down to eight | **Local later change:** SHOP_SIZE in `src/engine/v4/core.js`; verify next live build, absent from earlier `ffc44bc`. |
+| 22 | Shop down to eight | **Implemented and live:** eight face-up members (`SHOP_SIZE`), verified on the public build. |
 | 23 | Remove EACH ROUND / Members labels; show figures | **Implemented:** `CultSeat.jsx` removes labels, measures row capacity and displays more figures. |
 | 24 | Log between paired player cards | **Idea:** not implemented. |
 | 25 | More efficient minions; follower typography | **Open polish:** existing minion column retained; no comprehensive seat redesign. |
 | 26 | Currency position feels odd | **Open polish:** retained placement. |
 | 27 | Follower shop brighter | **Implemented treatment:** `lamp-b.css` rate styling; visual judgment still applies. |
 | 28 | Member pops from seat side, speech bubble | **Idea:** existing member staging retained, not a new side bubble. |
-| 29 | Smaller shop / compact noticeable follower buys / seat room | **Partial, local later change:** eight cards and three compact follower tiers; verify composition. No dramatic layout change. |
+| 29 | Smaller shop / compact noticeable follower buys / seat room | **Partial, live:** eight cards and three compact follower tiers; reduced wasted shop spacing. Broader seat composition remains open. |
 | 30 | Empty player-card space opens member list | **Implemented:** `CultSeat.jsx` bodyHover and openSeat handlers. Preserve existing hover. |
 | 31 | Efficient, elegant member ability text | **Open:** timing normalization done; complete ability text pass remains. |
-| 32 | Follower buys 1 or 2 / 5 / 10 | **Local later change:** TIERS uses 1/5/10, unlimited. Assistant chose recorded default 1; absent from earlier `ffc44bc`. |
+| 32 | Follower buys 1 or 2 / 5 / 10 | **Implemented and live:** follower tiers 1/5/10; redundant no-limit label removed. |
 | 33 | Snob worth 2 / Chatterboxes or Gossips / Blue social | **Idea:** no batch applied. |
 | 34 | Final member bonuses with round scoring, no surprise/recount | **Implemented:** `Reckoning.jsx` reckonSteps appends sourced final bonuses after contests; `GameScreen.jsx` disables FinalScore recount. |
 | 35 | End-game layout/load polish | **Partial:** recount removed; broader layout/load evaluation remains. |
@@ -62,20 +62,20 @@ Release boundary: latest verified live source is `c8dd8a997c527f4e19ed2529b214f4
 | 54 | Each sphere member-vs-resource end-game paths | **Idea:** no systematic new set applied. |
 | 55 | Follower-cost reverse sphere; defensive action sphere | **Idea:** parked. Strategic goal of clearer rival plans/counterplay retained. |
 | 56 | Perhaps no release | **Superseded:** user later explicitly said leave release in. |
-| 57 | Night Owl wording poor | **Implemented in working follow-up:** Night Owl explicitly states rounds II–III, after last placement, one extra turn if room, once per round. |
-| 58 | End-game tiebreak unclear | **Implemented clarification in local follow-up:** rulebook already states more members; `format.js` winSentence now names winner by members or shared tie. Targeted regression added. |
+| 57 | Night Owl wording poor | **Implemented and live:** Night Owl explicitly states rounds II–III, after last placement, one extra turn if room, once per round. |
+| 58 | End-game tiebreak unclear | **Implemented and live:** rulebook already states more members; `format.js` winSentence now names winner by members or shared tie. Targeted regression added. |
 | 59 | Log everything; update handoff docs | **Maintained:** verbatim source, full 59-item audit, current handoff/in-flight/todo and a project progress board. Release status separates local implementation from verified live code. |
 
 ## Additional feedback after the original batch
 
 - Friend feedback: wheel play areas are hard to parse. **Open visual/usability review**; preserve the existing design while improving comprehension.
-- Phone must function: isolated touch smoke passes at 390 and 412 widths; this is emulation, not physical-device verification.
+- Phone must function: public release touch smoke passes at 390 and 412 widths; this is emulation, not physical-device verification.
 - Member landing noise: universal quiet member sound in earlier `ffc44bc`; distinct voices remain optional.
 - Action recruit should trigger Go-Between and Exporter: three action-recruit engine regressions pass with both owned. Reported missing effect not reproduced; do not label a rules fix without evidence. Member-origin presentation improved separately.
 - Root `/patrons/` must work: main index redirects to built `/patrons/play/`; deployment manifest identifies which source batch is actually served.
 
-- Echo stall reproduced at place→choose transition: auto-copy hit the input lock and never retried. Local fix and fail-before/pass-after regression ready.
+- Echo stall reproduced at place→choose transition: auto-copy hit the input lock and never retried. Fixed and live in c8dd8a9; fail-before/pass-after regression passes.
 - Animation overlap: local sequencing work separates named payouts and waits for member landing. Shipped in c8dd8a9; sequencing regressions, pacing and full browser game pass. Smoothness remains a user-observed quality item.
-- Wheel areas: subtle sphere-colored slice outlines added and visually checked locally.
+- Wheel areas: subtle sphere-colored slice outlines added, visually checked and live in c8dd8a9.
 - Resource source: wheel-ring anchors requested for action gains/spending; member bonuses remain portrait-sourced. Visible bank remains an idea for later.
 - Friend first-play detail: initially missed inner round-II/III rings and did not see tiles as “lit” when tutorial asked for a lit tile. During play they understood gold = available, dim = taken, dark = future. Treat as onboarding/first-impression issue, not proof that state cues are entirely broken; verify slice outlines help without competing with gold availability.

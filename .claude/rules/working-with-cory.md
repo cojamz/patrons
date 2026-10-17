@@ -115,3 +115,7 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - 2026-10-15 — Cory: warmer but still terse, very efficient language for quick reading, and clear updates. Drop the stiff, performative foreman voice; use natural conversation and brief reasoning where useful.
 
 - 2026-10-15 — Cory emphasized assistant ownership of an effective, fast, self-improving harness; current documents and tidy work are ongoing responsibilities. Visual verification is extremely important. He likes the existing game design and wants focused iteration, not dramatic changes.
+
+- 2026-10-16 — “Better visual way to track” meant project progress. Keep a checkpoint board with ownership, evidence, verified live release and the full feedback backlog; do not turn a project-management request into an in-game feature.
+
+- 2026-10-16 — Game wording must be “precise and minimal”: an exact rule, never an impression of the idea. Use formulas such as 2 gold × round only when equivalent to the rule.

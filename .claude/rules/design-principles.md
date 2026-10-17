@@ -2,6 +2,9 @@
 
 Distilled from `design/decisions.md`, which stays the full log. Check every suggestion against this list before proposing it. Cory can change any line.
 
+## Wording (Cory, 2026-10-16)
+- Aim for **precise and minimal**. Preserve the exact amount, trigger, target, timing, limits and optionality that affect a decision. Do not shorten to an impression of the rule. Use exact formulas where clearer, e.g. `2 gold × round`; keep necessary words when compression introduces ambiguity.
+
 ## Theme (working frame: Cult Wars)
 - Say "buy followers", never "fixtures" (or Laurel/Garland/Diadem) when talking to Cory. Rates (2026-10-14): 2→1, 4→3, 8→6 (limited, 2 per player), and a top tier of 10→10 (unlimited). The game always ends after round III: "the turns are the end game clock" (Cory). Member costs were doubled the same day.
 - The frame is light. You lead a following: items are members, VP are followers. Don't over-index on 'cult' (religious, sacrificial, ritual).

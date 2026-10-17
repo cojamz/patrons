@@ -1,6 +1,6 @@
 # v4 to-do
 
-Checked against the code (src/v4, src/engine/v4), the gates (e2e/v4, src/test/v4) and `git log` on 2026-10-15 ~14:45 UTC, at 8afc4dd (PR #1's head; the game code is the final overnight build 0c1cd51 plus notes). A box is ticked only when code or a gate proves it, not on an agent's report; where it isn't obvious, the proof is in brackets.
+Current feedback section reconciled 2026-10-16; later historical sections retain their original context. Exact verified live source and current checks: `design/in-flight.md`. A box is ticked only when code or a gate proves it, not on an agent's report; where it isn't obvious, the proof is in brackets.
 
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 The bar (Cory, 2026-10-15): A− or better from a fresh blind panel, on the exact build he'll open, before he sees anything.
@@ -13,9 +13,9 @@ Cards and wording
 - [ ] Crescendo: "more each round" is confusing. *idea:* show I: 2 green, II: 4 green, III: 6 green on the card, gray out the rounds that don't apply.
 - [ ] Golden Years: same fix as Crescendo.
 - [x] Card timing reads "on recruit" and "at round start" (not "Now").
-- [ ] Language pass on every action text and how each is shown; many are easy to misread.
-- [ ] Snap Up wording is bad for what it does.
-- [ ] Night Owl wording is awful.
+- [x] Reviewed all 54 specialized action descriptions; corrected misleading text and shortened crowded wheel phrases. First-play comprehension remains open.
+- [x] Snap Up explicitly describes the optional paid extra recruit and normal-buy distinction.
+- [x] Night Owl states rounds II–III, last placement, one extra turn if room, once per round.
 - [x] "Copy space taken since your last turn" → copy the previous action (the one picked on the previous turn, rival or you on a snake double turn).
 - [x] Encore → copy any space with a minion (phrase it elegantly and precisely).
 - [x] Greatest Hits → repeat all actions where you have a minion.
@@ -47,11 +47,11 @@ Economy and follower buys
 - [x] Fewer follower buys: 1 or 2, then 5 for 5, 10 for 10 (see open call). Lets you grind followers on turns you can't buy a member.
 - [ ] *idea:* tone resource gain down. Spheres give too much; balance actions that do interesting things vs ones that give resources, and buying members for effects.
 - [x] *idea:* fewer members in the shop, maybe 8, freeing a row.
-- [ ] *idea:* remove member release entirely (see open call).
+- [x] Keep member release (Cory’s later correction); explicit Release entry added when legal.
 
 Board layout and player cards
 - [ ] Member card text on the card itself if it fits; "1 [follower]" or just the follower mark instead of "+1". Keep their charming design.
-- [ ] Take-a-free-member screen: bigger member cards so text fits.
+- [x] Take-a-free-member screen: larger cards show full abilities; checked on laptop and phone.
 - [x] Remove "EACH ROUND X" from player boxes; drop "Members X" and SHOW more members, collapsing only rarely.
 - [ ] *idea:* log in the middle of the player boxes, two on each side.
 - [ ] Minion display on the player box more efficient; follower number better, or different text than the player name.
@@ -192,7 +192,7 @@ Finish every running process and to-do, then a multiplayer version Cory can play
 - [ ] Improve the thinking bot: better rollouts and card valuation, fast enough for 4 at a table (Hard is back to 43% against three Normal bots after a planning fix)
 - [ ] Later, only if bot prices keep disagreeing with Cory's feel in play: a bot that learns from its own games
 
-## Phone (out of scope for v0.2: laptops only, Cory)
+## Phone (basic compatibility requested, 2026-10-16)
 - [ ] Online, phone guest stuck on "Place here" (QA, 2026-10-15; design/eval/qa/online-phone-place-stall.png). ab783f9 removed the Place-here wait for board picks (the Sleepwalker stall); not re-checked on a phone. Next: on a quiet box, tap Place here and check whether the move reaches the host.
 - [ ] The pod's phone notes (see the pod list above and design/eval/design-pod/queue.md)
 
