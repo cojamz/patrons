@@ -101,8 +101,9 @@ async function play(t) {
       if (await page.$('[data-full-note]')) err('the swap note stays after Clear');
       if (!(await page.$('[data-start][disabled]'))) err('Start was enabled with fewer than 4 spheres');
       for (const id of t.ids) await page.click(`[data-sphere="${id}"]`);
-      // the plain Blue can't join a table that already has a blue
-      if (!(await page.$('[data-sphere="blue"][disabled]'))) err('a second blue sphere was still pickable');
+      // the plain Blue can't join a table that already has a blue (v0.6.0 leaves Basic Blue out of normal setup, so
+      // it may not be offered at all; offered, it must be disabled)
+      if (await page.$('[data-sphere="blue"]:not([disabled])')) err('a second blue sphere was still pickable');
     }
     const picked = await page.$eval('[data-table]', e => e.getAttribute('data-table'));
     if (picked !== t.ids.join(',')) err(`picker shows ${picked}, wanted ${t.ids.join(',')}`);

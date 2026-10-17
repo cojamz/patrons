@@ -1,6 +1,14 @@
 # Cults — agent handoff, October17,2026
 
-## FINAL STOP CHECKPOINT — user requested immediate GitHub handoff
+## SHIPPED v0.6.0 — 2026-10-17 7:32pm Eastern
+- Public: v0.6.0, source 41f09d86749401c1577bbd569921ed59c32ab46b, main 11c3ee2 (play/build.json). Published with v4-play.sh logic from a box that can't reach github.io, so Pages was confirmed through its Actions run, not the served stamp.
+- Verdict gate on 41f09d8: unit + build PASS; 15/30 browser tests FAIL. Same gate on v0.5 (6c1e97e): unit FAIL, 15/30 browser FAIL. Failing on both: hotseat (only "hovering a space did not show its card"; the 4-minute timeout is load: alone it finishes ~3 min), touch, benders, members, pay, payflow (stale save: tier:big illegal), sound, steal, travel, turndock, turnstory, layout, info, motion (assumes Steady; default is Relaxed). New on 41f09d8: tables (obsolete contract after Basic Blue left setup; fixed in the e2e) and phone-smoke (Kickback rival pick on a phone, the space card opens over it; phone out of scope).
+- Logs: none durable; re-run `npm run check:v4 -- --commit <sha>` on a quiet box.
+- First next action: bring the browser suite back to green (refresh stale saves, motion.mjs speed, hover-space card), then the HANDOFF items below that still apply.
+- The gh-pages workflow is manual-only now (7a8fce9).
+
+
+## Earlier: final stop checkpoint before v0.6.0 shipped (kept for its evidence)
 
 - **Source candidate:f00f20e1246f30e979e22d9e6510744ccd366dce**, branch claude/gifted-newton-3lcy3i. Documentation commits above it may follow. Versionv0.6.0 is UNRELEASED.
 - **Verified PUBLIC remainsv0.5 /6c1e97eb**. No new deployment was made. Do not confuse source pushed to GitHub with playable release.

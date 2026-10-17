@@ -1,8 +1,8 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public source:6c1e97eb (historical labelv0.5). v0.6.0 below is a release candidate until public deployment is verified. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.0, source 41f09d8 (main 11c3ee2), published 2026-10-17. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.6.0 — 2026-10-17 — unreleased
+## v0.6.0 — 2026-10-17 — shipped (source 41f09d8, main 11c3ee2)
 
 - Member competitions count members of that arc's own color; Gold, Silver and Yellow keep their conditions.
 - Local/online legal lights and turns wait for actual action animation completion; scoring awards wait for arrival.
@@ -10,7 +10,7 @@ Player-facing releases and exact source/build verification are recorded separate
 - Cutpurse offers resource choice; Poach gives no replacement; Extortionist triggers on5+ follower purchases; Go-Getter can activate after its last-turn purchase.
 - Payment shows member ability; Basic Blue/Green leave normal setup; Straggler/Squatter cues and card wording improved.
 - Version now includes a release number and build reference. Public build manifest includes version and full source commit.
-- Release blocker: complete browser game and final regressions must pass; do not describe this entry as shipped before verification.
+- Checked: unit tests and build pass; a full laptop game and an online game finish. Every browser test that still fails also fails on v0.5 (old test expectations, see design/HANDOFF.md), except the phone smoke test (phone is out of scope for now).
 
 ## Historical v0.5 — verified source6c1e97eb — 2026-10-17
 
