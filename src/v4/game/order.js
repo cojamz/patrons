@@ -23,3 +23,18 @@ export function snakeOrder(state) {
   }
   return { order, slot, pass, passes, dir: pass % 2 ? 'up' : 'down', extra };
 }
+
+/**
+ * The table the screen draws: the physical state (counters, pieces in flight) with the turn record of the settled
+ * interaction state (whose turn, its options, the order). Every field the turn words read goes across together:
+ * early (Crunch Time's moved-up turns) belongs to the queue it moved, so a rival's Crunch Time still animating never
+ * pairs the old queue with the new moves (the seats then counted the moved turns as extra ones: #113, "turn status
+ * desync'd").
+ */
+export function tableView(physical, interaction) {
+  if (physical === interaction) return physical;
+  return { ...physical,
+    pending: interaction.pending, current: interaction.current, over: interaction.over, order: interaction.order,
+    turns: interaction.turns, queue: interaction.queue, early: interaction.early,
+  };
+}

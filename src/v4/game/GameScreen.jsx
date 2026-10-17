@@ -29,7 +29,7 @@ import Results from './Results.jsx';
 import FinalScore from './FinalScore.jsx';
 import RoundEnd from './RoundEnd.jsx';
 import Reckoning, { scoringSeatState } from './Reckoning.jsx';
-import { snakeOrder } from './order.js';
+import { snakeOrder, tableView } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
@@ -544,9 +544,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const physicalState = physical0;
   const interactionState = moment && moment.board ? moment.board : settled0;
   // Counters and flying targets use physical state; ownership/options/order share one settled boundary.
-  const state = useMemo(() => physicalState === interactionState ? physicalState : ({ ...physicalState,
-    pending: interactionState.pending, current: interactionState.current, over: interactionState.over, order: interactionState.order, turns: interactionState.turns, queue: interactionState.queue,
-  }), [physicalState, interactionState]);
+  const state = useMemo(() => tableView(physicalState, interactionState), [physicalState, interactionState]);
   useAnyDot((state.quadrants || []).map(q => quadrant(q).resource)); // the "any" dot's four colors, where their quadrants sit
   const mySeats = session.mySeats || NO_SEATS;
   const pend = state.pending;

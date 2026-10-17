@@ -1,0 +1,152 @@
+// @vitest-environment node
+// The seats' and the header's turn words agree with the engine's real next placer, for every viewer's seat (online,
+// each guest computes its own words for its own seat from the same state).
+import { describe, it, expect } from 'vitest';
+import { createGame, applyMove, turnRail, actionAt } from '../../../engine/v4/core.js';
+import { chooseBotMove } from '../../../engine/v4/bots.js';
+import { seededRandom } from '../../../engine/v4/rng.js';
+import { registerQuadrant } from '../../../engine/v4/content/index.js';
+import purple from '../../../engine/v4/content/purple.js';
+import { seatTurns, turnPlaces } from '../../../v4/game/seats.js';
+import { tableView } from '../../../v4/game/order.js';
+import { promptFor, currentTurn, turnSequence } from '../../../v4/format.js';
+
+registerQuadrant(purple);
+
+const planned = s => (s.turns || []).length + s.queue.filter(t => t.t === 'turn').length;
+const earlyN = s => (s.early && s.early.round === s.round ? s.early.moves.length : 0);
+/** Who really places next (the next turn the engine starts this round), or undefined when the plan changed on the way
+ *  (an extra turn granted, turns taken early) so no label could have known it; null when the round ends first. */
+function realNext(s, rand) {
+  const r = s.round, n0 = (s.turns || []).length, p0 = planned(s), e0 = earlyN(s);
+  let t = s;
+  for (let g = 0; g < 400; g++) {
+    t = applyMove(t, chooseBotMove(t, rand));
+    if (t.round !== r || t.over) return null;
+    if ((t.turns || []).length > n0) return planned(t) === p0 && earlyN(t) === e0 ? t.turns[n0] : undefined;
+  }
+  return undefined;
+}
+
+const TABLES = [
+  { n: 3, q: ['gold', 'red', 'purple', 'green'] },
+  { n: 4, q: ['gold', 'red', 'purple', 'green'] },
+  { n: 2, q: ['purple', 'red', 'gold', 'green'] },
+  // whoever can, takes Crunch Time at once (its turns moved up close the gaps between the others' turns: #98, #99)
+  { n: 3, q: ['gold', 'red', 'purple', 'green'], crunch: true },
+  { n: 4, q: ['gold', 'red', 'purple', 'green'], crunch: true },
+];
+/** The bot's move, or Crunch Time when the table forces it and it's open. */
+function nextMove(s, rand, crunch) {
+  if (crunch && s.pending?.kind === 'place') {
+    const o = s.pending.options.find(x => x.kind === 'slot' && actionAt(s, x.q, x.i).name === 'Crunch Time');
+    if (o) return { player: s.pending.player, option: o.id };
+  }
+  return chooseBotMove(s, rand);
+}
+
+describe('turn labels agree with the engine', () => {
+  for (const tb of TABLES) for (let seed = 1; seed <= 6; seed++) it(`${tb.n} players${tb.crunch ? ', Crunch Time taken' : ''}, seed ${seed}`, () => {
+    let s = createGame({ seats: Array.from({ length: tb.n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: tb.q });
+    const rand = seededRandom(seed * 7 + 1);
+    let checked = 0, closedSeen = 0, viewSeen = 0;
+    for (let step = 0; step < 3000 && !s.over; step++) {
+      const pend = s.pending;
+      if (s.round >= 1 && pend && s.current != null) {
+        const nxt = realNext(s, seededRandom(seed * 1000 + step));
+        const rail = turnRail(s);
+        for (let me = 0; me < tb.n; me++) {
+          const w = seatTurns(s, me)[me];
+          if (!w) continue;
+          // "your turn" only on the seat placing now
+          if (w.kind === 'now') expect(s.current, `step ${step} me ${me}`).toBe(me);
+          if (s.current === me && pend.player === me) expect(w.kind).toBe('now');
+          // "→ right after this one" only on the seat that really places next
+          if (nxt !== undefined && nxt !== null) {
+            if (w.kind === 'soon') expect(nxt, `step ${step} me ${me} soon`).toBe(me);
+            if (nxt === me && s.current !== me) expect(w.kind, `step ${step} me ${me}`).toBe('soon');
+          }
+          if (w.kind === 'done') expect(rail.next.includes(me) || s.current === me).toBe(false);
+          // the header names the seat that is acting, for whoever is watching
+          const pr = promptFor(s, pend.player === me);
+          if (pr.who) expect(pr.who.id).toBe(pend.player);
+        }
+        // "X again (snake order)" only where the planned snake really turns on X: two of X's turns that sat side by
+        // side in the round's plan, at the end of a pass
+        if (pend.kind === 'place') {
+          const t = currentTurn(s);
+          // (a seat that took an extra turn this round is left out: its k-th turn is no longer its k-th planned one)
+          const since = s.log.slice(s.log.findLastIndex(l => /^Round \S+ begins\./.test(l)));
+          const nm = s.players[pend.player].name;
+          const hadExtra = since.some(l => l.startsWith(`${nm} takes`) && /extra turn/.test(l) || l.startsWith(`${nm}'s`) && /: \S+ takes (an|\d+) extra turns?/.test(l));
+          if (t && t.again && t.kind === 'snake' && !t.early && !hadExtra) {
+            const done = s.turns.length; // this turn is s.turns[done - 1]
+            const text = promptFor(s, false).text;
+            // where the two turns sat in the plain snake (state.order: first pass, then the passes)
+            const order = s.order, nP = s.players.length;
+            const plan = []; // plain-snake positions of this player's turns taken so far, in order
+            let mine = 0;
+            for (let k = 0; k < done; k++) if (s.turns[k] === pend.player) mine++;
+            for (let k = 0; k < order.length && plan.length < mine; k++) if (order[k] === pend.player) plan.push(k);
+            const [a, b] = plan.slice(-2);
+            const turnaround = b - a === 1 && b % nP === 0;
+            if (turnaround) expect(text, `step ${step}`).toMatch(/snake order/);
+            else {
+              // the gap closed because a rival took turns early: the header and the seat say so, never "snake order"
+              expect(text, `step ${step}: plain snake had them at ${a} and ${b}`).not.toMatch(/snake order/);
+              expect(text).toMatch(/took turns early/);
+              closedSeen++;
+            }
+          }
+        }
+        checked++;
+      }
+      const next = applyMove(s, nextMove(s, rand, tb.crunch));
+      // the screen draws the newer physical state with the settled one's turn record while a move animates
+      // (GameScreen: tableView): its turn words are the settled state's, for every viewer
+      if (s.round >= 1 && next.round === s.round && !next.over) {
+        const view = tableView(next, s);
+        for (let me = 0; me < tb.n; me++) {
+          const a = turnPlaces(view, me), b = turnPlaces(s, me);
+          expect(a.order, `step ${step}`).toEqual(b.order);
+          for (const p of s.players) expect([a.places[p.id]?.label, a.places[p.id]?.twice], `step ${step} seat ${p.id}`).toEqual([b.places[p.id]?.label, b.places[p.id]?.twice]);
+          expect(seatTurns(view, me)[me]?.say).toBe(seatTurns(s, me)[me]?.say);
+        }
+        // and so are the reasons: snake turn, extra turn, a turn taken early, a gap closed by one
+        const kinds = st => turnSequence(st).map(t => [t.pid, t.kind, t.early || null, t.closed ? t.closed.pid : null]);
+        expect(kinds(view), `step ${step}`).toEqual(kinds(s));
+        if (earlyN(next) !== earlyN(s)) viewSeen++;
+      }
+      s = next;
+    }
+    expect(checked).toBeGreaterThan(20);
+    if (tb.crunch) expect(closedSeen, 'a forced Crunch Time table closes a gap at least once').toBeGreaterThan(0);
+    if (tb.crunch) expect(viewSeen, 'a Crunch Time move is drawn mid-animation at least once').toBeGreaterThan(0);
+  });
+});
+
+describe('a gap closed by Crunch Time is said as such (Cory #98, #99)', () => {
+  it('3 players, round III: A takes Crunch Time first, so B places twice in a row: never "snake order"', () => {
+    let s = createGame({ seats: Array.from({ length: 3 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 11, quadrants: ['gold', 'red', 'purple', 'green'] });
+    const rand = seededRandom(11);
+    while (!(s.round === 3 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
+    const [A, B] = s.order;
+    s = applyMove(s, nextMove(s, rand, true)); // A takes Crunch Time: A A A B C C B B C C B A A B C
+    const at = (n, ok = () => true) => { while (!(s.pending?.kind === 'place' && s.turns.length === n && ok(s))) s = applyMove(s, chooseBotMove(s, rand)); };
+    at(7); // B's first of the pair (turn 7 of 15)
+    expect(s.current).toBe(B);
+    expect(turnPlaces(s, B).places[B]).toMatchObject({ label: 'now', twice: true });
+    expect(turnPlaces(s, B).places[B].title).toMatch(new RegExp(`Back to back because ${s.players[A].name} took turns early with Crunch Time\\.`));
+    expect(turnPlaces(s, B).places[B].title).not.toMatch(/snake order/);
+    expect(turnPlaces(s, s.order[2]).places[B].title).toMatch(new RegExp(`because ${s.players[A].name} took turns early`));
+    expect(turnPlaces(s, A).places[B].title).toMatch(/because you took turns early with Crunch Time/);
+    at(8);
+    expect(s.current).toBe(B);
+    expect(promptFor(s, false).text).toBe(`${s.players[B].name} again (${s.players[A].name} took turns early with Crunch Time)`);
+    expect(promptFor(s, true).lead).toBe(`Your turn again (${s.players[A].name} took turns early with Crunch Time) — `);
+    // the plain snake turnaround that follows (C C at turns 9-10) still says snake order
+    at(10);
+    expect(currentTurn(s).again).toBe(true);
+    expect(promptFor(s, false).text).toMatch(/again \(snake order\)$/);
+  });
+});

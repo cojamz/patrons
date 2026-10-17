@@ -104,6 +104,13 @@ export function promptFor(state, mine) {
             ? { who: p, lead: `Your next turn, now (${t.early}): `, text: 'place a minion', keepCase: true, ...(or ? { sub: or } : {}) }
             : { who: p, text: `${name}: next turn, now (${t.early})` };
         }
+        // back to back because a rival took their turns early (Crunch Time), not because the snake turned
+        if (t.closed) {
+          const by = closedBy(state, t.closed, mine ? pend.player : null);
+          return mine
+            ? { who: p, lead: `Your turn again (${by}) — `, text: 'place a minion', ...(or ? { sub: or } : {}) }
+            : { who: p, text: `${name} again (${by})` };
+        }
         if (t.kind === 'snake') {
           return mine
             // the headline says it, and so do the rail and the chip ("now twice"): no third telling (w2b #15)
@@ -220,9 +227,19 @@ export function turnSequence(state) {
     if (j < order.length && order[j] === t.pid) {
       // snake or hand by where the turn sat before it was taken early
       t.kind = src[j] < snake ? 'snake' : 'hand';
+      t.src = src[j];
       if (early[j]) t.early = early[j];
       j++;
     } else t.kind = 'extra';
+  }
+  // Two of one seat's own turns back to back that were not side by side in the plain snake: a rival took turns early
+  // (Crunch Time) and closed the gap between them. That is not the snake turning (Cory #98: "the middle player went
+  // twice?"), so it says who moved their turns up: closed = { pid, why }.
+  for (let i = 1; i < seq.length; i++) {
+    const a = seq[i - 1], t = seq[i];
+    if (a.pid !== t.pid || a.kind === 'extra' || t.kind === 'extra' || t.early || t.src === a.src + 1) continue;
+    const by = seq.find(x => x.early && x.pid !== t.pid && x.src > a.src && x.src < t.src);
+    t.closed = by ? { pid: by.pid, why: by.early } : { pid: null, why: null };
   }
   const grants = extraGrants(state), used = {};
   const begins = state.log.slice(roundLogStart(state.log)).find(l => /^Round \S+ begins\./.test(l)) || '';
@@ -232,6 +249,12 @@ export function turnSequence(state) {
     else t.why = null;
   }
   return seq;
+}
+/** Why two turns came back to back off the snake (turnSequence's closed): "P1 took turns early with Crunch Time". */
+export function closedBy(state, closed, me = null) {
+  if (!closed || closed.pid == null) return 'turns in between were taken early';
+  const who = closed.pid === me ? 'you' : state.players[closed.pid].name;
+  return `${who} took turns early${closed.why ? ` with ${closed.why}` : ''}`;
 }
 /** The turn being played (or about to be): { pid, kind, why, again } — again when the same player also had the turn before. */
 export function currentTurn(state) {
