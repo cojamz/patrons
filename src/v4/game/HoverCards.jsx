@@ -12,7 +12,6 @@ import { Popover } from './parts.jsx';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
 import { SeatFigure } from './Glyphs.jsx';
 import { Rich } from './Rich.jsx';
-import { unlockedBy, surely } from './cards.js';
 import { memberCopyTargets, ownCopyPlan, copiesAll } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
@@ -483,10 +482,6 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const viewer = me != null ? me : state.pending && state.pending.player;
   // the dry run is read from the cache (warmed in idle time); if it isn't there yet it fills in a moment later
   const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i, { now: !past }) || null;
-  const race = pv && pv.race ? raceAfter(state, pv.race, qid, viewer, !(pv.theirAsks && pv.theirAsks.length)) : null;
-  const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
-  // the shop brightens those cards while you place (ShopCards ShopTicks): then the row says why
-  const placingNow = !!(state.pending && state.pending.kind === 'place' && state.pending.player === viewer);
   // copy every space you took this round (Greatest Hits): which it copies and which it skips, before you place
   const all = open && viewer != null && !state.over && copiesAll(a.text) ? ownCopyPlan(state, viewer) : null;
   return (
@@ -501,19 +496,12 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} now /></span></div> : null}
         {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
         {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={whyLine(pv.reasons)} /></span></Row> : null}
-        {race && <Row k={race.rule}><span className="lt-race" data-race={qid}>
-          <span className="race-you" data-race-p={viewer}><Rich text={race.you} /></span>
-          <span className="race-them">{race.them.map((t, k) => <span key={t.pid} data-race-p={t.pid}>{k ? ', ' : ''}{t.text}</span>)}{race.tail}</span>
-        </span></Row>}
         {/* a few by name; the whole row is said as one (it listed all ten names, the row you can already see) */}
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.length > 3
           ? <span data-swept={pv.swept.join(' ')}>{pv.swept.length === state.shop.length ? `the whole row (${pv.swept.length})` : `${pv.swept.length} face-up members`}</span>
           : pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {/* the members the space lights, named (Cory, 2026-10-16: the lit cards say why) */}
         {open && pv ? targetLines(state, viewer, pv.targets).map(l => <Row key={l.k} k={l.k}><span data-aims={l.uids.join(' ')}>{l.text}</span></Row>) : null}
-        {/* the shop's cards it makes affordable brighten with the hover; this row says why (a lit Kingpin under Lie Low
-            had no reason on screen) */}
-        {unlocks.length && (pinned || placingNow) ? <Row k="Can afford">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
         {/* a second minion on it says why (w4 skeptic #13: two minions on one space, no reason): Squatter's join */}
         {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn' : ''}{((state.squats && state.squats[spaceKey]) || []).map(j => `; ${j === viewer ? 'you' : state.players[j].name} joined (Squatter)`).join('')}{opt ? ' — you can join it' : ''}</Row>}
         {/* a value that grows by round: its run is the rule sentence's ("+2● in round I, +4 in round II…"), said once
@@ -597,7 +585,7 @@ export function StandingsCard({ state, qid, meId = null }) {
   // what the rim's prize pays, in words (Cory, 2026-10-15): "Round end: whoever has the most white gets 2 followers"
   return (
     <>
-      <p className="lt-prize-line" data-prize-line={qid}>A bonus every round, not the final score: at this round’s end, whoever has the {ruleWords(qid, st.rule).replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'} ({RING_VALUE.map(v => `+${v}`).join(' / ')} in rounds I / II / III).</p>
+      <p className="lt-prize-line" data-prize-line={qid}>A bonus every round, not the final score: at this round’s end, whoever has the {ruleWords(qid, st.rule).replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'} ({RING_VALUE.map(v => `+${v}`).join(' / ')} in rounds I / II / III; ties pay half each).</p>
       <ContestStandings state={state} st={st} meId={meId} brief />
     </>
   );
@@ -614,7 +602,7 @@ export function SeatCard({ state, pid, meId = null, optionFor = () => null, onPi
   const lvl = p.kind === 'bot' ? BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid)) : null; // Easy / Normal / Hard
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
-      <div className="t"><SeatFigure id={pid} state={state} size={32} face={pid !== meId} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal resources from {pid === meId ? 'you' : p.name} this round.</small> : null}{pid !== meId ? <SpendingLine state={state} pid={pid} /> : null}</h4></div>
+      <div className="t"><SeatFigure id={pid} state={state} size={32} face={pid !== meId} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal members or resources from {pid === meId ? 'you' : p.name} this round.</small> : null}{pid !== meId ? <SpendingLine state={state} pid={pid} /> : null}</h4></div>
       <SeatMembers state={state} pid={pid} me={meId} optionFor={pid === meId ? optionFor : undefined} onPick={pid === meId ? onPick : null} />
     </div>
   );

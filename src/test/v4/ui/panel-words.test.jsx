@@ -78,7 +78,7 @@ describe('panel words (w3)', () => {
     expect(lines(panelText('gold', { key: 'jv' }, 1))).toContain('+1 gold to a rival');
     expect(lines(panelText('gold', { key: 'jv' }, 1)).join(' ')).not.toMatch(/you pick who/);
     expect(lines(panelText('silver', { key: 'toast' }, 2))).toContain('others get 2 silver');
-    expect(lines(panelText('silver', { key: 'tide' }, 2))).toContain('others get 1 silver');
+    expect(lines(panelText('silver', { key: 'tide' }, 2))).toContain('others get 2 silver');
     for (const [qid, key, t] of panelEntries()) for (const l of lines(t)) expect(l, `${qid}.${key}`).not.toMatch(/\bget 1$/);
     // Cheap Seats grants followers for held white; it never describes a purchase or payment.
     const cs = panelText('trading', { key: 'buylow' }, 2);

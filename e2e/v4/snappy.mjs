@@ -151,7 +151,10 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
     if (r && r.total <= LIMIT.spin + F && r.start <= LIMIT.spinStart + F) break;
   }
   const best = runs.slice().sort((a, b) => (a.total - a.F) - (b.total - b.F))[0];
+  const cold = runs[0];
   report.push(`spin: ${runs.map(r => `${Math.round(r.total)}ms (starts ${Math.round(r.start)}ms, ${r.frames} frames, longest ${Math.round(r.gap)}ms, box frame ${Math.round(r.F)}ms)`).join('; ')}`);
+  if (cold && (cold.total > LIMIT.spin + cold.F || cold.start > LIMIT.spinStart + cold.F))
+    errors.push(`(s1 cold) the first spin took ${Math.round(cold.total)}ms (starts ${Math.round(cold.start)}ms); a warm retry cannot cover a cold stall`);
   if (!best) errors.push('(s1) an arrow key did not turn the wheel');
   else {
     if (best.total > LIMIT.spin + best.F) errors.push(`(s1) the wheel spin took ${Math.round(best.total)}ms to land (want ≤ ${LIMIT.spin}ms + one ${Math.round(best.F)}ms frame; runs ${runs.map(r => Math.round(r.total)).join(', ')}ms)`);

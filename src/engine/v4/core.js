@@ -21,7 +21,7 @@ const LOG_MAX = 300;
 // Rule flags a table can toggle (sims flip them). release: once per round, on your turn, release one of your
 // members (it goes to the bottom of the pile) for its colored part in its own color (not one recruited this round). guests: rule-bending guest
 // members join the deck.
-export const DEFAULT_RULES = { release: true, guests: true, cull: true };
+export const DEFAULT_RULES = { release: false, guests: true, cull: true };
 
 // ---------- creation ----------
 
@@ -62,9 +62,10 @@ export function createGame({ seats, seed = 1, quadrants, rules = {} }) {
   // pick resources THEN it randomized the order???"). Everyone is tied at round I, so it's random (Cory, 2026-10-14);
   // nothing between here and round I draws from the rng, so a seed deals the same order it always did.
   state.firstOrder = shuffleInPlace(state, state.players.map(p => p.id));
-  for (const id of state.firstOrder) state.queue.push({ t: 'setupPick', p: id, k: 1 }, { t: 'setupPick', p: id, k: 2 });
+  state.startPool = [...state.quadrants];
+  for (const id of [...state.firstOrder].reverse()) state.queue.push({ t: 'setupPick', p: id });
   state.queue.push({ t: 'round', r: 1 });
-  log(state, `Round I's turn order: ${state.firstOrder.map(id => state.players[id].name).join(', ')}. Each player picks 2 starting resources, in that order.`);
+  log(state, `Round I's turn order: ${state.firstOrder.map(id => state.players[id].name).join(', ')}. Draft 1 resource each in reverse order; each color can be taken once.`);
   advance(state);
   return state;
 }
@@ -119,7 +120,11 @@ export function resume(state) {
 // A Doppelganger becomes a copy of the member card it copies: its follower value and member count too.
 const valueOf = card => (card.copy ? Math.max(defById(card.def).f, defById(card.copy).f) : defById(card.def).f);
 export const followers = (state, p) => 1 + p.bonus + p.members.reduce((s, u) => s + valueOf(state.cards[u]), 0);
-const countOf = card => (card.copy ? Math.max(defById(card.def).n, defById(card.copy).n) : defById(card.def).n);
+// Printed followers also count as members; explicit member counts (Revelers) still apply.
+// Bonus followers never enter this value, and a copied card counts its effective printed value.
+const printedMembers = def => Math.max(def.f || 0, def.n ?? 1);
+const countOf = card => Math.max(printedMembers(defById(card.def)), card.copy ? printedMembers(defById(card.copy)) : 0);
+export const memberWeight = (state, uid) => countOf(state.cards[uid]);
 export const memberCount = (state, p) => p.members.reduce((s, u) => s + countOf(state.cards[u]), 0);
 export const countMembersOfColor = (state, p, q) => p.members.reduce((s, u) => {
   const c = state.cards[u]; return s + (defById(c.def).quadrant === q ? countOf(c) : 0);
@@ -390,9 +395,10 @@ function inputFor(state, task) {
     // the preview's stop (preview.js): the round's turns wait behind it, there for content to read (Crunch Time), never run
     case 'previewHold': return { kind: 'hold', prompt: '', options: [{ id: 'hold', label: '', kind: 'hold' }] };
     case 'setupPick':
+      if (state.startPool?.length === 1) return null;
       return {
-        kind: 'setup', prompt: `${p.name}: pick a starting resource (${task.k} of 2)`,
-        options: state.quadrants.map(q => ({ id: `color:${q}`, label: quadrant(q).name, kind: 'color', value: q })),
+        kind: 'setup', prompt: `${p.name}: draft 1 resource`,
+        options: (state.startPool || state.quadrants).map(q => ({ id: `color:${q}`, label: quadrant(q).name, kind: 'color', value: q })),
       };
     case 'place': {
       const slots = [
@@ -519,7 +525,8 @@ function resolveTask(state, task, optionId) {
     case 'setupPick': {
       const q = optionId.slice('color:'.length);
       p.res[quadrant(q).resource] += 1;
-      log(state, `${p.name} starts with +1 ${quadrant(q).resource}.`);
+      if (state.startPool) state.startPool = state.startPool.filter(id => id !== q);
+      log(state, `${p.name} drafts +1 ${quadrant(q).resource}.`);
       return;
     }
     case 'place': {
@@ -605,6 +612,7 @@ function resolveTask(state, task, optionId) {
 function runTask(state, task) {
   const p = task.p !== undefined ? state.players[task.p] : null;
   switch (task.t) {
+    case 'setupPick': return resolveTask(state, task, `color:${state.startPool[0]}`);
     case 'round': return underCause({ kind: 'round', round: task.r }, () => startRound(state, task.r));
     case 'turn': {
       state.current = p.id;
@@ -666,6 +674,13 @@ function runTask(state, task) {
 
 function startRound(state, r) {
   state.round = r;
+  // Fresh face-up market between rounds; old cards remain in the deck, at the bottom.
+  if (r > 1) {
+    const old = state.shop.splice(0);
+    state.pile.push(...old);
+    refill(state);
+    log(state, `The member market refreshes for round ${roman(r)}.`);
+  }
   state.slots = {};
   state.squats = {};
   state.recruits = 0;
@@ -721,8 +736,8 @@ function endRound(state) {
   for (const c of table) {
     if (!c.winners.length) continue;
     const winners = c.winners.map(id => state.players[id]);
-    underCause({ kind: 'contest', qid: c.qid, round: state.round }, () => { for (const w of winners) { w.bonus += v; w.contest += v; fBump(state, w, v); } });
-    msg.push(`${c.label}: ${winners.map(w => w.name).join(' & ')} +${v}`);
+    underCause({ kind: 'contest', qid: c.qid, round: state.round }, () => { for (const w of winners) { w.bonus += c.prize; w.contest += c.prize; fBump(state, w, c.prize); } });
+    msg.push(`${c.label}: ${winners.map(w => w.name).join(' & ')} +${c.prize}`);
   }
   // the round's scoring, kept as decided: the round-end card and the results read it back (never re-derived)
   state.contests = [...(state.contests || []), { round: state.round, prize: v, results: table }];
@@ -754,7 +769,7 @@ export function contestTable(state, ctx = ctxFor(state)) {
     }).sort((a, b) => b.score - a.score || a.player - b.player);
     return {
       qid, label: sc.label, rule: ruleOf(sc.label), counts: sc.counts || null, tiebreak: sc.tiebreak || null,
-      prize, rows, winners,
+      prize: winners.length > 1 ? prize / 2 : prize, fullPrize: prize, rows, winners,
     };
   });
 }
@@ -859,8 +874,8 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   else state.pile.splice(fromPile, 1);
   refill(state);
   p.members.push(uid);
-  state.recruits += 1;
-  p.turnRecruits += 1;
+  state.recruits += memberWeight(state, uid);
+  p.turnRecruits += memberWeight(state, uid);
   const card = state.cards[uid], def = defById(card.def);
   // who recruited it and when: a member can't be released in the round its owner recruited it
   card.recruitedRound = state.round; card.recruitedBy = p.id;
@@ -948,6 +963,7 @@ function gain(state, p, color, n, { fromAction = false, again = false } = {}) {
   eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(card, def, c0, n0); } });
   p.res[g.color] = (p.res[g.color] || 0) + g.n;
   eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); });
+  return { color: g.color, n: g.n };
 }
 
 // ---------- member iteration (a Doppelganger also runs the hooks of the member it copies) ----------
@@ -1129,6 +1145,7 @@ function ctxFor(state) {
     quadrant,
     followers: p => followers(state, p),
     memberCount: p => memberCount(state, p),
+    memberWeight: card => memberWeight(state, typeof card === 'number' ? card : card.uid),
     countMembersOfColor: (p, q) => countMembersOfColor(state, p, q),
     card: uid => wrap(state, state.cards[uid]),
     defOf: c => (typeof c === 'number' ? cardDef(state, c) : c.def),
@@ -1183,13 +1200,13 @@ function ctxFor(state) {
     },
     /** How many a steal of `base` takes for this thief (members: stealMore adds, stealDouble(ctx, owner) doubles). */
     stealCount(thief, base, { say = false } = {}) {
-      let n = base, double = false;
+      let extra = 0, double = false;
       const who = [], why = [];
       eachMemberOf(state, thief, (card, def) => {
-        if (typeof def.stealMore === 'number') { n += def.stealMore; if (def.stealMore) { who.push(`${thief.name}'s ${def.name}: +${def.stealMore}`); why.push([def.name, `+${def.stealMore} to steal`]); } }
+        if (typeof def.stealMore === 'number') { extra += def.stealMore; if (def.stealMore) { who.push(`${thief.name}'s ${def.name}: +${def.stealMore}`); why.push([def.name, `+${def.stealMore} to steal`]); } }
         if (def.stealDouble && def.stealDouble(ctx, thief)) { double = true; who.push(`${thief.name}'s ${def.name}: doubled`); why.push([def.name, 'steal doubled']); }
       });
-      const out = double ? n * 2 : n;
+      const out = (double ? base * 2 : base) + extra;
       // say: a real steal (not an estimate) names the members that changed its size, in the log and in a hover's Why
       // (live panel r1: Help Yourself's face said +4 and its hover +8, and neither named Desperado)
       if (say && base > 0 && out !== base) {

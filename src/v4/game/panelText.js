@@ -66,7 +66,7 @@ const P = {
     // "per minion to place" read as +2 (round 3 skeptic): live, it's the count after this one
     planahead: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion to place' } : { main: `+${now} purple`, second: '1 per minion left to place' }),
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
-    rushhour: { main: '+1 purple', second: 'per 2 minions on the board' },
+    rushhour: (r, now) => ({ main: `+${now ?? 1} purple`, second: 'per 2 minions on the board', note: now == null ? null : 'this one too' }),
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     rally: { verb: 'Your next 2 turns, now' },
   },
@@ -80,10 +80,10 @@ const P = {
     alms: { main: '+4 silver', second: '+2 of a color to a rival', note: 'you pick both' },
     // "trade silver" (w3a #57): with whom? it's a swap of your silver into one other color. Line 2 within 16 letters
     // ("swap silver for a color" didn't fit ring II, and dropped whole)
-    tongue: { main: '+4 silver', second: 'swap for a color', note: 'others get 1 silver' },
+    tongue: { main: '+4 silver', second: 'swap for a color', note: 'others get 2 silver' },
     // the richest in silver: the hover says "the rival with the most" ("Gain half the silver" left no room for line 2)
     // "half the richest" read as half your own pile (blind testers, 2026-10-15): it's the top rival's
-    tide: { verb: 'Gain silver', second: 'half the top rival’s', note: 'others get 1 silver' },
+    tide: { verb: 'Gain silver', second: 'half the top rival’s', note: 'others get 2 silver' },
     // on the center line 2 drops: the rate is in line 1, and "held" says the silver stays
     jubilee: { verb: '+1 @f per 2 silver held', second: 'others get 2 silver' },
   },
@@ -141,7 +141,7 @@ const P = {
 // own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
 // A space that pays per something shows this turn's gain big and its rate small (round 3 skeptic: Bandwagon's "+1●"
 // paid +5, Roll Call's +3), for `pid` (the viewer; else whoever's turn it is).
-const LIVE = new Set(['market.showroom', 'gold.windfall', 'red.turnout', 'purple.catchup', 'purple.windup', 'purple.planahead', 'yellow.harvest', 'trading.haggle', 'trading.dividend']);
+const LIVE = new Set(['market.showroom', 'gold.windfall', 'red.turnout', 'purple.catchup', 'purple.windup', 'purple.planahead', 'purple.rushhour', 'yellow.harvest', 'trading.haggle', 'trading.dividend']);
 function liveYield(qid, action, state, pid) {
   if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
   const p = state.players && state.players[pid ?? state.current ?? 0];

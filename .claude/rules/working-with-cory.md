@@ -119,3 +119,5 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - 2026-10-16 — “Better visual way to track” meant project progress. Keep a checkpoint board with ownership, evidence, verified live release and the full feedback backlog; do not turn a project-management request into an in-game feature.
 
 - 2026-10-16 — Game wording must be “precise and minimal”: an exact rule, never an impression of the idea. Use formulas such as 2 gold × round only when equivalent to the rule.
+
+- 2026-10-17 — Batch intake: preserve every note, set ambiguous calls aside for concise questions, and ship clear independent fixes quickly with integrity. A design ambiguity never blocks unrelated verified fixes. Latest explicit removal of Release supersedes the previous keep decision.

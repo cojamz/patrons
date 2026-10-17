@@ -7,8 +7,8 @@ import { Sprite } from '../art/Sprite.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { spriteId } from '../art/index.js';
 import { quadrant, followers } from '../../engine/v4/index.js';
-import { breakdown } from '../format.js';
-import { CardName, onTable, Tip } from './Info.jsx';
+import { breakdown, costParts } from '../format.js';
+import { CardName, onTable, Tip, CostDots } from './Info.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { memberRows, useNow, spendingPower, memberAsks } from './memberUse.js';
 import './members.css';
@@ -25,18 +25,6 @@ export function UseButton({ use, uid, name, onPick, big = false }) {
     <button type="button" className={`mu-use${big ? ' big' : ''}${use.idle ? ' idle' : ''}`} data-use={uid} data-idle={use.idle ? '1' : undefined} data-option={use.option} title={title}
       onClick={e => { e.stopPropagation(); onPick(use.option); }}>
       <Rich text={use.label} />
-    </button>
-  );
-}
-
-/** "Release: +2 ●": put the member at the bottom of the pile for the colored part of its cost (once a round). */
-export function ReleaseButton({ option, name, onPick }) {
-  const n = option.refund ?? 0, color = option.color || 'any';
-  const say = `Release ${name}: it goes to the bottom of the pile and you get back ${n} ${color === 'any' ? 'in any colors' : color}. Once a round.`;
-  return (
-    <button type="button" className="mu-use mu-release" data-release={option.uid} data-option={option.id} title={say} aria-label={say}
-      onClick={e => { e.stopPropagation(); onPick(option.id); }}>
-      Release: <b className="num">+{n}</b><Pip color={color} n={n} />
     </button>
   );
 }
@@ -91,7 +79,7 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
         return (
           <li key={row.key} className={`mu-row k-${row.kind}${st ? ` s-${st}` : ''}${brk ? ' brk' : ''}`} data-member-row={row.def.id} data-state={st || undefined}>
             <span className="mu-art" aria-hidden="true"><Sprite id={[row.def.id, spriteId(row.name)]} kind="member" sphere={sphereOf(state, row.def)} size={24} /></span>
-            <span className="mu-body">
+            <span className="mu-body" style={{ '--member-color': `var(--q-${sphereOf(state, row.def)}, var(--pl-ink-3))` }}>
               <span className="mu-head">
                 <b className="mu-name"><CardName state={state} uid={row.uid} />{row.n > 1 ? <span className="num"> ×{row.n}</span> : null}</b>
                 {/* its state on the right: a switch, the Use button when it's yours to use now, else a quiet word */}
@@ -100,6 +88,7 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
                   : onPick && row.use && !row.use.blocked && !row.use.idle ? <UseButton use={row.use} uid={row.uid} name={row.name} onPick={onPick} />
                     : row.tag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
               </span>
+              <span className="mu-price" data-member-cost={row.uid}><span>Cost</span><CostDots parts={costParts(row.def, state.resources)} /></span>
               {/* the whole sentence, never cut; plain (the member's own card underlines its keywords) */}
               <span className="mu-text" data-ability>{row.text ? <Rich text={row.text} /> : 'No effect.'}</span>
             </span>
@@ -123,9 +112,7 @@ export function MemberActions({ state, uid, me = null, optionFor = () => null, o
   const use = row.kind === 'use' && !c.used ? useNow(state, me, uid) : null;
   // a member asking you something now (Big Spender's second buy, Straggler's move): what to do, and its way out
   const ask = memberAsks(state, me).get(uid) || null;
-  // in your buy step, a member you can release says what comes back, in dots (dialogs pod: Release lives on the seat)
-  const rel = row.uids.map(u => optionFor(`release:${u}`)).find(Boolean) || null;
-  if (!use && !row.toggle && !rel && !ask) return null;
+  if (!use && !row.toggle && !ask) return null;
   return (
     <div className="mu-actions" data-member-actions={uid}>
       {row.toggle ? <span className="mu-sw-line"><span>{row.name} is {row.toggle.on ? 'on' : 'off'}</span><MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} /></span> : null}
@@ -134,7 +121,6 @@ export function MemberActions({ state, uid, me = null, optionFor = () => null, o
       {use && use.blocked ? <small className="mu-why">Can’t use it now: {use.why || 'nothing would happen'}.</small> : null}
       {use && use.idle ? <small className="mu-why" data-idle-why>Nothing to gain now: {use.why}.</small> : null}
       {use && !use.blocked && onPick ? <UseButton use={use} uid={uid} name={row.name} onPick={onPick} big /> : null}
-      {rel && onPick ? <ReleaseButton option={rel} name={row.name} onPick={onPick} /> : null}
     </div>
   );
 }

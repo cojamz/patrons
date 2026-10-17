@@ -258,7 +258,15 @@ function layPanel(s, R, rot, k, said, taken, need) {
   // the print may sit a little in from the middle of its band, where an upright box has more room
   const centres = R.n === 1 ? [R.r - 8, R.r - 6, R.r - 4, R.r - 2, R.r, R.r + 2, R.r + 4, R.r + 6] : [R.r - 6, R.r - 4, R.r - 2, R.r, R.r + 2, R.r + 4];
   let rc = R.r;
+  // Different wrapping candidates often have the same total height. Solve their geometry once,
+  // including its chosen centre: restoring only the width would leave text on another candidate's centre.
+  const rooms = new Map();
   const room = hPx => {
+    const cached = rooms.get(hPx);
+    if (cached) {
+      if (cached.w > 0) rc = cached.rc;
+      return cached.w;
+    }
     let best = 0;
     for (const c of centres) {
       const [cx, cy] = polar(s.ang + rot, c);
@@ -267,6 +275,8 @@ function layPanel(s, R, rot, k, said, taken, need) {
       const w = 2 * fitHalfWidth(cx, cy, hPx / k, R.n === 1 ? R.r0 + 3 : R.r0, R.r1, a0, a1, 1.2, PANEL_GUT / 2 + 1.2);
       if (w > best + 0.01) { best = w; rc = c; }
     }
+    // With no fitting centre the original search leaves rc alone; a cached zero must do the same.
+    rooms.set(hPx, { w: best, rc });
     return best;
   };
   const X = PANEL_PX;
@@ -739,7 +749,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     // white and silver read as themselves (w3a A4: both rims were grey): white is a light band with dark letters, silver a
     // steel band; every other color is its own deep tone
     const res = quadrant(qid).resource;
-    const deep = res === 'white' ? `color-mix(in srgb, ${col} 86%, #1a120c)` : res === 'silver' ? `color-mix(in srgb, ${col} 72%, #1a120c)` : `color-mix(in srgb, ${col} 50%, #1a120c)`;
+    const deep = res === 'white' ? `color-mix(in srgb, ${col} 86%, #1a120c)` : res === 'silver' ? `color-mix(in srgb, ${col} 72%, #1a120c)` : `color-mix(in srgb, ${col} 72%, #1a120c)`;
     paper.push(<path key={`rim${q}`} className={`rim${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} data-rim-res={res} d={arc(a0, a1, RIM.r0, RIM.r1)} fill={panels ? deep : col} fillOpacity={panels ? 1 : 0.88} />);
     if (panels) paper.push(<path key={`rimfoot${q}`} className="rim-foot" d={arc(a0 + 0.3, a1 - 0.3, RIM.r0, RIM.r0 + 0.8)} fill={`color-mix(in srgb, ${col} 80%, #fff)`} opacity=".35" />);
   });

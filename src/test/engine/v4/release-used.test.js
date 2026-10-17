@@ -5,7 +5,7 @@ import { createGame, canRelease } from '../../../engine/v4/core.js';
 
 describe('Release and used members', () => {
   it('a spent once-per-game member is not releasable; an unspent one is', () => {
-    const s = createGame({ seats: [{ name: 'A' }, { name: 'B' }], seed: 11 });
+    const s = createGame({ seats: [{ name: 'A' }, { name: 'B' }], seed: 11, rules: { release: true } });
     const p = s.players[0];
     const uid = Object.keys(s.cards).find(u => !p.members.includes(u));
     p.members.push(uid);

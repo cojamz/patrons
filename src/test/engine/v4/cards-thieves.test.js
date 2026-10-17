@@ -33,29 +33,29 @@ describe('Magenta actions', () => {
     s = play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold', 'take:1:gold');
     expect(R(s).magenta).toBe(4);
   });
-  it('× Sticky Fingers +1 and Desperado double: round I Help Yourself takes (2+1)×2 = 6', () => {
+  it('× Sticky Fingers +1 and Desperado double: round I Help Yourself takes 2×2+1 = 5', () => {
     let s = table(Q, { res: [{}, { gold: 9 }], members: [['thieves.sticky', 'thieves.desperado']], bonus: [0, 3], shop: ROW });
     s = take(s, 'thieves.pickpocket');
-    for (let k = 0; k < 6; k++) s = move(s, 'take:1:gold');
-    expect(R(s).magenta).toBe(6);
-    expect(R(s, 1).gold).toBe(3);
+    for (let k = 0; k < 3; k++) s = move(s, 'take:1:gold');
+    expect(R(s).magenta).toBe(5);
+    expect(R(s, 1).gold).toBe(4);
     expect(named(s, 'Sticky Fingers').length).toBe(1);
     expect(named(s, 'Desperado').length).toBe(1);
   });
-  it('× Sticky Fingers and Desperado on Gold\'s Collect Debts: (3+1)×2 = 8, and the log names both', () => {
+  it('× Sticky Fingers and Desperado on Gold\'s Collect Debts: 3×2+1 = 7, and the log names both', () => {
     let s = table(Q, { round: 2, left: 4, res: [{}, { gold: 9 }], members: [['thieves.sticky', 'thieves.desperado']], bonus: [0, 3], shop: ROW });
     s = take(s, 'gold.steal');
-    for (let k = 0; k < 8; k++) s = move(s, 'player:1');
-    expect(R(s).gold).toBe(8);
-    expect(R(s, 1).gold).toBe(1);
+    for (let k = 0; k < 4; k++) s = move(s, 'player:1');
+    expect(R(s).gold).toBe(7);
+    expect(R(s, 1).gold).toBe(2);
     expect(named(s, 'Sticky Fingers').length).toBe(1);
     expect(named(s, 'Desperado').length).toBe(1);
   });
 
-  it('Redistribute: take 1 from each player holding more than you', () => {
+  it('Redistribute: take 1 from each rival', () => {
     let s = table(Q, { n: 4, res: [{ red: 2 }, { gold: 3 }, { red: 1 }, { gold: 1, red: 2 }], shop: ROW });
-    s = play(take(s, 'thieves.tipoff'), 'take:1:gold', 'take:3:red');
-    expect([R(s).magenta, R(s, 1).gold, R(s, 2).red, R(s, 3).red]).toEqual([2, 2, 1, 1]);
+    s = play(take(s, 'thieves.tipoff'), 'take:1:gold', 'take:2:red', 'take:3:red');
+    expect([R(s).magenta, R(s, 1).gold, R(s, 2).red, R(s, 3).red]).toEqual([3, 2, 0, 1]);
   });
   it('× Lie Low: a richer player in the Lie Low can\'t be tipped off', () => {
     let s = table(Q, { n: 3, res: [{}, { gold: 3 }, { red: 3 }], shop: ROW, queue: turns(1, 0) });
@@ -73,24 +73,14 @@ describe('Magenta actions', () => {
     expect(R(s).gold).toBe(4);
     expect(s.log).toContain('P2 found nothing to steal.');
   });
-  it('Lie Low (Cory\'s ruling): your members can still be taken, by Poach, Shake Down and Swap Sides', () => {
+  it('Lie Low protects members from Poach, Shake Down and Swap Sides', () => {
     const base = { round: 3, left: 5, res: [{ gold: 4 }, { red: 1 }], members: [['red.twins'], ['red.intern']], shop: ROW, queue: turns(0, 1) };
-    // Poach
-    let s = pass(play(take(table(Q, base), 'thieves.hideout'), 'take:1:red'));
-    s = take(s, 'thieves.heist');
-    expect(ids(s)).toContain(cardOpt(s, 'red.twins', 0));
-    s = move(s, cardOpt(s, 'red.twins', 0));
-    expect(owns(s, 1, 'red.twins')).toBe(true);
-    // Shake Down (the payment still goes through: it's the holder's choice to pay)
-    s = pass(play(take(table(Q, { ...base, round: 2 }), 'thieves.hideout'), 'take:1:red'));
-    s = take(s, 'thieves.ransom');
-    s = move(move(s, cardOpt(s, 'red.twins', 0)), 'pay');
-    expect(owns(s, 0, 'red.twins')).toBe(true);
-    expect([R(s).gold, R(s, 1).magenta]).toEqual([0, 4]);
-    // Red's Swap Sides
-    s = pass(play(take(table(Q, { ...base, round: 2 }), 'thieves.hideout'), 'take:1:red'));
-    s = take(s, 'red.trade');
-    expect(ids(s).some(id => id.endsWith(`:${uidIn(s, 'red.twins', 0)}`))).toBe(true);
+    for (const action of ['thieves.heist', 'thieves.ransom', 'red.trade']) {
+      let s = pass(play(take(table(Q, base), 'thieves.hideout'), 'take:1:red'));
+      s = take(s, action);
+      expect(ids(s).some(id => id.includes(`:${uidIn(s, 'red.twins', 0)}`))).toBe(false);
+      expect(owns(s, 0, 'red.twins')).toBe(true);
+    }
   });
 
   it('Crime Wave: take 3 from rivals, at least 1 from each', () => {
@@ -189,10 +179,12 @@ describe('Magenta members', () => {
 
   it('Accomplice: when recruited, take 1 from each rival (named)', () => {
     let s = table(Q, { n: 3, res: [{ magenta: 8 }, { gold: 1 }, { red: 2 }], shop: ['thieves.accomplice', ...ROW] });
-    s = move(take(s, 'thieves.tipoff'), cardOpt(s, 'thieves.accomplice', 'shop'));
+    s = take(s, 'thieves.tipoff');
+    s = play(s, 'take:1:gold', 'take:2:red');
+    s = move(s, cardOpt(s, 'thieves.accomplice', 'shop'));
     s = s.pending?.kind === 'pay' ? move(s, s.pending.options[0].id) : s;
-    expect([R(s).magenta, R(s, 1).gold, R(s, 2).red]).toEqual([2, 0, 1]);
-    expect(named(s, 'Accomplice').length).toBe(2);
+    expect([R(s).magenta, R(s, 1).gold, R(s, 2).red]).toEqual([3, 0, 0]);
+    expect(named(s, 'Accomplice').length).toBe(1);
   });
   it('× Poach: a stolen Accomplice doesn\'t fire again (it wasn\'t recruited)', () => {
     let s = table(Q, { round: 3, left: 5, res: [{}, { gold: 3 }], members: [[], ['thieves.accomplice']], shop: ROW });
@@ -202,11 +194,14 @@ describe('Magenta members', () => {
 
   it('Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most', () => {
     let s = table(Q, { n: 3, res: [{ magenta: 6 }, { gold: 3 }, { red: 2 }], members: [['red.twins', 'red.intern', 'red.volunteer']], shop: ['thieves.grifter', ...ROW] });
-    s = move(take(s, 'thieves.tipoff'), cardOpt(s, 'thieves.grifter', 'shop'));
+    s = take(s, 'thieves.tipoff');
+    s = play(s, 'take:1:gold', 'take:2:red');
+    s = move(s, cardOpt(s, 'thieves.grifter', 'shop'));
+    while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     // 4 members: take 2, one at a time from whoever holds the most then
-    expect(R(s).magenta).toBe(2);
-    expect(R(s, 1).gold + R(s, 2).red).toBe(3);
-    expect(named(s, 'Grifter').length).toBe(2);
+    expect(R(s).magenta).toBe(4);
+    expect(R(s, 1).gold + R(s, 2).red).toBe(1);
+    expect(named(s, 'Grifter').length).toBe(1);
   });
 
   it('Robin Hood: whenever you steal from the player with the most followers, +1 follower (named)', () => {
@@ -271,8 +266,9 @@ describe('Magenta members', () => {
   it('Safecracker: once per game, half (rounded down) of the magenta of the rival holding the most (named)', () => {
     let s = table(Q, { n: 3, res: [{ gold: 20 }, { magenta: 7 }, { magenta: 3 }], members: [['thieves.bigscore']], shop: ROW });
     s = take(s, 'thieves.tipoff');
+    while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     s = move(s, `use:${uidIn(s, 'thieves.bigscore', 0)}`);
-    expect([R(s).magenta, R(s, 1).magenta, R(s, 2).magenta]).toEqual([3, 4, 3]);
+    expect([R(s).magenta, R(s, 1).magenta, R(s, 2).magenta]).toEqual([5, 3, 2]);
     expect(named(s, 'Safecracker').length).toBe(1);
     expect(ids(s)).not.toContain(`use:${uidIn(s, 'thieves.bigscore', 0)}`);
   });
@@ -280,6 +276,7 @@ describe('Magenta members', () => {
     let s = table(Q, { res: [{ gold: 20 }, { magenta: 8 }], members: [['thieves.bigscore', 'echo.doppel']], shop: ROW });
     s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'thieves.bigscore';
     s = take(s, 'thieves.tipoff');
+    while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     s = move(s, `use:${uidIn(s, 'thieves.bigscore', 0)}`);
     s = move(s, `use:${uidIn(s, 'echo.doppel', 0)}`);
     expect([R(s).magenta, R(s, 1).magenta]).toEqual([6, 2]);

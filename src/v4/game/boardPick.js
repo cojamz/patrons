@@ -228,13 +228,13 @@ function stealModel(state, pend, title, question, base, takes) {
  * color order), one coin at a time: [{ pid, res }]. Each is still checked against the engine's options as it's made.
  */
 export function stealPlan(rivals, k, owed = [], eachOnly = false) {
-  const left = new Map();
-  for (const r of rivals) for (const s of r.stacks) left.set(`${r.pid}:${s.res}`, s.has);
+  const left = new Map(), amounts = new Map();
+  for (const r of rivals) for (const s of r.stacks) { const key = `${r.pid}:${s.res}`; left.set(key, s.has); amounts.set(key, s.o?.take || 1); }
   const out = [];
   // owed: rivals who must give 1 each, taken first (their biggest pile); eachOnly: and nothing more from them
   const due = owed.slice();
   const given = new Set();
-  for (let i = 0; i < k; i++) {
+  for (let i = 0; i < k;) {
     let best = null;
     const who = due.length ? due.shift() : null;
     for (const [key, n] of left) {
@@ -244,9 +244,11 @@ export function stealPlan(rivals, k, owed = [], eachOnly = false) {
     }
     if (best) given.add(Number(best.split(':')[0]));
     if (!best) break;
-    left.set(best, left.get(best) - 1);
+    const take = Math.min(amounts.get(best), left.get(best), k - i);
+    left.set(best, left.get(best) - take);
+    i += take;
     const [pid, res] = best.split(':');
-    out.push({ pid: Number(pid), res });
+    out.push({ pid: Number(pid), res, ...(take > 1 ? { take } : {}) });
   }
   return out;
 }

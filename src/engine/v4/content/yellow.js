@@ -104,8 +104,8 @@ export default {
       onRoundStart(ctx, owner) { for (const c of missing(ctx, owner)) ctx.gain(owner, c, 1); },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
-    m('peddler', 'Peddler', 4, 4, 'Now and at round start, +1 of each other color.', { now: true,
-      onRoundStart(ctx, owner) { for (const c of others(ctx)) ctx.gain(owner, c, 1); },
+    m('peddler', 'Peddler', 4, 4, 'Now and at round start, +1 of each color.', { now: true,
+      onRoundStart(ctx, owner) { for (const c of colors(ctx)) ctx.gain(owner, c, 1); },
     }),
     m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2+ of another color at once, +1 yellow.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== Y && g.n >= 2) owner.res[Y] += 1; },
@@ -180,9 +180,9 @@ export default {
     m('farmer', 'Farmer', 4, 2, 'Whenever an action gains you yellow, +1 more.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === Y && g.n > 0) owner.res[Y] += 1; },
     }),
-    m('weaver', 'Weaver', 4, 2, 'Whenever you buy 6 or more followers, +1 of each color.', {
+    m('weaver', 'Weaver', 4, 2, 'Whenever you buy 5 or more followers, +1 of each color.', {
       onBuyFollowers(ctx, owner, card, buyer, tier) {
-        if (buyer === owner && tier?.get >= 6) eachColor(ctx, owner, 1);
+        if (buyer === owner && tier?.get >= 5) eachColor(ctx, owner, 1);
       },
     }),
     m('explorer', 'Explorer', 4, 4, 'Whenever you take a space outside Yellow, +1 yellow.', {

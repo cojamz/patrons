@@ -45,6 +45,10 @@
   ],
   "next": [
     {
+      "name": "Ambiguous design calls",
+      "next": "Drafting, multi-person member counts, tie splitting, discounts and terminology wait for specific answers; clear fixes continue."
+    },
+    {
       "name": "Cold first-spin hitch",
       "next": "Trace first-spin layout at laptop width; cache repeated panel geometry and require the first spin to pass independently of retries."
     },
@@ -68,22 +72,24 @@
   "releaseSummary": "Deck browser \u00b7 brighter market \u00b7 clearer wording \u00b7 smoother motion",
   "upNext": [
     {
-      "source": "Cold first-spin hitch",
-      "name": "Smooth the first spin",
-      "summary": "Remove the remaining hitch when the wheel first turns.",
-      "doneWhen": "The first spin passes the frame budget at laptop width, without relying on a smoother retry."
+      "source": "Multiplayer turn correctness",
+      "name": "Fix multiplayer turns and logs",
+      "summary": "Correct stale highlights, turn labels and missing updates.",
+      "doneWhen": "Two-client regressions keep legal choices, turn ownership and logs in sync."
     },
     {
-      "source": "Member-language pass",
-      "name": "Make member text precise and minimal",
-      "summary": "Shorten abilities without losing a condition.",
-      "doneWhen": "Each revised ability matches its amount, trigger, target, timing and limits in the game rules."
+      "source": "UI interaction fixes",
+      "name": "Make actions and market easier to use",
+      "summary": "Direct desktop placement, cleaner card views and a visible Done button.",
+      "doneWhen": "Desktop and phone checks pass without losing exact rules or outcomes."
     },
     {
-      "source": "Opponent engines & scoring polish",
-      "name": "Make points easier to follow",
-      "summary": "Clarify opponents\u2019 bonuses and where scores come from.",
-      "doneWhen": "Point sources remain clear through play and round-end scoring, verified visually."
+      "source": "Rules and member fixes",
+      "name": "Correct theft and explicit member changes",
+      "summary": "Fix doubled steals, protection and stated card values.",
+      "doneWhen": "Engine regressions pass; ambiguous redesigns stay outside the release."
     }
-  ]
+  ],
+  "batchStatus": "In progress",
+  "batchNote": "113 new notes captured \u00b7 clear fixes first"
 }

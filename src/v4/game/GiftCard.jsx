@@ -15,7 +15,6 @@ import { spriteId } from '../art/index.js';
 import { cardColor, onTable } from './Info.jsx';
 import { realHover } from '../hover.js';
 import { TurnOf } from './parts.jsx';
-import { leadWarning } from './boardPick.js';
 import './giftcard.css';
 
 const LABELS = { color: [null, null], give: ['Color', 'To'], gift: [null, 'To'], colors: ['Give', 'Get'], amount: ['Get', 'How many'], trade: ['Yours', 'Theirs'], steal: [null, null], recruit: [null, null], move: [null, null] };
@@ -91,7 +90,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
   // the row to act on takes the focus, so the keyboard starts where the mouse would
   useEffect(() => {
     const b = box.current && box.current.querySelector(`.gc-row[data-row="${step}"] button:not([disabled])`);
-    if (b) b.focus({ preventScroll: true });
+    if (b && (!document.hasFocus || document.hasFocus())) b.focus({ preventScroll: true });
   }, [pend, step]);
   // a second row that scrolls inside the card (a swap in round III: many rivals' members) fades at the edge that has
   // more, so it never reads as cut off
@@ -231,7 +230,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
   // the steal: each rival's face, then the stacks you can take from (one coin a click); a rival you can't take from
   // says why, quietly, in its place
   const plan = new Map();
-  if (preview && g.plan) for (const x of g.plan) plan.set(`${x.pid}:${x.res}`, (plan.get(`${x.pid}:${x.res}`) || 0) + 1);
+  if (preview && g.plan) for (const x of g.plan) plan.set(`${x.pid}:${x.res}`, (plan.get(`${x.pid}:${x.res}`) || 0) + (x.take || 1));
   const stealRows = () => g.rivals.map(r => (
     <span key={r.pid} className="gc-group gc-rival" data-pid={r.pid} data-dim={r.stacks.length ? undefined : '1'}>
       <span className="gc-who" title={r.name}><Minion color={playerColor(r.pid)} emoji={seatEmoji(state, r.pid)} size={24} /><span className="gc-who-name">{r.name}</span></span>
@@ -240,7 +239,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
           const k = plan.get(`${r.pid}:${st.res}`) || 0;
           return (
             <button key={st.res} type="button" className="gc-item gc-dot gc-stack" data-pid={r.pid} data-res={st.res} data-option={st.o.id} data-plan={k || undefined} disabled={busy}
-              aria-label={`Take 1 ${st.res} from ${r.name} (has ${st.has})`} title={`Take 1 ${st.res} from ${r.name}`}
+              aria-label={`Take ${st.o.take || 1} ${st.res} from ${r.name} (has ${st.has})`} title={`Take ${st.o.take || 1} ${st.res} from ${r.name}`}
               onClick={e => onAnswer(st.o.id, e.currentTarget, r.pid)}>
               <ResourceGlyph r={st.res} size={24} decorative />
               <b className="num">{st.has}</b>
@@ -252,9 +251,10 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
       </span>
     </span>
   ));
+  const planTotal = g.plan?.reduce((n, x) => n + (x.take || 1), 0) || 0;
   const planWords = g.plan ? (() => {
     const by = new Map();
-    for (const x of g.plan) { const k = `${x.pid}:${x.res}`; by.set(k, (by.get(k) || 0) + 1); }
+    for (const x of g.plan) { const k = `${x.pid}:${x.res}`; by.set(k, (by.get(k) || 0) + (x.take || 1)); }
     return [...by].map(([k, n]) => { const [pid, res] = k.split(':'); return `${n} ${res} from ${state.players[pid].name}`; }).join(', ');
   })() : '';
   // the members you can recruit from the row: picture, name and what you pay
@@ -320,13 +320,12 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
           <div ref={more} onScroll={edge} className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? theirs() : g.others.map(secondItem)}</div>
         </div>
       )}
-      {leadWarning(pend.options) && <p className="pay-lead gc-lead" data-pay-lead>{leadWarning(pend.options)}</p>}
       {(g.rest.length > 0 || (g.plan && g.plan.length > 1)) && (
         <div className="gc-rest">
           {g.plan && g.plan.length > 1 && (
-            <button type="button" className="btn gc-rest-btn gc-all" data-take-all={g.plan.length} disabled={busy} title={`Takes ${planWords}`} aria-label={`Take all ${g.plan.length}: ${planWords}`}
+            <button type="button" className="btn gc-rest-btn gc-all" data-take-all={planTotal} disabled={busy} title={`Takes ${planWords}`} aria-label={`Take all ${planTotal}: ${planWords}`}
               onPointerEnter={() => setPreview(true)} onPointerLeave={() => setPreview(false)} onFocus={() => setPreview(true)} onBlur={() => setPreview(false)} onClick={onTakeAll}>
-              Take all <b className="num">{g.plan.length}</b>
+              Take all <b className="num">{planTotal}</b>
             </button>
           )}
           {g.rest.map(o => <button key={o.id} type="button" className="btn gc-rest-btn" data-option={o.id} disabled={busy} onClick={e => onAnswer(o.id, e.currentTarget, null)}>{o.label}</button>)}

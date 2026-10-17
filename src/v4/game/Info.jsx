@@ -5,7 +5,7 @@
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { cardDef, defById, quadrant, previewSpace, memberPrice } from '../../engine/v4/index.js';
+import { memberWeight, cardDef, defById, quadrant, previewSpace, memberPrice } from '../../engine/v4/index.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
@@ -205,6 +205,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
   const copied = card && card.copy ? (() => { try { return defById(card.copy); } catch { return null; } })() : null;
   const ability = String((copied || d).text || '').replace(/^Worth \d+ followers?\.\s*/i, '').replace(/^(Free\.\s*)?No effect\.?$/i, '').trim();
   const worth = d.f != null ? d.f : 1;
+  const weight = uid != null ? memberWeight(state, uid) : Math.max(d.n || 1, d.f || 1);
   const sphere = onTable(state, d) ? (() => { try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } })() : 'colorless';
   // a discount on you (the shop face shows the price, the list price struck beside it): its reason
   const paid = where === 'In the shop' && me != null && state.players[me] ? paidParts(state, state.players[me], uid, d) : null;
@@ -215,8 +216,8 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
         <span className="mc-id">
           <span className="mc-row"><b className="mc-name">{d.name}</b>{!onFace && <span className="mc-worth" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`}><b className="n">{d.f}</b><Follower size={14} title={`worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></span>}</span>
           {/* the cost's dots say its colors; a member of no color here says so on its own line below (w3a #23: "costs 4◐ · colorless") */}
-          {onFace ? (d.n > 1 ? <small className="mc-cost">counts as {d.n} members</small> : null)
-            : <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}</small>}
+          {onFace ? (weight > 1 ? <small className="mc-cost">counts as {weight} members</small> : null)
+            : <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{weight > 1 ? ` · counts as ${weight} members` : ''}</small>}
         </span>
       </div>
       {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}

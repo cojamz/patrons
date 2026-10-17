@@ -20,7 +20,7 @@ export function useDialog(onClose) {
   useEffect(() => {
     const back = document.activeElement;
     const first = box.current && (box.current.querySelector('[autofocus]:not([disabled]), [data-autofocus]:not([disabled])') || box.current.querySelector('button:not([disabled]), [href], input'));
-    if (first) first.focus({ preventScroll: true });
+    if (first && (!document.hasFocus || document.hasFocus())) first.focus({ preventScroll: true });
     const onKey = e => {
       if (e.key === 'Escape' && close.current) { e.preventDefault(); e.stopPropagation(); close.current(); }
       if (e.key === 'Tab' && box.current) { // keep Tab inside the dialog
@@ -33,7 +33,7 @@ export function useDialog(onClose) {
     addEventListener('keydown', onKey, true);
     return () => {
       removeEventListener('keydown', onKey, true);
-      if (back && back.isConnected && back.focus) back.focus({ preventScroll: true });
+      if (back && back.isConnected && back.focus && (!document.hasFocus || document.hasFocus())) back.focus({ preventScroll: true });
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return box;
@@ -80,7 +80,7 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
   useEffect(() => {
     // the docked caption takes focus itself (Tab then reaches its buttons and the list); a panel focuses its first button
     const b = box.current && (seatPick ? box.current : box.current.querySelector('button:not([disabled])'));
-    if (b) b.focus({ preventScroll: true });
+    if (b && (!document.hasFocus || document.hasFocus())) b.focus({ preventScroll: true });
   }, [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   // counted picks ("Steal: take 1 gold from… (2 left)") show how many are already taken
   const total = useRef(null);
@@ -93,12 +93,12 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
     : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
   const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
-    <section className={`prompt choice${setup ? ' setup' : ' plain'}${watching ? ' watching' : ''}${place ? ` at-space ${place.up ? 'below' : 'above'}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={watching ? `${watching.name} is picking a starting resource` : setup ? 'Pick a starting resource' : pend.prompt}
+    <section className={`prompt choice${setup ? ' setup' : ' plain'}${watching ? ' watching' : ''}${place ? ` at-space ${place.up ? 'below' : 'above'}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={watching ? `${watching.name} is drafting a resource` : setup ? 'Draft 1 resource' : pend.prompt}
       style={place ? { left: place.left, top: place.top } : undefined}>
       {turnOf && <TurnOf player={turnOf} />}
       {/* setup: the headline says "pick a starting resource (1 of 2)"; the panel says only which pick this is, not the
           same sentence again (RC1 sweep 24) */}
-      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `${watching ? `${watching.name} · pick` : 'Pick'} ${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] || 1} of 2` : <Rich text={pend.prompt} />}</p>
+      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `${watching ? `${watching.name} · ` : ''}Draft 1 resource` : <Rich text={pend.prompt} />}</p>
       {setup ? <><SetupTokens state={state} pend={pend} onPick={pick} busy={busy} /><ForSale state={state} /></>
         : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
       {!setup && left != null && Number(left) > 1 && (

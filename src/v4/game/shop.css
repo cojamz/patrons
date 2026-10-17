@@ -42,3 +42,19 @@
 .lt-shop .lt-card.card.lit,.lt-shop .lt-rates .lt-rate.lit{background:#fffaf0;box-shadow:inset 0 0 0 2px #ffe0a1,0 0 0 2px #ffe0a1,0 0 18px rgba(255,224,161,.45)}
 .lt-shop .lt-card.card[data-aim]{background:#fffaf0;outline:3px solid #ffe0a1;outline-offset:1px;box-shadow:inset 0 0 0 2px #ffe0a1,0 0 0 1px #382516,0 0 24px rgba(255,224,161,.65)}
 .lt-shop .lt-card.card[data-aim] .art{background:color-mix(in srgb,var(--q) 8%,#fffaf0)}
+
+/* One click anywhere switches the order; the active word moves within one tactile control. */
+.lt-shop-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
+.lt-shop-controls .lt-sort{display:inline-flex;gap:0;margin:0;min-height:32px;padding:2px;font:inherit;background:transparent;color:var(--cream-2);cursor:pointer}
+.lt-shop-controls .lt-sort span{padding:4px 6px;font-size:11px;line-height:16px;border-radius:16px}
+.lt-shop-controls .lt-sort span.on{background:var(--cream);color:var(--table,#191310)}
+.lt-view-btn{min-height:32px;padding:4px 6px;border:0;background:none;color:var(--cream-2);font:inherit;font-size:11px;cursor:pointer}
+.lt-view-btn[aria-pressed="true"]{color:var(--cream);text-decoration:underline;text-underline-offset:4px}
+.lt-view-btn:disabled{cursor:default;opacity:1}
+.lt-shop-controls button:focus-visible{outline:2px solid var(--cream);outline-offset:2px}
+.lt-shop-cards .lt-shop-head{height:auto;min-height:32px;gap:8px}
+.lt-shop-cards .lt-shop-head .lt-h{display:flex;flex-direction:column;gap:0}
+
+/* Keep the colored rim legible even while another quadrant is being counted. */
+.lt .stage svg.wheel-paper .rim.wait{fill-opacity:.8}
+.lt .stage svg.wheel-paper .rim-rule.wait,.lt .stage svg.wheel-paper .rim-emoji.wait,.lt .stage svg.wheel-paper .rim-dot.wait{opacity:.8}

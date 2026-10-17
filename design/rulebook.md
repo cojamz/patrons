@@ -6,10 +6,10 @@ Lead a cult for three rounds. Most **followers** after round III wins.
 - **Minions** are your workers, small copies of your emoji: 3 in round I, 4 in round II, 5 in round III.
 - **Followers** are your score, shown by a little-person mark. You start with 1. Each member is worth the followers beside the mark on its card (usually 1). Only followers you bought or won can be sold or stolen.
 - **Resources** come in one color per quadrant, and there is one quadrant per player. A resource is a plain dot in its color; a dot split into the table's colors means "any resources".
-- **Members** are recruited from the shop. Each is worth followers, and most have an ability. "On recruit" happens when it joins you; "at round start" happens before anyone places a minion.
+- **Members** are recruited from the shop. A card counts as its printed follower value in members, or a larger member count stated on the card; bonus followers do not increase that count. Each is worth followers, and most have an ability. "On recruit" happens when it joins you; "at round start" happens before anyone places a minion.
 
 ## Setup
-In seat order, each player chooses 2 starting resources.
+Round I’s turn order is drawn first. Starting with the player who will act last, draft 1 resource from the table’s colors. Each color can be taken once; the first player gets the remaining color. This happens only before round I.
 
 ## The wheel
 One colored quadrant per player, each with its own spaces and its own contest, printed on its rim.
@@ -23,20 +23,19 @@ One colored quadrant per player, each with its own spaces and its own contest, p
 Turns go down the player column, then back up: 1-2-3-4, 4-3-2-1, repeating. The player at either end takes two turns in a row. This is snake order. Round I's order is random; from round II, fewest followers goes first (ties: whoever went later last round).
 1. **Place a minion** on an open space and resolve it. A space that recruits does not use your buy, unless it says "as your buy".
 2. **Buy one thing**, or pass:
-   - **Recruit a member** from the shop: 8 face up, refilled from the face-down pile at the head of the row, which shows how many are left. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins are already in the cost; tap one of your resources to swap it in. A discount ("your next member costs 4 less") and any member that changes a price (Penny Pincher's gold counts double) apply to every member you pay for, including one a space lets you recruit (Snap Up, Half Price). While a discount is yours, each card shows what you'd pay, with its list price small and struck beside it ("free" when it costs you nothing). Cards stay readable; affordable choices have a gold edge. Point at a card to see what you're short of.
+   - **Recruit a member** from the shop: 8 face up, refilled from the face-down pile at the head of the row; the whole market refreshes between rounds. The pile shows how many are left. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins are already in the cost; tap one of your resources to swap it in. A discount ("your next member costs 4 less") and any member that changes a price (Penny Pincher's gold counts double) apply to every member you pay for, including one a space lets you recruit (Snap Up, Half Price). While a discount is yours, each card shows what you'd pay, with its list price small and struck beside it ("free" when it costs you nothing). Cards stay readable; affordable choices have a gold edge. Point at a card to see what you're short of.
    - Or **buy followers** with any resources: 1 for 1 follower, 5 for 5, or 10 for 10. All three buys are unlimited.
-   - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back only its colored part, in its color (in any colors if its color isn't on the table). The "any" part never comes back, so a member with no colored part can't be released, and neither can a member you've already used.
 
 An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while the board has a space to spare after every remaining minion lands. A member whose color isn't on the table is **colorless**: it gives nothing to cards that pay "its color".
 
 ## Round end
-Each contest's leader gains +2 followers in round I, +4 in round II, +6 in round III. Tied leaders each gain the full prize. You need at least 1 of what's counted. The count is taken at round end.
+Each contest's leader gains +2 followers in round I, +4 in round II, +6 in round III. Tied leaders each gain half the prize: +1 / +2 / +3, regardless of how many players tie. You need at least 1 of what's counted. The count is taken at round end.
 
 ## Game end
 After round III, add game-end member bonuses. Most followers wins; ties go to more members.
 
 ## On screen
-- Point at anything (long-press on a phone) for its full rule and what you'd get. A faded shop card is one you can't afford.
+- Point at anything (long-press on a phone) for its full rule and what you'd get. Affordable market cards have a gold edge.
 - When paying, the suggested payment is filled in; tap a resource to swap it in.
 - Speed (Quick, Steady, Relaxed) is on the setup page and in the ☰ menu. Tap to skip the round-end Reckoning.
 

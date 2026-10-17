@@ -5,7 +5,7 @@ import { render, screen, fireEvent, cleanup, within } from '@testing-library/rea
 import { createGame, applyMove, chooseBotMove, quadrant } from '../../../engine/v4/index.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 function fakeSession(state, mySeats) {
   return {
@@ -41,10 +41,11 @@ describe('v4 game screen', () => {
     expect(container.querySelector('.lt-cult-seat.mine .cs-setup [data-option="color:gold"]')).not.toBeNull();
     fireEvent.click(within(container.querySelector('.lt-cult-seat.mine .cs-setup')).getByRole('button', { name: 'Take 1 gold' }));
     expect(session.submit).toHaveBeenCalledWith({ player: me, option: 'color:gold' });
-    expect(screen.getByText(/pick a starting resource/i, { selector: '[data-prompt] *' })).toBeTruthy();
+    expect(screen.getByText(/Draft 1 resource/i, { selector: '[data-prompt] *' })).toBeTruthy();
   });
 
-  it('place: every open space is clickable (wheel and card), locked and taken spaces are not', () => {
+  it('place: desktop spaces submit directly; locked and taken spaces are not clickable', () => {
+    vi.stubGlobal('matchMedia', vi.fn(q => ({ matches: q.includes('min-width: 861px'), addEventListener() {}, removeEventListener() {} })));
     let state = advanceTo(createGame({ seats, seed: 11 }), 'place');
     // take one space so a taken space exists, then come back round to a placement
     state = applyMove(state, chooseBotMove(state, () => 0.3));
@@ -104,13 +105,15 @@ describe('v4 game screen', () => {
   });
 
   it('hot-seat: a choice that opens a turn carries the hand-over in its own header (no extra screen)', () => {
-    const two = [{ name: 'Ana', kind: 'human' }, { name: 'Bea', kind: 'human' }];
+    const two = [{ name: 'Ana', kind: 'human' }, { name: 'Bea', kind: 'human' }, { name: 'Cy', kind: 'human' }];
     let state = createGame({ seats: two, seed: 2 });
-    const [first, second] = state.firstOrder;
-    state = applyMove(state, { player: first, option: 'color:gold' });
-    state = applyMove(state, { player: first, option: 'color:red' });
-    expect(state.pending.player).toBe(second);
-    const session = fakeSession(state, [0, 1]);
+    const first = state.pending.player;
+    expect(first).toBe(state.firstOrder.at(-1)); // the resource draft reverses placement order
+    state = applyMove(state, { player: first, option: state.pending.options[0].id });
+    const second = state.pending.player;
+    expect(second).not.toBe(first);
+    expect(state.pending.kind).toBe('setup');
+    const session = fakeSession(state, [0, 1, 2]);
     const { container } = render(<GameScreen session={session} />);
     // setup is a choice: the hand-over is folded into it ("Bea's turn · pass the device"), one step not two
     const who = two[second].name;

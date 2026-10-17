@@ -32,7 +32,7 @@ describe('Yellow actions', () => {
   });
   it('Branch Out: +1 of each other color per 3 yellow (yellow kept); Potluck: 1 per member of its color; Bumper Crop: per full set', () => {
     expect(R(take(sc({ round: 2, res: [{ yellow: 7 }] }), 'yellow.prism'))).toEqual({ gold: 2, red: 2, yellow: 7, green: 2 });
-    expect(R(take(sc({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern']] }), 'yellow.gather'))).toMatchObject({ gold: 1, red: 2 });
+    expect(R(take(sc({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern']] }), 'yellow.gather'))).toMatchObject({ gold: 1, red: 3 }); // Twins2 + Intern1.
     expect(R(take(sc({ round: 3, res: [{ gold: 2, red: 2, yellow: 3, green: 2 }] }), 'yellow.flourish'))).toEqual({ gold: 4, red: 4, yellow: 3, green: 4 });
   });
 });
@@ -43,9 +43,9 @@ describe('Yellow members', () => {
     expect(R(s)).toEqual({ gold: 2, red: 1, yellow: 1, green: 1 });
     expect(named(s, 'Gardener')).toHaveLength(1);
   });
-  it('Peddler: round start +1 of each other color, named', () => {
+  it('Peddler: round start +1 of each color, named', () => {
     const s = sc({ members: [['yellow.peddler']], queue: [{ t: 'round', r: 2 }] });
-    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 0, green: 1 });
+    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
     expect(named(s, 'Peddler')).toHaveLength(1);
   });
   it('Gleaner: an action gaining 2+ of another color at once gives +1 yellow, named; Midas’s converted gain counts', () => {
@@ -117,7 +117,7 @@ describe('Yellow members', () => {
   });
   it('Sower × Release: planted yellow comes back when the Sower leaves (as Cory ruled for Investor)', () => {
     const restore = pinCosts({ 'yellow.sower': [2, 2] });
-    let s = sc({ round: 2, res: [{ yellow: 1 }], members: [['yellow.sower']], queue: [{ t: 'buy', p: 0 }] });
+    let s = sc({ round: 2, rules: { release: true }, res: [{ yellow: 1 }], members: [['yellow.sower']], queue: [{ t: 'buy', p: 0 }] });
     const u = uidOf(s, 'yellow.sower', 0);
     s.cards[u].sown = 3;
     s = move(s, `release:${u}`);
@@ -167,13 +167,15 @@ describe('Yellow members', () => {
     s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'yellow.farmer';
     expect(R(take(s, 'yellow.harvest')).yellow).toBe(3); // Harvest's 1 (no other colors held), +1 Farmer, +1 its copy
   });
-  it('Weaver: buying 6+ followers gives +1 of each color, named; a 3-buy does not', () => {
+  it('Weaver: buying 5+ followers gives +1 of each color, named; a 1-buy does not', () => {
     let s = sc({ res: [{ gold: 3, red: 3, yellow: 3, green: 3 }], members: [['yellow.weaver']] });
     s = take(s, 'gold.rush');
-    s = move(s, 'tier:top');
+    s = move(s, 'tier:mid'); // The five-follower tier now reaches Weaver's threshold.
     expect(named(s, 'Weaver')).toHaveLength(1);
+    expect(s.players[0].bonus).toBe(5);
+    expect(named(s, 'Weaver')[0]).toContain('+1 gold, +1 red, +1 yellow, +1 green');
     s = take(sc({ res: [{ gold: 3, red: 3 }], members: [['yellow.weaver']] }), 'gold.rush');
-    s = move(s, 'tier:mid');
+    s = move(s, 'tier:small');
     expect(named(s, 'Weaver')).toHaveLength(0);
   });
   it('Explorer: +1 yellow for a space outside Yellow, named; Straggler’s move counts', () => {

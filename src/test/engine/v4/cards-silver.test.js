@@ -27,11 +27,11 @@ describe('Silver actions', () => {
     expect(named(s, 'Caterer')).toHaveLength(1); // one gift, not one per recipient
     expect(s.log).toContain(`P1 raised a toast: +${6 * round} silver, +${round} silver to everyone else.`);
   });
-  it('Sweet Talk +4 then swap; Rising Tide: others +1 then half the richest rival’s, rounded up; Hold Court', () => {
+  it('Sweet Talk +4 then swap; Rising Tide: others +2 then half the richest rival’s, rounded up; Hold Court', () => {
     let s = move(take(sc({ round: 2 }), 'silver.tongue'), 'swap:red:4');
     expect(s.players.map(p => [p.res.silver, p.res.red])).toEqual([[0, 4], [1, 0]]);
     s = take(sc({ round: 2, res: [{}, { silver: 4 }] }), 'silver.tide');
-    expect(s.players.map(p => p.res.silver)).toEqual([3, 5]);
+    expect(s.players.map(p => p.res.silver)).toEqual([3, 6]);
     s = take(sc({ round: 3, res: [{ silver: 7 }] }), 'silver.jubilee');
     expect(s.players[0].bonus).toBe(3);
     expect(s.players.map(p => p.res.silver)).toEqual([7, 2]);
@@ -131,7 +131,7 @@ describe('Silver members', () => {
     expect(followers(s, s.players[0])).toBe(2);
     const red = contestTable(s).find(c => c.qid === 'red');
     expect(red.rows.find(r => r.player === 0).count).toBe(3);
-    expect(red.winners).toEqual([0]);
+    expect(red.winners).toEqual([0, 1]); // Revelers3 ties Intern1 + Twins2.
     expect(take(sc({ round: 2, members: [['silver.revelers']] }), 'gold.windfall').players[0].res.gold).toBe(3);
     s = sc({ members: [['silver.revelers', 'red.patriarch']], queue: [{ t: 'finish' }] });
     expect(s.players[0].final.parts).toContain('Patriarch +2');
@@ -143,14 +143,14 @@ describe('Silver members', () => {
   it('Heir: when recruited, +1 silver per member you have (itself included), named', () => {
     let s = sc({ round: 3, res: [{ silver: 8 }], members: [['red.intern', 'red.twins']], shop: ['silver.heir'], queue: [{ t: 'buy', p: 0 }] });
     s = buy(s, 'silver.heir');
-    expect(S(s)).toBe(3);
-    expect(named(s, 'Heir')).toEqual(["P1's Heir: +3 silver."]);
+    expect(S(s)).toBe(4); // Heir1 + Intern1 + Twins2.
+    expect(named(s, 'Heir')).toEqual(["P1's Heir: +4 silver."]);
   });
   it('Heir: at round start, only round III pays, +1 silver per member, named', () => {
     let s = sc({ members: [['silver.heir', 'red.intern', 'red.twins']], queue: [{ t: 'round', r: 2 }] });
     expect(S(s)).toBe(0);
     s = sc({ members: [['silver.heir', 'red.intern', 'red.twins']], queue: [{ t: 'round', r: 3 }] });
-    expect(S(s)).toBe(3);
+    expect(S(s)).toBe(4); // Heir1 + Intern1 + Twins2.
     expect(named(s, 'Heir')).toHaveLength(1);
   });
 
@@ -194,7 +194,7 @@ describe('Silver members', () => {
 
   it('Patron Saint: game end +1 follower per 2 silver members in play, anyone’s', () => {
     const s = sc({ members: [['silver.saint', 'silver.dowager'], ['silver.guest', 'silver.heir']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.parts).toEqual(['Patron Saint +2']);
+    expect(s.players[0].final.parts).toEqual(['Patron Saint +3']);
     void resume;
   });
 });

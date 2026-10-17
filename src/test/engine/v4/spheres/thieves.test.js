@@ -75,17 +75,17 @@ describe('Magenta actions', () => {
     expect(R(z)[0].magenta).toBe(0);
   });
 
-  it('Redistribute: take 1 from each player holding more than you (you pick what)', () => {
+  it('Redistribute: take 1 from each rival (you pick what)', () => {
     let s = scene({ n: 4, res: [{ gold: 2 }, { gold: 3 }, { red: 1, blue: 2 }, { gold: 2 }] });
     s = take(s, 'thieves.tipoff');
-    expect(ids(s)).toEqual(['take:1:gold', 'take:2:red', 'take:2:blue']);
-    s = play(s, 'take:2:red', 'take:1:gold');
-    expect(R(s).map(r => [r.gold, r.red, r.blue, r.magenta])).toEqual([[2, 0, 0, 2], [2, 0, 0, 0], [0, 0, 2, 0], [2, 0, 0, 0]]);
+    expect(ids(s)).toEqual(['take:1:gold', 'take:2:red', 'take:2:blue', 'take:3:gold']);
+    s = play(s, 'take:2:red', 'take:1:gold', 'take:3:gold');
+    expect(R(s).map(r => [r.gold, r.red, r.blue, r.magenta])).toEqual([[2, 0, 0, 3], [2, 0, 0, 0], [0, 0, 2, 0], [1, 0, 0, 0]]);
     const z = take(scene({ res: [{ gold: 5 }, { gold: 1 }] }), 'thieves.tipoff');
-    expect(z.pending?.kind).not.toBe('choose');
+    expect(ids(z)).toEqual(['take:1:gold']);
   });
 
-  it('Lie Low: take 1 from a rival; then no one can steal resources from you this round, Gold’s Collect Debts included (members stay takeable)', () => {
+  it('Lie Low: take 1 from a rival; then no one can steal resources from you this round, Gold’s Collect Debts included (members protected too)', () => {
     let s = scene({ round: 2, res: [{ gold: 4 }, {}, { gold: 2 }], members: [['red.intern'], [], []],
       queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 1 }, { t: 'turn', p: 1 }] });
     s = take(s, 'thieves.hideout');
@@ -95,11 +95,11 @@ describe('Magenta actions', () => {
     s = take(s, 'thieves.pickpocket');
     expect(ids(s)).toEqual(['take:2:gold']);
     s = pass(play(s, 'take:2:gold'));
-    // Cory: Lie Low shields resources only, so Shake Down can still pick the Intern
+    // Lie Low now protects the Intern too.
     s = take(s, 'thieves.ransom');
-    expect(ids(s)).toEqual([`card:${uidOf(s, 'red.intern', 0)}`]);
-    s = pass(play(s, `card:${uidOf(s, 'red.intern', 0)}`, 'let'));
-    expect(defs(s, 0)).toEqual([]);
+    expect(ids(s)).not.toContain(`card:${uidOf(s, 'red.intern', 0)}`);
+    s = pass(s);
+    expect(defs(s, 0)).toEqual(['red.intern']);
     s = take(s, 'gold.steal');
     expect(s.pending?.kind).not.toBe('choose');
     expect(R(s)[0].gold).toBe(4);
@@ -221,6 +221,7 @@ describe('Magenta members', () => {
     let s = scene({ res: [{ magenta: 2, gold: 1 }, { gold: 3 }, { red: 2 }], members: [['red.intern', 'red.volunteer', 'red.mob', 'red.drive']], shop: ['thieves.grifter', ...SHOP.slice(1)] });
     s = take(s, 'red.turnout');
     s = move(s, `card:${uidOf(s, 'thieves.grifter', 'shop')}`);
+    while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     // 5 members → take 2: P2 (3) first, then P2 vs P3 tied at 2 → P2 (first found)
     expect(R(s)[0].magenta).toBe(2);
     expect(R(s)[1].gold + R(s)[2].red).toBe(3);
@@ -237,7 +238,7 @@ describe('Magenta members', () => {
 
   it('Desperado: while no one has fewer followers, steals take double', () => {
     let s = scene({ res: [{}, { gold: 9 }], bonus: [0, 2, 1], members: [['thieves.desperado']] });
-    s = play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold', 'take:1:gold');
+    s = play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold');
     expect(R(s)[0].magenta).toBe(4);
   });
 

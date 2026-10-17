@@ -1,5 +1,6 @@
 // Live panel round 1 (cf23306), lane G1: a space's hover says what the space will really do, and why.
 import { describe, it, expect } from 'vitest';
+import { applyMove } from '../../../engine/v4/index.js';
 import { previewSpace } from '../../../engine/v4/preview.js';
 import { youdWords, cachedPreview } from '../../../v4/game/Info.jsx';
 import { raceAfter, whyLine } from '../../../v4/game/HoverCards.jsx';
@@ -37,7 +38,7 @@ describe('hover honesty (live panel r1)', () => {
   it('Snap Up: the recruit is said by its price after the +2 blue, never as a net loss', () => {
     const s = sceneQ({ quadrants: T, round: 1, n: 3, res: [{ gold: 9, red: 3 }], shop: ['red.bigfamily'] });
     const { y } = words(s, 'Snap Up');
-    expect(y.text).toMatch(/^\+2 blue, or \+1 member \(.+\), \+\d+ followers? for \d+$/);
+    expect(y.text).toBe('+2 blue, or +3 members (Big Family), +3 followers for 4');
     expect(y.text).not.toMatch(/−/);
   });
 
@@ -50,18 +51,24 @@ describe('hover honesty (live panel r1)', () => {
     expect(whyLine(pv.reasons)).toBe('Bandwagon: 3 members recruited this round, 1 red each');
   });
 
-  it('Redistribute in round III with Desperado takes 2 from each richer rival, and the Why says Desperado doubled it', () => {
+  it('Redistribute in round III with Desperado takes 2 from each rival, and the Why says Desperado doubled it', () => {
     const s = sceneQ({ quadrants: T, round: 3, n: 3, res: [{}, { gold: 5 }, { red: 4 }], bonus: [0, 3, 3], members: [['thieves.desperado'], [], []] });
     const { pv, y } = words(s, 'Redistribute');
     expect(y.text).toBe('+4 magenta');
     expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (2 → 4)');
   });
 
-  it('Redistribute when you hold the most: the hover says nothing, and taking it really gives nothing', () => {
+  it('Redistribute when you hold the most still previews and steals from each rival', () => {
     const s = sceneQ({ quadrants: T, round: 1, n: 3, res: [{ gold: 5 }, { gold: 1 }, { red: 1 }], bonus: [5, 0, 0] });
-    expect(words(s, 'Redistribute').y.text).toBe('nothing right now');
-    const t = take(s, 'thieves.tipoff');
-    expect(t.players.map(p => p.res)).toEqual(s.players.map(p => p.res));
-    expect(t.log).toContain('P1 found nothing to steal.');
+    expect(words(s, 'Redistribute').y.text).toBe('+2 magenta');
+    let t = take(s, 'thieves.tipoff');
+    for (let k = 0; k < 8 && t.pending?.kind === 'choose'; k++) {
+      const option = t.pending.options.find(o => o.kind === 'take');
+      if (!option) break;
+      t = applyMove(t, { player: t.pending.player, option: option.id });
+    }
+    expect(t.players[0].res.magenta - s.players[0].res.magenta).toBe(2);
+    expect(t.players[1].res.gold).toBe(0);
+    expect(t.players[2].res.red).toBe(0);
   });
 });

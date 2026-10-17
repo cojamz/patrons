@@ -85,7 +85,6 @@ describe('online session over the memory transport', () => {
     await until(() => hs.getState() && gs.getState());
     const st = hs.getState();
     const actor = st.pending.player === 0 ? hs : gs;
-    const actorId = st.pending.player === 0 ? host.playerId : guests[0].playerId;
     const move = { player: st.pending.player, option: st.pending.options[0].id };
     // same call twice -> same promise
     const p1 = actor.submit(move), p2 = actor.submit(move);
@@ -96,9 +95,12 @@ describe('online session over the memory transport', () => {
     const t = guests[0].t;
     await until(() => gs.info.version === 2);
     const st2 = gs.getState();
-    expect(st2.pending.player).toBe(move.player); // same player picks both starting resources
+    expect(st2.pending.kind).toBe('place'); // the remaining draft color was autoassigned
+    expect(st2.pending.player).not.toBe(move.player); // reverse draft: first placer drafted last
     const base = `${ROOM_ROOT}/${host.code}`;
-    const rec = { by: actorId, seat: move.player, move: { player: move.player, option: hs.getState().pending.options[0].id }, n: 2, mid: 'dupmid' };
+    const nextSeat = st2.pending.player;
+    const nextId = nextSeat === 0 ? host.playerId : guests[0].playerId;
+    const rec = { by: nextId, seat: nextSeat, move: { player: nextSeat, option: st2.pending.options[0].id }, n: 2, mid: 'dupmid' };
     await t.push(`${base}/moves`, rec);
     await t.push(`${base}/moves`, rec);
     await until(() => hs.info.version === 3 && !room(store, host.code).moves, { label: 'moves drained' });

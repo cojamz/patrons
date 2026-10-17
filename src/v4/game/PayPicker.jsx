@@ -20,7 +20,6 @@ import { ResourceGlyph } from './Glyphs.jsx';
 import { CostDots, cardColor, onTable } from './Info.jsx';
 import { priceNotes } from './priceNotes.js';
 import { motionOK } from './flight.js';
-import { leadsLost } from './boardPick.js';
 import './pay.css';
 
 const vecOf = (res, v) => Object.fromEntries(res.map(r => [r, (v && v[r]) || 0]));
@@ -99,11 +98,6 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
     ...(def ? priceNotes(state, p, uid).filter(n => n.key !== 'total') : []),
   ], [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   const pay = () => { if (match && !busy) onPick(match.id); };
-  // this way gives up a contest lead or tie you hold (the engine's breaks): one quiet line says so
-  const lostLead = match && match.breaks && match.breaks.length ? match.breaks : null;
-  // when any way gives up a lead, the line's room is kept while the way you're on keeps them all, so Pay never jumps as
-  // you move coins (skeptic round 2: Pay jumped 40px when "gives up your tie" appeared)
-  const someLost = ways.some(o => o.breaks && o.breaks.length);
   const box = useDialog(back ? () => { if (!busy) onPick('back'); } : null);
 
   // beside what you're buying: the card (or follower tile) you clicked stays lit in a hole in the dimmed table, and the
@@ -140,7 +134,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
     const el = box.current;
     if (!el || busy || el.contains(document.activeElement)) return;
     const b = el.querySelector('[data-autofocus]:not([disabled])');
-    if (b) b.focus({ preventScroll: true });
+    if (b && (!document.hasFocus || document.hasFocus())) b.focus({ preventScroll: true });
   }, [pend, busy, !!match]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // the coins fly between stack and socket: where each coin was before a change, then a FLIP after it
@@ -286,11 +280,10 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
             a lost lead (one way) says that instead, below. */}
         {ways.length > 1 && <p className="pay-legend" data-pay-legend>You can pay this more than one way: click a coin to move it.</p>}
 
-        {(notes.length > 0 || nudge || someLost) && (
+        {(notes.length > 0 || nudge) && (
           <div className="pay-notes">
             {notes.length > 0 && <ul className="pay-rules" data-pay-rules={notes.length}>{notes.map(n => <li key={n.key} data-pay-rule={n.key}>{n.text}</li>)}</ul>}
-            {lostLead ? <p className="pay-lead" data-pay-lead={lostLead.join(' ')}>Paying this gives up {leadsLost(lostLead, match.ties || [])}.</p>
-              : someLost ? <p className="pay-lead" aria-hidden="true" style={{ visibility: 'hidden' }}>Paying this gives up your lead.</p> : null}
+
             {nudge && <p key={nudge.n} className="pay-nudge" role="status">{nudge.text}</p>}
           </div>
         )}

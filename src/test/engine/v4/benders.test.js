@@ -11,7 +11,7 @@ import { STRAYS, stray } from './stray.js';
 
 const DEFAULT = ['gold', 'red', 'blue', 'green'];
 function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null, bonus = [], queue = null, slots = {}, quadrants = DEFAULT, rules = {}, order = null } = {}) {
-  const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants, rules });
+  const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants, rules: { release: true, ...rules } });
   s.queue = []; s.pending = null; s.round = round; s.slots = { ...slots }; s.squats = {}; s.log = [];
   s.order = order || [];
   s.players.forEach((p, i) => {

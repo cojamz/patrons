@@ -107,9 +107,9 @@ export default {
     }),
     m('drive', 'Pied Piper', 2, 2, 'Recruit 2+ members in one turn: +2 red.', {
       // pays the moment your second recruit of the turn lands, so the red can still be spent this turn
-      onAnyRecruit(ctx, owner, card, by) {
+      onAnyRecruit(ctx, owner, card, by, recruited) {
         // your own turn only: a recruit on someone else's turn (Poach's free recruit) doesn't count toward it
-        if (by === owner && ctx.state.current === owner.id && owner.turnRecruits === 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Pied Piper: +2 red.`); }
+        if (by === owner && ctx.state.current === owner.id && owner.turnRecruits >= 2 && owner.turnRecruits - ctx.memberWeight(recruited) < 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Pied Piper: +2 red.`); }
       },
     }),
     m('host', 'Host', 4, 2, 'Now and at round start, +1 red per 2 members.', { now: true,

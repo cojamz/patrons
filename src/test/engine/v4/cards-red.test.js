@@ -163,9 +163,9 @@ describe('Red members', () => {
     restore();
   });
 
-  it('Patriarch: game end +1 follower per 2 members (a Twins is one member)', () => {
+  it('Patriarch: game end +1 follower per 2 members (Twins counts as two)', () => {
     const s = sceneQ({ members: [['red.patriarch', 'red.twins', 'red.intern']], queue: [{ t: 'finish' }] });
-    expect(memberCount(s, s.players[0])).toBe(3);
-    expect(s.players[0].final.parts).toEqual(['Patriarch +1']);
+    expect(memberCount(s, s.players[0])).toBe(4);
+    expect(s.players[0].final.parts).toEqual(['Patriarch +2']);
   });
 });

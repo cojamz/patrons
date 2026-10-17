@@ -89,8 +89,8 @@ export function promptFor(state, mine) {
     case 'setup': {
       return mine
         // the count is the pick's own title ("Pick 1 of 2"), right where you pick; the header doesn't repeat it (w3b #6)
-        ? { who: p, text: 'Pick a starting resource' }
-        : { who: p, text: `${name} is picking a starting resource` };
+        ? { who: p, text: 'Draft 1 resource' }
+        : { who: p, text: `${name} is drafting a resource` };
     }
     case 'place': {
       // a second placement in a row says why: the snake turning round on you is your turn again, not a bonus;

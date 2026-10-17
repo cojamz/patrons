@@ -104,7 +104,7 @@ export function loadRoundStart(st, online = false) {
   return null;
 }
 
-function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
+export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   const first = session.getState();
   // a local game reloaded while its round summary was up reopens it (session/moment.js; the session holds its bots)
   const [table, setTable] = useState(() => ({ shown: first, moment: restoredMoment(session, first) }));
@@ -260,6 +260,14 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   useEffect(() => {
     const off = session.subscribe(s => {
       if (s === shownRef.current || queue.current.includes(s)) return;
+      // Human clients advance independently. Never replay a stale turn as actionable while the
+      // host is already waiting on another seat. Local bots retain the paced animation queue.
+      if (online && !held.current) {
+        clearTimeout(timer.current); timer.current = null;
+        queue.current.length = 0;
+        show(s);
+        return;
+      }
       queue.current.push(s);
       pump();
     });
@@ -267,16 +275,17 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     // so subscribe's duplicate guard must not leave that queue without a timer to drain it.
     pump();
     return () => { off(); clearTimeout(timer.current); timer.current = null; };
-  }, [session, pump]);
+  }, [session, pump, online, show]);
 
   // the round card's button: the card closes in the click's own frame (GameScreen hides it at once), and the table that
   // follows (the new round, every minion going home) is drawn as a transition behind it (it took the click ~1s at 4×)
   const dismiss = useCallback(() => {
     held.current = false;
-    paced.current = true;
+    paced.current = !online;
+    if (online && queue.current.length > 1) queue.current.splice(0, queue.current.length - 1);
     startTransition(() => setTable(t => ({ ...t, moment: null })));
     pump();
-  }, [pump]);
+  }, [pump, online]);
 
   return [table.shown, table.moment, dismiss, rs0, retime];
 }
@@ -520,7 +529,7 @@ function PromptActions({ optionFor, onPick }) {
   );
 }
 
-const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a minion', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
+const verbFor = kind => ({ setup: 'drafting a resource', place: 'placing a minion', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
   const beforeShow = useRef(null);
@@ -883,6 +892,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // step's kind changes, and only when focus is truly lost (perf, 2026-10-15: a focus() on every state forced a layout)
   const kindKey = pend ? `${pend.player}:${pend.kind}` : 'none';
   useEffect(() => {
+    if (document.hasFocus && !document.hasFocus()) return;
     const a = document.activeElement;
     if ((!a || a === document.body) && root.current) {
       const pill = root.current.querySelector('[data-prompt]');
@@ -892,7 +902,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
 
   // Focus goes to the next sensible control when it becomes your move (not into the void).
   useEffect(() => {
-    if (!mine || needHandoff || !root.current) return;
+    if (!mine || needHandoff || !root.current || (document.hasFocus && !document.hasFocus())) return;
     if (pend.kind !== 'place' && pend.kind !== 'buy') return; // choices and paying focus themselves
     const a = document.activeElement;
     const free = !a || a === document.body || !a.isConnected || (a.matches && a.matches('[data-prompt]')) || (a.closest && a.closest('.side, .stage, .players, .fbuy') && (a.disabled || a.getAttribute('aria-disabled') === 'true' || !a.matches('[data-option]')));
@@ -915,7 +925,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (ready == null || !root.current) return undefined;
     const t = setTimeout(() => {
       const r = root.current;
-      if (!r) return;
+      if (!r || (document.hasFocus && !document.hasFocus())) return;
       const pick = r.querySelector('.prompt.choice button:not([disabled])') || r.querySelector('.dialog.pay .btn.pri') || r.querySelector('.slot.can') || r.querySelector('.act.can') || r.querySelector('.card.can') || r.querySelector('.fb.can') || r.querySelector('.fbuy .pass[data-option]');
       if (pick) pick.focus({ preventScroll: true });
     }, 80);
@@ -1042,7 +1052,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (moment) text = 'Start the round first';
     else if (!mySeats.includes(pend.player)) text = `${who.name} is ${verbFor(pend.kind)} — your turn comes`;
     else if (needHandoff) text = `Hand the device to ${who.name}`;
-    else if (pend.kind === 'setup') text = 'Pick your starting resources first';
+    else if (pend.kind === 'setup') text = 'Draft your resource first';
     else if (pend.kind === 'choose' || pend.kind === 'pay') text = 'Answer the question first';
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
@@ -1111,6 +1121,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // answered there (boardPick.js); the choice panel shrinks to a caption docked under the headline, the leftover
   // buttons and a list for the keyboard. A gift or a choice of pairs (Good Deed, Kickback, the swaps…) is the gift card
   // beside the space instead; its first part picked is kept here, for this question only.
+  const [shopDetails, setShopDetails] = useState(false);
   const [pickFirst, setPickFirst] = useState({ pend: null, v: null });
   const first = pickFirst.pend === pend ? pickFirst.v : null;
   // a gift or a pair is picked on the gift card beside the space (GiftCard.jsx), not on the board
@@ -1118,6 +1129,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   if (gift && pr.forMe && mine) pr.text = `${gift.title ? `${gift.title}: ` : ''}${gift.kind === 'gift' ? `a rival you pick gets ${gift.n}${gift.color ? ` ${gift.color}` : ''}` : gift.head[0].toLowerCase() + gift.head.slice(1)}`;
   // (a steal, a recruit from the row, a minion's move: the card asks and the board stays lit, gift.board)
   const picker = useMemo(() => (showChoice && pend.kind === 'choose' && (!gift || gift.board) ? boardPicker(state, pend) : null), [showChoice, state, pend, gift]);
+  const shopRecruit = !!(picker && gift?.kind === 'recruit');
   const pickSpaces = picker && picker.spaces.size ? picker.spaces : null;
   // what a copy would give, on the space itself while you hover it (the engine's own words for the option)
   const pickNotes = useMemo(() => (pickSpaces ? new Map([...picker.where].filter(([k]) => k.startsWith('space:')).map(([k, o]) => [k.slice(6), o.label])) : null), [picker, pickSpaces]);
@@ -1125,7 +1137,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // A plain question (Your Call's "+2 followers or +4 white") opens at the decision point: beside the space you just
   // took, below it in the wheel's top half and above it in the bottom half, never off the wheel's area.
   const [plainAt, setPlainAt] = useState(null);
-  const plainKey = showChoice && (!picker || gift) && pend.kind === 'choose' && !payChoice(pend) ? pend : null;
+  const plainKey = showChoice && (!picker || (gift && !shopRecruit)) && pend.kind === 'choose' && !payChoice(pend) ? pend : null;
   useLayoutEffect(() => {
     const p = plainKey && state.players[pend.player];
     const key = p && p.lastSlot && state.slots[p.lastSlot.key] === p.id ? p.lastSlot.key : null;
@@ -1284,18 +1296,17 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const stepRef = useRef('place');
   if (phase === 'place') stepRef.current = 'place'; else if (phase === 'buy' || phase === 'pay') stepRef.current = 'buy';
   const step = phase === 'choose' ? stepRef.current : phase === 'pay' ? 'buy' : phase;
-  const releaseNow = buyingNow && pend.options.some(o => o.kind === 'release');
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-shop-details={shopDetails || undefined} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}
-          {picker && !gift ? (
+          {picker && (!gift || shopRecruit) ? (
             <ChoicePrompt state={state} onPick={onSeatPick} busy={busy} seatPick={picker} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
           ) : note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
           ) : pr.text ? (
-            <AfterChain value={pr} hold={holdStory && (!mine || rivalPlaying)} step={state.moves}>{held => {
+            <AfterChain value={pr} hold={session.info?.mode !== 'online' && holdStory && (!mine || rivalPlaying)} step={state.moves}>{held => {
               // a held line addressed to someone else is never shown in this one's voice (w3b: your "Choose how to
               // pay" stayed up, dotted like a rival's, while the bots moved): it gives way to the current line
               const p = turnOver ? { who: turnOver, text: humansHere ? `${turnOver.name}’s turn is over` : 'Your turn is over', over: true }
@@ -1315,7 +1326,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : <span className="say" data-prompt tabIndex={-1} />}
           {buyingNow && !wide && <PromptActions optionFor={live} onPick={onPick} />}
           <span className="undo-slot">
-            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your draft pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
         </div>
         <div className="bar-row steps-row">
@@ -1323,9 +1334,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               2026-10-15); the round's start card still says it */}
           <span className="round">{roundText}</span>
           {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
-          {picker && !gift ? <span className="say-sub pick-how" data-prompt-sub title={!note ? pickCaption(state, picker).rule : undefined}>{note ? note.text : pickCaption(state, picker).how}</span>
+          {picker && (!gift || shopRecruit) ? <span className="say-sub pick-how" data-prompt-sub title={!note ? pickCaption(state, picker).rule : undefined}>{note ? note.text : pickCaption(state, picker).how}</span>
             : pickDone ? <span className="say-sub seat-pick-done" aria-hidden="true"><span className="pick-cap">{pickDone.title}: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</span></span>
-              : mine && !needHandoff && !note && (pr.sub || releaseNow) ? <span className="say-sub" data-prompt-sub>{pr.sub ? `${pr.sub}${releaseNow ? ', or release a member' : ''}` : '…or release a member'}</span>
+              : mine && !needHandoff && !note && pr.sub ? <span className="say-sub" data-prompt-sub>{pr.sub}</span>
                 : mine && !needHandoff && buyingNow ? null : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
               <span className={step === 'place' ? 'on' : ''}>Place</span>
@@ -1358,8 +1369,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           {/* (data-step: after you've placed, the wheel steps back so only your buys are bright; final panel S#27) */}
           <section className="lt-wheel" data-region="wheel" data-step={buyingNow ? 'buy' : undefined}>
-            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} idle={pickSpaces ? null : idleSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && (!picker || gift) && !payChoice(pend) && pend.kind !== 'setup' && (gift
+            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} idle={pickSpaces ? null : idleSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={!wide} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            {showChoice && (!picker || (gift && !shopRecruit)) && !payChoice(pend) && pend.kind !== 'setup' && (gift
               ? <GiftCard state={state} gift={gift} onFirst={onGiftFirst} onAnswer={gift.board === 'seats' ? onSeatPick : onGiftAnswer} onBack={canUndo ? undo : null} busy={busy} place={plainAt} hover={hover} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
               : <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />)}
             {/* the starting picks (motion gaps 1): the row stays on the table while the others pick (read-only), and until the
@@ -1385,7 +1396,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </section>
           ))}
           <section className="lt-shop" data-region="shop" aria-label="Shop">
-            <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={shopFor || live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
+            <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={shopFor || live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} onViewChange={setShopDetails} />
           </section>
           {/* what the rivals did since your own last placement, one line each, always on the board (RC1 panel) */}
           {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} hover={hover} onLog={openLog} />}

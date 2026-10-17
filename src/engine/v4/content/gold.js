@@ -35,7 +35,7 @@ export default {
     {
       key: 'steal', ring: 2, name: 'Collect Debts', text: 'Take up to 3 gold from rivals, split however you like.',
       estimate: (ctx, p) => Math.min(3, ctx.rivals(p).filter(o => ctx.canSteal(p, o)).reduce((s, o) => s + o.res.gold, 0)) * 1.4,
-      resolve(ctx, p) { stealStep(ctx, p, { left: ctx.stealCount(p, 3, { say: true }), picked: {} }); },
+      resolve(ctx, p) { stealStep(ctx, p, { left: ctx.stealCount(p, 3, { say: true }), picked: {}, unit: ctx.stealCount(p, 1) - ctx.stealCount(p, 0) }); },
     },
     {
       key: 'windfall', ring: 2, name: 'Tithe', text: '+1 gold per member you have.',
@@ -57,7 +57,8 @@ export default {
       give(ctx, p, t, 'gold', 1);
     },
     steal(ctx, p, value, data) {
-      stealStep(ctx, p, { left: data.left - 1, picked: { ...data.picked, [value]: (data.picked[value] || 0) + 1 } });
+      const n = Math.min(data.unit || 1, data.left, ctx.player(value).res.gold - (data.picked[value] || 0));
+      stealStep(ctx, p, { ...data, left: data.left - n, picked: { ...data.picked, [value]: (data.picked[value] || 0) + n } });
     },
     invest(ctx, p, x, data) {
       if (!x) return;
@@ -189,8 +190,9 @@ function stealStep(ctx, p, data) {
   if (data.left > 0 && targets.length) {
     // the count rides on the task (1 of 3 taken), so a reload mid-split shows the same progress
     const taken = Object.values(data.picked).reduce((a, b) => a + b, 0);
-    ctx.choose(p, `Collect Debts: take 1 gold from… (${data.left} left)`, targets.map(o => ({
+    ctx.choose(p, `Collect Debts: take ${Math.min(data.unit || 1, data.left)} gold from… (${data.left} left)`, targets.map(o => ({
       id: `player:${o.id}`, label: `${o.name} · ${left(o)} gold`, kind: 'player', value: o.id, hint: left(o),
+      take: Math.min(data.unit || 1, data.left, left(o)),
       target: { pid: o.id, res: 'gold' }, // their gold stack is what you click (the seat selector)
     })), 'gold.steal', data, { count: { of: data.left + taken, left: data.left } });
     return;

@@ -3,7 +3,7 @@
 // afford are dim, and the ones the space under your pointer would unlock brighten (engine dry run).
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
-import { memo, useLayoutEffect, useRef, useState } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft, quadrant } from '../../engine/v4/index.js';
 import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
@@ -27,6 +27,8 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
 // The face-up row's order (Cory, 2026-10-15): by cost, cheapest first, or by color (the table's color order, then
 // cost). Remembered per viewer in this browser; a blocked storage just means the default.
 export const SORT_KEY = 'patrons.v4.shopSort';
+export const VIEW_KEY = 'patrons.v4.shopView';
+const readView = () => { try { return localStorage.getItem(VIEW_KEY) === 'details' ? 'details' : 'compact'; } catch { return 'compact'; } };
 const readSort = () => { try { return localStorage.getItem(SORT_KEY) === 'color' ? 'color' : 'cost'; } catch { return 'cost'; } };
 /** The printed cost as one number (every part, colored and any). */
 export const costTotal = (state, d) => costParts(d, state.resources).reduce((t, c) => t + c.n, 0);
@@ -67,7 +69,7 @@ export function CostShapes({ parts }) {
   );
 }
 
-function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null }) {
+function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null, onViewChange = null }) {
   const pend = state.pending;
   const viewer = me != null ? state.players[me] : null;
   const mine = !!(pend && mySeats.includes(pend.player));
@@ -80,6 +82,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const pointer = useRef('mouse');
   const rowRef = useRef(null), deckRef = useRef(null);
   const [sort, setSortState] = useState(readSort);
+  const [view, setView] = useState(readView);
+  const toggleView = () => { const next = view === 'compact' ? 'details' : 'compact'; setView(next); hover?.close?.(); try { localStorage.setItem(VIEW_KEY, next); } catch { /* this visit only */ } };
   const setSort = v => { setSortState(v); try { localStorage.setItem(SORT_KEY, v); } catch { /* private window: this visit only */ } };
   useDeal(rowRef, deckRef, state); // a refill comes off the deck
   // a card that just arrived (a refill sliding under the pointer after an instant buy) ignores clicks for half a second
@@ -103,18 +107,21 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   steady.current = { key: rowKey, uids: row };
   const uids = tray || [...row, ...pileOpts];
   const memberPick = picking && uids.some(uid => optionFor(`card:${uid}`));
+  const detailed = memberPick || view === 'details';
+  useEffect(() => { onViewChange?.(detailed); }, [detailed, onViewChange]);
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
-    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-tray={tray ? 'pile' : undefined} aria-label="Shop">
+    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
         {/* a discount is said once, here, beside the struck prices (w4 A#23: its sentence was on all ten hovers) */}
         <h3 className="lt-h">{tray ? 'Top of the pile' : 'Members'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : viewer && viewer.discount > 0 ? <span data-shop-discount>your next one {viewer.discount} less</span> : buying && affordable ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
-        <span className="lt-sort" role="group" aria-label="Sort the members">
-          {[['cost', 'Cheapest first'], ['color', 'Grouped by color, then cheapest']].map(([k, t]) => (
-            <button key={k} type="button" className={`lt-sort-btn${sort === k ? ' on' : ''}`} data-sort-by={k} aria-pressed={sort === k} title={`Sort the members: ${t.toLowerCase()}`} onClick={() => setSort(k)}>{k}</button>
-          ))}
+        <span className="lt-shop-controls">
+          <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} disabled={memberPick} onClick={toggleView}>details</button>
+          <button type="button" className="lt-sort" role="switch" aria-label="Group members by color" aria-checked={sort === 'color'} title="Switch cost / color order" onClick={() => setSort(sort === 'cost' ? 'color' : 'cost')}>
+            <span className={sort === 'cost' ? 'on' : ''}>cost</span><span className={sort === 'color' ? 'on' : ''}>color</span>
+          </button>
         </span>
       </div>
       <div className="lt-shop-body">
@@ -140,8 +147,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
-              onPointerEnter={e => { if (hover && realHover(e)) { if (fresh(uid)) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } }}
-              onPointerMove={e => { if (waiting.current.has(uid) && hover && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } }}
+              onPointerEnter={e => { if (hover && !detailed && realHover(e)) { if (fresh(uid)) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } }}
+              onPointerMove={e => { if (waiting.current.has(uid) && hover && !detailed && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } }}
               onPointerLeave={e => { waiting.current.delete(uid); if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
               onClick={e => {
                 if (fresh(uid)) return; // just arrived under the pointer: not a deliberate click
@@ -160,7 +167,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               </span>
               {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
-              {memberPick && <span className="lt-pick-ability"><Rich text={memberTimingWords(d.text)} /></span>}
+              {detailed && <span className="lt-pick-ability"><Rich text={memberTimingWords(d.text)} /></span>}
               <span className="ft">
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>

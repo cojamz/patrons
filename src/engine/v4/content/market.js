@@ -137,7 +137,8 @@ const market = {
       resolve(ctx, p) {
         const k = Math.floor(priciest(ctx, p) / 2);
         if (!k) ctx.log(`Show Off: ${p.name} has no member costing 2 or more, so gains nothing.`);
-        ctx.gain(p, B, k, { fromAction: true });
+        const got = ctx.gain(p, B, k, { fromAction: true });
+        if (got) ctx.log(`${p.name}'s Show Off: +${got.n} ${got.color}.`);
       },
     },
     {
@@ -187,7 +188,7 @@ const market = {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && colorOf(ctx, rec)) ctx.gain(owner, colorOf(ctx, rec), 1); },
     }),
     m('curator', 'Curator', 2, 2, 'Now and at round start, +1 blue per other blue member you have.', { now: true,
-      onRoundStart(ctx, owner, card) { ctx.gain(owner, B, ctx.countMembersOfColor(owner, Q) - (card && isBlue(card.def) ? 1 : 0)); },
+      onRoundStart(ctx, owner, card) { ctx.gain(owner, B, ctx.countMembersOfColor(owner, Q) - (card && isBlue(card.def) ? ctx.memberWeight(card) : 0)); },
     }),
     m('planner', 'Planner', 2, 2, 'Now and at round start, your next member costs 2 less per round number.', { now: true,
       onRoundStart(ctx, owner) { owner.discount += 2 * ctx.state.round; },
@@ -252,5 +253,5 @@ export function install() {
 // Talent Scout recruits from the pile at the member's own price, by the one price rule.
 const scoutChoices = (ctx, p, uid) => ctx.payChoices(p, uid, {});
 function rivalsBigger(ctx, p) { const mine = ctx.memberCount(p); return ctx.rivals(p).filter(o => ctx.memberCount(o) > mine).length; }
-function showroomCount(ctx) { return ctx.shopCards().filter(c => isBlue(c.def)).length; }
+function showroomCount(ctx) { return ctx.shopCards().filter(c => isBlue(c.def)).reduce((n, c) => n + ctx.memberWeight(c), 0); }
 function priciest(ctx, p) { return Math.max(0, ...ctx.membersOf(p).map(priceOf)); }

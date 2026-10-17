@@ -138,3 +138,12 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 /* Informational mouse hovers explain the target without blocking the next click beneath them. Pinned tips and
    sticky member cards retain their controls. */
 .popover:has(> .tip-body.passive),.tip-body.passive,.tip-body.passive *{pointer-events:none !important}
+
+/* Each member has a stable name / cost / ability rhythm, with a quiet color edge. */
+.seat-card .mu-row{padding:8px 0;column-gap:8px}
+.seat-card .mu-body{border-left:3px solid var(--member-color);padding-left:8px;gap:4px}
+.mu-price{display:flex;align-items:baseline;gap:8px;font-size:14px;line-height:18px;color:var(--pl-ink-2,#6e5c49)}
+.mu-price>span:first-child{font-size:11px}
+
+.cs-member-count{flex:none;align-self:center;font-size:14px;line-height:18px;color:var(--cream-2);font-weight:700}
+.cs-member-count>span{font-size:11px;font-weight:500}

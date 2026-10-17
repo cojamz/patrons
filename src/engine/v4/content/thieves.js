@@ -62,7 +62,9 @@ function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
 // the limit, and blocked names, for each rival you can't take from right now, the true reason (the board dims them).
 function stealStep(ctx, p, data) {
   const picked = id => data.picked[id] || {};
-  const can = o => stealable(ctx, p, o, picked(o.id)) > 0;
+  const remaining = o => holding(o) - Object.values(picked(o.id)).reduce((a, n) => a + n, 0);
+  const top = data.richest ? Math.max(0, ...ctx.rivals(p).filter(o => stealable(ctx, p, o, picked(o.id)) > 0).map(remaining)) : 0;
+  const can = o => stealable(ctx, p, o, picked(o.id)) > 0 && (!data.richest || remaining(o) === top);
   const owed = data.each.map(id => ctx.player(id)).filter(can);
   const free = data.left - owed.length > 0 ? ctx.rivals(p).filter(o => can(o) && (!data.only || data.only.includes(o.id))) : [];
   const pool = data.left > 0 ? (owed.length && data.left <= owed.length ? owed : [...new Set([...owed, ...free])]) : [];
@@ -71,6 +73,7 @@ function stealStep(ctx, p, data) {
     for (const o of pool) for (const [c, n] of piles(ctx, p, o, picked(o.id))) opts.push({
       id: `take:${o.id}:${c}`, label: `${o.name}'s ${c} (${n})`, kind: 'take', value: [o.id, c],
       hint: n + 0.05 * ctx.followers(o) + (owed.includes(o) ? 5 : 0),
+      take: Math.min(data.unit || 1, data.left, n),
     });
     const names = list => list.map(o => o.name).join(', ');
     // the limit, said: "1 each from P3, P4" when the picks left are all owed, else "at least 1 from each of …"
@@ -79,15 +82,16 @@ function stealStep(ctx, p, data) {
     for (const o of ctx.rivals(p)) {
       if (pool.includes(o)) continue;
       const why = !ctx.canSteal(p, o) ? `${o.name} can’t be stolen from now.`
+        : data.richest && stealable(ctx, p, o, picked(o.id)) > 0 && remaining(o) < top ? `${data.name}: choose a rival holding ${top} resources.`
         : !can(o) ? `${o.name} has nothing left to take.`
         : data.only && !data.only.includes(o.id) ? (data.rich && holding(o) <= holding(p) ? `${o.name} holds no more resources than you (${holding(o)} vs your ${holding(p)}).` : `${data.name} can’t take from ${o.name}.`)
-        : data.only && data.picked[o.id] ? `${data.name} takes 1 from each richer rival, and ${o.name} already gave theirs.`
+        : data.only && data.picked[o.id] ? `${data.name} takes 1 from each rival, and ${o.name} already gave theirs.`
         : `${data.name}: the ${data.left} left must come 1 each from ${names(owed)}.`;
       blocked[o.id] = why;
     }
     // the count rides on the task, so a reload mid-steal keeps "1 of 3 taken"
     const taken = Object.values(data.picked).reduce((t, pk) => t + Object.values(pk).reduce((a, b) => a + b, 0), 0);
-    ctx.choose(p, `${data.name}: take 1 resource (${data.left} left${owing})`, opts, 'thieves.take', data, { count: { of: data.left + taken, left: data.left }, blocked });
+    ctx.choose(p, `${data.name}: take ${Math.min(data.unit || 1, data.left)} resource${Math.min(data.unit || 1, data.left) === 1 ? '' : 's'} (${data.left} left${owing})`, opts, 'thieves.take', data, { count: { of: data.left + taken, left: data.left }, blocked });
     return;
   }
   let got = 0;
@@ -95,15 +99,15 @@ function stealStep(ctx, p, data) {
   // who led when the steal began: a follower one victim's theft wins (Robin Hood) doesn't un-lead the next victim
   const led = new Set(ctx.state.players.filter(o => isLeader(ctx, o)).map(o => o.id));
   for (const [id, pick] of Object.entries(data.picked)) {
-    const v = ctx.player(Number(id)), x = commit(ctx, p, v, pick, false, true, led.has(v.id));
+    const v = ctx.player(Number(id)), x = commit(ctx, p, v, pick, false, data.fromAction !== false, led.has(v.id));
     // each pile by its color, and what it turns into (live panel r1: the recap said "1 gold from P3" while the stack
     // that landed was magenta)
     const what = Object.entries(pick).filter(([, k]) => k > 0).map(([c, k]) => `${k} ${c}`).join(' and ');
     if (x) { got += x; from.push(x === Object.values(pick).reduce((a, b) => a + b, 0) ? `${what} from ${v.name}` : `${x} from ${v.name}`); }
   }
-  ctx.log(got ? `${p.name} stole ${got} (${from.join(', ')}), now magenta.` : `${p.name} found nothing to steal.`);
+  ctx.log(got ? `${p.name}${data.fromAction === false ? "'s " + data.name : ""} stole ${got} (${from.join(', ')}), now magenta.` : `${p.name} found nothing to steal.`);
 }
-const startSteal = (ctx, p, name, n, extra = {}) => stealStep(ctx, p, { name, left: n, each: [], picked: {}, ...extra });
+const startSteal = (ctx, p, name, n, extra = {}) => stealStep(ctx, p, { name, left: n, each: [], picked: {}, unit: extra.fromAction === false ? 1 : ctx.stealCount(p, 1) - ctx.stealCount(p, 0), ...extra });
 const estimateSteal = (ctx, p, n, who = ctx.rivals(p)) => Math.min(n, who.reduce((s, o) => s + stealable(ctx, p, o), 0)) * 1.33;
 
 // Members a thief may take.
@@ -133,7 +137,6 @@ function pickMember(ctx, p, list, prompt, handler, data = null) {
     id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid, hint: memberHint(c),
   })), handler, data);
 }
-const richer = (ctx, p) => ctx.rivals(p).filter(o => holding(o) > holding(p));
 function richest(ctx, p) {
   const list = ctx.rivals(p).filter(o => stealable(ctx, p, o) > 0);
   if (!list.length) return null;
@@ -148,8 +151,8 @@ const thieves = {
   rule: 'Whatever you steal turns magenta in your supply, ready to spend. Most Magenta members at round end wins.',
   scoring: SCORING.members,
 
-  // quadrant-level hooks (engine): Lie Low refuses resource steals (not members: Cory, 2026-10-14); thefts are recorded
-  guardSteal: (ctx, thief, victim, kind = 'res') => kind === 'res' && victim.hideout === ctx.state.round,
+  // Lie Low protects both members and resources until round end (Cory, 2026-10-17).
+  guardSteal: (ctx, thief, victim) => victim.hideout === ctx.state.round,
   onSteal(ctx, info) {
     // measurement only: who robbed whom, and where the victim stood
     const s = ctx.state;
@@ -167,18 +170,18 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round + 1, { say: true })); },
     },
     {
-      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Take 1 resource from each rival holding more resources than you (they arrive as magenta).',
-      estimate: (ctx, p) => estimateSteal(ctx, p, richer(ctx, p).length, richer(ctx, p)),
+      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Take 1 resource from each rival. They become magenta.',
+      estimate: (ctx, p) => estimateSteal(ctx, p, ctx.rivals(p).length),
       resolve(ctx, p) {
-        // exactly 1 from each richer rival you can take from (one lying low, or with nothing, isn't counted); a
+        // Exactly 1 from each rival you can take from; a
         // member that makes steals bigger (Sticky Fingers, Desperado) adds picks from those same rivals
-        const ids = richer(ctx, p).filter(o => stealable(ctx, p, o) > 0).map(o => o.id);
+        const ids = ctx.rivals(p).filter(o => stealable(ctx, p, o) > 0).map(o => o.id);
         const n = ids.length ? ctx.stealCount(p, ids.length, { say: true }) : 0;
-        startSteal(ctx, p, 'Redistribute', n, { each: ids, only: ids, rich: true });
+        startSteal(ctx, p, 'Redistribute', n, { each: ids, only: ids });
       },
     },
     {
-      key: 'hideout', ring: 1, name: 'Lie Low', text: 'Take 1 resource from a rival (it arrives as magenta). Then no one can steal resources from you this round.',
+      key: 'hideout', ring: 1, name: 'Lie Low', text: 'Take 1 resource from a rival (it arrives as magenta). Then your members and resources are safe from theft this round.',
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, 1)) + 0.8 + 0.6 * ctx.state.round,
       resolve(ctx, p) {
         p.hideout = ctx.state.round;
@@ -221,8 +224,9 @@ const thieves = {
   handlers: {
     take(ctx, p, [vid, pile], data) {
       const mine = { ...(data.picked[vid] || {}) };
-      mine[pile] = (mine[pile] || 0) + 1;
-      stealStep(ctx, p, { ...data, left: data.left - 1, each: data.each.filter(id => id !== vid), picked: { ...data.picked, [vid]: mine } });
+      const n = Math.min(data.unit || 1, data.left, ctx.player(vid).res[pile] - (mine[pile] || 0));
+      mine[pile] = (mine[pile] || 0) + n;
+      stealStep(ctx, p, { ...data, left: data.left - n, each: data.each.filter(id => id !== vid), picked: { ...data.picked, [vid]: mine } });
     },
     ransomPick(ctx, p, uid) {
       const v = ctx.ownerOf(uid), c = ctx.card(uid), n = cost(c);
@@ -287,14 +291,14 @@ const thieves = {
     m('accomplice', 'Accomplice', 4, 4, 'When recruited: take 1 resource from each rival (they arrive as magenta).', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have, from the rivals holding the most resources (they arrive as magenta).', {
+    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have. Each pick comes from a rival holding the most resources and becomes magenta.', {
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
-        for (let k = 0; k < n; k++) { const t = richest(ctx, owner); if (!t || !autoSteal(ctx, owner, t, 'Grifter')) break; }
+        startSteal(ctx, owner, 'Grifter', n, { fromAction: false, richest: true });
       },
     }),
-    m('sticky', 'Sticky Fingers', 4, 4, 'Your steals from spaces take 1 more resource.', { stealMore: 1 }),
-    m('desperado', 'Desperado', 2, 2, 'While no one has fewer followers than you, your steals from spaces take double.', {
+    m('sticky', 'Sticky Fingers', 4, 4, 'Your steals from spaces take +1 resource after doubling.', { stealMore: 1 }),
+    m('desperado', 'Desperado', 2, 2, 'While you have the fewest followers (ties count), double the base resources stolen from spaces.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
     m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower.', {

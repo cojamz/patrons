@@ -126,13 +126,13 @@ export const silverActions = [
     },
   },
   {
-    key: 'tide', ring: 2, name: 'Rising Tide', text: 'Everyone else +1 silver. Then gain half the silver of the rival with the most (rounded up).',
-    estimate: (ctx, p) => tideAmount(ctx, p, 1) - spillCost(ctx, 1),
+    key: 'tide', ring: 2, name: 'Rising Tide', text: 'Everyone else +2 silver. Then gain half the silver of the rival with the most (rounded up).',
+    estimate: (ctx, p) => tideAmount(ctx, p, 2) - spillCost(ctx, 2),
     resolve(ctx, p) {
-      giveAll(ctx, p, S, 1);
+      giveAll(ctx, p, S, 2);
       const k = tideAmount(ctx, p, 0);
       const got = hostGain(ctx, p, k);
-      ctx.log(`${p.name}'s Rising Tide: +1 silver to everyone else, then +${got} silver.`);
+      ctx.log(`${p.name}'s Rising Tide: +2 silver to everyone else, then +${got} silver.`);
     },
   },
   {

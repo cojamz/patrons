@@ -2,7 +2,7 @@
 // Display only. The engine's own action runs (with every member hook that reacts), so the preview can't drift
 // from the rules. Choices the action asks for (yours or a rival's) are explored as branches and summarized as
 // ranges. Nothing hidden leaks: it reports the player's own changes and rivals' totals, never the refilled shop.
-import { applyMove, resume, followers } from './core.js';
+import { applyMove, resume, followers, memberCount } from './core.js';
 
 const NODE_BUDGET = 36; // states explored per preview (a counted pick branches a lot; past the budget only the extremes are kept)
 
@@ -56,7 +56,7 @@ export function previewSpace(state, pid, q, i) {
     const a = s.players[who], b = state.players[who];
     let v = 0;
     for (const r of state.resources) v += (a.res[r] || 0) - (b.res[r] || 0);
-    v += 2 * (followers(s, a) - followers(state, b)) + 4 * (a.members.length - b.members.length) + ((a.discount || 0) - (b.discount || 0));
+    v += 2 * (followers(s, a) - followers(state, b)) + 4 * (memberCount(s, a) - memberCount(state, b)) + ((a.discount || 0) - (b.discount || 0));
     if (who === pid) v += 3 * Math.max(0, a.left - (b.left - 1));
     return (m[k] = v);
   };
@@ -97,7 +97,7 @@ export function previewSpace(state, pid, q, i) {
     const me = s.players[pid];
     for (const r of state.resources) put(you.res[r] = you.res[r] || range(), (me.res[r] || 0) - (me0.res[r] || 0));
     put(you.followers, followers(s, me) - followers(state, me0));
-    put(you.members, me.members.length - me0.members.length);
+    put(you.members, memberCount(s, me) - memberCount(state, me0));
     put(you.discount, (me.discount || 0) - (me0.discount || 0)); // "your next member costs N less"
     // an extra turn shows up as a worker given back (left grows past the one just placed)
     put(you.turns, Math.max(0, me.left - (me0.left - 1)));
@@ -106,7 +106,7 @@ export function previewSpace(state, pid, q, i) {
     const rivals = s.players.filter(o => o.id !== pid);
     for (const r of state.resources) put(others.res[r] = others.res[r] || range(), rivals.reduce((t, o) => t + (o.res[r] || 0) - (state.players[o.id].res[r] || 0), 0));
     put(others.followers, rivals.reduce((t, o) => t + followers(s, o) - followers(state, state.players[o.id]), 0));
-    put(others.members, rivals.reduce((t, o) => t + o.members.length - state.players[o.id].members.length, 0));
+    put(others.members, rivals.reduce((t, o) => t + memberCount(s, o) - memberCount(state, state.players[o.id]), 0));
   }
   // face-up members this space sends back under the pile (Restock's sweep; a bury), whatever you choose: so nobody
   // sweeps away the card they meant to recruit by surprise. Not counting cards someone recruits.
@@ -141,7 +141,7 @@ export function previewSpace(state, pid, q, i) {
     const me = s.players[pid];
     return {
       res: Object.fromEntries(state.resources.map(r => [r, (me.res[r] || 0) - (me0.res[r] || 0)])),
-      followers: followers(s, me) - followers(state, me0), members: me.members.length - me0.members.length,
+      followers: followers(s, me) - followers(state, me0), members: memberCount(s, me) - memberCount(state, me0),
       turns: Math.max(0, me.left - (me0.left - 1)), early: earlyMoves(s, pid) - earlyMoves(state, pid), discount: (me.discount || 0) - (me0.discount || 0),
       // members that came in while the count didn't rise by as many: traded for (a swap)
       swapped: Math.max(0, me.members.filter(u => !me0.members.includes(u)).length - Math.max(0, me.members.length - me0.members.length)),

@@ -4,7 +4,7 @@
 // nearest you and is a little larger, with Use/switch on members you can use now. Hover or tap the cult for its
 // card (resources, members, last moves); hover or tap a member for that member's card.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { followers, quadrant, cardDef } from '../../engine/v4/index.js';
+import { followers, memberCount, quadrant, cardDef } from '../../engine/v4/index.js';
 import { memberChips, playerColor, newLogLines, seatEmoji } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId, sphereShare } from '../art/index.js';
@@ -44,7 +44,6 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // what a use just did, over that member for a moment (even "+0"); and the member giving a second buy hops as it does
   const result = useUseResult(state, pid);
   const pend = state.pending;
-  const canRelease = !!(mine && pend?.player === pid && pend.options.some(o => o.kind === 'release' && optionFor(o.id)));
   const extraBuyNow = !!(mine && pend && pend.player === pid && pend.kind === 'buy' && pend.extra && !state.over);
   const givesExtra = g => extraBuyNow && g.uids.some(u => { const c = state.cards[u]; return !(c.spent && c.spent.extraBuy === state.round) && !!cardDef(state, u).extraBuy; });
   const ready = new Set(mine ? [...usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid), ...memberAsks(state, pid).keys()] : []); // + a member asking you now (memberUse.js)
@@ -61,7 +60,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // (Cory, 2026-10-15: "doppleganger can only copy whats available"); the row grows for the choice and folds after
   const pickAll = !!(pick && pick.members && groups.some(g => g.uids.some(u => pick.members[u])));
   const MAX = pickAll ? groups.length : fit ? (fit.all >= groups.length ? groups.length : fit.withMore) : bonus ? 5 : 10;
-  const nMembers = p.members.length;
+  const nMembers = memberCount(state, p);
   // your starting pick, when it's yours to make here (the engine's options, through the same optionFor as Use)
   const setupPick = mine && pend && pend.kind === 'setup' && pend.player === pid && !state.over
     ? (() => { const options = pend.options.filter(o => optionFor(o.id)); const m = /\((\d) of 2\)/.exec(pend.prompt || ''); return options.length ? { options, k: m ? Number(m[1]) : 1 } : null; })()
@@ -115,7 +114,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         el.classList.remove('pick-nudge'); void el.offsetWidth; el.classList.add('pick-nudge');
         setTimeout(() => el.classList.remove('pick-nudge'), 700);
       } : undefined}
-      aria-label={`${mine ? 'Your cult' : `${p.name}'s cult`}: ${f} follower${f === 1 ? '' : 's'}, ${p.members.length} member${p.members.length === 1 ? '' : 's'}, ${p.left} minion${p.left === 1 ? '' : 's'} to place${now ? ', their turn' : ''}`}>
+      aria-label={`${mine ? 'Your cult' : `${p.name}'s cult`}: ${f} follower${f === 1 ? '' : 's'}, ${nMembers} member${nMembers === 1 ? '' : 's'}, ${p.left} minion${p.left === 1 ? '' : 's'} to place${now ? ', their turn' : ''}`}>
       <header className="cs-head" role="button" tabIndex={0} aria-haspopup="dialog" data-hint={`${p.name}: ${f} follower${f === 1 ? '' : 's'}. Show their cult.`}
         onPointerEnter={e => { railIn.current = onRail(e); if (realHover(e) && !railIn.current) openSeat(e, false); }}
         onPointerMove={e => {
@@ -150,8 +149,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           what I needed to do. It could just show it IN the player card"): it stands where your members will, until both
           picks are in */}
       {setupPick && (
-        <div className="cs-setup" role="group" aria-label={`Pick a starting resource (${setupPick.k} of 2)`} data-setup-k={setupPick.k}>
-          <small className="cs-setup-say">Pick a starting resource <span className="num">{setupPick.k}</span> of 2</small>
+        <div className="cs-setup" role="group" aria-label="Draft 1 resource" data-setup-k={setupPick.k}>
+          <small className="cs-setup-say">Draft 1 resource</small>
           <span className="cs-setup-row">
             {setupPick.options.map(o => {
               const res = state.quadrants.includes(o.value) ? quadrant(o.value).resource : o.value;
@@ -174,6 +173,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         </div>
       )}
       <div className="cs-crowd" {...bodyHover} role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members: ${nMembers}`}>
+        <b className="cs-member-count num" data-members={nMembers} title="Members: each card counts its printed follower value, or its stated member count if higher">{nMembers}<span> members</span></b>
         <span className="cs-figs" style={fit ? { maxWidth: `${fit.per * fit.cell}px` } : undefined}>
         {shown.map(g => {
           const d = g.def;
@@ -217,9 +217,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {/* the figures that don't fit fold into one quiet "+N" cell (the count beside them says the whole) */}
         {rest > 0 && <span className="cs-more num" data-more={rest} aria-label={`${rest} more member${rest === 1 ? '' : 's'}`} title={`${rest} more: point at the seat for every member`}>+{rest}</span>}
         </span>
-        {canRelease && hover && <button type="button" className="cs-release" aria-label="Choose a member to release" onClick={e => { e.stopPropagation(); hover.onSeatHover(pid, e.currentTarget, { pinned: true }); }}>Release a member…</button>}
         {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
-        {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
+        {safe && <small className="cs-safe" data-safe="1" title={`No one can steal members or resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </div>
       {bonus && (
         <div className="cs-build cs-bonus" data-pick-bonus={bonus.n} title={bonus.why}>
@@ -235,7 +234,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             // a pick in progress (Collect Debts) shows what's left with what's picked beside it, never the old count and
             // the change together (w3b #35: "3" with a "−2" badge)
             const shown = Math.max(0, (p.res[r] || 0) - took);
-            const say = o ? (pick.give || mine ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take 1 ${r} from ${p.name} (${took ? `${shown} left, ${took} picked` : shown})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
+            const say = o ? (pick.give || mine ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take ${o.take || 1} ${r} from ${p.name} (${took ? `${shown} left, ${took} picked` : shown})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
             return (
               <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}${sp ? (o ? ' pick-on' : ' pick-off') : ''}`} data-res={r} title={say}
                 {...(o ? { role: 'button', tabIndex: -1, 'data-option': o.id, 'aria-label': say, onClick: e => pick.onPick(o.id, e.currentTarget) } : sp ? { 'data-why': sp.why, onClick: e => pick.onDenied && pick.onDenied(sp.why, e.currentTarget) } : {})}>
@@ -360,7 +359,8 @@ function useFigureFit(rootEl, layout = null) {
         const b = build && build.getBoundingClientRect();
         const beside = b && b.width && b.top < c.bottom - 1 && b.bottom > c.top + 1 ? b.width + 8 : 0;
         const safe = crowd.querySelector(':scope > .cs-safe');
-        const room = c.width - beside - (safe ? safe.getBoundingClientRect().width + gap : 0);
+        const count = crowd.querySelector(':scope > .cs-member-count');
+        const room = c.width - beside - (count ? count.getBoundingClientRect().width + gap : 0) - (safe ? safe.getBoundingClientRect().width + gap : 0);
         const per = Math.max(1, Math.floor((room + fgap) / cell));
         const all = per * rows;
         const withMore = Math.max(1, all - 1); // "+N" takes the last cell
