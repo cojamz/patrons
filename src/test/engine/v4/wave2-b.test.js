@@ -143,17 +143,17 @@ describe('tester A #4: Extra Hand recruited during round III gives its minion th
 });
 
 describe('tester A #5: the suggested payment keeps the rims you lead or tie', () => {
-  it('10-for-10 with leads in gold (8–2) and blue (5–4): the default spends gold down to a tie, not blue below P2', () => {
-    const s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 3, res: [{ gold: 8, blue: 5, red: 3 }, { gold: 2, blue: 4 }] });
+  it('10-for-10 preserves both Gold and Silver resource leads when a legal payment can', () => {
+    const s = sceneQ({ quadrants: ['gold', 'red', 'silver', 'yellow'], n: 2, round: 3, res: [{ gold: 8, silver: 5, red: 3 }, { gold: 2, silver: 4 }] });
     const ways = followerChoices(s, s.players[0], TIERS.find(t => t.key === 'top'));
     const d = ways[0];
-    expect(s.players[0].res.blue - (d.blue || 0)).toBeGreaterThanOrEqual(4);
+    expect(s.players[0].res.silver - (d.silver || 0)).toBeGreaterThanOrEqual(4);
     expect(s.players[0].res.gold - (d.gold || 0)).toBeGreaterThanOrEqual(2);
   });
   it('when every way loses a lead, it loses as few as it can', () => {
-    const s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 3, res: [{ gold: 4, blue: 5, green: 3 }, { gold: 3, blue: 4, green: 2 }] });
+    const s = sceneQ({ quadrants: ['gold', 'red', 'silver', 'yellow'], n: 2, round: 3, res: [{ gold: 4, silver: 5, yellow: 3, red: 2 }, { gold: 3, silver: 4, yellow: 2, red: 1 }] });
     const d = followerChoices(s, s.players[0], TIERS.find(t => t.key === 'top'))[0];
-    const keeps = ['gold', 'blue', 'green'].filter(c => s.players[0].res[c] - (d[c] || 0) >= s.players[1].res[c]).length;
+    const keeps = ['gold', 'silver'].filter(c => s.players[0].res[c] - (d[c] || 0) >= s.players[1].res[c]).length;
     expect(keeps).toBeGreaterThanOrEqual(1);
   });
 });

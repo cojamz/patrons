@@ -6,7 +6,7 @@ import { friendlyError } from '../errors.js';
 import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
 import { CLASSIC, spheres, sphereName, sphereLine, tableProblem, randomTable, urlTable, fitTable, sphereCount } from '../tables.js';
 import { panelWords } from '../game/panelText.js';
-import { GAME_NAME, VERSION } from '../version.js';
+import { GAME_NAME, VERSION_LABEL } from '../version.js';
 import { copyText } from '../Recovery.jsx';
 import { Tip } from '../game/Info.jsx';
 import { EmojiButton, EmojiFace, emojiName } from './EmojiPicker.jsx';
@@ -53,7 +53,7 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, la
           <circle cx="50" cy="50" r="14" fill="var(--table)" />
         </svg>
         <h1>{GAME_NAME}</h1>
-        <p className="version" data-version>{VERSION}</p>
+        <p className="version" data-version>{VERSION_LABEL}</p>
         <p className="tag">Draft the wheel. Recruit members. Win followers.</p>
       </div>
       <div className="menu">

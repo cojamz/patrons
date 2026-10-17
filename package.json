@@ -18,7 +18,8 @@
     "test:v4:related": "V4_GAMES=fast vitest related --run",
     "retro:v4": "node scripts/v4-retro.mjs",
     "records:refresh": "node scripts/v4-records-refresh.mjs",
-    "sim:v4": "node scripts/v4-sim.mjs"
+    "sim:v4": "node scripts/v4-sim.mjs",
+    "version:v4": "node scripts/v4-version.mjs"
   },
   "dependencies": {
     "firebase": "^12.6.0",

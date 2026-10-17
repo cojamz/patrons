@@ -1,5 +1,6 @@
-// The game's name and version, shown on the home screen and in How to play. One place, so saves and screens agree
-// (the save hardening stamps VERSION too). Code identifiers and storage keys keep the old "patrons" name on purpose:
-// renaming them would orphan every saved game.
+// Player release identity. Bump with npm run version:v4; see design/releasing.md.
+// Save/room compatibility is the rules-content hash, never this display version.
 export const GAME_NAME = 'Cults';
-export const VERSION = 'v0.5';
+export const VERSION = 'v0.6.0';
+export const BUILD_REF = typeof __V4_BUILD__ !== 'undefined' ? String(__V4_BUILD__).split('@')[0] : 'dev';
+export const VERSION_LABEL = `${VERSION} · ${BUILD_REF}`;

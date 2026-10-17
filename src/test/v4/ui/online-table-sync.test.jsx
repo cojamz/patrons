@@ -57,6 +57,22 @@ describe('one presentation boundary for local and online tables', () => {
     expect(beforeShow.current.mock.calls).toEqual([[initial, first], [first, second]]);
   });
 
+  it('does not keep the estimated dwell timer after the actual animation has completed', async () => {
+    vi.useFakeTimers();
+    const initial = createGame({ seats, seed: 21 });
+    const session = sessionAt(initial, 'online');
+    const { result } = renderHook(() => useTable(session, 1000));
+    await act(async () => vi.advanceTimersByTimeAsync(10000));
+    const first = next(initial), second = next(first);
+    animation.running = true;
+    await act(async () => session.publish(first));
+    await act(async () => session.publish(second));
+    expect(result.current[0]).toBe(first);
+    await finish(); // no fake time elapses: actual completion itself releases the queued step
+    expect(result.current[0]).toBe(second);
+    expect(result.current[5]).toBe(first);
+  });
+
   it('reduced motion settles without waiting for an animation event that cannot exist', async () => {
     vi.useFakeTimers(); animation.enabled = false;
     const initial = createGame({ seats, seed: 21 });

@@ -125,13 +125,14 @@ describe('Silver members', () => {
   });
 
   // Cory (2026-10-14): Feast Hall became Revelers, a group: more members, not more silver
-  it('Revelers: counts as 3 members: Red’s most-members contest, Patriarch, Tithe and Heir all see 3; worth 1 follower', () => {
+  it('Revelers counts as 3 silver members for per-member effects, contributes no red contest count, and is worth 1 follower', () => {
     let s = sc({ members: [['silver.revelers'], ['red.intern', 'red.twins']], queue: [] });
     expect(memberCount(s, s.players[0])).toBe(3);
     expect(followers(s, s.players[0])).toBe(2);
     const red = contestTable(s).find(c => c.qid === 'red');
-    expect(red.rows.find(r => r.player === 0).count).toBe(3);
-    expect(red.winners).toEqual([0, 1]); // Revelers3 ties Intern1 + Twins2.
+    expect(red.rows.find(r => r.player === 0).count).toBe(0);
+    expect(red.rows.find(r => r.player === 1).count).toBe(3);
+    expect(red.winners).toEqual([1]); // Silver Revelers does not compete with Intern1 + Twins2 on Red.
     expect(take(sc({ round: 2, members: [['silver.revelers']] }), 'gold.windfall').players[0].res.gold).toBe(3);
     s = sc({ members: [['silver.revelers', 'red.patriarch']], queue: [{ t: 'finish' }] });
     expect(s.players[0].final.parts).toContain('Patriarch +2');

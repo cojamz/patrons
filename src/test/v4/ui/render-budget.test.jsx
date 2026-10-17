@@ -39,6 +39,7 @@ import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.j
 import { createLocalSession } from '../../../v4/session/local.js';
 import { createEmitter } from '../../../v4/session/emitter.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
+import { seatRanks } from '../../../v4/game/RankRow.jsx';
 import Tick, { countMs } from '../../../v4/game/Tick.jsx';
 import { saveLocalSoon, flushLocalSave, clearLocal, claimLocal, loadLocal } from '../../../v4/saved.js';
 
@@ -106,7 +107,7 @@ describe('render budget', () => {
       // the table holds each step for its chain (director.js): wait until it shows this one, then a beat more
       for (let w = 0; w < 200 && container.querySelector('.lt').getAttribute('data-moves') !== String(next.moves); w++) await act(() => new Promise(r => setTimeout(r, 10)));
       await settle(3);
-      perStep.push({ kind: state.pending.kind, actor: state.pending.player, turnEnds: !(next.pending && next.pending.player === state.pending.player), Wheel: R.n('Wheel'), Space: R.n('WheelSpace'), CultSeat: R.n('CultSeat'), GameScreen: R.n('GameScreen'), ShopCards: R.n('ShopCards'), components: R.total() });
+      perStep.push({ rankViewsChanged: state.players.filter(p => JSON.stringify(seatRanks(state, 0)[p.id]) !== JSON.stringify(seatRanks(next, 0)[p.id])).length, kind: state.pending.kind, actor: state.pending.player, turnEnds: !(next.pending && next.pending.player === state.pending.player), Wheel: R.n('Wheel'), Space: R.n('WheelSpace'), CultSeat: R.n('CultSeat'), GameScreen: R.n('GameScreen'), ShopCards: R.n('ShopCards'), components: R.total() });
       state = next;
     }
     console.log('[render-budget] rival steps:', JSON.stringify(perStep));
@@ -115,7 +116,12 @@ describe('render budget', () => {
     // The step that ends a turn moves every chair's place in the turn order ("now", "next", "in 2"), so all four redraw.
     const inside = perStep.filter(s => !s.turnEnds);
     expect(inside.length).toBeGreaterThan(1);
-    for (const s of inside) expect(s.CultSeat).toBeLessThan(4);
+    for (const s of inside) {
+      // A new leader/score margin changes every seat's visible score tooltip, even within one turn.
+      // Unchanged rank views still enforce the original no-whole-table-redraw budget.
+      if (s.rankViewsChanged === 4) expect(s.CultSeat).toBeLessThanOrEqual(4);
+      else expect(s.CultSeat).toBeLessThan(4);
+    }
     for (const s of perStep) expect(s.ShopCards).toBeLessThanOrEqual(1); // the shop once per step, at most
     // the wheel redraws only the spaces whose picture changed: the one just taken and the last placement's (its ring)
     for (const s of perStep) expect(s.Space).toBeLessThanOrEqual(2);

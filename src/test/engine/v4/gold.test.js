@@ -176,8 +176,9 @@ describe('Gold members', () => {
     let s = scene({ members: [['gold.thrift']], res: [{ gold: 2, red: 2 }], shop: ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
     s = take(s, 'blue.a1');
     s = move(s, `card:${uidOf(s, 'gold.midas', 'shop')}`);
-    // the wild 1 paid from red: P0 leads blue (3 from Tide), and the default never spends a color whose contest you lead
-    expect(R(s)[0]).toEqual({ gold: 0, red: 1, blue: 3, green: 0 });
+    // Gold pays double: two gold cover4 units and one blue covers the remaining1.
+    // Blue resources no longer lead Blue's own-color member contest.
+    expect(R(s)[0]).toEqual({ gold: 0, red: 2, blue: 2, green: 0 });
   });
 
   it('Penny Pincher: gold also pays the wild part double when nothing else is left', () => {
@@ -306,11 +307,11 @@ describe('Gold members', () => {
 });
 
 describe('default payment protects contests you lead', () => {
-  it('pays "any" from a color nobody contests rather than one you lead', () => {
-    // P0 leads blue after Tide; Banker's 1 "any" should come from red, not blue
+  it('does not treat Blue resources as a Blue member-contest lead', () => {
+    // Tide increases resources, not Blue members; the default may spend blue for the any part.
     let s = scene({ members: [[], []], res: [{ gold: 2, red: 1 }, { gold: 0 }], shop: ['gold.prospector', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
     s = take(s, 'blue.a1');
     s = move(s, `card:${uidOf(s, 'gold.prospector', 'shop')}`);
-    expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 3, green: 0 });
+    expect(R(s)[0]).toEqual({ gold: 0, red: 1, blue: 2, green: 0 });
   });
 });

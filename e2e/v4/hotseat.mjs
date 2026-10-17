@@ -141,8 +141,8 @@ try {
 
   // Setup: what's for sale decides the starting picks, so every face-up member is on screen (no scrolling)
   {
-    // (laptop: the pick stands in your own chair, Cory 2026-10-15; a rival picking first shows no panel)
-    await page.waitForFunction(() => [...document.querySelectorAll('.lt-cult-seat .cs-setup [data-option], .prompt.choice.setup')].some(e => e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden'), null, { timeout: 30000 });
+    // The final draft color is automatic: a first actor can reach placement without a personal draft button.
+    await page.waitForFunction(() => [...document.querySelectorAll('.lt-cult-seat .cs-setup [data-option], .prompt.choice.setup')].some(e => e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden') || !!document.querySelector('.app.game[data-phase="place"]'), null, { timeout: 30000 });
     await page.waitForTimeout(300);
     const r = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('.lt-shop .card')];
@@ -186,10 +186,12 @@ try {
     // the furniture never moves: every region keeps its box from phase to phase (only the lamp moves), and every
     // open space prints its effect, readable without hovering (≥11px)
     {
+      await chairsStand();
       const r = await page.evaluate(() => {
         const vp = innerWidth + 'x' + innerHeight;
         const regions = Object.fromEntries(['prompt', 'wheel', 'shop', 'seat-0', 'seat-1', 'seat-2', 'seat-3'].map(k => { const e = document.querySelector(`.lt [data-region="${k}"]`); if (!e) return [k, null]; const b = e.getBoundingClientRect(); return [k, [b.left, b.top, b.width, b.height].map(Math.round).join(',')]; }));
         const phase = (document.querySelector('.app.game') || {}).dataset?.phase;
+        const animating = document.querySelector('.app.game')?.dataset.animating === 'true';
         const round = (document.querySelector('.app.game') || {}).dataset?.round;
         const bad = [];
         for (const sl of document.querySelectorAll('.lt .slot.open')) {
@@ -200,9 +202,9 @@ try {
         }
         // how the column stood: each chair's --y, its transform, height and fractional top, and the column's height
         const column = [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(e => `${e.dataset.region} y${e.style.getPropertyValue('--y')} t${new DOMMatrixReadOnly(getComputedStyle(e).transform).m42} h${e.getBoundingClientRect().height.toFixed(1)} top${e.getBoundingClientRect().top.toFixed(1)}`).join(', ') + ` | column ${document.querySelector('.lt > .lt-snake')?.getBoundingClientRect().height.toFixed(1)}`;
-        return { vp, regions, phase, round, bad, column };
+        return { vp, regions, phase, round, animating, bad, column };
       });
-      if (r.vp === '1270x700' && r.phase && !['over', 'reckon'].includes(r.phase)) {
+      if (r.vp === '1270x700' && !r.animating && r.phase && !['over', 'reckon', 'setup'].includes(r.phase)) {
         if (!regionBoxes) regionBoxes = { ...r.regions, phase: r.phase, round: r.round, column: r.column };
         // the chairs stand in the round's turn order (Cory, 2026-10-15: "position IS order"): a new round may re-sort
         // them, so their boxes are re-read at each round start; within a round, and for every other region, never

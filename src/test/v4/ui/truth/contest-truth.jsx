@@ -42,6 +42,7 @@ export function checkContestTruth(g0, n) {
       for (const r of reckonRows(info)) {
         const rec = record.results.find(c => c.qid === r.qid);
         expect([...r.winners].sort((a, b) => a - b), `game ${game} reckoning ${r.qid}`).toEqual([...rec.winners].sort((a, b) => a - b));
+        expect(r.prize, `game ${game} reckoning ${r.qid} prize`).toBe(prize / (r.winners.length > 1 ? 2 : 1));
         for (const row of r.rows) {
           const want = oracleCount(moment, r.qid, moment.players[row.id]);
           if (want != null) expect(row.shown, `game ${game} reckoning ${r.qid} seat ${row.id}`).toBe(want);
@@ -64,15 +65,17 @@ export function checkContestTruth(g0, n) {
           const want = oracleCount(moment, qid, moment.players[Number(span.dataset.pid)]);
           if (want != null) expect(Number(span.dataset.count), `${where}: count for seat ${span.dataset.pid}`).toBe(want);
         }
-        // the tiebreak is named in the rule's own words (Purple: "purple breaks ties", never "purple members")
+        // Own-color member labels are intentional; no former secondary tiebreak remains.
         const tb = quadrant(qid).scoring.tiebreak;
         if (tb) expect(li.textContent).toContain(tb.text);
-        expect(li.textContent).not.toMatch(/purple members/);
+        if (qid === 'purple') expect(li.textContent).toMatch(/Most purple members/i);
+        const shownPrize = Number(li.querySelector('.re-chip').textContent.match(/\+(\d+)/)?.[1]);
+        expect(shownPrize, `${where}: displayed prize`).toBe(prize / (shown.length > 1 ? 2 : 1));
       }
       // 3. what was awarded: each player's contest followers grew by exactly the prizes shown for them
       for (const p of after.players) {
-        const shownWins = rows.filter(li => ids(li.dataset.winners).includes(p.id)).length;
-        expect(after.players[p.id].contest - before.players[p.id].contest, `game ${game}: ${p.name} awarded`).toBe(shownWins * prize);
+        const shownAward = rows.filter(li => ids(li.dataset.winners).includes(p.id)).reduce((n, li) => n + Number(li.querySelector('.re-chip').textContent.match(/\+(\d+)/)?.[1]), 0);
+        expect(after.players[p.id].contest - before.players[p.id].contest, `game ${game}: ${p.name} awarded`).toBe(shownAward);
       }
       cleanup();
       cards++;

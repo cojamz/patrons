@@ -26,11 +26,11 @@ function checkTable(s, table, where) {
 }
 
 describe('v4 contests: one function decides and describes them', () => {
-  it('Red and Yellow ties each earn half the prize, regardless of former tiebreak counts', () => {
+  it('own-color Red and full-set Yellow ties each earn half the prize, regardless of resource surpluses', () => {
     const s = sceneQ({
       quadrants: ['gold', 'red', 'yellow'], n: 3,
-      members: [['red.volunteer'], ['gold.tycoon'], []],
-      res: [{ gold: 1, red: 1, yellow: 7 }, { gold: 1, red: 1, yellow: 1 }, {}],
+      members: [['red.volunteer'], ['red.intern'], []],
+      res: [{ gold: 1, red: 9, yellow: 7 }, { gold: 1, red: 1, yellow: 1 }, {}],
       queue: [{ t: 'endRound' }],
     });
     const scored = s.contests.at(-1).results;
@@ -42,6 +42,13 @@ describe('v4 contests: one function decides and describes them', () => {
     }
     // Gold, Red and Yellow all tie; each winner gets three half prizes of 1 follower each.
     expect(s.players.map(p => p.contest)).toEqual([3, 3, 0]);
+  });
+  it('a three-way tie pays half the prize to each winner, never one third', () => {
+    const s = sceneQ({ quadrants: ['gold', 'red', 'yellow'], n: 3, round: 3,
+      members: [['red.volunteer'], ['red.intern'], ['red.crowd']],
+      res: Array.from({ length: 3 }, () => ({ gold: 1, red: 1, yellow: 1 })), queue: [{ t: 'endRound' }] });
+    expect(s.contests.at(-1).results.every(c => c.winners.length === 3 && c.prize === 3)).toBe(true);
+    expect(s.players.map(p => p.contest)).toEqual([9, 9, 9]);
   });
   it('Red and Yellow still award no prize when nobody has a member or a full set', () => {
     const s = sceneQ({ quadrants: ['gold', 'red', 'yellow'], n: 3, res: [{ yellow: 9 }, {}, {}] });

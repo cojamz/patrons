@@ -1,8 +1,7 @@
 // An independent oracle for the round-end contests, used by the engine test (contests.test.js) and the UI
 // test (src/test/v4/ui/contest-truth.test.jsx). It never calls a quadrant's scoring or show: it counts what each
 // rule says it counts, straight off the state, so a screen and the engine can both be checked against it.
-import { createGame, applyMove, defById, chooseBotMove, quadrant, RING_VALUE } from '../../../engine/v4/index.js';
-import { workersOnBoard } from '../../../engine/v4/core.js';
+import { createGame, applyMove, defById, chooseBotMove, RING_VALUE } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { makeTables } from './fuzz-tables-runner.js';
 
@@ -14,18 +13,15 @@ const members = (state, p, color = null) => p.members.reduce((n, uid) => {
   return n + Math.max(printed(def), card.copy ? printed(defById(card.copy)) : 0);
 }, 0);
 
-/** The number a quadrant's rule measures for player p (its count), or null when the oracle doesn't know the rule. */
+/** Count the agreed rule directly, without consulting production scoring callbacks or labels. */
 export function oracleCount(state, qid, p) {
   const res = r => p.res[r] || 0;
-  const q = quadrant(qid);
-  // a plain "Most <resource>" rule counts that resource (Gold, Silver, White, Green, Purple…)
-  if (q.scoring.label === `Most ${q.resource}`) return res(q.resource);
   switch (qid) {
-    case 'red': return members(state, p);
-    case 'purple': return /workers on the board/.test(q.scoring.label) ? workersOnBoard(state, p) : null;
+    case 'gold': return res('gold');
+    case 'silver': return res('silver');
     case 'yellow': return Math.min(...state.resources.map(res));
-    case 'thieves': return members(state, p, 'thieves');
-    default: return null;
+    // Every other arc counts its own printed member quantity, including stand-ins and copied card weight.
+    default: return members(state, p, qid);
   }
 }
 /** Contests have no secondary tiebreakers. Kept for callers rendering older records. */

@@ -223,6 +223,8 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     const completed = waiting.current;
     if (!completed) return;
     waiting.current = null;
+    // Actual completion supersedes the estimated viewing timer; never wait twice for one sequence.
+    if (timer.current !== 'commit') { clearTimeout(timer.current); timer.current = null; timerAt.current = null; }
     setTable(t => t.shown === completed ? { ...t, interaction: completed } : t);
     // The transport can be ahead; reveal its queued snapshots only after this sequence lands.
     if (!timer.current) startTransition(() => pumpRef.current());
@@ -1191,6 +1193,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [pickDone, setPickDone] = useState(null); // the last pick's caption ("· 0 left") stays while its resource flies
   useEffect(() => { if (!pickDone) return undefined; const t = setTimeout(() => setPickDone(null), 900); return () => clearTimeout(t); }, [pickDone]);
   const onSeatPick = useCallback((id, el) => {
+    if (interactionState !== physicalState || session.getState() !== physicalState) return;
     const pk = pickerRef.current;
     const o = pk && pk.options.find(x => x.id === id);
     if (!o) return;
@@ -1214,10 +1217,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       });
     }
     onPick(id);
-  }, [options, onPick, pickKey]);
+  }, [options, onPick, pickKey, interactionState, physicalState, session]);
   // the gift card: a first lifts (or is put back); nothing goes to the engine until the second
   const onGiftFirst = useCallback(a => setPickFirst({ pend, v: a }), [pend]);
   const onGiftAnswer = useCallback((id, el, b) => {
+    if (interactionState !== physicalState || session.getState() !== physicalState) return;
     const g = gift;
     if (!g || !options.has(id)) return;
     // a gift: its coins fly from the card to the rival's stack of that color, as many as they get (up to 3)
@@ -1229,7 +1233,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       if (to) for (let k = 0; k < Math.max(1, Math.min(3, g.n || 1)); k++) setTimeout(() => flyToken(from, to, html, { tag: 'pick-flight', duration: 460 }), k * 70);
     }
     onPick(id);
-  }, [gift, options, onPick]);
+  }, [gift, options, onPick, interactionState, physicalState, session]);
   const onSeatDenied = useCallback((why, el) => {
     if (why) say(why);
     if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-3px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 220, easing: 'ease-out' });

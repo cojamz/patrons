@@ -27,9 +27,27 @@ trap 'exit 143' TERM
 mkdir "$TMP/source"
 git archive "$SHA" | tar -x -C "$TMP/source"
 ln -s "$ROOT/node_modules" "$TMP/source/node_modules"
+# A public release number identifies one immutable source; prevent silent reuse.
+curl -fsSL --connect-timeout 5 --max-time 10 "$URL/build.json?version-check=$SHA" -o "$TMP/previous-build.json"
+node --input-type=module - "$TMP/source" "$TMP/previous-build.json" "$SHA" <<'RELEASE_CHECK'
+import {readFileSync} from 'node:fs';
+import {pathToFileURL} from 'node:url';
+const [source,previousPath,sha]=process.argv.slice(2);
+const {VERSION}=await import(pathToFileURL(`${source}/src/v4/version.js`));
+if(!/^v\d+\.\d+\.\d+$/.test(VERSION))throw new Error('Release version must be semantic, for example v0.6.0.');
+const notes=readFileSync(`${source}/CHANGELOG.md`,'utf8');
+if(!notes.split('\n').some(line=>line.startsWith(`## ${VERSION} `)))throw new Error(`Missing changelog section for ${VERSION}.`);
+const previous=JSON.parse(readFileSync(previousPath,'utf8'));
+if(previous.version===VERSION && previous.commit!==sha)throw new Error(`${VERSION} is already published from another commit. Bump with npm run version:v4 before checking the next release.`);
+RELEASE_CHECK
 echo "Building checked commit $SHORT"
 ( cd "$TMP/source" && COMMIT_REF="$SHA" "$ROOT/node_modules/.bin/vite" build --base ./ --outDir "$TMP/play" )
-node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({commit:process.argv[2]})+"\n")' "$TMP/play/build.json" "$SHA"
+node --input-type=module - "$TMP/play/build.json" "$SHA" "$TMP/source/src/v4/version.js" <<'MANIFEST'
+import {writeFileSync} from 'node:fs';
+import {pathToFileURL} from 'node:url';
+const {VERSION}=await import(pathToFileURL(process.argv[4]));
+writeFileSync(process.argv[2],JSON.stringify({version:VERSION,commit:process.argv[3],builtAt:new Date().toISOString()})+'\n');
+MANIFEST
 
 git fetch -q origin main:refs/remotes/origin/main
 git worktree add -q --detach "$WT" origin/main

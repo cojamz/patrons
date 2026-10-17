@@ -159,13 +159,14 @@ describe('Blue members', () => {
     s = buyTurn([['market.onlooker']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
     expect(R(s).blue).toBe(0);
   });
-  it('× Poach: the victim\'s free recruit of a blue member is a rival recruit for Onlooker', () => {
+  it('× Poach: no replacement means Onlooker sees no rival recruit', () => {
     let s = table(Q, { round: 3, left: 5, n: 3, members: [[], ['gold.tycoon'], ['market.onlooker']], shop: ['market.recluse', ...ROW] });
     s = take(s, 'thieves.heist');
     s = move(s, `card:${uidIn(s, 'gold.tycoon', 1)}`);
-    s = move(s, card(s, 'market.recluse')); // P2 recruits free, costing ≤12
-    expect(owns(s, 1, 'market.recluse')).toBe(true);
-    expect(R(s, 2).blue).toBe(2);
+    expect(owns(s, 0, 'gold.tycoon')).toBe(true);
+    expect(owns(s, 1, 'market.recluse')).toBe(false);
+    expect(s.shop).toContain(uidIn(s, 'market.recluse', 'shop'));
+    expect(R(s, 2).blue).toBe(0);
   });
 
   it('Connoisseur: whenever you recruit a blue member, +2 blue; not for other colors', () => {

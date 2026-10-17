@@ -1,7 +1,6 @@
 // @vitest-environment node
 // A rival's answer on your turn is told honestly (blind testers, aminus r1 #3, #4): Shake Down says whose call it was,
-// what they gave and why that much (the member's cost, as the card says); Poach says when the victim gets no
-// replacement and why. The log says it, and so does the turn card (format.js turnStory).
+// what they gave and why that much (the member's cost, as the card says); Poach names the transferred member. The log says it, and so does the turn card (format.js turnStory).
 import { describe, it, expect } from 'vitest';
 import { take, move } from './helpers.js';
 import { table, useCosts, uidIn } from './cards-helpers-b.js';
@@ -43,14 +42,17 @@ describe('Shake Down: the rival chooses, and the card says what they paid and wh
   });
 });
 
-describe('Poach: no replacement is said plainly', () => {
-  it('nothing face up costs that little: the log and the turn card say why', () => {
+describe('Poach: the transfer is said plainly', () => {
+  it('takes the member without a replacement or a misleading price explanation', () => {
     // Intern costs 2; nothing face up costs 2 or less (Volunteer, at 0, is taken out of the row)
     const s0 = table(Q, { round: 3, left: 5, members: [[], ['red.intern']], shop: ['gold.tycoon', 'red.bigfamily', 'red.twins', 'gold.taxman'] });
     s0.shop = s0.shop.filter(u => s0.cards[u].def !== 'red.volunteer' && s0.cards[u].def !== 'red.intern');
     const s = move(take(s0, 'thieves.heist'), cardOpt(s0, 'red.intern', 1));
-    expect(s.log).toContain('P2 gets no replacement: nothing in the shop costs 2 or less.');
-    expect(story(s0, s)).toMatch(/P2 gets no replacement: nothing in the shop costs 2 or less/);
+    expect(s.players[1].members).toEqual([]);
+    expect(s.shop).toEqual(s0.shop);
+    expect(s.log).toContain("P1 pulled a heist: P2's Intern.");
+    expect(story(s0, s)).toContain("took P2's Intern");
+    expect(s.log.join(' ')).not.toMatch(/replacement|nothing in the shop costs/);
   });
 });
 

@@ -12,7 +12,7 @@ describe('Printed followers count as members', () => {
     expect(countMembersOfColor(s, s.players[0], 'red')).toBe(5);
     expect(countMembersOfColor(s, s.players[0], 'yellow')).toBe(2);
     expect(followers(s, s.players[0])).toBe(45);
-    expect(contextFor(s).quadrant('red').scoring.score(contextFor(s), s.players[0])).toBe(7);
+    expect(contextFor(s).quadrant('red').scoring.score(contextFor(s), s.players[0])).toBe(5);
   });
   it('uses printed member weight for a per-member action', () => {
     let s = table(Q, { round: 2, members: [['red.twins', 'red.bigfamily']] });

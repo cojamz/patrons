@@ -627,7 +627,8 @@ function runTask(state, task) {
       p.turnRecruits = 0;
       p.turnBuys = 0;
       // task.ring: a turn limited to spaces of that ring or lower (a weaker extra worker)
-      state.queue.unshift({ t: 'place', p: p.id, ...(task.ring ? { ring: task.ring } : {}) }, { t: 'buy', p: p.id }, { t: 'buy', p: p.id, extra: true }, { t: 'endTurn', p: p.id });
+      const source = workerSourceOf(task);
+      state.queue.unshift({ t: 'place', p: p.id, ...source, ...(task.ring ? { ring: task.ring } : {}) }, { t: 'buy', p: p.id, ...source }, { t: 'buy', p: p.id, ...source, extra: true }, { t: 'endTurn', p: p.id, ...source });
       return;
     }
     case 'act': {
@@ -717,16 +718,22 @@ function startRound(state, r) {
   // extra workers go after the snake, in this round's order
   // (a member with extraWorkerRing limits its worker to spaces of that ring or lower)
   const extras = Object.fromEntries(base.map(id => {
-    const rings = [];
-    for (const uid of state.players[id].members) for (const d of effectiveDefs(state.cards[uid]))
-      for (let k = 0; k < ((d.extraWorkers || [])[r - 1] || 0); k++) rings.push(d.extraWorkerRing || 0);
-    return [id, rings];
+    const grants = [];
+    for (const uid of state.players[id].members) {
+      let grant = 0;
+      for (const d of effectiveDefs(state.cards[uid]))
+        for (let k = 0; k < ((d.extraWorkers || [])[r - 1] || 0); k++) grants.push({ uid, grant: grant++, ring: d.extraWorkerRing || 0 });
+      state.cards[uid].workerGrantRound = r;
+      state.cards[uid].workerGrants = grant;
+    }
+    return [id, grants];
   }));
   const snake = state.order.map(id => ({ t: 'turn', p: id }));
   const most = Math.max(0, ...base.map(id => extras[id].length));
   for (let k = 0; k < most; k++) for (const id of base) if (extras[id].length > k) {
+    const x = extras[id][k], workerOrder = state.order.length;
     state.order.push(id);
-    snake.push({ t: 'turn', p: id, ...(extras[id][k] ? { ring: extras[id][k] } : {}) });
+    snake.push({ t: 'turn', p: id, workerSource: x.uid, workerGrant: x.grant, workerOrder, ...(x.ring ? { ring: x.ring } : {}) });
   }
   // the cards that bend this round's order and workers are named, so the order and the extra worker trace to them
   const hands = base.filter(id => extras[id].length).map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'extraWorkers')}: +${extras[id].length} minion${extras[id].length > 1 ? 's' : ''}.`);
@@ -893,7 +900,7 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   // a when-recruited effect leaves a trace like any other member hook (Seed Money, Pilgrim, Retinue…)
   if (def.onRecruited) { const before = traceSnapshot(state); def.onRecruited(ctx, p, w); traceChanges(state, before, p, def); }
   joinNow(state, p, w, [def]);
-  workersNow(state, p, def);
+  workersNow(state, p, def, uid);
 }
 /**
  * A member's "now" part, as it joins p: "Now and at round start" members (flag now) fire their round-start effect once
@@ -918,17 +925,37 @@ function memberJoined(state, p, uid) {
  * once: extra turns after everyone else's, before the round closes, as at round start (Claude, under Cory's
  * go-with-your-gut, 2026-10-15: bought in round III it was a dead buy). Recruited earlier, round start counts it.
  */
-function workersNow(state, p, def) {
+function workersNow(state, p, def, uid) {
   const r = state.round;
-  const k = r >= 1 ? (def.extraWorkers || [])[r - 1] || 0 : 0;
+  const card = state.cards[uid];
+  const prior = card?.workerGrantRound === r ? card.workerGrants || 0 : 0;
+  const k = Math.max(0, (r >= 1 ? (def.extraWorkers || [])[r - 1] || 0 : 0) - prior);
   const at = state.queue.findIndex(t => t.t === 'allPlaced');
   if (!k || at < 0) return;
-  const turns = Array.from({ length: k }, () => ({ t: 'turn', p: p.id, ...(def.extraWorkerRing ? { ring: def.extraWorkerRing } : {}) }));
+  const turns = Array.from({ length: k }, (_, i) => ({ t: 'turn', p: p.id, workerSource: uid, workerGrant: prior + i, workerOrder: state.order.length + i, ...(def.extraWorkerRing ? { ring: def.extraWorkerRing } : {}) }));
+  card.workerGrantRound = r; card.workerGrants = prior + k;
   state.queue.splice(at, 0, ...turns);
   state.order.push(...turns.map(() => p.id));
   p.workers = (p.workers ?? WORKERS[r - 1]) + k;
   p.left += k;
   log(state, `${p.name}'s ${def.name}: +${k} minion${k > 1 ? 's' : ''} this round, after everyone else's turns.`);
+}
+
+// An unplaced extra minion belongs to its granting card. A placed minion never follows a later transfer.
+function transferWorkers(state, uid, from, to) {
+  const unplaced = state.queue.filter(t => t.p === from.id && t.workerSource === uid && (t.t === 'turn' || t.t === 'place'));
+  const grants = new Set(unplaced.map(t => t.workerGrant));
+  if (!grants.size) return;
+  for (const t of state.queue) if (t.p === from.id && t.workerSource === uid && grants.has(t.workerGrant)) t.p = to.id;
+  for (const t of unplaced) if (Number.isInteger(t.workerOrder)) state.order[t.workerOrder] = to.id;
+  if (unplaced.some(t => t.t === 'place') && state.current === from.id) {
+    state.current = to.id;
+    if (state.turns?.length && state.turns[state.turns.length - 1] === from.id) state.turns[state.turns.length - 1] = to.id;
+  }
+  from.left -= grants.size; to.left += grants.size;
+  from.workers = (from.workers ?? WORKERS[state.round - 1]) - grants.size;
+  to.workers = (to.workers ?? WORKERS[state.round - 1]) + grants.size;
+  log(state, `${defById(state.cards[uid].def).name}: ${grants.size} unplaced minion${grants.size === 1 ? '' : 's'} moves from ${from.name} to ${to.name}.`);
 }
 
 function buyFollowers(state, p, tier, chosen) {
@@ -1061,12 +1088,13 @@ function spendAllowance(state, p, flag) {
   log(state, `${p.name} uses ${defById(card.def).name}.`);
 }
 // Preserve purchase allowance and the activation-only window across member uses.
-const extraOf = task => ({ ...(task.extra ? { extra: true } : {}), ...(task.afterPurchase ? { afterPurchase: true } : {}) });
+const workerSourceOf = task => task.workerSource !== undefined ? { workerSource: task.workerSource, workerGrant: task.workerGrant, workerOrder: task.workerOrder } : {};
+const extraOf = task => ({ ...workerSourceOf(task), ...(task.extra ? { extra: true } : {}), ...(task.afterPurchase ? { afterPurchase: true } : {}) });
 // A real buy (member or followers) in a buy step. The second one spends a Big Spender.
 function boughtOnce(state, p, task) {
   if (task.extra) spendAllowance(state, p, 'extraBuy');
   p.turnBuys = (p.turnBuys || 0) + 1;
-  if (task.uid !== undefined) state.queue.unshift({ t: 'buy', p: p.id, afterPurchase: true });
+  if (task.uid !== undefined) state.queue.unshift({ t: 'buy', p: p.id, afterPurchase: true, ...workerSourceOf(task) });
 }
 /** How many cards off the top of the pile p may recruit from (Insider: flag pileReach; copies don't stack). */
 export function pileReach(state, p) {
@@ -1162,6 +1190,7 @@ function ctxFor(state) {
     shopCards: () => state.shop.map(u => wrap(state, state.cards[u])),
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
     discount: grantDiscount,
+    workersNow: (p, uid, def) => workersNow(state, p, def, uid),
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
     /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
     price: (p, uid, how) => memberPrice(state, p, uid, how),
@@ -1192,6 +1221,7 @@ function ctxFor(state) {
       refill(state);
     },
     moveMember(uid, from, to) {
+      transferWorkers(state, uid, from, to);
       cardLeaves(state, from, uid);
       from.members.splice(from.members.indexOf(uid), 1);
       to.members.push(uid);

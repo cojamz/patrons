@@ -1,3 +1,33 @@
+# Cults changelog
+
+Player-facing releases and exact source/build verification are recorded separately. Current public source:6c1e97eb (historical labelv0.5). v0.6.0 below is a release candidate until public deployment is verified. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+
+## v0.6.0 — 2026-10-17 — unreleased
+
+- Member competitions count members of that arc's own color; Gold, Silver and Yellow keep their conditions.
+- Local/online legal lights and turns wait for actual action animation completion; scoring awards wait for arrival.
+- Remove the round-end pre-screen and fixed gaps; improve swap, steal and wheel rendering.
+- Cutpurse offers resource choice; Poach gives no replacement; Extortionist triggers on5+ follower purchases; Go-Getter can activate after its last-turn purchase.
+- Payment shows member ability; Basic Blue/Green leave normal setup; Straggler/Squatter cues and card wording improved.
+- Version now includes a release number and build reference. Public build manifest includes version and full source commit.
+- Release blocker: complete browser game and final regressions must pass; do not describe this entry as shipped before verification.
+
+## Historical v0.5 — verified source6c1e97eb — 2026-10-17
+
+- Reverse RoundI resource draft; printed follower value also counts as member quantity; tied leaders each get half prize.
+- Corrected theft/member effects, multiplayer display and market interactions.
+- Desktop, online fallback and phone checks passed; exact evidence and remaining work are in design/HANDOFF.md.
+- Earlier releases reused the samev0.5 label. Git history and feedback audits retain those individual fixes; no invented release numbers.
+
+## Recorded v0.2 — 2026-10-14 — historical source
+
+- Central Cults name/version marker introduced in [20573121](https://github.com/cojamz/patrons/commit/205731217a93ffb499fcc3804fe140653df4a336), following the deterministic v4 engine and local/online UI work.
+- v0.5 replaced it on October15. No v0.3/v0.4 release is inferred; see the separate deployment timeline for published builds.
+
+## Legacy recorded changelog (preserved)
+
+The original entries below predate the current release-numbering scheme. Their dates and wording are preserved; they do not imply deployment of the new v4 candidate.
+
 # Changelog
 
 All notable changes to Patrons are documented here.

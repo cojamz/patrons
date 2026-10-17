@@ -194,8 +194,9 @@ describe('Green members', () => {
     s = move(take(s, 'echo.hum'), cardOpt(s, 'echo.understudy', 'shop'));
     s = payDefault(s);
     expect(s.pending.options.map(o => o.label)).toEqual(['Crescendo (P2): +4 green']);
+    const beforeCopy = { ...R(s) };
     s = move(s, s.pending.options[0].id);
-    expect(R(s).green).toBe(4 + 3 - 4 + 4 - Math.max(0, 2 - 2));
+    expect(R(s)).toEqual({ ...beforeCopy, green: beforeCopy.green + 4 });
     expect(named(s, 'Understudy').length).toBe(1);
   });
   // design critic follow-up (2026-10-14): was "Game end: +1 follower per green member"

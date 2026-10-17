@@ -888,6 +888,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
       // silently, straight into the round's scoring, where the toast never showed)
       else if (/^ couldn't buy anything\.$/.test(own)) said.push('nothing affordable to buy');
       else if ((m = own.match(/^ traded (.+)\.$/))) said.push(youName(`traded ${m[1]}`));
+      else if ((m = own.match(/^ pulled a heist: (.+)\.$/))) said.push(youName(`took ${m[1]}`));
       else if ((m = own.match(/takes (an extra turn|(\d+) extra turns)\.$/))) said.push(m[2] ? `${m[2]} extra turns` : 'an extra turn');
       else if ((m = own.match(/^'s next member costs (\d+) less\.$/))) said.push(`next member costs ${m[1]} less`);
       else if ((m = own.match(/^ recruited (.+?)(?: from the pile with .+?)? \((.+)\)\.$/))) said.push(m[2] === 'free' ? `recruited ${m[1]} (free)` : `recruited ${m[1]} (paid ${m[2]})`);

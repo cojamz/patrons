@@ -248,18 +248,18 @@ describe('follower buys', () => {
 describe('round-end contests', () => {
   it('rings pay full +2/+4/+6 to a solo leader, half to every tied leader, and nothing for zero', () => {
     for (const [round, v] of [[1, 2], [2, 4], [3, 6]]) {
-      const s = scene({ n: 3, round, res: [{ gold: 5, blue: 1 }, { gold: 5 }, { gold: 3 }], queue: [{ t: 'endRound' }] });
+      const s = scene({ n: 3, round, members: [['blue.hand'], [], []], res: [{ gold: 5, blue: 1 }, { gold: 5 }, { gold: 3 }], queue: [{ t: 'endRound' }] });
       expect(s.players.map(p => p.contest)).toEqual([v + v / 2, v / 2, 0]);
     }
   });
 
-  it('most members wins red; tied member counts each score half', () => {
+  it('most own-color members wins red; tied weighted red counts each score half', () => {
     let s = scene({ n: 3, members: [['gold.banker', 'gold.midas'], ['red.intern', 'gold.tycoon'], ['red.volunteer', 'red.crowd']], queue: [{ t: 'endRound' }] });
-    // all have 2 members; P2 has 1 red, P3 has 2 red
-    expect(s.players.map(p => p.contest)).toEqual([1, 1, 1]);
+    // All have two cards; only the red quantities count: 0, 1 and 2.
+    expect(s.players.map(p => p.contest)).toEqual([0, 0, 2]);
     s = scene({ n: 3, members: [['red.intern', 'gold.midas'], ['red.mob', 'gold.tycoon'], ['gold.banker']], queue: [{ t: 'endRound' }] });
     expect(s.players.map(p => p.contest)).toEqual([1, 1, 0]);
-    // Printed groups count as multiple members: Twins (2) + Big Family (3) beat three single members.
+    // Printed red groups count as multiple red members: Twins (2) + Big Family (3) score 5, off-color cards score 0.
     s = scene({ n: 2, members: [['gold.banker', 'gold.midas', 'gold.tycoon'], ['red.twins', 'red.bigfamily']], queue: [{ t: 'endRound' }] });
     expect(s.players.map(p => p.contest)).toEqual([0, 2]);
   });

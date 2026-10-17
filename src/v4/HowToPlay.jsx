@@ -2,7 +2,7 @@
 import { Fragment } from 'react';
 import { useDialog } from './game/parts.jsx';
 import { RULEBOOK } from './rulebook.js';
-import { GAME_NAME, VERSION } from './version.js';
+import { GAME_NAME, VERSION_LABEL } from './version.js';
 import { GLOSSARY } from './glossary.js';
 import { Follower } from './art/Follower.jsx';
 import { ResourceGlyph } from './game/Glyphs.jsx';
@@ -64,7 +64,7 @@ export default function HowToPlay({ onClose }) {
           <h3 id="glossary">Glossary</h3>
           <dl className="glossary" data-glossary>{GLOSSARY.filter(t => !t.legacy).map(t => <Fragment key={t.key}><dt>{t.word}</dt><dd>{t.def}</dd></Fragment>)}</dl>
         </div>
-        <p className="version" data-version>{GAME_NAME} {VERSION}</p>
+        <p className="version" data-version>{GAME_NAME} {VERSION_LABEL}</p>
       </div>
     </div>
   );

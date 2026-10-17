@@ -16,11 +16,14 @@ npm run sim:v4 -- 300 4   # bot balance read
 ```
 
 ## Ship it
-Work lives on `claude/gifted-newton-3lcy3i` (PR #1). Push there once the quick check passes, then:
+Work lives on `claude/gifted-newton-3lcy3i` (PR#1). Start with [HANDOFF](design/HANDOFF.md) for exact source/live state and blockers. [CHANGELOG](CHANGELOG.md) records releases; [release guide](design/releasing.md) explains the versioning/check workflow.
 ```bash
-bash scripts/v4-play.sh
+npm run version:v4 -- patch "Concrete player-facing changes"  # minor for a rule/content batch
+# Commit, then check the exact immutable source and actual UI.
+npm run check:v4 -- --commit <sha> --quick
+bash scripts/v4-play.sh <checked-full-sha>
 ```
-It builds HEAD, commits `play/` to `main` and waits for GitHub Pages. A push to a branch alone never changes the play link.
+The publisher requires a matching changelog entry and a fresh semantic version, exports the checked commit, writes version+fullsource into build.json, updates main/play, and waits for GitHub Pages. A source-branch checkpoint push never updates the play link. Verify the public stamp and game before marking a release shipped. Save compatibility remains the separate rules-content fingerprint.
 
 ## Where things live
 - `design/` — the design record. Start with `HANDOFF.md`, then `in-flight.md`, `todo.md`, `decisions.md` (every call Cory has made; it wins over code and docs), `taste.md`, `rulebook.md`.

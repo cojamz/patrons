@@ -321,6 +321,7 @@ const echoQ = {
       // Doppelganger becomes a copy of the member card (Cory): the copied "when recruited" effect fires once, for the
       // copy, and so does a "Now and at round start" member's now part. Named under the copied member, like its other hooks.
       const d = target.def;
+      if (d.extraWorkers) ctx.workersNow(p, self.uid, d);
       if (d.onRecruited) ctx.asMember(p, d.name, () => d.onRecruited(ctx, p, self));
       if (d.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (d[hook]) ctx.asMember(p, d.name, () => d[hook](ctx, p, self));
     },
