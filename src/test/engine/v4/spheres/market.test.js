@@ -30,8 +30,8 @@ let restore;
 beforeEach(() => { restore = pinCosts({ ...TEST_COSTS, ...MARKET_TEST_COSTS }); });
 afterEach(() => { restore(); });
 
-function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null, bonus = [], turn = 0, queue = null, pileFirst = null } = {}) {
-  const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: Q });
+function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null, bonus = [], turn = 0, queue = null, pileFirst = null, rules = {} } = {}) {
+  const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: Q, rules });
   s.queue = []; s.pending = null; s.round = round; s.slots = {}; s.order = []; s.log = [];
   s.players.forEach((p, i) => {
     for (const r of s.resources) p.res[r] = 0;
@@ -209,12 +209,12 @@ describe('Blue members', () => {
   });
   // replaced (dead-window audit, 2026-10-14): the round-start trade-in became a payout on Release
   it('Social Climber: whenever you release another member, +2 of any color you choose (not for itself)', () => {
-    let s = scene({ round: 2, members: [['market.climber', 'gold.midas']], queue: [{ t: 'buy', p: 0 }] });
+    let s = scene({ round: 2, rules: { release: true }, members: [['market.climber', 'gold.midas']], queue: [{ t: 'buy', p: 0 }] });
     s = move(s, `release:${uidOf(s, 'gold.midas', 0)}`);
     expect(s.pending.prompt).toContain('Social Climber');
     s = move(s, 'color:green');
     expect(R(s).green).toBe(2);
-    let k = scene({ round: 2, members: [['market.climber']], queue: [{ t: 'buy', p: 0 }] });
+    let k = scene({ round: 2, rules: { release: true }, members: [['market.climber']], queue: [{ t: 'buy', p: 0 }] });
     k = move(k, `release:${uidOf(k, 'market.climber', 0)}`);
     expect(k.pending?.prompt || '').not.toContain('Social Climber');
   });
@@ -260,7 +260,7 @@ describe('Blue members', () => {
   });
   it('Recluse: game end, +2 followers per rival with more members', () => {
     const s = scene({ n: 3, members: [['market.recluse'], ['red.intern', 'red.drive'], ['red.twins']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(2);
+    expect(s.players[0].final.total).toBe(4); // Both rivals hold two members; Recluse holds one.
   });
 });
 

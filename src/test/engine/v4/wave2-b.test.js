@@ -13,8 +13,8 @@ import { breakdown } from '../../../v4/format.js';
 const MAG = ['gold', 'thieves', 'market', 'echo'];
 const takeFrom = (s, pid) => move(s, s.pending.options.find(o => o.value[0] === pid).id);
 
-describe('#6 Redistribute: exactly 1 from each richer rival it can take from', () => {
-  it('a richer rival lying low is not counted: 2 to take, 1 each, never a second from P2', () => {
+describe('#6 Redistribute: exactly 1 from each rival it can take from', () => {
+  it('a rival lying low is not counted: 2 to take, 1 each, never a second from P2', () => {
     let s = sceneQ({ quadrants: MAG, n: 4, res: [{ gold: 1 }, { gold: 3, red: 2 }, { gold: 4 }, { gold: 3 }] });
     s.players[2].hideout = s.round; // P3 lies low
     s = take(s, 'thieves.tipoff');
@@ -46,12 +46,19 @@ describe('#38 a dim rival says the true reason', () => {
     let s = sceneQ({ quadrants: MAG, n: 3, res: [{}, { magenta: 2, gold: 1 }, { gold: 2 }] });
     s = take(s, 'thieves.tipoff');
     s = takeFrom(s, 1);
-    expect(s.pending.blocked[1]).toMatch(/1 from each richer rival/);
+    expect(s.pending.blocked[1]).toMatch(/1 from each rival/);
   });
-  it('Redistribute: a rival holding no more than you says so', () => {
+  it('Redistribute: a rival holding no more than you is still available', () => {
     let s = sceneQ({ quadrants: MAG, n: 3, res: [{ gold: 2 }, { gold: 5 }, { gold: 2 }] });
     s = take(s, 'thieves.tipoff');
-    expect(s.pending.blocked[2]).toMatch(/P3 holds no more resources than you/);
+    expect(s.pending.options.some(o => o.value[0] === 2)).toBe(true);
+    s = takeFrom(s, 2);
+    expect(s.pending.options.every(o => o.value[0] === 1)).toBe(true);
+    expect(s.pending.blocked[2]).toMatch(/already gave theirs/);
+    s = takeFrom(s, 1); // chosen piles move together once all picks are complete
+    expect(s.players[2].res.gold).toBe(1);
+    expect(s.players[1].res.gold).toBe(4);
+    expect(s.players[0].res.magenta).toBe(2);
   });
 });
 

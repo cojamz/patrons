@@ -81,7 +81,7 @@ describe('audit: log lines', () => {
     expect(s.players[0].res.silver).toBe(12);
     expect(s.log.some(l => /raised a toast: \+12 silver/.test(l))).toBe(true);
     s = take(sc(QP, { round: 2, res: [{}, { silver: 5 }], members: [['silver.grandhost']] }), 'silver.tide');
-    expect(s.players[0].res.silver).toBe(6);
-    expect(s.log.some(l => /Rising Tide: \+1 silver to everyone else, then \+6 silver/.test(l))).toBe(true);
+    expect(s.players[0].res.silver).toBe(8);
+    expect(s.log.some(l => /Rising Tide: \+2 silver to everyone else, then \+8 silver/.test(l))).toBe(true);
   });
 });

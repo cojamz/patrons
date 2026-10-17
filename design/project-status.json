@@ -73,23 +73,35 @@
   "upNext": [
     {
       "source": "Multiplayer turn correctness",
-      "name": "Fix multiplayer turns and logs",
-      "summary": "Correct stale highlights, turn labels and missing updates.",
-      "doneWhen": "Two-client regressions keep legal choices, turn ownership and logs in sync."
-    },
-    {
-      "source": "UI interaction fixes",
-      "name": "Make actions and market easier to use",
-      "summary": "Direct desktop placement, cleaner card views and a visible Done button.",
-      "doneWhen": "Desktop and phone checks pass without losing exact rules or outcomes."
+      "name": "Multiplayer \u00b7 implemented",
+      "summary": "Current turn, glowing spaces and log update together. Multi-client regressions passed; frozen browser check next.",
+      "doneWhen": "The published build passes real browser host/guest play and shows current ownership."
     },
     {
       "source": "Rules and member fixes",
-      "name": "Correct theft and explicit member changes",
-      "summary": "Fix doubled steals, protection and stated card values.",
-      "doneWhen": "Engine regressions pass; ambiguous redesigns stay outside the release."
+      "name": "Rules & theft \u00b7 implemented",
+      "summary": "Reverse resource draft, weighted members, half tie rewards and corrected steal choices. Engine regressions passed.",
+      "doneWhen": "Combined suite and complete browser game pass on the exact release."
+    },
+    {
+      "source": "UI interaction fixes",
+      "name": "Market & UI \u00b7 implemented",
+      "summary": "Details toggle, single sort switch, clearer Done and buy-only fading. Laptop and phone visuals checked in isolation.",
+      "doneWhen": "Integrated laptop/phone views remain readable and usable."
+    },
+    {
+      "source": "Release integration",
+      "name": "Release \u00b7 checking",
+      "summary": "Fixing a real final-summary log mismatch, then combined game, multiplayer and motion checks. Not shipped yet.",
+      "doneWhen": "Publish checked commit, verify public build stamp and announce \u201cShipped\u2014ready to test\u201d."
+    },
+    {
+      "source": "Animation performance",
+      "name": "Animation contention \u00b7 investigating",
+      "summary": "Profiling wheel spins during active resource/member effects; idle-only measurements are insufficient.",
+      "doneWhen": "Concurrent effects stay smooth in the frozen production build; bottleneck and remaining limits reported."
     }
   ],
-  "batchStatus": "In progress",
-  "batchNote": "113 new notes captured \u00b7 clear fixes first"
+  "batchStatus": "Release checks",
+  "batchNote": "113 notes tracked \u00b7 current batch not live"
 }

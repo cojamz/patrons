@@ -76,11 +76,14 @@ describe('Even Swap', () => {
     expect(s.log.some(l => /Banker/.test(l) && /\+3 gold/.test(l))).toBe(true);
   });
 
-  it('Lie Low doesn’t stop it (it shields resources only)', () => {
+  it('Lie Low protects its owner’s members from an equal-cost swap', () => {
     let s = sceneQ({ quadrants: T, members: [['red.twins'], ['gold.banker']] });
     s.players[1].hideout = s.round;
     s = take(s, 'red.evenswap');
-    expect(ids(s)).toEqual([`trade:${uidOf(s, 'red.twins', 0)}:${uidOf(s, 'gold.banker', 1)}`]);
+    expect(s.pending?.kind).not.toBe('choose');
+    expect(R(s).red).toBe(1);
+    expect(defs(s, 0)).toEqual(['red.twins']);
+    expect(defs(s, 1)).toEqual(['gold.banker']);
   });
 
   it('with no members of your own: +1 red, nothing to swap, no fallback', () => {

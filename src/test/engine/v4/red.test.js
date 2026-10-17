@@ -102,9 +102,9 @@ describe('Stand-in actions are plain gains', () => {
 });
 
 describe('Red members', () => {
-  it('Twins is worth 2 followers, Big Family 3, and each is one member', () => {
+  it('Twins is worth 2 followers and members; Big Family 3 of each', () => {
     const s = scene({ members: [['red.twins', 'red.bigfamily', 'red.intern']] });
-    expect(memberCount(s, s.players[0])).toBe(3);
+    expect(memberCount(s, s.players[0])).toBe(6);
     expect(fol(s, 0)).toBe(1 + 2 + 3 + 1);
   });
 
@@ -139,7 +139,7 @@ describe('Red members', () => {
 
   it('Mob: game end +1 follower per red member', () => {
     const s = scene({ members: [['red.mob', 'red.twins', 'red.intern', 'gold.banker']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(3);
+    expect(s.players[0].final.total).toBe(4);
   });
 
   it('Recruiter: +1 red whenever you recruit (not for itself)', () => {
@@ -158,14 +158,14 @@ describe('Red members', () => {
     expect(s.pending).toBe(null);
     expect(R(s)[0].red).toBe(2);
     let t = scene({ members: [['red.drive']], shop: ['red.volunteer', ...SHOP.slice(1)] });
-    t = take(t, 'red.hire'); // nothing affordable after: only Release (a base rule) or pass
-    expect(t.pending.options.every(o => o.kind === 'release' || o.kind === 'pass')).toBe(true);
+    t = take(t, 'red.hire'); // Nothing affordable; Release is disabled, so the buy step closes.
+    expect(t.pending).toBe(null);
     expect(R(t)[0].red).toBe(0);
   });
 
   it('Host: at round start +1 red per 2 members', () => {
     const s = scene({ members: [['red.host', 'red.twins', 'red.intern', 'red.crowd', 'gold.banker']], queue: [{ t: 'round', r: 2 }] });
-    expect(R(s)[0].red).toBe(2);
+    expect(R(s)[0].red).toBe(3);
   });
 
   it('Sponsor: members cost 2 less, and stacks with Intro Offer', () => {
@@ -248,7 +248,7 @@ describe('Red members', () => {
 
   it('Patriarch: game end +1 follower per 2 members', () => {
     const s = scene({ members: [['red.patriarch', 'red.bigfamily', 'red.intern', 'red.crowd', 'gold.banker']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(2);
-    expect(fol(s, 0)).toBe(1 + (1 + 3 + 1 + 1 + 1) + 2);
+    expect(s.players[0].final.total).toBe(3);
+    expect(fol(s, 0)).toBe(1 + (1 + 3 + 1 + 1 + 1) + 3);
   });
 });

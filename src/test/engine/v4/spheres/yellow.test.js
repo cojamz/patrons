@@ -124,9 +124,9 @@ describe('Yellow actions', () => {
     expect(R(take(scene({ round: 2, res: [{ yellow: 2 }] }), 'yellow.prism'))).toEqual({ ...Z, yellow: 2 });
   });
 
-  it('Potluck (ring II): each member brings 1 of its color (Twins is one member)', () => {
+  it('Potluck (ring II): each member brings 1 of its color (Twins counts as two)', () => {
     const s = take(scene({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern', 'yellow.farmer']] }), 'yellow.gather');
-    expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 2, green: 0 }); // Farmer adds 1 to the yellow
+    expect(R(s)).toEqual({ gold: 1, red: 3, yellow: 2, green: 0 }); // Farmer adds 1 to the yellow
   });
 
   it('Bumper Crop (ring III): +1 of each other color per full set', () => {
@@ -148,8 +148,8 @@ describe('Yellow members', () => {
     expect(R(s)).toEqual({ gold: 2, red: 1, yellow: 1, green: 1 });
   });
 
-  it('Peddler: round start, +1 of each other color', () => {
-    expect(R(start([['yellow.peddler']]))).toEqual({ gold: 1, red: 1, yellow: 0, green: 1 });
+  it('Peddler: round start, +1 of each color', () => {
+    expect(R(start([['yellow.peddler']]))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
   });
 
   it('Gleaner: an action gaining 2+ of another color gives +1 yellow (once per color gained)', () => {
@@ -234,7 +234,7 @@ describe('Yellow members', () => {
     expect(R(take(scene({ members: [['yellow.farmer']], res: [{ gold: 1 }] }), 'yellow.bloom')).yellow).toBe(2);
   });
 
-  it('Weaver: buying 6 followers gives +1 of each color; smaller buys don’t', () => {
+  it('Weaver: buying 5 or more followers gives +1 of each color', () => {
     let s = scene({ members: [['yellow.weaver']], res: [{ gold: 2, red: 2, green: 2 }] });
     s.cards[uidOf(s, 'yellow.weaver', 0)].seenBig = s.bigLeft;
     s = take(s, 'yellow.harvest'); // +3 yellow
@@ -246,10 +246,10 @@ describe('Yellow members', () => {
     t.cards[uidOf(t, 'yellow.weaver', 0)].seenBig = t.bigLeft;
     t = take(t, 'gold.rush');
     t = move(t, 'tier:mid');
-    expect(Object.values(R(t)).reduce((a, b) => a + b, 0)).toBe(6 - 5);
+    expect(Object.values(R(t)).reduce((a, b) => a + b, 0)).toBe(6 - 5 + 4);
   });
 
-  it('Weaver: remembers the pile when recruited, and a rival’s 6-buy doesn’t trigger it', () => {
+  it('Weaver: remembers the pile when recruited, and a rival’s follower-buy doesn’t trigger it', () => {
     let s = scene({ res: [{ yellow: 1, gold: 1 }, { gold: 3, red: 3, green: 3 }], shop: ['yellow.weaver', ...SHOP.slice(1)], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
     s = take(s, 'yellow.harvest');
     s = move(s, `card:${uidOf(s, 'yellow.weaver', 'shop')}`);

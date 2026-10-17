@@ -1,10 +1,18 @@
 // An independent oracle for the round-end contests, used by the engine test (contests.test.js) and the UI
 // test (src/test/v4/ui/contest-truth.test.jsx). It never calls a quadrant's scoring or show: it counts what each
 // rule says it counts, straight off the state, so a screen and the engine can both be checked against it.
-import { createGame, applyMove, memberCount, countMembersOfColor, chooseBotMove, quadrant, RING_VALUE } from '../../../engine/v4/index.js';
+import { createGame, applyMove, defById, chooseBotMove, quadrant, RING_VALUE } from '../../../engine/v4/index.js';
 import { workersOnBoard } from '../../../engine/v4/core.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { makeTables } from './fuzz-tables-runner.js';
+
+// Count printed groups independently of the engine's memberCount helpers.
+const printed = def => Math.max(def.f || 0, def.n ?? 1);
+const members = (state, p, color = null) => p.members.reduce((n, uid) => {
+  const card = state.cards[uid], def = defById(card.def);
+  if (color && def.quadrant !== color) return n;
+  return n + Math.max(printed(def), card.copy ? printed(defById(card.copy)) : 0);
+}, 0);
 
 /** The number a quadrant's rule measures for player p (its count), or null when the oracle doesn't know the rule. */
 export function oracleCount(state, qid, p) {
@@ -13,16 +21,16 @@ export function oracleCount(state, qid, p) {
   // a plain "Most <resource>" rule counts that resource (Gold, Silver, White, Green, Purple…)
   if (q.scoring.label === `Most ${q.resource}`) return res(q.resource);
   switch (qid) {
-    case 'red': return memberCount(state, p);
+    case 'red': return members(state, p);
     case 'purple': return /workers on the board/.test(q.scoring.label) ? workersOnBoard(state, p) : null;
     case 'yellow': return Math.min(...state.resources.map(res));
-    case 'thieves': return countMembersOfColor(state, p, 'thieves');
+    case 'thieves': return members(state, p, 'thieves');
     default: return null;
   }
 }
 /** Contests have no secondary tiebreakers. Kept for callers rendering older records. */
 export function oracleTiebreak() { return null; }
-/** Every player tied for the largest count gets the full prize; zero never scores. */
+/** Every player tied for the largest count shares winner status (each earns half the full prize); zero never scores. */
 export function oracleWinners(state, qid) {
   const rows = state.players.map(p => ({ id: p.id, c: oracleCount(state, qid, p) }));
   if (rows.some(r => r.c == null)) return null;

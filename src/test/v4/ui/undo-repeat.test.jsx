@@ -3,8 +3,9 @@ import { it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent, act, cleanup } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
-afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 for (const succeeds of [true, false]) it(`${succeeds ? 'successful' : 'failed'} undo ${succeeds ? 'allows' : 'still guards'} an immediate repeat of the same space`, async () => {
+  vi.stubGlobal('matchMedia', vi.fn(q => ({ matches: q.includes('min-width: 861px'), addEventListener() {}, removeEventListener() {} })));
   let state = createGame({ seats: [{ name: 'You', kind: 'human' }, { name: 'Bot', kind: 'bot' }], seed: 11 });
   for (let n = 0; n < 100 && state.pending.kind !== 'place'; n++) state = applyMove(state, chooseBotMove(state, () => 0.3));
   const me = state.pending.player;

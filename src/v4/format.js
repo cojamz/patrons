@@ -493,12 +493,17 @@ export function scoringSnapshot(before, after) {
   if (!before || !before.pending || !after) return null;
   const cut = before.queue.findIndex(t => t.t === 'endRound');
   if (cut < 0) return null;
-  const target = JSON.stringify(after.log.slice(-6));
-  for (const o of before.pending.options) {
+  const target = JSON.stringify(after.log);
+  // Scoring can fill the log tail identically after different buys. Replay the actual recorded move;
+  // otherwise a same-value card earlier in the options could replace the member really recruited.
+  const recorded = after.moves === before.moves + 1 ? after.history?.[before.moves] : null;
+  const options = recorded && recorded[0] === before.pending.player
+    ? before.pending.options.filter(o => o.id === recorded[1]) : before.pending.options;
+  for (const o of options) {
     const move = { player: before.pending.player, option: o.id };
     let full;
     try { full = applyMove(before, move); } catch { continue; }
-    if (JSON.stringify(full.log.slice(-6)) !== target || full.round !== after.round) continue;
+    if (JSON.stringify(full.log) !== target || full.round !== after.round) continue;
     const trimmed = { ...before, queue: before.queue.slice(0, cut + 1) };
     try { return applyMove(trimmed, move); } catch { return null; }
   }

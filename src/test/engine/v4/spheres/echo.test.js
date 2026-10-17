@@ -151,13 +151,13 @@ describe('Green actions', () => {
 
   it('Encore: any occupied space, including the center, but not another copy', () => {
     let s = scene({ round: 3, turns: [1, 1, 0, 0], res: [{}, { gold: 5 }], members: [[], ['red.intern', 'red.twins', 'red.volunteer']] });
-    s = go(s, 'gold.windfall'); // P2 +3 gold (3 members); P1 has none and still copies +3
+    s = go(s, 'gold.windfall'); // P2 +4 gold (Twins counts as 2); P1 has none and still copies +4
     s = go(s, 'gold.strike');   // P2 center
     s = go(s, 'echo.hum');      // P1 +3 green
     s = take(s, 'echo.encore');
-    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Double Down (P2): +8 gold', 'Hum (P1): +3 green', 'Tithe (P2): +3 gold']);
+    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Double Down (P2): +9 gold', 'Hum (P1): +3 green', 'Tithe (P2): +4 gold']);
     s = pass(play(s, spaceOpt(s, 'gold.windfall')));
-    expect(R(s)[0]).toEqual({ ...Z, gold: 3, green: 3 });
+    expect(R(s)[0]).toEqual({ ...Z, gold: 4, green: 3 });
   });
 
   it('Reprise: copy one of your own spaces without a green bonus', () => {

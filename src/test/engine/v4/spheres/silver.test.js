@@ -50,11 +50,11 @@ const Z = { gold: 0, red: 0, blue: 0, silver: 0 };
 const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
 
 describe('Silver scoring: most silver', () => {
-  it('the most silver at round end takes the ring; ties all score; none scores nothing', () => {
+  it('the most silver at round end takes the ring; ties split the prize; none scores nothing', () => {
     let s = scene({ res: [{ silver: 3 }, { silver: 2 }, { gold: 9 }], queue: [{ t: 'endRound' }] });
     expect(s.log.at(-1)).toContain('Most silver: P1 +2');
     s = scene({ res: [{ silver: 3 }, { silver: 3 }], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most silver: P1 & P2 +2');
+    expect(s.log.at(-1)).toContain('Most silver: P1 & P2 +1');
     s = scene({ res: [{ gold: 1 }], queue: [{ t: 'endRound' }] });
     expect(s.log.at(-1)).not.toContain('Most silver');
   });
@@ -101,10 +101,10 @@ describe('Silver actions', () => {
     expect(R(s).silver).toBe(4);
   });
 
-  it('Rising Tide (ring II): everyone else +1 silver, then half the richest rival’s silver, rounded up', () => {
+  it('Rising Tide (ring II): everyone else +2 silver, then half the richest rival’s silver, rounded up', () => {
     const s = take(scene({ round: 2, res: [{ silver: 1 }, { silver: 4 }, { silver: 2 }] }), 'silver.tide');
-    expect(R(s, 1).silver).toBe(5);
-    expect(R(s, 2).silver).toBe(3);
+    expect(R(s, 1).silver).toBe(6);
+    expect(R(s, 2).silver).toBe(4);
     expect(R(s).silver).toBe(1 + 3);
   });
 
@@ -172,10 +172,10 @@ describe('Silver members', () => {
     expect(R(s).silver).toBe(9);
   });
 
-  it('Retinue: worth 2 followers but 1 member; when recruited, everyone else +1 silver', () => {
+  it('Retinue: worth 2 followers and 2 members; when recruited, everyone else +1 silver', () => {
     let s = scene({ res: [{ silver: 1, gold: 1 }], shop: ['silver.retinue'], queue: [{ t: 'buy', p: 0 }] });
     s = move(s, `card:${uidOf(s, 'silver.retinue', 'shop')}`);
-    expect(memberCount(s, s.players[0])).toBe(1);
+    expect(memberCount(s, s.players[0])).toBe(2);
     expect(followers(s, s.players[0])).toBe(3);
     expect(R(s, 1).silver).toBe(1);
     expect(R(s, 2).silver).toBe(1);
@@ -191,7 +191,7 @@ describe('Silver members', () => {
 
   it('Heir: at the start of round III, +1 silver per member (nothing in round II)', () => {
     let s = scene({ members: [['silver.heir', 'silver.retinue', 'gold.banker']], queue: [{ t: 'round', r: 3 }] });
-    expect(R(s).silver).toBe(3);
+    expect(R(s).silver).toBe(4); // Heir1 + Retinue2 + Banker1.
     s = scene({ members: [['silver.heir']], queue: [{ t: 'round', r: 2 }] });
     expect(R(s).silver).toBe(0);
   });
@@ -218,10 +218,10 @@ describe('Silver members', () => {
     expect(ids(s)).not.toContain(`use:${u}`);
   });
 
-  it('Dowager: worth 3 followers, 1 member', () => {
+  it('Dowager: worth 3 followers and 3 members', () => {
     const s = scene({ members: [['silver.dowager']] });
     expect(followers(s, s.players[0])).toBe(4);
-    expect(memberCount(s, s.players[0])).toBe(1);
+    expect(memberCount(s, s.players[0])).toBe(3);
   });
 
   it('Grand Host: silver from Silver spaces is doubled; gifts and other spaces are not', () => {

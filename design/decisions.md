@@ -768,3 +768,8 @@ User confirmed batch complete; every original line is retained in `play-feedback
 - 💡 #111: Steal UI isn’t particularly intuitive. Well, the UI is maybe intuitive but sometimes wording on the cards isnt (Investigate / design idea; audit tracks implementation.)
 - ❓ #112: Didn’t we say end of round sphere rewards should divide up evenly on a tie? (Question / hold; audit tracks implementation.)
 - ✅ #113: Sometimes turn status is desync’d or wrong (Firm change; audit tracks implementation.)
+
+### Clarifications to the October 17 batch
+- ✅ Replace initial resource picks with a Round-I-only resource draft: one of each available color, in reverse of drawn first-turn order; last remaining color goes to first actor.
+- ✅ Printed follower quantity also counts as member quantity; preserve larger explicit member-count rules. Do not inflate counts with bonus followers or fire recruitment hooks multiple times per card.
+- ✅ Tied sphere leaders each get half the round prize, regardless of tie size.

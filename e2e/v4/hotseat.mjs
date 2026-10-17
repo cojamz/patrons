@@ -323,15 +323,8 @@ try {
       continue;
     }
     // Once: undo a placement, then reload mid-game and resume, then browser Back and resume again.
-    // Once: the first starting pick can be taken back (a double tap no longer commits it for good).
-    if (!seen.has('undo-pick') && await page.$('.undo:has-text("pick")')) {
-      seen.add('undo-pick');
-      await page.click('.undo:has-text("pick")');
-      await page.waitForTimeout(200);
-      const p = await page.$eval('.cs-setup:not(.wait), .prompt.choice p', e => e.textContent).catch(() => ''); // on a laptop the pick sits in your seat
-      if (!/1 of 2/.test(p)) errors.push(`undoing the first starting pick did not reopen it ("${p}")`);
-      continue;
-    }
+    // The one-resource draft passes to the next seat immediately; there is no second pick to undo.
+    if (await page.$('.undo:has-text("pick")')) errors.push('obsolete second-resource Undo pick is still visible');
     if (!seen.has('undo') && await page.$('.undo:not(:has-text("pick"))')) {
       seen.add('undo');
       const before = await page.$$eval('.slot .worker', e => e.length);
@@ -435,7 +428,7 @@ try {
   console.log(`turn stories: ${told.length} (e.g. "${told[0] || ''}")`);
   if (told.length < 5) errors.push(`only ${told.length} turn stories by the board`);
   if (!told.some(t => t.startsWith('You took'))) errors.push('your own turns were never told ("You took …")');
-  for (const why of ['undo', 'undo-pick', 'reload', 'reload-end', 'reload-final']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
+  for (const why of ['undo', 'reload', 'reload-end', 'reload-final']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
   console.log(`finished after ${clicks} clicks: ${winner}`);
   // Play again returns to a fresh game.
   await page.click('[data-play-again]');

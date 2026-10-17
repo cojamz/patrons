@@ -2,7 +2,7 @@
 // player takes the space (choices made at random) lies inside the preview's ranges, and a space with no choices
 // is previewed exactly. The preview never changes the state it reads.
 import { describe, it, expect } from 'vitest';
-import { applyMove, followers, previewSpace } from '../../../engine/v4/index.js';
+import { applyMove, followers, memberCount, previewSpace } from '../../../engine/v4/index.js';
 import { playMixedGames } from './contest-oracle.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 
@@ -35,7 +35,7 @@ describe('v4 previewSpace', () => {
           const pastRound = t.over || t.round !== s.round || t.log.slice(s.log.length).some(l => /^Round \S+ ends\./.test(l));
           if (!pv.partial && !pastRound) {
             for (const r of s.resources) expect(inRange(pv.you.res[r], (me.res[r] || 0) - (me0.res[r] || 0)), `${o.label}: ${r} ${JSON.stringify(pv.you.res[r])}`).toBe(true);
-            expect(inRange(pv.you.members, me.members.length - me0.members.length), `${o.label}: members`).toBe(true);
+            expect(inRange(pv.you.members, memberCount(t, me) - memberCount(s, me0)), `${o.label}: members`).toBe(true);
             // followers: the buy step can't have run yet (we stop at the next decision), so it's the space's own
             if (t.pending && t.pending.player === pid && t.pending.kind === 'buy') expect(inRange(pv.you.followers, followers(t, me) - followers(s, me0)), `${o.label}: followers`).toBe(true);
           }

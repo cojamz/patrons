@@ -213,7 +213,7 @@ describe('White members', () => {
   it('Heiress: once per game, +1 white per member (named)', () => {
     let s = take(table(Q, { members: [['trading.heiress', 'red.twins', 'red.bigfamily']], shop: ROW }), 'trading.haggle');
     s = move(s, `use:${uidIn(s, 'trading.heiress', 0)}`);
-    expect(R(s).white).toBe(2 + 3);
+    expect(R(s).white).toBe(2 + 6); // Heiress1 + Twins2 + BigFamily3.
     expect(named(s, 'Heiress').length).toBe(1);
   });
   it('Bulk Buyer: whenever you buy 3 or more followers, +1 more (not for the 1-for-1 buy)', () => {

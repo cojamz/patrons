@@ -42,7 +42,7 @@ import GameScreen from '../../../v4/game/GameScreen.jsx';
 import Tick, { countMs } from '../../../v4/game/Tick.jsx';
 import { saveLocalSoon, flushLocalSave, clearLocal, claimLocal, loadLocal } from '../../../v4/saved.js';
 
-afterEach(() => { cleanup(); globalThis.IS_REACT_ACT_ENVIRONMENT = true; });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); globalThis.IS_REACT_ACT_ENVIRONMENT = true; });
 
 const SEATS = [{ name: 'Ana', kind: 'human' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }, { name: 'Di', kind: 'bot' }];
 /** Bot moves for every seat until it's seat `who`'s `kind` step (round I or later). */
@@ -140,7 +140,8 @@ describe('render budget', () => {
     expect(report.GameScreen).toBeLessThanOrEqual(1);
   });
 
-  it('a click on a lit space lets the press paint before the table re-renders', async () => {
+  it('a desktop click on a lit space lets the press paint before the table re-renders', async () => {
+    vi.stubGlobal('matchMedia', vi.fn(q => ({ matches: q.includes('min-width: 861px'), addEventListener() {}, removeEventListener() {} })));
     const state = advanceTo(createGame({ seats: SEATS, seed: 21 }), 'place', 0);
     const session = createLocalSession({ state, botDelayMs: 1e9 });
     const { container } = render(<GameScreen session={session} pace={0} />);

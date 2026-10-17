@@ -58,3 +58,6 @@
 /* Keep the colored rim legible even while another quadrant is being counted. */
 .lt .stage svg.wheel-paper .rim.wait{fill-opacity:.8}
 .lt .stage svg.wheel-paper .rim-rule.wait,.lt .stage svg.wheel-paper .rim-emoji.wait,.lt .stage svg.wheel-paper .rim-dot.wait{opacity:.8}
+
+/* A quiet affordability cue only while buying; placement and free choices stay bright. */
+.lt[data-yours="1"][data-phase="buy"] .lt-shop .lt-card.card.paper.recede:not([data-aim]){opacity:.82;filter:none}

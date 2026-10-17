@@ -124,7 +124,7 @@ describe('bot levels', () => {
         const { s } = play(4, seed, [level, level, level, level]);
         for (const p of s.players) {
           seats++;
-          members += memberCount(s, p);
+          members += p.members.length; // physical recruitments, not the new printed member weight
           left += Object.values(p.res).reduce((a, b) => a + b, 0);
           expect(followers(s, p)).toBeGreaterThan(10);
         }

@@ -2,16 +2,15 @@
 
 Updated 2026-10-16, Eastern. Current assignments and release evidence are below; older sections are historical. Source branch: `claude/gifted-newton-3lcy3i`. Codex coordinates agents, integrates, checks and publishes. State of the project: `design/HANDOFF.md`.
 
-## Current Codex work (2026-10-16, Eastern)
-- Verified live source `eecddbae08ebd4e747eaec053d7c630f2846e683`, main/play `be2c240`; public root redirects correctly. Exact manifest/HTML and real public browser load verified.
-- Shipped: bright shop/target outline and spacing, deck gallery by color/price, Cost/Color toggle, readable free-member cards, precise wheel wording/formulas, visible Release entry, snake/ring guidance, Undo-retake correction, compositor wheel motion and smoother scoring effects.
-- Checks: full base suite 1,174 passed / 1 skipped, build and full game; wording follow-up 286 related checks plus build/full game. Public deck selection, Escape and focus return pass with zero resource/runtime errors. Laptop/phone gallery screenshots inspected.
-- Performance: quiet normal/4× profile clean (worst frame 17.7ms), frozen interaction gate passed. **Open:** first laptop spin had a 450ms cold stall before a smooth retry. Suspect uncached panel layout; trace before fixing. Do not call performance finished.
-- Phone touch setup, placement and purchase pass publicly at 390/412px (emulation).
-- Performance, wording and verification agents finished. No scheduled check-ins. Codex owns release records and project board checkpoint refreshes.
-- Original 59-item feedback audit remains the scope record. Board data: `design/project-status.json`; generator: `scripts/v4-status-board.mjs`.
-- Next: cold first-spin fix, opponents’ engine/points clarity, member wording, first-play comprehension, then open balance/design items. “Precise and minimal” is the language standard.
-- Historical sections below are context, not current assignments or deployment instructions.
+## Current Codex work (2026-10-17, Eastern)
+- Latest VERIFIED LIVE remains eecddbae; new 113-note batch is NOT SHIPPED.
+- Source checkpoint8097779 implements clear UI, multiplayer, theft and clarified rule changes. Subsequent uncommitted changes update obsolete test contracts; all agent edits are in the shared checkout.
+- Parallel work completed: multiplayer authoritative display/focus; Magenta rules/printed member weights; shop/UI. Agent credits ended after UI agent left one actual format/log discrepancy to resolve. Root is integrating; do not claim agents still running unless checked.
+- Initial quick gate: build passes, full game finishes but old Undo-pick requirement fails; 58 unit failures largely old-rule pins. Targeted repairs pass; root final five files47pass; final format discrepancy under investigation.
+- Resource draft RoundIonly reverseorder, printed follower/member quantity, half prize for every tied leader confirmed by Cory. No blanket balance/retheme decisions.
+- Working audit `feedback-audit-2026-10-17.md` tracks every one of113notes separately; original retained. Earlier59-note audit remains historical. Public release/phone/online/first-spin checks still required before publishing.
+- User requested economical shipping now and resume6:15am. One-time heartbeat arrived6:27am; exact delay cause unknown. Local scheduled work requires app running/computer on; do not promise exact unattended start.
+- Next: finish integration gates, inspect frozen laptop/phone and multi-client play, publish checked immutable commit, verify public stamp and update all records. No new speculative design work before this release.
 
 ## 2026-10-16 (10:40pm Eastern, Oct 15): Cory's v0.5 play notes, logged only
 - Nothing built. Everything is in design/todo.md, top section "Cory's play notes, 2026-10-16"; his clear calls in decisions.md (2026-10-16); catches 48–53 in the answer key.

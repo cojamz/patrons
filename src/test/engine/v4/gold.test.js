@@ -86,9 +86,9 @@ describe('Gold actions', () => {
     expect(() => take(s, 'gold.steal')).toThrow(/not open/);
   });
 
-  it('Tithe: +1 gold per member (Twins is one member)', () => {
+  it('Tithe: +1 gold per member (Twins counts as two)', () => {
     const s = take(scene({ round: 2, members: [['red.twins', 'red.intern', 'red.crowd']] }), 'gold.windfall');
-    expect(R(s)[0].gold).toBe(3);
+    expect(R(s)[0].gold).toBe(4);
   });
 
   it('Double Down: doubles your gold (round III only)', () => {
@@ -284,7 +284,7 @@ describe('Gold members', () => {
     let s = scene({ members: [['red.twins', 'red.intern']], res: [{ gold: 2 }], shop: ['gold.seed', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
     s = take(s, 'blue.a1');
     s = move(s, `card:${uidOf(s, 'gold.seed', 'shop')}`);
-    expect(R(s)[0].gold).toBe(0 + 3);
+    expect(R(s)[0].gold).toBe(0 + 4); // Twins2 + Intern1 + Treasurer1.
   });
 
   it('Hustler: pick a color; your actions there give +1 gold', () => {

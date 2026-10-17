@@ -22,9 +22,9 @@ function nextPlacer(s) {
 const queuedTurns = (s, id) => s.queue.filter(t => t.t === 'turn' && t.p === id).length;
 
 describe('Night Owl', () => {
-  it('is printed as decided: 8 purple + 2 any, worth 1 follower, in plain words', () => {
+  it('is printed as decided: 8 purple + 2 any, worth 2 followers, in plain words', () => {
     const d = defById('purple.nightowl');
-    expect([d.s, d.w, d.f]).toEqual([8, 2, 1]);
+    expect([d.s, d.w, d.f]).toEqual([8, 2, 2]);
     expect(d.text).toBe('Rounds II–III: after placing your last minion, take 1 extra turn if there’s room. Once per round.');
   });
 

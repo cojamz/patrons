@@ -57,11 +57,11 @@ describe('White scoring: fewest followers', () => {
     expect(trading.scoring.score(ctx, { f: 2 })).toBeGreaterThan(trading.scoring.score(ctx, { f: 5 }));
     expect(trading.scoring.show(ctx, { f: 5 }).count).toBe(5);
   });
-  it('pays the ring value to whoever has fewest followers, white or not; ties all score', () => {
+  it('pays the ring value to whoever has fewest followers, white or not; ties split the prize', () => {
     let s = scene({ n: 3, res: [{}, { white: 5 }, {}], bonus: [0, 2, 1], queue: [{ t: 'endRound' }] });
     expect(s.log.at(-1)).toContain('Fewest followers: P1 +2');
     s = scene({ n: 3, bonus: [0, 0, 3], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Fewest followers: P1 & P2 +2');
+    expect(s.log.at(-1)).toContain('Fewest followers: P1 & P2 +1');
   });
 });
 
@@ -252,7 +252,7 @@ describe('White members', () => {
     let s = take(scene({ round: 3, members: [['trading.heiress', 'red.twins', 'gold.banker']] }), 'gold.rush');
     const u = uidOf(s, 'trading.heiress', 0);
     s = move(s, `use:${u}`);
-    expect(R(s).white).toBe(3); // Heiress, Twins, Banker
+    expect(R(s).white).toBe(4); // Heiress1 + Twins2 + Banker1
     expect(ids(s)).not.toContain(`use:${u}`);
   });
 

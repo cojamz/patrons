@@ -78,8 +78,9 @@ describe('round summary and results (live panel r1)', () => {
     expect(rev).toBeTruthy();
     for (const x of over.players) x.members = x.members.filter(u => u !== rev.uid);
     const p = over.players[1];
+    const before = memberCount(over, p);
     p.members.push(rev.uid);
-    expect(memberCount(over, p)).toBe(p.members.length + 2);
+    expect(memberCount(over, p) - before).toBe(3);
     const { container } = render(<Results state={over} onPlayAgain={() => {}} onHome={() => {}} />);
     expect(container.querySelector(`[data-members="${p.id}"]`).textContent).toBe(`${memberCount(over, p)} members`);
     // the cult cell's hover names the same count

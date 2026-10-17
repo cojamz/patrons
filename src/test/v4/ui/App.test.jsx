@@ -4,7 +4,7 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 import App from '../../../v4/App.jsx';
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
-beforeEach(() => { localStorage.clear(); vi.spyOn(Math, 'random').mockReturnValue(0); }); // seed 0: the human picks first, so this flow test never waits for a bot
+beforeEach(() => { localStorage.clear(); vi.spyOn(Math, 'random').mockReturnValue(0); }); // deterministic resource draft; reverse order may start with a bot
 
 describe('v4 app', () => {
   it('goes from Home through local setup into a game', async () => {
@@ -16,8 +16,11 @@ describe('v4 app', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
     // two chairs at the table hold a cult; the other two stay empty
     expect(container.querySelectorAll('.lt-seat[data-pid]')).toHaveLength(2);
-    expect(container.querySelector('[data-prompt]').textContent).toMatch(/starting resource/i);
-    await waitFor(() => expect(container.querySelectorAll('[data-option^="color:"]')).toHaveLength(2), { timeout: 10000 });
+    expect(container.querySelector('[data-prompt]').textContent).toMatch(/draft.*resource/i);
+    // Reverse order may let the bot draft first. Answer the human's one draft choice.
+    await waitFor(() => expect(container.querySelector('.app[data-yours="1"] [data-option^="color:"]')).not.toBeNull(), { timeout: 10000 });
+    fireEvent.click(container.querySelector('.app[data-yours="1"] [data-option^="color:"]'));
+    await waitFor(() => expect(container.querySelector('[data-prompt]').textContent).not.toMatch(/draft.*resource/i), { timeout: 10000 });
   });
 
   it('needs at least 2 seats to start', () => {

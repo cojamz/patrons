@@ -248,8 +248,8 @@ describe('v4 format helpers', () => {
   });
   it('a placement after a payment never nets: what was paid is the price, what the space gave is told apart', () => {
     let s = createGame({ seats, seed: 5 });
-    const trail = createTrail(0);
-    for (let k = 0; k < 3000 && !s.over; k++) { s = applyMove(s, chooseBotMove(s, () => 0.4)); feed(trail, s); }
+    const trail = createTrail(0), allLogs = new Set(s.log);
+    for (let k = 0; k < 3000 && !s.over; k++) { s = applyMove(s, chooseBotMove(s, () => 0.4)); feed(trail, s); s.log.forEach(l => allLogs.add(l)); }
     let n = 0;
     for (const st of trail.stories) for (const l of st.lines) {
       const m = l.match(/^recruited (.+?) \(paid (.+)\)$/);
@@ -257,7 +257,7 @@ describe('v4 format helpers', () => {
       n++;
       // the paid amount is the price the engine logged, never a net of the turn's other gains
       // (a recruit from the pile reads "recruited X from the pile with Insider (price)")
-      expect(s.log.some(l => l.includes(`recruited ${m[1]} `) && l.includes(`(${m[2]})`)), l).toBe(true);
+      expect([...allLogs].some(l => l.includes(`recruited ${m[1]} `) && l.slice(l.indexOf(' (') + 2).split(/[;)]/)[0] === m[2].split(';')[0]), `${l} :: ${JSON.stringify([...allLogs].filter(x => x.includes('recruited ')))}`).toBe(true);
     }
     expect(n).toBeGreaterThan(3);
   });

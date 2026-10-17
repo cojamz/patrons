@@ -250,7 +250,7 @@ describe('Blue members', () => {
 
   // replaced (dead-window audit, 2026-10-14): the old once-per-game round-start trade-in never fired in bot play
   it('Social Climber: whenever you release another member, +2 of a color you choose, named; bots take their least-held', () => {
-    let s = table(Q, { round: 2, members: [['market.climber', 'red.bigfamily']], res: [{ gold: 1 }], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
+    let s = table(Q, { rules: { release: true }, round: 2, members: [['market.climber', 'red.bigfamily']], res: [{ gold: 1 }], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
     s = move(s, `release:${uidIn(s, 'red.bigfamily', 0)}`);
     expect(R(s).red).toBe(4); // Big Family's colored part
     expect(s.pending.prompt).toMatch(/Social Climber/);
@@ -261,13 +261,13 @@ describe('Blue members', () => {
     expect(named(s, 'Social Climber')).toEqual(["P1's Social Climber: +2 gold."]);
     expect(s.pending.kind).toBe('buy');
     // releasing the Climber itself gives only its colored part
-    let t = table(Q, { round: 2, members: [['market.climber']], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
+    let t = table(Q, { rules: { release: true }, round: 2, members: [['market.climber']], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
     t = move(t, `release:${uidIn(t, 'market.climber', 0)}`);
     expect(R(t).blue).toBe(2);
     expect(named(t, 'Social Climber')).toHaveLength(0);
   });
   it('× Doppelganger copying Social Climber: one release pays +2 twice', () => {
-    let s = table(Q, { round: 2, members: [['market.climber', 'echo.doppel', 'red.twins']], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
+    let s = table(Q, { rules: { release: true }, round: 2, members: [['market.climber', 'echo.doppel', 'red.twins']], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
     s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'market.climber';
     s = move(s, `release:${uidIn(s, 'red.twins', 0)}`);
     s = move(move(s, 'color:magenta'), 'color:magenta');

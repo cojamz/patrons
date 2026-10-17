@@ -58,12 +58,12 @@ const JV = '0-0', RUSH = '0-1', HIRE = '1-2';
 const fullRoundI = (...free) => Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => !free.includes(k)).map(k => [k, 1]));
 
 describe('Purple scoring: most purple', () => {
-  it('most purple at round end takes the ring; ties all score; none scores nothing', () => {
+  it('most purple at round end takes the ring; ties split the prize; none scores nothing', () => {
     // workers on the board don't count any more (Claude, 2026-10-14: they almost always tied)
     const s = scene({ res: [{ purple: 2 }, { purple: 3 }], slots: { [JV]: 0, [RUSH]: 0, [HIRE]: 1 }, queue: [{ t: 'endRound' }] });
     expect(s.log.at(-1)).toContain('Most purple: P2 +2');
     const t = scene({ res: [{ purple: 4 }, { purple: 4 }], queue: [{ t: 'endRound' }] });
-    expect(t.log.at(-1)).toContain('Most purple: P1 & P2 +2');
+    expect(t.log.at(-1)).toContain('Most purple: P1 & P2 +1');
     const u = scene({ res: [{ purple: 0 }, { purple: 0 }], queue: [{ t: 'endRound' }] });
     expect(u.log.at(-1)).not.toContain('Most purple');
   });

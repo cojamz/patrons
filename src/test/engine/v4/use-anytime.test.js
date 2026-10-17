@@ -42,7 +42,8 @@ describe('using a member any time on your turn', () => {
     const uid = uidIn(s, 'gold.jackpot', 0), use = `use:${uid}`;
     s = take(s, N('gold', 'rush'));
     expect(s.pending.kind).toBe('buy');
-    expect(ids(s)).toEqual(expect.arrayContaining([use, `release:${uid}`])); // unused: usable, and releasable
+    expect(ids(s)).toContain(use);
+    expect(ids(s)).not.toContain(`release:${uid}`); // Release removed; activation stays available
     // one line for one step (blind testers, 2026-10-15): the headline says it all, the line under it names the use
     expect(promptFor(s, true).text).toBe('Recruit a member or buy followers');
     expect(promptFor(s, true).sub).toBe('…or use Lottery Winner');

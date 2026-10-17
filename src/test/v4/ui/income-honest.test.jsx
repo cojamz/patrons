@@ -3,7 +3,7 @@
 // hangs on a condition now says it ("if fewest", "per 2 purple"), and the hover gives each member's rule.
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
-import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
+import { createGame, applyMove, chooseBotMove, memberCount } from '../../../engine/v4/index.js';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
 import { incomeTerms, incomeCondition } from '../../../v4/game/build.js';
 
@@ -72,12 +72,12 @@ describe('seat income says its conditions', () => {
   });
 
   // live panel r1 (G4): "+N more" hid members, so the "Most members" prize couldn't be counted off the seats
-  it('seats free their labels for figures, retain accessible counts', () => {
+  it('seats show weighted member counts and keep individual figures accessible', () => {
     const s = toPlace(createGame({ seats, seed: 4, quadrants }));
     for (const c of Object.values(s.cards).filter(x => s.pile.includes(x.uid)).slice(0, 14)) give(s, 1, c.def);
     const { container } = render(<CultSeat state={s} pid={1} me={0} />);
-    expect(container.querySelector('[data-member-count]')).toBeNull();
-    expect(container.querySelector('.lt-cult-seat').getAttribute('aria-label')).toContain(`${s.players[1].members.length} members`);
+    expect(container.querySelector('.cs-member-count').textContent).toBe(`${memberCount(s, s.players[1])} members`);
+    expect(container.querySelector('.lt-cult-seat').getAttribute('aria-label')).toContain(`${memberCount(s, s.players[1])} members`);
     expect(container.querySelectorAll('.cs-member').length).toBeGreaterThan(6);
     // a rival's figures are off the keyboard's path (their seat's head opens the card listing them)
     for (const f of container.querySelectorAll('.cs-member .fig')) expect(f.getAttribute('tabindex')).toBe('-1');

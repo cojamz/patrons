@@ -7,9 +7,10 @@ import { take, move } from '../../engine/v4/helpers.js';
 import { createEmitter } from '../../../v4/session/emitter.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const wait = ms => act(() => new Promise(resolve => setTimeout(resolve, ms)));
 it('automatically copies after placing on Echo, through the step input lock', async () => {
+  vi.stubGlobal('matchMedia', vi.fn(q => ({ matches: q.includes('min-width: 861px'), addEventListener() {}, removeEventListener() {} })));
   let current = table(['gold', 'red', 'market', 'echo'], {
     shop: ['red.volunteer'], queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }],
   });

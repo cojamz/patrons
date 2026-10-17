@@ -29,8 +29,8 @@ const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.intern', 'red.pa
  * A hand-made position on any table. `turns` is the turn order to queue (default P1, P2, P1, P2…),
  * `slots` presets workers on the board ({ 'q-i': player }), `copies` sets Doppelganger copies ({ player: { def: copiedDef } }).
  */
-function scene({ quads, n = 2, seed = 7, round = 1, res = [], members = [], shop = SHOP, bonus = [], turns = null, queue = null, slots = {}, left = 5, copies = {}, pileFirst = [] }) {
-  const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: quads });
+function scene({ quads, n = 2, seed = 7, round = 1, res = [], members = [], shop = SHOP, bonus = [], turns = null, queue = null, slots = {}, left = 5, copies = {}, pileFirst = [], rules = {} }) {
+  const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: quads, rules });
   Object.assign(s, { queue: [], pending: null, round, slots: { ...slots }, order: [], log: [] });
   delete s.echo;
   s.players.forEach((p, i) => {
@@ -227,7 +227,7 @@ describe('Silver gifts with Guest and Kickback', () => {
   });
   it('Rising Tide counts what the Guest just got', () => {
     const s = go(scene({ quads: Q, round: 2, res: [{}, { silver: 5 }], members: [[], ['silver.guest']] }), 'silver.tide');
-    expect(R(s, 1).silver).toBe(7);
+    expect(R(s, 1).silver).toBe(8); // 5 held + 2 given + Guest’s 1
     expect(R(s, 0).silver).toBe(4);
   });
   it('Kickback’s gold is a gift: the Guest gets 1 more', () => {
@@ -315,7 +315,7 @@ describe('Magenta takes members that carry state', () => {
   // Social Climber now pays on Release (dead-window audit, 2026-10-14); these were its round-start trade-in
   it('a member released with Social Climber held goes back to the pile clean (no Doppelganger copy, used flag), and Climber pays +2', () => {
     // a Green table: Doppelganger is green since 2026-10-15, so its release pays green
-    let s = scene({ quads: ['gold', 'red', 'market', 'echo'], round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'gold.midas' } } });
+    let s = scene({ rules: { release: true }, quads: ['gold', 'red', 'market', 'echo'], round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'gold.midas' } } });
     const d = uidOf(s, 'echo.doppel', 0);
     s.cards[d].used = true;
     s = move(s, `release:${d}`);
@@ -326,7 +326,7 @@ describe('Magenta takes members that carry state', () => {
     expect(R(s, 0).red).toBe(2);
   });
   it('releasing an Investor with Social Climber gives back the gold set aside, not doubled, plus Climber’s +2', () => {
-    let s = scene({ quads: Q, round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'gold.investor']] });
+    let s = scene({ rules: { release: true }, quads: Q, round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'gold.investor']] });
     const u = uidOf(s, 'gold.investor', 0);
     s.cards[u].invested = 3;
     s = move(s, `release:${u}`);
@@ -391,11 +391,12 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
     s.players[1].hideout = 1; // a Lie Low from an earlier round protects nothing
     expect(quadrant('thieves').guardSteal({ state: s }, s.players[0], s.players[1])).toBe(false);
   });
-  it('Shake Down can still pick a member of the player in the Lie Low (Cory: Lie Low shields resources only)', () => {
+  it('Shake Down cannot pick a member protected by Lie Low', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }], members: [[], ['red.twins'], ['red.bigfamily']] });
     s = go(s, 'thieves.hideout', 'take:2:gold');
     s = take(s, 'thieves.ransom');
-    expect(ids(s).sort()).toEqual([`card:${uidOf(s, 'red.twins', 1)}`, `card:${uidOf(s, 'red.bigfamily', 2)}`].sort());
+    expect(ids(s)).toEqual([`card:${uidOf(s, 'red.bigfamily', 2)}`]);
+    expect(defs(s, 1)).toEqual(['red.twins']);
   });
   it('Gold’s Collect Debts sets off Magenta’s reactions (Lookout)', () => {
     let s = scene({ quads: Q, n: 3, round: 2, res: [{ gold: 1 }, { gold: 4 }, {}], members: [[], [], ['thieves.lookout']] });
@@ -404,13 +405,15 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
     expect(R(s, 0).gold).toBe(3); // stole 3, Lookout took 1 back
     expect(R(s, 2).magenta).toBe(1);
   });
-  it('Bodyguard stops Red’s Swap Sides (decisions.md: Watchdog blocks Trade); Lie Low doesn’t (it shields resources only)', () => {
+  it('Bodyguard and Lie Low both stop Red’s Swap Sides', () => {
     const T = ['gold', 'red', 'thieves', 'green'];
     let s = scene({ quads: T, n: 3, round: 2, members: [['red.intern'], ['thieves.watchdog', 'red.twins'], ['red.volunteer']] });
     s.players[2].hideout = 2; // P3 is lying low this round
     s = take(s, 'red.trade');
     expect(ids(s)).not.toContain(`trade:${uidOf(s, 'red.intern', 0)}:${uidOf(s, 'red.twins', 1)}`);
-    expect(ids(s)).toContain(`trade:${uidOf(s, 'red.intern', 0)}:${uidOf(s, 'red.volunteer', 2)}`);
+    expect(ids(s)).not.toContain(`trade:${uidOf(s, 'red.intern', 0)}:${uidOf(s, 'red.volunteer', 2)}`);
+    expect(s.pending?.kind).not.toBe('choose');
+    expect(defs(s, 0)).toEqual(['red.intern']);
   });
 });
 
@@ -434,7 +437,7 @@ describe('gain changers on stolen goods', () => {
 describe('member colors across spheres', () => {
   it('Yellow’s Potluck counts Green members', () => {
     const s = go(scene({ quads: ['gold', 'red', 'yellow', 'echo'], round: 2, members: [['echo.evergreen', 'echo.choir', 'red.twins']] }), 'yellow.gather');
-    expect(R(s, 0)).toMatchObject({ green: 2, red: 1 });
+    expect(R(s, 0)).toMatchObject({ green: 2, red: 2 }); // Twins counts as two red members
   });
   it('Green members pay their colored part in green', () => {
     let s = scene({ quads: ['gold', 'red', 'yellow', 'echo'], res: [{ green: 1, gold: 1 }], shop: ['echo.evergreen', ...SHOP.slice(1)] });
@@ -452,7 +455,7 @@ describe('Release on members that carry state', () => {
   const Q = ['gold', 'red', 'thieves', 'market'];
   const buyStep = p => [{ t: 'buy', p }, { t: 'endRound' }];
   it('releasing an Investor gives back the gold set aside, not doubled', () => {
-    let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['gold.investor']] });
+    let s = scene({ rules: { release: true }, quads: Q, round: 2, queue: buyStep(0), members: [['gold.investor']] });
     const u = uidOf(s, 'gold.investor', 0);
     s.cards[u].invested = 4;
     s = move(s, `release:${u}`);
@@ -461,14 +464,14 @@ describe('Release on members that carry state', () => {
     expect(R(s, 0).gold).toBe(4 + 2); // the 4 set aside, plus Investor's colored part (2 gold, pinned): Release gives back only that (Cory, 2026-10-14)
   });
   it('a released Doppelganger goes back clean and stops copying', () => {
-    let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['echo.doppel', 'gold.midas']], copies: { 0: { 'echo.doppel': 'gold.midas' } } });
+    let s = scene({ rules: { release: true }, quads: Q, round: 2, queue: buyStep(0), members: [['echo.doppel', 'gold.midas']], copies: { 0: { 'echo.doppel': 'gold.midas' } } });
     const u = uidOf(s, 'echo.doppel', 0);
     s = move(s, `release:${u}`);
     expect(s.cards[u]).toEqual({ uid: u, def: 'echo.doppel' });
     expect(s.pile.at(-1)).toBe(u);
   });
   it('one release per round: no second release after the first', () => {
-    let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['red.twins', 'red.intern']] });
+    let s = scene({ rules: { release: true }, quads: Q, round: 2, queue: buyStep(0), members: [['red.twins', 'red.intern']] });
     s = move(s, `release:${uidOf(s, 'red.twins', 0)}`);
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     expect(ids(s).some(id => id.startsWith('release:'))).toBe(false);
