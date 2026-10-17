@@ -15,7 +15,7 @@
   .app.game.lt .lt-shop-cards[data-member-pick] .lt-card.card{flex:0 0 174px;scroll-snap-align:start}
 }
 @media (min-width:861px) and (max-width:1199px) and (min-height:500px){
-  .app.game.lt:has(.lt-shop-cards[data-member-pick]){--shop-h:264px}
+  .app.game.lt[data-member-pick]{--shop-h:264px}
   .app.game.lt .lt-shop-cards[data-member-pick] .lt-shop-body{min-width:0}
   .app.game.lt .lt-shop-cards[data-member-pick] .lt-cards{max-height:240px}
 }

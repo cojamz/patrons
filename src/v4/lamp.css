@@ -163,7 +163,8 @@ h1,h2,h3{font-family:var(--serif)}
 }
 
 /* the lamp: whichever region holds the decision is lit; the rest sit a little in shadow */
-.lt .lt-wheel,.lt .lt-shop{transition:filter var(--mo-dim) ease}
+.lt .lt-wheel{transition:filter var(--mo-dim) ease}
+.lt .lt-shop{transition:opacity var(--mo-dim) ease}
 .lt[data-yours="1"][data-phase="buy"] .lt-wheel,.lt[data-yours="1"][data-phase="pay"] .lt-wheel{filter:brightness(.82) saturate(.85)}
 .lt[data-yours="1"][data-phase="place"] .lt-shop{filter:none}
 
@@ -369,7 +370,7 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage .slot .face .pip{width:.8em;height:.8em;margin:0 0 0 .08em;vertical-align:-.06em}
 .lt [data-spaces="panels"] .stage .slot .face svg.follower-mark{display:inline-block;width:.8em;height:.8em;vertical-align:-.06em;margin:0 0 0 .08em}
 /* 2. the effect in plain words */
-.lt [data-spaces="panels"] .stage .slot .face .second{display:block;max-width:100%;font-size:14px;line-height:15px;font-weight:600;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot .face .second{display:block;max-width:100%;font-size:14px;line-height:15px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
 .lt [data-spaces="panels"] .stage .slot.wrap .face .second{white-space:normal;text-wrap:balance}
 /* a narrow panel sets its effect a size down (the clarification's size, at the effect's weight) before it wraps thrice */
 .lt [data-spaces="panels"] .stage .slot.small .face .second{font-size:12px;line-height:13px}
@@ -479,7 +480,7 @@ h1,h2,h3{font-family:var(--serif)}
 /* ---------- the Reckoning: the room dims, the lamp walks the rim, prizes arc to the winners ---------- */
 .lt-reckon{position:fixed;inset:0;z-index:40;background:none;cursor:pointer}
 /* the room dims around the board while it pays: the wheel and the chairs being paid stay in the light */
-.lt[data-phase="reckon"] .lt-shop,.lt[data-phase="reckon"] .lt-prompt{filter:brightness(.55) saturate(.7);transition:filter .3s}
+.lt[data-phase="reckon"] .lt-shop,.lt[data-phase="reckon"] .lt-prompt{opacity:.6;transition:opacity .3s}
 /* the chairs step back by opacity over the dark table, never a filter: their counts roll and settle as the prizes land
    (taste.md: no filter on a container whose children animate) */
 .lt[data-phase="reckon"] .lt-seat{opacity:.82;transition:opacity .3s,transform calc(.35s * var(--mo-slow, 1)) cubic-bezier(.3,.7,.4,1)}

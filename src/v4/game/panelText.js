@@ -61,14 +61,14 @@ const P = {
     hourly: r => ({ main: `+${3 + r} purple`, second: grows(r) }),
     // "per rival ahead" read as ahead on score (blind testers, 2026-10-15): it counts minions placed, said in line 2
     catchup: (r, now) => ({ main: `+${now ?? 1} purple`, second: now == null ? '+1 per rival who placed more' : '1, +1 per rival who placed more', note: 'minions this round' }),
-    // "out" and "left" read alike (w3b #16): where the minions are, in the card's own words ("on the board")
-    windup: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion on the board' } : { main: `+${now} purple`, second: '1 per minion on the board', note: 'this one too' }),
+    // Say whose placed minions count; "on the board" alone read as counting all players' minions.
+    windup: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion you placed' } : { main: `+${now} purple`, second: '1 per minion you placed', note: 'this one too' }),
     // "per minion to place" read as +2 (round 3 skeptic): live, it's the count after this one
-    planahead: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion to place' } : { main: `+${now} purple`, second: '1 per minion left after this' }),
+    planahead: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion to place' } : { main: `+${now} purple`, second: '1 per minion left to place' }),
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
     rushhour: { main: '+1 purple', second: 'per 2 minions on the board' },
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
-    rally: { verb: 'Take your next 2 turns now' },
+    rally: { verb: 'Your next 2 turns, now' },
   },
   silver: {
     // "others get 1" left "1 of what?" (live panel r1): silver
@@ -129,11 +129,11 @@ const P = {
   echo: {
     chant: r => ({ main: `+${2 * r} green`, second: r < 3 ? '+2 each new round' : null }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
-    echo: { verb: 'Copy the previous action' },
+    echo: { verb: 'Copy previous action' },
     encore: { verb: 'Copy any space', second: 'with a minion' },
     // one word for it, the hover's (w3a #22: "redo" here, "copy" there)
-    refrain: { verb: 'Copy a space', second: 'where you have a minion' },
-    eternity: { verb: 'Copy every action', second: 'where you have a minion' },
+    refrain: { verb: 'Copy a space', second: 'with your minion' },
+    eternity: { verb: 'Copy every action', second: 'with your minions' },
   },
 };
 

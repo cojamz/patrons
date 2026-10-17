@@ -286,9 +286,14 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
 function cheer(root, id) {
   const seat = root && root.querySelector(`.lt-cult-seat[data-seat="${id}"]`);
   if (!seat) return;
-  const parts = [[seat.querySelector('.cs-leader'), 'react-celebrate'], ...[...seat.querySelectorAll('.cs-member')].slice(0, 6).map(m => [m, 'react-hop'])];
-  parts.forEach(([el, cls], k) => {
-    if (!el) return;
-    setTimeout(() => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 900); }, k * 70);
+  // Animate the sprite directly: restarting a CSS class with offsetWidth forced a synchronous
+  // layout for each winner/member while the scoring card was counting.
+  const parts = [[seat.querySelector('.cs-leader .lead'), [0, -6, 0, -4, 0], 800],
+    ...[...seat.querySelectorAll('.cs-member .fig')].slice(0, 6).map(m => [m, [0, -4, -6, -2, 0], 500])];
+  parts.forEach(([el, heights, duration], k) => {
+    if (!el?.animate) return;
+    track(el.animate(heights.map(y => ({ transform: `translateY(${y}px)` })), {
+      duration: slowed(duration), delay: slowed(k * 70), easing: 'steps(5,end)', composite: 'add',
+    }));
   });
 }

@@ -1262,10 +1262,21 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // only while the seat to act (on screen) is the person who made the move
     && pend && session.undoSeat != null && pend.player === session.undoSeat && session.undoSeat === holder ? (session.undoKind || 'place') : null;
   const canUndo = !!undoKind && !state.over;
-  const undo = () => { const k = undoKind; noLock.current = true; lockUntil.current = 0; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : k === 'setup' ? 'Pick undone — pick again' : 'Placement undone — place again', 'info', 1800); };
+  const undo = () => {
+    const k = undoKind;
+    if (!session.undo || !session.undo()) return;
+    // Undo starts a new deliberate decision: retaking the same space or member is
+    // valid immediately, even inside the previous choice's double-click window.
+    noLock.current = true;
+    lockUntil.current = 0;
+    lastPick.current = { id: null, t: 0, x: null, y: null };
+    lastDown.current = { x: null, y: null, t: 0 };
+    say(k === 'buy' ? 'Buy undone — choose again' : k === 'setup' ? 'Pick undone — pick again' : 'Placement undone — place again', 'info', 1800);
+  };
   const undoWord = undoKind === 'buy' ? 'buy' : undoKind === 'setup' ? 'pick' : 'placement';
 
   // The lamp follows the decision; the furniture never moves (fixed regions, phase only re-lights them).
+  const memberPicking = mine && !needHandoff && pend?.kind === 'choose' && pend.options.some(o => o.kind === 'card');
   const phase = state.over && !moment ? 'over' : moment ? 'reckon' : !pend ? 'wait' : pend.kind === 'pay' ? 'pay' : pend.kind === 'buy' ? 'buy' : pend.kind === 'place' ? 'place' : pend.kind === 'setup' ? 'setup' : 'choose';
   const yours = mine && !needHandoff;
   // which of the turn's two steps a choice belongs to: the one before it (a recruit's or a release's choice is the buy
@@ -1275,7 +1286,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const step = phase === 'choose' ? stepRef.current : phase === 'pay' ? 'buy' : phase;
   const releaseNow = buyingNow && pend.options.some(o => o.kind === 'release');
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}

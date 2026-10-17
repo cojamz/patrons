@@ -196,7 +196,7 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 .prompt.choice.setup.watching .token:disabled{opacity:1;cursor:default}
 .prompt.choice.setup .token.chain-point{border-color:var(--c);background:color-mix(in srgb,var(--c) 22%,transparent)}
 .prompt.choice.setup .token.chain-point .res-glyph{transform:translateY(-2px)}
-/* a drag turns the wheel on the compositor (Wheel.jsx paintRot; motion gaps 7): its layers are promoted only while it turns */
+/* Spins and drags turn the wheel on the compositor (Wheel.jsx paintRot; motion gaps 7): its layers are promoted only while it turns */
 .lt .stage.turning > svg{will-change:transform}
 .lt .stage.turning > [data-slot]{will-change:translate}
 /* the round's end, a beat of its own before the first rim (Reckoning.jsx; wave 4 #6): the card stamps in at the wheel's

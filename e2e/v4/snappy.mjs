@@ -107,7 +107,7 @@ await page.evaluate(delay => {
     last = now;
     const g = wheelG();
     if (g && W.key != null) {
-      const t = g.getAttribute('transform') || '';
+      const t = `${g.getAttribute('transform') || ''}|${g.ownerSVGElement?.style.transform || ''}`;
       if (!W.rot.length || W.rot[W.rot.length - 1][1] !== t) W.rot.push([performance.now(), t]);
     }
     const up = hoverUp();

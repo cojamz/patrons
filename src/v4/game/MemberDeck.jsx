@@ -5,7 +5,9 @@
 // When the face-up row refills, each new card comes off the deck: a short flip at the deck, then a slide into its slot.
 // Every number is the engine's: state.pile (top first; core.js refill() takes from the top, release() and
 // buryFromShop() push to the bottom).
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import DeckBrowser from './DeckBrowser.jsx';
 import { cardDef, quadrant } from '../../engine/v4/index.js';
 import Tick from './Tick.jsx';
 import { CultMark } from '../art/CultMark.jsx';
@@ -34,14 +36,16 @@ export function deckColors(state) {
 export const deckEdges = n => (n >= 30 ? 3 : n >= 12 ? 2 : n >= 4 ? 1 : 0);
 
 export function MemberDeck({ state, deckRef = null }) {
+  const [browsing, setBrowsing] = useState(false);
   const n = state.pile.length;
   const edges = deckEdges(n);
   const label = n ? `${n} member${n === 1 ? '' : 's'} left in the deck` : 'The deck is empty';
   return (
-    <div
-      ref={deckRef} data-deck="" data-left={n} role="img"
+    <>
+    <button type="button" onClick={() => setBrowsing(true)}
+      ref={deckRef} data-deck="" data-left={n} aria-haspopup="dialog"
       className={`lt-deck${n === 0 ? ' empty' : n <= 3 ? ' low last' : n <= DECK_LOW ? ' low' : ''}`}
-      aria-label={`Member deck: ${label}`}
+      aria-label={`Browse member deck: ${label}`}
     >
       {/* a pile, not a card (live panel r1: at member size in the first slot it read as a member to buy): smaller than a
           card, its edges showing, named underneath */}
@@ -53,7 +57,9 @@ export function MemberDeck({ state, deckRef = null }) {
         </span>
       </span>
       {n > 0 && <span className="cap" aria-hidden="true">deck</span>}
-    </div>
+    </button>
+    {browsing && createPortal(<DeckBrowser state={state} onClose={() => setBrowsing(false)} />, document.body)}
+    </>
   );
 }
 

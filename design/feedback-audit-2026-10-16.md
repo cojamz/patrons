@@ -10,14 +10,14 @@ Release boundary: latest verified live source is `c8dd8a997c527f4e19ed2529b214f4
 | 2 | Default Relaxed | **Implemented:** `src/v4/motion.js` DEFAULT_SPEED. |
 | 3 | Crescendo scaling clear; optional I/II/III gray schedule | **Partial:** `content/echo.js` lists +2/+4/+6 by round; `src/v4/shorts.js` shows current-round gain. Gray schedule not built. |
 | 4 | On recruit / at round start | **Implemented:** `src/v4/game/memberTiming.js`, used in member presentations. |
-| 5 | Every action's language and visual representation | **Open:** targeted Green wording landed; a complete action-by-action pass is not evidenced. |
+| 5 | Every action's language and visual representation | **Implemented in working follow-up:** all 54 current specialized actions checked against wheel/short text; seven misleading descriptions corrected, plus six crowded phrases shortened. Full member-language compression remains open. See wording-pass and wheel-readable reports. |
 | 6 | Golden Years same scaling clarity | **Partial:** `content/gold.js` lists +2/+4/+6 explicitly; no gray schedule. |
 | 7 | Cult-themed action names | **Idea / open design:** no replacement naming batch applied. |
 | 8 | Round scorecard slow; broader lag | **Partial:** playback and hover fixes landed; complete scorecard/performance quality remains a visual verification task. |
-| 9 | Members too dim, active and tinted | **Local follow-up, visually checked at 1270×700 and 390px:** removed compounded shop-region and card opacity; unaffordable cards/rates remain legible with existing actionable glow. Earlier live brightening was insufficient. |
-| 10 | Release hard to find | **Open usability:** existing prompt mentions release (`GameScreen.jsx`); release button remains in member details (`MemberUse.jsx`). Keep release per later explicit reversal. |
+| 9 | Members too dim, active and tinted | **Live correction bd2bb87:** removed the remaining placement-phase whole-shop brightness filter; full-opacity bright cards and a crisp 3px target outline verified in the actual Open Door hover. Still subject to Cory’s visual judgment. |
+| 10 | Release hard to find | **Implemented in working follow-up:** explicit “Release a member…” entry appears on your seat when legal and opens the existing list without releasing immediately; click regression passes. |
 | 11 | Likes money selector | **Preserve:** no redesign requested. |
-| 12 | Snap Up wording poor | **Open:** `content/market.js` still says “+2 blue, then you may recruit a face-up member now, in any colors.” |
+| 12 | Snap Up wording poor | **Implemented in working follow-up:** Snap Up explicitly describes an optional paid extra recruit using any colors, in addition to the normal buy. |
 | 13 | Opponents' points / engine not intuitive | **Partial:** seat member lists, follower breakdowns and staged effects exist. Intuitive understanding needs observed play, not a checkbox. |
 | 14 | Copy previous action, including own snake turn | **Implemented:** `content/echo.js` previous targets and previousNow; Understudy consistent. |
 | 15 | Encore any occupied space | **Implemented:** Green targets; `design/rulebook.md` copy rule. Existing no-recursive-copy rule retained. |
@@ -25,7 +25,7 @@ Release boundary: latest verified live source is `c8dd8a997c527f4e19ed2529b214f4
 | 17 | Perhaps reduce resource gain | **Idea:** economy rebalance not applied wholesale. |
 | 18 | Reprise no +2 green | **Implemented:** Green copy action drops gain. |
 | 19 | Crescendo / Hum names do not fit | **Open naming:** names retained in `content/echo.js`. |
-| 20 | Larger free-member choice cards | **Open:** `ShopCards.jsx` still uses existing card presentation for recruitment choices. |
+| 20 | Larger free-member choice cards | **Implemented in working follow-up:** member choices use larger cards with full abilities in the existing shop; ordinary shopping stays compact. Desktop and phone screenshots checked; integrated check pending. |
 | 21 | Fit abilities on member cards; remove worth plus | **Partial:** worth is numeral + follower mark (`ShopCards.jsx`); ability remains hover-only. Preserve charming design. |
 | 22 | Shop down to eight | **Local later change:** SHOP_SIZE in `src/engine/v4/core.js`; verify next live build, absent from earlier `ffc44bc`. |
 | 23 | Remove EACH ROUND / Members labels; show figures | **Implemented:** `CultSeat.jsx` removes labels, measures row capacity and displays more figures. |
@@ -55,16 +55,16 @@ Release boundary: latest verified live source is `c8dd8a997c527f4e19ed2529b214f4
 | 47 | Patron Saint +1 per Silver member / price tradeoff | **Idea:** remains +1 per two (`content/silver.js` saint). |
 | 48 | Player hover needn't say short | **Implemented:** seat hover no longer includes shortfall prose (`HoverCards.jsx`). |
 | 49 | Heir too expensive | **Open balance:** remains 6 silver + 2 any (`content/silver.js` heir). |
-| 50 | Snake draft clear | **Partial:** rulebook gives explicit sequence; turnaround prompt says snake order (`format.js`). Persistent board clarity not separately proven. |
+| 50 | Snake draft clear | **Partial:** rulebook now explains down then up the player column, including two consecutive end turns; live board cues remain. First-play comprehension still needs feedback. |
 | 51 | Delicate resource/member/action balance | **Open strategic design:** no sweeping balance changes claimed. |
 | 52 | Unexplained follower flights before round end | **Open investigation:** not specifically reproduced or closed. |
 | 53 | Hold Court feels like member ability | **Open design:** current action remains. |
 | 54 | Each sphere member-vs-resource end-game paths | **Idea:** no systematic new set applied. |
 | 55 | Follower-cost reverse sphere; defensive action sphere | **Idea:** parked. Strategic goal of clearer rival plans/counterplay retained. |
 | 56 | Perhaps no release | **Superseded:** user later explicitly said leave release in. |
-| 57 | Night Owl wording poor | **Open:** current long wording remains in `content/purple.js`. |
+| 57 | Night Owl wording poor | **Implemented in working follow-up:** Night Owl explicitly states rounds II–III, after last placement, one extra turn if room, once per round. |
 | 58 | End-game tiebreak unclear | **Implemented clarification in local follow-up:** rulebook already states more members; `format.js` winSentence now names winner by members or shared tie. Targeted regression added. |
-| 59 | Log everything; update handoff docs | **Partial:** original saved verbatim, this audit maps every item. Current todo/handoff/inflight reconciliation is being handled separately; older unchecked lists are not evidence of source status. |
+| 59 | Log everything; update handoff docs | **Maintained:** verbatim source, full 59-item audit, current handoff/in-flight/todo and a project progress board. Release status separates local implementation from verified live code. |
 
 ## Additional feedback after the original batch
 

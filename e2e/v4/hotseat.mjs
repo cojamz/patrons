@@ -346,10 +346,15 @@ try {
       const base = await page.$('.slot.can .base');
       const bb = base && await base.boundingBox();
       if (bb) {
-        await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
+        const center = { x: bb.x + bb.width / 2, y: bb.y + bb.height / 2 };
+        const clickState = await page.evaluate(({ x, y }) => {
+          const nodes = document.elementsFromPoint(x, y).slice(0, 8).map(e => ({ tag: e.tagName, cls: e.getAttribute('class'), slot: e.closest('[data-slot]')?.dataset.slot }));
+          return { nodes, phase: document.querySelector('.app.game')?.dataset.phase, motion: document.getAnimations().filter(a => a.playState === 'running').map(a => ({ cls: a.effect?.target?.getAttribute?.('class'), time: a.currentTime })) };
+        }, center);
+        await page.mouse.click(center.x, center.y);
         await page.waitForFunction(a => document.querySelectorAll('.slot .worker').length === a + 1, after, { timeout: 3000, polling: 50 }).catch(() => {});
         const again = await page.$$eval('.slot .worker', e => e.length);
-        if (again !== after + 1) errors.push(`center click after undo did not place (${after} -> ${again})`);
+        if (again !== after + 1) { errors.push(`center click after undo did not place (${after} -> ${again}); ${JSON.stringify({ bb, clickState })}`); await shot('zz-undo-center-click'); }
         // the "Placement undone" note goes with the step it was about: the pill now tracks the real prompt
         const pill = await page.$eval('[data-prompt]', e => e.textContent).catch(() => '');
         if (/undone/i.test(pill)) errors.push(`after undo and a new placement the pill still says "${pill}"`);

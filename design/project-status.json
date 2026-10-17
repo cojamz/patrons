@@ -1,0 +1,16 @@
+{
+  "live": "Lighting, clearer highlights and tighter shop spacing",
+  "liveCommit": "bd2bb87f",
+  "work": [
+    {"id":"performance","name":"Animation performance","owner":"Performance agent","status":"Final checks next","scope":"Wheel spins use compositor motion; round-end cheers avoid forced layouts; full-region dimming uses opacity.","evidence":"Initial production profiles cover wheel spins, hover and scoring at normal and 4× CPU slowdown. Final integrated verification remains.","next":"Repeat the performance check on the exact combined release; publish after it passes."},
+    {"id":"wheel","name":"Wheel clarity","owner":"Language agent","status":"Ready to check","scope":"Clarified seven misleading descriptions, reviewed all 54 current specialized actions, shortened six crowded wheel phrases, and softened secondary text.","evidence":"Targeted wording checks pass. No effects, prices or action names changed.","next":"Inspect the combined wheel on laptop and phone; retain the core conditions on the board."},
+    {"id":"deck","name":"Member cards & deck","owner":"Codex","status":"Visual check next","scope":"Larger free-recruit cards show abilities directly. Clicking the deck opens a color-by-price member gallery; Cost/Color becomes a compact toggle.","evidence":"Card grouping, draw-order isolation, full card information and quick exit checks pass.","next":"Check gallery layout, phone browsing, focus restoration and selecting a member in the combined build."},
+    {"id":"release","name":"Release verification","owner":"Verification agent","status":"Integration check next","scope":"Fixed immediate retaking after Undo. Added a visible Release entry and clearer wheel/snake guidance. Project tracking stays outside the game.","evidence":"Undo regression fails before and passes after; a frozen full browser game passed. The earlier combined check caught a costly selector and the Undo bug; both are corrected.","next":"Run the combined game check, publish, then verify the actual public build."}
+  ],
+  "next": [
+    {"name":"Opponent engines & scoring polish","next":"Review what players can understand at a glance; keep scoring sources visible and check end screens visually."},
+    {"name":"Member-language pass","next":"Compress the remaining member descriptions while preserving every trigger and condition."},
+    {"name":"First-play guidance","next":"Test whether newcomers notice future rings and recognize playable tiles; assess the revised snake explanation."},
+    {"name":"Balance and replacement designs","next":"Heir pricing, Sweet Talk, Hold Court, Goody Bags and Cheap Seats; broader Silver/White themes and sphere ideas remain explicitly open."}
+  ]
+}

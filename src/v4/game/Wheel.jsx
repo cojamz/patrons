@@ -400,26 +400,19 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   const drawn = useRef(rot); // the angle React last drew
   const painted = useRef(rot); // the angle the board's groups carry now (React's, or a spin frame's)
   const geo = useRef(null); // the stage's size and each space's place, read once per turn (no layout read per frame)
-  // A drag turns the board on the compositor (motion gaps 7, wave 3: "coasts about 4s", "started 618ms after the drag"):
-  // redrawing the rotated wheel every pointer move cost about 80ms of raster a frame on a loaded box, so the board trailed
-  // the pointer for seconds. While a drag lasts, the wheel's layers rotate by a CSS transform (stage.turning promotes
-  // them) from the angle the groups carry; a spin (keys, the settle after a drag) paints the groups as before.
-  const paintRot = (r, { drag: dragging = false } = {}) => {
+  // Spin and drag share the compositor path. Rewriting SVG group transforms every frame re-rasterized
+  // the paper, panel glows and lettering; rotate their already-painted layers until the landing commit.
+  const paintRot = r => {
     rotRef.current = r;
     const root = stage.current;
     if (!root) return;
-    if (dragging) {
-      const dr = r - painted.current;
-      for (const sv of root.querySelectorAll(':scope > svg')) sv.style.transform = Math.abs(dr) > 0.001 ? `rotate(${dr.toFixed(2)}deg)` : '';
-    } else {
-      for (const sv of root.querySelectorAll(':scope > svg')) if (sv.style.transform) sv.style.transform = '';
-      for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${r} ${CX} ${CY})`);
-      painted.current = r;
-    }
     if (!geo.current) {
       const w = root.clientWidth, h = root.clientHeight;
       geo.current = [...root.querySelectorAll(':scope > [data-slot]')].map(el => [el, (parseFloat(el.style.left) / 100 - 0.5) * w, (parseFloat(el.style.top) / 100 - 0.5) * h]);
     }
+    // Read slot geometry above before writing transforms: the first frame must not force a layout.
+    const dr = r - painted.current;
+    for (const sv of root.querySelectorAll(':scope > svg')) sv.style.transform = Math.abs(dr) > 0.001 ? `rotate(${dr.toFixed(2)}deg)` : '';
     const d = ((r - drawn.current) * Math.PI) / 180, c = Math.cos(d), s = Math.sin(d);
     for (const [el, x, y] of geo.current) el.style.translate = Number.isFinite(x + y) ? `${(x * c - y * s - x).toFixed(1)}px ${(x * s + y * c - y).toFixed(1)}px` : '';
   };
@@ -439,6 +432,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     stop();
     const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : MO.spin;
     geo.current = null;
+    stage.current?.classList.add('turning');
     setPeek(p => (p && !p.pinned ? null : p)); // a hover card doesn't ride along on a turning board
     if (hoverRef.current && hoverRef.current.card && !hoverRef.current.card.pinned) hoverRef.current.close();
     const step = now => {
@@ -448,7 +442,8 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
       // land on the exact angle in this frame (the spin ends at MO.spin); React's commit of it follows and changes nothing
       // on screen (snappy gate s1: waiting on the commit read as a ~500ms spin)
       paintRot(to);
-      if (stage.current) stage.current.classList.remove('turning'); // (a drag that came back where it started commits nothing)
+      // A return to the same React angle has no commit to clean up its promoted layers.
+      if (to === drawn.current && stage.current) stage.current.classList.remove('turning'); // (a drag that came back where it started commits nothing)
       applyRot(to);
     };
     anim.current = requestAnimationFrame(step);
@@ -545,7 +540,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
     // angular speed (deg/ms), smoothed, so a quick flick can carry the wheel on to the next quadrant
     const now = performance.now(), dt = Math.max(1, now - dr.t);
     dr.v = 0.6 * (d / dt) + 0.4 * dr.v; dr.t = now;
-    paintRot(rotRef.current + d, { drag: true });
+    paintRot(rotRef.current + d);
   };
   const onUp = e => {
     if (e && e.pointerType === 'touch' && !moved.current && drag.current) {

@@ -66,14 +66,17 @@ describe('member deck', () => {
     expect(container.textContent).not.toMatch(/★/);
   });
 
-  it('the deck has no hover (Cory, 2026-10-15): pointing at it or clicking it opens nothing; its count stays on it', () => {
+  it('the deck stays quiet on hover and opens the member browser on click', () => {
     const s = createGame({ seats, seed: 35 });
     const hover = createHover();
     const { container } = render(<><ShopCards state={s} me={0} mySeats={[0]} hover={hover} /><HoverCardLayer hover={hover} state={s} me={0} /></>);
     const deck = container.querySelector('[data-deck]');
-    act(() => { fireEvent.pointerEnter(deck, { pointerType: 'mouse' }); fireEvent.click(deck); });
+    act(() => { fireEvent.pointerEnter(deck, { pointerType: 'mouse' }); });
+    expect(document.querySelector('[aria-label="Browse members"]')).toBeNull();
     expect(container.querySelector('[data-hover-layer] [data-hover-card="deck"]')).toBeNull();
-    expect(deck.matches('button, [aria-haspopup], [title]')).toBe(false);
+    expect(deck.matches('button[aria-haspopup="dialog"]')).toBe(true);
+    act(() => { fireEvent.click(deck); });
+    expect(document.querySelector('[aria-label="Browse members"]')).toBeTruthy();
     expect(deck.querySelector('.n').textContent).toBe(String(s.pile.length));
     hover.dispose();
   });

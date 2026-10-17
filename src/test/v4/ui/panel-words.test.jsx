@@ -39,6 +39,20 @@ describe('panel words (w3)', () => {
     }
   });
 
+  it('keeps ownership and copy targets explicit without long inner-ring clauses', () => {
+    const ownSpace = panelText('echo', { key: 'refrain' });
+    expect(ownSpace.verb).toBe('Copy a space');
+    expect(ownSpace.second).toBe('with your minion');
+    const allOwn = panelText('echo', { key: 'eternity' });
+    expect(allOwn.verb).toBe('Copy every action');
+    expect(allOwn.second).toBe('with your minions');
+    // "Any" must stay distinct from your own minions, and "previous" from your own previous action.
+    expect(panelText('echo', { key: 'encore' }).second).toBe('with a minion');
+    expect(panelText('echo', { key: 'echo' }).verb).toBe('Copy previous action');
+    // The purple gain counts only your minions, not every piece on the wheel.
+    expect(panelText('purple', { key: 'windup' }).second).toBe('per minion you placed');
+  });
+
   it('Trade Seeds shows the gain before the swaps, and Snap Up says the recruit is paid and optional', () => {
     const seeds = panelText('yellow', { key: 'transmute' });
     expect(seeds.main).toBe('+2 yellow');
@@ -51,7 +65,7 @@ describe('panel words (w3)', () => {
 
   it('a space whose center or ring II panel drops line 2 is whole in line 1', () => {
     // w3b #18: "Extra turns for all purple" read as a group effect; w3b #19: "Ransom a member" read backwards
-    expect(panelText('purple', { key: 'rally' }, 3).verb).toMatch(/^Take your next 2 turns now$/);
+    expect(panelText('purple', { key: 'rally' }, 3).verb).toMatch(/^Your next 2 turns, now$/);
     // w4b #5: "A rival's member or its cost" read as "I choose": the rival pays or loses, in line 1
     expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^A rival pays a member’s cost, or loses it$/);
     expect(panelText('silver', { key: 'jubilee' }, 3).verb).toMatch(/per 2 silver held/);
