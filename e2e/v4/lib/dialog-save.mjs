@@ -135,6 +135,18 @@ export function colorSave(space = 'goody') {
   }
   throw new Error(`dialog-save: never reached P1 on ${space}`);
 }
+/** P1 about to place on Cheap Seats (ring I) holding `white` white: since Cory's 2026-10-15 call it asks nothing (+1
+ *  follower per 3 white held, the white kept), so the save stops before the placement. Returns { save, slot }. */
+export function cheapSeatsSave(white = 7) {
+  const slot = slotOf(COLOR_TABLE, 'trading', 'buylow');
+  for (let seed = 1; seed < 300; seed++) {
+    const s = playToOn(COLOR_TABLE, seed, st => st.round >= 1 && st.pending && st.pending.player === 0 && st.pending.kind === 'place' && st.pending.options.some(o => o.id === slot));
+    if (!s) continue;
+    s.players[0].res = { silver: 2, gold: 3, white, red: 2 };
+    return { save: wrap(s), slot };
+  }
+  throw new Error('dialog-save: never reached P1 on Cheap Seats');
+}
 
 // Wave-2 tester B's moments (#8–#12): Snap Up's payment, Talent Scout's top 5, Your Call, Release, Double Agent.
 export const BOARD_TABLE = ['echo', 'red', 'market', 'thieves'];
@@ -185,13 +197,16 @@ export function momentSave(name) {
     return wrap(applyMove(s, { player: 0, option: slot }));
   }
   if (name === 'release') {
-    // the buy step, holding members recruited in an earlier round (releasable)
+    // the buy step, holding members recruited in an earlier round (what Release used to free; Release is off since
+    // Cory's 2026-10-17 calls #40/#57, rules.release false, so this is the moment it must not show)
     const s = at(BOARD_TABLE, 'buy', { round: 2, res: { green: 0, red: 0, blue: 0, magenta: 0 }, fresh: false });
     // three members with a colored part, from the pile, recruited in round I
     for (const u of s.pile.filter(x => defById(s.cards[x].def).s > 0 && BOARD_TABLE.includes(defById(s.cards[x].def).quadrant)).slice(0, 3)) give(s, 0, s.cards[u].def);
     s.players[0].releasedRound = 0;
+    s.players[0].res = { green: 1, red: 1, blue: 1, magenta: 1 }; // (something to buy: an empty buy step is skipped)
     resume(s);
-    if (!s.pending.options.some(o => o.kind === 'release')) throw new Error('dialog-save: nothing to release');
+    if (s.rules.release) throw new Error('dialog-save: the table still has the Release rule on');
+    if (!(s.pending && s.pending.kind === 'buy' && s.pending.player === 0)) throw new Error('dialog-save: not P1’s buy step');
     return wrap(s);
   }
   if (name === 'doubleagent') {
