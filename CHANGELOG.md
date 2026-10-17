@@ -13,7 +13,6 @@ Player-facing releases and exact source/build verification are recorded separate
 - Remove the round-end pre-screen and fixed gaps; improve swap, steal and wheel rendering.
 - Cutpurse offers resource choice; Poach gives no replacement; Extortionist triggers on5+ follower purchases; Go-Getter can activate after its last-turn purchase.
 - Payment shows member ability; Basic Blue/Green leave normal setup; Straggler/Squatter cues and card wording improved.
-- Turn card and "since your last turn": an extra turn names its card ("Night Owl: extra turn"; the earning turn reads "Night Owl: an extra turn after this one"; Crunch Time's turns read "Crunch Time: next turn, now"); a member used before placing leads the card and keeps its own gains (Tribute Band's copy no longer reads as Spree's); a magenta steal is one line ("1 gold from P2, 1 red from P3, as magenta").
 - Version now includes a release number and build reference. Public build manifest includes version and full source commit.
 - Checked: unit tests and build pass; a full laptop game and an online game finish. Every browser test that still fails also fails on v0.5 (old test expectations, see design/HANDOFF.md), except the phone smoke test (phone is out of scope for now).
 
