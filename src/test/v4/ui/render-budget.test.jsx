@@ -132,7 +132,7 @@ describe('render budget', () => {
     const seen = new Set();
     R.reset();
     act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); });
-    for (let k = 0; k < 40; k++) { await act(() => new Promise(r => setTimeout(r, 16))); if (g()) seen.add(g().getAttribute('transform')); }
+    for (let k = 0; k < 40; k++) { await act(() => new Promise(r => setTimeout(r, 16))); if (g()) seen.add(`${g().getAttribute('transform')}|${g().closest('svg').style.transform}`); }
     const report = { commits: R.commits, Wheel: R.n('Wheel'), GameScreen: R.n('GameScreen'), frames: seen.size };
     console.log('[render-budget] one spin:', JSON.stringify(report));
     expect(report.frames).toBeGreaterThan(2); // it did turn, through several angles

@@ -3,8 +3,8 @@
 .app.game.lt .lt-shop-cards[data-member-pick] .lt-deck{display:none}
 .app.game.lt .lt-shop-cards[data-member-pick] .lt-card.card{height:auto;min-height:220px}
 .app.game.lt .lt-shop-cards[data-member-pick] .lt-card .art{height:52px;min-height:52px;flex:none}
-.app.game.lt .lt-shop-cards[data-member-pick] .lt-card .nm{font-size:12px;line-height:15px;height:auto;min-height:30px;margin:5px 6px 0}
-.app.game.lt .lt-shop-cards[data-member-pick] .lt-pick-ability{display:block;padding:5px 8px 10px;font-size:13px;line-height:18px;color:var(--pl-ink,#2b2018);font-weight:500;overflow-wrap:break-word;text-wrap:pretty}
+.app.game.lt .lt-shop-cards[data-member-pick] .lt-card .nm{font-size:14px;line-height:18px;height:auto;min-height:30px;margin:5px 6px 0}
+.app.game.lt .lt-shop-cards[data-member-pick] .lt-pick-ability{display:block;padding:5px 8px 10px;font-size:14px;line-height:18px;color:var(--pl-ink,#2b2018);font-weight:500;overflow-wrap:break-word;text-wrap:pretty}
 .app.game.lt .lt-shop-cards[data-member-pick] .lt-card .ft{height:25px;min-height:25px;margin-top:auto;flex:none}
 @media (min-width:1200px) and (min-height:500px){
   .app.game.lt .lt-shop-cards[data-member-pick] .lt-shop-body{display:block;overflow-y:auto;overflow-x:hidden;padding:5px;scrollbar-width:thin;overscroll-behavior:contain}
