@@ -334,10 +334,10 @@ try {
     await page.screenshot({ path: `${SHOTS}/g3-seat-given.png` });
     await ctx.close();
   }
-  // (c1) Goody Bags' color and (c2) Cheap Seats' "pay 1 for 1 follower" open on the card at the space (Cory, 2026-10-15:
-  // choices come to where you act), never on your seat's stacks ~500 px away: one row of the engine's colors, each the
-  // engine's own id; Cheap Seats shows what you hold of each, "N left" by its name and its Done
-  for (const [tag, space] of [['c1', 'goody'], ['c2', 'cheap']]) {
+  // (c1) Goody Bags' color opens on the card at the space (Cory, 2026-10-15: choices come to where you act), never on
+  // your seat's stacks ~500 px away: one row of the engine's colors, each the engine's own id. (c2, Cheap Seats' old
+  // "pay 1 for 1 follower" card, went with that rule: Cheap Seats is now "+1 follower per 3 white you hold", no pick.)
+  for (const [tag, space] of [['c1', 'goody']]) {
     const save = colorSave(space);
     const st = save.state, slot = st.players[0].lastSlot && st.players[0].lastSlot.key;
     const { ctx, page } = await open(tag, save, '.lt-wheel .gift-card[data-gift="color"]');
@@ -361,48 +361,19 @@ try {
     const title = await page.$eval('.gift-card .gc-title', e => e.textContent.replace(/\s+/g, ' ').trim()).catch(() => '');
     const head = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim()).catch(() => '');
     await page.screenshot({ path: `${SHOTS}/${tag}-card.png` });
-    if (space === 'goody') {
-      if (title !== 'Goody Bags' || head !== 'Which color?') errors.push(`(c1) the card reads "${title}" / "${head}"`);
-      const sub = await page.$eval('.gift-card .gc-sub', e => e.textContent.trim()).catch(() => '');
-      if (!/You get 2, everyone else gets 1/.test(sub)) errors.push(`(c1) the line under the heading reads "${sub}"`);
-      const pick = st.pending.options.find(o => o.id === 'color:red') || st.pending.options.find(o => o.target);
-      const before = st.players[0].res[pick.value] || 0;
-      await click(page, `.gift-card .gc-dot[data-option="${pick.id}"]`);
-      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 6000 }).catch(() => errors.push('(c1) clicking a color did nothing'));
-      const rec = await lastMove(page);
-      if (rec && rec !== pick.id) errors.push(`(c1) recorded ${rec}, not ${pick.id}`);
-      let got = NaN;
-      for (let k = 0; k < 30 && got !== before + 2; k++) { got = await page.$eval(`.lt-seat[data-pid="0"] .cs-stack[data-res="${pick.value}"] b`, e => Number(e.textContent)).catch(() => NaN); await page.waitForTimeout(100); }
-      if (got !== before + 2) errors.push(`(c1) you hold ${got} ${pick.value}, want ${before + 2}`);
-      if (await page.$('.gift-card[data-gift="color"]')) errors.push('(c1) the card stays up after the pick');
-    } else {
-      const left = (st.pending.prompt.match(/\((\d+) left\)/) || [])[1];
-      if (title !== `Cheap Seats · ${left} left` || head !== 'Pay 1 for 1 follower') errors.push(`(c2) the card reads "${title}" / "${head}" (want "Cheap Seats · ${left} left" / "Pay 1 for 1 follower")`);
-      const counts = await page.$$eval('.gift-card .gc-dot', els => els.map(e => [e.dataset.res, Number(e.querySelector('.num')?.textContent)]));
-      for (const [r, n] of counts) if (n !== (st.players[0].res[r] || 0)) errors.push(`(c2) the ${r} dot says ${n}, you hold ${st.players[0].res[r] || 0}`);
-      const done = await page.$eval('.gift-card .gc-rest-btn', e => [e.dataset.option, e.textContent.trim()]).catch(() => null);
-      const engineDone = st.pending.options.find(o => !o.target);
-      if (!done || done[0] !== engineDone.id || done[1] !== engineDone.label) errors.push(`(c2) the card's Done reads ${JSON.stringify(done)}, the engine's ${engineDone.id} "${engineDone.label}"`);
-      // pay one: a follower, and the card stays at the space with one fewer left, now with "Done"
-      await click(page, '.gift-card .gc-dot[data-res="gold"]');
-      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 6000 }).catch(() => errors.push('(c2) paying a color did nothing'));
-      const rec1 = await lastMove(page);
-      if (rec1 && rec1 !== 'color:gold') errors.push(`(c2) recorded ${rec1}, not color:gold`);
-      await page.waitForSelector(`.gift-card[data-gift="color"] .gc-title:has-text("${Number(left) - 1} left")`, { timeout: 6000 }).catch(() => errors.push(`(c2) after one paid the card does not say ${Number(left) - 1} left`));
-      const done2 = await page.$eval('.gift-card .gc-rest-btn', e => [e.dataset.option, e.textContent.trim()]).catch(() => null);
-      if (!done2 || done2[0] !== 'done' || done2[1] !== 'Done') errors.push(`(c2) after one paid, the card's stop reads ${JSON.stringify(done2)} (want Done)`);
-      const goldNow = await page.$eval('.gift-card .gc-dot[data-res="gold"] .num', e => Number(e.textContent)).catch(() => NaN);
-      if (goldNow !== st.players[0].res.gold - 1) errors.push(`(c2) after paying 1 gold the card says ${goldNow}, want ${st.players[0].res.gold - 1}`);
-      const w2 = await page.evaluate(key => { const c = document.querySelector('.gift-card').getBoundingClientRect(), r = document.querySelector(`.lt-wheel [data-slot="${key}"]`).getBoundingClientRect(); return Math.max(0, r.left - c.right, c.left - r.right) + Math.max(0, r.top - c.bottom, c.top - r.bottom); }, slot).catch(() => null);
-      if (w2 == null || w2 > 40) errors.push(`(c2) after one paid the card moved off the space (${w2}px)`);
-      await page.screenshot({ path: `${SHOTS}/c2-one-paid.png` });
-      const m1 = await page.$eval('.app.game', e => Number(e.dataset.moves));
-      await click(page, '.gift-card .gc-rest-btn[data-option="done"]');
-      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, m1, { timeout: 6000 }).catch(() => errors.push('(c2) Done did nothing'));
-      const rec2 = await lastMove(page);
-      if (rec2 && rec2 !== 'done') errors.push(`(c2) Done recorded ${rec2}`);
-      if (await page.$('.gift-card[data-gift="color"]')) errors.push('(c2) the card stays up after Done');
-    }
+    if (title !== 'Goody Bags' || head !== 'Which color?') errors.push(`(c1) the card reads "${title}" / "${head}"`);
+    const sub = await page.$eval('.gift-card .gc-sub', e => e.textContent.trim()).catch(() => '');
+    if (!/You get 2, everyone else gets 1/.test(sub)) errors.push(`(c1) the line under the heading reads "${sub}"`);
+    const pick = st.pending.options.find(o => o.id === 'color:red') || st.pending.options.find(o => o.target);
+    const before = st.players[0].res[pick.value] || 0;
+    await click(page, `.gift-card .gc-dot[data-option="${pick.id}"]`);
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 6000 }).catch(() => errors.push('(c1) clicking a color did nothing'));
+    const rec = await lastMove(page);
+    if (rec && rec !== pick.id) errors.push(`(c1) recorded ${rec}, not ${pick.id}`);
+    let got = NaN;
+    for (let k = 0; k < 30 && got !== before + 2; k++) { got = await page.$eval(`.lt-seat[data-pid="0"] .cs-stack[data-res="${pick.value}"] b`, e => Number(e.textContent)).catch(() => NaN); await page.waitForTimeout(100); }
+    if (got !== before + 2) errors.push(`(c1) you hold ${got} ${pick.value}, want ${before + 2}`);
+    if (await page.$('.gift-card[data-gift="color"]')) errors.push('(c1) the card stays up after the pick');
     await ctx.close();
   }
   // (w1) Even Swap: yours, then theirs, on the same card
