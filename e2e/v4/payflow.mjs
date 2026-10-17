@@ -2,10 +2,10 @@ import { browserPath } from './lib/browser.mjs';
 // E2E pay-flow gate (live panel round 1, G2), at laptop size (1270×700). Testers couldn't tell why some buys open the
 // pay sheet and some pay at once, read the sheet's faded coins backwards, saw two prices for one discounted card, and
 // took the deck for a member.
-//  (f1) One way to pay (8 for 8 with exactly 8): no sheet; a "Paid 4● 4●" receipt stands at the tile you clicked (the
+//  (f1) One way to pay (5 for 5 with exactly 5): no sheet; a "Paid 3● 2●" receipt stands at the tile you clicked (the
 //       engine's spend), and goes after a moment.
 //  (f2) One way to pay for a member (exact cost): the same receipt at the card.
-//  (f3) Several ways (2 for 1 with mixed colors): the sheet opens beside the tile, says why ("more than one way"), the
+//  (f3) Several ways (1 for 1 with mixed colors): the sheet opens beside the tile (no "more than one way" legend since H09), the
 //       tile stays uncovered and lit in the hole; the coins that pay sit in a Paying row by color, above a Keeping row
 //       of numbered stacks (Cory, 2026-10-15: the faded lifted coins were "hard to decipher").
 //  (f4) A discount: the sheet's price is the card face's price (the struck list number, then the dots), the struck
@@ -87,14 +87,15 @@ async function receipt(tag, save, sel) {
 }
 
 try {
-  // (f1) 8 for 8 with exactly 8, the rivals holding more of both colors (no lead lost)
-  await receipt('f1', buySave({ def: null, res: { gold: 4, red: 0, blue: 4, green: 0 }, rivals: { gold: 6, blue: 6 } }).save, '.lt-rates [data-rate="big"]');
+  // (f1) 5 for 5 with exactly 5 in two colors, the rivals holding more of both colors (no lead lost). Was 8 for 8 on the
+  // retired 'big' tier; the buys are 1 for 1, 5 for 5 and 10 for 10 since 2026-10-16 (decisions.md).
+  await receipt('f1', buySave({ def: null, res: { gold: 3, red: 0, blue: 2, green: 0 }, rivals: { gold: 6, blue: 6 } }).save, '.lt-rates [data-rate="mid"]');
   // (f2) Prospector at exactly its cost
   {
     const { save, uid } = buySave({ def: 'gold.prospector', res: { gold: 4, red: 0, blue: 0, green: 0 }, rivals: { gold: 6 } });
     await receipt('f2', save, `.lt-shop .lt-card[data-uid="${uid}"]`);
   }
-  // (f3) 2 for 1 with four colors: several ways, the sheet beside the tile
+  // (f3) 1 for 1 with four colors: several ways, the sheet beside the tile
   {
     const { save } = buySave({ def: null, res: { gold: 2, red: 2, blue: 1, green: 1 } });
     const p = save.state.players[0];
@@ -108,8 +109,10 @@ try {
     if (overlap(box, tile) > 0) errors.push('(f3) the sheet covers the tile it pays for');
     const hole = await page.$eval('.pay-hole', e => ({ at: !!e.dataset.at, r: e.getBoundingClientRect().toJSON() })).catch(() => null);
     if (!hole || !hole.at || hole.r.left > tile.left || hole.r.right < tile.right || hole.r.top > tile.top || hole.r.bottom < tile.bottom) errors.push(`(f3) the tile is not lit in the hole: ${JSON.stringify(hole)}`);
-    const why = await page.$eval('[data-pay-legend]', e => e.textContent).catch(() => '');
-    if (!/more than one way/.test(why)) errors.push(`(f3) the sheet doesn't say why it asks ("${why}")`);
+    // the "you can pay this more than one way" line was taken off the sheet (Cory, 2026-10-17 feedback H09,
+    // design/feedback-addendum-2026-10-17.md); the instant receipt (f1, f2) is what tells the two flows apart now
+    if (await page.$('[data-pay-legend]')) errors.push('(f3) the sheet still carries the retired "more than one way" legend');
+    if (/more than one way/.test(await page.$eval('.dialog.pay', e => e.textContent))) errors.push('(f3) the sheet still says "more than one way"');
     // two rows (Cory, 2026-10-15: "hard to decipher"): what pays sits in Paying by color, what stays in Keeping, numbered
     const rows = await page.evaluate(() => {
       const P = document.querySelector('.dialog.pay .pay-row.paying'), K = document.querySelector('.dialog.pay .pay-row.keeping');
@@ -181,4 +184,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`payflow.mjs: ${errors.length} problem(s)\n  ${errors.join('\n  ')}`); process.exit(1); }
-console.log('payflow.mjs: one-way receipts, an anchored sheet that says why, one price, a deck that reads as a deck');
+console.log('payflow.mjs: one-way receipts, an anchored sheet, one price, a deck that reads as a deck');
