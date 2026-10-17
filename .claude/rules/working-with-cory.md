@@ -26,6 +26,7 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - Everything else (code, tooling, harness, process, sequencing): decide and do it. Report briefly afterward.
 - **Fixes: go with your gut** (Cory, 2026-10-14). On fixes and open questions, take the default and build it. Log every gut call in `design/decisions.md` as "(Claude, under Cory's go-with-your-gut)" with the why, so he can overturn any.
 - Never send Cory a menu of tactical options. Pick one.
+- **Price notes are mine (Cory, 2026-10-17):** when a note only says a card should be cheaper or pricier, pick the new number (educated guess, direction checked, measured with a named bot), log it as a go-with-your-gut call, and report the buy-followers-only win rate.
 - **Price every card before showing it.** Use `design/eval/value-model.md`: a ring-I space is worth about 2.5u, ring II about 4u, ring III about 7u, and a member is worth about its cost plus 1.5u. A free swap or an extra recruit already uses up a whole space's budget, so never stack a resource gain on top of a strong verb. Anything outside its band gets cut before Cory sees it. Cory's own anchors at the top of the value model beat the model's numbers.
 - Tokens are not a constraint (no token or cost limits, per Cory 2026-10-14). Always push for the most effective harness and organization: run the most useful parallelism, the strongest tool for each job, and nothing idle that isn't a dependency.
 
@@ -123,3 +124,4 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - 2026-10-17 — Batch intake: preserve every note, set ambiguous calls aside for concise questions, and ship clear independent fixes quickly with integrity. A design ambiguity never blocks unrelated verified fixes. Latest explicit removal of Release supersedes the previous keep decision.
 - 2026-10-17 — Cory: work the backlog in batches of 5–10 related items, each batch checked and shipped together (replaces one-fix-at-a-time for backlog work).
 - 2026-10-17 — Cory: a note every time a fix goes live, with concise change notes, the version and a screenshot.
+- 2026-10-17 — Cory: "X should be cheaper/more expensive" notes are mine to price; educated guess, logged as gut calls.

@@ -796,3 +796,6 @@ The full verdict gate fails 15 of 30 browser tests on 41f09d8, but the live v0.5
 - 2026-10-17 — The gh-pages workflow no longer runs on pushes (it built every push of PR #1's branch, never served, but read like a release). The play link is only main/play via scripts/v4-play.sh. (Claude, under Cory's go-with-your-gut)
 ## 2026-10-17 — backlog in batches (Cory)
 Work the backlog in batches of 5–10 related items; check and ship each batch together, then report it. Why: easier to follow than a stream of single fixes.
+
+## 2026-10-17 — price notes (Cory)
+When a note just says a card should be cheaper or more expensive, Claude picks the new price (educated guess, measured with a named bot) and logs it as a gut call. Why: keeps price nudges off his list.
