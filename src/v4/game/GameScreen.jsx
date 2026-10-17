@@ -1095,8 +1095,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   handlers.current = { onPick, onDenied };
   const shopPick = useCallback((...a) => handlers.current.onPick(...a), []);
   const shopDenied = useCallback((...a) => handlers.current.onDenied(...a), []);
+  // The pay sheet is up for your pay step, and goes the moment you pay: once the table holds the paid state, the
+  // payment's chain plays with the sheet gone (it stayed up over the recruit's flight for the whole chain, reading the
+  // paid stacks against the old price: "Keeping -1").
+  const paySheet = !!(mine && !needHandoff && pend && physicalState.moves === interactionState.moves && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)));
   // A modal takes the stage: sweep any flying ghosts so nothing floats over it.
-  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay' && !onlyPay) || (mine && !needHandoff && payChoice(pend)));
+  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || paySheet);
   useEffect(() => { if (modalOpen) clearFlights(0); }, [modalOpen]);
   // and the page behind a modal doesn't scroll
   useEffect(() => {
@@ -1436,7 +1440,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </Popover>
       )}
       {receipt && <PayReceipt key={receipt.key} receipt={receipt} onDone={() => setReceipt(r => (r && r.key === receipt.key ? null : r))} />}
-      {mine && !needHandoff && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)) && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+      {paySheet && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={rootEl} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && closedMoment !== moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={nextRound} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
