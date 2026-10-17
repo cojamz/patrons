@@ -207,3 +207,17 @@ it('member timing names recruitment and round starts precisely', () => {
   expect(container.textContent).toMatch(/^On recruit and at round start/);
   expect(container.textContent).not.toMatch(/Now/);
 });
+
+
+describe('shop discount origin', () => {
+  it('opens a named breakdown on tap, with an honest fallback for legacy discounts', () => {
+    const { s } = marketState();
+    s.players[0].discount = 6;
+    s.players[0].discountSources = [{ name: 'Intro Offer', n: 4 }, { name: 'Planner', n: 2 }];
+    const { getByRole } = render(<ShopCards state={s} me={0} mySeats={[0]} optionFor={none} onPick={() => {}} />);
+    fireEvent.click(getByRole('button', { name: 'Discount sources' }));
+    const body = document.querySelector('[data-tip-body]');
+    expect(body.textContent).toContain('Intro Offer: next member −4');
+    expect(body.textContent).toContain('Planner: next member −2');
+  });
+});

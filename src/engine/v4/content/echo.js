@@ -215,7 +215,7 @@ export function copy(ctx, p, e, { later = null, by = null, asker = null } = {}) 
   const mult = has(ctx, p, 'wallflower') && fewest ? 2 : 1;
   const asGreen = ctx.membersOf(p).some(c => (c.def.id === 'echo.translator' || c.copy === 'echo.translator') && c.on !== false);
   for (const [c, n] of Object.entries(e.res)) ctx.gain(p, asGreen ? 'green' : c, n * mult, { fromAction: true });
-  if (e.discount) p.discount += e.discount;
+  if (e.discount) ctx.discount(p, e.discount, `Copy of ${e.name}`);
   const notes = [mult > 1 ? `doubled by ${p.name}'s Wallflower` : '', asGreen && Object.keys(e.res).length ? `as green by ${p.name}'s Translator` : ''].filter(Boolean);
   ctx.log(`${who} copied ${e.name}${e.p !== p.id ? ` (${ctx.player(e.p).name}'s)` : ''}: ${describe(ctx, e)}${notes.length ? `, ${notes.join(', ')}` : ''}.`);
   heard(ctx, p, e, taker);

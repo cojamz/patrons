@@ -56,11 +56,20 @@ function fromGains(before, state) {
 function movesOf(cause, effects, owner) {
   const pays = [], takes = [], gives = [], gains = [], cards = [], fols = [];
   const used = new Set();
-  // a steal that changes color (magenta): a rival's pay and the owner's gain of the same total, under one cause
+  // A color-changing steal may aggregate several rival piles into one magenta gain.
+  // Work on local quantities: each unit travels once, directly from its victim to the thief.
+  effects = effects.map(e => ({ ...e, what: { ...e.what } }));
   for (const p of effects) {
     if (p.type !== 'pay' || p.from.pid === owner || used.has(p)) continue;
-    const g = effects.find(e => e.type === 'gain' && !used.has(e) && e.to.pid === owner && e.what.n === p.what.n);
-    if (g) { used.add(p); used.add(g); takes.push({ from: p.from, to: g.to, n: p.what.n, r: p.what.r, turn: g.what.r !== p.what.r ? g.what.r : null }); }
+    for (const g of effects) {
+      if (g.type !== 'gain' || used.has(g) || g.to.pid !== owner) continue;
+      const n = Math.min(p.what.n, g.what.n);
+      if (!n) continue;
+      takes.push({ from: p.from, to: g.to, n, r: p.what.r, turn: g.what.r !== p.what.r ? g.what.r : null });
+      p.what.n -= n; g.what.n -= n;
+      if (!g.what.n) used.add(g);
+      if (!p.what.n) { used.add(p); break; }
+    }
   }
   // a payment that reaches a rival (a ransom paid, "the payment arrives as magenta"): the owner's pays and another
   // player's gain of the same total under one cause are a give, straight from the payer's stacks to theirs (grammar M4);
@@ -312,18 +321,19 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     // two members cross at once on mirrored arcs; a member taken (Poach, a ransom let go) is a take, the victim's crowd
     // tugs and it flies straight. Each lands on its own new chip, which shows when it lands.
     const moves = m.cards.filter(e => e.type === 'member-move');
+    const moved = new Set(); // planning must never mutate the engine's effect stream
     for (const card of m.cards) {
-      if (card.done) continue;
+      if (moved.has(card)) continue;
       const to = card.type === 'member-move' || card.type === 'recruit' ? { ...card.to, uid: card.what.uid } : card.to;
       if (card.type === 'member-move') {
-        const back = moves.find(o => o !== card && !o.done && o.from.pid === card.to.pid && o.to.pid === card.from.pid);
+        const back = moves.find(o => o !== card && !moved.has(o) && o.from.pid === card.to.pid && o.to.pid === card.from.pid);
         // (tester B, w5: "a bot's Even Swap took my Tax Collector and nothing showed it"): a member changing hands
         // stops on the stage on its way, big, so everyone sees who it is before it lands in its new chair
         const via = MO.stageIn + Math.round(MO.stageHold / 2);
         if (back) {
-          back.done = true;
-          at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: 'arc', dur: via + MO.swap, via: 0, hide: true });
-          at(cur, { op: 'chip', from: back.from, to: { ...back.to, uid: back.what.uid }, uid: back.what.uid, path: 'cross', dur: via + MO.swap, via: 1, hide: true });
+          moved.add(back);
+          at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: 'arc', dur: via + MO.swap, via: 0, swap: true, hide: true });
+          at(cur, { op: 'chip', from: back.from, to: { ...back.to, uid: back.what.uid }, uid: back.what.uid, path: 'cross', dur: via + MO.swap, via: 1, swap: true, hide: true });
           ends(cur + via + MO.swap);
           cur += via + nextBeatAt(MO.swap);
           continue;
@@ -796,13 +806,14 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           if (!A || !B) return;
           chain.flying++;
           let pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
-          const R = a.via != null ? stageRect(a.via) : null;
+          const hub = a.via != null ? stageRect('card') : null;
+          // Both members meet side by side at the actual hub, then cross to their new seats.
+          const R = hub ? { ...hub, left: hub.left + hub.width / 2 - 26 + (a.swap ? (a.via === 1 ? 34 : -34) : 0), top: hub.top + hub.height / 2 - 26, width: 52, height: 52 } : null;
           if (R) { let nm = ''; try { nm = defById(ctx.state.cards[a.uid].def).name; } catch { /* unnamed */ } if (nm) pic += `<b class="pm-name">${nm.replace(/[<&]/g, '')}</b>`; }
           if (R) {
             // out of its old chair onto the stage, a beat there, then on to its new chair
             const leg1 = Math.round(MO.stageIn), hold = Math.round(MO.stageHold / 2), leg2 = Math.max(120, a.dur - leg1 - hold);
             const big = square(R, 52);
-            chain.flying++;
             const one = flyPath(pic, 'piece-flight piece-member staged', square(rectOf(A), 52), big, { path: 'arc', duration: leg1 });
             const g = document.createElement('div');
             g.className = 'piece-flight piece-member staged ghost-layer';

@@ -48,3 +48,45 @@ it('routes ordinary resources through their matching rim while keeping member an
   expect(pieces.find(a => a.take).from).toEqual(stack(1, 'gold'));
   expect(pieces.find(a => a.from.uid === 101).from.kind).toBe('stage');
 });
+
+
+it('plans both swap members repeatedly without mutating engine effects', () => {
+  const before = sceneQ({ quadrants: ['gold', 'silver'] });
+  const cause = { kind: 'space', pid: 0, key: '0-0' };
+  const move = (uid, from, to) => Object.freeze({ type: 'member-move', cause,
+    from: { kind: 'crowd', pid: from }, to: { kind: 'crowd', pid: to }, what: { uid, worth: 1 } });
+  const effects = [move(101, 0, 1), move(102, 1, 0)];
+  const after = { ...before, moves: before.moves + 1, effects };
+  const first = planChain(before, after), second = planChain(before, after);
+  expect(second).toEqual(first);
+  const chips = first.atoms.filter(a => a.op === 'chip');
+  expect(chips.map(a => [a.uid, a.from.pid, a.to.pid])).toEqual([[101, 0, 1], [102, 1, 0]]);
+  expect(chips.map(a => a.via)).toEqual([0, 1]);
+  expect(chips.every(a => a.swap && a.hide)).toBe(true);
+  expect(chips[0].at).toBe(chips[1].at);
+});
+
+it('pairs a color-changing steal into one gain rather than separate loss and gain flights', () => {
+  const cause = { kind: 'space', pid: 0, key: '0-0' };
+  const plan = chain([
+    { type: 'pay', cause, from: stack(1, 'gold'), to: cause, what: { r: 'gold', n: 1 } },
+    { type: 'gain', cause, from: cause, to: stack(0, 'magenta'), what: { r: 'magenta', n: 1 } },
+  ]);
+  const pieces = plan.atoms.filter(a => a.op === 'piece');
+  expect(pieces).toHaveLength(1);
+  expect(pieces[0]).toMatchObject({ from: stack(1, 'gold'), to: stack(0, 'magenta'), turn: 'magenta', take: true });
+});
+
+
+it('shows one direct transfer per stolen unit when several colors become one magenta gain', () => {
+  const cause = { kind: 'space', pid: 0, key: '0-0' };
+  const plan = chain([
+    { type: 'pay', cause, from: stack(1, 'gold'), to: cause, what: { r: 'gold', n: 1 } },
+    { type: 'pay', cause, from: stack(1, 'silver'), to: cause, what: { r: 'silver', n: 2 } },
+    { type: 'gain', cause, from: cause, to: stack(0, 'magenta'), what: { r: 'magenta', n: 3 } },
+  ]);
+  const pieces = plan.atoms.filter(a => a.op === 'piece');
+  expect(pieces).toHaveLength(3);
+  expect(pieces.every(a => a.take && a.turn === 'magenta' && a.from.pid === 1 && a.to.pid === 0)).toBe(true);
+  expect(pieces.reduce((sum, a) => sum + a.n, 0)).toBe(3);
+});

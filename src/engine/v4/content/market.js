@@ -191,10 +191,10 @@ const market = {
       onRoundStart(ctx, owner, card) { ctx.gain(owner, B, ctx.countMembersOfColor(owner, Q) - (card && isBlue(card.def) ? ctx.memberWeight(card) : 0)); },
     }),
     m('planner', 'Planner', 2, 2, 'Now and at round start, your next member costs 2 less per round number.', { now: true,
-      onRoundStart(ctx, owner) { owner.discount += 2 * ctx.state.round; },
+      onRoundStart(ctx, owner) { ctx.discount(owner, 2 * ctx.state.round, 'Planner'); },
     }),
     m('underbidder', 'Underbidder', 2, 0, 'Now and at round start, your next member costs 2 less per rival with more members than you.', { now: true,
-      onRoundStart(ctx, owner) { owner.discount += 2 * rivalsBigger(ctx, owner); },
+      onRoundStart(ctx, owner) { ctx.discount(owner, 2 * rivalsBigger(ctx, owner), 'Underbidder'); },
     }),
     m('minimalist', 'Minimalist', 2, 0, 'Now and at round start, +1 blue per rival with more members than you.', { now: true,
       onRoundStart(ctx, owner) { const k = rivalsBigger(ctx, owner); if (k) ctx.gain(owner, B, k); },
@@ -213,7 +213,7 @@ const market = {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && !isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1); },
     }),
     m('sommelier', 'Sommelier', 2, 2, 'Whenever you recruit a blue member, your next member costs 2 less.', {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) owner.discount += 2; },
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.discount(owner, 2, 'Sommelier'); },
     }),
     m('patroness', 'Patroness', 2, 2, 'Whenever you recruit a blue member, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) owner.bonus += 1; },

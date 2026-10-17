@@ -9,7 +9,7 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip, CostDots, paidParts } from './Info.jsx';
+import { cardColor, onTable, usePreview, Tip, CostDots, paidParts, discountWhy } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip, Rich } from './Rich.jsx';
 import { memberTimingWords } from './memberTiming.js';
@@ -72,6 +72,7 @@ export function CostShapes({ parts }) {
 function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null, onViewChange = null }) {
   const pend = state.pending;
   const viewer = me != null ? state.players[me] : null;
+  const discount = viewer ? (viewer.discount || 0) + viewer.members.reduce((n, uid) => n + (cardDef(state, uid).costReduction || 0), 0) : 0;
   const mine = !!(pend && mySeats.includes(pend.player));
   const buying = mine && pend.kind === 'buy';
   const placing = mine && pend.kind === 'place';
@@ -116,7 +117,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
         {/* a discount is said once, here, beside the struck prices (w4 A#23: its sentence was on all ten hovers) */}
-        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Members'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : viewer && viewer.discount > 0 ? <span data-shop-discount>your next one {viewer.discount} less</span> : buying && affordable ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
+        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Members'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
         <span className="lt-shop-controls">
           <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} disabled={memberPick} onClick={toggleView}>details</button>
           <button type="button" className="lt-sort" role="switch" aria-label="Group members by color" aria-checked={sort === 'color'} title="Switch cost / color order" onClick={() => setSort(sort === 'cost' ? 'color' : 'cost')}>

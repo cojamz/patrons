@@ -115,6 +115,10 @@ const rimWidths = new Map();
 // a panel's layout for where it sits (panelLayout): pure in its inputs and the widths above, so it's kept until the
 // widths are re-measured (perf, 2026-10-15: every placement re-laid all 30-odd panels, ~5s of a 4×-CPU game)
 const layCache = new Map();
+// Geometry depends on the wedge and text-block height, not the words. Resource gains can change
+// a panel's text mid-chain; keep its fit searches reusable across those text-layout cache misses.
+const roomCache = new Map();
+const ROOM_SHAPES_MAX = 512;
 const clearMeasures = () => { rimWidths.clear(); layCache.clear(); };
 let rimCtx, rimEarly = false; // rimEarly: something was measured before the web font arrived
 // The faces the wheel measures its print in, asked for at once (a face loads only when something first uses it, after
@@ -260,7 +264,13 @@ function layPanel(s, R, rot, k, said, taken, need) {
   let rc = R.r;
   // Different wrapping candidates often have the same total height. Solve their geometry once,
   // including its chosen centre: restoring only the width would leave text on another candidate's centre.
-  const rooms = new Map();
+  const geometryKey = [((s.ang + rot) % 360 + 360) % 360, s.half, R.r0, R.r1, R.r, R.n, k].join('|');
+  let rooms = roomCache.get(geometryKey);
+  if (!rooms) {
+    rooms = new Map();
+    roomCache.set(geometryKey, rooms);
+    if (roomCache.size > ROOM_SHAPES_MAX) roomCache.delete(roomCache.keys().next().value);
+  }
   const room = hPx => {
     const cached = rooms.get(hPx);
     if (cached) {

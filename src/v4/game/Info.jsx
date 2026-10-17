@@ -1,3 +1,4 @@
+import { discountSources } from '../../engine/v4/discount.js';
 // The information layer: everything here appears on hover (mouse) or tap / long-press (touch), never always on.
 // - Tip: any element that explains itself in a small card (hover after a beat; a tap pins it; Esc / tap away closes).
 // - Term / CardText: game keywords underlined in rules text; each opens its glossary definition (src/v4/glossary.js).
@@ -190,7 +191,7 @@ export function paidParts(state, p, uid, d = cardDef(state, uid)) {
 /** Why p pays less: "your next member costs 4 less", "Sponsor takes 2 off". */
 const upFirst = t => (t ? t[0].toUpperCase() + t.slice(1) : t);
 export const discountWhy = (state, p) => [
-  ...(p.discount ? [`your next member costs ${p.discount} less`] : []),
+  ...discountSources(p).map(x => `${x.name}: next member −${x.n}`),
   ...p.members.map(u => { try { return cardDef(state, u); } catch { return null; } }).filter(x => x && x.costReduction).map(x => `${x.name} takes ${x.costReduction} off`),
 ].join(', ');
 

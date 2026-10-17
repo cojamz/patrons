@@ -254,7 +254,7 @@ export default {
       onExtraTurn(ctx, owner) { for (const c of ctx.state.resources) if (c !== P) ctx.gain(owner, c, 1); },
     }),
     m('apprentice', 'Apprentice', 2, 2, 'Whenever you take an extra turn, your next member costs 4 less.', {
-      onExtraTurn(ctx, owner) { owner.discount += 4; },
+      onExtraTurn(ctx, owner) { ctx.discount(owner, 4, 'Apprentice'); },
     }),
     m('overseer', 'Overseer', 2, 2, 'Whenever a rival takes an extra turn, gain half your purple, rounded down (at most 4).', {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },

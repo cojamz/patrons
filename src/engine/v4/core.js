@@ -1,3 +1,4 @@
+import { grantDiscount } from './discount.js';
 // Patrons v4 engine. Pure and deterministic: state in, move in, state out.
 // Everything runs through a task queue. When a task needs a decision, the engine stops and publishes
 // state.pending = { player, kind, prompt, options:[{ id, label, kind, ... }] }. A move is { player, option }.
@@ -868,7 +869,7 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
     }
     if (notes.length) paid += `; ${notes.join(', ')}`;
     // a discount waits for a member that actually costs something
-    if (cardDef(state, uid).s + cardDef(state, uid).w > 0) p.discount = 0;
+    if (cardDef(state, uid).s + cardDef(state, uid).w > 0) { p.discount = 0; p.discountSources = []; }
   }
   if (idx >= 0) state.shop.splice(idx, 1);
   else state.pile.splice(fromPile, 1);
@@ -1153,6 +1154,7 @@ function ctxFor(state) {
     ownerOf: uid => state.players.find(o => o.members.includes(uid)),
     shopCards: () => state.shop.map(u => wrap(state, state.cards[u])),
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
+    discount: grantDiscount,
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
     /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
     price: (p, uid, how) => memberPrice(state, p, uid, how),
