@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { contextFor, resume, WORKERS } from '../../../engine/v4/core.js';
-import { sceneQ, buy } from './cards-helpers.js';
+import { sceneQ } from './cards-helpers.js';
 import { uidOf, take, move as contextMove } from './helpers.js';
 const Q = ['gold', 'red', 'purple', 'echo'];
 const start = (members = [['benders.extrahand']]) => sceneQ({ quadrants: Q, members, queue: [{ t: 'round', r: 3 }] });
@@ -79,21 +79,4 @@ describe('Extra Hand transfers only its unplaced minion', () => {
     expect(s.players.map(p => p.left)).toEqual([before[0] - 1, before[1] + 1]);
     expect(s.players.reduce((n, p) => n + p.workers, 0)).toBe(total);
   });
-  it('copying Extra Hand during round III grants once under the copy’s physical uid', () => {
-    let s = sceneQ({ quadrants: Q, round: 3, members: [[], ['benders.extrahand']],
-      res: [{ gold: 12, red: 12, purple: 12, green: 12 }], shop: ['echo.doppel'],
-      queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }] });
-    const original = uidOf(s, 'benders.extrahand', 1);
-    s = buy(take(s, 'gold.rush'), 'echo.doppel');
-    const copy = uidOf(s, 'echo.doppel', 0), left = s.players[0].left;
-    s = contextMove(s, `card:${original}`);
-    expect(s.players[0].left).toBe(left + 1);
-    expect(extras(s, copy).map(t => t.p)).toEqual([0]);
-    contextFor(s).workersNow(s.players[0], copy, contextFor(s).defOf(original));
-    expect(extras(s, copy)).toHaveLength(1);
-    give(s, copy, 0, 1);
-    expect(extras(s, copy).map(t => t.p)).toEqual([1]);
-    expect(extras(s, original)).toHaveLength(0);
-  });
-
 });

@@ -1190,7 +1190,6 @@ function ctxFor(state) {
     shopCards: () => state.shop.map(u => wrap(state, state.cards[u])),
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
     discount: grantDiscount,
-    workersNow: (p, uid, def) => workersNow(state, p, def, uid),
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
     /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
     price: (p, uid, how) => memberPrice(state, p, uid, how),
