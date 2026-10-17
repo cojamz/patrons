@@ -11,12 +11,14 @@ import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
 import { cardColor, onTable, usePreview, Tip, CostDots, paidParts } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
-import { Pip } from './Rich.jsx';
+import { Pip, Rich } from './Rich.jsx';
+import { memberTimingWords } from './memberTiming.js';
 import { timingOf, unlockedBy, surely } from './cards.js';
 void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
 import { MemberDeck, useDeal } from './MemberDeck.jsx';
 import './lamp-b.css';
+import './member-pick.css';
 import './shop.css'; // live panel r1 (G2): the deck, the struck price and the worth
 import { breakable } from './hyphen.js'; // long names break at a seam on the narrow card (Doppel-ganger)
 
@@ -100,9 +102,10 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const row = steadyOrder(steady.current, rowKey, sortShop(state, state.shop, sort));
   steady.current = { key: rowKey, uids: row };
   const uids = tray || [...row, ...pileOpts];
+  const memberPick = picking && uids.some(uid => optionFor(`card:${uid}`));
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
-    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-tray={tray ? 'pile' : undefined} aria-label="Shop">
+    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-tray={tray ? 'pile' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
@@ -158,6 +161,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               </span>
               {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
+              {memberPick && <span className="lt-pick-ability"><Rich text={memberTimingWords(d.text)} /></span>}
               <span className="ft">
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>

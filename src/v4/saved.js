@@ -1,6 +1,6 @@
 // Reload-proofing. Local games save their state and setup on every change; online games remember the room and
 // your player id so a reload rejoins your seat. Everything is wrapped: storage can be missing or full.
-import { stateProblem, gameRecord } from './session/record.js';
+import { stateProblem, gameRecord, CONTENT_HASH } from './session/record.js';
 import { createTabLease, OWNER_CHANNEL } from './session/owner.js';
 
 const LOCAL = 'patrons.v4.local';
@@ -39,6 +39,11 @@ export const loadLocal = () => {
 // engine can't read, is never returned (so never auto-resumed into a crash): it's set aside under STALE and the home
 // screen says "saved on an older version: start fresh" (Recovery.jsx), with its game record still copyable.
 function usable(v) {
+  // This exact release changes only Snap Up/Night Owl descriptions in the engine sources.
+  // Preserve local games from its immediate predecessor; never extend this to other rule hashes.
+  if (CONTENT_HASH === '22q53nl0l4m.3601c69be7' && v.state.build?.content === '22q53nl0l4m.4cc3239e30') {
+    v = { ...v, state: { ...v.state, build: { ...v.state.build, content: CONTENT_HASH } } };
+  }
   const problem = stateProblem(v.state); // never throws: engine calls inside are wrapped
   if (!problem) return v;
   setAside(v, problem.kind, problem.message);

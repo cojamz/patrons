@@ -14,15 +14,16 @@ In seat order, each player chooses 2 starting resources.
 ## The wheel
 One colored quadrant per player, each with its own spaces and its own contest, printed on its rim.
 - The **outer ring** opens in round I, the **middle ring** in round II, the **inner ring** in round III. Open rings stay open.
+- **Pale spaces with gold edges are available now.** Taken spaces dim; dark spaces in the inner rings open in later rounds.
 - Each space holds one minion per round. All minions return at round end.
 - To **copy** a space is to gain that space's own gain this round, as printed. The taker's member bonuses (like Grand Host's double) and gifts to others are not copied. Copies never copy another copy. Occupied inner-ring spaces can be copied. Echo copies the previous action, including your own on a snake double turn; Encore copies any space with a minion; Greatest Hits copies every space with your minion.
 - To **steal** is to take from a rival. Resources a Magenta card steals arrive as magenta.
 
 ## A turn
-Turns go in snake order (1-2-3-4, 4-3-2-1, …). Round I's order is random; from round II, fewest followers goes first (ties: whoever went later last round).
+Turns go down the player column, then back up: 1-2-3-4, 4-3-2-1, repeating. The player at either end takes two turns in a row. This is snake order. Round I's order is random; from round II, fewest followers goes first (ties: whoever went later last round).
 1. **Place a minion** on an open space and resolve it. A space that recruits does not use your buy, unless it says "as your buy".
 2. **Buy one thing**, or pass:
-   - **Recruit a member** from the shop: 8 face up, refilled from the face-down pile at the head of the row, which shows how many are left. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins are already in the cost; tap one of your resources to swap it in. A discount ("your next member costs 4 less") and any member that changes a price (Penny Pincher's gold counts double) apply to every member you pay for, including one a space lets you recruit (Snap Up, Half Price). While a discount is yours, each card shows what you'd pay, with its list price small and struck beside it ("free" when it costs you nothing). A card you can't afford yet is faded; point at it to see what you're short of.
+   - **Recruit a member** from the shop: 8 face up, refilled from the face-down pile at the head of the row, which shows how many are left. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins are already in the cost; tap one of your resources to swap it in. A discount ("your next member costs 4 less") and any member that changes a price (Penny Pincher's gold counts double) apply to every member you pay for, including one a space lets you recruit (Snap Up, Half Price). While a discount is yours, each card shows what you'd pay, with its list price small and struck beside it ("free" when it costs you nothing). Cards stay readable; affordable choices have a gold edge. Point at a card to see what you're short of.
    - Or **buy followers** with any resources: 1 for 1 follower, 5 for 5, or 10 for 10. All three buys are unlimited.
    - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back only its colored part, in its color (in any colors if its color isn't on the table). The "any" part never comes back, so a member with no colored part can't be released, and neither can a member you've already used.
 

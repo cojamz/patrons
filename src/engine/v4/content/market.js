@@ -107,7 +107,7 @@ const market = {
 
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Snap Up', text: '+2 blue, then you may recruit a face-up member now, in any colors.',
+      key: 'bargain', ring: 1, name: 'Snap Up', text: '+2 blue. You may then pay for a member in the shop using any colors, in addition to your normal buy.',
       estimate: (ctx, p) => 2 + bestRowValue(ctx, p, SNAP) * 0.3,
       resolve(ctx, p) { ctx.gain(p, B, 2, { fromAction: true }); offerRow(ctx, p, SNAP, 'Snap Up'); },
     },

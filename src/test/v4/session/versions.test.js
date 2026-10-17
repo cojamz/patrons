@@ -62,6 +62,15 @@ describe('local saves from another version', () => {
     expect(staleSave()).toBe(null);
   });
 
+  it('preserves a local game across the audited wording-only release', () => {
+    const st = newGame({ seats, seed: 5 });
+    const prior = { ...st, build: { ...st.build, content: '22q53nl0l4m.4cc3239e30' } };
+    saveLocal({ seats }, prior);
+    const resumed = loadLocal();
+    expect(resumed?.state).toEqual(st);
+    expect(staleSave()).toBe(null);
+  });
+
   it('a save from older content is never returned: it is set aside, unseen, with its record kept', () => {
     const st = newGame({ seats, seed: 5 });
     const old = { ...st, build: { ...st.build, content: 'olderContent' } };

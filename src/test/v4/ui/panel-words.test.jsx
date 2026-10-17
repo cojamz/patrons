@@ -17,7 +17,7 @@ describe('panel words (w3)', () => {
   });
 
   it('a gain that grows by round says so in rounds I and II, and not in III (w3a #54: "+2●" read as flat)', () => {
-    for (const [qid, key] of [['gold', 'rush'], ['purple', 'hourly'], ['echo', 'chant'], ['silver', 'toast'], ['thieves', 'pickpocket'], ['trading', 'pawn']]) {
+    for (const [qid, key] of [['purple', 'hourly'], ['silver', 'toast'], ['thieves', 'pickpocket'], ['trading', 'pawn']]) {
       for (const r of [1, 2]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain('more each round');
       expect(lines(panelText(qid, { key }, 3)), `${qid}.${key} round III`).not.toContain('more each round');
     }
@@ -27,6 +27,26 @@ describe('panel words (w3)', () => {
       expect(cheap).toContain('per 3 white you hold');
       expect(cheap.join(' ')).not.toMatch(/limit|more each round|buy/i);
     }
+  });
+
+  it('Crescendo and Golden Years say the exact increase instead of an unspecified growing gain', () => {
+    for (const [qid, key, color] of [['echo', 'chant', 'green'], ['gold', 'rush', 'gold']]) {
+      for (const r of [1, 2, 3]) {
+        const t = panelText(qid, { key }, r);
+        expect(t.main).toBe(`+${2 * r} ${color}`);
+        expect(t.second).toBe(r < 3 ? '+2 each new round' : null);
+      }
+    }
+  });
+
+  it('Trade Seeds shows the gain before the swaps, and Snap Up says the recruit is paid and optional', () => {
+    const seeds = panelText('yellow', { key: 'transmute' });
+    expect(seeds.main).toBe('+2 yellow');
+    expect(seeds.second).toBe('then swap up to 3');
+    const snap = panelText('market', { key: 'bargain' });
+    expect(snap.second).toBe('may pay for a member');
+    expect(snap.note).toBe('in any colors; extra buy');
+    expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
 
   it('a space whose center or ring II panel drops line 2 is whole in line 1', () => {

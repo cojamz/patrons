@@ -563,3 +563,6 @@
   box-shadow:0 0 0 1.5px rgba(var(--lamp,255,206,140),.85),0 0 16px 5px rgba(var(--lamp,255,206,140),.4)}
 .lt-cult-seat .cs-member.used[data-aim] .fig .sprite{opacity:1;filter:none}
 @media (prefers-reduced-motion:reduce){.lt-card.card{transition:none}}
+
+.lt-cult-seat .cs-release{margin-left:auto;padding:2px 0;border:0;border-bottom:1px solid var(--cream-2);background:none;color:var(--cream);font-family:var(--sans);font-size:14px;line-height:20px;cursor:pointer}
+.lt-cult-seat .cs-release:hover,.lt-cult-seat .cs-release:focus-visible{color:#fff3d4;border-color:#fff3d4}

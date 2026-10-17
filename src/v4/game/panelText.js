@@ -26,7 +26,7 @@ const P = {
     // "+1 to anyone" (w3): the gift goes to a rival only, never to you. "1 of what?" says gold; "you pick who" read
     // awkwardly (live panel r1): the note runs on from line 2 ("…to a rival / of your choice")
     jv: { main: '+3 gold', second: '+1 gold to a rival', note: 'of your choice' },
-    rush: r => ({ main: `+${2 * r} gold`, second: grows(r) }),
+    rush: r => ({ main: `+${2 * r} gold`, second: r < 3 ? '+2 each new round' : null }),
     // "Save 4" read as keeping 4 resources (blind testers, 2026-10-15): it's money off, said as a shop says it
     discount: { verb: '4 off', second: 'your next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
@@ -45,7 +45,7 @@ const P = {
   },
   market: {
     // "then recruit" read as a normal recruit (w3a #21): its perk, paying in any colors, is on the panel
-    bargain: { main: '+2 blue', second: 'then recruit in any colors' },
+    bargain: { main: '+2 blue', second: 'may pay for a member', note: 'in any colors; extra buy' },
     restock: { main: '+2 blue', second: 'refresh the shop' },
     // one wording with the hover: "per blue member in the shop" (w3a #22: "on sale" here, "face-up" there)
     // live (f8): line 1 is this turn's real payout, like a space that grows by round shows this round's number; the
@@ -90,8 +90,8 @@ const P = {
   yellow: {
     harvest: (r, now) => ({ main: `+${now ?? 1} yellow`, second: now == null ? '+1 per other color' : '1, +1 per other color', note: 'you hold' }),
     bloom: { verb: 'Top up', second: '+1 of your fewest' },
-    // in the rule's order, swap first, then the yellow (w4b #21: "+1● swap up to 3" read reversed against the hover)
-    transmute: { verb: 'Swap up to 3', second: 'then +1 yellow', note: 'for other colors' },
+    // Match the current rule: the yellow arrives before the optional swaps.
+    transmute: { main: '+2 yellow', second: 'then swap up to 3', note: 'for other colors' },
     prism: { verb: '+1 each other color', second: 'per 3 yellow', note: 'you keep the yellow' },
     // "Members pay out" was all a tight ring II showed: the gain first, whole in line 1
     gather: { verb: '+1 per member', second: 'in its own color' },
@@ -118,7 +118,7 @@ const P = {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers
     haggle: (r, now) => ({ main: `+${now ?? 2} white`, second: now == null ? '+1 per rival with more @f' : '2, +1 per rival with more @f' }),
     buylow: { main: '+1 @f', second: 'per 3 white you hold' },
-    pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, note: grows(r) }),
+    pawn: r => ({ main: `+${r} @f`, second: 'or 2 white per @f', note: grows(r) }),
     // the gain first: "Sell followers" lost its "3 white each" on ring II whenever the panel was tight (w3 words pass)
     sellhigh: { main: '+3 white', second: 'per follower sold', note: 'up to 2' },
     // "loose" is a rulebook word a newcomer won't remember (w3a #57): what it means, in the glossary's own words
@@ -127,7 +127,7 @@ const P = {
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
   },
   echo: {
-    chant: r => ({ main: `+${2 * r} green`, second: grows(r) }),
+    chant: r => ({ main: `+${2 * r} green`, second: r < 3 ? '+2 each new round' : null }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
     echo: { verb: 'Copy the previous action' },
     encore: { verb: 'Copy any space', second: 'with a minion' },

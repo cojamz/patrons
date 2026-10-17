@@ -646,3 +646,6 @@ His notes below were made on the preview, which was stuck on a build from before
 
 - 2026-10-16 — (Cory, screenshot) Shop still dim, including a space-highlighted member. Remove remaining placement-phase whole-shop brightness filter, use fully opaque bright paper/portraits and a crisp warm outline for the space’s target. Verify the actual Open Door hover, not setup alone.
 - 2026-10-16 — (Cory) Remove “no limit” from follower shop; omit redundant unlimited wording from its hover too.
+
+- 2026-10-16 — Original-feedback follow-up: selecting a free member shows larger cards with full abilities in the existing shop; ordinary shop retains its compact design. Action wording reviewed against all 54 current specialized actions; Snap Up, Night Owl and five display descriptions clarified, no rules changed.
+- 2026-10-16 — Release remains available; your seat now has an explicit “Release a member…” link when legal, opening the existing list instead of releasing immediately. Rulebook now names pale/gold available, dim taken, dark future rings and explains the snake’s two consecutive end turns.

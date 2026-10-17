@@ -44,6 +44,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // what a use just did, over that member for a moment (even "+0"); and the member giving a second buy hops as it does
   const result = useUseResult(state, pid);
   const pend = state.pending;
+  const canRelease = !!(mine && pend?.player === pid && pend.options.some(o => o.kind === 'release' && optionFor(o.id)));
   const extraBuyNow = !!(mine && pend && pend.player === pid && pend.kind === 'buy' && pend.extra && !state.over);
   const givesExtra = g => extraBuyNow && g.uids.some(u => { const c = state.cards[u]; return !(c.spent && c.spent.extraBuy === state.round) && !!cardDef(state, u).extraBuy; });
   const ready = new Set(mine ? [...usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid), ...memberAsks(state, pid).keys()] : []); // + a member asking you now (memberUse.js)
@@ -216,6 +217,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {/* the figures that don't fit fold into one quiet "+N" cell (the count beside them says the whole) */}
         {rest > 0 && <span className="cs-more num" data-more={rest} aria-label={`${rest} more member${rest === 1 ? '' : 's'}`} title={`${rest} more: point at the seat for every member`}>+{rest}</span>}
         </span>
+        {canRelease && hover && <button type="button" className="cs-release" aria-label="Choose a member to release" onClick={e => { e.stopPropagation(); hover.onSeatHover(pid, e.currentTarget, { pinned: true }); }}>Release a member…</button>}
         {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
         {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </div>
