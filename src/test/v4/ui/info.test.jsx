@@ -142,9 +142,10 @@ describe('keyword glossary: one source, every keyword in the cards defined', () 
     for (const t of texts) for (const part of splitTerms(t)) if (part.key) found.add(part.key);
     for (const k of ['full set', 'plant', 'in play', 'worth', 'extra turn', 'copy', 'set aside', 'once per round', 'face-up']) expect(found.has(k), k).toBe(true);
     for (const k of found) expect(term(k)?.def?.length, k).toBeGreaterThan(20);
-    // keys are unique, and release (a base rule, not on cards) is defined too
+    // Keys are unique; legacy card text can still explain Release without teaching it as normal play.
     expect(new Set(GLOSSARY.map(t => t.key)).size).toBe(GLOSSARY.length);
-    expect(term('release').def).toMatch(/bottom of the pile/);
+    expect(term('release').legacy).toBe(true);
+    expect(term('release').def).toMatch(/unavailable in normal play/);
     const { container } = render(<CardText text={quadrant('yellow').members.find(m => m.key === 'harmonist').text} />);
     const u = container.querySelector('[data-term="full set"]');
     expect(u).not.toBeNull();
@@ -193,8 +194,10 @@ describe('How to play lists the glossary', () => {
     const { default: HowToPlay } = await import('../../../v4/HowToPlay.jsx');
     const { container } = render(<HowToPlay onClose={() => {}} />);
     const dts = [...container.querySelectorAll('[data-glossary] dt')].map(e => e.textContent);
-    expect(dts).toEqual(GLOSSARY.map(t => t.word));
+    expect(dts).toEqual(GLOSSARY.filter(t => !t.legacy).map(t => t.word));
     expect(container.querySelector('[data-glossary]').textContent).toMatch(/Full set/);
+    expect(dts).not.toContain('Release');
+    expect(container.textContent).not.toContain('Released members');
   });
 });
 
@@ -220,4 +223,15 @@ describe('shop discount origin', () => {
     expect(body.textContent).toContain('Intro Offer: next member −4');
     expect(body.textContent).toContain('Planner: next member −2');
   });
+});
+
+
+it('glossary matches confirmed member quantity, protection and recruit rules', () => {
+  expect(term('member').def).toContain('printed follower value');
+  expect(term('member').def).toContain('larger member count');
+  expect(term('member').def).toContain('Bonus followers do not add members');
+  expect(term('colorless').def).not.toContain('one of your members');
+  expect(term('steal').def).toContain('protects your members and resources until round end');
+  expect(term('when recruited').def).toContain('paid or free');
+  expect(term('when recruited').def).toContain('Taking or swapping an existing member does not retrigger it');
 });

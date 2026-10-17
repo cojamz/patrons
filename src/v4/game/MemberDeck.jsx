@@ -81,7 +81,7 @@ export function DeckCard({ state }) {
           </li>
         ))}
       </ul>
-      <p>When a face-up member leaves, the next one comes off the top. Released and swept members go to the bottom.</p>
+      <p>When a face-up member leaves, the next one comes off the top. Swept members go to the bottom. The market refreshes between rounds.</p>
     </div>
   );
 }

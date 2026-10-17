@@ -9,7 +9,7 @@ import { quadrant, roman, spaceOpen, contestTable, cardDef, botLevel, BOT_LEVEL_
 import { ruleWords } from '../shorts.js';
 import { playerColor, standings } from '../format.js';
 import { Popover } from './parts.jsx';
-import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
+import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews, cancelPreviewFallback } from './Info.jsx';
 import { SeatFigure } from './Glyphs.jsx';
 import { Rich } from './Rich.jsx';
 import { memberCopyTargets, ownCopyPlan, copiesAll } from './cards.js';
@@ -185,9 +185,9 @@ export function usePreviewWarmup(state, pid) {
     if (!keys.size) return undefined;
     // your move: the spaces you can take first (the ones you'll point at), then the rest
     const list = [...keys];
-    if (mine && state.pending.kind === 'place') { requestPreviews(state, pid, list); return undefined; }
+    if (mine && state.pending.kind === 'place') { requestPreviews(state, pid, list); return () => cancelPreviewFallback(state); }
     const t = setTimeout(() => requestPreviews(state, pid, list), 250);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); cancelPreviewFallback(state); };
   }, [state, pid]);
 }
 

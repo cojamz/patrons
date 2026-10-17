@@ -3,6 +3,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import { createGame, cardDef, memberPrice } from '../../../engine/v4/index.js';
+import { grantDiscount } from '../../../engine/v4/discount.js';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
 import { MemberCard, paidParts } from '../../../v4/game/Info.jsx';
 
@@ -29,14 +30,22 @@ describe('discounts on the shop faces', () => {
       if (pays === 0) expect(el.querySelector('.cost-now .lt-cost.free')).not.toBeNull();
     }
   });
-  it('the hover names it', () => {
+  it('the hover names the source and amount, without repeating payment instructions', () => {
     const s = createGame({ seats, seed: 4 });
-    s.players[0].discount = 4;
+    grantDiscount(s.players[0], 4, 'Intro Offer');
     const uid = s.shop[0];
     const { container } = render(<MemberCard state={s} uid={uid} me={0} />);
-    expect(container.querySelector('[data-discount]').textContent).toBe('Your next member costs 4 less.');
+    expect(container.querySelector('[data-discount]').textContent).toBe('Intro Offer: next member −4.');
     // the cost and nothing else about paying (Cory, 03:40: cut "You pay")
     expect(container.textContent).not.toMatch(/You pay|Pays|Choose how to pay/);
+  });
+
+  it('legacy discounts show the amount without inventing a source', () => {
+    const s = createGame({ seats, seed: 4 });
+    s.players[0].discount = 4;
+    const { container } = render(<MemberCard state={s} uid={s.shop[0]} me={0} />);
+    expect(container.querySelector('[data-discount]').textContent).toBe('Earlier discount: next member −4.');
+    expect(container.querySelector('[data-discount]').textContent).not.toContain('Intro Offer');
   });
 
   it('the discount is said once in the shop, not on every hover; Half Price shows half on the faces (w4 A#23, A#42)', () => {

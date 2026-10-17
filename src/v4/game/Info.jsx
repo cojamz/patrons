@@ -419,17 +419,60 @@ const pending = new Map(); // gen → state
 const inflight = new Set(); // requests posted to the worker: { state, pid, keys, t }
 const WATCHDOG_MS = 4000;
 const notify = (state, pid, key) => { for (const fn of listeners) fn(state, pid, key); };
-/** Work the keys out here, one at a time and a moment apart, so a hover never waits on a whole batch. */
-function onMainThread(state, pid, keys) {
-  const m = mapFor(state);
-  let k = 0;
+// One fallback queue for the current state. A failed worker must not leave old turns' dry runs
+// competing with animation and input; the normal worker still owns its existing generation protocol.
+let fallbackState = null, fallbackQueue = [], fallbackTimer = null, fallbackIdle = false;
+const fallbackJobs = new Map();
+const cancelledFallback = new WeakSet();
+const cancelFallbackTimer = () => {
+  if (fallbackTimer == null) return;
+  if (fallbackIdle) cancelIdleCallback(fallbackTimer); else clearTimeout(fallbackTimer);
+  fallbackTimer = null;
+};
+const clearFallback = () => { cancelFallbackTimer(); fallbackQueue = []; fallbackJobs.clear(); };
+/** Stop background work for a table that has changed or unmounted, including a later worker-failure handoff. */
+export function cancelPreviewFallback(state) {
+  cancelledFallback.add(state);
+  if (fallbackState === state) clearFallback();
+}
+const scheduleFallback = () => {
+  if (fallbackTimer != null || !fallbackQueue.length) return;
   const step = () => {
-    if (k >= keys.length) return;
-    const key = keys[k++];
-    if (!m.has(`${pid}|${key}`)) { const [q, i] = key.split('-').map(Number); try { m.set(`${pid}|${key}`, computeHere(state, pid, q, i)); } catch { m.set(`${pid}|${key}`, null); } notify(state, pid, key); }
-    setTimeout(step, 0);
+    fallbackTimer = null;
+    const job = fallbackQueue.shift();
+    if (!job) return;
+    fallbackJobs.delete(job.id);
+    const { state, pid, key } = job;
+    if (state === fallbackState && !cancelledFallback.has(state)) {
+      const m = mapFor(state), id = `${pid}|${key}`;
+      if (!m.has(id)) {
+        const [q, i] = key.split('-').map(Number);
+        try { m.set(id, computeHere(state, pid, q, i)); } catch { m.set(id, null); }
+        notify(state, pid, key);
+      }
+    }
+    scheduleFallback();
   };
-  setTimeout(step, 0);
+  fallbackIdle = !fallbackQueue[0].front && typeof requestIdleCallback === 'function';
+  fallbackTimer = fallbackIdle ? requestIdleCallback(step, { timeout: 100 }) : setTimeout(step, 0);
+};
+/** Coalesce warmups and hovered requests; the hovered space jumps ahead of background keys. */
+function onMainThread(state, pid, keys, { front = false } = {}) {
+  if (state !== fallbackState || cancelledFallback.has(state)) return;
+  const urgent = [];
+  for (const key of new Set(keys)) {
+    const id = `${pid}|${key}`;
+    if (mapFor(state).has(id)) continue;
+    let job = fallbackJobs.get(id);
+    if (job) {
+      if (!front) continue;
+      fallbackQueue = fallbackQueue.filter(x => x !== job);
+      job.front = true;
+    } else { job = { id, state, pid, key, front }; fallbackJobs.set(id, job); }
+    if (front) urgent.push(job); else fallbackQueue.push(job);
+  }
+  if (urgent.length) { fallbackQueue.unshift(...urgent); cancelFallbackTimer(); }
+  scheduleFallback();
 }
 const missing = r => r.keys.filter(k => !mapFor(r.state).has(`${r.pid}|${k}`));
 /** The worker is gone (its file 404s after a deploy, it crashed, it went silent): nothing waits on it any more. */
@@ -438,7 +481,7 @@ function workerFailed() {
   worker = false;
   const left = [...inflight];
   inflight.clear();
-  for (const r of left) { const keys = missing(r); if (keys.length) onMainThread(r.state, r.pid, keys); }
+  for (const r of left) { const keys = missing(r); if (keys.length) onMainThread(r.state, r.pid, keys, { front: r.front }); }
 }
 // A request the worker never answers (not one result since it was posted) means the worker is dead: fall back.
 // A slow but working worker is left alone (no duplicate work on the main thread).
@@ -471,6 +514,8 @@ function getWorker() {
 /** Ask for previews of these spaces ("q-i" keys) for pid on this state; results arrive in the cache. `front`: a space
  *  under the pointer, worked out ahead of the warmup batch. */
 export function requestPreviews(state, pid, keys, { front = false } = {}) {
+  if (fallbackState !== state) { clearFallback(); fallbackState = state; }
+  cancelledFallback.delete(state);
   const m = mapFor(state);
   const todo = keys.filter(k => !m.has(`${pid}|${k}`));
   if (!todo.length) return;
@@ -479,16 +524,16 @@ export function requestPreviews(state, pid, keys, { front = false } = {}) {
     if (workerState !== state) { workerState = state; workerGen++; pending.clear(); pending.set(workerGen, state); inflight.clear(); }
     try {
       w.postMessage({ gen: workerGen, state: stripped(state), pid, keys: todo, front });
-      const r = { state, pid, keys: todo, t: Date.now() };
+      const r = { state, pid, keys: todo, front, t: Date.now() };
       inflight.add(r);
       watch(r);
       return;
     } catch { workerFailed(); }
   }
-  onMainThread(state, pid, todo);
+  onMainThread(state, pid, todo, { front });
 }
 /** For tests: forget the worker (null: try again; false: there is none). */
-export const _setPreviewWorker = w => { worker = w; lastAnswer = 0; inflight.clear(); if (w) { w.onerror = workerFailed; w.onmessageerror = workerFailed; } };
+export const _setPreviewWorker = w => { clearFallback(); fallbackState = null; worker = w; lastAnswer = 0; inflight.clear(); if (w) { w.onerror = workerFailed; w.onmessageerror = workerFailed; } };
 /** A preview already computed for this state, or undefined (never computes: a hover must not wait). */
 export function peekPreview(state, pid, q, i) {
   const m = previews.get(state);

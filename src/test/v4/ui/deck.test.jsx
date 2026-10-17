@@ -62,7 +62,7 @@ describe('member deck', () => {
     const { container } = render(<DeckCard state={s} />);
     expect(container.querySelector('[data-deck-card]').dataset.left).toBe(String(s.pile.length));
     for (const r of rows) expect(container.querySelector(`[data-color="${r.key}"]`).dataset.n).toBe(String(r.n));
-    expect(container.textContent).toMatch(/Released and swept members go to the bottom/);
+    expect(container.textContent).toMatch(/Swept members go to the bottom/);
     expect(container.textContent).not.toMatch(/★/);
   });
 

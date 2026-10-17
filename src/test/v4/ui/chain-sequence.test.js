@@ -90,3 +90,26 @@ it('shows one direct transfer per stolen unit when several colors become one mag
   expect(pieces.every(a => a.take && a.turn === 'magenta' && a.from.pid === 1 && a.to.pid === 0)).toBe(true);
   expect(pieces.reduce((sum, a) => sum + a.n, 0)).toBe(3);
 });
+
+
+it('shows round-start income after minions return when closing a same-move scoring snapshot', () => {
+  setMotionSpeed('steady');
+  const before = sceneQ({ quadrants: ['gold', 'silver'], members: [['gold.banker']] });
+  before.round = 1;
+  const players = before.players.map(p => ({ ...p, res: { ...p.res } }));
+  players[0].res.gold = (players[0].res.gold || 0) + 3;
+  const after = { ...before, round: 2, players, slots: {},
+    log: [...before.log, `${players[0].name}'s Banker: +3 gold.`],
+    // This belongs to the original closing move and must not replay on summary dismissal.
+    effects: [{ type: 'gain', cause: { kind: 'space', pid: 0, key: '0-0' },
+      from: { kind: 'space', key: '0-0' }, to: stack(0, 'gold'), what: { r: 'gold', n: 99 } }],
+  };
+  const plan = planChain(before, after);
+  const home = plan.atoms.find(a => a.op === 'home');
+  expect(home).toBeTruthy();
+  const gains = plan.atoms.filter(a => a.op === 'piece');
+  expect(gains.reduce((sum, a) => sum + a.n, 0)).toBe(3);
+  expect(gains.every(a => a.from.kind === 'member' && a.from.def === 'gold.banker' && a.from.pid === 0)).toBe(true);
+  expect(Math.min(...gains.map(a => a.at))).toBeGreaterThan(0);
+  expect(plan.handoff).toBeGreaterThanOrEqual(Math.max(...plan.atoms.filter(a => a.op === 'land').map(a => a.at)) - 1);
+});

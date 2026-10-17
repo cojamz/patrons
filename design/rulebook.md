@@ -6,7 +6,7 @@ Lead a cult for three rounds. Most **followers** after round III wins.
 - **Minions** are your workers, small copies of your emoji: 3 in round I, 4 in round II, 5 in round III.
 - **Followers** are your score, shown by a little-person mark. You start with 1. Each member is worth the followers beside the mark on its card (usually 1). Only followers you bought or won can be sold or stolen.
 - **Resources** come in one color per quadrant, and there is one quadrant per player. A resource is a plain dot in its color; a dot split into the table's colors means "any resources".
-- **Members** are recruited from the shop. A card counts as its printed follower value in members, or a larger member count stated on the card; bonus followers do not increase that count. Each is worth followers, and most have an ability. "On recruit" happens when it joins you; "at round start" happens before anyone places a minion.
+- **Members** are recruited from the shop. A card counts as its printed follower value in members, or a larger member count stated on the card; bonus followers do not increase that count. Each is worth followers, and most have an ability. "On recruit" happens when you recruit it, paid or free, but not when you take or swap an existing member; "at round start" happens before anyone places a minion.
 
 ## Setup
 Round I’s turn order is drawn first. Starting with the player who will act last, draft 1 resource from the table’s colors. Each color can be taken once; the first player gets the remaining color. This happens only before round I.

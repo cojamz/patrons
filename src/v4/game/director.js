@@ -45,7 +45,11 @@ function fromGains(before, state) {
       default: return w;
     }
   };
-  return gainsBetween(before, state).map((m, i) => {
+  // Closing a scoring summary reveals a new-round state at the same move number.
+  // Its delta is income only; never reuse that state's full closing-turn effect stream.
+  const deltaState = state.round > before.round && state.moves === before.moves
+    ? { ...state, moves: before.moves + 1 } : state;
+  return gainsBetween(before, deltaState).map((m, i) => {
     const from = conv(m.from), to = conv(m.to);
     const cause = from.kind === 'member' ? { kind: 'member', pid: from.pid, def: from.def } : from.kind === 'space' ? { kind: 'space', key: from.key } : { kind: 'guess', n: i };
     return { n: i, type: m.what === 'fol' ? 'followers' : m.pay ? 'pay' : from.kind === 'stack' ? 'transfer' : 'gain', cause, from, to, what: m.what === 'fol' ? { n: m.n } : { r: m.r, n: m.n } };
@@ -106,13 +110,8 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   // moves (wave 4 #3: the seats re-sorted under the player while the bots' first placements flew)
   // (round I's start only: a later round's new order arrives with the Reckoning, which measures the chairs where they stand)
   const resort = before.round === 0 && state.round === 1 && seatOrder(before).join() !== seatOrder(state).join();
-  if (!(state.moves > before.moves)) {
-    if (state.round > before.round && before.round >= 1) {
-      const d = MO.minionsHome, s = resort ? MO.sortBeat : 0;
-      return { atoms: [{ at: 0, op: 'home' }, ...(resort ? [{ at: d, op: 'sort' }] : [])], total: d + s, handoff: d + s };
-    }
-    return { atoms, total: 0, handoff: 0 };
-  }
+  const roundAdvance = state.round > before.round && before.round >= 1 && state.moves === before.moves;
+  if (!(state.moves > before.moves) && !roundAdvance) return { atoms, total: 0, handoff: 0 };
   const dist = (a, b) => (measure ? measure(a, b) : TYPICAL);
   // Shorter travel replaces overlapping named causes, preserving the overall turn budget.
   const fly = (a, b) => Math.round(flightMs(dist(a, b)) * 0.65);
