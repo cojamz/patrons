@@ -1,10 +1,8 @@
-# The play link: every push to PR #1's branch (only gate-green builds go there) builds the game and publishes it to the
-# gh-pages branch, which GitHub Pages serves at https://cojamz.github.io/patrons/ (Settings → Pages → Deploy from a
-# branch → gh-pages / root). Replaces the Netlify preview, whose free deploys ran out (2026-10-15).
-name: play link
+# Retired 2026-10-17: the play link is main/play/, published only by scripts/v4-play.sh from a checked commit
+# (design/releasing.md). This workflow used to build every push to PR #1's branch into gh-pages, which shipped
+# unchecked source (41f09d8, 2026-10-17). It now runs only by hand, and nothing should point Pages at gh-pages.
+name: play link (manual, gh-pages)
 on:
-  push:
-    branches: [claude/gifted-newton-3lcy3i]
   workflow_dispatch:
 permissions:
   contents: write
