@@ -2,6 +2,14 @@
 
 Rewritten 2026-10-15 (afternoon), so a fresh thread loses nothing. Read this first, then the files it points to. Where this doc and a source disagree, the source wins: `design/decisions.md` for design calls, the code for what's built.
 
+## Current release checkpoint (2026-10-17, Codex)
+- Latest public source: `6c1e97eb4bef2d4050f6dba1a70c94886f0ddd36`, main/play `f71fd9a`; deployment script verified full public source stamp. Public desktop/phone UI checks passed.
+- October17 clear-rule/UI/multiplayer batch: 1,203 unit tests passed / 1 skipped, production build and complete hotseat game passed. Three-tab online game passed including reload/substitution/rejoin (BroadcastChannel fallback; no RTDB emulator, weaker shared-storage rejoin proof). Phone touch setup/place/purchase passed at390/412px. Frozen affordability/details/sort/deck/Done/responsive UI checks passed.
+- Rules: RoundI only reverse-order one-resource draft without replacement; printed follower value counts as member quantity, retaining larger explicit counts; each tied sphere leader receives half the round prize; Release disabled in normal play. See October17 audit for all113 notes; do not claim all done.
+- Next immutable candidate `ae2fc11a`: perpetual swap-loop fix, single aggregate-steal flights, side-by-side swaps, shared wheel geometry cache, two-person Late Bloomers, discount provenance. Focused checks passed; integration gate running. NOT LIVE.
+- Profile: repeated wheel geometry dominated sampled user work. Shared-cache fixture performs66% fewer radius tests with exact layout across40 configurations; browser improvement remains unverified. Filter comparison did not establish filter as sole cause of lag.
+- Root owns integration/publication; parallel agents continue motion round-start, wording intake and interaction-loop audit. Verify actual agent state before reporting it.
+
 ## Current collaboration update (2026-10-16, Codex)
 - Cory wants warm, terse, clear updates; fast delivery with integrity, assistant-owned harness, visual checks and current docs. Preserve the existing design. Native screenshots were declined; isolated browser screenshots are authorized.
 - Source branch: `claude/gifted-newton-3lcy3i`. Publish checked commits with `scripts/v4-play.sh` to main/play, verify full live build stamp. Root `/patrons/` redirects to `/patrons/play/`. Historical Netlify instructions below are superseded.

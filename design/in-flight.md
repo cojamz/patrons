@@ -3,14 +3,11 @@
 Updated 2026-10-16, Eastern. Current assignments and release evidence are below; older sections are historical. Source branch: `claude/gifted-newton-3lcy3i`. Codex coordinates agents, integrates, checks and publishes. State of the project: `design/HANDOFF.md`.
 
 ## Current Codex work (2026-10-17, Eastern)
-- Latest VERIFIED LIVE remains eecddbae; new 113-note batch is NOT SHIPPED.
-- Source checkpoint8097779 implements clear UI, multiplayer, theft and clarified rule changes. Subsequent uncommitted changes update obsolete test contracts; all agent edits are in the shared checkout.
-- Parallel work completed: multiplayer authoritative display/focus; Magenta rules/printed member weights; shop/UI. Agent credits ended after UI agent left one actual format/log discrepancy to resolve. Root is integrating; do not claim agents still running unless checked.
-- Initial quick gate: build passes, full game finishes but old Undo-pick requirement fails; 58 unit failures largely old-rule pins. Targeted repairs pass; root final five files47pass; final format discrepancy under investigation.
-- Resource draft RoundIonly reverseorder, printed follower/member quantity, half prize for every tied leader confirmed by Cory. No blanket balance/retheme decisions.
-- Working audit `feedback-audit-2026-10-17.md` tracks every one of113notes separately; original retained. Earlier59-note audit remains historical. Public release/phone/online/first-spin checks still required before publishing.
-- User requested economical shipping now and resume6:15am. One-time heartbeat arrived6:27am; exact delay cause unknown. Local scheduled work requires app running/computer on; do not promise exact unattended start.
-- Next: finish integration gates, inspect frozen laptop/phone and multi-client play, publish checked immutable commit, verify public stamp and update all records. No new speculative design work before this release.
+- Public source6c1e97eb, main/playf71fd9a: full public stamp verified; public desktop/phone UI checks passed. Frozen checks:1203pass/1skip, build, full hotseat, three-tab online game, phone touch390/412, affordability and details/sort/deck/Done/responsive UI.
+- Candidateae2fc11a (NOT LIVE): swap loop leak, duplicate aggregate-steal flights, side-by-side hub swap, exact shared geometry cache, Late Bloomers art, discount source display. Immutable integration gate running; inspect visuals/performance before publishing.
+-113-note audit remains authoritative, with original preserved.38 implemented in6c;5partial,9verified/preserved,61open before next candidate. No claim all complete.
+- Three parallel follow-ups: round-start income sequencing implementation; exact wording/glossary intake; further render/animation-loop audit. Root integrates and publishes checked immutable batches.
+- Usage: user requested economical checks. Avoid repeat full checks without source changes; isolate performance measurements from builds/browsers. One-time6:15heartbeat arrived6:27; cause unknown.
 
 ## 2026-10-16 (10:40pm Eastern, Oct 15): Cory's v0.5 play notes, logged only
 - Nothing built. Everything is in design/todo.md, top section "Cory's play notes, 2026-10-16"; his clear calls in decisions.md (2026-10-16); catches 48–53 in the answer key.

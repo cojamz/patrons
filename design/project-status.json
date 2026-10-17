@@ -1,6 +1,6 @@
 {
-  "live": "Deck browsing, clearer wording, brighter shop and smoother rendering",
-  "liveCommit": "eecddbae08ebd4e747eaec053d7c630f2846e683",
+  "live": "October17 rules, multiplayer and market interaction batch",
+  "liveCommit": "6c1e97eb4bef2d4050f6dba1a70c94886f0ddd36",
   "work": [
     {
       "id": "performance",
@@ -69,39 +69,33 @@
       "next": "Heir pricing, Sweet Talk, Hold Court, Goody Bags and Cheap Seats; broader Silver/White themes and sphere ideas remain explicitly open."
     }
   ],
-  "releaseSummary": "Deck browser \u00b7 brighter market \u00b7 clearer wording \u00b7 smoother motion",
+  "releaseSummary": "Reverse resource draft \u00b7 printed member counts \u00b7 tie rewards \u00b7 current online turns \u00b7 market controls",
   "upNext": [
     {
-      "source": "Multiplayer turn correctness",
-      "name": "Multiplayer \u00b7 implemented",
-      "summary": "Current turn, glowing spaces and log update together. Multi-client regressions passed; frozen browser check next.",
-      "doneWhen": "The published build passes real browser host/guest play and shows current ownership."
+      "source": "Motion sequencing",
+      "name": "Motion \u00b7 agent follow-up",
+      "summary": "Swap loop and duplicate steals fixed in candidate. Round-start income follow-up tested; full choreography remains partial.",
+      "doneWhen": "Integrated swap/steal/round-start visuals verified."
     },
     {
-      "source": "Rules and member fixes",
-      "name": "Rules & theft \u00b7 implemented",
-      "summary": "Reverse resource draft, weighted members, half tie rewards and corrected steal choices. Engine regressions passed.",
-      "doneWhen": "Combined suite and complete browser game pass on the exact release."
+      "source": "Wheel performance",
+      "name": "Wheel cache \u00b7 integration checks",
+      "summary": "Exact layout across40 configurations;66% fewer geometry checks in fixture. Browser timing still pending.",
+      "doneWhen": "Quiet concurrent-animation profile verifies improvement."
     },
     {
-      "source": "UI interaction fixes",
-      "name": "Market & UI \u00b7 implemented",
-      "summary": "Details toggle, single sort switch, clearer Done and buy-only fading. Laptop and phone visuals checked in isolation.",
-      "doneWhen": "Integrated laptop/phone views remain readable and usable."
+      "source": "Member polish",
+      "name": "Cards \u00b7 ready; glossary agent active",
+      "summary": "Two-person Late Bloomers and named discount sources in candidate. Confirmed-rule glossary/help corrections underway.",
+      "doneWhen": "Full checks and artwork/discount visuals pass."
     },
     {
       "source": "Release integration",
-      "name": "Release \u00b7 checking",
-      "summary": "Fixing a real final-summary log mismatch, then combined game, multiplayer and motion checks. Not shipped yet.",
-      "doneWhen": "Publish checked commit, verify public build stamp and announce \u201cShipped\u2014ready to test\u201d."
-    },
-    {
-      "source": "Animation performance",
-      "name": "Animation contention \u00b7 investigating",
-      "summary": "Profiling wheel spins during active resource/member effects; idle-only measurements are insufficient.",
-      "doneWhen": "Concurrent effects stay smooth in the frozen production build; bottleneck and remaining limits reported."
+      "name": "Codex \u00b7 integration and shipping",
+      "summary": "October17 batch6c1e97eb verified live. Next candidateae2fc11 is undergoing immutable build/tests/full-game checks.",
+      "doneWhen": "Next candidate passes checks and public verification."
     }
   ],
-  "batchStatus": "Release checks",
-  "batchNote": "113 notes tracked \u00b7 current batch not live"
+  "batchStatus": "Next animation batch \u00b7 checking",
+  "batchNote": "113 notes \u00b7 38 live, 5 partial, 9 verified, 61 open before next batch"
 }
