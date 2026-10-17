@@ -35,7 +35,7 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - **Do it the way he said.** No added restrictions or "improvements" on his calls (the Steal and bribe exceptions). If I see a risk, build it his way and flag it in one line.
 - **My fill-ins are labeled and never treated as approved** (Patron, Steward and Gambler slipped in as if agreed).
 - **Sanity-check the direction of every balance suggestion** before sending it (I once proposed giving the advantaged player more).
-- **Ship straight away (Cory, 2026-10-15: "with this project shit its like crazy slow").** Every thread pushes its own quick-green work (build + hotseat on the bundle) to `claude/gifted-newton-3lcy3i`, one change at a time, then runs `bash scripts/v4-play.sh` to refresh the play link (play/ on main) and confirms it. No funnel, no batching.
+- **Ship straight away (Cory, 2026-10-15: "with this project shit its like crazy slow").** Every thread pushes its own quick-green work (build + hotseat on the bundle) to `claude/gifted-newton-3lcy3i`, one change at a time, then runs `bash scripts/v4-play.sh` to refresh the play link (play/ on main) and confirms it. No funnel. **Backlog work ships in batches (Cory, 2026-10-17):** group 5–10 items that belong together, check the batch, ship it live, then tell him what's in it.
 - **Times in his clock.** Cory is on US Eastern (UTC−4 in October); the container runs UTC. Say every time as his local 12-hour time, like "7:43pm".
 - **Status = what's running / what's next / rough ETA**, in 3 lines. Give an ETA whenever work will take longer than a few minutes.
 - **Five lines at most**, no tables, headers or bold-label report voice, no AI tics (the full voice rules live in foreman.md).
@@ -121,3 +121,4 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - 2026-10-16 — Game wording must be “precise and minimal”: an exact rule, never an impression of the idea. Use formulas such as 2 gold × round only when equivalent to the rule.
 
 - 2026-10-17 — Batch intake: preserve every note, set ambiguous calls aside for concise questions, and ship clear independent fixes quickly with integrity. A design ambiguity never blocks unrelated verified fixes. Latest explicit removal of Release supersedes the previous keep decision.
+- 2026-10-17 — Cory: work the backlog in batches of 5–10 related items, each batch checked and shipped together (replaces one-fix-at-a-time for backlog work).
