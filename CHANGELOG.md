@@ -1,8 +1,8 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.0, source 41f09d8 (main 11c3ee2), published 2026-10-17. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.1, source 4be3a95 (main 65b79ea), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.6.1 — 2026-10-17 — unreleased
+## v0.6.1 — 2026-10-18 — shipped (source 4be3a95, main 65b79ea)
 
 - When Crunch Time puts a player back to back, the turn line says so ("P1 took turns early with Crunch Time") instead of blaming snake order.
 - The round card shows the coming round's snake: "Snake order: P4, P2, You, P3, P3, You, P2, P4 …".

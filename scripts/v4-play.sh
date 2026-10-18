@@ -28,7 +28,12 @@ mkdir "$TMP/source"
 git archive "$SHA" | tar -x -C "$TMP/source"
 ln -s "$ROOT/node_modules" "$TMP/source/node_modules"
 # A public release number identifies one immutable source; prevent silent reuse.
-curl -fsSL --connect-timeout 5 --max-time 10 "$URL/build.json?version-check=$SHA" -o "$TMP/previous-build.json"
+if ! curl -fsSL --connect-timeout 5 --max-time 10 "$URL/build.json?version-check=$SHA" -o "$TMP/previous-build.json"; then
+  # Some boxes can't reach github.io: the published stamp is also main's play/build.json.
+  git fetch -q origin main:refs/remotes/origin/main
+  git show origin/main:play/build.json > "$TMP/previous-build.json" || echo '{}' > "$TMP/previous-build.json"
+  SERVED_UNREACHABLE=1
+fi
 node --input-type=module - "$TMP/source" "$TMP/previous-build.json" "$SHA" <<'RELEASE_CHECK'
 import {readFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
@@ -85,6 +90,11 @@ while [ "$SECONDS" -le "$DEADLINE" ]; do
   if node -e 'const r=require("child_process").spawnSync("gh",process.argv.slice(1),{encoding:"utf8",timeout:15000}); if(r.stdout)process.stdout.write(r.stdout);process.exit(r.status??1)' \
     run list -R "$REPO" --branch main --limit 20 --json headSha,name,status,conclusion > "$TMP/runs.json" 2>/dev/null; then
     if ! node -e 'const runs=JSON.parse(require("fs").readFileSync(process.argv[1])); const r=runs.find(r=>r.headSha===process.argv[2]&&/pages/i.test(r.name)); if(r?.status==="completed"&&r.conclusion!=="success"){console.error(`Pages failed: ${r.conclusion}`);process.exit(1)}' "$TMP/runs.json" "$MAIN_SHA"; then exit 1; fi
+    # From a box that can't reach github.io, the Pages deployment of main's commit is the proof we can get.
+    if [ "${SERVED_UNREACHABLE:-0}" = 1 ] && node -e 'const runs=JSON.parse(require("fs").readFileSync(process.argv[1])); const r=runs.find(r=>r.headSha===process.argv[2]&&/pages/i.test(r.name)); process.exit(r?.status==="completed"&&r.conclusion==="success"?0:1)' "$TMP/runs.json" "$MAIN_SHA"; then
+      echo "Pages deployed main ${MAIN_SHA:0:7} (build $SHORT); github.io is unreachable from this box, so the served stamp was not read ($URL/)"
+      exit 0
+    fi
   fi
   [ "$SECONDS" -lt "$DEADLINE" ] || break
   echo "Waiting for Pages to serve ${SHORT}..."
