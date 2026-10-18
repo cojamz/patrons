@@ -1,8 +1,8 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.2, source f9a419f (main 15e674c), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.3, source ebbe04f (main 2817380d), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.6.3 — 2026-10-18 — unreleased
+## v0.6.3 — 2026-10-18 — shipped (source ebbe04f, main 2817380d)
 
 - A resumed game on your turn takes your first click at once (it waited 2-3s).
 - Redistribute on the wheel says "from every rival" (it still said "from rivals with more resources").
