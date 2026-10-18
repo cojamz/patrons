@@ -5,6 +5,10 @@ Player-facing releases and exact source/build verification are recorded separate
 ## v0.6.1 — 2026-10-17 — unreleased
 
 - When Crunch Time puts a player back to back, the turn line says so ("P1 took turns early with Crunch Time") instead of blaming snake order.
+- The round card shows the coming round's snake: "Snake order: P4, P2, You, P3, P3, You, P2, P4 …".
+- An extra turn names its card: "Night Owl: extra turn" (also Go-Getter, Late Riser); Crunch Time's turns read "Crunch Time: next turn, now".
+- A member used before placing leads the turn card and keeps its own gains (Tribute Band's copy no longer reads as Spree's).
+- A magenta steal reads once: "1 gold from P2, 1 red from P3, as magenta".
 
 ## v0.6.0 — 2026-10-17 — shipped (source 41f09d8, main 11c3ee2)
 
