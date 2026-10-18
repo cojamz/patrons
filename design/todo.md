@@ -34,6 +34,16 @@ Not built (Cory out of credits, 2026-10-18 9:40pm Eastern). His exact calls are 
 - [ ] Player-card member hover: cost on the right, one clean line per member, no "whose it is" line.
 - [ ] Animate the member shop refreshing at round start.
 
+## Cory's voice note, 2026-10-18 late (logged in decisions.md; ❓ items wait on his read-back)
+- [ ] Scaling text as "I: … / II: … / III: …" lines, dimming the rounds that aren't current.
+- [ ] Green: replace Hum and Crescendo (pitches in the thread, fill-ins). Every green space +1 green, printed at the bottom.
+- [ ] Green copies chain (choose again on a copied copy; nothing already in the chain). Test hard for loops.
+- [ ] Green members: Doppelganger 3+2; cut Ensemble and Mime; Chronicler → +1 follower per green member, 2+3, new name; Impressionist cheaper; Muse → +1 green when another player copies, 2+2; Busker +2 green now and at round start, cheaper; Stunt Double once per game; Understudy/Tribute Band at 6+4. Back-fill to equal member counts.
+- [ ] Rework Bookkeeper. Rework most of Blue. Retinue: more members, more followers.
+- [ ] Member card: total cost as a small number top right.
+- [ ] "Player took X from you": shorter, near your player card.
+- [ ] Clarity motion: recruit flies to the middle, shows its effect, goes to the buyer; steals show what's taken; action effects play beside the action; a Hearthstone-style stack of bulletin cards before the log.
+
 ## Cory's ideas, 2026-10-17 evening (triaged into batches by the backlog thread)
 - [ ] "The follower shop needs to be a bit bigger." On-screen size at ~1270×700, a modest bump that keeps the layout. Batch: laptop layout.
 

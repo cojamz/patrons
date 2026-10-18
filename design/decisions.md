@@ -837,3 +837,34 @@ Instrument for all seven: `v4-fair-price.mjs sweep`, 80 paired seeds, Normal bot
 - (Cory, 2026-10-18) A gain of 12 coins animates 12 coins, for any count.
 - 2026-10-18 — (Claude, under Cory's go-with-your-gut) While a move plays out, the idle animations (bobbing minions, breathing leaders and sprites, blinks) stop, and they resume when it lands. Why: a 4× CPU trace showed they doubled the page's work during play (19.3s → 5.9s of main-thread work in 25s; worst stall 415 → 133ms).
 
+
+## 2026-10-18 (late, ~2am Eastern) — Cory's voice note: Green, clarity, animation
+✅ = decision · 💡 = idea · ❓ = open. Read-back questions went to him in the thread; defaults are in brackets.
+- ✅ (Cory) Round text on scaling cards: "I: 2 green / II: 4 green / III: 6 green" on separate lines, and the rounds that aren't current are dimmed. Replaces "2 green × round".
+- ✅ (Cory) Green actions: Echo stays, "absolutely perfect": the bar for round I actions (simple, strategic, scales because it copies better actions later). Reprise, Encore and Greatest Hits stay. Hum and Crescendo get replaced.
+- ✅ (Cory) Every green space gives +1 green, printed at the bottom of its text (same on all of them; on top would confuse).
+- ✅ (Cory) Green copies chain: copying a copy action (or Greatest Hits) lets you choose again what it copies; you can't copy an action already in the chain. Why: a dedicated green player gets rich on green, since every green space in the chain pays its +1. ❓ Needs testing that no infinite chain exists.
+- 💡 (Cory) Maybe one green space is just a basic "gain X".
+- ✅ (Cory) Doppelganger: great, too cheap → 3 green + 2 any.
+- ✅ (Cory) Ensemble: scrapped for now. He likes "a follower per copy" but this isn't it (too few spaces copy a rival's).
+- ✅ (Cory) Chronicler → "+1 follower per green member", 2 green + 3 any, needs a new name. Why: decenter currency collecting.
+- ✅ (Cory) Impressionist: great; cost about 4, "maybe 2 green 1 any". Why: bring costs down; he's going to nerf resource gains in general.
+- ✅ (Cory) Muse → "when another player copies an action, +1 green" (a counter to a chaining player), 2 green + 2 any.
+- ✅ (Cory) Mime: cut.
+- ✅ (Cory) Understudy is good but should be Greatest Hits as a buy; then noticed Tribute Band already is that, 4 dearer: "maybe we just put it at 6 green 4 any for now". ❓ which card gets 6+4.
+- ✅ (Cory) Busker: cheaper; "+2 green now and at round start", 3 green + 1 any, or "maybe 1 green 3 any to play a little catch-up on green". ❓
+- ✅ (Cory) Stunt Double: one-time activate. Elegant.
+- 💡 (Cory) Green's logic chains will need a lot of testing.
+- ✅ (Cory) Bookkeeper is bad; "so many members need reworks".
+- ✅ (Cory) Pretty much all of Blue needs a rework.
+- ✅ (Cory) Retinue "needs to be more members. More followers." ❓ exact numbers.
+- 💡 (Cory) Neutral member idea, Launderer: "On recruit he lets you rearrange your money as you please."
+- ❓ (Cory) Group members into round I / II / III? He leans no.
+- ✅ (Cory) A member's total cost goes as a small number in the top right of its card, not next to the cost (small and confusing there).
+- 💡 (Cory) Recruit animation: the member flies to the middle, shows what it does, then goes to whoever bought it.
+- 💡 (Cory) Steals: make what's being stolen clear at once.
+- 💡 (Cory) Animations: more clever, "elegant and simple but informative", not fancy or cute.
+- 💡 (Cory) While an action plays, show its effect next to the action, not in the middle.
+- ✅ (Cory) "Player took X from you" lasts too long and isn't helpful; at least move it near your player card.
+- 💡 (Cory) Everything that shows what's happening lands in one spot before going to the log, Hearthstone style: little bulletin cards in the game's own style.
+- 💡 (Cory) Eventually everything gets a little cheaper.
