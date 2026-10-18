@@ -125,3 +125,4 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - 2026-10-17 — Cory: work the backlog in batches of 5–10 related items, each batch checked and shipped together (replaces one-fix-at-a-time for backlog work).
 - 2026-10-17 — Cory: a note every time a fix goes live, with concise change notes, the version and a screenshot.
 - 2026-10-17 — Cory: "X should be cheaper/more expensive" notes are mine to price; educated guess, logged as gut calls.
+- 2026-10-17 — Cory: updates every 5 minutes while work is running. Keep the changelog updated with every release.
