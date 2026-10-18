@@ -1,4 +1,12 @@
-# Cults — agent handoff, October17,2026
+# Cults — agent handoff, October 18, 2026
+
+## Backlog thread, wound down 12:30am Eastern (Cory low on usage)
+- Public: v0.6.2 (source f9a419f, main 15e674c). Shipped tonight on top of v0.6.0: v0.6.1 (turn words: Crunch Time back-to-back, snake order on the round card, extra turns named, used members credited, one-line magenta steals) and v0.6.2 (round-end followers fly from their real sources). Each passed the quick check on its exact commit.
+- The backlog is triaged in design/backlog-triage-2026-10-17.md. Start with its CLAUDE list (item 1, the browser suite back to green, belongs to whoever picks up the full gate). Cory's open calls are numbered at the top of design/todo.md.
+- Parked work and next steps: design/in-flight.md.
+- Echo dead end (friend report): fixed by c8dd8a99 on Oct 16; ~900 engine/jsdom/browser runs found no stall since. Kept closed unless it's seen again.
+- Cory's working calls tonight (working-with-cory.md): backlog in batches of 5–10; a go-live note per ship with version, concise change notes and a screenshot; price nudges are Claude's (measured, logged as gut calls); progress every 5 minutes while he's waiting.
+
 
 ## SHIPPED v0.6.0 — 2026-10-17 7:32pm Eastern
 - Public: v0.6.0, source 41f09d86749401c1577bbd569921ed59c32ab46b, main 11c3ee2 (play/build.json). Published with v4-play.sh logic from a box that can't reach github.io, so Pages was confirmed through its Actions run, not the served stamp.

@@ -5,6 +5,27 @@ Current feedback section reconciled 2026-10-16; later historical sections retain
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 Shipping: checked incremental fixes ship promptly under current working instructions. A− is the finished-build goal; historical panel requirements do not block authorized iterations.
 
+## Cory's open calls (2026-10-18; answer by number, default in brackets)
+Full triage of every open item: `design/backlog-triage-2026-10-17.md`. Price nudges are Claude's now (measured patch parked, see in-flight.md).
+1. Sweet Talk, Hold Court, Goody Bags and Cheap Seats need new designs (and Silver a counterweight). [Claude proposes 2 options each]
+2. Discounts: remove every cost reduction, or keep them now that the source is shown? [keep; Intro Offer "your next member costs 4 less" → "+2 gold, plus 1 per gold member you have"]
+3. Magenta: Crime Wave "take 3, at least 1 from each" equals Redistribute at 4 players. [Redistribute → "Take 3 resources from one rival"; Kingpin → "+1 follower per magenta member"]
+4. Purple: Catch Up is weak, Overseer doesn't fit. [Catch Up +2 base; cut Overseer]
+5. Yellow: Top Up "+1 of each color you hold the fewest of" fades in rounds II–III; yellow wants no members. [Top Up scales by round; Feastmaker → "Chefs", counts as 2 members]
+6. Guests: Squatter shows magenta, Front-runner purple; Recluse sits in Blue. [guests colorless; Recluse → White]
+7. A cult-themed naming pass for spheres and actions (Crescendo, Hum); "members" → "assets"? [yes to names; keep "members"]
+8. Retinue "Worth 2 followers": worth 3? [yes]
+9. Bandwagon "+1 red per member recruited this round, by anyone" gave +8 late in round I. [cap at +4]
+10. Thin deck at 2–3 players: deal guest members from other spheres? [yes]
+11. Greatest Hits repeating a copied Echo's gain? [no]
+12. Help Yourself already 2 / 3 / 4 by round: scale it more? [2 / 4 / 6]
+13. Keep the 1/5/10 follower shop after the no-shop bot games? [keep; judge by people]
+14. Unaffordable members: fade always, or a third shop toggle? [as now: light fade on your own buy step]
+15. Social Climber "Whenever you release another member…" is blank now release is gone: cut it and bring back which Market card? [cut; bring back Reseller]
+16. Notes I couldn't place: "Hover over in the glossary", "Make pants taller", "Round 3 actions", "This should straight up steal", "Should on recruit trigger", "That is not yellow", "keep # of ghosts", "You see in advance round end bonus", "follower claims visibility". [one line from you each, or drop]
+17. Real online test: allow the Firebase hosts here, or one 2-laptop game yourself? [you play one 2-laptop game]
+18. Round I has no round card, so the snake shows only from round II. A line during the round I resource draft? [yes]
+
 ## Cory's ideas, 2026-10-17 evening (triaged into batches by the backlog thread)
 - [ ] "The follower shop needs to be a bit bigger." On-screen size at ~1270×700, a modest bump that keeps the layout. Batch: laptop layout.
 

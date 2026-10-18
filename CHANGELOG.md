@@ -1,10 +1,10 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.1, source 4be3a95 (main 65b79ea), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.2, source f9a419f (main 15e674c), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.6.2 — 2026-10-18 — unreleased
+## v0.6.2 — 2026-10-18 — shipped (source f9a419f, main 15e674c)
 
-- At round end, followers fly only from where they really came from: no stray flights from the follower shop, and a closing recruit's followers come off the new card
+- At round end, followers fly only from where they really came from: no stray flights from the follower shop, and a closing recruit's followers come off the new card.
 
 ## v0.6.1 — 2026-10-18 — shipped (source 4be3a95, main 65b79ea)
 

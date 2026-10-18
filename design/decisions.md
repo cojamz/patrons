@@ -799,3 +799,5 @@ Work the backlog in batches of 5–10 related items; check and ship each batch t
 
 ## 2026-10-17 — price notes (Cory)
 When a note just says a card should be cheaper or more expensive, Claude picks the new price (educated guess, measured with a named bot) and logs it as a gut call. Why: keeps price nudges off his list.
+- 2026-10-18 — (Claude, under Cory's go-with-your-gut) scripts/v4-play.sh reads main's play/build.json and the Pages run when github.io is unreachable from the box (the cloud box can't reach it). Why: publishing kept failing on the version check alone.
+- 2026-10-18 — (Claude, under Cory's go-with-your-gut) The round card shows the coming round's snake order; extra turns name their card; a used member keeps credit for its gains; magenta steals read once. Why: Cory's #98/#99/#102 and the pod's turn-card notes.
