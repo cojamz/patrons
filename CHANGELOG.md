@@ -5,7 +5,6 @@ Player-facing releases and exact source/build verification are recorded separate
 ## v0.6.3 — 2026-10-18 — unreleased
 
 - A resumed game on your turn takes your first click at once (it waited 2-3s).
-- The pay sheet closes the moment you pay, instead of covering the recruit's flight with "Keeping -1".
 - Redistribute on the wheel says "from every rival" (it still said "from rivals with more resources").
 
 ## v0.6.2 — 2026-10-18 — shipped (source f9a419f, main 15e674c)
