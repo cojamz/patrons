@@ -801,3 +801,35 @@ Work the backlog in batches of 5–10 related items; check and ship each batch t
 When a note just says a card should be cheaper or more expensive, Claude picks the new price (educated guess, measured with a named bot) and logs it as a gut call. Why: keeps price nudges off his list.
 - 2026-10-18 — (Claude, under Cory's go-with-your-gut) scripts/v4-play.sh reads main's play/build.json and the Pages run when github.io is unreachable from the box (the cloud box can't reach it). Why: publishing kept failing on the version check alone.
 - 2026-10-18 — (Claude, under Cory's go-with-your-gut) The round card shows the coming round's snake order; extra turns name their card; a used member keeps credit for its gains; magenta steals read once. Why: Cory's #98/#99/#102 and the pod's turn-card notes.
+## 2026-10-17 — price notes (Claude, under Cory's go-with-your-gut)
+Instrument for all seven: `v4-fair-price.mjs sweep`, 80 paired seeds, Normal bots, forked at round II, forced arm (A−B follower margin ±95% CI). Buy-followers-only seat (`v4-big-followers.mjs`, 400 games, Normal): default table 8.0% → 8.0%; gold/silver/purple/yellow 17.3% → 15.6% (target ~25%; both reads were already under it before this change).
+- 2026-10-17 — (Claude, under Cory's go-with-your-gut) Heir 8 (6+2) → 6 (4+2): Cory "too expensive". Bot disagrees: fair ~11.6 (margin +3.8 at 8, +5.4 at 6), so Heir is a strong buy at 6 for bots; cut by 2 anyway, any part kept at 2.
+- 2026-10-17 — (Claude, under Cory's go-with-your-gut) Revelers 6 (4+2) → 4 (3+1): Cory "too expensive". Bot agrees: fair ~2.2–3.1 (margin −3.0 at 6, −0.8 at 4); split kept proportional.
+- 2026-10-17 — (Claude, under Cory's go-with-your-gut) Freelancer 4 (2+2) → 6 (3+3): Cory "maybe more expensive". Bot agrees: fair ~5.3–6.5 (margin +1.5 at 4, +1.6 at 6, −4.2 at 8); split kept even.
+- 2026-10-17 — (Claude, under Cory's go-with-your-gut) Alchemist 8 (5+3) → 6 (4+2): Cory "8 is a lot". Bot puts fair at ~8.2 (margin +0.2 at 8, +3.9 at 6), so a mild undercharge by the bot's read; the colored part stays the larger share.
+- 2026-10-17 — (Claude, under Cory's go-with-your-gut) Squatter 8 (6+2) → 7 (5+2): Cory "a little cheaper", so 1, off the colored part. Bot fair ~8.1–8.9 (margin +1.2 at 8, +2.4 at 6), so slightly under its read.
+- 2026-10-17 — (Claude, under Cory's go-with-your-gut) Lamplighter 12 (10+2) → 8 (6+2): Cory "too expensive". Bot agrees: fair ~5.6–7.1, noisy (margin −2.6 at 12, −1.3 at 8, +1.6 at 6; buy rate 40% at 12, 56% at 8). Chose 8 over 7 since balance pass 2's pooled bench said ~11; any part kept at 2.
+- 2026-10-17 — (Claude, under Cory's go-with-your-gut) Front-runner 2 (2+0) → 4 (4+0): Cory "too cheap" (and "not important"). Bot reads ~1.8 (margin +0.4 at 2, +0.6 at 4, −3.4 at 6), but bots can't value turn order (rule-benders.md), so this is a floor; still all colored.
+
+## 2026-10-18 — Cory's answers to the open calls
+- (Cory) Retinue is worth 3 followers.
+- (Cory) No guest members from other spheres for thin 2–3 player decks.
+- (Cory) Help Yourself goes 2 / 4 / 6 by round (he asked where the note came from: the coordinator's balance list, see backlog-triage-2026-10-17.md).
+- (Cory) Unaffordable members get a third shop toggle that fades them.
+- (Cory) Cut Social Climber; Claude designs a reasonable replacement (a fill-in until he approves it).
+- (Cory) "Make pants taller" means applying the Max easter egg to "pants".
+- (Cory, clarified 9:12pm Eastern) Taking a member from another cult counts as a recruit and fires on-recruit effects. A member given to you does not.
+- (Cory) The yellow on the wheel reads as lime green; make it yellow.
+- (Cory) Show the snake order during round I's resource draft: "let's see what it looks like".
+- (Cory) Keep the 1/5/10 follower shop for now.
+- (Cory) Keep "members"; no cult naming pass for now.
+- (Cory) Top Up scales by round. Feastmaker becomes Chefs, is a little cheaper and counts as at least 2 members.
+- (Cory) Neutral cards stay neutral: they don't take a color.
+- (Cory) Drop every cost reduction for now; they'll be reworked.
+- (Cory) Every color has the same number of members.
+- (Cory) Sweet Talk, Hold Court, Goody Bags, Cheap Seats, Silver's counterweight and Catch Up need better pitches; cut Overseer and bring in something else. Why: he wants deeper options grounded in the game and its principles.
+- (Cory) Drop the unplaced notes and the ghost note. "Advance round-end bonus" was the +followers showing before the round-end animation landed (fixed as A6 in todo.md). No answer on the online test.
+- (Cory) With details on, members fit on screen at laptop size with no scrolling and no shortened text. "Its color isn't on the table" goes. In the player-card member hover, cost goes on the right and "whose it is" goes.
+- (Cory) The member shop should refresh each round, and you should see it happen as an animation.
+- 2026-10-18 — (Claude, under Cory's go-with-your-gut) turn-labels-truth: the "a Crunch Time table closes a gap" coverage check counts over each table's six seeds, not per seed, and a Late Riser extra turn (logged before "Round … begins") counts as an extra turn. Why: the price nudges changed which seeds close a gap; the label rule itself is unchanged and its deterministic case still passes.
+

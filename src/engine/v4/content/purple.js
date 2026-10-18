@@ -280,7 +280,7 @@ export default {
       onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 12
-    m('lamplighter', 'Lamplighter', 10, 2,'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
+    m('lamplighter', 'Lamplighter', 6, 2,'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       // Cory, 2026-10-15: every minion you get counts (Extra Hand's too)
       onRoundStart(ctx, owner) { ctx.gain(owner, P, owner.workers || [3, 4, 5][ctx.state.round - 1] || 3); },
     }),

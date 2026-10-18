@@ -124,7 +124,7 @@ export default {
       },
     }),
     // Cory, 2026-10-15: Tinker was way too strong; now +1 gold per other color an action gains you, named Alchemist
-    m('tinker', 'Alchemist', 5, 3, 'Whenever an action gains you another color, +1 gold.', {
+    m('tinker', 'Alchemist', 4, 2, 'Whenever an action gains you another color, +1 gold.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
     m('investor', 'Investor', 4, 2, 'Round start: set aside any of your gold. Round end: it comes back doubled.', {

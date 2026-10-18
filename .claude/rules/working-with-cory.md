@@ -58,6 +58,7 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - **He shouldn't find obvious UX problems.** Every catch of his (today: Pass, the gift picker, the rail, emoji size) joins the testers' answer key the same turn and becomes a gate.
 - **A gut call that changes HOW a choice is made gets shown to him as a picture first.** My overnight two-step gift picker went straight in, and he found it "very bad/confusing".
 - **Measure what he feels.** Time "card complete", not "card present"; judge pace by eye on filmstrips at every speed; use a headed real browser for feel.
+- **Test only what changed.** Per fix, run the related unit tests and only the e2e scripts that touch it (`V4_QUICK_E2E=spaces.mjs npm run check:v4:quick -- --related <files>`, or `none`). A full game only for end-of-game changes or the final verdict. Why: full games per fix were the bottleneck (Cory, 2026-10-18).
 - **At most one check-in pending**, and delete it when the work ends. Seven leftovers flooded him this morning.
 - **If tools are missing, say so once, plainly, with the one thing he can do.** No "session" jargon, no repeated "next session".
 
@@ -126,3 +127,4 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - 2026-10-17 — Cory: a note every time a fix goes live, with concise change notes, the version and a screenshot.
 - 2026-10-17 — Cory: "X should be cheaper/more expensive" notes are mine to price; educated guess, logged as gut calls.
 - 2026-10-17 — Cory: updates every 5 minutes while work is running. Keep the changelog updated with every release.
+- 2026-10-18 — Cory: game tests are the bottleneck. Test only what changed; full games only for end-of-game changes or the final verdict. --quick takes V4_QUICK_E2E to skip its hot-seat game.

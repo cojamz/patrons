@@ -46,6 +46,8 @@ function nextMove(s, rand, crunch) {
 }
 
 describe('turn labels agree with the engine', () => {
+  // gaps closed per table, over its six seeds: which seed closes one moves with prices and bot buys (2026-10-18)
+  const closedBy = {};
   for (const tb of TABLES) for (let seed = 1; seed <= 6; seed++) it(`${tb.n} players${tb.crunch ? ', Crunch Time taken' : ''}, seed ${seed}`, () => {
     let s = createGame({ seats: Array.from({ length: tb.n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: tb.q });
     const rand = seededRandom(seed * 7 + 1);
@@ -76,9 +78,10 @@ describe('turn labels agree with the engine', () => {
         if (pend.kind === 'place') {
           const t = currentTurn(s);
           // (a seat that took an extra turn this round is left out: its k-th turn is no longer its k-th planned one)
-          const since = s.log.slice(s.log.findLastIndex(l => /^Round \S+ begins\./.test(l)));
+          // (from last round's end: an extra turn first, like Late Riser's, is logged before "Round … begins")
+          const since = s.log.slice(Math.max(0, s.log.findLastIndex(l => /^Round \S+ ends\./.test(l))));
           const nm = s.players[pend.player].name;
-          const hadExtra = since.some(l => l.startsWith(`${nm} takes`) && /extra turn/.test(l) || l.startsWith(`${nm}'s`) && /: \S+ takes (an|\d+) extra turns?/.test(l));
+          const hadExtra = since.some(l => l.startsWith(`${nm} takes`) && /extra turn/.test(l) || l.startsWith(`${nm}'s`) && /: (\S+ takes )?(an|\d+) extra turns?/.test(l));
           if (t && t.again && t.kind === 'snake' && !t.early && !hadExtra) {
             const done = s.turns.length; // this turn is s.turns[done - 1]
             const text = promptFor(s, false).text;
@@ -120,8 +123,11 @@ describe('turn labels agree with the engine', () => {
       s = next;
     }
     expect(checked).toBeGreaterThan(20);
-    if (tb.crunch) expect(closedSeen, 'a forced Crunch Time table closes a gap at least once').toBeGreaterThan(0);
+    closedBy[tb.n + (tb.crunch ? 'c' : '')] = (closedBy[tb.n + (tb.crunch ? 'c' : '')] || 0) + closedSeen;
     if (tb.crunch) expect(viewSeen, 'a Crunch Time move is drawn mid-animation at least once').toBeGreaterThan(0);
+  });
+  for (const tb of TABLES.filter(t => t.crunch)) it(`${tb.n} players, Crunch Time taken: a forced Crunch Time table closes a gap at least once`, () => {
+    expect(closedBy[tb.n + 'c'] || 0).toBeGreaterThan(0);
   });
 });
 

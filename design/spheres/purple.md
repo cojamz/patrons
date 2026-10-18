@@ -27,7 +27,7 @@ Night Owl and the five reprices (marked) come from the member-value sim in desig
 16. Double Time [Corner-Cutter] (2+0; repriced 6+2 → 4+2 → 4+0 → 2+0, the last two in balance passes 1 and 2): extra turns you pay purple for cost you half (rounded up). Since Overtime and Crunch Time went free (2026-10-15) it halves only Taskmaster; rework pending.
 17. Bookkeeper (4+2, changed): when you place your last worker of a round, +1 purple per 2 workers you have on the board.
 18. Clockmaker (2+2): now and at round start, +1 purple per 2 purple you have.
-19. Lamplighter (10+2, was 6+2; balance pass 2): now and at round start, +1 purple per worker you get this round (3 / 4 / 5).
+19. Lamplighter (6+2, was 10+2; Claude under go-with-your-gut 2026-10-17): now and at round start, +1 purple per worker you get this round (3 / 4 / 5).
 20. Night Owl (8+2, replaces Relay): each round, after your last minion, place one more and buy again. It counts as an extra turn (Foreman, Overseer…), and needs a space to spare.
 21. Patience (6+2): at game end, +1 follower per 3 purple.
 22. Shift Crew (1+1): worth 2 followers. No effect.
