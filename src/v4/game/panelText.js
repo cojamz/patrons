@@ -100,8 +100,8 @@ const P = {
   },
   thieves: {
     pickpocket: r => ({ main: `+${r + 1} magenta`, second: 'from rivals', note: grows(r) }),
-    // "richer" in what? (w3a #52) resources
-    tipoff: { verb: 'Steal 1 each', second: 'from rivals with more resources' },
+    // one from each rival, no conditions since feedback #18 (2026-10-17); it read "from rivals with more resources"
+    tipoff: { verb: 'Steal 1 each', second: 'from every rival' },
     // "safe" from what? (w3a: guessed swaps) steals
     hideout: { verb: 'Steal 1', second: 'then safe from steals', note: 'this round' },
     // the limit belongs on the face (skeptic round 2: line 3 drops on ring II): "from each rival" says from rivals too
