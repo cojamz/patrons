@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.3, source ebbe04f (main 2817380d), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.6.4 — 2026-10-18
+
+- Prices: Heir 4+2, Revelers 3+1, Alchemist 4+2, Squatter 5+2, Lamplighter 6+2 are cheaper; Freelancer 3+3 and Front-runner 4 cost more.
+
 ## v0.6.3 — 2026-10-18 — shipped (source ebbe04f, main 2817380d)
 
 - A resumed game on your turn takes your first click at once (it waited 2-3s).
