@@ -17,7 +17,8 @@ export const SPACES = {
   echo: [BOARD_TABLE, 'echo', 'echo'], encore: [BOARD_TABLE, 'echo', 'encore'], snapup: [BOARD_TABLE, 'market', 'bargain'],
   shakedown: [BOARD_TABLE, 'thieves', 'ransom'], handpick: [BOARD_TABLE, 'red', 'take'],
 };
-// what everyone holds when P1 takes a steal space (P4 holds less than P1: Redistribute leaves P4 out)
+// what everyone holds when P1 takes a steal space (P4 holds less than P1: Redistribute still takes from P4, one from
+// each rival with no conditions since Cory's 2026-10-17 feedback #18)
 export const PILES = [
   { gold: 1, magenta: 0, blue: 1, green: 1 },
   { gold: 3, magenta: 0, blue: 2, green: 4 },
@@ -26,7 +27,8 @@ export const PILES = [
 ];
 
 // placed: false stops a step earlier, with P1 about to place on the space (a test then places it by clicking)
-export function stealSave(space = 'help', { placed = true } = {}) {
+// piles: what everyone holds in place of PILES (steal tables only)
+export function stealSave(space = 'help', { placed = true, piles = PILES } = {}) {
   const [table, qid, key] = SPACES[space];
   const q = table.indexOf(qid), i = quadrant(qid).actions.findIndex(a => a.key === key), round = quadrant(qid).actions[i].ring;
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
@@ -36,7 +38,7 @@ export function stealSave(space = 'help', { placed = true } = {}) {
     const ready = st => st.round === round && st.pending && st.pending.player === 0 && st.pending.kind === 'place' && st.pending.options.some(o => o.id === `slot:${q}-${i}`);
     for (let n = 0; n < 1500 && !ready(s) && !s.over; n++) s = applyMove(s, chooseBotMove(s, rand));
     if (!ready(s)) continue;
-    if (table === STEAL_TABLE) PILES.forEach((r, k) => { s.players[k].res = { ...r }; });
+    if (table === STEAL_TABLE) piles.forEach((r, k) => { s.players[k].res = { ...r }; });
     const before = s;
     s = applyMove(s, { player: 0, option: `slot:${q}-${i}` });
     if (!(s.pending && s.pending.player === 0 && s.pending.kind === 'choose')) continue;

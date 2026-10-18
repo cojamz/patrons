@@ -8,19 +8,22 @@ import { browserPath } from './lib/browser.mjs';
 //       resources move (they arrive as magenta).
 //  (s2) Collect Debts: only gold, on the seats and the card; "Take all 3" previews its picks on the card's stacks while
 //       pointed at, and one click takes all 3, biggest pile first (the engine's options, recorded one by one).
-//  (s3) Redistribute: the rival holding less than you is dim on the seat and on the card, saying why; "Take all 2"
-//       plans one from each owed rival; picks land.
+//  (s3) Redistribute: 1 from each rival, no conditions (feedback #18), so the rival holding less than you is owed
+//       too; "Take all 3" plans one from each; picks land, the counter running 2 → 1. (s3b) A rival with nothing to
+//       take is dim on the seat and on the card, saying why.
 //  (e1) Escape on Kickback's card takes the placement back (the card closes, the minion comes home).
-//  (h1) Hand-pick: the card by the space shows the offered members with their printed cost; a click takes one.
+//  (h1) Hand-pick: the offered members light in the shop (no duplicate card since #14), each with its printed cost;
+//       a click takes one.
 //  (t1) Straggler: the card by your last minion's space, its spaces the engine's (lit on the wheel too), Stay put on
 //       it; a space on the card moves the minion; Escape says Stay put.
 //  (s4) Kickback ("give 1 gold to…"): a gift, so it's the gift card beside the space (Cory, 2026-10-16): one face per
 //       rival the engine offers, and the same rivals' seats light (Cory, 2026-10-15: as Good Deed's), each the engine's
 //       answer, its gold stack lit, never your own; a click on a lit seat gives that player 1 gold.
-//  (s5) Echo: exactly the copyable spaces light on the wheel, the caption covers none of them, a lit space's hover says
+//  (s5) Encore (Echo copies only the previous action since Cory's 2026-10-16 call, so it asks no pick on the wheel):
+//       exactly the copyable spaces light on the wheel, the caption covers none of them, a lit space's hover says
 //       what the copy gives, and clicking it copies (your resources match the engine's).
-//  (s6) Snap Up: exactly the offered face-up members light in the shop and sit on the card with what you'd pay;
-//       "Recruit nothing" is on the card; clicking a lit shop card recruits it.
+//  (s6) Snap Up: exactly the offered face-up members light in the shop, each priced as Snap Up asks; no duplicate
+//       card by the space (feedback #14); "Recruit nothing" is offered; clicking a lit shop card recruits it.
 //  (s7) Shake Down: the offered members glow on the rivals' seats; clicking one picks it.
 // Starts from saved games stopped on each choice (e2e/v4/lib/steal-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
@@ -187,26 +190,42 @@ try {
     }
     await ctx.close();
   }
-  // (s3) Redistribute: P4 holds less than you
+  // (s3) Redistribute takes 1 from each rival, no conditions (Cory, 2026-10-17 feedback #18; it used to skip a rival
+  // holding no more than you): P4 holds less than you and is owed all the same; "Take all 3" plans one from each;
+  // picks land
   {
-    const { ctx, page } = await open('redistribute');
-    if (await page.$eval('.lt-seat[data-pid="3"] .lt-cult-seat', e => e.dataset.pick).catch(() => null) !== 'off') errors.push('(s3) P4 (poorer than you) is not dim');
-    const why4 = await page.$eval('.gift-card .gc-rival[data-pid="3"][data-dim] .gc-why', e => e.textContent).catch(() => '');
-    if (!/no more resources than you/.test(why4)) errors.push(`(s3) P4 on the card says "${why4}", not why it can't be picked`);
-    // owed 1 each from P2 and P3: "Take all 2" takes one from each (live panel round 3: a forced split took a click each)
-    if (!(await page.$('.gift-card .gc-all[data-take-all="2"]'))) errors.push('(s3) no "Take all 2" for the 1-each split');
+    const { ctx, page, save } = await open('redistribute');
+    const owed = [...new Set(save.state.pending.options.map(o => o.target.pid))].sort();
+    if (owed.join() !== '1,2,3') errors.push(`(s3) the engine takes from P${owed.map(x => x + 1).join(' P')}, want every rival`);
+    if (await page.$eval('.lt-seat[data-pid="3"] .lt-cult-seat', e => e.dataset.pick).catch(() => null) === 'off') errors.push('(s3) P4 (poorer than you, owed all the same) is dim');
+    if (await page.$('.gift-card .gc-rival[data-dim]')) errors.push('(s3) a rival on the card is dim though every rival is owed 1');
+    // owed 1 each from P2, P3 and P4: "Take all 3" takes one from each (live panel round 3: a forced split took a click each)
+    if (!(await page.$('.gift-card .gc-all[data-take-all="3"]'))) errors.push('(s3) no "Take all 3" for the 1-each split');
     else {
       await page.hover('.gift-card .gc-all');
       await page.waitForTimeout(150);
       const marks = await page.$$eval('.gift-card .gc-stack[data-plan]', els => els.map(e => `${e.dataset.pid}:${e.dataset.plan}`).sort());
-      if (marks.join() !== '1:1,2:1') errors.push(`(s3) "Take all" previews ${marks.join(' ') || 'nothing'}, want 1 from P2 and 1 from P3`);
+      if (marks.join() !== '1:1,2:1,3:1') errors.push(`(s3) "Take all" previews ${marks.join(' ') || 'nothing'}, want 1 each from P2, P3 and P4`);
       await page.mouse.move(4, 690);
     }
     await click(page, stack(1, 'blue'));
-    await page.waitForSelector('.pick-left[data-left="1"]', { timeout: 8000 }).catch(() => errors.push('(s3) the counter never showed 1 left'));
+    await page.waitForSelector('.pick-left[data-left="2"]', { timeout: 8000 }).catch(() => errors.push('(s3) the counter never showed 2 left'));
     await click(page, stack(2, 'magenta'));
+    await page.waitForSelector('.pick-left[data-left="1"]', { timeout: 8000 }).catch(() => errors.push('(s3) the counter never showed 1 left'));
+    await click(page, stack(3, 'magenta'));
     await page.waitForFunction(() => !document.querySelector('.gift-card'), null, { timeout: 8000 }).catch(() => errors.push('(s3) the steal never closed'));
-    await expectCounts(page, 's3', { '1:blue': 1, '2:magenta': 1, '0:magenta': 2 });
+    await expectCounts(page, 's3', { '1:blue': 1, '2:magenta': 1, '3:magenta': 0, '0:magenta': 3 });
+    await ctx.close();
+  }
+  // (s3b) a rival with nothing to take is the one Redistribute leaves out: dim on the seat and on the card, saying why
+  {
+    const piles = [{ gold: 1, magenta: 0, blue: 1, green: 1 }, { gold: 3, magenta: 0, blue: 2, green: 4 }, { gold: 5, magenta: 2, blue: 0, green: 1 }, { gold: 0, magenta: 0, blue: 0, green: 0 }];
+    const { ctx, page, save } = await open('redistribute', '.lt-wheel .gift-card', { piles });
+    if (save.state.pending.options.some(o => o.target.pid === 3)) errors.push('(s3b) the engine offers a take from P4, who holds nothing');
+    if (await page.$eval('.lt-seat[data-pid="3"] .lt-cult-seat', e => e.dataset.pick).catch(() => null) !== 'off') errors.push('(s3b) P4 (nothing to take) is not dim');
+    const why4 = await page.$eval('.gift-card .gc-rival[data-pid="3"][data-dim] .gc-why', e => e.textContent).catch(() => '');
+    if (!/has nothing (left )?to take/.test(why4)) errors.push(`(s3b) P4 on the card says "${why4}", not why it can't be picked`);
+    await page.screenshot({ path: `${SHOTS}/s3b-nothing.png` });
     await ctx.close();
   }
   // (s4) Kickback: pick a player by their face on the gift card, or by their lit seat
@@ -237,9 +256,9 @@ try {
     await expectCounts(page, 's4', { '3:gold': save.state.players[3].res.gold + 1 });
     await ctx.close();
   }
-  // (s5) Echo: copy a space on the wheel
+  // (s5) Encore: copy a space on the wheel (was Echo, which copies only the previous action since 2026-10-16)
   {
-    const { ctx, page, save } = await open('echo', '.prompt.choice.seat-pick');
+    const { ctx, page, save } = await open('encore', '.prompt.choice.seat-pick');
     const want = save.state.pending.options.filter(o => o.target && o.target.space).map(o => o.target.space).sort();
     const got = await page.$$eval('.lt-wheel .slot.lit[data-slot]', els => els.map(e => e.dataset.slot).sort());
     if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`(s5) lit spaces ${got.join(' ')} ≠ the engine's ${want.join(' ')}`);
@@ -262,22 +281,28 @@ try {
     await expectCounts(page, 's5', mine);
     await ctx.close();
   }
-  // (s6) Snap Up: recruit from the shop strip
+  // (s6) Snap Up: recruit from the shop strip. The shop is its only recruit surface since feedback #14 (2026-10-17:
+  // "why also have the pop up window"; the duplicate card by the space went), "Recruit nothing" by the question
   {
-    const { ctx, page, save } = await open('snapup');
+    const { ctx, page, save } = await open('snapup', '.lt-shop .card.lit');
     const want = save.state.pending.options.filter(o => o.target && Number.isInteger(o.target.uid)).map(o => String(o.target.uid)).sort();
     const got = await page.$$eval('.lt-shop .card.lit[data-uid]', els => els.map(e => e.dataset.uid).sort());
     if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`(s6) lit shop cards ${got.join(' ')} ≠ the engine's ${want.join(' ')}`);
-    const tiles = await page.$$eval('.gift-card[data-gift="recruit"] .gc-member', els => els.map(e => [e.dataset.uid, e.querySelector('.gc-cost')?.dataset.cost]));
-    if (tiles.map(t => t[0]).sort().join() !== want.join()) errors.push(`(s6) the card's members ${tiles.map(t => t[0]).join(' ')} ≠ the engine's ${want.join(' ')}`);
-    for (const [uid, c] of tiles) {
+    if (await page.$('.gift-card[data-gift="recruit"]')) errors.push('(s6) Snap Up still opens the duplicate card by the space (#14)');
+    // each lit card's price (what you'd pay, after any discount) is what Snap Up asks
+    const prices = await page.$$eval('.lt-shop .card.lit[data-uid]', els => els.map(e => {
+      const now = e.querySelector('.cost-now[data-paid]');
+      const listed = (e.getAttribute('aria-label').match(/costs (.*)$/) || [])[1] || '';
+      return [e.dataset.uid, now ? Number(now.dataset.paid) : listed.split(' + ').reduce((t, x) => t + (parseInt(x, 10) || 0), 0)];
+    }));
+    for (const [uid, c] of prices) {
       const o = save.state.pending.options.find(x => x.target && String(x.target.uid) === uid);
-      const pay = o && (o.label.match(/pay (\d+)$/) || [])[1];
-      if (c !== pay) errors.push(`(s6) member ${uid} on the card shows cost ${c}, Snap Up asks ${pay}`);
+      const pay = o && Number((o.label.match(/pay (\d+)$/) || [])[1]);
+      if (c !== pay) errors.push(`(s6) member ${uid} in the shop shows cost ${c}, Snap Up asks ${pay}`);
     }
-    if (!(await page.$('.gift-card .gc-rest-btn[data-option="none"]'))) errors.push('(s6) "Recruit nothing" is not on the card');
-    const gap = await gapToSpace(page, save.state.players[0].lastSlot.key);
-    if (gap == null || gap > 40) errors.push(`(s6) the card sits ${gap}px from Snap Up (want ≤ 40)`);
+    const skip = save.state.pending.options.find(o => !o.target);
+    const none = await page.$eval(`button[data-option="${skip.id}"]`, e => e.textContent.trim()).catch(() => null);
+    if (none !== skip.label) errors.push(`(s6) the engine's "${skip.label}" is not offered (${JSON.stringify(none)})`);
     await page.screenshot({ path: `${SHOTS}/s6-snapup.png` });
     await click(page, `.lt-shop .card.lit[data-uid="${want[0]}"]`);
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s6) clicking the lit card did nothing'));
@@ -298,20 +323,25 @@ try {
     if (!(await page.waitForSelector(`.lt-wheel .slot.lit[data-slot="${key}"]`, { timeout: 4000 }).then(() => true, () => false))) errors.push('(e1) Kickback is not open again after Escape');
     await ctx.close();
   }
-  // (h1) Hand-pick: the members on the card by the space, with their printed cost
+  // (h1) Hand-pick: the offered members light in the shop, the recruit surface for every free or member pick since
+  // feedback #14 (2026-10-17: the duplicate card by the space went); each shows its printed cost; a click takes one
   {
-    const { ctx, page, save } = await open('handpick', '.lt-wheel .gift-card[data-gift="recruit"]');
-    const want = save.state.pending.options.map(o => o.id).sort();
-    const got = await cardOptions(page, '.gc-member');
-    if (got.join() !== want.join()) errors.push(`(h1) the card's members answer ${got.join(' ')}, the engine offers ${want.join(' ')}`);
-    const costs = await page.$$eval('.gift-card .gc-member', els => els.map(e => [Number(e.dataset.uid), Number(e.querySelector('.gc-cost')?.dataset.cost)]));
+    const { ctx, page, save } = await open('handpick', '.lt-shop .card.lit');
+    const want = save.state.pending.options.filter(o => o.target && Number.isInteger(o.target.uid)).map(o => o.id).sort();
+    const got = await page.$$eval('.lt-shop .card.lit[data-option]', els => els.map(e => e.dataset.option).sort());
+    if (got.join() !== want.join()) errors.push(`(h1) the lit shop cards answer ${got.join(' ')}, the engine offers ${want.join(' ')}`);
+    if (await page.$('.gift-card[data-gift="recruit"]')) errors.push('(h1) Hand-pick still opens the duplicate card by the space (#14)');
+    const costs = await page.$$eval('.lt-shop .card.lit[data-uid]', els => els.map(e => [Number(e.dataset.uid), ((e.getAttribute('aria-label').match(/costs (.*)$/) || [])[1] || '').split(' + ').reduce((t, x) => t + (parseInt(x, 10) || 0), 0)]));
     const { defById } = await import('../../src/engine/v4/index.js');
     for (const [uid, c] of costs) { const d = defById(save.state.cards[uid].def); if (c !== d.s + d.w) errors.push(`(h1) ${d.name} shows cost ${c}, printed ${d.s + d.w}`); }
-    const gap = await gapToSpace(page, save.state.players[0].lastSlot.key);
-    if (gap == null || gap > 40) errors.push(`(h1) the card sits ${gap}px from Hand-pick (want ≤ 40)`);
     await page.screenshot({ path: `${SHOTS}/h1-handpick.png` });
-    await click(page, `.gift-card .gc-member[data-option="${want[0]}"]`);
-    if (!(await moved(page, save.state.moves))) errors.push('(h1) clicking a member on the card did nothing');
+    // (the shop column scrolls at 1270×700: bring the card into view, as a player would)
+    await page.locator(`.lt-shop .card.lit[data-option="${want[0]}"]`).scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    await click(page, `.lt-shop .card.lit[data-option="${want[0]}"]`);
+    if (!(await moved(page, save.state.moves))) errors.push('(h1) clicking a lit member in the shop did nothing');
+    const rec = await page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-1)[0]?.[1]; } catch { return null; } });
+    if (rec && rec !== want[0]) errors.push(`(h1) recorded ${rec}, clicked ${want[0]}`);
     await ctx.close();
   }
   // (t1) Straggler: the card by your last minion, the spaces on it and lit on the wheel, Stay put; Escape stays put
@@ -363,4 +393,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`board-picker gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('board-picker gate: ok (Help Yourself, Collect Debts and Take all, Redistribute, Kickback and Escape, Echo, Snap Up, Hand-pick, Straggler, Shake Down)');
+console.log('board-picker gate: ok (Help Yourself, Collect Debts and Take all, Redistribute, Kickback and Escape, Encore, Snap Up, Hand-pick, Straggler, Shake Down)');
