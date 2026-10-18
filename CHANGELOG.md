@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.1, source 4be3a95 (main 65b79ea), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.6.2 — 2026-10-18 — unreleased
+
+- At round end, followers fly only from where they really came from: no stray flights from the follower shop, and a closing recruit's followers come off the new card
+
 ## v0.6.1 — 2026-10-18 — shipped (source 4be3a95, main 65b79ea)
 
 - When Crunch Time puts a player back to back, the turn line says so ("P1 took turns early with Crunch Time") instead of blaming snake order.
@@ -15,7 +19,6 @@ Player-facing releases and exact source/build verification are recorded separate
 - Member competitions count members of that arc's own color; Gold, Silver and Yellow keep their conditions.
 - Local/online legal lights and turns wait for actual action animation completion; scoring awards wait for arrival.
 - Remove the round-end pre-screen and fixed gaps; improve swap, steal and wheel rendering.
-- A round's closing action plays from its own effects: its recruit, member and buy followers fly from their real sources, and no followers fly from the follower rates or to contest winners before the Reckoning.
 - Cutpurse offers resource choice; Poach gives no replacement; Extortionist triggers on5+ follower purchases; Go-Getter can activate after its last-turn purchase.
 - Payment shows member ability; Basic Blue/Green leave normal setup; Straggler/Squatter cues and card wording improved.
 - Version now includes a release number and build reference. Public build manifest includes version and full source commit.
