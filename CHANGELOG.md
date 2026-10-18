@@ -15,6 +15,7 @@ Player-facing releases and exact source/build verification are recorded separate
 - Member competitions count members of that arc's own color; Gold, Silver and Yellow keep their conditions.
 - Local/online legal lights and turns wait for actual action animation completion; scoring awards wait for arrival.
 - Remove the round-end pre-screen and fixed gaps; improve swap, steal and wheel rendering.
+- A round's closing action plays from its own effects: its recruit, member and buy followers fly from their real sources, and no followers fly from the follower rates or to contest winners before the Reckoning.
 - Cutpurse offers resource choice; Poach gives no replacement; Extortionist triggers on5+ follower purchases; Go-Getter can activate after its last-turn purchase.
 - Payment shows member ability; Basic Blue/Green leave normal setup; Straggler/Squatter cues and card wording improved.
 - Version now includes a release number and build reference. Public build manifest includes version and full source commit.

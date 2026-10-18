@@ -64,10 +64,15 @@ export function unpaidFollowers(info, paid = 0) {
 /** Keep the scored board's positions, with final bonuses withheld until their animation lands. */
 export function scoringSeatState(board, info, paid) {
   const owed = unpaidFollowers(info, paid);
-  return { ...board, players: board.players.map(p => {
+  const out = { ...board, players: board.players.map(p => {
     const scored = info.after.over ? info.after.players[p.id] : p;
     return { ...p, bonus: scored.bonus - (owed[p.id]?.bonus || 0), contest: (scored.contest || 0) - (owed[p.id]?.contest || 0) };
   }) };
+  // the closing move's effect stream (non-enumerable, so a spread drops it) stays with the state the table plays:
+  // without it the director falls back to the state diff (Cory, 2026-10-17: followers flew out of the follower rates)
+  // (only the scored board's own stream: the next round's state carries its round-start income too)
+  if (board !== info.after && Array.isArray(board.effects)) Object.defineProperty(out, 'effects', { value: board.effects, enumerable: false, configurable: true, writable: true });
+  return out;
 }
 
 export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = null }) {

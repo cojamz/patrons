@@ -528,7 +528,9 @@ export function scoringSnapshot(before, after) {
     try { full = applyMove(before, move); } catch { continue; }
     if (JSON.stringify(full.log) !== target || full.round !== after.round) continue;
     const trimmed = { ...before, queue: before.queue.slice(0, cut + 1) };
-    try { return applyMove(trimmed, move); } catch { return null; }
+    // with its own effect stream (the closing move up to its scoring, no round-start income): the table plays the
+    // closing move from it, never from a state diff that reads every change as a follower buy (Cory, 2026-10-17)
+    try { return applyMove(trimmed, move, { effects: true }); } catch { return null; }
   }
   return null;
 }
