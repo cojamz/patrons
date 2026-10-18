@@ -1,5 +1,11 @@
 # Cults — agent handoff, October 18, 2026
 
+## Top-10 thread, wound down 9:45pm Eastern, Oct 17 (Cory out of credits)
+- Shipped v0.6.4: the seven price nudges. Shipped v0.6.5: idle animations stop while a move plays (lamp-b.css, keyed on .app.game[data-chain]). Proof: 4× CPU CDP trace over 25s of play, main-thread work 19.3s → 5.9s, long tasks 64 → 22.
+- Known red: pacing.test (a rival's turn is ~0.4s over its cap since the prices). It's on todo.md; trim the pace, never the cap.
+- Everything else Cory decided tonight is unbuilt and listed under "Build queue from his answers" in todo.md, with his calls in decisions.md.
+- Tooling: `V4_QUICK_E2E=none|file.mjs` makes check:v4:quick skip its full hot-seat game (Cory: test only what changed). After `npm ci`, Playwright's bundled headless shell is missing; scripts must pass executablePath '/opt/pw-browsers/chromium' (the e2e scripts already do).
+
 ## Backlog thread, wound down 12:30am Eastern (Cory low on usage)
 - Public: v0.6.2 (source f9a419f, main 15e674c). Shipped tonight on top of v0.6.0: v0.6.1 (turn words: Crunch Time back-to-back, snake order on the round card, extra turns named, used members credited, one-line magenta steals) and v0.6.2 (round-end followers fly from their real sources). Each passed the quick check on its exact commit.
 - The backlog is triaged in design/backlog-triage-2026-10-17.md. Start with its CLAUDE list (item 1, the browser suite back to green, belongs to whoever picks up the full gate). Cory's open calls are numbered at the top of design/todo.md.

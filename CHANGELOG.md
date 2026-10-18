@@ -1,6 +1,10 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.3, source ebbe04f (main 2817380d), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.5, published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+
+## v0.6.5 — 2026-10-18
+
+- Smoother animations: the idle bobbing and breathing pause while a move plays out. At 4× CPU slowdown, that halves the page's work and cuts the worst stall from 0.4s to 0.13s.
 
 ## v0.6.4 — 2026-10-18
 

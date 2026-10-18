@@ -1,5 +1,11 @@
 # In flight — October 18, 12:30am Eastern (backlog thread wound down: Cory low on usage)
 
+## Top-10 thread, wound down 9:45pm Eastern, Oct 17 (Cory out of credits)
+- Shipped v0.6.4: the seven price nudges. Shipped v0.6.5: idle animations stop while a move plays (lamp-b.css, keyed on .app.game[data-chain]). Proof: 4× CPU CDP trace over 25s of play, main-thread work 19.3s → 5.9s, long tasks 64 → 22.
+- Known red: pacing.test (a rival's turn is ~0.4s over its cap since the prices). It's on todo.md; trim the pace, never the cap.
+- Everything else Cory decided tonight is unbuilt and listed under "Build queue from his answers" in todo.md, with his calls in decisions.md.
+- Tooling: `V4_QUICK_E2E=none|file.mjs` makes check:v4:quick skip its full hot-seat game (Cory: test only what changed). After `npm ci`, Playwright's bundled headless shell is missing; scripts must pass executablePath '/opt/pw-browsers/chromium' (the e2e scripts already do).
+
 - Public: v0.6.2 (source f9a419f, main 15e674c). Pages run confirmed; github.io is unreachable from the cloud box, so the served stamp was read from main's play/build.json (scripts/v4-play.sh falls back to that now).
 - Nothing running. All helpers stopped.
 - Parked, unfinished (in /mnt/project-files/handoff/backlog-oct18/):

@@ -832,4 +832,8 @@ Instrument for all seven: `v4-fair-price.mjs sweep`, 80 paired seeds, Normal bot
 - (Cory) With details on, members fit on screen at laptop size with no scrolling and no shortened text. "Its color isn't on the table" goes. In the player-card member hover, cost goes on the right and "whose it is" goes.
 - (Cory) The member shop should refresh each round, and you should see it happen as an animation.
 - 2026-10-18 — (Claude, under Cory's go-with-your-gut) turn-labels-truth: the "a Crunch Time table closes a gap" coverage check counts over each table's six seeds, not per seed, and a Late Riser extra turn (logged before "Round … begins") counts as an extra turn. Why: the price nudges changed which seeds close a gap; the label rule itself is unchanged and its deterministic case still passes.
+- (Cory, 2026-10-18) Steals in general are unbounded except by steal blocks; Grifter's text keeps only its first sentence.
+- (Cory, 2026-10-18) Straggler item dropped: it stays as it is.
+- (Cory, 2026-10-18) A gain of 12 coins animates 12 coins, for any count.
+- 2026-10-18 — (Claude, under Cory's go-with-your-gut) While a move plays out, the idle animations (bobbing minions, breathing leaders and sprites, blinks) stop, and they resume when it lands. Why: a 4× CPU trace showed they doubled the page's work during play (19.3s → 5.9s of main-thread work in 25s; worst stall 415 → 133ms).
 

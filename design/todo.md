@@ -11,6 +11,13 @@ Answered 2026-10-18 at 9pm Eastern; his answers are logged in decisions.md. A pi
 11. Greatest Hits repeating a copied Echo's gain: what's intuitive? [no: Greatest Hits repeats the space's own gain, which is what the card's words say]
 
 ## Build queue from his answers (2026-10-18)
+Not built (Cory out of credits, 2026-10-18 9:40pm Eastern). His exact calls are in decisions.md under "Cory's answers to the open calls". Also:
+- [ ] 12 coins animate as 12 coins, for any count (no bundling). Tried: every unit its own piece with the stagger tightened to ~200ms spread; it pushed pacing.test over its cap (22970 > 21060), so it was reverted. Needs the pace trimmed elsewhere first; never raise the cap.
+- [ ] Details toggle sometimes doesn't respond: it must work at every moment (animations, rival turns, pick and pay steps).
+- [ ] Payment screen: move the passives lines from the bottom to the top and tighten the screen.
+- [ ] Steals are unbounded except by steal blocks. Grifter keeps only its first sentence.
+- [ ] Pacing: a rival's turn is ~0.4s over its cap since the price nudges (pacing.test fails, 21235 > 21060 on v0.6.4). Trim the pace, never the cap.
+- [ ] The rest of the lag: with the idle animations stopped during moves, React commits still run 80–130ms at 4× (planChain measures places with getBoundingClientRect; GameScreen re-renders). Parked speed diffs in /mnt/project-files/handoff/speed/ no longer apply cleanly.
 - [ ] Retinue is worth 3 followers.
 - [ ] Help Yourself goes 2 / 4 / 6 by round.
 - [ ] A third shop toggle that fades unaffordable members.

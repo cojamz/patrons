@@ -566,3 +566,7 @@
 
 .lt-cult-seat .cs-release{margin-left:auto;padding:2px 0;border:0;border-bottom:1px solid var(--cream-2);background:none;color:var(--cream);font-family:var(--sans);font-size:14px;line-height:20px;cursor:pointer}
 .lt-cult-seat .cs-release:hover,.lt-cult-seat .cs-release:focus-visible{color:#fff3d4;border-color:#fff3d4}
+/* While a move plays out (data-chain on the table), the idle life stops: bobbing minions, breathing leaders and sprites,
+   blinks. Measured at 4× CPU over 25s of play: main-thread work 19.3s → 5.9s, long tasks 64 → 22, worst 415 → 133ms;
+   paused instead of stopped kept their layers and cut far less (14.9s). They pick up again when the move lands. */
+.app.game[data-chain="1"] :is(.cs-min,.leader,.leader .blink,.sprite,.lead,.dots){animation:none!important}
