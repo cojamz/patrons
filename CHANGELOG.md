@@ -2,6 +2,12 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.2, source f9a419f (main 15e674c), published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.6.3 — 2026-10-18 — unreleased
+
+- A resumed game on your turn takes your first click at once (it waited 2-3s).
+- The pay sheet closes the moment you pay, instead of covering the recruit's flight with "Keeping -1".
+- Redistribute on the wheel says "from every rival" (it still said "from rivals with more resources").
+
 ## v0.6.2 — 2026-10-18 — shipped (source f9a419f, main 15e674c)
 
 - At round end, followers fly only from where they really came from: no stray flights from the follower shop, and a closing recruit's followers come off the new card.
