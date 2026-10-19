@@ -1,6 +1,6 @@
 /* Reading an ability uses the portrait's space, without rearranging the shop. */
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art{display:none}
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .nm{white-space:normal;min-height:12px;flex:none;margin:4px 4px 2px;display:grid;align-content:center}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .nm{white-space:normal;height:auto;min-height:12px;flex:none;margin:4px 4px 2px;display:grid;align-content:center}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{display:block;flex:none;padding:2px 6px 2px;font-size:12px;line-height:14px;color:var(--pl-ink,#2b2018);font-weight:500;overflow-wrap:break-word;text-wrap:pretty}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-card .ft{flex:none;min-height:22px;margin-top:auto}
 /* Follower offers have no ability to substitute, so their faces remain unchanged. */

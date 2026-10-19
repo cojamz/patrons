@@ -66,7 +66,7 @@ describe('shop reading controls', () => {
     const options = base.shop.map(uid => ({ id: `card:${uid}`, kind: 'card', uid }));
     const state = { ...base, pending: { kind: 'buy', player: 0, options } };
     const { container } = render(<ShopCards state={state} me={0} mySeats={[0]} optionFor={key => options.find(o => o.id === key)} onPick={onPick} hover={{ onCardHover, subscribe: () => () => {}, space: null }} />);
-    const card = container.querySelector('.lt-card');
+    const card = container.querySelector('.lt-card[data-uid]');
     fireEvent.pointerEnter(card, { pointerType: 'mouse' });
     expect(onCardHover).not.toHaveBeenCalled();
     fireEvent.click(card);
