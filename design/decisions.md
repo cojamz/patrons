@@ -953,3 +953,9 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - 2026-10-19 (Cory): Keep Magenta Round II Shakedown shape: choose a rival’s member; they pay you to keep it, or you take it. Decide the target cost limit later. Shape confirmed, not a newly specified payment formula.
 
 - 2026-10-19 (Cory, communication): Drop meaningless AI-isms. Use plain specific language; no slogans or rhetorical conclusions after agreeing a rule. Working instructions updated immediately.
+
+- 2026-10-19 (Cory, Magenta discussion): Stolen resources keep original colors. Every arc action gives inherent+1 arc resource. Round I theft is1/2/3 resources by round, split among rivals, for2/3/4 total including inherent grant; earlier2/4/6 theft proposal superseded.
+- 2026-10-19 (Cory): Round II steals half ONE COLOR STACK from a rival, rounded down; not all resources and no largest-stack restriction. Inherent+1 still applies.
+- 2026-10-19 (Cory): Likes Round I steal1 + theft protection shape; asks whether useful later. Actions must remain worthwhile later and avoid a dominant first move. Magenta’s color is disliked; replacement still open.
+- 2026-10-19 (Cory): Shakedown total-cost5-or-less is provisional. Remaining Round I candidate and member deck not approved; assistant proposed steal1+extra follower purchase for discussion.
+- 2026-10-19 (Cory, clarified): Enlarge the printed member cost/follower text and icons. Do not increase prices or follower game values under that request.

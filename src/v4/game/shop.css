@@ -112,3 +112,8 @@
   .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards{height:auto;grid-template-rows:repeat(4,145px)}
   .app.game.lt .lt-shop-cards .lt-rates .lt-done{position:static;grid-column:1 / -1;width:100%}
 }
+
+/* Printed prices and follower worth remain readable at the enlarged shop-card size. */
+.app.game.lt .lt-shop-cards .lt-card .ft{font-size:16px;line-height:20px;flex:none}
+.app.game.lt .lt-shop-cards .lt-card .ft .num,.app.game.lt .lt-shop-cards .lt-card .ft .lt-cost.free{font-size:16px}
+.app.game.lt .lt-shop-cards .lt-card .ft .pip,.app.game.lt .lt-shop-cards .lt-card .ft .follower-mark{width:16px;height:16px}

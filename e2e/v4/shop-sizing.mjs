@@ -27,6 +27,11 @@ try{for(const[tag,opts]of[['laptop',{viewport:{width:1270,height:700}}],['deskto
  const body=e.querySelector('.lt-shop-body'),r=x=>{const b=x.getBoundingClientRect();return{x:b.x,y:b.y,w:b.width,h:b.height}};
  return {overflow:body.scrollHeight-body.clientHeight,docOverflow:document.documentElement.scrollWidth-innerWidth,deck:!!e.querySelector('.lt-deck').getClientRects().length,cards:[...e.querySelectorAll('.lt-card')].map(c=>({id:c.dataset.uid||c.dataset.rate,...r(c),footer:r(c.querySelector('.ft')),ability:c.querySelector('.lt-pick-ability')?r(c.querySelector('.lt-pick-ability')):null,clipped:c.querySelector('.lt-pick-ability')?(c.querySelector('.lt-pick-ability').getBoundingClientRect().bottom>c.querySelector('.ft').getBoundingClientRect().top+1||c.querySelector('.ft').getBoundingClientRect().bottom>c.getBoundingClientRect().bottom+1):false}))};
  });
+ const footerReadability=await p.locator('.lt-shop .lt-card[data-uid]').evaluateAll(es=>es.map(e=>{
+  const f=e.querySelector('.ft'),cost=f.querySelector('.cost-now')||f.querySelector('.lt-cost'),v=f.querySelector('.val'),num=f.querySelector('.num'),mark=v?.querySelector('.follower-mark');
+  return {font:num?parseFloat(getComputedStyle(num).fontSize):parseFloat(getComputedStyle(cost).fontSize),glyph:mark?.getBoundingClientRect().width,overlap:cost.getBoundingClientRect().right>v.getBoundingClientRect().left+1,overflow:f.scrollWidth>f.clientWidth+1};
+ }));
+ if(footerReadability.some(r=>r.font<16||r.glyph<15||r.overlap||r.overflow))throw Error(`${tag}: unreadable/overlapping price or worth ${JSON.stringify(footerReadability)}`);
  const a=await inspect();await p.screenshot({path:`${out}/${tag}-${group}-compact.png`});
  await p.getByRole('button',{name:'Show member abilities'}).click();const b=await inspect();
  await p.screenshot({path:`${out}/${tag}-${group}-details.png`});
