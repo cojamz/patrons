@@ -37,6 +37,8 @@ try{for(const[size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phon
  await p.locator('.app.game:not([data-animating])').waitFor();await p.waitForTimeout(450); // intentional post-handoff input guard
  const card=p.locator(`.lt-shop [data-uid="${u}"]`);await card.scrollIntoViewIfNeeded();if(await card.locator('[data-worth]').getAttribute('data-worth')!=='3')throw Error('shop worth wrong');
  if(size==='phone'){await card.tap();await p.getByRole('button',{name:'Recruit',exact:true}).click();}else await card.click();
+ await p.waitForFunction(uid=>!!document.querySelector('.pay-go')||JSON.parse(localStorage.getItem('patrons.v4.local')).state.players[0].members.includes(uid),u);
+ const pay=p.locator('.pay-go');if(await pay.isVisible())await pay.click();
  const cmp=st=>st.players.map(x=>({members:x.members,res:x.res,bonus:x.bonus}));
  await p.waitForFunction(want=>{try{return JSON.stringify(JSON.parse(localStorage.getItem('patrons.v4.local')).state.players.map(x=>({members:x.members,res:x.res,bonus:x.bonus})))===JSON.stringify(want);}catch{return false;}},cmp(expected)).catch(async err=>{await p.screenshot({path:`${out}/${size}-retinue-failure.png`});console.error('Retinue actual',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('patrons.v4.local')).state;return {moves:s.moves,pending:s.pending,players:s.players.map(x=>({members:x.members,res:x.res,bonus:x.bonus}))}}),'expected',cmp(expected));throw err;});
  await p.locator('.app.game:not([data-animating])').waitFor();
