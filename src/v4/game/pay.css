@@ -10,6 +10,7 @@
 .dialog.pay.pay-card{width:400px;max-width:calc(100vw - 32px);padding:20px;gap:0;border:0;border-radius:var(--corner,8px);
   background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);font-family:var(--sans);
   box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 24px 60px rgba(0,0,0,.55);animation:pay-in .16s cubic-bezier(.25,.6,.3,1)}
+.pay-card .pay-id .ability{color:var(--pl-ink,#2b2018);font-size:14px;line-height:20px;margin:12px 0 0}
 @keyframes pay-in{from{opacity:0;transform:translateY(6px) scale(.985)}}
 .pay-card .turn-of{margin:0 0 12px}
 

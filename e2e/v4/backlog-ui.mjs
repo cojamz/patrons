@@ -34,8 +34,8 @@ try{for(const[size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phon
   const after=await p.locator('.lt-shop .lt-card[data-option]').first().boundingBox();if(before.width!==after.width||before.height!==after.height)throw Error('details resized choice card');
  }else if(kind==='pay'){
   const dialog=p.locator('[role="dialog"]').filter({has:p.locator('.pay-card')});await dialog.waitFor();await settleCards();
-  const metrics=await dialog.evaluate(e=>{const n=e.querySelector('[data-pay-rules]'),a=e.querySelector('[data-pay-ability]'),rows=e.querySelector('.pay-rows');return {notes:!!n,ability:!!a,above:n&&n.getBoundingClientRect().bottom<=rows.getBoundingClientRect().top+1,w:e.getBoundingClientRect().width};});
-  if(!metrics.notes||!metrics.ability||!metrics.above)throw Error(`payment notes/ability misplaced: ${JSON.stringify(metrics)}`);
+  const metrics=await dialog.evaluate(e=>{const n=e.querySelector('[data-pay-rules]'),a=e.querySelector('[data-pay-ability]'),rows=e.querySelector('.pay-rows');return {notes:!!n,ability:!!a,above:n&&n.getBoundingClientRect().bottom<=rows.getBoundingClientRect().top+1,ink:a&&getComputedStyle(a).color,w:e.getBoundingClientRect().width};});
+  if(!metrics.notes||!metrics.ability||!metrics.above||metrics.ink!=='rgb(43, 32, 24)')throw Error(`payment notes/ability misplaced: ${JSON.stringify(metrics)}`);
   await p.screenshot({path:`${out}/${size}-${kind}.png`});
   const go=p.locator('.pay-go'),id=await go.getAttribute('data-option');const expected=applyMove(save.state,{player:0,option:id});await go.click();
   await p.waitForFunction(want=>{try{const s=JSON.parse(localStorage.getItem('patrons.v4.local')).state;return JSON.stringify({res:s.players.map(p=>p.res),members:s.players.map(p=>p.members),shop:s.shop})===JSON.stringify(want);}catch{return false;}},compare(expected));
