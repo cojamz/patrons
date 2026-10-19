@@ -32,7 +32,7 @@ function fixture() {
     if (i < 0) throw new Error(`Missing deck member ${def}`);
     (where === 'shop' ? s.shop : s.players[where].members).push(s.pile.splice(i, 1)[0]);
   };
-  for (const [who, def] of [[0, 'red.bigfamily'], [1, 'gold.prospector'], [2, 'echo.evergreen'], ['shop', 'red.host'], ['shop', 'red.intern'], ['shop', 'echo.muse'], ['shop', 'gold.banker']]) deal(def, who);
+  for (const [who, def] of [[0, 'red.bigfamily'], [1, 'gold.prospector'], [2, 'echo.evergreen'], ['shop', 'red.host'], ['shop', 'red.twins'], ['shop', 'echo.muse'], ['shop', 'gold.banker']]) deal(def, who);
   return s;
 }
 function scenario(name) {
@@ -63,6 +63,10 @@ function scenario(name) {
   return { save, action: `slot:${slot(name === 'copy-promote' ? 'echo' : 'red', action)}`, picks, a, b, pair, expected };
 }
 const comparable = s => ({ players: s.players.map(p => ({ members: p.members, res: p.res, bonus: p.bonus })), shop: s.shop, cards: s.cards });
+if (process.argv.includes('--fixtures-only')) {
+  for (const name of ['rival-swap', 'promote', 'copy-promote']) { scenario(name); console.log(`${name}: fixture resolves to buying.`); }
+  process.exit(0);
+}
 const browser = await chromium.launch({ executablePath: browserPath });
 let currentPage, currentTag;
 try {
