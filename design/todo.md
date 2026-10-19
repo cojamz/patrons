@@ -1,9 +1,9 @@
-## Active opening-clarity batch — October 19
+## Shipped — v0.8.5, October 19
 
-- [ ] Retinue worth3 followers /3 members, preserve price and recruit gift — retinue_three.
-- [ ] Yellow wheel/resources read yellow rather than lime — yellow_hue.
-- [ ] Reverse opening draft and upcoming snake placement order visible — draft_order_cue.
-- Root integrates, checks actual desktop/phone, publishes and reconciles historical entries. Magenta RoundIII anchor locked separately; see spheres/magenta-redesign-2026-10-19.md.
+- [x] Retinue worth3 followers /3 members, preserve price and recruit gift — retinue_three.
+- [x] Yellow wheel/resources read yellow rather than lime — yellow_hue.
+- [x] Reverse opening draft and upcoming snake placement order visible — draft_order_cue.
+-48 focused checks, production build, six desktop/phone browser scenes passed; public source verified. Evidence: eval/opening-v085/. Magenta RoundIII and Shakedown shape documented separately; other choices remain open.
 
 ## Shipped backlog batch — v0.8.4, October 19
 
@@ -68,13 +68,13 @@ Not built (Cory out of credits, 2026-10-18 9:40pm Eastern). His exact calls are 
 - [ ] Steals are unbounded except by steal blocks. Grifter keeps only its first sentence.
 - [x] Pacing: v0.7.0 trims stationary stage hold; longest wait21,041ms is below unchanged21,060ms cap.
 - [ ] The rest of the lag: with the idle animations stopped during moves, React commits still run 80–130ms at 4× (planChain measures places with getBoundingClientRect; GameScreen re-renders). Parked speed diffs in /mnt/project-files/handoff/speed/ no longer apply cleanly.
-- [ ] Retinue is worth 3 followers.
+- [x] Retinue is worth3 followers and counts3 members. v0.8.5; price and recruit gift unchanged.
 - [ ] Help Yourself goes 2 / 4 / 6 by round.
 - [ ] A third shop toggle that fades unaffordable members.
 - [ ] Cut Social Climber and replace it with a Claude fill-in.
 - [ ] "Pants": apply the Max easter egg (taller). Taking a member from another cult counts as a recruit; a member given to you doesn't.
-- [ ] Make the yellow on the wheel read yellow, not lime.
-- [ ] Show the snake order during round I's resource draft.
+- [x] Yellow theme changed to warm #ead844; wheel, pips and paper washes inherit it. v0.8.5.
+- [x] Opening resource draft shows remaining reverse draft and first placement order with return cue. v0.8.5;2/3/4player and phone checks.
 - [ ] Top Up scales by round. Feastmaker becomes Chefs, is a little cheaper and counts as at least 2 members.
 - [ ] Neutral (guest) cards stay neutral: no sphere color.
 - [ ] Drop every cost reduction for now (rework later), with fill-in abilities for Intro Offer and the other discount cards.

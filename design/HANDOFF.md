@@ -1,13 +1,13 @@
-# Latest — v0.8.4 backlog UI batch shipped, October 19
+# Current handoff — v0.8.5, October 19
 
-- Public https://cojamz.github.io/patrons/play/: **v0.8.4**, immutable source `1acee1a6c9db85d8dda4381389ffe751eacca525`, Pages main `70c0fa4`. Served stamp and HTML verified by publisher; actual public desktop/phone flows checked.
-- Three parallel lanes: payment passives above money rows with tighter layout; member hover costs at right and no redundant ownership footer; details toggle no longer forced/disabled during member choices and remembers explicit preferences. Member lists preserve effect groups then ascending price, full abilities and live controls.
-- Visual review also caught/fixed pale member ability text on payment paper. Scoped ink rule plus real-browser contrast assertion; do not revert it while styling `.ability` globally.
-- Exact final source: production build,52 focused UI checks and6 actual desktop/phone payment/choice/hover cases PASS. Eight viewport/color shop-sizing cases passed on immediately prior source before only the payment ink correction. No full-suite/sim or performance claim. Evidence: eval/backlog-ui-v084/.
-- v0.8.3 larger stable shop preserved: same twelve slots in compact/details; normal desktop fits; phone/tablet swipe; tiny desktop retains readable fallback scroll. Prior evidence: eval/shop-sizing-v083/.
-- All three lanes complete; no persistent previews. Root reconciled duplicate historical todo entries and refreshed board. General motion/wheel/round-summary backlog remains open.
-- Next design discussion: seven remaining identities Gold/Blue/Purple/Silver/Yellow/Magenta/White. Magenta suggested as next, working backward from Poach. No redesigned Magenta rule locked. Historical spheres/thieves.md now explicitly warns that old prices, Poach replacement and protection text are stale; use runtime code/current decisions.
-- Stay v0.8.x. Red/Green rules from v0.8.2 remain unchanged below.
+- Public https://cojamz.github.io/patrons/play/: **v0.8.5**, checked source `8619ed01ae44c423f0907ddcbd73035b0889cee2`, Pages main `8b6cc10`. Publisher verified served stamp and HTML; public desktop/phone flows checked.
+- Retinue now3 printed followers and3 members; costs1 silver+1 wild and gives rivals1 silver as before. Actual paid acquisition, weighted counts and Doppelganger copying without copied Recruit gift checked. Silver’s resource contest unchanged.
+- Yellow #ead844 replaces lime #d2d23a in canonical and fallback theme; Gold/Green unchanged. Palette separation/contrast and actual wheel/resource appearance reviewed.
+- Opening draft header shows remaining reverse draft and next placement order with a return arrow; current drafter underlined, “You” stays whole, long names have full accessible labels. Derives from engine queue/firstOrder; no draft/snake rule change.
+- Exact final source:48 focused checks, production build,6 actual browser scenes PASS (2/3/4-seat desktop draft,4-seat phone draft, desktop/phone paid Retinue). Evidence: eval/opening-v085/. No large sim/full-suite/performance claim.
+- Three helper lanes complete; no persistent preview. v0.8.4 payment/hover/details fixes and v0.8.3 sizing retained. Their evidence remains eval/backlog-ui-v084/ and eval/shop-sizing-v083/.
+- Magenta design: RoundIII “Take any rival’s member”; RoundII Shakedown shape confirmed (pay to keep or lose member). Target cost limit and payment formula are not newly specified. Current engine already implements prior versions; no Magenta rule changes in v0.8.5. Spec: spheres/magenta-redesign-2026-10-19.md. Other actions, deck, costs and scoring open.
+- Communication correction saved: plain specifics; no AI-isms, slogans or rhetorical summaries after a decision. General motion, phone Magenta label overflow, wheel text and round summary remain open. Stay v0.8.x.
 
 # Current handoff — v0.8.2 new Red deck shipped
 

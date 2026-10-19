@@ -1,8 +1,8 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.4, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.5, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.5 — 2026-10-19 — unreleased
+## v0.8.5 — 2026-10-19 — shipped (source 8619ed0, main 8b6cc10)
 
 - Retinue counts as three, Yellow is warmer, and the opening draft shows the upcoming snake order.
 

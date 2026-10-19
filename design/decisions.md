@@ -949,3 +949,7 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - 2026-10-19 (assistant recommendation, not a locked design): Start Magenta from its theft identity and existing Round III Poach (take a rival member). Resource theft supplies economy, defense/retaliation provide counterplay; avoid redundant steal-more members and account for both gain and denial in balance. Current rules remain unchanged pending Cory’s calls.
 
 - 2026-10-19 (Cory): Magenta next. Lock Round III: “Take any rival’s member.” Aggression is intentional; work backward from that anchor. No other Magenta redesign locked yet.
+
+- 2026-10-19 (Cory): Keep Magenta Round II Shakedown shape: choose a rival’s member; they pay you to keep it, or you take it. Decide the target cost limit later. Shape confirmed, not a newly specified payment formula.
+
+- 2026-10-19 (Cory, communication): Drop meaningless AI-isms. Use plain specific language; no slogans or rhetorical conclusions after agreeing a rule. Working instructions updated immediately.

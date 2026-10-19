@@ -1,49 +1,49 @@
 {
-  "live": "v0.8.4 \u2014 Payment, member hovers and details",
-  "liveCommit": "1acee1a6c9db85d8dda4381389ffe751eacca525",
+  "live": "v0.8.5 \u2014 Retinue, Yellow and draft order",
+  "liveCommit": "8619ed01ae44c423f0907ddcbd73035b0889cee2",
   "work": [
     {
-      "id": "payment-polish",
-      "name": "Payment layout",
-      "owner": "payment_polish",
+      "id": "retinue-three",
+      "name": "Retinue: three people",
+      "owner": "retinue_three + root",
       "status": "Shipped",
       "label": "Live",
-      "scope": "Passives above money selector; tighter spacing",
-      "evidence": "52 integrated UI checks; exact production build; actual public desktop/phone verification",
+      "scope": "3followers/3members; price and gift unchanged",
+      "evidence": "48 focused checks + production build; six real public desktop/phone scenes",
       "next": "Cory playtest feedback"
     },
     {
-      "id": "member-hover",
-      "name": "Member hover clarity",
-      "owner": "member_hover_polish",
+      "id": "yellow-hue",
+      "name": "Yellow palette",
+      "owner": "yellow_hue + root",
       "status": "Shipped",
       "label": "Live",
-      "scope": "Cost aligned right; remove redundant owner line",
-      "evidence": "52 integrated UI checks; exact production build; actual public desktop/phone verification",
+      "scope": "Warm Yellow distinct from Green and Gold",
+      "evidence": "48 focused checks + production build; six real public desktop/phone scenes",
       "next": "Cory playtest feedback"
     },
     {
-      "id": "details-toggle",
-      "name": "Details toggle",
-      "owner": "details_toggle",
+      "id": "draft-order",
+      "name": "Opening draft clarity",
+      "owner": "draft_order_cue + root",
       "status": "Shipped",
       "label": "Live",
-      "scope": "Explicit reading preference works during member choices and every phase",
-      "evidence": "52 integrated UI checks; exact production build; actual public desktop/phone verification",
+      "scope": "Current reverse draft and upcoming snake placement order",
+      "evidence": "48 focused checks + production build; six real public desktop/phone scenes",
       "next": "Cory playtest feedback"
     }
   ],
   "next": [
     {
-      "name": "Magenta design",
-      "next": "Seven colors remain after Red/Green. Start theft discussion from current Poach; no redesign yet locked."
+      "name": "Magenta actions",
+      "next": "RoundIII take any rival member; Shakedown shape confirmed. Other RoundII action, cost limits and payment amount open."
     },
     {
       "name": "Remaining UI backlog",
-      "next": "General motion audit, wheel clarity and readable round summary."
+      "next": "General animation audit, phone wheel labels and round-summary readability."
     }
   ],
-  "releaseSummary": "v0.8.4 live \u00b7 Three parallel backlog fixes \u00b7 Magenta next discussion",
+  "releaseSummary": "v0.8.5 live \u00b7 Retinue3 \u00b7 Yellow palette \u00b7 Draft order",
   "upNext": [
     {
       "source": "Cory / next design discussion",

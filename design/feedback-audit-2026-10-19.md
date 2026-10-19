@@ -23,3 +23,7 @@ Status is evidence-based. Public verification is recorded in eval/red-members-v0
 | 15 | Member hover costs on right, effect grouping then price; remove redundant ownership | Shipped v0.8.4 | member_hover_polish |37 focused info/member-use checks; desktop/phone list bounds; full abilities and states | No naming/art redesign |
 | 16 | Details toggle always responds rather than forcing details during member choices | Shipped v0.8.4 | details_toggle | Eight unit checks; actual member-choice toggle desktop/phone; size regression | Payment dialog retains modal focus; preference itself is phase independent |
 | 17 | Payment member ability nearly invisible on paper, discovered in review | Shipped v0.8.4 | root + payment_polish | Scoped dark ink; real browser computed-color assertion and settled screenshot | No broader theme change |
+
+| 18 | Retinue3 followers and3 members | Shipped v0.8.5 | retinue_three | Paid acquisition, gifts, weighted counts, copied quantity; public desktop/phone purchase | Price/gift unchanged |
+| 19 | Yellow reads yellow, not lime | Shipped v0.8.5 | yellow_hue | #ead844 canonical/fallback; contrast and color-distance checks; wheel/resource screenshots | Gold/Green unchanged |
+| 20 | Opening draft shows snake placement order | Shipped v0.8.5 | draft_order_cue | Queued reverse draft and engine firstOrder;2/3/4player browser picks; long-name phone bounds | Names truncate visually where needed; full accessible labels |
