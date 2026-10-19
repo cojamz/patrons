@@ -26,11 +26,11 @@ function checkTable(s, table, where) {
 }
 
 describe('v4 contests: one function decides and describes them', () => {
-  it('own-color Red and full-set Yellow ties each earn half the prize, regardless of resource surpluses', () => {
+  it('Red-resource and full-set Yellow ties each earn half the prize, regardless of member quantities', () => {
     const s = sceneQ({
       quadrants: ['gold', 'red', 'yellow'], n: 3,
-      members: [['red.volunteer'], ['red.intern'], []],
-      res: [{ gold: 1, red: 9, yellow: 7 }, { gold: 1, red: 1, yellow: 1 }, {}],
+      members: [['red.volunteer'], ['red.twins', 'red.bigfamily'], []],
+      res: [{ gold: 1, red: 9, yellow: 7 }, { gold: 1, red: 9, yellow: 1 }, {}],
       queue: [{ t: 'endRound' }],
     });
     const scored = s.contests.at(-1).results;
@@ -50,7 +50,7 @@ describe('v4 contests: one function decides and describes them', () => {
     expect(s.contests.at(-1).results.every(c => c.winners.length === 3 && c.prize === 3)).toBe(true);
     expect(s.players.map(p => p.contest)).toEqual([9, 9, 9]);
   });
-  it('Red and Yellow still award no prize when nobody has a member or a full set', () => {
+  it('Red and Yellow still award no prize when nobody has red resources or a full set', () => {
     const s = sceneQ({ quadrants: ['gold', 'red', 'yellow'], n: 3, res: [{ yellow: 9 }, {}, {}] });
     for (const c of contestTable(s).filter(c => ['red', 'yellow'].includes(c.qid))) expect(c.winners).toEqual([]);
   });

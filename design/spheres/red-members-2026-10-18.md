@@ -37,3 +37,26 @@ Eight keepers plus three proposed effects = eleven slots. No twelfth member inve
 ## Recruiter implementation check — v0.8.0
 
 Current core routes purchases, free recruitment, theft and the initiating actor’s incoming swap through memberAcquired/onAnyRecruit. Recruiter therefore already pays for active acquisition from shop, pile or rival cult, not merely paid shop buys. Passive gifts remain excluded under Cory’s earlier distinction (given versus taken). Its own acquisition is excluded by its existing hook. No code change made during this discussion.
+
+## Assistant price proposal — not approved or implemented
+
+| Member | Red | Wild | Total |
+|---|---:|---:|---:|
+| Volunteer | 0 | 0 | 0 |
+| Twins | 2 | 0 | 2 |
+| Recruiter | 3 | 1 | 4 |
+| Recruit-ability color reward | 2 | 2 | 4 |
+| Patriarch | 3 | 2 | 5 |
+| Rival-movement penalty | 3 | 2 | 5 |
+| Host | 4 | 2 | 6 |
+| Proselytizer | 4 | 2 | 6 |
+| Recruit: Promote or Demote | 5 | 3 | 8 |
+| Mentor & Protégé | 6 | 4 | 10 |
+| Mob | 8 | 4 | 12 |
+| Loyalists (unapproved defensive last slot; propose 2 members/followers) | 1 | 2 | 3 |
+
+Rationale: 8→10→12 supports promoting the promotion member into Mentor and then Mob. Mob scores 10 alone before other red members; held-red contests add a real spending opportunity cost. Recruiter affordable enough to repay through later acquisitions. Recruit promotion may create repeat-acquisition loops; price is not a substitute for a terminating rule and focused chain tests. No costs changed in the game.
+
+## New contest decision — confirmed trial
+
+Cory requests Green and Red round-end victory conditions based on held green/red resources, respectively, to reduce automatic rewards from committing to their member decks. Other contests and half-prize ties unchanged. Shipping separately as v0.8.1. Legacy stand-in Green remains retired normal content, not the current Green/echo quadrant.

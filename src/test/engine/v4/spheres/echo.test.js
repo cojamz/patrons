@@ -150,11 +150,12 @@ describe('Green table action boundaries', () => {
 });
 
 describe('Green table member boundaries', () => {
-  it('Green contests count printed member quantity, including Agents, rather than resources', () => {
+  it('Green contests count held green resources while Agents retains its member quantity', () => {
     const s = scene({ members: [['echo.agents']], res: [{}, { green: 40 }] });
-    expect(echo.scoring.score(contextFor(s), s.players[0])).toBe(2);
-    expect(echo.scoring.score(contextFor(s), s.players[1])).toBe(0);
-    expect(echo.scoring.label).toBe('Most green members');
+    expect(memberCount(s, s.players[0])).toBe(2);
+    expect(echo.scoring.score(contextFor(s), s.players[0])).toBe(0);
+    expect(echo.scoring.score(contextFor(s), s.players[1])).toBe(40);
+    expect(echo.scoring.label).toBe('Most green');
   });
   it('Busker and Connector do not pay recruit bonuses merely for being given to a player', () => {
     const s = scene({ members: [[], ['echo.evergreen', 'echo.connector']], turns: [0] });

@@ -1,5 +1,5 @@
 // Default arc competition: printed member quantity of that arc's own color.
-// Gold, Silver and Yellow retain their separate resource/set contests.
+// Gold, Red, Green (echo), Silver and Yellow use separate resource/set contests.
 export const memberScoring = (qid, color) => ({
   label: `Most ${color} members`,
   counts: `the ${color} members you hold (each card counts its printed member quantity)`,

@@ -1,5 +1,4 @@
-import { memberScoring } from './member-scoring.js';
-// Red: quantity over quality. Most red members at round end takes the ring's followers; ties all score.
+// Red builds and moves members; held red resources decide its round-end contest.
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
 
@@ -7,7 +6,7 @@ export default {
   id: 'red',
   name: 'Red',
   resource: 'red',
-  scoring: memberScoring('red', 'red'),
+  scoring: { label: 'Most red', counts: 'the red you hold when the round ends', score: (ctx, p) => p.res.red },
 
   actions: [
     {

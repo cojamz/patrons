@@ -1,4 +1,3 @@
-import { memberScoring } from './member-scoring.js';
 // Green copies actions, including copy actions whose targets are chosen afresh.
 // Each action pays +1 green; each branch excludes actions already in that branch.
 //
@@ -291,7 +290,7 @@ const echoQ = {
   name: 'Green',
   resource: 'green',
   rule: 'Copying a copy lets you choose again. Never copy an action already in its chain. Every Green action gives +1 green.',
-  scoring: memberScoring('echo', 'green'),
+  scoring: { label: 'Most green', counts: 'the green you hold when the round ends', score: (ctx, p) => p.res.green },
 
   actions: [
     {

@@ -253,15 +253,15 @@ describe('round-end contests', () => {
     }
   });
 
-  it('most own-color members wins red; tied weighted red counts each score half', () => {
-    let s = scene({ n: 3, members: [['gold.banker', 'gold.midas'], ['red.intern', 'gold.tycoon'], ['red.volunteer', 'red.crowd']], queue: [{ t: 'endRound' }] });
-    // All have two cards; only the red quantities count: 0, 1 and 2.
-    expect(s.players.map(p => p.contest)).toEqual([0, 0, 2]);
-    s = scene({ n: 3, members: [['red.intern', 'gold.midas'], ['red.mob', 'gold.tycoon'], ['gold.banker']], queue: [{ t: 'endRound' }] });
+  it('most held red resources wins Red; tied resource leaders each score half', () => {
+    let s = scene({ n: 3, members: [['gold.banker', 'gold.midas'], ['red.intern', 'gold.tycoon'], ['red.volunteer', 'red.crowd']], res: [{ red: 4 }, { red: 1 }, {}], queue: [{ t: 'endRound' }] });
+    // Red resources win even without a Red member.
+    expect(s.players.map(p => p.contest)).toEqual([2, 0, 0]);
+    s = scene({ n: 3, members: [['red.intern', 'gold.midas'], ['red.mob', 'gold.tycoon'], ['gold.banker']], res: [{ red: 3 }, { red: 3 }, { red: 1 }], queue: [{ t: 'endRound' }] });
     expect(s.players.map(p => p.contest)).toEqual([1, 1, 0]);
-    // Printed red groups count as multiple red members: Twins (2) + Big Family (3) score 5, off-color cards score 0.
-    s = scene({ n: 2, members: [['gold.banker', 'gold.midas', 'gold.tycoon'], ['red.twins', 'red.bigfamily']], queue: [{ t: 'endRound' }] });
-    expect(s.players.map(p => p.contest)).toEqual([0, 2]);
+    // Printed groups do not substitute for resources in the contest.
+    s = scene({ n: 2, members: [['gold.banker', 'gold.midas', 'gold.tycoon'], ['red.twins', 'red.bigfamily']], res: [{ red: 1 }, {}], queue: [{ t: 'endRound' }] });
+    expect(s.players.map(p => p.contest)).toEqual([2, 0]);
   });
 });
 

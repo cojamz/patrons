@@ -912,3 +912,10 @@ Cory confirmed resource income is per Recruit ability triggered and the movement
 Cory questions whether Promote/Demote should exchange with opponents and wants inherent Red defense because quantity/turnover reinforce each other. Assistant recommendation (NOT approved): keep shop replacement source and propose Loyalists, “Your members can’t be swapped,” including the owner’s swaps, as last slot. Full distinctions in spheres/red-members-2026-10-18.md.
 
 Release-series decision: remain on v0.8.x until Cory authorizes advancing. Patch increments even for substantial upcoming design batches; 0.8.10 follows 0.8.9. Updated releasing.md and working-with-cory.md.
+
+
+## 2026-10-18 — Red/Green resource contest trial and proposed Red prices
+
+Cory explicitly requests held green resources for Green and held red resources for Red, replacing own-color membership contests. Implement and ship as v0.8.1; other contests/tie prizes unchanged. Rationale: avoid member commitment also automatically winning the arc.
+
+Assistant submitted a full Red price ladder and proposed Loyalists as defensive last slot, 2 members/followers at 1 red +2 wild, symmetric no-swaps restriction. These remain proposals, not approved member code. Exact prices and rationale: spheres/red-members-2026-10-18.md. Highlighted free-acquisition loops for Recruit Promote/Demote: high price cannot solve recursion.

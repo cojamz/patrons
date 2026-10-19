@@ -5,13 +5,31 @@ import { quadrant, defById } from '../../../engine/v4/content/index.js';
 import { standings, bannerText } from '../../../v4/format.js';
 import { ruleWords } from '../../../v4/shorts.js';
 const seats = ['Ana', 'Bo', 'Cy', 'Di'].map(name => ({ name, kind: 'bot' }));
-const arcs = ['red', 'blue', 'green', 'market', 'echo', 'purple', 'trading', 'thieves'];
+const arcs = ['blue', 'green', 'market', 'purple', 'trading', 'thieves'];
 function table(qid) {
   const s = createGame({ seats, seed: 5, quadrants: [qid, 'gold', 'silver', 'yellow'] });
   s.players.forEach(p => { p.members = []; for (const r of s.resources) p.res[r] = 0; });
   return s;
 }
 describe('own-color arc contests', () => {
+  it.each(['red', 'echo'])('%s uses held resources even when another cult has more printed members', qid => {
+    const s = table(qid), resource = quadrant(qid).resource;
+    const own = Object.keys(s.cards).map(Number).filter(u => defById(s.cards[u].def).quadrant === qid);
+    s.players[0].members = own.slice(0, 4);
+    s.players[0].res[resource] = 1;
+    s.players[1].res[resource] = 7;
+    const row = contestTable(s).find(c => c.qid === qid);
+    expect(row.winners).toEqual([1]);
+    expect(row.rows.find(r => r.player === 0).count).toBe(1);
+    expect(row.rows.find(r => r.player === 1).count).toBe(7);
+    expect(row.label.toLowerCase()).toBe(`most ${resource}`);
+    const shown = standings(s).find(c => c.qid === qid);
+    expect(shown.rule.toLowerCase()).toBe(row.label.toLowerCase());
+    expect(shown.leaders).toEqual(row.winners);
+    expect(shown.rows.map(r => [r.id, r.shown])).toEqual(row.rows.map(r => [r.player, r.count]));
+    expect(bannerText(qid, 1)).not.toContain('MEMBERS');
+    expect(ruleWords(qid, row.label)).toBe(`${row.label} resources`);
+  });
   it.each(arcs)('%s counts own-color printed member quantity, never resources or other colors', qid => {
     const s = table(qid), own = Object.keys(s.cards).map(Number).filter(u => defById(s.cards[u].def).quadrant === qid);
     const foreign = Object.keys(s.cards).map(Number).filter(u => defById(s.cards[u].def).quadrant !== qid);
