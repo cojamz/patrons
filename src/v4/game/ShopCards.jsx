@@ -117,7 +117,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
         {/* a discount is said once, here, beside the struck prices (w4 A#23: its sentence was on all ten hovers) */}
-        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Members'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
+        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} you can afford` : `${state.shop.length} face up`}</small></h3>
         <span className="lt-shop-controls">
           <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} disabled={memberPick} onClick={toggleView}>details</button>
           <button type="button" className="lt-sort" role="switch" aria-label="Group members by color" aria-checked={sort === 'color'} title="Switch cost / color order" onClick={() => setSort(sort === 'cost' ? 'color' : 'cost')}>
@@ -126,8 +126,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
         </span>
       </div>
       <div className="lt-shop-body">
-      <MemberDeck state={state} deckRef={deckRef} />
       <div className="lt-cards" ref={rowRef}>
+      <MemberDeck state={state} deckRef={deckRef} />
+      <FollowerRates state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} buying={buying || picking} />
         {uids.map(uid => {
           const d = cardDef(state, uid);
           const opt = optionFor(`card:${uid}`);
@@ -190,7 +191,6 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       </div>
       </div>
       </div>
-      <FollowerRates state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} buying={buying || picking} />
       <ShopTicks state={state} viewer={viewer} placing={placing} hover={hover} rowRef={rowRef} />
     </section>
   );
@@ -211,7 +211,7 @@ function ShopTicks({ state, viewer, placing, hover, rowRef }) {
   // the face-up members the space itself acts on light up with its hover and go with it (Cory, 2026-10-16: "hovering
   // over Free Recruit should highlight the cheapest recruit(s) in the shop"): the engine's own list (preview targets),
   // drawn as a data attribute only, so React's classes and the layout never move
-  const aims = sp && pv && pv.targets ? pv.targets.shop : [];
+  const aims = placing && sp && pv && pv.targets ? pv.targets.shop : [];
   const aimSig = aims.join(',');
   useLayoutEffect(() => {
     const row = rowRef.current;
@@ -264,7 +264,6 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
   };
   return (
     <div className="lt-rates" role="group" aria-label="Buy followers">
-      <span className="lt-rates-head"><span className="lbl">Followers</span><small>any resources</small></span>
       <span className="lt-rates-grid">
       {TIERS.map(t => {
         const opt = optionFor(`tier:${t.key}`);
@@ -273,12 +272,12 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
         const afford = viewer ? held >= t.cost && left > 0 : true;
         const look = opt ? ' can lit' : buying ? ' recede' : afford ? '' : ' dim';
         return (
-          <button key={t.key} type="button" className={`fb lt-rate${look}`} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
+          <button key={t.key} type="button" className={`fb lt-rate lt-card card paper${look}`} style={{ '--q': 'var(--any)' }} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
             aria-haspopup="dialog" data-rate={t.key}
             aria-label={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game)` : ''}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}>
             {/* a move closes it (keyed by the move): after a buy it stayed open and flipped to "You hold 0: 10 short" (w2b #47) */}
-            <Tip key={state.moves} className="fb-tip" beside=".lt-rates" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
+            <Tip key={state.moves} className="fb-tip" beside=".lt-rate" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
               <div className="pop-card rate-card" data-rate-card={t.key}>
                 <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
                 <span>Any colors, any mix, as your one buy.</span>
@@ -286,7 +285,8 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
                 {t.limited && <span>{left} left at this table (2 per player at the start).</span>}
                 <small data-pays={opt ? 'tier' : undefined}>{when(t, opt)}</small>
               </div>
-            )}><span className="rt-trade"><b className="num">{t.cost}</b><Pip color="any" n={t.cost} /><span className="to" aria-hidden="true">→</span><b className="num get">{t.get}</b><FollowerGlyph size={14} /></span>{t.limited ? <small className="rt-left num">{left} left</small> : null}<span className="hitbox" aria-hidden="true" /></Tip>
+            )}><span className="art rt-art"><span className="rt-trade"><b className="num get">{t.get}</b><FollowerGlyph size={28} /></span></span>
+              <span className="nm">Followers</span><span className="ft"><CostShapes parts={[{ color: 'any', n: t.cost }]} />{t.limited ? <small className="rt-left num">{left} left</small> : null}</span><span className="hitbox" aria-hidden="true" /></Tip>
           </button>
         );
       })}

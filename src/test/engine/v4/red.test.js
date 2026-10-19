@@ -97,7 +97,7 @@ describe('Red members', () => {
 
   it('Mob: game end +1 follower per red member', () => {
     const s = scene({ members: [['red.mob', 'red.twins', 'red.intern', 'gold.banker']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(4);
+    expect(s.players[0].final.total).toBe(8);
   });
 
   it('Recruiter: +1 red whenever you recruit (not for itself)', () => {

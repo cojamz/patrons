@@ -42,7 +42,7 @@ const S = {
   trading: {
     haggle: '+2 white, +1 per leader', buylow: '+1 follower per 3 white', pawn: r => `${r} follower · may take 2 white each instead`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower bought or won', boom: 'all for followers',
   },
-  echo: { hum: '+1 green per occupied green action; +1 green', chant: r => `+${r + 1} green`, echo: 'copy previous; +1 green', encore: 'copy a rival’s action; +1 green', refrain: 'copy your action; +1 green', eternity: 'copy all your actions; +1 green' },
+  echo: { hum: '+1 green per other occupied green action; +1 green', chant: r => `+${r + 1} green`, echo: 'copy previous; +1 green', encore: 'copy a rival’s action; +1 green', refrain: 'copy your action; +1 green', eternity: 'copy all your actions; +1 green' },
 };
 
 // The shortest form, for the inner rings. Two symbols only (Cory, 2026-10-15: "just simplify visual language

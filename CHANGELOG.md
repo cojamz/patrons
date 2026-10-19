@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.1, published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.2 — 2026-10-19 — unreleased
+
+- New Red deck, corrected Green copies and a unified member/follower shop.
+
 ## v0.8.1 — 2026-10-18 — shipped (source 68e9a5d, main 2222a66)
 
 - Red and Green round prizes now reward held resources instead of members.

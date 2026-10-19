@@ -3,7 +3,7 @@
 // defined, so old records and the card tests still read them; a table with rules.cull off deals them again.
 export const CUT = new Set([
   'gold.midas', 'gold.investor', 'gold.hustler', 'gold.jackpot', 'gold.coinpurse',
-  'red.intern', 'red.reserve', 'red.drive', 'red.crowd',
+  'red.intern', 'red.reserve', 'red.drive', 'red.crowd', 'red.bigfamily', 'red.sponsor',
   'echo.afterimage', 'echo.translator', 'echo.wallflower', 'echo.groupie', 'echo.choir', 'echo.understudy', 'echo.mirror',
   'market.reseller', 'market.onlooker', 'market.auctioneer', 'market.curator', 'market.blackmarket',
   'purple.errand', 'purple.foreman', 'purple.apprentice', 'purple.taskmaster', 'purple.doubletime',

@@ -34,8 +34,21 @@ export function Pip({ color, n }) {
  * keywords), so "per blue | face-up | member" still reads "blue" as a word. "any" becomes the wild symbol only where a number counts it ("2 any");
  * "in any colors", "any face-up member" and "of anything" keep their words.
  */
-export function Rich({ text, after = '' }) {
+export function Rich({ text, after = '', timingDone = false }) {
   if (!text) return null;
+  // Canonical timing labels are real emphasis everywhere, never visible Markdown.
+  const timing = /\b(On recruit|(?:At )?round start)\b/ig;
+  if (!timingDone && timing.test(text)) {
+    timing.lastIndex = 0;
+    const pieces = []; let end = 0;
+    for (const m of text.matchAll(timing)) {
+      if (m.index > end) pieces.push(<Rich key={`before${m.index}`} text={text.slice(end, m.index)} after={text.slice(m.index) + after} timingDone />);
+      pieces.push(<strong key={`timing${m.index}`} className="ability-timing">{m[0].toLowerCase().includes('recruit') ? 'On Recruit' : 'Round Start'}</strong>);
+      end = m.index + m[0].length;
+    }
+    if (end < text.length) pieces.push(<Rich key="tail" text={text.slice(end)} after={after} timingDone />);
+    return <>{pieces}</>;
+  }
   const out = [];
   let last = 0;
   // the text up to a symbol; a number sits right against the dot or follower it counts ("+3●", "1👤")

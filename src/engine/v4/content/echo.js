@@ -173,7 +173,7 @@ export function targets(ctx, p, which, skip = null) {
   const L = ledger(ctx.state);
   const pool = Object.values(L.now);
   if (which === 'previous') {
-    const previous = pool.filter(e => e.key !== skip).sort((a, b) => (b.seq || 0) - (a.seq || 0))[0];
+    const previous = previousEntry(ctx, skip);
     return previous && allowed(ctx, previous) ? [previous] : [];
   }
   const since = which === 'since' ? Math.max(0, ...pool.filter(e => e.p === p.id && e.key !== skip).map(e => e.seq || 0)) : 0;
@@ -209,8 +209,14 @@ function copyOwn(ctx, p, self, by, who) {
   copyAll(ctx, p, take, by, who);
   return true;
 }
-/** Previous placement before this turn's action, including p's own placement on a snake double turn. */
-const previousNow = (ctx, p) => { const L = ledger(ctx.state); return targets(ctx, p, 'previous', L.origin || (L.now[L.open]?.p === p.id ? L.open : null)); };
+/** Latest placement regardless of its owner; legality never makes us fall back to an earlier placement. */
+export const previousEntry = (ctx, skip = null) => Object.values(ledger(ctx.state).now)
+  .filter(e => e.key !== skip).sort((a, b) => (b.seq || 0) - (a.seq || 0))[0] || null;
+/** Exclude the active placement while executing it, rather than guessing from the previous owner's identity. */
+export const previousNow = (ctx, p) => {
+  const L = ledger(ctx.state);
+  return targets(ctx, p, 'previous', L.path?.length ? L.origin : null);
+};
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
 // by: the member making the copy (Understudy, Sleepwalker…), so the log names it. who: the card or space asking
 // (the prompt's own name), so a copied space's free member is titled with it ("Encore: take a face-up member…").
@@ -294,8 +300,8 @@ const echoQ = {
 
   actions: [
     {
-      key: 'hum', ring: 1, name: 'Chorus', text: '+1 green per green action with a minion. +1 green.',
-      estimate: ctx => 1 + greenOccupied(ctx) + (ctx.state.slots[`${ctx.state.quadrants.indexOf('echo')}-0`] === undefined ? 1 : 0),
+      key: 'hum', ring: 1, name: 'Chorus', text: '+1 green per other green action with a minion. +1 green.',
+      estimate: ctx => 1 + greenOccupied(ctx),
       resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', greenOccupied(ctx), { fromAction: true }); },
     },
     {
@@ -355,11 +361,9 @@ const echoQ = {
       // a copied Hustler works the same color (until its own when-recruited pick below sets one)
       if (target.color !== undefined) self.color = target.color;
       ctx.log(`${p.name}'s ${self.def.name} becomes a copy of ${defById(self.copy).name}.`);
-      // Doppelganger becomes a copy of the member card (Cory): the copied "when recruited" effect fires once, for the
-      // copy, and so does a "Now and at round start" member's now part. Named under the copied member, like its other hooks.
+      // Becoming a copy is this physical card's Recruit ability. Adopting the identity does not
+      // recruit that identity again: its ongoing hooks start now, and round-start hooks wait.
       const d = defById(self.copy);
-      if (d.onRecruited) ctx.asMember(p, d.name, () => d.onRecruited(ctx, p, self));
-      if (d.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (d[hook]) ctx.asMember(p, d.name, () => d[hook](ctx, p, self));
       ctx.grantWorkers(p, d, self.uid);
     },
   },
@@ -375,7 +379,11 @@ const echoQ = {
     // Understudy and Ensemble replaced Choirmaster (green for a rival's copy: a gift for doing nothing, and Muse's
     // twin) and Fan (green when a rival takes the center: nothing to do with copying). Claude, 2026-10-14.
     m('understudy', 'Understudy', 4, 2, 'When recruited: copy the previous action.', {
-      onRecruited(ctx, owner) { offer(ctx, owner, previousNow(ctx, owner), 'Understudy: copy the previous action?', 'now', 'Understudy'); },
+      onRecruited(ctx, owner) {
+        // Retired Understudy keeps its old before-this-turn behavior in saved games; current Echo uses previousNow.
+        const L = ledger(ctx.state), skip = L.origin || (L.now[L.open]?.p === owner.id ? L.open : null);
+        offer(ctx, owner, targets(ctx, owner, 'previous', skip), 'Understudy: copy the previous action?', 'now', 'Understudy');
+      },
     }),
     // was "Game end: +1 follower per green member." (2+2) until the design critic's follow-ups (2026-10-14): now it
     // pays for the copy itself, a rival's space only, and the follower counts at once (heard() above).
@@ -469,7 +477,7 @@ export function justTook(ctx, p) {
 const nonGreenMembers = (ctx, p) => ctx.membersOf(p).reduce((n, c) => n + (c.def.quadrant === 'echo' ? 0 : ctx.memberWeight(c)), 0);
 const greenOccupied = ctx => {
   const q = ctx.state.quadrants.indexOf('echo');
-  return Object.keys(ctx.state.slots).filter(key => key.startsWith(`${q}-`)).length;
+  return Object.keys(ctx.state.slots).filter(key => key.startsWith(`${q}-`) && key !== `${q}-0`).length;
 };
 
 export default echoQ;

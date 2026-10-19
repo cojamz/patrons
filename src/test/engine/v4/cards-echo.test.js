@@ -36,11 +36,11 @@ describe('Green current actions', () => {
   it.each([1, 2, 3])('Build Up in round %i: round + inherent green', round => {
     expect(R(go(table(Q, { round, shop: ROW }), 'echo.chant')).green).toBe(round + 1);
   });
-  it('Chorus counts occupied Green actions, including itself, plus inherent green', () => {
+  it('Chorus counts other occupied Green actions, plus inherent green', () => {
     let s = table(Q, { shop: ROW, queue: turns(1, 0) });
     s = go(s, 'echo.chant');
     s = go(s, 'echo.hum');
-    expect([R(s).green, R(s, 1).green]).toEqual([3, 2]);
+    expect([R(s).green, R(s, 1).green]).toEqual([2, 2]);
   });
   it('Echo copies the printed chip and also gains its own inherent green', () => {
     const s = buildThenEcho();
@@ -139,7 +139,7 @@ describe('Green current members', () => {
   it('Stunt Double copies the action just taken when recruited, and has no activation', () => {
     let s = table(Q, { shop: ['echo.hourglass', ...ROW], res: [{ green: 4 }], queue: turns(0, 0) });
     s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.hourglass'));
-    expect(R(s).gold).toBe(4);
+    expect(R(s).gold).toBe(3); // Default payment spends one gold before Stunt copies the two-gold action.
     expect(named(s, 'Stunt Double').length).toBe(1);
     expect(ids(s).some(id => id.startsWith('use:'))).toBe(false);
   });
@@ -171,14 +171,14 @@ describe('Green current members', () => {
     expect(s.cards[uid].used).toBe(true);
     expect(ids(s)).not.toContain('use:' + uid);
   });
-  it('Doppelganger becomes a copy of an owned member, including recruit and round-start hooks', () => {
+  it('Doppelganger becomes a copy without firing its copied Recruit, retaining future round-start hooks', () => {
     let s = table(Q, { shop: ['echo.doppel', ...ROW], members: [['echo.evergreen']], res: [{ green: 5 }], queue: turns(0, 0) });
     s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.doppel'));
     s = move(s, cardOpt(s, 'echo.evergreen', 0));
     expect(s.cards[uidIn(s, 'echo.doppel', 0)].copy).toBe('echo.evergreen');
-    expect(R(s).green).toBe(2);
+    expect(R(s).green).toBe(1); // Default payment leaves one green; copying does not recruit Busker again.
     s.queue = [{ t: 'round', r: 2 }]; s = resume(s);
-    expect(R(s).green).toBe(6);
+    expect(R(s).green).toBe(5);
   });
   it('Impostor chooses only a rival’s members and adopts printed quantity', () => {
     let s = table(Q, { round: 3, shop: ['echo.impostor', ...ROW], members: [['echo.muse'], ['red.bigfamily']], queue: turns(0, 0) });
@@ -263,7 +263,7 @@ describe('legacy Green members remain readable in old records', () => {
       } else { s.queue = [{ t: 'round', r: 2 }]; s = resume(s); }
       expect(s.pending.prompt).toMatch(/Sleepwalker/);
       s = play(s, sp('gold.rush'));
-      expect(R(s).gold).toBe(4);
+      expect(R(s).gold).toBe(recruit ? 3 : 4); // Recruiting spends one gold; round-start activation is free.
       expect(Object.values(ledger(s).last)).toHaveLength(1);
     }
   });

@@ -159,11 +159,11 @@ describe('Green copies the risky spaces', () => {
 
     let t = scene({ quads: S, turns: [1, 0], members: [[], ['gold.midas']] });
     t = go(t, 'echo.hum');
-    expect(R(t, 1)).toMatchObject({ gold: 2, green: 0 });
+    expect(R(t, 1)).toMatchObject({ gold: 1, green: 0 });
     t = take(t, 'echo.echo');
-    expect(labels(t)).toEqual(['Chorus (P2): +2 green']);
+    expect(labels(t)).toEqual(['Chorus (P2): +1 green']);
     t = pass(move(t, t.pending.options[0].id));
-    expect(R(t, 0).green).toBe(3);
+    expect(R(t, 0).green).toBe(2);
   });
 
   it('Underdog doubles a copied gold gain (the copy is the copier’s own action)', () => {

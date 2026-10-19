@@ -126,7 +126,7 @@ const P = {
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
   },
   echo: {
-    hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? 'per green action with a minion' : '1 per green action with a minion', note: '+1 green' }),
+    hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? 'per other green action with a minion' : '1 per other green action with a minion', note: '+1 green' }),
     chant: r => ({ main: `+${r + 1} green`, second: '1 × round, +1' }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
     echo: { verb: 'Copy previous action', note: '+1 green' },

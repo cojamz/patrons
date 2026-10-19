@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
+import { CardText } from '../../../v4/game/Info.jsx';
 import { Rich, CostPips } from '../../../v4/game/Rich.jsx';
 import { anyDotVars } from '../../../v4/game/Glyphs.jsx';
 
@@ -52,4 +53,16 @@ describe('two symbols only, words for the rest (Cory, 2026-10-15: simplify)', ()
   it('the "any" dot puts each table color where its quadrant sits (q0 bottom, q1 left, q2 top, q3 right)', () => {
     expect(anyDotVars(['gold', 'red', 'blue', 'green'])).toEqual({ '--any-top': 'var(--blue)', '--any-right': 'var(--green)', '--any-bottom': 'var(--gold)', '--any-left': 'var(--red)' });
   });
+});
+
+
+it('renders canonical ability timings in bold without changing action instructions', () => {
+  const { container, rerender } = render(<CardText text="Recruit / round start: +2 red." />);
+  expect([...container.querySelectorAll('strong.ability-timing')].map(e => e.textContent)).toEqual(['On Recruit', 'Round Start']);
+  expect(container.textContent).not.toContain('**');
+  rerender(<CardText text="Now and at round start, +1 gold." />);
+  expect([...container.querySelectorAll('strong.ability-timing')].map(e => e.textContent)).toEqual(['On Recruit', 'Round Start']);
+  expect(container.textContent).not.toContain('at Round Start');
+  rerender(<Rich text="Recruit a shop member." />);
+  expect(container.textContent).toBe('Recruit a shop member.');
 });

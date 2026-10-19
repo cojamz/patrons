@@ -44,7 +44,7 @@ export const GLOSSARY = [
   { key: 'game end', word: 'Game end', match: /\bgame end\b/i,
     def: 'After round III is scored. Game-end bonuses are added, then the most followers wins (ties: more members).' },
   { key: 'when recruited', word: 'On recruit', match: /\bon recruit\b|\bwhen recruited\b|\bwhen it joins you\b/i,
-    def: 'Happens when you recruit the card, paid or free. Taking or swapping an existing member does not retrigger it.' },
+    def: 'Happens when you actively bring the member into your cult, paid or free: recruit, take or swap. Being given a member does not trigger it.' },
   { key: 'rival', word: 'Rival', link: false, match: /\brivals?’?s?\b/,
     def: 'Any other player.' },
   { key: 'leader', word: 'Leader', match: /\bthe leader\b/,

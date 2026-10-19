@@ -58,6 +58,9 @@ export default {
 
   handlers: {
     takeFree(ctx, p, uid) { ctx.recruit(p, uid, { free: true }); },
+    panelMode(ctx, p, mode) {
+      if (mode === 'promote' || mode === 'demote') swap(ctx, p, mode, `Panel: ${mode} a member`);
+    },
     trade(ctx, p, [a, b], data) {
       // Pinned choices reject a moved card; recheck prices/protection too before applying a queued choice.
       if (!swapPairs(ctx, p, data.mode).some(([x, y]) => x.uid === a && y.uid === b)) return;
@@ -67,11 +70,11 @@ export default {
   },
 
   members: [
-    m('twins', 'Twins', 1, 1, 'Worth 2 followers.', { f: 2 }),
+    m('twins', 'Twins', 2, 0, 'Worth 2 followers.', { f: 2, n: 2 }),
     m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
-    m('volunteer', 'Volunteer', 2, 2, 'No effect.'),
+    m('volunteer', 'Volunteer', 0, 0, 'No effect.'),
     m('intern', 'Intern', 1, 0, 'No effect.'),
-    m('mentor', 'Mentor & Protégé', 6, 4, 'When recruited: also take the cheapest face-up member free.', {
+    m('mentor', 'Mentor & Protégé', 5, 3, 'Recruit: recruit the cheapest shop member.', {
       // card: this Mentor, or a Doppelganger copying it (its free pick says so)
       onRecruited(ctx, owner, card) {
         const who = card && card.def && card.def.key === 'doppel' ? 'Doppelganger (as Mentor & Protégé)' : 'Mentor & Protégé';
@@ -83,10 +86,10 @@ export default {
     m('proselytizer', 'Proselytizer', 4, 2,'Whenever you recruit, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, recruited) { if (by === owner && recruited.uid !== card.uid) owner.bonus += 1; },
     }),
-    m('mob', 'Mob', 4, 4, 'Game end: +1 follower per red member.', {
+    m('mob', 'Mob', 6, 4, 'Game end: +1 follower per red member.', { f: 5, n: 5,
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'red'),
     }),
-    m('recruiter', 'Recruiter', 4, 4, 'Whenever you recruit, +1 red.', {
+    m('recruiter', 'Recruiter', 3, 1, 'When you recruit, +1 red.', {
       onAnyRecruit(ctx, owner, card, by, recruited) { if (by === owner && recruited.uid !== card.uid) ctx.gain(owner, 'red', 1); },
     }),
     m('drive', 'Pied Piper', 2, 2, 'Recruit 2+ members in one turn: +2 red.', {
@@ -106,6 +109,21 @@ export default {
     m('patriarch', 'Patriarch', 3, 2, 'Game end: +1 follower per 2 members.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
+    m('recruitbonus', 'Recruit Bonus', 2, 2, 'When you trigger a member’s Recruit ability, +1 of its color.', {
+      onRecruitAbility(ctx, owner, card, recruited) { ctx.gain(owner, ctx.quadrant(recruited.def.quadrant).resource, 1); },
+    }),
+    m('movementpenalty', 'Movement Penalty', 3, 2, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
+      onMoveMember(ctx, owner, card, info) { if (info.from !== owner) info.from.bonus -= 1; },
+    }),
+    m('panel', 'Panel', 4, 2, 'Recruit: Promote or Demote a member.', { f: 3, n: 3,
+      onRecruited(ctx, owner) {
+        const options = ['promote', 'demote'].filter(mode => swapPairs(ctx, owner, mode).length).map(mode => ({
+          id: mode, label: mode === 'promote' ? 'Promote' : 'Demote', kind: 'choice', value: mode,
+        }));
+        ctx.choose(owner, 'Panel: Promote or Demote?', options, 'red.panelMode');
+      },
+    }),
+    m('loyalists', 'Loyalists', 2, 3, 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
     m('reserve', 'Benchwarmer', 1, 0, 'No effect.'), // placeholder until Cory designs its hold (then it becomes Seat Saver)
   ],
 };
@@ -132,7 +150,7 @@ function hireCheapest(ctx, p, who) {
 }
 // A swap can rearrange any cult, but taking from a protected rival remains blocked.
 function swapPairs(ctx, p, mode) {
-  const cult = ctx.state.players.flatMap(owner => (owner === p || ctx.canSteal(p, owner, 'member')) ? ctx.membersOf(owner) : []);
+  const cult = ctx.state.players.flatMap(owner => ctx.canSwapMembers(owner) && (owner === p || ctx.canSteal(p, owner, 'member')) ? ctx.membersOf(owner) : []);
   const shop = ctx.shopCards();
   const out = [];
   const first = mode === 'even' ? [...cult, ...shop] : cult;

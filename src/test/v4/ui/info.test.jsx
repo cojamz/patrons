@@ -165,7 +165,7 @@ describe('"You\'d get" on a space (the engine\'s dry run)', () => {
     const pid = s.pending.player;
     const echo = s.quadrants.indexOf('echo'), hum = quadrant('echo').actions.findIndex(a => a.key === 'hum');
     const one = render(<YoudGet state={s} pid={pid} q={echo} i={hum} />);
-    await waitFor(() => expect(one.container.querySelector('[data-youd-get]').dataset.youdGet).toBe('+2 green'));
+    await waitFor(() => expect(one.container.querySelector('[data-youd-get]').dataset.youdGet).toBe('+1 green'));
     cleanup();
     const gold = s.quadrants.indexOf('gold'), jv = quadrant('gold').actions.findIndex(a => a.key === 'jv');
     const two = render(<YoudGet state={s} pid={pid} q={gold} i={jv} />);
@@ -207,7 +207,7 @@ it('member timing names recruitment and round starts precisely', () => {
   expect(memberTimingWords('When recruited: +2 red.')).toBe('On recruit: +2 red.');
   expect(memberTimingWords('Round start: plant any yellow.')).toBe('At round start: plant any yellow.');
   const { container } = render(<CardText text="Now and at round start, +3 gold." />);
-  expect(container.textContent).toMatch(/^On recruit and at round start/);
+  expect(container.textContent).toMatch(/^On Recruit and Round Start/);
   expect(container.textContent).not.toMatch(/Now/);
 });
 
@@ -233,5 +233,6 @@ it('glossary matches confirmed member quantity, protection and recruit rules', (
   expect(term('colorless').def).not.toContain('one of your members');
   expect(term('steal').def).toContain('protects your members and resources until round end');
   expect(term('when recruited').def).toContain('paid or free');
-  expect(term('when recruited').def).toContain('Taking or swapping an existing member does not retrigger it');
+  expect(term('when recruited').def).toContain('recruit, take or swap');
+  expect(term('when recruited').def).toContain('Being given a member does not trigger it.');
 });

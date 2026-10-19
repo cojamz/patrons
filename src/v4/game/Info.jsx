@@ -139,7 +139,7 @@ export function Definition({ k }) {
 /** Rules text: resource words as symbols (Rich), game keywords underlined (each opens its definition). */
 export function CardText({ text }) {
   if (!text) return null;
-  const parts = splitTerms(memberTimingWords(text));
+  const parts = splitTerms(memberTimingWords(text).replace(/\bat round start\b/ig, 'Round Start').replace(/\bon recruit\b/ig, 'On Recruit'));
   // each piece knows what follows it, so a color before a keyword ("blue | face-up member") stays a word
   const after = k => parts.slice(k + 1).map(x => x.text).join('');
   return <>{parts.map((part, k) => (part.key

@@ -83,9 +83,9 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
 
   it('Greatest Hits resumes after a copied free recruit and its recruited Stunt Double', () => {
     const stunt = member('Stunt Double');
-    let s = table(Q, { round: 3, left: 7, shop: ['red.volunteer', stunt], queue: turns(0, 0, 0, 0) });
+    let s = table(Q, { round: 3, left: 7, shop: ['red.recruiter', stunt], queue: turns(0, 0, 0, 0) });
     s = take(s, 'red.take');
-    s = pass(move(s, memberOption(s, 'red.volunteer')));
+    s = pass(move(s, memberOption(s, 'red.recruiter')));
     s = go(s, 'gold.rush');
     const before = s.players[0].res.gold;
     s = take(s, 'echo.eternity');
@@ -219,7 +219,7 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     expect(bonus(s)).toEqual([3, 1]);
   });
 
-  it('Impostor can become a copied member’s effective identity and fires its recruit effect', () => {
+  it('Impostor adopts a copied member’s effective identity without triggering its Recruit ability', () => {
     const impostor = member('Impostor');
     const busker = member('Busker');
     let s = table(Q, { round: 3, left: 6, shop: [impostor], members: [[], [busker, 'echo.doppel']], queue: turns(0, 0) });
@@ -227,7 +227,7 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     s = move(take(s, 'red.take'), memberOption(s, impostor));
     s = move(saved(s), `card:${uidIn(s, 'echo.doppel', 1)}`);
     expect(s.cards[uidIn(s, impostor, 0)].copy).toBe(busker);
-    expect(s.players[0].res.green).toBe(2);
+    expect(s.players[0].res.green).toBe(0);
   });
 
   it.each(['echo.doppel', 'echo.impostor'])('%s grants a copied Extra Hand’s unplaced minion immediately in round III', copier => {

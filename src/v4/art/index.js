@@ -87,6 +87,14 @@ for (const [key, name, source] of [
   const art = BY_ID.get(`echo.${source}`);
   if (art) BY_ID.set(`echo.${key}`, { ...art, id: `echo.${key}`, name });
 }
+// Red's redesign reuses retired portraits while names and final artwork settle.
+for (const [key, name, source] of [
+  ['recruitbonus', 'Recruit Bonus', 'crowd'], ['movementpenalty', 'Movement Penalty', 'drive'],
+  ['panel', 'Panel', 'bigfamily'], ['loyalists', 'Loyalists', 'twins'],
+]) {
+  const art = BY_ID.get(`red.${source}`);
+  if (art) BY_ID.set(`red.${key}`, { ...art, id: `red.${key}`, name });
+}
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */
 export const spriteId = name => String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 /** The icon for an id (or the first of several candidate ids), or the template for its kind. */

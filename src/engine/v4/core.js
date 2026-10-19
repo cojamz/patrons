@@ -913,7 +913,7 @@ function memberAcquired(state, p, uid) {
   const w = wrap(state, card);
   eachMember(state, (owner, c, d) => { if (d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, w); });
   // a when-recruited effect leaves a trace like any other member hook (Seed Money, Pilgrim, Retinue…)
-  if (def.onRecruited) { const before = traceSnapshot(state); def.onRecruited(ctx, p, w); traceChanges(state, before, p, def); }
+  if (def.onRecruited) recruitAbility(state, p, w, def, () => def.onRecruited(ctx, p, w));
   joinNow(state, p, w, [def]);
   workersNow(state, p, def, uid);
 }
@@ -926,7 +926,26 @@ function memberAcquired(state, p, uid) {
 function joinNow(state, p, w, defs) {
   const ctx = ctxFor(state);
   for (const def of defs) if (def.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (def[hook]) {
-    const before = traceSnapshot(state); def[hook](ctx, p, w); traceChanges(state, before, p, def);
+    recruitAbility(state, p, w, def, () => def[hook](ctx, p, w));
+  }
+}
+/** Emit only when a Recruit ability actually runs; passive gains and ordinary round starts never enter here. */
+function recruitAbility(state, p, card, def, fn) {
+  const ctx = ctxFor(state);
+  eachMemberOf(state, p, (held, d) => { if (d.onRecruitAbility) d.onRecruitAbility(ctx, p, held, card, def); });
+  const before = traceSnapshot(state);
+  const out = underCause({ kind: 'member', pid: p.id, uid: card.uid, def: card.def.id }, fn);
+  traceChanges(state, before, p, def);
+  return out;
+}
+/** Movement belongs to the leader doing it, rather than the departed card's owner. */
+const movementListeners = (state, actor) => actor.members.flatMap(uid => effectiveDefs(state.cards[uid]).filter(def => def.onMoveMember).map(def => ({ uid, def })));
+function memberMoved(state, actor, uid, from, to, listeners) {
+  const ctx = ctxFor(state);
+  for (const { uid: held, def } of listeners) {
+    const before = traceSnapshot(state);
+    underCause({ kind: 'member', pid: actor.id, uid: held, def: state.cards[held].def }, () => def.onMoveMember(ctx, actor, wrap(state, state.cards[held]), { actor, uid, from, to }));
+    traceChanges(state, before, actor, def);
   }
 }
 /** Distinct arrival hooks retain their printed semantics even when a recipient did not Recruit. */
@@ -1001,12 +1020,14 @@ function swapMembers(state, actor, aUid, bUid) {
   const a = locate(aUid), b = locate(bUid);
   if (!a || !b) return false;
   const ctx = ctxFor(state);
+  for (const loc of [a, b]) if (loc.owner && !ctx.canSwapMembers(loc.owner)) return false;
   for (const loc of [a, b]) if (loc.owner && loc.owner !== actor && !ctx.canSteal(actor, loc.owner, 'member')) return false;
   // Any two includes two in the same shop/cult: change their positions, with no acquisition.
   if (a.list === b.list) {
     [a.list[a.index], a.list[b.index]] = [bUid, aUid];
     return true;
   }
+  const movedHooks = movementListeners(state, actor);
   for (const [uid, from, to] of [[aUid, a, b], [bUid, b, a]]) if (from.owner) {
     if (to.owner) transferWorkers(state, uid, from.owner, to.owner);
     else returnWorkers(state, uid, from.owner);
@@ -1014,6 +1035,7 @@ function swapMembers(state, actor, aUid, bUid) {
   }
   a.list.splice(a.index, 1); b.list.splice(b.index, 1);
   a.list.splice(a.index, 0, bUid); b.list.splice(b.index, 0, aUid);
+  for (const [uid, from, to] of [[aUid, a, b], [bUid, b, a]]) if (from.owner) memberMoved(state, actor, uid, from.owner, to.owner || null, movedHooks);
   for (const [uid, dest] of [[bUid, a], [aUid, b]]) if (dest.owner) {
     if (dest.owner === actor) memberAcquired(state, actor, uid);
     memberJoined(state, dest.owner, uid);
@@ -1256,6 +1278,7 @@ function ctxFor(state) {
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
     discount: grantDiscount,
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
+    recruitAbility: (p, card, def, fn) => recruitAbility(state, p, card, def, fn),
     grantWorkers: (p, def, uid) => workersNow(state, p, def, uid),
     /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
     price: (p, uid, how) => memberPrice(state, p, uid, how),
@@ -1286,12 +1309,15 @@ function ctxFor(state) {
       refill(state);
     },
     swapMembers: (actor, a, b) => swapMembers(state, actor, a, b),
-    moveMember(uid, from, to, { recruit: activelyAcquired = false } = {}) {
+    canSwapMembers: owner => !sumMemberFlag(state, owner, 'blockMemberSwaps'),
+    moveMember(uid, from, to, { recruit: activelyAcquired = false, actor = activelyAcquired ? to : from } = {}) {
       if (!from.members.includes(uid) || from === to) return false;
+      const movedHooks = movementListeners(state, actor);
       transferWorkers(state, uid, from, to);
       cardLeaves(state, from, uid);
       from.members.splice(from.members.indexOf(uid), 1);
       to.members.push(uid);
+      memberMoved(state, actor, uid, from, to, movedHooks);
       if (activelyAcquired) memberAcquired(state, to, uid);
       memberJoined(state, to, uid);
       return true;

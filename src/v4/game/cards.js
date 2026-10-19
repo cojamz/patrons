@@ -2,7 +2,7 @@
 // and which face-up cards a space would make affordable. All read off the engine; nothing here is a rule.
 import { cardDef, paymentPlan, memberPrice, contestTable } from '../../engine/v4/index.js';
 import { contextFor } from '../../engine/v4/core.js';
-import { targets as echoTargets, ownPlan, skipWords, justTook } from '../../engine/v4/content/echo.js';
+import { ownPlan, skipWords, justTook, previousNow } from '../../engine/v4/content/echo.js';
 
 // The card's timing, from how its text opens (the tag above the name).
 const TIMINGS = [
@@ -95,7 +95,7 @@ export function memberCopyTargets(state, pid, def) {
     const ctx = contextFor(state), p = state.players[pid];
     const entries = /copy the action you just took/i.test(def.text || '')
       ? [justTook(ctx, p)].filter(Boolean)
-      : /copy the previous action/i.test(def.text || '') ? echoTargets(ctx, p, 'previous') : null;
+      : /copy the previous action/i.test(def.text || '') ? previousNow(ctx, p) : null;
     return entries && [...new Set(entries.map(e => String(e.key).split('+')[0]))];
   } catch { return null; }
 }
