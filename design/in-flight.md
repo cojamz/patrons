@@ -1,6 +1,7 @@
-# Current state — v0.7.0 shipped, October 18
+# Current state — Red v0.8.0 release candidate, October 18
 
-- Green batch complete/live: `4b6a8fef03dba491ae8378f394207c05dd2ba2c0`; Pages main `d6241e1cc1ae2c5f7ef77342f527b59c9d5ff7b4`. Source and deployment are distinct. Evidence: eval/green-v070/verification.md.
-- All assigned Green engine/UI/test lanes ended. Root integrated and verified public desktop/phone flow. Local preview cleanup in progress; no continuing feature workers.
-- Next is **Red design discussion** with Cory, not an authorized Red implementation. Actions are now specified in spheres/red-redesign-2026-10-18.md; general Promote/Demote and equal-cost swaps include rivals. Red members remain open; no Red source change or deployment has been made.
-- Keep checks focused and credit-conscious. Other backlog items remain queued. Read HANDOFF.md and the Green spec before continuing.
+- Cory authorized the six new Red actions. Engine lane and UI lane are integrated; root owns the immutable scoped check, desktop/phone verification and deployment.
+- Existing Red members are retained for Cory's next redesign. No inherent-resource changes to other colors.
+- Public remains v0.7.0 until the full v0.8.0 stamp and UI are verified. Red spec: spheres/red-redesign-2026-10-18.md.
+- Test only the affected contracts and a small seeded stale-choice slice; no redundant full-game simulations. New `check:v4 --quick --tests <comma-separated files>` provides an explicit scoped verdict when registry imports make `--related` select everything.
+- Planned preview: port 5322. Browser evidence: eval/red-v080/. Next: immutable check, verify picker/movement on desktop and phone, publish checked SHA, verify public.

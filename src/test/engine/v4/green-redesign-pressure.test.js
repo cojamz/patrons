@@ -84,7 +84,7 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
   it('Greatest Hits resumes after a copied free recruit and its recruited Stunt Double', () => {
     const stunt = member('Stunt Double');
     let s = table(Q, { round: 3, left: 7, shop: ['red.volunteer', stunt], queue: turns(0, 0, 0, 0) });
-    s = take(s, 'red.hireup');
+    s = take(s, 'red.take');
     s = pass(move(s, memberOption(s, 'red.volunteer')));
     s = go(s, 'gold.rush');
     const before = s.players[0].res.gold;
@@ -189,7 +189,7 @@ describe('Green redesign: copy observers and anti-copy members', () => {
 
   it('recruiting Agents midway through Greatest Hits prevents later sibling copies', () => {
     let s = table(Q, { round: 3, left: 6, shop: ['red.bigfamily', 'echo.agents'], queue: turns(0, 0, 0, 0) });
-    s = pass(move(take(s, 'red.hireup'), memberOption(s, 'red.bigfamily')));
+    s = pass(move(take(s, 'red.take'), memberOption(s, 'red.bigfamily')));
     s = go(s, 'gold.rush');
     const before = s.players[0].res.gold;
     s = take(s, 'echo.eternity');

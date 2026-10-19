@@ -35,13 +35,12 @@ const P = {
     strike: { verb: 'Double your gold' },
   },
   red: {
-    evenswap: { main: '+1 red', second: 'swap, equal cost', note: 'a member with a rival' },
-    turnout: (r, now) => (now == null ? { main: '+1 red', second: 'per recruit by all', note: 'this round' } : { main: `+${now} red`, second: '1 per recruit by all', note: 'this round' }),
-    hire: { verb: 'Free recruit', second: 'the cheapest' },
-    hireup: { verb: 'Free recruit', second: 'cost 4 or less' },
-    trade: { verb: 'Swap a member', second: 'with a rival', note: 'theirs can cost 2 more' },
-    // the center drops line 2: "Free recruit" alone hid that it's any member
-    take: { verb: 'Any member, free' },
+    evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+1 red' },
+    turnout: r => ({ main: `+${r + 1} red`, second: '1 × round, +1' }),
+    hire: { verb: 'Recruit the cheapest', second: 'in the shop, free', note: '+1 red' },
+    hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
+    trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
+    take: { verb: 'Recruit any member', second: 'in the shop, free', note: '+1 red' },
   },
   market: {
     // "then recruit" read as a normal recruit (w3a #21): its perk, paying in any colors, is on the panel

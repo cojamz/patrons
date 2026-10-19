@@ -75,7 +75,7 @@ export function boardPicker(state, pend) {
  *   gift    Kickback, Benefactor: the color is fixed ("give 1 gold to…"), so only the rivals' faces (their seats light too)
  *   colors  Trade Seeds: the color you give (yours), then the one you get
  *   amount  Sweet Talk: the color you get, then how many
- *   trade   Even Swap, Swap Sides: one of your members, then a rival's it pairs with (grouped by rival)
+ *   trade   Red swaps: two members from different cults or the shop, grouped by their actual holder
  *   color   Goody Bags, Cheap Seats: one row, a color of yours (a space's ask only; Done and "N left" ride along)
  * And three asks from far away (live panel round 1: the steal's, Collect Debts', Snap Up's and Hand-pick's targets sat
  * 420–600 px from the space while the prompt sat top centre; Straggler waited on a pill up there), which open on the
@@ -150,7 +150,8 @@ export function giftPick(state, pend, first = null) {
   else if (kind === 'give' || kind === 'amount') others.sort((x, y) => x - y);
   const n = Number((question.match(/give (\d+)/) || [])[1]) || null;
   const done = (question.match(/\((\d+) swapped so far\)/) || [])[1];
-  const head = { give: n ? `A rival you pick gets ${n}` : 'A rival you pick gets some', colors: 'Swap one for one', amount: 'Swap for another color', trade: 'Swap a member with a rival' }[kind];
+  const tradeHead = title === 'Promote' ? 'Promote a member' : title === 'Demote' ? 'Demote a member' : 'Swap any two equal-cost members';
+  const head = { give: n ? `A rival you pick gets ${n}` : 'A rival you pick gets some', colors: 'Swap one for one', amount: 'Swap for another color', trade: tradeHead }[kind];
   return { ...base, kind, n, color: null, head, chosen, firsts, seconds, others, rest, done: done == null ? null : Number(done), sameCost: /equal cost/i.test(question) };
 }
 
@@ -161,7 +162,7 @@ function lastSpaceName(state, p) {
   const [q, i] = l.key.split('-').map(Number);
   try { const a = quadrant(state.quadrants[q]).actions[i]; return a ? a.name : null; } catch { return null; }
 }
-const SHOP_HEADS = { 'Hand-pick': 'Take a member, free', 'Snap Up': 'Recruit a member, any colors', 'Half Price': 'Recruit a member at half price' };
+const SHOP_HEADS = { 'Hand-pick': 'Take a member, free', 'Recruit a Member': 'Recruit a shop member, free', 'Open Door': 'Recruit the cheapest shop member, free', 'Snap Up': 'Recruit a member, any colors', 'Half Price': 'Recruit a member at half price' };
 
 /** The steal, the recruit from the row and the minion's move, on the card by the space (see giftPick), or null. */
 function farPick(state, pend, title, question, base) {

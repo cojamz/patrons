@@ -110,7 +110,7 @@ describe('Green current members', () => {
   it('Busker gives two green on recruit and at round start, naming the source', () => {
     let s = table(Q, { shop: ['echo.evergreen', ...ROW], res: [{ green: 4 }], queue: turns(0) });
     s = move(take(s, 'red.turnout'), cardOpt(s, 'echo.evergreen'));
-    expect(R(s).green).toBe(2);
+    expect(R(s).green).toBe(3); // Gather's red pays part of the wild cost; Busker still pays exactly 2 green.
     expect(named(s, 'Busker').length).toBe(1);
     const t = table(Q, { members: [['echo.evergreen']], queue: [{ t: 'round', r: 2 }] });
     expect(R(t).green).toBe(2);
@@ -150,13 +150,17 @@ describe('Green current members', () => {
     s = pass(move(s, cardOpt(s, 'red.twins')));
     expect(s.players[0].members).toHaveLength(2);
   });
-  it('a stolen Stunt Double has no recruit trigger or obsolete once-per-round use', () => {
-    let s = table(QT, { round: 3, shop: ROW, res: [{ gold: 2 }], members: [[], ['echo.hourglass']], queue: turns(1, 0, 0) });
+  it('taking Stunt Double fires Recruit and copies the still-resolving Heist with a fresh choice', () => {
+    let s = table(QT, { round: 3, shop: ROW, res: [{ gold: 2 }], members: [[], ['echo.hourglass', 'thieves.crew']], queue: turns(1, 0, 0) });
     s = go(s, 'gold.rush');
     s = play(take(s, 'thieves.heist'), cardOpt(s, 'echo.hourglass', 1));
     expect(s.players[0].members).toContain(uidIn(s, 'echo.hourglass', 0));
     expect(ids(s).some(id => id.startsWith('use:'))).toBe(false);
-    expect(named(s, 'Stunt Double')).toEqual([]);
+    expect(s.pending.kind).toBe('choose');
+    s = move(s, cardOpt(s, 'thieves.crew', 1));
+    expect(s.players[0].members).toHaveLength(2);
+    expect(named(s, 'Stunt Double').length).toBe(1);
+    expect(s.recruits).toBe(3); // Stunt Double plus Crew's printed member quantity.
   });
   it('Tribute Band copies all this round’s actions once per game', () => {
     let s = table(Q, { round: 2, shop: ROW, members: [['echo.dejavu']], queue: turns(0, 0) });

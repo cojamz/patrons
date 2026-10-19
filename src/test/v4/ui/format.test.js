@@ -29,26 +29,15 @@ describe('v4 format helpers', () => {
     expect(membersParts({ joined: 4, left: 1, swapped: false, members: 10, lost: 1, gained: 11 })).toEqual(['+11 from new members', '−1 from members that left']);
     expect(membersParts({ joined: 1, left: 1, swapped: true, members: -1, lost: 3, gained: 2 })).toEqual(['−1 from a swap']);
     expect(membersParts({ joined: 2, left: 0, swapped: false, members: 2, lost: 0, gained: 2 })).toEqual(['+2 from new members']);
-    // a real swap, from both sides: the one who traded and the one traded with
-    let found = 0;
-    for (let seed = 1; seed < 40 && !found; seed++) {
-      let s = createGame({ seats, seed, quadrants: ['red', 'gold', 'market', 'echo'] });
-      let start = s;
-      while (!s.over && !found) {
-        const before = s;
-        s = applyMove(s, chooseBotMove(s, () => 0.4));
-        if (s.round !== before.round) start = s;
-        const line = newLogLines(before, s).find(l => / traded .+ for .+'s /.test(l));
-        if (!line) continue;
-        const [, a, b] = line.match(/^(.+?) traded .+ for (.+?)'s /);
-        for (const n of [a, b]) {
-          const g = roundGains(start, s, s.players.find(p => p.name === n), 0);
-          expect(g.swapped).toBe(true);
-        }
-        found++;
-      }
-    }
-    expect(found).toBe(1);
+    // A third player can exchange two rivals: attribute the swap to both owners, not the actor.
+    const start = createGame({ seats, seed: 1, quadrants: ['red', 'gold', 'market', 'echo'] });
+    const [a, b] = start.shop.splice(0, 2);
+    start.players[1].members.push(a); start.players[2].members.push(b);
+    const end = structuredClone(start);
+    expect(contextFor(end).swapMembers(end.players[0], a, b)).toBe(true);
+    end.log.push(`Ana swapped Bo's ${defById(start.cards[a].def).name} and Cy's ${defById(start.cards[b].def).name}.`);
+    expect(roundGains(start, end, end.players[0], 0).swapped).toBe(false);
+    for (const p of end.players.slice(1)) expect(roundGains(start, end, p, 0).swapped).toBe(true);
   });
 
   it('the log reads newest turn first, each turn top-down (w3b #49), with no bare passes (w3a #34)', () => {
@@ -158,6 +147,18 @@ describe('v4 format helpers', () => {
     const st = effectStory(s, s, 1, 0, fx);
     expect(st.short).toMatch(/took your .+, gave .+ to you/);
     expect(st.short).not.toMatch(/bought/);
+  });
+
+  it('Promote names both directions of the shop exchange without calling it a release', () => {
+    const s = createGame({ seats, seed: 1 });
+    const [u1, u2] = Object.keys(s.cards).map(Number);
+    const cause = { kind: 'space', pid: 0, key: '0-0' };
+    const story = effectStory(s, s, 0, 0, [
+      { type: 'release', what: { uid: u1 }, from: { kind: 'crowd', pid: 0 }, to: { kind: 'shop', uid: u1 }, cause },
+      { type: 'recruit', what: { uid: u2 }, from: { kind: 'shop', uid: u2 }, to: { kind: 'crowd', pid: 0 }, cause },
+    ]);
+    expect(story.short).toMatch(/gave .+ to the shop, took the shop's/);
+    expect(story.short).not.toMatch(/released/);
   });
 
   it('a gain that came in another color names the member that changed it (w4 skeptic #18)', () => {

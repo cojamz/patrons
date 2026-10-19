@@ -13,50 +13,17 @@ const R = (s, i = 0) => s.players[i].res;
 const rich = { gold: 30, red: 30, blue: 30, green: 30 };
 const cost = id => defById(id).s + defById(id).w;
 
-describe('Red actions', () => {
-  it('Even Swap: +1 red, and one of yours for a rival’s of equal cost (more cases in even-swap.test.js)', () => {
-    const restore = pinCosts({ 'red.intern': [1, 0], 'red.twins': [1, 1], 'gold.banker': [2, 0] });
-    try {
-      let s = take(sceneQ({ members: [['red.twins'], ['red.intern', 'gold.banker']] }), 'red.evenswap');
+describe('Red action gains', () => {
+  it.each([1, 2, 3])('Gather is round %i plus its inherent red, independent of recruit count', round => {
+    const s = sceneQ({ round }); s.recruits = 99;
+    expect(R(take(s, 'red.turnout')).red).toBe(round + 1);
+  });
+  it('Open Door and Recruit a Member give a free member plus inherent red', () => {
+    for (const [action, round] of [['red.hire', 1], ['red.take', 3]]) {
+      const s = settle(take(sceneQ({ round, shop: ['red.volunteer'] }), action));
+      expect(s.players[0].members).toHaveLength(1);
       expect(R(s).red).toBe(1);
-      expect(s.pending.options.map(o => o.label)).toEqual(['Twins → P2\'s Banker']); // Intern costs 1, not 2
-      s = move(s, s.pending.options[0].id);
-      expect(s.cards[s.players[0].members[0]].def).toBe('gold.banker');
-      expect(s.log).toContain('P1 traded Twins for P2\'s Banker.');
-    } finally { restore(); }
-  });
-  it('Bandwagon: +1 red per member recruited this round by anyone', () => {
-    const s = sceneQ({});
-    s.recruits = 3;
-    expect(R(take(s, 'red.turnout')).red).toBe(3);
-  });
-  it('Open Door / Open House / Hand-pick: free recruits (cheapest, any costing 4 or less, any)', () => {
-    let s = sceneQ({});
-    const min = Math.min(...s.shop.map(u => cost(s.cards[u].def)));
-    s = settle(take(s, 'red.hire'));
-    expect(s.players[0].members).toHaveLength(1);
-    expect(cost(s.cards[s.players[0].members[0]].def)).toBe(min);
-    s = take(sceneQ({ round: 2, shop: ['red.volunteer'] }), 'red.hireup');
-    expect(s.pending?.kind === 'choose' ? s.pending.options.every(o => cost(s.cards[o.value].def) <= 4) : true).toBe(true);
-    while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
-    expect(R(s).red).toBe(0);
-    expect(s.players[0].members).toHaveLength(1);
-    expect(cost(s.cards[s.players[0].members[0]].def)).toBeLessThanOrEqual(4);
-    s = take(sceneQ({ round: 3, shop: ['gold.tycoon'] }), 'red.take');
-    s = move(s, `card:${uidOf(s, 'gold.tycoon', 'shop')}`);
-    expect(s.players[0].res.gold).toBe(0); // free
-    expect(s.cards[s.players[0].members[0]].def).toBe('gold.tycoon');
-  });
-  it('Swap Sides: swap one of yours for a rival’s costing no more than yours +2', () => {
-    const restore = pinCosts({ 'red.intern': [1, 0], 'gold.banker': [2, 1], 'gold.tycoon': [3, 3] });
-    try {
-      let s = take(sceneQ({ round: 2, members: [['red.intern'], ['gold.banker', 'gold.tycoon']] }), 'red.trade');
-      const ids = s.pending.options.map(o => o.label);
-      expect(ids).toEqual(['Intern → P2\'s Banker']); // Tycoon costs 6 > 1 + 2
-      s = move(s, s.pending.options[0].id);
-      expect(s.cards[s.players[0].members[0]].def).toBe('gold.banker');
-      expect(s.cards[s.players[1].members.at(-1)].def).toBe('red.intern');
-    } finally { restore(); }
+    }
   });
 });
 
@@ -97,7 +64,7 @@ describe('Red members', () => {
 
   it('Recruiter: +1 red whenever you recruit, named', () => {
     const s = settle(take(sceneQ({ members: [['red.recruiter']] }), 'red.hire'));
-    expect(R(s).red).toBe(1);
+    expect(R(s).red).toBe(2);
     expect(named(s, 'Recruiter')).toHaveLength(1);
   });
 

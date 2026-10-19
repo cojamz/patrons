@@ -65,13 +65,11 @@ const SUMS = {
   'gold.windfall': ({ n }) => [R('gold', plus(n(0, 1))), PER, MEM()], //                          +1● / ▢
   'gold.strike': () => [R('gold'), X(2)], //                                                       ● ×2
   // red: members change hands
-  'red.evenswap': ({ n }) => [R('red', plus(n(0, 1))), DOT, MEM(), SWAP, MEM({ rival: true })], // +1♦ · ▢ ⇄ ☗▢  (equal cost: hover)
-  'red.turnout': ({ n }) => [R('red', plus(n(0, 1))), PER, MEM({ mod: 'new' })], //               +1♦ / ▢✦      (recruited this round, by anyone)
+  'red.evenswap': () => [MEM(), SWAP, MEM(), TAGT('=')],
+  'red.turnout': ({ r }) => [R('red', plus(r + 1))],
   'red.hire': () => [MEM({ mod: 'low' }), TAGT('free')], //                                        ▾▢ [free]
-  'red.hireup': ({ a, n }) => (/cheapest/i.test(a.text)
-    ? [R('red', plus(n(0, 2))), DOT, MEM({ mod: 'low' }), TAGT('free')] //                           +2♦ · ▾▢ [free]
-    : [MEM(), TAGT(`≤${n(0, 4)} free`)]), //                                                          ▢ [≤4 free]   (if the text caps the cost)
-  'red.trade': () => [MEM(), SWAP, MEM({ rival: true })], //                                       ▢ ⇄ ☗▢        (up to +2 cost: hover)
+  'red.hireup': () => [MEM(), SWAP, MEM({ row: true }), TAGT('≤+2')],
+  'red.trade': () => [MEM(), SWAP, MEM({ row: true }), TAGT('≤−2')],
   'red.take': () => [MEM(), TAGT('free')], //                                                      ▢ [free]      (any face-up member)
   // purple: tempo
   'purple.hourly': ({ n, r }) => [R('purple', plus(n(r - 1, 3 + r)))], //                   +5⧗

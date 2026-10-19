@@ -17,7 +17,7 @@ import { realHover } from '../hover.js';
 import { TurnOf } from './parts.jsx';
 import './giftcard.css';
 
-const LABELS = { color: [null, null], give: ['Color', 'To'], gift: [null, 'To'], colors: ['Give', 'Get'], amount: ['Get', 'How many'], trade: ['Yours', 'Theirs'], steal: [null, null], recruit: [null, null], move: [null, null] };
+const LABELS = { color: [null, null], give: ['Color', 'To'], gift: [null, 'To'], colors: ['Give', 'Get'], amount: ['Get', 'How many'], trade: ['Member', 'For'], steal: [null, null], recruit: [null, null], move: [null, null] };
 // a swap with this many members on the card sets them closer (round III: twelve of yours and twenty of theirs), so
 // every row shows whole, never cut off at the card's foot (live panel round 1)
 const DENSE = 14;
@@ -106,13 +106,15 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
   const [l1, l2] = LABELS[g.kind];
   const card = uid => cardDef(state, uid);
   const owner = uid => state.players.find(p => p.members.includes(uid));
+  const ownerName = uid => { const p = owner(uid); return p ? p.id === g.actor ? 'You' : p.name : 'Shop'; };
+  const memberLabel = uid => `${ownerName(uid)}: ${card(uid).name}`;
   const from = g.kind === 'amount' ? (String(pend.prompt).match(/swap (\w+) for/i) || [])[1] : null;
   // the gift comes from the bank, never your own stack (blind testers read "Give 1 to a rival" as paying it, 2026-10-15)
   const head = g.kind === 'give' && g.chosen ? <>A rival you pick gets <b className="num">{g.n}</b><Pip color={g.chosen} /></>
     : g.kind === 'gift' ? <>A rival you pick gets <b className="num">{g.n}</b>{g.color ? <Pip color={g.color} /> : null}</>
       : g.kind === 'colors' && g.chosen ? <>Swap <b className="num">1</b><Pip color={g.chosen} /> for another color</>
         : g.kind === 'amount' && from ? <>Swap {g.chosen ? 'your' : ''}<Pip color={from} /> for {g.chosen ? <Pip color={g.chosen} /> : 'another color'}</>
-          : g.kind === 'trade' && g.chosen != null ? <>Swap your {card(g.chosen).name} for…</>
+          : g.kind === 'trade' && g.chosen != null ? <>Swap {card(g.chosen).name} for…</>
             : g.head;
   // what the second row's items pair with, live or (before a first is picked) quiet
   const live = new Map(g.seconds.map(x => [x.b, x.o]));
@@ -148,7 +150,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
     if (g.kind === 'trade') {
       const d = card(f.a);
       return (
-        <button key={f.a} {...common} className={`${common.className} gc-member`} data-uid={f.a} aria-label={`Your ${d.name}${f.chosen ? ' (picked)' : ''}`} style={{ '--q': cardColor(state, d) }} {...memberHover(f.a)}>
+        <button key={f.a} {...common} className={`${common.className} gc-member`} data-uid={f.a} aria-label={`${memberLabel(f.a)}${f.chosen ? ' (picked)' : ''}`} style={{ '--q': cardColor(state, d) }} {...memberHover(f.a)}>
           {memberFace(d, pic)}
         </button>
       );
@@ -206,18 +208,22 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
     return null;
   };
 
-  // a member swap's second row: each rival's members that can pair, beside their face
-  const theirs = () => {
+  // Both sides show their real holder: a Red action may swap two rivals or a rival with the shop.
+  const memberGroups = (uids, first = false) => {
     const groups = new Map();
-    for (const u of g.others) { const p = owner(u); if (!p) continue; if (!groups.has(p.id)) groups.set(p.id, []); groups.get(p.id).push(u); }
+    for (const u of uids) { const pid = owner(u)?.id ?? 'shop'; if (!groups.has(pid)) groups.set(pid, []); groups.get(pid).push(u); }
     return [...groups].map(([pid, uids]) => (
       <span key={pid} className="gc-group" data-pid={pid}>
-        <span className="gc-who" title={state.players[pid].name}><Minion color={playerColor(pid)} emoji={seatEmoji(state, pid)} size={20} /></span>
+        <span className="gc-who gc-holder">
+          {pid !== 'shop' && <Minion color={playerColor(pid)} emoji={seatEmoji(state, pid)} size={20} />}
+          <span className="gc-who-name">{pid === 'shop' ? 'Shop' : pid === g.actor ? 'You' : state.players[pid].name}</span>
+        </span>
         <span className="gc-group-items">{uids.map(u => {
+          if (first) return firstItem(g.firsts.find(f => f.a === u));
           const o = live.get(u) || null, d = card(u);
           return (
             <button key={u} type="button" className="gc-item gc-member" data-uid={u} data-option={o ? o.id : undefined} disabled={busy || !o} style={{ '--q': cardColor(state, d) }}
-              aria-label={o ? `${state.players[pid].name}’s ${d.name}` : `${state.players[pid].name}’s ${d.name}: pick yours first`} {...memberHover(u)}
+              aria-label={o ? memberLabel(u) : `${memberLabel(u)}: ${g.chosen == null ? 'pick a member first' : 'not eligible'}`} {...memberHover(u)}
               onClick={e => o && onAnswer(o.id, e.currentTarget, u)}>
               {memberFace(d, pic)}
             </button>
@@ -311,13 +317,13 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
       {!far && l1 && (
         <div className="gc-row" data-row="1" data-live={step === 1 ? '1' : undefined}>
           <span className="gc-lbl">{l1}</span>
-          <div className="gc-items">{g.firsts.map(firstItem)}</div>
+          <div className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? memberGroups(g.firsts.map(f => f.a), true) : g.firsts.map(firstItem)}</div>
         </div>
       )}
       {!far && (
         <div className="gc-row" data-row="2" data-live={step === 2 ? '1' : undefined}>
           {l2 && <span className="gc-lbl">{l2}</span>}
-          <div ref={more} onScroll={edge} className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? theirs() : g.others.map(secondItem)}</div>
+          <div ref={more} onScroll={edge} className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? memberGroups(g.others) : g.others.map(secondItem)}</div>
         </div>
       )}
       {(g.rest.length > 0 || (g.plan && g.plan.length > 1)) && (

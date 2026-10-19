@@ -65,7 +65,7 @@ describe('using a member any time on your turn', () => {
     expect(ids(s)).toContain(use); // P1's own turn now
   });
 
-  it('a choice it asks comes first, then the placement: Tribute Band copying your Open House on your next turn', () => {
+  it('a choice it asks comes first, then the placement: Tribute Band copying your Open Door on your next turn', () => {
     const price = d => d.s + d.w;
     const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.dejavu' && price(d) > 0);
     const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 2));
@@ -73,7 +73,7 @@ describe('using a member any time on your turn', () => {
     const dear = defs.filter(d => price(d) > low).slice(0, 4).map(d => d.id);
     // the snake's double turn: P1 places, buys nothing, and places again
     let s = table(Q, { round: 2, members: [['echo.dejavu']], shop: [...tied, ...dear], queue: turns(0, 0) });
-    s = take(s, N('red', 'hireup'));
+    s = take(s, N('red', 'hire'));
     if (s.pending.kind === 'choose') s = move(s, s.pending.options[0].id); // Open Door's tie: either cheapest
     while (s.pending.kind === 'buy') s = move(s, 'pass');
     expect(s.pending.kind).toBe('place');

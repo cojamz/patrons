@@ -2,6 +2,13 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.7.0, published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.0 — 2026-10-18 — unreleased
+
+- Red's six actions now recruit, promote, demote, exchange equal-cost members, or gain 2/3/4 red by round. Every Red action includes +1 red.
+- Promote and Demote can change any cult; Even Swap can exchange any two equal-cost members across cults and the shop. Cost compares printed colored plus wild cost.
+- Taking a member for yourself triggers Recruit effects. Giving a member to another cult does not. Green copies ask for fresh swap targets.
+- Swaps preserve shop size and transfer only unused extra minions. Existing Red members remain while their redesign is discussed.
+
 ## v0.7.0 — 2026-10-18 — shipped (source 4b6a8fe, main d6241e1)
 
 - Green copies now choose again through copied copy actions. Each chain prevents revisiting an action, and each Green action gives +1 Green. Encore targets rivals; Reprise targets your actions.

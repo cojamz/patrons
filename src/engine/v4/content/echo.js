@@ -459,7 +459,11 @@ const echoQ = {
 
 export function justTook(ctx, p) {
   const L = ledger(ctx.state);
-  const e = L.lastBy && L.now[L.lastBy];
+  const last = L.lastBy && L.now[L.lastBy];
+  // Recruit hooks can run inside a still-resolving take/swap, before its wrapper settles the yield.
+  // Read a settled copy so Stunt Double sees that action without mutating the ledger during UI previews.
+  const e = last && { ...last };
+  if (e?.before) settle(ctx.state, e);
   return e && e.p === p.id && copyable(e) && !protectedAction(ctx, e) ? e : null;
 }
 

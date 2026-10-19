@@ -146,11 +146,11 @@ const S = {
     strike: [['×2', 'gold']],
   },
   red: {
-    evenswap: [['1', 'red'], ['m', 'swap', 'mr']],
-    turnout: [['1', 'red', '/', 'mnew']],
+    evenswap: [['m', 'swap', 'm'], ['tag:=']],
+    turnout: r => [[`${r + 1}`, 'red']],
     hire: [['mlow', 'tag:0']],
-    hireup: [['2', 'red'], ['mlow', 'tag:0']],
-    trade: [['m', 'swap', 'mr'], ['tag:+2']],
+    hireup: [['m', 'swap', 'm'], ['tag:≤+2']],
+    trade: [['m', 'swap', 'm'], ['tag:≤−2']],
     take: [['m', 'tag:0']],
   },
   purple: {

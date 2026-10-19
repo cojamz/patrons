@@ -898,12 +898,17 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   else state.pile.splice(fromPile, 1);
   refill(state);
   p.members.push(uid);
+  const def = cardDef(state, uid);
+  log(state, `${p.name} recruited ${def.name}${idx < 0 ? ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}` : ''} (${paid}).`);
+  memberAcquired(state, p, uid);
+}
+/** Recruit is an active acquisition for the acting leader, including a take or their side of a swap. */
+function memberAcquired(state, p, uid) {
   state.recruits += memberWeight(state, uid);
   p.turnRecruits += memberWeight(state, uid);
   const card = state.cards[uid], def = defById(card.def);
   // who recruited it and when: a member can't be released in the round its owner recruited it
   card.recruitedRound = state.round; card.recruitedBy = p.id;
-  log(state, `${p.name} recruited ${def.name}${idx < 0 ? ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}` : ''} (${paid}).`);
   const ctx = ctxFor(state);
   const w = wrap(state, card);
   eachMember(state, (owner, c, d) => { if (d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, w); });
@@ -914,9 +919,9 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
 }
 /**
  * A member's "now" part, as it joins p: "Now and at round start" members (flag now) fire their round-start effect once
- * (Cory, 2026-10-14). It fires however the member arrives, recruited, swapped or stolen: the card says "now", and a
- * Banker taken by Even Swap paid nothing (live panel r1 blocker; Claude, under Cory's go-with-your-gut, 2026-10-15).
- * defs: the member's own def on a recruit (a Doppelganger fires its copy itself), every effective def on a move.
+ * (Cory, 2026-10-18). It fires only for an active acquisition into the acting leader's own cult.
+ * A gift or a replacement sent into a rival's cult is an arrival, not a Recruit.
+ * defs: the member's own def (a Doppelganger fires its selected copy itself).
  */
 function joinNow(state, p, w, defs) {
   const ctx = ctxFor(state);
@@ -924,10 +929,9 @@ function joinNow(state, p, w, defs) {
     const before = traceSnapshot(state); def[hook](ctx, p, w); traceChanges(state, before, p, def);
   }
 }
-/** A member that moved to p by a swap or a steal: its "now" part fires (Lender's +5 stays once a game: cards-trading test). */
+/** Distinct arrival hooks retain their printed semantics even when a recipient did not Recruit. */
 function memberJoined(state, p, uid) {
   const card = state.cards[uid], w = wrap(state, card), defs = effectiveDefs(card), ctx = ctxFor(state);
-  joinNow(state, p, w, defs);
   for (const def of defs) if (def.onJoined) { const before = traceSnapshot(state); def.onJoined(ctx, p, w); traceChanges(state, before, p, def); }
 }
 /**
@@ -966,6 +970,57 @@ function transferWorkers(state, uid, from, to) {
   from.workers = (from.workers ?? WORKERS[state.round - 1]) - grants.size;
   to.workers = (to.workers ?? WORKERS[state.round - 1]) + grants.size;
   log(state, `${defById(state.cards[uid].def).name}: ${grants.size} unplaced minion${grants.size === 1 ? '' : 's'} moves from ${from.name} to ${to.name}.`);
+}
+
+/** Returning a member to the shop removes its unused grant, never a minion already placed. */
+function returnWorkers(state, uid, from) {
+  const unplaced = state.queue.filter(t => t.p === from.id && t.workerSource === uid && (t.t === 'turn' || t.t === 'place'));
+  const grants = new Set(unplaced.map(t => t.workerGrant));
+  if (!grants.size) return;
+  state.queue = state.queue.filter(t => !(t.p === from.id && t.workerSource === uid && grants.has(t.workerGrant)));
+  const orders = [...new Set(unplaced.map(t => t.workerOrder).filter(Number.isInteger))].sort((a, b) => b - a);
+  for (const at of orders) {
+    state.order.splice(at, 1);
+    for (const task of state.queue) if (Number.isInteger(task.workerOrder) && task.workerOrder > at) task.workerOrder -= 1;
+  }
+  from.left -= grants.size;
+  from.workers = (from.workers ?? WORKERS[state.round - 1]) - grants.size;
+  const card = state.cards[uid];
+  if (card.workerGrantRound === state.round) card.workerGrants = Math.max(0, (card.workerGrants || 0) - grants.size);
+}
+
+/** Atomic exchange: both departures settle before either incoming member can trigger an effect. */
+function swapMembers(state, actor, aUid, bUid) {
+  if (aUid === bUid) return false;
+  const locate = uid => {
+    const owner = state.players.find(p => p.members.includes(uid));
+    const list = owner ? owner.members : state.shop;
+    const index = list.indexOf(uid);
+    return index < 0 ? null : { owner, list, index };
+  };
+  const a = locate(aUid), b = locate(bUid);
+  if (!a || !b) return false;
+  const ctx = ctxFor(state);
+  for (const loc of [a, b]) if (loc.owner && loc.owner !== actor && !ctx.canSteal(actor, loc.owner, 'member')) return false;
+  // Any two includes two in the same shop/cult: change their positions, with no acquisition.
+  if (a.list === b.list) {
+    [a.list[a.index], a.list[b.index]] = [bUid, aUid];
+    return true;
+  }
+  for (const [uid, from, to] of [[aUid, a, b], [bUid, b, a]]) if (from.owner) {
+    if (to.owner) transferWorkers(state, uid, from.owner, to.owner);
+    else returnWorkers(state, uid, from.owner);
+    cardLeaves(state, from.owner, uid);
+  }
+  a.list.splice(a.index, 1); b.list.splice(b.index, 1);
+  a.list.splice(a.index, 0, bUid); b.list.splice(b.index, 0, aUid);
+  for (const [uid, dest] of [[bUid, a], [aUid, b]]) if (dest.owner) {
+    if (dest.owner === actor) memberAcquired(state, actor, uid);
+    memberJoined(state, dest.owner, uid);
+    // Extra minions are entitlements rather than Recruit effects; a gifted Extra Hand still owns its grant.
+    for (const def of effectiveDefs(state.cards[uid])) workersNow(state, dest.owner, def, uid);
+  }
+  return true;
 }
 
 function buyFollowers(state, p, tier, chosen) {
@@ -1230,12 +1285,16 @@ function ctxFor(state) {
       state.pile.push(uid);
       refill(state);
     },
-    moveMember(uid, from, to) {
+    swapMembers: (actor, a, b) => swapMembers(state, actor, a, b),
+    moveMember(uid, from, to, { recruit: activelyAcquired = false } = {}) {
+      if (!from.members.includes(uid) || from === to) return false;
       transferWorkers(state, uid, from, to);
       cardLeaves(state, from, uid);
       from.members.splice(from.members.indexOf(uid), 1);
       to.members.push(uid);
+      if (activelyAcquired) memberAcquired(state, to, uid);
       memberJoined(state, to, uid);
+      return true;
     },
     // ---- stealing: one shared verb, so protections and reactions apply to every sphere's steals ----
     /** May `thief` steal from `victim`? kind is 'res' (resources, piles) or 'member'. Quadrants and the
@@ -1277,7 +1336,7 @@ function ctxFor(state) {
         const x = Math.max(0, Math.min(k, victim.res[c] || 0));
         if (x) { victim.res[c] -= x; took[c] = x; n += x; }
       }
-      if (what.uid !== undefined) { ctx.moveMember(what.uid, victim, thief); n += 1; }
+      if (what.uid !== undefined && ctx.moveMember(what.uid, victim, thief, { recruit: true })) n += 1;
       if (!n) return 0;
       if (what.give) what.give(n);
       const info = { thief, victim, took, uid: what.uid, n, reaction: !!what.reaction, ...(what.led !== undefined ? { led: !!what.led } : {}) };

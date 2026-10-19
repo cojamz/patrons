@@ -33,6 +33,8 @@ const HELP = `npm run check:v4 [-- options]
                        the build, and the hot-seat e2e. Not a verdict.
   --related <f,f…>     With --quick: only the unit tests that import these files (vitest related; a UI file skips
                        every engine and seeded block), e.g. --quick --related src/v4/game/Wheel.jsx,src/v4/lamp.css
+  --tests <f,f…>       With --quick/--fast: explicitly selected test files. Reports a scoped verdict, not whole-suite
+                       coverage. Useful for engine changes whose shared registry makes --related select everything.
   --fast               Unit tests (seeded blocks on their fast slice) and the build; no e2e. CI runs this.
   --full               Every seeded block at its full count (V4_GAMES=full): the nightly / remote job. The verdict
                        plays each block's verdict slice, whose strength is stated beside it (src/test/engine/v4/budget.js).
@@ -56,7 +58,12 @@ if (ci >= 0 && (!ref || ref.startsWith('--'))) { console.error('--commit needs a
 const ri = argv.indexOf('--related');
 const related = ri >= 0 ? (argv[ri + 1] || '').split(',').map(f => f.trim()).filter(Boolean) : null;
 if (ri >= 0 && (!related.length || argv[ri + 1].startsWith('--') || !quick)) { console.error('--related goes with --quick and needs files: --quick --related src/v4/game/Wheel.jsx,src/v4/lamp.css\n\n' + HELP); process.exit(2); }
-const known = new Set(['--quick', '--fast', '--full', '--commit', ref, '--related', ri >= 0 ? argv[ri + 1] : null].filter(Boolean));
+const ti = argv.indexOf('--tests');
+const tests = ti >= 0 ? (argv[ti + 1] || '').split(',').map(f => f.trim()).filter(Boolean) : null;
+if (ti >= 0 && (!tests.length || !(quick || fast) || related || tests.some(f => !/^src\/test\/[\w./-]+\.test\.[cm]?[jt]sx?$/.test(f) || f.includes('..') || !existsSync(f)))) {
+  console.error('--tests needs existing src/test/*.test files with --quick/--fast, and cannot combine with --related.'); process.exit(2);
+}
+const known = new Set(['--quick', '--fast', '--full', '--commit', ref, '--related', ri >= 0 ? argv[ri + 1] : null, '--tests', ti >= 0 ? argv[ti + 1] : null].filter(Boolean));
 const unknown = argv.filter(a => !known.has(a));
 if (unknown.length) { console.error(`unknown option ${unknown.join(' ')}\n\n${HELP}`); process.exit(2); }
 
@@ -152,7 +159,8 @@ const run = async (name, args, { env = {}, nice = 0, tail = Infinity, cmd = proc
 const workers = Number(process.env.V4_UNIT_WORKERS) || availableParallelism();
 // --quick leaves out the coverage gates that play their full sample even on the fast slice (they gate verdicts)
 const QUICK_SKIP = ['**/fire-audit.test.js', '**/truth/contest-truth-*.test.jsx', '**/records.test.js'];
-const unitArgs = related
+if (tests) console.log(`SCOPED TEST SELECTION (${tests.length} files): ${tests.join(', ')}; no whole-suite coverage claim.`);
+const unitArgs = tests ? [VITEST, 'run', ...tests, `--maxWorkers=${workers}`] : related
   ? [VITEST, 'related', '--run', ...related, `--maxWorkers=${workers}`, '--passWithNoTests']
   : [VITEST, 'run', 'src/test/engine/v4', 'src/test/v4', `--maxWorkers=${workers}`, ...(quick ? QUICK_SKIP.flatMap(g => ['--exclude', g]) : [])];
 const unit = run('unit tests', unitArgs, { nice: 10, env: games ? { V4_GAMES: games } : {}, tail: 2500 });

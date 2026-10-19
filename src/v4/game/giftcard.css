@@ -74,6 +74,11 @@
 .gift-card .gc-group + .gc-group{padding-top:8px;border-top:1px solid rgba(42,31,23,.15)}
 .gift-card .gc-who{flex:none;display:inline-flex;align-items:center;height:44px}
 .gift-card .gc-group-items{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+.gift-card[data-gift="trade"] .gc-what{white-space:normal}
+.gift-card[data-gift="trade"] .gc-row{min-height:0;flex:0 1 auto}
+.gift-card[data-gift="trade"] .gc-row > .gc-items{max-height:180px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:3px;margin:-3px}
+.gift-card .gc-holder{flex-direction:column;justify-content:center;min-width:40px;max-width:64px;height:auto;min-height:44px;text-align:center;gap:2px}
+.gift-card .gc-holder .gc-who-name{font-size:11px;line-height:13px;overflow-wrap:anywhere}
 
 .gift-card .gc-rest{display:flex;justify-content:flex-end;gap:8px}
 .gift-card .gc-lead{margin:0;font:500 12px/16px var(--sans);color:var(--ink-2,#5a4a3c)}

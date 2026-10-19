@@ -2,9 +2,6 @@ import { memberScoring } from './member-scoring.js';
 // Red: quantity over quality. Most red members at round end takes the ring's followers; ties all score.
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
-/** Open House: the face-up members it can recruit. */
-const OPEN_HOUSE_MAX = 4;
-const openHouseRow = ctx => ctx.shopCards().filter(c => cost(c) <= OPEN_HOUSE_MAX);
 
 export default {
   id: 'red',
@@ -14,55 +11,46 @@ export default {
 
   actions: [
     {
-      // the weak twin of Swap Sides, the way Open Door pairs with Open House (Cory: "let's try it")
-      key: 'evenswap', ring: 1, name: 'Even Swap', text: '+1 red, and swap one of your members for a rival’s of equal cost.',
-      estimate: (ctx, p) => 1 + (swapPairs(ctx, p, sameCost).length ? 1 : 0),
+      key: 'evenswap', ring: 1, name: 'Even Swap', text: 'Swap any two members of equal cost. +1 red.', copyDoesIt: true,
+      estimate: (ctx, p) => 1 + (swapPairs(ctx, p, 'even').length ? 1 : 0),
       resolve(ctx, p) {
         ctx.gain(p, 'red', 1, { fromAction: true });
-        swap(ctx, p, sameCost, 'Even Swap: give one of yours, get one of theirs of equal cost', `${p.name} had no equal-cost member to swap.`);
+        swap(ctx, p, 'even', 'Even Swap: choose two equal-cost members');
       },
     },
     {
-      key: 'turnout', ring: 1, name: 'Bandwagon', text: '+1 red per member recruited this round, by anyone.',
-      estimate: ctx => ctx.state.recruits,
+      key: 'turnout', ring: 1, name: 'Gather', text: '+1 red × round. +1 red.',
+      estimate: ctx => ctx.state.round + 1,
       resolve(ctx, p) {
-        // the hover's Why says the count, so its number is never read as missing a base +1 (live panel r1)
-        const n = ctx.state.recruits;
-        ctx.note(p, 'Bandwagon', n ? `${n} member${n === 1 ? '' : 's'} recruited this round, 1 red each` : 'no one has recruited this round yet');
-        ctx.gain(p, 'red', n, { fromAction: true });
+        ctx.gain(p, 'red', ctx.state.round + 1, { fromAction: true });
       },
     },
     {
-      key: 'hire', ring: 1, name: 'Open Door', text: 'Recruit the cheapest face-up member, free.',
-      estimate: ctx => cheapValue(ctx),
-      resolve(ctx, p) { hireCheapest(ctx, p, 'Open Door'); },
+      key: 'hire', ring: 1, name: 'Open Door', text: 'Recruit the cheapest shop member. +1 red.',
+      estimate: ctx => 1 + cheapValue(ctx),
+      resolve(ctx, p) { ctx.gain(p, 'red', 1, { fromAction: true }); hireCheapest(ctx, p, 'Open Door'); },
     },
     {
-      // Cory, 2026-10-15 (balance pass 1, #6): no +2 red, and you choose (was "+2 red, and recruit the cheapest
-      // face-up member, free", his own "too strong" anchor: an extra recruit plus +2)
-      key: 'hireup', ring: 2, name: 'Open House', text: `Recruit a face-up member with a printed cost of ${OPEN_HOUSE_MAX} or less, free.`,
-      estimate: ctx => Math.max(0, ...openHouseRow(ctx).map(c => c.def.f + cost(c) * 0.8)),
+      key: 'hireup', ring: 2, name: 'Promote', text: 'Swap a member with a shop member costing up to 2 more. +1 red.', copyDoesIt: true,
+      estimate: (ctx, p) => 1 + (swapPairs(ctx, p, 'promote').length ? 2 : 0),
       resolve(ctx, p) {
-        const row = openHouseRow(ctx);
-        if (!row.length) { ctx.log(`Open House: no face-up member costs ${OPEN_HOUSE_MAX} or less, so ${p.name} recruits nothing.`); return; }
-        if (row.length === 1) { ctx.recruit(p, row[0].uid, { free: true }); return; }
-        ctx.choose(p, 'Open House: recruit which member?', row.map(c => ({
-          id: `card:${c.uid}`, label: `${c.def.name} (${cost(c)})`, kind: 'card', value: c.uid, hint: c.def.f * 1.5 + cost(c),
-        })), 'red.takeFree');
+        ctx.gain(p, 'red', 1, { fromAction: true });
+        swap(ctx, p, 'promote', 'Promote: choose a member and its shop replacement');
       },
     },
     {
-      key: 'trade', ring: 2, name: 'Swap Sides', text: 'Swap one of your members for another player’s costing no more than yours +2.',
-      estimate: (ctx, p) => (swapPairs(ctx, p, upToTwoMore).length ? 2 : 0),
-      resolve(ctx, p) { swap(ctx, p, upToTwoMore, 'Swap Sides: give one of yours, get one of theirs', `${p.name} had nothing to trade.`); },
+      key: 'trade', ring: 2, name: 'Demote', text: 'Swap a member with a shop member costing at least 2 less. +1 red.', copyDoesIt: true,
+      estimate: (ctx, p) => 1 + (swapPairs(ctx, p, 'demote').length ? 2 : 0),
+      resolve(ctx, p) { ctx.gain(p, 'red', 1, { fromAction: true }); swap(ctx, p, 'demote', 'Demote: choose a member and its shop replacement'); },
     },
     {
-      key: 'take', ring: 3, name: 'Hand-pick', text: 'Take any face-up member, free.',
-      estimate: ctx => Math.max(0, ...ctx.shopCards().map(c => c.def.f + cost(c) * 0.6)),
+      key: 'take', ring: 3, name: 'Recruit a Member', text: 'Recruit a shop member. +1 red.',
+      estimate: ctx => 1 + Math.max(0, ...ctx.shopCards().map(c => c.def.f + cost(c) * 0.6)),
       resolve(ctx, p) {
         const shop = ctx.shopCards();
+        ctx.gain(p, 'red', 1, { fromAction: true });
         if (!shop.length) return;
-        ctx.choose(p, 'Hand-pick: which member?', shop.map(c => ({
+        ctx.choose(p, 'Recruit a Member: which member?', shop.map(c => ({
           id: `card:${c.uid}`, label: `${c.def.name} (${cost(c)})`, kind: 'card', value: c.uid, hint: c.def.f * 1.5 + cost(c),
         })), 'red.takeFree');
       },
@@ -71,11 +59,11 @@ export default {
 
   handlers: {
     takeFree(ctx, p, uid) { ctx.recruit(p, uid, { free: true }); },
-    trade(ctx, p, [mine, theirs]) {
-      const other = ctx.ownerOf(theirs);
-      ctx.moveMember(mine, p, other);
-      ctx.moveMember(theirs, other, p);
-      ctx.log(`${p.name} traded ${ctx.card(mine).def.name} for ${other.name}'s ${ctx.card(theirs).def.name}.`);
+    trade(ctx, p, [a, b], data) {
+      // Pinned choices reject a moved card; recheck prices/protection too before applying a queued choice.
+      if (!swapPairs(ctx, p, data.mode).some(([x, y]) => x.uid === a && y.uid === b)) return;
+      const names = [a, b].map(uid => `${ctx.ownerOf(uid)?.name || 'Shop'}'s ${ctx.card(uid).def.name}`);
+      if (ctx.swapMembers(p, a, b)) ctx.log(`${p.name} swapped ${names[0]} and ${names[1]}.`);
     },
   },
 
@@ -143,24 +131,24 @@ function hireCheapest(ctx, p, who) {
     id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: c.def.f,
   })), 'red.takeFree');
 }
-// Swaps (Swap Sides, Even Swap): one of yours for a rival's that `fits` it. A rival whose members can't be taken
-// (Bodyguard) is out of reach: a swap takes a member too (decisions.md: Watchdog, now Bodyguard, blocks Trade).
-const upToTwoMore = (mine, theirs) => cost(theirs) <= cost(mine) + 2;
-const sameCost = (mine, theirs) => cost(theirs) === cost(mine);
-function swapPairs(ctx, p, fits) {
+// A swap can rearrange any cult, but taking from a protected rival remains blocked.
+function swapPairs(ctx, p, mode) {
+  const cult = ctx.state.players.flatMap(owner => (owner === p || ctx.canSteal(p, owner, 'member')) ? ctx.membersOf(owner) : []);
+  const shop = ctx.shopCards();
   const out = [];
-  for (const a of ctx.membersOf(p))
-    for (const o of ctx.rivals(p)) {
-      if (!ctx.canSteal(p, o, 'member')) continue;
-      for (const b of ctx.membersOf(o)) if (fits(a, b)) out.push([a, o, b]);
-    }
+  const first = mode === 'even' ? [...cult, ...shop] : cult;
+  const second = mode === 'even' ? first : shop;
+  for (const a of first) for (const b of second) if (a.uid !== b.uid && (mode === 'even' ? cost(a) === cost(b)
+    : mode === 'promote' ? cost(b) <= cost(a) + 2 : cost(b) <= cost(a) - 2)) out.push([a, b]);
   return out;
 }
-function swap(ctx, p, fits, prompt, none) {
-  const pairs = swapPairs(ctx, p, fits);
-  if (!pairs.length) { ctx.log(none); return; }
-  ctx.choose(p, prompt, pairs.map(([a, o, b]) => ({
-    id: `trade:${a.uid}:${b.uid}`, label: `${a.def.name} → ${o.name}'s ${b.def.name}`, kind: 'trade',
-    value: [a.uid, b.uid], hint: (b.def.f + cost(b)) - (a.def.f + cost(a)),
-  })), 'red.trade');
+function swap(ctx, p, mode, prompt) {
+  const pairs = swapPairs(ctx, p, mode);
+  if (!pairs.length) { ctx.log(`${p.name}: no eligible members to swap.`); return; }
+  const source = card => ctx.ownerOf(card.uid)?.name || 'Shop';
+  ctx.choose(p, prompt, pairs.map(([a, b]) => ({
+    id: `trade:${a.uid}:${b.uid}`, label: `${source(a)}: ${a.def.name} ↔ ${source(b)}: ${b.def.name}`, kind: 'trade',
+    value: [a.uid, b.uid], hint: ctx.ownerOf(a.uid) === p ? (b.def.f + cost(b)) - (a.def.f + cost(a))
+      : ctx.ownerOf(b.uid) === p ? (a.def.f + cost(a)) - (b.def.f + cost(b)) : 0,
+  })), 'red.trade', { mode });
 }

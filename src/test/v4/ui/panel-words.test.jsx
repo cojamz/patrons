@@ -88,17 +88,17 @@ describe('panel words (w3)', () => {
     expect(panelText('market', { key: 'pricecheck' }, 2).verb).toMatch(/^Gain half your priciest member’s cost$/);
   });
 
-  it('a space that pays per something shows this turn\'s gain big, its rate small (round 3 skeptic: Bandwagon "+1" paid +5)', () => {
+  it('Gather follows the round while Tithe counts the viewer’s members', () => {
     const s = createGame({ seats: [{ name: 'A', kind: 'human' }, { name: 'B', kind: 'bot' }], seed: 5, quadrants: ['market', 'red', 'gold', 'purple'] });
     s.recruits = 5;
     const t = panelText('red', quadrant('red').actions.find(x => x.key === 'turnout'), 1, s, 0);
-    expect(t.main).toBe('+5 red');
-    expect(t.second).toBe('1 per recruit by all');
+    expect(t.main).toBe('+2 red');
+    expect(t.second).toBe('1 × round, +1');
     // Tithe: +1 gold per member you have, for the viewer
     const w = panelText('gold', quadrant('gold').actions.find(x => x.key === 'windfall'), 2, s, 0);
     expect(w.main).toBe(`+${s.players[0].members.length} gold`);
     // without a table: the printed rule
-    expect(panelText('red', { key: 'turnout' }, 1).main).toBe('+1 red');
+    expect(panelText('red', { key: 'turnout' }, 1).main).toBe('+2 red');
   });
 
   it('Chorus counts its arriving minion and shows a rate of one beside the total', () => {

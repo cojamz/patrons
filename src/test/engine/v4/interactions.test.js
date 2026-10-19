@@ -285,12 +285,12 @@ describe('Magenta takes members that carry state', () => {
     expect(defs(s, 0)).toEqual(['gold.speculator']);
     expect(ids(s)).not.toContain(`use:${uidOf(s, 'gold.speculator', 0)}`);
   });
-  it('Poach on a Midas switched off: it stays off', () => {
+  it('Poach actively recruits Midas: its Recruit hook switches it on for the new owner', () => {
     let s = scene({ quads: Q, round: 3, res: [{ gold: 2 }, {}], members: [[], ['gold.midas']] });
     s.cards[uidOf(s, 'gold.midas', 1)].on = false;
     s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'gold.midas', 1)}`);
-    expect(s.cards[uidOf(s, 'gold.midas', 0)].on).toBe(false);
-    expect(s.pending.options.find(o => o.kind === 'toggle').label).toContain('switch on');
+    expect(s.cards[uidOf(s, 'gold.midas', 0)].on).toBe(true);
+    expect(s.pending.options.find(o => o.kind === 'toggle').label).toContain('switch off');
   });
   it('Poach on an Investor takes the card; the gold set aside goes back to the victim, not doubled', () => {
     let s = scene({ quads: Q, round: 3, members: [[], ['gold.investor']] });

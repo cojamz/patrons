@@ -42,13 +42,12 @@ describe('hover honesty (live panel r1)', () => {
     expect(y.text).not.toMatch(/−/);
   });
 
-  it('Bandwagon: the Why says how many were recruited, so its number never reads as missing a base', () => {
-    const s0 = sceneQ({ quadrants: T, round: 1, n: 3 });
-    expect(whyLine(words(s0, 'Bandwagon').pv.reasons)).toBe('Bandwagon: no one has recruited this round yet');
-    const s = { ...s0, recruits: 3 };
-    const { pv, y } = words(s, 'Bandwagon');
-    expect(y.text).toBe('+3 red');
-    expect(whyLine(pv.reasons)).toBe('Bandwagon: 3 members recruited this round, 1 red each');
+  it('Gather shows the round gain regardless of recruitment around the table', () => {
+    for (const round of [1, 2, 3]) {
+      const s = sceneQ({ quadrants: T, round, n: 3 });
+      s.recruits = 9;
+      expect(words(s, 'Gather').y.text).toBe(`+${round + 1} red`);
+    }
   });
 
   it('Redistribute in round III with Desperado takes 2 from each rival, and the Why says Desperado doubled it', () => {

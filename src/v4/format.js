@@ -562,7 +562,7 @@ export function roundGains(start, end, p, contests) {
   const worth = (st, u) => { try { return cardDef(st, u).f ?? 1; } catch { return 1; } };
   const lost = outs.reduce((t, u) => t + worth(start, u), 0);
   const who = esc(p.name);
-  const swap = new RegExp(`^${who} traded |^.+? traded .+ for ${who}'s |swaps sides: .+ gets ${who}'s |^${who}'s Double Agent swaps sides`);
+  const swap = new RegExp(`^${who} traded |^.+? traded .+ for ${who}'s |^.+? swapped ${who}'s |^.+? swapped .+ and ${who}'s |swaps sides: .+ gets ${who}'s |^${who}'s Double Agent swaps sides`);
   const swapped = roundLines.some(l => swap.test(l));
   return { contests, members, bought, effects: total - contests - members - bought, total, joined, left, swapped, lost, gained: members + lost };
 }
@@ -1040,8 +1040,8 @@ export function turnStory(start, end, actor, me = null, mid = null) {
 export function effectStory(start, end, actor, me = null, fx = []) {
   const base = turnStory(start, end, actor, me, null);
   const P = end.players;
-  const nm = id => (id === me ? 'you' : P[id].name);
-  const whose = id => (id === me ? 'your' : `${P[id].name}'s`);
+  const nm = id => (id === 'shop' ? 'the shop' : id === me ? 'you' : P[id].name);
+  const whose = id => (id === 'shop' ? "the shop's" : id === me ? 'your' : `${P[id].name}'s`);
   const fword = n => `${Math.abs(n)} follower${Math.abs(n) === 1 ? '' : 's'}`;
   const cardName = u => (end.cards[u] ? cardDef(end, u).name : start.cards[u] ? cardDef(start, u).name : 'a member');
   const groups = new Map();
@@ -1060,6 +1060,10 @@ export function effectStory(start, end, actor, me = null, fx = []) {
     else if (e.type === 'transfer') { add(e.from.pid, e.what.r, -e.what.n); add(e.to.pid, e.what.r, e.what.n); }
     else if (e.type === 'followers') g.fol[e.to.kind === 'count' ? e.to.pid : e.from.pid] += e.what.n;
     else if (e.type === 'member-move') g.moved.push({ uid: e.what.uid, from: e.from.pid, to: e.to.pid });
+    // Promote/Demote physically exchange a cult member and a shop card under the action's cause.
+    // Their outgoing card returns to the shop, rather than being released to the pile.
+    else if (e.type === 'release' && e.to.kind === 'shop') g.moved.push({ uid: e.what.uid, from: e.from.pid, to: 'shop' });
+    else if (e.type === 'recruit' && e.from.kind === 'shop' && e.cause?.kind === 'space') g.moved.push({ uid: e.what.uid, from: 'shop', to: e.to.pid });
     else if (e.type === 'discount' && e.to.pid === actor) g.disc += e.what.n;
   }
   const signedOf = (g, pid) => {
@@ -1164,7 +1168,7 @@ export function effectStory(start, end, actor, me = null, fx = []) {
   const hit = hits.join(', ');
   // a member changing hands names both and whose it was first ("took your Retinue, gave Broker"; w4 A#62: the strip said
   // "Swap Sides · bought 10" with no word of the swap)
-  const swapLine = out.filter(l => /^(took (your|\S+['’]s) |gave .+ to )/.test(l)).join(', ');
+  const swapLine = out.filter(l => /^(took (your|the shop['’]s|\S+['’]s) |gave .+ to )/.test(l)).join(', ');
   const big = swapLine || out.find(l => /^(recruited|bought|traded|released) /.test(l) || EXTRA_LINE.test(l));
   const conv = base && base.conv && base.conv.length ? base.conv : [];
   // the strip's one line: what hit you, then what you got, then the biggest thing the turn did

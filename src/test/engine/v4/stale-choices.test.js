@@ -1,6 +1,6 @@
 // @vitest-environment node
-// Stale choices: a queued choice whose options name cards (Open Door, Open House, Hand-pick, Bargain, Clearance,
-// Swap Sides, a copy's free member…) can wait while other things happen first. A Tribute Band copying Open House
+// Stale choices: a queued choice whose options name cards (Open Door, Open Door, Hand-pick, Bargain, Clearance,
+// Swap Sides, a copy's free member…) can wait while other things happen first. A Tribute Band copying Open Door
 // in the buy step queued "Open Door: which of the cheapest members?" behind the player's own buy; the buy took one of
 // those cards and picking it threw "Card 30 is not in the shop" (found by the remote bots session). Core now pins
 // where each named card was (option.at) and shows only the options whose cards are still there; none left, the
@@ -27,12 +27,12 @@ function takeAway(s, uid, to) {
 }
 
 describe('a queued choice never offers a card that moved', () => {
-  // The bots repro (fixtures/bots-repro-open-door.json, 2026-10-14 content): P1 takes Open House, then in the buy step
+  // The bots repro (fixtures/bots-repro-open-door.json, 2026-10-14 content): P1 takes Open Door, then in the buy step
   // uses Tribute Band to copy it ("doing it again"). That queued "Open Door: which of the cheapest members?" behind
   // the buy, the buy took Stylist (card 30), and picking Stylist in the choice threw. Now (gut call, 2026-10-15) a
   // member used in the buy step resolves its whole effect first: the choice comes right away, then the buy step
   // returns with options that reflect the recruit.
-  it('the bots repro: Tribute Band copying Open House in the buy step asks Open Door first; the buy then reflects the recruit', ctx => {
+  it('the bots repro: Tribute Band copying Open Door in the buy step asks Open Door first; the buy then reflects the recruit', ctx => {
     const rec = JSON.parse(readFileSync(new URL('./fixtures/bots-repro-open-door.json', import.meta.url), 'utf8'));
     let s = structuredClone(rec.start);
     const use = rec.moves.findIndex(m => m.option.startsWith('use:'));
@@ -58,17 +58,17 @@ describe('a queued choice never offers a card that moved', () => {
   });
 
   // The same, built from today's cards (the fixture above skips once the cards change under it): Tribute Band used in
-  // the buy step copies Open House, and the copy's free-member choice comes before the buy step returns.
-  it('a member used in the buy step resolves its choice first: Tribute Band copying Open House, then a fresh buy', () => {
+  // the buy step copies Open Door, and the copy's free-member choice comes before the buy step returns.
+  it('a member used in the buy step resolves its choice first: Tribute Band copying Open Door, then a fresh buy', () => {
     const Q = ['gold', 'red', 'market', 'echo'];
     const price = d => d.s + d.w;
     const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.dejavu' && price(d) > 0);
     const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 2));
     const tied = defs.filter(d => price(d) === low).slice(0, 2).map(d => d.id);
     const dear = defs.filter(d => price(d) > low).slice(0, 4).map(d => d.id);
-    // 2 red to spend, so the buy step has something to offer after the copy (Open House no longer gives +2 red)
+    // 2 red to spend, so the buy step has something to offer after the copy (Open Door no longer gives +2 red)
     let s = table(Q, { round: 2, members: [['echo.dejavu']], res: [{ red: 2 }], shop: [...tied, ...dear] });
-    s = take(s, N('red', 'hireup'));
+    s = take(s, N('red', 'hire'));
     if (s.pending.kind === 'choose') s = move(s, s.pending.options[0].id); // Open Door's tie: either cheapest
     expect(s.pending.kind).toBe('buy');
     const use = s.pending.options.find(o => o.kind === 'use');
@@ -98,19 +98,18 @@ describe('a queued choice never offers a card that moved', () => {
     expect(s.log.some(l => l.startsWith(`${N('red', 'take')}: nothing left to choose`))).toBe(true);
   });
 
-  it('Swap Sides: a pair whose rival member moved (stolen, released) is dropped', () => {
-    const restore = pinCosts({ 'gold.taxman': [2, 2] }); // the price this case was written at (Tax Collector is 8 since 2026-10-15)
-    try {
-    let s = table(['gold', 'red', 'market', 'echo'], { n: 3, round: 2, members: [['red.twins'], ['red.intern'], ['gold.taxman']], shop: ['red.volunteer'] });
-    s = take(s, N('red', 'trade'));
-    const pairs = s.pending.options.map(o => o.value);
-    expect(pairs.length).toBe(2);
-    const [, gone] = pairs[0];
-    s.players[1].members = s.players[1].members.filter(u => u !== gone); s.players[2].members.push(gone); // moved to P3
+  it('Promote drops a pair when its outgoing member changes cults', () => {
+    let s = table(['gold', 'red', 'market', 'echo'], { n: 3, round: 2, members: [['red.twins'], ['red.bigfamily'], ['gold.taxman']], shop: ['red.volunteer'] });
+    s = take(s, N('red', 'hireup'));
+    const outgoing = s.players[1].members[0];
+    const pair = s.pending.options.find(o => o.value[0] === outgoing);
+    expect(pair).toBeTruthy();
+    s.players[1].members = [];
+    s.players[2].members.push(outgoing);
     s = resume(s);
-    expect(s.pending.options.map(o => o.value)).toEqual(pairs.slice(1).filter(([, b]) => b !== gone));
-    } finally { restore(); }
+    expect(s.pending.options.map(o => o.id)).not.toContain(pair.id);
   });
+
 });
 
 // Fuzz: seeded easy-bot games; whenever a choice offers face-up cards, sometimes a rival takes one away first (as a
