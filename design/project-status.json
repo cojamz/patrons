@@ -1,57 +1,61 @@
 {
-  "live": "v0.8.3 \u2014 Larger shop, stable details",
-  "liveCommit": "cf9e23c8caac423d34a463e137551bc63749d774",
+  "live": "v0.8.4 \u2014 Payment, member hovers and details",
+  "liveCommit": "1acee1a6c9db85d8dda4381389ffe751eacca525",
   "work": [
     {
       "id": "payment-polish",
       "name": "Payment layout",
       "owner": "payment_polish",
-      "status": "In progress",
-      "label": "Checking",
+      "status": "Shipped",
+      "label": "Live",
       "scope": "Passives above money selector; tighter spacing",
-      "evidence": "Seven focused checks passed; integrated browser pending",
-      "next": "Root desktop/phone verification"
+      "evidence": "52 integrated UI checks; exact production build; actual public desktop/phone verification",
+      "next": "Cory playtest feedback"
     },
     {
       "id": "member-hover",
       "name": "Member hover clarity",
       "owner": "member_hover_polish",
-      "status": "In progress",
-      "label": "Building",
+      "status": "Shipped",
+      "label": "Live",
       "scope": "Cost aligned right; remove redundant owner line",
-      "evidence": "Targeted review and regressions",
-      "next": "Root integrated visual check"
+      "evidence": "52 integrated UI checks; exact production build; actual public desktop/phone verification",
+      "next": "Cory playtest feedback"
     },
     {
       "id": "details-toggle",
       "name": "Details toggle",
       "owner": "details_toggle",
-      "status": "In progress",
-      "label": "Checking",
+      "status": "Shipped",
+      "label": "Live",
       "scope": "Explicit reading preference works during member choices and every phase",
-      "evidence": "Eight focused checks passed; integrated browser pending",
-      "next": "Root integration and publish"
+      "evidence": "52 integrated UI checks; exact production build; actual public desktop/phone verification",
+      "next": "Cory playtest feedback"
     }
   ],
   "next": [
     {
-      "name": "Playtest new Red",
-      "next": "Cory feedback; precise remaining animation/wording issues; temporary passive names."
-    }
-  ],
-  "releaseSummary": "v0.8.3 live \u00b7 Larger shop cards \u00b7 Details in place",
-  "upNext": [
-    {
-      "source": "Cory / existing feedback",
-      "name": "Playtest and polish",
-      "summary": "New Red ready. Broad animation audit, wheel labels and round summary remain queued.",
-      "doneWhen": "Concrete scoped fixes checked and shipped."
+      "name": "Magenta design",
+      "next": "Seven colors remain after Red/Green. Start theft discussion from current Poach; no redesign yet locked."
     },
     {
-      "source": "Design",
-      "name": "Two temporary names / reused art",
-      "summary": "Recruit Bonus and Movement Penalty are plain placeholders; art pass remains separate.",
-      "doneWhen": "Cory supplies names or approves replacements."
+      "name": "Remaining UI backlog",
+      "next": "General motion audit, wheel clarity and readable round summary."
+    }
+  ],
+  "releaseSummary": "v0.8.4 live \u00b7 Three parallel backlog fixes \u00b7 Magenta next discussion",
+  "upNext": [
+    {
+      "source": "Cory / next design discussion",
+      "name": "Magenta identity and balance",
+      "summary": "Work backward from high-impact theft; preserve distinct role alongside Red/Green/Gold.",
+      "doneWhen": "Cory agrees actions, members, prices and scoring before implementation."
+    },
+    {
+      "source": "Existing feedback",
+      "name": "Motion and wording",
+      "summary": "Unclosed animation, wheel text and round-summary notes remain in the audits.",
+      "doneWhen": "Scoped fixes checked and shipped; no blanket backlog completion claim."
     }
   ],
   "batchStatus": "Shipped \u2014 ready to test",

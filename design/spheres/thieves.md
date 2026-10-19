@@ -1,3 +1,5 @@
+> **Current reference (October 19, 2026):** The proposal below is historical. Runtime truth is `src/engine/v4/content/thieves.js`; in particular Poach gives no replacement, Lie Low protects resources AND members, Shake Down’s ceiling is4, and costs/thresholds have since changed. Magenta is proposed as the next color redesign after Red/Green; no new redesign is locked. See `design/decisions.md` for current discussion. There are nine playable color identities: Red/Green completed; Gold/Blue/Purple/Silver/Yellow/Magenta/White remain.
+
 # Magenta: the thieves (module id `thieves`; Claude's build, revision 4, 2026-10-14)
 
 Built and measured as `src/engine/v4/content/thieves.js` (tests: `src/test/engine/v4/spheres/thieves.test.js`; sims: `scripts/spheres/thieves-*.mjs`). On the table it replaces the green stand-in.

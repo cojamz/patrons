@@ -1,9 +1,13 @@
-# Latest — v0.8.3 shop sizing shipped, October 19
+# Latest — v0.8.4 backlog UI batch shipped, October 19
 
-- Public v0.8.3: source `cf9e23c8caac423d34a463e137551bc63749d774`, Pages main `a189343`. Publisher verified served stamp and HTML.
-- Larger cards fill the shop height; compact/details retain the same twelve slots, deck and card sizes. Details uses portrait space for ability text. No internal market scroll at normal laptop/desktop sizes; phone/tablet retains swipe. Very short desktop windows keep a readable scroll fallback.
-- Immutable scoped check: production build, six existing UI checks and eight viewport/color layout cases PASS. Probe verifies full abilities/prices, exact card rectangles through toggles and no page overflow. One stale unit selector was corrected to target a member rather than the new follower cards. No rules changed.
-- Evidence: eval/shop-sizing-v083/. Two visual review passes, including longest texts from all eight normal quadrants. Previous Red/Green rules and remaining animation/wording backlog below still apply.
+- Public https://cojamz.github.io/patrons/play/: **v0.8.4**, immutable source `1acee1a6c9db85d8dda4381389ffe751eacca525`, Pages main `70c0fa4`. Served stamp and HTML verified by publisher; actual public desktop/phone flows checked.
+- Three parallel lanes: payment passives above money rows with tighter layout; member hover costs at right and no redundant ownership footer; details toggle no longer forced/disabled during member choices and remembers explicit preferences. Member lists preserve effect groups then ascending price, full abilities and live controls.
+- Visual review also caught/fixed pale member ability text on payment paper. Scoped ink rule plus real-browser contrast assertion; do not revert it while styling `.ability` globally.
+- Exact final source: production build,52 focused UI checks and6 actual desktop/phone payment/choice/hover cases PASS. Eight viewport/color shop-sizing cases passed on immediately prior source before only the payment ink correction. No full-suite/sim or performance claim. Evidence: eval/backlog-ui-v084/.
+- v0.8.3 larger stable shop preserved: same twelve slots in compact/details; normal desktop fits; phone/tablet swipe; tiny desktop retains readable fallback scroll. Prior evidence: eval/shop-sizing-v083/.
+- All three lanes complete; no persistent previews. Root reconciled duplicate historical todo entries and refreshed board. General motion/wheel/round-summary backlog remains open.
+- Next design discussion: seven remaining identities Gold/Blue/Purple/Silver/Yellow/Magenta/White. Magenta suggested as next, working backward from Poach. No redesigned Magenta rule locked. Historical spheres/thieves.md now explicitly warns that old prices, Poach replacement and protection text are stale; use runtime code/current decisions.
+- Stay v0.8.x. Red/Green rules from v0.8.2 remain unchanged below.
 
 # Current handoff — v0.8.2 new Red deck shipped
 

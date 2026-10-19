@@ -18,3 +18,8 @@ Status is evidence-based. Public verification is recorded in eval/red-members-v0
 | 12 | Fast phone Recruit tap loses its sheet | Fixed / checked | UI + root | Controller closes only accepted input; five hover tests; actual touch flow | Intentional animation/tap guard retained |
 
 | 13 | Enlarge shop cards; keep details close in size without desktop scrolling | Shipped v0.8.3 | Root + layout review | Eight viewport/color cases: stable slots, full ability/price bounds; live desktop/phone inspection | Very short desktop windows retain fallback scroll; phones retain swipe |
+
+| 14 | Payment passives above selector, tighter screen | Shipped v0.8.4 | payment_polish + root | Seven payment UI checks; exact desktop/phone payment resources; public inspection | Modal focus retained |
+| 15 | Member hover costs on right, effect grouping then price; remove redundant ownership | Shipped v0.8.4 | member_hover_polish |37 focused info/member-use checks; desktop/phone list bounds; full abilities and states | No naming/art redesign |
+| 16 | Details toggle always responds rather than forcing details during member choices | Shipped v0.8.4 | details_toggle | Eight unit checks; actual member-choice toggle desktop/phone; size regression | Payment dialog retains modal focus; preference itself is phase independent |
+| 17 | Payment member ability nearly invisible on paper, discovered in review | Shipped v0.8.4 | root + payment_polish | Scoped dark ink; real browser computed-color assertion and settled screenshot | No broader theme change |

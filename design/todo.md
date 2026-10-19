@@ -1,9 +1,9 @@
-## Active backlog batch — October 19
+## Shipped backlog batch — v0.8.4, October 19
 
-- [ ] Payment passives above selector, tighter spacing — payment_polish; preserve money interactions and ability.
-- [ ] Member hover costs aligned right, redundant ownership removed — member_hover_polish; preserve effect grouping and full rules.
-- [ ] Details toggle works in all game states — details_toggle; preserve explicit reading preference and legal choices.
-- Root integrates, checks desktop/phone and ships together. No balance edits; Magenta discussion separate.
+- [x] Payment passives above selector, tighter spacing — payment_polish; preserve money interactions and ability.
+- [x] Member hover costs aligned right, redundant ownership removed — member_hover_polish; preserve effect grouping and full rules.
+- [x] Details toggle works in all game states — details_toggle; preserve explicit reading preference and legal choices.
+- Integrated immutable checks: 52 UI checks, six actual desktop/phone flows; shop sizing eight-case regression passed before the final scoped payment-ink fix. Evidence: eval/backlog-ui-v084/. No balance edits; Magenta discussion separate.
 
 ## Shipped October 19 — v0.8.3
 
@@ -56,8 +56,8 @@ Answered 2026-10-18 at 9pm Eastern; his answers are logged in decisions.md. A pi
 ## Build queue from his answers (2026-10-18)
 Not built (Cory out of credits, 2026-10-18 9:40pm Eastern). His exact calls are in decisions.md under "Cory's answers to the open calls". Also:
 - [ ] 12 coins animate as 12 coins, for any count (no bundling). Tried: every unit its own piece with the stagger tightened to ~200ms spread; it pushed pacing.test over its cap (22970 > 21060), so it was reverted. Needs the pace trimmed elsewhere first; never raise the cap.
-- [ ] Details toggle sometimes doesn't respond: it must work at every moment (animations, rival turns, pick and pay steps).
-- [ ] Payment screen: move the passives lines from the bottom to the top and tighten the screen.
+- [x] Details toggle no longer disabled/forced during member choices; explicit view persists in all states. Shipped v0.8.4. Payment dialog retains its modal focus.
+- [x] Payment screen passives above money rows, tighter spacing and readable ability ink. Shipped v0.8.4.
 - [ ] Steals are unbounded except by steal blocks. Grifter keeps only its first sentence.
 - [x] Pacing: v0.7.0 trims stationary stage hold; longest wait21,041ms is below unchanged21,060ms cap.
 - [ ] The rest of the lag: with the idle animations stopped during moves, React commits still run 80–130ms at 4× (planChain measures places with getBoundingClientRect; GameScreen re-renders). Parked speed diffs in /mnt/project-files/handoff/speed/ no longer apply cleanly.
@@ -72,9 +72,9 @@ Not built (Cory out of credits, 2026-10-18 9:40pm Eastern). His exact calls are 
 - [ ] Neutral (guest) cards stay neutral: no sphere color.
 - [ ] Drop every cost reduction for now (rework later), with fill-in abilities for Intro Offer and the other discount cards.
 - [ ] Every color has the same number of members (Recluse moves out of Blue).
-- [ ] With details on, members fit at 1270×700 with no scrolling and their full text.
+- [x] With details on, members fit at 1270×700 without scrolling and with full text. Shipped v0.8.3, eight-case layout regression.
 - [ ] Remove "its color isn't on the table".
-- [ ] Player-card member hover: cost on the right, one clean line per member, no "whose it is" line.
+- [x] Player-card member hover: cost on right; clean ability row, effect grouping then ascending cost; redundant ownership footer removed. Shipped v0.8.4; full ability/controls retained.
 - [ ] Animate the member shop refreshing at round start.
 
 ## Cory's voice note, 2026-10-18 late (historical Green proposals superseded by shipped Green spec)
@@ -88,7 +88,7 @@ Not built (Cory out of credits, 2026-10-18 9:40pm Eastern). His exact calls are 
 - [ ] Clarity motion: recruit flies to the middle, shows its effect, goes to the buyer; steals show what's taken; action effects play beside the action; a Hearthstone-style stack of bulletin cards before the log.
 
 ## Cory's ideas, 2026-10-17 evening (triaged into batches by the backlog thread)
-- [ ] "The follower shop needs to be a bit bigger." On-screen size at ~1270×700, a modest bump that keeps the layout. Batch: laptop layout.
+- [x] Larger follower/member cards in unified shop. Shipped v0.8.3; stable compact/details sizing.
 
 ## Handoff batches — October 17
 
