@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.2, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.3 — 2026-10-19 — unreleased
+
+- Larger shop cards; details reveal abilities in place without rearranging or scrolling the desktop market.
+
 ## v0.8.2 — 2026-10-19 — shipped (source ff53560, main 4735862)
 
 - Red’s twelve-member deck now includes Panel, Loyalists and two new recruit/movement passives. Volunteer is free; Twins costs 2 red; Mob counts as 5 members/followers. The upper prices are 6 / 8 / 10.

@@ -1,25 +1,11 @@
-/* A free recruit is a reading decision. Keep it in the shop, with the full ability on the face,
-   while ordinary shopping retains the small portrait cards. Never overlay the wheel or the seats. */
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-deck{display:none}
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card{height:auto;min-height:220px}
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-card .art{height:52px;min-height:52px;flex:none}
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-card .nm{font-size:14px;line-height:18px;height:auto;min-height:30px;margin:5px 6px 0}
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{display:block;padding:5px 8px 10px;font-size:14px;line-height:18px;color:var(--pl-ink,#2b2018);font-weight:500;overflow-wrap:break-word;text-wrap:pretty}
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-card .ft{height:25px;min-height:25px;margin-top:auto;flex:none}
-@media (min-width:1200px) and (min-height:500px){
-  .app.game.lt .lt-shop-cards[data-view="details"] .lt-shop-body{display:block;overflow-y:auto;overflow-x:hidden;padding:5px;scrollbar-width:thin;overscroll-behavior:contain}
-  .app.game.lt .lt-shop-cards[data-view="details"] .lt-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch}
-}
+/* Reading an ability uses the portrait's space, without rearranging the shop. */
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art{display:none}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .nm{white-space:normal;min-height:12px;flex:none;margin:4px 4px 2px;display:grid;align-content:center}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{display:block;flex:none;padding:2px 6px 2px;font-size:12px;line-height:14px;color:var(--pl-ink,#2b2018);font-weight:500;overflow-wrap:break-word;text-wrap:pretty}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card .ft{flex:none;min-height:22px;margin-top:auto}
+/* Follower offers have no ability to substitute, so their faces remain unchanged. */
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-rate.card .art{display:grid}
 @media (max-width:1199px){
-  .app.game.lt .lt-shop-cards[data-view="details"] .lt-cards{display:flex;overflow-x:auto;scroll-snap-type:x proximity;gap:10px;padding:4px 4px 8px;align-items:stretch}
-  .app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card{flex:0 0 174px;scroll-snap-align:start}
-}
-@media (min-width:861px) and (max-width:1199px) and (min-height:500px){
-  .app.game.lt[data-member-pick],.app.game.lt[data-shop-details]{--shop-h:264px}
-  .app.game.lt .lt-shop-cards[data-view="details"] .lt-shop-body{min-width:0}
-  .app.game.lt .lt-shop-cards[data-view="details"] .lt-cards{max-height:240px}
-}
-
-@media (min-width:861px) and (max-width:1199px) and (min-height:500px){
-  .app.game.lt .lt-shop-cards[data-view="details"] .lt-shop-body{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;min-height:0}
+  .app.game.lt .lt-shop-cards .lt-card.card{flex-basis:132px;height:166px;min-height:166px}
+  .app.game.lt .lt-shop-cards .lt-deck{min-height:166px}
 }
