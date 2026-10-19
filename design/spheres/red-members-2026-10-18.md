@@ -50,12 +50,12 @@ Current core routes purchases, free recruitment, theft and the initiating actor�
 | Rival-movement penalty | 3 | 2 | 5 |
 | Host | 4 | 2 | 6 |
 | Proselytizer | 4 | 2 | 6 |
-| Recruit: Promote or Demote | 5 | 3 | 8 |
-| Mentor & Protégé | 6 | 4 | 10 |
-| Mob | 8 | 4 | 12 |
+| Recruit: Promote or Demote | 4 | 2 | 6 |
+| Mentor & Protégé | 5 | 3 | 8 |
+| Mob | 6 | 4 | 10 |
 | Loyalists (unapproved defensive last slot; propose 2 members/followers) | 1 | 2 | 3 |
 
-Rationale: 8→10→12 supports promoting the promotion member into Mentor and then Mob. Mob scores 10 alone before other red members; held-red contests add a real spending opportunity cost. Recruiter affordable enough to repay through later acquisitions. Recruit promotion may create repeat-acquisition loops; price is not a substitute for a terminating rule and focused chain tests. No costs changed in the game.
+Revised upper-end proposal after Cory floated a general total-cost ceiling of 10: 6→8→10 supports promoting the promotion member into Mentor and then Mob. The general ceiling remains a design proposal, not an approved global repricing. Mob scores 10 alone before other red members; held-red contests add a real spending opportunity cost. Tribute Band is currently Green’s most expensive member at 8 green +2 wild =10. Recruiter affordable enough to repay through later acquisitions. Recruit promotion may create repeat-acquisition loops; price is not a substitute for a terminating rule and focused chain tests. No costs changed in the game.
 
 ## New contest decision — confirmed trial
 

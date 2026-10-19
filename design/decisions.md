@@ -919,3 +919,8 @@ Release-series decision: remain on v0.8.x until Cory authorizes advancing. Patch
 Cory explicitly requests held green resources for Green and held red resources for Red, replacing own-color membership contests. Implement and ship as v0.8.1; other contests/tie prizes unchanged. Rationale: avoid member commitment also automatically winning the arc.
 
 Assistant submitted a full Red price ladder and proposed Loyalists as defensive last slot, 2 members/followers at 1 red +2 wild, symmetric no-swaps restriction. These remain proposals, not approved member code. Exact prices and rationale: spheres/red-members-2026-10-18.md. Highlighted free-acquisition loops for Recruit Promote/Demote: high price cannot solve recursion.
+
+
+## 2026-10-18 — Cost ceiling discussion
+
+Cory asks whether members should generally top out at total cost 10. Current Green maximum verified in source: Tribute Band, 8 green +2 wild. Assistant recommends a default 10 ceiling and revises proposed Red upper ladder to Recruit Promote/Demote 4 red +2 wild (6), Mentor & Protégé 5 red +3 wild (8), Mob 6 red +4 wild (10). Both ceiling and prices remain proposals; no member cost changes implemented. Prefer adjusting overpowered effects rather than extending the price ceiling.
