@@ -131,3 +131,7 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 
 ## Credit discipline — Cory, October18,2026
 Be credit-conscious without hampering speed. Prefer focused regressions and targeted browser checks; keep simulations small. Avoid repeated broad suites and heavy resource use unless the change or a concrete failure warrants it.
+
+
+## Release numbering — 2026-10-18
+Cory wants to remain on v0.8.x for a while. Use patch increments for every upcoming shipped batch, including rule/content changes. Do not advance to v0.9 or v1.0 without his explicit direction. See design/releasing.md.

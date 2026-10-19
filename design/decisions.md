@@ -903,3 +903,12 @@ Instrument for all seven: `v4-fair-price.mjs sweep`, 80 paired seeds, Normal bot
 ## 2026-10-18 — Red member readback, action release continues
 
 Cory keeps Host, Mentor & Protégé, Recruiter, Patriarch, Proselytizer, Mob; Volunteer becomes free/no effect; Twins costs 2 red. Family and Big Family subsequently dropped for now. Three unnamed proposals: Recruit-trigger color income; moved member’s owner loses follower; Recruit Promote/Demote. Self-swap and +3-member alternate promotion destination exploratory. Full intake and explicitly unapproved assistant recommendations: spheres/red-members-2026-10-18.md. No Red member changes included in v0.8.0 actions release.
+
+
+## 2026-10-18 — Red member clarifications and version series
+
+Cory confirmed resource income is per Recruit ability triggered and the movement penalty applies when moving a rival’s member out of their cult. Mob counts as 5 members/followers AND retains game-end +1 per red member; should be expensive, price open. Recruiter should reward active acquisition from anywhere; inspected v0.8.0 core already routes buys/free recruitment/pile access/theft/actor incoming swaps to its hook, passive gifts excluded per earlier given-versus-taken rule. No new member code shipped.
+
+Cory questions whether Promote/Demote should exchange with opponents and wants inherent Red defense because quantity/turnover reinforce each other. Assistant recommendation (NOT approved): keep shop replacement source and propose Loyalists, “Your members can’t be swapped,” including the owner’s swaps, as last slot. Full distinctions in spheres/red-members-2026-10-18.md.
+
+Release-series decision: remain on v0.8.x until Cory authorizes advancing. Patch increments even for substantial upcoming design batches; 0.8.10 follows 0.8.9. Updated releasing.md and working-with-cory.md.
