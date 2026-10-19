@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.4, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.5 — 2026-10-19 — unreleased
+
+- Retinue counts as three, Yellow is warmer, and the opening draft shows the upcoming snake order.
+
 ## v0.8.4 — 2026-10-19 — shipped (source 1acee1a, main 70c0fa4)
 
 - Payment passives sit above the money selector with tighter spacing; member abilities remain readable in dark ink.

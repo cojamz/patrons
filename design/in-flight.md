@@ -1,6 +1,9 @@
-# Current state — v0.8.4 shipped, October 19
+# Current work — opening clarity batch, October 19
 
-- Public source `1acee1a6c9db85d8dda4381389ffe751eacca525`, main `70c0fa4`; served stamp/HTML and public desktop/phone flows verified.
-- payment_polish, member_hover_polish and details_toggle complete. Root integrated and visually reviewed, including correction of payment ability ink. No continuing agent or preview assumed.
--52 scoped UI checks + production build +6 actual desktop/phone flows pass on exact final source. Shop sizing8 cases passed immediately before the scoped ink rule. Evidence: eval/backlog-ui-v084/.
-- Next: discuss Magenta retool/balance from its current theft kit. No rule changes in this batch. Seven colors remain after Red/Green. Broad animation audit, wheel language and round-summary readability remain queued.
+Verified public remains v0.8.4 /1acee1a6. Root integrates three explicit backlog fixes:
+
+- retinue_three: Silver Retinue3 followers and3 members; price/gift preserved. Focused acquisition/copy/quantity checks pass.
+- yellow_hue: Yellow theme #ead844, distinct from Green and Gold; palette checks pass.
+- draft_order_cue: engine-derived reverse resource draft and upcoming snake placement order;2/3/4player focused checks pass.
+
+Root: immutable integrated build/unit/browser desktop/phone checks and public deployment pending. New Magenta anchor documented in spheres/magenta-redesign-2026-10-19.md; other balance discussion stays open.

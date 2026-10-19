@@ -13,7 +13,7 @@
   --gold:#e3b23c; --red:#e0645a; --blue:#6aa6dc; --green:#5fb37c; --any:#97a49f;
   --magenta:#d4508f; --thieves:#d4508f;
   /* the newer spheres: each resource color, plus its module id when that differs (Blue = market, Green = echo, White = trading) */
-  --yellow:#dcd94e; --purple:#9a62e6; --silver:#a3b3c2; --white:#eef3f8;
+  --yellow:#ead844; --purple:#9a62e6; --silver:#a3b3c2; --white:#eef3f8;
   --market:var(--blue); --echo:var(--green); --trading:var(--white);
   --display:"Marcellus", Georgia, serif; --body:"Figtree", system-ui, sans-serif;
   --tap:36px;

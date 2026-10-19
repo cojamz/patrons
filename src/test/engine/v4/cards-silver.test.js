@@ -115,24 +115,25 @@ describe('Silver members', () => {
     expect(named(s, 'Steward')).toHaveLength(1);
   });
 
-  it('Retinue: worth 2 followers; when recruited everyone else +1 silver, named; a rival’s Guest gets 1 more', () => {
+  it('Retinue: worth 3 followers and members; when recruited everyone else +1 silver, named; a rival’s Guest gets 1 more', () => {
     let s = sc({ n: 3, res: [rich], members: [[], [], ['silver.guest']], shop: ['silver.retinue'] });
     const f0 = followers(s, s.players[0]);
     s = take(s, 'gold.rush'); s = buy(s, 'silver.retinue');
-    expect(followers(s, s.players[0])).toBe(f0 + 2);
+    expect(followers(s, s.players[0])).toBe(f0 + 3);
+    expect(memberCount(s, s.players[0])).toBe(3);
     expect([S(s, 1), S(s, 2)]).toEqual([1, 2]);
     expect(named(s, 'Retinue').length).toBeGreaterThanOrEqual(1);
   });
 
   // Cory (2026-10-14): Feast Hall became Revelers, a group: more members, not more silver
   it('Revelers counts as 3 silver members for per-member effects, contributes no red contest count, and is worth 1 follower', () => {
-    let s = sc({ members: [['silver.revelers'], ['red.intern', 'red.twins']], queue: [] });
+    let s = sc({ members: [['silver.revelers'], ['red.intern', 'red.twins']], res: [{}, { red: 3 }], queue: [] });
     expect(memberCount(s, s.players[0])).toBe(3);
     expect(followers(s, s.players[0])).toBe(2);
     const red = contestTable(s).find(c => c.qid === 'red');
     expect(red.rows.find(r => r.player === 0).count).toBe(0);
     expect(red.rows.find(r => r.player === 1).count).toBe(3);
-    expect(red.winners).toEqual([1]); // Silver Revelers does not compete with Intern1 + Twins2 on Red.
+    expect(red.winners).toEqual([1]); // Silver’s printed group does not affect Red’s resource contest.
     expect(take(sc({ round: 2, members: [['silver.revelers']] }), 'gold.windfall').players[0].res.gold).toBe(3);
     s = sc({ members: [['silver.revelers', 'red.patriarch']], queue: [{ t: 'finish' }] });
     expect(s.players[0].final.parts).toContain('Patriarch +2');

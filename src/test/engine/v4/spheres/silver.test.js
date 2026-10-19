@@ -172,11 +172,11 @@ describe('Silver members', () => {
     expect(R(s).silver).toBe(9);
   });
 
-  it('Retinue: worth 2 followers and 2 members; when recruited, everyone else +1 silver', () => {
+  it('Retinue: worth 3 followers and 3 members; when recruited, everyone else +1 silver', () => {
     let s = scene({ res: [{ silver: 1, gold: 1 }], shop: ['silver.retinue'], queue: [{ t: 'buy', p: 0 }] });
     s = move(s, `card:${uidOf(s, 'silver.retinue', 'shop')}`);
-    expect(memberCount(s, s.players[0])).toBe(2);
-    expect(followers(s, s.players[0])).toBe(3);
+    expect(memberCount(s, s.players[0])).toBe(3);
+    expect(followers(s, s.players[0])).toBe(4);
     expect(R(s, 1).silver).toBe(1);
     expect(R(s, 2).silver).toBe(1);
   });
@@ -191,7 +191,7 @@ describe('Silver members', () => {
 
   it('Heir: at the start of round III, +1 silver per member (nothing in round II)', () => {
     let s = scene({ members: [['silver.heir', 'silver.retinue', 'gold.banker']], queue: [{ t: 'round', r: 3 }] });
-    expect(R(s).silver).toBe(4); // Heir1 + Retinue2 + Banker1.
+    expect(R(s).silver).toBe(5); // Heir1 + Retinue3 + Banker1.
     s = scene({ members: [['silver.heir']], queue: [{ t: 'round', r: 2 }] });
     expect(R(s).silver).toBe(0);
   });

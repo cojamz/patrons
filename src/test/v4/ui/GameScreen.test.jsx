@@ -30,6 +30,28 @@ const seats = [{ name: 'Ana', kind: 'human' }, { name: 'Bo', kind: 'bot' }, { na
 const clickable = container => [...container.querySelectorAll('[data-option]')].map(e => e.getAttribute('data-option'));
 
 describe('v4 game screen', () => {
+  it('setup order: distinguishes the remaining reverse resource draft from the upcoming placement snake', () => {
+    let state = createGame({ seats, seed: 7 });
+    const firstDrafter = state.pending.player;
+    state = applyMove(state, { player: firstDrafter, option: state.pending.options[0].id });
+    const me = state.pending.player;
+    const { container } = render(<GameScreen session={fakeSession(state, [me])} />);
+    const cue = container.querySelector('[data-setup-order]');
+    const name = id => id === me ? 'You' : state.players[id].name;
+    const rowNames = kind => [...cue.querySelectorAll(`[data-order="${kind}"] .setup-order-name`)].map(el => el.textContent);
+    expect(rowNames('draft')).toEqual([...state.firstOrder].reverse().slice(1).map(name));
+    expect(rowNames('place')).toEqual([...state.firstOrder, ...[...state.firstOrder].reverse()].map(name));
+    expect(cue.querySelector('[data-current]').textContent).toBe('You');
+    expect(cue.querySelector('[data-order="place"]').getAttribute('aria-label')).toContain('snake');
+    expect(cue.querySelectorAll('[data-option]')).toHaveLength(0);
+  });
+
+  it('setup order: disappears once placements start', () => {
+    const state = advanceTo(createGame({ seats, seed: 7 }), 'place');
+    const { container } = render(<GameScreen session={fakeSession(state, [state.pending.player])} />);
+    expect(container.querySelector('[data-setup-order]')).toBeNull();
+  });
+
   it('setup: offers each starting color and submits the option id', () => {
     const state = createGame({ seats, seed: 7 });
     const me = state.pending.player; // round I's first seat picks first (the order is drawn before the picks)

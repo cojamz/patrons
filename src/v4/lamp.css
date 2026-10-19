@@ -20,7 +20,9 @@
   --lamp:255,206,140; --lamp-ink:#ffd99a;
   /* quadrant inks: muted, printed */
   --gold:#d49b27; --red:#c4533f; --blue:#4a80b8; --green:#3f9467; --magenta:#b2386c; --thieves:var(--magenta);
-  --silver:#94a3b2; /* steel with a coin edge, clearly not white, not a grey zero, not blue (w3a A4) */ --yellow:#d2d23a; /* lemon, not mustard: #c4a93a, then #c9c23f, still sat near gold #d49b27 (w2b #26, wave-4 B #25): a clear lemon, lighter and greener than the amber gold */ --purple:#7d5ba6; --white:#e6dcc6; --any:#a8977a;
+  --silver:#94a3b2; /* steel with a coin edge, clearly not white, not a grey zero, not blue (w3a A4) */
+  --yellow:#ead844; /* warm lemon: less green than the old #d2d23a; brighter than amber gold on the dark wheel rim */
+  --purple:#7d5ba6; --white:#e6dcc6; --any:#a8977a;
   --serif:'Alegreya', Georgia, serif; --sans:'Alegreya Sans', system-ui, sans-serif;
   --display:var(--serif); --body:var(--sans);
 }

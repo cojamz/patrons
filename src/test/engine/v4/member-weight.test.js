@@ -30,8 +30,33 @@ describe('Printed followers count as members', () => {
   });
   it('preserves explicit three-member Revelers despite its one printed follower', () => {
     const s = table(['gold', 'red', 'silver', 'yellow'], { members: [['silver.revelers', 'silver.retinue']] });
-    expect(memberCount(s, s.players[0])).toBe(5);
-    expect(countMembersOfColor(s, s.players[0], 'silver')).toBe(5);
+    expect(memberCount(s, s.players[0])).toBe(6);
+    expect(countMembersOfColor(s, s.players[0], 'silver')).toBe(6);
+  });
+  it('Retinue contributes three people without changing Silver’s resource contest', () => {
+    const s = table(['gold', 'red', 'silver', 'echo'], { members: [['silver.retinue']], res: [{ silver: 7 }] });
+    const uid = uidIn(s, 'silver.retinue', 0);
+    expect(memberWeight(s, uid)).toBe(3);
+    expect(memberCount(s, s.players[0])).toBe(3);
+    expect(countMembersOfColor(s, s.players[0], 'silver')).toBe(3);
+    expect(followers(s, s.players[0])).toBe(4); // Leader plus Retinue’s three printed followers.
+    expect(contextFor(s).quadrant('silver').scoring.score(contextFor(s), s.players[0])).toBe(7);
+  });
+  it('recruiting Doppelganger copies Retinue’s three people, without repeating its gift', () => {
+    let s = table(['gold', 'red', 'silver', 'echo'], {
+      round: 3, members: [['silver.retinue']], shop: ['echo.doppel'], queue: [{ t: 'turn', p: 0 }],
+    });
+    s = take(s, 'red.take');
+    const uid = uidIn(s, 'echo.doppel', 'shop');
+    s = move(s, `card:${uid}`);
+    s = move(s, `card:${uidIn(s, 'silver.retinue', 0)}`);
+    expect(s.cards[uid].copy).toBe('silver.retinue');
+    expect(memberWeight(s, uid)).toBe(3);
+    expect(memberCount(s, s.players[0])).toBe(6);
+    expect(countMembersOfColor(s, s.players[0], 'echo')).toBe(3);
+    expect(countMembersOfColor(s, s.players[0], 'silver')).toBe(3);
+    expect(followers(s, s.players[0])).toBe(7);
+    expect(s.players[1].res.silver).toBe(0); // Becoming a copy is its own Recruit effect.
   });
   it('weighted recruit counters cross Pied Piper threshold once; recruit hooks fire once', () => {
     let s = table(Q, { res: [{ red: 20 }], members: [['red.drive', 'red.recruiter']], shop: ['red.bigfamily'] });

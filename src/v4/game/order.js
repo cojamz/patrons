@@ -51,3 +51,12 @@ export function snakeWords(state, me = null) {
   const name = id => (id === me ? 'You' : state.players[id].name);
   return `Snake order: ${[...first, ...[...first].reverse()].map(name).join(', ')} …`;
 }
+
+/** Setup's resource draft runs backward; placements start in firstOrder and snake back. The pending setup task
+ * stays in the queue, including the final automatically assigned resource, so no seat is guessed or omitted. */
+export function setupOrder(state) {
+  if (state.over || state.pending?.kind !== 'setup') return null;
+  const first = seatOrder(state);
+  const draft = (state.queue || []).filter(t => t.t === 'setupPick').map(t => t.p);
+  return { draft, place: [...first, ...[...first].reverse()] };
+}

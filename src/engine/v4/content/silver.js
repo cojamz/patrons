@@ -212,8 +212,8 @@ const silver = {
       // counts after every other round-start income (Benefactor, Banker…), as a player reads it (Cory hit this, 2026-10-14)
       onRoundStartLate(ctx, owner) { ctx.gain(owner, S, Math.floor(owner.res[S] / 3)); },
     }),
-    m('retinue', 'Retinue', 1, 1, 'Worth 2 followers. When recruited, everyone else +1 silver.', {
-      f: 2,
+    m('retinue', 'Retinue', 1, 1, 'Worth 3 followers. When recruited, everyone else +1 silver.', {
+      f: 3,
       onRecruited(ctx, owner) { giveAll(ctx, owner, S, 1); },
     }),
     // Cory (2026-10-14): replaces Feast Hall. Members are people or groups, and a hall is lots of people: it counts as

@@ -23,6 +23,20 @@ const dE = (a, b) => { const A = lab(a), B = lab(b); return Math.hypot(A[0] - B[
 const lum = h => { const [r, g, b] = hex(h).map(lin); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
 const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
 
+describe('resource colors', () => {
+  it('keeps yellow warm and readable, distinct from green and amber gold', () => {
+    const yellow = varOf('yellow');
+    const [r, g, b] = hex(yellow);
+    // Warm lemon has more red than green; equal channels drift toward the lime-looking old rim.
+    expect(r).toBeGreaterThan(g);
+    expect(g).toBeGreaterThan(b * 2);
+    expect(dE(yellow, varOf('green'))).toBeGreaterThan(50);
+    expect(dE(yellow, varOf('gold'))).toBeGreaterThan(25);
+    expect(contrast(yellow, WALNUT)).toBeGreaterThan(10);
+    expect(contrast(yellow, '#2b2018')).toBeGreaterThan(10);
+  });
+});
+
 describe('player colors', () => {
   it('stay clear of every resource color, of each other, and read on the table', () => {
     const res = RESOURCES.map(r => [r, varOf(r)]);

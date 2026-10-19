@@ -947,3 +947,5 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 
 - 2026-10-19 (Cory): Work toward retooling/rebalancing the seven remaining colors after Red/Green; Magenta theft is a possible next starting point. Execute 2–5 confident existing backlog fixes in parallel with design discussion. Selected three UI lanes, no balance changes.
 - 2026-10-19 (assistant recommendation, not a locked design): Start Magenta from its theft identity and existing Round III Poach (take a rival member). Resource theft supplies economy, defense/retaliation provide counterplay; avoid redundant steal-more members and account for both gain and denial in balance. Current rules remain unchanged pending Cory’s calls.
+
+- 2026-10-19 (Cory): Magenta next. Lock Round III: “Take any rival’s member.” Aggression is intentional; work backward from that anchor. No other Magenta redesign locked yet.

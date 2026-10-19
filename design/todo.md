@@ -1,3 +1,10 @@
+## Active opening-clarity batch — October 19
+
+- [ ] Retinue worth3 followers /3 members, preserve price and recruit gift — retinue_three.
+- [ ] Yellow wheel/resources read yellow rather than lime — yellow_hue.
+- [ ] Reverse opening draft and upcoming snake placement order visible — draft_order_cue.
+- Root integrates, checks actual desktop/phone, publishes and reconciles historical entries. Magenta RoundIII anchor locked separately; see spheres/magenta-redesign-2026-10-19.md.
+
 ## Shipped backlog batch — v0.8.4, October 19
 
 - [x] Payment passives above selector, tighter spacing — payment_polish; preserve money interactions and ability.
