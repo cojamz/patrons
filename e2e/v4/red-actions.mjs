@@ -71,10 +71,12 @@ const browser = await chromium.launch({ executablePath: browserPath });
 let currentPage, currentTag;
 try {
   for (const [tag, options] of [['desktop', { viewport: { width: 1270, height: 700 } }], ['phone', devices['iPhone 13']]]) {
-    const ctx = await browser.newContext(options);
-    const page = await ctx.newPage(); currentPage = page; currentTag = tag;
-    const errors = []; page.on('pageerror', e => errors.push(e.message));
     for (const name of ['rival-swap', 'promote', 'copy-promote']) {
+      // A fresh context prevents the previous local game’s auto-resume flag from bypassing Home.
+      const ctx = await browser.newContext(options);
+      const page = await ctx.newPage(); currentPage = page; currentTag = `${tag}-${name}`;
+      page.setDefaultTimeout(10000);
+      const errors = []; page.on('pageerror', e => errors.push(e.message));
       const test = scenario(name);
       await seedSave(page, test.save);
       await page.goto(`${base}/?intro=0&botDelay=50`);
@@ -104,9 +106,9 @@ try {
       await page.locator('.app.game[data-phase="buy"]:not([data-animating])').waitFor({ timeout: 15000 });
       await page.screenshot({ path: `${out}/${tag}-${name}-settled.png` });
       console.log(`${tag}: ${name}; exact owners, resources, cards, shop and restored buy phase.`);
+      if (errors.length) throw new Error(`${tag}: ${errors.join('; ')}`);
+      await ctx.close();
     }
-    if (errors.length) throw new Error(`${tag}: ${errors.join('; ')}`);
-    await ctx.close();
   }
 } catch (error) {
   if (currentPage && !currentPage.isClosed()) {
