@@ -1,8 +1,10 @@
 # Red design intake — confirmed action spec
 
-- [ ] Release built Red action redesign after immutable scoped checks and desktop/phone verification: spheres/red-redesign-2026-10-18.md. Promote/Demote target any cult; equal-cost swap any two members; acquire-for-yourself Recruit triggers only.
-- [ ] Design Red members around this action structure with Cory. Existing six identity/support pitches remain unapproved.
+- [x] Shipped Red action redesign as v0.8.0 (216 focused tests; six public desktop/phone scenarios; eval/red-v080/verification.md): spheres/red-redesign-2026-10-18.md. Promote/Demote target any cult; equal-cost swap any two members; acquire-for-yourself Recruit triggers only.
+- [ ] Design Red members with Cory: spheres/red-members-2026-10-18.md. Eight keepers plus three proposed effects; Family/Big Family dropped for now. Assistant recommendations unapproved.
 - [ ] Universal inherent1resource per action is a direction; do not silently apply it to other colors as part of Red.
+
+- [ ] Red picker polish: keep phone turn toast clear of choice sheet; include both outgoing and incoming member in shop-swap turn toast. Existing selection/ownership/buy flow works; observed during v0.8.0 public browser review.
 
 # Shipped: Green v0.7.0
 

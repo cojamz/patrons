@@ -1,7 +1,17 @@
 {
-  "live": "v0.7.0 \u2014 Green redesign",
-  "liveCommit": "4b6a8fef03dba491ae8378f394207c05dd2ba2c0",
+  "live": "v0.8.0 \u2014 Red actions",
+  "liveCommit": "c643d186702476108cb3a0e5b56eb39a88734647",
   "work": [
+    {
+      "id": "red-actions",
+      "name": "Red actions",
+      "owner": "Root; engine and UI lanes integrated",
+      "status": "Shipped",
+      "scope": "Six actions, any-cult exchanges, active Recruit triggers",
+      "evidence": "216 focused tests; immutable build; six public desktop/phone browser cases; full stamp",
+      "next": "Cory playtest feedback; member redesign discussion",
+      "label": "Live"
+    },
     {
       "id": "green-release",
       "name": "Green redesign",
@@ -15,17 +25,17 @@
   ],
   "next": [
     {
-      "name": "Red identity",
-      "next": "Discuss member movement and accompanying effects with Cory before implementation."
+      "name": "Red members",
+      "next": "Discuss eight keepers plus three proposed effects. Family and Big Family dropped for now."
     }
   ],
-  "releaseSummary": "v0.7.0 live \u00b7 Green complete \u00b7 Red design discussion next",
+  "releaseSummary": "v0.8.0 live \u00b7 Red actions complete \u00b7 Red members under discussion",
   "upNext": [
     {
       "source": "Cory",
-      "name": "Red design discussion",
-      "summary": "Movement at its core; supporting mechanics not approved yet.",
-      "doneWhen": "Cory locks direction and requests implementation."
+      "name": "Red members",
+      "summary": "See spheres/red-members-2026-10-18.md; recommendations are not approvals.",
+      "doneWhen": "Cory locks member effects and requests implementation."
     },
     {
       "source": "Existing backlog",
@@ -35,5 +45,5 @@
     }
   ],
   "batchStatus": "Shipped \u2014 ready to test",
-  "batchNote": "Public source stamp and desktop/phone nested copies verified"
+  "batchNote": "Exact public source stamp and desktop/phone Red flow verified"
 }

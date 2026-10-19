@@ -1,13 +1,11 @@
-# Current handoff — Green v0.7.0 shipped
+# Current handoff — Red v0.8.0 shipped
 
-- Public https://cojamz.github.io/patrons/play/ is **v0.7.0**, exact checked source `4b6a8fef03dba491ae8378f394207c05dd2ba2c0`, Pages main `d6241e1cc1ae2c5f7ef77342f527b59c9d5ff7b4`. Verified served stamp/HTML and actual desktop/phone copy flow. Evidence: eval/green-v070/verification.md.
-- Green's agreed spec: spheres/green-redesign-2026-10-18.md. Twelve-member deck, confirmed prices, Chorus/BuildUp, inherent+1Green, rival Encore, fresh choices through copies, per-branch cycle guards, saved continuations, Agents/Bait, Recruit StuntDouble, copied ExtraHand all implemented.
-- Final107related tests+build+copyall+nested desktop/phone checks pass; preceding implementation1,326tests/1skip+fullhotseat passed. Online stress failed under concurrent load; isolated broadcast rerun finished. Shared-storage browser tabs are weaker than real remote devices. No unresolved Green check failure.
-- Signed Bait loss can debit printed followers, totals floor0, results preserve attribution, White sales/debt stay valid. Stunt's recruit starts a fresh member chain so it can copy the recruiting action.
-- Provisional: Chorus/Connector names; Chronicler rename; Connector4+2 and Bait3+2 prices; equalizing other deck counts stays backlog. Retired Green art is reused with distinct current card identities.
-- **Next: discuss Red with Cory before changing it.** He wants member movement at its core; asks what quieter supporting effects accompany it. Recruit-heavy Red is being explored, not approved. Current Green has5Recruit members: Busker, StuntDouble, Doppelganger, Impostor, Connector. Assistant pitches are in decisions.md, explicitly unapproved.
-- Cory's latest process call: credit-conscious without slowing delivery; focused tests, small sims, no redundant full-suite runs. All helper lanes ended; no assumed background work. Local preview is being stopped during wrap.
-- The older checkpoints below are historical; do not treat their stale public versions/blockers as current. Other feedback remains in todo/backlog triage.
+- Public https://cojamz.github.io/patrons/play/ is v0.8.0, checked source `c643d186702476108cb3a0e5b56eb39a88734647`, main `99a7ee83979cd9d654f8bead7f26c975124ad0ab`. Served full stamp/HTML verified; all six actual desktop/phone Red browser scenarios passed publicly.
+- Six new Red actions and inherent +1 red implemented. Any-cult Promote/Demote, any two equal-cost members, printed total cost, atomic shop exchanges and acting-leader-only Recruit hooks. Existing Red members intentionally retained. Other colors’ inherent resources unchanged.
+- Checks/evidence: eval/red-v080/verification.md. 216 focused tests/one obsolete replay skip on same app source; final immutable build +23 focused +six desktop/phone browser scenarios pass. No broad suite/sim claim.
+- Current member intake: spheres/red-members-2026-10-18.md. Eight keepers plus three proposed effects; Family/Big Family dropped for now. No implementation of new member discussion yet. Assistant recommendations clearly separated.
+- Next: continue Red member discussion with Cory; other backlog remains queued. All action lanes complete. Port5322 gate preview stopped automatically; browser checks close their browsers. Minor follow-ups: phone turn toast can overlap picker; shop exchange toast omits incoming member. Logged in todo; gameplay verified.
+- Green v0.7.0 history: eval/green-v070/verification.md and spheres/green-redesign-2026-10-18.md. Prior checkpoints below are historical and contain stale instructions/versions.
 
 # Cults — agent handoff, October 18, 2026
 

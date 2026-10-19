@@ -898,3 +898,8 @@ Instrument for all seven: `v4-fair-price.mjs sweep`, 80 paired seeds, Normal bot
 - (Cory) Equal-cost swap can exchange any two members across cults/the shop, including two rivals' members.
 - (Cory) Recruit triggers when the acting leader acquires a member for their own cult, including swaps/taking. A member moved into another leader's cult does not trigger that recipient's Recruit effect.
 - (Cory) Red gets an inherent1Red per action, like Green. Universal inherent resources are the intended general direction; other colors are not yet changed.
+
+
+## 2026-10-18 — Red member readback, action release continues
+
+Cory keeps Host, Mentor & Protégé, Recruiter, Patriarch, Proselytizer, Mob; Volunteer becomes free/no effect; Twins costs 2 red. Family and Big Family subsequently dropped for now. Three unnamed proposals: Recruit-trigger color income; moved member’s owner loses follower; Recruit Promote/Demote. Self-swap and +3-member alternate promotion destination exploratory. Full intake and explicitly unapproved assistant recommendations: spheres/red-members-2026-10-18.md. No Red member changes included in v0.8.0 actions release.

@@ -94,7 +94,7 @@ try {
       const card = page.locator('.gift-card[data-gift="trade"]');
       await card.waitFor();
       await page.locator(`.gift-card .gc-row[data-row="1"] [data-uid="${test.a}"]`).click();
-      const choose = page.locator(`.gift-card .gc-row[data-row="2"] [data-option=${JSON.stringify(test.pair)}]`);
+      const choose = page.locator(`.gift-card .gc-row[data-row="2"] [data-option=${JSON.stringify(test.pair)}]:not([disabled])`);
       await choose.waitFor();
       await page.screenshot({ path: `${out}/${tag}-${name}-choice.png` });
       if (tag === 'phone') await choose.tap(); else await choose.click();
