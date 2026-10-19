@@ -40,9 +40,10 @@ describe('v4 game screen', () => {
     const name = id => id === me ? 'You' : state.players[id].name;
     const rowNames = kind => [...cue.querySelectorAll(`[data-order="${kind}"] .setup-order-name`)].map(el => el.textContent);
     expect(rowNames('draft')).toEqual([...state.firstOrder].reverse().slice(1).map(name));
-    expect(rowNames('place')).toEqual([...state.firstOrder, ...[...state.firstOrder].reverse()].map(name));
+    expect(rowNames('place')).toEqual(state.firstOrder.map(name));
     expect(cue.querySelector('[data-current]').textContent).toBe('You');
-    expect(cue.querySelector('[data-order="place"]').getAttribute('aria-label')).toContain('snake');
+    expect(cue.querySelector('[data-order="place"]').getAttribute('aria-label')).toBe(`Place · snake: ${[...state.firstOrder, ...[...state.firstOrder].reverse()].map(name).join(', ')}, and back again`);
+    expect(cue.querySelector('.setup-order-tail').getAttribute('title')).toBe('Then back in reverse order');
     expect(cue.querySelectorAll('[data-option]')).toHaveLength(0);
   });
 
