@@ -1,3 +1,10 @@
+## Active backlog batch — October 19
+
+- [ ] Payment passives above selector, tighter spacing — payment_polish; preserve money interactions and ability.
+- [ ] Member hover costs aligned right, redundant ownership removed — member_hover_polish; preserve effect grouping and full rules.
+- [ ] Details toggle works in all game states — details_toggle; preserve explicit reading preference and legal choices.
+- Root integrates, checks desktop/phone and ships together. No balance edits; Magenta discussion separate.
+
 ## Shipped October 19 — v0.8.3
 
 - [x] Larger shop cards; stable compact/details grid without normal desktop scrolling. Full long-rule/price bounds checked across eight viewport/color cases. Evidence: eval/shop-sizing-v083/.

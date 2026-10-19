@@ -2,7 +2,7 @@ import { discountSources } from '../../engine/v4/discount.js';
 // The information layer: everything here appears on hover (mouse) or tap / long-press (touch), never always on.
 // - Tip: any element that explains itself in a small card (hover after a beat; a tap pins it; Esc / tap away closes).
 // - Term / CardText: game keywords underlined in rules text; each opens its glossary definition (src/v4/glossary.js).
-// - CardName / MemberCard: a member named anywhere opens the full card (color, cost, owner).
+// - CardName / MemberCard: a member named anywhere opens the full card (color, cost, ability).
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -230,7 +230,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {/* in plain words, no term to look up (w4b #26: "Colorless here" was a word the rulebook never defines) */}
       {!onTable(state, d) && <small className="mc-live" data-colorless="">Its color isn’t on this table: it counts as a member of no color.</small>}
       {copied && <small className="mc-live" data-copy-of="">Copy of <CardName state={state} def={copied} /></small>}
-      {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used && !state.over ? ' · used' : ''}</small>}
+      {owner && card && card.used && !state.over && <small className="mc-live" data-member-used="">Used</small>}
       {/* the cost and nothing else about paying (Cory, 03:40: cut "You pay"); a discount on you says only why the face's
           price is struck ("Your next member costs 4 less.") */}
       {/* the shop's header says a discount once; a face beside its hover shows the price (w4 A#23: the sentence on all 10) */}

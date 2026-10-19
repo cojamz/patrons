@@ -222,6 +222,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
             </span>
           </div>
           {def && <p className="ability" data-pay-ability><CardText text={def.text} /></p>}
+          {notes.length > 0 && <ul className="pay-rules" data-pay-rules={notes.length}>{notes.map(n => <li key={n.key} data-pay-rule={n.key}>{n.text}</li>)}</ul>}
         </div>
 
         {/* your resources in two rows (Cory, 2026-10-15, on the old lifted-and-faded coins: "hard to decipher … not
@@ -276,13 +277,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
           </div>
         </div>
 
-        {(notes.length > 0 || nudge) && (
-          <div className="pay-notes">
-            {notes.length > 0 && <ul className="pay-rules" data-pay-rules={notes.length}>{notes.map(n => <li key={n.key} data-pay-rule={n.key}>{n.text}</li>)}</ul>}
-
-            {nudge && <p key={nudge.n} className="pay-nudge" role="status">{nudge.text}</p>}
-          </div>
-        )}
+        {nudge && <p key={nudge.n} className="pay-nudge" role="status">{nudge.text}</p>}
 
         <div className="pay-foot">
           {back && <button type="button" className="pay-cancel" data-option="back" disabled={busy} onClick={() => onPick('back')}>Cancel</button>}

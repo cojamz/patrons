@@ -37,10 +37,54 @@ describe('member choice readability', () => {
     rerender(<ShopCards state={state} me={1} mySeats={[1]} optionFor={() => ({ id: 'irrelevant' })} />);
     expect(container.querySelector('[data-member-pick]')).toBeNull();
   });
+
+  it('lets the reader override automatic details during a member choice without changing the legal pick', () => {
+    const base = table();
+    const options = base.shop.slice(0, 3).map(uid => ({ id: `take:${uid}`, kind: 'card', value: uid, target: { uid } }));
+    const state = { ...base, pending: { kind: 'choose', player: 0, options } };
+    const onPick = vi.fn(), onViewChange = vi.fn();
+    const optionFor = key => options.find(o => key === `card:${o.value}`);
+    const props = { state, me: 0, mySeats: [0], optionFor, onPick, onViewChange };
+    const { container, getByRole, rerender, unmount } = render(<ShopCards {...props} />);
+    const toggle = getByRole('button', { name: 'Show member abilities' });
+    expect(toggle.disabled).toBe(false);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(toggle);
+    expect(container.querySelector('[data-view="compact"]')).not.toBeNull();
+    expect(localStorage.getItem(VIEW_KEY)).toBe('compact');
+    expect(onViewChange).toHaveBeenLastCalledWith(false);
+    fireEvent.click(container.querySelector(`[data-option="${options[0].id}"]`));
+    expect(onPick).toHaveBeenCalledExactlyOnceWith(options[0].id);
+    // Resolving one choice, then entering another, must not override that explicit choice.
+    rerender(<ShopCards {...props} state={{ ...state, pending: { kind: 'buy', player: 0, options: [] } }} />);
+    rerender(<ShopCards {...props} state={{ ...state, pending: { ...state.pending, options: [...options] } }} />);
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    unmount();
+    const again = render(<ShopCards {...props} />);
+    expect(again.container.querySelector('[data-view="compact"]')).not.toBeNull();
+  });
 });
 
 
 describe('shop reading controls', () => {
+  it.each([
+    ['rival turn', { kind: 'place', player: 1, options: [] }, 'rival'],
+    ['payment', { kind: 'pay', player: 0, options: [] }, 'pay'],
+    ['animation', { kind: 'buy', player: 0, options: [] }, 'animating'],
+  ])('keeps details reversible during %s without taking a game action', (_label, pending, phase) => {
+    const base = table(), onPick = vi.fn();
+    const { container, getByRole } = render(<ShopCards state={{ ...base, pending }} me={0} mySeats={[0]} phase={phase} onPick={onPick} />);
+    const toggle = getByRole('button', { name: 'Show member abilities' });
+    expect(toggle.disabled).toBe(false);
+    fireEvent.click(toggle);
+    expect(container.querySelector('[data-view="details"]')).not.toBeNull();
+    expect(localStorage.getItem(VIEW_KEY)).toBe('details');
+    fireEvent.click(toggle);
+    expect(container.querySelector('[data-view="compact"]')).not.toBeNull();
+    expect(localStorage.getItem(VIEW_KEY)).toBe('compact');
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
   it('switches sort order with either half of one click target and remembers detailed cards', () => {
     const base = table();
     const props = { state: base, me: 0, mySeats: [0] };

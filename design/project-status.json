@@ -3,34 +3,34 @@
   "liveCommit": "cf9e23c8caac423d34a463e137551bc63749d774",
   "work": [
     {
-      "id": "red-members",
-      "name": "New Red members",
-      "owner": "Root + engine lane",
-      "status": "Shipped",
-      "label": "Live",
-      "scope": "12 members, prices/bodies, Loyalists, Panel\u2019s another-member rule, recruit and movement passives",
-      "evidence": "241 integrated checks; final38 focused; actual public desktop/phone chain/swap",
-      "next": "Cory playtests; name two passives"
+      "id": "payment-polish",
+      "name": "Payment layout",
+      "owner": "payment_polish",
+      "status": "In progress",
+      "label": "Checking",
+      "scope": "Passives above money selector; tighter spacing",
+      "evidence": "Seven focused checks passed; integrated browser pending",
+      "next": "Root desktop/phone verification"
     },
     {
-      "id": "green-fixes",
-      "name": "Green + timing",
-      "owner": "Green lane",
-      "status": "Shipped",
-      "label": "Live",
-      "scope": "Chorus excludes itself; latest-action copy; no copied Recruit; bold timing",
-      "evidence": "Saved/copied choices and pressure checks; phone timing inspection",
-      "next": "Concrete playtest feedback"
+      "id": "member-hover",
+      "name": "Member hover clarity",
+      "owner": "member_hover_polish",
+      "status": "In progress",
+      "label": "Building",
+      "scope": "Cost aligned right; remove redundant owner line",
+      "evidence": "Targeted review and regressions",
+      "next": "Root integrated visual check"
     },
     {
-      "id": "unified-shop",
-      "name": "One shared shop",
-      "owner": "UI lane + root",
-      "status": "Shipped",
-      "label": "Live",
-      "scope": "Larger member/follower cards; same slots and sizes in details; normal desktop market fits without scrolling",
-      "evidence": "Immutable build + six UI checks + eight viewport/color layout cases; live desktop/phone inspection",
-      "next": "Remaining wheel/round-summary polish"
+      "id": "details-toggle",
+      "name": "Details toggle",
+      "owner": "details_toggle",
+      "status": "In progress",
+      "label": "Checking",
+      "scope": "Explicit reading preference works during member choices and every phase",
+      "evidence": "Eight focused checks passed; integrated browser pending",
+      "next": "Root integration and publish"
     }
   ],
   "next": [

@@ -167,7 +167,8 @@ export function memberRows(state, pid, viewer = null, optionFor = () => null) {
       loaded: kind === 'use' && !c.used, // a use still in hand: a rival's is a threat to watch (w2b #21)
     });
   }
-  return [...rows.values()].sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind));
+  return [...rows.values()].sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind)
+    || ((a.def.s || 0) + (a.def.w || 0)) - ((b.def.s || 0) + (b.def.w || 0)));
 }
 
 /** The members pid can use now with an effect (not refused by the engine, not worth nothing): [{ uid, name, use }]. */

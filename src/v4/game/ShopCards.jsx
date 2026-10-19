@@ -28,7 +28,7 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
 // cost). Remembered per viewer in this browser; a blocked storage just means the default.
 export const SORT_KEY = 'patrons.v4.shopSort';
 export const VIEW_KEY = 'patrons.v4.shopView';
-const readView = () => { try { return localStorage.getItem(VIEW_KEY) === 'details' ? 'details' : 'compact'; } catch { return 'compact'; } };
+const readView = () => { try { const saved = localStorage.getItem(VIEW_KEY); return saved === 'details' || saved === 'compact' ? saved : null; } catch { return null; } };
 const readSort = () => { try { return localStorage.getItem(SORT_KEY) === 'color' ? 'color' : 'cost'; } catch { return 'cost'; } };
 /** The printed cost as one number (every part, colored and any). */
 export const costTotal = (state, d) => costParts(d, state.resources).reduce((t, c) => t + c.n, 0);
@@ -84,7 +84,6 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const rowRef = useRef(null), deckRef = useRef(null);
   const [sort, setSortState] = useState(readSort);
   const [view, setView] = useState(readView);
-  const toggleView = () => { const next = view === 'compact' ? 'details' : 'compact'; setView(next); hover?.close?.(); try { localStorage.setItem(VIEW_KEY, next); } catch { /* this visit only */ } };
   const setSort = v => { setSortState(v); try { localStorage.setItem(SORT_KEY, v); } catch { /* private window: this visit only */ } };
   useDeal(rowRef, deckRef, state); // a refill comes off the deck
   // a card that just arrived (a refill sliding under the pointer after an instant buy) ignores clicks for half a second
@@ -108,7 +107,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   steady.current = { key: rowKey, uids: row };
   const uids = tray || [...row, ...pileOpts];
   const memberPick = picking && uids.some(uid => optionFor(`card:${uid}`));
-  const detailed = memberPick || view === 'details';
+  // Show abilities for a first member choice, but a reader's explicit preference always wins, in every phase.
+  const detailed = view === 'details' || (view === null && memberPick);
+  const toggleView = () => { const next = detailed ? 'compact' : 'details'; setView(next); hover?.close?.(); try { localStorage.setItem(VIEW_KEY, next); } catch { /* this visit only */ } };
   useEffect(() => { onViewChange?.(detailed); }, [detailed, onViewChange]);
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
@@ -119,7 +120,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
         {/* a discount is said once, here, beside the struck prices (w4 A#23: its sentence was on all ten hovers) */}
         <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} members affordable` : `${state.shop.length} members`}</small></h3>
         <span className="lt-shop-controls">
-          <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} disabled={memberPick} onClick={toggleView}>details</button>
+          <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} onClick={toggleView}>details</button>
           <button type="button" className="lt-sort" role="switch" aria-label="Group members by color" aria-checked={sort === 'color'} title="Switch cost / color order" onClick={() => setSort(sort === 'cost' ? 'color' : 'cost')}>
             <span className={sort === 'cost' ? 'on' : ''}>cost</span><span className={sort === 'color' ? 'on' : ''}>color</span>
           </button>

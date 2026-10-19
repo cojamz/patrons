@@ -30,7 +30,7 @@ function marketState() {
 // Ported from the retired Shop.jsx / Players.jsx to what the table shows now: the shop strip (ShopCards), each cult at
 // the table (CultSeat: its member figures and their cards) and a cult's card (SeatCard: its member list).
 describe('a member\'s card opens wherever the member shows', () => {
-  it('the shop strip shows every face-up card; a rival\'s figure and cult card open the member; the card face names the owner', () => {
+  it('the shop strip shows every face-up card; a rival\'s figure and cult card open the member; the card face omits redundant ownership', () => {
     const { s, held } = marketState();
     const { container } = render(<ShopCards state={s} me={0} mySeats={[0]} optionFor={none} onPick={() => {}} />);
     expect(container.querySelectorAll('.card[data-uid]').length).toBe(s.shop.length);
@@ -49,7 +49,12 @@ describe('a member\'s card opens wherever the member shows', () => {
     expect(sc.container.querySelector(`[data-card-name="${bo.id}"]`)).not.toBeNull();
     cleanup();
     const face = render(<CardFace state={s} uid={held} />);
-    expect(face.container.textContent).toMatch(/Bo’s/); // the owner, on the card
+    expect(face.container.querySelector('.owner')).toBeNull();
+    expect(face.container.textContent).not.toMatch(/Bo’s/);
+    cleanup();
+    s.cards[held].used = true;
+    const used = render(<CardFace state={s} uid={held} />);
+    expect(used.container.querySelector('[data-member-used]').textContent).toBe('Used');
   });
 });
 

@@ -149,7 +149,12 @@ describe('v4 payment picker', () => {
     const ss = session(state, [me]);
     render(<GameScreen session={ss} />);
     const dlg = screen.getByRole('dialog');
-    const rules = [...dlg.querySelectorAll('[data-pay-rule]')].map(e => e.textContent);
+    const rulesEl = dlg.querySelector('[data-pay-rules]');
+    const rules = [...rulesEl.querySelectorAll('[data-pay-rule]')].map(e => e.textContent);
+    // Understand the adjusted cost before choosing coins; keep the member's ability in the same header.
+    expect(dlg.querySelector('.pay-id').contains(rulesEl)).toBe(true);
+    expect(dlg.querySelector('[data-pay-ability]').compareDocumentPosition(rulesEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(rulesEl.compareDocumentPosition(dlg.querySelector('.pay-rows')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(rules.some(t => /gold counts double/.test(t))).toBe(true);
     expect(rules.some(t => /−4/.test(t))).toBe(true);
     // the default way pays the engine's price (each gold pays 2 here), no coin wasted beyond half a gold

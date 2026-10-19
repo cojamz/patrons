@@ -75,6 +75,7 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
     <ul className="mu-list" data-member-list={pid}>
       {rows.map((row, k) => {
         const st = stateOf(row);
+        const showTag = row.tag && !['pays at round start', 'scores at game end'].includes(row.tag.text);
         const brk = k > 0 && rows[k - 1].kind !== row.kind;
         return (
           <li key={row.key} className={`mu-row k-${row.kind}${st ? ` s-${st}` : ''}${brk ? ' brk' : ''}`} data-member-row={row.def.id} data-state={st || undefined}>
@@ -82,13 +83,15 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
             <span className="mu-body" style={{ '--member-color': `var(--q-${sphereOf(state, row.def)}, var(--pl-ink-3))` }}>
               <span className="mu-head">
                 <b className="mu-name"><CardName state={state} uid={row.uid} />{row.n > 1 ? <span className="num"> ×{row.n}</span> : null}</b>
-                {/* its state on the right: a switch, the Use button when it's yours to use now, else a quiet word */}
+                <span className="mu-price" data-member-cost={row.uid} aria-label={`${row.name} cost`}><CostDots parts={costParts(row.def, state.resources)} /></span>
+              </span>
+              <span className="mu-status">
+                {/* Keep live controls separate from the price; the full ability stays uncut. */}
                 {row.ask && row.ask.skip && onPick ? <SkipButton ask={row.ask} onPick={onPick} />
                   : row.toggle ? <MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} />
                   : onPick && row.use && !row.use.blocked && !row.use.idle ? <UseButton use={row.use} uid={row.uid} name={row.name} onPick={onPick} />
-                    : row.tag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
+                    : showTag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
               </span>
-              <span className="mu-price" data-member-cost={row.uid}><span>Cost</span><CostDots parts={costParts(row.def, state.resources)} /></span>
               {/* the whole sentence, never cut; plain (the member's own card underlines its keywords) */}
               <span className="mu-text" data-ability>{row.text ? <Rich text={row.text} /> : 'No effect.'}</span>
             </span>

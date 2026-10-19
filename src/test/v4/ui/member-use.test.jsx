@@ -80,7 +80,10 @@ describe('the seat card list', () => {
     const pick = [];
     const { container } = render(<SeatMembers state={s} pid={0} me={0} optionFor={optionsOf(s)} onPick={id => pick.push(id)} />);
     const rows = [...container.querySelectorAll('[data-member-row]')];
-    expect(rows.map(r => r.dataset.memberRow).slice(0, 3)).toEqual(['gold.jackpot', 'gold.speculator', 'trading.pawnbroker']);
+    const useRows = memberRows(s, 0, 0, optionsOf(s)).filter(r => r.kind === 'use');
+    expect(rows.map(r => r.dataset.memberRow).slice(0, 3)).toEqual(useRows.map(r => r.def.id));
+    const costs = useRows.map(r => r.def.s + r.def.w);
+    expect(costs).toEqual([...costs].sort((a, b) => a - b));
     const by = id => container.querySelector(`[data-member-row="${id}"]`);
     expect(by('gold.jackpot').dataset.state).toBe('ready');
     expect(by('gold.jackpot').querySelector('[data-use]').textContent).toMatch(/^Use: \+7/);
@@ -89,8 +92,8 @@ describe('the seat card list', () => {
     expect(by('trading.pawnbroker').dataset.state).toBe('blocked'); // nothing to sell: no button
     expect(by('trading.pawnbroker').querySelector('[data-use]')).toBeNull();
     expect(by('gold.midas').querySelector('[data-switch]').dataset.switch).toBe('on');
-    expect(by('gold.banker').textContent).toContain('pays at round start');
-    expect(by('gold.tycoon').textContent).toContain('scores at game end');
+    expect(by('gold.banker').querySelector('[data-ability]').textContent).toMatch(/Round Start/);
+    expect(by('gold.tycoon').querySelector('[data-ability]').textContent).toMatch(/Game end/i);
     // the sentences are whole (no "…")
     for (const r of rows) expect(r.querySelector('[data-ability]').textContent).not.toMatch(/…$/);
     fireEvent.click(by('gold.jackpot').querySelector('[data-use]'));

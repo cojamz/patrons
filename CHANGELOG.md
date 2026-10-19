@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.3, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.4 — 2026-10-19 — unreleased
+
+- Payment passives above the selector, cleaner member hover lists and a reliable details toggle.
+
 ## v0.8.3 — 2026-10-19 — shipped (source cf9e23c, main a189343)
 
 - Larger shop cards; details reveal abilities in place without rearranging or scrolling the desktop market.

@@ -141,9 +141,13 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 
 /* Each member has a stable name / cost / ability rhythm, with a quiet color edge. */
 .seat-card .mu-row{padding:8px 0;column-gap:8px}
-.seat-card .mu-body{border-left:3px solid var(--member-color);padding-left:8px;gap:4px}
-.mu-price{display:flex;align-items:baseline;gap:8px;font-size:14px;line-height:18px;color:var(--pl-ink-2,#6e5c49)}
-.mu-price>span:first-child{font-size:11px}
+.seat-card .mu-body{border-left:3px solid var(--member-color);padding-left:8px;display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+.seat-card .mu-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:8px;flex-wrap:nowrap}
+.mu-price{display:inline-flex;align-items:baseline;justify-content:flex-end;gap:4px;font-size:14px;line-height:18px;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.mu-status{grid-row:3;display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.mu-status:empty{display:none}
+.mu-status .mu-tag{white-space:normal;text-align:right}
+.mu-status .mu-use{margin-left:0}
 
 .cs-member-count{flex:none;align-self:center;font-size:14px;line-height:18px;color:var(--cream-2);font-weight:700}
 .cs-member-count>span{font-size:11px;font-weight:500}
