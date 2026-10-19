@@ -1,7 +1,17 @@
 {
-  "live": "v0.8.0 \u2014 Red actions",
-  "liveCommit": "c643d186702476108cb3a0e5b56eb39a88734647",
+  "live": "v0.8.1 \u2014 Red/Green resource contests",
+  "liveCommit": "68e9a5de612a7002f04dcb659bd0a24e24203eaf",
   "work": [
+    {
+      "id": "resource-contests",
+      "name": "Red / Green contests",
+      "owner": "Root; focused test lane complete",
+      "status": "Shipped",
+      "label": "Live",
+      "scope": "Held resources replace member quantities for Red and Green",
+      "evidence": "15 immutable focused checks; 6 additional boundary cases; public desktop/phone round results; full stamp",
+      "next": "Cory playtest feedback; Red member discussion"
+    },
     {
       "id": "red-actions",
       "name": "Red actions",
@@ -29,13 +39,13 @@
       "next": "Discuss eight keepers plus three proposed effects. Family and Big Family dropped for now."
     }
   ],
-  "releaseSummary": "v0.8.0 live \u00b7 Red actions complete \u00b7 Red members under discussion",
+  "releaseSummary": "v0.8.1 live \u00b7 Resource contests trial \u00b7 Red member prices proposed",
   "upNext": [
     {
       "source": "Cory",
       "name": "Red members",
-      "summary": "See spheres/red-members-2026-10-18.md; recommendations are not approvals.",
-      "doneWhen": "Cory locks member effects and requests implementation."
+      "summary": "Eight keepers plus three additions; proposed prices and defensive last slot. No member changes shipped.",
+      "doneWhen": "Cory locks effects/costs; checked deck batch shipped."
     },
     {
       "source": "Existing backlog",
@@ -45,5 +55,5 @@
     }
   ],
   "batchStatus": "Shipped \u2014 ready to test",
-  "batchNote": "Exact public source stamp and desktop/phone Red flow verified"
+  "batchNote": "Exact public source and desktop/phone resource scoring verified"
 }

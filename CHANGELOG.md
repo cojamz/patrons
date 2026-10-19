@@ -1,8 +1,8 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.0, published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.1, published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.1 — 2026-10-18 — unreleased
+## v0.8.1 — 2026-10-18 — shipped (source 68e9a5d, main 2222a66)
 
 - Red and Green round prizes now reward held resources instead of members.
 

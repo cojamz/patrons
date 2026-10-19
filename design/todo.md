@@ -1,3 +1,9 @@
+# Latest: v0.8.1 resource contests
+
+- [x] Red and Green contests use held red/green resources; other arcs and half prizes unchanged. Immutable build, focused rules/UI checks and desktop/phone last-move scoring flows pass. Evidence: eval/resource-v081/verification.md.
+- [ ] Lock Red member prices and final defensive slot with Cory; all suggested costs remain proposals. See spheres/red-members-2026-10-18.md. Mob’s 5-member body is confirmed but not implemented yet with the rest of this batch.
+- [ ] Before new Recruit Promote/Demote member ships, pressure-test active acquisition/re-entry chains; pricing alone cannot guard infinite Recruit loops.
+
 # Red design intake — confirmed action spec
 
 - [x] Shipped Red action redesign as v0.8.0 (216 focused tests; six public desktop/phone scenarios; eval/red-v080/verification.md): spheres/red-redesign-2026-10-18.md. Promote/Demote target any cult; equal-cost swap any two members; acquire-for-yourself Recruit triggers only.

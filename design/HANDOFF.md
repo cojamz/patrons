@@ -1,12 +1,13 @@
-# Current handoff — Red v0.8.0 shipped
+# Current handoff — v0.8.1 resource contests live
 
-- Public https://cojamz.github.io/patrons/play/ is v0.8.0, checked source `c643d186702476108cb3a0e5b56eb39a88734647`, main `99a7ee83979cd9d654f8bead7f26c975124ad0ab`. Served full stamp/HTML verified; all six actual desktop/phone Red browser scenarios passed publicly.
-- Six new Red actions and inherent +1 red implemented. Any-cult Promote/Demote, any two equal-cost members, printed total cost, atomic shop exchanges and acting-leader-only Recruit hooks. Existing Red members intentionally retained. Other colors’ inherent resources unchanged.
-- Checks/evidence: eval/red-v080/verification.md. 216 focused tests/one obsolete replay skip on same app source; final immutable build +23 focused +six desktop/phone browser scenarios pass. No broad suite/sim claim.
-- Release-series lock: remain on v0.8.x; patch increments for upcoming batches until Cory explicitly authorizes advancing.
-- Current member intake: spheres/red-members-2026-10-18.md. Eight keepers plus three additions; Family/Big Family dropped for now. Confirmed Recruit-ability color reward, rival movement penalty, and Mob 5 members/followers with existing bonus. Defensive final slot and opponent replacement sources remain open. No member code implemented yet. Assistant recommendations clearly separated.
-- Next: continue Red member discussion with Cory; other backlog remains queued. All action lanes complete. Port5322 gate preview stopped automatically; browser checks close their browsers. Minor follow-ups: phone turn toast can overlap picker; shop exchange toast omits incoming member. Logged in todo; gameplay verified.
-- Green v0.7.0 history: eval/green-v070/verification.md and spheres/green-redesign-2026-10-18.md. Prior checkpoints below are historical and contain stale instructions/versions.
+- Public https://cojamz.github.io/patrons/play/: v0.8.1, checked source `68e9a5de612a7002f04dcb659bd0a24e24203eaf`, Pages main `2222a66320397430bb242d6e641070dc4c1a16e0`. Full served stamp/HTML verified. Public desktop and phone last-move → contest summary checks both pass. Root inspected public phone summary. Evidence: eval/resource-v081/verification.md.
+- Red and Green (echo) round contests now count held red/green resources. Rim, standings, hover and round summary share the scoring definition. Other arcs and half-prize ties unchanged. Legacy retired Basic Green unchanged.
+- Immutable scoped build +15 unit/UI checks +actual last-move-to-summary flows on desktop/phone pass. Additional six filtered boundary cases passed on same app source; no broad sims/full-suite claim. First browser miss was numeric versus Roman round-label selector, fixed in test only.
+- Prior v0.8.0 actions remain intact: any-cult Promote/Demote, any equal-cost pair, printed costs, actor-only active Recruit hooks. Evidence eval/red-v080/verification.md.
+- No new Red member effects/prices implemented. Current source of truth: spheres/red-members-2026-10-18.md. Eight keepers plus three proposed additions; confirmed resource reward per Recruit ability, rival movement loss, Mob 5 members/followers AND existing end bonus, price open. Family/Big Family dropped for now. Full price ladder and Loyalists defensive last-slot suggestion are assistant proposals, not approvals. Pressure-test re-entry loops before implementing Recruit Promote/Demote.
+- Recruiter currently rewards active acquisition from shop/pile/rival (including theft/actor’s incoming swap), excludes passive gifts and its own arrival. Current implementation inspected; no change made to that hook this discussion.
+- Stay on v0.8.x patch increments until Cory explicitly authorizes a new series. Next: discuss member prices/defense and lock the deck. No autonomous implementation of assistant proposals.
+- Test lane complete. Preview5323 closed by gate; isolated browsers self-close. Public verifier complete; browsers closed. Other feedback remains in todo; prior checkpoints below are historical.
 
 # Cults — agent handoff, October 18, 2026
 
