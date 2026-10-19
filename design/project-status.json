@@ -1,63 +1,63 @@
 {
-  "live": "v0.8.5 \u2014 Retinue, Yellow and draft order",
-  "liveCommit": "8619ed01ae44c423f0907ddcbd73035b0889cee2",
+  "live": "v0.8.7 \u2014 Magenta resource contest + larger shop numbers",
+  "liveCommit": "c387ebdfe02dcfadb2499df718bf524b7ac0c49c",
   "work": [
     {
-      "id": "retinue-three",
-      "name": "Retinue: three people",
-      "owner": "retinue_three + root",
+      "id": "magenta-contest",
+      "name": "Magenta resource contest",
+      "owner": "Root",
       "status": "Shipped",
       "label": "Live",
-      "scope": "3followers/3members; price and gift unchanged",
-      "evidence": "48 focused checks + production build; six real public desktop/phone scenes",
-      "next": "Cory playtest feedback"
+      "scope": "Held Magenta wins; ties/zero/spending and labels agree",
+      "evidence": "39 focused checks; build; public desktop/phone scoring",
+      "next": "Cory playtest"
     },
     {
-      "id": "yellow-hue",
-      "name": "Yellow palette",
-      "owner": "yellow_hue + root",
+      "id": "card-numbers",
+      "name": "Larger printed costs and followers",
+      "owner": "Root",
       "status": "Shipped",
       "label": "Live",
-      "scope": "Warm Yellow distinct from Green and Gold",
-      "evidence": "48 focused checks + production build; six real public desktop/phone scenes",
-      "next": "Cory playtest feedback"
+      "scope": "16px digits/glyphs; values and card sizes retained",
+      "evidence": "Eight actual public viewport/color layout cases",
+      "next": "Cory playtest"
     },
     {
-      "id": "draft-order",
-      "name": "Opening draft clarity",
-      "owner": "draft_order_cue + root",
-      "status": "Shipped",
-      "label": "Live",
-      "scope": "Current reverse draft and upcoming snake placement order",
-      "evidence": "48 focused checks + production build; six real public desktop/phone scenes",
-      "next": "Cory playtest feedback"
+      "id": "magenta-design",
+      "name": "Magenta actions and deck",
+      "owner": "Cory + root",
+      "status": "In progress",
+      "label": "Design",
+      "scope": "R1 theft+safe, occupied theft, theft+followers; R2 ransom/half pile; R3 take member",
+      "evidence": "Decisions/spec recorded; action redesign not implemented",
+      "next": "Confirm protection amount/ransom details; color and members"
     }
   ],
   "next": [
     {
-      "name": "Magenta actions",
-      "next": "RoundIII take any rival member; Shakedown shape confirmed. Other RoundII action, cost limits and payment amount open."
+      "name": "Magenta redesign",
+      "next": "Finish open calls; implement together with original theft colors and inherent1."
     },
     {
       "name": "Remaining UI backlog",
-      "next": "General animation audit, phone wheel labels and round-summary readability."
+      "next": "General motion, phone wheel wording and round-summary readability."
     }
   ],
-  "releaseSummary": "v0.8.5 live \u00b7 Retinue3 \u00b7 Yellow palette \u00b7 Draft order",
+  "releaseSummary": "v0.8.7 live \u00b7 resource contest \u00b7 readable shop numbers",
   "upNext": [
     {
-      "source": "Cory / next design discussion",
-      "name": "Magenta identity and balance",
-      "summary": "Work backward from high-impact theft; preserve distinct role alongside Red/Green/Gold.",
-      "doneWhen": "Cory agrees actions, members, prices and scoring before implementation."
+      "source": "Cory / design",
+      "name": "Magenta actions",
+      "summary": "Third RoundI slot: steal\u00d7round + followers\u00d7round. Remaining actions unbuilt.",
+      "doneWhen": "Decisions confirmed, actual moves checked and shipped."
     },
     {
-      "source": "Existing feedback",
+      "source": "Existing audits",
       "name": "Motion and wording",
-      "summary": "Unclosed animation, wheel text and round-summary notes remain in the audits.",
-      "doneWhen": "Scoped fixes checked and shipped; no blanket backlog completion claim."
+      "summary": "Remaining animation and wheel/round-summary notes stay open.",
+      "doneWhen": "Scoped fixes checked and shipped."
     }
   ],
   "batchStatus": "Shipped \u2014 ready to test",
-  "batchNote": "Full public stamp, exact rules/state and desktop/phone motions verified"
+  "batchNote": "Public stamp and actual desktop/phone UI verified; Magenta actions remain design only"
 }

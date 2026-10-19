@@ -1,5 +1,5 @@
-# Current work — card-number readability, October 19
+# Current work — October19
 
-Public remains v0.8.5 /8619ed01. Root is enlarging printed shop cost/follower digits and glyphs, preserving values and stable card dimensions. Focused immutable build and desktop/phone details/long-text checks pending.
+Public v0.8.7 /c387ebdf (Pages main d090f0c): Magenta resource contest and larger printed shop prices/followers live and public desktop/phone verified. No active agents, builds or owned previews.
 
-Magenta discussion reconciled in spheres/magenta-redesign-2026-10-19.md: original resource colors retained, inherent1 arc resource, RoundI theft1/2/3, RoundII half one color stack. These new rules are not live. Third RoundI action, color/name, Shakedown limits and member deck remain open.
+Magenta design continues: theft+safe; occupied-action theft excluding own placement; third RoundI steal×round+followers×round chosen. RoundII ransom + half one-color stack; RoundIII take member. Actions remain unbuilt; universal1 Magenta, original theft colors and new slots must be implemented together after remaining choices. Spec: spheres/magenta-redesign-2026-10-19.md. Protection quantity, Shakedown cap/payment, color/name and member deck remain open. Details/evidence: HANDOFF.md, eval/magenta-v087/.

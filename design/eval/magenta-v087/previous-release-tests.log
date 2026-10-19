@@ -1,0 +1,81 @@
+
+ RUN  v4.0.9 /private/tmp/cults-magenta-baseline
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ❯ src/test/engine/v4/cards-thieves.test.js (29 tests | 2 failed) 66ms
+     ✓ Help Yourself: take 2 / 3 / 4 (by round) from rivals, split as you like; stolen goods turn magenta 8ms
+     ✓ × Sticky Fingers +1 and Desperado double: round I Help Yourself takes 2×2+1 = 5 2ms
+     ✓ × Sticky Fingers and Desperado on Gold's Collect Debts: 3×2+1 = 7, and the log names both 2ms
+     ✓ Redistribute: take 1 from each rival 1ms
+     ✓ × Lie Low: a richer player in the Lie Low can't be tipped off 1ms
+     ✓ Lie Low: take 1 from a rival; then no one can steal resources from you this round 1ms
+     ✓ Lie Low protects members from Poach, Shake Down and Swap Sides 5ms
+     ✓ Crime Wave: take 3 from rivals, at least 1 from each 2ms
+     ✓ × Lookout: once per round, a bystander takes 1 back from the thief (named) 2ms
+     ✓ Shake Down: a rival's member costing 4 or less; they pay its cost to keep it, or it's yours 2ms
+     ✓ × Bodyguard: Shake Down, Poach and Double Agent can't reach a Bodyguard owner's members 1ms
+     × Poach: take a rival member without a replacement or market changes 7ms
+     ✓ Poach does not grant a replacement recruit or trigger Light Fingers 1ms
+     ✓ Cutpurse: at round start, take 1 from the rival holding the most (named) 1ms
+     ✓ Mole: at round start, take 1 from each player with more followers (named) 1ms
+     ✓ Cutpurse and Mole recruited: their steal happens right away too (named) 2ms
+     ✓ × Sticky Fingers: a member's steal (Mole) takes 1 only today (see the ledger question) 0ms
+     ✓ Accomplice: when recruited, take 1 from each rival (named) 3ms
+     × × Poach: a stolen Accomplice doesn't fire again (it wasn't recruited) 1ms
+     ✓ Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most 4ms
+     ✓ Robin Hood: whenever you steal from the player with the most followers, +1 follower (named) 2ms
+     ✓ × Poach: taking a member from the leader counts, even when it leaves them behind 1ms
+     ✓ Lookout: stolen after it fired this round, it stays spent for the new owner 3ms
+     ✓ Light Fingers: whenever a rival recruits a member costing 8 or more, take 1 from them 2ms
+     ✓ Extortionist: whenever a rival buys 5 or more followers, take 2 from them (named) 2ms
+     ✓ Double Agent: when recruited, swap it for any rival's member (named) 2ms
+     ✓ Safecracker: once per game, half (rounded down) of the magenta of the rival holding the most (named) 2ms
+     ✓ × Doppelganger copying Safecracker: a second use (the copy's own once-per-game) 3ms
+     ✓ Kingpin: game end, +1 follower per 2 magenta 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/test/engine/v4/cards-thieves.test.js > Magenta actions > Poach: take a rival member without a replacement or market changes
+AssertionError: expected 3 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 3
+
+ ❯ src/test/engine/v4/cards-thieves.test.js:140:24
+    138|     expect(s.shop).toEqual(shop);
+    139|     expect(s.pile).toEqual(pile);
+    140|     expect(s.recruits).toBe(recruits);
+       |                        ^
+    141|     expect(s.pending?.player).not.toBe(1);
+    142|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/test/engine/v4/cards-thieves.test.js > Magenta members > × Poach: a stolen Accomplice doesn't fire again (it wasn't recruited)
+AssertionError: expected 2 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 2
+
+ ❯ src/test/engine/v4/cards-thieves.test.js:194:26
+    192|     let s = table(Q, { round: 3, left: 5, res: [{}, { gold: 3 }], memb…
+    193|     s = move(take(s, 'thieves.heist'), cardOpt(s, 'thieves.accomplice'…
+    194|     expect(R(s, 1).gold).toBe(3);
+       |                          ^
+    195|   });
+    196| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 27 passed (29)
+   Start at  18:52:53
+   Duration  467ms (transform 106ms, setup 40ms, collect 141ms, tests 66ms, environment 0ms, prepare 5ms)
+

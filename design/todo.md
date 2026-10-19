@@ -1,3 +1,10 @@
+## Shipped — v0.8.6/v0.8.7, October19
+
+- [x] Larger PRINTED shop costs/follower digits/icons; actual game values unchanged; stable compact/details layout.
+- [x] Magenta contest uses held resources; rim, standings, ties, empty piles and real round summary checked.
+- [x] Public source c387ebdf verified on desktop/phone; eight public card-layout/color cases pass. Evidence: eval/magenta-v087/.
+- [ ] Build Magenta action redesign after remaining calls; authoritative spec: spheres/magenta-redesign-2026-10-19.md. Third RoundI slot now theft×round+followers×round; do not implement rejected extra-purchase/color-exchange proposals.
+
 ## Shipped — v0.8.5, October 19
 
 - [x] Retinue worth3 followers /3 members, preserve price and recruit gift — retinue_three.

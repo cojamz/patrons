@@ -27,3 +27,7 @@ Status is evidence-based. Public verification is recorded in eval/red-members-v0
 | 18 | Retinue3 followers and3 members | Shipped v0.8.5 | retinue_three | Paid acquisition, gifts, weighted counts, copied quantity; public desktop/phone purchase | Price/gift unchanged |
 | 19 | Yellow reads yellow, not lime | Shipped v0.8.5 | yellow_hue | #ead844 canonical/fallback; contrast and color-distance checks; wheel/resource screenshots | Gold/Green unchanged |
 | 20 | Opening draft shows snake placement order | Shipped v0.8.5 | draft_order_cue | Queued reverse draft and engine firstOrder;2/3/4player browser picks; long-name phone bounds | Names truncate visually where needed; full accessible labels |
+
+| 21 | Larger printed member costs and follower icons, not larger game values | Shipped v0.8.6, retained v0.8.7 | Root | Actual16px digits/glyphs; eight public viewport/color layout cases; no footer overlap | No repricing |
+| 22 | Magenta victory condition uses Magenta resources | Shipped v0.8.7 | Root |39 focused checks; actual public desktop/phone tie through scoring; labels/counts agree | Remaining Magenta action redesign unbuilt |
+| 23 | New Magenta actions and discarded alternatives | Design recorded | Cory + root | Authoritative Magenta spec; RoundI third slot steal×round+followers×round | Confirm protection amount, ransom cap/payment, color/deck; implement/test |

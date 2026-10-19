@@ -1,3 +1,13 @@
+# Current handoff — v0.8.7, October19
+
+- Public https://cojamz.github.io/patrons/play/: **v0.8.7**, checked source c387ebdfe02dcfadb2499df718bf524b7ac0c49c, Pages main d090f0c. Served stamp/HTML and actual desktop/phone verified.
+- Magenta contest now uses held Magenta resources, not printed members. Rim/standings/scoring agree; tied leaders get half prizes, empty piles never win. Other contests unchanged.
+- v0.8.6 (source12aab9d, main190bf16) enlarged printed shop cost/follower digits and glyphs to16px. Prices/values/card sizes unchanged. Public v0.8.7 retains it across compact/details, long abilities and desktop/phone layouts.
+- Exact final source:39 focused engine checks, production build,2 actual desktop/phone last-move scoring scenes PASS. Eight layout/color cases passed before test-only commit and again on PUBLIC final source. No broad sims/full-suite/performance claim. Evidence: eval/magenta-v087/.
+- Two old theft tests failed on previous deployed source: they incorrectly expected no Recruit on active taking. Updated to agreed acquisition/weighted-count behavior. Third payment assertion became sensitive to the newly resource-scored currency; fixture now forces its intended colored budget rather than relying on bot payment preference. Runtime acquisition/payment code unchanged.
+- Magenta action redesign is NOT live. Authoritative spec: spheres/magenta-redesign-2026-10-19.md. RoundI shapes: theft+safe, occupied-action theft excluding own placement, and theft×round+followers×round. Third chosen by Cory; extra-purchase/exchange suggestions rejected. Universal1 Magenta/original theft colors and RoundII half one color stack remain unbuilt. Protection theft quantity, Shakedown payment/cap, color/name and deck remain to settle.
+- No active helper lanes or owned previews; isolated browsers closed. Next: continue Magenta design/implementation; existing general motion, phone wheel wording and round-summary backlog remains open. Preserve v0.8.x and targeted verification.
+
 # Current handoff — v0.8.5, October 19
 
 - Public https://cojamz.github.io/patrons/play/: **v0.8.5**, checked source `8619ed01ae44c423f0907ddcbd73035b0889cee2`, Pages main `8b6cc10`. Publisher verified served stamp and HTML; public desktop/phone flows checked.
