@@ -3,7 +3,7 @@
 // long, drawn hidden meanwhile so it shows whole at once; a sweep opens nothing; a card already up swaps at once; a
 // click or tap pins at once.
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, cleanup, act } from '@testing-library/react';
+import { render, cleanup, act, fireEvent } from '@testing-library/react';
 import { createGame } from '../../../engine/v4/index.js';
 import { createHover, HoverCardLayer } from '../../../v4/game/HoverCards.jsx';
 import { HOVER_DELAY_MS } from '../../../v4/game/hoverDelay.js';
@@ -66,4 +66,22 @@ describe('the hover delay', () => {
     expect(hover.card.pinned).toBe(true);
     hover.dispose();
   });
+});
+
+
+it('keeps a pinned recruit sheet when the controller rejects a fast tap', () => {
+  const state = createGame({ seats, seed: 7 });
+  const uid = state.shop[0], hover = createHover(), onPick = vi.fn();
+  const option = { id: `card:${uid}` };
+  const { getByRole } = render(<HoverCardLayer hover={hover} state={state} me={0} optionFor={id => id === option.id ? option : null} onPick={onPick} />);
+  act(() => hover.onCardHover(uid, target(), { pinned: true }));
+  fireEvent.click(getByRole('button', { name: 'Recruit', exact: true }));
+  expect(onPick).toHaveBeenCalledWith(option.id);
+  expect(hover.card?.pinned).toBe(true);
+  expect(getByRole('button', { name: 'Recruit', exact: true })).toBeTruthy();
+  // GameScreen owns the accepted-command close after its animation, tap and legality guards.
+  onPick.mockImplementation(() => hover.close());
+  fireEvent.click(getByRole('button', { name: 'Recruit', exact: true }));
+  expect(hover.card).toBeNull();
+  hover.dispose();
 });

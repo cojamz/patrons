@@ -286,7 +286,8 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   }, [c, hover]);
   const onPickNow = useRef(onPick);
   onPickNow.current = onPick;
-  const pickHere = useCallback(id => { hover.close(); onPickNow.current(id); }, [hover]);
+  // The controller closes on an accepted command. A guarded fast tap must keep its sheet open.
+  const pickHere = useCallback(id => onPickNow.current(id), []);
   // the same element while nothing it reads has changed: opening a prepared card re-renders the layer, not the card
   const drawnBody = useMemo(() => (drawn && drawEl ? cardBody(drawn, state, me, optionFor, pickHere) : null), [drawn, drawEl, state, me, optionFor, pickHere]);
   const body = c && el ? drawnBody : null;
