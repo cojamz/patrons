@@ -67,6 +67,17 @@ describe('new Red member hooks', () => {
     expect(s.players[1].bonus).toBe(0);
   });
 
+  it('movement penalty stops at zero without charging future follower gains', () => {
+    const s = fixture({ members: [['red.movementpenalty'], ['red.volunteer']], bonus: [0, -1], shop: ['red.twins'] });
+    const c = contextFor(s), [p, rival] = s.players;
+    expect(c.followers(rival)).toBe(1);
+    c.steal(p, rival, { uid: rival.members[0] });
+    expect(c.followers(rival)).toBe(0);
+    expect(rival.bonus).toBe(-1); // no extra debt while already at zero
+    c.recruit(rival, uidIn(s, 'red.twins', 'shop'), { free: true });
+    expect(c.followers(rival)).toBe(2); // both printed followers arrive in full
+  });
+
   it('Loyalists blocks both leaders’ swaps, including itself, while theft remains possible', () => {
     const s = fixture({ members: [['red.loyalists', 'red.twins'], ['gold.banker']], shop: ['red.volunteer'] });
     const c = contextFor(s), [p, rival] = s.players;

@@ -113,7 +113,7 @@ export default {
       onRecruitAbility(ctx, owner, card, recruited) { ctx.gain(owner, ctx.quadrant(recruited.def.quadrant).resource, 1); },
     }),
     m('movementpenalty', 'Movement Penalty', 3, 2, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
-      onMoveMember(ctx, owner, card, info) { if (info.from !== owner) info.from.bonus -= 1; },
+      onMoveMember(ctx, owner, card, info) { if (info.from !== owner && ctx.followers(info.from) > 0) info.from.bonus -= 1; },
     }),
     m('panel', 'Panel', 4, 2, 'On Recruit: Promote or Demote another member.', { f: 3, n: 3,
       onRecruited(ctx, owner, card) {
