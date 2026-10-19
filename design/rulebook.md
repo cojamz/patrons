@@ -44,3 +44,8 @@ After round III, add game-end member bonuses. Most followers wins; ties go to mo
 - One person taps **Host online game** and shares the link or room code; others open the link or tap **Join with code**. The host adds bots and starts.
 - Reload or lost connection: open the same link to get your seat back. If someone leaves, the host can let a bot play for them.
 - Something looked wrong? Open the menu, tap **Copy game record**, and send it to Cory.
+
+
+## Member copies and Red movement
+
+Impostor and Doppelganger’s **On Recruit** makes them copies; it does not also trigger the copied member’s **On Recruit**. Their copied passives and future **Round Start** effects work normally. Printed follower groups count equally as members. Panel’s **On Recruit** promotes or demotes another member; Panel cannot move itself. Loyalists blocks swaps involving its cult, including its owner’s swaps, but does not block theft.

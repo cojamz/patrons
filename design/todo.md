@@ -1,13 +1,23 @@
+# Latest: Red deck / Green / unified shop — v0.8.2
+
+- [x] Build twelve-member Red deck and confirmed bodies/costs, including Loyalists and Panel’s “another member” rule. Spec: spheres/red-members-2026-10-18.md.
+- [x] Both member copies skip copied On Recruit; preserve future triggers/weights/workers. Resolve demonstrated Panel/Stunt repeat via Panel rule, not an extra chain restriction.
+- [x] Chorus count and Copy Previous owner/target fixes; bold timing keywords; unified follower/member shop; stale swap highlight and fast phone Recruit sheet fix.
+- [x] Scoped unit/UI and actual desktop/phone recruit/swap/follower-purchase motion checks. Exact release/public evidence: eval/red-members-v082/verification.md.
+- [ ] Phone wheel wording/layout: Magenta Round III Ransom label still overlaps adjacent space in the four-arc phone proof; existing precise-wheel-text pass remains required.
+- [ ] General animation audit remains open. New Red flows verified; Cory’s unspecified missing Green/Red animations are not a blanket all-fixed claim. Intake: feedback-audit-2026-10-19.md.
+- [ ] Replace temporary names Recruit Bonus / Movement Penalty when Cory names them; higher-fidelity art remains separately queued.
+
 # Latest: v0.8.1 resource contests
 
 - [x] Red and Green contests use held red/green resources; other arcs and half prizes unchanged. Immutable build, focused rules/UI checks and desktop/phone last-move scoring flows pass. Evidence: eval/resource-v081/verification.md.
-- [ ] Lock Red member prices and final defensive slot with Cory; all suggested costs remain proposals. See spheres/red-members-2026-10-18.md. Mob’s 5-member body is confirmed but not implemented yet with the rest of this batch.
-- [ ] Before new Recruit Promote/Demote member ships, pressure-test active acquisition/re-entry chains; pricing alone cannot guard infinite Recruit loops.
+- [x] Red prices and defensive slot implemented in v0.8.2; Mob5/Panel3/Loyalists2 verified. Source of truth: spheres/red-members-2026-10-18.md.
+- [x] Before Panel ships, pressure-tested active acquisition/re-entry chains; pricing alone cannot guard infinite Recruit loops.
 
 # Red design intake — confirmed action spec
 
 - [x] Shipped Red action redesign as v0.8.0 (216 focused tests; six public desktop/phone scenarios; eval/red-v080/verification.md): spheres/red-redesign-2026-10-18.md. Promote/Demote target any cult; equal-cost swap any two members; acquire-for-yourself Recruit triggers only.
-- [ ] Design Red members with Cory: spheres/red-members-2026-10-18.md. Eight keepers plus three proposed effects; Family/Big Family dropped for now. Assistant recommendations unapproved.
+- [x] Red member redesign built and shipped as v0.8.2. Twelve active members; Family/Big Family retired. See current spec/evidence above.
 - [ ] Universal inherent1resource per action is a direction; do not silently apply it to other colors as part of Red.
 
 - [ ] Red picker polish: keep phone turn toast clear of choice sheet; include both outgoing and incoming member in shop-swap turn toast. Existing selection/ownership/buy flow works; observed during v0.8.0 public browser review.

@@ -1,62 +1,35 @@
-# Red members — October 18 discussion
+# Red member deck — implemented for v0.8.2
 
-Cory requested readback and recommendations, not implementation of this member batch. Red action release continues independently.
+Final implementation authorized October 19, 2026. Runtime source/evidence: ../eval/red-members-v082/verification.md. Earlier discussion and proposed prices remain in decisions.md; this is the current deck specification.
 
-## Cory’s keepers / changes
+| Member | Red | Wild | Members / followers | Effect |
+|---|---:|---:|---:|---|
+| Volunteer | 0 | 0 | 1 | No effect. |
+| Twins | 2 | 0 | 2 | No additional effect. |
+| Recruiter | 3 | 1 | 1 | When you recruit, +1 red. |
+| Recruit Bonus (temporary name) | 2 | 2 | 1 | When you trigger a member’s On Recruit, +1 resource of its color. |
+| Patriarch | 3 | 2 | 1 | Game end: +1 follower per 2 members. |
+| Movement Penalty (temporary name) | 3 | 2 | 1 | When you move a rival’s member out of their cult, they lose 1 follower. |
+| Loyalists | 2 | 3 | 2 | Your members can’t be swapped. |
+| Host | 4 | 2 | 1 | On Recruit & Round Start: +1 red per 2 members. |
+| Proselytizer | 4 | 2 | 1 | When you recruit, +1 follower. |
+| Panel | 4 | 2 | 3 | On Recruit: Promote or Demote another member. |
+| Mentor & Protégé | 5 | 3 | 1 | On Recruit: recruit the cheapest shop member free. |
+| Mob | 6 | 4 | 5 | Game end: +1 follower per red member. |
 
-- Keep Host, Mentor & Protégé, Recruiter, Patriarch and Proselytizer.
-- Mob: counts as 5 members/followers, retains game-end +1 follower per red member, and should be expensive. Cory explicitly confirmed both the printed 5 and existing bonus. Cost not locked.
-- Volunteer: cost 0, no effect.
-- Twins: cost 2 red, counts as 2 members/followers.
-- Family (5 followers, cost 2 red + 2 wild) and Big Family (7 followers, cost 3 red + 3 wild) were proposed, then Cory said “actually maybe we drop family and big family.” Treat both as dropped for now; do not implement the earlier numbers.
+## Locked rules
 
-## New effects and working cards
+- Printed follower groups count as that many members. Mob alone is 5 printed followers +5 from its own game-end bonus; it counts as 5 red members for other card effects. Red’s arc contest counts resources, not membership.
+- Panel’s physical card cannot be either side of its own swap, including after saved choices or relocation. It may target any other cult’s member; replacements remain shop-only. The wheel’s Promote/Demote retain unrestricted member targeting. Compare printed colored +wild totals, not payment/discounts.
+- Loyalists blocks all swaps involving its cult, by owner or rivals, including Loyalists itself. It does not block theft. Both its bodies count normally.
+- Active acquisition from shop, pile or rivals (including theft and actor’s incoming swap) triggers Recruiter. Passive gifts do not. Existing Recruiter and Proselytizer self-arrival exclusions remain.
+- Recruit Bonus rewards an actually invoked Recruit ability, not any arrival, passive payout or ordinary round start. The On Recruit portion of a Now/Round Start member qualifies. Physical member color governs its reward.
+- Neither Impostor nor Doppelganger fires copied On Recruit/immediate Now effects. Becoming the copy IS its On Recruit. Future Round Start/passives/member weights and Extra Hand entitlements remain effective.
+- Movement Penalty applies to each rival outgoing member, including both sides of a two-rival swap, never an own-member move or same-container reorder. Loss stops at zero; it cannot create hidden debt against future followers.
+- No once-per-chain guard was added. A verified Panel/Stunt repeat was removed by Cory’s “another member” rule; identity-copy repeats terminate under the new copy semantics. The initial Impostor/Mentor loop explanation was incorrect and corrected, with a terminating regression retained.
 
-- Confirmed: gain one resource of the member’s color per Recruit ability triggered, not per acquisition. Name/cost remain open.
-- Confirmed: “When you move a rival’s member out of their cult, they lose 1 follower.” This replaces the original any-player wording; no same-container reordering trigger. Name/cost remain open.
-- **Panel** (name confirmed): Recruit: Promote or Demote a member. Confirmed cost 4 red +2 wild (6). Cory proposes also counting as 3 members/followers; assistant endorses this body, not implemented.
+## Scope / fill-ins
 
-Eight keepers plus three proposed effects = eleven slots. No twelfth member invented or approved.
+Cory confirmed upper prices, Volunteer/Twins, Loyalists and member bodies. Remaining suggested prices were used under his implementation-priority/go-with-your-gut instructions. Recruit Bonus and Movement Penalty are descriptive temporary names. Existing art is reused; this is not the higher-fidelity art pass.
 
-## Exploratory / not locked
-
-- Activate: swap this with any member — Cory immediately called this too strong.
-- +3 members; any member can be promoted/demoted to this member — Cory noticed current Promote/Demote only exchange with shop. Requires a rules exception if the card in a cult becomes an alternate destination; parked.
-
-## Assistant recommendations (not Cory’s decisions)
-
-- Keep all three proposed additions: recruit economy, disruption payoff, and a combo starter.
-- Resource reward per Recruit ability triggered is now confirmed above. Copied abilities and multicolor definitions still need precise implementation.
-- Rival movement wording is now confirmed above.
-- Keep Host and Recruiter initially, despite overlap; one rewards existing quantity, the other repeated acquisition.
-- Latest last-slot recommendation (not approved): **Loyalists** (placeholder): “Your members can’t be swapped.” Applies to your own swaps too, blocks Promote/Demote and Even Swap involving your cult, not theft. This protects accumulated membership while sacrificing your own promotion/recruit recycling. No extra tracking.
-- Promote/Demote: recommend retaining shop-only replacements. Targeting a rival’s member remains implemented. Expanding replacement sources to rival cults is a separate unresolved design call.
-- Mob’s own 5 red members give its existing bonus +5: it scores 10 alone before other red members, and adds 5 to red competitions and other membership counts. Explicit balance implication, not a price recommendation.
-- Cory says the quantity and turnover paths may reinforce each other too much; seek symmetric restrictions with real opportunity cost, not a free defensive passive.
-
-## Recruiter implementation check — v0.8.0
-
-Current core routes purchases, free recruitment, theft and the initiating actor’s incoming swap through memberAcquired/onAnyRecruit. Recruiter therefore already pays for active acquisition from shop, pile or rival cult, not merely paid shop buys. Passive gifts remain excluded under Cory’s earlier distinction (given versus taken). Its own acquisition is excluded by its existing hook. No code change made during this discussion.
-
-## Prices — confirmed upper ladder; remaining suggestions not approved or implemented
-
-| Member | Red | Wild | Total |
-|---|---:|---:|---:|
-| Volunteer | 0 | 0 | 0 |
-| Twins | 2 | 0 | 2 |
-| Recruiter | 3 | 1 | 4 |
-| Recruit-ability color reward | 2 | 2 | 4 |
-| Patriarch | 3 | 2 | 5 |
-| Rival-movement penalty | 3 | 2 | 5 |
-| Host | 4 | 2 | 6 |
-| Proselytizer | 4 | 2 | 6 |
-| Panel — confirmed cost; 3-member body proposed | 4 | 2 | 6 |
-| Mentor & Protégé — confirmed cost | 5 | 3 | 8 |
-| Mob — confirmed cost | 6 | 4 | 10 |
-| Loyalists (unapproved defensive last slot; propose 2 members/followers) | 1 | 2 | 3 |
-
-Revised upper-end proposal after Cory floated a general total-cost ceiling of 10: 6→8→10 supports promoting the promotion member into Mentor and then Mob. Cory confirmed the default total-cost ceiling of 10 and the 6→8→10 Red upper ladder. This is not an instruction to silently reprice every existing card; unreviewed legacy costs need separate intake. Mob scores 10 alone before other red members; held-red contests add a real spending opportunity cost. Tribute Band is currently Green’s most expensive member at 8 green +2 wild =10. Recruiter affordable enough to repay through later acquisitions. Recruit promotion may create repeat-acquisition loops; price is not a substitute for a terminating rule and focused chain tests. No costs changed in the game. Panel’s name is confirmed; its proposed 3-member/follower body gives its recruit action a meaningful baseline at cost 6.
-
-## New contest decision — confirmed trial
-
-Cory requests Green and Red round-end victory conditions based on held green/red resources, respectively, to reduce automatic rewards from committing to their member decks. Other contests and half-prize ties unchanged. Shipping separately as v0.8.1. Legacy stand-in Green remains retired normal content, not the current Green/echo quadrant.
+Family/Big Family, Intern, Benchwarmer, Pied Piper, Sponsor and Crowd-Pleaser are absent from the ordinary deck. Legacy definitions remain for old records and full-deck tests. Normal Red now has twelve members. Default price ceiling 10; remain on release series 0.8.x until Cory says otherwise.

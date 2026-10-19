@@ -1,59 +1,59 @@
 {
-  "live": "v0.8.1 \u2014 Red/Green resource contests",
-  "liveCommit": "68e9a5de612a7002f04dcb659bd0a24e24203eaf",
+  "live": "v0.8.2 \u2014 New Red deck + unified shop",
+  "liveCommit": "ff5356072225432d24eb0b7eb4dd6c50302d3903",
   "work": [
     {
-      "id": "resource-contests",
-      "name": "Red / Green contests",
-      "owner": "Root; focused test lane complete",
+      "id": "red-members",
+      "name": "New Red members",
+      "owner": "Root + engine lane",
       "status": "Shipped",
       "label": "Live",
-      "scope": "Held resources replace member quantities for Red and Green",
-      "evidence": "15 immutable focused checks; 6 additional boundary cases; public desktop/phone round results; full stamp",
-      "next": "Cory playtest feedback; Red member discussion"
+      "scope": "12 members, prices/bodies, Loyalists, Panel\u2019s another-member rule, recruit and movement passives",
+      "evidence": "241 integrated checks; final38 focused; actual public desktop/phone chain/swap",
+      "next": "Cory playtests; name two passives"
     },
     {
-      "id": "red-actions",
-      "name": "Red actions",
-      "owner": "Root; engine and UI lanes integrated",
+      "id": "green-fixes",
+      "name": "Green + timing",
+      "owner": "Green lane",
       "status": "Shipped",
-      "scope": "Six actions, any-cult exchanges, active Recruit triggers",
-      "evidence": "216 focused tests; immutable build; six public desktop/phone browser cases; full stamp",
-      "next": "Cory playtest feedback; member redesign discussion",
-      "label": "Live"
+      "label": "Live",
+      "scope": "Chorus excludes itself; latest-action copy; no copied Recruit; bold timing",
+      "evidence": "Saved/copied choices and pressure checks; phone timing inspection",
+      "next": "Concrete playtest feedback"
     },
     {
-      "id": "green-release",
-      "name": "Green redesign",
-      "owner": "Root",
+      "id": "unified-shop",
+      "name": "One shared shop",
+      "owner": "UI lane + root",
       "status": "Shipped",
-      "scope": "Six actions, twelve members, safe copy chains and exact costs",
-      "evidence": "1326unit tests; final107related; fullhotseat; isolatedonline; publicdesktop/phone",
-      "next": "Cory playtest feedback",
-      "label": "Live"
+      "label": "Live",
+      "scope": "Follower cards beside members; cost anatomy; touch-sheet guard",
+      "evidence": "Matching dimensions, no page overflow; actual public follower buys and motion",
+      "next": "Remaining wheel/round-summary polish"
     }
   ],
   "next": [
     {
-      "name": "Red members",
-      "next": "Discuss eight keepers plus three proposed effects. Family and Big Family dropped for now."
+      "name": "Playtest new Red",
+      "next": "Cory feedback; precise remaining animation/wording issues; temporary passive names."
     }
   ],
-  "releaseSummary": "v0.8.1 live \u00b7 Resource contests trial \u00b7 Red member prices proposed",
+  "releaseSummary": "v0.8.2 live \u00b7 12 Red members \u00b7 Green fixes \u00b7 One shop",
   "upNext": [
     {
-      "source": "Cory",
-      "name": "Red members",
-      "summary": "Eight keepers plus three additions; proposed prices and defensive last slot. No member changes shipped.",
-      "doneWhen": "Cory locks effects/costs; checked deck batch shipped."
+      "source": "Cory / existing feedback",
+      "name": "Playtest and polish",
+      "summary": "New Red ready. Broad animation audit, wheel labels and round summary remain queued.",
+      "doneWhen": "Concrete scoped fixes checked and shipped."
     },
     {
-      "source": "Existing backlog",
-      "name": "Other feedback stays queued",
-      "summary": "See todo and backlog triage; no all-done claim.",
-      "doneWhen": "Separately checked and shipped batches."
+      "source": "Design",
+      "name": "Two temporary names / reused art",
+      "summary": "Recruit Bonus and Movement Penalty are plain placeholders; art pass remains separate.",
+      "doneWhen": "Cory supplies names or approves replacements."
     }
   ],
   "batchStatus": "Shipped \u2014 ready to test",
-  "batchNote": "Exact public source and desktop/phone resource scoring verified"
+  "batchNote": "Full public stamp, exact rules/state and desktop/phone motions verified"
 }

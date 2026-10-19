@@ -10,7 +10,7 @@ Agents blocks everyone's copies of its owner's actions, including the owner's. B
 
 ## Actions
 
-- I: Chorus (working name), +1 green per Green action with a minion; Build Up, +1 green × round; Echo, copy previous action.
+- I: Chorus (working name), +1 green per OTHER Green action with a minion; Build Up, +1 green × round; Echo, copy previous action.
 - II: Encore, copy an action with a rival minion; Reprise, copy an action with your minion.
 - III: Greatest Hits, copy every action with your minion.
 - Add the inherent +1 green to each action above. Build Up totals 2 / 3 / 4 by round.
@@ -41,3 +41,7 @@ Connector's cost is an implementation fill-in under Cory's go-with-your-gut inst
 Bait debits printed followers through a signed score adjustment; totals stop at zero. Its rival reward still applies at zero. Cards are never deleted to pay the loss. Results show the named loss and any zero-minimum adjustment. A Stunt Double recruit starts a fresh member-triggered chain, including when recruited during an action; ordinary copy-action descendants retain their branch ancestry.
 
 Copy targets select with one phone tap; ordinary placements retain their existing confirmation. Current-member art reuses distinct retired Green silhouettes while names/art settle. The rest of the backlog remains open.
+
+## v0.8.2 clarifications — October 19
+
+Chorus excludes its own occupied space, including copies of Chorus; its inherent +1 still applies. Copy Previous selects the latest action regardless of who chose it, with no fallback past protected/blocked latest targets. Both Impostor and Doppelganger’s On Recruit ONLY creates the copy; it does not execute copied Recruit/immediate Now effects. Future Round Start/passives, member quantity and worker entitlements remain. No once-per-acquisition-chain rule was introduced; Red Panel’s self-movement is prohibited instead.

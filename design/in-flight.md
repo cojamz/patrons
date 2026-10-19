@@ -1,8 +1,7 @@
-# Active — v0.8.2 Red deck and unified shop
+# Current state — v0.8.2 shipped, October 19
 
-- Root integrating final checked release; engine, Green and UI lanes complete. No new design questions block shipping.
-- Confirmed twelve-card Red: eight keepers plus Recruit Bonus / Movement Penalty (plain placeholder names), Panel and Loyalists. Loyalists 2 red +3 wild, 2 members/followers. Panel 4+2, 3 members/followers, “On Recruit: Promote or Demote another member.” Exclusion survives saved choices. No once-per-chain restriction.
-- Both identity copies (Impostor, Doppelganger) skip copied On Recruit/immediate Now effects, retaining future triggers, quantities and worker entitlements.
-- Chorus excludes itself; Copy Previous uses latest selected action across owners. Unified shop and bold timing keywords built. Root final immutable gate on5325; UI review snapshot5324 separately frozen.
-- Evidence to preserve in eval/red-members-v082/. Prior public remains v0.8.1 source68e9a5de until new full stamp/UI verification.
-- Tests focused and credit-conscious. No large simulations; every final check is against immutable commit.
+- Verified public source `ff5356072225432d24eb0b7eb4dd6c50302d3903`, main `47358624d1693631e8c2991fd794b2c939578fbe`. All six public desktop/phone Red/shop scenarios and served stamp/HTML pass. New deck, Green fixes and unified shop are live.
+- All three helper lanes complete. Root integrated/reviewed/shipped; no assumed continuing feature agents. Review5324 stopped; gate5325 and public browsers cleaned.
+- Current specs/evidence: spheres/red-members-2026-10-18.md; eval/red-members-v082/verification.md; feedback-audit-2026-10-19.md.
+- Next: Cory playtests. Two descriptive passive names/art remain provisional; general animation audit, precise wheel labels and round-summary readability remain queued. No unexplained copied-Recruit rule or chain guard pending.
+- Keep v0.8.x and focused checks. Board now discovers all dated feedback audits automatically rather than requiring its date list to be edited.
