@@ -26,20 +26,21 @@ try{for(const[size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phon
  await seedSave(p,save);await p.goto(`${base}/?intro=0&speed=quick`);await p.locator('[data-home="resume"]').click();
  const hand=p.locator('[data-handoff]');if(await hand.isVisible())await hand.click();
  await p.locator('.app.game').waitFor();
+ const settleCards=()=>p.locator('.pay-card, .popover').evaluateAll(async es=>{await Promise.all(es.flatMap(e=>e.getAnimations({subtree:true})).filter(a=>a.effect?.getComputedTiming().endTime<Infinity).map(a=>a.finished.catch(()=>{})));});
  if(kind==='choice'){
   const toggle=p.getByRole('button',{name:'Show member abilities'});await toggle.scrollIntoViewIfNeeded();if(await toggle.getAttribute('aria-pressed')!=='true')throw Error('choice should initially show abilities');
   const before=await p.locator('.lt-shop .lt-card[data-option]').first().boundingBox();
   await toggle.click();if(await toggle.getAttribute('aria-pressed')!=='false')throw Error('choice details cannot toggle off');await toggle.click();if(await toggle.getAttribute('aria-pressed')!=='true')throw Error('choice details cannot toggle on');
   const after=await p.locator('.lt-shop .lt-card[data-option]').first().boundingBox();if(before.width!==after.width||before.height!==after.height)throw Error('details resized choice card');
  }else if(kind==='pay'){
-  const dialog=p.locator('[role="dialog"]').filter({has:p.locator('.pay-card')});await dialog.waitFor();
+  const dialog=p.locator('[role="dialog"]').filter({has:p.locator('.pay-card')});await dialog.waitFor();await settleCards();
   const metrics=await dialog.evaluate(e=>{const n=e.querySelector('[data-pay-rules]'),a=e.querySelector('[data-pay-ability]'),rows=e.querySelector('.pay-rows');return {notes:!!n,ability:!!a,above:n&&n.getBoundingClientRect().bottom<=rows.getBoundingClientRect().top+1,w:e.getBoundingClientRect().width};});
   if(!metrics.notes||!metrics.ability||!metrics.above)throw Error(`payment notes/ability misplaced: ${JSON.stringify(metrics)}`);
   await p.screenshot({path:`${out}/${size}-${kind}.png`});
   const go=p.locator('.pay-go'),id=await go.getAttribute('data-option');const expected=applyMove(save.state,{player:0,option:id});await go.click();
   await p.waitForFunction(want=>{try{const s=JSON.parse(localStorage.getItem('patrons.v4.local')).state;return JSON.stringify({res:s.players.map(p=>p.res),members:s.players.map(p=>p.members),shop:s.shop})===JSON.stringify(want);}catch{return false;}},compare(expected));
  }else{
-  await p.locator('.lt-seat.mine .cs-head').click();const list=p.locator('[data-seat-card="0"]');await list.waitFor();
+  await p.locator('.lt-seat.mine .cs-head').click();const list=p.locator('[data-seat-card="0"]');await list.waitFor();await settleCards();
   const rows=await list.locator('.mu-row').evaluateAll(es=>es.map(e=>{const n=e.querySelector('.mu-name').getBoundingClientRect(),c=e.querySelector('.mu-price').getBoundingClientRect();return{name:e.innerText,aligned:c.left>=n.right-1,ability:!!e.querySelector('[data-ability]')};}));
   if(rows.length<4||rows.some(r=>!r.aligned||!r.ability))throw Error(`member rows broken: ${JSON.stringify(rows)}`);
  }
