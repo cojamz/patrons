@@ -16,3 +16,5 @@ Status is evidence-based. Public verification is recorded in eval/red-members-v0
 | 10 | Loyalists 2 red +3 wild, 2 followers | Built / checked | Engine lane | Owner/rival swaps blocked; theft allowed; body/price verified | None identified |
 | 11 | Panel only moves another member | Built / checked | Engine lane | Saved choice exclusion; genuine Stunt loop terminates | No arbitrary once-per-chain rule |
 | 12 | Fast phone Recruit tap loses its sheet | Fixed / checked | UI + root | Controller closes only accepted input; five hover tests; actual touch flow | Intentional animation/tap guard retained |
+
+| 13 | Enlarge shop cards; keep details close in size without desktop scrolling | Shipped v0.8.3 | Root + layout review | Eight viewport/color cases: stable slots, full ability/price bounds; live desktop/phone inspection | Very short desktop windows retain fallback scroll; phones retain swipe |

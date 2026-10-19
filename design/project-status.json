@@ -1,6 +1,6 @@
 {
-  "live": "v0.8.2 \u2014 New Red deck + unified shop",
-  "liveCommit": "ff5356072225432d24eb0b7eb4dd6c50302d3903",
+  "live": "v0.8.3 \u2014 Larger shop, stable details",
+  "liveCommit": "cf9e23c8caac423d34a463e137551bc63749d774",
   "work": [
     {
       "id": "red-members",
@@ -28,8 +28,8 @@
       "owner": "UI lane + root",
       "status": "Shipped",
       "label": "Live",
-      "scope": "Follower cards beside members; cost anatomy; touch-sheet guard",
-      "evidence": "Matching dimensions, no page overflow; actual public follower buys and motion",
+      "scope": "Larger member/follower cards; same slots and sizes in details; normal desktop market fits without scrolling",
+      "evidence": "Immutable build + six UI checks + eight viewport/color layout cases; live desktop/phone inspection",
       "next": "Remaining wheel/round-summary polish"
     }
   ],
@@ -39,7 +39,7 @@
       "next": "Cory feedback; precise remaining animation/wording issues; temporary passive names."
     }
   ],
-  "releaseSummary": "v0.8.2 live \u00b7 12 Red members \u00b7 Green fixes \u00b7 One shop",
+  "releaseSummary": "v0.8.3 live \u00b7 Larger shop cards \u00b7 Details in place",
   "upNext": [
     {
       "source": "Cory / existing feedback",

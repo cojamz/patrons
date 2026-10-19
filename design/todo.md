@@ -1,3 +1,7 @@
+## Shipped October 19 — v0.8.3
+
+- [x] Larger shop cards; stable compact/details grid without normal desktop scrolling. Full long-rule/price bounds checked across eight viewport/color cases. Evidence: eval/shop-sizing-v083/.
+
 # Latest: Red deck / Green / unified shop — v0.8.2
 
 - [x] Build twelve-member Red deck and confirmed bodies/costs, including Loyalists and Panel’s “another member” rule. Spec: spheres/red-members-2026-10-18.md.

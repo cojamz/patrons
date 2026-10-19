@@ -1,3 +1,10 @@
+# Latest — v0.8.3 shop sizing shipped, October 19
+
+- Public v0.8.3: source `cf9e23c8caac423d34a463e137551bc63749d774`, Pages main `a189343`. Publisher verified served stamp and HTML.
+- Larger cards fill the shop height; compact/details retain the same twelve slots, deck and card sizes. Details uses portrait space for ability text. No internal market scroll at normal laptop/desktop sizes; phone/tablet retains swipe. Very short desktop windows keep a readable scroll fallback.
+- Immutable scoped check: production build, six existing UI checks and eight viewport/color layout cases PASS. Probe verifies full abilities/prices, exact card rectangles through toggles and no page overflow. One stale unit selector was corrected to target a member rather than the new follower cards. No rules changed.
+- Evidence: eval/shop-sizing-v083/. Two visual review passes, including longest texts from all eight normal quadrants. Previous Red/Green rules and remaining animation/wording backlog below still apply.
+
 # Current handoff — v0.8.2 new Red deck shipped
 
 - Public https://cojamz.github.io/patrons/play/: **v0.8.2**, checked source `ff5356072225432d24eb0b7eb4dd6c50302d3903`, Pages main `47358624d1693631e8c2991fd794b2c939578fbe`. Full served stamp/HTML and all six actual public desktop/phone scenarios verified. Evidence: eval/red-members-v082/verification.md. Public unified shop/timing/layout also inspected.

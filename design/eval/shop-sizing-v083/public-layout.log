@@ -1,0 +1,315 @@
+desktop {
+  "text": "SHOP\n8 members affordable\ndetails\ncost\ncolor\n41\nDECK\n1\nFOLLOWERS\n1\n5\nFOLLOWERS\n5\n10\nFOLLOWERS\n10\nDone, no buy\nVOLUNTEER\nfree\n1\nTWINS\n2\n2\nRECRUITER\n3\n1\n1\nLOYALISTS\n2\n3\n2\nHOST\n4\n2\n1\nPANEL\n4\n2\n3\nMENTOR & PROTÉGÉ\n5\n3\n1\nMOB\n6\n4\n5",
+  "grid": "grid",
+  "cards": [
+    {
+      "id": "small",
+      "r": {
+        "x": 906,
+        "y": 48,
+        "width": 108.65625,
+        "height": 142.5,
+        "top": 48,
+        "right": 1014.65625,
+        "bottom": 190.5,
+        "left": 906
+      }
+    },
+    {
+      "id": "mid",
+      "r": {
+        "x": 1022.65625,
+        "y": 48,
+        "width": 108.671875,
+        "height": 142.5,
+        "top": 48,
+        "right": 1131.328125,
+        "bottom": 190.5,
+        "left": 1022.65625
+      }
+    },
+    {
+      "id": "top",
+      "r": {
+        "x": 1139.328125,
+        "y": 48,
+        "width": 108.65625,
+        "height": 142.5,
+        "top": 48,
+        "right": 1247.984375,
+        "bottom": 190.5,
+        "left": 1139.328125
+      }
+    },
+    {
+      "id": "11",
+      "r": {
+        "x": 1022.65625,
+        "y": 198.5,
+        "width": 108.671875,
+        "height": 142.5,
+        "top": 198.5,
+        "right": 1131.328125,
+        "bottom": 341,
+        "left": 1022.65625
+      }
+    },
+    {
+      "id": "10",
+      "r": {
+        "x": 1139.328125,
+        "y": 198.5,
+        "width": 108.65625,
+        "height": 142.5,
+        "top": 198.5,
+        "right": 1247.984375,
+        "bottom": 341,
+        "left": 1139.328125
+      }
+    },
+    {
+      "id": "15",
+      "r": {
+        "x": 906,
+        "y": 349,
+        "width": 108.65625,
+        "height": 142.5,
+        "top": 349,
+        "right": 1014.65625,
+        "bottom": 491.5,
+        "left": 906
+      }
+    },
+    {
+      "id": "21",
+      "r": {
+        "x": 1022.65625,
+        "y": 349,
+        "width": 108.671875,
+        "height": 142.5,
+        "top": 349,
+        "right": 1131.328125,
+        "bottom": 491.5,
+        "left": 1022.65625
+      }
+    },
+    {
+      "id": "16",
+      "r": {
+        "x": 1139.328125,
+        "y": 349,
+        "width": 108.65625,
+        "height": 142.5,
+        "top": 349,
+        "right": 1247.984375,
+        "bottom": 491.5,
+        "left": 1139.328125
+      }
+    },
+    {
+      "id": "20",
+      "r": {
+        "x": 906,
+        "y": 499.5,
+        "width": 108.65625,
+        "height": 142.5,
+        "top": 499.5,
+        "right": 1014.65625,
+        "bottom": 642,
+        "left": 906
+      }
+    },
+    {
+      "id": "12",
+      "r": {
+        "x": 1022.65625,
+        "y": 499.5,
+        "width": 108.671875,
+        "height": 142.5,
+        "top": 499.5,
+        "right": 1131.328125,
+        "bottom": 642,
+        "left": 1022.65625
+      }
+    },
+    {
+      "id": "14",
+      "r": {
+        "x": 1139.328125,
+        "y": 499.5,
+        "width": 108.65625,
+        "height": 142.5,
+        "top": 499.5,
+        "right": 1247.984375,
+        "bottom": 642,
+        "left": 1139.328125
+      }
+    }
+  ]
+}
+desktop timing [ 'On Recruit', 'Round Start', 'On Recruit', 'On Recruit' ]
+phone {
+  "text": "SHOP\n8 members affordable\ndetails\ncost\ncolor\n41\nDECK\n1\nFOLLOWERS\n1\n5\nFOLLOWERS\n5\n10\nFOLLOWERS\n10\nDone, no buy\nVOLUNTEER\nfree\n1\nTWINS\n2\n2\nRECRUITER\n3\n1\n1\nLOYALISTS\n2\n3\n2\nHOST\n4\n2\n1\nPANEL\n4\n2\n3\nMENTOR & PROTÉGÉ\n5\n3\n1\nMOB\n6\n4\n5",
+  "grid": "flex",
+  "cards": [
+    {
+      "id": "small",
+      "r": {
+        "x": 16,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 148,
+        "bottom": 702.71875,
+        "left": 16
+      }
+    },
+    {
+      "id": "mid",
+      "r": {
+        "x": 158,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 290,
+        "bottom": 702.71875,
+        "left": 158
+      }
+    },
+    {
+      "id": "top",
+      "r": {
+        "x": 300,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 432,
+        "bottom": 702.71875,
+        "left": 300
+      }
+    },
+    {
+      "id": "11",
+      "r": {
+        "x": 518,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 650,
+        "bottom": 702.71875,
+        "left": 518
+      }
+    },
+    {
+      "id": "10",
+      "r": {
+        "x": 660,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 792,
+        "bottom": 702.71875,
+        "left": 660
+      }
+    },
+    {
+      "id": "15",
+      "r": {
+        "x": 802,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 934,
+        "bottom": 702.71875,
+        "left": 802
+      }
+    },
+    {
+      "id": "21",
+      "r": {
+        "x": 944,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 1076,
+        "bottom": 702.71875,
+        "left": 944
+      }
+    },
+    {
+      "id": "16",
+      "r": {
+        "x": 1086,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 1218,
+        "bottom": 702.71875,
+        "left": 1086
+      }
+    },
+    {
+      "id": "20",
+      "r": {
+        "x": 1228,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 1360,
+        "bottom": 702.71875,
+        "left": 1228
+      }
+    },
+    {
+      "id": "12",
+      "r": {
+        "x": 1370,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 1502,
+        "bottom": 702.71875,
+        "left": 1370
+      }
+    },
+    {
+      "id": "14",
+      "r": {
+        "x": 1512,
+        "y": 536.71875,
+        "width": 132,
+        "height": 166,
+        "top": 536.71875,
+        "right": 1644,
+        "bottom": 702.71875,
+        "left": 1512
+      }
+    }
+  ]
+}
+phone overflow {
+  vw: 390,
+  docWidth: 390,
+  docHeight: 1158,
+  shop: {
+    x: 12,
+    y: 439.71875,
+    width: 365.984375,
+    height: 224,
+    top: 439.71875,
+    right: 377.984375,
+    bottom: 663.71875,
+    left: 12
+  }
+}
+phone timing [ 'On Recruit', 'Round Start', 'On Recruit', 'On Recruit' ]
