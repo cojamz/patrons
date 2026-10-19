@@ -114,19 +114,19 @@ describe('Red members', () => {
     s = take(s, 'gold.rush'); s = buy(s, 'echo.doppel');
     s = move(s, s.pending.options[0].id);
     expect(named(s, 'Doppelganger')[0]).toMatch(/becomes a copy of Banker/);
-    expect(named(s, 'Banker')).toHaveLength(1); // the copy's "now" +3, at once
+    expect(named(s, 'Banker')).toHaveLength(0); // No copied On Recruit.
     s.queue = [{ t: 'round', r: 2 }]; s.pending = null; s = resume(s);
-    expect(named(s, 'Banker')).toHaveLength(3);
+    expect(named(s, 'Banker')).toHaveLength(2);
   });
-  it('Doppelganger copying a when-recruited member (Treasurer) fires it once for the copy (Cory: a copy of the card)', () => {
+  it('Doppelganger does not trigger copied Treasurer’s On Recruit', () => {
     const restore = pinCosts({ 'echo.doppel': [0, 0] });
     let s = sceneQ({ res: [rich], members: [['gold.seed']], shop: ['echo.doppel'] });
     s = take(s, 'gold.rush');
     const g = s.players[0].res.gold;
     s = buy(s, 'echo.doppel');
     s = move(s, s.pending.options[0].id);
-    expect(s.players[0].res.gold).toBe(g + 2); // Treasurer pays the copy: +1 gold per member (Treasurer, Doppelganger)
-    expect(named(s, 'Treasurer')).toHaveLength(1);
+    expect(s.players[0].res.gold).toBe(g); // No copied On Recruit.
+    expect(named(s, 'Treasurer')).toHaveLength(0);
     restore();
   });
 

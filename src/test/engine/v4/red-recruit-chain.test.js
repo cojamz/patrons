@@ -18,23 +18,17 @@ it.each(['echo.impostor', 'echo.doppel'])('%s copies Panel without firing its Re
   expect(s.shop.map(u => s.cards[u].def)).toEqual(['red.mentor']);
 });
 
-it('reproduces two bounded Panel ↔ Stunt Double cycles by recopying the current Promote', () => {
-  let s = table(['red', 'echo', 'gold', 'thieves'], { round: 2, members: [['echo.hourglass', 'red.recruiter']], shop: ['red.panel'] });
+it('Panel cannot promote itself into Stunt Double and restart the current Promote', () => {
+  let s = table(['red', 'echo', 'gold', 'thieves'], { round: 2, members: [['echo.hourglass']], shop: ['red.panel'] });
   s.pile = [];
   const stunt = uidIn(s, 'echo.hourglass', 0), panel = uidIn(s, 'red.panel', 'shop');
   s = reload(take(s, 'red.hireup'));
+  // The wheel can still promote Stunt into Panel at the exact +2 boundary.
   s = reload(move(s, `trade:${stunt}:${panel}`));
-  s = reload(move(s, 'promote'));
-  s = reload(move(s, `trade:${panel}:${stunt}`));
-  const before = s.players[0].res.red;
-  for (let cycle = 0; cycle < 2; cycle += 1) {
-    expect(s.pending.options.map(o => o.id)).toContain(`trade:${stunt}:${panel}`);
-    s = reload(move(s, `trade:${stunt}:${panel}`));
-    s = reload(move(s, 'promote'));
-    s = reload(move(s, `trade:${panel}:${stunt}`));
-    expect(s.players[0].members).toContain(stunt);
-    expect(s.shop).toEqual([panel]);
-  }
-  expect(s.players[0].res.red - before).toBe(6); // four acquisitions plus two copied action gains
-  // Diagnostic witness: no rule restriction has been invented here.
+  expect(s.players[0].members).toEqual([panel]);
+  expect(s.shop).toEqual([stunt]);
+  // Only Panel could swap into Stunt here, and its own ability now excludes it.
+  expect(s.pending?.kind).toBe('buy');
+  expect(s.pending.options.some(o => o.id === 'promote' || o.id === `trade:${panel}:${stunt}`)).toBe(false);
+  expect(s.players[0].res.red).toBe(1);
 });

@@ -931,3 +931,14 @@ Cory asks whether members should generally top out at total cost 10. Current Gre
 Cory said “yep” to the default total-cost ceiling of 10 and revised Red costs: Recruit Promote/Demote 4 red +2 wild =6; Mentor & Protégé 5 red +3 wild =8; Mob 6 red +4 wild =10. These costs are now confirmed. Other assistant price suggestions remain proposals. No runtime member prices changed yet.
 
 Cory says Recruit Promote/Demote should do more, proposes also counting as 3 members, and names it **Panel**. Name confirmed; 3 members/followers is his proposed body, endorsed by assistant at the confirmed cost 6. Ability remains “Recruit: Promote or Demote a member.” No extra effect or ownership restriction invented. Future implementation must pressure-test reacquisition chains.
+
+
+## 2026-10-19 — Build and ship new Red; final clarifications
+
+Cory explicitly prioritizes shipping the deck. Loyalists confirmed at 2 red +3 wild and 2 members/followers. Both Impostor and Doppelganger: becoming the copy IS their On Recruit, so copied Recruit/immediate Now effects do not fire; future triggers/ongoing effects remain. Extra Hand entitlement remains separate from Recruit.
+
+Assistant’s first Impostor→Mentor repeat example was WRONG: Mentor remains held after reacquiring Impostor, so that sequence terminates. Corrected to Cory immediately; kept a terminating regression. A Panel/Doppel loop was demonstrated and is resolved by no copied Recruit. A separate Panel/Stunt loop was proven with saved choices; Cory explicitly chose changing Panel to “Promote or Demote another member.” Its physical card is excluded from both swap positions throughout that ability; the wheel actions retain general targeting. No arbitrary once-per-chain rule added.
+
+Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Previous means latest action regardless owner and must highlight accordingly; bold canonical On Recruit / Round Start; unify follower buys into same shop/card size/price position with number+follower art and stacked-paper impression; investigate missing new-member animations; verify printed follower groups count as member quantity. Implementing in v0.8.2, all tracked.
+
+(Claude, under Cory’s go-with-your-gut): use previously proposed remaining prices for the prioritized deck, and plain temporary names Recruit Bonus / Movement Penalty until Cory names them. These are implementation fill-ins, not invented approvals. Keep identity-copy physical color for Recruit Bonus; it rewards actual Recruit abilities, never a vanilla arrival or gift.

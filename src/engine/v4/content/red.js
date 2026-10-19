@@ -58,12 +58,12 @@ export default {
 
   handlers: {
     takeFree(ctx, p, uid) { ctx.recruit(p, uid, { free: true }); },
-    panelMode(ctx, p, mode) {
-      if (mode === 'promote' || mode === 'demote') swap(ctx, p, mode, `Panel: ${mode} a member`);
+    panelMode(ctx, p, mode, data) {
+      if (mode === 'promote' || mode === 'demote') swap(ctx, p, mode, `Panel: ${mode} another member`, data?.excludeUid);
     },
     trade(ctx, p, [a, b], data) {
       // Pinned choices reject a moved card; recheck prices/protection too before applying a queued choice.
-      if (!swapPairs(ctx, p, data.mode).some(([x, y]) => x.uid === a && y.uid === b)) return;
+      if (!swapPairs(ctx, p, data.mode, data.excludeUid).some(([x, y]) => x.uid === a && y.uid === b)) return;
       const names = [a, b].map(uid => `${ctx.ownerOf(uid)?.name || 'Shop'}'s ${ctx.card(uid).def.name}`);
       if (ctx.swapMembers(p, a, b)) ctx.log(`${p.name} swapped ${names[0]} and ${names[1]}.`);
     },
@@ -109,18 +109,18 @@ export default {
     m('patriarch', 'Patriarch', 3, 2, 'Game end: +1 follower per 2 members.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
-    m('recruitbonus', 'Recruit Bonus', 2, 2, 'When you trigger a member’s Recruit ability, +1 of its color.', {
+    m('recruitbonus', 'Recruit Bonus', 2, 2, 'When you trigger a member’s On Recruit, +1 of its color.', {
       onRecruitAbility(ctx, owner, card, recruited) { ctx.gain(owner, ctx.quadrant(recruited.def.quadrant).resource, 1); },
     }),
     m('movementpenalty', 'Movement Penalty', 3, 2, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
       onMoveMember(ctx, owner, card, info) { if (info.from !== owner) info.from.bonus -= 1; },
     }),
-    m('panel', 'Panel', 4, 2, 'Recruit: Promote or Demote a member.', { f: 3, n: 3,
-      onRecruited(ctx, owner) {
-        const options = ['promote', 'demote'].filter(mode => swapPairs(ctx, owner, mode).length).map(mode => ({
+    m('panel', 'Panel', 4, 2, 'On Recruit: Promote or Demote another member.', { f: 3, n: 3,
+      onRecruited(ctx, owner, card) {
+        const options = ['promote', 'demote'].filter(mode => swapPairs(ctx, owner, mode, card.uid).length).map(mode => ({
           id: mode, label: mode === 'promote' ? 'Promote' : 'Demote', kind: 'choice', value: mode,
         }));
-        ctx.choose(owner, 'Panel: Promote or Demote?', options, 'red.panelMode');
+        ctx.choose(owner, 'Panel: Promote or Demote?', options, 'red.panelMode', { excludeUid: card.uid });
       },
     }),
     m('loyalists', 'Loyalists', 2, 3, 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
@@ -149,23 +149,23 @@ function hireCheapest(ctx, p, who) {
   })), 'red.takeFree');
 }
 // A swap can rearrange any cult, but taking from a protected rival remains blocked.
-function swapPairs(ctx, p, mode) {
+function swapPairs(ctx, p, mode, excludeUid = null) {
   const cult = ctx.state.players.flatMap(owner => ctx.canSwapMembers(owner) && (owner === p || ctx.canSteal(p, owner, 'member')) ? ctx.membersOf(owner) : []);
   const shop = ctx.shopCards();
   const out = [];
   const first = mode === 'even' ? [...cult, ...shop] : cult;
   const second = mode === 'even' ? first : shop;
-  for (const a of first) for (const b of second) if (a.uid !== b.uid && (mode === 'even' ? cost(a) === cost(b)
+  for (const a of first) for (const b of second) if (a.uid !== b.uid && a.uid !== excludeUid && b.uid !== excludeUid && (mode === 'even' ? cost(a) === cost(b)
     : mode === 'promote' ? cost(b) <= cost(a) + 2 : cost(b) <= cost(a) - 2)) out.push([a, b]);
   return out;
 }
-function swap(ctx, p, mode, prompt) {
-  const pairs = swapPairs(ctx, p, mode);
+function swap(ctx, p, mode, prompt, excludeUid = null) {
+  const pairs = swapPairs(ctx, p, mode, excludeUid);
   if (!pairs.length) { ctx.log(`${p.name}: no eligible members to swap.`); return; }
   const source = card => ctx.ownerOf(card.uid)?.name || 'Shop';
   ctx.choose(p, prompt, pairs.map(([a, b]) => ({
     id: `trade:${a.uid}:${b.uid}`, label: `${source(a)}: ${a.def.name} ↔ ${source(b)}: ${b.def.name}`, kind: 'trade',
     value: [a.uid, b.uid], hint: ctx.ownerOf(a.uid) === p ? (b.def.f + cost(b)) - (a.def.f + cost(a))
       : ctx.ownerOf(b.uid) === p ? (a.def.f + cost(a)) - (b.def.f + cost(b)) : 0,
-  })), 'red.trade', { mode });
+  })), 'red.trade', { mode, excludeUid });
 }

@@ -155,18 +155,16 @@ describe('Red members', () => {
     expect(ids(s)).toEqual([`card:${banker}`]);
     s = move(s, `card:${banker}`);
     expect(s.cards[uidOf(s, 'echo.doppel', 0)].copy).toBe('gold.banker');
-    expect(R(s)[0].gold).toBe(9); // the copy's now part +3, then round II start: Banker +3, the copy +3
+    expect(R(s)[0].gold).toBe(6); // Next round: Banker +3 and copy +3; no immediate Recruit gain.
   });
 
-  it('Doppelganger copying Hustler: Hustler\'s when-recruited fires for the copy, so it picks its own color', () => {
+  it('Doppelganger inherits Hustler’s selected color without firing its Recruit again', () => {
     let s = scene({ members: [['gold.hustler']], res: [{ green: 2, gold: 2 }], shop: ['echo.doppel', ...SHOP.slice(1)], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }] });
     s.cards[uidOf(s, 'gold.hustler', 0)].color = 'blue';
     s = beginBuy(s);
     s = move(s, `card:${uidOf(s, 'echo.doppel', 'shop')}`);
     s = move(s, `card:${uidOf(s, 'gold.hustler', 0)}`);
-    expect(s.pending.kind).toBe('choose');
-    expect(ids(s).every(id => id.startsWith('color:'))).toBe(true);
-    s = move(s, 'color:blue');
+    expect(s.pending.kind).toBe('place');
     expect(s.cards[uidOf(s, 'echo.doppel', 0)].color).toBe('blue');
     expect(R(s)[0].gold).toBe(0);
     s = take(s, 'blue.a1');

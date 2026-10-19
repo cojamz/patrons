@@ -99,15 +99,17 @@ describe('Red members: bounded acquisition and body invariants', () => {
   });
 
   it('Panel save/load retains mode and exact swap targets without inherent action red', () => {
-    let s = table(Q, { round: 3, shop: ['red.panel', 'red.mentor', 'red.mob'], queue: turns(0, 0) });
+    let s = table(Q, { round: 3, members: [['red.host']], shop: ['red.panel', 'red.mentor', 'red.mob'], queue: turns(0, 0) });
     s = move(take(s, 'red.take'), `card:${uidIn(s, 'red.panel', 'shop')}`);
     expect(s.pending.prompt).toMatch(/Panel/);
     expect(s.pending.options.map(o => o.id)).toContain('promote');
     const direct = move(s, 'promote'), reload = move(saved(s), 'promote');
     expect(reload).toEqual(direct);
-    const panel = uidIn(reload, 'red.panel', 0), mentor = uidIn(reload, 'red.mentor', 'shop');
-    expect(reload.pending.options.map(o => o.id)).toContain(pair(panel, mentor));
-    expect(reload.pending.options.map(o => o.id)).not.toContain(pair(panel, uidIn(reload, 'red.mob', 'shop')));
+    const panel = uidIn(reload, 'red.panel', 0), host = uidIn(reload, 'red.host', 0), mentor = uidIn(reload, 'red.mentor', 'shop');
+    expect(reload.pending.options.map(o => o.id)).toContain(pair(host, mentor));
+    expect(reload.pending.options.map(o => o.id)).not.toContain(pair(host, uidIn(reload, 'red.mob', 'shop')));
+    expect(reload.pending.options.every(o => !o.value.includes(panel))).toBe(true);
+    expect(saved(reload).pending.options.every(o => !o.value.includes(panel))).toBe(true);
     expect(reload.players[0].res.red).toBe(1); // Red space only; Panel itself pays no inherent red.
   });
 
@@ -118,6 +120,17 @@ describe('Red members: bounded acquisition and body invariants', () => {
     expect(actor.res.red).toBe(0);
     ctx.moveMember(uidIn(s, 'echo.evergreen', 1), rival, actor);
     expect(actor.res.green).toBe(0);
+  });
+
+  it('Panel exclusion survives a saved mode choice even if Panel has moved into the shop', () => {
+    let s = table(Q, { round: 3, members: [['red.host']], shop: ['red.panel', 'red.mentor'], queue: turns(0, 0) });
+    s = move(take(s, 'red.take'), `card:${uidIn(s, 'red.panel', 'shop')}`);
+    const panel = uidIn(s, 'red.panel', 0);
+    s.players[0].members.splice(s.players[0].members.indexOf(panel), 1);
+    s.shop.push(panel);
+    s = move(saved(s), 'promote');
+    expect(s.pending.options.length).toBeGreaterThan(0);
+    expect(s.pending.options.every(o => !o.value.includes(panel))).toBe(true);
   });
 
   it('Recruit Bonus rewards Doppelganger’s identity choice once, using its physical color', () => {
@@ -172,17 +185,20 @@ describe('Red members: bounded acquisition and body invariants', () => {
     expect(saved(s).players[0].res.red).toBe(1);
   });
 
-  it('Panel → Doppelganger → copied Panel terminates instead of recycling the same physical cards', () => {
+  it('Panel cannot swap itself after reload, while promoting another member into Doppelganger terminates normally', () => {
     let s = table(Q, { round: 2, members: [['echo.impostor', 'echo.doppel', 'red.recruitbonus']], shop: ['red.panel'], queue: turns(0, 0) });
     const impostor = uidIn(s, 'echo.impostor', 0), doppel = uidIn(s, 'echo.doppel', 0), panel = uidIn(s, 'red.panel', 'shop');
     s.cards[impostor].copy = 'red.panel'; s.cards[doppel].copy = 'red.panel';
     s = move(take(s, 'red.hireup'), pair(doppel, panel));
     s = move(saved(s), 'promote');
-    s = move(saved(s), pair(panel, doppel));
-    s = move(saved(s), `card:${impostor}`);
+    expect(s.pending.options.every(o => !o.value.includes(panel))).toBe(true);
+    expect(() => move(saved(s), pair(panel, doppel))).toThrow();
+    s = move(saved(s), pair(impostor, doppel));
+    s = move(saved(s), `card:${panel}`);
     expect(s.cards[doppel].copy).toBe('red.panel');
     expect(s.players[0].members).toContain(doppel);
-    expect(s.shop).toContain(panel);
+    expect(s.players[0].members).toContain(panel);
+    expect(s.shop).toContain(impostor);
     expect(s.pending?.kind).not.toBe('choose');
     expect(s.players[0].res).toMatchObject({ red: 2, green: 1 }); // action + actual Panel ability + physical copy choice
   });

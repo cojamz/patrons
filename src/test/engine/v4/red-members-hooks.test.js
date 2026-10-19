@@ -75,16 +75,17 @@ describe('new Red member hooks', () => {
     expect(c.steal(rival, p, { uid: uidIn(s, 'red.twins', 0) })).toBe(1);
   });
 
-  it('Panel promotes itself to Mentor, who recruits the cheapest member, without inherent action red', () => {
-    let s = fixture({ shop: ['red.panel', 'red.mentor', 'red.volunteer'] });
+  it('Panel promotes another member to Mentor, who recruits the cheapest member, without inherent action red', () => {
+    let s = fixture({ members: [['red.host']], shop: ['red.panel', 'red.mentor', 'red.volunteer'] });
     acquire(s, 'red.panel');
     s = resume(s);
     expect(s.pending.options.map(o => o.id)).toContain('promote');
     s = move(s, 'promote');
-    const panel = uidIn(s, 'red.panel', 0), mentor = uidIn(s, 'red.mentor', 'shop');
-    s = move(s, `trade:${panel}:${mentor}`);
-    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.mentor', 'red.volunteer']);
+    const panel = uidIn(s, 'red.panel', 0), host = uidIn(s, 'red.host', 0), mentor = uidIn(s, 'red.mentor', 'shop');
+    expect(s.pending.options.every(o => !o.value.includes(panel))).toBe(true);
+    s = move(s, `trade:${host}:${mentor}`);
+    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.mentor', 'red.panel', 'red.volunteer']);
     expect(s.players[0].res.red).toBe(0);
-    expect(s.shop).toContain(panel);
+    expect(s.shop).toContain(host);
   });
 });

@@ -4,7 +4,11 @@ Player-facing releases and exact source/build verification are recorded separate
 
 ## v0.8.2 — 2026-10-19 — unreleased
 
-- New Red deck, corrected Green copies and a unified member/follower shop.
+- Red’s twelve-member deck now includes Panel, Loyalists and two new recruit/movement passives. Volunteer is free; Twins costs 2 red; Mob counts as 5 members/followers. The upper prices are 6 / 8 / 10.
+- Panel promotes or demotes another member. Loyalists blocks your own and rivals’ swaps; taking members still triggers Recruiter. Printed follower groups count equally as members.
+- Impostor and Doppelganger become copies without triggering the copied member’s On Recruit; ongoing abilities and future Round Start effects remain.
+- Chorus excludes itself. Copy Previous follows the latest action regardless of its owner. On Recruit and Round Start are bold throughout member rules.
+- Followers and members share one shop with matching card art/cost layouts. Swap targeting no longer leaves stale hover highlights.
 
 ## v0.8.1 — 2026-10-18 — shipped (source 68e9a5d, main 2222a66)
 

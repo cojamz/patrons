@@ -83,6 +83,11 @@
 @media (min-width:1200px) and (min-height:500px){
   .app.game.lt .lt-shop-cards .lt-shop-main{height:100%}
   .app.game.lt .lt-shop-cards[data-view="details"] .lt-shop-body > .lt-cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:auto}
+  .app.game.lt .lt-shop-cards[data-view="details"] .lt-rates-grid{display:grid;grid-column:1 / -1;grid-template-columns:repeat(3,minmax(0,1fr));order:-1;gap:10px}
+  .app.game.lt .lt-shop-cards[data-view="details"] .lt-rates-grid .lt-rate{height:116px;min-height:116px}
+  .app.game.lt .lt-shop-cards[data-view="details"] .lt-rates-grid .lt-rate .art{flex:1 1 auto;min-height:58px;height:auto}
+  .app.game.lt .lt-shop-cards[data-view="details"] .lt-rates-grid .lt-rate .nm{font-size:11px;line-height:12px;min-height:0;margin:6px 2px 0}
+
   .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards{grid-auto-rows:minmax(116px,1fr)}
   .app.game.lt .lt-shop-cards .lt-card.card,.app.game.lt .lt-shop-cards .lt-deck{min-height:116px}
 }
