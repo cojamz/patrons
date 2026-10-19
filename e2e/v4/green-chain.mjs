@@ -97,6 +97,14 @@ try {
         return s.pending?.kind === 'buy' && JSON.stringify(s.players.map(p => [p.res, p.bonus])) === JSON.stringify(expected);
       } catch { return false; }
     }, expected.players.map(p => [p.res, p.bonus]), { timeout: 20000 });
+    // Engine state settles before its presentation. Verify that the legal buy controls
+    // actually return after the last flight, rather than photographing a stale choice.
+    const close = page.getByRole('button', { name: 'Close', exact: true });
+    if (await close.isVisible()) await close.click();
+    const handAfter = page.locator('[data-handoff]');
+    if (await handAfter.isVisible()) await handAfter.click();
+    await page.locator('.app.game[data-phase="buy"]:not([data-animating])').waitFor({ timeout: 20000 });
+    await page.locator('[data-option="pass"]:not([aria-disabled="true"])').first().waitFor();
     await page.screenshot({ path: `${out}/${tag}-settled.png` });
     if (errors.length) throw new Error(`${tag}: ${errors.join('; ')}`);
     console.log(`${tag}: Encore → Reprise → own Golden Years; fresh choice, reload, exact gains, buying restored; no page errors.`);

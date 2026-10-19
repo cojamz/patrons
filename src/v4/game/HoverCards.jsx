@@ -400,7 +400,9 @@ function useCopyTargets(c, state, me) {
   let keys = pv && pv.copies ? pv.copies : null;
   if (!keys && c && c.kind === 'card' && viewer != null && state.cards[c.uid]) keys = memberCopyTargets(state, viewer, cardDef(state, c.uid));
   // Greatest Hits / Tribute Band: every space of yours it would copy lights up
-  const all = !keys && viewer != null && (space ? copiesAll(quadrant(state.quadrants[space[0]]).actions[space[1]].text) : c && c.kind === 'card' && state.cards[c.uid] && copiesAll(cardDef(state, c.uid).text));
+  // A copy-all preview may already be asking a nested copy's first question.
+  // Its root hover still highlights the whole replay plan, not just that question's targets.
+  const all = viewer != null && (space ? copiesAll(quadrant(state.quadrants[space[0]]).actions[space[1]].text) : c && c.kind === 'card' && state.cards[c.uid] && copiesAll(cardDef(state, c.uid).text));
   if (all) { const plan = ownCopyPlan(state, viewer); if (plan) keys = plan.keys; }
   const sig = keys ? keys.join(',') : '';
   // lit in the same frame the card opens (a layout effect), not a frame after it
@@ -490,7 +492,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
       <h4 className="sc-name" title={`${Q.name} · ${RINGS[a.ring - 1]}`}>{a.name}</h4>
       <p className="sc-rule"><CardText text={a.text} /></p>
       <div className="lt-yd">
-        {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
+        {pv && pv.copies && !all ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
         {all ? <Row k="Copies"><span data-copies-all>{all.names.length ? all.names.join(', ') : 'nothing yet'}</span></Row> : null}
         {all && all.skips ? <Row k="Skips"><span data-copies-skip>{all.skips}</span></Row> : null}
         {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} now /></span></div> : null}

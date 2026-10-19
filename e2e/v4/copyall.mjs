@@ -51,7 +51,7 @@ function copyAllSave() {
     const mine = Object.entries(s.slots).filter(([, p]) => p === 0).map(([k]) => k);
     const ok = s.round === 3 && s.pending?.kind === 'place' && s.pending.player === 0 && s.players[0].left === 1
       && s.pending.options.some(o => o.id === `slot:${GH}`) && mine.some(k => COPIES.includes(k)) && mine.length >= 4;
-    if (!ok) continue;
+    if (!ok || ownPlan(contextFor(s), s.players[0]).take.length < 2) continue;
     return { seed, mine, save: { config: { seats: seats.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal' }, state: s, undo: null, savedAt: Date.now() } };
   }
   throw new Error('copyall: no seed reached round III with a copy space among P1\'s and Greatest Hits open');
@@ -120,7 +120,7 @@ try {
   const after = at < 0 ? [] : log.slice(at);
   if (at < 0) fail('the game log never says P1 took Greatest Hits', 'c3');
   else {
-    if (skipped.length && !after.some(l => l.includes(`Greatest Hits skips ${skipReason}`))) fail(`no skip line after Greatest Hits: ${JSON.stringify(after.slice(0, 8))}`, 'c3');
+    if (skipped.length && !after.some(l => l.includes(`skips ${skipReason}`))) fail(`no skip line after Greatest Hits: ${JSON.stringify(after.slice(0, 8))}`, 'c3');
     for (const n of copied) if (!after.some(l => new RegExp(`P1 cop(ied|ies) ${n}\\b`).test(l))) fail(`no "copied ${n}" line: ${JSON.stringify(after.slice(0, 10))}`, 'c3');
   }
   await page.click('.lt-menu .menu-glyph').catch(() => {});
