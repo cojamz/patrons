@@ -1,3 +1,9 @@
+# Red design intake — confirmed action spec
+
+- [ ] Build Red action redesign when implementation begins: spheres/red-redesign-2026-10-18.md. Promote/Demote target any cult; equal-cost swap any two members; acquire-for-yourself Recruit triggers only.
+- [ ] Design Red members around this action structure with Cory. Existing six identity/support pitches remain unapproved.
+- [ ] Universal inherent1resource per action is a direction; do not silently apply it to other colors as part of Red.
+
 # Shipped: Green v0.7.0
 
 - [x] Implement agreed actions, inherent +1 Green, fresh choices through copies, cycle prevention and serialized branch/recruit continuations.

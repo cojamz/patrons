@@ -890,3 +890,11 @@ Instrument for all seven: `v4-fair-price.mjs sweep`, 80 paired seeds, Normal bot
 - (Cory) Exploring what a lot of Recruit effects would look like. Current Green has5of12: Busker, StuntDouble, Doppelganger, Impostor, Connector (Busker/Connector also round start).
 - (Assistant proposals, NOT approved) Support movement with Recruit bursts, round-start/end reasons to retain members, cheap multi-person groups, context-dependent member abilities, and quieter resource actions based on cult size or table recruitment. Earlier six identity ideas: crowd growth, recruit turnover, exchanges, market control, table recruitment momentum, spending membership. These are discussion options, not locked designs.
 - (Cory process) Be credit-conscious without slowing delivery; trim sims and avoid expensive redundant checks.
+
+
+## 2026-10-18 — Red actions, worked backward from round III
+- (Cory) III: Recruit a Member. II: Promote and Demote via swaps with the shop. I: cheapest shop recruit; simple gain totaling2/3/4Red by round; any equal-cost member swap. Exact spec: spheres/red-redesign-2026-10-18.md.
+- (Cory) Promote/Demote target any cult's member, including rivals; general wording is intentional. Promote replacement costs at most outgoing+2. Demote replacement costs at most outgoing−2: a6can become4orless. Cost is printed colored+wild.
+- (Cory) Equal-cost swap can exchange any two members across cults/the shop, including two rivals' members.
+- (Cory) Recruit triggers when the acting leader acquires a member for their own cult, including swaps/taking. A member moved into another leader's cult does not trigger that recipient's Recruit effect.
+- (Cory) Red gets an inherent1Red per action, like Green. Universal inherent resources are the intended general direction; other colors are not yet changed.
