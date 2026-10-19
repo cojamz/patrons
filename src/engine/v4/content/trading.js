@@ -21,7 +21,7 @@ const W = 'white';
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 
 /** Followers you can sell: your loose followers (the ones you've won or bought). */
-export const sellable = p => p.bonus;
+export const sellable = p => Math.max(0, p.bonus);
 const ahead = (ctx, p) => ctx.rivals(p).filter(o => ctx.followers(o) > ctx.followers(p)).length;
 // How bots value a follower against one resource, by round (resources compound early, followers are the score late).
 const fv = ctx => [1.6, 1.3, 1.2][ctx.state.round - 1] ?? 1.2;
@@ -203,7 +203,7 @@ const trading = {
       // This turn-end check is a fallback for a copy made some other way (loanPaid unset).
       onTurnEnd(ctx, owner, card) { if (!card.loanPaid) payLoan(ctx, owner, card); },
       // can't take you below the followers you've won or bought (never yourself or a member)
-      onGameEnd: (ctx, owner) => -Math.min(2, owner.bonus),
+      onGameEnd: (ctx, owner) => -Math.min(2, sellable(owner)),
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 8 → 4
     m('magnate', 'Magnate', 2, 2, 'Game end: +1 follower per 3 white.', {
@@ -310,7 +310,7 @@ function raid(ctx, owner, t, k) {
   ctx.log(`${owner.name}'s Raider bought ${k} follower${k > 1 ? 's' : ''} from ${t.name} for ${k} white.`);
 }
 function raidAmount(ctx, p, t) {
-  return Math.min(3, t.bonus, p.res[W]);
+  return Math.min(3, sellable(t), p.res[W]);
 }
 
 export default trading;

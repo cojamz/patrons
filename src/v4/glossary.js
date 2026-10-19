@@ -28,7 +28,7 @@ export const GLOSSARY = [
   { key: 'extra turn', word: 'Extra turn', match: /\bextra turns?\b/,
     def: 'Another turn right after this one: you place one more minion and may buy again. Never in round I; later only if a space remains after every minion still due has landed.' },
   { key: 'copy', word: 'Copy', match: /\bcop(y|ies|ied)\b(?= (?:any|every|one|the|it|that|what|a)\b)|\bwhat you copy\b|\bcopy a space\b/,
-    def: 'Copy a space: get its own printed gain (what its chip shows). Members’ bonuses on it and its gifts to others don’t repeat. Its taker keeps what they got. Copies never copy another copy (a space that itself copies, like Echo). Occupied inner-ring spaces can be copied. Echo copies the previous action, Encore any space with a minion, and Greatest Hits every space with your minion.' },
+    def: 'Copy an action: get its own printed gain (what its chip shows). Members’ bonuses on it and its gifts to others don’t repeat. Its taker keeps what they got. Copying a copy lets you choose again; never choose an action already in that chain. Each green action gives +1 green, including when copied. Agents blocks everyone from copying its owner’s actions. Echo copies the previous action, Encore an action with a rival minion, Reprise one with your minion, and Greatest Hits every action with your minion.' },
   { key: 'face-up', word: 'Face-up', match: /\bface-up\b/,
     def: 'The members in the shop that everyone can see. When one leaves, the pile refills the row.' },
   { key: 'pile', word: 'Pile', match: /\b(?:the|of the) pile\b/,

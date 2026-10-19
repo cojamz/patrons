@@ -68,7 +68,7 @@ describe('every use-once member goes through the one flow', () => {
 describe('the seat card list', () => {
   const scene = () => {
     const s = table(['gold', 'echo', 'trading', 'purple'], {
-      members: [['gold.jackpot', 'gold.speculator', 'gold.midas', 'gold.banker', 'gold.prospector', 'gold.tycoon', 'trading.pawnbroker'], ['echo.hourglass']],
+      members: [['gold.jackpot', 'gold.speculator', 'gold.midas', 'gold.banker', 'gold.prospector', 'gold.tycoon', 'trading.pawnbroker'], ['echo.dejavu']],
       res: [{ gold: 2 }, { gold: 7 }],
     });
     s.cards[uidIn(s, 'gold.speculator', 0)].used = true;
@@ -99,7 +99,7 @@ describe('the seat card list', () => {
     // a rival's card: their states, never a button
     const r = render(<SeatMembers state={s} pid={1} me={0} />);
     expect(r.container.querySelector('[data-use]')).toBeNull();
-    expect(r.container.querySelector('[data-member-row="echo.hourglass"]').textContent).toContain('once a round');
+    expect(r.container.querySelector('[data-member-row="echo.dejavu"]').textContent).toContain('Once per game:');
   });
   it('the member\'s own hover: the big Use button, or why not', () => {
     const s = scene();
@@ -109,12 +109,22 @@ describe('the seat card list', () => {
     const b = render(<MemberActions state={s} uid={uidIn(s, 'trading.pawnbroker', 0)} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
     expect(b.container.textContent).toMatch(/Can’t use it now: no followers to sell/);
     cleanup();
-    const c = render(<MemberActions state={s} uid={uidIn(s, 'echo.hourglass', 1)} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
+    const c = render(<MemberActions state={s} uid={uidIn(s, 'echo.dejavu', 1)} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
     expect(c.container.textContent).toBe('');
   });
   it('the prompt names only what would do something, once', () => {
     const s = scene();
     expect(promptFor(s, true).sub).toBe('…or use Lottery Winner first'); // not Pawnbroker (nothing to sell), not Speculator (used)
+  });
+  it('Stunt Double is a recruit effect, without an activation row or button', () => {
+    const s = table(['gold', 'echo', 'trading', 'purple'], { members: [['echo.hourglass']] });
+    const uid = uidIn(s, 'echo.hourglass', 0);
+    const row = memberRows(s, 0, 0, optionsOf(s)).find(r => r.uids.includes(uid));
+    expect(row.kind).not.toBe('use');
+    expect(row.text).toMatch(/On recruit: copy the action you just took/i);
+    expect(useNow(s, 0, uid)).toBeNull();
+    const { container } = render(<SeatMembers state={s} pid={0} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
+    expect(container.querySelector('[data-use]')).toBeNull();
   });
   it('what a used member gives flies from that member', () => {
     const s = scene();

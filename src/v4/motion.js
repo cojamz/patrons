@@ -187,7 +187,7 @@ const TABLE = {
   // the action stage (stage.js): the space taken flies out to the hub as a card, a member steps off its seat beside it,
   // what they give flows from there; when the chain ends the stage holds a moment, then each flies home
   stageIn:     [150,   180],
-  stageHold:   [220,   420],
+  stageHold:   [220,   180],
   stageOut:    [160,   240],
 };
 /** A budget at the viewer's speed: Quick's own number, else the base times the speed. */

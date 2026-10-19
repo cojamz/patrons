@@ -27,16 +27,16 @@ const entry = (s, name) => Object.values(s.echo.now).find(e => e.name === name);
 
 describe('Green: a space’s chip is what the space gave, closed at the buy step', () => {
   it('a member recruited in the buy step (Understudy) does not add its copy to the space the buyer just took', () => {
-    // P2 takes Golden Years (+2 gold). P1 takes Hum (+3 green), then buys Understudy and copies Golden Years.
+    // P2 takes Golden Years. P1 takes Chorus (+2 green), then buys legacy Understudy and copies Golden Years.
     let s = scene({ turns: [1, 0, 1], res: [{ green: 10, gold: 4 }, {}], shop: ['echo.understudy', 'red.twins', 'red.bigfamily'] });
     s = pass(take(s, 'gold.rush'));
     s = take(s, 'echo.hum');
     s = buyCard(s, 'echo.understudy');
     expect(s.pending.prompt).toMatch(/^Understudy/);
     s = pass(move(s, s.pending.options[0].id));
-    const hum = entry(s, 'Hum');
-    // Hum gave its taker +3 green, nothing else
-    expect(hum.res).toEqual({ green: 3 });
+    const hum = entry(s, 'Chorus');
+    // Chorus gave its taker +1 for its occupied green action, +1 inherent, nothing else.
+    expect(hum.res).toEqual({ green: 2 });
     expect(hum.redo).toBeFalsy();
     expect(hum.members).toEqual([]);
   });

@@ -202,12 +202,12 @@ const S = {
     boom: [['anys', '→', 'f']],
   },
   echo: {
-    hum: [['3', 'green']],
-    chant: r => [[`${2 * r}`, 'green']],
-    echo: [['copy', 'r']],
-    encore: [['copy', 'space']],
-    refrain: [['2', 'green'], ['copy', 'w']],
-    eternity: [['copy', 'ws']],
+    hum: [['1', 'green', '/', 'space', 'w'], ['1', 'green']],
+    chant: r => [[`${r + 1}`, 'green']],
+    echo: [['copy', 'space'], ['1', 'green']],
+    encore: [['copy', 'r', 'w'], ['1', 'green']],
+    refrain: [['copy', 'w'], ['1', 'green']],
+    eternity: [['copy', 'ws'], ['1', 'green']],
   },
 };
 

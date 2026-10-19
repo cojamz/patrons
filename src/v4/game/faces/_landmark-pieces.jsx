@@ -85,12 +85,11 @@ const PIECES = {
   'trading.sellhigh': () => [{ t: 'fol', n: 2 }, TO, res('white', 6)],
   'trading.dividend': () => [per('white', 1, 'fol')],
   'trading.boom': () => [{ t: 'all', r: 'any' }, TO, { t: 'fol', n: null }],
-  'echo.hum': () => [res('green', 3)],
-  'echo.chant': r => [res('green', 2 * r)],
-  'echo.echo': () => [{ t: 'mirror', of: 'hood' }],
-  'echo.encore': () => [{ t: 'mirror', of: 'any' }],
-  'echo.refrain': () => [res('green', 2), { t: 'mirror', of: 'mine' }],
-  'echo.eternity': () => [{ t: 'mirror', of: 'all' }],
+  'echo.chant': r => [res('green', r + 1)],
+  'echo.echo': () => [{ t: 'mirror', of: 'any' }, res('green', 1)],
+  'echo.encore': () => [{ t: 'mirror', of: 'hood' }, res('green', 1)],
+  'echo.refrain': () => [{ t: 'mirror', of: 'mine' }, res('green', 1)],
+  'echo.eternity': () => [{ t: 'mirror', of: 'all' }, res('green', 1)],
 };
 function numIn(a, re, dflt) { const m = String(a && a.text || '').match(re); return m ? Number(m[1]) : dflt; }
 

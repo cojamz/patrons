@@ -9,6 +9,7 @@ import { scoreSteps, finalGrants, BEATS } from '../../../v4/game/finalScore.js';
 import { reckonSteps, unpaidFollowers, scoringSeatState } from '../../../v4/game/Reckoning.jsx';
 import FinalScore, { plan } from '../../../v4/game/FinalScore.jsx';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
+import { breakdown } from '../../../v4/format.js';
 
 afterEach(cleanup);
 const finish = (seed, n = 4) => {
@@ -21,6 +22,20 @@ const finish = (seed, n = 4) => {
 const games = [3, 5, 8, 13, 21, 34].map(seed => finish(seed, seed % 2 ? 4 : 3));
 
 describe('end-game scoring pops', () => {
+  it('keeps signed follower losses visible, with a zero floor and nonnegative scoring totals', () => {
+    const s = createGame({ seats: [{ kind: 'bot' }, { kind: 'bot' }], quadrants: ['gold', 'echo'] });
+    const p = s.players[0], agents = Object.values(s.cards).find(c => c.def === 'echo.agents');
+    p.members = [agents.uid]; p.bonus = -4; p.bought = 0; p.contest = 0; p.final = null;
+    s.ledger = { [p.id]: { Bait: -4 } };
+    const b = breakdown(s, p);
+    expect(b.members).toBe(2);
+    expect(b.play).toEqual([{ label: 'Bait', n: -4 }, { label: 'Minimum 0 followers', n: 1 }]);
+    expect(b.self + b.members + b.bought + b.contests + b.effects + b.endGame).toBe(0);
+    let total = 0;
+    for (const step of scoreSteps(s, p)) { total += step.n; expect(total).toBeGreaterThanOrEqual(0); }
+    expect(total).toBe(followers(s, p));
+    expect(scoreSteps(s, p).find(x => x.beat === 'losses').n).toBe(-2);
+  });
   it('add up to each player\'s final total, beat by beat in order', () => {
     for (const s of games) {
       expect(s.over).toBe(true);

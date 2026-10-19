@@ -1,3 +1,12 @@
+# Green v0.7.0 — current candidate (not yet deployed)
+
+- This section supersedes historical checkpoints below. Green's agreed spec: design/spheres/green-redesign-2026-10-18.md.
+- Implemented: twelve-member deck, confirmed prices, Chorus/Build Up, inherent +1 Green, rival Encore, fresh copy choices with per-branch cycle guards, serialized continuations, Agents/Bait, recruit-only Stunt Double and copied Extra Hand grants.
+- Dedicated Green tests, twenty seeded games and related UI tests pass. Final exact-commit combined/browser verification remains required. Do not call the candidate live.
+- Bait uses signed follower adjustments; total floors at zero, score breakdowns preserve attribution, White sales/debt remain valid. Stunt's member-triggered copy starts a fresh chain so its recruit effect can copy the recruiting action.
+- Names Chorus/Connector and Connector4+2/Bait3+2 prices are placeholders; Chronicler rename and equalizing other colors' deck counts remain backlog.
+- Root owns remaining integration/deployment. Helper runs ended; do not assume any agent remains active.
+
 # Cults — agent handoff, October 18, 2026
 
 ## Top-10 thread, wound down 9:45pm Eastern, Oct 17 (Cory out of credits)

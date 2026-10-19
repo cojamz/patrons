@@ -72,6 +72,10 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // passed only while a bot happened to recruit a second copy (balance pass 3 moved those games).
   // cards-thieves.test.js (Double Agent) covers its line.
   const EXEMPT = new Set(['thieves.watchdog', 'market.climber', 'trading.magnate', 'thieves.doubleagent']);
+  // Agents denies copy targets without changing a number, like Bodyguard's steal protection. Keep it in the dealt
+  // hands (preserving the audit's coverage distribution), but require no payout log from this pure restriction.
+  // green-redesign-pressure.test.js verifies that it blocks both its owner's and rivals' copies, including copies of Agents.
+  const QUIET_RESTRICTIONS = new Set(['echo.agents']);
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
     ['gold', 'market', 'trading', 'echo'], ['red', 'thieves', 'market', 'trading'],
@@ -80,7 +84,7 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   it('every member with an effect, once held, leaves a log line naming it (seeded mixed tables, normal bots)', () => {
     // Release off: bots release dealt members early, and this gate is about naming, not balance
     const st = audit(TABLES, 24, { hand, perSeat: 3, rules: { release: false } });
-    const silent = hand.filter(id => st[id]?.held >= 3 && !st[id].fired).map(id => `${id} (held in ${st[id].held} games, never named)`);
+    const silent = hand.filter(id => !QUIET_RESTRICTIONS.has(id) && st[id]?.held >= 3 && !st[id].fired).map(id => `${id} (held in ${st[id].held} games, never named)`);
     const unseen = hand.filter(id => !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);

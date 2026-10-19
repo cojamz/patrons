@@ -78,6 +78,15 @@ const TEMPLATES = { member: { id: '_member', name: 'Member', kind: 'member', px:
 
 // ids: engine ids for the batches ("gold.banker", "gold.rush"), kebab names for the calibration set ("banker")
 const BY_ID = new Map(SETS.filter(i => i.kind === 'member' || i.kind === 'action').map(i => [i.id, i]));
+// Green's new members use distinct retired Green drawings while their final names/art settle.
+// New IDs preserve each member's own palette and cache entry; no live Green card shares these silhouettes.
+for (const [key, name, source] of [
+  ['impostor', 'Impostor', 'mirror'], ['connector', 'Connector', 'groupie'],
+  ['agents', 'Agents', 'choir'], ['bait', 'Bait', 'understudy'],
+]) {
+  const art = BY_ID.get(`echo.${source}`);
+  if (art) BY_ID.set(`echo.${key}`, { ...art, id: `echo.${key}`, name });
+}
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */
 export const spriteId = name => String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 /** The icon for an id (or the first of several candidate ids), or the template for its kind. */

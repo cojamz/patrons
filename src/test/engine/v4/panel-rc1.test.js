@@ -92,11 +92,11 @@ describe('12 · one price rule for every recruit', () => {
     // the old hover read "need 8 more": it ignored the discount
     expect(payBreakdown(s, p, u).short.total).toBe(4);
   });
-  it('memberPrice: "need 4 green" names the color; "2 gold, 1 any" splits it', () => {
+  it('memberPrice: "need 1 green" names Busker’s new colored price; "2 gold, 1 any" splits it', () => {
     const s = sceneQ({ quadrants: CLASSIC, res: [{ gold: 15 }] });
     row(s, ['echo.evergreen', 'gold.jackpot']);
     const p = s.players[0];
-    expect(memberPrice(s, p, s.shop[0]).short.text).toBe('4 green');
+    expect(memberPrice(s, p, s.shop[0]).short.text).toBe('1 green');
     p.res = { gold: 4, red: 3, blue: 0, green: 0 };
     expect(memberPrice(s, p, s.shop[1]).short.text).toBe('2 gold, 1 any');
   });

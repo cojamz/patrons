@@ -1,3 +1,11 @@
+# Active batch: Green redesign
+
+- [ ] Implement agreed actions, inherent +1 Green, fresh choices through copies, cycle prevention and serialized branch/recruit continuations.
+- [ ] Implement all twelve agreed members and confirmed costs; retain working names and documented placeholder costs.
+- [ ] Migrate obsolete Green contracts; pressure-test copy-all, nested recruit, copied members, Agents/Bait, save/load and full-game progression.
+- [ ] Check exact immutable v0.7.0 build, desktop/phone nested copy UI, publish and verify public source stamp.
+- Scope/source of truth: spheres/green-redesign-2026-10-18.md. Equal deck sizes across other colors remain separate backlog work.
+
 # v4 to-do
 
 Current feedback section reconciled 2026-10-16; later historical sections retain their original context. Exact verified live source and current checks: `design/in-flight.md`. A box is ticked only when code or a gate proves it, not on an agent's report; where it isn't obvious, the proof is in brackets.

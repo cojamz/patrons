@@ -1,45 +1,63 @@
 {
-  "live": "Verified October17 rules/multiplayer/market release",
-  "liveCommit": "6c1e97eb4bef2d4050f6dba1a70c94886f0ddd36",
+  "live": "v0.6.5 \u2014 idle animations pause during moves",
+  "liveCommit": "aad49c59",
   "work": [
     {
-      "id": "handoff",
-      "name": "Source and backlog handoff",
-      "owner": "Next agent",
-      "status": "Checkpointed \u00b7 not live",
-      "scope": "Own-color contests, Poach/Cutpurse/Extortionist, actual animation boundaries, payment and small UI fixes.",
-      "evidence": "Targeted repaired regressions green; no final combined gate.f00f20e1 is a source checkpoint, not public release.",
-      "next": "Read HANDOFF finalcheckpoint and run required immutable release checks.",
-      "label": "Handoff"
+      "id": "green-engine",
+      "name": "Copy engine and twelve-member deck",
+      "owner": "green_engine",
+      "status": "In progress",
+      "scope": "Fresh choices, cycle prevention, serialized continuations and agreed member rules",
+      "evidence": "Pressure tests pending",
+      "next": "Focused engine regressions",
+      "label": "Engine"
+    },
+    {
+      "id": "green-tests",
+      "name": "Chain pressure tests",
+      "owner": "green_pressure_tests",
+      "status": "In progress",
+      "scope": "Copy-all, recruits, save/load, Agents, Bait, copied members",
+      "evidence": "Dedicated regressions added",
+      "next": "Migrate obsolete Green contracts and loop on failures",
+      "label": "Tests"
+    },
+    {
+      "id": "green-ui",
+      "name": "Green UI and deck integration",
+      "owner": "green_ui",
+      "status": "In progress",
+      "scope": "Deck cull, exact wording, legal targets, art mappings and hover",
+      "evidence": "UI contracts being updated",
+      "next": "Actual desktop/phone nested-copy verification",
+      "label": "UI"
+    },
+    {
+      "id": "green-release",
+      "name": "Integration and live release",
+      "owner": "Root",
+      "status": "In progress",
+      "scope": "Independent code review, browser nested-copy/reload, immutable gate, docs and deployment",
+      "evidence": "v0.7.0 candidate; no deployment yet",
+      "next": "Commit checked source and verify served stamp/UI",
+      "label": "Release"
     }
   ],
   "next": [
     {
-      "name": "Start here",
-      "next": "Read design/HANDOFF.md, final check evidence and feedback-addendum-2026-10-17.md."
+      "name": "Green v0.7.0",
+      "next": "Publish only after focused pressure/browser and immutable checks."
     }
   ],
-  "releaseSummary": "Verified live6c1e97eb \u00b7 newer fixes checkpointed for handoff",
+  "releaseSummary": "v0.6.5 public; v0.7.0 Green candidate in progress",
   "upNext": [
     {
-      "source": "Release blocker",
-      "name": "Full-game progression \u00b7 first",
-      "summary": "Prior19regressions repaired with focused proof; actual held-click stall fixed. Run combined immutable gate onf00f20e1 before release.",
-      "doneWhen": "Complete local/online games and phone checks pass on final immutable source."
-    },
-    {
-      "source": "Confirmed rule",
-      "name": "Extra Hand \u00b7 implemented, verify",
-      "summary": "Source-tagged unplaced-only transfer implemented; focused tests pass, integrated proof pending.",
-      "doneWhen": "No duplication after copies, repeated transfers or already-used grants."
-    },
-    {
-      "source": "New intake",
-      "name": "All feedback \u00b7 triaged",
-      "summary": "Original113notes plus new24-row addendum, including copy-chain pressure tests, scoring redesign, purchase cues and Undo reversal.",
-      "doneWhen": "Continue clear batches; park only unresolved design calls."
+      "source": "Existing backlog",
+      "name": "Other feedback remains queued",
+      "summary": "No unrelated fixes are claimed complete by this Green batch.",
+      "doneWhen": "Ship separately checked batches against todo.md."
     }
   ],
-  "batchStatus": "Stopped \u00b7 GitHub handoff ready",
-  "batchNote": "v0.6.0 candidatef00f20e1 \u00b7 not deployed \u00b7 final immutable checks pending"
+  "batchStatus": "Green v0.7.0 implementation and verification",
+  "batchNote": "Not live; three lanes plus root integration"
 }

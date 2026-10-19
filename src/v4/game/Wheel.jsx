@@ -617,7 +617,9 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     // left the click doing nothing, and the online e2e circled the lit spaces forever (2026-10-15)
     const confirmHere = confirmPlace && (!opt || /^(slot|squat):/.test(opt));
     const touch = confirmHere || lastPointer.current === 'touch';
-    if (opt && !touch) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
+    // A copy target is already the answer to a choice. Its read-only touch card has no
+    // confirmation button, so choose it on the first tap, just as with a mouse.
+    if (opt && (!touch || !/^(slot|squat):/.test(opt))) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
     if (opt && touch) {
       if (peek && peek.key === s.key && peek.pinned) { setPeek(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
       setPeek({ key: s.key, pinned: true });

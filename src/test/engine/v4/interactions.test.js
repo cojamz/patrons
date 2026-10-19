@@ -155,13 +155,13 @@ describe('Green copies the risky spaces', () => {
     let s = scene({ quads: S, turns: [1, 0], members: [['gold.midas'], []] });
     s = go(s, 'silver.toast');
     s = pass(move(take(s, 'echo.echo'), 'space:now:2-0'));
-    expect(R(s, 0)).toMatchObject({ gold: 3, silver: 1 }); // the spill isn't from an action: it stays silver
+    expect(R(s, 0)).toMatchObject({ gold: 4, silver: 1 }); // Echo's inherent green also turns gold; the gift stays silver.
 
     let t = scene({ quads: S, turns: [1, 0], members: [[], ['gold.midas']] });
     t = go(t, 'echo.hum');
-    expect(R(t, 1)).toMatchObject({ gold: 3, green: 0 });
+    expect(R(t, 1)).toMatchObject({ gold: 2, green: 0 });
     t = take(t, 'echo.echo');
-    expect(labels(t)).toEqual(['Hum (P2): +3 green']);
+    expect(labels(t)).toEqual(['Chorus (P2): +2 green']);
     t = pass(move(t, t.pending.options[0].id));
     expect(R(t, 0).green).toBe(3);
   });
@@ -194,7 +194,7 @@ describe('Doppelganger copying Purple, Green and Silver members', () => {
     let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['echo.choir', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'echo.choir' } } });
     s = go(s, 'gold.rush');
     s = pass(move(take(s, 'echo.echo'), 'space:now:0-1'));
-    expect(R(s, 0)).toMatchObject({ gold: 2, green: 2 });
+    expect(R(s, 0)).toMatchObject({ gold: 2, green: 3 }); // Two Choirs plus Echo's inherent green.
   });
   it('copying Go-Getter gives a usable once-per-game extra turn of its own', () => {
     let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, turns: [0, 1], members: [['purple.secondwind', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'purple.secondwind' } } });
@@ -443,8 +443,8 @@ describe('member colors across spheres', () => {
     s = take(s, 'gold.rush');
     s = move(s, `card:${uidOf(s, 'echo.evergreen', 'shop')}`);
     expect(defs(s, 0)).toEqual(['echo.evergreen']);
-    // paid its 1 green, then Busker pays "now and at round start": +3 green
-    expect(R(s, 0).green).toBe(3);
+    // Paid its 1 green, then Busker's recruit income pays +2 green.
+    expect(R(s, 0).green).toBe(2);
   });
 });
 

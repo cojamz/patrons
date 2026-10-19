@@ -146,7 +146,7 @@ describe('Red members', () => {
     let s = sceneQ({ res: [rich], members: [['gold.banker']], shop: ['echo.doppel'] });
     s = take(s, 'gold.rush'); s = buy(s, 'echo.doppel');
     s = move(s, s.pending.options[0].id);
-    expect(named(s, 'Doppelganger')[0]).toMatch(/copies Banker/);
+    expect(named(s, 'Doppelganger')[0]).toMatch(/becomes a copy of Banker/);
     expect(named(s, 'Banker')).toHaveLength(1); // the copy's "now" +3, at once
     s.queue = [{ t: 'round', r: 2 }]; s.pending = null; s = resume(s);
     expect(named(s, 'Banker')).toHaveLength(3);

@@ -16,7 +16,7 @@ One colored quadrant per player, each with its own spaces and its own contest, p
 - The **outer ring** opens in round I, the **middle ring** in round II, the **inner ring** in round III. Open rings stay open.
 - **Pale spaces with gold edges are available now.** Taken spaces dim; dark spaces in the inner rings open in later rounds.
 - Each space holds one minion per round. All minions return at round end.
-- To **copy** a space is to gain that space's own gain this round, as printed. The taker's member bonuses (like Grand Host's double) and gifts to others are not copied. Copies never copy another copy. Occupied inner-ring spaces can be copied. Echo copies the previous action, including your own on a snake double turn; Encore copies any space with a minion; Greatest Hits copies every space with your minion.
+- To **copy** an action is to gain its own printed gain this round. The taker's member bonuses and gifts to others are not copied. Copying a copy lets you choose again; never choose an action already in that chain. Each Green action gives +1 green whenever it is taken or copied. Echo copies the previous action, including your own on a snake double turn; Encore copies an action with a rival minion; Reprise copies one with your minion; Greatest Hits copies every action with your minion. Agents blocks everyone, including its owner, from copying that owner's actions.
 - To **steal** is to take from a rival. Resources a Magenta card steals arrive as magenta.
 
 ## A turn

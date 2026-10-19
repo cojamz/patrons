@@ -1,4 +1,6 @@
-# Cull to 10 members per sphere (built, 2026-10-15)
+# Cull to 10 members per sphere (historical, built 2026-10-15)
+
+Green was superseded by the agreed twelve-member redesign on October 18: [current Green spec](green-redesign-2026-10-18.md). Other colors retain the cull below.
 
 Cory: "cull member piles down to the best existing 10, per our principles and balance tests." Only existing cards are used here. Each cut was judged against the rework principles in sphere-brief.md and against the bench (claude/cults-bench c768aba, Normal bots, 440 seeds; "fair" is the price at which recruiting the card breaks even, against its printed price). Prices and texts come from the fix branch (claude/project-thread-hysli4, after balance pass 3). Mark it by sphere, or say "all good".
 

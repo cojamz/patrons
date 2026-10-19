@@ -2,15 +2,15 @@
 // and which face-up cards a space would make affordable. All read off the engine; nothing here is a rule.
 import { cardDef, paymentPlan, memberPrice, contestTable } from '../../engine/v4/index.js';
 import { contextFor } from '../../engine/v4/core.js';
-import { targets as echoTargets, ownPlan, skipWords } from '../../engine/v4/content/echo.js';
+import { targets as echoTargets, ownPlan, skipWords, justTook } from '../../engine/v4/content/echo.js';
 
 // The card's timing, from how its text opens (the tag above the name).
 const TIMINGS = [
-  [/^(?:now|on recruit) and at round start\b/i, 'On recruit + at round start'],
+  [/^(?:now|recruit|on recruit|when recruited) (?:and|\/) (?:at )?round start\b/i, 'On recruit + at round start'],
   [/^(?:at )?round start\b/i, 'At round start'],
   [/^round end\b/i, 'Round end'],
-  [/^(?:on recruit|when recruited|when it joins you)\b/i, 'On recruit'],
-  [/^whenever\b/i, 'Whenever'],
+  [/^(?:recruit|on recruit|when recruited|when it joins you)\b/i, 'On recruit'],
+  [/^(?:whenever|when you|when another player)\b/i, 'Whenever'],
   [/^game end\b/i, 'Game end'],
   [/^once per round\b/i, 'Once a round'],
   [/^once per game\b/i, 'Once a game'],
@@ -86,18 +86,24 @@ export function unlockedBy(state, p, gain) {
 export const surely = pv => (pv ? Object.fromEntries(Object.entries(pv.you.res).map(([r, [lo]]) => [r, lo])) : {});
 
 /**
- * The spaces a copying member would copy if recruited now (Understudy: a rival's space since your last turn), as
+ * The actions a copying member would copy if recruited now, as
  * board keys, from Green's own target rule; null for any other member or when Green isn't on the table.
  */
 export function memberCopyTargets(state, pid, def) {
-  if (!state.quadrants.includes('echo') || !/copy the previous action/i.test(def.text || '')) return null;
-  try { return [...new Set(echoTargets(contextFor(state), state.players[pid], 'previous').map(e => String(e.key).split('+')[0]))]; } catch { return null; }
+  if (!state.quadrants.includes('echo')) return null;
+  try {
+    const ctx = contextFor(state), p = state.players[pid];
+    const entries = /copy the action you just took/i.test(def.text || '')
+      ? [justTook(ctx, p)].filter(Boolean)
+      : /copy the previous action/i.test(def.text || '') ? echoTargets(ctx, p, 'previous') : null;
+    return entries && [...new Set(entries.map(e => String(e.key).split('+')[0]))];
+  } catch { return null; }
 }
 
 /**
  * "Copy every space you took this round" (Greatest Hits, Tribute Band) for player pid right now: the spaces it would
- * copy (board keys and names, in the order taken) and what it skips, in the engine's own words ("Echo (copies never
- * copy a copy)"). Null when it isn't such a card or Green isn't on the table. Read on a copy of the ledger.
+ * copy (board keys and names, in the order taken) and what it skips, in the engine's own words.
+ * Null when it isn't such a card or Green isn't on the table. Read on a copy of the ledger.
  */
 export function ownCopyPlan(state, pid) {
   if (!state.quadrants.includes('echo') || pid == null) return null;
@@ -108,4 +114,4 @@ export function ownCopyPlan(state, pid) {
   } catch { return null; }
 }
 /** Is this the copy-all card (Greatest Hits as a space, Tribute Band as a member)? */
-export const copiesAll = text => /^(?:once per game: )?copy every (?:action where you have a minion|space you took this round)/i.test(text || '');
+export const copiesAll = text => /^(?:once per game: )?copy every (?:action (?:where you have a minion|with your minion|you took this round)|space you took this round)/i.test(text || '');

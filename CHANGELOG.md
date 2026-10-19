@@ -2,6 +2,14 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.5, published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.7.0 — 2026-10-18 — unreleased
+
+- Green copies now choose again through copied copy actions. Each chain prevents revisiting an action, and each Green action gives +1 Green. Encore targets rivals; Reprise targets your actions.
+- Chorus and Build Up replace Hum and Crescendo. Green's twelve-member deck includes Impostor, Connector, Agents and Bait, plus revised existing abilities and prices. Stunt Double copies on recruit; Tribute Band is once per game.
+- Copy-all resolves each choice and recruit before continuing; nested choices survive save/reload. Copying Extra Hand grants the current round's unplaced extra minion.
+- Bait visibly deducts followers without removing members; totals stop at zero and score breakdowns account for losses.
+- Shorter pauses while members pass through the center; flight and landing animations keep their full duration.
+
 ## v0.6.5 — 2026-10-18
 
 - Smoother animations: the idle bobbing and breathing pause while a move plays out. At 4× CPU slowdown, that halves the page's work and cuts the worst stall from 0.4s to 0.13s.

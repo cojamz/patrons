@@ -120,7 +120,8 @@ export function resume(state) {
 
 // A Doppelganger becomes a copy of the member card it copies: its follower value and member count too.
 const valueOf = card => (card.copy ? Math.max(defById(card.def).f, defById(card.copy).f) : defById(card.def).f);
-export const followers = (state, p) => 1 + p.bonus + p.members.reduce((s, u) => s + valueOf(state.cards[u]), 0);
+// Bait can debit printed followers through a signed adjustment; a later member transfer cannot make the score negative.
+export const followers = (state, p) => Math.max(0, 1 + p.bonus + p.members.reduce((s, u) => s + valueOf(state.cards[u]), 0));
 // Printed followers also count as members; explicit member counts (Revelers) still apply.
 // Bonus followers never enter this value, and a copied card counts its effective printed value.
 const printedMembers = def => Math.max(def.f || 0, def.n ?? 1);
@@ -647,6 +648,15 @@ function runTask(state, task) {
         a.resolve(ctx, p);
       });
       fCredit(state, mark, a.name);
+      return out;
+    }
+    // Content continuations are plain queue data: saves and multiplayer can resume a copy chain
+    // after its choices/recruits without closures or an extra player-facing confirmation.
+    case 'content': {
+      const mark = fMark(state);
+      const run = () => handlerById(task.h)(ctxFor(state), p, null, task.data);
+      const out = task.cause ? underCause(task.cause, run) : run();
+      fCredit(state, mark, task.data?.by || task.data?.who || 'Copy');
       return out;
     }
     case 'endTurn': {
@@ -1191,6 +1201,7 @@ function ctxFor(state) {
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
     discount: grantDiscount,
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
+    grantWorkers: (p, def, uid) => workersNow(state, p, def, uid),
     /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
     price: (p, uid, how) => memberPrice(state, p, uid, how),
     payChoices: (p, uid, how) => paymentChoices(state, p, uid, how),
@@ -1283,6 +1294,10 @@ function ctxFor(state) {
       const at = state.queue.findIndex(t => !t._fresh);
       const task = { t: 'choose', p: p.id, prompt, options: withTargets(state, options).map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), ...(extra.blocked && Object.keys(extra.blocked).length ? { blocked: extra.blocked } : {}), _fresh: true };
       state.queue.splice(at < 0 ? state.queue.length : at, 0, task);
+    },
+    defer(p, handler, data = null, cause = null) {
+      const at = state.queue.findIndex(t => !t._fresh);
+      state.queue.splice(at < 0 ? state.queue.length : at, 0, { t: 'content', p: p.id, h: handler, data, ...(cause ? { cause } : {}), _fresh: true });
     },
   };
   return ctx;

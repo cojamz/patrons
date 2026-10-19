@@ -118,12 +118,12 @@ const SUMS = {
   'trading.dividend': () => [R('white', '+1'), PER, FOL()], //                                     +1⬡ / ☺
   'trading.boom': () => [WORD('all'), R('any'), ARROW, FOL()], //                                  all◌ → ☺      (keep white if you like)
   // echo (green): copies
-  'echo.hum': ({ n }) => [R('green', plus(n(0, 3)))], //                                           +3🍃
-  'echo.chant': ({ n, r }) => [R('green', plus(n(0, 2) * r))], //                           +4🍃
-  'echo.echo': () => [COPY, HOOD()], //                                                            ⧉☗            (since your last turn)
-  'echo.encore': () => [COPY, WORD('any')], //                                                     ⧉ any         (this round)
-  'echo.refrain': ({ n }) => [R('green', plus(n(0, 2))), DOT, COPY, MIN()], //                     +2🍃 · ⧉♟
-  'echo.eternity': () => [COPY, WORD('all'), MIN()], //                                            ⧉ all ♟
+  'echo.hum': () => [R('green', '+1'), PER, WORD('green action'), MIN(), DOT, R('green', '+1')],
+  'echo.chant': ({ r }) => [R('green', plus(r + 1))],
+  'echo.echo': () => [COPY, WORD('previous'), DOT, R('green', '+1')],
+  'echo.encore': () => [COPY, HOOD(), MIN(), DOT, R('green', '+1')],
+  'echo.refrain': () => [COPY, MIN(), DOT, R('green', '+1')],
+  'echo.eternity': () => [COPY, WORD('all'), MIN(), DOT, R('green', '+1')],
 };
 
 /** Plain gains ("+2 blue, +1 red."), for the stand-in spheres and anything else that's only that. */

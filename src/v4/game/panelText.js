@@ -127,13 +127,14 @@ const P = {
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
   },
   echo: {
-    chant: () => ({ main: '+2 green × round' }),
+    hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? 'per green action with a minion' : '1 per green action with a minion', note: '+1 green' }),
+    chant: r => ({ main: `+${r + 1} green`, second: '1 × round, +1' }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
-    echo: { verb: 'Copy previous action' },
-    encore: { verb: 'Copy any space', second: 'with a minion' },
+    echo: { verb: 'Copy previous action', note: '+1 green' },
+    encore: { verb: 'Copy an action', second: 'with a rival minion', note: '+1 green' },
     // one word for it, the hover's (w3a #22: "redo" here, "copy" there)
-    refrain: { verb: 'Copy a space', second: 'with your minion' },
-    eternity: { verb: 'Copy every action', second: 'with your minions' },
+    refrain: { verb: 'Copy an action', second: 'with your minion', note: '+1 green' },
+    eternity: { verb: 'Copy every action', second: 'with your minions', note: '+1 green' },
   },
 };
 
@@ -141,7 +142,7 @@ const P = {
 // own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
 // A space that pays per something shows this turn's gain big and its rate small (round 3 skeptic: Bandwagon's "+1●"
 // paid +5, Roll Call's +3), for `pid` (the viewer; else whoever's turn it is).
-const LIVE = new Set(['market.showroom', 'gold.windfall', 'red.turnout', 'purple.catchup', 'purple.windup', 'purple.planahead', 'purple.rushhour', 'yellow.harvest', 'trading.haggle', 'trading.dividend']);
+const LIVE = new Set(['market.showroom', 'gold.windfall', 'red.turnout', 'purple.catchup', 'purple.windup', 'purple.planahead', 'purple.rushhour', 'yellow.harvest', 'trading.haggle', 'trading.dividend', 'echo.hum']);
 function liveYield(qid, action, state, pid) {
   if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
   const p = state.players && state.players[pid ?? state.current ?? 0];

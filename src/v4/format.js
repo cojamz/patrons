@@ -279,15 +279,24 @@ export function boughtFollowers(state, p) {
  */
 export function breakdown(state, p) {
   // followers that members are worth, as the engine counts them (a Doppelganger can copy a follower value)
-  const members = engineFollowers(state, p) - 1 - p.bonus;
+  const members = printedFollowers(state, p);
   const endGame = p.final ? p.final.total : 0;
   const bought = boughtFollowers(state, p);
-  const effects = p.bonus - p.contest - endGame - bought;
+  const rawEffects = p.bonus - p.contest - endGame - bought;
+  const floor = Math.max(0, -(1 + p.bonus + members));
+  const effects = rawEffects + floor;
   const rows = state.ledger && state.ledger[p.id] ? Object.entries(state.ledger[p.id]).filter(([, n]) => n).map(([label, n]) => ({ label, n })) : [];
   const listed = rows.reduce((t, l) => t + l.n, 0);
-  const play = listed === effects ? rows : [...rows, { label: rows.length ? 'other' : 'during play', n: effects - listed }].filter(l => l.n);
-  return { self: 1, members, contests: p.contest, bought, effects, endGame, play, parts: p.final ? p.final.parts : [] };
+  const play = listed === rawEffects ? rows : [...rows, { label: rows.length ? 'other' : 'during play', n: rawEffects - listed }].filter(l => l.n);
+  if (floor) play.push({ label: 'Minimum 0 followers', n: floor });
+  return { self: 1, members, contests: p.contest, bought, effects, endGame, floor, play, parts: p.final ? p.final.parts : [] };
 }
+
+// Read printed values directly: a signed follower loss can put the raw total below its zero floor.
+const printedFollowers = (state, p) => p.members.reduce((n, uid) => {
+  const c = state.cards[uid], own = cardDef(state, uid).f ?? 1;
+  return n + (c.copy ? Math.max(own, defById(c.copy).f ?? 1) : own);
+}, 0);
 
 // ---------- round end, read back from the engine's log line ----------
 const ROUND_END = /^Round (\S+) ends\.\s*/;
@@ -538,7 +547,7 @@ export function scoringSnapshot(before, after) {
 /** Where a player's followers came from during a round: { contests, members, bought, effects }. */
 export function roundGains(start, end, p, contests) {
   const was = start.players[p.id];
-  const memF = st => engineFollowers(st, st.players[p.id]) - 1 - st.players[p.id].bonus;
+  const memF = st => printedFollowers(st, st.players[p.id]);
   const members = memF(end) - memF(start);
   const roundLines = newLogLines(start, end);
   const re = new RegExp(`^${p.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} bought (\\d+) followers?\\b`);

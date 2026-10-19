@@ -10,7 +10,7 @@ import { checkInvariants } from './fuzz-runner.js';
 const SPHERES = allQuadrantIds().filter(q => !['blue', 'green'].includes(q));
 const seats = n => Array.from({ length: n }, () => ({ kind: 'bot' }));
 
-describe('the cull: 10 members per sphere (Cory, 2026-10-15)', () => {
+describe('the curated member decks', () => {
   // setup.js deals the full deck for the card tests; these play the deck the game ships with
   beforeAll(() => { FULL_DECK.tests = false; });
   afterAll(() => { FULL_DECK.tests = true; });
@@ -20,11 +20,11 @@ describe('the cull: 10 members per sphere (Cory, 2026-10-15)', () => {
     expect(createGame({ seats: seats(2) }).rules.cull).toBe(true);
   });
 
-  it('every culled sphere deals exactly 10 members; neutral deals 5; no cut card is dealt', () => {
+  it('Green deals 12 members, other spheres 10, neutral 5; no cut card is dealt', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });
       const dealt = Object.values(s.cards).map(c => c.def);
-      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(10);
+      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(q === 'echo' ? 12 : 10);
       expect(dealt.filter(d => CUT.has(d))).toEqual([]);
       expect(dealt.filter(d => d.startsWith('benders.')).length).toBe(5);
     }

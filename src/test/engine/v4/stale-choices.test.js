@@ -1,6 +1,6 @@
 // @vitest-environment node
 // Stale choices: a queued choice whose options name cards (Open Door, Open House, Hand-pick, Bargain, Clearance,
-// Swap Sides, a copy's free member…) can wait while other things happen first. A Stunt Double copying Open House
+// Swap Sides, a copy's free member…) can wait while other things happen first. A Tribute Band copying Open House
 // in the buy step queued "Open Door: which of the cheapest members?" behind the player's own buy; the buy took one of
 // those cards and picking it threw "Card 30 is not in the shop" (found by the remote bots session). Core now pins
 // where each named card was (option.at) and shows only the options whose cards are still there; none left, the
@@ -28,11 +28,11 @@ function takeAway(s, uid, to) {
 
 describe('a queued choice never offers a card that moved', () => {
   // The bots repro (fixtures/bots-repro-open-door.json, 2026-10-14 content): P1 takes Open House, then in the buy step
-  // uses Stunt Double to copy it ("doing it again"). That queued "Open Door: which of the cheapest members?" behind
+  // uses Tribute Band to copy it ("doing it again"). That queued "Open Door: which of the cheapest members?" behind
   // the buy, the buy took Stylist (card 30), and picking Stylist in the choice threw. Now (gut call, 2026-10-15) a
   // member used in the buy step resolves its whole effect first: the choice comes right away, then the buy step
   // returns with options that reflect the recruit.
-  it('the bots repro: Stunt Double copying Open House in the buy step asks Open Door first; the buy then reflects the recruit', ctx => {
+  it('the bots repro: Tribute Band copying Open House in the buy step asks Open Door first; the buy then reflects the recruit', ctx => {
     const rec = JSON.parse(readFileSync(new URL('./fixtures/bots-repro-open-door.json', import.meta.url), 'utf8'));
     let s = structuredClone(rec.start);
     const use = rec.moves.findIndex(m => m.option.startsWith('use:'));
@@ -57,17 +57,17 @@ describe('a queued choice never offers a card that moved', () => {
     expect(s.over).toBe(true);
   });
 
-  // The same, built from today's cards (the fixture above skips once the cards change under it): Stunt Double used in
+  // The same, built from today's cards (the fixture above skips once the cards change under it): Tribute Band used in
   // the buy step copies Open House, and the copy's free-member choice comes before the buy step returns.
-  it('a member used in the buy step resolves its choice first: Stunt Double copying Open House, then a fresh buy', () => {
+  it('a member used in the buy step resolves its choice first: Tribute Band copying Open House, then a fresh buy', () => {
     const Q = ['gold', 'red', 'market', 'echo'];
     const price = d => d.s + d.w;
-    const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.hourglass' && price(d) > 0);
+    const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.dejavu' && price(d) > 0);
     const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 2));
     const tied = defs.filter(d => price(d) === low).slice(0, 2).map(d => d.id);
     const dear = defs.filter(d => price(d) > low).slice(0, 4).map(d => d.id);
     // 2 red to spend, so the buy step has something to offer after the copy (Open House no longer gives +2 red)
-    let s = table(Q, { round: 2, members: [['echo.hourglass']], res: [{ red: 2 }], shop: [...tied, ...dear] });
+    let s = table(Q, { round: 2, members: [['echo.dejavu']], res: [{ red: 2 }], shop: [...tied, ...dear] });
     s = take(s, N('red', 'hireup'));
     if (s.pending.kind === 'choose') s = move(s, s.pending.options[0].id); // Open Door's tie: either cheapest
     expect(s.pending.kind).toBe('buy');

@@ -1,8 +1,9 @@
 import { browserPath } from './lib/browser.mjs';
 // E2E: Greatest Hits ("Copy all your spaces / from this round") at 1270×700, from a real round III where you took a
 // mix of spaces, an Echo or Reprise among them. Cory's play (2026-10-16): "Copy all your spaces doesn't work quite
-// right": a copy space you took was skipped without a word. Green's rule stands (copies never copy a copy), and now:
-//  (c1) the space's hover lists what it copies ("Copies") and what it skips and why ("Skips … copies never copy a copy");
+// right": a copy space you took was skipped without a word. The revised rule includes copy actions, which offer a
+// fresh choice without revisiting an action in the same chain:
+//  (c1) the hover lists every eligible action, including copies, and explains any protected/empty skips;
 //  (c2) every space of yours it copies lights up on the wheel while it's under the pointer, and no other;
 //  (c3) after you take it, the Chronicle carries the skip line, and every copied space is named there.
 // Server: $V4_URL (a built preview). Shots: $V4_SHOTS/copyall (or $GH_SHOTS).
@@ -10,6 +11,8 @@ import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { createGame, applyMove, chooseBotMove, quadrant } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
+import { contextFor } from '../../src/engine/v4/core.js';
+import { ownPlan, skipWords } from '../../src/engine/v4/content/echo.js';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { answerChoice } from './lib/answer.mjs';
@@ -76,8 +79,10 @@ try {
   await page.waitForSelector(`[data-slot="${GH}"]`);
   await page.waitForTimeout(900);
   const names = got.mine.map(k => { const [q, i] = k.split('-').map(Number); return quadrant(QUADS[q]).actions[i]; });
-  const copied = names.filter(a => !a.echo && a.ring < 3).map(a => a.name);
-  const skipped = names.filter(a => a.echo).map(a => a.name);
+  const plan = ownPlan(contextFor(got.save.state), got.save.state.players[0]);
+  const copied = plan.take.map(e => e.name);
+  const skipped = plan.skip.map(x => x.e.name);
+  const skipReason = skipWords(plan.skip);
 
   // (c1)(c2) the hover
   const box = await (await page.$(`[data-slot="${GH}"]`)).boundingBox();
@@ -90,18 +95,18 @@ try {
     const copiesRow = await page.evaluate(() => document.querySelector("[data-copies-all]")?.innerText || '');
     const skipRow = await page.evaluate(() => document.querySelector("[data-copies-skip]")?.innerText || '');
     for (const n of copied) if (!copiesRow.includes(n)) fail(`"Copies" doesn't name ${n}: "${copiesRow}"`, 'c1');
-    for (const n of skipped) if (copiesRow.includes(n)) fail(`"Copies" names the copy space ${n}: "${copiesRow}"`, 'c1');
+    for (const n of skipped) if (copiesRow.includes(n)) fail(`"Copies" names ineligible ${n}: "${copiesRow}"`, 'c1');
     for (const n of skipped) if (!skipRow.includes(n)) fail(`"Skips" doesn't name ${n}: "${skipRow}"`, 'c1');
-    if (skipped.length && !/copies never copy a copy/.test(skipRow)) fail(`"Skips" doesn't say why: "${skipRow}"`, 'c1');
+    if (skipped.length && !skipRow.includes(skipReason)) fail(`"Skips" doesn't say why: "${skipRow}"`, 'c1');
   }
   const lit = await page.evaluate(() => [...new Set([...document.querySelectorAll('[data-slot].copy-target')].map(e => e.dataset.slot))].sort());
-  const wantLit = got.mine.filter((k, j) => !names[j].echo && names[j].ring < 3).sort();
+  const wantLit = [...new Set(plan.take.map(e => e.key.split('+')[0]))].sort();
   if (JSON.stringify(lit) !== JSON.stringify(wantLit)) fail(`lit ${JSON.stringify(lit)}, want your copyable spaces ${JSON.stringify(wantLit)}`, 'c2');
 
   // (c3) take it, answer its choices as a person would, then read the Chronicle
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await page.waitForTimeout(900);
-  for (let k = 0; k < 8; k++) {
+  for (let k = 0; k < 48; k++) {
     const st = await page.evaluate(() => JSON.parse(localStorage.getItem('patrons.v4.local')).state.pending);
     if (!st || st.player !== 0 || st.kind !== 'choose') break;
     await page.screenshot({ path: `${SHOTS}/02-choice-${k + 1}.png` });
@@ -115,7 +120,7 @@ try {
   const after = at < 0 ? [] : log.slice(at);
   if (at < 0) fail('the game log never says P1 took Greatest Hits', 'c3');
   else {
-    if (skipped.length && !after.some(l => /Greatest Hits skips .*copies never copy a copy/.test(l))) fail(`no skip line after Greatest Hits: ${JSON.stringify(after.slice(0, 8))}`, 'c3');
+    if (skipped.length && !after.some(l => l.includes(`Greatest Hits skips ${skipReason}`))) fail(`no skip line after Greatest Hits: ${JSON.stringify(after.slice(0, 8))}`, 'c3');
     for (const n of copied) if (!after.some(l => new RegExp(`P1 cop(ied|ies) ${n}\\b`).test(l))) fail(`no "copied ${n}" line: ${JSON.stringify(after.slice(0, 10))}`, 'c3');
   }
   await page.click('.lt-menu .menu-glyph').catch(() => {});
@@ -123,7 +128,7 @@ try {
   const chron = await page.waitForSelector('.lt-chron', { timeout: 4000 }).catch(() => null);
   if (chron) {
     const text = await page.evaluate(() => document.querySelector('.lt-chron').innerText);
-    if (skipped.length && !/skips .*copies never copy a copy/i.test(text)) fail('the Chronicle doesn\'t carry the skip line', 'c3');
+    if (skipped.length && !text.includes(skipReason)) fail('the Chronicle doesn\'t carry the skip line', 'c3');
     await page.screenshot({ path: `${SHOTS}/04-chronicle.png` });
   } else fail('the Chronicle did not open', 'c3');
   console.log(`copyall: seed ${got.seed}, took ${names.map(a => a.name).join(', ')}; copies ${copied.join(', ')}; skips ${skipped.join(', ')}`);

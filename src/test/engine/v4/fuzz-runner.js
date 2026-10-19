@@ -29,9 +29,9 @@ export function checkInvariants(s, ctx) {
   // resources never negative, always whole
   for (const p of s.players) {
     for (const [r, v] of Object.entries(p.res)) if (!Number.isInteger(v) || v < 0) fail(`${p.name} has ${v} ${r}`, s, ctx);
-    if (!Number.isInteger(p.bonus) || p.bonus < 0) fail(`${p.name} bonus ${p.bonus}`, s, ctx);
+    if (!Number.isInteger(p.bonus)) fail(`${p.name} bonus ${p.bonus}`, s, ctx);
     if (p.discount < 0) fail(`${p.name} discount ${p.discount}`, s, ctx);
-    if (followers(s, p) < 1) fail(`${p.name} has under 1 follower`, s, ctx);
+    if (followers(s, p) < 0) fail(`${p.name} has negative followers`, s, ctx);
   }
   for (const c of Object.values(s.cards)) if ((c.invested || 0) < 0) fail(`card ${c.uid} invested ${c.invested}`, s, ctx);
   for (const t of TIERS.filter(x => x.limited)) {

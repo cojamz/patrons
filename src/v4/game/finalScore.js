@@ -5,7 +5,7 @@
 //   beat 1 "followers": the leader and every loose follower except the end-game bonuses, over the leader's head
 //   beat 2 "members":   each member's own people (its follower value), over its head
 //   beat 3 "grants":    the followers a member grants at game end (Mob, Tycoon, Recluse…: p.final.cards), over its head
-import { cardDef, defById } from '../../engine/v4/index.js';
+import { cardDef, defById, followers } from '../../engine/v4/index.js';
 
 /** A member card's follower value, as the engine counts it (core.js valueOf). */
 export function memberValue(state, uid) {
@@ -37,13 +37,21 @@ export function finalGrants(state, p) {
 export function scoreSteps(state, p) {
   const grants = finalGrants(state, p);
   const granted = grants.reduce((s, g) => s + g.n, 0);
-  const steps = [{ beat: 'followers', uid: null, n: 1 + p.bonus - granted, name: 'followers' }];
+  const loose = 1 + p.bonus - granted;
+  const steps = [{ beat: 'followers', uid: null, n: Math.max(0, loose), name: 'followers' }];
   for (const uid of p.members) {
     const n = memberValue(state, uid);
     if (n) steps.push({ beat: 'members', uid, n, name: cardDef(state, uid).name });
   }
   for (const g of grants) if (g.n) steps.push({ beat: 'grants', uid: g.uid, n: g.n, name: g.name });
+  // Signed losses may consume printed followers. Count their sources first, then subtract the
+  // loss, bounded by the engine's zero minimum, so no scoring beat shows a negative player total.
+  if (loose < 0) {
+    const counted = steps.reduce((n, s) => n + s.n, 0);
+    const loss = followers(state, p) - counted;
+    if (loss) steps.push({ beat: 'losses', uid: null, n: loss, name: 'followers lost' });
+  }
   return steps;
 }
 
-export const BEATS = ['followers', 'members', 'grants'];
+export const BEATS = ['followers', 'members', 'grants', 'losses'];

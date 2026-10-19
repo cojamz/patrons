@@ -5,7 +5,7 @@
 //   actions   the camera comes to the wheel; ONE minion floats from the leader onto ONE space (Kickback, gold); the
 //             space lights and says what it gives, big: "+3 [gold]"; exactly those three glyphs lift off the space,
 //             one after another, into the cult's pile, which counts up. A second minion does it again, faster, on a
-//             green space (Hum, +3 green), so the pattern is learned;
+//             green space (Build Up in round II, +3 green), so the pattern is learned;
 //   recruit   the wheel dims, the camera pulls back to the cult, and <Initiation/> plays (card, beckon, bow, mark,
 //             slot), paid with two of the gold; the followers step back a row to make room for the new member;
 //   followers the four other glyphs rise into a small arcane glow, circle once and dissolve; three followers appear
@@ -42,7 +42,7 @@ export const stillShot = { ...CAM.wheelAndCult };
 // a minion floats (f ms), lands; the space lights; the plaque pops; the glyphs lift off one by one (gap apart)
 const ACTS = [
   { m: 0, q: 'gold', k: 0, r: 'gold', n: 3, name: 'Kickback', at: A1, float: 900, arc: 14, gap: 230, pop: 150, fly: 520, pile: [0, 1, 2] },
-  { m: 2, q: 'green', k: 1, r: 'green', n: 3, name: 'Hum', at: A2, float: 450, arc: 10, gap: 100, pop: 80, fly: 400, pile: [3, 4, 5] },
+  { m: 2, q: 'green', k: 1, r: 'green', n: 3, name: 'Build Up', at: A2, float: 450, arc: 10, gap: 100, pop: 80, fly: 400, pile: [3, 4, 5] },
 ].map(a => {
   const land = a.at + a.float;
   const plaque = land + (a.m ? 30 : 100);

@@ -1,3 +1,12 @@
+# Active Green batch — v0.7.0 candidate
+
+- Engine lane: green_engine, serialized fresh-choice copy chains and twelve-member deck.
+- Pressure lane: green_pressure_tests, chain/recruit/save/member regressions and obsolete Green contracts.
+- UI lane: green_ui, deck cull, copy targeting, concise summaries, glossary and artwork mappings.
+- Root: integration, independent review, browser nested-copy/reload checks, version/changelog/docs and immutable deployment.
+- Last known public: v0.6.5. Candidate is NOT LIVE until exact source stamp and desktop/phone checks are verified.
+- Scope: design/spheres/green-redesign-2026-10-18.md. No unrelated backlog completion claim.
+
 # In flight — October 18, 12:30am Eastern (backlog thread wound down: Cory low on usage)
 
 ## Top-10 thread, wound down 9:45pm Eastern, Oct 17 (Cory out of credits)
