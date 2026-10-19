@@ -3,7 +3,7 @@
 // member costs, through real legal moves, plus one cross-sphere case each. Every number a card changes must
 // show up in a log line that names the card.
 import { describe, it, expect } from 'vitest';
-import { followers } from '../../../engine/v4/core.js';
+import { followers, memberWeight } from '../../../engine/v4/core.js';
 import { take, move, play, ids } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
@@ -132,12 +132,13 @@ describe('Magenta actions', () => {
   it('Poach: take a rival member without a replacement or market changes', () => {
     let s = table(Q, { round: 3, left: 5, members: [[], ['red.bigfamily']], shop: ROW });
     const shop = [...s.shop], pile = [...s.pile], recruits = s.recruits;
+    const acquired = uidIn(s, 'red.bigfamily', 1), quantity = memberWeight(s, acquired);
     s = move(take(s, 'thieves.heist'), cardOpt(s, 'red.bigfamily', 1));
     expect(owns(s, 0, 'red.bigfamily')).toBe(true);
     expect(s.players[1].members).toEqual([]);
     expect(s.shop).toEqual(shop);
     expect(s.pile).toEqual(pile);
-    expect(s.recruits).toBe(recruits);
+    expect(s.recruits).toBe(recruits + quantity);
     expect(s.pending?.player).not.toBe(1);
   });
   it('Poach does not grant a replacement recruit or trigger Light Fingers', () => {
@@ -164,12 +165,12 @@ describe('Magenta members', () => {
   });
   // "now" (dead-window audit, 2026-10-14): recruited in round III they used to give nothing
   it('Cutpurse and Mole recruited: their steal happens right away too (named)', () => {
-    let s = table(Q, { n: 3, round: 3, left: 5, res: [{ magenta: 4 }, { gold: 2 }, { red: 3 }], shop: ['thieves.cutpurse', ...ROW] });
+    let s = table(Q, { n: 3, round: 3, left: 5, res: [{ magenta: 2 }, { gold: 2 }, { red: 3 }], shop: ['thieves.cutpurse', ...ROW] });
     s = move(take(s, 'gold.rush'), cardOpt(s, 'thieves.cutpurse', 'shop'));
     s = move(s, 'take:2:red');
     expect([R(s).magenta, R(s, 2).red]).toEqual([1, 2]);
     expect(named(s, 'Cutpurse')).toEqual(["P1's Cutpurse stole 1 (1 red from P3), now magenta."]);
-    let t = table(Q, { n: 3, round: 3, left: 5, res: [{ magenta: 4 }, { gold: 2 }, { red: 3 }], bonus: [0, 2, 0], shop: ['thieves.mole', ...ROW] });
+    let t = table(Q, { n: 3, round: 3, left: 5, res: [{ magenta: 2 }, { gold: 2 }, { red: 3 }], bonus: [0, 2, 0], shop: ['thieves.mole', ...ROW] });
     t = move(take(t, 'gold.rush'), cardOpt(t, 'thieves.mole', 'shop'));
     expect([R(t).magenta, R(t, 1).gold, R(t, 2).red]).toEqual([1, 1, 3]);
     expect(named(t, 'Mole')).toEqual(["P1's Mole: took 1 from P2."]);
@@ -188,10 +189,13 @@ describe('Magenta members', () => {
     expect([R(s).magenta, R(s, 1).gold, R(s, 2).red]).toEqual([3, 0, 0]);
     expect(named(s, 'Accomplice').length).toBe(1);
   });
-  it('× Poach: a stolen Accomplice doesn\'t fire again (it wasn\'t recruited)', () => {
+  it('× Poach: actively taking Accomplice triggers its On Recruit', () => {
     let s = table(Q, { round: 3, left: 5, res: [{}, { gold: 3 }], members: [[], ['thieves.accomplice']], shop: ROW });
     s = move(take(s, 'thieves.heist'), cardOpt(s, 'thieves.accomplice', 1));
-    expect(R(s, 1).gold).toBe(3);
+    expect(owns(s, 0, 'thieves.accomplice')).toBe(true);
+    expect(R(s, 1).gold).toBe(2);
+    expect(R(s).magenta).toBe(1);
+    expect(named(s, 'Accomplice').length).toBe(1);
   });
 
   it('Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most', () => {

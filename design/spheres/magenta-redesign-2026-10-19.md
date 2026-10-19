@@ -14,6 +14,10 @@
 
 Scale in value into later rounds; avoid a disproportionately profitable first pick in Round I; count the inherent1 arc resource when evaluating each action. Scaling may come from what the effect protects or lets you spend, rather than a larger printed resource payout.
 
+## Latest exploration (supersedes protection-only suggestion)
+
+Cory proposes matching2/3/4 payouts with different benefits. Assistant suggests steal1×round + protection versus steal1×round + extra follower purchase, both with inherent1 Magenta. Neither final wording nor second benefit is approved. Remove a plain-steal duplicate if both are adopted; third RoundI slot remains open. Protection-only and purchase-only were earlier responses, not committed rules.
+
 ## Open proposals
 
 - Superseded assistant proposal: steal1+extra follower purchase. It also outclasses plain steal1 in RoundI. Revised proposal removes its steal and retains the inherent grant plus extra purchase; not approved. It is additional to the normal buy. Prior ten-option list is brainstorming, not a committed deck/action list.

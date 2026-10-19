@@ -961,3 +961,5 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - 2026-10-19 (Cory, clarified): Enlarge the printed member cost/follower text and icons. Do not increase prices or follower game values under that request.
 
 - 2026-10-19 (Cory): Switch Magenta contest to held magenta resources. Steal1+protection outclasses the plain scaling steal in RoundI; revise rather than accept the extra protection for free. Assistant proposed removing theft from protection and extra-purchase candidates; not approved yet.
+
+- 2026-10-19 (Cory, Magenta discussion): RoundII remains ransom + half one-color pile theft; RoundIII taking a member. Explore two RoundI actions with equal2/3/4 total gain and different benefits, including theft protection. Assistant proposed steal1×round+protection versus steal1×round+extra follower purchase, each with inherent+1 Magenta; these are proposals, not approved runtime rules. They replace a weaker plain-steal duplicate; third RoundI slot remains open.
