@@ -37,7 +37,7 @@ try{
  for(const [tag,options]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]]){
   const ctx=await browser.newContext(options),page=await ctx.newPage();page.setDefaultTimeout(15000);
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await seedSave(page,save);await page.goto(`${base}/?intro=0`);
+  await seedSave(page,save);await page.goto(`${base}/?intro=0&speed=quick`);
   await page.locator('[data-home="resume"]').click();
   if(await page.locator('[data-handoff]').isVisible())await page.locator('[data-handoff]').click();
   for(const qid of ['red','echo']){
@@ -52,7 +52,7 @@ try{
    const state=JSON.parse(localStorage.getItem('patrons.v4.local')).state;
    return JSON.stringify(state.contests.at(-1))===JSON.stringify(want);
   },contests);
-  const summary=page.getByRole('dialog',{name:'Round 1 scoring',exact:true});
+  const summary=page.getByRole('dialog',{name:'Round I scoring',exact:true});
   await summary.waitFor({timeout:25000});
   for(const [qid,winners]of[['red','1,2'],['echo','2']]){
    const row=summary.locator(`[data-qid="${qid}"]`);
