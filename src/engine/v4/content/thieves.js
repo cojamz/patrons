@@ -1,6 +1,6 @@
 // Magenta (module id 'thieves'): the thieves. Magenta makes nothing of its own: it takes from the table, resources and members.
 // Magenta is stolen goods: whatever you steal turns magenta in your supply right away, spendable on your next buy.
-// The ring goes to most Magenta members at round end.
+// The ring goes to most magenta resources held at round end.
 // Every steal (Magenta's, Gold's Collect Debts, anyone's) goes through the engine's shared ctx.steal(), so Lie Low,
 // Bodyguard, Lookout and Robin Hood apply to all of them.
 import { registerQuadrant, defById } from './index.js';
@@ -10,9 +10,11 @@ const cost = c => c.def.s + c.def.w;
 const total = p => Object.values(p.res).reduce((a, b) => a + b, 0);
 const holding = p => total(p);
 
-// ---------- scoring: most Magenta members (what you hold right now) ----------
-// Most Magenta members: a member stolen from a rival counts if it's magenta, so Poach and Shake Down move the ring too.
-export const SCORING = { members: { label: 'Most Magenta members', counts: 'the magenta members you hold (each card counts its printed member quantity; stolen ones count)', score: (ctx, p) => ctx.countMembersOfColor(p, 'thieves') } };
+// Resource contest; the historical member variant remains available to old analysis scripts only.
+export const SCORING = {
+  resources: { label: 'Most magenta', counts: 'the magenta you hold when the round ends', score: (ctx, p) => p.res.magenta || 0 },
+  members: { label: 'Most Magenta members', counts: 'the magenta members you hold (each card counts its printed member quantity; stolen ones count)', score: (ctx, p) => ctx.countMembersOfColor(p, 'thieves') },
+};
 
 // ---------- helpers ----------
 const fewestFollowers = (ctx, p) => ctx.state.players.every(o => ctx.followers(o) >= ctx.followers(p));
@@ -142,8 +144,8 @@ const thieves = {
   id: 'thieves',
   name: 'Magenta',
   resource: 'magenta',
-  rule: 'Whatever you steal turns magenta in your supply, ready to spend. Most Magenta members at round end wins.',
-  scoring: SCORING.members,
+  rule: 'Whatever you steal turns magenta in your supply, ready to spend. Most magenta at round end wins.',
+  scoring: SCORING.resources,
 
   // Lie Low protects both members and resources until round end (Cory, 2026-10-17).
   guardSteal: (ctx, thief, victim) => victim.hideout === ctx.state.round,

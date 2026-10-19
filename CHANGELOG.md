@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.5, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.7 — 2026-10-19 — unreleased
+
+- Magenta contests reward held magenta resources.
+
 ## v0.8.6 — 2026-10-19 — unreleased
 
 - Larger printed costs and follower symbols on shop cards.

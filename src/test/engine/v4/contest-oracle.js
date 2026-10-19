@@ -21,6 +21,7 @@ export function oracleCount(state, qid, p) {
     case 'silver': return res('silver');
     case 'red': return res('red');
     case 'echo': return res('green');
+    case 'thieves': return res('magenta');
     case 'yellow': return Math.min(...state.resources.map(res));
     // Other arcs retain their own printed member quantity, including stand-ins and copied card weight.
     default: return members(state, p, qid);

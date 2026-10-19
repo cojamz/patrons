@@ -959,3 +959,5 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - 2026-10-19 (Cory): Likes Round I steal1 + theft protection shape; asks whether useful later. Actions must remain worthwhile later and avoid a dominant first move. Magenta’s color is disliked; replacement still open.
 - 2026-10-19 (Cory): Shakedown total-cost5-or-less is provisional. Remaining Round I candidate and member deck not approved; assistant proposed steal1+extra follower purchase for discussion.
 - 2026-10-19 (Cory, clarified): Enlarge the printed member cost/follower text and icons. Do not increase prices or follower game values under that request.
+
+- 2026-10-19 (Cory): Switch Magenta contest to held magenta resources. Steal1+protection outclasses the plain scaling steal in RoundI; revise rather than accept the extra protection for free. Assistant proposed removing theft from protection and extra-purchase candidates; not approved yet.

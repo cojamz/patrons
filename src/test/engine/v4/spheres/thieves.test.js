@@ -185,14 +185,14 @@ describe('Scoring and stolen goods', () => {
     s = play(take(s, 'gold.steal'), 'player:1', 'player:1', 'player:1');
     expect([R(s)[0].gold, R(s)[0].magenta]).toEqual([3, 0]);
   });
-  it('scores most Magenta members (members only; stolen magenta members count for the thief)', () => {
+  it('scores held magenta resources; stealing a member does not move resource counts', () => {
     let s = scene({ round: 3, res: [{}, { magenta: 9 }], members: [['thieves.mole'], ['thieves.crew', 'thieves.cutpurse', 'red.twins']] });
     const ctx = contextFor(s);
-    expect(thieves.scoring.label).toBe('Most Magenta members');
-    expect([thieves.scoring.score(ctx, s.players[0]), thieves.scoring.score(ctx, s.players[1])]).toEqual([1, 3]);
+    expect(thieves.scoring.label).toBe('Most magenta');
+    expect([thieves.scoring.score(ctx, s.players[0]), thieves.scoring.score(ctx, s.players[1])]).toEqual([0, 9]);
     s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'thieves.crew', 1)}`);
     const c2 = contextFor(s);
-    expect([thieves.scoring.score(c2, s.players[0]), thieves.scoring.score(c2, s.players[1])]).toEqual([3, 1]);
+    expect([thieves.scoring.score(c2, s.players[0]), thieves.scoring.score(c2, s.players[1])]).toEqual([0, 9]);
   });
 });
 
