@@ -1,63 +1,39 @@
 {
-  "live": "v0.6.5 \u2014 idle animations pause during moves",
-  "liveCommit": "aad49c59",
+  "live": "v0.7.0 \u2014 Green redesign",
+  "liveCommit": "4b6a8fef03dba491ae8378f394207c05dd2ba2c0",
   "work": [
     {
-      "id": "green-engine",
-      "name": "Copy engine and twelve-member deck",
-      "owner": "green_engine",
-      "status": "In progress",
-      "scope": "Fresh choices, cycle prevention, serialized continuations and agreed member rules",
-      "evidence": "Pressure tests pending",
-      "next": "Focused engine regressions",
-      "label": "Engine"
-    },
-    {
-      "id": "green-tests",
-      "name": "Chain pressure tests",
-      "owner": "green_pressure_tests",
-      "status": "In progress",
-      "scope": "Copy-all, recruits, save/load, Agents, Bait, copied members",
-      "evidence": "Dedicated regressions added",
-      "next": "Migrate obsolete Green contracts and loop on failures",
-      "label": "Tests"
-    },
-    {
-      "id": "green-ui",
-      "name": "Green UI and deck integration",
-      "owner": "green_ui",
-      "status": "In progress",
-      "scope": "Deck cull, exact wording, legal targets, art mappings and hover",
-      "evidence": "UI contracts being updated",
-      "next": "Actual desktop/phone nested-copy verification",
-      "label": "UI"
-    },
-    {
       "id": "green-release",
-      "name": "Integration and live release",
+      "name": "Green redesign",
       "owner": "Root",
-      "status": "In progress",
-      "scope": "Independent code review, browser nested-copy/reload, immutable gate, docs and deployment",
-      "evidence": "v0.7.0 candidate; no deployment yet",
-      "next": "Commit checked source and verify served stamp/UI",
-      "label": "Release"
+      "status": "Shipped",
+      "scope": "Six actions, twelve members, safe copy chains and exact costs",
+      "evidence": "1326unit tests; final107related; fullhotseat; isolatedonline; publicdesktop/phone",
+      "next": "Cory playtest feedback",
+      "label": "Live"
     }
   ],
   "next": [
     {
-      "name": "Green v0.7.0",
-      "next": "Publish only after focused pressure/browser and immutable checks."
+      "name": "Red identity",
+      "next": "Discuss member movement and accompanying effects with Cory before implementation."
     }
   ],
-  "releaseSummary": "v0.6.5 public; v0.7.0 Green candidate in progress",
+  "releaseSummary": "v0.7.0 live \u00b7 Green complete \u00b7 Red design discussion next",
   "upNext": [
     {
+      "source": "Cory",
+      "name": "Red design discussion",
+      "summary": "Movement at its core; supporting mechanics not approved yet.",
+      "doneWhen": "Cory locks direction and requests implementation."
+    },
+    {
       "source": "Existing backlog",
-      "name": "Other feedback remains queued",
-      "summary": "No unrelated fixes are claimed complete by this Green batch.",
-      "doneWhen": "Ship separately checked batches against todo.md."
+      "name": "Other feedback stays queued",
+      "summary": "See todo and backlog triage; no all-done claim.",
+      "doneWhen": "Separately checked and shipped batches."
     }
   ],
-  "batchStatus": "Green v0.7.0 implementation and verification",
-  "batchNote": "Not live; three lanes plus root integration"
+  "batchStatus": "Shipped \u2014 ready to test",
+  "batchNote": "Public source stamp and desktop/phone nested copies verified"
 }

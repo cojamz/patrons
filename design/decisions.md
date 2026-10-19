@@ -883,3 +883,10 @@ Instrument for all seven: `v4-fair-price.mjs sweep`, 80 paired seeds, Normal bot
 - (Codex harness fix) Trim only stationary center-stage hold from 420 to 180 base milliseconds, preserving travel/landing durations and actual-completion gating. The prior pacing test exceeded its unchanged longest-wait cap by 175ms; measured longest snake wait fell from 21,235ms to 21,041ms, below the unchanged 21,060ms cap.
 
 - (Codex phone fix) Copy-target choices select on the first tap. Their read-only action sheet has no confirmation control; pinning it first left phone players stuck on a taken-action sheet. Ordinary placement keeps its existing confirmation. Desktop/phone nested Encore→Reprise→Golden Years, save/reload and exact gains pass.
+
+
+## 2026-10-18 — Red discussion after Green shipped
+- (Cory) Red should have something that moves members around. Work backward from that; movement is too powerful to be every action, so find accompanying effects. No Red code change authorized yet.
+- (Cory) Exploring what a lot of Recruit effects would look like. Current Green has5of12: Busker, StuntDouble, Doppelganger, Impostor, Connector (Busker/Connector also round start).
+- (Assistant proposals, NOT approved) Support movement with Recruit bursts, round-start/end reasons to retain members, cheap multi-person groups, context-dependent member abilities, and quieter resource actions based on cult size or table recruitment. Earlier six identity ideas: crowd growth, recruit turnover, exchanges, market control, table recruitment momentum, spending membership. These are discussion options, not locked designs.
+- (Cory process) Be credit-conscious without slowing delivery; trim sims and avoid expensive redundant checks.

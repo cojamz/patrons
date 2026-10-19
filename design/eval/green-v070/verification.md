@@ -1,0 +1,10 @@
+# Green v0.7.0 — shipped October 18, 2026
+
+- Verified public source: `4b6a8fef03dba491ae8378f394207c05dd2ba2c0`; main Pages build: `d6241e1cc1ae2c5f7ef77342f527b59c9d5ff7b4`. Public `/patrons/play/build.json` reports v0.7.0 and the exact source above; publisher also compared served HTML. Pages run39180023708 succeeded.
+- Immutable d64bcc0 (full implementation before the final hover fix): production build, 1,326 tests passed/1 skipped, complete local browser game (54 clicks,415 flights,188 count-ups), desktop/phone nested-copy persistence/gains passed. The initial parallel online stress run failed at a Straggler choice under load; isolated rerun finished, Pia52followers, PASS broadcast. Broadcast tabs share storage: this is not independent-device RTDB proof.
+- Immutable final4b6a8fe: production build,107related UI tests, copy-all browser replay/hover check and desktop/phone nested-copy/reload/actual buy-control restoration all passed. No repeated full-suite run after the three-file hover/test-only correction.
+- Public4b6a8fe: actual desktop1270×700 and iPhone13 touch Encore→Reprise→own GoldenYears, fresh choice, reload, exact resource/follower gains and restored buy controls passed with no page errors. Screenshots here were inspected.
+- Green-focused tests include19pressure scenarios and20complete seeded games. Full member-effect fire audit4tests also passed separately. Copy-all's old scenario recruited Agents and therefore correctly had nothing to copy; the updated browser fixture requires at least two eligible actions.
+- The unchanged pacing cap now passes: longest snake wait21,235→21,041ms (cap21,060), by reducing stationary stage hold420→180base ms; no flight/landing duration or completion rule changed.
+- Remaining design placeholders: Connector4Green+2any, Bait3+2; Chorus/Connector working names, Chronicler rename; other colors still have ten members. No broad backlog completion or balance claim.
+- Cost discipline: subsequent fixes use related tests and focused browser scenarios. Large sims/full suites are reserved for changes that justify them.

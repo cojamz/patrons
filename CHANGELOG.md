@@ -1,8 +1,8 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.6.5, published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.7.0, published 2026-10-18. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.7.0 — 2026-10-18 — unreleased
+## v0.7.0 — 2026-10-18 — shipped (source 4b6a8fe, main d6241e1)
 
 - Green copies now choose again through copied copy actions. Each chain prevents revisiting an action, and each Green action gives +1 Green. Encore targets rivals; Reprise targets your actions.
 - Chorus and Build Up replace Hum and Crescendo. Green's twelve-member deck includes Impostor, Connector, Agents and Bait, plus revised existing abilities and prices. Stunt Double copies on recruit; Tribute Band is once per game.

@@ -128,3 +128,6 @@ Latest preference (Cory, 2026-10-15): warm but terse; very efficient language, e
 - 2026-10-17 — Cory: "X should be cheaper/more expensive" notes are mine to price; educated guess, logged as gut calls.
 - 2026-10-17 — Cory: updates every 5 minutes while work is running. Keep the changelog updated with every release.
 - 2026-10-18 — Cory: game tests are the bottleneck. Test only what changed; full games only for end-of-game changes or the final verdict. --quick takes V4_QUICK_E2E to skip its hot-seat game.
+
+## Credit discipline — Cory, October18,2026
+Be credit-conscious without hampering speed. Prefer focused regressions and targeted browser checks; keep simulations small. Avoid repeated broad suites and heavy resource use unless the change or a concrete failure warrants it.

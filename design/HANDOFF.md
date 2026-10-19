@@ -1,11 +1,13 @@
-# Green v0.7.0 — current candidate (not yet deployed)
+# Current handoff — Green v0.7.0 shipped
 
-- This section supersedes historical checkpoints below. Green's agreed spec: design/spheres/green-redesign-2026-10-18.md.
-- Implemented: twelve-member deck, confirmed prices, Chorus/Build Up, inherent +1 Green, rival Encore, fresh copy choices with per-branch cycle guards, serialized continuations, Agents/Bait, recruit-only Stunt Double and copied Extra Hand grants.
-- Dedicated Green tests, twenty seeded games and related UI tests pass. Final exact-commit combined/browser verification remains required. Do not call the candidate live.
-- Bait uses signed follower adjustments; total floors at zero, score breakdowns preserve attribution, White sales/debt remain valid. Stunt's member-triggered copy starts a fresh chain so its recruit effect can copy the recruiting action.
-- Names Chorus/Connector and Connector4+2/Bait3+2 prices are placeholders; Chronicler rename and equalizing other colors' deck counts remain backlog.
-- Root owns remaining integration/deployment. Helper runs ended; do not assume any agent remains active.
+- Public https://cojamz.github.io/patrons/play/ is **v0.7.0**, exact checked source `4b6a8fef03dba491ae8378f394207c05dd2ba2c0`, Pages main `d6241e1cc1ae2c5f7ef77342f527b59c9d5ff7b4`. Verified served stamp/HTML and actual desktop/phone copy flow. Evidence: eval/green-v070/verification.md.
+- Green's agreed spec: spheres/green-redesign-2026-10-18.md. Twelve-member deck, confirmed prices, Chorus/BuildUp, inherent+1Green, rival Encore, fresh choices through copies, per-branch cycle guards, saved continuations, Agents/Bait, Recruit StuntDouble, copied ExtraHand all implemented.
+- Final107related tests+build+copyall+nested desktop/phone checks pass; preceding implementation1,326tests/1skip+fullhotseat passed. Online stress failed under concurrent load; isolated broadcast rerun finished. Shared-storage browser tabs are weaker than real remote devices. No unresolved Green check failure.
+- Signed Bait loss can debit printed followers, totals floor0, results preserve attribution, White sales/debt stay valid. Stunt's recruit starts a fresh member chain so it can copy the recruiting action.
+- Provisional: Chorus/Connector names; Chronicler rename; Connector4+2 and Bait3+2 prices; equalizing other deck counts stays backlog. Retired Green art is reused with distinct current card identities.
+- **Next: discuss Red with Cory before changing it.** He wants member movement at its core; asks what quieter supporting effects accompany it. Recruit-heavy Red is being explored, not approved. Current Green has5Recruit members: Busker, StuntDouble, Doppelganger, Impostor, Connector. Assistant pitches are in decisions.md, explicitly unapproved.
+- Cory's latest process call: credit-conscious without slowing delivery; focused tests, small sims, no redundant full-suite runs. All helper lanes ended; no assumed background work. Local preview is being stopped during wrap.
+- The older checkpoints below are historical; do not treat their stale public versions/blockers as current. Other feedback remains in todo/backlog triage.
 
 # Cults — agent handoff, October 18, 2026
 

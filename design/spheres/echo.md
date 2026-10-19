@@ -1,3 +1,5 @@
+> Historical exploration. Current Green rules, deck and prices: [Green v0.7.0 spec](green-redesign-2026-10-18.md). Earlier no-copy-copy/no-center proposals below are superseded.
+
 # Green: the echo (Claude's build, revised 2026-10-14; reworked after Cory's first play)
 
 Built and measured as `src/engine/v4/content/echo.js` (tests: `src/test/engine/v4/spheres/echo.test.js`, `src/test/engine/v4/cards-echo.test.js`; sims: `scripts/spheres/echo-*.mjs`). On the table it replaces the green stand-in.

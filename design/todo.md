@@ -1,9 +1,9 @@
-# Active batch: Green redesign
+# Shipped: Green v0.7.0
 
-- [ ] Implement agreed actions, inherent +1 Green, fresh choices through copies, cycle prevention and serialized branch/recruit continuations.
-- [ ] Implement all twelve agreed members and confirmed costs; retain working names and documented placeholder costs.
-- [ ] Migrate obsolete Green contracts; pressure-test copy-all, nested recruit, copied members, Agents/Bait, save/load and full-game progression.
-- [ ] Check exact immutable v0.7.0 build, desktop/phone nested copy UI, publish and verify public source stamp.
+- [x] Implement agreed actions, inherent +1 Green, fresh choices through copies, cycle prevention and serialized branch/recruit continuations.
+- [x] Implement all twelve agreed members and confirmed costs; retain working names and documented placeholder costs.
+- [x] Migrate obsolete Green contracts; pressure-test copy-all, nested recruit, copied members, Agents/Bait, save/load and full-game progression.
+- [x] Check exact immutable v0.7.0 build, desktop/phone nested copy UI, publish and verify public source stamp.
 - Scope/source of truth: spheres/green-redesign-2026-10-18.md. Equal deck sizes across other colors remain separate backlog work.
 
 # v4 to-do
@@ -24,7 +24,7 @@ Not built (Cory out of credits, 2026-10-18 9:40pm Eastern). His exact calls are 
 - [ ] Details toggle sometimes doesn't respond: it must work at every moment (animations, rival turns, pick and pay steps).
 - [ ] Payment screen: move the passives lines from the bottom to the top and tighten the screen.
 - [ ] Steals are unbounded except by steal blocks. Grifter keeps only its first sentence.
-- [ ] Pacing: a rival's turn is ~0.4s over its cap since the price nudges (pacing.test fails, 21235 > 21060 on v0.6.4). Trim the pace, never the cap.
+- [x] Pacing: v0.7.0 trims stationary stage hold; longest wait21,041ms is below unchanged21,060ms cap.
 - [ ] The rest of the lag: with the idle animations stopped during moves, React commits still run 80–130ms at 4× (planChain measures places with getBoundingClientRect; GameScreen re-renders). Parked speed diffs in /mnt/project-files/handoff/speed/ no longer apply cleanly.
 - [ ] Retinue is worth 3 followers.
 - [ ] Help Yourself goes 2 / 4 / 6 by round.
@@ -42,11 +42,11 @@ Not built (Cory out of credits, 2026-10-18 9:40pm Eastern). His exact calls are 
 - [ ] Player-card member hover: cost on the right, one clean line per member, no "whose it is" line.
 - [ ] Animate the member shop refreshing at round start.
 
-## Cory's voice note, 2026-10-18 late (logged in decisions.md; ❓ items wait on his read-back)
+## Cory's voice note, 2026-10-18 late (historical Green proposals superseded by shipped Green spec)
 - [ ] Scaling text as "I: … / II: … / III: …" lines, dimming the rounds that aren't current.
-- [ ] Green: replace Hum and Crescendo (pitches in the thread, fill-ins). Every green space +1 green, printed at the bottom.
-- [ ] Green copies chain (choose again on a copied copy; nothing already in the chain). Test hard for loops.
-- [ ] Green members: Doppelganger 3+2; cut Ensemble and Mime; Chronicler → +1 follower per green member, 2+3, new name; Impressionist cheaper; Muse → +1 green when another player copies, 2+2; Busker +2 green now and at round start, cheaper; Stunt Double once per game; Understudy/Tribute Band at 6+4. Back-fill to equal member counts.
+- [x] Green actions replaced and inherent +1Green shipped in v0.7.0; current spec supersedes these earlier pitches.
+- [x] Green copy chains shipped with branch-safe persistence and pressure tests in v0.7.0.
+- [x] Green member redesign superseded by the agreed twelve-card v0.7.0 spec; [ ] Chronicler rename and equal counts across other colors remain.
 - [ ] Rework Bookkeeper. Rework most of Blue. Retinue: more members, more followers.
 - [ ] Member card: total cost as a small number top right.
 - [ ] "Player took X from you": shorter, near your player card.
