@@ -30,7 +30,7 @@ function scenario(name){
   initial.push(action('evenswap'));pair=`trade:${a}:${b}`;picks.push(pair);
  }else{
   for(const d of ['red.panel','red.twins','red.host','red.mentor','red.recruitbonus','red.loyalists','red.mob','red.movementpenalty'])deal(d,'shop');
-  s.players[0].res=Object.fromEntries(s.resources.map(r=>[r,12]));s.queue=[{t:'buy',p:0},{t:'endTurn',p:0},{t:'turn',p:0}];
+  s.players[0].res=Object.fromEntries(s.resources.map(r=>[r,r==='red'?12:0]));s.queue=[{t:'buy',p:0},{t:'endTurn',p:0},{t:'turn',p:0}];
   initial.push('tier:mid');
  }
  s=resume(s);s.build=buildStamp();
