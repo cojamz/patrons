@@ -10,11 +10,11 @@ Cory requested readback and recommendations, not implementation of this member b
 - Twins: cost 2 red, counts as 2 members/followers.
 - Family (5 followers, cost 2 red + 2 wild) and Big Family (7 followers, cost 3 red + 3 wild) were proposed, then Cory said “actually maybe we drop family and big family.” Treat both as dropped for now; do not implement the earlier numbers.
 
-## Proposed effects, unnamed and unpriced
+## New effects and working cards
 
 - Confirmed: gain one resource of the member’s color per Recruit ability triggered, not per acquisition. Name/cost remain open.
 - Confirmed: “When you move a rival’s member out of their cult, they lose 1 follower.” This replaces the original any-player wording; no same-container reordering trigger. Name/cost remain open.
-- On Recruit: Promote or Demote a member.
+- **Panel** (name confirmed): Recruit: Promote or Demote a member. Confirmed cost 4 red +2 wild (6). Cory proposes also counting as 3 members/followers; assistant endorses this body, not implemented.
 
 Eight keepers plus three proposed effects = eleven slots. No twelfth member invented or approved.
 
@@ -38,7 +38,7 @@ Eight keepers plus three proposed effects = eleven slots. No twelfth member inve
 
 Current core routes purchases, free recruitment, theft and the initiating actor’s incoming swap through memberAcquired/onAnyRecruit. Recruiter therefore already pays for active acquisition from shop, pile or rival cult, not merely paid shop buys. Passive gifts remain excluded under Cory’s earlier distinction (given versus taken). Its own acquisition is excluded by its existing hook. No code change made during this discussion.
 
-## Assistant price proposal — not approved or implemented
+## Prices — confirmed upper ladder; remaining suggestions not approved or implemented
 
 | Member | Red | Wild | Total |
 |---|---:|---:|---:|
@@ -50,12 +50,12 @@ Current core routes purchases, free recruitment, theft and the initiating actor�
 | Rival-movement penalty | 3 | 2 | 5 |
 | Host | 4 | 2 | 6 |
 | Proselytizer | 4 | 2 | 6 |
-| Recruit: Promote or Demote | 4 | 2 | 6 |
-| Mentor & Protégé | 5 | 3 | 8 |
-| Mob | 6 | 4 | 10 |
+| Panel — confirmed cost; 3-member body proposed | 4 | 2 | 6 |
+| Mentor & Protégé — confirmed cost | 5 | 3 | 8 |
+| Mob — confirmed cost | 6 | 4 | 10 |
 | Loyalists (unapproved defensive last slot; propose 2 members/followers) | 1 | 2 | 3 |
 
-Revised upper-end proposal after Cory floated a general total-cost ceiling of 10: 6→8→10 supports promoting the promotion member into Mentor and then Mob. The general ceiling remains a design proposal, not an approved global repricing. Mob scores 10 alone before other red members; held-red contests add a real spending opportunity cost. Tribute Band is currently Green’s most expensive member at 8 green +2 wild =10. Recruiter affordable enough to repay through later acquisitions. Recruit promotion may create repeat-acquisition loops; price is not a substitute for a terminating rule and focused chain tests. No costs changed in the game.
+Revised upper-end proposal after Cory floated a general total-cost ceiling of 10: 6→8→10 supports promoting the promotion member into Mentor and then Mob. Cory confirmed the default total-cost ceiling of 10 and the 6→8→10 Red upper ladder. This is not an instruction to silently reprice every existing card; unreviewed legacy costs need separate intake. Mob scores 10 alone before other red members; held-red contests add a real spending opportunity cost. Tribute Band is currently Green’s most expensive member at 8 green +2 wild =10. Recruiter affordable enough to repay through later acquisitions. Recruit promotion may create repeat-acquisition loops; price is not a substitute for a terminating rule and focused chain tests. No costs changed in the game. Panel’s name is confirmed; its proposed 3-member/follower body gives its recruit action a meaningful baseline at cost 6.
 
 ## New contest decision — confirmed trial
 

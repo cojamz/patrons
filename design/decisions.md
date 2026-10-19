@@ -924,3 +924,10 @@ Assistant submitted a full Red price ladder and proposed Loyalists as defensive 
 ## 2026-10-18 — Cost ceiling discussion
 
 Cory asks whether members should generally top out at total cost 10. Current Green maximum verified in source: Tribute Band, 8 green +2 wild. Assistant recommends a default 10 ceiling and revises proposed Red upper ladder to Recruit Promote/Demote 4 red +2 wild (6), Mentor & Protégé 5 red +3 wild (8), Mob 6 red +4 wild (10). Both ceiling and prices remain proposals; no member cost changes implemented. Prefer adjusting overpowered effects rather than extending the price ceiling.
+
+
+## 2026-10-18 — Cost ceiling / upper ladder confirmed; Panel named
+
+Cory said “yep” to the default total-cost ceiling of 10 and revised Red costs: Recruit Promote/Demote 4 red +2 wild =6; Mentor & Protégé 5 red +3 wild =8; Mob 6 red +4 wild =10. These costs are now confirmed. Other assistant price suggestions remain proposals. No runtime member prices changed yet.
+
+Cory says Recruit Promote/Demote should do more, proposes also counting as 3 members, and names it **Panel**. Name confirmed; 3 members/followers is his proposed body, endorsed by assistant at the confirmed cost 6. Ability remains “Recruit: Promote or Demote a member.” No extra effect or ownership restriction invented. Future implementation must pressure-test reacquisition chains.
