@@ -549,7 +549,7 @@ function SetupOrderCue({ state, me }) {
     <div className="setup-order-row" role="group" data-order={kind} aria-label={`${label}: ${ids.map(name).join(', ')}${kind === 'place' ? ', and back again' : ''}`}>
       <span className="setup-order-label">{label}</span>
       <span className="setup-order-names" aria-hidden="true">{(kind === 'place' ? ids.slice(0, state.players.length) : ids).map((id, i) => (
-        <span className="setup-order-step" data-pid={id} key={`${i}-${id}`}>
+        <span className="setup-order-step" data-pid={id} data-self={id === me || undefined} key={`${i}-${id}`}>
           {i > 0 && <span className="setup-order-arrow">→</span>}
           <span className="setup-order-name" title={name(id)} data-current={kind === 'draft' && i === 0 || undefined}>{name(id)}</span>
         </span>

@@ -62,6 +62,7 @@
 .setup-order-label{flex:none;width:76px;text-align:right;color:var(--cream-3)}
 .setup-order-names{display:flex;align-items:baseline;min-width:0;flex:1;gap:3px}
 .setup-order-step{display:flex;align-items:baseline;gap:3px;min-width:0}
+.setup-order-step[data-self]{flex-shrink:0}
 .setup-order-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .setup-order-name[data-current]{color:var(--cream);text-decoration:underline;text-underline-offset:3px}
 .setup-order-arrow,.setup-order-tail{flex:none;color:var(--cream-3)}
