@@ -40,6 +40,12 @@ function scenario(name){
   if(!expected.pending?.options.some(o=>o.id===id))throw Error(`${name}: missing ${id}: ${expected.pending?.options.map(o=>o.id)}`);
   expected=applyMove(expected,{player:expected.pending.player,option:id});
  }
+ // The UI confirms a single legal payment plan automatically; the raw engine publishes that pay step first.
+ if(name==='followers'&&expected.pending?.kind==='pay'){
+  const pays=expected.pending.options.filter(o=>o.id.startsWith('pay:'));
+  if(pays.length!==1)throw Error('Follower fixture must have exactly one payment plan');
+  expected=applyMove(expected,{player:expected.pending.player,option:pays[0].id});
+ }
  return{save,initial,pair,expected};
 }
 if(process.argv.includes('--fixtures-only')){for(const n of ['panel','penalty','followers']){scenario(n);console.log(`${n}: fixture resolves`);}process.exit(0);}
