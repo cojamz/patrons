@@ -479,7 +479,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const qid = state.quadrants[q];
   const Q = quadrant(qid), a = Q.actions[i];
   const owner = state.slots[spaceKey];
-  const opt = optionFor(`slot:${spaceKey}`) || optionFor(`squat:${spaceKey}`);
+  const opt = optionFor(`slot:${spaceKey}`) || optionFor(`squat:${spaceKey}`) || optionFor(`to:${spaceKey}`);
   const round = Math.max(1, state.round);
   const open = !past && spaceOpen(a, round) && (owner === undefined || opt);
   const viewer = me != null ? me : state.pending && state.pending.player;
@@ -513,7 +513,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}
         {a.lastRound && round > a.lastRound && <Row k="Closed">after round {roman(a.lastRound)}</Row>}
       </div>
-      {opt && pinned && onPick && !past && <button type="button" className="lt-btn pri" data-place={opt.id} onClick={() => onPick(opt.id)}>{opt.squat ? 'Join here' : 'Place here'}</button>}
+      {opt && pinned && onPick && !past && <button type="button" className="lt-btn pri" data-place={opt.id} onClick={() => onPick(opt.id)}>{opt.id.startsWith('to:') ? 'Move here' : opt.squat ? 'Join here' : 'Place here'}</button>}
     </div>
   );
 }

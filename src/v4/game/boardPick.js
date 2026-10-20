@@ -292,6 +292,7 @@ export function pickCaption(state, pk) {
   return warn ? { ...cap, how: `${cap.how} · ${warn}`, warn } : cap;
 }
 function captionOf(state, pk) {
+  if (pk.title === 'Straggler' && pk.kinds.has('space')) return { title: 'Straggler', what: ['move your last minion'], how: 'Inspect a lit space, then move there and do its action.' };
   if (pk.kinds.has('stack') && !pk.give && pk.count && pk.title) {
     // the steal's limit, in the engine's words ("1 each from P3, P4"), leads the how line
     const limit = (String(pk.question).match(/\(\d+ left, ([^)]+)\)/) || [])[1];

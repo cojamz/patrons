@@ -44,9 +44,9 @@ describe('Guest members (rule-benders)', () => {
     const restore = pinCosts({ 'gold.banker': [2, 0] });
     try {
       let s = sceneQ({ res: [{ red: 4 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
-      s = take(s, 'red.turnout'); // +0 red: nobody has recruited yet
+      s = take(s, 'red.turnout'); // current Gather adds2 red in roundI
       s = buy(s, 'gold.banker');
-      expect(s.players[0].res.red).toBe(2);
+      expect(s.players[0].res.red).toBe(4);
       expect(named(s, 'Freelancer')).toHaveLength(1);
     } finally { restore(); }
   });
@@ -106,6 +106,7 @@ describe('Guest members (rule-benders)', () => {
     expect(s.slots['0-0']).toBeUndefined(); // the last-placed minion moved (not just the last in board order)
     expect(s.slots['1-0']).toBe(0); // the other one stayed
     expect(s.slots['0-1']).toBe(0);
+    expect(s.players[0].lastSlot).toEqual({ key: '0-1', joined: false });
   });
 
   it('Straggler: Stay put leaves the board as it was', () => {

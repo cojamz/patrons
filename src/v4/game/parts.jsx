@@ -151,7 +151,7 @@ function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
       {keys && (
         <div className="pick-keys" role="group" aria-label="Pick from a list">
           {[...pk.where.values()].map(o => (
-            <button key={o.id} type="button" className="pick-key" data-key-option={o.id} disabled={busy} onClick={() => onPick(o.id)}><Rich text={pickName(state, o)} /></button>
+            <button key={o.id} type="button" className="pick-key" data-key-option={o.id} disabled={busy} onClick={() => onPick(o.id)}><Rich text={pickName(state, o)} />{pk.title === 'Straggler' && o.target?.space && (() => { const [q, i] = o.target.space.split('-').map(Number); return <small className="pick-action-rule"><CardText text={quadrant(state.quadrants[q]).actions[i].text} /></small>; })()}</button>
           ))}
         </div>
       )}

@@ -90,6 +90,7 @@ export const handlers = {
       if (!list.length) delete ctx.state.squats[key];
     } else delete ctx.state.slots[key];
     ctx.state.slots[to] = p.id;
+    p.lastSlot = { key: to, joined: false };
     const [q, i] = to.split('-').map(Number);
     ctx.log(`${p.name}'s Straggler moves a minion from ${actionOf(ctx, key).name} to ${actionOf(ctx, to).name}.`);
     // the engine's own act task: the new space resolves as usual (no buy)

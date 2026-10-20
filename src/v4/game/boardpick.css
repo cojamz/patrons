@@ -142,3 +142,7 @@
 /* (keyed on a flag the caption sets on the table, never a :has() on it: that restyled the whole page on every step) */
 .lt[data-pick-seat] > .lt-seat.mine .lt-cult-seat.now{box-shadow:none;background:none}
 .lt[data-pick-seat] > .lt-seat.mine{background:var(--seat, #221a15);box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.10));opacity:.75}
+
+/* The optional keyboard destination list gives the action itself, not only its name. */
+.pick-keys .pick-key:has(.pick-action-rule){display:flex;flex-direction:column;align-items:flex-start;text-align:left;white-space:normal;max-width:260px;padding:8px 12px;border-radius:8px}
+.pick-action-rule{font-size:12px;line-height:1.4;font-weight:400;margin-top:3px}

@@ -615,11 +615,11 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     // online, a placement asks to confirm on its card ("Place here": no Undo online). A choice answered on a space (a
     // copy's target, boardPick.js) has no confirm on that card, so it picks at once, as it does locally: pinning it
     // left the click doing nothing, and the online e2e circled the lit spaces forever (2026-10-15)
-    const confirmHere = confirmPlace && (!opt || /^(slot|squat):/.test(opt));
+    const confirmHere = confirmPlace && (!opt || /^(slot|squat|to):/.test(opt));
     const touch = confirmHere || lastPointer.current === 'touch';
     // A copy target is already the answer to a choice. Its read-only touch card has no
     // confirmation button, so choose it on the first tap, just as with a mouse.
-    if (opt && (!touch || !/^(slot|squat):/.test(opt))) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
+    if (opt && (!touch || !/^(slot|squat|to):/.test(opt))) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
     if (opt && touch) {
       if (peek && peek.key === s.key && peek.pinned) { setPeek(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
       setPeek({ key: s.key, pinned: true });
