@@ -172,6 +172,12 @@ function farPick(state, pend, title, question, base) {
   // the space asking is the one your last minion stands on (an Echo copy, a member's own steal: the board, as before)
   const atSpace = lastSpaceName(state, p) === title;
   const takes = pend.options.filter(o => o.target && Number.isInteger(o.target.pid) && o.target.res && !o.target.give && o.target.pid !== pend.player);
+  // Half-pile theft is one stack choice, never a counted sequence of coin picks.
+  const halfPile = state.queue?.[0]?.h === 'thieves.halfPile';
+  if (halfPile && takes.length && takes.length === pend.options.length) {
+    const model = stealModel(state, pend, title, question, base, takes);
+    return { ...model, halfPile: true, n: null, left: null, plan: null, head: 'Steal half a pile', sub: 'One color; rounded down.' };
+  }
   if (atSpace && pend.count && takes.length && takes.length === pend.options.length) return stealModel(state, pend, title, question, base, takes);
   const row = pend.options.filter(o => o.target && Number.isInteger(o.target.uid) && state.shop.includes(o.target.uid));
   if (atSpace && row.length && row.length + loose.length === pend.options.length) {

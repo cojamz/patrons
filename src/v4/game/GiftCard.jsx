@@ -242,7 +242,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
       <span className="gc-who" title={r.name}><Minion color={playerColor(r.pid)} emoji={seatEmoji(state, r.pid)} size={24} /><span className="gc-who-name">{r.name}</span></span>
       <span className="gc-group-items">
         {r.stacks.map(st => {
-          const k = plan.get(`${r.pid}:${st.res}`) || 0;
+          const k = g.halfPile ? st.o.take : plan.get(`${r.pid}:${st.res}`) || 0;
           return (
             <button key={st.res} type="button" className="gc-item gc-dot gc-stack" data-pid={r.pid} data-res={st.res} data-option={st.o.id} data-plan={k || undefined} disabled={busy}
               aria-label={`Take ${st.o.take || 1} ${st.res} from ${r.name} (has ${st.has})`} title={`Take ${st.o.take || 1} ${st.res} from ${r.name}`}
@@ -286,7 +286,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
       </button>
     );
   });
-  const headOf = g.kind === 'steal' ? <>Take <b className="num">{g.n}</b>{g.color ? <Pip color={g.color} /> : null}</>
+  const headOf = g.halfPile ? <>{g.head}</> : g.kind === 'steal' ? <>Take <b className="num">{g.n}</b>{g.color ? <Pip color={g.color} /> : null}</>
     : g.kind === 'move' ? <>{g.head}</> : g.kind === 'recruit' ? <>{g.head}</> : head;
   const sub = g.kind === 'move' ? <>{g.from ? <>It’s on {g.from}. </> : null}{g.sub}</> : g.sub;
   const farBody = g.kind === 'steal' ? (

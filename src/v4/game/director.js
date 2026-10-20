@@ -65,8 +65,10 @@ function movesOf(cause, effects, owner) {
   effects = effects.map(e => ({ ...e, what: { ...e.what } }));
   for (const p of effects) {
     if (p.type !== 'pay' || p.from.pid === owner || used.has(p)) continue;
-    for (const g of effects) {
-      if (g.type !== 'gain' || used.has(g) || g.to.pid !== owner) continue;
+    // Match the stolen color first: an action’s inherent Magenta gain is separate from its theft.
+    const matching = effects.filter(g => g.type === 'gain' && !used.has(g) && g.to.pid === owner)
+      .sort((a, b) => Number(b.what.r === p.what.r) - Number(a.what.r === p.what.r));
+    for (const g of matching) {
       const n = Math.min(p.what.n, g.what.n);
       if (!n) continue;
       takes.push({ from: p.from, to: g.to, n, r: p.what.r, turn: g.what.r !== p.what.r ? g.what.r : null });
@@ -75,14 +77,19 @@ function movesOf(cause, effects, owner) {
       if (!p.what.n) { used.add(p); break; }
     }
   }
-  // a payment that reaches a rival (a ransom paid, "the payment arrives as magenta"): the owner's pays and another
-  // player's gain of the same total under one cause are a give, straight from the payer's stacks to theirs (grammar M4);
-  // otherwise the coins dropped into a space and flew out of it, and the eye lost who paid whom (motion gaps 3)
+  // Ransom payments keep each paid color and travel directly to the recipient.
   const ownPays = effects.filter(e => e.type === 'pay' && !used.has(e) && owner != null && e.from.pid === owner && e.from.kind === 'stack' && !['shop', 'rate'].includes(e.to && e.to.kind));
-  if (ownPays.length) {
-    const paid = ownPays.reduce((t, e) => t + e.what.n, 0);
-    const g = effects.find(e => e.type === 'gain' && !used.has(e) && e.to.kind === 'stack' && e.to.pid !== owner && e.what.n === paid);
-    if (g) { used.add(g); for (const p of ownPays) { used.add(p); gives.push({ from: p.from, to: g.to, n: p.what.n, r: p.what.r, turn: g.what.r !== p.what.r ? g.what.r : null }); } }
+  for (const p of ownPays) {
+    const matching = effects.filter(g => g.type === 'gain' && !used.has(g) && g.to.kind === 'stack' && g.to.pid !== owner)
+      .sort((a, b) => Number(b.what.r === p.what.r) - Number(a.what.r === p.what.r));
+    for (const g of matching) {
+      const n = Math.min(p.what.n, g.what.n);
+      if (!n) continue;
+      gives.push({ from: p.from, to: g.to, n, r: p.what.r, turn: g.what.r !== p.what.r ? g.what.r : null });
+      p.what.n -= n; g.what.n -= n;
+      if (!g.what.n) used.add(g);
+      if (!p.what.n) { used.add(p); break; }
+    }
   }
   for (const e of effects) {
     if (used.has(e)) continue;

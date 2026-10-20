@@ -113,3 +113,38 @@ it('shows round-start income after minions return when closing a same-move scori
   expect(Math.min(...gains.map(a => a.at))).toBeGreaterThan(0);
   expect(plan.handoff).toBeGreaterThanOrEqual(Math.max(...plan.atoms.filter(a => a.op === 'land').map(a => a.at)) - 1);
 });
+
+
+it('keeps stolen colors on victim-to-thief flights and sources inherent Magenta from its rim', () => {
+  const cause = { kind: 'space', pid: 0, key: '0-0' };
+  const effects = [
+    { type: 'gain', cause, from: cause, to: stack(0, 'magenta'), what: { r: 'magenta', n: 1 } },
+    { type: 'pay', cause, from: stack(1, 'gold'), to: cause, what: { r: 'gold', n: 2 } },
+    { type: 'gain', cause, from: cause, to: stack(0, 'gold'), what: { r: 'gold', n: 2 } },
+    { type: 'pay', cause, from: stack(2, 'silver'), to: cause, what: { r: 'silver', n: 1 } },
+    { type: 'gain', cause, from: cause, to: stack(0, 'silver'), what: { r: 'silver', n: 1 } },
+  ];
+  const before = JSON.stringify(effects);
+  const pieces = chain(effects).atoms.filter(a => a.op === 'piece');
+  const magenta = pieces.filter(a => a.r === 'magenta');
+  expect(magenta).toHaveLength(1);
+  expect(magenta[0].from).toEqual({ kind: 'rim', r: 'magenta' });
+  const theft = pieces.filter(a => a.take);
+  expect(theft).toHaveLength(3);
+  expect(theft.every(a => a.from.kind === 'stack' && a.from.r === a.to.r && !a.turn)).toBe(true);
+  expect(theft.filter(a => a.r === 'gold').every(a => a.from.pid === 1)).toBe(true);
+  expect(theft.find(a => a.r === 'silver').from.pid).toBe(2);
+  expect(JSON.stringify(effects)).toBe(before);
+});
+
+it('flies a mixed-color ransom payment directly from payer to recipient without conversion', () => {
+  const cause = { kind: 'space', pid: 1, key: '0-4' };
+  const pieces = chain([
+    { type: 'pay', cause, from: stack(1, 'gold'), to: cause, what: { r: 'gold', n: 2 } },
+    { type: 'pay', cause, from: stack(1, 'silver'), to: cause, what: { r: 'silver', n: 1 } },
+    { type: 'gain', cause, from: cause, to: stack(0, 'gold'), what: { r: 'gold', n: 2 } },
+    { type: 'gain', cause, from: cause, to: stack(0, 'silver'), what: { r: 'silver', n: 1 } },
+  ]).atoms.filter(a => a.op === 'piece');
+  expect(pieces).toHaveLength(3);
+  expect(pieces.every(a => a.from.pid === 1 && a.to.pid === 0 && a.from.r === a.to.r && !a.turn && !a.pay)).toBe(true);
+});

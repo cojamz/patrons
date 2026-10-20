@@ -73,10 +73,10 @@ const PIECES = {
   'market.clearance': () => [card('½')],
   'market.pricecheck': () => [card('top'), TO, res('blue', '½')],
   'market.spree': () => [card('×3')],
-  'thieves.pickpocket': r => [HOOD, TO, res('magenta', r + 1)],
-  'thieves.tipoff': () => [per('magenta', 1, 'richer')],
-  'thieves.hideout': () => [HOOD, TO, res('magenta', 1), { t: 'shield' }],
-  'thieves.rob': () => [HOOD, TO, res('magenta', 3)],
+  'thieves.pickpocket': r => [HOOD, TO, res('any', r), { t: 'fol', n: r }],
+  'thieves.tipoff': () => [HOOD, TO, per('any', 1, 'minion')],
+  'thieves.hideout': r => [HOOD, TO, res('any', r), { t: 'shield' }],
+  'thieves.rob': () => [HOOD, TO, res('any', '½')],
   'thieves.ransom': () => [{ t: 'hoodcard' }, TO, { t: 'ransom' }],
   'thieves.heist': () => [HOOD, TO, card(null)],
   'trading.haggle': () => [res('white', 2), per('white', 1, 'ahead')],
@@ -299,9 +299,9 @@ function draw(p, s) {
     }
     case 'shield': return [s * 0.9, <g transform={`scale(.9)`}><ShieldG s={s} /></g>];
     case 'ransom': {
-      // their payment or their member: magenta / card
+      // their original-color payment or their member
       const g = s * 0.8;
-      return [g + s * 0.46 + s * 0.8, <g><g transform={`translate(0 ${s * 0.1})`}><Glyph r="magenta" s={g} /></g>{draw(OR, s * 0.9)[1] && <g transform={`translate(${g} 0)`}>{draw(OR, s)[1]}</g>}<g transform={`translate(${g + s * 0.46} ${s * 0.1}) scale(.8)`}><CardG s={s} /></g></g>];
+      return [g + s * 0.46 + s * 0.8, <g><g transform={`translate(0 ${s * 0.1})`}><Glyph r="any" s={g} /></g>{draw(OR, s * 0.9)[1] && <g transform={`translate(${g} 0)`}>{draw(OR, s)[1]}</g>}<g transform={`translate(${g + s * 0.46} ${s * 0.1}) scale(.8)`}><CardG s={s} /></g></g>];
     }
     default: return [0, null];
   }

@@ -37,7 +37,7 @@ const S = {
     bargain: '+2 blue · may pay for an extra member', restock: '+2 blue · new row', showroom: '+1 blue, +1 per face-up blue', clearance: 'half-price buy', pricecheck: 'half your priciest member’s cost', spree: 'buy 3 times',
   },
   thieves: {
-    pickpocket: r => `steal ${r + 1}`, tipoff: 'steal 1 each richer', hideout: 'steal 1 · safe', rob: 'steal 3', ransom: 'ransom a member', heist: 'steal a member',
+    pickpocket: r => `steal ${r}; +${r} followers; +1 magenta`, tipoff: 'steal 1 per already occupied magenta action; +1 magenta', hideout: r => `steal ${r}; safe from steals this round; +1 magenta`, rob: 'steal half a rival’s one-color pile, round down; +1 magenta', ransom: 'rival pays member’s cost or loses it; cost 5 or less; +1 magenta', heist: 'take a rival’s member; +1 magenta',
   },
   trading: {
     haggle: '+2 white, +1 per leader', buylow: '+1 follower per 3 white', pawn: r => `${r} follower · may take 2 white each instead`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower bought or won', boom: 'all for followers',
@@ -54,7 +54,7 @@ const PIPS = {
   silver: { tide: 'half the top rival’s', jubilee: 'silver for followers' },
   yellow: { gather: '+1 per member' },
   market: { clearance: 'half price', spree: 'buy 3 times' },
-  thieves: { rob: 'take 3 any', ransom: 'ransom a member', heist: 'take a rival’s member' },
+  thieves: { rob: 'steal half a one-color pile', ransom: 'rival pays or loses member', heist: 'take a rival’s member' },
   trading: { sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower', boom: 'all for followers' },
   echo: { refrain: 'copy yours', eternity: 'copy all' },
 };

@@ -186,12 +186,12 @@ const S = {
     spree: [['×3', 'tag:']],
   },
   thieves: {
-    pickpocket: r => [['rr', '→', `${r + 1}`, 'magenta']],
-    tipoff: [['1', 'magenta', '/', 'rup']],
-    hideout: [['r', '→', '1', 'magenta'], ['shield']],
-    rob: [['rr', '→', '3', 'magenta']],
-    ransom: [['mr', 'tag:≤4', '→', 'magenta']],
-    heist: [['mr', '→', 'm']],
+    pickpocket: r => [['rr', '→', `${r}`, 'any'], [`${r}`, 'f'], ['1', 'magenta']],
+    tipoff: [['rr', '→', '1', 'any', '/', 'minion'], ['1', 'magenta']],
+    hideout: r => [['rr', '→', `${r}`, 'any'], ['shield'], ['1', 'magenta']],
+    rob: [['rr', '→', '½', 'any'], ['1', 'magenta']],
+    ransom: [['mr', 'tag:≤5', '→', 'any'], ['1', 'magenta']],
+    heist: [['mr', '→', 'm'], ['1', 'magenta']],
   },
   trading: {
     haggle: [['2', 'white'], ['1', '/', 'rup']],

@@ -636,6 +636,7 @@ function runTask(state, task) {
       const qid = state.quadrants[task.q];
       const a = actionAt(state, task.q, task.i);
       const ctx = ctxFor(state);
+      ctx.placement = { key: `${task.q}-${task.i}`, joined: !!p.lastSlot?.joined };
       // follower changes the space makes itself (Your Call), after its members' own (credited to them)
       const mark = fMark(state);
       const out = underCause({ kind: 'space', key: `${task.q}-${task.i}`, qid, pid: p.id }, () => {
@@ -1351,7 +1352,7 @@ function ctxFor(state) {
     },
     /** One steal event from one victim. what: { take: {color: n} } moves resources (clamped to what they hold),
      *  { uid } moves a member, { other: n } reports units the caller already moved (e.g. a loot pile).
-     *  what.give(n) hands the thief the proceeds before anyone reacts (so a reaction can take from the thief).
+     *  what.give(n, took) hands the thief the proceeds before anyone reacts (so a reaction can take from the thief).
      *  what.led: whether the victim led when a multi-victim steal began (reactions read it as info.led).
      *  Then fires onSteal on every quadrant and member. Returns units taken. */
     steal(thief, victim, what = {}) {
@@ -1364,7 +1365,7 @@ function ctxFor(state) {
       }
       if (what.uid !== undefined && ctx.moveMember(what.uid, victim, thief, { recruit: true })) n += 1;
       if (!n) return 0;
-      if (what.give) what.give(n);
+      if (what.give) what.give(n, took);
       const info = { thief, victim, took, uid: what.uid, n, reaction: !!what.reaction, ...(what.led !== undefined ? { led: !!what.led } : {}) };
       for (const qid of state.quadrants) { const q = quadrant(qid); if (q.onSteal) q.onSteal(ctx, info); }
       eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });

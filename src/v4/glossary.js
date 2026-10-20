@@ -54,7 +54,7 @@ export const GLOSSARY = [
   { key: 'next member costs less', word: 'Next member costs less', match: /\bnext member costs \d+ less\b/,
     def: 'A discount: the next member you recruit that costs something is that much cheaper (colored part first). It waits until you use it.' },
   { key: 'steal', word: 'Steal', match: /\bsteals?\b/,
-    def: 'Take resources or a member from a rival. Resources a Magenta card takes arrive as magenta. Lie Low protects your members and resources until round end; some members stop steals too.' },
+    def: 'Take resources or a member from a rival. Stolen resources keep their colors. Lie Low protects your members and resources until round end; some members stop steals too.' },
   { key: 'colorless', word: 'Colorless', match: /\bcolou?rless\b/,
     def: 'A member whose color isn’t on this table. Its colored part is paid in any colors. Its member quantity still counts, but never toward a color, and it brings nothing to cards that pay “its color”.' },
   { key: 'any', word: 'Any (cost)', link: false, match: /\bin any colors\b/,

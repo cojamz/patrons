@@ -102,12 +102,12 @@ const SUMS = {
   'market.pricecheck': () => [R('blue', '+'), EQ, NUM('½'), MEM({ mod: 'high' })], //              +■ = ½▴▢
   'market.spree': ({ n }) => [TAGT(), X(n(0, 3))], //                                              [ ] ×3
   // thieves (magenta): take
-  'thieves.pickpocket': ({ r }) => [HOOD(), ARROW, R('magenta', r + 1)], //                 ☗ → 3◆
-  'thieves.tipoff': () => [R('magenta', '+1'), PER, HOOD({ mod: 'high' })], //                     +1◆ / ▴☗      (each richer player)
-  'thieves.hideout': () => [HOOD(), ARROW, R('magenta', 1), DOT, SAFE], //                         ☗ → 1◆ · ⛨
-  'thieves.rob': ({ n }) => [HOOD({ all: true }), ARROW, R('magenta', n(0, 3))], //                ☗☗ → 3◆      (at least 1 from each)
-  'thieves.ransom': () => [MEM({ rival: true }), ARROW, R('magenta'), WORD('or'), MEM()], //       ☗▢ → ◆ or ▢   (cost cap, their choice: hover)
-  'thieves.heist': () => [MEM({ rival: true }), ARROW, MEM()], //                                  ☗▢ → ▢        (transfer only; no replacement)
+  'thieves.pickpocket': ({ r }) => [HOOD(), ARROW, R('any', r), DOT, FOL(plus(r)), CUT, DOT, R('magenta', '+1')],
+  'thieves.tipoff': () => [HOOD(), ARROW, R('any', 1), PER, WORD('occupied magenta action'), MIN(), CUT, DOT, R('magenta', '+1')],
+  'thieves.hideout': ({ r }) => [HOOD(), ARROW, R('any', r), DOT, SAFE, CUT, DOT, R('magenta', '+1')],
+  'thieves.rob': () => [HOOD(), R('any', '½'), ARROW, R('any'), CUT, DOT, R('magenta', '+1')],
+  'thieves.ransom': () => [MEM({ rival: true }), ARROW, R('any'), WORD('or'), MEM(), CUT, DOT, R('magenta', '+1')],
+  'thieves.heist': () => [MEM({ rival: true }), ARROW, MEM(), CUT, DOT, R('magenta', '+1')],
   // trading (white): followers
   'trading.haggle': ({ n }) => [R('white', plus(n(0, 2))), NUM(plus(n(1, 1))), PER, HOOD({ mod: 'high' })], // +2⬡ +1/▴☗
   'trading.buylow': () => [FOL('+1'), PER, R('white', '3')], //                                   +1☺ / 3⬡

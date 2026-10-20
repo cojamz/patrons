@@ -17,7 +17,7 @@ One colored quadrant per player, each with its own spaces and its own contest, p
 - **Pale spaces with gold edges are available now.** Taken spaces dim; dark spaces in the inner rings open in later rounds.
 - Each space holds one minion per round. All minions return at round end.
 - To **copy** an action is to gain its own printed gain this round. The taker's member bonuses and gifts to others are not copied. Copying a copy lets you choose again; never choose an action already in that chain. Each Green action gives +1 green whenever it is taken or copied. Echo copies the previous action, including your own on a snake double turn; Encore copies an action with a rival minion; Reprise copies one with your minion; Greatest Hits copies every action with your minion. Agents blocks everyone, including its owner, from copying that owner's actions.
-- To **steal** is to take from a rival. Resources a Magenta card steals arrive as magenta.
+- To **steal** is to take from a rival. Stolen resources keep their colors. A general steal can be split among rivals; doubling and extra-resource bonuses apply once to its overall total. Half-pile theft targets one rival’s stack of one color. Every Magenta action also grants1 magenta.
 
 ## A turn
 Turns go down the player column, then back up: 1-2-3-4, 4-3-2-1, repeating. The player at either end takes two turns in a row. This is snake order. Round I's order is random; from round II, fewest followers goes first (ties: whoever went later last round).

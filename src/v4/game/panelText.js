@@ -98,20 +98,12 @@ const P = {
     flourish: { verb: '+1 each other color, per full set' },
   },
   thieves: {
-    pickpocket: r => ({ main: `+${r + 1} magenta`, second: 'from rivals', note: grows(r) }),
-    // one from each rival, no conditions since feedback #18 (2026-10-17); it read "from rivals with more resources"
-    tipoff: { verb: 'Steal 1 each', second: 'from every rival' },
-    // "safe" from what? (w3a: guessed swaps) steals
-    hideout: { verb: 'Steal 1', second: 'then safe from steals', note: 'this round' },
-    // the limit belongs on the face (skeptic round 2: line 3 drops on ring II): "from each rival" says from rivals too
-    rob: { main: '+3 magenta', second: 'at least 1 from each rival' },
-    // "Ransom a member" read as paying to get a member back (w3b #19, w3a #57): what you get, whole in line 1 (ring II
-    // drops line 2 when tight), and who decides
-    // "A rival's member or its cost" read as "I choose" (w4b #5): line 1 says who decides, line 2 what's picked
-    // what they pay is the member's cost (f8: the face didn't say how much), whole in line 1, since ring II drops line 2
-    // the limit in line 2 (skeptic round 2: "costing 4 or less" sat in line 3, which ring II drops); who decides goes small
-    ransom: { verb: 'A rival pays a member’s cost, or loses it', second: 'a member costing 4 or less', note: 'their choice' },
-    heist: { verb: 'Take a rival’s member' },
+    pickpocket: r => ({ verb: `Steal ${r}, +${r} @f`, second: '+1 magenta', note: grows(r) }),
+    tipoff: { verb: 'Steal 1 per magenta action', second: 'already holding a minion', note: '+1 magenta' },
+    hideout: r => ({ verb: `Steal ${r}; safe from steals`, second: 'this round', note: '+1 magenta' }),
+    rob: { verb: 'Steal half a rival’s pile', second: 'one color; round down', note: '+1 magenta' },
+    ransom: { verb: 'A rival pays a member’s cost, or loses it', second: 'a member costing 5 or less', note: '+1 magenta' },
+    heist: { verb: 'Take a rival’s member', note: '+1 magenta' },
   },
   trading: {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers

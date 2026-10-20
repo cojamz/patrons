@@ -968,3 +968,5 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 
 - 2026-10-19 (Cory): occupied-action theft adopted provisionally as second RoundI slot; excludes own new placement. Third slot confirmed: steal1 resource×round and gain1 follower×round, plus universal1 Magenta. Extra follower purchase rejected as poor in RoundI; optional currency exchange rejected as redundant with choosing stolen colors. These actions are design decisions, not yet deployed.
 - 2026-10-19 release: v0.8.6 enlarged PRINTED shop costs/follower icons only. v0.8.7 switches Magenta contest to held resources; confirmed public desktop/phone. No other Magenta redesign silently included.
+
+- 2026-10-19 (Cory): implement the six agreed Magenta actions. Working protection theft is1×round; ransom ceiling5, payment its total cost. Stolen resources retain colors; each action grants1 Magenta. Bodyguard now says “Rivals can’t steal from you,” protecting both resources and members. General steals split freely among rivals; doubling/+1 apply once to total, not per victim. Half-pile remains one rival stack.

@@ -635,6 +635,19 @@ function mixWords(pv, state, own) {
   const sure = sureWords(pv, state);
   const loose = state.resources.filter(r => pv.you.res[r][0] !== pv.you.res[r][1]);
   const same = (f, a, b) => a[f] === b[f];
+  // Original-color theft varies by what you take, not by a swap. Keep the inherent gain and followers
+  // separate, including when Magenta itself is one of the stealable colors.
+  const theft = state.resources.some(r => pv.others?.res?.[r]?.[0] < 0)
+    && state.resources.every(r => pv.you.res[r][0] >= 0);
+  const resTotal = d => state.resources.reduce((n, r) => n + d.res[r], 0);
+  if (theft && mix.every(d => resTotal(d) === resTotal(mix[0]) && same('followers', d, mix[0]) && same('members', d, mix[0]))) {
+    const fixed = state.resources.reduce((n, r) => n + pv.you.res[r][0], 0);
+    const n = resTotal(mix[0]) - fixed;
+    const minimums = state.resources.filter(r => pv.you.res[r][0] > 0 && pv.you.res[r][0] !== pv.you.res[r][1])
+      .map(r => `+${pv.you.res[r][0]} ${r}`);
+    const guaranteed = [...minimums, sure].filter(Boolean).join(', ');
+    if (n > 0) return { text: `${guaranteed ? `${guaranteed}; ` : ''}steal ${n} in colors you pick`, note: null };
+  }
   // one color of your choosing on top of the sure part: "+2 silver, +2 of a color you pick"
   const one = mix.map(d => loose.filter(r => d.res[r]).map(r => d.res[r]));
   if (one.every(v => v.length === 1 && v[0] === one[0][0] && v[0] > 0) && mix.every(d => same('followers', d, mix[0]) && same('members', d, mix[0])))
