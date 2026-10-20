@@ -105,3 +105,5 @@ How Claude works on Cults (the repo is still called patrons). Claude owns this f
 - When unsure about a Claude Code feature, check the official docs (code.claude.com/docs) before building anything.
 
 - 2026-10-19 browser purchase checks: a single legal payment plan does not guarantee auto-confirmation, especially when resuming a saved scene. Observe whether the member arrives or a payment sheet opens; confirm the visible sheet when present. Keep exact final ownership/resource assertions. Do not treat an unclicked Pay button as a game failure.
+
+- 2026-10-19 Magenta batch: use explicit test files for shared director/boardPick changes. `vitest related` expanded to69files/65.8s including200-game truth checks, and mutable concurrent test edits made one result invalid. Frozen scoped gates stayed bounded (final88checks+build+ransom desktop/phone21.8s). Actual full action proof uses7 seeded positions×2viewports (55.5s), not full games. V4_SCENES filters narrowly after wording-only fixes; retain original whole-action evidence. Dismiss local handoff before settled screenshots so overlays cannot hide the wheel. Version dates use Cory’s Eastern timezone.

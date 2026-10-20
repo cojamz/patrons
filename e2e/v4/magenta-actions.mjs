@@ -171,6 +171,10 @@ try {
       }
       assert(!await page.evaluate(() => document.body.scrollWidth > innerWidth + 1), `${tag}: horizontal overflow`);
       assert(!errors.length, `${tag}: ${errors.join('; ')}`);
+      const finalHandoff = page.locator('[data-handoff]');
+      if (await finalHandoff.isVisible()) await finalHandoff.click();
+      await page.locator('.app.game:not([data-animating])').waitFor();
+      await page.waitForTimeout(450);
       await page.screenshot({ path: `${out}/${tag}-settled.png` });
       console.log(`${tag}: exact state and independently checked colors/counts; restored buying; ${flights.length} motion pieces; no errors/overflow.`);
       await ctx.close();

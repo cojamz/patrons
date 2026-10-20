@@ -970,3 +970,5 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - 2026-10-19 release: v0.8.6 enlarged PRINTED shop costs/follower icons only. v0.8.7 switches Magenta contest to held resources; confirmed public desktop/phone. No other Magenta redesign silently included.
 
 - 2026-10-19 (Cory): implement the six agreed Magenta actions. Working protection theft is1×round; ransom ceiling5, payment its total cost. Stolen resources retain colors; each action grants1 Magenta. Bodyguard now says “Rivals can’t steal from you,” protecting both resources and members. General steals split freely among rivals; doubling/+1 apply once to total, not per victim. Half-pile remains one rival stack.
+
+- 2026-10-19 shipped v0.8.8: checked source68c9bf0fad95358c558d2ffd3312dfd92ce6c4bc, Pages mainf366272. New Magenta actions/theft rules and Bodyguard live;88 focused checks, all14 actual public action scenes and2 scoring scenes passed. Magenta deck/color redesign and broader motion/phone label work remain open.

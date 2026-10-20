@@ -1,9 +1,20 @@
+## Shipped — v0.8.8, October 19
+
+- [x] All six Magenta actions, inherent1 Magenta, original theft colors, free multi-rival splitting and once-total modifiers.
+- [x] Bodyguard blocks resource and member theft; costs retained.
+- [x] Exact half-stack chooser, previews, direct color-preserving resource flights; copy/resume/follower timing regressions.
+- [x] Public68c9bf0 verified:14 action scenes+2 scoring scenes across desktop/phone;88 focused checks/build pass. Evidence: eval/magenta-v088/.
+- [ ] New Magenta member deck and color/name remain open; no unapproved card overhaul.
+- [ ] Migrate remaining historical Magenta tests (spheres/thieves.test.js, cross-sphere conversion/old-action expectations). Canonical new rules covered in cards-thieves/magenta-redesign/magenta-batch; do not reinstate old rules to satisfy stale tests.
+- [ ] Wider existing UI test failures: Wheel red-resource label, deck unified-grid selector, Echo/Chorus counts, turnover phase and weighted OpenDoor member text. Six reproduced on previousc387ebdf; evidence previous-release-ui.log. Keep current behavior and update tests against confirmed rules.
+- [ ] Phone narrow wheel labels still crowd in some rotations; shorter ransom wording does not complete the full precise wheel-text pass.
+
 ## Shipped — v0.8.6/v0.8.7, October19
 
 - [x] Larger PRINTED shop costs/follower digits/icons; actual game values unchanged; stable compact/details layout.
 - [x] Magenta contest uses held resources; rim, standings, ties, empty piles and real round summary checked.
 - [x] Public source c387ebdf verified on desktop/phone; eight public card-layout/color cases pass. Evidence: eval/magenta-v087/.
-- [ ] Build Magenta action redesign after remaining calls; authoritative spec: spheres/magenta-redesign-2026-10-19.md. Third RoundI slot now theft×round+followers×round; do not implement rejected extra-purchase/color-exchange proposals.
+- [x] Built Magenta action redesign in v0.8.8; authoritative spec: spheres/magenta-redesign-2026-10-19.md. Third RoundI slot now theft×round+followers×round; do not implement rejected extra-purchase/color-exchange proposals.
 
 ## Shipped — v0.8.5, October 19
 

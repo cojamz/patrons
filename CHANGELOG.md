@@ -1,10 +1,13 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.7, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.8, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.8 — 2026-10-20 — unreleased
+## v0.8.8 — 2026-10-19 — shipped (source 68c9bf0, main f366272)
 
-- New Magenta actions, original-color theft and full Bodyguard protection.
+- Round I: steal×round plus safety; steal per already occupied Magenta action; steal×round plus followers×round.
+- Round II: take half a rival’s one-color pile, rounded down; ransom a member costing5 or less. Round III: take a rival’s member without replacement.
+- Every action gives+1 Magenta. Stolen resources keep their colors, including ransom payments and member effects. Split general steals freely across rivals; doubling/+1 apply once to the overall total.
+- Bodyguard protects both resources and members. Updated wheel/hover text, exact half-stack choices and direct original-color resource flights.
 
 ## v0.8.7 — 2026-10-19 — shipped (source c387ebd, main d090f0c)
 

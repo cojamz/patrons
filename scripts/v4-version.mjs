@@ -7,7 +7,7 @@ const match=source.match(/export const VERSION = 'v(\d+)\.(\d+)\.(\d+)';/);
 if(!match)throw new Error('Expected semantic VERSION in src/v4/version.js');
 let [major,minor,patch]=match.slice(1).map(Number);
 if(kind==='minor'){minor++;patch=0;}else patch++;
-const version=`v${major}.${minor}.${patch}`,date=new Date().toISOString().slice(0,10);
+const version=`v${major}.${minor}.${patch}`,date=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const changelog=readFileSync('CHANGELOG.md','utf8'),heading='\n## ';
 const at=changelog.indexOf(heading);
 if(at<0)throw new Error('Expected release sections in CHANGELOG.md');

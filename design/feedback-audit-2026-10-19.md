@@ -30,4 +30,8 @@ Status is evidence-based. Public verification is recorded in eval/red-members-v0
 
 | 21 | Larger printed member costs and follower icons, not larger game values | Shipped v0.8.6, retained v0.8.7 | Root | Actual16px digits/glyphs; eight public viewport/color layout cases; no footer overlap | No repricing |
 | 22 | Magenta victory condition uses Magenta resources | Shipped v0.8.7 | Root |39 focused checks; actual public desktop/phone tie through scoring; labels/counts agree | Remaining Magenta action redesign unbuilt |
-| 23 | New Magenta actions and discarded alternatives | Design recorded | Cory + root | Authoritative Magenta spec; RoundI third slot steal×round+followers×round | Confirm protection amount, ransom cap/payment, color/deck; implement/test |
+| 23 | New Magenta actions and discarded alternatives | Actions shipped v0.8.8 | Cory + root | Authoritative spec; all16 public scenes verified | Color/name and new member deck remain open |
+
+| 24 | Implement all six new Magenta actions; each grants1 Magenta, theft keeps colors | Shipped v0.8.8 | Root +3 helper lanes |88 focused checks; all14 public desktop/phone action scenes +2 scoring scenes; copies/resume/protection/rounding | Full balance pass and new deck remain open |
+| 25 | Bodyguard: Rivals can’t steal from you | Shipped v0.8.8 | Root | Resources/member/ransom protections checked; half-stack excludes guarded40gold rival | Cost unchanged |
+| 26 | General steals split across rivals; doubling/+1 once to overall total | Shipped v0.8.8 | Root + checks/UI | Split multi-victim/color regression; one-resource picks under doubling; no repeated grants on reload | Half-pile is explicitly one stack |
