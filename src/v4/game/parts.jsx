@@ -131,6 +131,18 @@ function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
   const seatKind = pk.kinds.has('seat');
   useLayoutEffect(() => (seatKind && box.current ? holdFlag(box.current.closest('.lt'), 'pickSeat') : undefined), [seatKind]); // eslint-disable-line react-hooks/exhaustive-deps
   const [keys, setKeys] = useState(false);
+  useEffect(() => {
+    if (pk.title !== 'Straggler') return;
+    const key = e => {
+      if (e.key !== 'Escape' || e.defaultPrevented || busy) return;
+      if (document.querySelector('[data-hover-layer][data-open="1"], [role="dialog"][aria-modal="true"]')) return;
+      const skip = pk.rest.find(o => o.id === 'no');
+      if (skip) { e.preventDefault(); onPick(skip.id); }
+    };
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  }, [pk, busy, onPick]);
+
   const what = cap.what && cap.what.map((w, k) => (typeof w === 'string' ? <span key={k}>{w}</span> : <Pip key={k} color={w.dot} />));
   return (
     <section className="prompt choice seat-pick docked" aria-live="polite" ref={box} tabIndex={-1} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')}

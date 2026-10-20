@@ -1345,7 +1345,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}
           {picker && (!gift || shopRecruit || wheelMove) ? (
-            <ChoicePrompt state={state} onPick={onSeatPick} busy={busy} seatPick={picker} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
+            <ChoicePrompt state={state} onPick={onSeatPick} busy={busy} seatPick={picker} turnOf={!wheelMove && humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
           ) : note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
           ) : pr.text ? (

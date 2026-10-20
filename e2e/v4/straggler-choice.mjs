@@ -20,15 +20,16 @@ if(expected.players[0].res.gold!==4||expected.slots['0-0']!==undefined||expected
 const browser=await chromium.launch({executablePath:browserPath});
 try{
 for(const[tag,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]]){
-for(const outcome of ['move','stay']){
+for(const outcome of ['move','stay','escape']){
  const ctx=await browser.newContext(opts),page=await ctx.newPage();page.setDefaultTimeout(12000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await seedSave(page,save);await page.goto(`${base}/?intro=0&speed=quick`);await page.locator('[data-home="resume"]').click();
  const handoff=page.locator('[data-handoff]');if(await handoff.isVisible())await handoff.click();
  await page.locator('.prompt.choice.seat-pick.docked').waitFor();await page.locator('.app.game:not([data-animating])').waitFor();await page.waitForTimeout(450);
  if(await page.locator('.lt-wheel .gift-card[data-gift="move"]').count())throw Error('Move menu still obstructs wheel');
  await page.getByRole('button',{name:'Stay put',exact:true}).waitFor();
- if(outcome==='stay'){
-  await page.getByRole('button',{name:'Stay put',exact:true}).click();
+ if(outcome!=='move'){
+  if(outcome==='escape')await page.keyboard.press('Escape');
+  else await page.getByRole('button',{name:'Stay put',exact:true}).click();
   await page.waitForFunction(()=>{const x=JSON.parse(localStorage.getItem('patrons.v4.local')).state;return x.slots['0-0']===0&&x.pending?.kind==='place';});
   const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('patrons.v4.local')).state);
   if(after.players[0].res.gold!==0||after.cards[uid].usedRound===2)throw Error('Stay put changed reward/used state');
@@ -40,10 +41,12 @@ for(const outcome of ['move','stay']){
    if(!/round II|round III/.test(await card.innerText()))throw Error('Destination card hides effect');
    const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('patrons.v4.local')).state);
    if(before.slots['0-1']!==undefined||before.players[0].res.gold!==0)throw Error('First tap moved before inspection');
+   await page.waitForTimeout(250);
    await page.screenshot({path:`${out}/${tag}-inspect.png`});
    await page.getByRole('button',{name:'Move here',exact:true}).click();
   }else{
    await dest.hover();await page.locator('[data-space-card="0-1"]').waitFor();
+   await page.waitForTimeout(250);
    await page.screenshot({path:`${out}/${tag}-inspect.png`});await dest.click();
   }
   await page.waitForFunction(()=>{const x=JSON.parse(localStorage.getItem('patrons.v4.local')).state;return x.slots['0-1']===0&&x.slots['0-0']===undefined&&x.players[0].res.gold===4;});
