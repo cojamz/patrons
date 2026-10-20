@@ -35,3 +35,6 @@ Status is evidence-based. Public verification is recorded in eval/red-members-v0
 | 24 | Implement all six new Magenta actions; each grants1 Magenta, theft keeps colors | Shipped v0.8.8 | Root +3 helper lanes |88 focused checks; all14 public desktop/phone action scenes +2 scoring scenes; copies/resume/protection/rounding | Full balance pass and new deck remain open |
 | 25 | Bodyguard: Rivals can’t steal from you | Shipped v0.8.8 | Root | Resources/member/ransom protections checked; half-stack excludes guarded40gold rival | Cost unchanged |
 | 26 | General steals split across rivals; doubling/+1 once to overall total | Shipped v0.8.8 | Root + checks/UI | Split multi-victim/color regression; one-resource picks under doubling; no repeated grants on reload | Half-pile is explicitly one stack |
+
+| 27 | Straggler selection blocks wheel; action names do not explain destinations; cannot inspect/choose | Shipped v0.8.9 | Root | Compact docked prompt; full hover/tap action inspection, Move here;24 focused checks/build and6 public desktop/phone move/stay/escape flows | No redesign of other choice types |
+| 28 | Greatest Hits appears wrong | Withdrawn by Cory | Root | User had Agents; own actions protected from copying as designed; investigation stopped | No Green change |

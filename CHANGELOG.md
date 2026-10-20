@@ -1,8 +1,8 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.8, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.9, published 2026-10-19. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.9 — 2026-10-19 — unreleased
+## v0.8.9 — 2026-10-19 — shipped (source eab7757, main d657180)
 
 - Straggler destinations stay visible and can be inspected before moving.
 

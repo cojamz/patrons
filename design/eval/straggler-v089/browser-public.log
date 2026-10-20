@@ -1,0 +1,6 @@
+desktop-move: wheel clear; inspected actual action; exact minion/resource/used state.
+desktop-stay: wheel clear; inspected actual action; exact minion/resource/used state.
+desktop-escape: wheel clear; inspected actual action; exact minion/resource/used state.
+phone-move: wheel clear; inspected actual action; exact minion/resource/used state.
+phone-stay: wheel clear; inspected actual action; exact minion/resource/used state.
+phone-escape: wheel clear; inspected actual action; exact minion/resource/used state.

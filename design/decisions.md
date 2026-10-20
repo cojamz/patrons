@@ -972,3 +972,8 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - 2026-10-19 (Cory): implement the six agreed Magenta actions. Working protection theft is1×round; ransom ceiling5, payment its total cost. Stolen resources retain colors; each action grants1 Magenta. Bodyguard now says “Rivals can’t steal from you,” protecting both resources and members. General steals split freely among rivals; doubling/+1 apply once to total, not per victim. Half-pile remains one rival stack.
 
 - 2026-10-19 shipped v0.8.8: checked source68c9bf0fad95358c558d2ffd3312dfd92ce6c4bc, Pages mainf366272. New Magenta actions/theft rules and Bodyguard live;88 focused checks, all14 actual public action scenes and2 scoring scenes passed. Magenta deck/color redesign and broader motion/phone label work remain open.
+
+- 2026-10-19 (Cory): Straggler selection blocks actions and names do not explain destinations; clarified could not inspect/choose. Replace obstructing menu with direct wheel selection and full action inspection; phone confirm after inspection, Stay put/Escape retained. Fix moved lastSlot bookkeeping.
+- 2026-10-19 (Cory): Greatest Hits report withdrawn after noticing Agents. Existing rule correctly blocks copying your own protected actions too; no Greatest Hits change. Investigation stopped immediately.
+
+- 2026-10-19 shippedv0.8.9 Straggler selection: sourceeab7757cab1bff5150e4e4514dd9a136e011a80c, Pages maind657180.24 focused checks/build +6 public desktop/phone move/stay/escape flows pass. Greatest Hits unchanged because Agents explained report.

@@ -1,3 +1,10 @@
+## Shipped — v0.8.9, October 19
+
+- [x] Straggler chooser no longer blocks wheel destinations; action inspection via hover/phone tap, Move here confirmation; optional keyboard list shows full effects.
+- [x] Stay put/Escape preserved; actual last minion and destination action/reward/used state checked; relocated lastSlot bookkeeping updated.
+- [x] Exact24checks/build plus6 actual public desktop/phone scenarios pass; sourceeab7757, maind657180. Evidence: eval/straggler-v089/.
+- [x] Greatest Hits report retracted: Agents correctly prevents copying your own protected actions. No Green fix required.
+
 ## Shipped — v0.8.8, October 19
 
 - [x] All six Magenta actions, inherent1 Magenta, original theft colors, free multi-rival splitting and once-total modifiers.

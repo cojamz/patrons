@@ -1,7 +1,17 @@
 {
-  "live": "v0.8.8 \u2014 new Magenta actions + Bodyguard",
-  "liveCommit": "68c9bf0fad95358c558d2ffd3312dfd92ce6c4bc",
+  "live": "v0.8.9 \u2014 Straggler selection",
+  "liveCommit": "eab7757cab1bff5150e4e4514dd9a136e011a80c",
   "work": [
+    {
+      "id": "straggler-selection",
+      "name": "Straggler destinations",
+      "owner": "Root",
+      "status": "Shipped",
+      "label": "Live",
+      "scope": "Wheel unobstructed; hover/tap action details; phone Move here; Stay put/Escape",
+      "evidence": "24 focused checks and production build; six public desktop/phone flows",
+      "next": "Cory playtest"
+    },
     {
       "id": "magenta-actions",
       "name": "Six Magenta actions",
@@ -33,7 +43,7 @@
       "next": "General motion, precise wheel labels/phone crowding, round summary; migrate historical test expectations."
     }
   ],
-  "releaseSummary": "v0.8.8 live \u00b7 Six Magenta actions \u00b7 Original colors \u00b7 Full Bodyguard",
+  "releaseSummary": "v0.8.9 live \u00b7 Clear Straggler destinations \u00b7 Inspect before moving",
   "upNext": [
     {
       "source": "Cory / design",
@@ -49,5 +59,5 @@
     }
   ],
   "batchStatus": "Shipped \u2014 ready to test",
-  "batchNote": "88 focused checks; actual public desktop/phone actions and scoring verified"
+  "batchNote": "24 focused checks/build; six actual public desktop/phone flows verified"
 }

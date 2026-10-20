@@ -1,5 +1,5 @@
 # Current work — October 19
 
-Public v0.8.8 /68c9bf0fad95358c558d2ffd3312dfd92ce6c4bc (Pages main f366272): new Magenta actions, original-color/splittable theft and full Bodyguard protection live. Served source and all14 public action scenes plus2 scoring scenes verified on desktop/phone.88 focused checks and production build passed. No active helpers/browsers/owned previews.
+Public **v0.8.9** /eab7757cab1bff5150e4e4514dd9a136e011a80c (Pages main d657180): Straggler unobstructed selection and inspect-before-move live.24 focused checks/build and6 actual public desktop/phone flows pass. No active helper/browser/owned preview.
 
-Next: Cory playtest; Magenta member deck and replacement color/name. Existing general motion, wheel wording/phone label crowding, round-summary and legacy test migration backlog remains open. Spec: spheres/magenta-redesign-2026-10-19.md; evidence: eval/magenta-v088/verification.md. Root completed integration after helper edits; no unfinished agent lane to wait on.
+Greatest Hits report withdrawn after Cory noticed Agents; no Green change. Previous Magenta action batch retained. Next: Cory playtest; existing motion/phone wording/round summary, legacy test migration and Magenta member/color work remain open. Evidence: eval/straggler-v089/verification.md.

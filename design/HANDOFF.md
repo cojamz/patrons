@@ -1,3 +1,12 @@
+# Current handoff — v0.8.9, October 19
+
+- Public https://cojamz.github.io/patrons/play/: **v0.8.9**, source `eab7757cab1bff5150e4e4514dd9a136e011a80c`, Pages main `d657180`. Served source/HTML verified; six actual public desktop/phone flows PASS.
+- Straggler selection no longer overlays the wheel. Compact header/Stay put; hover inspects actual action, phone first tap pins full action card and Move here confirms. Optional keyboard list includes actual rule text; Escape stays put unless a hover/dialog needs closing first. No change to Green copy selection behavior.
+- User clarified the reported Straggler failure was inability to inspect/choose destinations, not an observed missed engine reward. Verified the actual last minion moves, previous slot frees, destination action pays exactly once, card spends only on move; Stay put/Escape retain minion/resources/unspent card. Updated lastSlot after relocation for correct source/joined bookkeeping. Updated one unrelated old test’s Gather expectation; no Freelancer runtime change.
+- Exact immutable source:24 focused engine/UI checks, production build,6 desktop/phone move/Stay put/Escape scenes PASS; public rerun same6 PASS. Real action text/+4gold checked, first phone tap leaves state unchanged until confirmation; no obstructing chooser or JS/overflow errors. Evidence: eval/straggler-v089/verification.md. No full-game/whole-suite/performance verdict.
+- Greatest Hits report WITHDRAWN: Cory noticed Agents. Protection correctly blocks own copies as well as rivals. Investigation interrupted immediately; no Greatest Hits/Green changes.
+- No active helper, browser or owned preview. Docs/backlog/board current. Prior v0.8.8 Magenta actions/Bodyguard retained; full general motion/precise wheel-text/phone crowding and legacy test migration remain open. New Magenta deck/color/name remain design work. Stayv0.8.x.
+
 # Current handoff — v0.8.8, October 19
 
 - Public https://cojamz.github.io/patrons/play/: **v0.8.8**, checked source `68c9bf0fad95358c558d2ffd3312dfd92ce6c4bc`, Pages main `f366272`. Publisher verified stamp/HTML;14 actual public desktop/phone action scenes and2 public scoring scenes PASS.
