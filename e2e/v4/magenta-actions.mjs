@@ -86,7 +86,9 @@ function fixture(name) {
   }
   return { name, save: { config: { seats, speed: 'quick' }, state: initial, undo: null, savedAt: Date.now() }, action: `slot:${key(action)}`, picks, placed, expected };
 }
-const names = ['scaling-resume', 'occupied', 'safe', 'half-small', 'half-large', 'ransom', 'heist'];
+const names = ['scaling-resume', 'occupied', 'safe', 'half-small', 'half-large', 'ransom', 'heist']
+  .filter(name => !process.env.V4_SCENES || process.env.V4_SCENES.split(',').includes(name));
+assert(names.length, 'V4_SCENES did not match a known scene');
 if (process.argv.includes('--fixtures-only')) {
   for (const name of names) { fixture(name); console.log(`${name}: independent transfer/bonus/protection assertions pass.`); }
   process.exit(0);

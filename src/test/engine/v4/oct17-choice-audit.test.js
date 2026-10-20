@@ -11,15 +11,15 @@ import { quadrant } from '../../../engine/v4/content/index.js';
 
 const rich = { gold: 30, red: 30, purple: 30, green: 30 };
 describe('October 17 reported choices', () => {
-  it('Shake Down artwork and real member targets agree at the 4-cost limit', () => {
-    const restore = pinCosts({ 'red.twins': [2, 2], 'red.intern': [4, 2] });
+  it('Shake Down artwork and real member targets agree at the 5-cost limit', () => {
+    const restore = pinCosts({ 'red.twins': [2, 3], 'red.intern': [4, 2] });
     try {
       const s = take(sceneQ({ quadrants: ['gold', 'red', 'thieves', 'green'], round: 2,
         members: [[], ['red.twins', 'red.intern']] }), 'thieves.ransom');
       const action = quadrant('thieves').actions.find(a => a.key === 'ransom');
       const printed = Number(stripFor('thieves', action).flat().find(x => x.startsWith('tag:≤')).slice(5));
       const legal = s.pending.options.map(o => o.value);
-      expect(printed).toBe(4);
+      expect(printed).toBe(5);
       expect(legal).toContain(uidOf(s, 'red.twins', 1));
       expect(legal).not.toContain(uidOf(s, 'red.intern', 1));
       expect(legal.every(uid => { const d = cardDef(s, uid); return d.s + d.w <= printed; })).toBe(true);
@@ -112,11 +112,12 @@ describe('October 17 reported choices', () => {
     expect(s.pending.player).toBe(0);
     expect(s.pending.options.map(o => o.id).sort()).toEqual(['take:1:gold', 'take:1:red']);
     const next = move(s, 'take:1:gold');
-    expect(next.players[0].res.magenta).toBe(1);
+    expect(next.players[0].res.gold).toBe(1);
+    expect(next.players[0].res.magenta).toBe(0);
     expect(next.players[1].res.gold).toBe(0);
     expect(next.players[1].res.red).toBe(4);
     expect(next.players[2].res.green).toBe(3);
-    expect(next.log.some(l => l.includes('Cutpurse stole 1 (1 gold from P2), now magenta'))).toBe(true);
+    expect(next.log.some(l => l.includes('Cutpurse stole 1 (1 gold from P2)'))).toBe(true);
   });
 
 });

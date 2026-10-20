@@ -102,7 +102,7 @@ const P = {
     tipoff: { verb: 'Steal 1 per magenta action', second: 'already holding a minion', note: '+1 magenta' },
     hideout: r => ({ verb: `Steal ${r}; safe from steals`, second: 'this round', note: '+1 magenta' }),
     rob: { verb: 'Steal half a rival’s pile', second: 'one color; round down', note: '+1 magenta' },
-    ransom: { verb: 'A rival pays a member’s cost, or loses it', second: 'a member costing 5 or less', note: '+1 magenta' },
+    ransom: { verb: 'Rival pays or loses member', second: 'pay its cost; member ≤5', note: '+1 magenta' },
     heist: { verb: 'Take a rival’s member', note: '+1 magenta' },
   },
   trading: {

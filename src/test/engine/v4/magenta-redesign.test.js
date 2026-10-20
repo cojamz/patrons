@@ -69,6 +69,15 @@ describe('Magenta redesign edge cases', () => {
     expect(loaded.players[0].res).toMatchObject({ magenta: 1, gold: 2, red: 1 });
     expect(loaded.players[0].bonus).toBe(3);
   });
+  it('Help Yourself calculates doubling before its follower reward changes a fewest-followers tie', () => {
+    let s = table(Q, { round: 1, res: [{}, { gold: 4 }], members: [['thieves.desperado']], bonus: [0, 1], shop });
+    s = take(s, 'thieves.pickpocket');
+    expect(s.pending.count.left).toBe(2);
+    expect(s.players[0].bonus).toBe(0);
+    s = move(move(s, 'take:1:gold'), 'take:1:gold');
+    expect(s.players[0].bonus).toBe(1);
+    expect(s.players[0].res).toMatchObject({ gold: 2, magenta: 1 });
+  });
   it('half-stack theft allows a smaller chosen color and excludes singletons and protected rivals', () => {
     let s = table(Q, { round: 2, n: 3, res: [{}, { gold: 9, red: 5 }, { gold: 12, red: 1 }], members: [[], [], ['thieves.watchdog']], shop });
     s = take(s, 'thieves.rob');

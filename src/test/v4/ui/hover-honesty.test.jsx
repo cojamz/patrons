@@ -20,8 +20,8 @@ describe('hover honesty (live panel r1)', () => {
   it('Help Yourself doubled by Desperado: the Why names Desperado', () => {
     const s = sceneQ({ quadrants: T, round: 3, n: 3, res: [{}, { gold: 5, red: 4 }, { blue: 3 }], bonus: [0, 3, 3], members: [['thieves.desperado'], [], []] });
     const { pv, y } = words(s, 'Help Yourself');
-    expect(y.text).toBe('+8 magenta');
-    expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (4 → 8)');
+    expect(y.text).toBe('+1 magenta, +3 followers; steal 6 in colors you pick');
+    expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (3 → 6)');
   });
 
   it('Collect Debts with Sticky Fingers: the Why names it, and a rival it can rob reads now and after, never a gift', () => {
@@ -50,23 +50,25 @@ describe('hover honesty (live panel r1)', () => {
     }
   });
 
-  it('Redistribute in round III with Desperado takes 2 from each rival, and the Why says Desperado doubled it', () => {
+  it('Redistribute doubles its occupied-action total once, with fresh rival choices', () => {
     const s = sceneQ({ quadrants: T, round: 3, n: 3, res: [{}, { gold: 5 }, { red: 4 }], bonus: [0, 3, 3], members: [['thieves.desperado'], [], []] });
+    s.slots['2-0'] = 1; s.slots['2-2'] = 2;
     const { pv, y } = words(s, 'Redistribute');
-    expect(y.text).toBe('+4 magenta');
+    expect(y.text).toBe('+1 magenta; steal 4 in colors you pick');
     expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (2 → 4)');
   });
 
-  it('Redistribute when you hold the most still previews and steals from each rival', () => {
+  it('Redistribute can choose poorer rivals for its occupied-action total', () => {
     const s = sceneQ({ quadrants: T, round: 1, n: 3, res: [{ gold: 5 }, { gold: 1 }, { red: 1 }], bonus: [5, 0, 0] });
-    expect(words(s, 'Redistribute').y.text).toBe('+2 magenta');
+    s.slots['2-0'] = 1; s.slots['2-2'] = 2;
+    expect(words(s, 'Redistribute').y.text).toBe('+1 gold, +1 red, +1 magenta');
     let t = take(s, 'thieves.tipoff');
     for (let k = 0; k < 8 && t.pending?.kind === 'choose'; k++) {
       const option = t.pending.options.find(o => o.kind === 'take');
       if (!option) break;
       t = applyMove(t, { player: t.pending.player, option: option.id });
     }
-    expect(t.players[0].res.magenta - s.players[0].res.magenta).toBe(2);
+    expect(t.players[0].res.magenta - s.players[0].res.magenta).toBe(1);
     expect(t.players[1].res.gold).toBe(0);
     expect(t.players[2].res.red).toBe(0);
   });

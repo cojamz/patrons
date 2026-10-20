@@ -22,7 +22,7 @@ describe('Magenta action wording and one-stack theft', () => {
     const occupied = panelText('thieves', { key: 'tipoff' });
     expect(`${occupied.verb} ${occupied.second}`).toBe('Steal 1 per magenta action already holding a minion');
     expect(occupied.note).toBe('+1 magenta');
-    expect(panelText('thieves', { key: 'ransom' }, 2).second).toBe('a member costing 5 or less');
+    expect(panelText('thieves', { key: 'ransom' }, 2).second).toBe('pay its cost; member ≤5');
     expect(panelText('thieves', { key: 'rob' }, 2).second).toBe('one color; round down');
     expect(pipEffect('thieves', { key: 'rob' }, 2)).toBe('steal half a one-color pile');
   });
