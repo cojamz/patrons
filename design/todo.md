@@ -50,13 +50,13 @@ Laptop UI clarity
 - [ ] Round-end and end-game screens: appear quickly (A4 result-card lag), readable layout, hover for detail, no totals counting up for nothing.
 - [ ] End-game scoring shows where every point comes from: each member pops "+x" for its people, then its granted followers (Cory, 10-15).
 - [ ] Seat pass: minions, follower number, currencies, and rivals' points and engine readable at a glance. Show Cory 2 mockups first.
-- [ ] Laptop fits: at 900×600 a rival's stacks crowd its total; at 1270×700 the strip squeezes "since your last turn" and holds one line under a turn card.
-- [ ] Large screens (≥1600px): side columns scale with the wheel (zoom proposal, design-pod queue.md).
+- [x] Laptop fits: at 900×600 a rival's stacks crowd its total; at 1270×700 the strip squeezes "since your last turn" and holds one line under a turn card. (Lane 8, 10-21: chairs run full height beside the narrow shop strip; 1270×700 story holds two turns. turnstory t2/t9 fail before and after, pre-existing.)
+- [x] Large screens (≥1600px): side columns scale with the wheel (zoom proposal, design-pod queue.md). (Lane 8, 10-21: zoom steps 1.25/1.4/1.6/2; hover cards stay 1×.)
 - [ ] Contest arc: follower mark distinct (a sheen). (Centering on the text line done 10-21.)
-- [ ] Silver, white and colorless members look alike at card size.
+- [x] Silver, white and colorless members look alike at card size. (Lane 8, 10-21: own card grounds.)
 - [x] Trade Seeds: its "Swap nothing" button reads as part of the caption; set it apart (yellow.js:221).
-- [ ] Wording pass: member texts much tighter, steal text, wheel text (rule-style.md). Before/after sheet for Cory.
-- [ ] First play: tutorial wording for lit/dim/dark spaces and the inner II/III rings.
+- [ ] Wording pass: member texts much tighter, steal text, wheel text (rule-style.md). Before/after sheet for Cory. (Sheet ready for his yes/no: /mnt/project-files/overnight/lane8/wording-sheet.md; nothing shipped.)
+- [x] First play: tutorial wording for lit/dim/dark spaces and the inner II/III rings. (Lane 8, 10-21: your first placement each round names the open rings.)
 - [x] "Safe this round" as a small shield mark (CultSeat.jsx:224).
 - [x] Stacks of 20+ resources: size tiers that keep exact counts (H14). The pay sheet's coin stacks pack past six.
 - [x] A clear purchase signal: the bought tier or card pulses before its reward flies (H13).
