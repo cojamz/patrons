@@ -20,11 +20,11 @@ describe('the curated member decks', () => {
     expect(createGame({ seats: seats(2) }).rules.cull).toBe(true);
   });
 
-  it('Green deals 12 members, other spheres 10, neutral 5; no cut card is dealt', () => {
+  it('Green and Red deal 12 members, other spheres 10, neutral 5; no cut card is dealt', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });
       const dealt = Object.values(s.cards).map(c => c.def);
-      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(q === 'echo' ? 12 : 10);
+      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(q === 'echo' || q === 'red' ? 12 : 10);
       expect(dealt.filter(d => CUT.has(d))).toEqual([]);
       expect(dealt.filter(d => d.startsWith('benders.')).length).toBe(5);
     }

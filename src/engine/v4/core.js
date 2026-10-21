@@ -1037,6 +1037,8 @@ function swapMembers(state, actor, aUid, bUid) {
   a.list.splice(a.index, 1); b.list.splice(b.index, 1);
   a.list.splice(a.index, 0, bUid); b.list.splice(b.index, 0, aUid);
   for (const [uid, from, to] of [[aUid, a, b], [bUid, b, a]]) if (from.owner) memberMoved(state, actor, uid, from.owner, to.owner || null, movedHooks);
+  // A member swapped into the shop goes back wiped clean, as a released one does (no old owner's copy or flags).
+  for (const [uid, from, to] of [[aUid, a, b], [bUid, b, a]]) if (from.owner && !to.owner) state.cards[uid] = { uid, def: state.cards[uid].def };
   for (const [uid, dest] of [[bUid, a], [aUid, b]]) if (dest.owner) {
     if (dest.owner === actor) memberAcquired(state, actor, uid);
     memberJoined(state, dest.owner, uid);
