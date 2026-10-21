@@ -93,3 +93,4 @@ Tooling
 - Art: pixel animations "good enough for now"; living cults (idle loops, reactions); a higher-fidelity Extra Hand sample (H20).
 - Cory's ideas, read when that color's rework starts: members worth 2 followers (Snob); deeper sphere themes, members themed with their sphere; Silver II–III reward getting rid of silver members; White rework, fewer followers as catch-up; Patron Saint 1 follower per silver member in play; every sphere has a member end-game and a resource end-game card; a reverse sphere (actions gain followers, members cost followers); a defensive blocking sphere.
 - Cory's layout and motion ideas: log in the middle of the player boxes; remote mouse pointers (H05); flights from a resource bank (H12).
+- Low priority (Cory, Oct 21): balance-test Crunch Time at 3 turns against 2.
