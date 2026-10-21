@@ -352,7 +352,6 @@ const market = {
         if (n === 2) { ctx.gain(owner, B, 1); ctx.log(`${owner.name}'s Doorman: +1 blue.`); }
       },
     }),
-    m('shoppers', 'Window Shoppers', 1, 1, 'Worth 2 followers.', { f: 2, n: 2, vanilla: true }),
     // Cory's, Oct 21: "one recruit, refresh the shop. all the members"; prices are sim starting points
     m('makeover', 'Makeover', 1, 1, 'When recruited: send the whole shop to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx) { sweepRow(ctx); },
@@ -376,13 +375,6 @@ const market = {
       },
     }),
     // Claude's fill-in counters, Oct 21, not approved
-    // Cory, Oct 21: no ("they can just pay such that they don't lose blue")
-    m('jealousex', 'Jealous Ex', 1, 2, 'Whenever a rival recruits a blue member, they lose 1 blue.', {
-      onAnyRecruit(ctx, owner, card, by, rec) {
-        if (by === owner || !isBlue(ctx.defOf(rec)) || !(by.res[B] > 0)) return;
-        by.res[B] -= 1; ctx.log(`${owner.name}'s Jealous Ex: ${by.name} loses 1 blue.`);
-      },
-    }),
   ],
 };
 

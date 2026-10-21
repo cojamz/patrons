@@ -102,6 +102,8 @@ describe('render budget', () => {
     const perStep = [];
     for (let k = 0; k < 6 && state.pending && state.pending.player !== 0; k++) {
       const next = applyMove(state, chooseBotMove(state, () => 0.3));
+      // a round's end turns the whole board over (new wheel, new shop): not a step inside a rival's turn
+      if (next.round !== state.round || next.pending?.kind === 'roundEnd') break;
       R.reset();
       act(() => { session.publish(next); });
       // the table holds each step for its chain (director.js): wait until it shows this one, then a beat more

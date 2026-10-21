@@ -35,7 +35,10 @@ export function oracleWinners(state, qid) {
   const rows = state.players.map(p => ({ id: p.id, c: oracleCount(state, qid, p) }));
   if (rows.some(r => r.c == null)) return null;
   const best = Math.max(...rows.map(r => r.c));
-  return best > 0 ? rows.filter(r => r.c === best).map(r => r.id).sort((a, b) => a - b) : [];
+  const top = best > 0 ? rows.filter(r => r.c === best).map(r => r.id).sort((a, b) => a - b) : [];
+  // Tiebreaker (guest, Cory 2026-10-21): "Ties you're in go to you alone" when exactly one tied player holds one
+  const tb = top.filter(id => state.players[id].members.some(u => [state.cards[u].def, state.cards[u].copy].includes('benders.tiebreaker')));
+  return top.length > 1 && tb.length === 1 ? tb : top;
 }
 
 const SEAT_NAMES = ['Ana', 'Bo', 'Cy', 'Di'];
