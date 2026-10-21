@@ -110,7 +110,7 @@ describe('v4 game screen', () => {
     expect(container.querySelector('[data-prompt]').textContent).toMatch(/is placing a minion/);
   });
 
-  it('buy: affordable shop cards, follower buys and Done, no buy match the options; the rest are inert', () => {
+  it('buy: affordable shop cards, follower buys and Done, no recruit match the options; the rest are inert', () => {
     let state = advanceTo(createGame({ seats, seed: 5 }), 'buy');
     const me = state.pending.player;
     const session = fakeSession(state, [me]);
@@ -122,7 +122,7 @@ describe('v4 game screen', () => {
       expect(!!el).toBe(legal.has(`card:${uid}`));
     }
     // passing (Cory, 2026-10-16: "pass is hard to find"): "Done, no buy" stands in the shop column, under the follower buys
-    const pass = within(container.querySelector('.lt-shop .lt-rates')).getByRole('button', { name: 'Done, no buy' });
+    const pass = within(container.querySelector('.lt-shop .lt-rates')).getByRole('button', { name: 'Done, no recruit' });
     fireEvent.click(pass);
     expect(session.submit).toHaveBeenCalledWith({ player: me, option: 'pass' });
   });

@@ -310,9 +310,9 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
       return ways.length === 1 ? <>Pays <CostDots parts={Object.entries(ways[0]).filter(([, n]) => n > 0).map(([color, n]) => ({ color, n }))} /></> : 'Choose how to pay';
     }
     if (viewer && held < t.cost) return `You hold ${held}: ${t.cost - held} short.`;
-    if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You buy after you place a minion, in your buy step.';
+    if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You buy followers after you place a minion.';
     if (tierLeft(state, t) <= 0) return 'None left.';
-    return 'You buy in your buy step, after placing a minion.';
+    return 'You buy followers after placing a minion.';
   };
   return (
     <div className="lt-rates" role="group" aria-label="Buy followers">
@@ -332,7 +332,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
             <Tip key={state.moves} className="fb-tip" beside=".lt-rate" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
               <div className="pop-card rate-card" data-rate-card={t.key}>
                 <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
-                <span>Any colors, any mix, as your one buy.</span>
+                <span>Any colors, any mix, as your one recruit.</span>
                 {/* one buy per placement (the rule): "as many as you like" beside "your one buy" read as a contradiction (w4 A#25) */}
                 {t.limited && <span>{left} left at this table (2 per player at the start).</span>}
                 <small data-pays={opt ? 'tier' : undefined}>{when(t, opt)}</small>
@@ -348,7 +348,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
           step starts or ends (it's hidden then, and on phones folded away). */}
       <button type="button" className={`btn lt-done${done ? '' : ' idle'}`} data-option={done ? 'pass' : undefined} data-done-no-buy={done ? 'on' : 'off'}
         disabled={!done} tabIndex={done ? 0 : -1} aria-hidden={done ? undefined : 'true'}
-        title={done ? (state.pending?.afterPurchase ? 'Finish your turn' : 'End your turn without recruiting or buying') : undefined} onClick={() => done && onPick('pass')}>{state.pending?.afterPurchase ? 'End turn' : 'Done, no buy'}</button>
+        title={done ? (state.pending?.afterPurchase ? 'Finish your turn' : 'End your turn without recruiting or buying') : undefined} onClick={() => done && onPick('pass')}>{state.pending?.afterPurchase ? 'End turn' : 'Done, no recruit'}</button>
     </div>
   );
 }

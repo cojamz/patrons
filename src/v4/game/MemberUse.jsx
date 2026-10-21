@@ -35,7 +35,7 @@ export function UseButton({ use, uid, name, onPick, big = false }) {
  * testers, 2026-10-15: Translator's pill under it said nothing and its hover opened nothing).
  */
 export function MemberSwitch({ name, on, option = null, onPick = null, about = null }) {
-  const say = `${name} is ${on ? 'on' : 'off'}.${option ? ` Click to switch it ${on ? 'off' : 'on'}.` : ' You can switch it when you buy.'}`;
+  const say = `${name} is ${on ? 'on' : 'off'}.${option ? ` Click to switch it ${on ? 'off' : 'on'}.` : ' You can switch it when you recruit.'}`;
   const face = <><i className="mu-track" aria-hidden="true"><i className="mu-knob" /></i><span className="mu-sw-word">{on ? 'on' : 'off'}</span></>;
   const sw = option && onPick
     ? <button type="button" role="switch" aria-checked={on} className={`mu-switch${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} data-option={option.id} title={about == null ? say : undefined} aria-label={say}

@@ -28,7 +28,7 @@ const LINES = {
   purple: 'Extra turns: place again right away.',
   silver: 'Big gains for you, a little for everyone else.',
   yellow: 'Gathers every color, and scores full sets.',
-  market: 'Bends the shop: recruit outside your buy, pay half, refresh the row.',
+  market: 'Bends the shop: extra recruits, pay half, refresh the row.',
   thieves: 'Steals resources and members from rivals.',
   trading: 'Sells followers for white, and buys them back cheap.',
   echo: 'Copies spaces: a rival’s, or your own again.',

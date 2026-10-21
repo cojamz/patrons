@@ -164,7 +164,7 @@ const market = {
       },
     },
     {
-      key: 'showroom', ring: 1, name: 'Peek', text: 'Look at the top 4 of the pile and put them back in any order. This turn you may recruit one of them as your buy. +1 blue.', copyDoesIt: true,
+      key: 'showroom', ring: 1, name: 'Peek', text: 'Look at the top 4 of the pile and put them back in any order. This turn your recruit may be one of them. +1 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 1 + Math.max(0, ...ctx.state.pile.slice(0, 4).map(u => ctx.card(u)).filter(c => ctx.payChoices(p, c.uid, {}).length).map(botWorth)) * 0.3,
       resolve(ctx, p) {
         ctx.gain(p, B, 1, { fromAction: true });
@@ -175,9 +175,9 @@ const market = {
       },
     },
     {
-      key: 'clearance', ring: 2, name: 'Buy Twice', text: 'Buy twice this turn. +1 blue.', copyDoesIt: true,
+      key: 'clearance', ring: 2, name: 'Buy Twice', text: 'Recruit twice this turn. +1 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 1 + Math.min(10, Math.max(0, totalRes(p) - 2)) * 0.4,
-      resolve(ctx, p) { ctx.gain(p, B, 1, { fromAction: true }); extraBuys(ctx, p, 1); ctx.log(`${p.name} buys twice this turn.`); },
+      resolve(ctx, p) { ctx.gain(p, B, 1, { fromAction: true }); extraBuys(ctx, p, 1); ctx.log(`${p.name} recruits twice this turn.`); },
     },
     {
       key: 'pricecheck', ring: 2, name: 'Bury', text: 'Send a shop member to the bottom of the pile, then refill. Gain blue equal to half its cost, rounded down. +1 blue.', copyDoesIt: true,
@@ -192,9 +192,9 @@ const market = {
       },
     },
     {
-      key: 'spree', ring: 3, name: 'Spree', text: 'Buy 3 times this turn. +3 blue.', copyDoesIt: true,
+      key: 'spree', ring: 3, name: 'Spree', text: 'Recruit 3 times this turn. +3 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 3 + Math.min(10, Math.max(0, totalRes(p) - 3)) * 0.8,
-      resolve(ctx, p) { ctx.gain(p, B, 3, { fromAction: true }); extraBuys(ctx, p, 2); ctx.log(`${p.name} goes on a spree: 3 buys this turn.`); },
+      resolve(ctx, p) { ctx.gain(p, B, 3, { fromAction: true }); extraBuys(ctx, p, 2); ctx.log(`${p.name} goes on a spree: 3 recruits this turn.`); },
     },
   ],
 

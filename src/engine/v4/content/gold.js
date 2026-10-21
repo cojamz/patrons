@@ -74,7 +74,7 @@ export default {
   },
 
   members: [
-    m('midas', 'Midas', 2, 2, 'Gains from actions come as gold. Switch it on or off when you buy.', {
+    m('midas', 'Midas', 2, 2, 'Gains from actions come as gold. Switch it on or off when you recruit.', {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
       // a conversion: runs before every other gain modifier, so "gold gains" sees the converted gain

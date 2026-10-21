@@ -150,14 +150,14 @@ export function promptFor(state, mine) {
         // (w3: the game-feel tester thought Big Spender fired twice)
         // once the member glows on your seat with its own "Skip, keep it for later" (memberUse.js memberAsks), the line
         // under the headline would say it a second time: it goes, all but another way out
-        ? (pend.extra ? { who: p, text: `Buy again (${extraBuyer(state, p) || 'a second buy'})`, keepCase: false,
+        ? (pend.extra ? { who: p, text: `Recruit again (${extraBuyer(state, p) || 'a second recruit'})`, keepCase: false,
           ...([...memberAsks(state, p.id).values()].some(a => a.kind === 'again')
             ? (use ? { sub: `…or use ${use}` } : {})
             : { sub: `Once a round: pass and ${extraBuyer(state, p) || 'it'} keeps it for a later turn${use ? `; or use ${use}` : ''}` }) }
           // one line for one step (blind testers, 2026-10-15: headline, a subtitle saying it again and the step tabs):
           // the headline says it all; the line under it only when there's another way out
           : { who: p, text: 'Recruit a member or buy followers', ...(use ? { sub: `…or use ${use}` } : {}) })
-        : { who: p, text: pend.extra ? `${name} buys again (${extraBuyer(state, p) || 'a second buy'})` : `${name} is shopping` };
+        : { who: p, text: pend.extra ? `${name} recruits again (${extraBuyer(state, p) || 'a second recruit'})` : `${name} is shopping` };
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };
     case 'choose': {

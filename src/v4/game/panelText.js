@@ -45,10 +45,10 @@ const P = {
   market: {
     bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: grows(r) }),
     restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
-    showroom: { verb: 'Peek at the top 4', second: 'reorder; may buy one', note: '+1 blue' },
-    clearance: { verb: 'Buy twice', second: 'this turn', note: '+1 blue' },
+    showroom: { verb: 'Peek at the top 4', second: 'reorder; may recruit one', note: '+1 blue' },
+    clearance: { verb: 'Recruit twice', second: 'this turn', note: '+1 blue' },
     pricecheck: { verb: 'Bury a shop member', second: 'gain half its cost in blue', note: '+1 blue' },
-    spree: { verb: 'Buy 3 times', second: 'this turn', note: '+3 blue' },
+    spree: { verb: 'Recruit 3 times', second: 'this turn', note: '+3 blue' },
   },
   purple: {
     hourly: r => ({ main: `+${3 + r} purple`, second: grows(r) }),

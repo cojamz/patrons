@@ -549,7 +549,7 @@ function PromptActions({ optionFor, onPick, afterPurchase = false }) {
   const pass = optionFor('pass');
   return (
     <span className="pr-actions">
-      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title={afterPurchase ? "Finish your turn" : "End your turn without recruiting or buying"} data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>{afterPurchase ? 'End turn' : 'Done, no buy'}</button>
+      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title={afterPurchase ? "Finish your turn" : "End your turn without recruiting or buying"} data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>{afterPurchase ? 'End turn' : 'Done, no recruit'}</button>
     </span>
   );
 }
@@ -1167,7 +1167,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
-      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers, or end your turn: Done, no buy' : 'You can’t take this space right now';
+      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers, or end your turn: Done, no recruit' : 'You can’t take this space right now';
     } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a minion first, then recruit' : 'Place a minion first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
     // what you have beside what it needs (w4 skeptic #20: "Need 8, you have 4")
@@ -1397,9 +1397,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     lockUntil.current = 0;
     lastPick.current = { id: null, t: 0, x: null, y: null };
     lastDown.current = { x: null, y: null, t: 0 };
-    say(k === 'buy' ? 'Buy undone — choose again' : k === 'setup' ? 'Pick undone — pick again' : 'Placement undone — place again', 'info', 1800);
+    say(k === 'buy' ? 'Recruit undone — choose again' : k === 'setup' ? 'Pick undone — pick again' : 'Placement undone — place again', 'info', 1800);
   };
-  const undoWord = undoKind === 'buy' ? 'buy' : undoKind === 'setup' ? 'pick' : 'placement';
+  const undoWord = undoKind === 'buy' ? 'recruit' : undoKind === 'setup' ? 'pick' : 'placement';
 
   // The lamp follows the decision; the furniture never moves (fixed regions, phase only re-lights them).
   const memberPicking = mine && !needHandoff && pend?.kind === 'choose' && pend.options.some(o => o.kind === 'card');
@@ -1440,7 +1440,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : <span className="say" data-prompt tabIndex={-1} />}
           {buyingNow && !wide && <PromptActions optionFor={live} onPick={onPick} afterPurchase={pend.afterPurchase} />}
           <span className="undo-slot">
-            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your draft pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your draft pick' : 'Take back your minion until you recruit or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
         </div>
         <div className="bar-row steps-row">

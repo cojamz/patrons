@@ -54,7 +54,7 @@ const stillMine = (ctx, p, w) => (w.joined ? (ctx.state.squats?.[w.key] || []).i
 
 const members = [
   m('squatter', 'Squatter', 'thieves', 5, 2, 'Once per round: place a minion on a space a rival already took.', { squat: true }),
-  m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per round: buy twice in one turn.', { extraBuy: true }),
+  m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per round: recruit twice in one turn.', { extraBuy: true }),
   m('freelancer', 'Freelancer', 'yellow', 3, 3, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
   m('extrahand', 'Extra Hand', 'purple', 6, 3, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
