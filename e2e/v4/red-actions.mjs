@@ -32,7 +32,7 @@ function fixture() {
     if (i < 0) throw new Error(`Missing deck member ${def}`);
     (where === 'shop' ? s.shop : s.players[where].members).push(s.pile.splice(i, 1)[0]);
   };
-  for (const [who, def] of [[0, 'red.bigfamily'], [1, 'gold.prospector'], [2, 'echo.evergreen'], ['shop', 'red.host'], ['shop', 'red.twins'], ['shop', 'echo.muse'], ['shop', 'gold.banker']]) deal(def, who);
+  for (const [who, def] of [[0, 'red.recruiter'], [1, 'gold.prospector'], [2, 'echo.evergreen'], ['shop', 'red.host'], ['shop', 'red.twins'], ['shop', 'echo.muse'], ['shop', 'gold.banker']]) deal(def, who);
   return s;
 }
 function scenario(name) {
@@ -54,7 +54,7 @@ function scenario(name) {
     if (!copy) throw new Error('Encore does not offer rival Promote');
     picks.push(copy.id); expected = move(expected, copy.id);
   }
-  const a = name === 'rival-swap' ? uid(expected, 'gold.prospector', 1) : uid(expected, 'red.bigfamily', 0);
+  const a = name === 'rival-swap' ? uid(expected, 'gold.prospector', 1) : uid(expected, 'red.recruiter', 0);
   const b = name === 'rival-swap' ? uid(expected, 'echo.evergreen', 2) : uid(expected, 'red.host', 'shop');
   const pair = `trade:${a}:${b}`;
   if (!expected.pending.options.some(o => o.id === pair)) throw new Error(`${name}: missing swap ${pair}`);

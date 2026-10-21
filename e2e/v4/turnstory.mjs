@@ -20,7 +20,8 @@ import { browserPath } from './lib/browser.mjs';
 //  (t8) a space or member named in the strip, or in the log, opens its card on the board's hover layer (the space card,
 //       the member card), beside the name, whole on screen, above the log drawer.
 //  (t9) Cory, 2026-10-16: "pass is hard to find" and "the turn-order rail is confusing". In your buy step a "Done, no
-//       buy" button stands in the shop column directly under the follower buys, visible and enabled, and it's the one
+//       buy" button stands in the shop column directly under the shop's grid of buys (follower buys and members, one
+//       grid since v0.8.2), visible and enabled, and it's the one
 //       way to pass on a laptop (no second Pass in the headline); the rail is gone (nothing drawn in the chairs' gutter);
 //       during a rival's turn no rival seat reads anything (Cory, 2026-10-15: "next" dropped), and
 //       your seat reads "your turn next" / "your turn in N", N the turns before yours in the engine's queue.
@@ -227,7 +228,9 @@ try {
   {
     const d = await page.evaluate(() => {
       const l = document.querySelector('.lt'), btn = document.querySelector('.lt-shop .lt-rates [data-option="pass"]');
-      const grid = document.querySelector('.lt-shop .lt-rates-grid'), shop = document.querySelector('.lt-shop');
+      // the follower buys are cards in the one shop grid since v0.8.2 (Cory, 2026-10-19), so "under the buys" is under
+      // that grid: the follower buys head it and the members follow
+      const grid = document.querySelector('.lt-shop .lt-cards'), shop = document.querySelector('.lt-shop');
       const vis = e => { if (!e) return false; const c = getComputedStyle(e); const b = e.getBoundingClientRect(); return c.display !== 'none' && c.visibility !== 'hidden' && +c.opacity > 0.5 && b.width > 0 && b.height > 0; };
       const r = e => (e ? e.getBoundingClientRect().toJSON() : null);
       return { phase: `${l?.dataset.phase}:${l?.dataset.yours}`, vis: vis(btn), text: btn?.textContent.trim() || null, disabled: !!btn?.disabled, btn: r(btn), grid: r(grid), shop: r(shop),
@@ -239,7 +242,7 @@ try {
       if (!d.vis || d.disabled || d.text !== 'Done, no buy') fail(`(t9) no visible, enabled "Done, no buy" in the shop column in your buy step: ${JSON.stringify(d)}`, 't9');
       else {
         const under = d.btn.top >= d.grid.bottom - 1 && d.btn.top - d.grid.bottom <= 16 && d.btn.left >= d.grid.left - 1 && d.btn.right <= d.grid.right + 1;
-        if (!under) fail(`(t9) "Done, no buy" isn't directly under the follower buys: button ${JSON.stringify(d.btn)}, buys ${JSON.stringify(d.grid)}`, 't9');
+        if (!under) fail(`(t9) "Done, no buy" isn't directly under the shop's buys: button ${JSON.stringify(d.btn)}, buys ${JSON.stringify(d.grid)}`, 't9');
         if (d.btn.bottom > 700 || d.btn.left < d.shop.left - 1 || d.btn.right > d.shop.right + 1) fail(`(t9) "Done, no buy" sits outside the shop column or off screen: ${JSON.stringify(d.btn)} in ${JSON.stringify(d.shop)}`, 't9');
       }
       if (d.others) fail(`(t9) ${d.others} other pass button(s) on screen beside the shop's "Done, no buy"`, 't9');

@@ -3,11 +3,12 @@
 // Heiress), one worth nothing now (Safecracker: no rival holds 2 magenta), one already used (Speculator), switches
 // (Midas on, Translator off), reactions (Prospector, Impressionist), a game-end scorer
 // (Tycoon) and one the engine would refuse now (Pawnbroker: nothing to sell). P2 holds gold, so Lottery Winner has
-// something to win, and Stunt Double (a use still in hand); P3 lies low (safe this round); P4 holds 13
+// something to win, and Raider (a use still in hand; Stunt Double's copy is a recruit trigger now, not a use);
+// P3 lies low (safe this round), and only P3; P4 holds 13
 // members (its card scrolls inside the window). The round-start snapshot
 // is saved too. No round-start income, so the seat has room for six figures.
 import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/index.js';
-import { resume, memberWeight, shopSize } from '../../../src/engine/v4/core.js';
+import { resume, memberWeight, cardDef, shopSize } from '../../../src/engine/v4/core.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
 import { buildStamp } from './stamp.mjs';
 import { freeCard } from './deal.mjs';
@@ -16,7 +17,7 @@ const SEATS = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { nam
 export const QUADS = ['gold', 'echo', 'trading', 'thieves'];
 export const HAND = ['gold.jackpot', 'gold.speculator', 'gold.midas', 'gold.prospector', 'gold.tycoon',
   'echo.translator', 'echo.tuningfork', 'trading.heiress', 'trading.pawnbroker', 'thieves.bigscore'];
-export const RIVAL = ['gold.thrift', 'echo.hourglass'];
+export const RIVAL = ['gold.thrift', 'trading.raider'];
 const play = (s, move) => { const next = applyMove(s, move); next.history = [...(s.history || []), [move.player, move.option]]; return next; };
 
 export function membersSave(from = 1) {
@@ -41,7 +42,8 @@ export function membersSave(from = 1) {
     const theirs = RIVAL.map(id => give(1, id));
     // P4 holds a crowd (w2a #16: a 12+ member seat card ran off the screen): the first 13 one-body members left in
     // the pile (a printed group like Mob counts several members, which would blur cards against members here)
-    for (const u of s.pile.filter(x => !s.players.some(p => p.members.includes(x)) && memberWeight(s, x) === 1).slice(0, 13)) give(3, s.cards[u].def);
+    // (no steal guard such as Bodyguard either: it would make P4 "safe this round" too, and only P3 lies low)
+    for (const u of s.pile.filter(x => !s.players.some(p => p.members.includes(x)) && memberWeight(s, x) === 1 && !cardDef(s, x).guardSteal).slice(0, 13)) give(3, s.cards[u].def);
     while (s.shop.length < shopSize(s) && s.pile.length) s.shop.push(s.pile.shift());
     s.cards[uids[HAND.indexOf('gold.midas')]].on = true;
     s.cards[uids[HAND.indexOf('echo.translator')]].on = false;
@@ -55,11 +57,13 @@ export function membersSave(from = 1) {
     const roundStart = s;
     for (let n = 0; n < 400 && !(s.pending && s.pending.player === 0 && s.pending.kind === 'place'); n++) s = play(s, chooseBotMove(s, rand));
     if (!(s.round === 1 && s.pending && s.pending.player === 0 && s.pending.kind === 'place')) continue;
-    // P2 still holds the 7 gold Lottery Winner wins (the gate's "Use: +7"), and Stunt Double still in hand (m9): a bot
-    // that spent gold or used Stunt Double before P1's turn moves to the next seed (the cull's deck made seed 1 do both)
-    const stunt = s.players[1].members.find(u => s.cards[u].def === 'echo.hourglass');
-    if (s.players[1].res.gold !== 7 || stunt == null || s.cards[stunt].used) continue;
+    // P2 still holds the 7 gold Lottery Winner wins (the gate's "Use: +7"), and Raider still in hand (m9): a bot
+    // that spent gold or used Raider before P1's turn moves to the next seed
+    const raider = s.players[1].members.find(u => s.cards[u].def === 'trading.raider');
+    if (s.players[1].res.gold !== 7 || raider == null || s.cards[raider].used) continue;
     if (s.players.slice(1).some(o => (o.res.magenta || 0) >= 2) || s.players[2].hideout !== 1) continue;
+    // only P3 lies low (a bot that took a hideout of its own on the way would light a second "safe this round")
+    if ([0, 1, 3].some(k => s.players[k].hideout)) continue;
     return {
       seed, uids: Object.fromEntries(HAND.map((id, k) => [id, uids[k]])),
       save: { config: { seats: SEATS.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal', quadrants: QUADS }, state: s, undo: null, savedAt: Date.now() },

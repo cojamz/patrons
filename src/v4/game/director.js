@@ -15,12 +15,12 @@
 // and timers (no React state). A click or Space skips the rest of a chain to its end (skipChain). Every duration comes
 // from src/v4/motion.js at the viewer's speed. A state without an effect stream (an online guest, a catch-up) falls
 // back to gains.js, which reads the change of state.
-import { MO, flightMs, nextBeatAt, speedScale } from '../motion.js';
+import { MO, flightMs, nextBeatAt, speedScale, streamGap } from '../motion.js';
 import { playerColor } from '../format.js';
 import { play } from '../sound.js';
 import { gainsBetween } from './gains.js';
 import { seatOrder } from './seats.js';
-import { stageRect, stageShow, stageRelease, stageClear, stageBusy, subscribeStage } from './stage.js';
+import { stageRect, hubRect, stageShow, stageRelease, stageClear, stageBusy, subscribeStage, stageItems, stagePlace, spaceRect, bubbleRect, stageLeave, HUB_MEMBER } from './stage.js';
 import { panelText } from './panelText.js';
 import { quadrant, defById } from '../../engine/v4/index.js';
 import { seatEmoji } from '../format.js';
@@ -104,6 +104,19 @@ function movesOf(cause, effects, owner) {
   return { pays, takes, gives, gains, cards, fols };
 }
 
+/** How long the wheel's minions take to fly home at a new round (all at once, a stagger apart; flight.js). */
+function homeMs(before) {
+  const n = Object.keys(before.slots || {}).length + Object.values(before.squats || {}).reduce((k, l) => k + l.length, 0);
+  return n ? MO.minionsHome + (n - 1) * MO.minionsHomeStagger : 0;
+}
+/** A new round's own effects: the closing move's stream past the scored board's (the board carries the stream up to
+ *  its scoring, format.js scoringSnapshot), from the round's start on. Null when they can't be told apart. */
+function roundSegment(before, state) {
+  if (!Array.isArray(state.effects) || !Array.isArray(before.effects) || before.effects.length > state.effects.length) return null;
+  const seg = state.effects.slice(before.effects.length);
+  return seg.length && seg[0].cause && seg[0].cause.kind === 'round' ? seg : null;
+}
+
 /**
  * What a change of state plays: { atoms: [{ at, op, ... }], total } in ms at the viewer's speed. Pure when `measure`
  * is left out (the table's pacing calls it before anything is on screen); playChain passes the screen's distances.
@@ -150,11 +163,18 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     }
     pulsed = key;
   }
-  if (!sameRound && before.round >= 1) { at(0, { op: 'home' }); t = ends(MO.minionsHome); }
+  // a new round opens as separate beats (Cory's A5 remainder): the minions home, then each seat's round-start income,
+  // then the members that do something else at round start (steals, set-asides), then the shop's fresh row
+  const homeAt = roundAdvance ? homeMs(before) : 0;
+  if (!sameRound && before.round >= 1) { at(0, { op: 'home' }); t = ends(roundAdvance ? homeAt : MO.minionsHome); }
 
   // 2. the cascade (a rival's run of follower buys, folded by foldBuys, carries the whole run's effects)
-  const fx = Array.isArray(state.effects) && state.moves === before.moves + 1 ? state.effects
-    : state.foldedFrom === before.moves && Array.isArray(state.foldedEffects) ? state.foldedEffects : fromGains(before, state);
+  let fx = Array.isArray(state.effects) && state.moves === before.moves + 1 ? state.effects
+    : state.foldedFrom === before.moves && Array.isArray(state.foldedEffects) ? state.foldedEffects
+      : roundAdvance && roundSegment(before, state) || fromGains(before, state);
+  // a new round's round-start income plays as its own beat (below), before the hooks
+  const income = roundAdvance ? fx.filter(e => e && e.cause && e.cause.kind === 'member' && e.type === 'gain' && e.to && e.to.kind === 'stack' && e.to.pid === e.cause.pid) : [];
+  if (income.length) fx = fx.filter(e => !income.includes(e));
   const beats = [];
   for (const e of fx) {
     if (!e || !e.cause || ['contest', 'final'].includes(e.cause.kind)) continue; // the Reckoning flies prizes and end-game member bonuses
@@ -175,13 +195,49 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     const from = opt.r && ['space', 'bank'].includes(from0.kind) ? rim : onStage(from0);
     const to = opt.r && opt.pay ? rim : onStage(to0);
     // 1–3 single pieces, 60ms apart (Steady); 4 or more one bundle carrying its count
-    const d = opt.dur || fly(from, to);
-    hand = Math.max(hand, (n >= 4 ? time : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
-    if (n >= 4) { at(time, { op: 'piece', from, to, n, bundle: true, dur: d, ...opt }); at(time + d, { op: 'land', to, by: n, bundle: true, ...opt }); return { last: time, d }; }
+    // (Cory, 2026-10-18: "steals: make what's being stolen clear at once") a take of 2 or more leaves as one handful
+    const bundle = n >= 4 || (opt.take && n >= 2);
+    // a bundle of resources is a stream: every coin flies, the last one `tail` behind the first (Cory: "12 coins animate
+    // as 12, any count"); its count rolls as they land. Followers keep their bundle. A stream's coins travel quicker by
+    // its tail (a rush of coins, never under 0.6 of the flight), so its last coin lands when the old single bundle did
+    // and the turn's pace stays where it was (pacing.test.js)
+    const tail = bundle && !opt.fol ? Math.round((n - 1) * streamGap(n)) : 0;
+    const d = opt.dur || Math.max(Math.round(fly(from, to) * 0.6), fly(from, to) - tail);
+    hand = Math.max(hand, (bundle ? time + tail : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
+    if (bundle) { at(time, { op: 'piece', from, to, n, bundle: true, dur: d, ...(tail ? { stream: tail } : {}), ...opt }); at(time + d, { op: 'land', to, by: n, bundle: true, ...(tail ? { stream: tail } : {}), ...opt }); return { last: time + tail, d }; }
     for (let k = 0; k < n; k++) { at(time + k * MO.pieceStagger, { op: 'piece', from, to, n: 1, dur: d, ...opt }); at(time + k * MO.pieceStagger + d, { op: 'land', to, by: 1, ...opt }); }
     return { last: time + (n - 1) * MO.pieceStagger, d };
   };
   const after = r => r.last + nextBeatAt(r.d); // when the next beat may start
+  if (income.length) {
+    // the beat starts as the last minion is two-thirds of the way home
+    const t0 = Math.max(0, homeAt - MO.minionsHome / 3);
+    const seats = seatOrder(state).filter((id, i, a) => a.indexOf(id) === i);
+    let k = 0;
+    for (const pid of seats) {
+      const mine0 = income.filter(e => e.cause.pid === pid);
+      if (!mine0.length) continue;
+      const st = t0 + k++ * MO.incomeSeat;
+      const byMember = new Map();
+      for (const e of mine0) { const key = e.cause.uid ?? e.cause.def; if (!byMember.has(key)) byMember.set(key, []); byMember.get(key).push(e); }
+      for (const list of byMember.values()) {
+        const c = list[0].cause, src = { kind: 'member', pid, uid: c.uid, def: c.def };
+        at(st, { op: 'hop', place: src });
+        // one group per color, net of every gain this member made (a +2 and a +1 of gold fly as one +3)
+        const net = new Map();
+        for (const e of list) net.set(e.what.r, (net.get(e.what.r) || 0) + e.what.n);
+        let o = st + MO.lead;
+        for (const [r, n] of net) {
+          if (!n) continue;
+          const r0 = pieces(o, src, { kind: 'stack', pid, r }, n, { r, owner: pid });
+          ends(r0.last + r0.d);
+          o += MO.fan;
+        }
+      }
+    }
+    // the next beat (round-start hooks, then the shop) waits for the income to land: each its own beat
+    t = Math.max(t, end);
+  }
   // what a member's beat did, in plain words with the real numbers, for its caption on the stage (Cory, 22:48: "a member
   // will fly out and something will happen, but its not clear why without hover"): "you +1 gold", "+2 blue from P3"
   const who = id => (mine.length === 1 && mine[0] === id ? 'you' : state.players[id] ? state.players[id].name : '');
@@ -265,10 +321,15 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       let paid = s + MO.cardLift + hold;
       // The card stays lifted until its payment has landed on the wheel.
       for (const [i, p] of m.pays.entries()) { const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, { kind: 'shop', index: c.index, uid: c.uid }, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid }); paid = Math.max(paid, r.last + r.d); }
-      const d = fly(card.from, card.to);
-      hand = Math.max(hand, paid + d * (2 / 3));
-      at(s, { op: 'card', uid: card.what.uid, to: card.to.pid, from: card.from, lift: MO.cardLift, wait: paid - s - MO.cardLift, dur: d });
-      const landed = ends(paid + d);
+      // (Cory, 2026-10-18) the recruit flies to the middle, shows what it does, then goes to its buyer: it leaves its
+      // slot as it lifts, its coins drop meanwhile, it holds at the hub a beat to be read, then flies to the crowd
+      const hubW = { kind: 'stage', slot: 'hub' };
+      const toHub = fly(card.from, hubW), fromHub = fly(hubW, card.to);
+      const atHub = s + MO.cardLift + hold + toHub;
+      const leave = Math.max(atHub + MO.recruitShow, paid);
+      hand = Math.max(hand, leave + fromHub * (2 / 3));
+      at(s, { op: 'card', uid: card.what.uid, to: card.to.pid, from: card.from, lift: MO.cardLift + hold, toHub, show: leave - atHub, fromHub });
+      const landed = ends(leave + fromHub);
       if (card.what.worth > 0) {
         // its worth: follower marks hop from the new chip to the count, which ticks as they land
         const r = pieces(landed, { kind: 'crowd', pid: card.to.pid, uid: card.what.uid }, { kind: 'count', pid: card.to.pid }, card.what.worth, { fol: true, dur: MO.worthHop });
@@ -307,7 +368,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       if (!list.length) return;
       let lastR = null, o = cur;
       for (const g of list) {
-        if (g.tug) at(o, { op: 'tug', place: g.from, toward: g.to, dur: MO.tug });
+        if (g.tug) at(o, { op: 'tug', place: g.from, toward: g.to, dur: MO.tug, n: g.n, r: g.opt && g.opt.r, owner: g.from.pid });
         const r = pieces(o + (g.tug ? MO.tug : 0), g.from, g.to, g.n, g.opt);
         ends(r.last + r.d);
         if (!lastR || r.last + r.d > lastR.last + lastR.d) lastR = r;
@@ -351,8 +412,24 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
         cur += MO.tug + via + nextBeatAt(d);
         continue;
       }
+      // a swap with the shop (Promote, Demote, Even Swap): the member leaving for the shop and the one coming off it
+      // cross at once, each on its own arc; the card going back shows in the shop when it lands (the animation audit:
+      // it was dealt off the deck before it left its cult, and the two moved one after the other)
+      const isShop = w => w && w.kind === 'shop';
+      const partner = card.type === 'release' && isShop(card.to) ? m.cards.find(o => o !== card && !moved.has(o) && o.type === 'recruit' && isShop(o.from))
+        : card.type === 'recruit' && isShop(card.from) ? m.cards.find(o => o !== card && !moved.has(o) && o.type === 'release' && isShop(o.to)) : null;
+      if (partner) {
+        moved.add(partner);
+        const [out, inn] = card.type === 'release' ? [card, partner] : [partner, card];
+        const dOut = fly(out.from, out.to), dIn = fly(inn.from, inn.to);
+        at(cur, { op: 'chip', from: out.from, to: out.to, uid: out.what.uid, path: 'arc', dur: dOut, hide: true });
+        at(cur, { op: 'chip', from: inn.from, to: { ...inn.to, uid: inn.what.uid }, uid: inn.what.uid, path: 'cross', dur: dIn, hide: true });
+        ends(cur + Math.max(dOut, dIn));
+        cur += nextBeatAt(Math.max(dOut, dIn));
+        continue;
+      }
       const d = fly(card.from, card.to);
-      at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: card.type === 'release' ? 'drop' : 'arc', dur: d });
+      at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: card.type === 'release' ? 'drop' : 'arc', dur: d, hide: card.type === 'recruit' || (card.type === 'release' && isShop(card.to)) });
       ends(cur + d);
       cur += nextBeatAt(d);
     }
@@ -365,12 +442,22 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   // players' picks (the first placements follow the last one)
   if (setup && end) { hand = end; if (turnPasses) end += MO.setupRest; }
   if (resort) { at(end, { op: 'sort' }); end += MO.sortBeat; hand = end; }
+  // the round's fresh shop is the round start's last beat: the old row goes to the deck once everything else has landed
+  // (or, with nothing else, as the minions come home), and the new row deals after it (useDeal; playChain delays it)
+  const outs = roundAdvance ? shopOuts(before, state).length : 0;
+  if (outs) {
+    const refillAt = t;
+    at(refillAt, { op: 'refill', n: outs });
+    end = Math.max(end, refillAt + rowOutMs(outs) + MO.deal + (outs - 1) * MO.dealStagger);
+    hand = end;
+  }
   // Dense chains tighten proportionally, preserving cause order within the existing turn-wait budget.
   // a longer plan plays faster to fit, never faster than Quick (half)
   const cap = Math.round(2400 * speedScale());
-  if (end > cap) {
+  // (a new round's opening isn't a turn: its beats keep their own pace, outside the turn's cap)
+  if (end > cap && !roundAdvance) {
     const k = Math.max(0.5, cap / end);
-    for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); }
+    for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); for (const f of ['toHub', 'show', 'fromHub']) if (a[f]) a[f] = Math.round(a[f] * k); }
     end *= k; hand *= k; t *= k;
   }
   return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? Math.round(end + (turnPasses ? MO.breath : 0)) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses };
@@ -568,6 +655,7 @@ export function skipChain() {
   const q = chain.queue;
   chain.queue = [];
   for (const item of q) item.fn(true);
+  clearRewind();
   landAll();
   clearFlights(0);
   chain.flying = 0;
@@ -650,6 +738,9 @@ const folHtml = (root, pid) => { const g = root.querySelector(`.lt-cult-seat[dat
 // moves (hotseat region gate); only the thing inside it does
 const region = el => !!(el && el.matches && el.matches('[data-region]'));
 const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly && !region(el)) relative(el, [{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.4 }, { transform: 'translateY(0) scale(1)' }], { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' }); };
+/** How a bundle flies: resources as a stream of every coin (the piece's `stream`: the last coin this far behind the
+ *  first), followers as one mark with its fading echo. `k` scales the stream (the rewind plays at half time). */
+const bundleTrail = (a, k = 1) => (!a.bundle ? { trail: 0 } : a.stream && a.n > 1 ? { trail: a.n - 1, trailGap: (a.stream * k) / (a.n - 1), full: true } : { trail: 2, trailGap: MO.bundleTrail });
 const square = (r, size) => ({ left: r.left + r.width / 2 - size / 2, top: r.top + r.height / 2 - size / 2, width: size, height: size });
 const onFinish = (anim, fn) => {
   const epoch = chain.epoch || 0;
@@ -687,6 +778,117 @@ export function shopOuts(before, state) {
  *  last; the deal begins as the last is halfway there, so the deck is never still between the two). */
 export function rowOutMs(n) { return n > 0 ? Math.round(MO.shopSlide / 2 + (n - 1) * MO.rowOutStagger) : 0; }
 
+// the new row's deal animations at a new round (MemberDeck.jsx useDeal notes them; playChain times them)
+const roundDeals = [];
+/** useDeal's deal of a new round's row: `anim` (the picture flying off the deck), `hide` (the real card waiting). */
+export function noteRoundDeal(anim, hide) { if (anim && hide && anim.effect && hide.effect) roundDeals.push({ anim, hide }); }
+
+// ---------- undo (H24): the move's motion, backwards ----------
+// Undo restores the state at once (session/local.js); what moved plays back the way it came, at twice the speed: pieces
+// fly back to where they came from, your minion returns to its column, a bought card to its slot. Nothing counts, rings
+// or sounds again (the numbers are already the restored ones), and it never holds the table: no chain runs.
+const REWIND = 0.5;
+const rewind = { timers: [], anims: [] };
+/** Whether going from `before` to `state` takes a step back (an undo): the same round, fewer moves. */
+export const isUndo = (before, state) => !!before && !!state && before.round === state.round && typeof before.moves === 'number' && state.moves < before.moves;
+function clearRewind() {
+  rewind.timers.forEach(clearTimeout);
+  rewind.timers = [];
+  const a = rewind.anims;
+  rewind.anims = [];
+  for (const x of a) { try { x.finish(); } catch { /* gone */ } }
+}
+/** The rewind of a move's plan (`fwd`, as planChain made it from the restored state to the undone one): its pieces,
+ *  minions and bought cards, each reversed in time and direction, at REWIND of the time. Pure. */
+export function rewindPlan(fwd) {
+  const T = fwd.total || 0, atoms = [];
+  const back = (at, d) => Math.round(Math.max(0, T - at - d) * REWIND);
+  for (const a of fwd.atoms || []) {
+    if (a.op === 'piece') {
+      const d = a.dur || 0;
+      atoms.push({ op: 'piece', at: back(a.at + (a.stream || 0), d), dur: Math.max(1, Math.round(d * REWIND)), from: a.to, to: a.from, n: a.n, r: a.r, owner: a.owner, fol: !!a.fol, bundle: !!a.bundle, ...(a.stream ? { stream: a.stream } : {}) });
+    } else if (a.op === 'minion') {
+      atoms.push({ op: 'minion', at: back(a.at, a.dur || 0), dur: Math.max(1, Math.round((a.dur || 0) * REWIND)), pid: a.pid, key: a.key });
+    } else if (a.op === 'card') {
+      const whole = (a.lift || 0) + (a.toHub || 0) + (a.show || 0) + (a.fromHub || 0);
+      const d = Math.round(((a.toHub || 0) + (a.fromHub || 0)) * REWIND);
+      atoms.push({ op: 'card', at: back(a.at, whole), dur: Math.max(1, d), uid: a.uid, pid: a.to });
+    }
+  }
+  atoms.sort((x, y) => x.at - y.at);
+  const total = atoms.reduce((m, a) => Math.max(m, a.at + a.dur), 0);
+  return { atoms, total, handoff: 0, rewind: true };
+}
+function playRewind(root, before, state, mine) {
+  // undone during the move's own motion: that motion lands at once (silently), and the rewind starts from its end
+  if (chainRunning()) skipChain();
+  clearRewind();
+  const ctx = { state, before, snap: null, chips: null };
+  const where = w => (w && w.kind !== 'stage' ? placeEl(root, w, ctx) : null);
+  const measure = (a, b) => { const A = where(a), B = where(b); if (!A || !B) return TYPICAL; const ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect(); return Math.hypot(rb.left + rb.width / 2 - ra.left - ra.width / 2, rb.top + rb.height / 2 - ra.top - ra.height / 2); };
+  const plan = rewindPlan(planChain(state, before, { mine, measure }));
+  if (!plan.atoms.length || !motionOK()) return plan;
+  const keep = x => { if (x) rewind.anims.push(x); return x; }; // (flyPath tracks its own; the rest are tracked here)
+  const hideUntil = (el, ms) => { if (el && el.animate) keep(track(el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: ms + 30 }))); };
+  const run = a => {
+    switch (a.op) {
+      case 'piece': {
+        const A = where(a.from), B = where(a.to);
+        if (!A || !B) return;
+        const size = a.fol ? 18 : 16;
+        const pid = a.from.kind === 'stack' || a.from.kind === 'count' ? a.from.pid : a.to.pid;
+        const html = a.fol ? folHtml(root, pid) : dotHtml(root, a.r, a.owner ?? pid);
+        keep(flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'} rewind`, square(A.getBoundingClientRect(), size), square(B.getBoundingClientRect(), size), { path: 'arc', duration: a.dur, ...bundleTrail(a, REWIND), fade: true }));
+        return;
+      }
+      case 'minion': {
+        const slot = root.querySelector(`[data-slot="${a.key}"]`);
+        const col = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions [data-minion]`)];
+        const home = col[col.length - 1] || root.querySelector(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions`);
+        if (!slot || !home) return;
+        const F = (slot.querySelector('.base') || slot).getBoundingClientRect(), H = home.getBoundingClientRect();
+        const size = Math.max(16, H.width || 18);
+        const html = col.length ? home.innerHTML : `<i style="background:${playerColor(a.pid)}"></i>`;
+        if (col.length) hideUntil(home, a.dur);
+        keep(flyPath(html, 'worker-flight minion-flight rewind', square(F, size), square(H, size), { path: 'arc', duration: a.dur }));
+        return;
+      }
+      case 'card': {
+        const card = root.querySelector(`.lt-shop .card[data-uid="${a.uid}"], .shop .card[data-uid="${a.uid}"]`);
+        const crowd = placeEl(root, { kind: 'crowd', pid: a.pid }, ctx);
+        if (!card || !crowd || !card.animate) return;
+        const C = card.getBoundingClientRect(), W = crowd.getBoundingClientRect();
+        if (!C.width) return;
+        const g = document.createElement('div');
+        g.className = 'flight card-flight ghost-layer rewind';
+        g.dataset.born = String(Date.now());
+        g.innerHTML = card.outerHTML;
+        Object.assign(g.style, { left: `${C.left}px`, top: `${C.top}px`, width: `${C.width}px`, height: `${C.height}px` });
+        document.body.appendChild(g);
+        const dx = W.left + W.width / 2 - (C.left + C.width / 2), dy = W.top + W.height / 2 - (C.top + C.height / 2);
+        const bow = onScreenBow(W, C, Math.max(16, Math.min(70, Math.hypot(dx, dy) * 0.18)));
+        // from the buyer's crowd (small) back into its slot (full size): the forward flight, run backwards
+        const frames = arcFrames(-dx, -dy, bow, { s0: 0.3, s1: 1, ease: CARD_EASE }).map(f => ({ ...f, transform: f.transform.replace(/translate\(([-\d.]+)px,([-\d.]+)px\)/, (m, x, y) => `translate(${(dx + Number(x)).toFixed(1)}px,${(dy + Number(y)).toFixed(1)}px)`) }));
+        const anim = keep(track(g.animate(frames, { duration: a.dur, fill: 'forwards' })));
+        keep(track(g.animate([{ opacity: 0.5 }, { opacity: 1, offset: 0.4 }, { opacity: 1 }], { duration: a.dur, fill: 'forwards' })));
+        const done = () => g.remove();
+        anim.addEventListener('finish', done);
+        anim.addEventListener('cancel', done);
+        setTimeout(done, a.dur + 500);
+        hideUntil(card, a.dur);
+        return;
+      }
+      default:
+    }
+  };
+  for (const a of plan.atoms) {
+    // a card going back hides its slot from the start, so the row never shows it twice
+    if (a.op === 'card' && a.at > 0) { const card = root.querySelector(`.lt-shop .card[data-uid="${a.uid}"], .shop .card[data-uid="${a.uid}"]`); hideUntil(card, a.at); }
+    if (a.at <= 0) run(a); else rewind.timers.push(setTimeout(() => run(a), a.at));
+  }
+  return plan;
+}
+
 /** (kept for callers: a placed minion's slot is read when its chain plays) */
 export const noteTable = root => { void root; };
 
@@ -696,7 +898,12 @@ export const noteTable = root => { void root; };
  * A chain may start while the last one's tail is still landing (the same player's next step shows at its handoff).
  */
 export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [], chips = null } = {}) {
+  // the new row's deal, noted by useDeal in this same commit (it lays out first): this chain says when it starts
+  const deals = roundDeals.splice(0);
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
+  // an undo (H24): the table is already back; the move's own motion plays backwards over it, quickly, effects not again
+  if (isUndo(before, state)) return playRewind(root, before, state, mine);
+  clearRewind();
   const ctx = { state, before, snap, chips };
   if (chain.draining) cancelDrain(); // an externally delivered step adopts any explicit motion still finishing
   const chainId = (chain.n = (chain.n || 0) + 1);
@@ -734,6 +941,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   for (const a of plan.atoms) {
     if (a.op !== 'chip' || !a.hide) continue;
     const B = where(a.to);
+    // a member going back to the shop: its card there waits, unseen, until the member lands on it
+    if (a.to.kind === 'shop' && B && !B.rectOnly && B.animate && B.dataset && B.dataset.uid === String(a.uid)) { track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 })); continue; }
     if (B && !B.rectOnly && B.animate && B.dataset && B.dataset.uids === String(a.uid)) track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 }));
   }
   const firstLand = new Map();
@@ -766,8 +975,10 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
     if ((chain.epoch || 0) !== epoch) return; // the chain was skipped: its numbers are already final
     if (a.to.kind === 'stack' && !a.pay && B) {
       const h = holdOf(B, a.to.pid, a.to.r);
-      if (h) { if (a.bundle && !skip) h.roll(a.by ?? a.n, MO.roll); else h.step(a.by ?? a.n); }
-      if (a.bundle && !skip) setTimeout(() => release(B), MO.roll); else release(B);
+      // (a stream's count rolls while its coins land: over the stream, at least the usual roll)
+      const rollMs = Math.max(MO.roll, a.stream || 0);
+      if (h) { if (a.bundle && !skip) h.roll(a.by ?? a.n, rollMs); else h.step(a.by ?? a.n); }
+      if (a.bundle && !skip) setTimeout(() => release(B), rollMs); else release(B);
     }
     if (a.to.kind === 'count' && B && !B.rectOnly) { try { B.dispatchEvent(new CustomEvent('patrons:land')); } catch { /* old browser */ } }
     // the sound of it (sound.js): a coin for a resource gained, the little voice for followers joining
@@ -816,52 +1027,62 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
         }
         case 'hop': if (!skip) hopEl(where(a.place), MO.hop); return;
         case 'stage': if (!skip) stageOut(root, a, ctx, where, chainId, mine); return;
-        case 'tug': if (!skip) tug(where(a.place), where(a.toward), a.dur); return;
+        case 'tug': {
+          if (skip) return;
+          const el = where(a.place);
+          tug(el, where(a.toward), a.dur);
+          // what's taken says so on the victim's pile the moment it's taken: "−2 ●", gone as the handful lands
+          if (a.n && a.r) takeTag(el, a.n, dotHtml(root, a.r, a.owner));
+          return;
+        }
         case 'card': {
-          // the recruited card: a picture of it lifts in its old slot, takes its coins, then flies to its new chip
+          // the recruited card (Cory, 2026-10-18): a picture of it lifts in its old slot with the bought ring, then
+          // flies to the hub, where it opens as the member's card (who, what it does) and is read; then it flies on to
+          // its new chip in the buyer's crowd, which lands with its ring and sound
           const sn = snap && snap.get(a.uid);
           if (skip || !sn || !sn.rect) return;
           const g = document.createElement('div');
           g.className = 'flight card-flight ghost-layer';
           g.dataset.born = String(Date.now());
           g.innerHTML = sn.html;
-          Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px` });
+          Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px`, borderRadius: 'var(--corner, 8px)' });
           document.body.appendChild(g);
           if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
           const chip = root.querySelector(`.lt-seat[data-pid="${a.to}"] [data-uids~="${a.uid}"]`) || placeEl(root, { kind: 'crowd', pid: a.to }, ctx);
-          const B = chip ? chip.getBoundingClientRect() : sn.rect;
-          const dx = B.left + B.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = B.top + B.height / 2 - (sn.rect.top + sn.rect.height / 2);
-          const total = a.lift + a.wait + a.dur, k1 = a.lift / total, k2 = (a.lift + a.wait) / total;
-          const sc = B.width ? Math.max(0.2, Math.min(0.5, B.width / sn.rect.width)) : 0.3;
+          const hub = hubRect(HUB_MEMBER) || sn.rect;
+          const dx = hub.left + hub.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = hub.top + hub.height / 2 - (sn.rect.top + sn.rect.height / 2);
+          const total = a.lift + a.toHub, k1 = a.lift / total;
           chain.flying++;
-          // lift, hold while its coins drop in, then a true arc to the chip (grammar M7; sampled, so the path has no
-          // corner: the five-keyframe version turned at its top and changed speed there)
-          const bow = onScreenBow(sn.rect, B, Math.max(16, Math.min(70, Math.hypot(dx, dy) * 0.18)));
+          // lift, then a true arc to the hub, fading as the member's card opens out of it there
+          const bow = onScreenBow(sn.rect, hub, Math.max(16, Math.min(70, Math.hypot(dx, dy) * 0.18)));
           const anim = track(g.animate([
             { transform: 'translate(0px,0px) scale(1)', offset: 0, easing: 'ease-out' },
             { transform: 'translate(0px,-10px) scale(1.06)', offset: k1 },
-            ...arcFrames(dx, dy, bow, { from: k2, s0: 1.06, s1: sc, y0: -10, ease: CARD_EASE }),
+            ...arcFrames(dx, dy, bow, { from: k1, s0: 1.06, s1: 1.2, y0: -10, ease: CARD_EASE }),
           ], { duration: total, fill: 'forwards' }));
-          track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k2 + (1 - k2) * 0.88 }, { opacity: 0.2 }], { duration: total, fill: 'forwards' }));
-          // the bought card says so before it leaves (H13): a warm ring comes up as it lifts and holds while its coins
-          // drop in, then lets go as it flies; no time added to the chain
-          g.style.borderRadius = 'var(--corner, 8px)';
-          const k3 = Math.min(0.99, k2 + (1 - k2) * 0.25);
+          track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k1 + (1 - k1) * 0.55 }, { opacity: 0 }], { duration: total, fill: 'forwards' }));
+          // the bought card says so before it leaves (H13): a warm ring comes up as it lifts and lets go as it flies
           track(g.animate([
             { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 0 },
             { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', offset: k1 },
-            { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', offset: Math.max(k1, k2) },
-            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: k3 },
+            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: Math.min(0.99, k1 + (1 - k1) * 0.4) },
             { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 1 },
           ], { duration: total, fill: 'forwards' }));
           slideShop(root, snap);
-          if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total }));
-          onFinish(anim, () => {
-            if (anim.playState === 'finished') play('member');
-            g.remove();
-            chain.flying = Math.max(0, chain.flying - 1);
-            if (chip && chip.animate && chip.isConnected && !region(chip)) relative(chip, [{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' });
+          if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total + a.show + a.fromHub }));
+          const id = `recruit:${a.uid}`;
+          const ep = chain.epoch || 0;
+          // the member's card opens at the hub as the picture arrives
+          schedule(base + a.at + a.lift + Math.round(a.toHub * 0.45), sk => {
+            if (sk || (chain.epoch || 0) !== ep) return;
+            const look = memberLook(ctx.state, a.uid);
+            if (!look) return;
+            stageShow({ id, chain: chainId, kind: 'member', recruit: true, uid: a.uid, pid: a.to, size: HUB_MEMBER, at: hub, from: g.getBoundingClientRect(), homeEl: chip && !chip.rectOnly ? chip : null, dur: Math.round(a.toHub * 0.55), ...look, got: '',
+              onHome: () => { play('member'); if (chip && chip.animate && chip.isConnected && !region(chip)) relative(chip, [{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' }); } });
           });
+          // read, then on to the buyer
+          schedule(base + a.at + total + a.show, sk => { if (!sk) stageLeave(id, a.fromHub); });
+          onFinish(anim, () => { g.remove(); chain.flying = Math.max(0, chain.flying - 1); });
           return;
         }
         case 'chip': {
@@ -871,8 +1092,11 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           const A = was && a.from.kind === 'crowd' ? { getBoundingClientRect: () => was.rect } : where(a.from), B = where(a.to);
           if (!A || !B) return;
           chain.flying++;
-          let pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
-          const hub = a.via != null ? stageRect('card') : null;
+          // a member coming off the shop (a swap with the shop, a free recruit) flies as its portrait from the card it was
+          // (the animation audit: it flew as a blank square)
+          const fig = was && was.html ? was.html : a.from.kind === 'shop' ? shopFig(ctx.snap, a.uid) : '';
+          let pic = fig ? `<span class="piece-member-pic">${fig}</span>` : '<i class="piece-dot member"></i>';
+          const hub = a.via != null ? stageRect('hub') : null;
           // Both members meet side by side at the actual hub, then cross to their new seats.
           const R = hub ? { ...hub, left: hub.left + hub.width / 2 - 26 + (a.swap ? (a.via === 1 ? 34 : -34) : 0), top: hub.top + hub.height / 2 - 26, width: 52, height: 52 } : null;
           if (R) { let nm = ''; try { nm = defById(ctx.state.cards[a.uid].def).name; } catch { /* unnamed */ } if (nm) pic += `<b class="pm-name">${nm.replace(/[<&]/g, '')}</b>`; }
@@ -924,7 +1148,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           chain.flying++;
           // (the places were measured before the commit, or on first use: never a layout read per piece)
           const anim = flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'}${a.pay ? ' pay' : ''}`, square(rectOf(A), size), square(rectOf(B), size),
-            { path: a.pay ? 'drop' : a.take ? 'line' : 'arc', duration: a.dur, label: a.bundle ? `+${a.n}` : '', trail: a.bundle ? 2 : 0, trailGap: MO.bundleTrail, turnTo: a.turn ? dotHtml(root, a.turn, pid) : null, fade: true });
+            { path: a.pay ? 'drop' : a.take ? 'line' : 'arc', duration: a.dur, label: a.bundle ? `+${a.n}` : '', ...bundleTrail(a), turnTo: a.turn ? dotHtml(root, a.turn, pid) : null, fade: true });
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); land({ ...a, by: a.n }, B, false); });
           return;
         }
@@ -937,6 +1161,18 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // shrinking into the deck as it arrives; the new row deals off the top after it (dealAfter, useDeal). Bookkeeping: it
   // never holds the chain, and a skip lands it.
   const outs = snap ? shopOuts(before, state) : [];
+  // a new round's fresh row is its own last beat (planChain's refill): the old row leaves then, and the new deals after
+  const refill = plan.atoms.find(a => a.op === 'refill');
+  const refillOff = refill ? Math.max(0, base + refill.at - chain.clock) : 0;
+  for (const d of deals) {
+    try {
+      if (refillOff) {
+        d.anim.effect.updateTiming({ delay: (d.anim.effect.getTiming().delay || 0) + refillOff });
+        d.hide.effect.updateTiming({ duration: Number(d.hide.effect.getTiming().duration) + refillOff });
+      }
+      track(d.anim); track(d.hide); // a skip deals them at once
+    } catch { /* gone */ }
+  }
   if (outs.length) {
     const deckEl = root.querySelector('[data-deck] .back') || root.querySelector('[data-deck]');
     const D = deckEl ? deckEl.getBoundingClientRect() : null;
@@ -948,7 +1184,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       g.innerHTML = sn.html;
       Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px` });
       document.body.appendChild(g);
-      const delay = k * MO.rowOutStagger;
+      const delay = refillOff + k * MO.rowOutStagger;
       const frames = D && D.width
         ? (() => {
           const dx = D.left + D.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = D.top + D.height / 2 - (sn.rect.top + sn.rect.height / 2);
@@ -978,6 +1214,22 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   return plan;
 }
 
+/** "−2 ●" over a victim's pile as it's taken from (stage.css .take-tag). */
+function takeTag(el, n, dot) {
+  if (!el || el.rectOnly || typeof document === 'undefined') return;
+  const r = el.getBoundingClientRect();
+  if (!r.width) return;
+  const b = document.createElement('b');
+  b.className = 'take-tag ghost-layer';
+  b.dataset.born = String(Date.now());
+  b.innerHTML = `−${n}${dot}`;
+  Object.assign(b.style, { left: `${Math.round(r.left + r.width / 2)}px`, top: `${Math.round(r.top - 2)}px` });
+  const life = MO.tug + flightMs(300) + MO.settle;
+  b.style.setProperty('--tl', `${life}ms`);
+  document.body.appendChild(b);
+  setTimeout(() => b.remove(), life + 50);
+}
+
 /** A space or member flies out of its place onto the stage (stage.js; ActionStage.jsx draws it). */
 // a seat's follower change, lingering under its count
 const lingering = new Map();
@@ -998,6 +1250,26 @@ function linger(el, n) {
   lingering.set(el, { b, n, t });
 }
 
+/** How a member shows on the stage: its name, picture, sphere colour and rule. */
+/** A shop card's portrait as it stood (the shop snapshot's picture), for a member flying off the shop as itself. */
+function shopFig(snap, uid) {
+  const sn = snap && snap.get(uid);
+  if (!sn || !sn.html || typeof document === 'undefined') return '';
+  const t = document.createElement('template');
+  t.innerHTML = sn.html;
+  const fig = t.content.querySelector('.art svg, .art img');
+  return fig ? fig.outerHTML : '';
+}
+function memberLook(st, uid, def0 = null) {
+  const card = st.cards && st.cards[uid];
+  let d = null;
+  try { d = defById(card ? card.def : def0); } catch { d = null; }
+  if (!d) return null;
+  let sphere = 'colorless', color = 'var(--colorless)';
+  try { if (st.quadrants.includes(d.quadrant)) { sphere = quadrant(d.quadrant).resource; color = `var(--${d.quadrant})`; } } catch { /* colorless */ }
+  return { name: d.name, sprite: [d.id, spriteId(d.name)], sphere, color, text: d.text || '' };
+}
+
 function stageOut(root, a, ctx, where, chainId, mine = []) {
   const st = ctx.state;
   const el = where(a.place);
@@ -1011,7 +1283,7 @@ function stageOut(root, a, ctx, where, chainId, mine = []) {
     const pid = a.pid ?? (st.slots && st.slots[key]);
     const p = st.players[pid];
     const slot = a.slot || 'card';
-    const at = stageRect(slot);
+    const at = stagePlace(slot, spaceRect(from, slot));
     if (!at) return;
     const slotEl = root.querySelector(`[data-slot="${key}"]`);
     const who = !p ? '' : mine.length === 1 && mine[0] === pid ? 'You' : p.name;
@@ -1025,11 +1297,15 @@ function stageOut(root, a, ctx, where, chainId, mine = []) {
   let d = null;
   try { d = defById(card ? card.def : def); } catch { d = null; }
   if (!d) return;
-  const at = stageRect(a.spot);
+  // its bubble pops out of the right side of its seat, level with its chip (Cory, 2026-10-18)
+  const seatEl = root.querySelector(`.lt-cult-seat[data-seat="${pid}"]`);
+  const seatR = seatEl ? seatEl.getBoundingClientRect() : null;
+  const k = stageItems().filter(it => it.kind === 'member' && !it.leaving && !it.recruit && it.pid === pid && it.chain === chainId).length;
+  const at = seatR && seatR.width ? stagePlace(a.spot, bubbleRect(seatR, from, k)) : stageRect(a.spot);
   if (!at) return;
   let sphere = 'colorless', color = 'var(--colorless)';
   try { if (st.quadrants.includes(d.quadrant)) { sphere = quadrant(d.quadrant).resource; color = `var(--${d.quadrant})`; } } catch { /* colorless */ }
-  stageShow({ id: `member:${pid}:${uid}`, chain: chainId, kind: 'member', uid, at, from, homeEl: el && !el.rectOnly ? el : null, dur: a.dur, color, pc: playerColor(pid),
+  stageShow({ id: `member:${pid}:${uid}`, chain: chainId, kind: 'member', uid, pid, at, from, homeEl: el && !el.rectOnly ? el : null, dur: a.dur, color, pc: playerColor(pid),
     name: d.name, sprite: [d.id, spriteId(d.name)], sphere, text: d.text || '', got: a.got || '' });
 }
 

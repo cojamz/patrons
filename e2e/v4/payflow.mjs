@@ -141,7 +141,8 @@ try {
     const { save, uid } = buySave({ discount: 2 });
     const st = save.state, p = st.players[0];
     const { ctx, page } = await open('f4', save);
-    const cards = await page.$$eval('.lt-shop .lt-card', els => els.map(e => {
+    // member cards only: the follower buys share the shop and its card size since v0.8.2 but print no worth
+    const cards = await page.$$eval('.lt-shop .lt-card[data-uid]', els => els.map(e => {
       const now = e.querySelector('.cost-now'), was = e.querySelector('.cost-was'), cost = e.querySelector('.ft .lt-cost'), val = e.querySelector('.ft .val');
       const right = Math.max(...[...e.querySelectorAll('.ft .lt-cost .lt-res, .ft .lt-cost, .ft .cost-was')].map(x => x.getBoundingClientRect().right));
       return { uid: e.dataset.uid, wasFirst: !!(now && was && was.compareDocumentPosition(cost) & Node.DOCUMENT_POSITION_FOLLOWING), discounted: !!now, gap: val.getBoundingClientRect().left - right };
@@ -170,7 +171,7 @@ try {
     const { save } = buySave({});
     const { ctx, page } = await open('f6', save);
     const d = await page.evaluate(() => {
-      const pile = document.querySelector('[data-deck] .pile'), card = document.querySelector('.lt-shop .lt-card');
+      const pile = document.querySelector('[data-deck] .pile'), card = document.querySelector('.lt-shop .lt-card[data-uid]');
       return { pile: pile && pile.getBoundingClientRect().toJSON(), card: card.getBoundingClientRect().toJSON(), cap: document.querySelector('[data-deck] .cap')?.textContent || '' };
     });
     if (!d.pile || d.pile.height > d.card.height * 0.8 || d.pile.width > d.card.width * 0.8) errors.push(`(f6) the deck is as big as a member card (${d.pile && Math.round(d.pile.width)}×${d.pile && Math.round(d.pile.height)} vs ${Math.round(d.card.width)}×${Math.round(d.card.height)})`);

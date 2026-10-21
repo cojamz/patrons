@@ -220,6 +220,8 @@ function chooseSwap(state, pend) {
   const placesLeft = turns[me] + lt.turns;
   const buys = state.players.map((_, i) => turns[i] + lt.turns + (i === me ? 1 : 0));
   const income = turns.map(t => (t * INCOME[Math.max(1, state.round) - 1] + lt.income) * INCOME_SCALE);
+  // the queued choice carries its handler and data (Even Swap's mode, Swap Sides'); without them every trade threw and fell back to its hint
+  const task = state.queue.find(t => t.t === 'choose' && t.p === me);
   const rated = pend.options.map(o => {
     // either orientation, and swaps that move none of mine (two rivals', or a rival's and the shop's)
     const side = swapSides(state, me, o.value);
@@ -227,10 +229,10 @@ function chooseSwap(state, pend) {
     try {
       const s = lightClone(state);
       const ctx = contextFor(s);
-      handlerById('red.trade')(ctx, s.players[me], o.value);
+      handlerById(task?.h || 'red.trade')(ctx, s.players[me], o.value, task?.data);
       const ability = side.in === null ? 0 : abilityValue(cardDef(s, side.in), placesLeft) - abilityValue(cardDef(s, side.out), placesLeft);
       v = marginOf(evaluate(s, buys, income, roundLeft, { [me]: ability }), me);
-    } catch { v = (o.hint || 0) - 100; }
+    } catch (e) { globalThis.__swapFail = (globalThis.__swapFail || 0) + 1; v = (o.hint || 0) - 100; }
     if (side.in !== null && given.has(cardDef(state, side.in).name)) v -= 100;
     return { o, v };
   });

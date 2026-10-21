@@ -21,6 +21,13 @@
 /* its place on the board while it's out: the space stands empty-looking, the member's chip a ghost */
 .lt .stage .slot.on-stage .face .yl,.lt .stage .slot.on-stage .face .note,.lt .stage .slot.on-stage .base{opacity:.4}
 .cs-member.on-stage .fig{opacity:.3}
+/* a member acting: a small speech bubble out of the right side of its seat, its tail pointing back at the seat
+   (Cory, 2026-10-18); 11px name, one line of rule, what it just did */
+.as-member.bubble{gap:6px;padding:4px 8px 4px 4px;border-radius:8px}
+.as-member.bubble::before{content:"";position:absolute;left:-5px;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);
+  background:color-mix(in srgb,var(--q) 22%,var(--walnut-2,#271d16));box-shadow:-1px 1px 0 0 color-mix(in srgb,var(--q) 55%,transparent);border-radius:0 0 0 2px}
+.as-member.bubble .as-rule{-webkit-line-clamp:1}
+.as-member.bubble .as-got{font-size:11px;font-weight:800}
 @media (prefers-reduced-motion: reduce){.action-stage{display:none}}
 .as-card .as-note{font:500 11px/1.1 var(--sans);color:var(--pl-ink-3,#a39078)}
 /* a member changing hands, big on the stage on its way: its name under it */
@@ -30,5 +37,11 @@
 /* a seat's follower change, under its count for a while (director.js linger) */
 .seat-delta{position:fixed;transform:translateX(-100%);z-index:55;pointer-events:none;padding:1px 5px;border-radius:4px;font:800 11px/1.25 var(--sans);background:var(--walnut-2,#271d16);box-shadow:0 1px 3px rgba(0,0,0,.5);animation:seatdelta var(--ld,2.6s) ease-out both}
 .seat-delta.up{color:#bfe6a8}.seat-delta.down{color:#f0a49a}
+/* what a steal takes, on the victim's pile the moment it's taken (director.js takeTag) */
+.take-tag{position:fixed;transform:translate(-50%,-100%);z-index:62;pointer-events:none;display:flex;align-items:center;gap:2px;padding:1px 5px 1px 4px;border-radius:4px;
+  font:800 11px/1.25 var(--sans);color:#f0a49a;background:var(--walnut-2,#271d16);box-shadow:0 1px 3px rgba(0,0,0,.5);white-space:nowrap;animation:taketag var(--tl,900ms) ease-out both}
+.take-tag svg,.take-tag .piece-dot{width:10px;height:10px;display:block}
+@keyframes taketag{0%{opacity:0;transform:translate(-50%,-80%) scale(1.25)}14%{opacity:1;transform:translate(-50%,-100%) scale(1)}80%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.take-tag{animation:none}}
 @keyframes seatdelta{0%{opacity:0;transform:translate(-100%,-3px)}8%{opacity:1;transform:translate(-100%,0)}82%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion: reduce){.seat-delta{animation:none}}

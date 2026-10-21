@@ -1,8 +1,24 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.19, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.21 — 2026-10-21 — unreleased
+## v0.8.25 — 2026-10-21 — shipped (source ed22298)
+
+- Member swaps with the shop cross both portraits at once. A big gain flies every coin (12 coins as 12) without slowing the turn. Round end is smoother: the scoring card fades up, totals count as prizes land, minions fill their columns as they arrive. The follower mark on each rim has a soft sheen. Bots now judge member swaps properly.
+
+## v0.8.24 — 2026-10-21 — shipped (source 2831c45)
+
+- Shop: long abilities in details view fit their card, and a discounted card's old price no longer runs into its worth. The since-your-last-turn story never shows a line cut in half, and a tall turn card sums up its last lines so the story's heading stays visible.
+
+## v0.8.23 — 2026-10-21 — shipped (source 1343cb1)
+
+- Clearer motion: a space's result shows beside its space, members pop out of their seat when they act, a recruit shows itself at the middle before flying to its buyer, and a steal says what was taken at once. Round start plays in steps: minions home, income seat by seat, then the shop refills. Skipping no longer sets off a burst of sounds. Undo plays the move backwards.
+
+## v0.8.22 — 2026-10-21 — shipped (source febdee1)
+
+- Laptops: chairs run full height beside a narrower shop; the story holds two turns. Big screens scale the whole table. Silver, white and colorless members get their own card look. Your first placement each round says which rings are open.
+
+## v0.8.21 — 2026-10-21 — shipped (source e606c44)
 
 - "Safe this round" is a small shield. Big coin piles on the pay sheet stay short and print their count. A buy or recruit pulses before its reward flies. At round start the old shop cards go into the deck and the new ones deal out.
 

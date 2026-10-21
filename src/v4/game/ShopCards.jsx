@@ -9,7 +9,7 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
+import { cardColor, cardGround, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { timingOf, unlockedBy, surely } from './cards.js';
@@ -118,6 +118,26 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const detailed = view === 'details' || (view === null && memberPick);
   const toggleView = () => { const next = detailed ? 'compact' : 'details'; setView(next); hover?.close?.(); try { localStorage.setItem(VIEW_KEY, next); } catch { /* this visit only */ } };
   useEffect(() => { onViewChange?.(detailed); }, [detailed, onViewChange]);
+  // with details on, an ability that would run under the price sets one step tighter, so the card keeps its slot and
+  // the whole rule stays readable (Straggler at 1270x700 ran under its footer; shop-sizing gate)
+  const fitKey = detailed ? `${uids.join(',')}|${state.round}` : '';
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!fitKey || !row) return undefined;
+    const fit = () => {
+      for (const a of row.querySelectorAll('.lt-pick-ability')) {
+        const card = a.closest('.lt-card'), ft = card && card.querySelector('.ft');
+        if (!ft) continue;
+        a.removeAttribute('data-fit');
+        const over = () => a.getBoundingClientRect().bottom > ft.getBoundingClientRect().top + 0.5 || ft.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom + 0.5;
+        if (over()) a.setAttribute('data-fit', 'tight');
+      }
+    };
+    fit();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
+    ro?.observe(row);
+    return () => ro?.disconnect();
+  }, [fitKey]);
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
     <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-fade={viewer && fade ? 'on' : undefined} aria-label="Shop">
@@ -156,7 +176,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
               className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying || picking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
-              style={{ '--q': cardColor(state, d) }} aria-disabled={!opt} data-unaffordable={short || undefined}
+              style={{ '--q': cardColor(state, d) }} data-ground={cardGround(state, d)} aria-disabled={!opt} data-unaffordable={short || undefined}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
@@ -185,7 +205,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
               {/* a rule that grows by round reads by round, this round lit, as in every hover (RuleText; compact on the small card) */}
               {detailed && <span className="lt-pick-ability"><RuleText def={d} round={state.round} plain compact /></span>}
-              <span className="ft">
+              <span className="ft" data-discount={paid ? '' : undefined}>
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>
                     {/* the list price as one struck number, BEFORE the price you pay (a shop's "was 4, now 2"): after it, it

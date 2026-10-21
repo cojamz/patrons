@@ -5,17 +5,17 @@ import { browserPath } from './lib/browser.mjs';
 //  (s1) Help Yourself: the card opens by the space, its stacks exactly the engine's options; exactly the same stacks
 //       light on the rival seats (own seat never), every other rival stack is dim and says why on hover; one pick on a
 //       seat and one on the card take them, the counter runs 1 → 0, a resource flies for each pick, and the right
-//       resources move (they arrive as magenta).
+//       resources move (they keep their colors, plus the space's +1 magenta: Cory, 2026-10-19). Round II: it steals 1 × round.
 //  (s2) Collect Debts: only gold, on the seats and the card; "Take all 3" previews its picks on the card's stacks while
 //       pointed at, and one click takes all 3, biggest pile first (the engine's options, recorded one by one).
-//  (s3) Redistribute: 1 from each rival, no conditions (feedback #18), so the rival holding less than you is owed
-//       too; "Take all 3" plans one from each; picks land, the counter running 2 → 1. (s3b) A rival with nothing to
-//       take is dim on the seat and on the card, saying why.
+//  (s3) Redistribute: 1 per Magenta action already holding a minion (2 here), split freely among rivals, so the rival
+//       holding less than you is offered too; "Take all 2" plans 2; picks land, the counter running 1 → 0.
+//       (s3b) A rival with nothing to take is dim on the seat and on the card, saying why.
 //  (e1) Escape on Kickback's card takes the placement back (the card closes, the minion comes home).
 //  (h1) Hand-pick: the offered members light in the shop (no duplicate card since #14), each with its printed cost;
 //       a click takes one.
-//  (t1) Straggler: the card by your last minion's space, its spaces the engine's (lit on the wheel too), Stay put on
-//       it; a space on the card moves the minion; Escape says Stay put.
+//  (t1) Straggler (v0.8.9): nothing over the wheel; its spaces the engine's, lit and answering on the wheel, Stay put in
+//       the docked caption; a lit space moves the minion; Escape says Stay put.
 //  (s4) Kickback ("give 1 gold to…"): a gift, so it's the gift card beside the space (Cory, 2026-10-16): one face per
 //       rival the engine offers, and the same rivals' seats light (Cory, 2026-10-15: as Good Deed's), each the engine's
 //       answer, its gold stack lit, never your own; a click on a lit seat gives that player 1 gold.
@@ -31,7 +31,7 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { stealSave, stragglerSave } from './lib/steal-save.mjs';
+import { stealSave, stragglerSave, PILES, STEAL_TABLE } from './lib/steal-save.mjs';
 import { applyMove } from '../../src/engine/v4/index.js';
 import { seedSave } from './lib/seed.mjs';
 
@@ -109,9 +109,9 @@ const cardOptions = (page, sel) => page.$$eval(`.gift-card ${sel}[data-option]`,
 const moved = (page, m0) => page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, m0, { timeout: 8000 }).then(() => true, () => false);
 
 try {
-  // (s1) Help Yourself: take 2
+  // (s1) Help Yourself: take 2 (it steals 1 × round since the Magenta rework, so round II)
   {
-    const { ctx, page, save } = await open('help');
+    const { ctx, page, save } = await open('help', '.lt-wheel .gift-card', { round: 2 });
     const want = expectedLit(save);
     const got = await lit(page);
     if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`(s1) lit stacks ${got.join(' ')} ≠ the engine's options ${want.join(' ')}`);
@@ -147,7 +147,9 @@ try {
     // the second pick on the card itself, coin by coin
     await click(page, '.gift-card .gc-stack[data-pid="2"][data-res="gold"]');
     await page.waitForFunction(() => !document.querySelector('.gift-card'), null, { timeout: 8000 }).catch(() => errors.push('(s1) the steal never closed'));
-    await expectCounts(page, 's1', { '1:green': 3, '2:gold': 4, '0:magenta': 2 });
+    // stolen resources keep their colors; the space's own +1 magenta comes on top (Cory, 2026-10-19)
+    const mine = PILES[0]; // what P1 held before taking the space
+    await expectCounts(page, 's1', { '1:green': 3, '2:gold': 4, '0:green': mine.green + 1, '0:gold': mine.gold + 1, '0:magenta': mine.magenta + 1 });
     const left = await seenLeft(page);
     // from the first take on (never the count again at the start); the closing "0" can be missed on a loaded box
     if (left[0] !== '1' || left.includes('2')) errors.push(`(s1) the counter ran ${left.join(' → ')}, not 1 → 0 (shown from the first take)`);
@@ -190,31 +192,39 @@ try {
     }
     await ctx.close();
   }
-  // (s3) Redistribute takes 1 from each rival, no conditions (Cory, 2026-10-17 feedback #18; it used to skip a rival
-  // holding no more than you): P4 holds less than you and is owed all the same; "Take all 3" plans one from each;
-  // picks land
+  // (s3) Redistribute steals 1 per Magenta action already holding a minion (Cory, 2026-10-19; was "1 from each rival"),
+  // split freely among rivals like every steal: with P2 on Help Yourself and P3 on Lie Low it takes 2. Every rival
+  // holding something is offered (P4, poorer than you, all the same); "Take all 2" previews a plan of 2 on offered
+  // stacks; picks count down 1 → 0 and land as the engine says (stolen colors kept, +1 magenta)
   {
-    const { ctx, page, save } = await open('redistribute');
-    const owed = [...new Set(save.state.pending.options.map(o => o.target.pid))].sort();
-    if (owed.join() !== '1,2,3') errors.push(`(s3) the engine takes from P${owed.map(x => x + 1).join(' P')}, want every rival`);
+    const occupy = { [`${STEAL_TABLE.indexOf('thieves')}-0`]: 1, [`${STEAL_TABLE.indexOf('thieves')}-2`]: 2 };
+    const { ctx, page, save } = await open('redistribute', '.lt-wheel .gift-card', { occupy });
+    const st = save.state;
+    if (st.pending.count?.of !== 2) errors.push(`(s3) the engine asks for ${st.pending.count?.of} steals with two Magenta actions taken, want 2`);
+    const owed = [...new Set(st.pending.options.map(o => o.target.pid))].sort();
+    if (owed.join() !== '1,2,3') errors.push(`(s3) the engine takes from P${owed.map(x => x + 1).join(' P')}, want every rival holding something`);
     if (await page.$eval('.lt-seat[data-pid="3"] .lt-cult-seat', e => e.dataset.pick).catch(() => null) === 'off') errors.push('(s3) P4 (poorer than you, owed all the same) is dim');
-    if (await page.$('.gift-card .gc-rival[data-dim]')) errors.push('(s3) a rival on the card is dim though every rival is owed 1');
-    // owed 1 each from P2, P3 and P4: "Take all 3" takes one from each (live panel round 3: a forced split took a click each)
-    if (!(await page.$('.gift-card .gc-all[data-take-all="3"]'))) errors.push('(s3) no "Take all 3" for the 1-each split');
+    if (await page.$('.gift-card .gc-rival[data-dim]')) errors.push('(s3) a rival on the card is dim though every rival holds something');
+    const cap = await page.$eval('.gift-card', e => `${e.querySelector('.gc-title').textContent}: ${e.querySelector('.gc-what').textContent}`.replace(/\s+/g, ' ').trim()).catch(() => '');
+    if (!/^Redistribute: Take 2$/i.test(cap)) errors.push(`(s3) the card reads "${cap}"`);
+    if (!(await page.$('.gift-card .gc-all[data-take-all="2"]'))) errors.push('(s3) no "Take all 2" on the card');
     else {
       await page.hover('.gift-card .gc-all');
       await page.waitForTimeout(150);
-      const marks = await page.$$eval('.gift-card .gc-stack[data-plan]', els => els.map(e => `${e.dataset.pid}:${e.dataset.plan}`).sort());
-      if (marks.join() !== '1:1,2:1,3:1') errors.push(`(s3) "Take all" previews ${marks.join(' ') || 'nothing'}, want 1 each from P2, P3 and P4`);
+      const marks = await page.$$eval('.gift-card .gc-stack[data-plan]', els => els.map(e => [e.dataset.option, Number(e.dataset.plan)]));
+      const offered = new Set(st.pending.options.map(o => o.id));
+      if (marks.reduce((t, [, n]) => t + n, 0) !== 2 || marks.some(([id]) => !offered.has(id))) errors.push(`(s3) "Take all" previews ${JSON.stringify(marks)}, want 2 on offered stacks`);
       await page.mouse.move(4, 690);
     }
-    await click(page, stack(1, 'blue'));
-    await page.waitForSelector('.pick-left[data-left="2"]', { timeout: 8000 }).catch(() => errors.push('(s3) the counter never showed 2 left'));
-    await click(page, stack(2, 'magenta'));
+    let after = st;
+    await click(page, stack(1, 'blue')); after = applyMove(after, { player: 0, option: 'take:1:blue' });
     await page.waitForSelector('.pick-left[data-left="1"]', { timeout: 8000 }).catch(() => errors.push('(s3) the counter never showed 1 left'));
-    await click(page, stack(3, 'magenta'));
+    await click(page, stack(3, 'magenta')); after = applyMove(after, { player: 0, option: 'take:3:magenta' });
     await page.waitForFunction(() => !document.querySelector('.gift-card'), null, { timeout: 8000 }).catch(() => errors.push('(s3) the steal never closed'));
-    await expectCounts(page, 's3', { '1:blue': 1, '2:magenta': 1, '3:magenta': 0, '0:magenta': 3 });
+    const want = {};
+    for (const pid of [0, 1, 3]) for (const r of ['blue', 'magenta']) want[`${pid}:${r}`] = after.players[pid].res[r];
+    if (want['1:blue'] !== 1 || want['3:magenta'] !== 0) errors.push(`(s3) the engine's own steal is off: ${JSON.stringify(want)}`);
+    await expectCounts(page, 's3', want);
     await ctx.close();
   }
   // (s3b) a rival with nothing to take is the one Redistribute leaves out: dim on the seat and on the card, saying why
@@ -330,18 +340,18 @@ try {
     if (rec && rec !== want[0]) errors.push(`(h1) recorded ${rec}, clicked ${want[0]}`);
     await ctx.close();
   }
-  // (t1) Straggler: the card by your last minion, the spaces on it and lit on the wheel, Stay put; Escape stays put
+  // (t1) Straggler (v0.8.9, Cory 2026-10-19: the move menu blocked the wheel): no card over the wheel; exactly the
+  // engine's spaces light on the wheel and are the answer, "Stay put" sits in the docked caption; Escape stays put
   {
-    const { ctx, page, save } = await open('straggler', '.lt-wheel .gift-card[data-gift="move"]');
+    const { ctx, page, save } = await open('straggler', '.prompt.choice.seat-pick.docked');
+    await page.waitForSelector('.app.game:not([data-animating])', { timeout: 8000 }).catch(() => {});
     const want = save.state.pending.options.filter(o => o.target && o.target.space).map(o => o.target.space).sort();
     const lit = await page.$$eval('.lt-wheel .slot.lit[data-slot]', els => els.map(e => e.dataset.slot).sort());
     if (lit.join() !== want.join()) errors.push(`(t1) lit spaces ${lit.join(' ')} ≠ the engine's ${want.join(' ')}`);
-    const onCard = await page.$$eval('.gift-card .gc-space', els => els.map(e => e.dataset.space).sort());
-    if (onCard.join() !== want.join()) errors.push(`(t1) the card's spaces ${onCard.join(' ')} ≠ the engine's ${want.join(' ')}`);
-    if (!(await page.$('.gift-card .gc-rest-btn[data-option="no"]'))) errors.push('(t1) no Stay put on the card');
-    if (await page.$('.prompt.choice.seat-pick')) errors.push('(t1) Straggler still asks in the header');
-    const gap = await gapToSpace(page, save.state.players[0].lastSlot.key);
-    if (gap == null || gap > 40) errors.push(`(t1) the card sits ${gap}px from your last minion (want ≤ 40)`);
+    const answers = await page.$$eval('.lt-wheel .slot[data-option^="to:"]', els => els.map(e => e.dataset.slot).sort());
+    if (answers.join() !== want.join()) errors.push(`(t1) the wheel's answers ${answers.join(' ')} ≠ the engine's ${want.join(' ')}`);
+    if (await page.$('.lt-wheel .gift-card[data-gift="move"]')) errors.push('(t1) the move menu still covers the wheel');
+    if (!(await page.$('.prompt.choice.seat-pick button[data-option="no"]'))) errors.push('(t1) no Stay put in the caption');
     await page.screenshot({ path: `${SHOTS}/t1-straggler.png` });
     await page.keyboard.press('Escape');
     if (!(await moved(page, save.state.moves))) errors.push('(t1) Escape did not close Straggler');
@@ -350,11 +360,14 @@ try {
     await ctx.close();
   }
   {
-    // a space on the card moves the minion there
-    const { ctx, page, save } = await open('straggler', '.lt-wheel .gift-card[data-gift="move"]');
+    // a lit space on the wheel moves the minion there (pointed at first, as a person inspects it)
+    const { ctx, page, save } = await open('straggler', '.prompt.choice.seat-pick.docked');
+    await page.waitForSelector('.app.game:not([data-animating])', { timeout: 8000 }).catch(() => {});
     const o = save.state.pending.options.find(x => x.target && x.target.space);
-    await click(page, `.gift-card .gc-space[data-option="${o.id}"]`);
-    if (!(await moved(page, save.state.moves))) errors.push('(t1) a space on the card did nothing');
+    await page.hover(`.lt-wheel .slot[data-option="${o.id}"]`);
+    await page.waitForTimeout(250);
+    await click(page, `.lt-wheel .slot[data-option="${o.id}"]`);
+    if (!(await moved(page, save.state.moves))) errors.push('(t1) a lit space on the wheel did nothing');
     const rec = await page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-1)[0]?.[1]; } catch { return null; } });
     if (rec && rec !== o.id) errors.push(`(t1) recorded ${rec}, clicked ${o.id}`);
     await ctx.close();

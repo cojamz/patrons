@@ -1063,6 +1063,10 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
           <defs>
             <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
             <filter id="ltGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" /></filter>
+            {/* the contest rim's follower mark: a pearly sheen and a soft halo, so it reads as followers and not as one
+                more cream resource mark on the band (Claude, under Cory's go-with-your-gut, 2026-10-21) */}
+            <linearGradient id="ltSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffffff" /><stop offset=".42" stopColor="#fff4dc" /><stop offset=".55" stopColor="#ffffff" /><stop offset=".72" stopColor="#ffe9bd" /><stop offset="1" stopColor="#e9c88a" /></linearGradient>
+            <filter id="ltSheenHalo" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="b" /><feFlood floodColor="#fff6e0" floodOpacity=".75" /><feComposite in2="b" operator="in" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
             <pattern id="ltHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.2)" strokeWidth="1" /></pattern>
           </defs>
           <circle cx={CX} cy={CY} r="200" fill="url(#ltPaper)" className="disk" />

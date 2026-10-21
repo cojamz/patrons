@@ -30,33 +30,36 @@ Answer by number. Claude's default in [brackets].
 12. Online on the real link: allow *.firebaseio.com, identitytoolkit.googleapis.com, securetoken.googleapis.com in the environment, or he plays one 2-laptop game. [he plays one]
 13. Faint marks for colorblind players (morning note #6). [no, unless a friend needs them]
 14. Old notes nobody can place: "Hover over in the glossary", "Round 3 actions", "This should straight up steal", "follower claims visibility". [drop them]
+15. Your seat's member card: with two rows of members, a member's hover card covers the second row wherever it opens. Open it below the whole member block? [yes]
+16. Wording pass sheet: /mnt/project-files/overnight/lane8/wording-sheet.md, yes/no per row (⚑ rows are rules questions). [nothing ships until you answer]
 
 ## Ours, open
 Correctness and Cory's made calls
-- [ ] Cut Social Climber ("whenever you release another member": dead, Release is off, core.js:25) and deal a Claude fill-in.
-- [ ] Guests colorless: in flight, uncommitted (content/index.js, benders.js).
-- [ ] Remove "Its color isn't on this table" (Info.jsx:231); glossary "colorless" to match.
-- [ ] Grifter keeps only its first sentence (thieves.js:313).
-- [ ] Top Up scales by round (yellow.js:40). Feastmaker becomes Chefs: a little cheaper, counts as at least 2 members (yellow.js:191).
-- [ ] Cut Overseer (purple.js:260); its replacement is Cory #5.
-- [ ] A player named "Pants" gets Max's tall leader (Glyphs.jsx:103).
-- [ ] A third shop toggle that fades unaffordable members (ShopCards.jsx:123).
+- [x] Cut Social Climber ("whenever you release another member": dead, Release is off, core.js:25) and deal a Claude fill-in. (v0.8.16–0.8.21)
+- [x] Guests colorless: in flight, uncommitted (content/index.js, benders.js). (v0.8.16)
+- [x] Remove "Its color isn't on this table" (Info.jsx:231); glossary "colorless" to match. (v0.8.21)
+- [x] Grifter keeps only its first sentence (thieves.js:313). (v0.8.21)
+- [x] Top Up scales by round (yellow.js:40). Feastmaker becomes Chefs: a little cheaper, counts as at least 2 members (yellow.js:191). (v0.8.16)
+- [x] Cut Overseer (purple.js:260); its replacement is Cory #5. (v0.8.21)
+- [x] A player named "Pants" gets Max's tall leader (Glyphs.jsx:103). (v0.8.21)
+- [x] A third shop toggle that fades unaffordable members (ShopCards.jsx:123). (v0.8.21, "affordable")
 - [ ] Long shop member names fit their box (hotseat e2e: Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double); recheck first.
 
 Laptop UI clarity
 - [x] Scaling text as "I: … / II: … / III: …" lines, the current round lit (hovers, member cards, seat list; wheel faces unchanged; the shop's details view now too, compact: "I +1 · II +2 · III +3").
 - [x] "P2 took X from you": shorter, near your player card.
-- [ ] Red shop-swap turn toast names both the outgoing and incoming member.
+- [x] Red shop-swap turn toast names both the outgoing and incoming member. (v0.8.21)
 - [ ] Round-end and end-game screens: appear quickly (A4 result-card lag), readable layout, hover for detail, no totals counting up for nothing.
 - [ ] End-game scoring shows where every point comes from: each member pops "+x" for its people, then its granted followers (Cory, 10-15).
+- [ ] Even Swap trading two shop members' places tells nothing in "since your last turn" (no member moved, so no effects); say "swapped the shop's X and Y". Bots pick it as a harmless swap since 2026-10-21.
 - [ ] Seat pass: minions, follower number, currencies, and rivals' points and engine readable at a glance. Show Cory 2 mockups first.
-- [ ] Laptop fits: at 900×600 a rival's stacks crowd its total; at 1270×700 the strip squeezes "since your last turn" and holds one line under a turn card.
-- [ ] Large screens (≥1600px): side columns scale with the wheel (zoom proposal, design-pod queue.md).
-- [ ] Contest arc: follower mark distinct (a sheen). (Centering on the text line done 10-21.)
-- [ ] Silver, white and colorless members look alike at card size.
+- [x] Laptop fits: at 900×600 a rival's stacks crowd its total; at 1270×700 the strip squeezes "since your last turn" and holds one line under a turn card. (Lane 8, 10-21: chairs run full height beside the narrow shop strip; 1270×700 story holds two turns. turnstory t2/t9 fail before and after, pre-existing.)
+- [x] Large screens (≥1600px): side columns scale with the wheel (zoom proposal, design-pod queue.md). (Lane 8, 10-21: zoom steps 1.25/1.4/1.6/2; hover cards stay 1×.)
+- [x] Contest arc: follower mark distinct (a sheen). (Centering on the text line done 10-21.) (v0.8.25: sheen)
+- [x] Silver, white and colorless members look alike at card size. (Lane 8, 10-21: own card grounds.)
 - [x] Trade Seeds: its "Swap nothing" button reads as part of the caption; set it apart (yellow.js:221).
-- [ ] Wording pass: member texts much tighter, steal text, wheel text (rule-style.md). Before/after sheet for Cory.
-- [ ] First play: tutorial wording for lit/dim/dark spaces and the inner II/III rings.
+- [ ] Wording pass: member texts much tighter, steal text, wheel text (rule-style.md). Before/after sheet for Cory. (Sheet ready for his yes/no: /mnt/project-files/overnight/lane8/wording-sheet.md; nothing shipped.)
+- [x] First play: tutorial wording for lit/dim/dark spaces and the inner II/III rings. (Lane 8, 10-21: your first placement each round names the open rings.)
 - [x] "Safe this round" as a small shield mark (CultSeat.jsx:224).
 - [x] Stacks of 20+ resources: size tiers that keep exact counts (H14). The pay sheet's coin stacks pack past six.
 - [x] A clear purchase signal: the bought tier or card pulses before its reward flies (H13).
@@ -64,19 +67,19 @@ Laptop UI clarity
 
 Motion and lag
 - [x] Animate the member shop refreshing at round start.
-- [ ] Clarity motion (Cory, 10-18): a recruit flies to the middle, shows its effect, goes to the buyer; a steal shows what's taken at once; action effects play beside the action; bulletin cards gather in one spot before the log. Members acting pop from the seat (his idea).
-- [ ] Round start as separate beats: home flights, net income, member hooks, market refill (A5 remainder).
-- [ ] End-of-round animations: smoothing.
-- [ ] Undo plays the motion backwards without repeating effects (H24).
-- [ ] Sounds land with their animation (audit #44).
-- [ ] Animation audit: the Green/Red animations Cory found missing (feedback-audit-2026-10-19.md).
-- [ ] 12 coins animate as 12, any count. Trim pace elsewhere first; never raise the pacing cap.
+- [x] Clarity motion (Cory, 10-18): a recruit flies to the middle, shows its effect, goes to the buyer; a steal shows what's taken at once; action effects play beside the action; bulletin cards gather in one spot before the log. Members acting pop from the seat (his idea). (v0.8.23; bulletin cards gathering before the log not done)
+- [x] Round start as separate beats: home flights, net income, member hooks, market refill (A5 remainder). (v0.8.23)
+- [x] End-of-round animations: smoothing. (v0.8.25)
+- [x] Undo plays the motion backwards without repeating effects (H24). (v0.8.23)
+- [x] Sounds land with their animation (audit #44). (v0.8.23: only skips were off)
+- [x] Animation audit: the Green/Red animations Cory found missing (feedback-audit-2026-10-19.md). (v0.8.25: swaps cross as portraits; no other Red/Green effect without motion)
+- [x] 12 coins animate as 12, any count. Trim pace elsewhere first; never raise the pacing cap. (v0.8.25; pace unchanged)
 - [ ] Lag (needs Cory's go for perf runs): React commits 80–130ms at 4×; seat re-renders as cards land; hover "a tiny bit wonky" (film it frame by frame); linger motion starts late; re-measure the old 4× regression and hover p95.
 - [ ] Re-port minion-on-press and the compositor wheel spin (6543c7f; /mnt/project-files/handoff/speed/) onto the 2/3/4-sector wheel.
 - [ ] Round I resource draft animated, once the perf items are in (H04).
 
 Tooling
-- [ ] Browser gates all green, and a check:v4 that doesn't fail from the load it puts on the box.
+- [x] Browser gates all green (10-21: 16 stale gates repaired; 5 real overlaps being fixed: Straggler details text, discounted price into worth, turn card over the story at 4 players and on a rival's turn, Lottery Winner hover over your second row), and a check:v4 that doesn't fail from the load it puts on the box. (v0.8.24: four overlaps fixed; members m3 known red, needs a seat call)
 - [ ] Later (engineering review): structured events instead of log parsing; shared verbs for copies; online auth rules; type checking.
 
 ## Parked

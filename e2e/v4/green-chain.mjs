@@ -47,7 +47,8 @@ function fixture() {
 const browser = await chromium.launch({ executablePath: browserPath });
 let currentPage, currentTag;
 try {
-  for (const [tag, options] of [['desktop', { viewport: { width: 1270, height: 700 } }], ['phone', devices['iPhone 13']]]) {
+  // the phone pass runs only with V4_PHONE=1 (phone is out of scope, Cory 2026-10-20)
+  for (const [tag, options] of [['desktop', { viewport: { width: 1270, height: 700 } }], ...(process.env.V4_PHONE ? [['phone', devices['iPhone 13']]] : [])]) {
     const ctx = await browser.newContext(options);
     const page = await ctx.newPage();
     currentPage = page; currentTag = tag;
@@ -86,8 +87,11 @@ try {
     await page.screenshot({ path: `${out}/${tag}-fresh-choice.png` });
     // Save flushes on pagehide: reload the live nested choice, never reseed it.
     await page.reload();
+    // A reload in the same tab resumes by itself (App.jsx: sessionStorage patrons.v4.inGame), so the home's Resume
+    // shows for at most a frame; press it only if it is still there, then require the game back.
     const again = page.locator('[data-home="resume"]');
-    if (await again.isVisible()) await again.click();
+    if (await again.isVisible()) await again.click({ timeout: 1500 }).catch(() => {});
+    await page.locator('.lt-wheel').waitFor();
     const hand = page.locator('[data-handoff]');
     if (await hand.isVisible()) await hand.click();
     await press(second);

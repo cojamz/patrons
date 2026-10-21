@@ -84,7 +84,12 @@ try {
   await p1.waitForSelector('[data-tab-away]', { timeout: 4000 }).catch(() => errors.push('(t) the older tab never said the game is open in another tab'));
   await p1.bringToFront();
   await shot(p1, 'session-two-tabs-away');
+  // the older page may still be playing out moves made before the hand-off (every move plays out whole: its view
+  // lags the save); it settles there, at most at the save's count when the newer tab took over, and stays put
+  await p1.waitForSelector('.app.game:not([data-animating])', { timeout: 8000 }).catch(() => {});
+  await p1.waitForTimeout(200);
   const frozen = await moves(p1);
+  if (frozen > before) errors.push(`(t) the older tab played past the hand-off (${before} saved → ${frozen} shown)`);
   // the older page tries to move (a click that raced the hand-off): nothing it does reaches the game or the save
   await p1.$$eval('[data-option]', els => els.slice(0, 3).forEach(e => e.click())).catch(() => {});
   await p2.bringToFront();

@@ -45,7 +45,7 @@ const HELP = `npm run check:v4 [-- options]
   V4_CHECK_SLOTS=${String(SLOTS).padEnd(13)}capacity in units: a full gate takes 2, --quick/--fast or a bare whole-suite vitest 1 (/tmp/v4-check-slots)
   V4_E2E_TOKENS=${String(E2E_TOKENS).padEnd(14)}browser e2e in flight at once across every run on the box
   V4_UNIT_WORKERS=<n>         vitest workers (default: every core; they run at nice 10)
-  V4_PHONE=1                  include touch.mjs (the phone gate; outside the v0.2 verdict)
+  V4_PHONE=1                  include the phone gates (touch.mjs, phone-smoke.mjs; phone is out of scope)
   V4_LOGS=<dir>               where each stage's full output goes (default /tmp/v4-check-logs/<run>)`;
 
 const argv = process.argv.slice(2);
@@ -173,12 +173,13 @@ if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
   else {
     let server;
     try { server = await servePreview({ outDir, port, root }); } catch (err) { console.error(err.message); process.exit(2); }
-    // Each script gets its own shots dir (hotseat wipes its root). touch.mjs (phone) is outside the v0.2 verdict
-    // (Cory: no phone for a long time): V4_PHONE=1 brings it back. --quick plays the hot-seat game only.
+    // Each script gets its own shots dir (hotseat wipes its root). The phone gates (touch.mjs, phone-smoke.mjs) are
+    // outside the verdict (Cory, 2026-10-20: phone is out of scope): V4_PHONE=1 brings them back. --quick plays the hot-seat game only.
     // V4_QUICK_E2E=spaces.mjs,info.mjs (or none) swaps --quick's full hot-seat game for just the scripts the change touches
     // (Cory, 2026-10-18: test only what changed; full games only for end-of-game changes or the verdict).
+    const PHONE_ONLY = new Set(['touch.mjs', 'phone-smoke.mjs']);
     const shotsRoot = process.env.V4_SHOTS || `/tmp/patrons-shots/v4-${port}`;
-    const all = quick ? (process.env.V4_QUICK_E2E ? process.env.V4_QUICK_E2E.split(',').filter(f => f && f !== 'none') : ['hotseat.mjs']) : readdirSync(join(root, 'e2e/v4')).filter(f => f.endsWith('.mjs')).filter(f => f !== 'touch.mjs' || process.env.V4_PHONE)
+    const all = quick ? (process.env.V4_QUICK_E2E ? process.env.V4_QUICK_E2E.split(',').filter(f => f && f !== 'none') : ['hotseat.mjs']) : readdirSync(join(root, 'e2e/v4')).filter(f => f.endsWith('.mjs')).filter(f => !PHONE_ONLY.has(f) || process.env.V4_PHONE)
       // agents' scratch probes (qa-*, *probe*) are never gates, even if a checkpoint picks one up
       .filter(f => !/^qa-|probe/.test(f));
     // timing-sensitive: hover p95 (info), count-ups and bot pacing (motion). They take every e2e token on the box.

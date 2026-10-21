@@ -70,6 +70,13 @@ export function extraBuyer(state, p) {
   return null;
 }
 
+/** The line under your first "place a minion" of each round: where the open spaces are. */
+export const RING_NOTE = {
+  1: 'The dark inner rings open in rounds II and III.',
+  2: 'The middle ring opened this round.',
+  3: 'The inner ring opened this round.',
+};
+
 /**
  * Header line, phrased for people. `me` is true when the seat to act is controlled here.
  * Returns { who, text } where who is the acting player (or null).
@@ -125,10 +132,14 @@ export function promptFor(state, mine) {
       }
     }
     // falls through
-    case 'place-plain':
-      return mine
-        ? { who: p, text: `Place a minion on a glowing space`, ...(use ? { sub: `…or use ${use} first` } : {}) }
-        : { who: p, text: `${name} is placing a minion` };
+    case 'place-plain': {
+      if (!mine) return { who: p, text: `${name} is placing a minion` };
+      // your first placement of a round says which rings are open (a friend's first game: he missed the inner rings):
+      // once a round, one short line, and a usable member's line wins the room
+      const first = !Object.values(state.slots || {}).includes(p.id);
+      const sub = use ? `…or use ${use} first` : first ? RING_NOTE[state.round] : null;
+      return { who: p, text: `Place a minion on a glowing space`, ...(sub ? { sub } : {}) };
+    }
     // the headline is a verb phrase that fits one line at 1270×700; the details go in the line under it (sub)
     case 'buy':
       return mine

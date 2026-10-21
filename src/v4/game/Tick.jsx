@@ -68,7 +68,9 @@ export default function Tick({ value, from, color, className = '', float = true,
     const stride = Math.max(1, Math.ceil(Math.abs(d) / 12));
     const step = now => {
       const k = t0 === Infinity ? 0 : Math.max(0, Math.min(1, (now - t0) / ms));
-      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // ease in-out: the middle numbers stay readable
+      // ease in-out (the middle numbers stay readable); a count that pieces land on moves the moment the first one
+      // lands (round-end smoothing: the Reckoning's +2 landed and the number sat still a beat before it rolled)
+      const e = coming ? 1 - Math.pow(1 - k, 3) : k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       const aim = Math.max(lo, Math.min(hi, Math.round(start + d * e)));
       const was = disp.current;
       const next = Math.abs(aim - was) > stride ? was + Math.sign(aim - was) * stride : aim;

@@ -9,9 +9,11 @@
 import { MO } from '../motion.js';
 
 export const CARD = { w: 184, h: 104 };
-// a staged member is a caption card: its portrait, its name, its rule and what it just did (Cory, 22:48: "it's not
-// clear why without hover"); they stack under the space's card in the order they acted
-export const MEMBER = { w: 248, h: 62 };
+// a member acting is a small speech bubble out of the right side of its seat (Cory, 2026-10-18: "members pop out of the
+// right side of the player card when they act, maybe with a speech bubble"): its portrait, its name, its rule in one
+// line and what it just did; a recruit shows the same card, bigger, at the hub on its way to its buyer
+export const MEMBER = { w: 212, h: 52 };
+export const HUB_MEMBER = { w: 248, h: 62 };
 
 let items = [];
 let ver = 0;
@@ -33,14 +35,53 @@ export function stageCenter() {
   return { x: r.left + r.width / 2, y: r.top + r.height / 2, R: r.width / 2 };
 }
 
-/** Where a slot on the stage sits: 'card' (the action) or a member's spot (0, 1, 2…). A DOMRect-like box. */
+// where each slot actually stands this chain (a space's card beside its space, a member's bubble beside its seat)
+const placed = new Map();
+/** Where a slot on the stage sits: 'card' / 'card2' (the action, and the space a copy runs), a member's spot (0, 1,
+ *  2…), or 'hub' (the wheel's middle: a recruit on its way, members changing hands). A DOMRect-like box. */
 export function stageRect(slot) {
+  if (placed.has(slot)) return placed.get(slot);
+  if (slot === 'hub') return hubRect(CARD);
   const c = stageCenter();
   if (!c) return null;
   if (slot === 'card') return box(c.x - CARD.w / 2, c.y - CARD.h / 2 - 50, CARD.w, CARD.h);
-  // the space a copy runs lands on the first card, fanned down and right, so the first card's top line still shows
   if (slot === 'card2') return box(c.x - CARD.w / 2 + 22, c.y - CARD.h / 2 - 14, CARD.w, CARD.h);
   return box(c.x - MEMBER.w / 2, c.y + 10 + (slot % 4) * (MEMBER.h + 6), MEMBER.w, MEMBER.h);
+}
+/** A box of `size` centred on the hub. */
+export function hubRect(size = CARD) {
+  const c = stageCenter();
+  return c ? box(c.x - size.w / 2, c.y - size.h / 2, size.w, size.h) : null;
+}
+/** Remember where a slot stands (the director places it when it plays). */
+export const stagePlace = (slot, rect) => { if (rect) placed.set(slot, rect); return rect; };
+
+/**
+ * A space's card stands beside its space (Cory, 2026-10-18: "while an action plays, show its effect next to the
+ * action, not in the middle"): just inside it, toward the hub, so the space itself still shows; a copy's second card
+ * fans down and right off the first.
+ */
+export function spaceRect(spaceRect0, slot = 'card') {
+  const c = stageCenter();
+  if (slot === 'card2' && placed.has('card')) { const a = placed.get('card'); return box(a.left + 22, a.top + 36, CARD.w, CARD.h); }
+  if (!c || !spaceRect0) return stageRect(slot);
+  const sx = spaceRect0.left + spaceRect0.width / 2, sy = spaceRect0.top + spaceRect0.height / 2;
+  const dx = c.x - sx, dy = c.y - sy, d = Math.hypot(dx, dy) || 1;
+  // the card's centre moves in from the space by about its own half-depth, never past the hub
+  const k = Math.min(d, 112) / d;
+  return clampView(box(sx + dx * k - CARD.w / 2, sy + dy * k - CARD.h / 2, CARD.w, CARD.h));
+}
+/** A member's bubble out of the right side of its seat, level with its own chip; a second one from the same seat
+ *  stands under the first. */
+export function bubbleRect(seatRect, chipRect, k = 0) {
+  if (!seatRect) return null;
+  const y = chipRect ? chipRect.top + chipRect.height / 2 : seatRect.top + seatRect.height / 2;
+  return clampView(box(seatRect.right + 10, y - MEMBER.h / 2 + k * (MEMBER.h + 4), MEMBER.w, MEMBER.h));
+}
+function clampView(b) {
+  if (typeof window === 'undefined' || !window.innerWidth) return b;
+  const left = Math.max(4, Math.min(b.left, window.innerWidth - b.width - 4)), top = Math.max(4, Math.min(b.top, window.innerHeight - b.height - 4));
+  return box(left, top, b.width, b.height);
 }
 const box = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top });
 
@@ -53,6 +94,13 @@ export function stageShow(item) {
   const had = items.find(it => it.id === item.id && !it.leaving);
   if (had) { had.again = (had.again || 0) + 1; emit(); return; }
   items.push({ ...item, born: Date.now() });
+  emit();
+}
+/** Send one item home now (a recruit leaving the hub for its buyer's crowd), taking `out` ms. */
+export function stageLeave(id, out = MO.stageOut) {
+  const it = items.find(x => x.id === id && !x.leaving);
+  if (!it) return;
+  it.leaving = true; it.out = out;
   emit();
 }
 let holdT = 0;
@@ -69,6 +117,7 @@ export function stageRelease(hold = MO.stageHold, chain = null) {
 /** Everything off the stage at once (a skip, a new round, the game leaving the screen). */
 export function stageClear() {
   clearTimeout(holdT);
+  placed.clear();
   for (const t of releaseTimers) clearTimeout(t);
   releaseTimers.clear();
   if (!items.length) return;
@@ -80,5 +129,6 @@ export function stageClear() {
 export function stageGone(id) {
   const n = items.length;
   items = items.filter(it => !(it.id === id && it.leaving));
+  if (!items.length) placed.clear();
   if (items.length !== n) { ver++; for (const fn of subs) fn(); }
 }
