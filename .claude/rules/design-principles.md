@@ -1,3 +1,9 @@
+---
+paths:
+  - "src/engine/**"
+  - "src/test/engine/**"
+  - "design/**"
+---
 # Patrons v4 — Design Principles
 
 Distilled from `design/decisions.md`, which stays the full log. Check every suggestion against this list before proposing it. Cory can change any line.

@@ -11,3 +11,5 @@ Claude and Codex work from one playbook. This file only points at it; don't fork
    - `design/HANDOFF.md`, `design/in-flight.md`, `design/todo.md` true for the next agent (one current state, no stacked sections);
    - commit and push (rebase, never force-push).
 6. Checks: `npm run check:v4:quick -- --related <files>` while iterating; the verdict is `npm run check:v4 -- --commit <sha>`. Ship with `bash scripts/v4-play.sh <sha>` and confirm the stamp. No sims or batches of test games unless Cory asks.
+
+7. Skills: `.agents/skills` links to `.claude/skills` (same SKILL.md format). ChatGPT chat reads nothing by itself; Cory pastes design/chatgpt-project-instructions.md into its Project once, and pastes its "To log" lines into a Claude thread.
