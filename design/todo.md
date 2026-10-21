@@ -33,20 +33,20 @@ Answer by number. Claude's default in [brackets].
 
 ## Ours, open
 Correctness and Cory's made calls
-- [ ] Cut Social Climber ("whenever you release another member": dead, Release is off, core.js:25) and deal a Claude fill-in.
-- [ ] Guests colorless: in flight, uncommitted (content/index.js, benders.js).
-- [ ] Remove "Its color isn't on this table" (Info.jsx:231); glossary "colorless" to match.
-- [ ] Grifter keeps only its first sentence (thieves.js:313).
-- [ ] Top Up scales by round (yellow.js:40). Feastmaker becomes Chefs: a little cheaper, counts as at least 2 members (yellow.js:191).
-- [ ] Cut Overseer (purple.js:260); its replacement is Cory #5.
-- [ ] A player named "Pants" gets Max's tall leader (Glyphs.jsx:103).
-- [ ] A third shop toggle that fades unaffordable members (ShopCards.jsx:123).
+- [x] Cut Social Climber ("whenever you release another member": dead, Release is off, core.js:25) and deal a Claude fill-in. (v0.8.16–0.8.21)
+- [x] Guests colorless: in flight, uncommitted (content/index.js, benders.js). (v0.8.16)
+- [x] Remove "Its color isn't on this table" (Info.jsx:231); glossary "colorless" to match. (v0.8.21)
+- [x] Grifter keeps only its first sentence (thieves.js:313). (v0.8.21)
+- [x] Top Up scales by round (yellow.js:40). Feastmaker becomes Chefs: a little cheaper, counts as at least 2 members (yellow.js:191). (v0.8.16)
+- [x] Cut Overseer (purple.js:260); its replacement is Cory #5. (v0.8.21)
+- [x] A player named "Pants" gets Max's tall leader (Glyphs.jsx:103). (v0.8.21)
+- [x] A third shop toggle that fades unaffordable members (ShopCards.jsx:123). (v0.8.21, "affordable")
 - [ ] Long shop member names fit their box (hotseat e2e: Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double); recheck first.
 
 Laptop UI clarity
 - [x] Scaling text as "I: … / II: … / III: …" lines, the current round lit (hovers, member cards, seat list; wheel faces unchanged; the shop's details view now too, compact: "I +1 · II +2 · III +3").
 - [x] "P2 took X from you": shorter, near your player card.
-- [ ] Red shop-swap turn toast names both the outgoing and incoming member.
+- [x] Red shop-swap turn toast names both the outgoing and incoming member. (v0.8.21)
 - [ ] Round-end and end-game screens: appear quickly (A4 result-card lag), readable layout, hover for detail, no totals counting up for nothing.
 - [ ] End-game scoring shows where every point comes from: each member pops "+x" for its people, then its granted followers (Cory, 10-15).
 - [ ] Seat pass: minions, follower number, currencies, and rivals' points and engine readable at a glance. Show Cory 2 mockups first.
@@ -64,11 +64,11 @@ Laptop UI clarity
 
 Motion and lag
 - [x] Animate the member shop refreshing at round start.
-- [ ] Clarity motion (Cory, 10-18): a recruit flies to the middle, shows its effect, goes to the buyer; a steal shows what's taken at once; action effects play beside the action; bulletin cards gather in one spot before the log. Members acting pop from the seat (his idea).
-- [ ] Round start as separate beats: home flights, net income, member hooks, market refill (A5 remainder).
+- [x] Clarity motion (Cory, 10-18): a recruit flies to the middle, shows its effect, goes to the buyer; a steal shows what's taken at once; action effects play beside the action; bulletin cards gather in one spot before the log. Members acting pop from the seat (his idea). (v0.8.23; bulletin cards gathering before the log not done)
+- [x] Round start as separate beats: home flights, net income, member hooks, market refill (A5 remainder). (v0.8.23)
 - [ ] End-of-round animations: smoothing.
-- [ ] Undo plays the motion backwards without repeating effects (H24).
-- [ ] Sounds land with their animation (audit #44).
+- [x] Undo plays the motion backwards without repeating effects (H24). (v0.8.23)
+- [x] Sounds land with their animation (audit #44). (v0.8.23: only skips were off)
 - [ ] Animation audit: the Green/Red animations Cory found missing (feedback-audit-2026-10-19.md).
 - [ ] 12 coins animate as 12, any count. Trim pace elsewhere first; never raise the pacing cap.
 - [ ] Lag (needs Cory's go for perf runs): React commits 80–130ms at 4×; seat re-renders as cards land; hover "a tiny bit wonky" (film it frame by frame); linger motion starts late; re-measure the old 4× regression and hover p95.
@@ -76,7 +76,7 @@ Motion and lag
 - [ ] Round I resource draft animated, once the perf items are in (H04).
 
 Tooling
-- [ ] Browser gates all green, and a check:v4 that doesn't fail from the load it puts on the box.
+- [ ] Browser gates all green (10-21: 16 stale gates repaired; 5 real overlaps being fixed: Straggler details text, discounted price into worth, turn card over the story at 4 players and on a rival's turn, Lottery Winner hover over your second row), and a check:v4 that doesn't fail from the load it puts on the box.
 - [ ] Later (engineering review): structured events instead of log parsing; shared verbs for copies; online auth rules; type checking.
 
 ## Parked
