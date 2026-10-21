@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.14, published 2026-10-20. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.15 — 2026-10-20 — unreleased
+
+- A busy rival's chair shows more of its members: "safe this round" sits under the member count.
+
 ## v0.8.14 — 2026-10-20 — shipped (source 33aefd2, main e79d4fe)
 
 - Bigger wheel: the shop column is narrower on laptops.

@@ -363,7 +363,10 @@ function useFigureFit(rootEl, layout = null) {
         const beside = b && b.width && b.top < c.bottom - 1 && b.bottom > c.top + 1 ? b.width + 8 : 0;
         const safe = crowd.querySelector(':scope > .cs-safe');
         const count = crowd.querySelector(':scope > .cs-member-count');
-        const room = c.width - beside - (count ? count.getBoundingClientRect().width + gap : 0) - (safe ? safe.getBoundingClientRect().width + gap : 0);
+        // with a count, "safe this round" stands under it (layout.css), so the two share one column
+        const cw = count ? count.getBoundingClientRect().width : 0, sw = safe ? safe.getBoundingClientRect().width : 0;
+        const side = count && safe ? Math.max(cw, sw) + gap : (count ? cw + gap : 0) + (safe ? sw + gap : 0);
+        const room = c.width - beside - side;
         const per = Math.max(1, Math.floor((room + fgap) / cell));
         const all = per * rows;
         const withMore = Math.max(1, all - 1); // "+N" takes the last cell
@@ -372,7 +375,7 @@ function useFigureFit(rootEl, layout = null) {
     }
     const r = ro.current, w = watched.current;
     for (const x of [...w]) if (!x.isConnected) { r.unobserve(x); w.delete(x); }
-    for (const x of [el, el.querySelector(':scope > .cs-crowd'), el.querySelector(':scope > .cs-crowd > .cs-figs > .cs-member'), el.querySelector(':scope > .cs-build')]) if (x && !w.has(x)) { r.observe(x); w.add(x); }
+    for (const x of [el, el.querySelector(':scope > .cs-crowd'), el.querySelector(':scope > .cs-crowd > .cs-figs > .cs-member'), el.querySelector(':scope > .cs-crowd > .cs-safe'), el.querySelector(':scope > .cs-crowd > .cs-member-count'), el.querySelector(':scope > .cs-build')]) if (x && !w.has(x)) { r.observe(x); w.add(x); }
   });
   // the "each round" block moving between the name row and the figures' row resizes nothing the observer watches
   useLayoutEffect(() => { if (measure.current) measure.current(); }, [layout]);
