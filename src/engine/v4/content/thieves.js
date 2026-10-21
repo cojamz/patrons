@@ -323,9 +323,11 @@ const thieves = {
     m('desperado', 'Desperado', 2, 2, 'While you have the fewest followers (ties count), double the base resources stolen from spaces.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
-    m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower.', {
+    // Cory's #67 "maybe needs to scale" (concept, Oct 21, not approved): +1 × round
+    m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower × round.', {
       onSteal(ctx, owner, card, info) {
-        if (info.thief === owner && (info.led ?? ledBefore(ctx, info))) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
+        const k = Math.max(1, ctx.state.round);
+        if (info.thief === owner && (info.led ?? ledBefore(ctx, info))) { owner.bonus += k; ctx.log(`${owner.name}'s Robin Hood: +${k} follower${k > 1 ? 's' : ''}.`); }
       },
     }),
     m('lookout', 'Lookout', 4, 2, 'Once per round, when a rival steals from someone else, take 1 resource from the thief.', {
@@ -366,8 +368,19 @@ const thieves = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 4),
     }),
-    m('kingpin', 'Kingpin', 4, 0, 'Game end: +1 follower per 2 magenta.', {
-      onGameEnd: (ctx, owner) => Math.floor((owner.res.magenta || 0) / 2),
+    // Cory's #69 "King of Thieves… based more on members… shouldn't compete with ring competition" (concept, Oct 21)
+    m('kingpin', 'Kingpin', 1, 3, 'Game end: +1 follower per magenta member you have.', {
+      onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'thieves'),
+    }),
+    // concepts, Oct 21, not approved: a counter in Bait's shape, and a weak card for "magenta doesn't gain enough"
+    m('snitch', 'Snitch', 2, 2, 'Whenever a rival steals from you, they lose 1 follower.', {
+      onSteal(ctx, owner, card, info) {
+        if (info.victim !== owner || info.thief === owner || ctx.followers(info.thief) <= 0) return;
+        info.thief.bonus -= 1; ctx.log(`${owner.name}'s Snitch: ${info.thief.name} loses 1 follower.`);
+      },
+    }),
+    m('fence', 'Fence', 1, 2, 'Whenever you steal, +1 magenta.', {
+      onSteal(ctx, owner, card, info) { if (info.thief === owner) ctx.gain(owner, 'magenta', 1); },
     }),
   ],
 };
