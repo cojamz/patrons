@@ -1056,14 +1056,24 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           chain.flying++;
           // lift, then a true arc to the hub, fading as the member's card opens out of it there
           const bow = onScreenBow(sn.rect, hub, Math.max(16, Math.min(70, Math.hypot(dx, dy) * 0.18)));
-          const anim = track(g.animate([
+          const path = [
             { transform: 'translate(0px,0px) scale(1)', offset: 0, easing: 'ease-out' },
             { transform: 'translate(0px,-10px) scale(1.06)', offset: k1 },
             ...arcFrames(dx, dy, bow, { from: k1, s0: 1.06, s1: 1.2, y0: -10, ease: CARD_EASE }),
-          ], { duration: total, fill: 'forwards' }));
+          ];
+          const anim = track(g.animate(path, { duration: total, fill: 'forwards' }));
           track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k1 + (1 - k1) * 0.55 }, { opacity: 0 }], { duration: total, fill: 'forwards' }));
-          // the bought card says so before it leaves (H13): a warm ring comes up as it lifts and lets go as it flies
-          track(g.animate([
+          // the bought card says so before it leaves (H13): a warm ring comes up as it lifts and lets go as it flies. The
+          // ring is its own empty box riding the same path: a shadow animated on the card itself repainted the whole
+          // card (its words, its portrait) every frame of the lift
+          const ring = document.createElement('div');
+          ring.className = 'flight card-ring ghost-layer';
+          ring.dataset.born = g.dataset.born;
+          Object.assign(ring.style, { left: g.style.left, top: g.style.top, width: g.style.width, height: g.style.height, borderRadius: 'var(--corner, 8px)' });
+          g.before(ring);
+          track(ring.animate(path, { duration: total, fill: 'forwards' }));
+          onFinish(anim, () => ring.remove());
+          track(ring.animate([
             { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 0 },
             { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', offset: k1 },
             { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: Math.min(0.99, k1 + (1 - k1) * 0.4) },
