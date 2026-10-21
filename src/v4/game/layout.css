@@ -53,6 +53,20 @@
   .lt > .error{left:50%;right:auto;bottom:12px;translate:-50% 0;z-index:45}
   .lt > .room{top:4px;bottom:auto;left:62px}
 }
+/* Large screens (from 1600×880): the wheel grew with the window and the side columns didn't (design pod queue, 09:00:
+   at 1920×1080 the chairs filled half their column and read small beside a 1000px wheel). The 1270×700 composition
+   scales whole: the columns, the prompt, the chairs, the story, the turn card and the shop zoom by one step (--gz), and
+   the grid's tracks grow by the same step. Steps, not a smooth factor, so a resize never re-lays the shop's cards a pixel
+   at a time. Hover cards and flights live on the page, outside the zoom, and place themselves from what they measure, so
+   they land where things are drawn (lane 8, 2026-10-21). */
+@media (min-width:1600px) and (min-height:880px){
+  .app.game.lt{--gz:1.25;--col-l:calc(320px * var(--gz));--col-r:calc(340px * var(--gz));--col-gap:calc(16px * var(--gz));
+    grid-template-rows:calc(72px * var(--gz)) minmax(0,1fr);padding:calc(8px * var(--gz)) calc(18px * var(--gz))}
+  .app.game.lt > .lt-prompt,.app.game.lt > .lt-snake,.app.game.lt > .lt-seat,.app.game.lt > .lt-since,.app.game.lt > .lt-shop,.app.game.lt > .turn-card{zoom:var(--gz)}
+}
+@media (min-width:1780px) and (min-height:980px){ .app.game.lt{--gz:1.4} }
+@media (min-width:2030px) and (min-height:1120px){ .app.game.lt{--gz:1.6} }
+@media (min-width:2540px) and (min-height:1400px){ .app.game.lt{--gz:2} }
 /* a short wide laptop (1270×700): four chairs reach ~575px, and the story under them had ~70px (one line, under an
    "N earlier"), and while a turn card was up the card covered even its heading (lane 8, 2026-10-21). The chairs start
    higher and sit a little tighter, and the story starts closer under them: two whole turns once the card folds, and

@@ -436,7 +436,10 @@ function TurnCard({ card, root, state }) {
     const table = tableOf();
     const pos = turnCardDock(card, table);
     if (!pos) { el.style.display = 'none'; return; }
-    const px = v => (v == null ? '' : `${v}px`);
+    // a large screen zooms the card with the columns (layout.css --gz): its place is measured on screen, so it's written
+    // in the card's own (zoomed) pixels
+    const z = parseFloat(getComputedStyle(el).zoom) || 1;
+    const px = v => (v == null ? '' : `${z === 1 ? v : Math.round((v / z) * 10) / 10}px`);
     Object.assign(el.style, { display: '', left: px(pos.left), right: px(pos.right), top: px(pos.top), bottom: px(pos.bottom), width: px(pos.width), maxWidth: px(pos.width), transformOrigin: `${pos.ox} ${pos.oy}` });
     // the card always fits on screen (wave-2: a bot's card ran off the bottom): slid back up if it reaches past the bottom
     if (pos.top != null) {
