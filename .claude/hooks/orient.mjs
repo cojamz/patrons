@@ -15,7 +15,7 @@ const ahead = live.commit ? sh(`git rev-list --count ${live.commit}..HEAD`) : '?
 out.push(`# Cults orientation (${src})`);
 out.push(`Branch ${branch} at ${head}. Live play link: ${live.version || '?'} from ${String(live.commit || '?').slice(0, 7)}; this branch is ${ahead} commits past it.`);
 
-const harnessDiff = sh('git diff --stat origin/main HEAD -- CLAUDE.md AGENTS.md .claude | tail -1');
+const harnessDiff = sh('git diff --stat origin/main HEAD -- CLAUDE.md AGENTS.md .claude/settings.json .claude/hooks .claude/rules .claude/skills .claude/agents .claude/output-styles | tail -1');
 if (harnessDiff) out.push(`Harness on main differs from this branch (${harnessDiff}). New threads load main's copy: run bash scripts/harness-sync-main.sh after committing harness changes.`);
 
 const board = sh('node scripts/status.mjs board');
