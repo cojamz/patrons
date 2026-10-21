@@ -339,7 +339,9 @@ const market = {
     m('plusone', 'Plus-One', 1, 1, 'When recruited: buy again this turn.', { f: 2,
       onRecruited(ctx, owner) { extraBuys(ctx, owner, 1); },
     }),
-    m('doorman', 'Doorman', 1, 2, 'Whenever a rival recruits a second member in one turn, +1 blue.', {
+    // Cory, Oct 21: "any time a player recruits more than once in a turn", swaps and takes included (they all reach
+    // onAnyRecruit through memberAcquired)
+    m('doorman', 'Doorman', 1, 2, 'Whenever a rival recruits more than once in a turn (swaps count), +1 blue.', {
       onAnyRecruit(ctx, owner, card, by) {
         if (by === owner) return;
         const stamp = `${ctx.state.round}:${(ctx.state.turns || []).length}`;
@@ -364,15 +366,6 @@ const market = {
       },
     }),
     // Claude's fill-in counters, Oct 21, not approved
-    m('tastemaker', 'Tastemaker', 1, 2, 'Round end, before scoring: take 1 blue from each rival with more blue than you.', {
-      onRoundEnd(ctx, owner) {
-        const mine = owner.res[B] || 0;
-        for (const o of ctx.state.players) if (o !== owner && (o.res[B] || 0) > mine) {
-          o.res[B] -= 1; owner.res[B] = (owner.res[B] || 0) + 1;
-          ctx.log(`${owner.name}'s Tastemaker takes 1 blue from ${o.name}.`);
-        }
-      },
-    }),
     m('bouncer', 'Bouncer', 1, 2, 'Rivals can’t recruit more than 2 members in one turn.', { capRivalRecruits: 2 }),
   ],
 };
