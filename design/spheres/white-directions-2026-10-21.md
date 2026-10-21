@@ -16,6 +16,7 @@ Round III: take the prizes of the contests you lead right now, instead of at rou
 - Why it's grounded: holding versus spending is the core tension since Oct 20, and the contests are where it lives. This is the only direction that plays right on top of it. It adds no followers to the game: an early prize replaces the round-end one.
 - With the finished colors: Red, Green, Magenta and Blue all score held color now, so every player has a rim worth cashing, and White's spaces are wanted beyond the White player. Magenta can break a lead before it's cashed. Green copying a cash would cash the copier's own leads.
 - Rounds I and II: smaller cashes (one contest), and ways to build or match a lead in any color, so you can plan "tie it now, cash it next turn".
+- Against Cory's Gold verdict (Oct 21: "the core gold idea doesn't work as well now that almost all colors will give resource based points at round end"): this isn't a hoard of one color. It's about when any contest pays, so it gets stronger the more colors score held piles, not weaker.
 - Risk: it changes how a base rule reads (a rim can be "taken early"), and it softens the hold-or-spend weigh for whoever cashes.
 
 ## 2. White guards the wheel
