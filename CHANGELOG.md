@@ -1,8 +1,9 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.16, published 2026-10-20. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.17, published 2026-10-20. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.17 — 2026-10-20 — unreleased
+## v0.8.17 — 2026-10-20 — shipped (source 84b7374)
+
 
 - Shop: an "affordable" toggle fades the members you can't pay for.
 - Red's shop swap names both members.
