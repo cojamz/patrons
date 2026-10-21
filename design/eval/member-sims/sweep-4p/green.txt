@@ -1,0 +1,73 @@
+sweep: 4 seats, normal bots, 300 paired seeds (free-choice arm on the first 0, 2 rollouts a side), forked at round 2. 2919s on 4 workers.
+
+Agents: printed 3, fair ~4.9 (90% 2.9–8.7; line 3.06 -0.62·P; interpolated 4.5)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   0       3.60 ±1.92   100    12   |             –          –     –   |    6.88 (6.25)      2.0
+   3       0.11 ±1.93   100     4   |             –          –     –   |    6.63 (6.25)      2.0
+   6      -0.11 ±2.00   100     2   |             –          –     –   |    6.39 (6.25)      2.0
+
+Bait: printed 5, fair ~3.3 (90% 1.9–4.5; line 3.68 -1.10·P; interpolated 3.4)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   2       1.29 ±2.07   100     5   |             –          –     –   |    6.42 (6.25)      2.0
+   5      -1.46 ±1.86    99    -2   |             –          –     –   |    6.27 (6.25)      2.1
+   8      -5.33 ±1.56    93   -11   |             –          –     –   |    6.30 (6.25)      2.5
+
+Chronicler: printed 5, fair ~3.9 (90% 2.6–5.0; line 5.15 -1.31·P; interpolated 3.8)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   2       2.65 ±2.16   100     8   |             –          –     –   |    6.48 (6.25)      2.0
+   5      -1.68 ±1.91   100    -1   |             –          –     –   |    6.24 (6.25)      2.0
+   8      -5.22 ±1.79    98    -9   |             –          –     –   |    6.28 (6.25)      2.1
+
+Connector: printed 6, fair ~4.1 (90% 0.1–6.3; line 2.16 -0.53·P; interpolated 4.1)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   3       0.52 ±1.96   100     4   |             –          –     –   |    6.52 (6.25)      2.0
+   6      -0.91 ±1.84    97    -0   |             –          –     –   |    6.42 (6.25)      2.2
+   9      -2.66 ±1.49    77    -3   |             –          –     –   |    6.40 (6.25)      2.7
+
+Tribute Band: printed 10, fair ~12.9 (90% 12.2–13.8; line 16.39 -1.27·P; interpolated ≥13.0)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   7       8.33 ±2.17    78    23   |             –          –     –   |    6.51 (6.25)      2.7
+  10       1.94 ±1.32    43     6   |             –          –     –   |    6.46 (6.25)      2.9
+  13       0.68 ±1.23    21     3   |             –          –     –   |    6.32 (6.25)      3.0
+
+Doppelganger: printed 5, fair ~3.7 (90% 2.2–4.8; line 3.77 -1.02·P; interpolated 3.6)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   2       1.99 ±2.02   100     7   |             –          –     –   |    6.54 (6.25)      2.0
+   5      -1.86 ±1.81    99    -6   |             –          –     –   |    6.35 (6.25)      2.1
+   8      -4.15 ±1.65    93    -8   |             –          –     –   |    6.41 (6.25)      2.5
+
+Ensemble: printed 6, fair ~3.1 (90% 0.5–4.5; line 2.85 -0.92·P; interpolated ≤3.0)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   3      -0.31 ±1.99   100     2   |             –          –     –   |    6.35 (6.25)      2.0
+   6      -1.93 ±1.96    99    -2   |             –          –     –   |    6.24 (6.25)      2.1
+   9      -5.85 ±1.56    93    -9   |             –          –     –   |    6.32 (6.25)      2.6
+
+Busker: printed 4, fair ~4.9 (90% 3.3–7.0; line 4.06 -0.82·P; interpolated 4.9)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   1       3.27 ±1.93   100     7   |             –          –     –   |    6.61 (6.25)      2.0
+   4       0.69 ±2.08   100     8   |             –          –     –   |    6.50 (6.25)      2.0
+   7      -1.67 ±2.02   100    -1   |             –          –     –   |    6.22 (6.25)      2.0
+
+Stunt Double: printed 4, fair ~5.5 (90% 4.3–6.9; line 6.94 -1.26·P; interpolated 5.3)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   1       6.10 ±2.14   100    17   |             –          –     –   |    6.70 (6.25)      2.0
+   4       1.06 ±2.04   100     9   |             –          –     –   |    6.41 (6.25)      2.0
+   7      -1.46 ±1.95    97     0   |             –          –     –   |    6.48 (6.25)      2.2
+
+Impostor: printed 6, fair ~3.3 (90% -0.2–5.2; line 2.19 -0.67·P; interpolated 3.4)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   3       0.27 ±1.98   100     1   |             –          –     –   |    6.59 (6.25)      2.0
+   6      -1.97 ±1.78    97    -1   |             –          –     –   |    6.55 (6.25)      2.2
+   9      -3.73 ±1.39    77    -6   |             –          –     –   |    6.54 (6.25)      2.7
+
+Muse: printed 4, fair ~2.7 (90% 0.6–4.2; line 2.28 -0.84·P; interpolated 2.7)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   1       1.48 ±1.98   100     5   |             –          –     –   |    6.46 (6.25)      2.0
+   4      -1.14 ±1.95   100    -3   |             –          –     –   |    6.35 (6.25)      2.0
+   7      -3.53 ±1.66    97    -6   |             –          –     –   |    6.30 (6.25)      2.2
+
+Impressionist: printed 4, fair ~2.7 (90% 0.6–4.2; line 2.27 -0.84·P; interpolated 2.7)  [echo,thieves,red,market]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   1       1.48 ±1.98   100     5   |             –          –     –   |    6.46 (6.25)      2.0
+   4      -1.16 ±1.95   100    -3   |             –          –     –   |    6.35 (6.25)      2.0
+   7      -3.53 ±1.66    97    -6   |             –          –     –   |    6.30 (6.25)      2.2

@@ -53,11 +53,11 @@ function offerFrom(ctx, owner, uid) {
 const stillMine = (ctx, p, w) => (w.joined ? (ctx.state.squats?.[w.key] || []).includes(p.id) : ctx.state.slots[w.key] === p.id);
 
 const members = [
-  m('squatter', 'Squatter', 'thieves', 5, 2, 'Once per round: place a minion on a space a rival already took.', { squat: true }),
+  m('squatter', 'Squatter', 'thieves', 3, 1, 'Once per round: place a minion on a space a rival already took.', { squat: true }),
   m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per round: recruit twice in one turn.', { extraBuy: true }),
-  m('freelancer', 'Freelancer', 'yellow', 3, 3, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
+  m('freelancer', 'Freelancer', 'yellow', 2, 1, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
-  m('extrahand', 'Extra Hand', 'purple', 6, 3, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
+  m('extrahand', 'Extra Hand', 'purple', 5, 3, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
   m('frontrunner', 'Front-runner', 'purple', 5, 0, 'You go first every round.', { pickFirst: true }), // Cory, Oct 21: 5
   // Cory's ideas, Oct 21, on this sim branch only. Launderer is simplified for the bots: one color, not any split.
   m('launderer', 'Launderer', null, 0, 6, 'When recruited: turn all your resources into one color you choose.', {
@@ -72,7 +72,7 @@ const members = [
       ctx.choose(owner, 'Launderer: turn everything into which color?', opts, 'benders.launder');
     },
   }),
-  m('tiebreaker', 'Tiebreaker', null, 0, 6, 'Ties you’re in go to you alone.', { tiebreak: true }),
+  m('tiebreaker', 'Tiebreaker', null, 0, 5, 'Ties you’re in go to you alone.', { tiebreak: true }),
   m('straggler', 'Straggler', 'purple', 4, 1, 'Once per round, after the last minion is placed: you may move your last minion to an open space and take it.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;

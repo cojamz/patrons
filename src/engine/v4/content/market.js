@@ -261,7 +261,7 @@ const market = {
   },
 
   members: [
-    m('stylist', 'Stylist', 2, 2, 'Whenever anyone recruits a blue member, +1 blue.', {
+    m('stylist', 'Stylist', 2, 1, 'Whenever anyone recruits a blue member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) {
         if (rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1);
       },
@@ -272,7 +272,7 @@ const market = {
     m('onlooker', 'Onlooker', 6, 4, 'Whenever a rival recruits a blue member, +2 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 2); },
     }),
-    m('connoisseur', 'Connoisseur', 2, 2, 'Whenever you recruit a blue member, +1 blue.', {
+    m('connoisseur', 'Connoisseur', 1, 1, 'Whenever you recruit a blue member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1); },
     }),
     m('reseller', 'Reseller', 4, 2, 'Whenever you recruit, +1 of that member’s color.', {
@@ -309,7 +309,7 @@ const market = {
     }),
     // Cory, Oct 21: "whenever cards are placed on the bottom of the deck". Turns only, not the round-start refresh
     // (Claude's fill-in: he called bottom-of-pile payouts "too strong between rounds" on Oct 20).
-    m('patroness', 'Patroness', 2, 2, 'Whenever a shop member goes to the bottom of the pile, +1 follower.', { bottomFollowers: true }),
+    m('patroness', 'Patroness', 3, 2, 'Whenever a shop member goes to the bottom of the pile, +1 follower.', { bottomFollowers: true }),
     m('blackmarket', 'Talent Scout', 2, 2, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
       activate: 'game',
       onActivate(ctx, owner) {
@@ -330,13 +330,13 @@ const market = {
     }),
     // concepts, Oct 21, not approved (design/eval/member-concepts-2026-10-21.md): prices are sim starting points
     m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true }),
-    m('windowdresser', 'Window Dresser', 1, 2, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', {
+    m('windowdresser', 'Window Dresser', 0, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', {
       onRecruited(ctx, owner) {
         churnStep(ctx, owner, { left: Math.min(3, ctx.state.shop.length) });
         ctx.defer(owner, `${Q}.churnRefill`);
       },
     }),
-    m('plusone', 'Plus-One', 1, 1, 'When recruited: recruit again this turn.', { f: 2,
+    m('plusone', 'Plus-One', 2, 1, 'When recruited: recruit again this turn.', { f: 2,
       onRecruited(ctx, owner) { extraBuys(ctx, owner, 1); },
     }),
     // Cory, Oct 21: "any time a player recruits more than once in a turn", swaps and takes included (they all reach
@@ -354,7 +354,7 @@ const market = {
     }),
     m('shoppers', 'Window Shoppers', 1, 1, 'Worth 2 followers.', { f: 2, n: 2, vanilla: true }),
     // Cory's, Oct 21: "one recruit, refresh the shop. all the members"; prices are sim starting points
-    m('makeover', 'Makeover', 1, 2, 'When recruited: send the whole shop to the bottom of the pile, then refill.', {
+    m('makeover', 'Makeover', 0, 1, 'When recruited: send the whole shop to the bottom of the pile, then refill.', {
       onRecruited(ctx) { sweepRow(ctx); },
     }),
     // Cory's, Oct 21: "when you buy followers +1 blue"; his Oct 21 definition makes buying followers a recruit
@@ -362,7 +362,7 @@ const market = {
       onBuyFollowers(ctx, owner, card, by) { if (by.id === owner.id && ctx.gain(owner, B, 1)) ctx.log(`${owner.name}'s Regular: +1 blue.`); },
     }),
     // Cory's pick for Blue's 12th, Oct 21 ("trendsetter is good!")
-    m('trendsetter', 'Trendsetter', 1, 2, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', {
+    m('trendsetter', 'Trendsetter', 0, 1, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', {
       onRecruit(ctx, owner, card, by, what) {
         if (by !== owner || what.member?.uid === card.uid || !ctx.state.shop.length) return;
         churnStep(ctx, owner, { left: 1 });
