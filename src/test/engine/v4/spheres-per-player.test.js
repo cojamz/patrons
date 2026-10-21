@@ -14,12 +14,16 @@ const bots = n => Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind
 function play(n, seed, quadrants) {
   const rand = seededRandom(seed * 7919 + n);
   let s = createGame({ seats: bots(n), seed, ...(quadrants ? { quadrants } : {}) });
-  let lastR1 = null;
+  // every space taken in round I, read off the moves (the last placement can close the round in the same move)
+  const r1 = { quadrants: s.quadrants, slots: {}, squats: 0 };
   while (!s.over) {
-    if (s.round === 1) lastR1 = s;
-    s = applyMove(s, chooseBotMove(s, rand));
+    const mv = chooseBotMove(s, rand);
+    if (s.round === 1 && mv.option?.startsWith('slot:')) r1.slots[mv.option.slice(5)] = true;
+    const squats = s.round === 1 ? Object.values(s.squats || {}).flat().length : 0;
+    s = applyMove(s, mv);
+    if (s.round === 1) r1.squats = Math.max(r1.squats, squats, Object.values(s.squats || {}).flat().length);
   }
-  return { r1: lastR1, end: s };
+  return { r1, end: s };
 }
 const ringOneTaken = s => Object.keys(s.slots).filter(k => { const [q, i] = k.split('-').map(Number); return quadrant(s.quadrants[q]).actions[i].ring === 1; }).length;
 
@@ -44,7 +48,8 @@ describe('spheres = players', () => {
         expect(tableProblem(t, n)).toBe('');
         const { r1, end } = play(n, 100 + k, t);
         expect(end.quadrants).toEqual(t);
-        expect(ringOneTaken(r1)).toBe(3 * n);
+        // a Squatter's minion joins a taken space, so it leaves one space open
+        expect(ringOneTaken(r1) + r1.squats).toBe(3 * n);
         expect(end.over).toBe(true);
       });
     }
