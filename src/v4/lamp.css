@@ -500,6 +500,11 @@ h1,h2,h3{font-family:var(--serif)}
   background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);box-shadow:0 0 0 2px var(--c,var(--paper-edge)),0 14px 30px rgba(0,0,0,.55);min-width:min(420px, 92vw);text-align:center}
 /* the card never covers the rim it scores: a rim in the wheel's lower half sends it to the top (motion review #29) */
 .lt-reckon .reckon-head.at-top{bottom:auto;top:14px}
+/* round-end smoothing (frame by frame at Steady, 1270×700): the card came up in one frame over the last move; it now
+   fades up in a beat, and each rim's words fade in as the lamp moves (opacity and scale only: its transform places it) */
+.lt-reckon:not(.waiting) .reckon-head{animation:reckonin calc(.2s * var(--mo-slow, 1)) cubic-bezier(.3,.7,.4,1) both}
+@keyframes reckonin{from{opacity:0;scale:.96}to{opacity:1;scale:1}}
+.lt-reckon .reckon-head .reckon-rule,.lt-reckon .reckon-head .reckon-counts{animation:fade calc(.18s * var(--mo-slow, 1)) ease-out both}
 /* a seat's count stamps in, then ticks (the counting is the motion, #30); the leader's count hops once */
 .lt-reckon .reckon-count{animation:reckonstamp var(--mo-land) cubic-bezier(.3,1.5,.5,1) both}
 @keyframes reckonstamp{from{opacity:0;scale:1.25}to{opacity:1;scale:1}}
@@ -643,14 +648,16 @@ h1,h2,h3{font-family:var(--serif)}
 /* the Reckoning's scoreboard: every player's count side by side on the card; the winner's column cheers */
 .lt-reckon .reckon-board{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px;width:100%;margin:8px 0 4px}
 .lt-reckon .reckon-board .rc{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 6px;border-radius:10px;opacity:.25;transition:opacity calc(.2s * var(--mo-slow)),background-color calc(.2s * var(--mo-slow))}
-.lt-reckon .reckon-board .rc.in{opacity:1;animation:reckonstamp var(--mo-land) cubic-bezier(.3,1.5,.5,1) both}
+.lt-reckon .reckon-board .rc.in{opacity:1;animation:reckonstampcol var(--mo-land) cubic-bezier(.3,1.5,.5,1) both}
+/* a column stamps in from where it rested (.25), never blinking out to nothing first (round-end smoothing) */
+@keyframes reckonstampcol{from{opacity:.25;scale:1.12}to{opacity:1;scale:1}}
 .lt-reckon .reckon-board .rc-who{display:flex;align-items:center;gap:5px;font:600 14px/1 var(--sans);color:var(--paper-ink-2);max-width:100%;white-space:nowrap;overflow:hidden}
 .lt-reckon .reckon-board .rc-who svg{flex:none}
 .lt-reckon .reckon-board .rc-n{font:800 36px/1 var(--sans)!important;color:var(--paper-ink)}
 .lt-reckon .reckon-board .rc.lost{opacity:.45}
 .lt-reckon .reckon-board .rc.won{background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 2px var(--c);animation:reckoncheer calc(.7s * var(--mo-slow)) cubic-bezier(.3,1.4,.5,1) 2}
 @keyframes reckoncheer{0%,100%{transform:translateY(0) rotate(0)}15%{transform:translateY(-8px) rotate(-4deg)}30%{transform:translateY(-2px) rotate(3deg)}45%{transform:translateY(-6px) rotate(-2deg)}65%{transform:translateY(0) rotate(1deg)}}
-@media (prefers-reduced-motion: reduce){.lt-reckon .reckon-board .rc.won,.lt-reckon .reckon-board .rc.in{animation:none}}
+@media (prefers-reduced-motion: reduce){.lt-reckon .reckon-board .rc.won,.lt-reckon .reckon-board .rc.in,.lt-reckon .reckon-head,.lt-reckon .reckon-head .reckon-rule,.lt-reckon .reckon-head .reckon-counts{animation:none}}
 /* the round-end card waits, unseen, for the round's last move to land (Reckoning.jsx) */
 .lt-reckon.waiting{visibility:hidden}
 

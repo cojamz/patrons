@@ -199,7 +199,9 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         longest = Math.max(longest, d);
         const go = () => {
           const anim = flyToken(src, home, `<b class="reckon-token" style="--pc:${playerColor(id)}">${row.prize < 0 ? '−' : '+'}${Math.abs(row.prize)}</b>`, { tag: 'reckon', duration: d });
-          if (anim && anim.finished) anim.finished.then(land, land); else land();
+          // (round-end smoothing) the total starts to roll as the token reaches it, while it fades onto it: on the token's
+          // finish the table's re-render landed the first number a beat after the token had gone (frame by frame, ~0.2s)
+          if (anim && anim.finished) { let once = false; const go1 = () => { if (!once) { once = true; land(); } }; timers.push(setTimeout(go1, Math.round(d * 0.8))); anim.finished.then(go1, go1); } else land();
         };
         if (k) timers.push(setTimeout(go, k * MO.fan)); else go();
       });
@@ -235,8 +237,9 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         {ready && (
           <>
           <small>{row?.kind === 'bonus' ? 'End-game bonuses' : `Round ${info.result.round} scoring`} · {Math.min(step + 1, rows.length)} of {rows.length}</small>
-          {row && <b className="reckon-rule">{row.rule}</b>}
-          {row && row.counts && <span className="reckon-counts">{row.kind === 'bonus' ? '' : 'Counts '}{row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
+          {/* (keyed by the rim: the next rim's words fade in rather than swap in one frame, round-end smoothing) */}
+          {row && <b key={`r${step}`} className="reckon-rule">{row.rule}</b>}
+          {row && row.counts && <span key={`c${step}`} className="reckon-counts">{row.kind === 'bonus' ? '' : 'Counts '}{row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
           {/* the four scores side by side (Cory, 2026-10-15: "show the 4 players' scores for the various competitions"):
               each player's count stamps in and ticks up under their minion; the winner's column jiggles */}
           {row && mid && step < rows.length && (
