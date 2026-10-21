@@ -26,12 +26,12 @@ Answer by number. Claude's default in [brackets].
 8. Bookkeeper ("+1 purple per 2 minions you have on the board") needs a rework. [with Purple's rework]
 9. Stolen loot and gold members: an action's steal counts as a gain from an action, so Midas turns the loot to gold and Underdog doubles it (interactions.test.js DESIGN QUESTION). [keep; Midas is culled from the live deck anyway]
 10. Stealing a member fires its "when recruited" effect for the thief (a stolen Lender pays +5; cards-trading.test.js). [yes: his Oct 18 call says taking a member counts as a recruit; Lender is culled from the live deck]
-11. Tiebreaker on followers is most members (built, format.js:377). [keep]
-12. Online on the real link: allow *.firebaseio.com, identitytoolkit.googleapis.com, securetoken.googleapis.com in the environment, or he plays one 2-laptop game. [he plays one]
-13. Faint marks for colorblind players (morning note #6). [no, unless a friend needs them]
-14. Old notes nobody can place: "Hover over in the glossary", "Round 3 actions", "This should straight up steal", "follower claims visibility". [drop them]
-15. Your seat's member card: with two rows of members, a member's hover card covers the second row wherever it opens. Open it below the whole member block? [yes]
-16. Wording pass sheet: /mnt/project-files/overnight/lane8/wording-sheet.md, yes/no per row (⚑ rows are rules questions). [nothing ships until you answer]
+11. Tiebreaker on followers is most members (built, format.js:377). [keep] [x] (Cory 10-21: yes, keep)
+12. Online on the real link: allow *.firebaseio.com, identitytoolkit.googleapis.com, securetoken.googleapis.com in the environment, or he plays one 2-laptop game. [he plays one] [x] (Cory 10-21: online works)
+13. Faint marks for colorblind players (morning note #6). [no, unless a friend needs them] [x] (Cory 10-21: no)
+14. Old notes nobody can place: "Hover over in the glossary", "Round 3 actions", "This should straight up steal", "follower claims visibility". [drop them] [x] (Cory 10-21: yes, dropped)
+15. Your seat's member card: with two rows of members, a member's hover card covers the second row wherever it opens. Open it below the whole member block? [yes] [x] (Cory 10-21: drop it; the overlap check is gone)
+16. Wording pass sheet: /mnt/project-files/overnight/lane8/wording-sheet.md, yes/no per row (⚑ rows are rules questions). [nothing ships until you answer] (Cory 10-21: "ok.." → applying the rows that only reword; ⚑ rules rows held)
 
 ## Ours, open
 Correctness and Cory's made calls
