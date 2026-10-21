@@ -46,6 +46,7 @@ Correctness and Cory's made calls
 - [ ] Long shop member names fit their box (hotseat e2e: Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double); recheck first.
 
 Laptop UI clarity
+- [ ] "Buy" → "Recruit" for members everywhere (buttons, prompts, toasts, log, rulebook, card text); "buy followers" stays (Cory, 2026-10-21, design thread). After the panel A build lands.
 - [x] Scaling text as "I: … / II: … / III: …" lines, the current round lit (hovers, member cards, seat list; wheel faces unchanged; the shop's details view now too, compact: "I +1 · II +2 · III +3").
 - [x] "P2 took X from you": shorter, near your player card.
 - [x] Red shop-swap turn toast names both the outgoing and incoming member. (v0.8.21)
