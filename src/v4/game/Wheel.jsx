@@ -601,7 +601,9 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   const rotSeen = useRef(rot);
   useEffect(() => { if (Math.abs(rot - rotSeen.current) > 2) { rotSeen.current = rot; setPeek(p => (p && !p.pinned ? null : p)); } }, [rot]);
   // A new decision clears a stale selection and any note.
-  useEffect(() => { setPeek(null); setDeny(null); setSent(null); }, [state]);
+  // A ghost whose state has gone is dropped too: Undo hands back that very state object, which revived it (steal.mjs e1:
+  // after Escape on Kickback your minion still stood there, unlit, though the engine had taken the placement back)
+  useEffect(() => { setPeek(null); setDeny(null); setSent(null); setGhost(g => (g && g.state !== state ? null : g)); }, [state]);
   // a placement the table took but whose state never came (it can't happen locally; belt and braces): gone after 2s.
   // A ghost the new state has replaced is simply ignored (no render to clear it)
   const stateNow = useRef(state);
