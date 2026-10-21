@@ -2,7 +2,7 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.22 — 2026-10-21 — unreleased
+## v0.8.22 — 2026-10-21 — shipped (source febdee1)
 
 - Laptops: chairs run full height beside a narrower shop; the story holds two turns. Big screens scale the whole table. Silver, white and colorless members get their own card look. Your first placement each round says which rings are open.
 
