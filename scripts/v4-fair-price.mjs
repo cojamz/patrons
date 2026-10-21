@@ -17,6 +17,7 @@
 //   node scripts/v4-fair-price.mjs screen [--games=3000] [--jitter=0.4] [--workers=2] [--out=file.json]
 //   node scripts/v4-fair-price.mjs sweep banker,volunteer,bigfamily [--games=200] [--free=60] [--rollouts=2]
 //        [--deltas=-6,-4,-2,0,2,4] [--round=2] [--workers=2] [--out=file.json]
+//        [--seats=2|3|4] [--table=thieves,red,echo,market] (the card's sphere plus the first others, one per seat)
 //   Card names: key or name (case-insensitive), or the groups "anchors" and "benders".
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +27,9 @@ import { chooseNormalMove } from '../src/engine/v4/bots.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
 import { allQuadrantIds, quadrant, guestMembers, registerQuadrant, DEFAULT_QUADRANTS } from '../src/engine/v4/content/index.js';
 
-const SEATS = 4;
+// seats and the base table can change per run (--seats, --table); the worker threads read them from params
+let SEATS = 4;
+let BASE_TABLE = null;
 const ROLLOUT = { noise: 0.6, payWays: 2, payOptions: 2 };
 const ALL_Q = allQuadrantIds();
 const allDefs = () => [...ALL_Q.flatMap(q => quadrant(q).members), ...guestMembers()];
@@ -277,10 +280,12 @@ function playOut(fork, seed, seat, arm, uid, rollouts, think = 3) {
 }
 
 function tableFor(def) {
-  if (DEFAULT_QUADRANTS.includes(def.quadrant) || def.guest) return DEFAULT_QUADRANTS;
-  const r = quadrant(def.quadrant).resource;
-  const keep = DEFAULT_QUADRANTS.filter(q => quadrant(q).resource !== r);
-  return [...keep.slice(0, 3), def.quadrant];
+  const base = BASE_TABLE || DEFAULT_QUADRANTS;
+  const r = def.guest ? null : quadrant(def.quadrant).resource;
+  // the card's own sphere first, then the base table's spheres of other colors, as many as there are seats
+  const others = base.filter(q => q !== def.quadrant && (!r || quadrant(q).resource !== r));
+  const t = def.guest ? others : [def.quadrant, ...others];
+  return t.slice(0, Math.max(2, SEATS));
 }
 
 function gridFor(def, deltas, printed) {
@@ -382,6 +387,8 @@ function runPool(kind, n, params, workers, raw) {
 
 if (!isMainThread) {
   const { kind, params } = workerData;
+  if (params.seats) SEATS = params.seats;
+  if (params.table) BASE_TABLE = params.table;
   if (kind === 'screen') { const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js'); params.tables = makeTables(4242, 2).tables; }
   parentPort.on('message', g => {
     if (g < 0) { process.exit(0); }
@@ -420,8 +427,11 @@ if (!isMainThread) {
     console.log('card'.padEnd(22), 'print', ' fair', '  90% CI     ', 'owners', 'offers', 'buy%', 'demand', ' net@printed');
     for (const c of ranked) console.log(c.id.slice(0, 22).padEnd(22), String(c.printed).padStart(5), f1(c.fair).padStart(5), `${f1(c.lo)}–${f1(c.hi)}`.padEnd(13), String(c.owners).padStart(6), String(c.offers).padStart(6), (c.buyRate * 100).toFixed(0).padStart(4), f1(c.demandSlope).padStart(6), `${c.value.toFixed(2)}±${c.vSE.toFixed(2)}`.padStart(11), c.low ? 'LOW SAMPLE' : '');
   } else if (mode === 'sweep') {
+    if (flags.seats) SEATS = Number(flags.seats);
+    if (flags.table) BASE_TABLE = String(flags.table).split(',');
     const cards = findDefs((names || 'anchors').split(',')).map(d => d.id);
     const params = {
+      seats: SEATS, table: BASE_TABLE,
       cards, round: Number(flags.round || 2), freeN: Number(flags.free ?? 40), rollouts: Number(flags.rollouts || 2), think: Number(flags.think || 3),
       deltas: (flags.deltas || '-6,-4,-2,0,2,4').split(',').map(Number),
     };
@@ -433,7 +443,7 @@ if (!isMainThread) {
     const rows = analyseSweep(res, params);
     const out = { mode, games, ...params, secs: (Date.now() - t0) / 1000, rows };
     if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
-    console.log(`sweep: ${res.length} paired seeds (free-choice arm on the first ${params.freeN}, ${params.rollouts} rollouts a side), forked at round ${params.round}. ${out.secs.toFixed(0)}s on ${workers} workers.`);
+    console.log(`sweep: ${SEATS} seats, normal bots, ${res.length} paired seeds (free-choice arm on the first ${params.freeN}, ${params.rollouts} rollouts a side), forked at round ${params.round}. ${out.secs.toFixed(0)}s on ${workers} workers.`);
     for (const r of rows) {
       console.log(`\n${r.name}: printed ${r.printed}, fair ~${f1(r.fair)} (90% ${f1(r.lo)}–${f1(r.hi)}; line ${r.at0.toFixed(2)} ${r.slope.toFixed(2)}·P; interpolated ${r.interpCens}${f1(r.interp)})  [${r.table}]`);
       console.log('   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought');

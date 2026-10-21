@@ -1,3 +1,5 @@
+> Oct 21, Cory: this file is for the shape of members he likes, not prices ("my members aren't priced the best right now"). Prices come from sims; see design/member-process.md. Each color's concepts run strong to weak and include a few of its own counters.
+
 > Member principles (from the Oct 21 rework panel). Durable: read before pitching any member. Source evidence and quotes below; Cory can change any line.
 
 # Member shape: what Cory likes, and the principles for new members

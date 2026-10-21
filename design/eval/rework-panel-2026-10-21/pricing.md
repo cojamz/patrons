@@ -1,3 +1,5 @@
+> Superseded Oct 21 by design/member-process.md: Cory wants concepts first and sim games to set prices ("my members aren't priced the best right now").
+
 # Pricing v2 (Oct 21, after Cory's notes on the neutral members) — this section wins over everything below it
 
 Cory, 12:03am Eastern: "these are all a little too expensive, except the Launderer. the extra hand should be expensive? but the rest seem slightly too expensive. the other problem here is everything is roughly the same cost." The neutral set had come out as 5, 6, 6, 6, 7, 7, 9.
