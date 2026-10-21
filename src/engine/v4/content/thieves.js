@@ -310,10 +310,11 @@ const thieves = {
     m('accomplice', 'Accomplice', 4, 4, 'When recruited: take 1 resource from each rival.', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have. Each pick comes from a rival holding the most resources.', {
+    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have.', {
+      // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, like any steal
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
-        startSteal(ctx, owner, 'Grifter', n, { fromAction: false, richest: true });
+        startSteal(ctx, owner, 'Grifter', n, { fromAction: false });
       },
     }),
     m('sticky', 'Sticky Fingers', 4, 4, 'Your steals from spaces take +1 resource.', { stealMore: 1 }),

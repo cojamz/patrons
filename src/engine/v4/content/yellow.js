@@ -37,14 +37,15 @@ export default {
     {
       // the fewest, not "none of" (Claude under Cory's go-with-your-gut, from the dead-window audit): it printed Gardener's
       // text. Raising every lowest color always adds one full set.
-      key: 'bloom', ring: 1, name: 'Top Up', text: '+1 of each color you hold the fewest of (ties: all of them).',
-      estimate: (ctx, p) => fewest(ctx, p).length + 0.5,
+      // scales by round (Cory, 2026-10-18), in the "× round" form Gather and Build Up print
+      key: 'bloom', ring: 1, name: 'Top Up', text: '+1 × round of each color you hold the fewest of (ties: all of them).',
+      estimate: (ctx, p) => fewest(ctx, p).length * ctx.state.round + 0.5,
       resolve(ctx, p) {
-        const list = fewest(ctx, p);
+        const list = fewest(ctx, p), n = ctx.state.round;
         // a tie pays each tied color: the result says so, not only the hover (panel tester C)
-        if (list.length > 1) ctx.log(`${p.name}'s Top Up: ${list.slice(0, -1).join(', ')} and ${list[list.length - 1]} tie for your fewest (${p.res[list[0]] || 0} each), so +1 of each.`);
-        for (const c of list) ctx.gain(p, c, 1, { fromAction: true });
-        ctx.log(`${p.name}'s Top Up: +1 ${list.join(', +1 ')}.`);
+        if (list.length > 1) ctx.log(`${p.name}'s Top Up: ${list.slice(0, -1).join(', ')} and ${list[list.length - 1]} tie for your fewest (${p.res[list[0]] || 0} each), so +${n} of each.`);
+        for (const c of list) ctx.gain(p, c, n, { fromAction: true });
+        ctx.log(`${p.name}'s Top Up: +${n} ${list.join(`, +${n} `)}.`);
       },
     },
     {
@@ -188,12 +189,14 @@ export default {
     m('explorer', 'Explorer', 4, 4, 'Whenever you take a space outside Yellow, +1 yellow.', {
       afterAction(ctx, owner, card, qid) { if (qid !== 'yellow') ctx.gain(owner, Y, 1); },
     }),
-    m('feastmaker', 'Feastmaker', 6, 4, 'Once per game: +1 of each color per round number.', {
+    // was Feastmaker 6+4 (Cory, 2026-10-18): Chefs, a little cheaper, counts as 2 members (worth 2 followers, as Twins)
+    m('chefs', 'Chefs', 6, 3, 'Worth 2 followers. Once per game: +1 of each color per round number.', {
+      f: 2,
       activate: 'game',
       onActivate(ctx, owner) {
         const r = ctx.state.round;
         eachColor(ctx, owner, r);
-        ctx.log(`${owner.name} used Feastmaker: +${r} of each color.`);
+        ctx.log(`${owner.name} used Chefs: +${r} of each color.`);
       },
       botActivate: ctx => ctx.state.round === 3,
     }),

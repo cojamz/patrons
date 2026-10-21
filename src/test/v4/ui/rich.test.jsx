@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { CardText } from '../../../v4/game/Info.jsx';
 import { Rich, CostPips } from '../../../v4/game/Rich.jsx';
-import { anyDotVars } from '../../../v4/game/Glyphs.jsx';
+import { anyDotVars, isMax } from '../../../v4/game/Glyphs.jsx';
 
 const pips = c => [...c.querySelectorAll('.pip')].map(p => p.getAttribute('aria-label'));
 
@@ -65,4 +65,13 @@ it('renders canonical ability timings in bold without changing action instructio
   expect(container.textContent).not.toContain('at Round Start');
   rerender(<Rich text="Recruit a shop member." />);
   expect(container.textContent).toBe('Recruit a shop member.');
+});
+
+describe('tall leader easter egg', () => {
+  // Cory, 2026-10-18: "make pants taller" = Max's easter egg for a player named Pants (case-insensitive, trimmed)
+  it('Max and Pants get the tall leader; other names do not', () => {
+    const st = names => ({ players: names.map(name => ({ name })) });
+    expect([0, 1, 2, 3].map(i => isMax(st(['Max', ' pants ', 'PANTS', 'Pantsy']), i))).toEqual([true, true, true, false]);
+    expect(isMax(st(['Cory']), 0)).toBe(false);
+  });
 });

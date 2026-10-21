@@ -192,12 +192,12 @@ describe('Magenta members', () => {
     expect(named(s, 'Accomplice').length).toBe(1);
   });
 
-  it('Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most', () => {
+  it('Grifter: when recruited, take 1 per 2 members you have, from any rivals you choose', () => {
     let s = table(Q, { n: 3, res: [{ magenta: 6 }, { gold: 3 }, { red: 2 }], members: [['red.twins', 'red.intern', 'red.volunteer']], shop: ['thieves.grifter', ...ROW] });
     s = take(s, 'thieves.tipoff');
     s = move(s, cardOpt(s, 'thieves.grifter', 'shop'));
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
-    // 4 members: take 2, one at a time from whoever holds the most then
+    // 4 members: take 2, split freely among rivals (Cory, 2026-10-18: the "richest rival" sentence went)
     expect(R(s).magenta).toBe(1);
     expect(R(s).gold + R(s).red).toBe(2);
     expect(R(s, 1).gold + R(s, 2).red).toBe(3);

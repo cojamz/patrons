@@ -2,7 +2,7 @@
 // Card-by-card: every Yellow action and member, through real moves, against the printed text, with a log line naming
 // the card whenever it changes a number. Plus one cross-sphere case per member.
 import { describe, it, expect } from 'vitest';
-import { resume, followers } from '../../../engine/v4/core.js';
+import { resume, followers, memberCount, cardDef } from '../../../engine/v4/core.js';
 import { take, move, uidOf, pinCosts } from './helpers.js';
 import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 
@@ -194,11 +194,24 @@ describe('Yellow members', () => {
     s = move(s, 'to:0-1');
     expect(R(s).yellow).toBe(1);
   });
-  it('Feastmaker: once per game, +1 of each color per round number, named', () => {
-    let s = sc({ round: 2, members: [['yellow.feastmaker']] });
+  it('Chefs: once per game, +1 of each color per round number, named', () => {
+    let s = sc({ round: 2, members: [['yellow.chefs']] });
     s = take(s, 'gold.rush');
-    s = move(s, `use:${uidOf(s, 'yellow.feastmaker', 0)}`);
+    s = move(s, `use:${uidOf(s, 'yellow.chefs', 0)}`);
     expect(R(s)).toEqual({ gold: 6, red: 2, yellow: 2, green: 2 });
-    expect(named(s, 'Feastmaker')).toHaveLength(1);
+    expect(named(s, 'Chefs')).toHaveLength(1);
+  });
+  // Cory, 2026-10-18: Feastmaker became Chefs, a little cheaper (6+4 → 6+3) and counting as 2 members
+  it('Chefs: costs 6 yellow + 3 any, worth 2 followers, and counts as 2 members', () => {
+    const s = sc({ members: [['yellow.chefs']] });
+    const d = cardDef(s, uidOf(s, 'yellow.chefs', 0));
+    expect([d.s, d.w, d.f]).toEqual([6, 3, 2]);
+    expect(memberCount(s, s.players[0])).toBe(2);
+    expect(followers(s, s.players[0]) - followers(sc({}), sc({}).players[0])).toBe(2);
+  });
+  it('Top Up: +1 × round of each fewest color, named with the round amount', () => {
+    const s = take(sc({ round: 3, res: [{ gold: 2, red: 1, yellow: 1, green: 3 }] }), 'yellow.bloom');
+    expect(R(s)).toEqual({ gold: 2, red: 4, yellow: 4, green: 3 });
+    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +3 of each.", "P1's Top Up: +3 red, +3 yellow."]);
   });
 });

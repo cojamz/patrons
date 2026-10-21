@@ -171,7 +171,7 @@ const S = {
   },
   yellow: {
     harvest: [['1', 'yellow'], ['1', '/', 'each']],
-    bloom: [['1', 'low']],
+    bloom: r => [[`${r}`, 'low']],
     transmute: [['3', 'swap'], ['1', 'yellow']],
     prism: [['each', '/', '3', 'yellow']],
     gather: [['1', 'any', '/', 'm']],

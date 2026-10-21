@@ -88,7 +88,7 @@ const P = {
   },
   yellow: {
     harvest: (r, now) => ({ main: `+${now ?? 1} yellow`, second: now == null ? '+1 per other color' : '1, +1 per other color', note: 'you hold' }),
-    bloom: { verb: 'Top up', second: '+1 of your fewest' },
+    bloom: r => ({ verb: 'Top up', second: `+${r} of your fewest`, note: grows(r) }),
     // Match the current rule: the yellow arrives before the optional swaps.
     transmute: { main: '+2 yellow', second: 'then swap up to 3', note: 'for other colors' },
     prism: { verb: '+1 each other color', second: 'per 3 yellow', note: 'you keep the yellow' },

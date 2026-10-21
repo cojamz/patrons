@@ -99,8 +99,9 @@ export function FollowerMark({ n, size = 6, label = true }) {
   );
 }
 
-/** Cory's easter egg (2026-10-15): a player named Max gets a leader 20% taller (taller, not bigger) */
-export const isMax = (state, id) => (state?.players?.[id]?.name || '').trim().toLowerCase() === 'max';
+/** Cory's easter egg (2026-10-15): a player named Max gets a leader 20% taller (taller, not bigger); Pants too (2026-10-18) */
+const TALL = new Set(['max', 'pants']);
+export const isMax = (state, id) => TALL.has((state?.players?.[id]?.name || '').trim().toLowerCase());
 /** A seat's cult leader (32px): the robed figure in the seat's accent color with the player's emoji (or sigil). */
 export function SeatFigure({ id, state = null, size = 32, title = null, dim = false, face = false }) {
   return (

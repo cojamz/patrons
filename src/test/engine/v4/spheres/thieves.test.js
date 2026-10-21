@@ -230,19 +230,20 @@ describe('Magenta members', () => {
     expect(R(s).map(r => [r.gold, r.red, r.magenta])).toEqual([[3, 1, 0], [1, 0, 0], [0, 0, 0]]);
   });
 
-  it('Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most', () => {
+  // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, no longer only the richest
+  it('Grifter: when recruited, take 1 per 2 members you have, from any rivals you choose', () => {
     let s = scene({ res: [{ magenta: 2, gold: 1 }, { gold: 3 }, { red: 2 }], members: [['red.intern', 'red.volunteer', 'red.reserve', 'red.drive']], shop: ['thieves.grifter', ...SHOP.slice(1)] });
     s = take(s, 'red.turnout');
     s = move(s, `card:${uidOf(s, 'thieves.grifter', 'shop')}`);
-    // 5 members (Mob would count as 5, so plain ones here) → take 2: P2 (3) first, then P2 vs P3 tied at 2 → either
-    expect(ids(s)).toEqual(['take:1:gold']);
+    // 5 members (Mob would count as 5, so plain ones here) → take 2; P3 (2 red) is open on the first pick, not only P2 (3)
+    expect(ids(s)).toEqual(['take:1:gold', 'take:2:red']);
     const paid = { ...R(s)[0] };
-    s = move(s, 'take:1:gold');
+    s = move(s, 'take:2:red');
     expect(ids(s)).toEqual(['take:1:gold', 'take:2:red']);
     s = move(s, 'take:2:red');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(R(s)[0]).toEqual({ ...paid, gold: paid.gold + 1, red: paid.red + 1 });
-    expect([R(s)[1].gold, R(s)[2].red]).toEqual([2, 1]);
+    expect(R(s)[0]).toEqual({ ...paid, red: paid.red + 2 });
+    expect([R(s)[1].gold, R(s)[2].red]).toEqual([3, 0]);
   });
 
   it('Sticky Fingers: steals take 1 more — Magenta’s and Gold’s', () => {

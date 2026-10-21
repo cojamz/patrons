@@ -87,7 +87,7 @@ const SUMS = {
   'silver.jubilee': ({ n }) => [FOL(plus(n(0, 1))), PER, R('silver', n(1, 2)), CUT, DOT, HOOD({ all: true }), R('silver', '+2')], // +1☺/2🔔
   // yellow: colors
   'yellow.harvest': () => [R('yellow', '+1'), NUM('+1'), PER, R('any')], //                         +1☀ +1/◌      (per other color you hold)
-  'yellow.bloom': () => [R('any', '+1', { mod: 'low' })], //                                       +1 ▾◌         (ties: all of them)
+  'yellow.bloom': ({ r }) => [R('any', plus(r), { mod: 'low' })], //                                       +1 ▾◌         (ties: all of them)
   'yellow.transmute': ({ n }) => [R('any', n(0, 3)), SWAP, R('any'), DOT, R('yellow', '+1')], //   3◌ ⇄ ◌ · +1☀
   'yellow.prism': () => [R('set', '+1'), PER, R('yellow', 3)], //                                   +1⊛ / 3☀
   'yellow.gather': () => [R('any', '+1'), PER, MEM()], //                                          +1◌ / ▢       (each brings its own color)

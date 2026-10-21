@@ -56,7 +56,7 @@ export const GLOSSARY = [
   { key: 'steal', word: 'Steal', match: /\bsteals?\b/,
     def: 'Take resources or a member from a rival. Stolen resources keep their colors. Lie Low protects your members and resources until round end; some members stop steals too.' },
   { key: 'colorless', word: 'Colorless', match: /\bcolou?rless\b/,
-    def: 'A member whose color isn’t on this table. Its colored part is paid in any colors. Its member quantity still counts, but never toward a color, and it brings nothing to cards that pay “its color”.' },
+    def: 'A member of no color (a guest card). Its whole cost is paid in any colors. Its member quantity still counts, but never toward a color, and it brings nothing to cards that pay “its color”.' },
   { key: 'any', word: 'Any (cost)', link: false, match: /\bin any colors\b/,
     def: '“Any” in a cost or a gain: resources of any colors, your choice.' },
   { key: 'contest', word: 'Contest', match: /\bcontests?\b/,

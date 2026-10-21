@@ -22,7 +22,7 @@ const YELLOW_TEST_COSTS = {
   'yellow.gardener': [1, 1], 'yellow.peddler': [2, 1], 'yellow.gleaner': [1, 1], 'yellow.admirer': [2, 1],
   'yellow.gobetween': [1, 0], 'yellow.dyer': [1, 1], 'yellow.latebloomer': [1, 0], 'yellow.sower': [2, 1],
   'yellow.harmonist': [4, 2], 'yellow.rainmaker': [3, 2], 'yellow.pilgrim': [2, 1], 'yellow.farmer': [1, 1],
-  'yellow.weaver': [1, 1], 'yellow.explorer': [1, 1], 'yellow.feastmaker': [2, 2],
+  'yellow.weaver': [1, 1], 'yellow.explorer': [1, 1], 'yellow.chefs': [2, 2],
 };
 let restore;
 beforeEach(() => {
@@ -84,6 +84,10 @@ describe('Yellow actions', () => {
     expect(R(take(scene({}), 'yellow.bloom'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
     // holding every color: the fewest (here all, tied) still get +1 (dead-window audit, 2026-10-14; it gave nothing)
     expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
+  });
+  it('Top Up scales by round (Cory, 2026-10-18): +2 of each fewest color in round II, +3 in round III', () => {
+    expect(R(take(scene({ round: 2, res: [{ gold: 3, red: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 3, red: 1, yellow: 2, green: 2 });
+    expect(R(take(scene({ round: 3, res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 4, red: 4, yellow: 4, green: 4 });
   });
 
   it('Trade Seeds: +2 yellow first, then up to 3 one-for-one swaps (the new yellow can be swapped too)', () => {
@@ -264,10 +268,10 @@ describe('Yellow members', () => {
     expect(R(take(scene({ members: [['yellow.explorer']] }), 'yellow.harvest')).yellow).toBe(1);
   });
 
-  it('Feastmaker: once per game, +1 of each color per round number', () => {
-    let s = scene({ round: 3, members: [['yellow.feastmaker']] });
+  it('Chefs: once per game, +1 of each color per round number', () => {
+    let s = scene({ round: 3, members: [['yellow.chefs']] });
     s = take(s, 'yellow.harvest');
-    s = move(s, `use:${uidOf(s, 'yellow.feastmaker', 0)}`);
+    s = move(s, `use:${uidOf(s, 'yellow.chefs', 0)}`);
     expect(R(s)).toEqual({ gold: 3, red: 3, yellow: 4, green: 3 });
   });
 });

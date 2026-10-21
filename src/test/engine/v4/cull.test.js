@@ -20,14 +20,22 @@ describe('the curated member decks', () => {
     expect(createGame({ seats: seats(2) }).rules.cull).toBe(true);
   });
 
-  it('Green and Red deal 12 members, other spheres 10, neutral 5; no cut card is dealt', () => {
+  // Overseer (purple) and Social Climber (blue) cut on Cory's 2026-10-18 call; their replacements are his, so those
+  // two decks deal 9 until he names them
+  const DEALT = { echo: 12, red: 12, purple: 9, market: 9 };
+  it('Green and Red deal 12 members, Purple and Blue 9 (two cuts awaiting replacements), other spheres 10, neutral 5; no cut card is dealt', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });
       const dealt = Object.values(s.cards).map(c => c.def);
-      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(q === 'echo' || q === 'red' ? 12 : 10);
+      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(DEALT[q] ?? 10);
       expect(dealt.filter(d => CUT.has(d))).toEqual([]);
       expect(dealt.filter(d => d.startsWith('benders.')).length).toBe(5);
     }
+  });
+
+  it('Overseer and Social Climber are cut (Cory, 2026-10-18)', () => {
+    expect(CUT.has('purple.overseer')).toBe(true);
+    expect(CUT.has('market.climber')).toBe(true);
   });
 
   it('every cut id names a real card', () => {

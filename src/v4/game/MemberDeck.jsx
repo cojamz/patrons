@@ -76,7 +76,7 @@ export function DeckCard({ state }) {
       <ul className="lt-deck-colors">
         {rows.map(r => (
           <li key={r.key} data-color={r.key} data-n={r.n} className={r.n ? '' : 'none'}>
-            {r.res ? <ResourceGlyph r={r.res} size={14} /> : <span className="lt-colorless-dot" role="img" aria-label="colorless" title="Members of colors not on this table" />}
+            {r.res ? <ResourceGlyph r={r.res} size={14} /> : <span className="lt-colorless-dot" role="img" aria-label="colorless" title="Members of no color" />}
             <span className="k">{r.name}</span><b className="num">{r.n}</b>
           </li>
         ))}

@@ -95,6 +95,8 @@ for (const [key, name, source] of [
   const art = BY_ID.get(`red.${source}`);
   if (art) BY_ID.set(`red.${key}`, { ...art, id: `red.${key}`, name });
 }
+// Feastmaker became Chefs (Cory, 2026-10-18): same drawing under the new id
+{ const art = BY_ID.get('yellow.feastmaker'); if (art) BY_ID.set('yellow.chefs', { ...art, id: 'yellow.chefs', name: 'Chefs' }); }
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */
 export const spriteId = name => String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 /** The icon for an id (or the first of several candidate ids), or the template for its kind. */

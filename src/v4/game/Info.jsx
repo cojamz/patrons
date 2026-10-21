@@ -227,8 +227,6 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
           in the shop, also how: on your turn, from your seat */}
       {ability ? <p className="mc-text">{(copied || d).activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {d.activate && where && !state.over && <small className="mc-live" data-use-how="">Once it’s yours, use it on your turn: it lights up in your seat.</small>}
-      {/* in plain words, no term to look up (w4b #26: "Colorless here" was a word the rulebook never defines) */}
-      {!onTable(state, d) && <small className="mc-live" data-colorless="">Its color isn’t on this table: it counts as a member of no color.</small>}
       {copied && <small className="mc-live" data-copy-of="">Copy of <CardName state={state} def={copied} /></small>}
       {owner && card && card.used && !state.over && <small className="mc-live" data-member-used="">Used</small>}
       {/* the cost and nothing else about paying (Cory, 03:40: cut "You pay"); a discount on you says only why the face's

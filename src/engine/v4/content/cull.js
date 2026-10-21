@@ -6,7 +6,9 @@ export const CUT = new Set([
   'red.intern', 'red.reserve', 'red.drive', 'red.crowd', 'red.bigfamily', 'red.sponsor',
   'echo.afterimage', 'echo.translator', 'echo.wallflower', 'echo.groupie', 'echo.choir', 'echo.understudy', 'echo.mirror',
   'market.reseller', 'market.onlooker', 'market.auctioneer', 'market.curator', 'market.blackmarket',
+  'market.climber', // Cory, 2026-10-18: cut (dead while Release is off); its fill-in is his call
   'purple.errand', 'purple.foreman', 'purple.apprentice', 'purple.taskmaster', 'purple.doubletime',
+  'purple.overseer', // Cory, 2026-10-18: cut; its replacement is his call
   'silver.silversmith', 'silver.toastmaster', 'silver.caterer', 'silver.dowager', 'silver.steward',
   'yellow.harmonist', 'yellow.sower', 'yellow.farmer', 'yellow.gardener', 'yellow.gleaner',
   'thieves.accomplice', 'thieves.mole', 'thieves.lightfingers', 'thieves.bigscore', 'thieves.lookout',

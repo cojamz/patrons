@@ -102,8 +102,9 @@ describe('colorless members', () => {
     const squatter = guestMembers().find(g => g.lean === 'thieves');
     const { container } = render(<MemberCard state={s} def={squatter} />);
     expect(container.querySelector('.card-face').getAttribute('style')).toContain('var(--colorless)');
-    // on its own line, never beside the cost, where it read as the cost's color (w3a #23)
-    expect(container.querySelector('[data-colorless]').textContent).toMatch(/^Its color isn’t on this table/);
+    // no "its color isn't on this table" line (Cory, 2026-10-18): guests are colorless, the frame says so
+    expect(container.querySelector('[data-colorless]')).toBeNull();
+    expect(container.textContent).not.toMatch(/isn’t on this table/);
     expect(container.querySelector('.mc-cost').textContent).not.toMatch(/colorless/i);
     cleanup();
     const ok = render(<MemberCard state={s} def={quadrant('gold').members[0]} />);
