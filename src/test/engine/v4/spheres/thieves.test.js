@@ -359,10 +359,10 @@ describe('Magenta members', () => {
     expect(s.cards[b].used).toBe(true);
   });
 
-  it('Kingpin: game end, +1 follower per 2 magenta', () => {
+  it('Kingpin: game end, +1 follower per magenta member you have', () => {
     const s = scene({ res: [{ magenta: 7 }] });
     const km = thieves.members.find(d => d.key === 'kingpin');
-    expect(km.onGameEnd(contextFor(s), s.players[0])).toBe(3);
+    expect(km.onGameEnd(contextFor(s), s.players[0])).toBe(contextFor(s).countMembersOfColor(s.players[0], 'thieves'));
   });
 });
 
