@@ -7,7 +7,7 @@ Mine, no design call:
 - [ ] 5. Clarity: "I: / II: / III:" lines with other rounds dimmed; "P2 took X from you" shorter, near your card; shop refresh animates at round start; Red picker toast clear of the choice sheet.
 - [ ] 6. Lag and 12-coins-as-12 (needs perf runs: waits for Cory's go).
 Cory's calls (numbered picks when asked):
-- [ ] Magenta members (new deck, Grifter, color and name). Next color after Magenta, and its contest/+1/costs.
+- [ ] Magenta members: Cory designs (light rework). Next color: brainstorm thread.
 - [ ] Names: Recruit Bonus, Movement Penalty, Chronicler.
 - [ ] Greatest Hits repeating a copied Echo's gain [no]; tiebreaker most members [yes]; new abilities for the dropped cost reductions.
 Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 18 Green picks.
