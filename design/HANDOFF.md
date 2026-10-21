@@ -9,7 +9,7 @@ Last updated 2026-10-20 8:50pm Eastern. Older handoffs: design/archive/handoff-b
 ## The game now
 - Economy direction (decisions.md, 2026-10-20): each action gives 1 of its color, sometimes more; members cheaper and worth followers; held resources score contests; hold vs spend.
 - Reworked and live: Green (v0.7.0, spheres/green-redesign-2026-10-18.md), Red (v0.8.0 actions, v0.8.2 members, spheres/red-redesign-2026-10-18.md and red-members-2026-10-18.md), Magenta actions (v0.8.8, spheres/magenta-redesign-2026-10-19.md).
-- 2026-10-21 rework panel: recommendations for every open color are with Cory, unshipped (https://claude.ai/artifact/Cd8JTiPKtibYcmVPGLRUjo; depth in design/eval/rework-panel-2026-10-21/final/, neutral and Magenta in /mnt/project-files/color-reworks/). Build nothing until he answers by number.
+- 2026-10-21 rework panel: retired by Cory ("didn't come up with good enough examples"); the "Better design process" thread owns job 2. Index: design/eval/rework-panel-2026-10-21/README.md. Picks for every open color are with Cory, unshipped (https://claude.ai/artifact/Cd8JTiPKtibYcmVPGLRUjo; depth in design/eval/rework-panel-2026-10-21/final/, neutral and Magenta in /mnt/project-files/color-reworks/). Build nothing until he answers by number.
 - Not reworked: Magenta members (old 10), Gold, Blue, Purple, Silver, Yellow, White. Blue/Purple/White contests still count members; Yellow counts full sets.
 - Deck sizes: Red and Green 12, others 10 (target equal). Member cost ceiling 10. Release numbering stays v0.8.x.
 
