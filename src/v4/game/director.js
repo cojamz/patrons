@@ -20,7 +20,7 @@ import { playerColor } from '../format.js';
 import { play } from '../sound.js';
 import { gainsBetween } from './gains.js';
 import { seatOrder } from './seats.js';
-import { stageRect, stageShow, stageRelease, stageClear, stageBusy, subscribeStage } from './stage.js';
+import { stageRect, hubRect, stageShow, stageRelease, stageClear, stageBusy, subscribeStage, stageItems, stagePlace, spaceRect, bubbleRect, stageLeave, HUB_MEMBER } from './stage.js';
 import { panelText } from './panelText.js';
 import { quadrant, defById } from '../../engine/v4/index.js';
 import { seatEmoji } from '../format.js';
@@ -176,8 +176,10 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     const to = opt.r && opt.pay ? rim : onStage(to0);
     // 1–3 single pieces, 60ms apart (Steady); 4 or more one bundle carrying its count
     const d = opt.dur || fly(from, to);
-    hand = Math.max(hand, (n >= 4 ? time : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
-    if (n >= 4) { at(time, { op: 'piece', from, to, n, bundle: true, dur: d, ...opt }); at(time + d, { op: 'land', to, by: n, bundle: true, ...opt }); return { last: time, d }; }
+    // (Cory, 2026-10-18: "steals: make what's being stolen clear at once") a take of 2 or more leaves as one handful
+    const bundle = n >= 4 || (opt.take && n >= 2);
+    hand = Math.max(hand, (bundle ? time : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
+    if (bundle) { at(time, { op: 'piece', from, to, n, bundle: true, dur: d, ...opt }); at(time + d, { op: 'land', to, by: n, bundle: true, ...opt }); return { last: time, d }; }
     for (let k = 0; k < n; k++) { at(time + k * MO.pieceStagger, { op: 'piece', from, to, n: 1, dur: d, ...opt }); at(time + k * MO.pieceStagger + d, { op: 'land', to, by: 1, ...opt }); }
     return { last: time + (n - 1) * MO.pieceStagger, d };
   };
@@ -265,10 +267,15 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       let paid = s + MO.cardLift + hold;
       // The card stays lifted until its payment has landed on the wheel.
       for (const [i, p] of m.pays.entries()) { const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, { kind: 'shop', index: c.index, uid: c.uid }, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid }); paid = Math.max(paid, r.last + r.d); }
-      const d = fly(card.from, card.to);
-      hand = Math.max(hand, paid + d * (2 / 3));
-      at(s, { op: 'card', uid: card.what.uid, to: card.to.pid, from: card.from, lift: MO.cardLift, wait: paid - s - MO.cardLift, dur: d });
-      const landed = ends(paid + d);
+      // (Cory, 2026-10-18) the recruit flies to the middle, shows what it does, then goes to its buyer: it leaves its
+      // slot as it lifts, its coins drop meanwhile, it holds at the hub a beat to be read, then flies to the crowd
+      const hubW = { kind: 'stage', slot: 'hub' };
+      const toHub = fly(card.from, hubW), fromHub = fly(hubW, card.to);
+      const atHub = s + MO.cardLift + hold + toHub;
+      const leave = Math.max(atHub + MO.recruitShow, paid);
+      hand = Math.max(hand, leave + fromHub * (2 / 3));
+      at(s, { op: 'card', uid: card.what.uid, to: card.to.pid, from: card.from, lift: MO.cardLift + hold, toHub, show: leave - atHub, fromHub });
+      const landed = ends(leave + fromHub);
       if (card.what.worth > 0) {
         // its worth: follower marks hop from the new chip to the count, which ticks as they land
         const r = pieces(landed, { kind: 'crowd', pid: card.to.pid, uid: card.what.uid }, { kind: 'count', pid: card.to.pid }, card.what.worth, { fol: true, dur: MO.worthHop });
@@ -307,7 +314,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       if (!list.length) return;
       let lastR = null, o = cur;
       for (const g of list) {
-        if (g.tug) at(o, { op: 'tug', place: g.from, toward: g.to, dur: MO.tug });
+        if (g.tug) at(o, { op: 'tug', place: g.from, toward: g.to, dur: MO.tug, n: g.n, r: g.opt && g.opt.r, owner: g.from.pid });
         const r = pieces(o + (g.tug ? MO.tug : 0), g.from, g.to, g.n, g.opt);
         ends(r.last + r.d);
         if (!lastR || r.last + r.d > lastR.last + lastR.d) lastR = r;
@@ -370,7 +377,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   const cap = Math.round(2400 * speedScale());
   if (end > cap) {
     const k = Math.max(0.5, cap / end);
-    for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); }
+    for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); for (const f of ['toHub', 'show', 'fromHub']) if (a[f]) a[f] = Math.round(a[f] * k); }
     end *= k; hand *= k; t *= k;
   }
   return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? Math.round(end + (turnPasses ? MO.breath : 0)) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses };
@@ -816,52 +823,62 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
         }
         case 'hop': if (!skip) hopEl(where(a.place), MO.hop); return;
         case 'stage': if (!skip) stageOut(root, a, ctx, where, chainId, mine); return;
-        case 'tug': if (!skip) tug(where(a.place), where(a.toward), a.dur); return;
+        case 'tug': {
+          if (skip) return;
+          const el = where(a.place);
+          tug(el, where(a.toward), a.dur);
+          // what's taken says so on the victim's pile the moment it's taken: "−2 ●", gone as the handful lands
+          if (a.n && a.r) takeTag(el, a.n, dotHtml(root, a.r, a.owner));
+          return;
+        }
         case 'card': {
-          // the recruited card: a picture of it lifts in its old slot, takes its coins, then flies to its new chip
+          // the recruited card (Cory, 2026-10-18): a picture of it lifts in its old slot with the bought ring, then
+          // flies to the hub, where it opens as the member's card (who, what it does) and is read; then it flies on to
+          // its new chip in the buyer's crowd, which lands with its ring and sound
           const sn = snap && snap.get(a.uid);
           if (skip || !sn || !sn.rect) return;
           const g = document.createElement('div');
           g.className = 'flight card-flight ghost-layer';
           g.dataset.born = String(Date.now());
           g.innerHTML = sn.html;
-          Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px` });
+          Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px`, borderRadius: 'var(--corner, 8px)' });
           document.body.appendChild(g);
           if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
           const chip = root.querySelector(`.lt-seat[data-pid="${a.to}"] [data-uids~="${a.uid}"]`) || placeEl(root, { kind: 'crowd', pid: a.to }, ctx);
-          const B = chip ? chip.getBoundingClientRect() : sn.rect;
-          const dx = B.left + B.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = B.top + B.height / 2 - (sn.rect.top + sn.rect.height / 2);
-          const total = a.lift + a.wait + a.dur, k1 = a.lift / total, k2 = (a.lift + a.wait) / total;
-          const sc = B.width ? Math.max(0.2, Math.min(0.5, B.width / sn.rect.width)) : 0.3;
+          const hub = hubRect(HUB_MEMBER) || sn.rect;
+          const dx = hub.left + hub.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = hub.top + hub.height / 2 - (sn.rect.top + sn.rect.height / 2);
+          const total = a.lift + a.toHub, k1 = a.lift / total;
           chain.flying++;
-          // lift, hold while its coins drop in, then a true arc to the chip (grammar M7; sampled, so the path has no
-          // corner: the five-keyframe version turned at its top and changed speed there)
-          const bow = onScreenBow(sn.rect, B, Math.max(16, Math.min(70, Math.hypot(dx, dy) * 0.18)));
+          // lift, then a true arc to the hub, fading as the member's card opens out of it there
+          const bow = onScreenBow(sn.rect, hub, Math.max(16, Math.min(70, Math.hypot(dx, dy) * 0.18)));
           const anim = track(g.animate([
             { transform: 'translate(0px,0px) scale(1)', offset: 0, easing: 'ease-out' },
             { transform: 'translate(0px,-10px) scale(1.06)', offset: k1 },
-            ...arcFrames(dx, dy, bow, { from: k2, s0: 1.06, s1: sc, y0: -10, ease: CARD_EASE }),
+            ...arcFrames(dx, dy, bow, { from: k1, s0: 1.06, s1: 1.2, y0: -10, ease: CARD_EASE }),
           ], { duration: total, fill: 'forwards' }));
-          track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k2 + (1 - k2) * 0.88 }, { opacity: 0.2 }], { duration: total, fill: 'forwards' }));
-          // the bought card says so before it leaves (H13): a warm ring comes up as it lifts and holds while its coins
-          // drop in, then lets go as it flies; no time added to the chain
-          g.style.borderRadius = 'var(--corner, 8px)';
-          const k3 = Math.min(0.99, k2 + (1 - k2) * 0.25);
+          track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k1 + (1 - k1) * 0.55 }, { opacity: 0 }], { duration: total, fill: 'forwards' }));
+          // the bought card says so before it leaves (H13): a warm ring comes up as it lifts and lets go as it flies
           track(g.animate([
             { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 0 },
             { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', offset: k1 },
-            { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', offset: Math.max(k1, k2) },
-            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: k3 },
+            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: Math.min(0.99, k1 + (1 - k1) * 0.4) },
             { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 1 },
           ], { duration: total, fill: 'forwards' }));
           slideShop(root, snap);
-          if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total }));
-          onFinish(anim, () => {
-            if (anim.playState === 'finished') play('member');
-            g.remove();
-            chain.flying = Math.max(0, chain.flying - 1);
-            if (chip && chip.animate && chip.isConnected && !region(chip)) relative(chip, [{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' });
+          if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total + a.show + a.fromHub }));
+          const id = `recruit:${a.uid}`;
+          const ep = chain.epoch || 0;
+          // the member's card opens at the hub as the picture arrives
+          schedule(base + a.at + a.lift + Math.round(a.toHub * 0.45), sk => {
+            if (sk || (chain.epoch || 0) !== ep) return;
+            const look = memberLook(ctx.state, a.uid);
+            if (!look) return;
+            stageShow({ id, chain: chainId, kind: 'member', recruit: true, uid: a.uid, pid: a.to, size: HUB_MEMBER, at: hub, from: g.getBoundingClientRect(), homeEl: chip && !chip.rectOnly ? chip : null, dur: Math.round(a.toHub * 0.55), ...look, got: '',
+              onHome: () => { play('member'); if (chip && chip.animate && chip.isConnected && !region(chip)) relative(chip, [{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' }); } });
           });
+          // read, then on to the buyer
+          schedule(base + a.at + total + a.show, sk => { if (!sk) stageLeave(id, a.fromHub); });
+          onFinish(anim, () => { g.remove(); chain.flying = Math.max(0, chain.flying - 1); });
           return;
         }
         case 'chip': {
@@ -872,7 +889,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           if (!A || !B) return;
           chain.flying++;
           let pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
-          const hub = a.via != null ? stageRect('card') : null;
+          const hub = a.via != null ? stageRect('hub') : null;
           // Both members meet side by side at the actual hub, then cross to their new seats.
           const R = hub ? { ...hub, left: hub.left + hub.width / 2 - 26 + (a.swap ? (a.via === 1 ? 34 : -34) : 0), top: hub.top + hub.height / 2 - 26, width: 52, height: 52 } : null;
           if (R) { let nm = ''; try { nm = defById(ctx.state.cards[a.uid].def).name; } catch { /* unnamed */ } if (nm) pic += `<b class="pm-name">${nm.replace(/[<&]/g, '')}</b>`; }
@@ -978,6 +995,22 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   return plan;
 }
 
+/** "−2 ●" over a victim's pile as it's taken from (stage.css .take-tag). */
+function takeTag(el, n, dot) {
+  if (!el || el.rectOnly || typeof document === 'undefined') return;
+  const r = el.getBoundingClientRect();
+  if (!r.width) return;
+  const b = document.createElement('b');
+  b.className = 'take-tag ghost-layer';
+  b.dataset.born = String(Date.now());
+  b.innerHTML = `−${n}${dot}`;
+  Object.assign(b.style, { left: `${Math.round(r.left + r.width / 2)}px`, top: `${Math.round(r.top - 2)}px` });
+  const life = MO.tug + flightMs(300) + MO.settle;
+  b.style.setProperty('--tl', `${life}ms`);
+  document.body.appendChild(b);
+  setTimeout(() => b.remove(), life + 50);
+}
+
 /** A space or member flies out of its place onto the stage (stage.js; ActionStage.jsx draws it). */
 // a seat's follower change, lingering under its count
 const lingering = new Map();
@@ -998,6 +1031,17 @@ function linger(el, n) {
   lingering.set(el, { b, n, t });
 }
 
+/** How a member shows on the stage: its name, picture, sphere colour and rule. */
+function memberLook(st, uid, def0 = null) {
+  const card = st.cards && st.cards[uid];
+  let d = null;
+  try { d = defById(card ? card.def : def0); } catch { d = null; }
+  if (!d) return null;
+  let sphere = 'colorless', color = 'var(--colorless)';
+  try { if (st.quadrants.includes(d.quadrant)) { sphere = quadrant(d.quadrant).resource; color = `var(--${d.quadrant})`; } } catch { /* colorless */ }
+  return { name: d.name, sprite: [d.id, spriteId(d.name)], sphere, color, text: d.text || '' };
+}
+
 function stageOut(root, a, ctx, where, chainId, mine = []) {
   const st = ctx.state;
   const el = where(a.place);
@@ -1011,7 +1055,7 @@ function stageOut(root, a, ctx, where, chainId, mine = []) {
     const pid = a.pid ?? (st.slots && st.slots[key]);
     const p = st.players[pid];
     const slot = a.slot || 'card';
-    const at = stageRect(slot);
+    const at = stagePlace(slot, spaceRect(from, slot));
     if (!at) return;
     const slotEl = root.querySelector(`[data-slot="${key}"]`);
     const who = !p ? '' : mine.length === 1 && mine[0] === pid ? 'You' : p.name;
@@ -1025,11 +1069,15 @@ function stageOut(root, a, ctx, where, chainId, mine = []) {
   let d = null;
   try { d = defById(card ? card.def : def); } catch { d = null; }
   if (!d) return;
-  const at = stageRect(a.spot);
+  // its bubble pops out of the right side of its seat, level with its chip (Cory, 2026-10-18)
+  const seatEl = root.querySelector(`.lt-cult-seat[data-seat="${pid}"]`);
+  const seatR = seatEl ? seatEl.getBoundingClientRect() : null;
+  const k = stageItems().filter(it => it.kind === 'member' && !it.leaving && !it.recruit && it.pid === pid && it.chain === chainId).length;
+  const at = seatR && seatR.width ? stagePlace(a.spot, bubbleRect(seatR, from, k)) : stageRect(a.spot);
   if (!at) return;
   let sphere = 'colorless', color = 'var(--colorless)';
   try { if (st.quadrants.includes(d.quadrant)) { sphere = quadrant(d.quadrant).resource; color = `var(--${d.quadrant})`; } } catch { /* colorless */ }
-  stageShow({ id: `member:${pid}:${uid}`, chain: chainId, kind: 'member', uid, at, from, homeEl: el && !el.rectOnly ? el : null, dur: a.dur, color, pc: playerColor(pid),
+  stageShow({ id: `member:${pid}:${uid}`, chain: chainId, kind: 'member', uid, pid, at, from, homeEl: el && !el.rectOnly ? el : null, dur: a.dur, color, pc: playerColor(pid),
     name: d.name, sprite: [d.id, spriteId(d.name)], sphere, text: d.text || '', got: a.got || '' });
 }
 

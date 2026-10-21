@@ -189,6 +189,8 @@ const TABLE = {
   stageIn:     [150,   180],
   stageHold:   [220,   180],
   stageOut:    [160,   240],
+  // a recruit holds at the hub, its rule readable, before it flies on to its buyer (Cory, 2026-10-18)
+  recruitShow: [200,   300],
 };
 /** A budget at the viewer's speed: Quick's own number, else the base times the speed. */
 const atSpeed = ([quick, base]) => (speed === 'quick' ? quick : Math.round(base * speedScale()));

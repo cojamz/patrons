@@ -86,9 +86,11 @@ it('shows one direct transfer per stolen unit when several colors become one mag
     { type: 'gain', cause, from: cause, to: stack(0, 'magenta'), what: { r: 'magenta', n: 3 } },
   ]);
   const pieces = plan.atoms.filter(a => a.op === 'piece');
-  expect(pieces).toHaveLength(3);
+  // (Cory, 2026-10-18: a steal shows what's taken at once) one gold, and the two silver as one handful with its count
+  expect(pieces).toHaveLength(2);
   expect(pieces.every(a => a.take && a.turn === 'magenta' && a.from.pid === 1 && a.to.pid === 0)).toBe(true);
   expect(pieces.reduce((sum, a) => sum + a.n, 0)).toBe(3);
+  expect(pieces.find(a => a.n === 2).bundle).toBe(true);
 });
 
 
@@ -130,7 +132,9 @@ it('keeps stolen colors on victim-to-thief flights and sources inherent Magenta 
   expect(magenta).toHaveLength(1);
   expect(magenta[0].from).toEqual({ kind: 'rim', r: 'magenta' });
   const theft = pieces.filter(a => a.take);
-  expect(theft).toHaveLength(3);
+  // the two gold leave together, as one handful (a steal shows what's taken at once)
+  expect(theft).toHaveLength(2);
+  expect(theft.reduce((sum, a) => sum + a.n, 0)).toBe(3);
   expect(theft.every(a => a.from.kind === 'stack' && a.from.r === a.to.r && !a.turn)).toBe(true);
   expect(theft.filter(a => a.r === 'gold').every(a => a.from.pid === 1)).toBe(true);
   expect(theft.find(a => a.r === 'silver').from.pid).toBe(2);
@@ -147,4 +151,30 @@ it('flies a mixed-color ransom payment directly from payer to recipient without 
   ]).atoms.filter(a => a.op === 'piece');
   expect(pieces).toHaveLength(3);
   expect(pieces.every(a => a.from.pid === 1 && a.to.pid === 0 && a.from.r === a.to.r && !a.turn && !a.pay)).toBe(true);
+});
+
+
+it('a recruit flies to the hub, is read there, then flies on to its buyer before its worth lands (Cory, 10-18)', () => {
+  const cause = { kind: 'recruit', pid: 0, uid: 77, index: 0 };
+  const plan = chain([
+    { type: 'pay', cause, from: stack(0, 'gold'), to: { kind: 'shop', uid: 77 }, what: { r: 'gold', n: 2 } },
+    { type: 'recruit', cause, from: { kind: 'shop', uid: 77 }, to: { kind: 'crowd', pid: 0 }, what: { uid: 77, worth: 1 } },
+  ]);
+  const card = plan.atoms.find(a => a.op === 'card');
+  expect(card.toHub).toBeGreaterThan(0);
+  expect(card.show).toBeGreaterThanOrEqual(1);
+  expect(card.fromHub).toBeGreaterThan(0);
+  const worth = plan.atoms.find(a => a.op === 'piece' && a.fol);
+  expect(worth.at).toBeGreaterThanOrEqual(card.at + card.lift + card.toHub + card.show + card.fromHub - 1);
+});
+
+it('says what a steal takes at once: the victim pile is tagged as the take starts, and 2 or more leave as one handful', () => {
+  const cause = { kind: 'space', pid: 0, key: '0-0' };
+  const plan = chain([{ type: 'transfer', cause, from: stack(1, 'gold'), to: stack(0, 'gold'), what: { r: 'gold', n: 3 } }]);
+  const tug = plan.atoms.find(a => a.op === 'tug');
+  expect(tug).toMatchObject({ n: 3, r: 'gold', owner: 1 });
+  const pieces = plan.atoms.filter(a => a.op === 'piece');
+  expect(pieces).toHaveLength(1);
+  expect(pieces[0]).toMatchObject({ n: 3, bundle: true, take: true });
+  expect(pieces[0].at).toBeGreaterThanOrEqual(tug.at);
 });
