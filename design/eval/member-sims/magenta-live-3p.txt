@@ -1,0 +1,65 @@
+sweep: 3 seats, normal bots, 300 paired seeds (free-choice arm on the first 0, 2 rollouts a side), forked at round 2. 1201s on 3 workers.
+
+Shift Crew: printed 2, fair ~5.9 (90% 4.3–7.7; line 3.89 -0.66·P; interpolated 5.3)  [purple,thieves,red]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   0       3.33 ±1.84   100    14   |             –          –     –   |    6.97 (6.38)      2.0
+   2       3.78 ±1.72   100    16   |             –          –     –   |    6.87 (6.38)      2.1
+   4       0.82 ±1.67    99     0   |             –          –     –   |    6.62 (6.38)      2.1
+   6      -0.47 ±1.49    97    -2   |             –          –     –   |    6.56 (6.38)      2.2
+   8      -1.11 ±1.47    91    -2   |             –          –     –   |    6.47 (6.38)      2.3
+
+Cutpurse: printed 4, fair ~1.2 (90% -2.8–3.8; line 0.67 -0.58·P; interpolated 1.0)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   0       0.35 ±2.37   100     0   |             –          –     –   |    6.39 (5.98)      2.0
+   2      -0.38 ±2.68   100    -5   |             –          –     –   |    6.34 (5.98)      2.0
+   4      -1.65 ±2.47   100    -6   |             –          –     –   |    6.00 (5.98)      2.0
+   6      -1.83 ±2.36    98    -6   |             –          –     –   |    5.90 (5.98)      2.1
+   8      -4.70 ±2.11    88   -11   |             –          –     –   |    5.90 (5.98)      2.3
+
+Desperado: printed 4, fair ~5.8 (90% 4.1–7.5; line 5.70 -0.98·P; interpolated 5.4)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   0       5.64 ±2.59   100    13   |             –          –     –   |    6.47 (5.98)      2.0
+   2       4.63 ±2.57   100     9   |             –          –     –   |    6.32 (5.98)      2.0
+   4       0.54 ±2.60   100    -1   |             –          –     –   |    6.18 (5.98)      2.0
+   6      -0.24 ±2.65    98    -4   |             –          –     –   |    6.01 (5.98)      2.1
+   8      -1.77 ±2.18    88    -4   |             –          –     –   |    6.06 (5.98)      2.3
+
+Grifter: printed 6, fair ~-81.3 (90% -198.0––; line -2.72 -0.03·P; interpolated ≤2.0)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   2      -2.08 ±2.35   100    -6   |             –          –     –   |    6.19 (5.98)      2.0
+   4      -2.81 ±2.25    98    -7   |             –          –     –   |    6.10 (5.98)      2.1
+   6      -4.14 ±2.22    89   -11   |             –          –     –   |    5.91 (5.98)      2.3
+   8      -3.55 ±1.73    73    -8   |             –          –     –   |    6.06 (5.98)      2.5
+  10      -2.04 ±0.99    31    -6   |             –          –     –   |    6.04 (5.98)      2.8
+
+Bodyguard: printed 6, fair ~8.8 (90% 8.5–9.1; line 31.62 -3.58·P; interpolated 9.3)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   2      28.05 ±2.72   100    50   |             –          –     –   |    6.76 (5.98)      2.0
+   4      15.26 ±2.63    98    31   |             –          –     –   |    6.33 (5.98)      2.1
+   6       6.49 ±2.31    89    18   |             –          –     –   |    6.11 (5.98)      2.3
+   8       1.87 ±1.78    73     2   |             –          –     –   |    6.18 (5.98)      2.5
+  10      -1.08 ±0.98    31    -4   |             –          –     –   |    6.04 (5.98)      2.8
+
+Double Agent: printed 6, fair ~-35.4 (90% -186.4––; line -2.79 -0.08·P; interpolated ≤2.0)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   2      -2.66 ±2.49   100    -5   |             –          –     –   |    6.21 (5.98)      2.0
+   4      -2.32 ±2.30    98    -5   |             –          –     –   |    6.10 (5.98)      2.1
+   6      -4.83 ±2.16    89   -11   |             –          –     –   |    6.02 (5.98)      2.3
+   8      -3.82 ±1.82    73   -12   |             –          –     –   |    6.15 (5.98)      2.5
+  10      -2.70 ±1.15    31   -10   |             –          –     –   |    6.06 (5.98)      2.8
+
+Sticky Fingers: printed 8, fair ~6.4 (90% 4.6–7.8; line 6.38 -0.99·P; interpolated 5.7)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   4       4.39 ±2.72   100     7   |             –          –     –   |    6.11 (5.98)      2.0
+   6      -0.77 ±2.52    98    -2   |             –          –     –   |    5.96 (5.98)      2.1
+   8      -2.91 ±2.07    88    -9   |             –          –     –   |    5.91 (5.98)      2.3
+  10      -5.07 ±1.81    69   -10   |             –          –     –   |    6.03 (5.98)      2.6
+  12      -3.37 ±1.26    45    -9   |             –          –     –   |    6.09 (5.98)      2.8
+
+Extortionist: printed 10, fair ~– (90% –––; line -4.89 0.34·P; interpolated ≤6.0)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   6      -2.98 ±1.76    74    -7   |             –          –     –   |    6.00 (5.98)      2.5
+   8      -2.39 ±1.44    50    -6   |             –          –     –   |    6.08 (5.98)      2.8
+  10      -1.17 ±0.72    18    -6   |             –          –     –   |    6.04 (5.98)      2.9
+  12      -0.47 ±0.48     7    -0   |             –          –     –   |    5.99 (5.98)      3.0
+  14      -0.56 ±0.40     4    -1   |             –          –     –   |    6.00 (5.98)      3.0
