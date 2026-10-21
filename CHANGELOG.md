@@ -2,7 +2,7 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.30 — 2026-10-21 — unreleased
+## v0.8.30 — 2026-10-21 — shipped (source bd09cf9)
 
 - New player panels: the follower total is big on the right, minions left in a row under the name, resources in one even strip, members sorted by cost with room for two rows. The turn story folds to one line and opens on a tap.
 
