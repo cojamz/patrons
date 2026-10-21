@@ -8,7 +8,9 @@ Mine, no design call:
 - [ ] 6. Lag and 12-coins-as-12 (needs perf runs: waits for Cory's go).
 Shipped this week: busy rival chair shows its members and "safe this round" (v0.8.15); layout gate works again (3bbe5b11).
 Cory's calls (numbered picks when asked):
-- [ ] Magenta members: Cory designs (light rework); the Oct 21 panel picks were a no. Next color: brainstorm thread.
+- [x] Magenta members: his light rework and tested prices shipped in v0.8.28 (Oct 21).
+- [ ] Backlog (Cory, Oct 21): cut one Magenta member so Magenta has 12 like every color (it has 13 for now).
+- [ ] Blue members: 11 of 12; his pick for the 12th, then tested prices ship (claude/members-blue-v2). Red, Green and guest prices: balance tests running, ship as they land.
 - [ ] Neutral members (Cory, Oct 21): Front-runner 5, Tiebreaker in, Launderer 6, prices spread 3–9 (decisions.md). Build on his go; nothing ships from the rework panel before it.
 - [ ] Names: Recruit Bonus, Movement Penalty, Chronicler.
 - [ ] Greatest Hits repeating a copied Echo's gain [no]; tiebreaker most members [yes]; new abilities for the dropped cost reductions.
