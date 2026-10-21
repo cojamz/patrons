@@ -423,7 +423,7 @@ function inputFor(state, task) {
           options: uses.length ? [...uses, { id: 'pass', label: 'Done', kind: 'pass' }] : [] };
       }
       // a second buy (Big Spender) is offered only after a real first buy, while an unspent one is held
-      if (task.extra && !(p.turnBuys > 0 && allowance(state, p, 'extraBuy'))) return { kind: 'buy', prompt: '', options: [] };
+      if (task.extra && !(p.turnBuys > 0 && (allowance(state, p, 'extraBuy') || alwaysBuysTwice(state, p)))) return { kind: 'buy', prompt: '', options: [] };
       const opts = [];
       for (const uid of state.shop) if (paymentChoices(state, p, uid).length)
         opts.push({ id: `card:${uid}`, label: cardDef(state, uid).name, kind: 'card', uid });
@@ -1178,6 +1178,8 @@ function allowanceCards(state, p, flag) {
   return out;
 }
 const allowance = (state, p, flag) => allowanceCards(state, p, flag).length;
+// Shopaholic (concept): the second buy every turn, never spent
+const alwaysBuysTwice = (state, p) => p.members.some(uid => effectiveDefs(state.cards[uid]).some(d => d.buyTwice));
 function spendAllowance(state, p, flag) {
   const card = allowanceCards(state, p, flag)[0];
   if (!card) throw new Error(`${p.name} has no ${flag} left this round`);
@@ -1189,7 +1191,8 @@ const workerSourceOf = task => task.workerSource !== undefined ? { workerSource:
 const extraOf = task => ({ ...workerSourceOf(task), ...(task.extra ? { extra: true } : {}), ...(task.afterPurchase ? { afterPurchase: true } : {}) });
 // A real buy (member or followers) in a buy step. The second one spends a Big Spender.
 function boughtOnce(state, p, task) {
-  if (task.extra) spendAllowance(state, p, 'extraBuy');
+  if (task.extra && !alwaysBuysTwice(state, p)) spendAllowance(state, p, 'extraBuy');
+
   p.turnBuys = (p.turnBuys || 0) + 1;
   if (task.uid !== undefined) state.queue.unshift({ t: 'buy', p: p.id, afterPurchase: true, ...workerSourceOf(task) });
 }

@@ -316,6 +316,28 @@ const market = {
     m('recluse', 'Recluse', 2, 2, 'Game end: +2 followers per rival with more members than you.', {
       onGameEnd: (ctx, owner) => 2 * rivalsBigger(ctx, owner),
     }),
+    // concepts, Oct 21, not approved (design/eval/member-concepts-2026-10-21.md): prices are sim starting points
+    m('shopaholic', 'Shopaholic', 3, 5, 'You can always buy twice.', { buyTwice: true }),
+    m('windowdresser', 'Window Dresser', 1, 2, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', {
+      onRecruited(ctx, owner) {
+        churnStep(ctx, owner, { left: Math.min(3, ctx.state.shop.length) });
+        ctx.defer(owner, `${Q}.churnRefill`);
+      },
+    }),
+    m('plusone', 'Plus-One', 1, 1, 'When recruited: buy again this turn.', {
+      onRecruited(ctx, owner) { extraBuys(ctx, owner, 1); },
+    }),
+    m('doorman', 'Doorman', 1, 2, 'Whenever a rival recruits a second member in one turn, +1 blue.', {
+      onAnyRecruit(ctx, owner, card, by) {
+        if (by === owner) return;
+        const stamp = `${ctx.state.round}:${(ctx.state.turns || []).length}`;
+        const seen = card.doorSeen || (card.doorSeen = {});
+        const n = seen[by.id]?.[0] === stamp ? seen[by.id][1] + 1 : 1;
+        seen[by.id] = [stamp, n];
+        if (n === 2) { ctx.gain(owner, B, 1); ctx.log(`${owner.name}'s Doorman: +1 blue.`); }
+      },
+    }),
+    m('shoppers', 'Window Shoppers', 1, 1, 'Worth 2 followers.', { f: 2, n: 2, vanilla: true }),
   ],
 };
 
