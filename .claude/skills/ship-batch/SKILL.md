@@ -5,7 +5,7 @@ description: Ship checked work live to the play link (version bump, changelog, p
 
 # Ship a batch
 
-1. Read design/lessons/shipping.md. Pull and rebase on `claude/gifted-newton-3lcy3i` (never force-push). Group 5–10 related backlog items when there are several; a single fix ships alone.
+1. Pull and rebase on `claude/gifted-newton-3lcy3i` (never force-push). Group 5–10 related backlog items when there are several; a single fix ships alone.
 2. `npm run version:v4 -- patch "<plain summary>"` (stay on v0.8.x). Fill the new CHANGELOG.md section with one plain player-facing line per change.
 3. Commit, then `npm run check:v4:quick -- --related <files>` on the change. The verdict for a big batch is `npm run check:v4 -- --commit <sha>`.
 4. Push, then `bash scripts/v4-play.sh <sha>`. It builds that commit, commits play/ and the harness mirror to main, and waits for Pages. If it says the stamp was verified, it's live.
