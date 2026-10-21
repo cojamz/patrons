@@ -180,3 +180,4 @@ When unsure, err cheaper for quiet cards and dearer for universal ones. That is 
 ## Added 2026-10-21 (Cory on the neutral prices)
 - Spread prices wide. "Everything is roughly the same cost" is a flaw on its own: a row should hold a cheap pickup and a big buy. Guests run 3 to 9, and only a truly big effect (an extra minion) sits at the top.
 - Our prices run a little high. Start a notch cheaper than the sum-of-parts math says, except where a card can swing contests on the last buy (Launderer).
+- The full pricing rules, and why the old model came out high and flat, are at the top of design/eval/rework-panel-2026-10-21/pricing.md ("Pricing v2"). Shape each deck's price curve first: a third at 1 to 3, a third at 4 to 6, one to three at 7 to 10. Price for the round you want a card bought in, not the round it peaks. His "too cheap" means one step.

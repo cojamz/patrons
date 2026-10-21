@@ -111,3 +111,9 @@ Score: about 10 of 18. Right: Doppelganger, Squatter, Sleepwalker, Lender, Rainm
 18. Any choice you must remember is out unless the card shows it.
 19. One-shot windfalls off a rival's pile: lean no. Timed one-shots you choose to fire: lean yes.
 20. Claude's own audits (member-feel.md, value numbers) are not his taste. Quote him, not them.
+
+## Rubric v4 = v3 plus (Oct 21 verdicts)
+21. Magenta member picks, ❌ "those magenta changes look awful": magenta parts of 1 to 2 on every card, Bodyguard 1+5 worth 2, Kingpin "+1 follower per magenta member", Robin Hood "+1 follower × round" on space steals from the leader. Lesson: patches (lower a part, add a cap, add "× round") to a color's cards don't read as a rework. A thief color's members should each do one thieving thing you'd want; a flat follower scorer and a defense card are the skeleton again. And Magenta is his to design: don't pitch its members unasked.
+22. Tiebreaker, ✅ "tiebreaker was a good idea": "Ties you're in go to you alone." Short, a rule you can see, changes how you play the contests (hold to match, not to beat), and it bends a rule he set himself (ties all score) for one owner only. A rule-bender that touches contests is welcome.
+23. Prices: ❌ "everything is roughly the same cost" and "a little too expensive". A deck whose totals sit within 3 of each other fails on that alone. Check the curve before the cards (pricing.md, Pricing v2).
+24. "i don't think you have the hang of this quite yet": the overnight picks scored as fair, not good. Treat a panel's picks as pitches. Lead with the one or two cards in each color that open a different way to win, and keep the rest short.

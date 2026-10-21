@@ -1,3 +1,29 @@
+# Pricing v2 (Oct 21, after Cory's notes on the neutral members) — this section wins over everything below it
+
+Cory, 12:03am Eastern: "these are all a little too expensive, except the Launderer. the extra hand should be expensive? but the rest seem slightly too expensive. the other problem here is everything is roughly the same cost." The neutral set had come out as 5, 6, 6, 6, 7, 7, 9.
+
+## Why the old model came out high and flat
+1. **It priced every card at its peak.** Rule-benders were "priced for round III", and every card was scored in "its best round". Most cards peak at about one round III placement, so they all landed around 5 to 7. The model was flat by construction.
+2. **One ratio for every card.** The "1.2 to 1.5 in its best round" target forced every card to the same value for its cost. Then any card whose power we estimated at "about a space" got about the same price. Nothing in the model asked for a cheap card or a dear one.
+3. **The bumps stacked up.** Neutral cards got "+1 to 2 because they pay no contest tax". His Oct 15 "too cheap" got read as another +1 to 2 (Front-runner 4 → 6, when he wanted 5). Every adjustment pointed up.
+4. **It anchored on live prices**, which were already bunched from an earlier sim pass at 4 to 7.
+5. **It ignored when you can afford it.** A round I player has about 6 loose resources for the whole round (section 1 below). A 6 or 7 is a whole round's income, so a card priced like that is a round II card whatever its text says. Pricing at the peak quietly moved every card into rounds II and III.
+
+## The rules now
+1. **Shape the deck's price curve first, then fit the cards to it.** In a deck of 6 to 10: about a third cheap (1 to 3), a third middle (4 to 6), and one to three dear (7 to 10). At least one card at 2 or less, and at least one at 8 or more. No more than two cards at the same total. Spread 1 to 10 is the target, and 3 to 9 is the narrowest acceptable.
+2. **Price for the round you want it bought in, not the round it peaks.** Round I cards cost 4 or less (one round's income). Round II cards cost 4 to 7. Only a card whose whole point is a round III burst or a rule-bend that size (Extra Hand, Mob, Tribute Band) sits at 8 to 10.
+3. **When in doubt, go a step cheaper.** A dear card dies in the row and teaches nothing. A cheap card gets played, and he'll tell us. His notes run "too dear" on quiet cards far more often than "too cheap".
+4. **His "too cheap" or "too dear" means one step (±1)** unless he names a number. Never re-derive and stack.
+5. **No surcharge for neutral cards.** Not paying a contest tax is not worth extra.
+6. **Followers:** plain bodies stay at f = C or better (worth C+1 at 5 and 10). Ability cards stay at worth 1 unless the body count is the point.
+7. **The cheap card is a design job, not a leftover.** It should still be one you want, like Twins, Crew, Volunteer or Recluse at 4. A cheap card that does something small but clear (on arrival, visible) beats a dear card that does a lot.
+
+His liked members, by total cost: Volunteer 0, Twins 2, Crew 2, Shareholder 3, Recluse 4, Busker 4, Stunt Double 4, Treasurer 4, Doppelganger 5, Panel 6, Mentor & Protégé 8, Extra Hand 9, Mob 10, Tribute Band 10. That is the curve to imitate: wide, with most of the loved cards at 4 or less.
+
+Calibration (his calls and Claude's gut spread, Oct 21): Straggler 3, Freelancer 4, Tiebreaker 4, Front-runner 5 (his), Squatter 6, Launderer 6 (he said it's fine), Extra Hand 9 (he says it should stay expensive).
+
+---
+
 # Member pricing under the current economy (panel: economy and pricing)
 
 Claude, 2026-10-21, overnight panel. Arithmetic from the live rules (core.js: packs 1/5/10 at 1-for-1, one buy per turn, minions 3/4/5, contests 2/4/6, shop 7) and the approved Red (red.js) and Green (echo.js) decks. No sims, no games. Every estimate is marked **(guess)**; Cory's approved prices are the calibration, and where they disagree with the arithmetic his gut wins and this file says what it is pricing in.
