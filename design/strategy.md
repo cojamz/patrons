@@ -78,6 +78,7 @@ Before pitching a color: does every action feel good and distinct to take; does 
 - Harm when he picks it: Collect Debts on any player, the bribe "to the bank", Poach.
 
 **Rejects**
+- A color whose identity is holding its own resource (Gold as the hoard, gold as any color, members paying gold), 2026-10-21: "the core gold idea doesn't work as well now that almost all colors will give resource based points at round end". A pile of one color is no longer special.
 - Agent-forged quadrants and a homemade sphere (Bookie) (2026-10-09: "mostly sucked").
 - Tempo, Territory and Patronage spheres (2026-10-14: "bad ideas").
 - Claude's 8 neutral rule-benders, especially out-of-turn minion placement (2026-10-14: "I don't like your neutrals").

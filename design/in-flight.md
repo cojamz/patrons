@@ -1,7 +1,7 @@
-# In flight (2026-10-21 3:50am Eastern)
+# In flight (2026-10-21 12:05pm Eastern)
 
-- Live: v0.8.25 (main:play/build.json). Overnight job 1 done; morning summary posted in "Where we are this week".
-- Backlog thread ("Where we are this week"): next, Cory's answers to the numbered list in design/todo.md "Waiting on Cory", the wording sheet (/mnt/project-files/overnight/lane8/wording-sheet.md, his yes/no; nothing shipped), the members m3 seat layout call. Ours, still open: lag/perf (needs his go for perf runs), re-port minion-on-press, animated round I draft, seat pass mockups, bulletin cards gathering before the log.
-- Better design process thread: owns members and job 2 (color reworks for Cory's approval). Nothing ships before he approves.
-- Open questions parked for Cory's picks: Underdog doubling stolen loot; a stolen Lender pays its +5 to the thief (todo.md Waiting on Cory 9, 10).
+- Live: v0.8.32 (main:play/build.json, source 9aec1a1). Today: speed pass (v0.8.27), panels close up after the round I picks (v0.8.29), player panel A with members by cost and a compact expandable log (v0.8.30), Recruit wording + Recruit Twice (v0.8.31), Cory's recruit definition: follower buys count as recruits, forced arrivals don't (v0.8.32).
+- Backlog thread ("Where we are this week"): idle, waiting for Cory's next pick. Open, ours: Even Swap's shop-to-shop trade tells nothing in the story; the game log still says "bought N followers"; lag leftovers in design/eval/perf/lag-2026-10-21.md (round II commit ~200ms, bots think on the main thread, SinceStrip/TurnCard re-render every state, hover gutter grace); wording rows held as rules questions (⚑) in /mnt/project-files/overnight/lane8/wording-sheet.md.
+- Better design process thread: member card design. Done today: Magenta 13 (v0.8.28), Blue 12 picked (Window Dresser and Trendsetter in), guests Launderer/Tiebreaker/Front-runner yes. Old colors' members parked until their actions are redesigned. Crowd-Pleaser is cut, so no Recruiter stacking.
+- Member balance thread: prices at Cory's 1.5× rule for Magenta, Blue, Red, Green and guests, then one follower-only check; builds on claude/members-blue-v2.
 - Live status lines: node scripts/status.mjs (board at /mnt/project-files/status/board.md).

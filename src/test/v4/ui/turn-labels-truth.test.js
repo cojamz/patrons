@@ -82,7 +82,9 @@ describe('turn labels agree with the engine', () => {
           const since = s.log.slice(Math.max(0, s.log.findLastIndex(l => /^Round \S+ ends\./.test(l))));
           const nm = s.players[pend.player].name;
           const hadExtra = since.some(l => l.startsWith(`${nm} takes`) && /extra turn/.test(l) || l.startsWith(`${nm}'s`) && /: (\S+ takes )?(an|\d+) extra turns?/.test(l));
-          if (t && t.again && t.kind === 'snake' && !t.early && !hadExtra) {
+          // (so is a seat that took its own turns early: its last turns moved up, so its k-th turn isn't its k-th planned)
+          const tookEarly = s.early && s.early.round === s.round && s.early.moves.some(m => m.p === pend.player);
+          if (t && t.again && t.kind === 'snake' && !t.early && !hadExtra && !tookEarly) {
             const done = s.turns.length; // this turn is s.turns[done - 1]
             const text = promptFor(s, false).text;
             // where the two turns sat in the plain snake (state.order: first pass, then the passes)
@@ -137,22 +139,22 @@ describe('a gap closed by Crunch Time is said as such (Cory #98, #99)', () => {
     const rand = seededRandom(11);
     while (!(s.round === 3 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
     const [A, B] = s.order;
-    s = applyMove(s, nextMove(s, rand, true)); // A takes Crunch Time: A A A B C C B B C C B A A B C
+    s = applyMove(s, nextMove(s, rand, true)); // A takes Crunch Time: A A A B C C B A A (A: an extra turn) B C C B B C
     const at = (n, ok = () => true) => { while (!(s.pending?.kind === 'place' && s.turns.length === n && ok(s))) s = applyMove(s, chooseBotMove(s, rand)); };
-    at(7); // B's first of the pair (turn 7 of 15)
+    // the plain snake turnaround first (C C at turns 12-13) still says snake order
+    at(13);
+    expect(currentTurn(s).again).toBe(true);
+    expect(promptFor(s, false).text).toMatch(/again \(snake order\)$/);
+    at(14); // B's first of the pair (turn 14 of 16): A's last two turns moved up, closing B's gap
     expect(s.current).toBe(B);
     expect(turnPlaces(s, B).places[B]).toMatchObject({ label: 'now', twice: true });
     expect(turnPlaces(s, B).places[B].title).toMatch(new RegExp(`Back to back because ${s.players[A].name} took turns early with Crunch Time\\.`));
     expect(turnPlaces(s, B).places[B].title).not.toMatch(/snake order/);
     expect(turnPlaces(s, s.order[2]).places[B].title).toMatch(new RegExp(`because ${s.players[A].name} took turns early`));
     expect(turnPlaces(s, A).places[B].title).toMatch(/because you took turns early with Crunch Time/);
-    at(8);
+    at(15);
     expect(s.current).toBe(B);
     expect(promptFor(s, false).text).toBe(`${s.players[B].name} again (${s.players[A].name} took turns early with Crunch Time)`);
     expect(promptFor(s, true).lead).toBe(`Your turn again (${s.players[A].name} took turns early with Crunch Time) — `);
-    // the plain snake turnaround that follows (C C at turns 9-10) still says snake order
-    at(10);
-    expect(currentTurn(s).again).toBe(true);
-    expect(promptFor(s, false).text).toMatch(/again \(snake order\)$/);
   });
 });

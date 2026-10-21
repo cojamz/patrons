@@ -10,7 +10,8 @@ Shipped this week: busy rival chair shows its members and "safe this round" (v0.
 Cory's calls (numbered picks when asked):
 - [x] Magenta members: his light rework and tested prices shipped in v0.8.28 (Oct 21).
 - [ ] Backlog (Cory, Oct 21): cut one Magenta member so Magenta has 12 like every color (it has 13 for now).
-- [ ] Blue members: 11 of 12; his pick for the 12th, then tested prices ship (claude/members-blue-v2). Red, Green and guest prices: balance tests running, ship as they land.
+- [ ] Member prices at 1.5× for Magenta, Blue (12, all approved), Red, Green, guests; then the follower-only check (Member balance thread, claude/members-blue-v2).
+- [ ] Gold, Silver, Yellow, Purple, White members: wait for each color's action redesign (Cory, Oct 21).
 - [ ] Neutral members (Cory, Oct 21): Front-runner 5, Tiebreaker in, Launderer 6, prices spread 3–9 (decisions.md). Build on his go; nothing ships from the rework panel before it.
 - [ ] Names: Recruit Bonus, Movement Penalty, Chronicler.
 - [ ] Greatest Hits repeating a copied Echo's gain [no]; tiebreaker most members [yes]; new abilities for the dropped cost reductions.
@@ -93,3 +94,4 @@ Tooling
 - Cory's ideas, read when that color's rework starts: members worth 2 followers (Snob); deeper sphere themes, members themed with their sphere; Silver II–III reward getting rid of silver members; White rework, fewer followers as catch-up; Patron Saint 1 follower per silver member in play; every sphere has a member end-game and a resource end-game card; a reverse sphere (actions gain followers, members cost followers); a defensive blocking sphere.
 - Cory's layout and motion ideas: log in the middle of the player boxes; remote mouse pointers (H05); flights from a resource bank (H12).
 - Low priority (balance thread, after member prices ship): test Crunch Time ("Take your next 2 turns now", Purple round III) at 2 turns vs 3. It stays 2 for now (Cory, Oct 21: "It should maybe even be 3 turns. but let's do 2"). Run it only after the Purple redesign ships (Crunch Time then takes your last turns of the round, so you finish early).
+- Low priority (Cory, Oct 21): balance-test Crunch Time at 3 turns against 2.
