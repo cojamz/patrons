@@ -40,6 +40,8 @@ Read-only critics return text; the foreman saves it. `strategist` grounds brains
 - Done = a fresh frozen build seen in a screenshot at about 1270x700, or a gate that proves it. Snappy: clicks and hovers answer in 100 ms measured as "card complete"; the wheel lands in 400 ms; motion 150-350 ms per beat.
 
 ## Shipping
+Small screen or wording change, already committed: `bash scripts/v4-ship-ui.sh "<changelog line>" <changed files>` runs only their tests plus the build, bumps, pushes and publishes in about 2 minutes, printing each step's time. Then your own screenshot to Cory.
+- Browser gates already red on live are listed in e2e/v4/known-red.json: the check prints KNOWN RED and doesn't count them, and says NOW GREEN when one passes. Add one only after seeing it fail on the live commit.
 Pull `claude/gifted-newton-3lcy3i`, rebase (never force-push), push the fix the moment it passes the quick check, then `bash scripts/v4-play.sh <sha>` (builds that commit, commits play/ and the harness mirror to main, waits for Pages). Confirm the stamp, then tell Cory with the version, one plain line per change and a screenshot. Stay on v0.8.x. No new PRs; PR #1 is the line of v4 work.
 
 ## Parallel threads
@@ -49,3 +51,4 @@ One thread per job. Each owns its files, posts its status line, and messages the
 - 2026-10-19: A single legal payment plan doesn't guarantee auto-confirm in browser purchase checks; confirm a visible pay sheet, keep exact ownership assertions.
 - 2026-10-19: Dismiss the local handoff before settled screenshots, or overlays hide the wheel.
 - 2026-10-20: New threads loaded main's v3 CLAUDE.md and v3 game rules for weeks, so every thread started wrong. Fix: main mirrors the harness, and bootstrap moves fresh clones onto the v4 branch.
+- 2026-10-20: e2e/v4/layout.mjs is already red on the live build (follower-tile overflow, a 1100px setup wait), so running it on a CSS tweak cost ~10 min and proved nothing. Fix: CSS-only tweaks ship on the related unit tests plus Claude's own screenshot; layout.mjs needs repair before it's used as a gate.
