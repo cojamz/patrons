@@ -205,7 +205,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
               {/* a rule that grows by round reads by round, this round lit, as in every hover (RuleText; compact on the small card) */}
               {detailed && <span className="lt-pick-ability"><RuleText def={d} round={state.round} plain compact /></span>}
-              <span className="ft">
+              <span className="ft" data-discount={paid ? '' : undefined}>
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>
                     {/* the list price as one struck number, BEFORE the price you pay (a shop's "was 4, now 2"): after it, it

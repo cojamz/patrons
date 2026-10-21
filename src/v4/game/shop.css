@@ -143,6 +143,11 @@
 .app.game.lt .lt-shop-cards .lt-card .ft{font-size:16px;line-height:20px;flex:none}
 .app.game.lt .lt-shop-cards .lt-card .ft .num,.app.game.lt .lt-shop-cards .lt-card .ft .lt-cost.free{font-size:16px}
 .app.game.lt .lt-shop-cards .lt-card .ft .pip,.app.game.lt .lt-shop-cards .lt-card .ft .follower-mark{width:16px;height:16px}
+/* A discount's struck list price stands small just above the price you pay (a price tag's "was 10, now 6"): in one row it
+   ran into the worth on a 95px card at 1270x700 (Patriarch, Underdog, Tribute Band) and read as one number ("106") */
+.app.game.lt .lt-shop-cards .lt-card .ft[data-discount]{height:auto;align-items:flex-end}
+.app.game.lt .lt-shop-cards .lt-card .ft .cost-now{display:inline-grid;grid-template-columns:max-content;justify-items:start;row-gap:0}
+.app.game.lt .lt-shop-cards .lt-card .ft .cost-now .cost-was.num{font-size:11px;line-height:12px;font-weight:600;margin-top:2px}
 
 /* The "affordable" toggle (Cory, 2026-10-18): members you can't pay for right now fade, in every phase. A card the space
    under your pointer would unlock (data-after) or aims at (data-aim) comes back, so the hover's answer still reads. */
