@@ -330,7 +330,7 @@ const market = {
     }),
     // concepts, Oct 21, not approved (design/eval/member-concepts-2026-10-21.md): prices are sim starting points
     m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true }),
-    m('windowdresser', 'Window Dresser', 0, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', {
+    m('windowdresser', 'Window Dresser', 1, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx, owner) {
         churnStep(ctx, owner, { left: Math.min(3, ctx.state.shop.length) });
         ctx.defer(owner, `${Q}.churnRefill`);
@@ -354,7 +354,7 @@ const market = {
     }),
     m('shoppers', 'Window Shoppers', 1, 1, 'Worth 2 followers.', { f: 2, n: 2, vanilla: true }),
     // Cory's, Oct 21: "one recruit, refresh the shop. all the members"; prices are sim starting points
-    m('makeover', 'Makeover', 0, 1, 'When recruited: send the whole shop to the bottom of the pile, then refill.', {
+    m('makeover', 'Makeover', 1, 1, 'When recruited: send the whole shop to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx) { sweepRow(ctx); },
     }),
     // Cory's, Oct 21: "when you buy followers +1 blue"; his Oct 21 definition makes buying followers a recruit
@@ -362,7 +362,7 @@ const market = {
       onBuyFollowers(ctx, owner, card, by) { if (by.id === owner.id && ctx.gain(owner, B, 1)) ctx.log(`${owner.name}'s Regular: +1 blue.`); },
     }),
     // Cory's pick for Blue's 12th, Oct 21 ("trendsetter is good!")
-    m('trendsetter', 'Trendsetter', 0, 1, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', {
+    m('trendsetter', 'Trendsetter', 1, 1, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', { f: 3,
       onRecruit(ctx, owner, card, by, what) {
         if (by !== owner || what.member?.uid === card.uid || !ctx.state.shop.length) return;
         churnStep(ctx, owner, { left: 1 });

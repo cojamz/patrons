@@ -13,7 +13,7 @@ const acquire = (s, id) => contextFor(s).recruit(s.players[0], uidIn(s, id, 'sho
 describe('new Red member hooks', () => {
   it('deals exactly twelve ordinary Red members, with the approved printed bodies and prices', () => {
     expect(quadrant('red').members.filter(d => !CUT.has(d.id))).toHaveLength(12);
-    for (const [id, s, w, f] of [['volunteer', 0, 0, 1], ['twins', 2, 0, 2], ['panel', 4, 2, 3], ['mob', 6, 4, 5], ['loyalists', 2, 3, 2]]) {
+    for (const [id, s, w, f] of [['volunteer', 0, 0, 1], ['twins', 1, 1, 2], ['panel', 4, 2, 3], ['mob', 6, 4, 5], ['loyalists', 1, 1, 2]]) {
       expect(defById(`red.${id}`)).toMatchObject({ s, w, f });
     }
     const s = fixture({ members: [['red.mob', 'red.panel']] });
@@ -87,12 +87,13 @@ describe('new Red member hooks', () => {
   });
 
   it('Panel promotes another member to Mentor, who recruits the cheapest member, without inherent action red', () => {
-    let s = fixture({ members: [['red.host']], shop: ['red.panel', 'red.mentor', 'red.volunteer'] });
+    // Merchant (6) promotes to Mentor (8)
+    let s = fixture({ members: [['gold.merchant']], shop: ['red.panel', 'red.mentor', 'red.volunteer'] });
     acquire(s, 'red.panel');
     s = resume(s);
     expect(s.pending.options.map(o => o.id)).toContain('promote');
     s = move(s, 'promote');
-    const panel = uidIn(s, 'red.panel', 0), host = uidIn(s, 'red.host', 0), mentor = uidIn(s, 'red.mentor', 'shop');
+    const panel = uidIn(s, 'red.panel', 0), host = uidIn(s, 'gold.merchant', 0), mentor = uidIn(s, 'red.mentor', 'shop');
     expect(s.pending.options.every(o => !o.value.includes(panel))).toBe(true);
     s = move(s, `trade:${host}:${mentor}`);
     expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.mentor', 'red.panel', 'red.volunteer']);

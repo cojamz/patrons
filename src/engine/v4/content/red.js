@@ -71,7 +71,7 @@ export default {
   },
 
   members: [
-    m('twins', 'Twins', 2, 0, 'Worth 2 followers.', { f: 2, n: 2 }),
+    m('twins', 'Twins', 1, 1, 'Worth 2 followers.', { f: 2, n: 2 }),
     m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
     m('volunteer', 'Volunteer', 0, 0, 'Worth 1 follower.'),
     m('intern', 'Intern', 1, 0, 'Worth 1 follower.'),
@@ -111,7 +111,7 @@ export default {
     m('patriarch', 'Patriarch', 3, 2, 'Game end: +1 follower per 2 members.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
-    m('recruitbonus', 'Recruit Bonus', 1, 0, 'Whenever one of your members’ "When recruited" happens, +1 of its color.', {
+    m('recruitbonus', 'Recruit Bonus', 1, 1, 'Whenever one of your members’ "When recruited" happens, +1 of its color.', { f: 2,
       onRecruitAbility(ctx, owner, card, recruited) { ctx.gain(owner, ctx.quadrant(recruited.def.quadrant).resource, 1); },
     }),
     m('movementpenalty', 'Movement Penalty', 1, 1, 'When you move a rival’s member out of their cult, they lose 1 follower.', {

@@ -99,13 +99,14 @@ describe('Red members: bounded acquisition and body invariants', () => {
   });
 
   it('Panel save/load retains mode and exact swap targets without inherent action red', () => {
-    let s = table(Q, { round: 3, members: [['red.host']], shop: ['red.panel', 'red.mentor', 'red.mob'], queue: turns(0, 0) });
+    // Merchant (6) can promote to Mentor (8) but not to Mob (10)
+    let s = table(Q, { round: 3, members: [['gold.merchant']], shop: ['red.panel', 'red.mentor', 'red.mob'], queue: turns(0, 0) });
     s = move(take(s, 'red.take'), `card:${uidIn(s, 'red.panel', 'shop')}`);
     expect(s.pending.prompt).toMatch(/Panel/);
     expect(s.pending.options.map(o => o.id)).toContain('promote');
     const direct = move(s, 'promote'), reload = move(saved(s), 'promote');
     expect(reload).toEqual(direct);
-    const panel = uidIn(reload, 'red.panel', 0), host = uidIn(reload, 'red.host', 0), mentor = uidIn(reload, 'red.mentor', 'shop');
+    const panel = uidIn(reload, 'red.panel', 0), host = uidIn(reload, 'gold.merchant', 0), mentor = uidIn(reload, 'red.mentor', 'shop');
     expect(reload.pending.options.map(o => o.id)).toContain(pair(host, mentor));
     expect(reload.pending.options.map(o => o.id)).not.toContain(pair(host, uidIn(reload, 'red.mob', 'shop')));
     expect(reload.pending.options.every(o => !o.value.includes(panel))).toBe(true);
@@ -186,6 +187,10 @@ describe('Red members: bounded acquisition and body invariants', () => {
   });
 
   it('Panel cannot swap itself after reload, while promoting another member into Doppelganger terminates normally', () => {
+    // the swaps below need Doppelganger at 5 (Promote reaches up to 2 more); its printed price moves with balance passes
+    const dop = defById('echo.doppel'), was = { s: dop.s, w: dop.w };
+    Object.assign(dop, { s: 3, w: 2 });
+    try {
     let s = table(Q, { round: 2, members: [['echo.impostor', 'echo.doppel', 'red.recruitbonus']], shop: ['red.panel'], queue: turns(0, 0) });
     const impostor = uidIn(s, 'echo.impostor', 0), doppel = uidIn(s, 'echo.doppel', 0), panel = uidIn(s, 'red.panel', 'shop');
     s.cards[impostor].copy = 'red.panel'; s.cards[doppel].copy = 'red.panel';
@@ -201,5 +206,6 @@ describe('Red members: bounded acquisition and body invariants', () => {
     expect(s.shop).toContain(impostor);
     expect(s.pending?.kind).not.toBe('choose');
     expect(s.players[0].res).toMatchObject({ red: 2, green: 1 }); // action + actual Panel ability + physical copy choice
+    } finally { Object.assign(dop, was); }
   });
 });

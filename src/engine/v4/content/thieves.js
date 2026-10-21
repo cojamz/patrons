@@ -301,7 +301,7 @@ const thieves = {
   },
 
   members: [
-    m('cutpurse', 'Cutpurse', 1, 0, 'Now and at round start: steal 1 resource from the rival with the most resources.', { now: true,
+    m('cutpurse', 'Cutpurse', 1, 1, 'Now and at round start: steal 1 resource from the rival with the most resources.', { now: true,
       onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Cutpurse', 1, { fromAction: false, richest: true }); },
     }),
     m('mole', 'Mole', 2, 2, 'Now and at round start: steal 1 resource from each rival with more followers than you.', { now: true,
@@ -348,7 +348,7 @@ const thieves = {
     m('watchdog', 'Bodyguard', 5, 3, 'Rivals can’t steal from you.', {
       guardSteal: () => true,
     }),
-    m('crew', 'Crew', 1, 0, 'Worth 2 followers.', { f: 2 }),
+    m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2 }),
     m('doubleagent', 'Double Agent', 2, 1, 'When recruited: swap it for a rival’s member you choose.', {
       onRecruited(ctx, owner, card) {
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid);
