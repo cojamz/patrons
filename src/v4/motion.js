@@ -143,7 +143,7 @@ const TABLE = {
   fan:         [25,    40],   // groups, colors, seats in one beat
   settle:      [140,   180],
   roll:        [160,   240],  // a bundle's number rolling on landing
-  cardLift:    [80,    100],
+  cardLift:    [80,    80],
   rivalBuyHold:[0,     0],    // a rival's buy: the card stays lifted while its coins fly in (the telegraph)
   passHold:    [0,     0],  // a turn-ending pass with nothing to show
   cardFly:     [260,   340],

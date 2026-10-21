@@ -772,26 +772,33 @@ export function youdWords(pv, state, own = null) {
  */
 export function useIdleSpaces(state, pid, keys) {
   const [, bump] = useState(0);
+  // the same Set while the idle spaces stay the same, so the wheel doesn't redraw for every dry run that lands
+  // (render budget, 2026-10-21: nine previews arriving at the start of your turn redrew the whole table nine times)
+  const last = useRef({ sig: '', set: new Set() });
   const sig = keys.join('|');
   useEffect(() => {
     if (pid == null || !keys.length) return undefined;
-    const fn = (st, p, k) => { if (st === state && p === pid && keys.includes(k)) bump(n => n + 1); };
+    // a space's dry run only ever turns it idle (no preview yet counts as useful): redraw only when one does
+    const fn = (st, p, k) => { if (st === state && p === pid && keys.includes(k) && !last.current.set.has(k) && idleAt(state, pid, k)) bump(n => n + 1); };
     listeners.add(fn);
     requestPreviews(state, pid, keys);
     return () => { listeners.delete(fn); };
   }, [state, pid, sig]); // eslint-disable-line react-hooks/exhaustive-deps
   const out = new Set();
-  if (pid == null) return out;
-  for (const k of keys) {
-    const [q, i] = k.split('-').map(Number);
-    const pv = peekPreview(state, pid, q, i);
-    if (!pv) continue;
-    let own = null;
-    try { own = quadrant(state.quadrants[q]).resource; } catch { /* none */ }
-    const y = youdWords(pv, state, own);
-    if (!y.likely && !y.note && y.text === 'nothing right now') out.add(k);
-  }
-  return out;
+  if (pid != null) for (const k of keys) if (idleAt(state, pid, k)) out.add(k);
+  const outSig = [...out].join('|');
+  if (outSig !== last.current.sig) last.current = { sig: outSig, set: out };
+  return last.current.set;
+}
+/** Whether space "q-i" would give player pid nothing right now (false while its dry run hasn't landed). */
+function idleAt(state, pid, k) {
+  const [q, i] = k.split('-').map(Number);
+  const pv = peekPreview(state, pid, q, i);
+  if (!pv) return false;
+  let own = null;
+  try { own = quadrant(state.quadrants[q]).resource; } catch { /* none */ }
+  const y = youdWords(pv, state, own);
+  return !y.likely && !y.note && y.text === 'nothing right now';
 }
 /** "You'd get: +3 ●, +1 member" for player pid on space (q, i), computed just after it shows. */
 export function YoudGet({ state, pid, q, i, now = false }) {
