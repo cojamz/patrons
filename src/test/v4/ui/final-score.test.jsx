@@ -10,6 +10,7 @@ import { reckonSteps, unpaidFollowers, scoringSeatState } from '../../../v4/game
 import FinalScore, { plan } from '../../../v4/game/FinalScore.jsx';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
 import { breakdown } from '../../../v4/format.js';
+import { MO } from '../../../v4/motion.js';
 
 afterEach(cleanup);
 const finish = (seed, n = 4) => {
@@ -75,6 +76,11 @@ describe('end-game scoring pops', () => {
       const at = pops.map(p => p.at);
       expect([...at].sort((a, b) => a - b)).toEqual(at);
       for (let k = 1; k < pops.length; k++) if (pops[k].beat !== pops[k - 1].beat) expect(BEATS.indexOf(pops[k].beat)).toBeGreaterThan(BEATS.indexOf(pops[k - 1].beat));
+      // a cult of many members pops as one quick wave: no beat outlasts five steps and a fan
+      for (const beat of BEATS) {
+        const ts = pops.filter(p => p.beat === beat).map(p => p.at);
+        if (ts.length) expect(Math.max(...ts) - Math.min(...ts)).toBeLessThanOrEqual(5 * MO.scoreStep + order.length * MO.scoreFan);
+      }
     }
   });
 

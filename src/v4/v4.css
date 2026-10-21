@@ -361,7 +361,9 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 .rules-body b{color:#fff}
 
 /* round end: a centered, opaque scoring card */
-.overlay.moment{background:color-mix(in srgb,var(--table) 78%,transparent);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+/* the round card is readable within ~150ms (todo A4): the dim lands at once (no full-screen fade) and nothing blurs the
+   table behind it (a full-screen backdrop-filter repainted every frame of the fade: 8–10 frames over 50ms) */
+.overlay.moment{background:color-mix(in srgb,var(--table) 84%,transparent);animation:none}
 .dialog.roundend{background:var(--table-2);border-color:var(--gold);box-shadow:0 20px 60px rgba(0,0,0,.6);max-width:440px;gap:14px;animation:settle var(--mo-quick,.12s) cubic-bezier(.3,.7,.4,1) both;max-height:calc(100dvh - 24px);overflow:auto}
 @keyframes settle{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 .roundend h2{text-align:center;font-size:var(--fs-6)}

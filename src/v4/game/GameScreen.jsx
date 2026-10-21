@@ -1412,7 +1412,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <div className="main over">
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} meId={mySeats.length === 1 ? mySeats[0] : null} />
           {/* the cults at the end, scored where their followers come from (FinalScore.jsx, taste rule 11) */}
-          <FinalScore animate={false} state={state} me={me} hover={hover} onPick={onPick} CultSeat={CultSeat}>
+          <FinalScore state={state} me={me} hover={hover} onPick={onPick} CultSeat={CultSeat}>
             <Log state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} />
           </FinalScore>
         </div>

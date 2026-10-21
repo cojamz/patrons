@@ -95,13 +95,8 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
       {/* the columns add up to the total; a word the rulebook doesn't use never explains one ("raids", w3a #40) */}
       <p className="hint">Each number opens what it’s made of.{playCol ? ' During play: followers won or lost through members’ abilities and spaces.' : ''} Prizes: the rims’ round-end prizes.{endCol ? ' End-game: members that score when the game ends.' : ''}</p>
       {brokeTie && <p className="hint">Tied on followers: more members breaks the tie.</p>}
-      {ranked.some(p => p.final && p.final.parts.length) && (
-        <ul className="parts">
-          {ranked.filter(p => p.final && p.final.parts.length).map(p => (
-            <li key={p.id}><b>{nm(p)}</b> <NamedText state={state} text={p.final.parts.join(' · ')} /></li>
-          ))}
-        </ul>
-      )}
+      {/* (no list of end-game bonuses under the table: the End-game column's hover names each one, and the cults below pop
+          each over the member that scored it; the list repeated both, Claude under Cory's go-with-your-gut, 2026-10-21) */}
       <div className="row-btns">
         {onPlayAgain && <button type="button" className="btn pri" onClick={onPlayAgain} data-play-again>Play again</button>}
         {onHome && <button type="button" className="btn" onClick={onHome}>Home</button>}

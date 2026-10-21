@@ -32,6 +32,7 @@ function targetOf(seat, step) {
  * The pops, in time order: [{ at, pid, beat, n, key, uids }]. One pop per figure per beat (a "×2" figure pops its sum),
  * seats in step: the k-th pop of every seat's beat lands together, a fan apart.
  */
+const BEAT_STEPS = 5; // the most step-gaps one beat takes, however many figures pop in it
 export function plan(state, order, seatEl) {
   const lead = MO.scoreLead, fan = MO.scoreFan, step = MO.scoreStep, gap = MO.scoreBeat;
   const out = [];
@@ -50,8 +51,12 @@ export function plan(state, order, seatEl) {
     });
     const len = Math.max(0, ...rows.map(r => r.length));
     if (!len) continue;
-    for (let k = 0; k < len; k++) rows.forEach((r, i) => { if (r[k]) out.push({ ...r[k], at: t + k * step + i * fan }); });
-    t += (len - 1) * step + (order.length - 1) * fan + gap;
+    // a long row of figures quickens so no beat outlasts five steps (21 members read as one wave, not a 4s roll call)
+    // (the seat-to-seat fan shrinks with it, so the k-th pops of every seat still land before anyone's next one)
+    const each = len > 1 ? Math.min(step, (BEAT_STEPS * step) / (len - 1)) : step;
+    const fanned = fan * (each / step);
+    for (let k = 0; k < len; k++) rows.forEach((r, i) => { if (r[k]) out.push({ ...r[k], at: Math.round(t + k * each + i * fanned) }); });
+    t += Math.round((len - 1) * each + (order.length - 1) * fanned) + gap;
   }
   return out;
 }
