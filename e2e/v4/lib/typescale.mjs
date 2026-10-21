@@ -1,7 +1,8 @@
 // The table's type scale (design pod, 2026-10-15; art director's game-screen scale): every visible word is one of four
 // sizes, 11 (small print), 14 (text), 18 (titles, names, totals) or 36 (the big number or name). The wheel's panel
 // faces fit their own sizes to each panel (Wheel.jsx panelLayout, gated by spaces.mjs s7) and are left out, as are
-// screen-reader-only words. Run in the page: page.evaluate(TYPE_SCALE) → ["15px div.menu-list>button "How to play"", …].
+// screen-reader-only words. Shop cards' printed costs and follower worth are left out too: Cory asked for them
+// larger (2026-10-19, 16px footers; the follower card's big printed number), a card face like the wheel's. Run in the page: page.evaluate(TYPE_SCALE) → ["15px div.menu-list>button "How to play"", …].
 export const TYPE_SCALE = () => {
   const ALLOWED = [11, 14, 18, 36];
   const vis = e => { for (let a = e; a && a !== document.body; a = a.parentElement) { const s = getComputedStyle(a); if (s.display === 'none' || s.visibility === 'hidden' || Number(s.opacity) < 0.05) return false; } const b = e.getBoundingClientRect(); return b.width > 1 && b.height > 1 && b.top < innerHeight && b.left < innerWidth && b.bottom > 0 && b.right > 0; };
@@ -13,6 +14,7 @@ export const TYPE_SCALE = () => {
     const texts = [...e.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim());
     if (!texts.length || !vis(e)) continue;
     if (e.closest('[aria-hidden="true"], .wheel-paper, [data-spaces] .face, [data-intro], [data-recovery], script, style, option')) continue;
+    if (e.closest('.lt-card .ft, .lt-rate .rt-trade')) continue;
     const r = e.getBoundingClientRect();
     if (r.width <= 1 || r.height <= 1) continue;
     const fs = Math.round(parseFloat(getComputedStyle(e).fontSize) * 10) / 10;

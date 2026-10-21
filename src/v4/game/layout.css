@@ -57,7 +57,7 @@
    centre, where the eye lands, as one compact row: it covers only the inner rings, locked until rounds II and III, never a
    ring-I space you'll take nor a rim (layout gate l6). Sized from the wheel's region (container units), so it fits the
    inner rings at every laptop width. */
-.lt-prompt .setup-order{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%;font:500 12px/16px var(--sans);letter-spacing:0;text-transform:none;color:var(--cream-2)}
+.lt-prompt .setup-order{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%;font:500 11px/16px var(--sans);letter-spacing:0;text-transform:none;color:var(--cream-2)}
 .setup-order-row{display:flex;align-items:baseline;gap:8px;min-width:0}
 .setup-order-label{flex:none;width:76px;text-align:right;color:var(--cream-3)}
 .setup-order-names{display:flex;align-items:baseline;min-width:0;flex:1;gap:3px}

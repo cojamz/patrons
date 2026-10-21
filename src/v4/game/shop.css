@@ -78,7 +78,7 @@
 .app.game.lt .lt-shop-cards .lt-rate .rt-trade .follower-mark{width:28px;height:28px;color:var(--pl-ink,#2b2018)}
 .app.game.lt .lt-shop-cards .lt-rate .ft{display:flex;align-items:center;justify-content:space-between;min-height:22px;height:22px;width:auto;margin:auto 6px 0}
 .app.game.lt .lt-shop-cards .lt-rate .rt-left{font-size:10px;margin:0}
-.app.game.lt .lt-shop-cards .lt-rates .lt-done{order:2;grid-column:1 / -1;width:100%;margin:2px 0 0;height:40px;min-height:40px;font-size:15px}
+.app.game.lt .lt-shop-cards .lt-rates .lt-done{order:2;grid-column:1 / -1;width:100%;margin:2px 0 0;height:40px;min-height:40px;font-size:14px}
 .app.game.lt .lt-shop-cards .lt-rates .lt-done.idle{display:none}
 /* Keep the whole market on the table. Both views use the same twelve slots; rules replace portraits. */
 @media (min-width:1200px) and (min-height:500px){
