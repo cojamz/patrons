@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.26 — 2026-10-21 — unreleased
+
+- Shorter, more consistent card texts: one opener then a colon, "When recruited:", "each rival", "steal", growing amounts written per round. No card works differently.
+
 ## v0.8.25 — 2026-10-21 — shipped (source ed22298)
 
 - Member swaps with the shop cross both portraits at once. A big gain flies every coin (12 coins as 12) without slowing the turn. Round end is smoother: the scoring card fades up, totals count as prizes land, minions fill their columns as they arrive. The follower mark on each rim has a soft sheen. Bots now judge member swaps properly.
