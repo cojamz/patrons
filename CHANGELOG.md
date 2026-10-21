@@ -4,8 +4,15 @@ Player-facing releases and exact source/build verification are recorded separate
 
 ## v0.8.17 — 2026-10-20 — unreleased
 
-- Shop: an "affordable" toggle fades the members you can't pay for. Red's shop swap names both members.
-
+- Shop: an "affordable" toggle fades the members you can't pay for.
+- Red's shop swap names both members.
+- Rules that grow by round read as I / II / III lines, with this round lit (hovers, member cards, seat lists).
+- "P2 took 1 gold" shows as a small tab on the robbed seat.
+- Gift cards keep their way-out button ("Swap nothing", "Take all") in a footer, apart from the caption.
+- Contest rim marks sit on the line of text.
+- Grifter: only its first sentence. Top Up gives +1 × round. Feastmaker is now Chefs: 6 yellow + 3 any, worth 2 followers.
+- Overseer and Social Climber leave the deck (Purple and Blue deal 9 members until their replacements).
+- A player named Pants gets Max's tall leader.
 ## v0.8.16 — 2026-10-20 — shipped (source 9d04664, main e943baa)
 
 - Guest members are colorless: no sphere counts them, and their whole cost is paid in any colors.
