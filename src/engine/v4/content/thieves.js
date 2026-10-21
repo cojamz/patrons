@@ -301,7 +301,7 @@ const thieves = {
   },
 
   members: [
-    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the richest rival you can steal from.', { now: true,
+    m('cutpurse', 'Cutpurse', 2, 1, 'Now and at round start, take 1 resource from the richest rival you can steal from.', { now: true,
       onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Cutpurse', 1, { fromAction: false, richest: true }); },
     }),
     m('mole', 'Mole', 2, 2, 'Now and at round start, take 1 resource from each player with more followers than you.', { now: true,
@@ -312,18 +312,18 @@ const thieves = {
     m('accomplice', 'Accomplice', 4, 4, 'When recruited: take 1 resource from each rival.', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have.', {
+    m('grifter', 'Grifter', 3, 1, 'When recruited: take 1 resource per 2 members you have.', {
       // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, like any steal
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
         startSteal(ctx, owner, 'Grifter', n, { fromAction: false });
       },
     }),
-    m('sticky', 'Sticky Fingers', 4, 4, 'Your steals from spaces take +1 resource.', { stealMore: 1 }),
-    m('desperado', 'Desperado', 2, 2, 'While you have the fewest followers (ties count), double the base resources stolen from spaces.', {
+    m('sticky', 'Sticky Fingers', 3, 2, 'Your steals from spaces take +1 resource.', { stealMore: 1 }),
+    m('desperado', 'Desperado', 3, 2, 'While you have the fewest followers (ties count), double the base resources stolen from spaces.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
-    m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower.', {
+    m('robinhood', 'Robin Hood', 2, 1, 'Whenever you steal from the player with the most followers, +1 follower.', {
       onSteal(ctx, owner, card, info) {
         if (info.thief === owner && (info.led ?? ledBefore(ctx, info))) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
       },
@@ -340,16 +340,16 @@ const thieves = {
       },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 10
-    m('extortionist', 'Extortionist', 8, 2, 'Whenever a rival buys 5 or more followers, take 2 resources from them.', {
+    m('extortionist', 'Extortionist', 5, 1, 'Whenever a rival buys 5 or more followers, take 2 resources from them.', {
       onBuyFollowers(ctx, owner, card, buyer, tier) {
         if (buyer !== owner && tier && tier.get >= 5) autoSteal(ctx, owner, buyer, 'Extortionist', 2);
       },
     }),
-    m('watchdog', 'Bodyguard', 4, 2, 'Rivals can’t steal from you.', {
+    m('watchdog', 'Bodyguard', 6, 3, 'Rivals can’t steal from you.', {
       guardSteal: () => true,
     }),
     m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2 }),
-    m('doubleagent', 'Double Agent', 4, 2, 'When recruited: swap it for any rival’s member.', {
+    m('doubleagent', 'Double Agent', 3, 2, 'When recruited: swap it for any rival’s member.', {
       onRecruited(ctx, owner, card) {
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid);
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });
@@ -378,12 +378,12 @@ const thieves = {
       },
     }),
     // Cory's #26 "Steal when you buy a member - should be essential to magenta" (concept, asked Oct 21)
-    m('shoplifter', 'Shoplifter', 2, 2, 'Whenever you recruit, steal 1 resource.', {
+    m('shoplifter', 'Shoplifter', 3, 3, 'Whenever you recruit, steal 1 resource.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1, { fromAction: false });
       },
     }),
-    m('fence', 'Fence', 1, 2, 'Whenever you steal, +1 magenta.', {
+    m('fence', 'Fence', 2, 3, 'Whenever you steal, +1 magenta.', {
       onSteal(ctx, owner, card, info) { if (info.thief === owner) ctx.gain(owner, 'magenta', 1); },
     }),
   ],
