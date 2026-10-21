@@ -118,6 +118,26 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const detailed = view === 'details' || (view === null && memberPick);
   const toggleView = () => { const next = detailed ? 'compact' : 'details'; setView(next); hover?.close?.(); try { localStorage.setItem(VIEW_KEY, next); } catch { /* this visit only */ } };
   useEffect(() => { onViewChange?.(detailed); }, [detailed, onViewChange]);
+  // with details on, an ability that would run under the price sets one step tighter, so the card keeps its slot and
+  // the whole rule stays readable (Straggler at 1270x700 ran under its footer; shop-sizing gate)
+  const fitKey = detailed ? `${uids.join(',')}|${state.round}` : '';
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!fitKey || !row) return undefined;
+    const fit = () => {
+      for (const a of row.querySelectorAll('.lt-pick-ability')) {
+        const card = a.closest('.lt-card'), ft = card && card.querySelector('.ft');
+        if (!ft) continue;
+        a.removeAttribute('data-fit');
+        const over = () => a.getBoundingClientRect().bottom > ft.getBoundingClientRect().top + 0.5 || ft.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom + 0.5;
+        if (over()) a.setAttribute('data-fit', 'tight');
+      }
+    };
+    fit();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
+    ro?.observe(row);
+    return () => ro?.disconnect();
+  }, [fitKey]);
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
     <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-fade={viewer && fade ? 'on' : undefined} aria-label="Shop">
