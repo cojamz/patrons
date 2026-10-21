@@ -88,6 +88,9 @@
   .app.game.lt .lt-shop-cards .lt-card.card,.app.game.lt .lt-shop-cards .lt-deck{min-height:0}
   /* 3 follower buys + deck + 7 members: the deck takes two rows so the twelve slots stay full (Cory, 2026-10-20: shop at 7) */
   .app.game.lt .lt-shop-cards .lt-deck{grid-row:span 2}
+  /* the narrower column (Cory, 2026-10-20: a bigger wheel): the price and worth keep their whole width */
+  .app.game.lt .lt-shop-cards .lt-card .ft{margin:auto 4px 0}
+  .app.game.lt .lt-shop-cards .lt-card .lt-res{margin-right:3px}
   .app.game.lt .lt-shop-cards .lt-card .nm{white-space:normal;height:auto;min-height:12px;flex:none;display:grid;align-content:center;margin:3px 4px}
   .app.game.lt .lt-shop-cards .lt-rates .lt-done{position:absolute;bottom:4px;left:4px;width:calc(100% - 8px);margin:0}
   .app.game.lt .lt-shop-cards .lt-rates .lt-done.idle{display:block;visibility:hidden}

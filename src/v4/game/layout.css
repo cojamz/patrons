@@ -6,7 +6,7 @@
    Narrower laptops keep lamp.css's grid (a chair needs ~300px; the wheel would shrink); phones keep their stack. */
 @media (min-width:1200px) and (min-height:500px){
   .app.game.lt{
-    --col-l:340px;--col-r:clamp(350px, 26vw, 410px);--col-gap:18px;
+    --col-l:320px;--col-r:clamp(308px, 24vw, 370px);--col-gap:16px;
     --col-top:20px; /* the chairs start on the same line as the follower buys (which sit under their label) */
     --turn-dock:since; /* GameScreen's turn card docks under the story of the turns */
     grid-template-columns:var(--col-l) minmax(0,1fr) var(--col-r);
