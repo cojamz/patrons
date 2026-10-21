@@ -35,3 +35,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 
 ## Changelog
 - 2026-10-20: Rewrote to current rules only; history archived. From Cory's Oct 20 notes: extremely brief (smart brevity), easy to track every parallel thread without asking, never make him ask to save or organize, Claude levels up as creative partner and facilitator while he makes design calls, careful with tokens on game runs, tests over blind panels (panel occasionally, suggested when due). Brevity is now a gate (message-check hook) after the third correction.
+- 2026-10-20: Cory, on a third Netlify mention: "its not relevant! how could it be blocking anything". Don't raise irrelevant infrastructure; answer what's actually blocking (here, nothing). Netlify check is ignored per harness.md.
