@@ -84,7 +84,7 @@ export default {
       },
     }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 12 → 6
-    m('proselytizer', 'Proselytizer', 3, 2,'Whenever you recruit, +1 follower.', {
+    m('proselytizer', 'Proselytizer', 3, 3,'Whenever you recruit, +1 follower.', {
       // a recruit is a member or a follower purchase (Cory, 2026-10-21); not its own arrival
       onRecruit(ctx, owner, card, by, what) { if (by === owner && what.member?.uid !== card.uid) owner.bonus += 1; },
     }),
@@ -101,7 +101,7 @@ export default {
         if (by === owner && ctx.state.current === owner.id && owner.turnRecruits >= 2 && owner.turnRecruits - ctx.memberWeight(recruited) < 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Pied Piper: +2 red.`); }
       },
     }),
-    m('host', 'Host', 2, 1, 'Now and at round start: +1 red per 2 members.', { now: true,
+    m('host', 'Host', 2, 2, 'Now and at round start: +1 red per 2 members.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'red', Math.floor(ctx.memberCount(owner) / 2)); },
     }),
     m('sponsor', 'Sponsor', 6, 4, 'Your members cost 2 less.', { costReduction: 2 }),
@@ -114,7 +114,7 @@ export default {
     m('recruitbonus', 'Recruit Bonus', 1, 1, 'Whenever one of your members’ "When recruited" happens, +1 of its color.', { f: 2,
       onRecruitAbility(ctx, owner, card, recruited) { ctx.gain(owner, ctx.quadrant(recruited.def.quadrant).resource, 1); },
     }),
-    m('movementpenalty', 'Movement Penalty', 1, 1, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
+    m('movementpenalty', 'Movement Penalty', 1, 2, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
       onMoveMember(ctx, owner, card, info) { if (info.from !== owner && ctx.followers(info.from) > 0) info.from.bonus -= 1; },
     }),
     m('panel', 'Panel', 4, 2, 'When recruited: Promote or Demote another member.', { f: 3, n: 3,
@@ -125,7 +125,7 @@ export default {
         ctx.choose(owner, 'Panel: Promote or Demote?', options, 'red.panelMode', { excludeUid: card.uid });
       },
     }),
-    m('loyalists', 'Loyalists', 1, 1, 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
+    m('loyalists', 'Loyalists', 1, 2, 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
     m('reserve', 'Benchwarmer', 1, 0, 'Worth 1 follower.'), // placeholder until Cory designs its hold (then it becomes Seat Saver)
   ],
 };
