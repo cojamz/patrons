@@ -26,7 +26,7 @@ Codex reads AGENTS.md (pointer to these rules) and the skills through `.agents/s
 - Card gate (`hooks/card-gate.mjs`): the first edit to a card file in a thread asks whether it's Cory's logged call or a bug fix; retrying goes through.
 
 ## Skills (.claude/skills)
-`/note` (Cory's voice notes) · `/brainstorm` (any design pitch) · `/rework-color` (a color's actions or members, Cory's loop) · `/ship-batch` (version, changelog, publish, stamp, go-live note) · `/v4-loop` (build, check, look) · `/eval-quadrant` (judge a color on paper without games).
+`/note` (Cory's voice notes) · `/brainstorm` (any design pitch) · `/rework-color` (a color's actions, Cory's loop) · `/rework-members` (concepts strong to weak with counters, then sim prices; design/member-process.md) · `/ship-batch` (version, changelog, publish, stamp, go-live note) · `/v4-loop` (build, check, look) · `/eval-quadrant` (judge a color on paper without games).
 
 ## Agents (.claude/agents)
 Read-only critics return text; the foreman saves it. `strategist` grounds brainstorms and keeps its own memory (.claude/agent-memory/strategist/). `design-critic` pressure-tests a mechanic. Blind testers (`ui-critic`, `boardgame-enthusiast`, `game-skeptic`, `playtester`) get only the URL and design/rulebook.md, are fresh every time, and run only when Cory asks for a panel. `art-director` and `detail-designer` are the design pod while the UI is changing. Never pass agent output to Cory unvetted, and an agent's report is never proof.
