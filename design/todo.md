@@ -7,7 +7,8 @@ Mine, no design call:
 - [ ] 5. Clarity: "I: / II: / III:" lines with other rounds dimmed; "P2 took X from you" shorter, near your card; shop refresh animates at round start; Red picker toast clear of the choice sheet.
 - [ ] 6. Lag and 12-coins-as-12 (needs perf runs: waits for Cory's go).
 Cory's calls (numbered picks when asked):
-- [ ] Magenta members: Cory designs (light rework). Next color: brainstorm thread.
+- [ ] Magenta members: Cory designs (light rework); the Oct 21 panel picks were a no. Next color: brainstorm thread.
+- [ ] Neutral members (Cory, Oct 21): Front-runner 5, Tiebreaker in, Launderer 6, prices spread 3–9 (decisions.md). Build on his go; nothing ships from the rework panel before it.
 - [ ] Names: Recruit Bonus, Movement Penalty, Chronicler.
 - [ ] Greatest Hits repeating a copied Echo's gain [no]; tiebreaker most members [yes]; new abilities for the dropped cost reductions.
 Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 18 Green picks.
