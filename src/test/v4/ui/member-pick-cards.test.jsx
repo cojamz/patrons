@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { createGame, cardDef } from '../../../engine/v4/index.js';
 import ShopCards, { SORT_KEY, VIEW_KEY } from '../../../v4/game/ShopCards.jsx';
+import { RuleText } from '../../../v4/game/Info.jsx';
 
 afterEach(() => { cleanup(); localStorage.removeItem(SORT_KEY); localStorage.removeItem(VIEW_KEY); });
 const seats = [{ name: 'Ana', kind: 'human' }, { name: 'Bo', kind: 'bot' }];
@@ -115,5 +116,42 @@ describe('shop reading controls', () => {
     expect(onCardHover).not.toHaveBeenCalled();
     fireEvent.click(card);
     expect(onPick).toHaveBeenCalledWith(card.dataset.option);
+  });
+
+  it('prints a rule that grows by round by round in the details view (I +1 · II +2 · III +3), this round lit', () => {
+    localStorage.setItem(VIEW_KEY, 'details');
+    const base = table();
+    const cards = { ...base.cards };
+    let uid = Object.keys(cards).map(Number).find(u => cards[u].def === 'yellow.chefs' && !base.players.some(p => p.members.includes(u)));
+    if (uid == null) { uid = Math.max(...Object.keys(cards).map(Number)) + 1; cards[uid] = { uid, def: 'yellow.chefs' }; }
+    const state = { ...base, round: 2, cards, shop: [uid, ...base.shop.filter(u => u !== uid).slice(0, 6)] };
+    const { container } = render(<ShopCards state={state} me={0} mySeats={[0]} />);
+    const ability = container.querySelector(`.lt-card[data-uid="${uid}"] .lt-pick-ability`);
+    const lines = [...ability.querySelectorAll('[data-round-line]')];
+    // compact on the small card: the rounds side by side, the shared words once
+    expect(lines.map(l => l.textContent.replace(/[\s·]+/g, ' ').trim())).toEqual(['I +1', 'II +2', 'III +3']);
+    expect(ability.textContent.replace(/\s+/g, ' ')).toContain('III +3 of each color');
+    expect(lines.filter(l => l.getAttribute('aria-current') === 'true').map(l => l.dataset.roundLine)).toEqual(['2']);
+    expect(ability.textContent).not.toContain('per round number');
+    // a rule with no round lines still reads as its sentence
+    const plain = container.querySelector(`.lt-card[data-uid="${state.shop[1]}"] .lt-pick-ability`);
+    if (!cardDef(state, state.shop[1]).byRound) expect(plain.querySelector('[data-round-line]')).toBeNull();
+    expect(plain.textContent.length).toBeGreaterThan(0);
+  });
+
+  it('keeps one line per round when the rounds differ past their number, even on a small card', () => {
+    // differing only in their number (a plural is the same word): one run, the last round's words once
+    const same = render(<RuleText def={{ text: 'x', byRound: { lines: ['+1 follower', '+2 followers', '+3 followers'] } }} round={3} plain compact />);
+    expect(same.container.querySelector('.by-round.compact')).not.toBeNull();
+    expect(same.container.textContent.replace(/[\s·]+/g, ' ').trim()).toBe('I +1 II +2 III +3 followers');
+    same.unmount();
+    // the number isn't first ("Steal 1 resource."): a line per round
+    const steal = render(<RuleText def={{ text: 'x', byRound: { lines: ['Steal 1 resource.', 'Steal 2 resources.', 'Steal 3 resources.'] } }} round={1} plain compact />);
+    expect(steal.container.querySelector('.by-round.compact')).toBeNull();
+    steal.unmount();
+    const differ = { text: 'x', byRound: { lines: ['+3 silver. Each rival +1 silver.', '+6 silver. Each rival +2 silver.', '+9 silver. Each rival +3 silver.'] } };
+    const { container } = render(<RuleText def={differ} round={2} plain compact />);
+    expect(container.querySelector('.by-round.compact')).toBeNull();
+    expect([...container.querySelectorAll('[data-round-line]')].map(l => l.getAttribute('aria-current'))).toEqual([null, 'true', null]);
   });
 });

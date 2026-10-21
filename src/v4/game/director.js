@@ -663,14 +663,29 @@ const onFinish = (anim, fn) => {
  */
 export function dealAfter(state) {
   const fx = state && Array.isArray(state.effects) ? state.effects : null;
-  // a whole fresh row (New Faces): the new cards deal once the old row has dropped away (playChain, grammar B4)
+  // a whole fresh row (New Faces): the new cards deal once the old row has gone to the deck (playChain, grammar B4)
   const outs = fx ? fx.filter(e => e.type === 'shop-out').length : 0;
-  if (outs) return Math.round(MO.rowOut + (outs - 1) * MO.rowOutStagger);
+  if (outs) return rowOutMs(outs);
   const rec = fx && fx.find(e => e.type === 'recruit' && e.from && e.from.kind === 'shop');
   if (!rec) return 0;
   const paid = fx.filter(e => e.type === 'pay' && e.cause === rec.cause).reduce((t, e) => t + Math.min(3, e.what.n), 0);
   return Math.round(MO.cardLift + Math.max(0, paid - 1) * MO.pieceStagger + flightMs(TYPICAL) * (2 / 3) + MO.shopSlide);
 }
+
+/**
+ * The shop cards leaving the row for the bottom of the deck in this step, oldest row order: a sweep (New Faces, an
+ * effect each) or a new round's fresh row (Cory, 2026-10-20: "the member shop should refresh each round, and you should
+ * see it happen"; the round's start shares the closing move's number, so it's read off the two rows).
+ */
+export function shopOuts(before, state) {
+  if (!before || !state || before === state || !Array.isArray(before.shop) || !Array.isArray(state.shop)) return [];
+  if (state.moves === before.moves + 1 && Array.isArray(state.effects)) return state.effects.filter(e => e.type === 'shop-out').map(e => e.what.uid);
+  if (state.round > before.round && before.round >= 1 && state.moves === before.moves) return before.shop.filter(u => !state.shop.includes(u));
+  return [];
+}
+/** How long n cards take to leave the row for the deck before the new ones may deal (each starts a stagger after the
+ *  last; the deal begins as the last is halfway there, so the deck is never still between the two). */
+export function rowOutMs(n) { return n > 0 ? Math.round(MO.shopSlide / 2 + (n - 1) * MO.rowOutStagger) : 0; }
 
 /** (kept for callers: a placed minion's slot is read when its chain plays) */
 export const noteTable = root => { void root; };
@@ -828,6 +843,17 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
             ...arcFrames(dx, dy, bow, { from: k2, s0: 1.06, s1: sc, y0: -10, ease: CARD_EASE }),
           ], { duration: total, fill: 'forwards' }));
           track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k2 + (1 - k2) * 0.88 }, { opacity: 0.2 }], { duration: total, fill: 'forwards' }));
+          // the bought card says so before it leaves (H13): a warm ring comes up as it lifts and holds while its coins
+          // drop in, then lets go as it flies; no time added to the chain
+          g.style.borderRadius = 'var(--corner, 8px)';
+          const k3 = Math.min(0.99, k2 + (1 - k2) * 0.25);
+          track(g.animate([
+            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 0 },
+            { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', offset: k1 },
+            { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', offset: Math.max(k1, k2) },
+            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: k3 },
+            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 1 },
+          ], { duration: total, fill: 'forwards' }));
           slideShop(root, snap);
           if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total }));
           onFinish(anim, () => {
@@ -906,12 +932,15 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       }
     });
   }
-  // a whole fresh row (New Faces, motion gaps A47: "blanks all 10 cards at once, then refills"): the old row drops away
-  // toward the pile, left to right, from where each card stood; the new row deals after it (dealAfter). Bookkeeping: it
+  // a whole fresh row (New Faces, motion gaps A47: "blanks all 10 cards at once, then refills"; a new round's refresh,
+  // Cory 2026-10-20): the old row goes to the bottom of the deck, left to right, each card from where it stood,
+  // shrinking into the deck as it arrives; the new row deals off the top after it (dealAfter, useDeal). Bookkeeping: it
   // never holds the chain, and a skip lands it.
-  const outs = Array.isArray(state.effects) && state.moves === before.moves + 1 && snap ? state.effects.filter(e => e.type === 'shop-out') : [];
+  const outs = snap ? shopOuts(before, state) : [];
   if (outs.length) {
-    const cards = outs.map(e => snap.get(e.what.uid)).filter(sn => sn && sn.rect && sn.html).sort((a, b) => a.rect.top - b.rect.top || a.rect.left - b.rect.left);
+    const deckEl = root.querySelector('[data-deck] .back') || root.querySelector('[data-deck]');
+    const D = deckEl ? deckEl.getBoundingClientRect() : null;
+    const cards = outs.map(u => snap.get(u)).filter(sn => sn && sn.rect && sn.html).sort((a, b) => a.rect.top - b.rect.top || a.rect.left - b.rect.left);
     cards.forEach((sn, k) => {
       const g = document.createElement('div');
       g.className = 'flight shop-out ghost-layer';
@@ -919,7 +948,16 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       g.innerHTML = sn.html;
       Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px` });
       document.body.appendChild(g);
-      const anim = track(g.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(12px)', opacity: 0 }], { duration: MO.rowOut, delay: k * MO.rowOutStagger, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'both' }));
+      const delay = k * MO.rowOutStagger;
+      const frames = D && D.width
+        ? (() => {
+          const dx = D.left + D.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = D.top + D.height / 2 - (sn.rect.top + sn.rect.height / 2);
+          const sc = Math.max(0.2, Math.min(1, D.width / sn.rect.width));
+          return [{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${(dx * 0.85).toFixed(1)}px,${(dy * 0.85).toFixed(1)}px) scale(${(sc * 1.1).toFixed(3)})`, opacity: 1, offset: 0.8 },
+            { transform: `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${sc.toFixed(3)})`, opacity: 0 }];
+        })()
+        : [{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(12px)', opacity: 0 }];
+      const anim = track(g.animate(frames, { duration: D && D.width ? MO.shopSlide : MO.rowOut, delay, easing: 'cubic-bezier(.45,0,.4,1)', fill: 'both' }));
       onFinish(anim, () => g.remove());
     });
   }

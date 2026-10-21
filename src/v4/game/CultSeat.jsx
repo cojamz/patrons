@@ -220,8 +220,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {/* the figures that don't fit fold into one quiet "+N" cell (the count beside them says the whole) */}
         {rest > 0 && <span className="cs-more num" data-more={rest} aria-label={`${rest} more member${rest === 1 ? '' : 's'}`} title={`${rest} more: point at the seat for every member`}>+{rest}</span>}
         </span>
-        {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
-        {safe && <small className="cs-safe" data-safe="1" title={`No one can steal members or resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
+        {/* Lie Low and the like: no one can steal from this seat this round (w2b #21). A small shield under the member
+            count (Cory's todo: the words crowded the row); its hover says it in words, the seat card too */}
+        {safe && <small className="cs-safe" data-safe="1" role="img" aria-label="safe this round" title={`Safe this round: no one can steal members or resources from ${mine ? 'you' : p.name} until it ends`}><SafeShield /></small>}
       </div>
       {bonus && (
         <div className="cs-build cs-bonus" data-pick-bonus={bonus.n} title={bonus.why}>
@@ -256,6 +257,12 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
     </section>
   );
 }
+// the "safe this round" mark: a plain shield in the seat's quiet ink (the hover names it)
+const SafeShield = () => (
+  <svg className="cs-shield" viewBox="0 0 12 14" width="12" height="14" aria-hidden="true">
+    <path d="M6 1 L11 2.8 V7 C11 10 8.8 12 6 13 C3.2 12 1 10 1 7 V2.8 Z" fill="currentColor" fillOpacity=".22" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+  </svg>
+);
 // each figure breathes on its own period and phase, so a crowd never moves in step
 const phase = uid => `${((uid * 0.61803) % 1).toFixed(3)}`;
 const actionKey = last => { try { return quadrant(last.qid).actions.find(a => a.name === last.name).key; } catch { return ''; } };

@@ -38,7 +38,7 @@ Correctness and Cory's made calls
 - [ ] Long shop member names fit their box (hotseat e2e: Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double); recheck first.
 
 Laptop UI clarity
-- [x] Scaling text as "I: … / II: … / III: …" lines, the current round lit (hovers, member cards, seat list; wheel faces unchanged; the shop's details view still prints the sentence: ShopCards.jsx).
+- [x] Scaling text as "I: … / II: … / III: …" lines, the current round lit (hovers, member cards, seat list; wheel faces unchanged; the shop's details view now too, compact: "I +1 · II +2 · III +3").
 - [x] "P2 took X from you": shorter, near your player card.
 - [ ] Red shop-swap turn toast names both the outgoing and incoming member.
 - [ ] Round-end and end-game screens: appear quickly (A4 result-card lag), readable layout, hover for detail, no totals counting up for nothing.
@@ -51,13 +51,13 @@ Laptop UI clarity
 - [x] Trade Seeds: its "Swap nothing" button reads as part of the caption; set it apart (yellow.js:221).
 - [ ] Wording pass: member texts much tighter, steal text, wheel text (rule-style.md). Before/after sheet for Cory.
 - [ ] First play: tutorial wording for lit/dim/dark spaces and the inner II/III rings.
-- [ ] "Safe this round" as a small shield mark (CultSeat.jsx:224).
-- [ ] Stacks of 20+ resources: size tiers that keep exact counts (H14).
-- [ ] A clear purchase signal: the bought tier or card pulses before its reward flies (H13).
-- [ ] Recheck: a minion running past its panel's edge on space 0-1 (spaces.mjs s9).
+- [x] "Safe this round" as a small shield mark (CultSeat.jsx:224).
+- [x] Stacks of 20+ resources: size tiers that keep exact counts (H14). The pay sheet's coin stacks pack past six.
+- [x] A clear purchase signal: the bought tier or card pulses before its reward flies (H13).
+- [x] Recheck: a minion running past its panel's edge on space 0-1 (spaces.mjs s9). Passes (fixed earlier). Left: a joinable (lit) taken inner-ring space runs its minions past the panel top; needs a call on where they stand.
 
 Motion and lag
-- [ ] Animate the member shop refreshing at round start.
+- [x] Animate the member shop refreshing at round start.
 - [ ] Clarity motion (Cory, 10-18): a recruit flies to the middle, shows its effect, goes to the buyer; a steal shows what's taken at once; action effects play beside the action; bulletin cards gather in one spot before the log. Members acting pop from the seat (his idea).
 - [ ] Round start as separate beats: home flights, net income, member hooks, market refill (A5 remainder).
 - [ ] End-of-round animations: smoothing.

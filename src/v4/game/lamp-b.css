@@ -580,3 +580,8 @@
 .by-round .br-r{display:inline-block;min-width:2.1em;font-weight:700}
 .by-round .br-lead + .br-line{margin-top:2px}
 .by-round .br-rest{display:block;margin-top:2px}
+/* compact (the shop's small cards): one run of text, the rounds side by side, this round lit */
+.by-round.compact .br-line{display:inline;opacity:1;color:var(--pl-ink-3,#a39078)}
+.by-round.compact .br-line.now{color:inherit;font-weight:700}
+.by-round.compact .br-line .br-sep{color:var(--pl-ink-3,#a39078);font-weight:500}
+.by-round.compact .br-r{display:inline;min-width:0;font-weight:700}

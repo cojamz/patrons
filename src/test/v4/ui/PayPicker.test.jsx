@@ -6,7 +6,7 @@ import { render, screen, fireEvent, cleanup, within } from '@testing-library/rea
 import { createGame, applyMove, chooseBotMove, memberPrice, TIERS } from '../../../engine/v4/index.js';
 import { resume } from '../../../engine/v4/core.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
-import PayPicker from '../../../v4/game/PayPicker.jsx';
+import PayPicker, { stackStep, rowStep } from '../../../v4/game/PayPicker.jsx';
 import HowToPlay from '../../../v4/HowToPlay.jsx';
 import { RULEBOOK } from '../../../v4/rulebook.js';
 import { readFileSync } from 'node:fs';
@@ -93,6 +93,36 @@ describe('v4 payment picker', () => {
     expect(dlg.querySelector('.ps-none')).toBeNull();
     fireEvent.click(dlg.querySelector('.pay-go'));
     expect(ss.submit).toHaveBeenCalledWith({ player: me, option: chosen });
+  });
+
+  it('packs a big stack (20+) to the height of six coins and a long paying row to five, the exact count always shown (H14)', () => {
+    // the tiers: 6px a coin up to six, then closer, never above six coins' rise; a paying row 20px apart up to five
+    for (let n = 1; n <= 12; n++) {
+      expect(stackStep(n) * (n - 1)).toBeLessThanOrEqual(30 + 0.6);
+      if (n <= 6) expect(stackStep(n)).toBe(6);
+      expect(rowStep(n) * (n - 1)).toBeLessThanOrEqual(80 + 0.6);
+      if (n <= 5) expect(rowStep(n)).toBe(20);
+    }
+    const base = findPayState();
+    const me = base.pending.player;
+    const def = payIds(base).find(o => o.default);
+    const r = base.resources.find(c => !def.spend[c]) || base.resources[0];
+    const players = base.players.map(p => (p.id === me ? { ...p, res: { ...p.res, [r]: 24 } } : p));
+    const state = { ...base, players };
+    render(<GameScreen session={session(state, [me])} />);
+    const dlg = screen.getByRole('dialog');
+    const stack = dlg.querySelector(`.pay-row.keeping [data-stack="${r}"]`);
+    const coins = stack.querySelector('.ps-coins');
+    const drawn = coins.querySelectorAll('.ps-coin').length;
+    expect(drawn).toBe(12 - Math.min(12, def.spend[r] || 0));
+    expect(coins.dataset.dense).toBe('true');
+    expect(parseFloat(coins.style.getPropertyValue('--step')) * (drawn - 1)).toBeLessThanOrEqual(30.6);
+    expect(stack.querySelector('[data-keep-label]').textContent).toBe(String(24 - (def.spend[r] || 0)));
+    // the rows stand no taller than six coins
+    expect(dlg.querySelector('.pay-rows').style.getPropertyValue('--rise')).toBe('30px');
+    // a stack of three keeps its 6px rise
+    const small = base.resources.find(c => c !== r && (state.players[me].res[c] || 0) - (def.spend[c] || 0) > 1 && (state.players[me].res[c] || 0) <= 6);
+    if (small) expect(dlg.querySelector(`.pay-row.keeping [data-stack="${small}"] .ps-coins`).style.getPropertyValue('--step')).toBe('6px');
   });
 
   it('Cancel (and Escape) go back to the buy step', () => {

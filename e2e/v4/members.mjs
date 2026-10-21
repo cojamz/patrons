@@ -27,7 +27,7 @@ import { browserPath } from './lib/browser.mjs';
 //       a rival's card says what it could buy now; one card on screen at a time.
 //  (m14) w4b #2: one move onto a seat, its body or its follower number, and no more, opens its card within 150ms.
 //  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Stunt Double, subdued); a seat no one can
-//       steal from this round says "safe this round" (P3 lies low), in its seat and its card.
+//       steal from this round shows the "safe this round" shield, named in its hover (P3 lies low), and says so in its card.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/members/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -117,7 +117,7 @@ try {
   const marks = await page.evaluate(() => ({
     stunt: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="echo.hourglass"]'); return m ? { loaded: m.classList.contains('loaded'), ready: m.classList.contains('ready'), filter: getComputedStyle(m.querySelector('.sprite')).filter } : null; })(),
     pincher: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="gold.thrift"]'); return m ? m.classList.contains('loaded') : null; })(),
-    safe: [0, 1, 2, 3].map(id => !!document.querySelector(`[data-cult="${id}"] [data-safe]`) && /safe this round/.test(document.querySelector(`[data-cult="${id}"] [data-safe]`).textContent)),
+    safe: [0, 1, 2, 3].map(id => !!document.querySelector(`[data-cult="${id}"] [data-safe]`) && /safe this round/i.test(document.querySelector(`[data-cult="${id}"] [data-safe]`).getAttribute('aria-label') + ' ' + document.querySelector(`[data-cult="${id}"] [data-safe]`).title)),
   }));
   if (!marks.stunt || !marks.stunt.loaded || marks.stunt.ready || !/drop-shadow/.test(marks.stunt.filter)) fail(`P2's Stunt Double (a use in hand) isn't marked on P2's seat: ${JSON.stringify(marks.stunt)}`, 'm9');
   if (marks.pincher) fail('P2\'s Penny Pincher (no use) is marked as a use in hand', 'm9');

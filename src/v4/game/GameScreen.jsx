@@ -599,7 +599,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // the round card closes in the click's own frame: this commit only unmounts it, and the new round's table follows as a
   // transition (useTable dismiss), so the button answers at once instead of after the whole table has redrawn
   const [closedMoment, setClosedMoment] = useState(null);
-  const nextRound = useCallback(() => { setClosedMoment(moment); dismissMoment(); }, [moment, dismissMoment]);
+  // the old row is measured as the card closes (it still stands there): the new round sends it to the deck (director.js)
+  const nextRound = useCallback(() => {
+    { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
+    setClosedMoment(moment); dismissMoment();
+  }, [moment, dismissMoment]);
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
   // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
   // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)

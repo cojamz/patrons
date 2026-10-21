@@ -15,7 +15,7 @@ import { onTable } from './Info.jsx';
 import { ResourceGlyph } from './Glyphs.jsx';
 import { motionOK } from './flight.js';
 import { MO } from '../motion.js';
-import { dealAfter } from './director.js';
+import { dealAfter, rowOutMs } from './director.js';
 
 /** At or below this many cards the count warms. */
 export const DECK_LOW = 10;
@@ -96,8 +96,11 @@ export function useDeal(rowRef, deckRef, state) {
   const prev = useRef(null);
   useLayoutEffect(() => {
     const was = prev.current;
-    prev.current = { shop: state.shop.slice(), moves: state.moves, seed: state.seed };
-    if (!was || was.seed !== state.seed || !(state.moves > was.moves) || !motionOK()) return;
+    prev.current = { shop: state.shop.slice(), moves: state.moves, seed: state.seed, round: state.round };
+    // a new round's fresh row arrives at the closing move's own number (the round card held the scored board), so a
+    // change of round deals too (Cory, 2026-10-20: "you should see it happen as an animation")
+    const newRound = !!was && state.round > was.round && was.round >= 1;
+    if (!was || was.seed !== state.seed || !(state.moves > was.moves || newRound) || !motionOK()) return;
     const row = rowRef.current, deck = deckRef.current;
     if (!row || !deck) return;
     const dealt = state.shop.filter(u => !was.shop.includes(u));
@@ -123,7 +126,9 @@ export function useDeal(rowRef, deckRef, state) {
       ghost.dataset.born = String(Date.now());
       Object.assign(ghost.style, { position: 'fixed', left: `${b.left}px`, top: `${b.top}px`, width: `${b.width}px`, height: `${b.height}px`, margin: '0', zIndex: '13', pointerEvents: 'none' });
       document.body.appendChild(ghost);
-      const duration = MO.deal, delay = dealAfter(state) + k * MO.dealStagger; // after the bought card has left its slot (director.js)
+      // after the bought card has left its slot, or the old row has gone to the deck (director.js)
+      const outs = newRound ? was.shop.filter(u => !state.shop.includes(u)).length : 0;
+      const duration = MO.deal, delay = (outs ? rowOutMs(outs) : dealAfter(state)) + k * MO.dealStagger;
       const anim = ghost.animate([
         { transform: `translate(${dx}px,${dy}px) ${s} perspective(500px) rotateY(88deg)` },
         { transform: `translate(${dx}px,${dy}px) ${s} perspective(500px) rotateY(0deg)`, offset: 0.32 },

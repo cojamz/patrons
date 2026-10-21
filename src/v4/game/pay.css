@@ -39,7 +39,7 @@
 .ps-out:hover:not(:disabled){background:color-mix(in srgb,var(--pl-ink,#2b2018) 8%,transparent)}
 .ps-out:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:0}
 .po-coins{display:inline-flex}
-.po-coins > .ps-coin + .ps-coin{margin-left:-4px}
+.po-coins > .ps-coin + .ps-coin{margin-left:var(--ov,-4px)}
 .ps-out:hover:not(:disabled) .ps-coin:last-child{transform:translateY(2px)}
 .po-n{font-size:14px;font-weight:700}
 .ps-coin{display:block;width:24px;height:24px;border-radius:50%;transition:transform .12s ease-out}
@@ -53,8 +53,8 @@
 .ps-add:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:0}
 .pay-stack:has(.ps-add:hover:not(:disabled)){background:color-mix(in srgb,var(--pl-ink,#2b2018) 6%,transparent)}
 .pay-stack:has(.ps-add:active:not(:disabled)) .ps-coins{transform:translateY(1px)}
-.ps-coins{position:relative;z-index:1;display:block;width:24px;height:calc(24px + (var(--tall) - 1) * 6px);pointer-events:none;transition:transform .08s ease-out}
-.ps-coins > .ps-coin{position:absolute;left:0;bottom:calc(var(--k) * 6px)}
+.ps-coins{position:relative;z-index:1;display:block;width:24px;height:calc(24px + var(--rise, 0px));pointer-events:none;transition:transform .08s ease-out}
+.ps-coins > .ps-coin{position:absolute;left:0;bottom:calc(var(--k) * var(--step, 6px))}
 /* the top coin rises a little under the pointer: it's the one a click would move up to Paying */
 .pay-stack:has(.ps-add:hover:not(:disabled)) .ps-coins > .ps-coin:nth-last-child(1 of .ps-coin){transform:translateY(-3px)}
 /* every coin of a color paying: an empty ring where the stack was */

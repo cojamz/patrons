@@ -504,10 +504,22 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
 const furniture = el => !!(el.matches && el.matches('[data-region]'));
 export function pulse(el, ms, { press = false } = {}) {
   if (!el || !el.animate || el.rectOnly || furniture(el)) return;
-  relative(el, press
-    ? [{ transform: 'scale(1)' }, { transform: 'scale(.96)', offset: 0.5 }, { transform: 'scale(1)' }]
-    : [{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(1.04)', filter: 'brightness(1.25)', offset: 0.45 }, { transform: 'scale(1)', filter: 'brightness(1)' }],
-  { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+  // a press is a purchase taking hold (a follower rate as its coins land, H13: "a clear purchase signal"): it presses
+  // in, pops back with a warm ring as its followers leave, and the ring lets go as they fly. Eased per keyframe: an
+  // overshooting curve on the whole effect skipped the middle frames (the ring never showed)
+  if (press) {
+    const ring = '0 0 0 3px rgba(255,222,160,.9), 0 0 16px 2px rgba(255,200,120,.55)', none = '0 0 0 0 rgba(255,214,140,0), 0 0 0 0 rgba(255,200,120,0)';
+    relative(el, [
+      { transform: 'scale(1)', boxShadow: none, easing: 'ease-in' },
+      { transform: 'scale(.95)', boxShadow: none, offset: 0.25, easing: 'cubic-bezier(.3,1.5,.5,1)' },
+      { transform: 'scale(1.04)', boxShadow: ring, offset: 0.5, easing: 'ease-out' },
+      { transform: 'scale(1)', boxShadow: ring, offset: 0.7, easing: 'ease-in' },
+      { transform: 'scale(1)', boxShadow: none },
+    ], { duration: Math.round(ms * 1.6), easing: 'linear' });
+    return;
+  }
+  relative(el, [{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(1.04)', filter: 'brightness(1.25)', offset: 0.45 }, { transform: 'scale(1)', filter: 'brightness(1)' }],
+    { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' });
 }
 /** A stack being taken from shifts toward the taker and back, once. */
 export function tug(el, toward, ms) {
