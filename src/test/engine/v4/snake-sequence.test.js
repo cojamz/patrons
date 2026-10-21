@@ -3,7 +3,7 @@
 // Cory's play notes #98/#99 (2026-10-17): "the middle player went twice?" after Crunch Time.
 // - An extra turn (Go-Getter, Night Owl, Errand Runner, Taskmaster, Late Riser) is a turn put in: everyone else keeps
 //   the plain snake, untouched.
-// - Crunch Time ("Take your next 2 turns right away", Cory 2026-10-15) moves your own two later turns up. Nobody gains
+// - Crunch Time ("Take your next 2 turns right away", Cory 2026-10-15) moves your own last two turns of the round up (Cory, 2026-10-21: it shouldn't skip your next turns). Nobody gains
 //   or loses a turn, everyone else keeps their order, but the gaps those two turns left close: a seat that never places
 //   twice in a row in the plain snake (the middle seat) can now. That is the rule, not a reshuffle.
 import { describe, it, expect } from 'vitest';
@@ -53,19 +53,19 @@ describe('snake vs real sequence, 3 players, one seat taking turns out of it', (
     });
     return { base, who, plain: s.order, seq };
   };
-  it('Crunch Time on the first seat\'s first turn (round III): the middle seat now places twice in a row', () => {
+  it('Crunch Time on the first seat\'s first turn (round III): its last two turns move up, so the middle seat places twice in a row at the end', () => {
     const { base, who, plain, seq } = crunch(0);
     console.log(`Crunch Time, seat A\n  plain : ${letters(base, plain)}\n  actual: ${letters(base, seq)}`);
     expect(letters(base, plain)).toBe('A B C C B A A B C C B A A B C');
-    expect(letters(base, seq)).toBe('A A A B C C B B C C B A A B C');
+    expect(letters(base, seq)).toBe('A A A B C C B A A B C C B B C');
     // same placements per seat, everyone else's order untouched
     expect([...seq].sort()).toEqual([...plain].sort());
     expect(others(seq, who)).toEqual(others(plain, who));
   });
-  it('Crunch Time on the middle seat\'s first turn: the first seat\'s pair moves next to the last seat\'s', () => {
+  it('Crunch Time on the middle seat\'s first turn: its last two turns move up and the rest of the order stays', () => {
     const { base, who, plain, seq } = crunch(1);
     console.log(`Crunch Time, seat B\n  plain : ${letters(base, plain)}\n  actual: ${letters(base, seq)}`);
-    expect(letters(base, seq)).toBe('A B B B C C A A C C B A A B C');
+    expect(letters(base, seq)).toBe('A B B B C C B A A B C C A A C');
     expect(others(seq, who)).toEqual(others(plain, who));
   });
   for (const at of [0, 1]) it(`an extra turn (Go-Getter) for seat ${L[at]} in round II goes in; nobody else moves`, () => {

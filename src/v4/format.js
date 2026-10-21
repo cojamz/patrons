@@ -249,7 +249,8 @@ export function turnSequence(state) {
   // twice?"), so it says who moved their turns up: closed = { pid, why }.
   for (let i = 1; i < seq.length; i++) {
     const a = seq[i - 1], t = seq[i];
-    if (a.pid !== t.pid || a.kind === 'extra' || t.kind === 'extra' || t.early || t.src === a.src + 1) continue;
+    // (after your own Crunch Time chain your next turn may follow at once: still your own run, nothing closed)
+    if (a.pid !== t.pid || a.kind === 'extra' || t.kind === 'extra' || t.early || a.early || t.src === a.src + 1) continue;
     const by = seq.find(x => x.early && x.pid !== t.pid && x.src > a.src && x.src < t.src);
     t.closed = by ? { pid: by.pid, why: by.early } : { pid: null, why: null };
   }

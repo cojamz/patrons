@@ -151,7 +151,7 @@ describe('Purple actions', () => {
       expect(R(s).purple).toBe(held); // nothing spent, nothing gained
       expect(s.players[0].left).toBe(2); // the 3 it started with, less this one: no extra minion
       expect(after1(s)).toEqual([0, 0, 1, 1, 1]);
-      expect(s.log).toContain("P1's Crunch Time: P1 takes their next 2 turns now.");
+      expect(s.log).toContain("P1's Crunch Time: P1 takes 2 more turns now and finishes the round early.");
       expect(nextPlacer(s)).toBe(0);
     }
     expect(() => take(scene({ round: 2 }), 'purple.rally')).toThrow(); // the center opens in round III
@@ -166,7 +166,7 @@ describe('Purple actions', () => {
   it('Crunch Time with 1 minion left takes that 1; with none, nothing happens', () => {
     let s = take(scene({ round: 3, queue: turns(0, 1, 1, 0, 1) }), 'purple.rally');
     expect(after1(s)).toEqual([0, 1, 1, 1]);
-    expect(s.log).toContain("P1's Crunch Time: P1 takes their next turn now (their last minion).");
+    expect(s.log).toContain("P1's Crunch Time: P1 takes 1 more turn now and finishes the round early (their last minion).");
     s = take(scene({ round: 3, queue: turns(0, 1, 1) }), 'purple.rally');
     expect(after1(s)).toEqual([1, 1]);
     expect(s.log).toContain('P1 has no minions left to place: Crunch Time does nothing.');

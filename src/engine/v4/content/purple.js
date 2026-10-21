@@ -115,8 +115,10 @@ export function turnsNow(ctx, p, n, why) {
   const end = q.findIndex(t => t.t === 'endTurn');
   const close = q.findIndex(t => t.t === 'allPlaced');
   const stop = close < 0 ? q.length : close;
+  // your LAST n turns of the round move up, so the turns in between stay where they are and you finish early
+  // (Cory, 2026-10-21: it shouldn't skip your next turns)
   const picks = [];
-  for (let i = end + 1; i < stop && picks.length < n; i++) if (q[i].t === 'turn' && q[i].p === p.id) picks.push(i);
+  for (let i = stop - 1; i > end && picks.length < n; i--) if (q[i].t === 'turn' && q[i].p === p.id) picks.unshift(i);
   if (!picks.length) { ctx.log(`${p.name} has no minions left to place: ${why} does nothing.`); return 0; }
   // where each turn sits in the round's order, matched as the seats match it (extra turns sit outside it)
   const { order } = ctx.roundOrder();
@@ -139,21 +141,18 @@ export function turnsNow(ctx, p, n, why) {
   }
   const k = tasks.length;
   const few = k < n ? ` (${k === 1 ? 'their last minion' : `their last ${k} minions`})` : '';
-  ctx.log(`${p.name}'s ${why}: ${p.name} takes ${k === 1 ? 'their next turn' : `their next ${k} turns`} now${few}.`);
+  ctx.log(`${p.name}'s ${why}: ${p.name} takes ${k === 1 ? '1 more turn' : `${k} more turns`} now and finishes the round early${few}.`);
   return k;
 }
 /** Playing your own turns sooner: each one that jumps rivals gets first pick of the spaces they'd have taken. */
 const turnsNowEstimate = (ctx, p, n) => {
   const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn');
   const close = q.findIndex(t => t.t === 'allPlaced');
-  let v = 0, k = 0, jumped = 0;
-  for (let i = end + 1; i < (close < 0 ? q.length : close) && k < n; i++) {
-    if (q[i].t !== 'turn') continue;
-    if (q[i].p !== p.id) { jumped++; continue; }
-    k++;
-    v += Math.min(1, jumped / 3) * turnValue(ctx) * 0.25;
-  }
-  return v;
+  const stop = close < 0 ? q.length : close;
+  const mine = [];
+  for (let i = stop - 1; i > end && mine.length < n; i--) if (q[i].t === 'turn' && q[i].p === p.id) mine.push(i);
+  // each pulled turn jumps every rival turn before it
+  return mine.reduce((v, i) => v + Math.min(1, q.slice(end + 1, i).filter(t => t.t === 'turn' && t.p !== p.id).length / 3) * turnValue(ctx) * 0.25, 0);
 };
 
 /** Overtime, off the board since 2026-10-15 (Rush Hour took its space). Kept for the extra-turn member tests only:
@@ -210,7 +209,7 @@ export default {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take your next 2 turns now.',
+      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take 2 more turns now. You finish the round early.',
       estimate: (ctx, p) => turnsNowEstimate(ctx, p, 2),
       resolve(ctx, p) { turnsNow(ctx, p, 2, 'Crunch Time'); },
     },
