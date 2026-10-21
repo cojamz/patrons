@@ -323,11 +323,9 @@ const thieves = {
     m('desperado', 'Desperado', 2, 2, 'While you have the fewest followers (ties count), double the base resources stolen from spaces.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
-    // Cory's #67 "maybe needs to scale" (concept, Oct 21, not approved): +1 × round
-    m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower × round.', {
+    m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower.', {
       onSteal(ctx, owner, card, info) {
-        const k = Math.max(1, ctx.state.round);
-        if (info.thief === owner && (info.led ?? ledBefore(ctx, info))) { owner.bonus += k; ctx.log(`${owner.name}'s Robin Hood: +${k} follower${k > 1 ? 's' : ''}.`); }
+        if (info.thief === owner && (info.led ?? ledBefore(ctx, info))) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
       },
     }),
     m('lookout', 'Lookout', 4, 2, 'Once per round, when a rival steals from someone else, take 1 resource from the thief.', {
@@ -377,6 +375,12 @@ const thieves = {
       onSteal(ctx, owner, card, info) {
         if (info.victim !== owner || info.thief === owner || ctx.followers(info.thief) <= 0) return;
         info.thief.bonus -= 1; ctx.log(`${owner.name}'s Snitch: ${info.thief.name} loses 1 follower.`);
+      },
+    }),
+    // Cory's #26 "Steal when you buy a member - should be essential to magenta" (concept, asked Oct 21)
+    m('shoplifter', 'Shoplifter', 2, 2, 'Whenever you recruit, steal 1 resource.', {
+      onAnyRecruit(ctx, owner, card, by, recruited) {
+        if (by === owner && recruited.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1, { fromAction: false });
       },
     }),
     m('fence', 'Fence', 1, 2, 'Whenever you steal, +1 magenta.', {
