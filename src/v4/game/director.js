@@ -407,8 +407,24 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
         cur += MO.tug + via + nextBeatAt(d);
         continue;
       }
+      // a swap with the shop (Promote, Demote, Even Swap): the member leaving for the shop and the one coming off it
+      // cross at once, each on its own arc; the card going back shows in the shop when it lands (the animation audit:
+      // it was dealt off the deck before it left its cult, and the two moved one after the other)
+      const isShop = w => w && w.kind === 'shop';
+      const partner = card.type === 'release' && isShop(card.to) ? m.cards.find(o => o !== card && !moved.has(o) && o.type === 'recruit' && isShop(o.from))
+        : card.type === 'recruit' && isShop(card.from) ? m.cards.find(o => o !== card && !moved.has(o) && o.type === 'release' && isShop(o.to)) : null;
+      if (partner) {
+        moved.add(partner);
+        const [out, inn] = card.type === 'release' ? [card, partner] : [partner, card];
+        const dOut = fly(out.from, out.to), dIn = fly(inn.from, inn.to);
+        at(cur, { op: 'chip', from: out.from, to: out.to, uid: out.what.uid, path: 'arc', dur: dOut, hide: true });
+        at(cur, { op: 'chip', from: inn.from, to: { ...inn.to, uid: inn.what.uid }, uid: inn.what.uid, path: 'cross', dur: dIn, hide: true });
+        ends(cur + Math.max(dOut, dIn));
+        cur += nextBeatAt(Math.max(dOut, dIn));
+        continue;
+      }
       const d = fly(card.from, card.to);
-      at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: card.type === 'release' ? 'drop' : 'arc', dur: d });
+      at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: card.type === 'release' ? 'drop' : 'arc', dur: d, hide: card.type === 'recruit' || (card.type === 'release' && isShop(card.to)) });
       ends(cur + d);
       cur += nextBeatAt(d);
     }
@@ -917,6 +933,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   for (const a of plan.atoms) {
     if (a.op !== 'chip' || !a.hide) continue;
     const B = where(a.to);
+    // a member going back to the shop: its card there waits, unseen, until the member lands on it
+    if (a.to.kind === 'shop' && B && !B.rectOnly && B.animate && B.dataset && B.dataset.uid === String(a.uid)) { track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 })); continue; }
     if (B && !B.rectOnly && B.animate && B.dataset && B.dataset.uids === String(a.uid)) track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 }));
   }
   const firstLand = new Map();
@@ -1064,7 +1082,10 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           const A = was && a.from.kind === 'crowd' ? { getBoundingClientRect: () => was.rect } : where(a.from), B = where(a.to);
           if (!A || !B) return;
           chain.flying++;
-          let pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
+          // a member coming off the shop (a swap with the shop, a free recruit) flies as its portrait from the card it was
+          // (the animation audit: it flew as a blank square)
+          const fig = was && was.html ? was.html : a.from.kind === 'shop' ? shopFig(ctx.snap, a.uid) : '';
+          let pic = fig ? `<span class="piece-member-pic">${fig}</span>` : '<i class="piece-dot member"></i>';
           const hub = a.via != null ? stageRect('hub') : null;
           // Both members meet side by side at the actual hub, then cross to their new seats.
           const R = hub ? { ...hub, left: hub.left + hub.width / 2 - 26 + (a.swap ? (a.via === 1 ? 34 : -34) : 0), top: hub.top + hub.height / 2 - 26, width: 52, height: 52 } : null;
@@ -1220,6 +1241,15 @@ function linger(el, n) {
 }
 
 /** How a member shows on the stage: its name, picture, sphere colour and rule. */
+/** A shop card's portrait as it stood (the shop snapshot's picture), for a member flying off the shop as itself. */
+function shopFig(snap, uid) {
+  const sn = snap && snap.get(uid);
+  if (!sn || !sn.html || typeof document === 'undefined') return '';
+  const t = document.createElement('template');
+  t.innerHTML = sn.html;
+  const fig = t.content.querySelector('.art svg, .art img');
+  return fig ? fig.outerHTML : '';
+}
 function memberLook(st, uid, def0 = null) {
   const card = st.cards && st.cards[uid];
   let d = null;

@@ -96,14 +96,15 @@ export function useDeal(rowRef, deckRef, state) {
   const prev = useRef(null);
   useLayoutEffect(() => {
     const was = prev.current;
-    prev.current = { shop: state.shop.slice(), moves: state.moves, seed: state.seed, round: state.round };
+    prev.current = { shop: state.shop.slice(), moves: state.moves, seed: state.seed, round: state.round, owned: new Set((state.players || []).flatMap(p => p.members || [])) };
     // a new round's fresh row arrives at the closing move's own number (the round card held the scored board), so a
     // change of round deals too (Cory, 2026-10-20: "you should see it happen as an animation")
     const newRound = !!was && state.round > was.round && was.round >= 1;
     if (!was || was.seed !== state.seed || !(state.moves > was.moves || newRound) || !motionOK()) return;
     const row = rowRef.current, deck = deckRef.current;
     if (!row || !deck) return;
-    const dealt = state.shop.filter(u => !was.shop.includes(u));
+    // a member a player gave back (a swap with the shop) isn't dealt: it flies in from its cult (director.js)
+    const dealt = state.shop.filter(u => !was.shop.includes(u) && !(was.owned && was.owned.has(u)));
     if (!dealt.length) return;
     const top = deck.querySelector('.back') || deck;
     // every rect read first, then the writes (perf, 2026-10-15: a read after each ghost was appended laid the page out
