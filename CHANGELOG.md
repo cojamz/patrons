@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.36 — 2026-10-21 — unreleased
+
+- Snappier: a rival's seat card opens as soon as you rest on it, the start of your turn no longer stutters, and rivals' turns run a touch quicker.
+
 ## v0.8.35 — 2026-10-21 — unreleased
 
 - New member prices for Magenta, Blue, Red, Green and the guests: educated guesses from bot tests, leaning a little pricier, nothing below 2 (one color, one wild). Most cards got cheaper; human play will set the rest. Price list: /mnt/project-files/member-balance/prices-2026-10-21.md
