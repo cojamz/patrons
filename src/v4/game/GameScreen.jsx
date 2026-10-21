@@ -417,6 +417,12 @@ function TurnCard({ card, root, state }) {
     return () => t.forEach(clearTimeout);
   }, [lifeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const gone = life === 'gone';
+  // docked under the story, the card leaves the story's heading and Log in view: a card too tall for the room under
+  // them sums up its last lines ("+N more") one at a time until it fits (four seats at 1270x700: a five-line card
+  // covered the heading; turndock d2). Kept per card text, so a new card starts at the full count again.
+  const fitKey = `${card.n}|${card.text}`;
+  const [fitOf, setFit] = useState({ key: '', max: 5 });
+  const MAXL = fitOf.key === fitKey ? fitOf.max : 5;
   // Where the card sits, written straight to its style in one layout effect (perf, 2026-10-15): as React state its place
   // and its lift cost every step one or two more commits of their own, each reading the layout again
   const box = useRef(null);
@@ -448,16 +454,22 @@ function TurnCard({ card, root, state }) {
     }
     // (only the dock under the story uses it: layout.css)
     if (!pos.since) return;
+    const story = table && table.querySelector(':scope > .lt-since');
+    // the story's heading sits where the chairs end, never where the card is, so this read can't feed back
+    // (the card's resting top, from its dock: its rise from 4px higher is not where it stays)
+    const head = story && story.querySelector(':scope > .since-head');
+    if (head && MAXL > 1 && card.text.split(' · ').length - 1 > 1 && innerHeight - pos.bottom - el.getBoundingClientRect().height < head.getBoundingClientRect().bottom + 4) {
+      setFit({ key: fitKey, max: Math.min(MAXL, card.text.split(' · ').length - 1) - 1 });
+      return;
+    }
     const h = Math.ceil(el.offsetHeight) + 8;
     // written on the story itself, its only reader (layout.css): on the table, an inherited custom property re-styled all
     // ~5,000 elements of the page every time it changed (perf, 2026-10-15)
-    const story = table && table.querySelector(':scope > .lt-since');
     if (story && (h !== turnH.current || turnHOn.current !== story)) { turnH.current = h; turnHOn.current = story; story.style.setProperty('--turn-h', `${h}px`); }
-  }, [card.pid, card.n, card.text, root, gone]);
+  }, [card.pid, card.n, card.text, root, gone, MAXL]); // eslint-disable-line react-hooks/exhaustive-deps
   if (gone) return null;
   // at most a few lines, the rest summed up (every line stays in the strip's card and the log)
   const [head, ...all] = card.text.split(' · ');
-  const MAXL = 5;
   const rest = all.length > MAXL ? [...all.slice(0, MAXL - 1), `+${all.length - MAXL + 1} more`] : all;
   return (
     <div ref={box} className={`turn-card${card.live ? ' live' : ''}${card.folding || life === 'folding' ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
