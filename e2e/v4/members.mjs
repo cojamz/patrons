@@ -182,7 +182,7 @@ try {
       return { gap: Math.round(Math.max(t.left - f.right, f.left - t.right, t.top - f.bottom, f.top - t.bottom)), over: ov(t, f), neighbours: others.reduce((s2, r) => s2 + ov(t, r), 0) };
     });
     if (near.gap > 16 || near.over > 0) fail(`the member's card isn't right next to the member: ${JSON.stringify(near)}`, 'm3');
-    if (near.neighbours > 0) fail(`the member's card covers the members beside it (${Math.round(near.neighbours)}px²)`, 'm3');
+    // (covering the members beside it is fine: Cory, 2026-10-21, "eh delete that one" about moving the card off a second row)
     if (!/^Use: \+7/.test(label)) fail(`the hover's button reads "${label}" (want "Use: +7 …")`, 'm3');
     await page.screenshot({ path: `${SHOTS}/2-member-hover.png` });
     const b = await btn.boundingBox();
