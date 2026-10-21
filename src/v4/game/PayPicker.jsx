@@ -84,7 +84,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
 
   const def = uid !== undefined ? cardDef(state, uid) : null;
   const tier = pend.tier ? TIERS.find(t => t.key === pend.tier) : null;
-  const title = def ? `Recruit ${def.name}` : `Buy ${tier.get} follower${tier.get > 1 ? 's' : ''}`;
+  const title = def ? `Recruit ${def.name}` : `Recruit ${tier.get} follower${tier.get > 1 ? 's' : ''}`;
   const shape = useMemo(() => costShape(state, p, pend, uid, how), [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   const printed = def ? costParts(def, res) : [{ color: 'any', n: tier.cost }];
   // the price you pay, as the shop card's face shows it (live panel r1: the card showed the discounted price, the sheet

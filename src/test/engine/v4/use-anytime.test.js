@@ -45,7 +45,7 @@ describe('using a member any time on your turn', () => {
     expect(ids(s)).toContain(use);
     expect(ids(s)).not.toContain(`release:${uid}`); // Release removed; activation stays available
     // one line for one step (blind testers, 2026-10-15): the headline says it all, the line under it names the use
-    expect(promptFor(s, true).text).toBe('Recruit a member or buy followers');
+    expect(promptFor(s, true).text).toBe('Recruit a member or followers');
     expect(promptFor(s, true).sub).toBe('…or use Lottery Winner');
     s = move(s, use);
     expect(s.pending.kind).toBe('buy');

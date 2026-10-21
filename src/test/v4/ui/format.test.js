@@ -357,7 +357,7 @@ describe('v4 format helpers', () => {
     expect(`${again.lead}${again.text}`).toBe('Your turn again (snake order) — place a minion');
     expect(JSON.stringify(again)).not.toMatch(/extra/i);
     expect(other.pr.text).toBe(`${other.name} again (snake order)`);
-    expect(buy.text).toBe('Recruit a member or buy followers');
+    expect(buy.text).toBe('Recruit a member or followers');
     expect(buy.sub == null || /^…or use /.test(buy.sub)).toBe(true); // one line for one step: no subtitle saying it again (blind testers, 2026-10-15)
     // nobody else's turn ever reads as yours
     expect(promptFor(s, false).text).not.toMatch(/^Your|^Extra/);

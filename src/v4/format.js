@@ -156,7 +156,7 @@ export function promptFor(state, mine) {
             : { sub: `Once a round: pass and ${extraBuyer(state, p) || 'it'} keeps it for a later turn${use ? `; or use ${use}` : ''}` }) }
           // one line for one step (blind testers, 2026-10-15: headline, a subtitle saying it again and the step tabs):
           // the headline says it all; the line under it only when there's another way out
-          : { who: p, text: 'Recruit a member or buy followers', ...(use ? { sub: `…or use ${use}` } : {}) })
+          : { who: p, text: 'Recruit a member or followers', ...(use ? { sub: `…or use ${use}` } : {}) })
         : { who: p, text: pend.extra ? `${name} recruits again (${extraBuyer(state, p) || 'a second recruit'})` : `${name} is shopping` };
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };
@@ -400,7 +400,7 @@ export function winSentence(state) {
   // "P4 won by 17, mostly by holding Most members all three rounds (+20)." Biggest source first, in plain words.
   const say = {
     members: v => `by recruiting ${n} members (+${v})`,
-    bought: v => `by buying followers (+${v})`,
+    bought: v => `by recruiting followers (+${v})`,
     effects: v => `from abilities and spaces during play (+${v})`,
     endGame: v => `from end-game bonuses (+${v})`,
     // the sweep names its own followers, never the contests' total (Most Magenta members gave +10 of +18)

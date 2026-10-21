@@ -8,7 +8,7 @@ const rings = RING_VALUE.map(v => `+${v}`).join(' / ');
 
 export const GLOSSARY = [
   { key: 'follower', word: 'Followers', link: false, match: /\bfollowers?\b/,
-    def: 'Your score. You start with 1 (yourself); members add what they are worth, and you gain more from contests, follower buys and abilities. Most followers after round III wins.' },
+    def: 'Your score. You start with 1 (yourself); members add what they are worth, and you gain more from contests, recruiting followers and abilities. Most followers after round III wins.' },
   { key: 'loose followers', word: 'Loose followers', match: /\bloose followers?\b/,
     def: 'Followers you bought or won, not the ones your members are worth (and never yourself). Only loose followers can be sold or taken away.' },
   { key: 'member', word: 'Member', link: false, match: /\bmembers?\b/,
@@ -44,7 +44,10 @@ export const GLOSSARY = [
   { key: 'game end', word: 'Game end', match: /\bgame end\b/i,
     def: 'After round III is scored. Game-end bonuses are added, then the most followers wins (ties: more members).' },
   { key: 'when recruited', word: 'On recruit', match: /\bon recruit\b|\bwhen recruited\b|\bwhen it joins you\b/i,
-    def: 'Happens when you actively bring the member into your cult, paid or free: recruit, take or swap. Being given a member does not trigger it.' },
+    def: 'Happens when the member joins your cult by your own doing, paid or free: recruit, take or swap (your own red action). Being given a member does not trigger it, and a rival moving it into your cult doesn’t either.' },
+  // Cory, 2026-10-21: what "recruit" means on every card that says "whenever you recruit"
+  { key: 'recruit', word: 'Recruit', match: /\bwhenever you recruit\b/i,
+    def: 'Bring a member or followers into your cult by your own doing: recruit or take a member (paid or free), swap one in with your own red action, or recruit followers (each follower purchase is one recruit). A member a rival moves into your cult isn’t your recruit.' },
   { key: 'rival', word: 'Rival', link: false, match: /\brivals?’?s?\b/,
     def: 'Any other player.' },
   { key: 'leader', word: 'Leader', match: /\bthe leader\b/,

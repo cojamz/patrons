@@ -6,7 +6,8 @@ Lead a cult for three rounds. Most **followers** after round III wins.
 - **Minions** are your workers, small copies of your emoji: 3 in round I, 4 in round II, 5 in round III.
 - **Followers** are your score, shown by a little-person mark. You start with 1. Each member is worth the followers beside the mark on its card (usually 1). Only followers you bought or won can be sold or stolen.
 - **Resources** come in one color per quadrant, and there is one quadrant per player. A resource is a plain dot in its color; a dot split into the table's colors means "any resources".
-- **Members** are recruited from the shop. A card counts as its printed follower value in members, or a larger member count stated on the card; bonus followers do not increase that count. Each is worth followers, and most have an ability. "On recruit" happens when you recruit it, paid or free, but not when you take or swap an existing member; "at round start" happens before anyone places a minion.
+- **Members** are recruited from the shop. A card counts as its printed follower value in members, or a larger member count stated on the card; bonus followers do not increase that count. Each is worth followers, and most have an ability. "At round start" happens before anyone places a minion.
+- To **recruit** is to bring a member or followers into your cult by your own doing: recruit a member from the shop (paid or free), take one from a rival, swap one in with a red action you take (Promote, Demote, Even Swap), or recruit followers (each follower purchase is one recruit). A member a rival's action moves into your cult is not your recruit. "Whenever you recruit" happens on each of these. A member's "On recruit" happens when it joins your cult by your own doing (recruited, taken or swapped in), not when a rival moves it into your cult.
 
 ## Setup
 Round I’s turn order is drawn first. Starting with the player who will act last, draft 1 resource from the table’s colors. Each color can be taken once; the first player gets the remaining color. This happens only before round I.
@@ -22,9 +23,9 @@ One colored quadrant per player, each with its own spaces and its own contest, p
 ## A turn
 Turns go down the player column, then back up: 1-2-3-4, 4-3-2-1, repeating. The player at either end takes two turns in a row. This is snake order. Round I's order is random; from round II, fewest followers goes first (ties: whoever went later last round).
 1. **Place a minion** on an open space and resolve it. A space that recruits does not use your recruit, unless it says so (Peek).
-2. **Recruit one thing**, or pass:
+2. **Recruit**: one thing, or pass:
    - **Recruit a member** from the shop: 5 face up in round I, 6 in round II, 7 in round III, refilled from the face-down pile at the head of the row; the whole market refreshes between rounds. The pile shows how many are left. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins are already in the cost; tap one of your resources to swap it in. A discount ("your next member costs 4 less") and any member that changes a price (Penny Pincher's gold counts double) apply to every member you pay for, including one recruited off the pile (Peek, Talent Scout). While a discount is yours, each card shows what you'd pay, with its list price small and struck beside it ("free" when it costs you nothing). Cards stay readable; affordable choices have a gold edge. Point at a card to see what you're short of.
-   - Or **buy followers** with any resources: 1 for 1 follower, 5 for 5, or 10 for 10. All three buys are unlimited.
+   - Or **recruit followers** with any resources: 1 for 1 follower, 5 for 5, or 10 for 10. All three are unlimited. Each follower purchase is a recruit.
 
 An **extra turn** (Overtime, Go-Getter, Night Owl…) never happens in round I, and later only while the board has a space to spare after every remaining minion lands. A member whose color isn't on the table is **colorless**: it gives nothing to cards that pay "its color".
 
