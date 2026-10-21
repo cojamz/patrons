@@ -173,15 +173,37 @@ function avoidUndo(state, pend) {
 function undoesSwap(state, s, me, t) {
   if (t.p !== me || !t.options.every(o => o.kind === 'trade')) return false;
   const given = givenAway(state, me);
-  return given.size > 0 && t.options.every(o => given.has(cardDef(s, o.value[1]).name));
+  return given.size > 0 && t.options.every(o => { const u = swapSides(s, me, o.value).in; return u !== null && given.has(cardDef(s, u).name); });
 }
 
-/** Names of members player `me` has swapped away this game (read from the log). */
+/** A swap of cards a and b, from `me`'s side: { out: my card it moves away, in: the card it brings me }, or nulls when
+ *  it moves none of mine, or only swaps two of mine (Red's swaps take either orientation, and any two cults or the shop). */
+function swapSides(state, me, [a, b]) {
+  const mine = u => state.players[me].members.includes(u);
+  if (mine(a) && !mine(b)) return { out: a, in: b };
+  if (mine(b) && !mine(a)) return { out: b, in: a };
+  return { out: null, in: null };
+}
+
+/** Names of members player `me` has swapped away this game (read from the log). Red's swaps log
+ *  "P1 swapped P1's X and Shop's Y." (red.js trade); the older "P1 traded X for P2's Y." is read too. */
 function givenAway(state, me) {
   const p = state.players[me], given = new Set();
+  const owners = [...state.players.map(o => o.name), 'Shop'];
   for (const line of state.log || []) {
-    const m = typeof line === 'string' && line.startsWith(`${p.name} traded `) && line.match(/ traded (.+) for .+'s (.+)\.$/);
-    if (m) given.add(m[1]);
+    if (typeof line !== 'string') continue;
+    const m = line.startsWith(`${p.name} traded `) && line.match(/ traded (.+) for .+'s (.+)\.$/);
+    if (m) { given.add(m[1]); continue; }
+    const head = `${p.name} swapped `;
+    if (!line.startsWith(head) || !line.endsWith('.')) continue;
+    const body = line.slice(head.length, -1);
+    for (const left of owners) for (const right of owners) {
+      if (!body.startsWith(`${left}'s `) || left === right && left === p.name) continue;
+      const k = body.indexOf(` and ${right}'s `, left.length + 3);
+      if (k < 0) continue;
+      if (left === p.name) given.add(body.slice(left.length + 3, k));
+      if (right === p.name) given.add(body.slice(k + ` and ${right}'s `.length));
+    }
   }
   return given;
 }
@@ -199,16 +221,17 @@ function chooseSwap(state, pend) {
   const buys = state.players.map((_, i) => turns[i] + lt.turns + (i === me ? 1 : 0));
   const income = turns.map(t => (t * INCOME[Math.max(1, state.round) - 1] + lt.income) * INCOME_SCALE);
   const rated = pend.options.map(o => {
-    const [mine, theirs] = o.value;
+    // either orientation, and swaps that move none of mine (two rivals', or a rival's and the shop's)
+    const side = swapSides(state, me, o.value);
     let v;
     try {
       const s = lightClone(state);
       const ctx = contextFor(s);
       handlerById('red.trade')(ctx, s.players[me], o.value);
-      const ability = abilityValue(cardDef(s, theirs), placesLeft) - abilityValue(cardDef(s, mine), placesLeft);
+      const ability = side.in === null ? 0 : abilityValue(cardDef(s, side.in), placesLeft) - abilityValue(cardDef(s, side.out), placesLeft);
       v = marginOf(evaluate(s, buys, income, roundLeft, { [me]: ability }), me);
     } catch { v = (o.hint || 0) - 100; }
-    if (given.has(cardDef(state, theirs).name)) v -= 100;
+    if (side.in !== null && given.has(cardDef(state, side.in).name)) v -= 100;
     return { o, v };
   });
   return rated.reduce((a, b) => (b.v > a.v ? b : a)).o;

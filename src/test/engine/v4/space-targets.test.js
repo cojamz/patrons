@@ -35,20 +35,33 @@ describe('space targets', () => {
     expect(sorted(t.shop)).toEqual(sorted([uidIn(s, 'red.intern', 'shop'), uidIn(s, 'red.reserve', 'shop')]));
     expect(t.sure).toBe(false);
   });
-  it('Open House: every face-up member costing 4 or less', () => {
-    const s = table(Q, { round: 2, shop: ['gold.tycoon', 'red.intern', 'red.bigfamily', 'gold.taxman', 'red.mentor'] });
+  // Open House left with the Red redesign (v0.8.0); round II's hireup space is Promote
+  it('Promote: the pairs of a member (yours or a rival\'s) for a shop member costing up to 2 more', () => {
+    const s = table(Q, { round: 2, members: [['red.twins'], ['red.intern']], shop: ['gold.tycoon', 'red.bigfamily', 'gold.taxman', 'red.reserve', 'red.mentor'] });
     const t = targetsAt(s, 'hireup');
-    expect(sorted(t.shop)).toEqual(sorted(['red.intern', 'red.bigfamily', 'gold.taxman'].map(d => uidIn(s, d, 'shop'))));
+    const key = ([a, b]) => `${a}:${b}`;
+    const twins = uidIn(s, 'red.twins', 0), intern = uidIn(s, 'red.intern', 1);
+    expect(t.pairs.map(key).sort()).toEqual([
+      [twins, uidIn(s, 'red.bigfamily', 'shop')], [twins, uidIn(s, 'gold.taxman', 'shop')],
+      [twins, uidIn(s, 'red.reserve', 'shop')], [intern, uidIn(s, 'red.reserve', 'shop')],
+    ].map(key).sort());
+  });
+  it('Recruit a Member: every face-up member', () => {
+    const s = table(Q, { round: 3, shop: ['gold.tycoon', 'red.intern', 'red.bigfamily', 'gold.taxman', 'red.mentor'] });
+    const t = targetsAt(s, 'take');
+    expect(sorted(t.shop)).toEqual(sorted(['gold.tycoon', 'red.intern', 'red.bigfamily', 'gold.taxman', 'red.mentor'].map(d => uidIn(s, d, 'shop'))));
   });
   it('Snap Up: only what you could pay for after its +2 blue', () => {
     const s = table(Q, { shop: ['gold.tycoon', 'red.intern', 'red.bigfamily'] });
     const t = targetsAt(s, 'bargain');
     expect(sorted(t.shop)).toEqual(sorted([uidIn(s, 'red.intern', 'shop')]));
   });
-  it('Even Swap: the pairs of equal cost, yours for theirs', () => {
+  // any two members of equal cost, either way round (red-redesign-2026-10-18.md; red-redesign.test.js offers both)
+  it('Even Swap: the pairs of equal cost, in either orientation', () => {
     const s = table(Q, { members: [['gold.taxman'], ['red.intern', 'red.bigfamily']], shop: ['gold.tycoon'] });
     const t = targetsAt(s, 'evenswap');
-    expect(t.pairs).toEqual([[uidIn(s, 'gold.taxman', 0), uidIn(s, 'red.bigfamily', 1)]]);
+    const a = uidIn(s, 'gold.taxman', 0), b = uidIn(s, 'red.bigfamily', 1);
+    expect(t.pairs).toEqual([[a, b], [b, a]]);
     expect(t.shop).toEqual([]);
   });
   it('a space that touches no particular member lights nothing', () => {

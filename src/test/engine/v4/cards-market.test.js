@@ -213,7 +213,9 @@ describe('Blue members', () => {
     let s = table(Q, { round: 2, members: [['market.planner']], res: [{ gold: 8 }], shop: ROW, discount: [4] });
     s = move(take(s, 'thieves.tipoff'), card(s, 'gold.tycoon'));
     expect(owns(s, 0, 'gold.tycoon')).toBe(true);
-    expect(R(s).gold).toBe(0);
+    // 12 − 4 = 8 paid from 8 gold and Redistribute's +1 magenta (v0.8.8): either way gives up one lead, so the
+    // default spends the magenta and keeps 1 gold (less gold first)
+    expect(R(s).gold + R(s).magenta).toBe(1);
     expect(s.players[0].discount).toBe(0);
   });
   it('× Doppelganger copying Planner: both discounts stack (round III: 6 + 6)', () => {
@@ -320,11 +322,12 @@ describe('Blue members', () => {
     // step comes back ("also"), used, so no second use
     expect(s.pending.prompt).toMatch(/top 5/);
     s = move(s, `card:${uidIn(s, 'gold.jackpot', 'pile')}`);
-    // its one way to pay spends all the gold P1 leads with: the pay sheet asks first (one pay rule, aminus r1 #1)
-    expect(s.pending.options.filter(o => o.kind === 'pay').map(o => o.breaks)).toEqual([['gold']]);
+    // both ways to pay spend all the gold P1 leads with, and either the red or Redistribute's magenta (held-resource
+    // contests since v0.8.1/v0.8.7): the pay sheet asks first (one pay rule, aminus r1 #1)
+    expect(s.pending.options.filter(o => o.kind === 'pay').map(o => o.breaks)).toEqual([['gold', 'red'], ['gold', 'magenta']]);
     s = move(s, s.pending.options.find(o => o.kind === 'pay').id);
     expect(owns(s, 0, 'gold.jackpot')).toBe(true);
-    expect([R(s).gold, R(s).red]).toEqual([0, 0]);
+    expect([R(s).gold, R(s).red, R(s).magenta]).toEqual([0, 0, 1]);
     expect(named(s, 'Talent Scout').length).toBe(1);
     if (s.pending?.kind === 'buy') expect(ids(s)).not.toContain(use);
   });

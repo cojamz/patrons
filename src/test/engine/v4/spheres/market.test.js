@@ -180,7 +180,9 @@ describe('Blue members', () => {
     expect(R(s).blue).toBe(2 - 2 + 2);
     let t = take(scene({ res: [{ red: 9 }], members: [['market.connoisseur']], shop: CHEAP }), 'market.showroom');
     t = move(t, card(t, 'red.twins'));
-    expect(R(t).blue).toBe(1); // Name Drop's 1 only
+    // Name Drop's 1 only: it pays Twins' any part (Red scores held red since v0.8.1, so the default keeps the red),
+    // and no +2 comes back for a red member
+    expect(R(t)).toMatchObject({ red: 8, blue: 0 });
   });
   it('Reseller: whenever you recruit, +1 of that member’s color', () => {
     let s = take(scene({ res: [{ gold: 9 }], members: [['market.reseller']], shop: SHOP }), 'market.showroom');
@@ -240,15 +242,21 @@ describe('Blue members', () => {
   });
   it('Talent Scout: once per game, also recruit one of the top 5 of the pile at its cost', () => {
     let s = scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });
-    s = take(s, 'red.turnout'); // nobody has recruited this round: Bandwagon gives nothing, so only gold is held
+    s = take(s, 'red.turnout'); // Gather (v0.8.0): +1 red × round and +1 red, so 9 gold and 2 red
     const use = `use:${uidOf(s, 'market.blackmarket', 0)}`;
     s = move(s, use); // its question comes at once (gut call, 2026-10-15); your normal buy follows
     expect(s.pending.prompt).toContain('top 5');
     expect(ids(s)).not.toContain(`card:${uidOf(s, 'gold.midas', 'pile')}`); // 6th card is out of reach
     const j = uidOf(s, 'gold.jackpot', 'pile');
-    s = move(s, `card:${j}`); // 3 gold + 3 any → all gold, one way to pay
+    s = move(s, `card:${j}`); // 3 gold + 3 any: several ways now; the default keeps both leads and spends less gold
+    expect(s.pending.options.filter(o => o.kind === 'pay').length).toBeGreaterThan(1);
+    const pay = s.pending.options[0]; // the suggested way comes first
+    expect(pay.breaks).toBeUndefined();
+    expect(pay.value).toMatchObject({ gold: 5, red: 1 });
+    expect(s.pending.options.find(o => o.id === 'pay:4-2-0-0').breaks).toEqual(['red']);
+    s = move(s, pay.id);
     expect(has(s, 'gold.jackpot')).toBe(true);
-    expect(R(s).gold).toBe(3);
+    expect(R(s)).toMatchObject({ gold: 4, red: 1 });
     expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.pile.includes(j)).toBe(false);
     expect(s.pending.kind).toBe('buy'); // then the buy step, fresh: used, so no second use

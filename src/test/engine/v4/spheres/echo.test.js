@@ -115,7 +115,7 @@ describe('Green table action boundaries', () => {
     s = go(s, 'red.hire');
     expect(defs(s, 1)).toEqual(['red.volunteer']);
     s = take(s, 'echo.echo');
-    expect(s.pending.options[0].label).toBe('Open Door (P2): a free member (none face up)');
+    expect(s.pending.options[0].label).toBe('Open Door (P2): +1 red, a free member (none face up)');
     s = move(s, s.pending.options[0].id);
     expect(defs(s, 0)).toEqual([]);
     expect(s.pending?.kind).not.toBe('choose');
@@ -124,7 +124,7 @@ describe('Green table action boundaries', () => {
     let s = scene({ turns: [1, 0], shop: ['red.intern', 'gold.seed', ...SHOP.slice(0, 4)] });
     s = go(s, 'red.hire');
     s = take(s, 'echo.echo');
-    expect(s.pending.options[0].label).toBe('Open Door (P2): a member costing 1 or less (none face up)');
+    expect(s.pending.options[0].label).toBe('Open Door (P2): +1 red, a member costing 1 or less (none face up)');
     s = move(s, s.pending.options[0].id);
     expect(defs(s, 0)).toEqual([]);
   });
@@ -138,7 +138,8 @@ describe('Green table action boundaries', () => {
     expect(labels.every(l => Number(l.match(/\((\d+)\)$/)[1]) <= 2)).toBe(true);
     s = pass(move(s, 'card:' + uidOf(s, 'red.twins', 'shop')));
     expect(defs(s, 0)).toEqual(['red.twins']);
-    expect(R(s)).toEqual({ ...Z, green: 1 });
+    // the copied Open Door's +1 red (v0.8.0) and Echo's +1 green; nothing spent on the recruit
+    expect(R(s)).toEqual({ ...Z, red: 1, green: 1 });
   });
   it('copying a discount grants its printed discount without spending the copier’s resources', () => {
     let s = scene({ round: 2, turns: [1, 1, 0], res: [{ gold: 1 }] });

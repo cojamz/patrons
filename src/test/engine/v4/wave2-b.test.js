@@ -6,59 +6,70 @@ import { describe, it, expect } from 'vitest';
 import { applyMove, followers, createGame, resume } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
-import { sceneQ } from './cards-helpers.js';
+import { sceneQ, spaceOf } from './cards-helpers.js';
 import { take, move, uidOf } from './helpers.js';
 import { breakdown } from '../../../v4/format.js';
 
 const MAG = ['gold', 'thieves', 'market', 'echo'];
 const takeFrom = (s, pid) => move(s, s.pending.options.find(o => o.value[0] === pid).id);
 
-describe('#6 Redistribute: exactly 1 from each rival it can take from', () => {
-  it('a rival lying low is not counted: 2 to take, 1 each, never a second from P2', () => {
+// Magenta redesign (design/spheres/magenta-redesign-2026-10-19.md): Redistribute steals 1 per Magenta action that
+// already has a minion, Crime Wave halves one rival's one-color stack, and general steals split freely among rivals.
+describe('#6 Redistribute: the count is the occupied Magenta actions, and a rival lying low is never offered', () => {
+  it('a rival lying low is not counted: 2 to take, both may come from P2, never from P3', () => {
     let s = sceneQ({ quadrants: MAG, n: 4, res: [{ gold: 1 }, { gold: 3, red: 2 }, { gold: 4 }, { gold: 3 }] });
+    s.slots[spaceOf(s, 'thieves.pickpocket')] = 2;
+    s.slots[spaceOf(s, 'thieves.hideout')] = 3;
     s.players[2].hideout = s.round; // P3 lies low
     s = take(s, 'thieves.tipoff');
     expect(s.pending.count).toEqual({ of: 2, left: 2 });
+    expect(s.pending.options.some(o => o.value[0] === 2)).toBe(false);
+    expect(s.pending.blocked[2]).toMatch(/P3 can’t be stolen from now/);
     s = takeFrom(s, 1);
-    expect(s.pending.options.every(o => o.value[0] === 3)).toBe(true);
-    s = takeFrom(s, 3);
+    expect(s.pending.options.some(o => o.value[0] === 1)).toBe(true); // a free split: P2 again is fine
+    expect(s.pending.options.some(o => o.value[0] === 2)).toBe(false);
+    s = takeFrom(s, 1);
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.players[0].res.magenta).toBe(2);
+    expect(s.players[0].res).toMatchObject({ gold: 3, magenta: 1 });
+    expect(s.players[1].res.gold).toBe(1);
+    expect(s.players[2].res.gold).toBe(4);
   });
 });
 
-describe('#7 Crime Wave: 3 from rivals, at least 1 from each, and the choice says so', () => {
-  it('with 3 rivals it is 1 from each; with 2 rivals 1 each and 1 from either; the caption names the limit', () => {
-    let s = sceneQ({ quadrants: MAG, n: 4, round: 2, res: [{}, { gold: 5 }, { gold: 5 }, { gold: 5 }] });
+describe('#7 Crime Wave: half of one rival\'s one-color stack, and the choice says so', () => {
+  it('offers each rival stack of 2 or more at half, rounded down; a singleton or a rival lying low is not offered', () => {
+    let s = sceneQ({ quadrants: MAG, n: 4, round: 2, res: [{}, { gold: 5 }, { gold: 5, red: 1 }, { gold: 4 }] });
+    s.players[3].hideout = s.round; // P4 lies low
     s = take(s, 'thieves.rob');
-    expect(s.pending.prompt).toMatch(/1 each from P2, P3, P4/);
-    s = takeFrom(s, 1);
-    expect(s.pending.options.some(o => o.value[0] === 1)).toBe(false);
-    expect(s.pending.blocked[1]).toMatch(/1 each from P3, P4/);
-    let t = sceneQ({ quadrants: MAG, n: 3, round: 2, res: [{}, { gold: 5 }, { gold: 5 }] });
-    t = take(t, 'thieves.rob');
-    expect(t.pending.prompt).toMatch(/at least 1 from each of P2, P3/);
+    expect(s.pending.prompt).toMatch(/Crime Wave: steal half of which resource pile/);
+    expect(s.pending.options.map(o => [o.id, o.take]).sort()).toEqual([['take:1:gold', 2], ['take:2:gold', 2]]);
+    s = move(s, 'take:2:gold');
+    expect(s.players[0].res).toMatchObject({ gold: 2, magenta: 1 });
+    expect(s.players[2].res).toMatchObject({ gold: 3, red: 1 });
+    expect(s.players[1].res.gold).toBe(5);
   });
 });
 
 describe('#38 a dim rival says the true reason', () => {
-  it('Redistribute: a rival who already gave their 1 says so, not "you picked all their magenta"', () => {
-    let s = sceneQ({ quadrants: MAG, n: 3, res: [{}, { magenta: 2, gold: 1 }, { gold: 2 }] });
-    s = take(s, 'thieves.tipoff');
+  it('Help Yourself: a rival you already emptied says they have nothing left, not that they are protected', () => {
+    let s = sceneQ({ quadrants: MAG, n: 3, round: 2, res: [{}, { gold: 1 }, { gold: 2 }] });
+    s = take(s, 'thieves.pickpocket');
     s = takeFrom(s, 1);
-    expect(s.pending.blocked[1]).toMatch(/1 from each rival/);
+    expect(s.pending.options.every(o => o.value[0] === 2)).toBe(true);
+    expect(s.pending.blocked[1]).toMatch(/P2 has nothing left to take/);
   });
-  it('Redistribute: a rival holding no more than you is still available', () => {
-    let s = sceneQ({ quadrants: MAG, n: 3, res: [{ gold: 2 }, { gold: 5 }, { gold: 2 }] });
-    s = take(s, 'thieves.tipoff');
+  it('Help Yourself: a rival holding no more than you is still available, and may give both', () => {
+    let s = sceneQ({ quadrants: MAG, n: 3, round: 2, res: [{ gold: 2 }, { gold: 5 }, { gold: 2 }] });
+    s = take(s, 'thieves.pickpocket');
     expect(s.pending.options.some(o => o.value[0] === 2)).toBe(true);
     s = takeFrom(s, 2);
-    expect(s.pending.options.every(o => o.value[0] === 1)).toBe(true);
-    expect(s.pending.blocked[2]).toMatch(/already gave theirs/);
-    s = takeFrom(s, 1); // chosen piles move together once all picks are complete
-    expect(s.players[2].res.gold).toBe(1);
-    expect(s.players[1].res.gold).toBe(4);
-    expect(s.players[0].res.magenta).toBe(2);
+    expect(s.players[2].res.gold).toBe(2); // chosen piles move together once all picks are complete
+    expect(s.pending.options.some(o => o.value[0] === 2)).toBe(true);
+    expect(s.pending.options.some(o => o.value[0] === 1)).toBe(true);
+    s = takeFrom(s, 2);
+    expect(s.players[2].res.gold).toBe(0);
+    expect(s.players[1].res.gold).toBe(5);
+    expect(s.players[0].res).toMatchObject({ gold: 4, magenta: 1 });
   });
 });
 
@@ -143,12 +154,14 @@ describe('tester A #4: Extra Hand recruited during round III gives its minion th
 });
 
 describe('tester A #5: the suggested payment keeps the rims you lead or tie', () => {
-  it('10-for-10 preserves both Gold and Silver resource leads when a legal payment can', () => {
-    const s = sceneQ({ quadrants: ['gold', 'red', 'silver', 'yellow'], n: 2, round: 3, res: [{ gold: 8, silver: 5, red: 3 }, { gold: 2, silver: 4 }] });
+  // Red scores held red too since v0.8.1 (decisions 2026-10-18), so the scene holds enough red to spend without losing it
+  it('10-for-10 preserves the Gold, Silver and Red resource leads when a legal payment can', () => {
+    const s = sceneQ({ quadrants: ['gold', 'red', 'silver', 'yellow'], n: 2, round: 3, res: [{ gold: 8, silver: 5, red: 6 }, { gold: 2, silver: 4 }] });
     const ways = followerChoices(s, s.players[0], TIERS.find(t => t.key === 'top'));
     const d = ways[0];
     expect(s.players[0].res.silver - (d.silver || 0)).toBeGreaterThanOrEqual(4);
     expect(s.players[0].res.gold - (d.gold || 0)).toBeGreaterThanOrEqual(2);
+    expect(s.players[0].res.red - (d.red || 0)).toBeGreaterThanOrEqual(1);
   });
   it('when every way loses a lead, it loses as few as it can', () => {
     const s = sceneQ({ quadrants: ['gold', 'red', 'silver', 'yellow'], n: 2, round: 3, res: [{ gold: 4, silver: 5, yellow: 3, red: 2 }, { gold: 3, silver: 4, yellow: 2, red: 1 }] });

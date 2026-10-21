@@ -132,7 +132,8 @@ describe('12 · one price rule for every recruit', () => {
 });
 
 describe('13 · Hand-pick’s preview never offers last round’s spaces as copies', () => {
-  it('in round III before any placement, Hand-pick (with Sleepwalker face up) shows no "can copy"', () => {
+  // Hand-pick became Red's Recruit a Member (v0.8.0): the same round-III free recruit of a face-up member
+  it('in round III before any placement, Recruit a Member (with Sleepwalker face up) shows no "can copy"', () => {
     const s = sceneQ({ quadrants: CLASSIC, round: 3, res: [rich] });
     row(s, ['echo.afterimage', 'red.intern'], ['red.mob']);
     // P1's round-II spaces, as the copy ledger kept them
@@ -140,7 +141,7 @@ describe('13 · Hand-pick’s preview never offers last round’s spaces as copi
       '0-1': { key: '0-1', p: 0, ring: 1, name: 'Golden Years', color: 'gold', idx: 1, echo: false, res: { gold: 4 }, discount: 0, members: [], seq: 1 },
       '0-4': { key: '0-4', p: 0, ring: 2, name: 'Tithe', color: 'gold', idx: 4, echo: false, res: { gold: 5 }, discount: 0, members: [], seq: 2 },
     }, last: {}, open: null };
-    const handpick = s.pending.options.find(o => o.label === 'Hand-pick');
+    const handpick = s.pending.options.find(o => o.label === 'Recruit a Member');
     const pv = previewSpace(s, 0, handpick.q, handpick.i);
     expect(pv).not.toBeNull();
     expect(pv.copies).toBeNull();

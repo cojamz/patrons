@@ -107,6 +107,9 @@ const ALLOW = {
   'purple.patience': 'pays only on 3+ purple still held at game end (cards-purple: Timekeeper)',
   // Overtime and Crunch Time went free (2026-10-15): only Taskmaster still pays purple for a turn, and both are cut
   'purple.doubletime': 'halves only Taskmaster’s paid turn now (cards-purple: Corner-Cutter); cut from the deck',
+  // like Bodyguard and Agents above: a pure restriction (its cult's members drop out of every swap's options) that
+  // changes no number, so there is no payout line to name it (v0.8.2 Red deck)
+  'red.loyalists': 'only removes its cult from swap options (red-members-hooks / red-members-pressure: Loyalists)',
 };
 
 describe('namesCard: what counts as a line naming a card', () => {

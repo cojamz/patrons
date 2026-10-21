@@ -4,8 +4,10 @@ import { createGame, paymentChoices, followerChoices, TIERS } from '../../../eng
 import { resume } from '../../../engine/v4/core.js';
 
 // Q's scene: 1 green, leading green alone (and then tied); a buy that could spend green or something else.
+// The real Green (echo) scores held green since v0.8.1 (the stand-in 'green' scores members, so spending green there
+// gives up nothing); Red scores held red too.
 function scene(resP0, resP1) {
-  const s = createGame({ seats: [{ name: 'Q' }, { name: 'B' }], seed: 3, quadrants: ['gold', 'red', 'blue', 'green'] });
+  const s = createGame({ seats: [{ name: 'Q' }, { name: 'B' }], seed: 3, quadrants: ['gold', 'red', 'blue', 'echo'] });
   s.players[0].res = { ...resP0 }; s.players[1].res = { ...resP1 };
   return s;
 }
@@ -48,7 +50,7 @@ it('a way to pay that gives up a lead says which colors (breaks); one that keeps
   resume(s);
   const ways = s.pending.options.filter(o => o.kind === 'pay');
   expect(ways).toHaveLength(1);
-  expect(ways[0].breaks).toEqual(['gold']);
+  expect(ways[0].breaks.sort()).toEqual(['gold', 'red']); // red is a held-resource contest too (v0.8.1)
   // with red to spend instead, the default way keeps the lead and carries no mark; the gold-heavy way still does
   s.players[0].res.red = 5;
   s.queue.unshift({ t: 'pay', p: 0, tier: 'mid' });

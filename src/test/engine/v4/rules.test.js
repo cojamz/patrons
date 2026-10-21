@@ -86,9 +86,12 @@ describe('setup', () => {
 
   it('starts with a shuffled deck of every table sphere\'s members (plus the guest rule-benders) and a full row face up', () => {
     const s = createGame({ quadrants: TABLE, seats: seats(2), seed: 9, rules: { guests: false } });
-    // 59 on this table since Doppelganger left Red for Green (Cory, 2026-10-15); the deck is whatever the spheres hold
-    const deck = 59;
+    // 63 on this table (tests deal the full deck, cut cards too) since the 12-member Red deck (v0.8.2: Recruit Bonus,
+    // Movement Penalty, Panel, Loyalists joined); the deck is whatever the spheres hold, every copy of every member
+    const deck = 63;
+    expect(TABLE.reduce((n, q) => n + quadrant(q).members.reduce((a, d) => a + d.copies, 0), 0)).toBe(deck);
     expect(Object.keys(s.cards)).toHaveLength(deck);
+    expect(Object.values(s.cards).every(c => TABLE.includes(c.def.split('.')[0]))).toBe(true);
     expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.pile).toHaveLength(deck - SHOP_SIZE);
     expect(Object.keys(createGame({ quadrants: TABLE, seats: seats(2), seed: 9 }).cards)).toHaveLength(deck + guestMembers().length);
@@ -102,8 +105,9 @@ describe('turn order and workers', () => {
   it('round I, all tied: a seeded random order, snaking, 3 workers', () => {
     const s = scene({ n: 3, queue: [{ t: 'round', r: 1 }] });
     // random since 2026-10-14 (core.js startRound); pinned to this seed's draw
-    expect(s.order).toEqual([1, 0, 2, 2, 0, 1, 1, 0, 2]);
-    expect(s.pending.player).toBe(1);
+    expect(s.order).toEqual([0, 1, 2, 2, 1, 0, 0, 1, 2]);
+    expect(s.order.slice(3, 6)).toEqual([...s.order.slice(0, 3)].reverse()); // the snake
+    expect(s.pending.player).toBe(0);
     expect(s.players.map(p => p.left)).toEqual([3, 3, 3]);
   });
 
@@ -315,7 +319,10 @@ describe('payment', () => {
     let s = scene({ res: [{ gold: 2 }], shop: ['gold.midas', 'red.mentor', 'gold.banker', 'red.intern', 'red.volunteer', 'gold.seed'] });
     s = take(s, 'red.turnout');
     const offered = s.pending.options.filter(o => o.kind === 'card').map(o => s.cards[o.uid].def).sort();
-    expect(offered).toEqual(['gold.seed', 'red.volunteer']);
+    // Gather gives +1 red × round and +1 red (v0.8.0), so 2 gold + 2 red: Banker (2+1) and Intern (1) are in reach,
+    // Midas (3+2) and Mentor (3+2) are not
+    expect(s.players[0].res).toMatchObject({ gold: 2, red: 2 });
+    expect(offered).toEqual(['gold.banker', 'gold.seed', 'red.intern', 'red.volunteer']);
     expect(hasOpt(s, 'tier:small')).toBe(true);
     expect(hasOpt(s, 'pass')).toBe(true);
   });

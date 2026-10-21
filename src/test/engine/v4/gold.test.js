@@ -102,14 +102,16 @@ describe('Gold members', () => {
   it('Midas: action gains come as gold; other gains do not; can be switched off and on at the buy', () => {
     let s = scene({ members: [['gold.midas']], res: [{ red: 2 }], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }] });
     const uid = uidOf(s, 'gold.midas', 0);
-    s = take(s, 'red.evenswap'); // +1 red (nothing to swap)
-    expect(R(s)[0]).toMatchObject({ gold: 1, red: 2 });
+    // Gather (v0.8.0): +1 red × round and +1 red, 2 in round I, all of it gold under Midas. (Even Swap's +1 red now
+    // opens a swap choice whenever any two members on the table cost the same.)
+    s = take(s, 'red.turnout');
+    expect(R(s)[0]).toMatchObject({ gold: 2, red: 2 });
     expect(s.pending.kind).toBe('buy');
     s = move(s, `toggle:${uid}`);
     expect(s.cards[uid].on).toBe(false);
     s = move(s, 'pass');
     s = take(s, 'blue.a1');
-    expect(R(s)[0]).toMatchObject({ gold: 1, blue: 3 });
+    expect(R(s)[0]).toMatchObject({ gold: 2, blue: 3 });
     s = move(s, `toggle:${uid}`);
     expect(s.cards[uid].on).toBe(true);
   });
@@ -229,9 +231,8 @@ describe('Gold members', () => {
     expect(R(take(scene({ members: [['gold.tinker']] }), 'blue.a1'))[0]).toMatchObject({ blue: 3, gold: 1 });
     expect(R(take(scene({ members: [['gold.tinker']] }), 'blue.a2'))[0]).toMatchObject({ blue: 2, red: 1, gold: 2 });
     expect(R(take(scene({ members: [['gold.tinker']] }), 'gold.rush'))[0]).toMatchObject({ gold: 2 });
-    const s = scene({ members: [['gold.tinker']] });
-    s.recruits = 1;
-    expect(R(take(s, 'red.turnout'))[0]).toMatchObject({ red: 1, gold: 1 });
+    // Gather's 2 red (+1 red × round, +1 red) is one gain of one other color: +1 gold, not 2
+    expect(R(take(scene({ members: [['gold.tinker']] }), 'red.turnout'))[0]).toMatchObject({ red: 2, gold: 1 });
   });
 
   it('Investor: you choose how much gold to set aside at round start; it comes back doubled at round end', () => {
@@ -297,7 +298,7 @@ describe('Gold members', () => {
     s = move(s, 'color:red');
     expect(s.cards[uidOf(s, 'gold.hustler', 0)].color).toBe('red');
     const before = R(s)[0].gold;
-    s = take(s, 'red.evenswap');
+    s = take(s, 'red.turnout'); // round I: +1 gold per round number
     expect(R(s)[0].gold).toBe(before + 1);
     s = move(s, 'pass');
     // a rival on red gets nothing from it

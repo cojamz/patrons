@@ -67,11 +67,12 @@ describe('Yellow members', () => {
     const restore = pinCosts({ 'red.volunteer': [0, 0] });
     let s = take(sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] }), 'red.hire');
     restore();
-    expect(R(s).red).toBe(1);
+    expect(R(s).red).toBe(2); // Open Door's own +1 red (v0.8.0), and Go-Between's +1 for the red recruit
     expect(named(s, 'Go-Between')).toHaveLength(1);
     s = sc({ round: 3, members: [['yellow.gobetween']], shop: ['benders.squatter'] }); // leans to Thieves, not on this table
     s = move(take(s, 'red.take'), `card:${uidOf(s, 'benders.squatter', 'shop')}`);
-    expect(Object.values(R(s)).reduce((a, b) => a + b, 0)).toBe(0);
+    expect(R(s)).toEqual({ gold: 0, red: 1, yellow: 0, green: 0 }); // only Recruit a Member's +1 red
+    expect(named(s, 'Go-Between')).toHaveLength(0);
   });
   it('Dyer: round end +1 yellow per color held, named', () => {
     const s = sc({ res: [{ gold: 1, red: 3 }], members: [['yellow.dyer']], queue: [{ t: 'endRound' }] });
@@ -156,7 +157,7 @@ describe('Yellow members', () => {
   it('Pilgrim: when recruited +1 of each color, named', () => {
     let s = sc({ round: 3, shop: ['yellow.pilgrim'] });
     s = move(take(s, 'red.take'), `card:${uidOf(s, 'yellow.pilgrim', 'shop')}`);
-    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
+    expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 1, green: 1 }); // and Recruit a Member's own +1 red (v0.8.0)
     expect(named(s, 'Pilgrim')[0]).toMatch(/P1's Pilgrim: \+1 gold, \+1 red, \+1 yellow, \+1 green/);
   });
   it('Farmer: +1 more when an action gains yellow, named; a Doppelganger copy adds another', () => {

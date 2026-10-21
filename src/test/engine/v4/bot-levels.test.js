@@ -148,9 +148,15 @@ describe('bot levels', () => {
         const pend = s.pending, m = chooseBotMove(s, rand, { level });
         const o = pend.options.find(x => x.id === m.option);
         if (o?.kind === 'trade') {
-          const [mine, theirs] = o.value.map(u => engine.cardDef(s, u).name);
-          expect(given[pend.player].has(theirs), `${level} seed ${seed}: P${pend.player + 1} takes back ${theirs}`).toBe(false);
-          given[pend.player].add(mine);
+          // Red's swaps (v0.8.0) take either orientation and may move none of the swapper's members (two rivals', or
+          // the shop's): what comes in is the card of the pair that isn't already theirs
+          const own = u => s.players[pend.player].members.includes(u);
+          const [a, b] = o.value, out = own(a) && !own(b) ? a : own(b) && !own(a) ? b : null;
+          if (out !== null) {
+            const theirs = engine.cardDef(s, out === a ? b : a).name;
+            expect(given[pend.player].has(theirs), `${level} seed ${seed}: P${pend.player + 1} takes back ${theirs}`).toBe(false);
+            given[pend.player].add(engine.cardDef(s, out).name);
+          }
           swaps++;
         }
         s = applyMove(s, m);

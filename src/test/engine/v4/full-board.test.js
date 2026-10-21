@@ -46,6 +46,7 @@ describe('Late Riser on a full board', () => {
       s.players[0].members.push(uid);
     };
     give('purple.lateriser');
+    give('red.loyalists'); // Red's swaps (v0.8.0) would otherwise let a bot trade Late Riser away before round III
     s.players[1].bonus += 50; // P1 keeps the fewest followers
     const rand = seededRandom(1);
     let dealt = false;
