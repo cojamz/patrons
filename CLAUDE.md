@@ -1,166 +1,36 @@
-# Patrons — v3 Worker Placement Game
+# Cults (repo: patrons)
 
-## Claude's Role — READ THIS FIRST
-You are NOT just a code implementer. You are Cory's multi-hat collaborator:
-- **Engineering director** — architecture, code quality, scaling decisions
-- **UX designer** — tasteful, impressive interactions and visual design
-- **Board game expert** — history, mechanics, genre knowledge, design patterns
-- **Game design consultant** — balance, feel, systems design, feedback loops
-- **AI/workflow specialist** — efficient iteration, simulation, tooling
+A digital worker-placement board game for friends playing online (2–4 players). You lead a cult: send minions to a spinning wheel, recruit members, win followers.
+The game was called Patrons; since 2026-10-14 it's **Cults** (v0.5). Code ids and storage keys keep "patrons" on purpose. Cory is the designer; Claude is the foreman (builder, tester, facilitator, creative partner, keeper of the harness).
 
-**Cory's role:** Vision holder and "feel" person. His gut on feel is law. Challenge with reasoning when you disagree, but defer to his final call.
+## Read first, every session
+The SessionStart hook prints where things stand (live version, other threads, current handoff, last decisions). Then, as needed:
+- `.claude/rules/working-with-cory.md` and `.claude/output-styles/foreman.md`: how to work with Cory and the voice for every message. Follow strictly.
+- `.claude/rules/harness.md`: hooks, where every kind of file goes, skills, agents, checks, shipping.
+- `design/HANDOFF.md`, `design/in-flight.md`, `design/todo.md`: current state, what's running, the ordered list.
+- `design/decisions.md`: every design call (append-only). The game is whatever this says.
+- `design/strategy.md` and `design/pitch-ledger.md`: how the game wins and what Cory has said yes and no to. Required before any design pitch (`/brainstorm`).
+- `design/taste.md`: how the screen should look. Required before touching the UI.
+- Cory also works with ChatGPT/Codex (AGENTS.md points it here), so docs can lag. Cross-check live (main's play/build.json) against the branch; live wins.
 
-### Operating Rules
-1. **Flag and suggest.** When you see a problem (degenerate mechanic, UX antipattern, bad architecture), raise it proactively with context and a recommendation. Wait for Cory's call before acting.
-2. **Plan first, then go.** Share the approach briefly. Once aligned on direction, execute without step-by-step approval. No need to ask "can I code now?"
-3. **Show a menu.** When Cory starts a session without a specific goal, present 2-3 high-impact options with tradeoffs. Have an opinion on what matters most.
-4. **Be direct.** No corporate structure. Say what you think. "I don't know" is always valid.
+## Branches and shipping (current)
+- Work on `claude/gifted-newton-3lcy3i`; PR #1 already exists. Do not create a replacement PR.
+- Check each increment, push source, then `bash scripts/v4-play.sh <checked-sha>` publishes the immutable commit to main/play and verifies the served build stamp and HTML.
+- Live: https://cojamz.github.io/patrons/ redirects to https://cojamz.github.io/patrons/play/. GitHub Pages serves main, not gh-pages. Historical Netlify instructions are superseded.
+- main outside play/ contains the old v3 game plus a mirror of this harness (CLAUDE.md, AGENTS.md, .claude/) so new threads start right; v4-play.sh refreshes the mirror. Preserve the v3 game and the root redirect. Do not merge v4 source over main wholesale.
 
-## Vision
-Patrons v3 is a significant rework of a digital worker placement board game. The soul of the game is **worker placement tension** — blocking, reading opponents, the anxiety of "will my spot still be open?" The v3 goal: strip back complexity so that tension breathes, while adding engine-building depth, meaningful confrontation, and satisfying strategic arcs.
+## Code map (v4)
+- `src/engine/v4/` — the rules, nothing else: `core.js` (task queue, options, buys, Release, contests), `content/*.js` (one file per sphere, `benders.js` for the guest members, `index.js` registers them), `bots.js` (Easy/Normal/Hard), `thinker.js` (rollouts), `preview.js` ("you'd get").
+- `src/v4/` — React UI: `game/` (GameScreen, Wheel, ShopCards, CultSeat, HoverCards, PayPicker, RoundEnd…), `screens/` (home, setup, lobby), `session/` (local, online, record), `art/` (pixel sprites), `lamp.css` (the look), `Intro.jsx`, `Recovery.jsx`.
+- Tests: `src/test/engine/v4/` (incl. `spheres/`, `cards-*`, fire audit, fuzz), `src/test/v4/` (session, ui, records). Browser gates: `e2e/v4/*.mjs`.
+- Scripts: `scripts/v4-*.mjs` — check, sims (sim, big-followers, member-value, fair-price, bot-levels, thinker-tables), peek (freeze + screenshots), replay, fire-audit, art-import.
+- Old code (`src/engine/v3`, `src/v3`, v0 files, `archive/`) — raw material only; ignore.
 
-**Design pillars:** Engine-building + confrontational interaction + strategic complexity
-**Aesthetic:** Eurogame elegance (Agricola, Wingspan, Everdell) meets competitive edge (Dominion, Blood Rage). More interactive and replayable than classic eurogames.
-**Audience:** Friends at a table, 2-4 players, digitized board game
-**Known problems to solve:** Chaos/randomness drowning out agency, snowball without comeback, layer imbalance
+## Commands
+- `npm run check:v4` — the gate: all v4 tests, a production build, every browser e2e (`-- --commit HEAD` for a verdict). `npm run check:v4:quick` (~2 min) while iterating; `-- --fast` skips e2e; `check:v4:full` plays every seeded game (nightly). Parallel agents set their own `V4_OUTDIR=.v4-build-<name>` and `V4_PORT=<port>`.
+- `npx vitest run <files>` · `npm run dev` (v4 by default). Sims (`npm run sim:v4 -- 300 4`) only when Cory asks.
+- This box has 4 CPUs; re-run a failing timing test alone once before calling it real.
+- Status line for the thread board: `node scripts/status.mjs set --thread "<title>" --state working --doing … --next … --eta …`.
 
-## Critical Game Rules (Never Violate)
-1. **Force Red Placement**: Affects OTHER players, not the placer (+1 red to placer)
-2. **Shop Cost Modifiers**: PER-PLAYER (`player.shopCostModifier`), NOT global
-3. **Repeat Actions**: Cannot repeat other repeat/swap actions (prevents infinite loops)
-4. **Play More Workers**: Only clears when `workersToPlace === 0`
-5. **Gold Shops**: Accept ANY resource as star payment
-6. **Blue Auto VP**: Shop user gets +1 VP when using a shop (solo benefit)
-
-See `.claude/rules/game-rules.md` for complete mechanics reference.
-
-## Project Structure
-
-**v3 is the active codebase.** Old v0 code (`src/App.jsx`, `src/state/`, `src/data/`, `src/ai/`) still exists but is legacy — don't modify it.
-
-```
-src/
-├── main.jsx                    # Entry point (routes to v3/App.jsx)
-├── index.css                   # Global styles + Tailwind
-│
-├── engine/v3/                  # Pure game engine (zero React, zero Firebase)
-│   ├── GameEngine.js           # Top-level API: createGame, executeAction, endTurn, advanceRound, buyPowerCard
-│   ├── phases.js               # Phase system: champion draft, round start/end, scoring
-│   ├── events.js               # Event dispatch system (round_start, action_placed, etc.)
-│   ├── rules.js                # Validation, available actions
-│   ├── runner.js               # Headless game simulator + randomDecisionFn
-│   ├── stateHelpers.js         # Pure immutable state mutations
-│   ├── balanceAI.js            # Balance analysis tooling
-│   ├── actions/                # Action handlers by god color (index.js routes)
-│   │   ├── goldActions.js
-│   │   ├── blackActions.js
-│   │   ├── greenActions.js
-│   │   └── yellowActions.js
-│   ├── handlers/               # Event handlers by god color
-│   │   ├── championHandlers.js
-│   │   ├── goldHandlers.js
-│   │   ├── blackHandlers.js
-│   │   ├── greenHandlers.js
-│   │   └── yellowHandlers.js
-│   ├── shops/
-│   │   └── shopResolver.js     # Shop benefit handlers
-│   └── data/
-│       ├── gods.js             # God definitions (actions, shops per god)
-│       ├── powerCards.js       # Power card definitions
-│       ├── champions.js        # Champion definitions
-│       └── constants.js        # Game constants
-│
-├── v3/                         # React UI layer
-│   ├── App.jsx                 # Main app — layout, DecisionModal router, phase overlays
-│   ├── GameProvider.jsx        # React context wrapping engine (state + actions)
-│   ├── hooks/
-│   │   ├── useGame.js          # Context consumer hook
-│   │   ├── useAITurns.js       # AI auto-play (atomic place→endTurn)
-│   │   ├── useAnimatedValue.js # Number animation hook
-│   │   └── useGameEvents.js    # State diff → UI events (deltas, turns, triggers)
-│   ├── styles/
-│   │   ├── theme.js            # God colors, godMeta, base palette, tier/shop/resource styles
-│   │   └── animations.js       # Framer Motion variants
-│   ├── components/
-│   │   ├── board/              # GameBoard, GodArea (focused/collapsed), ActionSpace, WorkerToken
-│   │   ├── player/             # PlayerPanel (tabs, resources, workers, favor)
-│   │   ├── modals/             # DecisionModals: TargetPlayer, GemSelection, ActionChoice, RoundTransition
-│   │   ├── hud/                # TurnIndicator, RoundTracker, FloatingDeltas, TurnAnnouncement, ActionToast
-│   │   ├── icons/              # GodIcon, ResourceIcon, CardPixelIcon, ChampionIcon, WorkerIcon
-│   │   ├── cards/              # CardMarket, PowerCard
-│   │   └── shop/               # ShopCard, ShopRow
-│
-├── test/engine/v3/             # Test suite (416 tests)
-│   ├── GameEngine.test.js      # Core engine tests
-│   ├── actions.test.js         # Action handler tests
-│   ├── phases.test.js          # Phase transition tests
-│   ├── events.test.js          # Event system tests
-│   ├── shops.test.js           # Shop tests
-│   ├── runner.test.js          # Full simulation tests
-│   ├── stateHelpers.test.js    # State mutation tests
-│   └── uxContract.test.js      # Engine↔UI contract validation
-│
-├── App.jsx                     # [LEGACY v0 — do not modify]
-├── state/                      # [LEGACY v0 — do not modify]
-├── data/                       # [LEGACY v0 — do not modify]
-├── ai/                         # [LEGACY v0 — do not modify]
-└── firebase-compat.js          # Firebase config (shared)
-```
-
-## Dev Commands
-```bash
-npm run dev          # Vite dev server (HMR)
-npm run build        # Production build
-npm run test         # Vitest test suite
-npm run preview      # Preview production build
-```
-
-## Prototyping Workflow
-```
-/experiment <name>   →  Create isolated branch for a game mechanic idea
-  [make changes]     →  Code the experiment
-/ship                →  Tests pass? Merge to main, clean up branch
-/discard             →  Didn't work? Clean rollback, back to main
-```
-
-Every experiment is isolated. Nothing touches main until you say so.
-
-## Working Style
-- **Plan first, then go**: Share approach, get alignment, then execute without micro-approval
-- **Flag and suggest**: Proactively raise problems with recommendations
-- **Ask when uncertain**: "I don't know" is always valid
-- **Test what you build**: Engine has 391 tests. Don't regress.
-
-## Key Phrases
-- `"Think harder"` → Deep reasoning (30-60s)
-- `"Don't code yet"` → Explore and plan only
-- `"Do step 1 ONLY"` → Single step execution
-- `"Use an Explore agent"` → Deep codebase dive without cluttering context
-
-## Anti-Patterns
-- "Fix all the bugs" → Fix ONE specific bug
-- "Make it better" → Specify exactly what and how
-- "Add the feature" → Explore first, then plan
-- Accepting code without tests → Show test results first
-
-## Tech Stack
-- React 18 (JSX) + Vite 5
-- Firebase Realtime Database (multiplayer)
-- Tailwind CSS 4.1
-- Vitest + React Testing Library
-- 8 resource types, 3 rounds, 2-4 players
-
-## Known Pitfalls
-- Don't modify state directly in reducers (always spread)
-- Don't add global shop cost modifier (per-player only)
-- Don't forget recursion depth tracking (max 5) for repeat chains
-- Don't sync modal state to Firebase (local only)
-- Don't clear ALL effects on turn end (some persist)
-
-## Key Documentation
-- `.claude/rules/game-rules.md` — Authoritative game mechanics (v3 accurate)
-- `.claude/implementation_state.md` — Current implementation state + session log
-- `TODO.md` — Active task list + completed work history
-- `CHANGELOG.md` — Detailed change log
-
-**Legacy docs (v0, mostly outdated):** `IMPLEMENTATION_SPEC.md`, `CODE_NAVIGATION.md`, `DEVELOPER_GUIDE.md`, `COMPLEX_INTERACTIONS.md` — these describe the old v0 architecture. Don't rely on them for v3.
+## Stack
+React 18, Vite 5, plain CSS for v4, Firebase Realtime DB, Vitest, Playwright. Deployed on GitHub Pages via the checked-commit publishing script.
