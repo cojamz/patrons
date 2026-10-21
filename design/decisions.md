@@ -977,3 +977,9 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - 2026-10-19 (Cory): Greatest Hits report withdrawn after noticing Agents. Existing rule correctly blocks copying your own protected actions too; no Greatest Hits change. Investigation stopped immediately.
 
 - 2026-10-19 shippedv0.8.9 Straggler selection: sourceeab7757cab1bff5150e4e4514dd9a136e011a80c, Pages maind657180.24 focused checks/build +6 public desktop/phone move/stay/escape flows pass. Greatest Hits unchanged because Agents explained report.
+
+## 2026-10-20 — Economy direction (Cory, back after the v0.8.x run)
+- (Cory) The economy direction for every color: using an action gives 1 of that color and only sometimes more resources (move away from big resource gains). Member costs come down to match. Members are where followers come from. Resources held at round end score the contests, so holding versus spending on members is the core tension. Why: it's the thread through the Green, Red and Magenta reworks, now stated for the whole game.
+- State on v0.8.9: Green, Red and Magenta follow it. Contests on held resources: Red, Green, Gold, Silver, Magenta. Still on most members: Blue, Purple, White; Yellow scores full sets. +1 per action: Green, Red, Magenta only. Apply it to each remaining color as part of that color's rework, never silently as a global change (keeps the 2026-10-18 Red note).
+- Superseded by shipped specs (closed): the Green thread's Oct 18 picks for members and round I actions (green-redesign-2026-10-18.md won); "Help Yourself goes 2/4/6" and the Crime Wave vs Redistribute call (magenta-redesign-2026-10-19.md won).
+- (Cory) This week is token-conscious: no sims or batches of test games unless he asks, and the game is opened only to check UI. This overrides "tokens are not a constraint" for now.
