@@ -357,6 +357,9 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot .rim-dot-ring{fill:#f6deb0}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot.wait{opacity:.5}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{color:#f6deb0}
+/* the follower mark on a contest rim wears a pearly sheen and a soft halo: followers, not one more resource mark */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{filter:url(#ltSheenHalo)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark .follower-mark path{fill:url(#ltSheen)}
 .lt [data-spaces="panels"] .stage .hub-label small{display:none}
 /* a serif numeral: "II" in a heavy sans inside the dark disc read as a pause button */
 .lt [data-spaces="panels"] .stage .hub-label b{font-family:var(--serif);font-weight:700;font-size:18px}
