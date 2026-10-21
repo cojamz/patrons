@@ -2,6 +2,14 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.34 — 2026-10-21 — unreleased
+
+- Crunch Time's hover says 2 more turns now.
+- New member prices for Magenta, Blue, Red, Green and the guests: educated guesses from bot tests, leaning a little pricier, nothing below 2 (one color, one wild). Most cards got cheaper; human play will set the rest. Price list: /mnt/project-files/member-balance/prices-2026-10-21.md
+- The new Blue members are in: Shopaholic, Patroness, Snob, Stylist, Connoisseur, Plus-One, Doorman, Critic, Regular, Window Dresser, Makeover, Trendsetter. Window Dresser, Makeover and Trendsetter are now worth 3 followers each.
+- Guests: Front-runner, Tiebreaker ("Ties you're in go to you alone") and Launderer ("turn all your resources into one color you choose") join the deck.
+- Recruit Bonus is worth 2 followers. Shopaholic's second recruit is named in the game log.
+
 ## v0.8.33 — 2026-10-21 — unreleased
 
 - Crunch Time takes 2 more turns now from the end of your round, so your next turns stay where they were and you finish early.
