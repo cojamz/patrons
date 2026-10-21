@@ -2,7 +2,11 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.26 — 2026-10-21 — unreleased
+## v0.8.27 — 2026-10-21 — unreleased
+
+- Faster: your minion stands on the space the moment you click, the wheel spin no longer stalls, round II starts with no dim pause, the shop stops redrawing on rivals' turns, and card flights cost less to draw.
+
+## v0.8.26 — 2026-10-21 — went live together with v0.8.27
 
 - Shorter, more consistent card texts: one opener then a colon, "When recruited:", "each rival", "steal", growing amounts written per round. No card works differently.
 

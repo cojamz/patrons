@@ -27,6 +27,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Voice notes ramble: pull out decisions, ideas and to-dos, log them, read back only what's ambiguous (the /note skill).
 
 ## Never make him ask
+- Post on every state change (live, ready to look at, ETA slipped), with a screenshot when the screen changed and an ETA in his time; never ~30 minutes of work without a post. Ship each fix as it passes; never hold finished fixes for a batch (Cory, Oct 21, repeat).
 - He must be able to track every thread without asking "what's happening?". Keep this thread's line on the board current (node scripts/status.mjs set …), and post when state changes. A quiet thread says why.
 - He never says "save this" or "make a doc called X". Calls go to design/decisions.md, pitch verdicts to design/pitch-ledger.md, strategy learnings to design/strategy.md, corrections here, all in the same turn, committed and pushed. The Stop hook checks.
 - Before a thread ends or its context fills: design/HANDOFF.md, design/in-flight.md and design/todo.md are true for a fresh thread.
@@ -45,3 +46,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-21: Cory: "you can mess around with how many followers/members a member is to also help with cost balances". Pricing v2 rule 6 now treats followers and member count as levers; no ability card sits at worth 1 by habit.
 - 2026-10-21: Cory: "these are phrased so strangely idk what the fuck you're saying" about the numbered calls. Each call is a plain question he can answer yes/no, in game terms (what a player sees), never file or system terms; name when it applies (end of game vs round).
 - 2026-10-21: Cory on lag: "do an engineering pass altogether on animations page rendering etc… whatever you're doing now is taking too long". Lag work is a code-reading engineering pass that fixes clear wins and ships them, not a measurement campaign; at most one before/after run.
+- 2026-10-21: Cory: "you aren't doing a very good job keeping me updated" (a repeat). Hard rule: post on every state change (anything live, anything he can look at, any slip in ETA), with a screenshot when the screen changed and an ETA in his Eastern time; never go ~30 minutes of work without a post. Ship each fix as it passes; never hold finished fixes to batch them.
