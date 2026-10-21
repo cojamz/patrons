@@ -191,3 +191,6 @@ Squatter 5+2 (once per round place on a rival's taken space; Cory: "really great
 
 ## Keeping this true
 After every rework ships or Cory answers a pitch, update the section it touches (the /brainstorm and /rework-color skills say when). Open design questions live in design/todo.md, not here.
+
+## Cory's bar for round II (2026-10-20)
+Round II spaces are measured against Promote (a free upgrade of a member) and Shake Down (take a member or get paid its cost). A round II space that only gives access or information (claim a card, pull a card into the shop) is far below that bar; he called dig "so weak". Round II must change what you own or how much you buy, not just what you can see.
