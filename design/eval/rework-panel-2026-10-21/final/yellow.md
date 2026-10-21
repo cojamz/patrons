@@ -1,6 +1,20 @@
 # Yellow, final (rework panel, phase 4)
 
+Re-priced under Pricing v2.
+
 Gate fixes applied (see gate.md).
+
+## Re-priced (Pricing v2, Oct 21)
+- Rainmaker: 3+3 → 3+2 (6 → 5), followers 2 → 2, his "should cost more" on the live 4 is one step (rule 4), not two. The "raise each of your colors" version goes 9 → 8: a round III burst, the deck's dear card if he picks it.
+- Unchanged: Sprouts 1+1 (f = C), Convert 2+1, Go-Between 2+2 (live), Chefs 4+3 (Cory's call).
+
+Curve: 2, 3, 4, 5, 7 (with "each color" Rainmaker: 2, 3, 4, 7, 8). Cheap 2, 3 · middle 4, 5 · dear 7.
+
+Flags:
+- No card at 8 or more, and 2 to 7 is narrower than the 3 to 9 floor. Chefs (Cory's, 7) is the only card with round III size (about 14 of value with 10 bodies), so it is the natural 8 (5+3). Kept at 7, his to call. The open top slot or the "each color" Rainmaker also fixes it.
+- Weakest card: the one-color Rainmaker. It can't be the dear card: at 8 it pays 5 to 7, less than its cost.
+
+Spaces that read prices: none. Potluck, Feast, Bumper Crop and Top Up count members and colors, not costs.
 
 **All card texts and numbers are Claude's fill-ins, not approved.** Chosen concept: yellow-anchor A ("your members bring their colors"), revised after the five critiques. Nothing here ships until Cory says yes.
 
@@ -63,10 +77,10 @@ What a specialist earns in yellow in a game (guess): about 7 from the +1s on ~7 
 | Sprouts | 1+1 | 2 | When recruited: +1 of your fewest color. | Cheap body at Crew's price plus Top Up's kick: 2.6 + 1 for 2 in round I. In this color every body is +2 on Bumper Crop, so the cheap worth-2 card is the specialist's fuel. Open Door's natural pick |
 | Convert | 2+1 | 2 | When recruited, pick a color: it's a member of that color. | Fits any build: one more member for a color counter (Mob, Chronicler), a member contest, or Potluck's payout in the color you lack. 2.6 of body + about 1–2 of fit, for 3: 1.2–1.5. Choice made on arrival and kept (a cube on the card); if taken, it keeps its color |
 | Go-Between (kept) | 2+2 | 1 | Whenever you recruit a non-yellow member, +1 of its color. | Live card, on your own turn, table-proof. Fires 3–5 times: 1.3 + 4 for 4, about 1.3 |
-| Rainmaker (Cory liked; "should cost more") | 3+3 | 2 | Once per game: raise one of your colors to match your yellow. | Round III yellow 6–8, target 0–2: +5–7. 2.6 + 6 for 6, about 1.4, the same at 2 and 4 players. Alternative in pick 3 |
-| Chefs (Cory's call) | 4+3 | 3 | When recruited: each of your members brings you 1 of its color. | Potluck on arrival, counts itself (3 bodies). Round II with 6 bodies: 6 + 3.9 for 7 (1.4); round III with 10: 10 + 3.9 (2.0). Flag: under bodies it outruns Potluck's cap of 6 in round III; "(at most 6)" like Potluck would match, but the card is his call, so it's his to cap. Gets better the later you buy it (Treasurer's shape). 7 is cheaper than Feastmaker's 10 |
+| Rainmaker (Cory liked; "should cost more") | 3+2 | 2 | Once per game: raise one of your colors to match your yellow. | Round III yellow 6–8, target 0–2: +5–7. His "should cost more" on the live 4 is one step, so 5. Bought in round II, used in round III; the same at 2 and 4 players. Alternative in pick 3 |
+| Chefs (Cory's call) | 4+3 | 3 | When recruited: each of your members brings you 1 of its color. | Potluck on arrival, counts itself (3 bodies). Round II with 6 bodies: 6 + 3.9 for 7 (1.4); round III with 10: 10 + 3.9 (2.0). Flag: under bodies it outruns Potluck's cap of 6 in round III; "(at most 6)" like Potluck would match, but the card is his call, so it's his to cap. Gets better the later you buy it (Treasurer's shape). 7 is cheaper than Feastmaker's 10. Pricing v2 flag: the deck has no 8, and this is the card that could be it (5+3); kept at 7 |
 
-Ladder 2, 3, 4, 6, 7. Printed followers 10 across 5 cards (3 worth 2+).
+Ladder 2, 3, 4, 5, 7. Printed followers 10 across 5 cards (3 worth 2+).
 
 Every card stands alone: Yellow's spaces count all your members, any color, so no yellow card needs another yellow card to show up (a committed player owns about 3–5 of a color at 4 players).
 
@@ -93,5 +107,5 @@ Board rules check: no tie card, no out-of-turn buy, no turn-moving source, nothi
 ## Picks for Cory
 1. Yellow becomes "your members bring their colors": round III "Each of your members brings you 2 of its color (at most 10)", or repainting resources (Dye) [members].
 2. Feast, new round II: "+1 follower per member you have that isn't yellow (at most 6)" [yes].
-3. Rainmaker: "Raise one of your colors to match your yellow" at 6, or keep "raise each of your colors" at 9 [one color].
+3. Rainmaker: "Raise one of your colors to match your yellow" at 5, or keep "raise each of your colors" at 8 [one color].
 4. Convert: "When recruited, pick a color: it's a member of that color" [yes].

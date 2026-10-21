@@ -1,6 +1,22 @@
 # Silver, final (rework panel, 2026-10-21)
 
+Re-priced under Pricing v2.
+
 Gate fixes applied (see gate.md).
+
+## Re-priced (Pricing v2, Oct 21)
+- Fruitcake: 1+1 → 1+0 (2 → 1), followers 1 → 1, the deck's 1: a small clear card, and a round I Care Package gift.
+- Upstart: 3+2 → 2+1 (5 → 3), followers 1 → 1, round I income of about 2 a round, so about 2X; bought in round I or not at all.
+- Patron Saint: 3+4 → 3+5 (7 → 8), followers 1 → 1, the deck's dear card: pays up to 10, bought in round II when the table's silver members show. Still mostly any so splashers fight for it. At 2 players it rarely reaches 8 (flag).
+- Unchanged: Gossips 1+1 (f = C), Retinue 2+2 worth 4 (f = C), Recluse 2+2 (Cory's price), Benefactor 4+2 (live price, 2X for +3 a round).
+
+Curve: 1, 2, 3, 4, 4, 6, 8. Cheap 1, 2, 3 · middle 4, 4, 6 · dear 8. Two cards share 4 (Retinue and Recluse), the most allowed.
+
+Weakest card: Fruitcake. It can't go below 1, and it is only worth anything when it leaves your cult.
+
+Spaces that read prices:
+- Regift ("gain silver equal to its cost, up to 6"): a typical member held in round II now costs about 3 to 5, not 4 to 6, so it nets about +3 to +5, one less. The cap of 6 now binds only on Benefactor and the 8s. Keep the cap; the space drops about one step.
+- Care Package (caps 2 / 3 / 4): cheaper rows mean it whiffs less (Fruitcake 1, Gossips 2, Upstart 3 all fit early), but it still pays the gift's cost, so its band stays 2 to 3 / 3 to 4 / 4 to 5. Fruitcake given in round I pays you only 1 + 1.
 
 **Every card text and number below is Claude's fill-in, not approved. Nothing ships until Cory says so.**
 
@@ -28,7 +44,7 @@ Built on Cory's own words: Rising Tide "I like this one a lot" (kept), "Silver m
 2. **Regift**: "Give one of your members to the rival with the fewest followers (ties: whoever picks earlier this round). Gain silver equal to its cost, up to 6. +1 silver."
    - Cory's "reward getting RID of members", as a gift, not a discard. The member stays in play (it still counts for Patron Saint), the trailer gets a body and its ongoing effect, and its On Recruit does not fire for them (live rule: a gift into a rival's cult is an arrival, not a Recruit).
    - Changes what you own and what a rival owns, so it passes the round II bar beside Promote and Shake Down.
-   - Walk-away: a typical member held in round II costs 4–6 and is worth 1: **net +4 to +6** (cost + 1, minus the follower you hand over). Same at 2 and 4 players. A plain body worth its cost nets only the +1, so you give away members whose job is done: a spent On Recruit, an income card late in the game, a Fruitcake. Cap 6 because Cory called a cash-in "+10 blue in round 2".
+   - Walk-away: a typical member held in round II costs 3–5 under Pricing v2 and is worth 1: **net +3 to +5** (cost + 1, minus the follower you hand over). Same at 2 and 4 players. A plain body worth its cost nets only the +1, so you give away members whose job is done: a spent On Recruit, an income card late in the game, a Fruitcake. Cap 6 because Cory called a cash-in "+10 blue in round 2".
    - Why the trailer, not "a rival you choose": the skeptic and feel seats both flagged chosen gifts as kingmaking at a friends' table. A fixed target keeps the choice on *which* member, which is the interesting one.
    - Give only, no discard: Cory's discard note was Oct 16; on Oct 17 he said "Release needs to go entirely", and "put it under the pile for its cost" is Release with a bigger refund. Giving keeps it Silver's verb ("you gave me WHAT?").
    - Abuse checked: a free recruit (Open Door, Recruit a Member) Regifted next turn for up to 6 also hands the trailer that member, so it's self-limiting (skeptic).
@@ -49,7 +65,7 @@ Cut: Hold Court, Sweet Talk, Goody Bags (Cory asked), Toast's 3/6/9 (the steroid
 | Good Deed | 2 / 3 / 4 | 2 / 3 / 4 | trailer +2 of a color |
 | Care Package | 2–3 / 3–4 / 4–5 | same | trailer gets the member |
 | Rising Tide | – / 3–4 / 4–5 | – / 3–5 / 4–6 | +2 silver each rival |
-| Regift | – / net +4–6 / net +4–6 | same | trailer gets your member |
+| Regift | – / net +3–5 / net +3–5 | same | trailer gets your member |
 | High Tide | – / – / 5–8 followers +1 | – / – / 6–10 followers +1 | +3 silver each rival |
 
 Green copies every Silver space as "the copier does it themselves" (all six flagged).
@@ -58,21 +74,21 @@ Green copies every Silver space as "the copier does it themselves" (all six flag
 Most silver held (unchanged). Every space puts silver in rivals' hands, and rivals who hold it to fight you for the contest are exactly what the Tides read; rivals who spend it hand you the contest. High Tide gives each rival 3 and you only 1, so taking it usually concedes round III's prize: the burst and the prize pull against each other.
 
 ## The deck (7 cards, 3 slots open)
-Cost is silver + any. A Silver specialist earns about **18–22 silver a game** (Toast/Good Deed/Care Package 2–5 a placement, Rising Tide 3–6, Regift up to 6; High Tide pays followers, not silver), plus Benefactor or Upstart. The deck's colored parts sum to 17, so 4–5 Silver members cost a specialist about 10 silver: affordable without giving up the contest every round. Deck visibility: at 4 players a committed player owns 3–5 of the 10 (deck-visibility.md), so no card here needs another one.
+Cost is silver + any. A Silver specialist earns about **18–22 silver a game** (Toast/Good Deed/Care Package 2–5 a placement, Rising Tide 3–6, Regift 3–6; High Tide pays followers, not silver), plus Benefactor or Upstart. The deck's colored parts sum to 15, so 4–5 Silver members cost a specialist about 9 silver: affordable without giving up the contest every round. Deck visibility: at 4 players a committed player owns 3–5 of the 10 (deck-visibility.md), so no card here needs another one.
 
 | # | Card | Text | Cost | Worth | Why this price |
 |---|---|---|---|---|---|
 | 1 | Gossips | Worth 2 followers. | 1+1 | 2 | Cory's idea. A plain body at f = C, Twins' rate; the round I filler and a Care Package gift. |
 | 2 | Retinue | Worth 4 followers. When recruited, everyone else +1 silver. | 2+2 | 4 | Cory's "more members, more followers". f = C at 4, with the gift as its cost to the table. At 2+1 it was the best Shake Down target on the board (ransom 3 for 4 followers) and a combo piece with any member counter (pricing). |
 | 3 | Benefactor (target changed) | Now and at round start, +3 silver, and the rival with the fewest followers (ties: whoever picks earlier this round) gets 1 silver. | 4+2 | 1 | Flat income 3 a round, so 2X = 6: the live price. The target joins the color's one rule (gifts go to the trailer). |
-| 4 | Upstart (reworded to income) | Now and at round start, gain half the silver of the rival with the most (rounded up), up to 4. | 3+2 | 1 | The Tide on a card, as ongoing income instead of a one-shot off a rival's pile (Cory disliked Lottery Winner's windfall). About 1–2 now, 2 and 2–3 at later round starts: about 6 bought in round I, ratio about 1.4; about 0.9 in round II. |
-| 5 | Fruitcake (new) | Worth 1. When it leaves your cult, +2 followers. | 1+1 | 1 | The gift everyone passes on. Regift it (+2 silver, +2 followers), Promote it, or let a thief take it and smile. If it never leaves it's a 2-cost body worth 1 (0.65, a trap you chose); if it leaves, about 1.65. No "rivals can't" clause: being taken is its defense. |
-| 6 | Patron Saint (Cory's version) | Game end: +1 follower per silver member in play, anyone's (max 10). | 3+4 | 1 | His wording and his cap. Counts bodies like every other "per member" card (Cory's rule: a member worth N counts as N), so Retinue counts 4 and Gossips 2. About 7 silver bodies end up in play at 4 players, so par at 7; the cap of 10 holds a Retinue-heavy table. Mostly "any" so other builds splash it and fight for it early, as he wanted. |
+| 4 | Upstart (reworded to income) | Now and at round start, gain half the silver of the rival with the most (rounded up), up to 4. | 2+1 | 1 | The Tide on a card, as ongoing income instead of a one-shot off a rival's pile (Cory disliked Lottery Winner's windfall). About 1–2 now, 2 and 2–3 at later round starts: about 6 bought in round I. Priced at 3 so it's a round I buy (Pricing v2); bought later it's small. |
+| 5 | Fruitcake (new) | Worth 1. When it leaves your cult, +2 followers. | 1+0 | 1 | The gift everyone passes on. Regift it (+1 silver, +2 followers), Promote it, or let a thief take it and smile. If it never leaves it's a 1-cost body worth 1 (f = C); if it leaves, 3 followers for 1. The deck's cheap card. No "rivals can't" clause: being taken is its defense. |
+| 6 | Patron Saint (Cory's version) | Game end: +1 follower per silver member in play, anyone's (max 10). | 3+5 | 1 | His wording and his cap. Counts bodies like every other "per member" card (Cory's rule: a member worth N counts as N), so Retinue counts 4 and Gossips 2. About 7 to 9 silver bodies end up in play at 4 players, with the cap at 10, so 8 makes it the deck's dear card: a loss for a dabbler, a deal at a Retinue-heavy table. Mostly "any" so other builds splash it and fight for it, as he wanted. At 2 players it rarely reaches 8. |
 | 7 | Recluse (moved from Blue) | Game end: +2 followers per rival with more members than you. | 2+2 | 1 | Cory's card and price, unchanged ("I love this one a lot"). Regift and Fruitcake shrink your cult and grow the trailer's, so the lean Silver cult is a real plan. Also wanted by White's outsider pitch; Blue's members thread is moving it out. One home, asked once across colors (Silver by default). |
 
-Prices: 2, 2, 4, 4, 5, 6, 7. Printed followers 11 on 7 cards (13 bodies).
+Prices: 1, 2, 3, 4, 4, 6, 8. Printed followers 11 on 7 cards (13 bodies).
 
-**3 slots open for you**, including the round III card. Nothing I found for the top of the curve was good: the panel's options were "once per game, do High Tide" (the shared capstone skeleton the judge flagged), "+X when you take a Silver space" (Majordomo again), or a bigger Retinue (a slight variation). The cheap end is full; the gap is a 7–9 card a Silver player saves for.
+**3 slots open for you**, including the round III card. Nothing I found for the top of the curve was good: the panel's options were "once per game, do High Tide" (the shared capstone skeleton the judge flagged), "+X when you take a Silver space" (Majordomo again), or a bigger Retinue (a slight variation). The cheap end is full. Patron Saint now holds the top at 8; a 9 or 10 card a Silver player saves for would widen the curve.
 
 Cut from the live ten: Guest (rival-turn drip), Majordomo ("+2 when you take a Silver space"), Revelers (Retinue carries the bodies), Heir ("too expensive"), Debutante ("double your silver" is Gold's verb now), Grand Host (12, over the ceiling). Cut from the anchor's draft: Hostess (a second counter of silver members in play, and row luck), Regifter (the action-on-arrival skeleton slot), Chaperone (quiet; architect wants catch-up in no color), Caterer ("once per space" is a rule to remember; two seats said cut), Debutante as a once-per-game High Tide (skeleton capstone).
 

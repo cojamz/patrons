@@ -1,6 +1,17 @@
 # Gold, final (rework panel, 2026-10-21)
 
+Re-priced under Pricing v2.
+
 Gate fixes applied (see gate.md).
+
+## Re-priced (Pricing v2, Oct 21)
+- Banker: 4+2 = 6 → 3+2 = 5, followers 1 → 1. Flat income is a round I buy and his notes on it only ever said "too dear"; 5 sits a step under the 2X rule, beside Busker's +2 at 4.
+- Tycoon: 3+3 = 6 → 2+1 = 3, followers 2 → 1. The deck needed a second cheap card; a hoarder gets 3 to 6 back, so 3 is a cheap pickup for the contrarian hoard plan and a small loss for a dabbler. The second body was a bonus nobody priced.
+- Penny Pincher: 4+3 = 7 → 4+2 = 6, followers 1 → 1. A round II card (4 to 7), live at 4 and called "good"; 7 stacked his "could get a little crazy" into +3, so one step back.
+- Kept: Miser 2 (cheap body, f = C), Treasurer 4 (live, loved at 4), Underdog 6 (his "2 gold 4 wild", if that was this card), Speculator 8 (round III burst, the deck's dear card).
+- Curve, old: 2, 4, 6, 6, 6, 7, 8 (three at 6). New: 2, 3, 4, 5, 6, 6, 8. Cheap 2, middle 4, dear 1.
+- Weakest card: Banker. Flat income is the shape he calls weak; at 4 it's a round I auto-buy, at 6 he called it too dear, so 5 is the only place it lives.
+- Board check: Gold's spaces don't read member prices. Banker (5) and Tycoon (3) are now Shake Down targets (ransom = cost, 5 or less); Penny Pincher at 6 stays immune. Gold parts now sum to 21 (was 23).
 
 **Every card text and number below is Claude's fill-in, not approved. Nothing ships until Cory says so.**
 
@@ -73,19 +84,19 @@ Most gold held (unchanged). Tithe, Boomtown and Double Down push gold in; member
 - The line to watch: hold all game, double in round III, buy 10-packs. The cap of 10 and round III's 5 buys limit it.
 
 ## The deck (7 cards, 3 slots open)
-Cost is gold + any. A Gold specialist earns about **30 gold a game** from spaces (about 5 in round I, 11 in round II, 14 in round III), plus up to 10 from Double Down. The seven cards' gold parts sum to 23, so 3 to 5 of them cost a specialist 10 to 15 gold: half their income, which is the hold-or-spend choice. At 4 players a committed player owns 3 to 5 of the 10 (deck-visibility.md), so nothing below needs another card.
+Cost is gold + any. A Gold specialist earns about **30 gold a game** from spaces (about 5 in round I, 11 in round II, 14 in round III), plus up to 10 from Double Down. The seven cards' gold parts sum to 21, so 3 to 5 of them cost a specialist 9 to 14 gold: half their income, which is the hold-or-spend choice. At 4 players a committed player owns 3 to 5 of the 10 (deck-visibility.md), so nothing below needs another card.
 
 | Card | Cost | Worth | Text | Why this price |
 |---|---|---|---|---|
 | Miser (body) | 1+1 | 2 | "Worth 2 followers." | The cheap body at f = C, anyone's in round I. Gold's reason for bodies: each is +1 on Tithe and Treasurer. Was a tie card; ties all score (Oct 16), so it's a plain body now (architect, judge, pricing). |
 | Treasurer (kept, capped) | 4+0 | 1 | "When recruited: gain gold equal to your member count, counting this one (at most 10)." | Tithe on arrival, "really good". 3 gold in round I, 5 in round II, 7 to 9 in round III: priced for round III, and the timing is the puzzle. Counts bodies; a Red multi-body cult reaches 12 to 15 in round III, so it prints the cap every other per-member gain prints. |
-| Banker (kept, repriced) | 4+2 | 1 | "Now and at round start, +3 gold." | Flat +3 a round: 2X rule gives 6. "Too dear" at 8. Bought in round I it pays 9; in round II, 6. |
-| Penny Pincher (kept, repriced) | 4+3 | 1 | "Gold you spend on members counts double." | The spend half of the color, and the rule Splurge would have put on the board. A gold cult spends 10 to 20 gold on members after buying it, saving 5 to 10, most of it after Double Down. Up from 4 to 7 for "could get a little crazy". |
+| Banker (kept, repriced) | 3+2 | 1 | "Now and at round start, +3 gold." | Flat +3 a round: a step under the 2X rule's 6, so a gold player can buy it in round I. "Too dear" at 8. Bought in round I it pays 9; in round II, 6. |
+| Penny Pincher (kept, repriced) | 4+2 | 1 | "Gold you spend on members counts double." | The spend half of the color, and the rule Splurge would have put on the board. A gold cult spends 10 to 20 gold on members after buying it, saving 5 to 10, most of it after Double Down. Live at 4; 6 makes it a round II buy for "could get a little crazy" without stacking steps. |
 | Underdog (kept, repriced) | 2+4 | 1 | "While anyone has more gold than you, your gold gains are doubled." | Cory's "2 gold 4 wild" (if he meant this card; it was asked). The splash card: a non-gold player doubles 4 to 8 gold over a game, then it fades. Caps apply after it, so it never triples Double Down (skeptic's ×3) or pushes Tithe past 5. |
-| Tycoon (kept text) | 3+3 | 2 | "Game end: +1 follower per 2 gold." | The color's one scorer, its own shape (the hoard). Gold held for round III's contest dies at round end; Tycoon pays half of it back, 4 to 6 for a hoarder, so holding vs converting stays close. Par for the committed, a loss for a dabbler holding 4. |
+| Tycoon (kept text) | 2+1 | 1 | "Game end: +1 follower per 2 gold." | The color's one scorer, its own shape (the hoard). Gold held for round III's contest dies at round end; Tycoon pays half of it back, 4 to 6 for a hoarder, so holding vs converting stays close. At 3 it's the deck's cheap pickup for the hoard plan: a good buy for the committed, a small loss for a dabbler holding 4. |
 | Speculator (capstone) | 5+3 | 2 | "Once per game, on your turn: double your gold (at most +10)." | Double Down on a card, timed by you: Tribute Band's shape (rule 19, lean yes). About +10 in round III; the gold 5 comes out of the pile it doubles, so buy it in round II. |
 
-Ladder 2, 4, 6, 6, 6, 7, 8. Bodies 10 across 7 cards.
+Ladder 2, 3, 4, 5, 6, 6, 8. Bodies 9 across 7 cards.
 
 Fixes decided:
 - **Speculator stays, capped; it may fire on a Double Down turn.** The skeptic's 10 → 21 → 42 dies with the caps: the same turn is at most +20 for an 8-cost capstone, the size of Tribute Band's 15 to 20. A "not on a Double Down turn" rule is one more thing to remember.

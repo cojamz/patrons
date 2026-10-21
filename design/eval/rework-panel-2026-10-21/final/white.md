@@ -1,6 +1,24 @@
 # White, final (rework panel, 2026-10-21)
 
+Re-priced under Pricing v2.
+
 Gate fixes applied (see gate.md).
+
+## Re-priced (Pricing v2, Oct 21)
+
+Direction 1:
+- Bailiff: 4 → 2 (2+2 → 1+1), followers 1 → 1, a round I pickup; small flat income is a cheap card's job (2X rule, a step under).
+- Victory Lap: 5 → 4 (3+2 → 2+2), followers 1 → 1, wanted before the first cash in round II; narrow, so a step cheaper.
+- Closer: 8 → 7 (2+6 → 2+5), followers 2 → 2, a round II to III one-shot, not a round III burst; still immune to Shake Down.
+- Unchanged: Shareholder 3 (live), Magnate 4 (live), Spoiler 5 (a round II card at about 1.1), Magistrate 10 (the capstone, about 1.45 bought in round II).
+- Curve, old: 3, 4, 4, 5, 5, 8, 10. New: 2, 3, 4, 4, 5, 7, 10. Cheap 2, middle 3, dear 2; every band filled.
+
+Direction 2:
+- Hard Luck: 4 → 2 (2+2 → 1+1), followers 1 → 1, three cards sat at 4 and Recluse and Magnate keep theirs; a round I gamble on falling behind.
+- Unchanged: Shareholder 3 (live), Recluse 4 (Cory's price), Magnate 4 (live), Spoiler 5, Comeback 8 (a true round III burst: Last Laugh on a card).
+- Curve, old: 3, 4, 4, 4, 5, 8. New: 2, 3, 4, 4, 5, 8. Cheap 2, middle 3, dear 1; every band filled, top at 8.
+
+Action spaces: none of White's spaces reads a member's price. Recruit a Member still reaches Magistrate (10) and Closer (7) in round III. Last Laugh and Fresh Blood can now ride on a 2-cost Hard Luck, but other colors already offer 0 to 2 members (Volunteer, Twins), so nothing changes there.
 
 **Every card text and number below is Claude's fill-in, not approved. Nothing ships until Cory says so.**
 
@@ -59,7 +77,7 @@ White lets you take a contest's prize the moment you lead it ("it won't score at
 | Draw Level | | 3–5 + a split | 3–6 + a split | flagged |
 | Settle Up | | | 7–13, about 8–13 all in | flagged |
 
-Specialist's own color (4 players, guess): **10–14 white a game** (the +1s, Sit Tight; guess, without the open slot). The deck's colored parts total 19; a specialist buys 3–4 of the 7 (about 8–10 white) and holds the rest for the white contest.
+Specialist's own color (4 players, guess): **10–14 white a game** (the +1s, Sit Tight; guess, without the open slot). The deck's colored parts total 17; a specialist buys 3–4 of the 7 (about 7–9 white) and holds the rest for the white contest.
 
 ## Contest
 Most white held. The White player leads white most easily (every White space gives +1 white), so White's own contest is the first one they cash. That teaches the rule on the color itself, and the freed white goes straight into White members.
@@ -69,14 +87,14 @@ Most white held. The White player leads white most easily (every White space giv
 | Card | Text | Cost | F | Why that price |
 |---|---|---|---|---|
 | Shareholder (live, kept) | Worth 3 followers. | 2+1 | 3 | Body at par (f = C), a round I card. Already White's; unchanged. |
-| Bailiff | Now and at round start, +1 of each color you lead. | 2+2 | 1 | Round-start income on the verb, paid in the colors you lead, so it widens margins against Draw Level and refills a pile after a cash. 1–2 a fire, bought in round I about 4–6 for 4 (about 1.3). Replaces the "+1 white per contest you lead" member. |
+| Bailiff | Now and at round start, +1 of each color you lead. | 1+1 | 1 | Round-start income on the verb, paid in the colors you lead, so it widens margins against Draw Level and refills a pile after a cash. 1–2 a fire, bought in round I about 3–6 for 2: the deck's cheap pickup, a round I card. Bought in round III it is about a refund. Replaces the "+1 white per contest you lead" member. |
 | Spoiler | Recruit: choose a color you don't lead; gain enough of it to tie its leader (at most 5). | 2+3 | 1 | Draw Level on arrival (Panel's shape), light colored so any trailer can splash it to stop a cash. Round II about 3–4 plus a blocked cash and the body: about 1.1 at 5. A re-fire on a swap gives nothing once you're tied. First to cut if Cory wants one tie effect on the board. |
 | Magnate (live, kept) | Game end: +1 follower per 3 white. | 2+2 | 1 | The deck's only "+1 per N" scorer, and the counter-plan: hold white to the end instead of cashing. Cory kept it over Cash In. |
-| Victory Lap | When you take a prize early, gain 2 of its color. | 3+2 | 1 | Impressionist's shape ("great") on White's verb: you start rebuilding the lead at once. 2–4 uses a game (Settle Up counts twice): +4–8 for 5. |
-| Closer | Worth 2. Recruit: take now the prize of one contest you lead. | 2+6 | 2 | Call It on arrival, plus bodies. Light colored, so a Red or Gold specialist can buy it to cash their own color and spend it on their own members. Round II about 0.95 at 8, round III about 1.6 (a cash is worth most when the pile would die). A free Recruit a Member pick in round III is the swing, and that's fine. Each contest can be taken once a round, so a re-fire on a swap is bounded. |
+| Victory Lap | When you take a prize early, gain 2 of its color. | 2+2 | 1 | Impressionist's shape ("great") on White's verb: you start rebuilding the lead at once. 2–4 uses a game (Settle Up counts twice): +4–8 for 4. Narrow, so priced to be bought in round I or early round II, before the first cash. |
+| Closer | Worth 2. Recruit: take now the prize of one contest you lead. | 2+5 | 2 | Call It on arrival, plus bodies. Light colored, so a Red or Gold specialist can buy it to cash their own color and spend it on their own members. Round II about 1.1 at 7, round III about 1.8 (a cash is worth most when the pile would die). A round II to III card, not a round III burst, so 7, not 8. A free Recruit a Member pick in round III is the swing, and that's fine. Each contest can be taken once a round, so a re-fire on a swap is bounded. |
 | Magistrate | Worth 3. Once a round, on your turn: take now the prize of a contest you lead. | 6+4 | 3 | The capstone is a standing rule (Squatter's shape), not a once-a-game blast: White's verb without a minion. Bought in round II: about 4 + 6 + a freed pile (guess 5) + 3 bodies, about 19 against 10 plus the colored tax (about 1.45). Bought in round III about 1.15. Six white keeps it with the committed player. UI: the rim you lead is the button. |
 
-Prices 3, 4, 4, 5, 5, 8, 10. Printed followers 12 on 7 cards (about Red's rate). Cost ≤5 cards (Shake Down targets) are all worth about their ransom. Cut from the anchor's draft: Arbiter (one pile in two contests, so a second prize from the same units; a round-end prompt), Holdout (holding 1 of each color shuts White down, and it defends against a verb this pitch invented), Hecklers (a rival-turn sting, the same job as Holdout), Crown (a third arrival cash at a third size), Clerks (a plain body, a template). Open slots: a second cheap body if Cory wants more bodies, or one of his own.
+Prices 2, 3, 4, 4, 5, 7, 10 (re-priced under Pricing v2). Printed followers 12 on 7 cards (about Red's rate). Cost ≤5 cards (Shake Down targets) are all worth about their ransom. Cut from the anchor's draft: Arbiter (one pile in two contests, so a second prize from the same units; a round-end prompt), Holdout (holding 1 of each color shuts White down, and it defends against a verb this pitch invented), Hecklers (a rival-turn sting, the same job as Holdout), Crown (a third arrival cash at a third size), Clerks (a plain body, a template). Open slots: a second cheap body if Cory wants more bodies, or one of his own.
 
 ## What changes at the table (and the risks)
 - **For every color:** a leader can lock their own contest and spend down the same round, so White's round II and III spaces are wanted beyond the White player.
@@ -130,7 +148,7 @@ White pays you for being behind the leader on followers, up to drawing level and
 | Upset | | 3–5 + a split | 3–6 + a split | flagged |
 | Last Laugh (trailer, 4p / 2p) | | | 9–11 / 4–10, + a member | flagged |
 
-Specialist's own color (4 players, guess): **12–16 white a game**. Colored parts in the deck total 15.
+Specialist's own color (4 players, guess): **12–16 white a game**. Colored parts in the deck total 14.
 
 ## Contest
 Most white held. Not Cory's Oct 15 "fewest followers" contest for White: on top of these spaces it would be a fifth layer of catch-up (Normal bots under it gave the buy-followers-only seat 41%, though that was the old trading White, so the number is only a direction check).
@@ -140,13 +158,13 @@ Most white held. Not Cory's Oct 15 "fewest followers" contest for White: on top 
 | Card | Text | Cost | F | Why that price |
 |---|---|---|---|---|
 | Shareholder (live, kept) | Worth 3 followers. | 2+1 | 3 | Body at par. |
-| Hard Luck | At round start, +1 white per 2 followers you're behind the leader (at most 4). | 2+2 | 1 | Round-start income on the verb (Sob Story on a card). Bought in round I it fires twice: about 0–2 then 2–4, so 2–6 for 4 to a trailer (about 1.2), a trap for the leader. No "now" part, so a swap doesn't re-fire it. |
+| Hard Luck | At round start, +1 white per 2 followers you're behind the leader (at most 4). | 1+1 | 1 | Round-start income on the verb (Sob Story on a card). Bought in round I it fires twice: about 0–2 then 2–4, so 2–6 for 2 to a trailer, a cheap round I gamble on falling behind; nothing for the leader. No "now" part, so a swap doesn't re-fire it. |
 | Recluse (moved from Blue) | Game end: +2 followers per rival with more members than you. | 2+2 | 1 | Cory's card and price, unchanged ("I love this one a lot"). The one card here that pays a lean cult, so it's the only feed to buy followers only (up to +6 at 4 players), and that's his call. Silver's final also claims it; one home. |
 | Spoiler | Recruit: choose a contest the leader leads; gain enough of its color to tie them (at most 5). | 2+3 | 1 | Upset on arrival, splashable. Once tied, a re-fire gives nothing. About 1.1 at 5. |
 | Magnate (live, kept) | Game end: +1 follower per 3 white. | 2+2 | 1 | Gives white a value after round III; the only "+1 per N" scorer. |
 | Comeback | Worth 2. Recruit: draw level with the leader, counted after it joins (at most 7). | 5+3 | 2 | Last Laugh on a card (Tribute Band beside Greatest Hits). Its own 2 count toward drawing level, so the total is min(gap, 9): about 9 for 8 to a far trailer in round III (about 1.2), about 0.7 in round II, a trap for the leader. Re-fires on swaps give nothing once level. |
 
-Prices 3, 4, 4, 4, 5, 8; printed followers 9 on 6 cards. That's thin, and Cory pushes bodies up. The open slots are the place for bodies. Cut from the outsider's draft: Nest Egg (Penny Pincher for packs, and with Windfall it made 5 white into 20 followers), Windfall and Grinder (they multiply follower buys), Tiebreaker ("ties all score"; the guest version is already with him), Tall Poppy (follower theft that loops through swaps), Untouchable (a defense against this color's own verb, and "you never count as the leader" contradicts the screen), Hermit ("counts as no members" undoes his "worth N counts as N members"), Long Shot (Comeback at a second size), Shopkeeper (generic +2 white income; White doesn't need it here).
+Prices 2, 3, 4, 4, 5, 8 (re-priced under Pricing v2); printed followers 9 on 6 cards. That's thin, and Cory pushes bodies up. The open slots are the place for bodies. Cut from the outsider's draft: Nest Egg (Penny Pincher for packs, and with Windfall it made 5 white into 20 followers), Windfall and Grinder (they multiply follower buys), Tiebreaker ("ties all score"; the guest version is already with him), Tall Poppy (follower theft that loops through swaps), Untouchable (a defense against this color's own verb, and "you never count as the leader" contradicts the screen), Hermit ("counts as no members" undoes his "worth N counts as N members"), Long Shot (Comeback at a second size), Shopkeeper (generic +2 white income; White doesn't need it here).
 
 ## What changes at the table (and the risks)
 - **A fourth catch-up?** The snake, the trailer's first pick in round III, and Purple's turn tricks are already there, and Silver's final aims its gifts at the fewest followers too. The answer is that this one is capped at the gap and paid through members, and its middle spaces fight the leader's contests instead of gifting. The feel critic's worry stands: a leader at a friends' table may feel nothing is safe. Watch it at 2 players first.

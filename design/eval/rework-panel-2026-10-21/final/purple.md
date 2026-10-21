@@ -1,6 +1,18 @@
 # Purple, final (rework panel, 2026-10-21)
 
+Re-priced under Pricing v2.
+
 Gate fixes applied (see gate.md).
+
+## Re-priced (Pricing v2, Oct 21)
+- Latecomer: 3+2 = 5 → 2+1 = 3, followers 1 → 1. The deck needed a second cheap card; it's a late-in-the-round buy in any round (4.3 for 3 on your last round I minion, 6.3 for 3 in round III).
+- Alarm Clock: 3+3 = 6 → 3+2 = 5, followers 2 → 2. Its job is a round II space, priced a step cheaper; with no income members it's two bodies, so it shouldn't be dear.
+- Closing Time: 3+3 = 6 → 3+2 = 5, followers 1 → 1. A scorer at what it pays a committed player (about 6), one step cheaper.
+- Lamplighter: 5+2 = 7 → 4+2 = 6, followers 1 → 1. Live at 8 and only ever "too dear"; a round II card for most, round I for the purple player, a hair above Banker (+3 at 5) since it grows 3/4/5.
+- Kept: Shift Crew 2 (live, f = C), Night Owl 10 (live total, his followers; a rule-bend of Extra Hand's size, two rounds of it).
+- Curve, old: 2, 5, 6, 6, 7, 10. New: 2, 3, 5, 5, 6, 10. Cheap 2, middle 3, dear 1.
+- Weakest card: Latecomer. At 3 it's a follower pack that grows late in the round; any dearer and the plain pack beats it, so it only lives cheap.
+- Board check: no Purple space reads member prices. Fast Forward's cap of 6 reads income amounts, not prices, so its numbers stand. Latecomer (3), Shift Crew (2), Alarm Clock (5) and Closing Time (5) are Shake Down targets. Purple parts now sum to 19 (was 21).
 
 **Every card text and number below is Claude's fill-in, not approved. Exceptions marked (live) or (Cory's) keep his text or his numbers. Nothing ships until Cory says so.**
 
@@ -74,13 +86,13 @@ A purple specialist earns about 20 to 25 purple a game (guess: about 8 in round 
 | Card | Cost (colored+any) | Followers | Text | Why that price |
 |---|---|---|---|---|
 | Shift Crew (live) | 1+1 | 2 | Worth 2 followers. No effect. | Cheap body at f = C, Open Door's pick. Kept. |
-| Latecomer (from purple-outsider 2) | 3+2 | 1 | When recruited: +1 follower per minion you've placed this round. | Treasurer's "buy it late" puzzle on Purple's clock: 1 on your first minion of round I (a bad buy), 5 on your last of round III, so about 6.3 for 5 bought late (1.26). Pays followers, a different currency from its cost (not a Mime refund). Re-fires on a swap; bounded at 5. |
-| Alarm Clock | 3+3 | 2 | When recruited: your members' round-start income comes again now, up to 6. | Fast Forward on a card (Panel is Promote on a card). 2 bodies (2.6) + 3 to 6 = 5.6 to 8.6 for 6: 0.95 to 1.4. Up from the anchor's 3+2, because the cap makes it reliable. |
-| Closing Time (purple-outsider 2's Night Watch, renamed) | 3+3 | 1 | Game end: +2 followers per purple space you're on (at most 10). | The scorer only Purple could have. Capped because Crunch Time plus Night Owl can sit on 5 to 6 purple spaces (10 to 12). Minions stay on their round III spaces at game end (core.js clears the board only at round start), so it reads what the board shows. A specialist ends on about 3 of the 6 purple spaces: 6 + body for 6 (1.2); 4 or 5 is 8 to 10. Rivals deny it by taking purple spaces, and it pulls against Crunch Time's "go take other anchors". Mostly "any" is wrong here: it's for the purple player, so 3 colored. |
-| Lamplighter (live text) | 5+2 | 1 | Now and at round start, +1 purple per minion you get this round (3 / 4 / 5). | Purple's own income, growing by round. Bought in round I: 3 + 4 + 5 = 12 for 7 (about 1.5 after the contest tax); round II: 9 for 7 (about 1.1). Down from 6+2: pricing says 6 colored is out of reach in round I, and Cory's notes on this card only ever said "too dear". Fast Forward fires it again, capped at 6. |
+| Latecomer (from purple-outsider 2) | 2+1 | 1 | When recruited: +1 follower per minion you've placed this round. | Treasurer's "buy it late" puzzle on Purple's clock: 1 on your first minion of round I (a bad buy), 5 on your last of round III, so about 4.3 for 3 late in round I and 6.3 for 3 late in round III. Pays followers, a different currency from its cost (not a Mime refund). Re-fires on a swap; bounded at 5. |
+| Alarm Clock | 3+2 | 2 | When recruited: your members' round-start income comes again now, up to 6. | Fast Forward on a card (Panel is Promote on a card). 2 bodies (2.6) + 3 to 6 = 5.6 to 8.6 for 5: 1.1 to 1.7 with income members, two bodies without. The anchor's 3+2, priced a step under Panel's 6. |
+| Closing Time (purple-outsider 2's Night Watch, renamed) | 3+2 | 1 | Game end: +2 followers per purple space you're on (at most 10). | The scorer only Purple could have. Capped because Crunch Time plus Night Owl can sit on 5 to 6 purple spaces (10 to 12). Minions stay on their round III spaces at game end (core.js clears the board only at round start), so it reads what the board shows. A specialist ends on about 3 of the 6 purple spaces: 6 + body for 5 (1.5); 4 or 5 is 8 to 10. Rivals deny it by taking purple spaces, and it pulls against Crunch Time's "go take other anchors". Mostly "any" is wrong here: it's for the purple player, so 3 colored. |
+| Lamplighter (live text) | 4+2 | 1 | Now and at round start, +1 purple per minion you get this round (3 / 4 / 5). | Purple's own income, growing by round. Bought in round I: 3 + 4 + 5 = 12 for 6 (the purple player's round I buy); round II: 9 for 6 (about 1.5). Down from live 6+2: 6 colored is out of reach in round I, and Cory's notes on this card only ever said "too dear". Fast Forward fires it again, capped at 6. |
 | Night Owl (live text) | 6+4 | 2 | Rounds II–III: after placing your last minion, take 1 extra turn if there's room. Once per round. | Capstone and the deck's one turn source. Bought in round II: two extra placements and buys (about 3.5 + 5) + 2 bodies = about 11 for 10. At 8+2 a purple player can't reach it until round III, where it's worth about 7.6 for 10 (pricing: a trap). 6+4 keeps it about 60% colored. Cory set the followers (#101). |
 
-- Prices 2, 5, 6, 6, 7, 10; 9 followers on 6 cards.
+- Prices 2, 3, 5, 5, 6, 10; 9 followers on 6 cards.
 - Shape: a cheap body, the color's action on arrival (Alarm Clock), growing income (Lamplighter), the clock on a card (Latecomer), a scorer that plays off rivals through the board (Closing Time), and the capstone and rule-bender (Night Owl). No defense card: Purple takes nothing, so there's nothing to defend.
 - Every card stands alone. Pairs that help: Lamplighter with Alarm Clock or Fast Forward; Latecomer with a late Night Owl turn.
 - Deck visibility: as a 6-card color at 4 players, about 0.9 purple shows in a row and about 5 of the 6 show in a game; a specialist owns 2 to 4. Nothing needs a partner.
