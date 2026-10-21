@@ -11,6 +11,7 @@ The game was called Patrons; since 2026-10-14 it's **Cults** (v0.5). Code ids an
 - `.claude/output-styles/foreman.md` — the voice for every message to Cory.
 - `design/taste.md` — how the screen should look and feel, and Cory's own calls. Read it before touching the UI.
 - `.claude/rules/harness.md` — how we work: tools, agents, ports, freezes, where things live.
+- `design/strategy.md` — what wins, where the tension is, what each color brings. Read before pitching any design; update it when a rework changes what wins.
 - `design/decisions.md` — every design call Cory has made (append-only). The game is whatever this says, not whatever old code or docs say.
 - `design/prototypes/vision/build-plan.md` — the UI being built (the Lamplit Table).
 
