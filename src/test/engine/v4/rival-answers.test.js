@@ -26,7 +26,7 @@ describe('Shake Down: the rival chooses, and the card says what they paid and wh
     const s0 = table(Q, { round: 2, res: [{}, { red: 3, gold: 2 }], members: [[], ['red.twins', 'red.intern']], shop: ROW });
     const asked = move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.twins', 1));
     expect(asked.pending.player).toBe(1);
-    expect(asked.pending.prompt).toBe('P1 holds your Twins to ransom: pay 4 (2 red, 2 gold) to keep it?');
+    expect(asked.pending.prompt).toBe('Shake Down: pay P1 4 (2 red, 2 gold) to keep Twins?');
     expect(asked.pending.options.find(o => o.id === 'pay').label).toBe('Pay P1 4 (2 red, 2 gold) to keep Twins');
     const paid = move(asked, 'pay');
     expect(paid.log).toContain('P2 chose to pay 4 (2 red, 2 gold) to keep Twins: its cost is 4.');

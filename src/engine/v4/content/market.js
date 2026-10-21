@@ -141,7 +141,7 @@ const market = {
   // +1 blue (the economy call). Names are working names. A copy (Echo) does the action itself: the doing is the value.
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 shop members to the bottom of the pile, then refill. +2 blue in round I, +3 in round II, +4 in round III.', copyDoesIt: true,
+      key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 members in the shop to the bottom of the pile, then refill. +2 blue in round I, +3 in round II, +4 in round III.', copyDoesIt: true,
       estimate: ctx => ctx.state.round + 1,
       byRound: { lines: ['+2 blue', '+3 blue', '+4 blue'] },
       resolve(ctx, p) {
@@ -175,7 +175,7 @@ const market = {
       },
     },
     {
-      key: 'clearance', ring: 2, name: 'Buy Twice', text: 'This turn you buy twice. +1 blue.', copyDoesIt: true,
+      key: 'clearance', ring: 2, name: 'Buy Twice', text: 'Buy twice this turn. +1 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 1 + Math.min(10, Math.max(0, totalRes(p) - 2)) * 0.4,
       resolve(ctx, p) { ctx.gain(p, B, 1, { fromAction: true }); extraBuys(ctx, p, 1); ctx.log(`${p.name} buys twice this turn.`); },
     },
@@ -192,7 +192,7 @@ const market = {
       },
     },
     {
-      key: 'spree', ring: 3, name: 'Spree', text: 'This turn you buy 3 times. +2 blue. +1 blue.', copyDoesIt: true,
+      key: 'spree', ring: 3, name: 'Spree', text: 'Buy 3 times this turn. +3 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 3 + Math.min(10, Math.max(0, totalRes(p) - 3)) * 0.8,
       resolve(ctx, p) { ctx.gain(p, B, 3, { fromAction: true }); extraBuys(ctx, p, 2); ctx.log(`${p.name} goes on a spree: 3 buys this turn.`); },
     },

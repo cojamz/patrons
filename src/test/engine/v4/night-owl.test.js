@@ -25,7 +25,7 @@ describe('Night Owl', () => {
   it('is printed as decided: 8 purple + 2 any, worth 2 followers, in plain words', () => {
     const d = defById('purple.nightowl');
     expect([d.s, d.w, d.f]).toEqual([8, 2, 2]);
-    expect(d.text).toBe('Rounds II–III: after placing your last minion, take 1 extra turn if there’s room. Once per round.');
+    expect(d.text).toBe('Once per round, from round II: after you place your last minion, take an extra turn.');
   });
 
   it('does nothing on a minion that is not your last', () => {

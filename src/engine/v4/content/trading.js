@@ -98,7 +98,7 @@ const trading = {
     {
       // 2026-10-14 rework: was "+2 white, and sell up to 1 follower per round number for 2 white each", whose sale was
       // dead in round I (only won or bought followers sell). Now an either/or per unit, always live, no sale.
-      key: 'pawn', ring: 1, name: 'Your Call', text: `+1 follower in round I, +2 in round II, +3 in round III; take ${PAWN.each} white in place of any of them.`,
+      key: 'pawn', ring: 1, name: 'Your Call', text: `+1 follower in round I, +2 in round II, +3 in round III. Take ${PAWN.each} white in place of any of them.`,
       byRound: { lines: ['+1 follower', '+2 followers', '+3 followers'], rest: `Take ${PAWN.each} white in place of any of them.` },
       estimate: ctx => ctx.state.round * Math.max(fv(ctx), PAWN.each),
       resolve(ctx, p) {
@@ -179,7 +179,7 @@ const trading = {
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
     // 2+0 since the 2026-10-14 rework (was 2+2): with Your Call no longer selling, bots sell half as often; value 6.2 → 2.1
-    m('dealer', 'Dealer', 2, 0, 'Whenever you sell followers, +1 white each.', {
+    m('dealer', 'Dealer', 2, 0, 'Whenever you sell followers, +1 white per follower sold.', {
       onSell(ctx, owner, card, k) { ctx.gain(owner, W, k); },
     }),
     m('pawnbroker', 'Pawnbroker', 2, 2, 'Once per round: sell 1 follower you bought or won, for 3 white.', {
@@ -220,14 +220,14 @@ const trading = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 || (ctx.state.round === 2 && ctx.memberCount(owner) >= 6),
     }),
-    m('bulkbuyer', 'Bulk Buyer', 4, 2, 'Whenever you buy 3 or more followers, +1 more.', {
+    m('bulkbuyer', 'Bulk Buyer', 4, 2, 'Whenever you buy 3 or more followers, +1 follower.', {
       onBuyFollowers(ctx, owner, card, buyer, tier) {
         if (buyer === owner && tier?.get >= 3) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
       },
     }),
     // once per action use, and 2+0 (was 2+2), since the 2026-10-14 rework: Cheap Seats paid it per resource traded,
     // and Cash In, its main trigger, is gone. Member value 3.5 → 0.6 (160 games, normal bots, White table)
-    m('broker', 'Broker', 2, 0, 'Whenever a White action gives you followers, +1 more (once per action).', { brokerBonus: 1 }),
+    m('broker', 'Broker', 2, 0, 'Whenever a White action gives you followers, +1 follower (once per action).', { brokerBonus: 1 }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4
     m('exporter', 'Exporter', 2, 2,'Whenever you recruit a non-white member, +1 white.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
@@ -246,7 +246,7 @@ const trading = {
     m('reinvestor', 'Reinvestor', 2, 2, 'Whenever you sell followers, your next member costs 2 less per follower sold.', {
       onSell(ctx, owner, card, k) { ctx.discount(owner, 2 * k, 'Reinvestor'); ctx.log(`${owner.name}'s Reinvestor: next member costs ${owner.discount} less.`); },
     }),
-    m('raider', 'Raider', 2, 0, 'Once per game: steal up to 3 followers from the leader, paying them 1 white each.', {
+    m('raider', 'Raider', 2, 0, 'Once per game: steal up to 3 followers from the leader. Pay them 1 white per follower.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const t = raidTarget(ctx, owner);

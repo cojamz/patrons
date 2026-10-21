@@ -72,7 +72,7 @@ const spillCost = (ctx, n) => 0.25 * n * (ctx.state.players.length - 1);
 
 export const silverActions = [
   {
-    key: 'toast', ring: 1, name: 'Toast', text: '+3 silver in round I, +6 in round II, +9 in round III. Each rival +1 / +2 / +3 silver.',
+    key: 'toast', ring: 1, name: 'Toast', text: '+3 silver in round I, +6 in round II, +9 in round III. Each rival +1 silver in round I, +2 in round II, +3 in round III.',
     byRound: { lines: ['+3 silver. Each rival +1 silver.', '+6 silver. Each rival +2 silver.', '+9 silver. Each rival +3 silver.'] },
     estimate: ctx => 3 * ctx.state.round - spillCost(ctx, ctx.state.round),
     resolve(ctx, p) {
@@ -84,7 +84,7 @@ export const silverActions = [
     },
   },
   {
-    key: 'gift', ring: 1, name: 'Goody Bags', text: '+2 silver and +2 of another color you choose; each rival gets 1 of that color.',
+    key: 'gift', ring: 1, name: 'Goody Bags', text: '+2 silver, and +2 of another color you choose. Each rival +1 of that color.',
     estimate: ctx => 4 - spillCost(ctx, 1),
     resolve(ctx, p) {
       hostGain(ctx, p, 2);
@@ -94,7 +94,7 @@ export const silverActions = [
     },
   },
   {
-    key: 'alms', ring: 1, name: 'Good Deed', text: '+4 silver, and a rival you choose gets 2 of a color you choose.',
+    key: 'alms', ring: 1, name: 'Good Deed', text: '+4 silver, and +2 of a color you choose to a rival you choose.',
     estimate: () => 4 - 0.5,
     resolve(ctx, p) {
       hostGain(ctx, p, 4);
@@ -112,7 +112,7 @@ export const silverActions = [
     },
   },
   {
-    key: 'tongue', ring: 2, name: 'Sweet Talk', text: '+4 silver, then swap half or all of your silver for one other color, one for one. Each rival +1 silver.',
+    key: 'tongue', ring: 2, name: 'Sweet Talk', text: '+4 silver. Then swap half or all your silver for one other color, 1 for 1. Each rival +1 silver.',
     estimate: ctx => 5 - spillCost(ctx, 1),
     resolve(ctx, p) {
       hostGain(ctx, p, 4);
@@ -137,7 +137,7 @@ export const silverActions = [
     },
   },
   {
-    key: 'jubilee', ring: 3, name: 'Hold Court', text: 'Gain 1 follower per 2 silver you hold (keep the silver). Each rival +2 silver.',
+    key: 'jubilee', ring: 3, name: 'Hold Court', text: '+1 follower per 2 silver you hold (you keep the silver). Each rival +2 silver.',
     estimate: (ctx, p) => 2 * Math.floor(p.res[S] / 2) - spillCost(ctx, 2),
     resolve(ctx, p) {
       const f = Math.floor(p.res[S] / 2);
@@ -189,7 +189,7 @@ const silver = {
     m('guest', 'Guest', 4, 4, 'Whenever a rival gives you something, +1 more of it.', {
       onGiven(ctx, owner, card, giver, color) { if (giver !== owner) ctx.gain(owner, color, 1); },
     }),
-    m('benefactor', 'Benefactor', 4, 2, 'Now and at round start: +3 silver, and a rival you pick gets 1 silver.', { now: true,
+    m('benefactor', 'Benefactor', 4, 2, 'Now and at round start: +3 silver, and +1 silver to a rival you choose.', { now: true,
       onRoundStart(ctx, owner) {
         ctx.gain(owner, S, 3);
         const low = Math.min(...others(ctx, owner).map(o => ctx.followers(o)));
@@ -198,7 +198,7 @@ const silver = {
         })), 'silver.benefactor');
       },
     }),
-    m('caterer', 'Caterer', 2, 2, 'Whenever you give something to a rival, +1 silver.', {
+    m('caterer', 'Caterer', 2, 2, 'Whenever you give a rival something, +1 silver.', {
       onGive(ctx, owner) { ctx.gain(owner, S, 1); },
     }),
     m('majordomo', 'Majordomo', 4, 2, 'Whenever you take a Silver space, +2 silver.', {
@@ -226,14 +226,14 @@ const silver = {
       onRoundStart(ctx, owner) { if (ctx.state.round === 3) ctx.gain(owner, S, ctx.memberCount(owner)); },
     }),
     // Cory, 2026-10-15 (balance pass 1, #2): half of it, Rising Tide's rule (both bots read the old card at 12+ for 6)
-    m('spoon', 'Upstart', 4, 2, 'When recruited: gain half the silver of the richest rival, rounded up.', {
+    m('spoon', 'Upstart', 4, 2, 'When recruited: gain half the silver of the rival with the most, rounded up.', {
       onRecruited(ctx, owner) { ctx.gain(owner, S, Math.ceil(Math.max(0, ...others(ctx, owner).map(o => o.res[S] || 0)) / 2)); },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 8 → 4
     m('toastmaster', 'Toastmaster', 2, 2, 'Whenever you take a Silver space, +1 follower.', {
       afterAction(ctx, owner, card, qid) { if (qid === S) owner.bonus += 1; },
     }),
-    m('gala', 'Debutante', 4, 4, 'Once per game: double your silver, and each rival +2 silver.', {
+    m('gala', 'Debutante', 4, 4, 'Once per game: double your silver. Each rival +2 silver.', {
       activate: 'game',
       onActivate(ctx, owner) {
         ctx.gain(owner, S, owner.res[S]);
@@ -243,10 +243,10 @@ const silver = {
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res[S] >= 6,
     }),
     m('dowager', 'Dowager', 2, 2, 'Worth 3 followers.', { f: 3 }),
-    m('grandhost', 'Grand Host', 8, 4, 'Silver spaces you take give you double the silver.', { hostDouble: true }),
+    m('grandhost', 'Grand Host', 8, 4, 'Double the silver you gain from Silver spaces.', { hostDouble: true }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6 (the most one pass moves);
     // pass 2's pooled midpoint (5.2) rounds back to 6, so it stays (design/eval/balance-pass-2.md)
-    m('saint', 'Patron Saint', 4, 2, 'Game end: +1 follower per 2 silver members in play, anyone’s.', {
+    m('saint', 'Patron Saint', 4, 2, 'Game end: +1 follower per 2 silver members, anyone’s.', {
       onGameEnd: ctx => Math.floor(ctx.state.players.reduce((s, o) => s + ctx.countMembersOfColor(o, S), 0) / 2),
     }),
   ],

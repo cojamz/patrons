@@ -163,6 +163,17 @@ export function promptFor(state, mine) {
     case 'choose': {
       if (!mine) return { who: p, text: `${name} is choosing` };
       // the question itself is in the note on the board; the headline names what's asking ("Kickback: choose below")
+      // a ransom ("Shake Down: pay P2 4 (2 red, 2 gold) to keep Magnate?") is your call, said as "P2 holds Magnate: keep it
+      // for 4?" (RC1 round 3 #55), never "Shake Down: choose one"
+      const ransom = String(pend.prompt || '').match(/^Shake Down: pay (.+?) (\d+(?: \([^)]+\))?) to keep (.+)\?$/);
+      if (ransom) {
+        // it's the thief's turn and your call (w3b #37: "Your turn — …" during P4's turn); with too little to pay,
+        // say so, rather than leave "Let Middleman go" as the only button with no reason
+        const have = Object.values(p.res || {}).reduce((a, b) => a + b, 0);
+        const can = pend.options.some(o => o.value === 'pay');
+        return { who: p, lead: 'Your call — ', text: `${ransom[1]} holds ${ransom[3]}: keep it for ${ransom[2]}?`, keepCase: true,
+          ...(can ? {} : { sub: `You hold ${have}: not enough to pay ${ransom[2]}, so it goes` }) };
+      }
       const asker = (String(pend.prompt || '').match(/^([^:]{2,28}):\s/) || [])[1];
       const short = String(pend.prompt || '').length <= 36;
       if (asker && asker !== name) {
@@ -170,18 +181,8 @@ export function promptFor(state, mine) {
         return { who: p, text: `${asker}: ${pend.options.some(o => o.target) ? 'pick on the board' : 'choose one'}`, keepCase: true };
       }
       if (short) return { who: p, text: pend.prompt };
-      // a long question says what it asks, never "Choose below" (RC1 round 3 #55): a ransom is "keep Magnate for 4?",
-      // and your own name before the question goes ("P2: take 6 more from the release, in any colors")
+      // your own name before the question goes ("P2: take 6 more from the release, in any colors")
       const pr = String(pend.prompt || '');
-      const ransom = pr.match(/^(.+?) holds your (.+) to ransom: pay (\d+(?: \([^)]+\))?) to keep it\?$/);
-      if (ransom) {
-        // it's the thief's turn and your call (w3b #37: "Your turn — …" during P4's turn); with too little to pay,
-        // say so, rather than leave "Let Middleman go" as the only button with no reason
-        const have = Object.values(p.res || {}).reduce((a, b) => a + b, 0);
-        const can = pend.options.some(o => o.value === 'pay');
-        return { who: p, lead: 'Your call — ', text: `${ransom[1]} holds ${ransom[2]}: keep it for ${ransom[3]}?`, keepCase: true,
-          ...(can ? {} : { sub: `You hold ${have}: not enough to pay ${ransom[3]}, so it goes` }) };
-      }
       const own = pr.startsWith(`${name}: `) ? pr.slice(name.length + 2) : pr;
       return { who: p, text: own.length <= 46 ? own : 'answer the question below' };
     }
