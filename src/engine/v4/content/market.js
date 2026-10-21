@@ -141,7 +141,7 @@ const market = {
   // +1 blue (the economy call). Names are working names. A copy (Echo) does the action itself: the doing is the value.
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 shop members to the bottom of the pile, then refill. +1 blue × round. +1 blue.', copyDoesIt: true,
+      key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 shop members to the bottom of the pile, then refill. +2 blue in round I, +3 in round II, +4 in round III.', copyDoesIt: true,
       estimate: ctx => ctx.state.round + 1,
       byRound: { lines: ['+2 blue', '+3 blue', '+4 blue'] },
       resolve(ctx, p) {

@@ -18,7 +18,7 @@ export default {
       },
     },
     {
-      key: 'turnout', ring: 1, name: 'Gather', text: '+1 red × round. +1 red.',
+      key: 'turnout', ring: 1, name: 'Gather', text: '+2 red in round I, +3 in round II, +4 in round III.',
       byRound: { lines: ['+2 red', '+3 red', '+4 red'] },
       estimate: ctx => ctx.state.round + 1,
       resolve(ctx, p) {
@@ -73,9 +73,9 @@ export default {
   members: [
     m('twins', 'Twins', 2, 0, 'Worth 2 followers.', { f: 2, n: 2 }),
     m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
-    m('volunteer', 'Volunteer', 0, 0, 'No effect.'),
-    m('intern', 'Intern', 1, 0, 'No effect.'),
-    m('mentor', 'Mentor & Protégé', 5, 3, 'Recruit: recruit the cheapest shop member.', {
+    m('volunteer', 'Volunteer', 0, 0, 'Worth 1 follower.'),
+    m('intern', 'Intern', 1, 0, 'Worth 1 follower.'),
+    m('mentor', 'Mentor & Protégé', 5, 3, 'When recruited: recruit the cheapest shop member.', {
       // card: this Mentor, or a Doppelganger copying it (its free pick says so)
       onRecruited(ctx, owner, card) {
         const who = card && card.def && card.def.key === 'doppel' ? 'Doppelganger (as Mentor & Protégé)' : 'Mentor & Protégé';
@@ -93,14 +93,14 @@ export default {
     m('recruiter', 'Recruiter', 3, 1, 'When you recruit, +1 red.', {
       onAnyRecruit(ctx, owner, card, by, recruited) { if (by === owner && recruited.uid !== card.uid) ctx.gain(owner, 'red', 1); },
     }),
-    m('drive', 'Pied Piper', 2, 2, 'Recruit 2+ members in one turn: +2 red.', {
+    m('drive', 'Pied Piper', 2, 2, 'Recruit 2 or more members in one turn: +2 red.', {
       // pays the moment your second recruit of the turn lands, so the red can still be spent this turn
       onAnyRecruit(ctx, owner, card, by, recruited) {
         // your own turn only: a recruit on someone else's turn (Poach's free recruit) doesn't count toward it
         if (by === owner && ctx.state.current === owner.id && owner.turnRecruits >= 2 && owner.turnRecruits - ctx.memberWeight(recruited) < 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Pied Piper: +2 red.`); }
       },
     }),
-    m('host', 'Host', 4, 2, 'Now and at round start, +1 red per 2 members.', { now: true,
+    m('host', 'Host', 4, 2, 'Now and at round start: +1 red per 2 members.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'red', Math.floor(ctx.memberCount(owner) / 2)); },
     }),
     m('sponsor', 'Sponsor', 6, 4, 'Your members cost 2 less.', { costReduction: 2 }),
@@ -116,7 +116,7 @@ export default {
     m('movementpenalty', 'Movement Penalty', 3, 2, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
       onMoveMember(ctx, owner, card, info) { if (info.from !== owner && ctx.followers(info.from) > 0) info.from.bonus -= 1; },
     }),
-    m('panel', 'Panel', 4, 2, 'On Recruit: Promote or Demote another member.', { f: 3, n: 3,
+    m('panel', 'Panel', 4, 2, 'When recruited: Promote or Demote another member.', { f: 3, n: 3,
       onRecruited(ctx, owner, card) {
         const options = ['promote', 'demote'].filter(mode => swapPairs(ctx, owner, mode, card.uid).length).map(mode => ({
           id: mode, label: mode === 'promote' ? 'Promote' : 'Demote', kind: 'choice', value: mode,
@@ -125,7 +125,7 @@ export default {
       },
     }),
     m('loyalists', 'Loyalists', 2, 3, 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
-    m('reserve', 'Benchwarmer', 1, 0, 'No effect.'), // placeholder until Cory designs its hold (then it becomes Seat Saver)
+    m('reserve', 'Benchwarmer', 1, 0, 'Worth 1 follower.'), // placeholder until Cory designs its hold (then it becomes Seat Saver)
   ],
 };
 

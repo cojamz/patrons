@@ -38,7 +38,7 @@ export default {
       // the fewest, not "none of" (Claude under Cory's go-with-your-gut, from the dead-window audit): it printed Gardener's
       // text. Raising every lowest color always adds one full set.
       // scales by round (Cory, 2026-10-18), in the "× round" form Gather and Build Up print
-      key: 'bloom', ring: 1, name: 'Top Up', text: '+1 × round of each color you hold the fewest of (ties: all of them).',
+      key: 'bloom', ring: 1, name: 'Top Up', text: 'Each color you hold the fewest of (ties: all of them): +1 in round I, +2 in round II, +3 in round III.',
       byRound: { lead: 'Each color you hold the fewest of (ties: all of them):', lines: ['+1', '+2', '+3'] },
       estimate: (ctx, p) => fewest(ctx, p).length * ctx.state.round + 0.5,
       resolve(ctx, p) {
@@ -102,14 +102,14 @@ export default {
   },
 
   members: [
-    m('gardener', 'Gardener', 2, 0, 'Now and at round start, +1 of each color you have none of.', { now: true,
+    m('gardener', 'Gardener', 2, 0, 'Now and at round start: +1 of each color you have none of.', { now: true,
       onRoundStart(ctx, owner) { for (const c of missing(ctx, owner)) ctx.gain(owner, c, 1); },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
-    m('peddler', 'Peddler', 4, 4, 'Now and at round start, +1 of each color.', { now: true,
+    m('peddler', 'Peddler', 4, 4, 'Now and at round start: +1 of each color.', { now: true,
       onRoundStart(ctx, owner) { for (const c of colors(ctx)) ctx.gain(owner, c, 1); },
     }),
-    m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2+ of another color at once, +1 yellow.', {
+    m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2 or more of another color at once, +1 yellow.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== Y && g.n >= 2) owner.res[Y] += 1; },
     }),
     m('admirer', 'Admirer', 3, 1, 'Whenever a rival recruits a member of a color you have none of, +1 of that color.', {

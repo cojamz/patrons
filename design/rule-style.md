@@ -30,7 +30,6 @@ Each card says exactly what happens, in the fewest plain words, and the same ide
   **copy** = get a space's printed gain. **swap**, **release**, **sell** (followers for resources), **buy followers**,
   **trade** (resources for followers), **pay**.
 - **followers you bought or won** (never "loose"; Cory: "what's a loose follower?").
-- Magenta steals: `…, as magenta.` once, at the end.
 
 ## Timing words
 - **now** = the moment it happens. **round start** = before anyone places a minion. **round end** = after the last

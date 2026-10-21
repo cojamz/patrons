@@ -179,7 +179,7 @@ const thieves = {
 
   actions: [
     {
-      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 1 resource × round. Gain 1 follower × round. +1 magenta.',
+      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 1 resource and +1 follower in round I, 2 and +2 in round II, 3 and +3 in round III. +1 magenta.',
       byRound: { lines: ['Steal 1 resource. +1 follower.', 'Steal 2 resources. +2 followers.', 'Steal 3 resources. +3 followers.'], rest: '+1 magenta.' },
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round)) + ctx.state.round * 1.5,
       resolve(ctx, p) {
@@ -192,7 +192,7 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Redistribute', ctx.stealCount(p, magentaOccupied(ctx, p), { say: true })); },
     },
     {
-      key: 'hideout', ring: 1, name: 'Lie Low', text: 'Steal 1 resource × round. Your members and resources can’t be stolen this round. +1 magenta.',
+      key: 'hideout', ring: 1, name: 'Lie Low', text: 'Steal 1 resource in round I, 2 in round II, 3 in round III. Your members and resources can’t be stolen this round. +1 magenta.',
       byRound: { lines: ['Steal 1 resource.', 'Steal 2 resources.', 'Steal 3 resources.'], rest: 'Your members and resources can’t be stolen this round. +1 magenta.' },
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round)) + 0.8 + 0.6 * ctx.state.round,
       resolve(ctx, p) {
@@ -229,7 +229,7 @@ const thieves = {
       },
     },
     {
-      key: 'heist', ring: 3, name: 'Poach', text: 'Take any rival’s member. +1 magenta.',
+      key: 'heist', ring: 3, name: 'Poach', text: 'Steal any rival’s member. +1 magenta.',
       estimate: (ctx, p) => { const l = takeable(ctx, p); return l.length ? Math.max(...l.map(([, c]) => memberHint(c))) : 0; },
       resolve(ctx, p) {
         const list = takeable(ctx, p);
@@ -301,18 +301,18 @@ const thieves = {
   },
 
   members: [
-    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the richest rival you can steal from.', { now: true,
+    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start: steal 1 resource from the richest rival you can steal from.', { now: true,
       onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Cutpurse', 1, { fromAction: false, richest: true }); },
     }),
-    m('mole', 'Mole', 2, 2, 'Now and at round start, take 1 resource from each player with more followers than you.', { now: true,
+    m('mole', 'Mole', 2, 2, 'Now and at round start: steal 1 resource from each player with more followers than you.', { now: true,
       onRoundStart(ctx, owner) {
         for (const o of ctx.rivals(owner)) if (ctx.followers(o) > ctx.followers(owner)) autoSteal(ctx, owner, o, 'Mole');
       },
     }),
-    m('accomplice', 'Accomplice', 4, 4, 'When recruited: take 1 resource from each rival.', {
+    m('accomplice', 'Accomplice', 4, 4, 'When recruited: steal 1 resource from each rival.', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have.', {
+    m('grifter', 'Grifter', 4, 2, 'When recruited: steal 1 resource per 2 members you have.', {
       // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, like any steal
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
@@ -328,19 +328,19 @@ const thieves = {
         if (info.thief === owner && (info.led ?? ledBefore(ctx, info))) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
       },
     }),
-    m('lookout', 'Lookout', 4, 2, 'Once per round, when a rival steals from someone else, take 1 resource from the thief.', {
+    m('lookout', 'Lookout', 4, 2, 'Once per round, when a rival steals from someone else, steal 1 resource from the thief.', {
       onSteal(ctx, owner, card, info) {
         if (info.reaction || info.thief === owner || info.victim === owner || card.round === ctx.state.round) return;
         if (autoSteal(ctx, owner, info.thief, 'Lookout', 1, true)) card.round = ctx.state.round;
       },
     }),
-    m('lightfingers', 'Light Fingers', 4, 4, 'Whenever a rival recruits a member costing 8 or more, take 1 resource from them.', {
+    m('lightfingers', 'Light Fingers', 4, 4, 'Whenever a rival recruits a member costing 8 or more, steal 1 resource from them.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by !== owner && cost(recruited) >= 8) autoSteal(ctx, owner, by, 'Light Fingers');
       },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 10
-    m('extortionist', 'Extortionist', 8, 2, 'Whenever a rival buys 5 or more followers, take 2 resources from them.', {
+    m('extortionist', 'Extortionist', 8, 2, 'Whenever a rival buys 5 or more followers, steal 2 resources from them.', {
       onBuyFollowers(ctx, owner, card, buyer, tier) {
         if (buyer !== owner && tier && tier.get >= 5) autoSteal(ctx, owner, buyer, 'Extortionist', 2);
       },
@@ -355,7 +355,7 @@ const thieves = {
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });
       },
     }),
-    m('bigscore', 'Safecracker', 2, 2, 'Once per game: take half (rounded down) of the magenta held by the rival with the most magenta.', {
+    m('bigscore', 'Safecracker', 2, 2, 'Once per game: steal half of the magenta held by the rival with the most magenta, rounded down.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const list = ctx.rivals(owner).filter(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 2);

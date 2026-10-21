@@ -100,13 +100,13 @@ export function incomeTerms(state, p) {
   const defs = [];
   for (const uid of p.members) { try { defs.push(cardDef(state, uid)); } catch { /* gone */ } }
   const atStart = d => /round start/i.test(timingOf(d)) || /\bstart of round\b/i.test(d.text || '');
-  const reacts = d => timingOf(d) === 'Whenever' || /^once per round, when\b/i.test(d.text || '');
+  const reacts = d => timingOf(d) === 'Whenever' || /^once per round[,:] when(?:ever)?\b/i.test(d.text || '');
   const paying = defs.some(atStart) ? defs.filter(atStart) : defs.filter(reacts);
   for (const d of paying) {
     const cond = atStart(d) ? incomeCondition(d) : 'not always';
     const same = sources.find(x => x.name === d.name);
     if (same) same.n++;
-    else sources.push({ name: d.name, text: (d.text || '').replace(/^Now and at round start,\s*/i, '').replace(/^At round start,\s*/i, ''), cond, n: 1, hold: holdNote(state, p, d) });
+    else sources.push({ name: d.name, text: (d.text || '').replace(/^Now and at round start[,:]\s*/i, '').replace(/^(?:At round start|Round start)[,:]\s*/i, ''), cond, n: 1, hold: holdNote(state, p, d) });
     if (!cond) continue;
     const touches = d.quadrant === 'thieves' ? ['magenta'] : ALL_COLORS.test(d.text || '') ? state.resources : state.resources.filter(r => new RegExp(`\\b${r}\\b`, 'i').test(d.text || ''));
     for (const r of touches) if (!condOf[r]) condOf[r] = cond;

@@ -66,7 +66,11 @@ describe('Green current actions', () => {
     expect(term('copy').def).toMatch(/choose again/);
     expect(readFileSync(new URL('../../../../design/rulebook.md', import.meta.url), 'utf8')).toMatch(/choose again/);
     expect(quadrant('echo').rule).toMatch(/already in its chain/);
-    for (const d of quadrant('echo').actions) expect(d.text).toContain('+1 green');
+    // Build Up's +1 green sits inside its by-round run (+1 × round, +1: 2 / 3 / 4)
+    for (const d of quadrant('echo').actions) {
+      if (d.key === 'chant') expect(d.text).toBe('+2 green in round I, +3 in round II, +4 in round III.');
+      else expect(d.text).toContain('+1 green');
+    }
   });
   it('Greatest Hits copies all your ordinary actions in order and adds one green', () => {
     let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(0, 0, 0) });

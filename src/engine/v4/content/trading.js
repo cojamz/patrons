@@ -175,7 +175,7 @@ const trading = {
   },
 
   members: [
-    m('shopkeeper', 'Shopkeeper', 2, 2, 'Now and at round start, +2 white.', { now: true,
+    m('shopkeeper', 'Shopkeeper', 2, 2, 'Now and at round start: +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
     // 2+0 since the 2026-10-14 rework (was 2+2): with Your Call no longer selling, bots sell half as often; value 6.2 → 2.1
@@ -192,7 +192,7 @@ const trading = {
       },
       botActivate: (ctx, owner) => sellable(owner) > 0 && ctx.state.round < 3,
     }),
-    m('safetynet', 'Rich Uncle', 2, 0, 'Now and at round start, if you have no white, +3 white.', { now: true,
+    m('safetynet', 'Rich Uncle', 2, 0, 'Now and at round start: if you have no white, +3 white.', { now: true,
       onRoundStart(ctx, owner) { if (!owner.res[W]) ctx.gain(owner, W, 3); },
     }),
     m('tipster', 'Tipster', 4, 2, 'Whenever a rival buys followers, +1 white.', {
@@ -246,7 +246,7 @@ const trading = {
     m('reinvestor', 'Reinvestor', 2, 2, 'Whenever you sell followers, your next member costs 2 less per follower sold.', {
       onSell(ctx, owner, card, k) { ctx.discount(owner, 2 * k, 'Reinvestor'); ctx.log(`${owner.name}'s Reinvestor: next member costs ${owner.discount} less.`); },
     }),
-    m('raider', 'Raider', 2, 0, 'Once per game: take up to 3 followers from the leader, paying them 1 white each.', {
+    m('raider', 'Raider', 2, 0, 'Once per game: steal up to 3 followers from the leader, paying them 1 white each.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const t = raidTarget(ctx, owner);

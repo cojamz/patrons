@@ -34,7 +34,7 @@ export default {
       resolve(ctx, p) { ctx.discount(p, 4, 'Intro Offer'); ctx.log(p.discount > 4 ? `Intro Offer stacks: ${p.name}'s next member costs ${p.discount} less.` : `${p.name}'s next member costs 4 less.`); },
     },
     {
-      key: 'steal', ring: 2, name: 'Collect Debts', text: 'Take up to 3 gold from rivals, split however you like.',
+      key: 'steal', ring: 2, name: 'Collect Debts', text: 'Steal up to 3 gold from rivals, split however you like.',
       estimate: (ctx, p) => Math.min(3, ctx.rivals(p).filter(o => ctx.canSteal(p, o)).reduce((s, o) => s + o.res.gold, 0)) * 1.4,
       resolve(ctx, p) { stealStep(ctx, p, { left: ctx.stealCount(p, 3, { say: true }), picked: {}, unit: ctx.stealCount(p, 1) - ctx.stealCount(p, 0) }); },
     },
@@ -83,7 +83,7 @@ export default {
       },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
-    m('banker', 'Banker', 4, 4, 'Now and at round start, +3 gold.', { now: true,
+    m('banker', 'Banker', 4, 4, 'Now and at round start: +3 gold.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'gold', 3); },
     }),
     m('prospector', 'Prospector', 2, 2, 'When an action gains you gold, +1 gold.', {
@@ -106,7 +106,7 @@ export default {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'gold') ctx.gain(owner, 'gold', 1);
       },
     }),
-    m('underdog', 'Underdog', 5, 3, 'While anyone has more gold than you, your gold gains are doubled.', {
+    m('underdog', 'Underdog', 5, 3, 'While a rival has more gold than you, your gold gains are doubled.', {
       modifyGain(ctx, owner, card, g) {
         if (g.color === 'gold' && !g.doubled && ctx.state.players.some(o => o !== owner && o.res.gold > owner.res.gold)) {
           g.n *= 2; g.doubled = true;
@@ -173,8 +173,8 @@ export default {
     m('seed', 'Treasurer', 4, 0, 'When recruited: gain gold equal to your member count (counting this one).', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
-    m('hustler', 'Hustler', 4, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
-      byRound: { lead: 'When recruited, pick a color. Actions there give you:', lines: ['+1 gold', '+2 gold', '+3 gold'] },
+    m('hustler', 'Hustler', 4, 0, 'When recruited: pick a color. Actions there give you +1 gold per round number.', {
+      byRound: { lead: 'When recruited: pick a color. Actions there give you:', lines: ['+1 gold', '+2 gold', '+3 gold'] },
       onRecruited(ctx, owner, card) {
         ctx.choose(owner, 'Hustler: actions in which color give you extra gold?', ctx.state.quadrants.map(q => ({
           id: `color:${q}`, label: ctx.quadrant(q).name, kind: 'color', value: q, hint: q === 'gold' ? 1 : 0,
