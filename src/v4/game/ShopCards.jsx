@@ -71,6 +71,9 @@ export function CostShapes({ parts }) {
   );
 }
 
+// a card's element as last built: the same element, no render (ShopCards' built cache)
+const Kept = memo(function KeptCard({ el }) { return el; });
+
 function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null, onViewChange = null }) {
   const pend = state.pending;
   const viewer = me != null ? state.players[me] : null;
@@ -138,7 +141,13 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
     ro?.observe(row);
     return () => ro?.disconnect();
   }, [fitKey]);
-  const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
+  const canPay = new Map(uids.map(u => [u, viewer ? !!paymentPlan(state, viewer, u) : false]));
+  const affordable = viewer ? uids.filter(u => canPay.get(u)).length : 0;
+  // each card's element is kept while what it shows is the same (lag pass 2026-10-21: a rival's step re-rendered every
+  // card in the row, 5-35ms at 4x CPU, for no change on screen); its handlers read the latest props through a ref
+  const live = useRef({});
+  live.current = { onPick, onDenied, hover, detailed };
+  const built = useRef(new Map()); // uid → { sig, el }
   return (
     <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-fade={viewer && fade ? 'on' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
@@ -161,7 +170,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
         {uids.map(uid => {
           const d = cardDef(state, uid);
           const opt = optionFor(`card:${uid}`);
-          const can = viewer ? !!paymentPlan(state, viewer, uid) : false;
+          const optId = opt ? opt.id : null;
+          const can = canPay.get(uid);
           // buying: the lamp lights only what you can recruit, the rest recede (Cory); placing: what you can't
           // afford yet is quieter, except a card the space under your pointer would unlock
           const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can));
@@ -172,28 +182,33 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           // a discount on you: the price you'd pay, the list price small and struck beside it (decisions.md, 2026-10-15)
           const paid = paidParts(state, viewer, uid, d);
           const fromPile = !state.shop.includes(uid);
-          return (
+          const color = cardColor(state, d), ground = cardGround(state, d), sphere = sphereOf(state, d);
+          const sig = [d.id, d.name, d.f, d.n, d.text, optId ?? '', dim ? 1 : 0, lit ? 1 : 0, short ? 1 : 0, buying || picking ? 1 : 0, JSON.stringify(parts), JSON.stringify(paid), fromPile ? 1 : 0, tray ? 1 : 0, detailed ? 1 : 0, state.round, color, ground, sphere].join('|');
+          const had = built.current.get(uid);
+          if (had && had.sig === sig) return <Kept key={uid} el={had.el} />;
+          const el = (
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
               className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying || picking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
-              style={{ '--q': cardColor(state, d) }} data-ground={cardGround(state, d)} aria-disabled={!opt} data-unaffordable={short || undefined}
+              style={{ '--q': color }} data-ground={ground} aria-disabled={!opt} data-unaffordable={short || undefined}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
-              onPointerEnter={e => { if (hover && !detailed && realHover(e)) { if (fresh(uid)) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } }}
-              onPointerMove={e => { if (waiting.current.has(uid) && hover && !detailed && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } }}
-              onPointerLeave={e => { waiting.current.delete(uid); if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
+              onPointerEnter={e => { const { hover, detailed } = live.current; if (hover && !detailed && realHover(e)) { if (fresh(uid)) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } }}
+              onPointerMove={e => { const { hover, detailed } = live.current; if (waiting.current.has(uid) && hover && !detailed && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } }}
+              onPointerLeave={e => { const { hover } = live.current; waiting.current.delete(uid); if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
               onClick={e => {
+                const { hover, onPick, onDenied } = live.current;
                 if (fresh(uid)) return; // just arrived under the pointer: not a deliberate click
                 // touch: a tap reads the card (a sheet with Recruit); it never recruits by itself
                 if (pointer.current === 'touch' && hover) { hover.onCardHover(uid, e.currentTarget, { pinned: true }); return; }
-                if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
+                if (optId) onPick(optId); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
               }}
             >
               {/* identity and price (Cory, 2026-10-15: "members can't be translated to shorthand"): the picture on its
                   tinted field, the name, the cost in dots and the worth; what it does is the hover's one plain sentence */}
               <span className="band" aria-hidden="true" />
-              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
+              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} />
                 {/* the price as one faint number in the corner, for a quick look across the row (Cory, 2026-10-21): what
                     you'd pay, so it agrees with the dots below; the dots stay the price's words */}
                 <span className="lt-corner-cost num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>
@@ -222,6 +237,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               </span>
             </button>
           );
+          built.current.set(uid, { sig, el });
+          return <Kept key={uid} el={el} />;
         })}
       </div>
       </div>
