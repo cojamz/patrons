@@ -154,6 +154,42 @@ it('flies a mixed-color ransom payment directly from payer to recipient without 
 });
 
 
+it('opens a new round as separate beats: minions home, then income seat by seat, then round-start hooks, then the shop', () => {
+  setMotionSpeed('steady');
+  const before = sceneQ({ quadrants: ['gold', 'silver'], members: [['gold.banker'], ['gold.merchant']], slots: { '0-0': 0, '0-1': 1, '1-0': 0 } });
+  before.round = 1;
+  const pre = { type: 'followers', cause: { kind: 'contest' }, from: { kind: 'rim' }, to: { kind: 'count', pid: 0 }, what: { n: 4 } };
+  before.effects = [pre];
+  const [u0, u1] = [before.players[0].members[0], before.players[1].members[0]];
+  const round = { kind: 'round', round: 2 };
+  const bank = (pid, uid) => ({ kind: 'member', pid, uid, def: pid ? 'gold.merchant' : 'gold.banker' });
+  const seg = [
+    ...before.shop.map(uid => ({ type: 'shop-out', cause: round, from: { kind: 'shop' }, to: { kind: 'pile' }, what: { uid } })),
+    { type: 'gain', cause: bank(0, u0), from: bank(0, u0), to: stack(0, 'gold'), what: { r: 'gold', n: 3 } },
+    { type: 'gain', cause: bank(1, u1), from: bank(1, u1), to: stack(1, 'gold'), what: { r: 'gold', n: 3 } },
+    // a round-start hook that takes: it plays after the income
+    { type: 'transfer', cause: bank(1, u1), from: stack(0, 'gold'), to: stack(1, 'gold'), what: { r: 'gold', n: 1 } },
+  ];
+  const shop = before.pile.slice(0, before.shop.length);
+  const after = { ...before, round: 2, slots: {}, squats: {}, shop, effects: [pre, ...seg] };
+  const plan = planChain(before, after, { mine: [0] });
+  const home = plan.atoms.find(a => a.op === 'home');
+  expect(home.at).toBe(0);
+  const income = plan.atoms.filter(a => a.op === 'piece' && a.from.kind === 'member');
+  expect(income.length).toBeGreaterThan(0);
+  expect(Math.min(...income.map(a => a.at))).toBeGreaterThan(0);
+  expect(plan.atoms.filter(a => a.op === 'hop').length).toBe(2);
+  const hook = plan.atoms.find(a => a.op === 'tug');
+  const incomeLands = plan.atoms.filter(a => a.op === 'land' && !a.take && a.to.kind === 'stack');
+  expect(hook.at).toBeGreaterThan(Math.min(...incomeLands.map(a => a.at)));
+  const refill = plan.atoms.find(a => a.op === 'refill');
+  expect(refill.n).toBe(before.shop.length);
+  expect(refill.at).toBeGreaterThanOrEqual(hook.at);
+  expect(plan.total).toBeGreaterThan(refill.at);
+  // nothing from before the round's start (the scored board's own stream) replays
+  expect(plan.atoms.some(a => a.fol)).toBe(false);
+});
+
 it('a recruit flies to the hub, is read there, then flies on to its buyer before its worth lands (Cory, 10-18)', () => {
   const cause = { kind: 'recruit', pid: 0, uid: 77, index: 0 };
   const plan = chain([

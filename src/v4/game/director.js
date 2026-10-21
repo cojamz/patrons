@@ -104,6 +104,19 @@ function movesOf(cause, effects, owner) {
   return { pays, takes, gives, gains, cards, fols };
 }
 
+/** How long the wheel's minions take to fly home at a new round (all at once, a stagger apart; flight.js). */
+function homeMs(before) {
+  const n = Object.keys(before.slots || {}).length + Object.values(before.squats || {}).reduce((k, l) => k + l.length, 0);
+  return n ? MO.minionsHome + (n - 1) * MO.minionsHomeStagger : 0;
+}
+/** A new round's own effects: the closing move's stream past the scored board's (the board carries the stream up to
+ *  its scoring, format.js scoringSnapshot), from the round's start on. Null when they can't be told apart. */
+function roundSegment(before, state) {
+  if (!Array.isArray(state.effects) || !Array.isArray(before.effects) || before.effects.length > state.effects.length) return null;
+  const seg = state.effects.slice(before.effects.length);
+  return seg.length && seg[0].cause && seg[0].cause.kind === 'round' ? seg : null;
+}
+
 /**
  * What a change of state plays: { atoms: [{ at, op, ... }], total } in ms at the viewer's speed. Pure when `measure`
  * is left out (the table's pacing calls it before anything is on screen); playChain passes the screen's distances.
@@ -150,11 +163,18 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     }
     pulsed = key;
   }
-  if (!sameRound && before.round >= 1) { at(0, { op: 'home' }); t = ends(MO.minionsHome); }
+  // a new round opens as separate beats (Cory's A5 remainder): the minions home, then each seat's round-start income,
+  // then the members that do something else at round start (steals, set-asides), then the shop's fresh row
+  const homeAt = roundAdvance ? homeMs(before) : 0;
+  if (!sameRound && before.round >= 1) { at(0, { op: 'home' }); t = ends(roundAdvance ? homeAt : MO.minionsHome); }
 
   // 2. the cascade (a rival's run of follower buys, folded by foldBuys, carries the whole run's effects)
-  const fx = Array.isArray(state.effects) && state.moves === before.moves + 1 ? state.effects
-    : state.foldedFrom === before.moves && Array.isArray(state.foldedEffects) ? state.foldedEffects : fromGains(before, state);
+  let fx = Array.isArray(state.effects) && state.moves === before.moves + 1 ? state.effects
+    : state.foldedFrom === before.moves && Array.isArray(state.foldedEffects) ? state.foldedEffects
+      : roundAdvance && roundSegment(before, state) || fromGains(before, state);
+  // a new round's round-start income plays as its own beat (below), before the hooks
+  const income = roundAdvance ? fx.filter(e => e && e.cause && e.cause.kind === 'member' && e.type === 'gain' && e.to && e.to.kind === 'stack' && e.to.pid === e.cause.pid) : [];
+  if (income.length) fx = fx.filter(e => !income.includes(e));
   const beats = [];
   for (const e of fx) {
     if (!e || !e.cause || ['contest', 'final'].includes(e.cause.kind)) continue; // the Reckoning flies prizes and end-game member bonuses
@@ -184,6 +204,35 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     return { last: time + (n - 1) * MO.pieceStagger, d };
   };
   const after = r => r.last + nextBeatAt(r.d); // when the next beat may start
+  if (income.length) {
+    // the beat starts as the last minion is two-thirds of the way home
+    const t0 = Math.max(0, homeAt - MO.minionsHome / 3);
+    const seats = seatOrder(state).filter((id, i, a) => a.indexOf(id) === i);
+    let k = 0;
+    for (const pid of seats) {
+      const mine0 = income.filter(e => e.cause.pid === pid);
+      if (!mine0.length) continue;
+      const st = t0 + k++ * MO.incomeSeat;
+      const byMember = new Map();
+      for (const e of mine0) { const key = e.cause.uid ?? e.cause.def; if (!byMember.has(key)) byMember.set(key, []); byMember.get(key).push(e); }
+      for (const list of byMember.values()) {
+        const c = list[0].cause, src = { kind: 'member', pid, uid: c.uid, def: c.def };
+        at(st, { op: 'hop', place: src });
+        // one group per color, net of every gain this member made (a +2 and a +1 of gold fly as one +3)
+        const net = new Map();
+        for (const e of list) net.set(e.what.r, (net.get(e.what.r) || 0) + e.what.n);
+        let o = st + MO.lead;
+        for (const [r, n] of net) {
+          if (!n) continue;
+          const r0 = pieces(o, src, { kind: 'stack', pid, r }, n, { r, owner: pid });
+          ends(r0.last + r0.d);
+          o += MO.fan;
+        }
+      }
+    }
+    // the next beat (round-start hooks, then the shop) waits for the income to land: each its own beat
+    t = Math.max(t, end);
+  }
   // what a member's beat did, in plain words with the real numbers, for its caption on the stage (Cory, 22:48: "a member
   // will fly out and something will happen, but its not clear why without hover"): "you +1 gold", "+2 blue from P3"
   const who = id => (mine.length === 1 && mine[0] === id ? 'you' : state.players[id] ? state.players[id].name : '');
@@ -372,10 +421,20 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   // players' picks (the first placements follow the last one)
   if (setup && end) { hand = end; if (turnPasses) end += MO.setupRest; }
   if (resort) { at(end, { op: 'sort' }); end += MO.sortBeat; hand = end; }
+  // the round's fresh shop is the round start's last beat: the old row goes to the deck once everything else has landed
+  // (or, with nothing else, as the minions come home), and the new row deals after it (useDeal; playChain delays it)
+  const outs = roundAdvance ? shopOuts(before, state).length : 0;
+  if (outs) {
+    const refillAt = t;
+    at(refillAt, { op: 'refill', n: outs });
+    end = Math.max(end, refillAt + rowOutMs(outs) + MO.deal + (outs - 1) * MO.dealStagger);
+    hand = end;
+  }
   // Dense chains tighten proportionally, preserving cause order within the existing turn-wait budget.
   // a longer plan plays faster to fit, never faster than Quick (half)
   const cap = Math.round(2400 * speedScale());
-  if (end > cap) {
+  // (a new round's opening isn't a turn: its beats keep their own pace, outside the turn's cap)
+  if (end > cap && !roundAdvance) {
     const k = Math.max(0.5, cap / end);
     for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); for (const f of ['toHub', 'show', 'fromHub']) if (a[f]) a[f] = Math.round(a[f] * k); }
     end *= k; hand *= k; t *= k;
@@ -694,6 +753,11 @@ export function shopOuts(before, state) {
  *  last; the deal begins as the last is halfway there, so the deck is never still between the two). */
 export function rowOutMs(n) { return n > 0 ? Math.round(MO.shopSlide / 2 + (n - 1) * MO.rowOutStagger) : 0; }
 
+// the new row's deal animations at a new round (MemberDeck.jsx useDeal notes them; playChain times them)
+const roundDeals = [];
+/** useDeal's deal of a new round's row: `anim` (the picture flying off the deck), `hide` (the real card waiting). */
+export function noteRoundDeal(anim, hide) { if (anim && hide && anim.effect && hide.effect) roundDeals.push({ anim, hide }); }
+
 /** (kept for callers: a placed minion's slot is read when its chain plays) */
 export const noteTable = root => { void root; };
 
@@ -703,6 +767,8 @@ export const noteTable = root => { void root; };
  * A chain may start while the last one's tail is still landing (the same player's next step shows at its handoff).
  */
 export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [], chips = null } = {}) {
+  // the new row's deal, noted by useDeal in this same commit (it lays out first): this chain says when it starts
+  const deals = roundDeals.splice(0);
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
   const ctx = { state, before, snap, chips };
   if (chain.draining) cancelDrain(); // an externally delivered step adopts any explicit motion still finishing
@@ -954,6 +1020,18 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // shrinking into the deck as it arrives; the new row deals off the top after it (dealAfter, useDeal). Bookkeeping: it
   // never holds the chain, and a skip lands it.
   const outs = snap ? shopOuts(before, state) : [];
+  // a new round's fresh row is its own last beat (planChain's refill): the old row leaves then, and the new deals after
+  const refill = plan.atoms.find(a => a.op === 'refill');
+  const refillOff = refill ? Math.max(0, base + refill.at - chain.clock) : 0;
+  for (const d of deals) {
+    try {
+      if (refillOff) {
+        d.anim.effect.updateTiming({ delay: (d.anim.effect.getTiming().delay || 0) + refillOff });
+        d.hide.effect.updateTiming({ duration: Number(d.hide.effect.getTiming().duration) + refillOff });
+      }
+      track(d.anim); track(d.hide); // a skip deals them at once
+    } catch { /* gone */ }
+  }
   if (outs.length) {
     const deckEl = root.querySelector('[data-deck] .back') || root.querySelector('[data-deck]');
     const D = deckEl ? deckEl.getBoundingClientRect() : null;
@@ -965,7 +1043,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       g.innerHTML = sn.html;
       Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px` });
       document.body.appendChild(g);
-      const delay = k * MO.rowOutStagger;
+      const delay = refillOff + k * MO.rowOutStagger;
       const frames = D && D.width
         ? (() => {
           const dx = D.left + D.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = D.top + D.height / 2 - (sn.rect.top + sn.rect.height / 2);
