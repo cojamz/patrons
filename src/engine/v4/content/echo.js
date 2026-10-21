@@ -306,6 +306,7 @@ const echoQ = {
     },
     {
       key: 'chant', ring: 1, name: 'Build Up', text: '+1 green × round. +1 green.',
+      byRound: { lines: ['+2 green', '+3 green', '+4 green'] },
       estimate: ctx => 1 + ctx.state.round,
       resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', ctx.state.round, { fromAction: true }); },
     },

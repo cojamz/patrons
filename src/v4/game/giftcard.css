@@ -80,7 +80,9 @@
 .gift-card .gc-holder{flex-direction:column;justify-content:center;min-width:40px;max-width:64px;height:auto;min-height:44px;text-align:center;gap:2px}
 .gift-card .gc-holder .gc-who-name{font-size:11px;line-height:13px;overflow-wrap:anywhere}
 
-.gift-card .gc-rest{display:flex;justify-content:flex-end;gap:8px}
+/* the way out ("Swap nothing", "Take all", "Recruit nothing") is its own footer under a hairline, so it never reads as
+   part of the caption above it (Cory's todo: Trade Seeds' "Swap nothing") */
+.gift-card .gc-rest{display:flex;justify-content:flex-end;gap:8px;margin-top:4px;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12))}
 .gift-card .gc-lead{margin:0;font:500 12px/16px var(--sans);color:var(--ink-2,#5a4a3c)}
 .lt .lt-wheel > .prompt.choice.gift-card .gc-rest-btn{min-height:32px;padding:0 14px;border-radius:999px;font:500 14px/1 var(--sans)}
 

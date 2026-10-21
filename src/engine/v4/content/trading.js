@@ -99,6 +99,7 @@ const trading = {
       // 2026-10-14 rework: was "+2 white, and sell up to 1 follower per round number for 2 white each", whose sale was
       // dead in round I (only won or bought followers sell). Now an either/or per unit, always live, no sale.
       key: 'pawn', ring: 1, name: 'Your Call', text: `+1 follower in round I, +2 in round II, +3 in round III; take ${PAWN.each} white in place of any of them.`,
+      byRound: { lines: ['+1 follower', '+2 followers', '+3 followers'], rest: `Take ${PAWN.each} white in place of any of them.` },
       estimate: ctx => ctx.state.round * Math.max(fv(ctx), PAWN.each),
       resolve(ctx, p) {
         const r = ctx.state.round, v = fv(ctx), late = lastTurn(ctx, p);

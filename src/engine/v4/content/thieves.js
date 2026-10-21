@@ -180,6 +180,7 @@ const thieves = {
   actions: [
     {
       key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 1 resource × round. Gain 1 follower × round. +1 magenta.',
+      byRound: { lines: ['Steal 1 resource. +1 follower.', 'Steal 2 resources. +2 followers.', 'Steal 3 resources. +3 followers.'], rest: '+1 magenta.' },
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round)) + ctx.state.round * 1.5,
       resolve(ctx, p) {
         startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round, { say: true }), { followers: ctx.state.round });
@@ -192,6 +193,7 @@ const thieves = {
     },
     {
       key: 'hideout', ring: 1, name: 'Lie Low', text: 'Steal 1 resource × round. Your members and resources can’t be stolen this round. +1 magenta.',
+      byRound: { lines: ['Steal 1 resource.', 'Steal 2 resources.', 'Steal 3 resources.'], rest: 'Your members and resources can’t be stolen this round. +1 magenta.' },
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round)) + 0.8 + 0.6 * ctx.state.round,
       resolve(ctx, p) {
         p.hideout = ctx.state.round;

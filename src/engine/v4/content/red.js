@@ -19,6 +19,7 @@ export default {
     },
     {
       key: 'turnout', ring: 1, name: 'Gather', text: '+1 red × round. +1 red.',
+      byRound: { lines: ['+2 red', '+3 red', '+4 red'] },
       estimate: ctx => ctx.state.round + 1,
       resolve(ctx, p) {
         ctx.gain(p, 'red', ctx.state.round + 1, { fromAction: true });

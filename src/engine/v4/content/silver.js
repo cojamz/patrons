@@ -73,6 +73,7 @@ const spillCost = (ctx, n) => 0.25 * n * (ctx.state.players.length - 1);
 export const silverActions = [
   {
     key: 'toast', ring: 1, name: 'Toast', text: '+3 silver in round I, +6 in round II, +9 in round III. Everyone else +1 / +2 / +3 silver.',
+    byRound: { lines: ['+3 silver. Each rival +1 silver.', '+6 silver. Each rival +2 silver.', '+9 silver. Each rival +3 silver.'] },
     estimate: ctx => 3 * ctx.state.round - spillCost(ctx, ctx.state.round),
     resolve(ctx, p) {
       const n = 3 * ctx.state.round;

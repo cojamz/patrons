@@ -192,6 +192,7 @@ const market = {
       onRoundStart(ctx, owner, card) { ctx.gain(owner, B, ctx.countMembersOfColor(owner, Q) - (card && isBlue(card.def) ? ctx.memberWeight(card) : 0)); },
     }),
     m('planner', 'Planner', 2, 2, 'Now and at round start, your next member costs 2 less per round number.', { now: true,
+      byRound: { lead: 'Now and at round start, your next member costs:', lines: ['2 less', '4 less', '6 less'] },
       onRoundStart(ctx, owner) { ctx.discount(owner, 2 * ctx.state.round, 'Planner'); },
     }),
     m('underbidder', 'Underbidder', 2, 0, 'Now and at round start, your next member costs 2 less per rival with more members than you.', { now: true,

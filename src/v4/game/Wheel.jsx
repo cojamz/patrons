@@ -862,7 +862,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
         </textPath>
       </text>,
     );
-    // the follower mark right after the prize, on the same arc, upright like the letters
+    // the follower mark right after the prize, on the same arc, upright like the letters, centred on the line (the
+    // text's dominant-baseline is central, so the line's middle is rr itself)
     {
       const sAt = startS + textW + (F * RIM_MARK) / 2;
       const deg = (sAt / rr) * 180 / Math.PI;
@@ -870,7 +871,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       const [mx, my] = polar(a, rr);
       const cap = F * 0.95;
       paper.push(
-        <g key={`rf${q}`} className={`rim-mark${lit}`} data-rim-prize={qid} data-rim-res={quadrant(qid).resource} transform={`translate(${mx.toFixed(2)} ${my.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap * 0.86).toFixed(2)})`}>
+        <g key={`rf${q}`} className={`rim-mark${lit}`} data-rim-prize={qid} data-rim-res={quadrant(qid).resource} transform={`translate(${mx.toFixed(2)} ${my.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap / 2).toFixed(2)})`}>
           <Follower size={cap} title={`${RING_VALUE[paying - 1]} followers`} />
         </g>,
       );
@@ -883,9 +884,14 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       const sAt = startS + textW + F * RIM_MARK + F * 0.45 + k * EM + EM / 2;
       const deg = (sAt / rr) * 180 / Math.PI;
       const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
-      // the band's middle (the line runs 3.6 units off it; w2a #52: past the band it rose onto the divider)
-      const [ex, ey] = polar(a, RIM.r);
+      // centred on the text line (Cory: the followers mark and emoji centred on the text), which runs 3.6 units off the
+      // band's middle; at most 62% of the band tall, it stays inside the band (w2a #52: past it, it rose onto the divider)
+      // (an upright square's corners reach (cap/2)(|cos|+|sin|) along the radius, so near the diagonals it gives up
+      // just enough of the offset to stay inside)
       const cap = EMOJI_U;
+      const t = (a + rot - 90) * Math.PI / 180;
+      const room = Math.max(0, (RIM.r1 - RIM.r0) / 2 - (cap / 2) * (Math.abs(Math.cos(t)) + Math.abs(Math.sin(t))) - 0.3);
+      const [ex, ey] = polar(a, RIM.r + Math.max(-room, Math.min(room, rr - RIM.r)));
       paper.push(
         <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} shapeRendering="crispEdges" transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(-rot).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap / 2).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
           <title>{`${state.players[id].name} leads`}</title>

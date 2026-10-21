@@ -192,6 +192,7 @@ export default {
     // was Feastmaker 6+4 (Cory, 2026-10-18): Chefs, a little cheaper, counts as 2 members (worth 2 followers, as Twins)
     m('chefs', 'Chefs', 6, 3, 'Worth 2 followers. Once per game: +1 of each color per round number.', {
       f: 2,
+      byRound: { lead: 'Worth 2 followers. Once per game:', lines: ['+1 of each color', '+2 of each color', '+3 of each color'] },
       activate: 'game',
       onActivate(ctx, owner) {
         const r = ctx.state.round;

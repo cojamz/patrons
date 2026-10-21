@@ -156,12 +156,16 @@ export function memberRows(state, pid, viewer = null, optionFor = () => null) {
     // the copy reads (Cory, 2026-10-15: "once doppelganger has copied, it doesnt need the extra text anymore")
     let text = memberTimingWords((d.text || '').trim());
     if (copy) text = `Copy of ${copy.name}: ${memberTimingWords((copy.text || '').trim())}`;
-    if (c.color) { try { text = `${text} Picked: ${quadrant(c.color).name}.`; } catch { /* no such quadrant */ } }
+    let picked = '';
+    if (c.color) { try { picked = `Picked: ${quadrant(c.color).name}.`; text = `${text} ${picked}`; } catch { /* no such quadrant */ } }
+    // a rule that grows by round shows as I / II / III lines in the hover (Cory, 2026-10-18); text stays the whole rule
+    const rule = copy || d;
+    const byRound = rule.byRound ? { def: rule, before: copy ? `Copy of ${copy.name}:` : '', after: picked } : null;
     const key = [d.id, c.used ? 'u' : '', c.on === false ? 'off' : '', c.copy || '', c.color || '', spentThisRound(state, c) ? 's' : '', ask ? 'ask' : ''].join('|');
     const row = rows.get(key);
     if (row) { row.uids.push(uid); row.n++; if (!row.use && use) row.use = use; continue; }
     rows.set(key, {
-      key, uids: [uid], uid, def: d, name: d.name, n: 1, text, kind, tag, use, ask,
+      key, uids: [uid], uid, def: d, name: d.name, n: 1, text, byRound, kind, tag, use, ask,
       toggle: eff.toggle ? { on, option: toggleOpt } : null,
       used: kind === 'use' ? !!c.used : spentThisRound(state, c),
       loaded: kind === 'use' && !c.used, // a use still in hand: a rival's is a threat to watch (w2b #21)

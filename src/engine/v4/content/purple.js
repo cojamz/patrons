@@ -176,6 +176,7 @@ export default {
   actions: [
     {
       key: 'hourly', ring: 1, name: 'Clock In', text: '+4 purple in round I, +5 in round II, +6 in round III.',
+      byRound: { lines: ['+4 purple', '+5 purple', '+6 purple'] },
       estimate: ctx => [3, 4, 5][ctx.state.round - 1] + 1,
       resolve(ctx, p) { ctx.gain(p, P, [3, 4, 5][ctx.state.round - 1] + 1, { fromAction: true }); },
     },

@@ -577,6 +577,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const giftsRef = useRef([]); // short-lived "+1 gold from P2" floaters on player cards
   const setGifts = useCallback(f => { giftsRef.current = typeof f === 'function' ? f(giftsRef.current) : f; }, []);
   const [toast, setToast] = useState(null);
+  const [stolen, setStolen] = useState([]); // [{ pid, text, n }]: "P2 took 2 gold" on the robbed seat (laptop)
   const robbedRef = useRef(null); // { pid, n }: flash that player's resources
   const setRobbed = useCallback(f => { robbedRef.current = typeof f === 'function' ? f(robbedRef.current) : f; }, []);
   const [cardDetail, setCardDetail] = useState(null); // { el, uid, hover? } a shop card's details (tap on phones, hover on desktop)
@@ -873,7 +874,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       for (const id of mySeats) {
         const lost = state.resources.map(r => [r, (robBase.current.res[id][r] || 0) - (state.players[id].res[r] || 0)]).filter(([, d]) => d > 0);
         if (lost.length) {
-          showToast(`${state.players[actor].name} took ${lost.map(([r, d]) => `${d} ${r}`).join(', ')} from ${humansHere ? state.players[id].name : 'you'}`, slowed(2400));
+          // on a laptop it's said on the robbed seat, short (Cory, 2026-10-18: "shorter, near your player card"): the
+          // seat says whose it is, the dots say what; a phone has no chair beside the wheel, so it keeps the toast
+          if (wide) {
+            const note = { pid: id, text: `${state.players[actor].name} took ${lost.map(([r, d]) => `${d} ${r}`).join(' ')}`, n: Date.now() };
+            setStolen(ss => [...ss.filter(x => x.pid !== id), note]);
+            setTimeout(() => setStolen(ss => ss.filter(x => x !== note)), slowed(2400));
+          } else showToast(`${state.players[actor].name} took ${lost.map(([r, d]) => `${d} ${r}`).join(', ')} from ${humansHere ? state.players[id].name : 'you'}`, slowed(2400));
           setRobbed({ pid: id, n: Date.now() });
           setTimeout(() => setRobbed(r => (r && r.pid === id ? null : r)), slowed(1600));
         }
@@ -1437,6 +1444,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               {pid == null ? null : (
                 <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={!!(pend && pend.player === pid && !state.over)} hover={hover} optionFor={pid === me ? live : undefined} onPick={shopPick} pick={pickParts[pid] || null} />
               )}
+              {pid != null && stolen.filter(x => x.pid === pid).map(x => <div key={x.n} className="seat-stolen" role="status" data-stolen={pid}><Rich text={x.text} /></div>)}
             </section>
           ))}
           <section className="lt-shop" data-region="shop" aria-label="Shop">

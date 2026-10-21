@@ -147,6 +147,32 @@ export function CardText({ text }) {
     : <Rich key={k} text={part.text} after={after(k)} />))}</>;
 }
 
+/**
+ * A rule whose value grows by round, as one line per round with this round lit (Cory, 2026-10-18: "I: … / II: … /
+ * III: …", the rounds that aren't current dimmed). The lines come from the def's byRound ({ lead, lines, rest }); the
+ * def's text stays the rule (log, rulebook, panels). Anything else reads as its text.
+ */
+const ROMAN = ['I', 'II', 'III'];
+const PlainText = ({ text }) => <Rich text={memberTimingWords(text)} />;
+// plain: resource marks only, no glossary underlines (the seat's member list; the member's own card underlines them)
+export function RuleText({ def, text = def && def.text, round = 1, plain = false }) {
+  const by = def && def.byRound;
+  const Text = plain ? PlainText : CardText;
+  if (!by || !by.lines || by.lines.length !== 3) return <Text text={text} />;
+  const now = Math.min(3, Math.max(1, round || 1));
+  return (
+    <span className="by-round" data-by-round={now}>
+      {by.lead ? <span className="br-lead"><Text text={by.lead} /></span> : null}
+      {by.lines.map((l, k) => (
+        <span key={k} className={`br-line${k + 1 === now ? ' now' : ''}`} data-round-line={k + 1} aria-current={k + 1 === now ? 'true' : undefined}>
+          <span className="br-r">{ROMAN[k]}:</span><span className="br-v"><Text text={l} /></span>
+        </span>
+      ))}
+      {by.rest ? <span className="br-rest"><Text text={by.rest} /></span> : null}
+    </span>
+  );
+}
+
 // ---------- members ----------
 /** Is a member's quadrant on this table? A member of an absent quadrant is colorless (neutral frame). */
 export const onTable = (state, def) => state.quadrants.includes(def.quadrant);
@@ -225,7 +251,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {/* a member with no ability says so, never an empty card (w2a #36: Twins and Intern showed only a header) */}
       {/* a member you use (once a game, once a round) says so first (w3a #5: "you can't find out which members you use");
           in the shop, also how: on your turn, from your seat */}
-      {ability ? <p className="mc-text">{(copied || d).activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
+      {ability ? <p className="mc-text">{(copied || d).activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<RuleText def={copied || d} text={ability} round={state.round} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {d.activate && where && !state.over && <small className="mc-live" data-use-how="">Once it’s yours, use it on your turn: it lights up in your seat.</small>}
       {copied && <small className="mc-live" data-copy-of="">Copy of <CardName state={state} def={copied} /></small>}
       {owner && card && card.used && !state.over && <small className="mc-live" data-member-used="">Used</small>}

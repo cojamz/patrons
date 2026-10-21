@@ -8,7 +8,7 @@ import { Follower } from '../art/Follower.jsx';
 import { spriteId } from '../art/index.js';
 import { quadrant, followers } from '../../engine/v4/index.js';
 import { breakdown, costParts } from '../format.js';
-import { CardName, onTable, Tip, CostDots } from './Info.jsx';
+import { CardName, onTable, Tip, CostDots, RuleText } from './Info.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { memberRows, useNow, spendingPower, memberAsks } from './memberUse.js';
 import './members.css';
@@ -93,7 +93,7 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
                     : showTag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
               </span>
               {/* the whole sentence, never cut; plain (the member's own card underlines its keywords) */}
-              <span className="mu-text" data-ability>{row.text ? <Rich text={row.text} /> : 'No effect.'}</span>
+              <span className="mu-text" data-ability>{row.byRound ? <>{row.byRound.before ? <Rich text={row.byRound.before} /> : null}<RuleText def={row.byRound.def} round={state.round} plain />{row.byRound.after ? <Rich text={row.byRound.after} /> : null}</> : row.text ? <Rich text={row.text} /> : 'No effect.'}</span>
             </span>
           </li>
         );

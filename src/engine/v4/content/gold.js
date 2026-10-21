@@ -24,6 +24,7 @@ export default {
     },
     {
       key: 'rush', ring: 1, name: 'Golden Years', text: '+2 gold in round I, +4 in round II, +6 in round III.',
+      byRound: { lines: ['+2 gold', '+4 gold', '+6 gold'] },
       estimate: ctx => 2 * ctx.state.round,
       resolve(ctx, p) { ctx.gain(p, 'gold', 2 * ctx.state.round, { fromAction: true }); },
     },
@@ -173,6 +174,7 @@ export default {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
     m('hustler', 'Hustler', 4, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
+      byRound: { lead: 'When recruited, pick a color. Actions there give you:', lines: ['+1 gold', '+2 gold', '+3 gold'] },
       onRecruited(ctx, owner, card) {
         ctx.choose(owner, 'Hustler: actions in which color give you extra gold?', ctx.state.quadrants.map(q => ({
           id: `color:${q}`, label: ctx.quadrant(q).name, kind: 'color', value: q, hint: q === 'gold' ? 1 : 0,

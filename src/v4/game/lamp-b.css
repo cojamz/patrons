@@ -574,3 +574,9 @@
    blinks. Measured at 4× CPU over 25s of play: main-thread work 19.3s → 5.9s, long tasks 64 → 22, worst 415 → 133ms;
    paused instead of stopped kept their layers and cut far less (14.9s). They pick up again when the move lands. */
 .app.game[data-chain="1"] :is(.cs-min,.leader,.leader .blink,.sprite,.lead,.dots){animation:none!important}
+/* a rule that grows by round: one line per round, this round lit, the others stepped back (Cory, 2026-10-18) */
+.by-round .br-line{display:block;opacity:.42}
+.by-round .br-line.now{opacity:1}
+.by-round .br-r{display:inline-block;min-width:2.1em;font-weight:700}
+.by-round .br-lead + .br-line{margin-top:2px}
+.by-round .br-rest{display:block;margin-top:2px}

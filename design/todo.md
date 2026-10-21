@@ -38,17 +38,17 @@ Correctness and Cory's made calls
 - [ ] Long shop member names fit their box (hotseat e2e: Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double); recheck first.
 
 Laptop UI clarity
-- [ ] Scaling text as "I: … / II: … / III: …" lines, the current round lit (Golden Years, Gather, Build Up, Help Yourself; panelText "× round" faces).
-- [ ] "P2 took X from you": shorter, near your player card.
+- [x] Scaling text as "I: … / II: … / III: …" lines, the current round lit (hovers, member cards, seat list; wheel faces unchanged; the shop's details view still prints the sentence: ShopCards.jsx).
+- [x] "P2 took X from you": shorter, near your player card.
 - [ ] Red shop-swap turn toast names both the outgoing and incoming member.
 - [ ] Round-end and end-game screens: appear quickly (A4 result-card lag), readable layout, hover for detail, no totals counting up for nothing.
 - [ ] End-game scoring shows where every point comes from: each member pops "+x" for its people, then its granted followers (Cory, 10-15).
 - [ ] Seat pass: minions, follower number, currencies, and rivals' points and engine readable at a glance. Show Cory 2 mockups first.
 - [ ] Laptop fits: at 900×600 a rival's stacks crowd its total; at 1270×700 the strip squeezes "since your last turn" and holds one line under a turn card.
 - [ ] Large screens (≥1600px): side columns scale with the wheel (zoom proposal, design-pod queue.md).
-- [ ] Contest arc: followers and emoji centered on the text; follower mark distinct (a sheen).
+- [ ] Contest arc: follower mark distinct (a sheen). (Centering on the text line done 10-21.)
 - [ ] Silver, white and colorless members look alike at card size.
-- [ ] Trade Seeds: its "Swap nothing" button reads as part of the caption; set it apart (yellow.js:221).
+- [x] Trade Seeds: its "Swap nothing" button reads as part of the caption; set it apart (yellow.js:221).
 - [ ] Wording pass: member texts much tighter, steal text, wheel text (rule-style.md). Before/after sheet for Cory.
 - [ ] First play: tutorial wording for lit/dim/dark spaces and the inner II/III rings.
 - [ ] "Safe this round" as a small shield mark (CultSeat.jsx:224).
