@@ -1,3 +1,4 @@
+// SKIPPED (phone-only): phone is out of scope (Cory, 2026-10-20). scripts/v4-check.mjs runs it only with V4_PHONE=1.
 import { browserPath } from './lib/browser.mjs';
 // E2E: a full game on a phone (390×844, touch), at Normal pace, with build-failing assertions:
 //  (a) every visible button / [role=button] / input has a hit box of at least 44×44 at every step
