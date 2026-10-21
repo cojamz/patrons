@@ -177,7 +177,7 @@ describe('render budget', () => {
     R.reset();
     el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     for (let k = 0; k < 8; k++) await Promise.resolve(); // the click's microtasks: everything before the next paint
-    const beforePaint = { commits: R.commits, components: R.total(), GameScreen: R.n('GameScreen'), Wheel: R.n('Wheel'), CultSeat: R.n('CultSeat'), ShopCards: R.n('ShopCards') };
+    const beforePaint = { commits: R.commits, components: R.total(), GameScreen: R.n('GameScreen'), Wheel: R.n('Wheel'), CultSeat: R.n('CultSeat'), ShopCards: R.n('ShopCards'), minion: !!container.querySelector(`[data-slot="${key}"] .worker[data-seat="0"]`) };
     // the engine ran at once (same move, same undo checkpoint): only the table's picture waits for the next frame
     expect(session.getState().slots[key]).toBe(0);
     expect(session.undoKind).toBe('place');
@@ -186,7 +186,9 @@ describe('render budget', () => {
     const after = { commits: R.commits, components: R.total(), GameScreen: R.n('GameScreen') };
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     console.log('[render-budget] click on a space, before paint:', JSON.stringify(beforePaint), 'after:', JSON.stringify(after));
-    expect(beforePaint.Wheel).toBe(0);
+    // the press paints your minion standing there (lag pass 2026-10-21): the Wheel alone renders in the click
+    expect(beforePaint.Wheel).toBeLessThanOrEqual(1);
+    expect(beforePaint.minion).toBe(true);
     expect(beforePaint.CultSeat).toBe(0);
     expect(beforePaint.ShopCards).toBe(0);
     expect(beforePaint.GameScreen).toBe(0);

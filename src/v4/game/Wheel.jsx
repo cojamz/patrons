@@ -366,6 +366,11 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // online: the space just picked, lit as chosen while its move crosses to the host and back (until the table moves on),
   // so the click answers at once; locally the move lands in the same frame
   const [sent, setSent] = useState(null);
+  // locally, the placement you just made, drawn at once (lag pass 2026-10-21: at 4x CPU your minion stood on the space only
+  // once the whole table's update had rendered, 300-500ms after the click): only a placement the table took (onPick
+  // answered true), and only against the state it was made on; the table's own state replaces it in its next commit,
+  // the same picture
+  const [ghost, setGhost] = useState(null); // { key, pid, squat, state }
   // the space card itself is UI-B's hover layer: the wheel only says which space is under the pointer (or pinned)
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
@@ -584,6 +589,23 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   useEffect(() => { if (Math.abs(rot - rotSeen.current) > 2) { rotSeen.current = rot; setPeek(p => (p && !p.pinned ? null : p)); } }, [rot]);
   // A new decision clears a stale selection and any note.
   useEffect(() => { setPeek(null); setDeny(null); setSent(null); }, [state]);
+  // a placement the table took but whose state never came (it can't happen locally; belt and braces): gone after 2s.
+  // A ghost the new state has replaced is simply ignored (no render to clear it)
+  const stateNow = useRef(state);
+  stateNow.current = state;
+  useEffect(() => {
+    if (!ghost) return undefined;
+    const t = setTimeout(() => { if (stateNow.current === ghost.state) setGhost(g => (g === ghost ? null : g)); }, 2000);
+    return () => clearTimeout(t);
+  }, [ghost]);
+  const ghostNow = ghost && ghost.state === state ? ghost : null;
+  // the board as drawn: the state, with the placement on its way (if any) standing on its space and no longer lit
+  const withGhost = slots => (ghostNow && !ghostNow.squat ? { ...slots, [ghostNow.key]: ghostNow.pid } : slots);
+  const slotsV = withGhost(state.slots), shadeV = withGhost(interactionState.slots);
+  const squatsV = ghostNow && ghostNow.squat ? { ...state.squats, [ghostNow.key]: [...((state.squats && state.squats[ghostNow.key]) || []), ghostNow.pid] } : state.squats;
+  const legalV = ghostNow ? new Map([...legal].filter(([k]) => k !== ghostNow.key)) : legal;
+  // its landing starts at the press too (the table's commit then keeps the same flash, so it doesn't land twice)
+  const flashV = ghostNow ? new Set([ghostNow.key]) : flash;
   // the note at the pointer fades on its own
   useEffect(() => {
     if (!deny) return undefined;
@@ -678,9 +700,17 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     }
   };
   const touchTapped = useRef(0);
+  // pick a space's option; a placement taken locally stands its minion there in this same frame
+  const place = (key, opt) => {
+    const ok = onPick(opt);
+    if (ok === true && !confirmPlace && /^(slot|squat):/.test(opt) && state.pending && state.pending.player != null) {
+      setGhost({ key, pid: state.pending.player, squat: opt.startsWith('squat:'), state });
+    }
+  };
   const tap = (s, el, pt = null) => {
     if (moved.current) return;
-    const opt = legal.get(s.key);
+    if (ghostNow) return; // a placement is on its way: the board answers it, not a second click
+    const opt = legalV.get(s.key);
     // online, a placement asks to confirm on its card ("Place here": no Undo online). A choice answered on a space (a
     // copy's target, boardPick.js) has no confirm on that card, so it picks at once, as it does locally: pinning it
     // left the click doing nothing, and the online e2e circled the lit spaces forever (2026-10-15)
@@ -688,9 +718,9 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     const touch = confirmHere || lastPointer.current === 'touch';
     // A copy target is already the answer to a choice. Its read-only touch card has no
     // confirmation button, so choose it on the first tap, just as with a mouse.
-    if (opt && (!touch || !/^(slot|squat|to):/.test(opt))) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
+    if (opt && (!touch || !/^(slot|squat|to):/.test(opt))) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); place(s.key, opt); return; }
     if (opt && touch) {
-      if (peek && peek.key === s.key && peek.pinned) { setPeek(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
+      if (peek && peek.key === s.key && peek.pinned) { setPeek(null); if (confirmPlace) setSent(s.key); place(s.key, opt); return; }
       setPeek({ key: s.key, pinned: true });
       return;
     }
@@ -840,8 +870,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     for (const s of spaces) {
       const R = rings[s.ring], c = qCenter(s.q, nq), w = SEC / R.n;
       const a1 = c + SEC / 2 - s.idx * w, a0 = a1 - w;
-      const owner = interactionState.slots[s.key], fresh = freshOf(s.key);
-      const status = faceStatus({ legal: legal.has(s.key), owner, open: spaceOpen(s.a, round), fresh });
+      const owner = shadeV[s.key], fresh = freshOf(s.key);
+      const status = faceStatus({ legal: legalV.has(s.key), owner, open: spaceOpen(s.a, round), fresh });
       paper.push(
         <g key={`fc${s.key}`} className={`face-cell ${status}`} data-cell={s.key} style={{ '--c': `var(--${s.qid})`, pointerEvents: 'none' }}>
           <Cell key={s.key} q={s.qid} action={s.a} ring={s.ring} round={round} status={status} ang={s.ang} a0={a0} a1={a1} r0={R.r0} r1={R.r1}
@@ -855,10 +885,10 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // outline). The wedge is the space's click and hover target; its print is the upright box above it (sockets below).
   if (panels) {
     for (const s of spaces) {
-      const R = rings[s.ring], open = spaceOpen(s.a, round), owner = interactionState.slots[s.key];
-      const lit = legal.has(s.key);
+      const R = rings[s.ring], open = spaceOpen(s.a, round), owner = shadeV[s.key];
+      const lit = legalV.has(s.key);
       // yours to take but worth nothing right now (its hover says so): placeable, without the lamp's glow
-      const squat = String(legal.get(s.key) || '').startsWith('squat:');
+      const squat = String(legalV.get(s.key) || '').startsWith('squat:');
       const quiet = lit && !squat && !!(idle && idle.has(s.key));
       const fresh = freshOf(s.key);
       const a0 = s.ang - s.half, a1 = s.ang + s.half;
@@ -1041,21 +1071,22 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     h = requestIdleCallback(run, { timeout: 2000 });
     return () => { if (h != null) cancelIdleCallback(h); };
   }, [panelLays]); // eslint-disable-line react-hooks/exhaustive-deps
-  live.current = { tap, onPick, hover, anchorOf };
+  live.current = { tap, place, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
-  const flashKey = [...flash].join('|');
-  const legalKey = [...legal.entries()].map(([k, v]) => `${k}=${v}`).join('|');
+  const flashKey = [...flashV].join('|');
+  const legalKey = [...legalV.entries()].map(([k, v]) => `${k}=${v}`).join('|');
+  const ghostKey = ghostNow ? `${ghostNow.key}:${ghostNow.pid}:${ghostNow.squat ? 1 : 0}` : '';
   const idleKey = idle ? [...idle].join('|') : '';
   const built = useRef(new Map()); // key → { sig, el }: each space's last element and what it showed
   const sockets = useMemo(() => spaces.map(s => {
     const { key, q, a, ring: t, qid } = s;
     const [X, Y] = turned(s.xy[0], s.xy[1]);
-    const owner = state.slots[key];
-    const shadeOwner = interactionState.slots[key];
-    const joiners = (state.squats && state.squats[key]) || [];
+    const owner = slotsV[key];
+    const shadeOwner = shadeV[key];
+    const joiners = (squatsV && squatsV[key]) || [];
     const open = t <= round;
-    const opt = legal.get(key);
+    const opt = legalV.get(key);
     const squat = String(opt || '').startsWith('squat:');
     const quiet = !!(opt && !squat && idle && idle.has(key));
     const selected = pinnedKey === key || sent === key;
@@ -1066,11 +1097,11 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     // everything this space shows, as one string: the same string, the same element (Space skips it)
     const crewIds = owner !== undefined ? [owner, ...joiners] : [];
     const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', shadeOwner ?? '', joiners.join(','), open ? 1 : 0, opt || '', quiet ? 1 : 0, selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
-      flash.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', said ? `${said.main || said.verb}/${said.second || ''}` : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
+      flashV.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', said ? `${said.main || said.verb}/${said.second || ''}` : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
       fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? `${scale}:${fontsIn}` : ''].join('|');
     const had = built.current.get(key);
     if (had && had.sig === sig) return <Space key={key} el={had.el} />;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', squat ? 'squat' : '', quiet ? 'idle' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', shadeOwner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', squat ? 'squat' : '', quiet ? 'idle' : '', flashV.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', shadeOwner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -1089,8 +1120,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
         const crew = owner !== undefined ? [owner, ...joiners].map(id => ({ emoji: seatEmoji(state, id), pid: id, fresh: !!(fresh && fresh.pid === id), color: playerColor(id), name: state.players[id].name })) : [];
         face = (
           <FaceBox Face={Face} q={qid} action={a} ring={t} round={round} name={a.name} effect={pipEffect(qid, a, round)}
-            status={faceStatus({ legal: !!opt, owner: shadeOwner, open, fresh })} minions={crew} onPick={opt ? () => live.current.onPick(opt) : null}
-            px={1 / (scale || 1)} color={`var(--${qid})`} angle={(norm(s.ang + rot) + 360) % 360} flash={flash.has(key)} selected={selected} />
+            status={faceStatus({ legal: !!opt, owner: shadeOwner, open, fresh })} minions={crew} onPick={opt ? () => live.current.place(key, opt) : null}
+            px={1 / (scale || 1)} color={`var(--${qid})`} angle={(norm(s.ang + rot) + 360) % 360} flash={flashV.has(key)} selected={selected} />
         );
       }
     }
@@ -1100,7 +1131,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
         data-panel={lay ? `${lay.oneLines}.${lay.twoLines}.${lay.noteLines}${lay.tight ? ' tight' : ''}` : undefined}
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
         onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); }}
-        onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}
+        onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.place(key, opt); } }}
         onPointerEnter={e => { const h = live.current.hover; if (panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
         onPointerLeave={e => { const h = live.current.hover; if (panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
         onFocus={e => { const h = live.current.hover; if (h && keyboardLed() && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
@@ -1146,7 +1177,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     );
     built.current.set(key, { sig, el });
     return <Space key={key} el={el} />;
-  }), [state, interactionState, rot, legalKey, idleKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [state, interactionState, rot, legalKey, ghostKey, idleKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>

@@ -1067,6 +1067,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         busyNow.current = false;
         startTransition(() => setBusy(false));
       });
+    // the table took it (the Wheel stands your minion on its space in this same frame, before the table redraws)
+    return session.getState() !== physicalState;
   }, [mine, busy, needHandoff, options, session, pend, interactionState, physicalState]);
   useEffect(() => {
     if (busy) return;
