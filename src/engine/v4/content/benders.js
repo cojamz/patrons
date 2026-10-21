@@ -58,7 +58,21 @@ const members = [
   m('freelancer', 'Freelancer', 'yellow', 3, 3, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
   m('extrahand', 'Extra Hand', 'purple', 6, 3, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
-  m('frontrunner', 'Front-runner', 'purple', 4, 0, 'You always pick first in a round.', { pickFirst: true }),
+  m('frontrunner', 'Front-runner', 'purple', 5, 0, 'You always pick first in a round.', { pickFirst: true }), // Cory, Oct 21: 5
+  // Cory's ideas, Oct 21, on this sim branch only. Launderer is simplified for the bots: one color, not any split.
+  m('launderer', 'Launderer', null, 0, 6, 'When recruited: turn all your resources into one color you choose.', {
+    onRecruited(ctx, owner) {
+      const total = Object.values(owner.res).reduce((a, b) => a + b, 0);
+      if (!total) return;
+      const opts = ctx.state.resources.map(c => {
+        const best = Math.max(0, ...ctx.rivals(owner).map(o => o.res[c] || 0));
+        return { id: `color:${c}`, label: `All ${c}`, kind: 'color', value: c, hint: (total > best ? 3 : 0) - best * 0.1 };
+      });
+      opts.push({ id: 'keep', label: 'Keep your colors', kind: 'pass', value: null, hint: 0 });
+      ctx.choose(owner, 'Launderer: turn everything into which color?', opts, 'benders.launder');
+    },
+  }),
+  m('tiebreaker', 'Tiebreaker', null, 0, 6, 'Ties you’re in go to you alone.', { tiebreak: true }),
   m('straggler', 'Straggler', 'purple', 4, 1, 'Once per round, after the last minion is placed: your last minion may move to an unused space and do that action.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;
@@ -95,6 +109,13 @@ export const handlers = {
     ctx.log(`${p.name}'s Straggler moves a minion from ${actionOf(ctx, key).name} to ${actionOf(ctx, to).name}.`);
     // the engine's own act task: the new space resolves as usual (no buy)
     ctx.state.queue.unshift({ t: 'act', p: p.id, q, i });
+  },
+  launder(ctx, p, color) {
+    if (!color) return;
+    const total = Object.values(p.res).reduce((a, b) => a + b, 0);
+    for (const c of Object.keys(p.res)) p.res[c] = 0;
+    p.res[color] = total;
+    ctx.log(`${p.name}'s Launderer: everything becomes ${color} (${total}).`);
   },
 };
 

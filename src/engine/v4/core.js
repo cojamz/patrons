@@ -788,7 +788,9 @@ export function contestTable(state, ctx = ctxFor(state)) {
     const sc = q.scoring;
     const scores = state.players.map(p => sc.score(ctx, p));
     const top = Math.max(...scores);
-    const winners = top > 0 ? state.players.filter((p, i) => scores[i] === top).map(p => p.id) : [];
+    let winners = top > 0 ? state.players.filter((p, i) => scores[i] === top).map(p => p.id) : [];
+    // Tiebreaker (concept): a tie its owner is in goes to them alone
+    if (winners.length > 1) { const tb = winners.filter(id => state.players[id].members.some(u => effectiveDefs(state.cards[u]).some(d => d.tiebreak))); if (tb.length === 1) winners = tb; }
     const rows = state.players.map((p, i) => {
       const shown = sc.show ? sc.show(ctx, p) : { count: scores[i] };
       const row = { player: p.id, score: scores[i], count: shown.count };
