@@ -160,7 +160,20 @@ export function Marked({ text }) {
 // ---------- panels (the default look): the visual language's flat wedges, plate 1b ----------
 const PANEL_GUT = 4, PANEL_RC = 4; // the gutter between neighbouring panels and their corner, in board units
 /** A ring cell as the plate draws it: straight, parallel gutters (`gut` wide) and rounded corners (`rc`). */
+// a panel's outline depends only on its numbers, and the panels never move on the paper (the paper turns): drawn once
+// each (lag pass 2026-10-21: every render of the wheel recomputed all of them, a few ms each commit at 4x CPU)
+const panelPaths = new Map();
 function panelPath(a0, a1, r0, r1, gut = PANEL_GUT, rc = PANEL_RC) {
+  const k = `${a0}|${a1}|${r0}|${r1}|${gut}|${rc}`;
+  let d = panelPaths.get(k);
+  if (d === undefined) {
+    if (panelPaths.size > 2000) panelPaths.clear();
+    d = drawPanelPath(a0, a1, r0, r1, gut, rc);
+    panelPaths.set(k, d);
+  }
+  return d;
+}
+function drawPanelPath(a0, a1, r0, r1, gut, rc) {
   const h = gut / 2, deg = x => (x * 180) / Math.PI;
   const s0 = r => a0 + deg(Math.asin(h / r)), s1 = r => a1 - deg(Math.asin(h / r));
   const O0 = polar(s0(r1), r1), O1 = polar(s1(r1), r1), I1 = polar(s1(r0), r0), I0 = polar(s0(r0), r0);
