@@ -19,7 +19,7 @@ Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 1
 ## Waiting on Cory
 Answer by number. Claude's default in [brackets].
 1. Magenta members: his light rework. Also Magenta's color, which he dislikes.
-2. Blue: worked in its own thread (second round II slot; round I spaces that "kinda don't scale").
+2. Blue: actions, held-blue contest and shop 5/6/7 live in v0.8.19–20. Blue members wait for Cory's broader member exercise (rejected: blue from cards going to the bottom, recruit the pile top, blue per multi-buy turn). For Red later: "borrow a recruit" (use a shop member's On Recruit; it stays in the shop).
 3. Names for the temporary Recruit Bonus, Movement Penalty and Chronicler. [keep the plain names until he names them]
 4. Greatest Hits repeating a copied Echo's gain. [no: it repeats the space's own gain, as the card says]
 5. Better pitches (his Oct 18 call): Sweet Talk ("+4 silver, then swap half or all"), Hold Court ("1 follower per 2 silver you hold"), Goody Bags ("+2 silver and +2 of another color"), Cheap Seats ("+1 follower per 3 white"), Catch Up ("+1 purple, +1 per rival who's placed more"), Silver's counterweight (Silver members and its round III), and a card in Overseer's place. [the pitch thread brings 2 options each]
