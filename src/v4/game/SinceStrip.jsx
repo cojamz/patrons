@@ -82,24 +82,21 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   // layout and before paint, so the lines it hides are never drawn in part.
   const committed = useRef({ sig, cut, len: base.length, lvl });
   const asked = useRef(null); // the fold the observer asked for and hid lines for, until React draws it
-  const ro = useRef(null), watched = useRef(new Set());
+  const ro = useRef(null), watched = useRef(new Set()), fold = useRef(null);
   // the list and each line on it are watched (observing is not a layout read; a newly watched line reports once)
   useLayoutEffect(() => {
-    const was = committed.current.sig;
-    committed.current = { sig, cut, len: base.length, lvl };
+    const prev = committed.current, was = prev.sig;
+    committed.current = { sig, cut, len: base.length, lvl, bare };
     // the fold asked for is drawn (or these are new lines, or a new room): lines hidden while it was on its way show again
     const l = listRef.current;
     if (asked.current && (asked.current.sig !== sig || (cut >= asked.current.n && (bare || !asked.current.bare) && lvl >= (asked.current.lvl || 0)))) {
       asked.current = null;
       if (l) for (const el of l.querySelectorAll(':scope > [data-fold-hide]')) { el.removeAttribute('data-fold-hide'); el.style.visibility = ''; }
     }
-    // new lines or a new room: measure again before this frame paints, even when nothing the observer watches changed
-    // size (the same lines in a room that moved: a fold asked for the old room was dropped above). A list watched anew
-    // reports once.
-    if (was !== sig && l && ro.current && watched.current.has(l)) { ro.current.unobserve(l); ro.current.observe(l); }
     if (typeof ResizeObserver !== 'function') return;
-    if (!ro.current) {
-      ro.current = new ResizeObserver(() => {
+    const fresh = !ro.current;
+    if (fresh) {
+      fold.current = () => {
         const list = listRef.current;
         if (!list) return;
         const { sig: s0, cut: c0, len, lvl: l0 } = committed.current;
@@ -139,8 +136,16 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
         for (const el of [...(moreEl ? [moreEl] : []), ...rows.slice(0, lvlNow > l0 ? k + 1 : k)]) { el.setAttribute('data-fold-hide', ''); el.style.visibility = 'hidden'; }
         asked.current = { sig: s0, n, bare: bareNow, lvl: lvlNow };
         setDrop(d => (d.sig === s0 && d.n >= n && (d.bare || !bareNow) && (d.lvl || 0) >= lvlNow ? d : { sig: s0, n, bare: bareNow || (d.sig === s0 && d.bare), lvl: lvlNow }));
-      });
+      };
+      ro.current = new ResizeObserver(() => fold.current());
     }
+    // new lines, a new room, or a fold or shorter setting just drawn: measure now, inside this commit, so each step of
+    // the fold (all lines, then without board words, then folded) is drawn before the frame and none shows cut. Waiting
+    // for the observer took a frame per step, and dropping a line's board words can leave every line the same height
+    // (two lines either way) with the oldest still cut at the top, so nothing resized to ask again (turnstory t2: "P2
+    // Tide…" stayed cut for ~110 frames at 1270x700 under the turn card). One layout read, only when something changed.
+    const redrawn = was !== sig || prev.cut !== cut || (prev.lvl || 0) !== lvl || !!prev.bare !== bare;
+    if ((redrawn || fresh) && l) fold.current();
     const r = ro.current, w = watched.current;
     for (const el of [...w]) if (!el.isConnected) { r.unobserve(el); w.delete(el); }
     if (!l) return;
