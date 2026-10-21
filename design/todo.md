@@ -29,9 +29,9 @@ Answer by number. Claude's default in [brackets].
 11. Tiebreaker on followers is most members (built, format.js:377). [keep]
 12. Online on the real link: allow *.firebaseio.com, identitytoolkit.googleapis.com, securetoken.googleapis.com in the environment, or he plays one 2-laptop game. [he plays one]
 13. Faint marks for colorblind players (morning note #6). [no, unless a friend needs them]
+14. Old notes nobody can place: "Hover over in the glossary", "Round 3 actions", "This should straight up steal", "follower claims visibility". [drop them]
 15. Your seat's member card: with two rows of members, a member's hover card covers the second row wherever it opens. Open it below the whole member block? [yes]
 16. Wording pass sheet: /mnt/project-files/overnight/lane8/wording-sheet.md, yes/no per row (⚑ rows are rules questions). [nothing ships until you answer]
-14. Old notes nobody can place: "Hover over in the glossary", "Round 3 actions", "This should straight up steal", "follower claims visibility". [drop them]
 
 ## Ours, open
 Correctness and Cory's made calls
