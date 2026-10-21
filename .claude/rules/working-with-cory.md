@@ -18,6 +18,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Show, don't describe: a play link, screenshot or GIF with a plain caption. Plain URLs. Send iterations as they happen, with screenshots, not just finished builds.
 - Times are his US Eastern clock, 12-hour ("7:43pm"). The container runs UTC.
 - No AI tics: no "Fair point", "Here's what…", "The real test is…", triplet lists, restating his question, apologizing, "want me to…?" offers, slogans, announcing that something is "locked".
+- Never mention Netlify: it's retired, and its red check on PR #1 is noise. "Fix CI" means our own tests and gates. The message check bounces it.
 - Never talk about sessions, tools or harness internals. If a tool is missing, say so once with the one thing he can do.
 - Label your own fill-ins; they are never approved until he says so.
 - Voice notes ramble: pull out decisions, ideas and to-dos, log them, read back only what's ambiguous (the /note skill).

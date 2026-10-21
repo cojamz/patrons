@@ -33,6 +33,7 @@ if (existsSync('design/decisions.md')) {
   out.push('', '## Last decisions (design/decisions.md)', ...d.slice(-6).map(l => l.slice(0, 220)));
 }
 
-out.push('', 'Before your first message to Cory: read .claude/output-styles/foreman.md. Before any design talk: design/strategy.md and design/pitch-ledger.md.',
+out.push('', '"Fix CI" means our own tests and gates (check:v4). Netlify is retired: its red check on PR #1 is noise; never mention it to Cory.');
+out.push('Before your first message to Cory: read .claude/output-styles/foreman.md. Before any design talk: design/strategy.md and design/pitch-ledger.md.',
   `Post your status as soon as you know your task: node scripts/status.mjs set --thread "<thread title>" --state working --doing "…" --next "…" --eta "<Eastern 12h>".`);
 console.log(out.join('\n'));
