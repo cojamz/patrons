@@ -23,6 +23,7 @@ New cloud threads clone `main`, so main carries a mirror of the harness (CLAUDE.
 Read-only critics return text; the foreman saves it. `strategist` grounds brainstorms. `design-critic` pressure-tests a mechanic. Blind testers (`ui-critic`, `boardgame-enthusiast`, `game-skeptic`, `playtester`) get only the URL and design/rulebook.md, are fresh every time, and run only when Cory asks for a panel. `art-director` and `detail-designer` are the design pod while the UI is changing. Never pass agent output to Cory unvetted, and an agent's report is never proof.
 
 ## Checks
+- CI on PR #1 is the game's own checks. The red Netlify check is a retired host failing on its side: ignore it, never report it to Cory as CI, never ask him to act on it (Cory, Oct 20).
 - Iterate: `npm run check:v4:quick -- --related <files>` (~2 min; `V4_QUICK_E2E=none|<file>.mjs` skips the hot-seat game). Name explicit test files for shared engine changes; `--related` can balloon to 69 files.
 - Verdict: `npm run check:v4 -- --commit <sha>` on a committed snapshot, never the live tree. Each agent sets `V4_OUTDIR=.v4-build-<name>` and `V4_PORT` (5281+).
 - The box has 4 CPUs; a full gate overloads it and timing failures are often load. Re-run a failure alone once before calling it real.
