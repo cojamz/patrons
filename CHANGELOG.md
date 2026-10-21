@@ -2,7 +2,7 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.32 — 2026-10-21 — unreleased
+## v0.8.32 — 2026-10-21 — shipped (source 9aec1a1)
 
 - Recruiting means bringing members or followers into your cult yourself: buying followers now counts for "whenever you recruit" cards (Recruiter, Proselytizer, Shoplifter); a member a rival forces on you never does. The step after placing is called Recruit.
 
