@@ -260,31 +260,43 @@ export function snapshotMinions(root) {
   });
   return snap;
 }
-/** At round end the wheel's minions fly home to their leaders, one after another. */
-export function flyMinionsHome(root, snap) {
+/** At round end the wheel's minions fly home to their leaders, one after another. `flownAt` (performance.now): their
+ *  ghosts already left then (the round card's press, before the new round had rendered), so only the seats' columns are
+ *  timed here, to the same landings. */
+export function flyMinionsHome(root, snap, { flownAt = null } = {}) {
   if (!root || !motionOK() || !snap || !snap.length) return 0;
+  const since = flownAt != null ? Math.max(0, performance.now() - flownAt) : 0;
   let n = 0;
   const landsAt = {}; // pid → when each of its minions lands (ms from now)
-  snap.forEach((m, k) => {
+  // every home is read first, then every ghost is added (lag pass 2026-10-21: a read after each added ghost forced a
+  // fresh layout per minion, ~100ms of the round's first commit at 4x CPU); each seat's home is read once
+  const homes = new Map(); // pid → its rect, or null
+  const homeOf = pid => {
+    if (homes.has(pid)) return homes.get(pid);
     // home is the seat's column of minions still to place (where the next placement leaves from), else the leader
-    const col = root.querySelector(`.lt-cult-seat[data-seat="${m.pid}"] .cs-minions`);
-    const home = (col && visible(col) && col) || playerAnchor(root, m.pid);
-    if (!home) return;
-    const h = home.getBoundingClientRect();
-    if (!h.width) return;
+    const col = root.querySelector(`.lt-cult-seat[data-seat="${pid}"] .cs-minions`);
+    const home = (col && visible(col) && col) || playerAnchor(root, pid);
+    const h = home ? home.getBoundingClientRect() : null;
+    homes.set(pid, h && h.width ? h : null);
+    return homes.get(pid);
+  };
+  const flights = snap.map((m, k) => ({ m, k, h: homeOf(m.pid) }));
+  for (const { m, k, h } of flights) {
+    if (!h) continue;
+    if (flownAt != null) { n++; (landsAt[m.pid] ||= []).push(Math.max(0, k * MO.minionsHomeStagger + MO.minionsHome - since)); continue; }
     const b = { left: h.left + h.width / 2 - m.rect.width / 2, top: h.top + h.height / 2 - m.rect.height / 2, width: m.rect.width, height: m.rect.height };
     // (staggered by the animation's own delay, not a timer per minion: they leave on the compositor's clock)
     ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: MO.minionsHome, scaleTo: 0.8, fadeTo: 0.2, arc: 40, delay: k * MO.minionsHomeStagger });
     n++;
     (landsAt[m.pid] ||= []).push(k * MO.minionsHomeStagger + MO.minionsHome);
-  });
+  }
   // (round-end smoothing) a seat's column fills as its minions land, one by one, never before they've left the wheel:
   // each standing minion waits unseen until one lands; a column's extra minion (a round with more) shows with its last
   for (const [pid, times] of Object.entries(landsAt)) {
     const col = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${pid}"] .cs-minions [data-minion]`)];
     col.forEach((el, i) => {
       const at = times[Math.min(i, times.length - 1)];
-      if (el.animate) track(el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.9 }, { opacity: 1 }], { duration: Math.round(at * 1.04) }));
+      if (el.animate && at > 0) track(el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.9 }, { opacity: 1 }], { duration: Math.round(at * 1.04) }));
     });
   }
   return n;
