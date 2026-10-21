@@ -137,6 +137,9 @@ const TABLE = {
   tug:         [60,    90],   // a stack being taken from
   pieceStagger:[35,    50],
   bundleTrail: [20,    30],
+  // 4 or more resources fly as that many coins, one after the next inside this window however many there are (Cory:
+  // "12 coins animate as 12, any count"): 4 coins ~54ms apart at Steady, 12 about 15ms apart
+  streamSpread:[50,    80],
   fan:         [25,    40],   // groups, colors, seats in one beat
   settle:      [140,   180],
   roll:        [160,   240],  // a bundle's number rolling on landing
@@ -203,6 +206,9 @@ for (const k of new Set([...Object.keys(BASE), ...Object.keys(TABLE)])) {
     get: () => (TABLE[k] ? atSpeed(TABLE[k]) : SHOW.has(k) ? Math.round(BASE[k] * speedScale()) : BASE[k]),
   });
 }
+/** The gap between the coins of a stream of n (a gain or take of 4 or more resources flies as n coins): the usual
+ *  stagger, tightened so the whole stream leaves within streamSpread. */
+export const streamGap = n => (n > 1 ? Math.min(MO.pieceStagger, MO.streamSpread / (n - 1)) : 0);
 /** A flight's length by its distance in px (the grammar: constant speed reads more honest than constant time). */
 export function flightMs(d) {
   const x = Math.max(0, d || 0);

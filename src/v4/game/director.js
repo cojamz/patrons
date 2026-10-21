@@ -15,7 +15,7 @@
 // and timers (no React state). A click or Space skips the rest of a chain to its end (skipChain). Every duration comes
 // from src/v4/motion.js at the viewer's speed. A state without an effect stream (an online guest, a catch-up) falls
 // back to gains.js, which reads the change of state.
-import { MO, flightMs, nextBeatAt, speedScale } from '../motion.js';
+import { MO, flightMs, nextBeatAt, speedScale, streamGap } from '../motion.js';
 import { playerColor } from '../format.js';
 import { play } from '../sound.js';
 import { gainsBetween } from './gains.js';
@@ -195,11 +195,16 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     const from = opt.r && ['space', 'bank'].includes(from0.kind) ? rim : onStage(from0);
     const to = opt.r && opt.pay ? rim : onStage(to0);
     // 1–3 single pieces, 60ms apart (Steady); 4 or more one bundle carrying its count
-    const d = opt.dur || fly(from, to);
     // (Cory, 2026-10-18: "steals: make what's being stolen clear at once") a take of 2 or more leaves as one handful
     const bundle = n >= 4 || (opt.take && n >= 2);
-    hand = Math.max(hand, (bundle ? time : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
-    if (bundle) { at(time, { op: 'piece', from, to, n, bundle: true, dur: d, ...opt }); at(time + d, { op: 'land', to, by: n, bundle: true, ...opt }); return { last: time, d }; }
+    // a bundle of resources is a stream: every coin flies, the last one `tail` behind the first (Cory: "12 coins animate
+    // as 12, any count"); its count rolls as they land. Followers keep their bundle. A stream's coins travel quicker by
+    // its tail (a rush of coins, never under 0.6 of the flight), so its last coin lands when the old single bundle did
+    // and the turn's pace stays where it was (pacing.test.js)
+    const tail = bundle && !opt.fol ? Math.round((n - 1) * streamGap(n)) : 0;
+    const d = opt.dur || Math.max(Math.round(fly(from, to) * 0.6), fly(from, to) - tail);
+    hand = Math.max(hand, (bundle ? time + tail : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
+    if (bundle) { at(time, { op: 'piece', from, to, n, bundle: true, dur: d, ...(tail ? { stream: tail } : {}), ...opt }); at(time + d, { op: 'land', to, by: n, bundle: true, ...(tail ? { stream: tail } : {}), ...opt }); return { last: time + tail, d }; }
     for (let k = 0; k < n; k++) { at(time + k * MO.pieceStagger, { op: 'piece', from, to, n: 1, dur: d, ...opt }); at(time + k * MO.pieceStagger + d, { op: 'land', to, by: 1, ...opt }); }
     return { last: time + (n - 1) * MO.pieceStagger, d };
   };
@@ -733,6 +738,9 @@ const folHtml = (root, pid) => { const g = root.querySelector(`.lt-cult-seat[dat
 // moves (hotseat region gate); only the thing inside it does
 const region = el => !!(el && el.matches && el.matches('[data-region]'));
 const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly && !region(el)) relative(el, [{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.4 }, { transform: 'translateY(0) scale(1)' }], { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' }); };
+/** How a bundle flies: resources as a stream of every coin (the piece's `stream`: the last coin this far behind the
+ *  first), followers as one mark with its fading echo. `k` scales the stream (the rewind plays at half time). */
+const bundleTrail = (a, k = 1) => (!a.bundle ? { trail: 0 } : a.stream && a.n > 1 ? { trail: a.n - 1, trailGap: (a.stream * k) / (a.n - 1), full: true } : { trail: 2, trailGap: MO.bundleTrail });
 const square = (r, size) => ({ left: r.left + r.width / 2 - size / 2, top: r.top + r.height / 2 - size / 2, width: size, height: size });
 const onFinish = (anim, fn) => {
   const epoch = chain.epoch || 0;
@@ -798,7 +806,7 @@ export function rewindPlan(fwd) {
   for (const a of fwd.atoms || []) {
     if (a.op === 'piece') {
       const d = a.dur || 0;
-      atoms.push({ op: 'piece', at: back(a.at, d), dur: Math.max(1, Math.round(d * REWIND)), from: a.to, to: a.from, n: a.n, r: a.r, owner: a.owner, fol: !!a.fol, bundle: !!a.bundle });
+      atoms.push({ op: 'piece', at: back(a.at + (a.stream || 0), d), dur: Math.max(1, Math.round(d * REWIND)), from: a.to, to: a.from, n: a.n, r: a.r, owner: a.owner, fol: !!a.fol, bundle: !!a.bundle, ...(a.stream ? { stream: a.stream } : {}) });
     } else if (a.op === 'minion') {
       atoms.push({ op: 'minion', at: back(a.at, a.dur || 0), dur: Math.max(1, Math.round((a.dur || 0) * REWIND)), pid: a.pid, key: a.key });
     } else if (a.op === 'card') {
@@ -830,7 +838,7 @@ function playRewind(root, before, state, mine) {
         const size = a.fol ? 18 : 16;
         const pid = a.from.kind === 'stack' || a.from.kind === 'count' ? a.from.pid : a.to.pid;
         const html = a.fol ? folHtml(root, pid) : dotHtml(root, a.r, a.owner ?? pid);
-        keep(flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'} rewind`, square(A.getBoundingClientRect(), size), square(B.getBoundingClientRect(), size), { path: 'arc', duration: a.dur, trail: a.bundle ? 2 : 0, trailGap: MO.bundleTrail, fade: true }));
+        keep(flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'} rewind`, square(A.getBoundingClientRect(), size), square(B.getBoundingClientRect(), size), { path: 'arc', duration: a.dur, ...bundleTrail(a, REWIND), fade: true }));
         return;
       }
       case 'minion': {
@@ -967,8 +975,10 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
     if ((chain.epoch || 0) !== epoch) return; // the chain was skipped: its numbers are already final
     if (a.to.kind === 'stack' && !a.pay && B) {
       const h = holdOf(B, a.to.pid, a.to.r);
-      if (h) { if (a.bundle && !skip) h.roll(a.by ?? a.n, MO.roll); else h.step(a.by ?? a.n); }
-      if (a.bundle && !skip) setTimeout(() => release(B), MO.roll); else release(B);
+      // (a stream's count rolls while its coins land: over the stream, at least the usual roll)
+      const rollMs = Math.max(MO.roll, a.stream || 0);
+      if (h) { if (a.bundle && !skip) h.roll(a.by ?? a.n, rollMs); else h.step(a.by ?? a.n); }
+      if (a.bundle && !skip) setTimeout(() => release(B), rollMs); else release(B);
     }
     if (a.to.kind === 'count' && B && !B.rectOnly) { try { B.dispatchEvent(new CustomEvent('patrons:land')); } catch { /* old browser */ } }
     // the sound of it (sound.js): a coin for a resource gained, the little voice for followers joining
@@ -1138,7 +1148,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           chain.flying++;
           // (the places were measured before the commit, or on first use: never a layout read per piece)
           const anim = flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'}${a.pay ? ' pay' : ''}`, square(rectOf(A), size), square(rectOf(B), size),
-            { path: a.pay ? 'drop' : a.take ? 'line' : 'arc', duration: a.dur, label: a.bundle ? `+${a.n}` : '', trail: a.bundle ? 2 : 0, trailGap: MO.bundleTrail, turnTo: a.turn ? dotHtml(root, a.turn, pid) : null, fade: true });
+            { path: a.pay ? 'drop' : a.take ? 'line' : 'arc', duration: a.dur, label: a.bundle ? `+${a.n}` : '', ...bundleTrail(a), turnTo: a.turn ? dotHtml(root, a.turn, pid) : null, fade: true });
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); land({ ...a, by: a.n }, B, false); });
           return;
         }

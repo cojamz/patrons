@@ -2,7 +2,7 @@
 // travels from its leader to the space it took, and at round end the minions fly home. All use fixed-position
 // ghosts + Web Animations.
 import { reducedMotion } from './Tick.jsx';
-import { MO } from '../motion.js';
+import { MO, streamGap } from '../motion.js';
 
 export const motionOK = () => !reducedMotion() && typeof document !== 'undefined' && !!document.body.animate;
 
@@ -410,7 +410,9 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
     if (!ok || !a || !b) continue;
     const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
     if (!ar.width || !br.width) continue;
-    const n = Math.min(m.n, MO.pieceMax), per = m.n / n;
+    // every unit of a resource flies (12 coins as 12), its gap tightened so the whole stream leaves within streamSpread;
+    // followers keep their cap
+    const n = m.what === 'res' ? m.n : Math.min(m.n, MO.pieceMax), per = m.n / n, gap = m.what === 'res' ? streamGap(n) : MO.pieceStagger;
     const html = pieceHtml(root, m);
     // stacks show what they held before this move, then count each piece out (a payment) or in (a gain)
     const fromStack = m.from.kind === 'stack' ? a : null, toStack = m.to.kind === 'stack' ? b : null;
@@ -419,11 +421,11 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
     const into = toStack ? held(toStack, startOf(m.to)) : null;
     if (out) out.left += n;
     if (into) into.left += n;
-    if (m.to.kind === 'total') arrivals.set(b, { at: performance.now() + t + MO.pieceFly, span: (n - 1) * MO.pieceStagger });
+    if (m.to.kind === 'total') arrivals.set(b, { at: performance.now() + t + MO.pieceFly, span: (n - 1) * gap });
     const size = m.what === 'fol' ? 20 : 18;
     for (let k = 0; k < n; k++) {
       const share = Math.round(per * (k + 1)) - Math.round(per * k);
-      const at = t + k * MO.pieceStagger;
+      const at = t + Math.round(k * gap);
       const go = () => {
         const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
         const jitter = (k % 3 - 1) * 4;
@@ -453,7 +455,7 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
 //      an inner one rises and falls) · line: a take (a steal), straight, a snatch · drop: a payment, lifts 6px then falls
 //      into what it pays, shrinking and fading (it's spent) · cross: a swap, the arc bowing the other way.
 // `turnTo`: a piece that changes color on its way (a steal that arrives as magenta) turns at its midpoint.
-export function flyPath(html, className, a, b, { path = 'arc', duration = 320, label = '', trail = 0, trailGap = 30, turnTo = null, fade = false } = {}) {
+export function flyPath(html, className, a, b, { path = 'arc', duration = 320, label = '', trail = 0, trailGap = 30, turnTo = null, fade = false, full = false } = {}) {
   if (typeof document === 'undefined' || !document.body.animate) return null;
   const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
   const dist = Math.hypot(dx, dy);
@@ -481,7 +483,7 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
     if (fade && path !== 'drop') track(outer.animate([{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], { duration, delay, fill: 'both' }));
     if (h) track(inner.animate([{ translate: '0 0' }, { translate: `0 ${-h}px`, offset: 0.5, easing: 'ease-in' }, { translate: '0 0' }], { duration, delay, easing: 'ease-out', fill: 'both' }));
     if (k === 0 && label) { const n = inner.querySelector('.bundle-n'); if (n) track(n.animate([{ opacity: 1 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], { duration, delay, fill: 'both' })); }
-    if (turnTo && k === 0) {
+    if (turnTo && (k === 0 || full)) {
       const tint = document.createElement('div');
       tint.className = 'path-turn';
       tint.innerHTML = turnTo;
@@ -498,7 +500,9 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
     return anim;
   };
   const lead = one(0, 1, 1, 0);
-  for (let k = 1; k <= trail; k++) one(k, 0.7, k === 1 ? 0.6 : 0.3, k * trailGap);
+  // a stream (full): every follower in the trail is a whole piece of its own (12 coins fly as 12); else a bundle's
+  // fading echo
+  for (let k = 1; k <= trail; k++) { if (full) one(k, 1, 1, Math.round(k * trailGap)); else one(k, 0.7, k === 1 ? 0.6 : 0.3, k * trailGap); }
   if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
   return lead;
 }

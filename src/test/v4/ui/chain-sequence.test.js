@@ -235,3 +235,30 @@ it('plays an undone placement backwards: your minion home and its pieces back wh
   expect(back.total).toBeLessThan(fwd.total);
   expect(back.total).toBeGreaterThan(0);
 });
+
+it('flies a gain of 12 as 12 coins in one stream, its last landing when the single bundle did (12 coins animate as 12)', async () => {
+  const { flyPath } = await import('../../../v4/game/flight.js');
+  const { streamGap, MO } = await import('../../../v4/motion.js');
+  const cause = { kind: 'space', pid: 0, key: '0-0' };
+  const plan = chain([{ type: 'gain', cause, from: cause, to: stack(0, 'gold'), what: { r: 'gold', n: 12 } }]);
+  const piece = plan.atoms.find(a => a.op === 'piece'), land = plan.atoms.find(a => a.op === 'land');
+  expect(piece).toMatchObject({ n: 12, bundle: true });
+  // every coin leaves within the stream window
+  expect(piece.stream).toBe(Math.round(11 * streamGap(12)));
+  expect(piece.stream).toBeLessThanOrEqual(MO.streamSpread);
+  expect(land.by).toBe(12);
+  // a stream of 3 or fewer is the usual singles; followers keep their single bundle
+  expect(chain([{ type: 'gain', cause, from: cause, to: stack(0, 'gold'), what: { r: 'gold', n: 3 } }]).atoms.filter(a => a.op === 'piece')).toHaveLength(3);
+  const fol = chain([{ type: 'followers', cause, from: cause, to: { kind: 'count', pid: 0 }, what: { n: 10 } }]).atoms.find(a => a.op === 'piece');
+  expect(fol.stream).toBeUndefined();
+  // on screen: twelve whole coins, not a bundle's two fading echoes
+  document.body.innerHTML = '';
+  const fake = { finished: Promise.resolve(), addEventListener() {}, cancel() {} };
+  const had = HTMLElement.prototype.animate;
+  HTMLElement.prototype.animate = () => fake;
+  try { flyPath('<i></i>', 'piece-flight', { left: 0, top: 0, width: 16, height: 16 }, { left: 300, top: 200, width: 16, height: 16 }, { duration: 200, trail: 11, trailGap: 12, full: true }); }
+  finally { HTMLElement.prototype.animate = had; }
+  const inner = [...document.querySelectorAll('.piece-flight .path-inner')];
+  expect(inner).toHaveLength(12);
+  expect(inner.every(e => !e.style.opacity || e.style.opacity === '1')).toBe(true);
+});
