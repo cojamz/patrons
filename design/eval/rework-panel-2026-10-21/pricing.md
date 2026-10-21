@@ -15,7 +15,7 @@ Cory, 12:03am Eastern: "these are all a little too expensive, except the Launder
 3. **When in doubt, go a step cheaper.** A dear card dies in the row and teaches nothing. A cheap card gets played, and he'll tell us. His notes run "too dear" on quiet cards far more often than "too cheap".
 4. **His "too cheap" or "too dear" means one step (±1)** unless he names a number. Never re-derive and stack.
 5. **No surcharge for neutral cards.** Not paying a contest tax is not worth extra.
-6. **Followers:** plain bodies stay at f = C or better (worth C+1 at 5 and 10). Ability cards stay at worth 1 unless the body count is the point.
+6. **Followers and member count are price levers too** (Cory, 12:11am: "you can mess around with how many followers/members a member is to also help with cost balances"). A card can move along the curve by changing what it's worth as well as what it costs. Give a dear ability card worth 2 or 3 so it beats a pack, or make a strong cheap one worth 0. Use "counts as N members" (Revelers) where a color counts members. Plain bodies stay at f = C or better (worth C+1 at 5 and 10). Don't leave every ability card at worth 1 by habit: that is part of what made decks flat.
 7. **The cheap card is a design job, not a leftover.** It should still be one you want, like Twins, Crew, Volunteer or Recluse at 4. A cheap card that does something small but clear (on arrival, visible) beats a dear card that does a lot.
 
 His liked members, by total cost: Volunteer 0, Twins 2, Crew 2, Shareholder 3, Recluse 4, Busker 4, Stunt Double 4, Treasurer 4, Doppelganger 5, Panel 6, Mentor & Protégé 8, Extra Hand 9, Mob 10, Tribute Band 10. That is the curve to imitate: wide, with most of the loved cards at 4 or less.

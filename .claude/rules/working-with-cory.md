@@ -41,3 +41,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-20: Cory, on a third Netlify mention: "its not relevant! how could it be blocking anything". Don't raise irrelevant infrastructure; answer what's actually blocking (here, nothing). Netlify check is ignored per harness.md.
 - 2026-10-20: Cory: "idk what v4 vs. v3 means so thats probably slop" and "5 lines is aggressive threshold but i like the spirit". v3/v4 now banned in messages (gate); cap raised to 8 lines / 160 words.
 - 2026-10-20: Cory: "that was all total gibberish" about a report full of mechanisms and numbered moves. Messages say what changes for him in everyday words; how it works only if he asks.
+- 2026-10-21: Cory: "you can mess around with how many followers/members a member is to also help with cost balances". Pricing v2 rule 6 now treats followers and member count as levers; no ability card sits at worth 1 by habit.
