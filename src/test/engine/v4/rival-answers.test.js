@@ -13,10 +13,12 @@ const cardOpt = (s, def, who) => `card:${uidIn(s, def, who)}`;
 const story = (a, b) => turnStory(a, b, 0, null).lines.join(' | ');
 
 describe('Shake Down: the rival chooses, and the card says what they paid and why', () => {
-  it('pays its cost (2, not the 4 cap) and says so', () => {
+  it('pays its cost (2, not the 5 cap) and says so', () => {
     const s0 = table(Q, { round: 2, res: [{}, { red: 3 }], members: [[], ['red.twins', 'red.intern']], shop: ROW });
     const s = move(move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.intern', 1)), 'pay');
-    expect(s.players[0].res.magenta).toBe(2);
+    // the payment keeps its colors; Shake Down's own +1 magenta on top
+    expect(s.players[0].res).toMatchObject({ red: 2, magenta: 1 });
+    expect(s.players[1].res.red).toBe(1);
     expect(s.log).toContain('P2 chose to pay 2 (2 red) to keep Intern: its cost is 2.');
     expect(story(s0, s)).toMatch(/P2 paid 2 to keep Intern \(its cost\)/);
   });
@@ -72,9 +74,11 @@ describe('gains on your turn say why', () => {
 
 describe('a skipped buy says so on the turn card', () => {
   it('nothing affordable: "nothing affordable to buy" (blind tester B: silent before round-end scoring)', () => {
-    const s0 = table(Q, { res: [{}], shop: ROW.filter(d => d !== 'red.volunteer') });
+    const s0 = table(Q, { round: 2, res: [{}], shop: ROW.filter(d => d !== 'red.volunteer') });
     s0.shop = s0.shop.filter(u => s0.cards[u].def !== 'red.volunteer');
-    const s = take(s0, 'red.turnout'); // +0 red: nobody has recruited yet
+    // round II Collect Debts with no rival gold to take: the turn gains nothing (Gather now always gives red)
+    const s = take(s0, 'gold.steal');
+    expect(s.players[0].res).toMatchObject({ gold: 0, red: 0, magenta: 0 });
     expect(s.log.some(l => /^P1 couldn't buy anything\.$/.test(l))).toBe(true);
     expect(story(s0, s)).toMatch(/nothing affordable to buy/);
   });

@@ -904,12 +904,13 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   memberAcquired(state, p, uid);
 }
 /** Recruit is an active acquisition for the acting leader, including a take or their side of a swap. */
-function memberAcquired(state, p, uid) {
+function memberAcquired(state, p, uid, { stolen = false } = {}) {
   state.recruits += memberWeight(state, uid);
   p.turnRecruits += memberWeight(state, uid);
   const card = state.cards[uid], def = defById(card.def);
-  // who recruited it and when: a member can't be released in the round its owner recruited it
-  card.recruitedRound = state.round; card.recruitedBy = p.id;
+  // who recruited it and when: a member can't be released in the round its owner recruited it. A stolen member
+  // can be (decisions.md, dead-window audit: "You can still release a member you stole that round").
+  if (!stolen) { card.recruitedRound = state.round; card.recruitedBy = p.id; }
   const ctx = ctxFor(state);
   const w = wrap(state, card);
   eachMember(state, (owner, c, d) => { if (d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, w); });
@@ -1321,7 +1322,7 @@ function ctxFor(state) {
       from.members.splice(from.members.indexOf(uid), 1);
       to.members.push(uid);
       memberMoved(state, actor, uid, from, to, movedHooks);
-      if (activelyAcquired) memberAcquired(state, to, uid);
+      if (activelyAcquired) memberAcquired(state, to, uid, { stolen: true });
       memberJoined(state, to, uid);
       return true;
     },

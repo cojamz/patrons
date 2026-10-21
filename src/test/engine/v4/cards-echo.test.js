@@ -96,12 +96,14 @@ describe('Green current actions', () => {
   });
   it('Echo redoes stealing for its copier and still respects Lie Low', () => {
     let s = table(QT, { n: 3, shop: ROW, res: [{}, {}, { gold: 3, blue: 2 }], queue: turns(1, 0) });
-    s = go(s, 'thieves.pickpocket', 'take:2:gold', 'take:2:gold');
-    s = go(s, 'echo.echo', sp('thieves.pickpocket'), 'take:2:blue', 'take:2:blue');
-    expect([R(s).magenta, R(s, 2).blue, R(s).green]).toEqual([2, 0, 1]);
+    s = go(s, 'thieves.pickpocket', 'take:2:gold'); // round I: steal 1
+    s = go(s, 'echo.echo', sp('thieves.pickpocket'), 'take:2:blue');
+    // the copier steals for itself (blue stays blue) and gets Help Yourself's own +1 magenta
+    expect([R(s).magenta, R(s).blue, R(s, 2).blue, R(s).green]).toEqual([1, 1, 1, 1]);
     let t = table(QT, { n: 3, shop: ROW, res: [{}, { gold: 3 }, { blue: 3 }], queue: turns(2, 0) });
     t = go(t, 'thieves.hideout', 'take:1:gold');
     t = play(take(t, 'echo.echo'), sp('thieves.hideout'));
+    expect(ids(t).length).toBeGreaterThan(0);
     expect(ids(t).every(id => id.startsWith('take:1:'))).toBe(true);
   });
 });

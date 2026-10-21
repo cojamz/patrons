@@ -187,12 +187,18 @@ describe('White members', () => {
     const f = table(Q, { members: [['trading.lender'], ['trading.lender'.replace('lender', 'magnate')]], bonus: [1], shop: ROW, queue: [{ t: 'finish' }] });
     expect(f.players[0].final.parts).toContain('Lender −1');
   });
-  it('× Poach: a stolen Lender doesn\'t pay its +5 again; its debt goes with it', () => {
+  // v0.8.8 (magenta-redesign-2026-10-19.md): taking a member is an active acquisition, so its Recruit ability fires
+  it('× Poach: taking is a Recruit, so a stolen Lender pays its +5 to the thief, once; its debt goes with it', () => {
     let s = table(Q, { round: 3, left: 5, bonus: [2], members: [[], ['trading.lender']], shop: ROW });
-    s.cards[uidIn(s, 'trading.lender', 1)].loanPaid = true;
+    const u = uidIn(s, 'trading.lender', 1);
+    s.cards[u].loanPaid = true;
     s = pass(move(take(s, 'thieves.heist'), cardOpt(s, 'trading.lender', 1)));
     while (s.pending && s.pending.player === 1) s = move(s, s.pending.options[0].id);
-    expect(R(s).white).toBe(0);
+    expect(R(s).white).toBe(5);
+    expect(R(s, 1).white).toBe(0);
+    expect(s.players[0].members).toContain(u);
+    expect(s.players[1].members).not.toContain(u);
+    expect(s.log.filter(l => l === "P1's Lender: +5 white.")).toHaveLength(1);
   });
   it('× Doppelganger copying Lender: the copy gets +5 at once (Cory: a full copy; its when-recruited fires)', () => {
     let s = table(Q, { members: [['trading.lender', 'red.twins']], shop: ['echo.doppel', ...ROW], res: [{ red: 4, gold: 2 }] });

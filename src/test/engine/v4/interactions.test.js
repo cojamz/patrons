@@ -65,28 +65,32 @@ describe('Green copies the risky spaces', () => {
   const Q = ['gold', 'red', 'thieves', 'echo'];
 
   it('copying a Magenta steal means stealing yourself, and never takes more than the victim holds', () => {
-    let s = scene({ quads: Q, n: 3, turns: [1, 0], res: [{}, {}, { gold: 3 }] });
+    let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, {}, { gold: 3 }] });
     s = go(s, 'thieves.pickpocket', 'take:2:gold', 'take:2:gold');
-    expect(R(s, 1).magenta).toBe(2);
+    expect(R(s, 1)).toMatchObject({ gold: 2, magenta: 1 });
     s = take(s, 'echo.echo');
     expect(labels(s)).toEqual(['Help Yourself (P2): do Help Yourself yourself']);
     s = move(s, s.pending.options[0].id);
-    // P1 now steals 2: P2's 2 magenta and P3's last gold are on offer
-    expect(ids(s).sort()).toEqual(['take:1:magenta', 'take:2:gold']);
+    // P1 now steals 2: P2's gold and magenta and P3's last gold are on offer
+    expect(ids(s).sort()).toEqual(['take:1:gold', 'take:1:magenta', 'take:2:gold']);
     s = play(s, 'take:2:gold');
-    expect(ids(s)).toEqual(['take:1:magenta']); // P3 is empty now
+    expect(ids(s).sort()).toEqual(['take:1:gold', 'take:1:magenta']); // P3 is empty now
     s = pass(play(s, 'take:1:magenta'));
-    expect(R(s, 0).magenta).toBe(2);
-    expect(R(s, 1).magenta).toBe(1);
+    // the copy gives its own +1 magenta, and the stolen gold stays gold
+    expect(R(s, 0)).toMatchObject({ gold: 1, magenta: 2 });
+    expect(R(s, 1)).toMatchObject({ gold: 2, magenta: 0 });
     expect(R(s, 2).gold).toBe(0);
   });
 
   it('copying a steal can’t reach a player in the Lie Low', () => {
     let s = scene({ quads: Q, n: 3, turns: [2, 1, 0], res: [{ red: 3 }, { gold: 5 }, { red: 4 }] });
     s = go(s, 'thieves.hideout', 'take:1:gold'); // P3 hides and lifts 1 gold from P2
-    s = go(s, 'thieves.pickpocket', 'take:0:red', 'take:0:red'); // P2 can only rob P1
+    s = take(s, 'thieves.pickpocket');
+    expect(ids(s)).toEqual(['take:0:red']); // P2 can only rob P1
+    s = pass(move(s, 'take:0:red'));
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(opt('Help Yourself')).id);
+    expect(ids(s).length).toBeGreaterThan(0);
     expect(ids(s).every(id => id.startsWith('take:1:'))).toBe(true); // never P3
   });
 
@@ -371,7 +375,7 @@ describe('White sells followers that contests and bonuses counted', () => {
     s = take(s, 'gold.rush');
     s = move(s, 'tier:top');
     expect(s.players[1].bonus).toBe(10);
-    expect(R(s, 0).magenta).toBe(2); // Extortionist took 2
+    expect(R(s, 0)).toMatchObject({ gold: 1, red: 1, magenta: 0 }); // Extortionist took the 2 left, colors kept
     // 10 held after Golden Years's +2, 10 spent, Extortionist takes the 2 left, then Weaver's +1 of each color
     expect(R(s, 1)).toMatchObject({ gold: 1, red: 1, magenta: 1, yellow: 1 });
   });
@@ -382,7 +386,8 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
   const Q = ['gold', 'red', 'thieves', 'market'];
   it('Collect Debts can’t take from the player in the Lie Low this round, and can next round', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }] });
-    s = go(s, 'thieves.hideout', 'take:2:gold'); // P2 hides (and lifts 1 gold from P3)
+    s = go(s, 'thieves.hideout', 'take:2:gold', 'take:2:gold'); // P2 hides (and lifts 2 gold from P3: 1 × round)
+    expect(R(s, 1)).toMatchObject({ gold: 6, magenta: 1 });
     s = take(s, 'gold.steal');
     expect(ids(s)).toEqual(['player:2']);
     s.players[1].hideout = 1; // a Lie Low from an earlier round protects nothing
@@ -390,7 +395,7 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
   });
   it('Shake Down cannot pick a member protected by Lie Low', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }], members: [[], ['red.twins'], ['red.bigfamily']] });
-    s = go(s, 'thieves.hideout', 'take:2:gold');
+    s = go(s, 'thieves.hideout', 'take:2:gold', 'take:2:gold');
     s = take(s, 'thieves.ransom');
     expect(ids(s)).toEqual([`card:${uidOf(s, 'red.bigfamily', 2)}`]);
     expect(defs(s, 1)).toEqual(['red.twins']);
@@ -400,7 +405,7 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
     s = play(take(s, 'gold.steal'), 'player:1', 'player:1', 'player:1');
     expect(R(s, 1).gold).toBe(1);
     expect(R(s, 0).gold).toBe(3); // stole 3, Lookout took 1 back
-    expect(R(s, 2).magenta).toBe(1);
+    expect(R(s, 2)).toMatchObject({ gold: 1, magenta: 0 }); // as gold: stolen resources keep their colors
   });
   it('Bodyguard and Lie Low both stop Red’s Swap Sides', () => {
     const T = ['gold', 'red', 'thieves', 'green'];
@@ -417,17 +422,22 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
 // ---------------------------------------------------------------------------------------------------------
 describe('gain changers on stolen goods', () => {
   const Q = ['gold', 'red', 'thieves', 'green'];
-  it('a member’s steal isn’t a gain from an action: Midas leaves it magenta', () => {
+  it('a member’s steal isn’t a gain from an action: Midas leaves its color alone', () => {
     let s = scene({ quads: Q, round: 1, queue: [{ t: 'round', r: 2 }], res: [{}, { red: 3 }], members: [['thieves.cutpurse', 'gold.midas', 'gold.prospector'], []] });
     s = play(s, 'take:1:red');
     s = pass(s);
-    expect(R(s, 0)).toMatchObject({ magenta: 1, gold: 0 });
+    expect(R(s, 0)).toMatchObject({ red: 1, magenta: 0, gold: 0 });
+    expect(R(s, 1).red).toBe(2);
   });
-  it('DESIGN QUESTION: an action’s steal is: Midas turns the loot to gold, and Underdog doubles it', () => {
+  // decisions.md's earlier gut call ("stolen loot stays magenta, Midas/Underdog don't apply") predates v0.8.8's
+  // "stolen resources keep their colors"; today an action's loot and its +1 magenta are both gains from an action.
+  it('DESIGN QUESTION: an action’s steal is: Midas turns the loot (and the +1 magenta) to gold, and Underdog doubles it', () => {
     let s = scene({ quads: Q, res: [{}, { red: 3, gold: 5 }], members: [['gold.midas', 'gold.underdog'], []] });
-    s = pass(play(take(s, 'thieves.pickpocket'), 'take:1:red', 'take:1:red'));
-    expect(R(s, 1).red).toBe(1); // lost 2
-    expect(R(s, 0).gold).toBe(4); // gained 4
+    s = take(s, 'thieves.pickpocket');
+    expect(ids(s)).toEqual(['take:1:gold', 'take:1:red']);
+    s = pass(move(s, 'take:1:red')); // round I: steal 1
+    expect(R(s, 1)).toMatchObject({ red: 2, gold: 5 }); // lost 1
+    expect(R(s, 0)).toMatchObject({ gold: 4, red: 0, magenta: 0 }); // +1 magenta → 1 gold → 2, 1 red → 1 gold → 2
   });
 });
 
