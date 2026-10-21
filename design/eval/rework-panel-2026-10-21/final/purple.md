@@ -1,5 +1,7 @@
 # Purple, final (rework panel, 2026-10-21)
 
+Gate fixes applied (see gate.md).
+
 **Every card text and number below is Claude's fill-in, not approved. Exceptions marked (live) or (Cory's) keep his text or his numbers. Nothing ships until Cory says so.**
 
 Reviser: built from purple-anchor concept A ("your future, now"), trimmed hard, with three pieces lifted from purple-outsider concept 2 (Latecomer, the Night Watch scorer, the round-end gain). Sources: the five critiques (pricing 3, feel 2.5, judge 3, skeptic 3 "fix heavy", architect: recommended), brief.md, member-shape.md, pricing.md, deck-visibility.md, cory-judge.md, live purple.js and core.js, Cory's Purple notes (Oct 15 16:54 and 17:53, #80, #92, #99, #101). No sims, no games, no code.
@@ -8,7 +10,7 @@ Reviser: built from purple-anchor concept A ("your future, now"), trimmed hard, 
 
 Purple chooses **when**. It pulls later things into now (Crunch Time takes your next two turns now; Fast Forward pays your members' round-start income now), it pushes a gain past the shop so it can only score (Overnight pays at round end), and its round I spaces pay for picking early or late on your own clock (Plan Ahead and Cory's Catch Up). What changes at the table: one player taking several turns in a row happens once a round at most, from the center, so the dead air and the "why is it their turn?" of today's Purple mostly go away. Purple becomes a color that buys round-start income members of *any* color and fires them again, so a purple player shows up in other colors' shops and contests. Round I stops being "+4 purple" (Clock In today is the biggest flat gain in round I on the board) and becomes a small early-or-late puzzle that rivals can spoil.
 
-**Contest: most purple held at round end, 2/4/6** (was "most purple members"; this follows the Oct 20 frame every reworked color moved to). Overnight and Lamplighter feed it, and every purple member's colored part comes out of it.
+**Contest: most purple held at round end, 2/4/6** (was "most purple members"; this follows the Oct 20 frame every reworked color moved to; asked once across colors, not as a Purple pick). Overnight and Lamplighter feed it, and every purple member's colored part comes out of it.
 
 ### What the trim cut, and why (critics agreed on all of these)
 - **Head Start, Errand Runner, Double Shift, Rush Job, Go-Getter, Late Riser.** The rule from the brief: at most one turn source besides Crunch Time. The arithmetic decides which: a single "take your next turn right away" on a *space* is worth nothing for its turn move, because it only reorders your own picks (you get the space you wanted next either way, and Head Start takes the place of the pick you'd have made later). It's Overtime's "lose a minion for slight position gain". A move or extra turn only pays on a *member*, because a member costs no placement. Of the members, **Night Owl** stays (Cory set its followers; it fires after your last minion, so it never jumps anyone and chains at most two turns). Late Riser goes even though it's live: it fires for the player with the fewest followers, who already picks first, so in round III it chains with Crunch Time into four placements in a row, and it stacks a fourth catch-up on the snake.
@@ -49,7 +51,7 @@ Purple chooses **when**. It pulls later things into now (Crunch Time takes your 
 - Copy: replays the taker's gain. No flag.
 
 **Plan Ahead** (live rule, moved down from round II) "+1 purple per minion you have left to place this round, this one included."
-- Round I: 3 / 2 / 1, Catch Up's mirror. Round II 4 to 1, round III 5 to 1. The purple player takes Plan Ahead first and Catch Up last; a rival spoils whichever is ripe. The judge put this pair forward; it's his own Catch Up idea seen from both ends. Risk: #92 put "Catch up, plan ahead, rush hour" side by side as a question, so he may read them as variations (pick 3).
+- Round I: 3 / 2 / 1, Catch Up's mirror. Round II 4 to 1, round III 5 to 1. The purple player takes Plan Ahead first and Catch Up last; a rival spoils whichever is ripe. The judge put this pair forward; it's his own Catch Up idea seen from both ends. Risk: #92 put "Catch up, plan ahead, rush hour" side by side as a question, so he may read them as variations (flagged in pick 3).
 - Copy: replays the taker's gain. No flag.
 
 **Clock In** (reworked, Cory's round I template) "+1 purple × round. +1 purple."
@@ -74,7 +76,7 @@ A purple specialist earns about 20 to 25 purple a game (guess: about 8 in round 
 | Shift Crew (live) | 1+1 | 2 | Worth 2 followers. No effect. | Cheap body at f = C, Open Door's pick. Kept. |
 | Latecomer (from purple-outsider 2) | 3+2 | 1 | When recruited: +1 follower per minion you've placed this round. | Treasurer's "buy it late" puzzle on Purple's clock: 1 on your first minion of round I (a bad buy), 5 on your last of round III, so about 6.3 for 5 bought late (1.26). Pays followers, a different currency from its cost (not a Mime refund). Re-fires on a swap; bounded at 5. |
 | Alarm Clock | 3+3 | 2 | When recruited: your members' round-start income comes again now, up to 6. | Fast Forward on a card (Panel is Promote on a card). 2 bodies (2.6) + 3 to 6 = 5.6 to 8.6 for 6: 0.95 to 1.4. Up from the anchor's 3+2, because the cap makes it reliable. |
-| Closing Time (purple-outsider 2's Night Watch, renamed) | 3+3 | 1 | Game end: +2 followers per purple space you're on. | The scorer only Purple could have. Minions stay on their round III spaces at game end (core.js clears the board only at round start), so it reads what the board shows. A specialist ends on about 3 of the 6 purple spaces: 6 + body for 6 (1.2); 4 or 5 is 8 to 10. Rivals deny it by taking purple spaces, and it pulls against Crunch Time's "go take other anchors". Mostly "any" is wrong here: it's for the purple player, so 3 colored. |
+| Closing Time (purple-outsider 2's Night Watch, renamed) | 3+3 | 1 | Game end: +2 followers per purple space you're on (at most 10). | The scorer only Purple could have. Capped because Crunch Time plus Night Owl can sit on 5 to 6 purple spaces (10 to 12). Minions stay on their round III spaces at game end (core.js clears the board only at round start), so it reads what the board shows. A specialist ends on about 3 of the 6 purple spaces: 6 + body for 6 (1.2); 4 or 5 is 8 to 10. Rivals deny it by taking purple spaces, and it pulls against Crunch Time's "go take other anchors". Mostly "any" is wrong here: it's for the purple player, so 3 colored. |
 | Lamplighter (live text) | 5+2 | 1 | Now and at round start, +1 purple per minion you get this round (3 / 4 / 5). | Purple's own income, growing by round. Bought in round I: 3 + 4 + 5 = 12 for 7 (about 1.5 after the contest tax); round II: 9 for 7 (about 1.1). Down from 6+2: pricing says 6 colored is out of reach in round I, and Cory's notes on this card only ever said "too dear". Fast Forward fires it again, capped at 6. |
 | Night Owl (live text) | 6+4 | 2 | Rounds II–III: after placing your last minion, take 1 extra turn if there's room. Once per round. | Capstone and the deck's one turn source. Bought in round II: two extra placements and buys (about 3.5 + 5) + 2 bodies = about 11 for 10. At 8+2 a purple player can't reach it until round III, where it's worth about 7.6 for 10 (pricing: a trap). 6+4 keeps it about 60% colored. Cory set the followers (#101). |
 
@@ -92,8 +94,8 @@ A purple specialist earns about 20 to 25 purple a game (guess: about 8 in round 
 - Less for rivals to care about: they only feel it when their own late minion is up.
 
 ## Picks for Cory
-1. Purple chooses when: Crunch Time, "your members' round-start income comes again now, up to 6", and a round-end "+4 purple"; contest becomes most purple held. Or Put It Off, paying for late picks. [the first]
-2. Only Crunch Time and Night Owl give turns; Late Riser, Go-Getter and the other "take your next turn right away" cards go. [yes]
-3. Round I is your Catch Up 1/2/3 ("per minion you've placed, this one included"), Plan Ahead moved down as its 3/2/1 mirror, and Clock In 2/3/4. [yes]
-4. New scorer: "Game end: +2 followers per purple space you're on", in place of Timekeeper. [yes]
-5. Latecomer: "When recruited: +1 follower per minion you've placed this round." [yes]
+1. Purple stays the color of when: Crunch Time kept, round II "Your members' round-start income comes again now, up to 6" and "+1 purple now, +4 at round end" [yes].
+2. Only Crunch Time and Night Owl move turns; Late Riser ("at round start, if you have the fewest followers, take an extra turn") and the other turn cards go [yes].
+3. Round I is your Catch Up ("+1 purple per minion you've placed this round"), its mirror Plan Ahead ("per minion you have left"), and Clock In 2/3/4 [yes, but tell us if the mirror feels like the same space].
+4. New scorer "Game end: +2 followers per purple space you're on (at most 10)" replaces Timekeeper [yes].
+5. Latecomer: "When recruited: +1 follower per minion you've placed this round" [yes].

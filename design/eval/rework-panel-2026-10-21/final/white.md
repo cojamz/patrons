@@ -1,5 +1,7 @@
 # White, final (rework panel, 2026-10-21)
 
+Gate fixes applied (see gate.md).
+
 **Every card text and number below is Claude's fill-in, not approved. Nothing ships until Cory says so.**
 
 Reviser: built from white-anchor A (take a contest's prize early) and white-outsider A (catch up on the follower gap), the five critiques (pricing: anchor A 4, outsider A 2.5; feel: 4 and 3; skeptic: 3 and 3; architect: anchor A recommended, "close call"; judge: outsider A 4, anchor A 2), brief.md, member-shape.md, pricing.md, deck-visibility.md, cory-judge.md (rubric v3), and Cory's White notes in design/todo.md and decisions.md. No sims, no games, no code. Estimates are marked (guess).
@@ -8,7 +10,7 @@ White is a genuine split: four critics put the early prize first, and the judge 
 
 ## What goes in both directions
 
-Today's White trades followers (Sell High, Dividend, All In, Cheap Seats, the "loose follower" rule). Cory: "what's a loose follower?", and selling then buying back is the follower buy in another coat. All of it goes, in either direction: Sell High, Dividend, All In, Cheap Seats, the loose-follower rule, Rich Uncle, Heiress, Bulk Buyer (the name frees up for Blue), Broker, Exporter, Reinvestor (a cost cut), Raider. Kept: Shareholder ("Worth 3 followers", 2+1) and Magnate ("Game end: +1 follower per 3 white", 2+2), both live. Contest in both: **most white held**, the Oct 20 frame (live is still "most white members").
+Today's White trades followers (Sell High, Dividend, All In, Cheap Seats, the "loose follower" rule). Cory: "what's a loose follower?", and selling then buying back is the follower buy in another coat. All of it goes, in either direction: Sell High, Dividend, All In, Cheap Seats, the loose-follower rule, Rich Uncle, Heiress, Bulk Buyer (the name frees up for Blue), Broker, Exporter, Reinvestor (a cost cut), Raider. Kept: Shareholder ("Worth 3 followers", 2+1) and Magnate ("Game end: +1 follower per 3 white", 2+2), both live. Contest in both: **most white held**, the Oct 20 frame (live is still "most white members"); asked once across colors, not as a White pick.
 
 Both decks are short on purpose. Each card had to be one only White could have; where nothing good enough turned up, the slot stays open for Cory rather than padded.
 
@@ -46,18 +48,18 @@ White lets you take a contest's prize the moment you lead it ("it won't score at
 ### Round I (×3, equal-ish gain, different side effects, all still worth taking in round III)
 1. **Pick a Fight**: "Gain 1 × round of one color. +1 white." **2 / 3 / 4.** The flexible one: builds a lead anywhere, or pays a member's colored part. Copy: flagged, so the copier picks their own color.
 2. **Sit Tight**: "+1 white per 3 resources you hold (at most 5). +1 white." Holding 3–5 / 6–8 / 9–15: **2 / 3 / 4–6.** Pays the holder before the cash-in. The cap stops a gold hoard (pricing finding 0.1). Flag: Gold's "half your gold" also pays holding; this counts every color, in white. If Cory reads them as twins, Sit Tight gives way. Copy: flagged.
-3. **Top Dog**: "+2 white per contest you lead. +1 white." 4 players: **1–3 / 3–5 / 3–7** (0–1, 1–2, 1–3 leads). 2 players: 1–3 / 3–5 / 3–5. Replaces "Even odds" (a tie card, cut). Taking a prize early closes that contest, so it stops counting here: take Top Dog before you cash, which is a small sequencing puzzle and not a rule to remember. Bounded by the number of contests. Copy: flagged.
+3. **Open slot.** Top Dog ("+2 white per contest you lead") is cut: it pays whoever already leads contests, which is win-more. The swap the gate offered ("+1 white × round") is Pick a Fight in white only, a slight variation, so the slot stays open for Cory rather than padded. What it wants: a round I space worth 2 / 3 / 4 that doesn't read who's ahead.
 
 | Space | Round I | Round II | Round III | Copy |
 |---|---|---|---|---|
 | Pick a Fight | 2 | 3 | 4 | flagged |
 | Sit Tight | 2 | 3 | 4–6 | flagged |
-| Top Dog (4p / 2p) | 1–3 / 1–3 | 3–5 / 3–5 | 3–7 / 3–5 | flagged |
+| (open slot) | | | | |
 | Call It | | 5 + freed pile | 7 + freed pile | flagged |
 | Draw Level | | 3–5 + a split | 3–6 + a split | flagged |
 | Settle Up | | | 7–13, about 8–13 all in | flagged |
 
-Specialist's own color (4 players, guess): **12–16 white a game** (the +1s, Sit Tight, Top Dog). The deck's colored parts total 19; a specialist buys 3–4 of the 7 (about 8–10 white) and holds the rest for the white contest.
+Specialist's own color (4 players, guess): **10–14 white a game** (the +1s, Sit Tight; guess, without the open slot). The deck's colored parts total 19; a specialist buys 3–4 of the 7 (about 8–10 white) and holds the rest for the white contest.
 
 ## Contest
 Most white held. The White player leads white most easily (every White space gives +1 white), so White's own contest is the first one they cash. That teaches the rule on the color itself, and the freed white goes straight into White members.
@@ -67,7 +69,7 @@ Most white held. The White player leads white most easily (every White space giv
 | Card | Text | Cost | F | Why that price |
 |---|---|---|---|---|
 | Shareholder (live, kept) | Worth 3 followers. | 2+1 | 3 | Body at par (f = C), a round I card. Already White's; unchanged. |
-| Bailiff | Now and at round start, +1 of each color you lead. | 2+2 | 1 | Round-start income on the verb, paid in the colors you lead, so it widens margins against Draw Level and refills a pile after a cash. 1–2 a fire, bought in round I about 4–6 for 4 (about 1.3). Replaces the "+1 white per contest you lead" member, which Top Dog now does as a space. |
+| Bailiff | Now and at round start, +1 of each color you lead. | 2+2 | 1 | Round-start income on the verb, paid in the colors you lead, so it widens margins against Draw Level and refills a pile after a cash. 1–2 a fire, bought in round I about 4–6 for 4 (about 1.3). Replaces the "+1 white per contest you lead" member. |
 | Spoiler | Recruit: choose a color you don't lead; gain enough of it to tie its leader (at most 5). | 2+3 | 1 | Draw Level on arrival (Panel's shape), light colored so any trailer can splash it to stop a cash. Round II about 3–4 plus a blocked cash and the body: about 1.1 at 5. A re-fire on a swap gives nothing once you're tied. First to cut if Cory wants one tie effect on the board. |
 | Magnate (live, kept) | Game end: +1 follower per 3 white. | 2+2 | 1 | The deck's only "+1 per N" scorer, and the counter-plan: hold white to the end instead of cashing. Cory kept it over Cash In. |
 | Victory Lap | When you take a prize early, gain 2 of its color. | 3+2 | 1 | Impressionist's shape ("great") on White's verb: you start rebuilding the lead at once. 2–4 uses a game (Settle Up counts twice): +4–8 for 5. |
@@ -91,7 +93,7 @@ Prices 3, 4, 4, 5, 5, 8, 10. Printed followers 12 on 7 cards (about Red's rate).
 
 White pays you for being behind the leader on followers, up to drawing level and never past, and it pays only through the members you buy. It's Cory's own note ("Likes fewer followers as a catch-up"), with Recluse finally at home ("Recluse not in blue"). At the table, the follower leader becomes everyone's reference point: a big lead funds whoever is behind, and White's middle spaces aim at the leader's contests. Two guards answer the critics. First, every payoff is capped at your gap, so White alone can never put you ahead. Second, the big ones ride on a member buy ("if your buy this turn is a member…"), so they push the trailer toward members, the Oct 20 frame, and never multiply a follower pack, which keeps buy followers only out of it.
 
-**One new number on each seat:** how many followers you're behind the leader (the leader's followers minus yours; 0 if you lead or tie). It's visible, it changes only when followers do, and nothing carries between rounds. "The leader" means the player with the most followers.
+**One new number on each seat:** how many followers you're behind the leader (the leader's followers minus yours; 0 if you lead or tie). It's visible, it changes only when followers do, and nothing carries between rounds. "The leader" means the player with the most followers; ties count as leading (every tied leader is 0 behind, and each counts as the leader for Upset and Spoiler).
 
 ## Actions (every space ends +1 white)
 
@@ -116,13 +118,13 @@ White pays you for being behind the leader on followers, up to drawing level and
 
 ### Round I (×3)
 1. **Save Up**: "+1 white × round. +1 white." **2 / 3 / 4.** The plain one; it builds the white contest.
-2. **Small Wins** (replaces Your Call): "+1 follower × round. +1 white." **2 / 3 / 4.** Followers now shrink your own gap. Taking them is the White question: score now, or stay behind and let White pay you later. It differs from Save Up in kind (followers against white for the contest), so neither is an upgrade of the other. Copy: flagged (followers only).
+2. **Open slot** (Your Call's place). Small Wins ("+1 follower × round") is cut: followers straight off a space are what buy-followers-only wants. The plain alternative, "+1 white × round, +1 more per 3 followers behind (at most 3)", is Save Up plus a smaller Sob Story, a copy, so the slot stays open for Cory.
 3. **Sob Story** (live name, reworked): "+1 white per 2 followers you're behind the leader (at most 4). +1 white." Far trailer, 4 players: **1–2 / 3–5 / 5**; middle 1 / 2–3 / 3–4; leader 1. 2 players: 1–2 / 2–4 / 3–5. It grows by round because gaps do, and it works at 2 players (the live "per rival" version tops out at +1 there). Copy: flagged.
 
 | Space | Round I | Round II | Round III | Copy |
 |---|---|---|---|---|
 | Save Up | 2 | 3 | 4 | plain gain, replays fine |
-| Small Wins | 2 | 3 | 4 | flagged |
+| (open slot) | | | | |
 | Sob Story (trailer, 4p / 2p) | 1–2 / 1–2 | 3–5 / 2–4 | 5 / 3–5 | flagged |
 | Fresh Blood (trailer) | | 3–6 + a member | 4–6 + a member | flagged |
 | Upset | | 3–5 + a split | 3–6 + a split | flagged |
@@ -149,7 +151,7 @@ Prices 3, 4, 4, 4, 5, 8; printed followers 9 on 6 cards. That's thin, and Cory p
 ## What changes at the table (and the risks)
 - **A fourth catch-up?** The snake, the trailer's first pick in round III, and Purple's turn tricks are already there, and Silver's final aims its gifts at the fewest followers too. The answer is that this one is capped at the gap and paid through members, and its middle spaces fight the leader's contests instead of gifting. The feel critic's worry stands: a leader at a friends' table may feel nothing is safe. Watch it at 2 players first.
 - **Sandbagging:** hold everything, stay "behind", cash in late. Limits: Last Laugh and Fresh Blood need a member buy; contest prizes are followers and close your own gap; the hoard still needs round III buys; Magenta's half-a-pile steal. A real strategy with real risk, unproven.
-- **Buy followers only:** usually leads on followers, so the gap spaces pay it nothing; it gets Save Up, Small Wins and Recluse.
+- **Buy followers only:** usually leads on followers, so the gap spaces pay it nothing; it gets Save Up and Recluse.
 - **If this direction wins:** the other "fewest followers" members (Desperado, Late Bloomers, Late Riser) should move or change, so catch-up has one home.
 
 ---
@@ -161,8 +163,5 @@ His Oct 15 ❌ was on contests that count something other than held color ("own 
 **My pick: direction 1.** It's the only White that lives on the Oct 20 core tension instead of beside it. It plays with every color through the rims without taking anything, adds no followers, scales through the 2/4/6 prize itself, and its deck came out fuller and more White-only. Direction 2 is the honest second: his note, Recluse's home, and safe once it pays through members, but its verb is narrow (thin round II, a 6-card deck), and it stacks on the catch-up the board already has.
 
 ## Picks for Cory
-1. White's direction: 1, "take a contest's prize early" (it won't score at round end), or 2, pay whoever is behind on followers, up to drawing level [1].
-2. Direction 1: an early prize closes that contest for the round ("won't score at round end") rather than scoring again at round end [closes it; no new followers enter the game].
-3. Direction 1: the round III space "take now the prizes of up to two contests you lead", or every contest you lead [up to two].
-4. Direction 2: White's catch-up pays only with a member buy ("if your buy this turn is a member, draw level"), or straight followers off the space [only with a member].
-5. Recluse ("+2 followers per rival with more members than you") goes to White if direction 2 wins, otherwise to Silver as its final asks [yes].
+1. White's direction: "take a contest's prize early" (that contest won't score at round end), or "pay whoever is behind on followers, up to drawing level, only when they buy a member" [early prize].
+2. Either way, White drops follower trading (Sell High, Dividend, All In, Cheap Seats, the loose follower rule) [drop].
