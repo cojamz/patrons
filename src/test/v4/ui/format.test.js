@@ -161,6 +161,37 @@ describe('v4 format helpers', () => {
     expect(story.short).not.toMatch(/released/);
   });
 
+  it("Red's swap with the shop names the member that left and the one that came (backlog 2026-10-21)", () => {
+    // real moves from bot games: every "X swapped A's Y and Shop's Z." turn tells both Y and Z
+    let seen = 0, rival = 0;
+    for (let seed = 1; seed <= 40 && seen < 4; seed++) {
+      let s = createGame({ seats, seed });
+      while (!s.over) {
+        const n = applyMove(s, chooseBotMove(s, () => 0.4), { effects: true });
+        const line = n.log.slice(s.log.length).map(l => l.match(/^(\w+) swapped (\w+)'s (.+) and Shop's (.+)\.$/)).find(Boolean);
+        if (line) {
+          const [, actorName, ownerName, out, inc] = line;
+          const actor = n.players.findIndex(p => p.name === actorName), owner = n.players.findIndex(p => p.name === ownerName);
+          for (const me of [actor, (actor + 1) % 3]) {
+            const st = effectStory(s, n, actor, me, n.effects);
+            expect(st.short).toContain(out);
+            expect(st.short).toContain(inc);
+            expect(st.text).toContain(out);
+            expect(st.text).toContain(inc);
+          }
+          if (owner !== actor) {
+            rival++;
+            expect(effectStory(s, n, actor, owner, n.effects).short).toBe(`swapped your ${out} for the shop's ${inc}`);
+          } else expect(effectStory(s, n, actor, actor, n.effects).short).toBe(`gave ${out} to the shop, took the shop's ${inc}`);
+          seen++;
+        }
+        s = n;
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+    expect(rival).toBeGreaterThan(0);
+  });
+
   it('a gain that came in another color names the member that changed it (w4 skeptic #18)', () => {
     const s = createGame({ seats, seed: 1 });
     const end = structuredClone(s);

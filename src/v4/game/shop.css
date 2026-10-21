@@ -122,3 +122,9 @@
 .app.game.lt .lt-shop-cards .lt-card .ft{font-size:16px;line-height:20px;flex:none}
 .app.game.lt .lt-shop-cards .lt-card .ft .num,.app.game.lt .lt-shop-cards .lt-card .ft .lt-cost.free{font-size:16px}
 .app.game.lt .lt-shop-cards .lt-card .ft .pip,.app.game.lt .lt-shop-cards .lt-card .ft .follower-mark{width:16px;height:16px}
+
+/* The "affordable" toggle (Cory, 2026-10-18): members you can't pay for right now fade, in every phase. A card the space
+   under your pointer would unlock (data-after) or aims at (data-aim) comes back, so the hover's answer still reads. */
+.lt-shop .lt-shop-cards .lt-card.card.paper{transition:transform .12s ease,filter .15s,box-shadow .12s ease-out,background-color .12s ease-out,opacity .2s ease-out}
+.lt-shop .lt-shop-cards[data-fade="on"] .lt-card.card.paper[data-unaffordable]:not([data-after]):not([data-aim]){opacity:.4}
+@media (prefers-reduced-motion:reduce){.lt-shop .lt-shop-cards .lt-card.card.paper{transition:none}}

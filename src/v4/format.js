@@ -1063,7 +1063,8 @@ export function effectStory(start, end, actor, me = null, fx = []) {
     // Promote/Demote physically exchange a cult member and a shop card under the action's cause.
     // Their outgoing card returns to the shop, rather than being released to the pile.
     else if (e.type === 'release' && e.to.kind === 'shop') g.moved.push({ uid: e.what.uid, from: e.from.pid, to: 'shop' });
-    else if (e.type === 'recruit' && e.from.kind === 'shop' && e.cause?.kind === 'space') g.moved.push({ uid: e.what.uid, from: 'shop', to: e.to.pid });
+    // Red's swaps with the shop record the incoming card as a recruit under the move ('move'), not the space
+    else if (e.type === 'recruit' && e.from.kind === 'shop' && (e.cause?.kind === 'space' || e.cause?.kind === 'move')) g.moved.push({ uid: e.what.uid, from: 'shop', to: e.to.pid });
     else if (e.type === 'discount' && e.to.pid === actor) g.disc += e.what.n;
   }
   const signedOf = (g, pid) => {
@@ -1120,7 +1121,22 @@ export function effectStory(start, end, actor, me = null, fx = []) {
         if (what.length) hits.push(`${why} ${what.join(', ')}`);
       }
     }
+    // a rival's member exchanged for the shop's (or another rival's) is one swap, both named: "swapped your Recruiter
+    // for the shop's Big Spender" (Cory's backlog: Red's shop swap told only the member that left)
+    const paired = new Set();
     for (const m of g.moved) {
+      if (paired.has(m) || m.from === owner || m.to === owner) continue;
+      const back = g.moved.find(x => x !== m && !paired.has(x) && x.from === m.to && x.to === m.from);
+      if (!back) continue;
+      paired.add(m); paired.add(back);
+      const [mine, theirs] = back.from === me || m.from === 'shop' ? [back, m] : [m, back];
+      const line = `swapped ${whose(mine.from)} ${cardName(mine.uid)} for ${whose(theirs.from)} ${cardName(theirs.uid)}`;
+      bits.push(line);
+      if ((mine.from === me || theirs.from === me) && actor !== me) hits.push(line);
+    }
+    // a shop exchange tells what left first ("gave X to the shop, took the shop's Y"), whatever order the engine moved them
+    for (const m of [...g.moved].sort((x, y) => (x.from === 'shop') - (y.from === 'shop'))) {
+      if (paired.has(m)) continue;
       bits.push(m.to === owner ? `took ${whose(m.from)} ${cardName(m.uid)}` : m.from === owner ? `gave ${cardName(m.uid)} to ${nm(m.to)}` : `${cardName(m.uid)}: ${nm(m.from)} → ${nm(m.to)}`);
       if (m.from === me && m.to !== me && actor !== me) hits.push(`took your ${cardName(m.uid)}`);
     }
@@ -1168,7 +1184,7 @@ export function effectStory(start, end, actor, me = null, fx = []) {
   const hit = hits.join(', ');
   // a member changing hands names both and whose it was first ("took your Retinue, gave Broker"; w4 A#62: the strip said
   // "Swap Sides · bought 10" with no word of the swap)
-  const swapLine = out.filter(l => /^(took (your|the shop['’]s|\S+['’]s) |gave .+ to )/.test(l)).join(', ');
+  const swapLine = out.filter(l => /^(took (your|the shop['’]s|\S+['’]s) |gave .+ to |swapped .+ for )/.test(l)).join(', ');
   const big = swapLine || out.find(l => /^(recruited|bought|traded|released) /.test(l) || EXTRA_LINE.test(l));
   const conv = base && base.conv && base.conv.length ? base.conv : [];
   // the strip's one line: what hit you, then what you got, then the biggest thing the turn did

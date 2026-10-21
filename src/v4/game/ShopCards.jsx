@@ -28,6 +28,9 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
 // cost). Remembered per viewer in this browser; a blocked storage just means the default.
 export const SORT_KEY = 'patrons.v4.shopSort';
 export const VIEW_KEY = 'patrons.v4.shopView';
+// Fading what you can't afford (Cory, 2026-10-18: "a third shop toggle that fades unaffordable members"): off by default
+export const FADE_KEY = 'patrons.v4.shopFade';
+const readFade = () => { try { return localStorage.getItem(FADE_KEY) === 'on'; } catch { return false; } };
 const readView = () => { try { const saved = localStorage.getItem(VIEW_KEY); return saved === 'details' || saved === 'compact' ? saved : null; } catch { return null; } };
 const readSort = () => { try { return localStorage.getItem(SORT_KEY) === 'color' ? 'color' : 'cost'; } catch { return 'cost'; } };
 /** The printed cost as one number (every part, colored and any). */
@@ -84,6 +87,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const rowRef = useRef(null), deckRef = useRef(null);
   const [sort, setSortState] = useState(readSort);
   const [view, setView] = useState(readView);
+  const [fade, setFadeState] = useState(readFade);
+  const toggleFade = () => { const next = !fade; setFadeState(next); try { localStorage.setItem(FADE_KEY, next ? 'on' : 'off'); } catch { /* this visit only */ } };
   const setSort = v => { setSortState(v); try { localStorage.setItem(SORT_KEY, v); } catch { /* private window: this visit only */ } };
   useDeal(rowRef, deckRef, state); // a refill comes off the deck
   // a card that just arrived (a refill sliding under the pointer after an instant buy) ignores clicks for half a second
@@ -113,13 +118,14 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   useEffect(() => { onViewChange?.(detailed); }, [detailed, onViewChange]);
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
-    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} aria-label="Shop">
+    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-fade={viewer && fade ? 'on' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
         {/* a discount is said once, here, beside the struck prices (w4 A#23: its sentence was on all ten hovers) */}
         <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} members affordable` : `${state.shop.length} members`}</small></h3>
         <span className="lt-shop-controls">
+          {viewer && <button type="button" className="lt-view-btn" aria-label="Fade members you can't afford" title="Fade members you can't afford right now" aria-pressed={fade} onClick={toggleFade}>affordable</button>}
           <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} onClick={toggleView}>details</button>
           <button type="button" className="lt-sort" role="switch" aria-label="Group members by color" aria-checked={sort === 'color'} title="Switch cost / color order" onClick={() => setSort(sort === 'cost' ? 'color' : 'cost')}>
             <span className={sort === 'cost' ? 'on' : ''}>cost</span><span className={sort === 'color' ? 'on' : ''}>color</span>
@@ -138,6 +144,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           // afford yet is quieter, except a card the space under your pointer would unlock
           const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can));
           const lit = (buying || picking) && !!opt;
+          // the fade toggle: a member you can't pay for right now (and no choice offers) fades, in every phase
+          const short = viewer && fade && !can && !opt;
           const parts = costParts(d, state.resources);
           // a discount on you: the price you'd pay, the list price small and struck beside it (decisions.md, 2026-10-15)
           const paid = paidParts(state, viewer, uid, d);
@@ -146,7 +154,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
               className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying || picking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
-              style={{ '--q': cardColor(state, d) }} aria-disabled={!opt}
+              style={{ '--q': cardColor(state, d) }} aria-disabled={!opt} data-unaffordable={short || undefined}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
