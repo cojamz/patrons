@@ -9,7 +9,7 @@ import { Sprite } from '../art/Sprite.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { MO } from '../motion.js';
 import { play } from '../sound.js';
-import { track } from './flight.js';
+import { track, landedEarly } from './flight.js';
 import './stage.css';
 
 const EASE_OUT = 'cubic-bezier(.2,.9,.25,1.15)'; // lands with a little give, like a card slapped on the table
@@ -38,7 +38,7 @@ function StageItem({ it }) {
       : [{ transform: 'scale(.8)', opacity: 0 }, { transform: 'none', opacity: 1 }];
     const arrival = track(e.animate(frames, { duration: it.dur, easing: EASE_OUT, fill: 'backwards' }));
     // a member's bubble pops with its little sound as it lands (a recruit's sound is its landing in the crowd)
-    if (it.kind === 'member' && !it.recruit) arrival.finished.then(() => { if (e.isConnected && !it.leaving) play('member'); }, () => {});
+    if (it.kind === 'member' && !it.recruit) arrival.finished.then(() => { if (e.isConnected && !it.leaving && !landedEarly(arrival)) play('member'); }, () => {});
     return () => { if (it.homeEl && it.homeEl.classList) it.homeEl.classList.remove('on-stage'); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // a member that acts again while it's out hops again
@@ -57,7 +57,7 @@ function StageItem({ it }) {
     if (!e || !e.animate || !home) { done(); return; }
     const a = track(e.animate([{ transform: 'none', opacity: 1 }, { transform: over(it.at, size, home), opacity: 0.15 }], { duration: it.out || MO.stageOut, easing: EASE_HOME, fill: 'forwards' }));
     // a recruit lands in its buyer's crowd with its sound and the crowd's landing ring; a bubble goes back quietly
-    a.finished.then(() => { if (it.onHome && a.playState === 'finished') it.onHome(); done(); }, done);
+    a.finished.then(() => { if (it.onHome && a.playState === 'finished' && !landedEarly(a)) it.onHome(); done(); }, done);
   }, [it.leaving]); // eslint-disable-line react-hooks/exhaustive-deps
   const style = { left: it.at.left, top: it.at.top, width: size.w, height: size.h, '--q': it.color, '--pc': it.pc };
   if (it.kind === 'space') {

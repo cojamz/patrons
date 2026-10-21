@@ -163,7 +163,11 @@ export function relative(el, frames, opts) {
   anim.addEventListener('cancel', off, { once: true });
   return track(anim);
 }
-export function landAll() { for (const a of [...live]) { try { a.finish(); } catch { try { a.cancel(); } catch { /* gone */ } } } live.clear(); for (const token of [...countedMotions]) { if (token.finish) token.finish(); countedMotions.delete(token); } motionChanged(); }
+// motions a skip landed at once (landAll): their finish isn't a landing on screen, so nothing sounds for it
+const forced = new WeakSet();
+/** Whether `anim` finished because a skip landed it, not by playing out. */
+export const landedEarly = anim => !!anim && forced.has(anim);
+export function landAll() { for (const a of [...live]) { forced.add(a); try { a.finish(); } catch { try { a.cancel(); } catch { /* gone */ } } } live.clear(); for (const token of [...countedMotions]) { if (token.finish) token.finish(); countedMotions.delete(token); } motionChanged(); }
 
 export function flyCards(root, snap, moves) {
   if (!root || !motionOK()) return;

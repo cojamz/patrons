@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { sceneQ } from '../../engine/v4/cards-helpers.js';
 import { chainRunning, onChainEnd, playChain, skipChain } from '../../../v4/game/director.js';
-import { holdStack, landAll, motionPending } from '../../../v4/game/flight.js';
+import { holdStack, landAll, motionPending, track, landedEarly } from '../../../v4/game/flight.js';
 import { stageShow, stageGone, stageClear, stageItems } from '../../../v4/game/stage.js';
 const control = vi.hoisted(() => ({ settles: [], motion: true }));
 vi.mock('../../../v4/game/flight.js', async original => {
@@ -55,4 +55,10 @@ it('skip immediately clears stage, settles and count rolls, without a second com
 });
 it('a reduced-motion action creates no completion wait for animations that never start',()=>{
  control.motion=false;start();expect(chainRunning()).toBe(false);expect(motionPending()).toBe(false);
+});
+it('a motion a skip lands is marked as landed early, so its landing sound stays quiet (audit #44)',()=>{
+ const fake=()=>{const ev=new EventTarget();return{finished:new Promise(()=>{}),playState:'running',addEventListener:(...a)=>ev.addEventListener(...a),finish(){this.playState='finished';ev.dispatchEvent(new Event('finish'));},cancel(){}};};
+ const played=fake(),skipped=fake();track(played);track(skipped);
+ played.finish();expect(landedEarly(played)).toBe(false);
+ landAll();expect(landedEarly(skipped)).toBe(true);expect(landedEarly(null)).toBe(false);
 });
