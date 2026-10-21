@@ -47,7 +47,9 @@ page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.te
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
 page.on('response', r => { if (r.status() >= 400) errors.push(`http ${r.status()}: ${r.url()}`); });
 
+// Phone sizes are out of scope (Cory, 2026-10-20): their shots and checks run only with V4_PHONE=1, like touch.mjs.
 const shot = async (name, size) => {
+  if (size && size.width <= 760 && !process.env.V4_PHONE) return;
   if (size) await page.setViewportSize(size);
   await page.waitForTimeout(size ? 250 : 50);
   await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
@@ -408,9 +410,9 @@ try {
   await page.waitForTimeout(200);
   await shot('09-results');
   // the results use the phone's whole width (they sat in one 117px column of the phone grid: detail designer, 10:55)
-  await page.setViewportSize(PHONE); await page.waitForTimeout(250);
-  const resW = await page.$eval('.results', e => e.getBoundingClientRect().width).catch(() => 0);
-  if (resW < PHONE.width * 0.8) errors.push(`results: ${Math.round(resW)}px wide on a ${PHONE.width}px phone`);
+  if (process.env.V4_PHONE) await page.setViewportSize(PHONE), await page.waitForTimeout(250);
+  const resW = process.env.V4_PHONE ? await page.$eval('.results', e => e.getBoundingClientRect().width).catch(() => 0) : 0;
+  if (process.env.V4_PHONE && resW < PHONE.width * 0.8) errors.push(`results: ${Math.round(resW)}px wide on a ${PHONE.width}px phone`);
   await shot('09-results-phone', PHONE);
   for (const x of await page.evaluate(TYPE_SCALE)) errors.push(`results: off the type scale (11/14/18/36): ${x}`);
   const winner = await page.$eval('.results .win', e => e.textContent);
