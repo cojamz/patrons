@@ -42,6 +42,13 @@
 .lt-shop .lt-card.card.lit,.lt-shop .lt-rates .lt-rate.lit{background:#fffaf0;box-shadow:inset 0 0 0 2px #ffe0a1,0 0 0 2px #ffe0a1,0 0 18px rgba(255,224,161,.45)}
 .lt-shop .lt-card.card[data-aim]{background:#fffaf0;outline:3px solid #ffe0a1;outline-offset:1px;box-shadow:inset 0 0 0 2px #ffe0a1,0 0 0 1px #382516,0 0 24px rgba(255,224,161,.65)}
 .lt-shop .lt-card.card[data-aim] .art{background:color-mix(in srgb,var(--q) 8%,#fffaf0)}
+/* The pale colors' own grounds (Info.jsx cardGround): tinted 18% into cream, silver, white and colorless all read as the
+   same near-cream field at card size. Silver is steel with a coin's sheen, white is clean white against the cream card,
+   colorless is a plain grey with no tint at all. */
+.lt-shop .lt-card.card[data-ground="silver"] .art,.lt-shop .lt-card.card[data-ground="silver"][data-aim] .art{
+  background:linear-gradient(155deg,color-mix(in srgb,var(--silver) 34%,#f7f9fb) 0%,color-mix(in srgb,var(--silver) 10%,#fbfcfd) 46%,color-mix(in srgb,var(--silver) 42%,#eef1f4) 100%)}
+.lt-shop .lt-card.card[data-ground="white"] .art,.lt-shop .lt-card.card[data-ground="white"][data-aim] .art{background:#fffefa;box-shadow:inset 0 -1px 0 rgba(43,32,24,.10)}
+.lt-shop .lt-card.card[data-ground="colorless"] .art,.lt-shop .lt-card.card[data-ground="colorless"][data-aim] .art{background:color-mix(in srgb,var(--colorless,#8d9693) 30%,#f1ede4)}
 
 /* One click anywhere switches the order; the active word moves within one tactile control. */
 .lt-shop-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}

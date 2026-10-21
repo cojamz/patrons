@@ -202,6 +202,9 @@ export function RuleText({ def, text = def && def.text, round = 1, plain = false
 export const onTable = (state, def) => state.quadrants.includes(def.quadrant);
 /** The frame color of a member on this table: its quadrant's, or the neutral "colorless" one. */
 export const cardColor = (state, def) => (onTable(state, def) ? `var(--${def.quadrant})` : 'var(--colorless)');
+/** The pale colors' own card ground (shop.css [data-ground]): silver, white and colorless all tinted a near-cream picture
+ *  field and looked alike at card size, so each gets a ground of its own: steel with a sheen, clean white, plain grey. */
+export const cardGround = (state, def) => (!onTable(state, def) ? 'colorless' : def.quadrant === 'silver' ? 'silver' : def.quadrant === 'trading' ? 'white' : undefined);
 /** "colorless": a member whose quadrant isn't on this table. */
 export function Colorless({ state, def }) {
   if (onTable(state, def)) return null;

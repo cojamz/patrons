@@ -9,7 +9,7 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
+import { cardColor, cardGround, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { timingOf, unlockedBy, surely } from './cards.js';
@@ -156,7 +156,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
               className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying || picking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
-              style={{ '--q': cardColor(state, d) }} aria-disabled={!opt} data-unaffordable={short || undefined}
+              style={{ '--q': cardColor(state, d) }} data-ground={cardGround(state, d)} aria-disabled={!opt} data-unaffordable={short || undefined}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
