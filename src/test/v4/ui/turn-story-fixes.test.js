@@ -3,8 +3,8 @@
 //     indicate a Night Owl turn");
 //  2. what a member used before the placement did is told as that member's, never as the space's own result (final
 //     panel S#6 / game-skeptic w4 #6: "You took Spree · +3 gold · 3 gold from P2", the gold from Tribute Band's copy);
-//  3. a steal that arrives as magenta is one line naming each rival and what they lost, not "+2 magenta" and the same
-//     coins again as "from P2", "from P3" (pod list; as the paired Magenta flight shows it, ae2fc11a).
+//  3. a steal is told once: each rival's loss on one line, in the colors taken (stolen resources keep their colors
+//     since the Magenta redesign, 2026-10-19), never repeated.
 import { describe, expect, it } from 'vitest';
 import { applyMove, actionAt } from '../../../engine/v4/index.js';
 import { sceneQ } from '../../engine/v4/cards-helpers.js';
@@ -145,40 +145,47 @@ describe('a member used before the placement is told as its own, not as the spac
   });
 });
 
-describe('a steal that arrives as magenta is told once', () => {
-  // a fresh table each time (sceneQ runs the queue it is given in place)
-  const opts = () => ({ quadrants: ['gold', 'thieves', 'market', 'red'], n: 3, round: 1, left: 2, res: [{}, { gold: 3 }, { red: 2 }],
+describe('a steal is told once, in the colors it took', () => {
+  // Magenta redesign (decisions.md 2026-10-19): stolen resources keep their colors and every Magenta action gives +1
+  // magenta, so the "…, as magenta" line is gone. What stays: each rival's loss is told once, beside the thief's gain,
+  // and Help Yourself's followers are told once. A fresh table each time (sceneQ runs the queue it is given in place).
+  const opts = (round = 1) => ({ quadrants: ['gold', 'thieves', 'market', 'red'], n: 3, round, left: 2, res: [{}, { gold: 3 }, { red: 2 }],
     queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 2 }, { t: 'turn', p: 0 }] });
-  const steal = effects => {
-    const d = table({ ...opts(), effects }, 1);
-    d.take('thieves.tipoff');
+  const steal = (effects, round = 1, picks = []) => {
+    const d = table({ ...opts(round), effects }, 1);
+    d.take('thieves.pickpocket');
+    for (const id of picks) d.mv(id);
     d.on();
     return d.t.stories[0];
   };
-  it('from the effects: one line naming each rival and the coins, no "+2 magenta" beside it', () => {
+  const once = st => {
+    expect(st.text).not.toMatch(/as magenta/);
+    expect(st.lines.filter(l => /\+1 magenta/.test(l))).toHaveLength(1); // the inherent +1, never the stolen coins
+    expect(st.lines.filter(l => /follower/.test(l))).toHaveLength(1);
+  };
+  it('from the effects: the gain in its own colors, and one line for what you lost', () => {
     const st = steal(true);
     expect(st.fx).toBe(true);
-    expect(st.lines).toEqual(['1 gold from you, 1 red from P3, as magenta']);
+    expect(st.lines).toEqual(['+1 magenta +1 gold +1 follower', '1 gold from you']);
     expect(st.hit).toBe('took 1 of your gold');
-    expect(st.short).toBe('1 gold from you, 1 red from P3, as magenta');
+    expect(st.short).toBe('took 1 of your gold · +1 magenta +1 gold +1 follower');
+    once(st);
   });
-  it('from the log (no effects recorded): the same one line', () => {
+  it('from the log (no effects recorded): the same steal, its followers told once', () => {
     const st = steal(false);
     expect(st.fx).toBeUndefined();
-    expect(st.lines).toEqual(['1 gold from you, 1 red from P3, as magenta']);
+    expect(st.lines).toEqual(['+1 gold +1 magenta', '1 gold from you', 'Help Yourself: +1 follower']);
     expect(st.hit).toBe('took 1 of your gold');
-    expect(st.short).toBe('1 gold from you, 1 red from P3, as magenta');
+    expect(st.short).toBe('+1 gold +1 magenta · 1 gold from you');
+    once(st);
   });
-  it('several coins from one rival, then from both (Help Yourself): still told once', () => {
-    const d = table(opts(), 1);
-    d.take('thieves.tipoff');
-    d.on();
-    for (let k = 0; k < 2; k++) { d.take(d.s.pending.options.find(o => o.kind === 'slot' && !/Redistribute/.test(o.label)).label); d.on(); }
-    d.take('thieves.pickpocket');
-    d.on();
-    const st = d.t.stories[3];
-    expect(st.lines[0]).toMatch(/^(\d+ (gold|red) from (you|P3), )+as magenta$/);
-    expect(st.lines.some(l => /^\+\d+ magenta$/.test(l))).toBe(false);
-    expect(st.lines.filter(l => / from (you|P3)/.test(l))).toHaveLength(1);
+  it.each([true, false])('from both rivals (effects %s): each rival named once, in the color they lost', effects => {
+    const st = steal(effects, 2, ['take:1:gold', 'take:2:red']);
+    expect(st.lines.filter(l => / from you/.test(l))).toEqual(['1 gold from you']);
+    expect(st.lines.filter(l => / from P3/.test(l))).toEqual(['1 red from P3']);
+    expect(st.lines[0]).toMatch(/\+1 gold/);
+    expect(st.lines[0]).toMatch(/\+1 red/);
+    expect(st.hit).toBe('took 1 of your gold');
+    once(st);
   });
 });

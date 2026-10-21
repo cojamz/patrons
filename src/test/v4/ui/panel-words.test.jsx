@@ -66,10 +66,12 @@ describe('panel words (w3)', () => {
     // w3b #18: "Extra turns for all purple" read as a group effect; w3b #19: "Ransom a member" read backwards
     expect(panelText('purple', { key: 'rally' }, 3).verb).toMatch(/^Your next 2 turns, now$/);
     // w4b #5: "A rival's member or its cost" read as "I choose": the rival pays or loses, in line 1
-    expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^A rival pays a member’s cost, or loses it$/);
+    // shortened to fit on phones (v0.8.8 Magenta, 68c9bf0f): line 1 still says the rival decides, pay or lose
+    expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^Rival pays or loses member$/);
     expect(panelText('silver', { key: 'jubilee' }, 3).verb).toMatch(/per 2 silver held/);
-    // Shake Down says what the rival pays: the member's cost (f8)
-    expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/pays a member’s cost/);
+    // Shake Down says what the rival pays: the member's cost (f8), and the limit, in line 2
+    expect(panelText('thieves', { key: 'ransom' }, 2).second).toMatch(/pay its cost/);
+    expect(panelText('thieves', { key: 'ransom' }, 2).second).toMatch(/member ≤5/);
   });
 
   it('says 1 of what, what a space costs, and whose cost (live panel r1)', () => {
@@ -101,13 +103,22 @@ describe('panel words (w3)', () => {
     expect(panelText('red', { key: 'turnout' }, 1).main).toBe('+2 red');
   });
 
-  it('Chorus counts its arriving minion and shows a rate of one beside the total', () => {
+  // v0.8.2: Chorus excludes its own space, so its arriving minion never counts; only the other occupied Green spaces
+  it('Chorus counts the other occupied Green spaces, not its arriving minion, with a rate of one beside the total', () => {
     const s = createGame({ seats: [{ name: 'A', kind: 'human' }, { name: 'B', kind: 'bot' }], seed: 5, quadrants: ['gold', 'echo'] });
     const a = quadrant('echo').actions.find(x => x.key === 'hum');
     const t = panelText('echo', a, 1, s, 0);
-    expect(t.main).toBe('+2 green');
-    expect(t.second).toBe('1 per green action with a minion');
+    expect(t.main).toBe('+1 green');
+    expect(t.second).toBe('1 per other green action with a minion');
     expect(t.note).toBe('+1 green');
+    // a rival on another Green space adds one; a minion on Chorus itself adds nothing
+    const q = s.quadrants.indexOf('echo'), chorus = quadrant('echo').actions.indexOf(a);
+    const other = quadrant('echo').actions.findIndex((x, i) => i !== chorus && x.ring === 1);
+    expect(panelText('echo', a, 1, { ...s, slots: { [`${q}-${other}`]: 1 } }, 0).main).toBe('+2 green');
+    expect(panelText('echo', a, 1, { ...s, slots: { [`${q}-${other}`]: 1, [`${q}-${chorus}`]: 1 } }, 0).main).toBe('+2 green');
+    // the printed rule, without a table
+    expect(panelText('echo', a, 1).main).toBe('+1 green');
+    expect(panelText('echo', a, 1).second).toBe('per other green action with a minion');
   });
 
   it('Name Drop prints this turn\'s real payout big, with its rule small under it (f8)', () => {

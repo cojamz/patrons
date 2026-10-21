@@ -20,7 +20,11 @@ describe('member deck', () => {
     expect(Number(deck.dataset.left)).toBe(s.pile.length);
     expect(deck.querySelector('.n').textContent).toBe(String(s.pile.length));
     expect(container.querySelector('.lt-shop-head').textContent).not.toMatch(/in the pile/);
-    expect(container.querySelectorAll('.lt-shop-body > [data-deck] + .lt-cards .card').length).toBe(s.shop.length); // the deck comes first
+    // one grid (unified member/follower shop): the deck is its first cell, then the follower buys, then every member
+    const grid = container.querySelector('.lt-shop-body > .lt-cards');
+    expect(grid.firstElementChild.matches('[data-deck]')).toBe(true);
+    expect(grid.querySelectorAll(':scope > [data-deck]').length).toBe(1);
+    expect([...grid.querySelectorAll(':scope > .card[data-uid]')].map(c => Number(c.dataset.uid)).sort()).toEqual([...s.shop].sort());
   });
 
   it('follows the engine through recruits and refills', () => {

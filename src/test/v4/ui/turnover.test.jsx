@@ -10,10 +10,10 @@ import GameScreen from '../../../v4/game/GameScreen.jsx';
 afterEach(cleanup);
 
 const SEATS = [{ name: 'Ana', kind: 'human' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }, { name: 'Di', kind: 'bot' }];
-function advanceTo(state, kind, who) {
+function advanceTo(state, kind, who, also = () => true) {
   let s = state;
   for (let k = 0; k < 800; k++) {
-    if (s.pending && s.round >= 1 && s.pending.kind === kind && s.pending.player === who) return s;
+    if (s.pending && s.round >= 1 && s.pending.kind === kind && s.pending.player === who && also(s)) return s;
     s = applyMove(s, chooseBotMove(s, () => 0.3));
   }
   throw new Error(`never reached ${kind}`);
@@ -34,7 +34,10 @@ const wait = ms => act(() => new Promise(r => setTimeout(r, ms)));
 
 describe('the header when your turn ends', () => {
   it('says "Your turn is over" for a beat, then the next player\'s line', async () => {
-    let state = advanceTo(createGame({ seats: SEATS, seed: 21 }), 'buy', 0);
+    // a buy step whose pass hands the table to someone else (a snake turnaround or a step of yours after it isn't a
+    // turn ending: the bot moves that reach the table changed with the reworks, so the fixture asks for it)
+    const handsOver = s => s.pending.options.some(o => o.id === 'pass') && applyMove(s, { player: 0, option: 'pass' }).pending?.player !== 0;
+    let state = advanceTo(createGame({ seats: SEATS, seed: 21 }), 'buy', 0, handsOver);
     const session = drivenSession(state, [0]);
     const { container } = render(<GameScreen session={session} pace={0} />);
     await wait(20);

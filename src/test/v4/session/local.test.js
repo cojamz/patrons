@@ -34,8 +34,14 @@ describe('local session', () => {
   });
 
   it('rejects wrong seat, wrong turn, and illegal options', async () => {
-    // Seed5 gives the human the first reverse-order resource draft.
-    const s = createLocalSession({ seats: [{ name: 'A' }, { name: 'B', kind: 'bot' }], seed: 5, botDelayMs: 10_000 });
+    // a seed that gives the human the first decision (which seat drafts first follows the seed, and moved with the
+    // rules changes; seed 5 no longer does)
+    let s = null;
+    for (let seed = 1; seed < 50; seed++) {
+      s = createLocalSession({ seats: [{ name: 'A' }, { name: 'B', kind: 'bot' }], seed, botDelayMs: 10_000 });
+      if (s.getState().pending.player === 0) break;
+      s.destroy();
+    }
     const st = s.getState();
     expect(st.pending.player).toBe(0);
     await expect(s.submit({ player: 1, option: st.pending.options[0].id })).rejects.toThrow(/isn't yours/);

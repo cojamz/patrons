@@ -48,7 +48,9 @@ describe('Wheel', () => {
     const s = createGame({ seats, seed: 3, quadrants: ['red', 'yellow', 'market', 'gold'] });
     const { container } = render(<Wheel state={s} legal={new Map()} onPick={() => {}} flash={new Set()} facing={0} onFacing={() => {}} />);
     const rim = q => container.querySelector(`[data-plaque="${q}"]`).textContent;
-    expect(rim('red')).toMatch(/MOST RED MEMBERS/);
+    // Red's contest scores the red you hold at round end (Cory, 2026-10-18 resource-contest trial)
+    expect(rim('red')).toMatch(/MOST RED RESOURCES/);
+    expect(rim('red')).not.toMatch(/MEMBERS/);
     expect(rim('yellow')).toMatch(/MOST FULL SETS/);
     for (const q of s.quadrants) {
       expect(rim(q)).toMatch(/\+2/);
@@ -57,7 +59,7 @@ describe('Wheel', () => {
     }
     // the full sentence is in the rim's label (and its hover card), no native <title>: that tooltip sat on top of the
     // hover card, saying it twice (design pod, 2026-10-15)
-    expect(container.querySelector('[data-rim="red"]').getAttribute('aria-label')).toMatch(/most red members, \+2 followers/);
+    expect(container.querySelector('[data-rim="red"]').getAttribute('aria-label')).toMatch(/most red resources, \+2 followers/);
     expect(container.querySelector('[data-rim="red"] title')).toBeNull();
   });
 

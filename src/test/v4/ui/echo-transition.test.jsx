@@ -37,6 +37,10 @@ it('automatically copies after placing on Echo, through the step input lock', as
   const copyId = current.pending.options[0].id;
   await wait(700);
   expect(submit).toHaveBeenCalledWith({ player: 0, option: copyId });
-  expect(current.players[0].res.green).toBe(3);
+  // Echo's inherent +1, plus the copied Chorus yield: P2's Chorus paid only its inherent +1, since it excludes its own
+  // space (v0.8.2 clarification), and a copy repeats what the taker got
+  expect(current.players[0].res.green).toBe(2);
+  expect(current.players[1].res.green).toBe(1);
+  expect(current.log.at(-1)).toMatch(/copied Chorus \(P2's\): \+1 green/);
   expect(current.pending.kind).toBe('buy');
 });

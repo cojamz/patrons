@@ -43,13 +43,25 @@ describe("You'd get", () => {
     } finally { restore(); }
   });
   it('Open Door with tied cheapest members: "+1 member" once, naming each one you could get', () => {
+    // plain one-member cards tied at the cheapest cost (Mob stopped being plain in the Red rebuild: it counts as 5
+    // members, so a tie with it is the case below)
+    const restore = pinCosts({ 'red.intern': [1, 0], 'red.volunteer': [1, 0], 'red.reserve': [1, 0], 'red.twins': [5, 5], 'red.bigfamily': [5, 5], 'red.mentor': [5, 5] });
+    try {
+      const s = sceneQ({ quadrants: ['red', 'silver', 'gold', 'market'], shop: ['red.intern', 'red.volunteer', 'red.reserve', 'red.twins', 'red.bigfamily', 'red.mentor'] });
+      const y = youdWords(pv(s, 'red.hire'), s, 'red');
+      const text = [y.text, y.likely, y.best].filter(Boolean).join(' | ');
+      expect(text.match(/\+1 member/g)).toHaveLength(1);
+      for (const n of ['Intern', 'Volunteer', 'Benchwarmer']) expect(text).toContain(n);
+      for (const n of ['Twins', 'Big Family', 'Mentor']) expect(text).not.toContain(n);
+    } finally { restore(); }
+  });
+  it('Open Door tied with a card that counts as several members: says the best case and names it', () => {
     const restore = pinCosts({ 'red.intern': [1, 0], 'red.mob': [1, 0], 'red.host': [1, 0], 'red.twins': [5, 5], 'red.bigfamily': [5, 5], 'red.mentor': [5, 5] });
     try {
       const s = sceneQ({ quadrants: ['red', 'silver', 'gold', 'market'], shop: ['red.intern', 'red.mob', 'red.host', 'red.twins', 'red.bigfamily', 'red.mentor'] });
       const y = youdWords(pv(s, 'red.hire'), s, 'red');
-      const text = [y.text, y.likely, y.best].filter(Boolean).join(' | ');
-      expect(text.match(/\+1 member/g)).toHaveLength(1);
-      for (const n of ['Intern', 'Mob', 'Host']) expect(text).toContain(n);
+      expect(y.text).toMatch(/up to \+5 members \(Mob\)/);
+      expect(y.note).toBe('your pick');
     } finally { restore(); }
   });
 });

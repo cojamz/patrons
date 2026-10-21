@@ -979,7 +979,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   }
   // followers: what this turn changed (contest prizes are the round's, not the turn's)
   const fl = s => engineFollowers(s, s.players[actor]) - (s.players[actor].contest || 0);
-  const f = fl(end) - fl(start);
+  const f = fl(end) - fl(start) - tracedF[actor]; // what a line above already told (e.g. "Help Yourself: +1 follower") is not told again
   if (f) out.push(`${f > 0 ? '+' : '−'}${fword(f)}`);
   // a rival's followers that moved and no member line explains (a follower drawn from them)
   for (const p of P) {
