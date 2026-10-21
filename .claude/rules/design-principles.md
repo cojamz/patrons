@@ -57,7 +57,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 ## Process
 - Start basic. Each sphere gets a plain first layer (simple gains, simple members); complexity comes in later layers.
 - The tracking burden is the UI's job. Only cut a rule if it can't be shown clearly.
-- Price every card by measurement before Cory sees it, and name the instrument behind every number (Easy/Normal/Hard bot, thinking bots, AI tester). Sims run daily: `scripts/v4-sim.mjs`, `v4-big-followers`, `v4-member-value`, `v4-fair-price`, `v4-bot-levels`, `v4-thinker-tables`. (Replaces "no simulator until the rules settle", 2026-10-15.)
+- Price every card before Cory sees it with design/eval/value-model.md, and name the instrument behind every number (value model, Easy/Normal/Hard bot, thinking bots, AI tester). Sims (`scripts/v4-sim.mjs` and friends) run only when Cory asks (Oct 20, token-conscious week).
 - Bot statistics are not design flaws. A bot taking a dead option says nothing about a person; fix only what can never pay, duplicates and dominated cards.
 - Report the buy-followers-only win rate (target about 25%) with every balance change, and check which way each fix points.
 

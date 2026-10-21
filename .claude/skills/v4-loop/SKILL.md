@@ -14,15 +14,15 @@ Each iteration:
    - `playtester` — plays the hot-seat game in a browser as a first-timer.
    - `ux-reviewer` — reviews the screenshots against design-principles and the play.html prototype look.
    Fix what they find (verify before trusting; no blind fixes).
-5. Commit with a clear message and push; the PR's Netlify preview redeploys.
+5. Commit with a clear message and push; ship with /ship-batch (the play link changes only through scripts/v4-play.sh).
 
-6. Blind panel (final gate). Each round runs FRESH agent instances that have never seen the game, 3 in parallel with different seats: a laptop newcomer, a phone tapper (touch emulation) and a saboteur (misclicks, spam, keyboard only). Never reuse a tester, because once it has learned the game it's no longer blind. A misread or issue reported by 2+ testers is confirmed; a single report gets verified by Claude before it's fixed. While iterating, one fresh tester is enough; run the full panel at milestones.
+6. Blind panel (only when Cory asks for one, or suggest it when a significant stretch of work makes it due; our tests and gates are the regular bar). Each round runs FRESH agent instances that have never seen the game, 3 in parallel with different seats: a laptop newcomer, a phone tapper (touch emulation) and a saboteur (misclicks, spam, keyboard only). Never reuse a tester, because once it has learned the game it's no longer blind. A misread or issue reported by 2+ testers is confirmed; a single report gets verified by Claude before it's fixed. While iterating, one fresh tester is enough; run the full panel at milestones.
    Testers see only the screen: each drives the frozen build through `scripts/v4-eyes.mjs` (screenshots, coordinates, timings; no DOM, no Playwright of its own; one eyes browser per tester, `stop` after), keeps bot speed at default, plays a table with a stealing quadrant, walks design/eval/critic-calibration/checklist.md (with its ten audits) and lists everything (40+) before grading; only a brief that scored ≥80% recall on the latest answer key (critic-calibration/results.md) is used, and the design sweep is two fresh testers on brief.md with their lists merged (one alone reached 72%, two 82%).
    Final gate: start the build yourself and give the `game-skeptic` agent only the URL and the player rulebook text (design/rulebook.md); it must never see the repo. The agent plays the real build adversarially and grades it. Loop until its verdict is SHIP with overall A- or better; fix its issues worst-first and re-run it fresh (no memory of the last run).
 
 Final output for Cory: besides the verdict, a short "how it feels" write-up synthesized from the testers' table talk (fun, tension, best moments, boredom, replay pull), clearly marked as AI players against bots, not real people.
 
-Done = check:v4 green, game-skeptic says SHIP (A- or better), and Cory has a link.
+Done = the gate is green, you've seen the change on a fresh frozen build at about 1270x700, and Cory has the link and a screenshot. A panel verdict applies only when a panel was run.
 Never present agent output to Cory unvetted.
 
 ## Speed without cutting corners

@@ -61,6 +61,8 @@ rm -rf "$WT/play"
 mkdir "$WT/play"
 cp -R "$TMP/play/." "$WT/play/"
 git -C "$WT" add --all -- play
+# New threads clone main: keep its copy of the harness in step with the shipped commit.
+[ -f "$TMP/source/scripts/harness-sync-main.sh" ] && bash "$TMP/source/scripts/harness-sync-main.sh" --into "$TMP/source" "$WT"
 if ! git -C "$WT" diff --cached --quiet; then
   git -C "$WT" commit -qm "Play link: build $SHORT"
 fi
