@@ -4,6 +4,8 @@ Every pitch Claude (or an agent) makes to Cory, and his answer, gets one line he
 Format: `- YYYY-MM-DD · pitch · ✅ yes / ❌ no / ↔ changed / … no verdict yet · his reason, quoted when we have it`.
 The patterns feed "Cory's taste" in design/strategy.md; reread both before pitching (/brainstorm).
 
+- 2026-10-20 · Blue shapes: churn, pile, claim, sweeten (blue-ideas-2026-10-20.md) · ↔ · "CHURN is closest to what I was thinking of. Then pile, and I also like claim a little." His own adds: flipping out different cards, sending all of one color to the bottom; sweeten got no mention
+- 2026-10-20 · Blue next after Magenta, as the shop · ✅ · "we should do blue, but its tricky… more dedicated shop/mixing up the shop somehow"
 - 2026-10-19 · Magenta round I: steal 1 × round plus an extra follower purchase · ❌ · "poor in Round I"
 - 2026-10-19 · Magenta round I: optional color exchange on a steal · ❌ · redundant: players already choose which resources to steal
 - 2026-10-19 · Magenta round I: steal 1 × round plus theft protection (Lie Low) · ↔ · liked the shape, but it "outclasses the plain scaling steal"; kept after revising to 1 × round
