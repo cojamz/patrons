@@ -1211,7 +1211,12 @@ const workerSourceOf = task => task.workerSource !== undefined ? { workerSource:
 const extraOf = task => ({ ...workerSourceOf(task), ...(task.extra ? { extra: true } : {}), ...(task.afterPurchase ? { afterPurchase: true } : {}) });
 // A real buy (member or followers) in a buy step. The second one spends a Big Spender.
 function boughtOnce(state, p, task) {
-  if (task.extra && !alwaysBuysTwice(state, p)) spendAllowance(state, p, 'extraBuy');
+  if (task.extra) {
+    // Shopaholic's second buy is named like any other member's use (the fire audit wants every effect in the log)
+    const always = p.members.find(uid => effectiveDefs(state.cards[uid]).some(d => d.buyTwice));
+    if (always !== undefined) log(state, `${p.name} uses ${defById(state.cards[always].def).name}.`);
+    else spendAllowance(state, p, 'extraBuy');
+  }
 
   p.turnBuys = (p.turnBuys || 0) + 1;
   if (task.uid !== undefined) state.queue.unshift({ t: 'buy', p: p.id, afterPurchase: true, ...workerSourceOf(task) });

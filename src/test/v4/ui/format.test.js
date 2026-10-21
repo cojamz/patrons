@@ -184,7 +184,10 @@ describe('v4 format helpers', () => {
           }
           if (owner !== actor) {
             rival++;
-            expect(effectStory(s, n, actor, owner, n.effects).short).toBe(`swapped your ${out} for the shop's ${inc}`);
+            // a Movement Penalty hit may follow on the same line ("…, Movement Penalty took 1 of your followers"), never a repeat
+            const short = effectStory(s, n, actor, owner, n.effects).short;
+            expect(short.startsWith(`swapped your ${out} for the shop's ${inc}`)).toBe(true);
+            expect(short.split(`swapped your ${out}`).length).toBe(2);
           } else expect(effectStory(s, n, actor, actor, n.effects).short).toBe(`gave ${out} to the shop, took the shop's ${inc}`);
           seen++;
         }

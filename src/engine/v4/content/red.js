@@ -112,7 +112,7 @@ export default {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
     m('recruitbonus', 'Recruit Bonus', 1, 1, 'Whenever one of your members’ "When recruited" happens, +1 of its color.', { f: 2,
-      onRecruitAbility(ctx, owner, card, recruited) { ctx.gain(owner, ctx.quadrant(recruited.def.quadrant).resource, 1); },
+      onRecruitAbility(ctx, owner, card, recruited) { const r = ctx.quadrant(recruited.def.quadrant).resource; if (ctx.state.resources.includes(r)) ctx.gain(owner, r, 1); }, // a guest has no color: nothing
     }),
     m('movementpenalty', 'Movement Penalty', 1, 2, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
       onMoveMember(ctx, owner, card, info) { if (info.from !== owner && ctx.followers(info.from) > 0) info.from.bonus -= 1; },

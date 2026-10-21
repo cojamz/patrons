@@ -1201,7 +1201,8 @@ export function effectStory(start, end, actor, me = null, fx = []) {
   const big = swapLine || out.find(l => /^(recruited|bought|traded|released) /.test(l) || EXTRA_LINE.test(l));
   const conv = base && base.conv && base.conv.length ? base.conv : [];
   // the strip's one line: what hit you, then what you got, then the biggest thing the turn did
-  const short = [hit && !(big && big.includes(hit)) && !(gain && gain.includes('from you')) ? hit : null, gift || null, gain && conv.length ? `${gain} (${conv.join(', ')})` : gain, big && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  const hitSaid = hit && !(big && big.includes(hit)) && !(gain && gain.includes('from you')) ? hit : null;
+  const short = [hitSaid, gift || null, gain && conv.length ? `${gain} (${conv.join(', ')})` : gain, big && !(hitSaid && hitSaid.includes(big)) && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
   const head = base ? base.head : (actor === me ? 'You' : P[actor].name);
   const touched = base ? base.touched : [];
   return { ...(base || {}), text: [head, ...out].join(' · '), head, lines: out, actor, touched, short, hit, gift, fx: true };
