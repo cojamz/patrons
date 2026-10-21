@@ -12,6 +12,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 
 ## Talking to him
 - Extremely brief, smart brevity. A few lines is normal and eight the most, unless he asks for more (he found five too aggressive, Oct 20). Longer things go in a file or picture, linked. The message check hook bounces anything longer, plus tables, headers, bold labels, em dashes, UTC times and AI tics.
+- Say what changes for him, in everyday words, not what was built. No file names, mechanisms or labels like "gate", "hook", "tracker", "moves 1-6" unless he asked how it works.
 - Lead with what you did and what's next. Status is three lines: what's running, what's next, ETA.
 - Decisions come as a numbered list he answers by number ("1 yes, 2 no"), one line each, your default in brackets. Only design and feel calls go to him.
 - Use his words. Never coin labels. Say "buy followers". Any card or space you name gets its text quoted in a few words and what changes for a player.
@@ -39,3 +40,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-20: Rewrote to current rules only; history archived. From Cory's Oct 20 notes: extremely brief (smart brevity), easy to track every parallel thread without asking, never make him ask to save or organize, Claude levels up as creative partner and facilitator while he makes design calls, careful with tokens on game runs, tests over blind panels (panel occasionally, suggested when due). Brevity is now a gate (message-check hook) after the third correction.
 - 2026-10-20: Cory, on a third Netlify mention: "its not relevant! how could it be blocking anything". Don't raise irrelevant infrastructure; answer what's actually blocking (here, nothing). Netlify check is ignored per harness.md.
 - 2026-10-20: Cory: "idk what v4 vs. v3 means so thats probably slop" and "5 lines is aggressive threshold but i like the spirit". v3/v4 now banned in messages (gate); cap raised to 8 lines / 160 words.
+- 2026-10-20: Cory: "that was all total gibberish" about a report full of mechanisms and numbered moves. Messages say what changes for him in everyday words; how it works only if he asks.

@@ -28,6 +28,8 @@ const internals = prose.match(/\b(sessions?|subagents?|wakes?|coordinator|cmsg_\
 if (internals) hard.push(`don't talk about internals ("${internals[0]}"); name the thread or say what's happening in the game`);
 
 if (/\bv[34]\b(?!\.\d)/i.test(prose)) hard.push('"v3"/"v4" mean nothing to Cory; say "the old game" / "the game" (version numbers like v0.8.11 are fine)');
+const mech = prose.match(/\b(hooks?|gates?|repo|mirror(ed)?|orientation|harness|\.mjs|\.md|jsonl|frontmatter|PreToolUse|SessionStart)\b/gi) || [];
+if (mech.length >= 3) hard.push(`too much machinery (${[...new Set(mech.map(m => m.toLowerCase()))].join(', ')}); say what changes for Cory in everyday words`);
 if (/\bnetlify\b/i.test(prose)) hard.push("don't mention Netlify; it's retired and its red check is noise (Cory corrected this twice)");
 
 const soft = [];

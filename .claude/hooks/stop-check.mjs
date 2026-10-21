@@ -36,6 +36,16 @@ if (note) {
   if (!touched && once(`note:${note.id}`)) asks.push(`Cory's note ${note.id} is long enough to carry calls. Log any design call to design/decisions.md (date, one line, why), any pitch verdict to design/pitch-ledger.md, any correction to how we work in .claude/rules/working-with-cory.md with a changelog line. If there is truly nothing to log, carry on.`);
 }
 
+// 1b. A finished job leaves a lesson: code commits this thread made, and nothing new in design/lessons/.
+let started = 0;
+try { started = new Date(JSON.parse(readFileSync(input.transcript_path, 'utf8').split('\n')[0]).timestamp || 0).getTime(); } catch {}
+if (started) {
+  const since = `--since=${Math.floor(started / 1000)}`;
+  const code = sh(`git log ${since} --format=%h -- src scripts e2e .claude/hooks`);
+  const lessons = sh(`git log ${since} --format=%h -- design/lessons`) || sh('git status --porcelain -- design/lessons');
+  if (code && !lessons && once(`lesson:${input.session_id}:${code.split('\n')[0]}`)) asks.push('This thread committed code but left no lesson. If anything was slow, surprising or corrected, add one line to the matching design/lessons/<topic>.md (what happened · the rule · where it now lives). Nothing learned is a fine answer: carry on.');
+}
+
 // 2. Doc and harness edits get committed and pushed, so the next thread sees them.
 const dirty = sh('git status --porcelain -- design .claude CLAUDE.md AGENTS.md scripts');
 if (dirty && once(`dirty:${dirty}`)) asks.push(`Uncommitted docs/harness changes:\n${dirty.split('\n').slice(0, 8).join('\n')}\nCommit and push them (git pull --rebase first) unless they're mid-change.`);
