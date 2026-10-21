@@ -1,0 +1,17 @@
+sweep: 3 seats, normal bots, 300 paired seeds (free-choice arm on the first 0, 2 rollouts a side), forked at round 2. 1376s on 3 workers.
+
+Robin Hood: printed 4, fair ~3.8 (90% 2.3–5.2; line 4.26 -1.12·P; interpolated 3.4)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   0       4.53 ±2.52   100    11   |             –          –     –   |    6.79 (6.46)      2.0
+   2       2.17 ±2.59   100     4   |             –          –     –   |    6.59 (6.46)      2.0
+   4      -0.95 ±2.72   100    -1   |             –          –     –   |    6.27 (6.46)      2.0
+   6      -2.46 ±2.52    98    -8   |             –          –     –   |    6.18 (6.46)      2.1
+   8      -4.33 ±2.21    90    -7   |             –          –     –   |    6.40 (6.46)      2.3
+
+Shoplifter: printed 4, fair ~6.6 (90% 5.6–7.8; line 12.11 -1.82·P; interpolated 7.0)  [thieves,red,echo]
+   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought
+   0      11.84 ±3.38   100    21   |             –          –     –   |    7.78 (6.46)      2.0
+   2       9.86 ±3.04   100    20   |             –          –     –   |    7.64 (6.46)      2.0
+   4       2.56 ±3.03   100     4   |             –          –     –   |    7.18 (6.46)      2.0
+   6       2.54 ±2.92    98     3   |             –          –     –   |    6.97 (6.46)      2.1
+   8      -2.74 ±2.44    90    -5   |             –          –     –   |    6.77 (6.46)      2.3
