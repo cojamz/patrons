@@ -1,11 +1,10 @@
 import { browserPath } from './lib/browser.mjs';
-// E2E: rule-bending members and Release, played through the real UI at 1270×700.
+// E2E: rule-bending members (and Release staying gone), played through the real UI at 1270×700.
 // From a saved round-I game where P1 (the only person) already holds Squatter, Insider, Straggler and a gold member:
 //  (b1) Squatter: every squat:<q>-<i> option the engine offers is a clickable, labelled space (wheel + panel), and
 //       clicking one places there;
 //  (b2) Insider: the top-of-pile cards the engine offers show in the shop, marked "From the pile", and can be recruited;
-//  (b3) Release: your releasable member's card offers "Release: +N ●" (no header dropdown); pressing it leads to the color choice and
-//       finishes the release;
+//  (b3) Release is gone (Cory, 2026-10-17): no release option in your buy step, no Release on a member's card;
 //  (b4) Straggler: it asks only where your last minion goes (Cory, 2026-10-15); the open spaces light on the wheel (every
 //       choice is picked on the board), "Stay put" stays a button, and picking a lit space works.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5188.
@@ -126,37 +125,19 @@ try {
           }
         }
       }
-      // (b3) Release, a seat action (dialogs pod, wave-2 #11): in your buy step, your member's card offers
-      // "Release: +N ●"; no header dropdown
-      const relUid = !seen.has('release') && await page.$('.lt[data-phase="buy"][data-yours="1"]') ? await page.evaluate(() => {
-        try { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; const o = s.pending && s.pending.options.find(x => x.kind === 'release'); return o ? o.uid : null; } catch { return null; }
-      }) : null;
-      if (relUid != null && await page.$('.lt-prompt .rel-toggle')) errors.push('(b3) the header still has a Release dropdown');
-      let rel = null;
-      if (relUid != null) {
-        const fig = await page.$(`.lt-seat.mine .cs-member[data-uids~="${relUid}"] .fig`);
-        if (fig) { await fig.hover(); rel = await page.waitForSelector('[data-release]', { timeout: 2000 }).catch(() => null); }
-        if (!rel) errors.push('(b3) your releasable member\'s card offers no Release');
-      }
-      if (rel && !seen.has('release')) {
-        seen.add('release');
-        await shot('b3-release-offered');
-        const txt = ((await rel.getAttribute('aria-label')) || '').trim();
-        if (!/^Release .+: it goes to the bottom of the pile and you get back \d+ \w+/.test(txt) || /undefined/.test(txt)) errors.push(`(b3) the release button says "${txt}"`);
-        if (!(await rel.$('.pip'))) errors.push('(b3) the release refund is not shown as a dot');
-        await rel.click();
-        await page.waitForTimeout(400);
-        // the color pick(s) come next as a normal choice
-        let k = 0;
-        // (a button by the caption, or your own lit stack: pick-on-board)
-        for (; k < 12 && await page.$('.prompt.choice') && await page.$('.lt[data-phase="choose"][data-yours="1"]'); k++) {
-          if (k === 0) await shot('b3-release-colors');
-          await answerChoice(page);
-          await page.waitForTimeout(350);
-        }
-        if (!k) errors.push('(b3) Release did not ask which colors');
-        seen.add('released');
-        continue;
+      // (b3) Release is gone (Cory, 2026-10-17 #40/#57: "Release needs to go entirely"; DEFAULT_RULES.release is false):
+      // the engine offers no release in your buy step and no member card offers one
+      if (!seen.has('no-release')) {
+        seen.add('no-release');
+        const offered = await page.evaluate(() => {
+          try { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return (s.pending?.options || []).filter(x => x.kind === 'release' || /^release:/.test(x.id)).length; } catch { return -1; }
+        });
+        if (offered !== 0) errors.push(`(b3) the buy step offers ${offered} release option(s); Release is off by default`);
+        const fig = await page.$('.lt-seat.mine .cs-member .fig');
+        if (fig) { await fig.hover(); await page.waitForTimeout(500); }
+        if (await page.$('[data-release]')) errors.push('(b3) a member card still offers Release');
+        if (await page.$('.lt-prompt .rel-toggle')) errors.push('(b3) the header still has a Release dropdown');
+        await page.mouse.move(2, 2);
       }
     }
 
@@ -165,10 +146,13 @@ try {
     if (/Straggler/.test(prompt) && !seen.has(`straggler-${prompt.slice(0, 30)}`)) {
       seen.add(`straggler-${prompt.slice(0, 30)}`);
       seen.add('straggler');
+      // the ask docks once the minion's own flight has landed (as a person sees it)
+      await page.waitForSelector('.app.game:not([data-animating])', { timeout: 8000 }).catch(() => {});
+      await page.waitForTimeout(300);
       await shot(`b4-straggler-${seen.size}`);
       if (/which (one|minion)|move one of your minions/i.test(prompt)) errors.push(`(b4) Straggler still asks which minion: "${prompt.slice(0, 80)}"`);
       const stay = await page.$('.prompt.choice button[data-option="no"]');
-      if (!stay) errors.push('(b4) Straggler has no "Stay put" button');
+      if (!stay) errors.push(`(b4) Straggler has no "Stay put" button: ${(await page.$eval('.prompt.choice', e => e.outerHTML).catch(() => '')).slice(0, 600)}`);
       const onBoard = await page.$$eval('.slot[data-option]', els => els.map(e => e.getAttribute('data-option')).filter(id => /^to:/.test(id)));
       if (!onBoard.length) errors.push('(b4) Straggler\'s destinations are not lit on the wheel');
       if (onBoard.length) await page.click(`.slot[data-option="${onBoard[0]}"]`).catch(e => errors.push(`(b4) could not pick ${onBoard[0]} on the wheel: ${e.message}`));
@@ -182,7 +166,7 @@ try {
     await page.waitForTimeout(did ? 60 : 80);
   }
   if (!(await page.$('.results'))) errors.push('the game did not finish');
-  for (const why of ['squat', 'pile', 'release', 'released', 'straggler']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
+  for (const why of ['squat', 'pile', 'pile-bought', 'no-release', 'straggler']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
   await shot('results');
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);
