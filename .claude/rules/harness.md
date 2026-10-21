@@ -49,3 +49,4 @@ One thread per job. Each owns its files, posts its status line, and messages the
 - 2026-10-19: A single legal payment plan doesn't guarantee auto-confirm in browser purchase checks; confirm a visible pay sheet, keep exact ownership assertions.
 - 2026-10-19: Dismiss the local handoff before settled screenshots, or overlays hide the wheel.
 - 2026-10-20: New threads loaded main's v3 CLAUDE.md and v3 game rules for weeks, so every thread started wrong. Fix: main mirrors the harness, and bootstrap moves fresh clones onto the v4 branch.
+- 2026-10-20: e2e/v4/layout.mjs is already red on the live build (follower-tile overflow, a 1100px setup wait), so running it on a CSS tweak cost ~10 min and proved nothing. Fix: CSS-only tweaks ship on the related unit tests plus Claude's own screenshot; layout.mjs needs repair before it's used as a gate.
