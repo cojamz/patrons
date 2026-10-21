@@ -1,0 +1,32 @@
+import { describe, it, expect } from 'vitest';
+import { spawnSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
+
+const check = text => {
+  const r = spawnSync('node', ['.claude/hooks/message-check.mjs'], { input: JSON.stringify({ tool_input: { text } }), encoding: 'utf8' });
+  return r.stdout ? JSON.parse(r.stdout).hookSpecificOutput.permissionDecisionReason : null;
+};
+
+describe('message check hook (Cory voice gate)', () => {
+  it('passes a short plain update', () => {
+    expect(check('Shipped v0.8.11: shop names fit. Next is the Red toast, about 9:40pm.')).toBeNull();
+  });
+  it('passes a numbered pick list', () => {
+    expect(check('Two calls:\n1. Cut Social Climber [yes]\n2. Guests stay colorless [yes]\n3. Tiebreaker is most members [yes]')).toBeNull();
+  });
+  it('bounces tables, headers, UTC times, em dashes and tics every time', () => {
+    for (const t of ['| a | b |\n|---|---|\n| 1 | 2 |', '## Status\nDone.', 'Back at 23:40 UTC.', 'Done — next is red.', 'Fair point, shipping now.', 'Want me to ship it?']) {
+      expect(check(t)).toMatch(/bounced/);
+      expect(check(t)).toMatch(/bounced/);
+    }
+  });
+  it('bounces a long message once, then lets the identical resend through', () => {
+    const t = `long ${Date.now()}\n` + 'line\n'.repeat(8);
+    expect(check(t)).toMatch(/lines/);
+    expect(check(t)).toBeNull();
+    rmSync('/tmp/cults-message-check', { recursive: true, force: true });
+  });
+  it('ignores times and paths inside code and links', () => {
+    expect(check('Log is `run-23:40.txt`, see https://x.io/a—b')).toBeNull();
+  });
+});
