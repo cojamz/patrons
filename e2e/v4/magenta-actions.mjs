@@ -51,8 +51,8 @@ function fixture(name) {
     s.players[2].res.gold = 1;
     deal('thieves.watchdog', 3); s.players[3].res.gold = 40;
   } else if (name === 'ransom') {
-    action = 'ransom'; member = deal('red.loyalists', 1);
-    // Loyalists costs 5; the old <=4 ceiling would wrongly hide it.
+    action = 'ransom'; member = deal('red.patriarch', 1);
+    // Patriarch costs 5 (Loyalists did until the Oct 21 prices, now 3); the old <=4 ceiling would wrongly hide it.
     s.players[1].res.red = 0;
     picks = [`card:${member}`, 'pay'];
   } else if (name === 'heist') {
