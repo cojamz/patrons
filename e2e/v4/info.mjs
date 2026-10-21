@@ -48,7 +48,7 @@ import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { tickSave } from './lib/tick-save.mjs';
 import { aimSave } from './lib/aim-save.mjs';
-import { defById } from '../../src/engine/v4/index.js';
+import { defById, cardDef, quadrant } from '../../src/engine/v4/index.js';
 import { richSave } from './lib/rich-save.mjs';
 import { answerChoice } from './lib/answer.mjs';
 import { TEXT_CLIP } from './lib/textclip.mjs';
@@ -742,12 +742,24 @@ try {
     await pg.screenshot({ path: `${SHOTS}/10-member-card.png` });
     // the pay dialog: place, then recruit a gold member; the dialog holds focus and names the rule-changers
     await pg.mouse.move(4, 690);
-    const sp = await pg.$('.slot.can .base');
+    // a plain gain (blue's "+3 blue"): Intro Offer stacked on the −4 to 8 off, so every gold member came free, and Even
+    // Swap's question swapped Penny Pincher away (both after the Oct 21 prices and deck)
+    const plain = `${st.quadrants.indexOf('blue')}-${quadrant('blue').actions.findIndex(a => a.key === 'a1')}`;
+    const sp = await pg.$(`.slot.can[data-slot="${plain}"] .base`);
     const bb = await sp.boundingBox();
     await pg.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
     // the space's question, answered where it's asked (Kickback: a rival's seat; lib/answer.mjs)
-    for (let k = 0; k < 40 && !(await pg.$('.lt[data-phase="buy"][data-yours="1"]')); k++) { await answerChoice(pg); await pg.waitForTimeout(250); }
-    const uid = await pg.evaluate(() => { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return s.shop.find(u => s.cards[u].def.startsWith('gold.') && s.cards[u].def !== 'gold.thrift'); });
+    // (only while a choice is open, never a buy: the step can turn to the buy step between the check and the click, and
+    // a follower buy there ended the turn before the gold member was tried; layout.mjs does the same)
+    await pg.waitForTimeout(300);
+    for (let k = 0; k < 40 && !(await pg.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
+      if (await pg.$('.lt[data-phase="choose"][data-yours="1"], .lt[data-phase="pay"][data-yours="1"]')) await answerChoice(pg, { avoid: ['pass', 'card:', 'tier:', 'slot:', 'release:'] });
+      await pg.waitForTimeout(250);
+    }
+    // the priciest gold member, so the −4 still leaves a real choice of how to pay (Oct 21 prices: Merchant left 2, one
+    // way, paid without asking)
+    const golds = await pg.evaluate(() => { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return s.shop.filter(u => s.cards[u].def.startsWith('gold.') && s.cards[u].def !== 'gold.thrift'); });
+    const uid = golds.length ? golds.map(u => [u, cardDef(st, u)]).sort((a, b) => (b[1].s + b[1].w) - (a[1].s + a[1].w))[0][0] : null;
     if (uid == null) fail('(q) no gold member in the shop to pay for', 'pay');
     else {
       await pg.click(`.lt-shop .card[data-uid="${uid}"]`);
