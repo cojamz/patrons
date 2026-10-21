@@ -10,6 +10,7 @@ New cloud threads clone `main`, so main carries a mirror of the harness (CLAUDE.
 - Stop (`hooks/stop-check.mjs`): before a turn ends, asks once for any of: logging a long note of Cory's, a lesson after code work, committing doc/harness edits, posting or refreshing this thread's status line.
 - Rules load by need: design-principles.md only when touching engine code or design docs, screen.md (points at taste.md) only when touching screen code.
 - PreCompact: refreshes the status line's git fields.
+- Weekly review (scheduled, Mondays 8:34am Eastern, in the harness thread): reads the week's corrections, lessons, slow checks and the board, and sends Cory up to 3 numbered changes to how we work. Cory said yes Oct 21.
 
 ## Where things go
 - Thread status, live: `node scripts/status.mjs set --thread "<title>" --state working|waiting|blocked|done --doing … --next … --eta … [--cory "what he owes"]`. Files in /mnt/project-files/status/ (board.md, board.html; the board on the project tab renders from board.md). Elsewhere: .status/.
