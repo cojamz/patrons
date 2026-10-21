@@ -170,7 +170,9 @@ describe('v4 format helpers', () => {
         const n = applyMove(s, chooseBotMove(s, () => 0.4), { effects: true });
         const line = n.log.slice(s.log.length).map(l => l.match(/^(\w+) swapped (\w+)'s (.+) and Shop's (.+)\.$/)).find(Boolean);
         // the game's last move also tells the game-end scoring ("you +6 followers (Tycoon) · swapped …"): judge the rest
-        if (line && !n.over) {
+        // (Even Swap may also trade two shop members' places, 'swapped Shop's X and Shop's Y': no member left a cult, so
+        // there's nothing to name here; bots pick it since their swaps are scored for real, 2026-10-21. todo.md tracks its story line.)
+        if (line && !n.over && line[2] !== 'Shop') {
           const [, actorName, ownerName, out, inc] = line;
           const actor = n.players.findIndex(p => p.name === actorName), owner = n.players.findIndex(p => p.name === ownerName);
           for (const me of [actor, (actor + 1) % 3]) {

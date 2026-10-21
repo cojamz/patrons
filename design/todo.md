@@ -51,6 +51,7 @@ Laptop UI clarity
 - [x] Red shop-swap turn toast names both the outgoing and incoming member. (v0.8.21)
 - [ ] Round-end and end-game screens: appear quickly (A4 result-card lag), readable layout, hover for detail, no totals counting up for nothing.
 - [ ] End-game scoring shows where every point comes from: each member pops "+x" for its people, then its granted followers (Cory, 10-15).
+- [ ] Even Swap trading two shop members' places tells nothing in "since your last turn" (no member moved, so no effects); say "swapped the shop's X and Y". Bots pick it as a harmless swap since 2026-10-21.
 - [ ] Seat pass: minions, follower number, currencies, and rivals' points and engine readable at a glance. Show Cory 2 mockups first.
 - [x] Laptop fits: at 900×600 a rival's stacks crowd its total; at 1270×700 the strip squeezes "since your last turn" and holds one line under a turn card. (Lane 8, 10-21: chairs run full height beside the narrow shop strip; 1270×700 story holds two turns. turnstory t2/t9 fail before and after, pre-existing.)
 - [x] Large screens (≥1600px): side columns scale with the wheel (zoom proposal, design-pod queue.md). (Lane 8, 10-21: zoom steps 1.25/1.4/1.6/2; hover cards stay 1×.)
