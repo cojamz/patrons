@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.15, published 2026-10-20. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.16 — 2026-10-20 — unreleased
+
+- Guest members are colorless: no sphere counts them, and their whole cost is paid in any colors.
+
 ## v0.8.15 — 2026-10-20 — shipped (source da1b0c7, main 7497f03)
 
 - A busy rival's chair shows more of its members: "safe this round" sits under the member count.

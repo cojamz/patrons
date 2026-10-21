@@ -24,7 +24,7 @@ export const GLOSSARY = [
   { key: 'in play', word: 'In play', match: /\bin play\b/,
     def: 'Held by any player. Members in the shop or the pile are not in play.' },
   { key: 'release', word: 'Release', legacy: true, match: /\breleas(e|ed|es)\b/,
-    def: 'Legacy rule, unavailable in normal play. Once per round, in your buy step: put one of your members (not one you recruited this round) at the bottom of the pile and take back only the colored part of its cost, in its own color (in any colors if its color isn’t on the table). You keep your buy.' },
+    def: 'Legacy rule, unavailable in normal play. Once per round, in your buy step: put one of your members (not one you recruited this round) at the bottom of the pile and take back only the colored part of its cost, in its own color. You keep your buy.' },
   { key: 'extra turn', word: 'Extra turn', match: /\bextra turns?\b/,
     def: 'Another turn right after this one: you place one more minion and may buy again. Never in round I; later only if a space remains after every minion still due has landed.' },
   { key: 'copy', word: 'Copy', match: /\bcop(y|ies|ied)\b(?= (?:any|every|one|the|it|that|what|a)\b)|\bwhat you copy\b|\bcopy a space\b/,

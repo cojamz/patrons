@@ -31,8 +31,11 @@ export function previewSpace(state, pid, q, i) {
   try {
     // notes: the engine's preview-only reasons (a member that changed the result, or one that stayed off and why)
     base = structuredClone({ ...state, log: [], pending: null, notes: [] });
-    if (base.slots[key] !== undefined && base.slots[key] !== pid) (base.squats[key] = base.squats[key] || []).push(pid);
+    const joined = base.slots[key] !== undefined && base.slots[key] !== pid;
+    if (joined) (base.squats[key] = base.squats[key] || []).push(pid);
     else base.slots[key] = pid;
+    // as the engine's placement does: the act reads it (ctx.placement.joined: Redistribute counts the space it joins)
+    base.players[pid].lastSlot = { key, joined };
     base.players[pid].left -= 1;
     base.current = pid;
     // the round's turns still to come wait behind a stop that never runs them: Crunch Time moves yours up, and an

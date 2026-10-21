@@ -57,19 +57,26 @@ describe('Yellow members', () => {
     s = take(s, 'green.a1');
     expect(R(s)).toMatchObject({ gold: 3, green: 0, yellow: 1 });
   });
-  it('Admirer: a rival recruiting a member of a color you lack gives +1 of it, named; a gold-leaning guest is gold', () => {
-    let s = sc({ res: [{}, rich], members: [['yellow.admirer']], shop: ['benders.bigspender'], queue: [{ t: 'turn', p: 1 }] });
-    s = take(s, 'gold.rush'); s = buy(s, 'benders.bigspender');
+  it('Admirer: a rival recruiting a member of a color you lack gives +1 of it, named; a guest (leans gold) is colorless and gives nothing', () => {
+    let s = sc({ res: [{}, rich], members: [['yellow.admirer']], shop: ['gold.banker'], queue: [{ t: 'turn', p: 1 }] });
+    s = take(s, 'gold.rush'); s = buy(s, 'gold.banker');
     expect(R(s).gold).toBe(1);
     expect(named(s, 'Admirer')).toHaveLength(1);
+    // neutral cards stay neutral (Cory, 2026-10-18): the rival recruits Big Spender, Admirer stays quiet
+    s = sc({ res: [{}, rich], members: [['yellow.admirer']], shop: ['benders.bigspender'], queue: [{ t: 'turn', p: 1 }] });
+    const u = uidOf(s, 'benders.bigspender', 'shop');
+    s = take(s, 'gold.rush'); s = buy(s, 'benders.bigspender');
+    expect(s.players[1].members).toContain(u);
+    expect(R(s)).toEqual({ gold: 0, red: 0, yellow: 0, green: 0 });
+    expect(named(s, 'Admirer')).toEqual([]);
   });
-  it('Go-Between: your non-yellow recruit gives +1 of its color, named; a guest leaning to an absent sphere gives nothing', () => {
+  it('Go-Between: your non-yellow recruit gives +1 of its color, named; a guest (colorless) gives nothing', () => {
     const restore = pinCosts({ 'red.volunteer': [0, 0] });
     let s = take(sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] }), 'red.hire');
     restore();
     expect(R(s).red).toBe(2); // Open Door's own +1 red (v0.8.0), and Go-Between's +1 for the red recruit
     expect(named(s, 'Go-Between')).toHaveLength(1);
-    s = sc({ round: 3, members: [['yellow.gobetween']], shop: ['benders.squatter'] }); // leans to Thieves, not on this table
+    s = sc({ round: 3, members: [['yellow.gobetween']], shop: ['benders.squatter'] }); // a guest: colorless
     s = move(take(s, 'red.take'), `card:${uidOf(s, 'benders.squatter', 'shop')}`);
     expect(R(s)).toEqual({ gold: 0, red: 1, yellow: 0, green: 0 }); // only Recruit a Member's +1 red
     expect(named(s, 'Go-Between')).toHaveLength(0);

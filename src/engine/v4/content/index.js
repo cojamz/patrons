@@ -44,7 +44,10 @@ export const classicFor = n => CLASSIC.slice(0, Math.max(2, Math.min(4, n)));
 /** The engine's default table for n seats: the plain 4-sphere test table, or Classic's first n when fewer play (the
  *  plain Blue and Green hand out each other's colors, so they don't split). */
 export const defaultQuadrants = n => (n >= 4 ? [...DEFAULT_QUADRANTS] : classicFor(n));
+// Guest members' stand-in sphere: colorless, never on a table, so no color counts them and no sphere scores them.
+const GUEST_QUADRANT = Object.freeze({ id: 'guest', name: 'Guest', resource: 'colorless', members: [], actions: [] });
 export const quadrant = id => {
+  if (id === 'guest') return GUEST_QUADRANT;
   const q = QUADRANTS[id];
   if (!q) throw new Error(`Unknown quadrant: ${id}`);
   return q;
@@ -62,14 +65,16 @@ export const handlerById = id => {
 export const allQuadrantIds = () => Object.keys(QUADRANTS);
 
 // Guest members: cards that join the shared deck without a quadrant of their own (the rule-benders, while they
-// wait for a sphere). Each def names the sphere it leans to (def.lean): that is its color, and it counts as one of
-// that sphere's members. Ids are "<group>.<key>". A table with the rule flag rules.guests off leaves them out.
+// wait for a sphere). Guests are colorless (Cory, 2026-10-18: "neutral cards stay neutral"): no sphere counts them,
+// and their whole cost is paid in any colors. def.lean only says which sphere a guest was first drawn for (records
+// and notes). Ids are "<group>.<key>". A table with the rule flag rules.guests off leaves them out.
 const GUESTS = [];
 export function registerGuests(group, defs, handlers = {}) {
   for (const [k, fn] of Object.entries(handlers)) HANDLERS[`${group}.${k}`] = fn;
   for (const def of defs) {
     def.id = `${group}.${def.key}`;
-    def.quadrant = def.lean;
+    def.quadrant = 'guest';
+    if (def.s) { def.w = (def.w || 0) + def.s; def.s = 0; }
     def.copies = def.copies || 1;
     def.guest = group;
     DEFS[def.id] = def;

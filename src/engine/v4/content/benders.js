@@ -1,6 +1,6 @@
 // Rule-benders: members that bend a rule instead of paying out (Cory, 2026-10-14). They're guest members: no
-// quadrant of their own yet. Each one leans to a sphere (def.lean): that's its color, it counts as one of that
-// sphere's members, and its colored part is paid in that color (in any colors when the color isn't on the table).
+// quadrant of their own yet. They're colorless: no sphere counts them, and their whole cost is paid in any colors
+// (index.js registerGuests folds the printed colored part into the any part; def.lean is only where it came from).
 // They join the shared deck while rules.guests is on, so they can be played and measured.
 //
 // Most of them are flags the engine reads (core.js, "rule-bending allowances"):

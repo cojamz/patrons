@@ -1218,8 +1218,8 @@ export const canRelease = (state, p, uid) => !!state.rules?.release && p.release
     && !state.cards[uid]?.used));
 /**
  * What releasing a member gives back (Cory, 2026-10-14): only its colored part, in its own color: { n, color, label }.
- * When its color isn't on the table (a guest leaning to an absent sphere), the colored part comes back in any colors
- * (color null). A member with no colored part gives back nothing.
+ * A member with no colored part (every guest: they're colorless) gives back nothing. The any-colors path (color null)
+ * is only reachable by a member whose sphere is off the table, which normal decks never deal.
  */
 export function releaseRefund(state, uid) {
   const def = cardDef(state, uid), c = colorOf(def), n = def.s;

@@ -2,7 +2,7 @@
 // Rule-benders (guest members) and the Release base rule: each one alone, then with Purple extra turns,
 // Echo copies, Doppelganger and Magenta theft.
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove, resume, followers, contextFor, cardDef } from '../../../engine/v4/core.js';
+import { createGame, applyMove, resume, followers, contextFor, cardDef, releaseRefund } from '../../../engine/v4/core.js';
 import { defById } from '../../../engine/v4/content/index.js';
 import { extraTurns, onBoard } from '../../../engine/v4/content/purple.js';
 import { move, uidOf, ids, hasOpt, actionName, pinCosts } from './helpers.js';
@@ -51,11 +51,20 @@ describe('guest members join the deck', () => {
     const t = move(s, `card:${uidOf(s, 'benders.squatter', 'shop')}`);
     expect(R(t).red + R(t).blue).toBe(10 - cost('benders.squatter'));
   });
-  it('a bender whose color is on the table counts as that sphere’s member and pays its colored part in it', () => {
-    const s = scene({ quadrants: ['gold', 'red', 'purple', 'green'], res: [{ red: 20 }], shop: ['benders.frontrunner'], queue: [{ t: 'buy', p: 0 }] });
-    expect(ids(s)).not.toContain(`card:${uidOf(s, 'benders.frontrunner', 'shop')}`);
-    const t = scene({ quadrants: ['gold', 'red', 'purple', 'green'], members: [['benders.frontrunner']] });
-    expect(contextFor(t).countMembersOfColor(t.players[0], 'purple')).toBe(1);
+  it('a guest is colorless even when the sphere it leans to is on the table: no sphere counts it, and its whole cost is any colors', () => {
+    // Front-runner leans Purple (printed 4 colored + 0 any): on a table with Purple, it's still nobody's color
+    const Q = ['gold', 'red', 'purple', 'green'];
+    expect(defById('benders.frontrunner')).toMatchObject({ quadrant: 'guest', lean: 'purple', s: 0, w: 4 });
+    const s = scene({ quadrants: Q, res: [{ red: 20 }], shop: ['benders.frontrunner'], queue: [{ t: 'buy', p: 0 }] });
+    s.current = 0;
+    const u = uidOf(s, 'benders.frontrunner', 'shop');
+    expect(ids(s)).toContain(`card:${u}`); // payable in red alone: no purple needed
+    const t = move(s, `card:${u}`);
+    expect(t.players[0].members).toContain(u);
+    expect(R(t).red).toBe(20 - cost('benders.frontrunner'));
+    expect(R(t).purple).toBe(0);
+    const v = scene({ quadrants: Q, members: [['benders.frontrunner']] });
+    for (const q of [...Q, 'guest']) expect(contextFor(v).countMembersOfColor(v.players[0], q), q).toBe(q === 'guest' ? 1 : 0);
   });
 });
 
@@ -245,9 +254,8 @@ describe('Straggler: after the last worker is placed, your last minion may move 
   });
 });
 
-// Release gives back only the member's colored part, in its own color (in any colors when its color isn't on the
-// table) (Cory, 2026-10-14). A member can't be released in the round you recruited it (Claude under Cory's
-// go-with-your-gut, from the dead-window audit, 2026-10-14): it stops buy-collect-release loops such as Lender's +5.
+// Release gives back only the member's colored part, in its own color (Cory, 2026-10-14). A member can't be released
+// in the round you recruited it (Claude under Cory's go-with-your-gut, from the dead-window audit, 2026-10-14): it stops buy-collect-release loops such as Lender's +5.
 describe('Release (base rule): once per round, release a member for its colored part', () => {
   const colored = id => defById(id).s;
   it('is offered in the buy step; the card goes to the bottom of the pile and you take its colored part in its color', () => {
@@ -267,19 +275,16 @@ describe('Release (base rule): once per round, release a member for its colored 
     expect(s.pending.kind).toBe('buy');
     expect(ids(s).some(i => i.startsWith('release:'))).toBe(false);
   });
-  it('a member whose color is not on the table gives its colored part back in any colors you pick', () => {
-    // Squatter leans Magenta; the default table has no magenta
-    let s = scene({ members: [['benders.squatter']], queue: [{ t: 'buy', p: 0 }] });
+  // Members only enter a deck with their sphere, so a non-guest member is never off the table; a guest is colorless
+  // with no colored part (Cory, 2026-10-18: "neutral cards stay neutral"), so Release gives nothing and isn't offered.
+  it('a guest has no colored part: Release refunds nothing, so it is not offered', () => {
+    let s = scene({ members: [['benders.squatter', 'red.bigfamily']], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0; s = resume(s);
-    const u = uidOf(s, 'benders.squatter', 0), n = colored('benders.squatter');
-    expect(s.pending.options.find(o => o.id === `release:${u}`).label).toBe(`Release Squatter for ${n} in any colors`);
-    s = move(s, `release:${u}`);
-    expect(s.pending.kind).toBe('choose');
-    s = move(s, 'one:blue');
-    s = move(s, 'all:green');
-    expect(R(s).blue).toBe(1);
-    expect(R(s).green).toBe(n - 1);
-    expect(s.pending.kind).toBe('buy');
+    const u = uidOf(s, 'benders.squatter', 0);
+    expect(colored('benders.squatter')).toBe(0);
+    expect(releaseRefund(s, u)).toEqual({ n: 0, color: null, label: 'nothing' });
+    expect(ids(s)).not.toContain(`release:${u}`);
+    expect(ids(s)).toContain(`release:${uidOf(s, 'red.bigfamily', 0)}`); // Release itself is still on offer
   });
   it('once per round: a later turn in the same round has no release; next round does', () => {
     let s = scene({ members: [['red.twins', 'red.bigfamily']], queue: [{ t: 'turn', p: 0 }] });

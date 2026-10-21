@@ -99,14 +99,18 @@ describe('Gold members', () => {
     expect(named(buyAs(0, [0, 5, 0]), 'Tax Collector')).toEqual([]); // the owner's own buy pays nothing
   });
 
-  it('Merchant: +1 gold whenever anyone recruits a gold member, named; a gold-leaning guest (Big Spender) counts', () => {
+  it('Merchant: +1 gold whenever anyone recruits a gold member, named; a guest (Big Spender, leans gold) is colorless and doesn’t count', () => {
     let s = sceneQ({ res: [{}, rich], members: [['gold.merchant']], shop: ['gold.banker', 'benders.bigspender'], queue: [{ t: 'turn', p: 1 }] });
     s = take(s, 'gold.rush'); s = buy(s, 'gold.banker');
     expect(G(s)[0]).toBe(1);
     expect(named(s, 'Merchant')).toHaveLength(1);
+    // neutral cards stay neutral (Cory, 2026-10-18): the recruit happens, Merchant stays quiet
     s = sceneQ({ res: [{}, rich], members: [['gold.merchant']], shop: ['benders.bigspender'], queue: [{ t: 'turn', p: 1 }] });
+    const u = uidOf(s, 'benders.bigspender', 'shop');
     s = take(s, 'gold.rush'); s = buy(s, 'benders.bigspender');
-    expect(G(s)[0]).toBe(1);
+    expect(s.players[1].members).toContain(u);
+    expect(G(s)[0]).toBe(0);
+    expect(named(s, 'Merchant')).toEqual([]);
   });
 
   it('Penny Pincher: gold spent on members counts double, and the recruit line says so', () => {
