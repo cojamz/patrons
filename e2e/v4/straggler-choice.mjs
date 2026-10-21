@@ -19,7 +19,8 @@ const expected=applyMove(s,{player:0,option:'to:0-1'});
 if(expected.players[0].res.gold!==4||expected.slots['0-0']!==undefined||expected.slots['0-1']!==0)throw Error('Fixture did not move last minion and perform Golden Years exactly once');
 const browser=await chromium.launch({executablePath:browserPath});
 try{
-for(const[tag,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]]){
+// the phone pass runs only with V4_PHONE=1 (phone is out of scope, Cory 2026-10-20)
+for(const[tag,opts]of[['desktop',{viewport:{width:1270,height:700}}],...(process.env.V4_PHONE?[['phone',devices['iPhone 13']]]:[])]){
 for(const outcome of ['move','stay','escape']){
  const ctx=await browser.newContext(opts),page=await ctx.newPage();page.setDefaultTimeout(12000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await seedSave(page,save);await page.goto(`${base}/?intro=0&speed=quick`);await page.locator('[data-home="resume"]').click();
