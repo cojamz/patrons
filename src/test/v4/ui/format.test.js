@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant, defById } from '../../../engine/v4/index.js';
-import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn, plainLine } from '../../../v4/format.js';
+import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn, plainLine, RING_NOTE } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor, useIdle } from '../../../engine/v4/core.js';
 
@@ -359,6 +359,27 @@ describe('v4 format helpers', () => {
     expect(buy.sub == null || /^…or use /.test(buy.sub)).toBe(true); // one line for one step: no subtitle saying it again (blind testers, 2026-10-15)
     // nobody else's turn ever reads as yours
     expect(promptFor(s, false).text).not.toMatch(/^Your|^Extra/);
+  });
+
+  it('your first placement of each round says which rings are open; later placements and rivals\' turns do not (first play)', () => {
+    const seen = {};
+    let s = createGame({ seats, seed: 7 });
+    while (!s.over) {
+      const pend = s.pending;
+      if (pend && pend.kind === 'place' && !(currentTurn(s) || {}).again) {
+        const pr = promptFor(s, pend.player === 0);
+        const first = !Object.values(s.slots).includes(pend.player);
+        if (pend.player === 0 && !/use/.test(pr.sub || '')) {
+          expect(pr.text).toBe('Place a minion on a glowing space');
+          if (first) { expect(pr.sub).toBe(RING_NOTE[s.round]); seen[s.round] = true; } else expect(pr.sub).toBeUndefined();
+        }
+        if (pend.player !== 0) expect(pr.sub).toBeUndefined();
+      }
+      s = applyMove(s, chooseBotMove(s, () => 0.4));
+    }
+    expect(Object.keys(seen).length).toBeGreaterThan(0);
+    expect(RING_NOTE[1]).toMatch(/inner rings open in rounds II and III/);
+    for (const r of [1, 2, 3]) expect(RING_NOTE[r].length).toBeLessThanOrEqual(48); // one short line at 900px
   });
 
   it('an extra turn from a card is told as one, naming the card or space that gave it', () => {
