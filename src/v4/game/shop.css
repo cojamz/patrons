@@ -111,6 +111,13 @@
 }
 @media (min-width:861px) and (max-width:1199px) and (min-height:500px){
   .app.game.lt{--shop-h:210px}
+  /* the strip starts at the wheel's column (the chairs run the full height, layout.css): its cards take the wide shop
+     column's width (~100px) so as many members show as before; names break at their seam, prices keep their width */
+  .app.game.lt .lt-shop-cards .lt-card.card{flex-basis:100px}
+  .app.game.lt .lt-shop-cards .lt-deck{flex-basis:56px}
+  .app.game.lt .lt-shop-cards .lt-card .nm{white-space:normal;height:auto;min-height:12px;flex:none;display:grid;align-content:center;margin:3px 4px}
+  .app.game.lt .lt-shop-cards .lt-card .ft{margin:auto 4px 0}
+  .app.game.lt .lt-shop-cards .lt-card .lt-res{margin-right:3px}
   .app.game.lt > .lt-since{max-height:100%}
   .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - var(--turn-h,112px) - 12px)}
 }

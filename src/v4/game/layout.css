@@ -53,6 +53,16 @@
   .lt > .error{left:50%;right:auto;bottom:12px;translate:-50% 0;z-index:45}
   .lt > .room{top:4px;bottom:auto;left:62px}
 }
+/* a short wide laptop (1270×700): four chairs reach ~575px, and the story under them had ~70px (one line, under an
+   "N earlier"), and while a turn card was up the card covered even its heading (lane 8, 2026-10-21). The chairs start
+   higher and sit a little tighter, and the story starts closer under them: two whole turns once the card folds, and
+   the heading and Log stay in view above the card while it's up */
+@media (min-width:1200px) and (min-height:500px) and (max-height:799px){
+  .app.game.lt{--col-top:2px}
+  .app.game.lt > .lt-seat{padding-top:4px;padding-bottom:4px}
+  .app.game.lt > .lt-since{margin-top:calc(var(--col-top) + var(--seats-end, 0px) + 6px);max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 6px)}
+  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 6px - var(--turn-h, 112px))}
+}
 /* setup (w3b #5; Cory: "the starting-resource pick must be an obvious call to action"): the pick stands at the wheel's
    centre, where the eye lands, as one compact row: it covers only the inner rings, locked until rounds II and III, never a
    ring-I space you'll take nor a rim (layout gate l6). Sized from the wheel's region (container units), so it fits the
@@ -97,7 +107,11 @@
    each, long names breaking at their seam); the prompt row gets room for a two-line question. The turn card docks under
    the story, above the follower buys. */
 @media (min-width:861px) and (max-width:1199px) and (min-height:500px){
-  .app.game.lt{--turn-dock:since;grid-template-rows:68px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px)}
+  .app.game.lt{--turn-dock:since;grid-template-rows:68px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px);
+    /* the chairs run the full height, beside the shop strip (lane 8, 2026-10-21: four chairs need ~560px; above a 210px
+       strip they had 370–470, so the strip covered the third and fourth chairs at 900×600 and the "You" chair at
+       1100×700). Like the wide layout: "who" is one full-height column; the strip sits under the wheel and the story */
+    grid-template-areas:"seats prompt side" "seats wheel side" "seats wheel side" "seats shop shop"}
   /* the follower buys stand at the column's foot, 182px tall (their label 20, two rows of 52 and a gap of 8, then
      "Done, no buy" 36 and its 8 above, 6 below); the story starts 8px down and stops 8px above them, or 8px above the
      turn card docked 12px over them */
