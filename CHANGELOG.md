@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.37 — 2026-10-21 — unreleased
+
+- Taking back a placement with Escape (Kickback) now really frees the space again.
+
 ## v0.8.36 — 2026-10-21 — unreleased
 
 - Snappier: a rival's seat card opens as soon as you rest on it, the start of your turn no longer stutters, and rivals' turns run a touch quicker.
