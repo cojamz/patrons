@@ -49,6 +49,8 @@ const report = [];
 const browser = await chromium.launch({ executablePath: browserPath });
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 const page = await ctx.newPage();
+// V4_CPU=4: the mid laptop (CDP CPU throttling), for checking the limits where the bar is set (off by default)
+if (Number(process.env.V4_CPU) > 1) await (await ctx.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.V4_CPU) });
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
 await seedSave(page, richSave()); // before the app runs (lib/seed.mjs)
 await page.goto(`${base}/?intro=0`);
@@ -105,9 +107,13 @@ await page.evaluate(delay => {
     if (last != null) W.frames.push([now, now - last]);
     if (W.frames.length > 600) W.frames.splice(0, 300);
     last = now;
+    // the angle the board shows: its group's rotate() plus any turn on its layer (a spin runs on the compositor as a Web
+    // Animation on the layer, and the computed transform reads the animated value)
     const g = wheelG();
     if (g && W.key != null) {
-      const t = `${g.getAttribute('transform') || ''}|${g.ownerSVGElement?.style.transform || ''}`;
+      const m = /rotate\((-?[\d.e]+)/.exec(g.getAttribute('transform') || '');
+      const mm = /^matrix\((-?[\d.e]+),\s*(-?[\d.e]+)/.exec(g.ownerSVGElement ? getComputedStyle(g.ownerSVGElement).transform || '' : '');
+      const t = ((m ? Number(m[1]) : 0) + (mm ? (Math.atan2(Number(mm[2]), Number(mm[1])) * 180) / Math.PI : 0)).toFixed(1);
       if (!W.rot.length || W.rot[W.rot.length - 1][1] !== t) W.rot.push([performance.now(), t]);
     }
     const up = hoverUp();

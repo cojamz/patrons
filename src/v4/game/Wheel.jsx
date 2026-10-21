@@ -16,7 +16,7 @@
 // shakes it and says why at the pointer ("Taken by P3", "Opens in round II"), never silence.
 // Each quadrant's contest is engraved on its rim (rule, prize, tiebreak, leaders), with the standings on hover/tap.
 // Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes a second tap.
-import { memo, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { memo, startTransition, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { quadrant, roman, spaceOpen, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, standings, seatEmoji, shortLabel } from '../format.js';
@@ -392,13 +392,15 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   const moved = useRef(false);
   const lastPointer = useRef('mouse');
   // On-screen scale of the board, so text is sized in real pixels.
+  const stageSize = useRef(null); // [clientWidth, clientHeight], from the ResizeObserver
   const [scale, setScale] = useState(1);
   // measured before the first paint (wave-4 B #32: measured after it, the first frame laid the panels out for a 416px
   // board and they reflowed bigger a frame later); one layout read at mount, then the ResizeObserver
   useLayoutEffect(() => {
     const el = stage.current;
     if (!el) return undefined;
-    const measure = () => { const w = el.getBoundingClientRect().width; if (w) setScale(w / VBS); };
+    // (the stage's inner size is kept too: a spin reads its spaces' places from it, never forcing a layout in the key's frame)
+    const measure = () => { const w = el.getBoundingClientRect().width; stageSize.current = [el.clientWidth, el.clientHeight]; if (w) setScale(w / VBS); };
     measure();
     if (typeof ResizeObserver === 'undefined') return undefined;
     const ro = new ResizeObserver(measure);
@@ -407,10 +409,15 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   }, []);
   const boardPx = scale * VBS;
 
+  // React takes a landed angle as a transition: the board already shows it (paintRot), and the re-lay of every space that
+  // follows (~200ms at 4× CPU) can't hold up the next press, key or hover. Until it commits, any other render draws the
+  // old angle, which the painted transforms still correct.
   const applyRot = useCallback(r => {
     rotRef.current = r;
-    setRot(r);
-    onFacing(facingOf(r, nq));
+    startTransition(() => {
+      setRot(r);
+      onFacing(facingOf(r, nq));
+    });
   }, [nq, onFacing]);
 
   // A spin or a drag paints straight onto the board, with no render per frame (a whole-wheel render each frame cost
@@ -422,14 +429,16 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   const geo = useRef(null); // the stage's size and each space's place, read once per turn (no layout read per frame)
   // Spin and drag share the compositor path. Rewriting SVG group transforms every frame re-rasterized
   // the paper, panel glows and lettering; rotate their already-painted layers until the landing commit.
+  const readGeo = root => {
+    if (geo.current) return;
+    const [w, h] = stageSize.current && stageSize.current[0] ? stageSize.current : [root.clientWidth, root.clientHeight];
+    geo.current = [...root.querySelectorAll(':scope > [data-slot]')].map(el => [el, (parseFloat(el.style.left) / 100 - 0.5) * w, (parseFloat(el.style.top) / 100 - 0.5) * h]);
+  };
   const paintRot = r => {
     rotRef.current = r;
     const root = stage.current;
     if (!root) return;
-    if (!geo.current) {
-      const w = root.clientWidth, h = root.clientHeight;
-      geo.current = [...root.querySelectorAll(':scope > [data-slot]')].map(el => [el, (parseFloat(el.style.left) / 100 - 0.5) * w, (parseFloat(el.style.top) / 100 - 0.5) * h]);
-    }
+    readGeo(root);
     // Read slot geometry above before writing transforms: the first frame must not force a layout.
     const dr = r - painted.current;
     for (const sv of root.querySelectorAll(':scope > svg')) sv.style.transform = Math.abs(dr) > 0.001 ? `rotate(${dr.toFixed(2)}deg)` : '';
@@ -446,27 +455,87 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     for (const sv of root.querySelectorAll(':scope > svg')) if (sv.style.transform) sv.style.transform = '';
     for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${rot} ${CX} ${CY})`);
     for (const el of root.querySelectorAll(':scope > [data-slot]')) if (el.style.translate) el.style.translate = '';
+    // a spin still turning when an earlier landing commits (its re-lay runs as a transition): its frames were drawn from
+    // the old angle, so they're drawn again from this one, on the same clock
+    if (spin.current) { root.classList.add('turning'); spinAnims(spin.current); }
   }, [rot]);
-  const stop = () => { if (anim.current) cancelAnimationFrame(anim.current); anim.current = null; };
+  // A spin (arrow keys, the settle after a drag, a facing change) runs on the compositor (lag pass 2026-10-21: at 4× CPU a
+  // rAF spin got 4 frames in ~800ms while a rival's move rendered): the board's layers turn by a CSS transform and each
+  // space slides round by `translate`, as Web Animations sampled from the spin's own easing, so a busy main thread can't
+  // stall it. The main thread only starts it and, when it ends, writes the landed angle in (paintRot) and drops them.
+  const spin = useRef(null); // { from, to, t0, dur, anims }
+  // where a spin is now, by its animations' own clock
+  const spinAt = sp => {
+    const ct = sp.anims.length && sp.anims[0].currentTime != null ? Number(sp.anims[0].currentTime) : performance.now() - sp.t0;
+    return sp.from + (sp.to - sp.from) * spinEase(Math.min(1, Math.max(0, ct / sp.dur)));
+  };
+  // keyframes even in angle (one per ~9°: a chord strays under a pixel from the circle), each at the moment the easing
+  // reaches it, linear between; relative to the angle React drew (drawn) and the layers' base (painted)
+  const SPIN_DEG = 9;
+  const spinAnims = sp => {
+    const root = stage.current;
+    for (const a of sp.anims) a.cancel();
+    sp.anims = [];
+    if (!root) return;
+    readGeo(root); // (the spaces' places, read once)
+    const { from, to, dur } = sp;
+    const n = Math.max(2, Math.min(40, Math.ceil(Math.abs(to - from) / SPIN_DEG)));
+    // the moment the easing (motion.js spinEase, rising) reaches fraction f, found by halving
+    const when = f => { let lo = 0, hi = 1; for (let j = 0; j < 20; j++) { const m = (lo + hi) / 2; if (spinEase(m) < f) lo = m; else hi = m; } return hi; };
+    const ks = Array.from({ length: n + 1 }, (_, i) => [from + ((to - from) * i) / n, i === 0 ? 0 : i === n ? 1 : when(i / n)]);
+    const opts = { duration: dur, easing: 'linear', fill: 'forwards' };
+    for (const sv of root.querySelectorAll(':scope > svg')) sp.anims.push(sv.animate(ks.map(([r, offset]) => ({ offset, transform: `rotate(${(r - painted.current).toFixed(2)}deg)` })), opts));
+    for (const [el, x, y] of geo.current || []) {
+      if (!Number.isFinite(x + y)) continue;
+      sp.anims.push(el.animate(ks.map(([r, offset]) => {
+        const d = ((r - drawn.current) * Math.PI) / 180, c = Math.cos(d), s = Math.sin(d);
+        return { offset, translate: `${(x * c - y * s - x).toFixed(1)}px ${(x * s + y * c - y).toFixed(1)}px` };
+      }), opts));
+    }
+    // started on the spin's own clock, not pending until the compositor picks them up (a frame or two later on a loaded
+    // box): the first frame after the key already shows the turn under way
+    const tl = document.timeline && document.timeline.currentTime;
+    if (sp.start == null) sp.start = tl;
+    if (sp.start != null) for (const an of sp.anims) an.startTime = sp.start;
+    if (sp.anims.length) sp.anims[0].onfinish = () => sp.land();
+  };
+  const stop = () => {
+    if (anim.current) cancelAnimationFrame(anim.current);
+    anim.current = null;
+    const sp = spin.current;
+    if (!sp) return;
+    spin.current = null;
+    // a spin cut short (a key, a drag) holds where it was
+    const at = spinAt(sp);
+    for (const a of sp.anims) a.cancel();
+    paintRot(at);
+  };
   const animateTo = useCallback(to => {
     stop();
-    const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : MO.spin;
+    const from = rotRef.current, dur = reduced() ? 1 : MO.spin;
     geo.current = null;
-    stage.current?.classList.add('turning');
+    const root = stage.current;
+    root?.classList.add('turning');
     setPeek(p => (p && !p.pinned ? null : p)); // a hover card doesn't ride along on a turning board
     if (hoverRef.current && hoverRef.current.card && !hoverRef.current.card.pinned) hoverRef.current.close();
-    const step = now => {
-      const k = Math.min(1, (now - t0) / dur);
-      if (k < 1) { paintRot(from + (to - from) * spinEase(k)); anim.current = requestAnimationFrame(step); return; }
-      anim.current = null;
-      // land on the exact angle in this frame (the spin ends at MO.spin); React's commit of it follows and changes nothing
-      // on screen (snappy gate s1: waiting on the commit read as a ~500ms spin)
+    const sp = { from, to, t0: performance.now(), dur, anims: [], start: null };
+    sp.land = () => {
+      if (spin.current !== sp) return;
+      spin.current = null;
+      // land on the exact angle (the spin ends at MO.spin); React's commit of it follows and changes nothing on screen
+      // (snappy gate s1: waiting on the commit read as a ~500ms spin)
       paintRot(to);
+      for (const a of sp.anims) a.cancel();
       // A return to the same React angle has no commit to clean up its promoted layers.
       if (to === drawn.current && stage.current) stage.current.classList.remove('turning'); // (a drag that came back where it started commits nothing)
       applyRot(to);
     };
-    anim.current = requestAnimationFrame(step);
+    spin.current = sp;
+    if (!root || dur <= 1 || typeof root.animate !== 'function' || Math.abs(to - from) < 0.01) { sp.land(); return; }
+    paintRot(from); // the layers carry the start (a drag ends with a turn on them), and the spaces' places are read
+    rotRef.current = to;
+    spinAnims(sp);
+    if (!sp.anims.length) sp.land();
   }, [applyRot]); // eslint-disable-line react-hooks/exhaustive-deps
   const touched = useRef(onTouched);
   touched.current = onTouched;
@@ -474,7 +543,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
 
   // Parent asked to face a quadrant (a tab, or a rival's move): spin there the short way.
   useEffect(() => {
-    if (anim.current || drag.current) return;
+    if (spin.current || drag.current) return;
     if (facingOf(rotRef.current, nq) !== facing) animateTo(rotRef.current + norm(-SEC * facing - rotRef.current));
   }, [facing, nq, SEC, animateTo]);
 
@@ -949,6 +1018,29 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     for (const t of [1, 2, 3]) sizeTo(spaces.filter(x => x.ring === t).map(x => out.get(x.key)).filter(v => v.said.verb));
     return out;
   }, [panels, state.quadrants, round, rot, scale, fontsIn, shopSig, liveSig]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the panels' layouts for the neighbouring turns, worked out in idle time: a spin's landing then finds them laid out
+  // (lag pass 2026-10-21: laying out every panel for an angle not seen yet was ~90ms of the landing's ~120ms render at 4×
+  // CPU). The same pure function and cache (panelLayout): nothing on screen changes.
+  useEffect(() => {
+    if (!panelLays || typeof requestIdleCallback !== 'function') return undefined;
+    const k = scale || 1;
+    const said = new Map();
+    const todo = [];
+    for (const d of [SEC, -SEC, 2 * SEC]) for (const s of spaces) todo.push([s, rot + d]);
+    let i = 0, h = null;
+    const run = deadline => {
+      while (i < todo.length && deadline.timeRemaining() > 2) {
+        const [s, r] = todo[i++];
+        try {
+          if (!said.has(s.key)) said.set(s.key, panelText(s.qid, s.a, round, state, meId));
+          panelLayout({ s, R: rings[s.ring], rot: r, k, said: said.get(s.key), taken: false });
+        } catch { /* only a warm-up */ }
+      }
+      h = i < todo.length ? requestIdleCallback(run, { timeout: 2000 }) : null;
+    };
+    h = requestIdleCallback(run, { timeout: 2000 });
+    return () => { if (h != null) cancelIdleCallback(h); };
+  }, [panelLays]); // eslint-disable-line react-hooks/exhaustive-deps
   live.current = { tap, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
