@@ -36,7 +36,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 ## Spending
 - Token-conscious on game runs (Cory, Oct 20): no sims, batches of test games or blind panels unless he asks. Open the game only to check UI. Our automated tests and gates are the regular bar; suggest a blind tester panel (bug bash) when a significant stretch of work makes one due.
 - Spend freely on what makes us faster and sharper long term: harness, hooks, skills, organization.
-- Balance from bots is a light first pass (Cory, Oct 21): assume bots underuse members, price a little above what the tests say, never below 2 (one color, one wild), lift a weak card with more followers before cutting its price, run no extra sweeps, and let human play refine.
+- Prices are high-level educated guesses, and human play refines them (Cory, Oct 21). Bot tests are not the pricing process: no sweeps or price batches unless he asks. Guess a little pricier than bots would say (they underuse members), never below 2 (one color, one wild), and lift a weak card with more followers before cutting its price.
 - Bot numbers name their instrument (Easy/Normal/Hard bot, thinking bots, AI tester), get a sanity check on which way the fix points, and come with the buy-followers-only win rate (target about 25%). Bot statistics are not design flaws.
 
 ## Changelog
@@ -49,3 +49,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-21: Cory on lag: "do an engineering pass altogether on animations page rendering etc… whatever you're doing now is taking too long". Lag work is a code-reading engineering pass that fixes clear wins and ships them, not a measurement campaign; at most one before/after run.
 - 2026-10-21: Cory: "you aren't doing a very good job keeping me updated" (a repeat). Hard rule: post on every state change (anything live, anything he can look at, any slip in ETA), with a screenshot when the screen changed and an ETA in his Eastern time; never go ~30 minutes of work without a post. Ship each fix as it passes; never hold finished fixes to batch them.
 - 2026-10-21: Cory: "i'm very skeptical of this balance process. let's not overdo it. we'll use humans to refine" and "at a minimum things should cost 2". Bot pricing is a light pass that leans pricier, with a 2 floor and the followers lever first.
+- 2026-10-21: Cory: "we should take high level educated guesses at prices, but otherwise let humans figure it out". Bot tests stop being the pricing process; prices are educated guesses.
