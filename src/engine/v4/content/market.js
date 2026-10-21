@@ -143,6 +143,7 @@ const market = {
     {
       key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 shop members to the bottom of the pile, then refill. +1 blue × round. +1 blue.', copyDoesIt: true,
       estimate: ctx => ctx.state.round + 1,
+      byRound: { lines: ['+2 blue', '+3 blue', '+4 blue'] },
       resolve(ctx, p) {
         ctx.gain(p, B, ctx.state.round + 1, { fromAction: true });
         churnStep(ctx, p, { left: Math.min(3, ctx.state.shop.length) });

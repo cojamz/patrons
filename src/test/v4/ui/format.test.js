@@ -169,7 +169,8 @@ describe('v4 format helpers', () => {
       while (!s.over) {
         const n = applyMove(s, chooseBotMove(s, () => 0.4), { effects: true });
         const line = n.log.slice(s.log.length).map(l => l.match(/^(\w+) swapped (\w+)'s (.+) and Shop's (.+)\.$/)).find(Boolean);
-        if (line) {
+        // the game's last move also tells the game-end scoring ("you +6 followers (Tycoon) · swapped …"): judge the rest
+        if (line && !n.over) {
           const [, actorName, ownerName, out, inc] = line;
           const actor = n.players.findIndex(p => p.name === actorName), owner = n.players.findIndex(p => p.name === ownerName);
           for (const me of [actor, (actor + 1) % 3]) {
