@@ -20,7 +20,7 @@ function scenario(name){
  const deal=(def,who)=>{const i=s.pile.findIndex(u=>s.cards[u].def===def);if(i<0)throw Error(`Missing ${def}`);const u=s.pile.splice(i,1)[0];(who==='shop'?s.shop:s.players[who].members).push(u);return u;};
  const initial=[],picks=[];let pair;
  if(name==='panel'){
-  deal('red.recruitbonus',0);deal('red.recruiter',0);const host=deal('red.host',0);
+  deal('red.recruitbonus',0);deal('red.recruiter',0);const host=deal('gold.merchant',0); // 6, so Promote (up to 2 more) reaches Mentor's 8
   const panel=deal('red.panel','shop'),mentor=deal('red.mentor','shop');
   for(const d of ['red.volunteer','red.twins','red.loyalists','red.mob','red.movementpenalty','red.patriarch'])deal(d,'shop');
   initial.push(action('take'),`card:${panel}`,'promote');pair=`trade:${host}:${mentor}`;picks.push(pair);

@@ -20,8 +20,8 @@ function saveOf(state) {
   return { config: { seats: state.players.map(p => ({ name: p.name, kind: p.kind })), speed: 'normal', quadrants: state.quadrants }, state, undo: null, savedAt: Date.now() };
 }
 // Red's swap across two cults (since the 2026-10-18 Red rework: round I Even Swap, any two members of equal cost):
-// your Host for the rival's Panel
-let swap = sceneQ({ quadrants: ['gold', 'red'], round: 1, members: [['red.twins', 'red.host'], ['gold.banker', 'red.panel']] });
+// your Merchant for the rival's Panel (both 6)
+let swap = sceneQ({ quadrants: ['gold', 'red'], round: 1, members: [['red.twins', 'gold.merchant'], ['gold.banker', 'red.panel']] });
 swap = take(swap, 'Even Swap');
 const [host, panel] = [swap.players[0].members[1], swap.players[1].members[1]];
 const trade = swap.pending.options.find(o => o.id === `trade:${host}:${panel}`);
