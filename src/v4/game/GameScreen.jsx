@@ -649,12 +649,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const layColumn = () => {
     const r = root.current;
     if (!r) return;
-    if (sortOwed.current) return; // (round I's order waits for its own beat: a chair resizing meanwhile keeps the old order)
     const rail = r.querySelector(':scope > .lt-snake');
     const seats = [...r.querySelectorAll(':scope > .lt-seat')].filter(e => e.dataset.pid != null);
     if (!rail || !rail.offsetHeight) { seats.forEach(e => e.style.removeProperty('--y')); return; }
     const GAP = 8;
-    const rows = seats.map(e => ({ e, slot: Number(e.dataset.slot) || 0, h: e.offsetHeight })).sort((a, b) => a.slot - b.slot);
+    // round I's order waits for its own beat: a chair resizing meanwhile (your chair loses its starting-pick row, ~36px)
+    // is re-stacked in the old order, so the chairs under it close up now. Returning early here left them standing
+    // under the taller chair until the sort beat, then sliding up mid-turn (hotseat region gate, 2026-10-21).
+    const held = sortOwed.current;
+    if (held && !seats.every(e => e.style.getPropertyValue('--y'))) return;
+    const rows = seats.map(e => ({ e, slot: held ? parseFloat(e.style.getPropertyValue('--y')) : Number(e.dataset.slot) || 0, h: e.offsetHeight })).sort((a, b) => a.slot - b.slot);
     const total = rows.reduce((t, x) => t + x.h, 0) + GAP * Math.max(0, rows.length - 1);
     const fromTop = getComputedStyle(rail).getPropertyValue('--seats-align').trim() === 'start';
     let y = fromTop ? 0 : Math.max(0, Math.round((rail.offsetHeight - total) / 2));
@@ -666,7 +670,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // a chair placed for the first time (the screen just mounted, as after a hot-seat handoff, or back from a phone size)
     // stands at its place at once: its first style was the fallback (slot × 108px), and sliding from there read as the
     // chairs moving 8–24px between setup and the first turn (hotseat region gate, 2026-10-15). Only a new order slides.
-    const fresh = rows.filter(x => !x.e.style.getPropertyValue('--y'));
+    // A chair that only changed size (the same order) closes the column up in the same frame, with no slide: sliding
+    // there read as the chairs under it moving mid-turn (hotseat region gate, 2026-10-21).
+    const was = rows.map(x => x.e.style.getPropertyValue('--y'));
+    const sameOrder = was.every(Boolean) && rows.every((x, i) => i === 0 || parseFloat(was[i]) > parseFloat(was[i - 1]));
+    const fresh = sameOrder ? rows.filter((x, i) => was[i] !== `${y + rows.slice(0, i).reduce((t, z) => t + z.h + GAP, 0)}px`) : rows.filter(x => !x.e.style.getPropertyValue('--y'));
     for (const x of fresh) x.e.style.transition = 'none';
     for (const x of rows) { x.e.style.setProperty('--y', `${y}px`); y += x.h + GAP; }
     if (fresh.length) {
@@ -700,6 +708,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, []);
   const layColumnNow = useRef(layColumn);
   layColumnNow.current = layColumn;
+  // your chair drops its starting-pick row when the last pick lands (~36px shorter): the column closes up in that same
+  // commit, not a frame later in the ResizeObserver, so nothing ever sees the chairs under it standing in the old place
+  const draftShown = !!(state.pending && state.pending.kind === 'setup' && !state.over);
+  useLayoutEffect(() => { layColumn(); }, [draftShown]); // eslint-disable-line react-hooks/exhaustive-deps
   const colRO = useRef(null), colWatched = useRef(new Set());
   useLayoutEffect(() => {
     const r = root.current;
