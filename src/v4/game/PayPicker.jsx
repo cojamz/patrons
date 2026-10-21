@@ -27,6 +27,16 @@ const dist = (res, a, b) => res.reduce((s, r) => s + Math.abs((a[r] || 0) - (b[r
 const defsOf = card => [defById(card.def), ...(card.copy ? [defById(card.copy)] : [])];
 const STACK_MAX = 12; // coins drawn in one stack; more say so in their number
 const STEP = 6; // px between stacked coins
+// Density tiers (H14: stacks of 20+ looked out of proportion, a 12-coin tower beside a stack of 2): a stack rises 6px a
+// coin up to six coins, then packs its coins closer so no stack stands taller than six would; a paying row of more than
+// five coins overlaps them closer and says its number. The exact count is always the number; the click target is the
+// whole stack, whatever its height.
+const RISE = 5 * STEP; // the tallest a stack rises above its bottom coin, px
+const ROW = 4 * 20; // the widest a paying row spreads past its first coin, px (five coins at 20px apart)
+/** px between coins in a stack of n drawn coins */
+export const stackStep = n => (n <= 6 ? STEP : Math.max(2, Math.round((RISE / (n - 1)) * 10) / 10));
+/** px between coins in a paying row of n drawn coins */
+export const rowStep = n => (n <= 5 ? 20 : Math.max(4, Math.round((ROW / (n - 1)) * 10) / 10));
 
 /**
  * What the sockets are: one per unit owed, the colored part first ({ c: color }), then the any part ({ c: 'any' }),
@@ -230,7 +240,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
             a stack per color with what stays and its number. A click on a paying coin sends one home (another color
             takes its place); a click on a kept stack pays with one more of it. The payment is always whole, and the
             coins fly between the rows so you see the swap. */}
-        <div className="pay-rows" style={{ '--tall': tall }}>
+        <div className="pay-rows" style={{ '--rise': `${Math.min(RISE, (tall - 1) * STEP)}px` }}>
           <div className="pay-row paying" role="group" aria-label="Paying">
             <span className="pr-lbl">Paying</span>
             <span className="pr-items">
@@ -241,12 +251,12 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
                   <button key={r} type="button" className="ps-out" data-pay-coin={r} data-out={out} disabled={busy}
                     title={`${out} ${r} pay${out === 1 ? 's' : ''} this. Click to keep one and pay with another color.`} aria-label={`${out} ${r} paying: keep one`}
                     onClick={() => remove(r)}>
-                    <span className="po-coins">
+                    <span className="po-coins" data-dense={lifted > 5 || undefined} style={{ '--ov': `${rowStep(lifted) - 24}px` }}>
                       {Array.from({ length: lifted }, (_, j) => (
                         <i key={j} className="ps-coin out" data-coin={`${r}-${drawn - lifted + j + base}`} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
                       ))}
                     </span>
-                    {out > lifted && <b className="po-n num" aria-hidden="true">{out}</b>}
+                    {(out > lifted || lifted > 5) && <b className="po-n num" aria-hidden="true">{out}</b>}
                   </button>
                 );
               })}
@@ -263,7 +273,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
                 return (
                   <div key={r} className={`pay-stack${out ? ' paying' : ''}${keep ? '' : ' spent'}`} data-stack={r} data-keep={keep} data-out={out}>
                     <button type="button" className="ps-add" data-pay-add={r} data-keep={keep} disabled={busy} aria-disabled={!keep || undefined} title={keep ? sayAdd : `All your ${r} pays this.`} aria-label={keep ? sayAdd : `All your ${r} pays this`} onClick={() => add(r)} />
-                    <span className="ps-coins">
+                    <span className="ps-coins" data-dense={drawn - lifted > 6 || undefined} style={{ '--step': `${stackStep(drawn - lifted)}px` }}>
                       {drawn - lifted === 0 && <i className="ps-socket" aria-hidden="true" />}
                       {Array.from({ length: drawn - lifted }, (_, k) => (
                         <i key={k} className="ps-coin" data-coin={`${r}-${k + base}`} style={{ '--k': k }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>

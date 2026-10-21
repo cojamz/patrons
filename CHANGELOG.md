@@ -2,6 +2,14 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.19, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.21 — 2026-10-21 — unreleased
+
+- "Safe this round" is a small shield. Big coin piles on the pay sheet stay short and print their count. A buy or recruit pulses before its reward flies. At round start the old shop cards go into the deck and the new ones deal out.
+
+## v0.8.20 — 2026-10-21 — unreleased
+
+- Churn's space on the wheel says what it does: send 3 to the bottom
+
 ## v0.8.19 — 2026-10-21 — shipped (source c20f7b7, main 0dae66e)
 
 - Blue reworked: churn the shop, peek at the pile, buy twice, bury, Spree; the shop grows 5/6/7 by round.

@@ -155,11 +155,35 @@ export function CardText({ text }) {
 const ROMAN = ['I', 'II', 'III'];
 const PlainText = ({ text }) => <Rich text={memberTimingWords(text)} />;
 // plain: resource marks only, no glossary underlines (the seat's member list; the member's own card underlines them)
-export function RuleText({ def, text = def && def.text, round = 1, plain = false }) {
+// "+1 of each color" / "+2 of each color" / "+3 of each color" → ['+1', '+2', '+3'] and "of each color" (the last
+// line's words, so a plural reads right); null when the lines differ past their first word
+const OTHER = w => w.toLowerCase().replace(/s\b/g, '');
+function sharedTail(lines) {
+  const split = lines.map(l => { const k = l.indexOf(' '); return k < 0 ? [l, ''] : [l.slice(0, k), l.slice(k + 1)]; });
+  return split.every(([, t]) => OTHER(t) === OTHER(split[2][1])) ? { heads: split.map(x => x[0]), tail: split[2][1] } : null;
+}
+/** compact: on a small card (the shop's details view), a rule whose rounds differ only in their number reads as one
+ *  line, "I +1 · II +2 · III +3 of each color", this round lit (the wheel's "+2 · +3 · +4 by round" grammar) */
+export function RuleText({ def, text = def && def.text, round = 1, plain = false, compact = false }) {
   const by = def && def.byRound;
   const Text = plain ? PlainText : CardText;
   if (!by || !by.lines || by.lines.length !== 3) return <Text text={text} />;
   const now = Math.min(3, Math.max(1, round || 1));
+  const shared = compact ? sharedTail(by.lines) : null;
+  if (shared) {
+    return (
+      <span className="by-round compact" data-by-round={now}>
+        {by.lead ? <><Text text={by.lead} />{' '}</> : null}
+        {shared.heads.map((h, k) => (
+          <span key={k} className={`br-line${k + 1 === now ? ' now' : ''}`} data-round-line={k + 1} aria-current={k + 1 === now ? 'true' : undefined}>
+            {k ? <span className="br-sep" aria-hidden="true"> · </span> : null}<span className="br-r">{ROMAN[k]}</span>{' '}<span className="br-v"><Text text={h} /></span>
+          </span>
+        ))}
+        {shared.tail ? <>{' '}<Text text={shared.tail} /></> : null}
+        {by.rest ? <>{' '}<Text text={by.rest} /></> : null}
+      </span>
+    );
+  }
   return (
     <span className="by-round" data-by-round={now}>
       {by.lead ? <span className="br-lead"><Text text={by.lead} /></span> : null}

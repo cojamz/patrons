@@ -9,10 +9,9 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip, CostDots, paidParts, discountWhy } from './Info.jsx';
+import { cardColor, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
-import { Pip, Rich } from './Rich.jsx';
-import { memberTimingWords } from './memberTiming.js';
+import { Pip } from './Rich.jsx';
 import { timingOf, unlockedBy, surely } from './cards.js';
 void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
@@ -184,7 +183,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               </span>
               {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
-              {detailed && <span className="lt-pick-ability"><Rich text={memberTimingWords(d.text)} /></span>}
+              {/* a rule that grows by round reads by round, this round lit, as in every hover (RuleText; compact on the small card) */}
+              {detailed && <span className="lt-pick-ability"><RuleText def={d} round={state.round} plain compact /></span>}
               <span className="ft">
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>
