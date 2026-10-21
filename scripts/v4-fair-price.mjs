@@ -377,7 +377,8 @@ function runPool(kind, n, params, workers, raw) {
     let next = 0, done = 0;
     const t0 = Date.now();
     const pool = Array.from({ length: Math.min(workers, n) }, () => new Worker(fileURLToPath(import.meta.url), { workerData: { kind, params } }));
-    const feed = w => { if (next < n) w.postMessage(next++); else w.postMessage(-1); };
+    // --first: game numbers start there, so several runs (--raw each) cover different games and merge with --from
+    const feed = w => { if (next < n) w.postMessage((params.first || 0) + next++); else w.postMessage(-1); };
     pool.forEach(w => {
       w.on('message', r => {
         results.push(r); done++;
@@ -396,7 +397,7 @@ if (!isMainThread) {
   if (params.table) BASE_TABLE = params.table;
   if (params.level) LEVEL = params.level;
   if (params.budget) BUDGET = params.budget;
-  if (kind === 'screen') { const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js'); params.tables = makeTables(4242, 2).tables; }
+  if (kind === 'screen') { const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js'); params.tables = params.table ? [params.table] : makeTables(4242, 2).tables; }
   parentPort.on('message', g => {
     if (g < 0) { process.exit(0); }
     parentPort.postMessage(kind === 'screen' ? screenGame(g, params) : sweepSeed(g, params));
@@ -411,8 +412,9 @@ if (!isMainThread) {
   if (mode === 'screen') {
     const games = Number(flags.games || 3000), jitter = Number(flags.jitter || 0.4);
     let res, printed = Object.fromEntries(allDefs().map(d => [d.id, priceOf(d)]));
-    if (flags.from) { const R = JSON.parse(readFileSync(flags.from, 'utf8')); res = R.results; printed = R.params.printed || printed; }
-    else res = await runPool('screen', games, { jitter, printed }, workers, flags.raw);
+    if (flags.from) { const Rs = String(flags.from).split(',').map(f => JSON.parse(readFileSync(f, 'utf8'))); res = Rs.flatMap(R => R.results).sort((a, b) => a.g - b.g); printed = Rs[0].params.printed || printed; }
+    // --from accepts several raw files, comma-separated (chunked runs)
+    else res = await runPool('screen', games, { jitter, printed, first: Number(flags.first || 0), table: flags.table ? String(flags.table).split(',') : null }, workers, flags.raw);
     const A = analyseScreen(res, { printed });
     const out = { mode, games, jitter, secs: (Date.now() - t0) / 1000, ...A };
     if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
