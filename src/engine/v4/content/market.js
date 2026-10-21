@@ -175,7 +175,7 @@ const market = {
       },
     },
     {
-      key: 'clearance', ring: 2, name: 'Buy Twice', text: 'Recruit twice this turn. +1 blue.', copyDoesIt: true,
+      key: 'clearance', ring: 2, name: 'Recruit Twice', text: 'Recruit twice this turn. +1 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 1 + Math.min(10, Math.max(0, totalRes(p) - 2)) * 0.4,
       resolve(ctx, p) { ctx.gain(p, B, 1, { fromAction: true }); extraBuys(ctx, p, 1); ctx.log(`${p.name} recruits twice this turn.`); },
     },
