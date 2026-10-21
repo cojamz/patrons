@@ -14,6 +14,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Extremely brief, smart brevity. A few lines is normal and eight the most, unless he asks for more (he found five too aggressive, Oct 20). Longer things go in a file or picture, linked. The message check hook bounces anything longer, plus tables, headers, bold labels, em dashes, UTC times and AI tics.
 - Say what changes for him, in everyday words, not what was built. No file names, mechanisms or labels like "gate", "hook", "tracker", "moves 1-6" unless he asked how it works.
 - Lead with what you did and what's next. Status is three lines: what's running, what's next, ETA.
+- Every call is a plain yes/no question about what changes for a player, in game words, with when it applies (end of game, each round). No file names, test names or system terms (Cory, Oct 21, second phrasing correction this week).
 - Decisions come as a numbered list he answers by number ("1 yes, 2 no"), one line each, your default in brackets. Only design and feel calls go to him.
 - Use his words. Never coin labels. Say "buy followers". Any card or space you name gets its text quoted in a few words and what changes for a player.
 - Show, don't describe: a play link, screenshot or GIF with a plain caption. Plain URLs. Send iterations as they happen, with screenshots, not just finished builds.
