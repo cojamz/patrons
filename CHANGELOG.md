@@ -2,7 +2,7 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.23 — 2026-10-21 — unreleased
+## v0.8.23 — 2026-10-21 — shipped (source 1343cb1)
 
 - Clearer motion: a space's result shows beside its space, members pop out of their seat when they act, a recruit shows itself at the middle before flying to its buyer, and a steal says what was taken at once. Round start plays in steps: minions home, income seat by seat, then the shop refills. Skipping no longer sets off a burst of sounds. Undo plays the move backwards.
 
