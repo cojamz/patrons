@@ -19,7 +19,7 @@ import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
 import { HOVER_DELAY_MS } from './hoverDelay.js';
-import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim, stillOn } from './hoverIntent.js';
+import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim, stillOn, pointer } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -96,9 +96,19 @@ export function createHover() {
   const holdBack = next => {
     heldBack = next;
     clearTimeout(retryT);
+    const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    let rest = pointer(), since = now();
     const again = () => {
       if (heldBack !== next) return;
       if (!stillOn(next.el)) { heldBack = null; return; }
+      const p = pointer();
+      if (!p || !rest || p.x !== rest.x || p.y !== rest.y) { rest = p; since = now(); }
+      // a pointer that rests on this target for the hover wait means it, even inside the way toward the open seat card
+      // (m14, 2026-10-21: a seat card with more Use buttons widened that way over a rival's name, which then waited out
+      // the whole aim, ~730ms); still never over the open card's own buttons or a member card you're using
+      if (now() - since >= HOVER_DELAY_MS && !overControls(liveBox()) && !(() => { const b = busyWith(); return !!b && b !== liveBox(); })()) {
+        heldBack = null; arrived(); clearTimeout(closeT); clearTimeout(openT); unprep(); set(next); return;
+      }
       if (blocks(next)) { retryT = setTimeout(again, 60); return; }
       heldBack = null;
       show(next);
