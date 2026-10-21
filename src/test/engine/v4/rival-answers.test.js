@@ -73,13 +73,13 @@ describe('gains on your turn say why', () => {
 });
 
 describe('a skipped buy says so on the turn card', () => {
-  it('nothing affordable: "nothing affordable to buy" (blind tester B: silent before round-end scoring)', () => {
+  it('nothing affordable: "nothing affordable" (blind tester B: silent before round-end scoring)', () => {
     const s0 = table(Q, { round: 2, res: [{}], shop: ROW.filter(d => d !== 'red.volunteer') });
     s0.shop = s0.shop.filter(u => s0.cards[u].def !== 'red.volunteer');
     // round II Collect Debts with no rival gold to take: the turn gains nothing (Gather now always gives red)
     const s = take(s0, 'gold.steal');
     expect(s.players[0].res).toMatchObject({ gold: 0, red: 0, magenta: 0 });
-    expect(s.log.some(l => /^P1 couldn't buy anything\.$/.test(l))).toBe(true);
-    expect(story(s0, s)).toMatch(/nothing affordable to buy/);
+    expect(s.log.some(l => /^P1 couldn't afford anything\.$/.test(l))).toBe(true);
+    expect(story(s0, s)).toMatch(/nothing affordable/);
   });
 });

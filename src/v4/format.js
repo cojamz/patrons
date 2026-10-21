@@ -950,7 +950,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
       else if ((m = own.match(/^ uses (.+?)\.$/))) said.push(`used ${m[1]}`);
       // a buy step skipped because nothing was affordable is said on the card (blind tester B: after Lie Low it passed
       // silently, straight into the round's scoring, where the toast never showed)
-      else if (/^ couldn't buy anything\.$/.test(own)) said.push('nothing affordable to buy');
+      else if (/^ couldn't afford anything\.$/.test(own)) said.push('nothing affordable');
       else if ((m = own.match(/^ traded (.+)\.$/))) said.push(youName(`traded ${m[1]}`));
       else if ((m = own.match(/^ pulled a heist: (.+)\.$/))) said.push(youName(`took ${m[1]}`));
       // the card that gave it, named (Cory: "Log did not indicate a Night Owl turn"): "Night Owl: an extra turn after this one"

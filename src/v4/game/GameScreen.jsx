@@ -949,9 +949,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       }
     }
     // Nothing to afford: say so in a readable toast — after anything you just got has landed.
-    const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't buy anything.`));
+    const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't afford anything.`));
     if (skipped) {
-      const msg = humansHere ? skipped.replace("couldn't buy anything.", 'can’t afford anything. Turn passes.') : 'Nothing you can afford. Turn passes.';
+      const msg = humansHere ? skipped.replace("couldn't afford anything.", 'can’t afford anything. Turn passes.') : 'Nothing you can afford. Turn passes.';
       setTimeout(() => showToast(msg, 2000), motionOK() ? played.total : 0);
     }
 
