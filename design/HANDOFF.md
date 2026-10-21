@@ -3,7 +3,7 @@
 Last updated 2026-10-21 3:50am Eastern. Older handoffs: design/archive/handoff-before-2026-10-20.md (v0.6–v0.8.9 detail and evidence).
 
 ## Live
-- https://cojamz.github.io/patrons/play/ is **v0.8.25** (see main:play/build.json for the exact source; CHANGELOG.md marks each section "shipped (source X)"). Branch claude/gifted-newton-3lcy3i (PR #1) holds the game plus docs.
+- https://cojamz.github.io/patrons/play/ is **v0.8.37** (Oct 21 5pm Eastern: lag thread's seat-hover, turn-start redraw, rival pace and Escape fixes on top of v0.8.35's prices and Blue deck) (see main:play/build.json for the exact source; CHANGELOG.md marks each section "shipped (source X)"). Branch claude/gifted-newton-3lcy3i (PR #1) holds the game plus docs.
 - Overnight Oct 20–21 (Cory's job 1, "fix all the open items"): v0.8.13–v0.8.25 except v0.8.14/0.8.19/0.8.20 (other threads). Colorless guests, Cory's made calls (Social Climber and Overseer cut, Grifter, Top Up, Chefs, Pants, affordable toggle), laptop fits and large-screen zoom, card grounds, first-play ring line, motion pass (members pop from seats, recruit via the hub, round-start beats, undo backwards, quiet skips), screen overlaps, swap portraits, every coin flies, round-end smoothing, rim sheen, bot swap scoring.
 - Unit suite all green; browser gates honest (lane 6 sweep, /mnt/project-files/overnight/lane6/gates.md). Known red: members.mjs m3 (e2e/v4/known-red.json) needs a seat-layout call.
 - Job 2 (color reworks) belongs to the "Better design process" thread; nothing from it ships before Cory approves.
@@ -18,7 +18,7 @@ Last updated 2026-10-21 3:50am Eastern. Older handoffs: design/archive/handoff-b
 - Deck sizes: Red and Green 12, others 10 (target equal). Member cost ceiling 10. Release numbering stays v0.8.x.
 
 ## Known not-green
-- members.mjs m3 (Lottery Winner's hover in a two-row seat covers the second row; no spot within 16px clears it). Needs a seat layout call; listed in e2e/v4/known-red.json.
+- scoring.mjs (e2e/v4/known-red.json): results replay the end-game count-up after round III already landed the bonuses; the test wants no second count. Cory's call is pending (default: keep the count-up, then update the test to match his call).
 - Box load: parallel agents' checks starve each other (hotseat's 4-minute bound). Re-run alone once; run at most two worktree lanes at a time.
 
 ## Working this week
