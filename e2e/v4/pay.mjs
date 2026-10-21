@@ -7,7 +7,8 @@ import { browserPath } from './lib/browser.mjs';
 //  (p2) A follower buy uses the same sheet: the lifted coins add up to what the tier costs.
 //  (p3) Only one way to pay: no sheet, it pays at once, and the coins fly from your stack.
 //  (p4) Wave-2 testers A#4, B#2: only one way to pay, but it gives up a lead you hold (3 gold leading Most gold, the
-//       price takes all 3): the sheet asks, says "gives up your lead in gold", and Cancel goes back with nothing paid.
+//       price takes all 3): the sheet asks (with no lost-lead prose since Cory's #32, 2026-10-17), and Cancel goes back
+//       with nothing paid.
 //  (g1) Good Deed on the gift card (Cory, 2026-10-16: the two-step pick on the seats was "very bad/confusing"): a small
 //       card beside the space just taken, headed "A rival you pick gets 2" (the picked color's dot after it, once picked); the table's colors are its lit first row, the
 //       rivals' faces wait quiet under them (no chips, nothing lit on the seats); a color is plainly picked, a click on
@@ -26,8 +27,8 @@ import { browserPath } from './lib/browser.mjs';
 //  (s0) Wave f4: the "since your last turn" strip with nothing to tell says nothing ("No moves since yours yet." went),
 //       and no strip line is ever clamped with an ellipsis ("took your Tax…").
 //  (k1) The keyboard list: absent for the mouse; Tab from the caption opens it with every pick.
-//  Wave-2 tester B: (s8) a recruit outside the buy step (Talent Scout's) pays through the sheet; (t1) Talent Scout's top 5 as cards; (y1) Your Call in marks at
-//  the space; (r1) Release from your member's card, no header dropdown; (d1) Double Agent's forced swap explained.
+//  Wave-2 tester B: (s8) Snap Up pays through the sheet; (t1) Talent Scout's top 5 as cards; (y1) Your Call in marks at
+//  the space; (r1) Release stays gone (no release anywhere, Cory 2026-10-17); (d1) Double Agent's forced swap explained.
 // Saves: e2e/v4/lib/dialog-save.mjs. Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -38,6 +39,7 @@ import { stealSave } from './lib/steal-save.mjs';
 import { memberPrice, TIERS, cardDef } from '../../src/engine/v4/index.js';
 import { costParts } from '../../src/v4/format.js';
 import { seedSave } from './lib/seed.mjs';
+import { HOVER_DELAY_MS } from '../../src/v4/game/hoverDelay.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/pay';
 mkdirSync(SHOTS, { recursive: true });
@@ -61,7 +63,9 @@ async function open(tag, save, ready) {
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`[${tag}] pageerror: ${e.message}`));
   await seedSave(page, save); // before the app runs (lib/seed.mjs)
-  await page.goto(`${base}/?intro=0`, { timeout: 90000 });
+  // at Steady, the speed this gate's waits were written for (the default became Relaxed, Cory 2026-10-16: a sheet or
+  // card stands until its chain has played, about 2.3x longer there)
+  await page.goto(`${base}/?intro=0&speed=steady`, { timeout: 90000 });
   await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
   await page.click('[data-home="resume"]');
   await page.waitForSelector(ready, { timeout: 60000 });
@@ -70,6 +74,9 @@ async function open(tag, save, ready) {
   return { ctx, page };
 }
 const moves = page => page.$eval('.app.game', e => Number(e.dataset.moves));
+// the answer's chain has played (a card that asked stands, its buttons off, until then: every move plays out whole
+// before the next view, decisions 2026-10-15 22:40), then two frames for the view to move on
+const chainDone = page => page.waitForFunction(() => !document.querySelector('.app.game[data-chain="1"]'), null, { timeout: 8000 }).then(() => page.waitForTimeout(120), () => {});
 const lastMove = page => page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-1).map(m => m[1])[0]; } catch { return null; } });
 async function click(page, sel) {
   const el = await page.waitForSelector(sel, { timeout: 8000 });
@@ -138,7 +145,7 @@ try {
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push(`[p3] pageerror: ${e.message}`));
     await seedSave(page, save); // before the app runs (lib/seed.mjs)
-    await page.goto(`${base}/?intro=0`, { timeout: 90000 });
+    await page.goto(`${base}/?intro=0&speed=steady`, { timeout: 90000 });
     await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
     await page.evaluate(() => { window.__sheet = 0; window.__payPieces = 0; const t = () => { if (document.querySelector('.dialog.pay')) window.__sheet++; for (const g of document.querySelectorAll('.piece-flight.pay')) if (!g.dataset.seen) { g.dataset.seen = '1'; window.__payPieces++; } requestAnimationFrame(t); }; requestAnimationFrame(t); });
     await page.click('[data-home="resume"]');
@@ -156,8 +163,9 @@ try {
     const ways = save.state.pending.options.filter(o => o.kind === 'pay');
     if (ways.length !== 1 || !(ways[0].breaks || []).includes('gold')) errors.push(`(p4) the save is not one way that gives up the gold lead (${ways.map(o => o.id).join(' ')})`);
     const { ctx, page } = await open('p4', save, '.dialog.pay');
-    const note = await page.$eval('[data-pay-lead]', e => e.textContent.trim()).catch(() => '');
-    if (!/gives up your lead in gold/.test(note)) errors.push(`(p4) the sheet doesn't say the lead is lost ("${note}")`);
+    // the sheet asks, without the lost-lead prose (Cory, 2026-10-17 #32: "You lose your tie for silver" is unnecessary)
+    const prose = await page.$eval('.dialog.pay', e => (e.querySelector('[data-pay-lead]') ? 'data-pay-lead' : '') + (/gives up your (lead|tie)|lose your (lead|tie)/i.test(e.innerText) ? ' prose' : '')).catch(() => '');
+    if (prose) errors.push(`(p4) the sheet still carries the lost-lead line (${prose.trim()})`);
     if (await page.$eval('.pay-go', e => e.dataset.option).catch(() => null) !== ways[0].id) errors.push('(p4) Pay is not on the one way');
     await page.screenshot({ path: `${SHOTS}/p4-lead.png` });
     if (await moves(page) !== save.state.moves) errors.push('(p4) something was paid before the player answered');
@@ -241,7 +249,8 @@ try {
     let got = NaN;
     for (let k = 0; k < 30 && got !== before + 2; k++) { got = await page.$eval('.lt-seat[data-pid="2"] .cs-stack[data-res="red"] b', e => Number(e.textContent)).catch(() => NaN); await page.waitForTimeout(100); }
     if (got !== before + 2) errors.push(`(g1) P3 holds ${got} red, want ${before + 2}`);
-    if (await page.$('.gift-card')) errors.push('(g1) the gift card stays up after the gift');
+    await chainDone(page);
+    if (await page.$('.gift-card')) errors.push('(g1) the gift card stays up after the gift has played');
     await page.screenshot({ path: `${SHOTS}/g1-given.png` });
     await ctx.close();
   }
@@ -330,7 +339,8 @@ try {
     let got = NaN;
     for (let k = 0; k < 30 && got !== before + 2; k++) { got = await page.$eval('.lt-seat[data-pid="3"] .cs-stack[data-res="red"] b', e => Number(e.textContent)).catch(() => NaN); await page.waitForTimeout(100); }
     if (got !== before + 2) errors.push(`(g3) P4 holds ${got} red, want ${before + 2}`);
-    if (await page.$('.gift-card, .lt-seat .cs-pick-seat')) errors.push('(g3) the card or a lit seat stays up after the gift');
+    await chainDone(page);
+    if (await page.$('.gift-card, .lt-seat .cs-pick-seat')) errors.push('(g3) the card or a lit seat stays up after the gift has played');
     await page.screenshot({ path: `${SHOTS}/g3-seat-given.png` });
     await ctx.close();
   }
@@ -373,7 +383,8 @@ try {
     let got = NaN;
     for (let k = 0; k < 30 && got !== before + 2; k++) { got = await page.$eval(`.lt-seat[data-pid="0"] .cs-stack[data-res="${pick.value}"] b`, e => Number(e.textContent)).catch(() => NaN); await page.waitForTimeout(100); }
     if (got !== before + 2) errors.push(`(c1) you hold ${got} ${pick.value}, want ${before + 2}`);
-    if (await page.$('.gift-card[data-gift="color"]')) errors.push('(c1) the card stays up after the pick');
+    await chainDone(page);
+    if (await page.$('.gift-card[data-gift="color"]')) errors.push('(c1) the card stays up after the pick has played');
     await ctx.close();
   }
   // (w1) Even Swap: yours, then theirs, on the same card
@@ -382,7 +393,8 @@ try {
     const st = save.state;
     const { ctx, page } = await open('w1', save, '.lt-wheel .gift-card[data-gift="trade"]');
     const head = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim());
-    if (head !== 'Swap a member with a rival') errors.push(`(w1) the card's heading reads "${head}"`);
+    // the heading says the space's rule (Red rework, Cory 2026-10-18: any two members of equal cost)
+    if (head !== 'Swap any two equal-cost members') errors.push(`(w1) the card's heading reads "${head}"`);
     if (await page.$('.lt-seat .cs-member.pick-on')) errors.push('(w1) members light on the seats');
     if (await page.$('.gift-card .gc-row[data-row="2"] .gc-member:not([disabled])')) errors.push('(w1) a rival member is live before yours is picked');
     const mine = await page.$$eval('.gift-card .gc-row[data-row="1"] .gc-member:not([disabled])', els => els.map(e => Number(e.dataset.uid)));
@@ -437,15 +449,15 @@ try {
     }
     await ctx.close();
   }
-  // (s8) a recruit outside the buy step (Talent Scout's) uses the same sheet: the lifted coins pay its price, Enter pays
+  // (s8) Snap Up's payment uses the same sheet: the lifted coins pay the price it's paid under (any colors), Enter pays
   {
-    const save = momentSave('scoutpay');
+    const save = momentSave('snappay');
     const st = save.state, w = st.pending.options[0];
     const { ctx, page } = await open('s8', save, '.dialog.pay');
     const n = await page.$$eval('.dialog.pay .ps-out .ps-coin', els => els.length);
-    if (n !== memberPrice(st, st.players[0], w.uid, w.how).total) errors.push(`(s8) ${n} coins lifted for Talent Scout's price ${memberPrice(st, st.players[0], w.uid, w.how).total}`);
-    if (await page.$('.prompt.choice .opts')) errors.push('(s8) Talent Scout still shows a list of ways to pay');
-    await page.screenshot({ path: `${SHOTS}/s8-scout-pay.png` });
+    if (n !== memberPrice(st, st.players[0], w.uid, w.how).total) errors.push(`(s8) ${n} coins lifted for Snap Up's price ${memberPrice(st, st.players[0], w.uid, w.how).total}`);
+    if (await page.$('.prompt.choice .opts')) errors.push('(s8) Snap Up still shows a list of ways to pay');
+    await page.screenshot({ path: `${SHOTS}/s8-snapup-pay.png` });
     const want = await page.$eval('.pay-go', e => e.dataset.option);
     await page.keyboard.press('Enter');
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(s8) Enter did not pay'));
@@ -510,26 +522,20 @@ try {
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(y1) a tile did nothing'));
     await ctx.close();
   }
-  // (r1) Release on the seat: your member's card offers "Release: +N ●"; no header dropdown
+  // (r1) Release is gone (Cory, 2026-10-17 #40/#57; rules.release false): in a buy step holding members recruited
+  // earlier, nothing offers a release, not the engine, not a member's card, not the header
   {
     const save = momentSave('release');
     const st = save.state;
     const { ctx, page } = await open('r1', save, '.lt[data-phase="buy"][data-yours="1"]');
+    if (st.pending.options.some(x => x.kind === 'release' || /^release:/.test(x.id))) errors.push('(r1) the engine offers a release');
     if (await page.$('.lt-prompt .rel-toggle, .lt-prompt .release-row')) errors.push('(r1) the header still has a Release dropdown');
-    const o = st.pending.options.find(x => x.kind === 'release');
-    await page.hover(`.lt-seat.mine .cs-member[data-uids~="${o.uid}"] .fig`);
-    const btn = await page.waitForSelector(`[data-release][data-option="${o.id}"]`, { timeout: 3000 }).catch(() => null);
-    if (!btn) errors.push('(r1) the member’s card offers no Release');
-    else {
-      if (!(await btn.$('.pip'))) errors.push('(r1) the refund is not a dot');
-      const t = await btn.innerText();
-      if (!new RegExp(`\\+${o.refund}`).test(t) || /red|blue|green|magenta/.test(t)) errors.push(`(r1) the button reads "${t}"`);
-      await page.screenshot({ path: `${SHOTS}/r1-release.png` });
-      await btn.click();
-      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(r1) Release did nothing'));
-      const rec = await lastMove(page);
-      if (rec && rec !== o.id) errors.push(`(r1) recorded ${rec}`);
-    }
+    const uid = st.players[0].members[0];
+    await page.hover(`.lt-seat.mine .cs-member[data-uids~="${uid}"] .fig`);
+    await page.waitForTimeout(400 + HOVER_DELAY_MS);
+    if (!(await page.$('.popover:not([data-prep]) .card-face'))) errors.push('(r1) your member opens no card to check');
+    if (await page.$('[data-release]')) errors.push('(r1) a member’s card still offers Release');
+    await page.screenshot({ path: `${SHOTS}/r1-no-release.png` });
     await ctx.close();
   }
   // (d1) Double Agent's forced swap: asked on the board, its rule under the headline, its figure marked as asking
@@ -589,4 +595,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`dialogs gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed (card and seats), Goody Bags and Cheap Seats on the card, Even Swap, keyboard list, Talent Scout pay, Talent Scout tray, Your Call, Release, Double Agent, Hustler)');
+console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed (card and seats), Goody Bags and Cheap Seats on the card, Even Swap, keyboard list, Snap Up pay, Talent Scout tray, Your Call, no Release, Double Agent, Hustler)');
