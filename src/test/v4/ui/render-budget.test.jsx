@@ -129,21 +129,39 @@ describe('render budget', () => {
     for (const s of perStep) expect(s.GameScreen).toBe(1);
   });
 
-  it('a wheel spin paints its frames straight to the board: the wheel renders once, when it lands', async () => {
+  // (lag pass 2026-10-21: at 4x CPU a rAF spin got 4 frames in ~800ms while a rival's move rendered) the spin runs on the
+  // compositor: the board's layers and its spaces get Web Animations through the turn's angles, and React renders once,
+  // when it lands
+  it('a wheel spin is handed to the compositor: no render while it turns, the wheel renders once when it lands', async () => {
     const state = advanceTo(createGame({ seats: SEATS, seed: 21 }), 'place', 0);
     const session = drivenSession(state, [0]);
     const { container } = render(<GameScreen session={session} pace={0} />);
     await settle();
-    const g = () => container.querySelector('.stage svg g[transform]');
-    const seen = new Set();
-    R.reset();
-    act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); });
-    for (let k = 0; k < 40; k++) { await act(() => new Promise(r => setTimeout(r, 16))); if (g()) seen.add(`${g().getAttribute('transform')}|${g().closest('svg').style.transform}`); }
-    const report = { commits: R.commits, Wheel: R.n('Wheel'), GameScreen: R.n('GameScreen'), frames: seen.size };
-    console.log('[render-budget] one spin:', JSON.stringify(report));
-    expect(report.frames).toBeGreaterThan(2); // it did turn, through several angles
-    expect(report.Wheel).toBeLessThanOrEqual(1);
-    expect(report.GameScreen).toBeLessThanOrEqual(1);
+    const anims = [];
+    const had = Element.prototype.animate;
+    Element.prototype.animate = function (frames, opts) { const a = { el: this, frames, opts, startTime: null, currentTime: 0, onfinish: null, cancel() { a.cancelled = true; } }; anims.push(a); return a; };
+    try {
+      R.reset();
+      act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); });
+      const turning = { Wheel: R.n('Wheel'), GameScreen: R.n('GameScreen') };
+      const layers = anims.filter(a => a.el.tagName.toLowerCase() === 'svg'), spaces = anims.filter(a => a.el.matches('[data-slot]'));
+      const angles = new Set(layers.length ? layers[0].frames.map(f => f.transform) : []);
+      expect(layers.length).toBeGreaterThan(0);
+      expect(spaces.length).toBe(container.querySelectorAll('.stage > [data-slot]').length);
+      expect(angles.size).toBeGreaterThan(2); // it turns through several angles
+      expect(turning.Wheel + turning.GameScreen).toBe(0); // the key itself renders nothing
+      const g = container.querySelector('.stage svg g[transform]').getAttribute('transform');
+      await act(async () => { layers[0].onfinish(); });
+      await act(() => new Promise(r => setTimeout(r, 50)));
+      const report = { commits: R.commits, Wheel: R.n('Wheel'), GameScreen: R.n('GameScreen'), anims: anims.length };
+      console.log('[render-budget] one spin:', JSON.stringify(report));
+      expect(container.querySelector('.stage svg g[transform]').getAttribute('transform')).not.toBe(g); // landed
+      expect(anims.every(a => a.cancelled)).toBe(true); // and let go of its animations
+      expect(report.Wheel).toBeLessThanOrEqual(1);
+      expect(report.GameScreen).toBeLessThanOrEqual(1);
+    } finally {
+      if (had) Element.prototype.animate = had; else delete Element.prototype.animate;
+    }
   });
 
   it('a desktop click on a lit space lets the press paint before the table re-renders', async () => {
@@ -159,7 +177,7 @@ describe('render budget', () => {
     R.reset();
     el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     for (let k = 0; k < 8; k++) await Promise.resolve(); // the click's microtasks: everything before the next paint
-    const beforePaint = { commits: R.commits, components: R.total(), GameScreen: R.n('GameScreen'), Wheel: R.n('Wheel'), CultSeat: R.n('CultSeat'), ShopCards: R.n('ShopCards') };
+    const beforePaint = { commits: R.commits, components: R.total(), GameScreen: R.n('GameScreen'), Wheel: R.n('Wheel'), CultSeat: R.n('CultSeat'), ShopCards: R.n('ShopCards'), minion: !!container.querySelector(`[data-slot="${key}"] .worker[data-seat="0"]`) };
     // the engine ran at once (same move, same undo checkpoint): only the table's picture waits for the next frame
     expect(session.getState().slots[key]).toBe(0);
     expect(session.undoKind).toBe('place');
@@ -168,7 +186,9 @@ describe('render budget', () => {
     const after = { commits: R.commits, components: R.total(), GameScreen: R.n('GameScreen') };
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     console.log('[render-budget] click on a space, before paint:', JSON.stringify(beforePaint), 'after:', JSON.stringify(after));
-    expect(beforePaint.Wheel).toBe(0);
+    // the press paints your minion standing there (lag pass 2026-10-21): the Wheel alone renders in the click
+    expect(beforePaint.Wheel).toBeLessThanOrEqual(1);
+    expect(beforePaint.minion).toBe(true);
     expect(beforePaint.CultSeat).toBe(0);
     expect(beforePaint.ShopCards).toBe(0);
     expect(beforePaint.GameScreen).toBe(0);

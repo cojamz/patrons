@@ -20,7 +20,8 @@ import { browserPath } from './lib/browser.mjs';
 //  (t8) a space or member named in the strip, or in the log, opens its card on the board's hover layer (the space card,
 //       the member card), beside the name, whole on screen, above the log drawer.
 //  (t9) Cory, 2026-10-16: "pass is hard to find" and "the turn-order rail is confusing". In your buy step a "Done, no
-//       buy" button stands in the shop column directly under the follower buys, visible and enabled, and it's the one
+//       buy" button stands in the shop column directly under the shop's grid of buys (follower buys and members, one
+//       grid since v0.8.2), visible and enabled, and it's the one
 //       way to pass on a laptop (no second Pass in the headline); the rail is gone (nothing drawn in the chairs' gutter);
 //       during a rival's turn no rival seat reads anything (Cory, 2026-10-15: "next" dropped), and
 //       your seat reads "your turn next" / "your turn in N", N the turns before yours in the engine's queue.
@@ -223,11 +224,13 @@ try {
   const sw = v.sw[0];
   if (!sw || sw.state !== 'on' || !/\bon$/.test(sw.text) || !/Midas is on/.test(sw.title) || !/switch it off/.test(sw.title)) fail(`the Midas switch: ${JSON.stringify(v.sw)}`, 't6');
   await page.screenshot({ path: `${SHOTS}/3-first-placement.png` });
-  // (t9) "Done, no buy" under the follower buys, in your buy step
+  // (t9) "Done, no recruit" under the follower buys, in your buy step
   {
     const d = await page.evaluate(() => {
       const l = document.querySelector('.lt'), btn = document.querySelector('.lt-shop .lt-rates [data-option="pass"]');
-      const grid = document.querySelector('.lt-shop .lt-rates-grid'), shop = document.querySelector('.lt-shop');
+      // the follower buys are cards in the one shop grid since v0.8.2 (Cory, 2026-10-19), so "under the buys" is under
+      // that grid: the follower buys head it and the members follow
+      const grid = document.querySelector('.lt-shop .lt-cards'), shop = document.querySelector('.lt-shop');
       const vis = e => { if (!e) return false; const c = getComputedStyle(e); const b = e.getBoundingClientRect(); return c.display !== 'none' && c.visibility !== 'hidden' && +c.opacity > 0.5 && b.width > 0 && b.height > 0; };
       const r = e => (e ? e.getBoundingClientRect().toJSON() : null);
       return { phase: `${l?.dataset.phase}:${l?.dataset.yours}`, vis: vis(btn), text: btn?.textContent.trim() || null, disabled: !!btn?.disabled, btn: r(btn), grid: r(grid), shop: r(shop),
@@ -236,16 +239,16 @@ try {
     });
     if (d.phase !== 'buy:1') fail(`(t9) expected your buy step after the first placement, the table is at ${d.phase}`, 't9');
     else {
-      if (!d.vis || d.disabled || d.text !== 'Done, no buy') fail(`(t9) no visible, enabled "Done, no buy" in the shop column in your buy step: ${JSON.stringify(d)}`, 't9');
+      if (!d.vis || d.disabled || d.text !== 'Done, no recruit') fail(`(t9) no visible, enabled "Done, no recruit" in the shop column in your buy step: ${JSON.stringify(d)}`, 't9');
       else {
         const under = d.btn.top >= d.grid.bottom - 1 && d.btn.top - d.grid.bottom <= 16 && d.btn.left >= d.grid.left - 1 && d.btn.right <= d.grid.right + 1;
-        if (!under) fail(`(t9) "Done, no buy" isn't directly under the follower buys: button ${JSON.stringify(d.btn)}, buys ${JSON.stringify(d.grid)}`, 't9');
-        if (d.btn.bottom > 700 || d.btn.left < d.shop.left - 1 || d.btn.right > d.shop.right + 1) fail(`(t9) "Done, no buy" sits outside the shop column or off screen: ${JSON.stringify(d.btn)} in ${JSON.stringify(d.shop)}`, 't9');
+        if (!under) fail(`(t9) "Done, no recruit" isn't directly under the shop's buys: button ${JSON.stringify(d.btn)}, buys ${JSON.stringify(d.grid)}`, 't9');
+        if (d.btn.bottom > 700 || d.btn.left < d.shop.left - 1 || d.btn.right > d.shop.right + 1) fail(`(t9) "Done, no recruit" sits outside the shop column or off screen: ${JSON.stringify(d.btn)} in ${JSON.stringify(d.shop)}`, 't9');
       }
-      if (d.others) fail(`(t9) ${d.others} other pass button(s) on screen beside the shop's "Done, no buy"`, 't9');
+      if (d.others) fail(`(t9) ${d.others} other pass button(s) on screen beside the shop's "Done, no recruit"`, 't9');
     }
     if (d.rail) fail(`(t9) the turn-order rail still draws ${d.rail} thing(s)`, 't9');
-    // (t9b) Cory, 2026-10-15: a follower buy's hover never covers "Done, no buy"
+    // (t9b) Cory, 2026-10-15: a follower buy's hover never covers "Done, no recruit"
     for (const key of ['small', 'mid', 'big', 'top']) {
       const rate = page.locator(`.lt-shop .lt-rate[data-rate="${key}"]`);
       if (!(await rate.count())) continue;
@@ -254,16 +257,16 @@ try {
         const b = document.querySelector('.lt-shop .lt-rates .lt-done')?.getBoundingClientRect(), c = document.querySelector('.popover')?.getBoundingClientRect();
         return b && c && c.width > 0 && !(c.right <= b.left || c.left >= b.right || c.bottom <= b.top || c.top >= b.bottom) ? { b: b.toJSON(), c: c.toJSON() } : null;
       });
-      if (hit) fail(`(t9b) the ${key} follower buy's hover covers "Done, no buy": ${JSON.stringify(hit)}`, 't9');
+      if (hit) fail(`(t9b) the ${key} follower buy's hover covers "Done, no recruit": ${JSON.stringify(hit)}`, 't9');
     }
     await page.mouse.move(5, 5); await page.waitForTimeout(250);
   }
   await page.locator('.lt-shop [data-option="pass"]').click();
   await page.waitForTimeout(700);
-  // (t9c) Cory, 2026-10-15: "Done, no buy" is there only in the buy step
+  // (t9c) Cory, 2026-10-15: "Done, no recruit" is there only in the buy step
   {
     const shown = await page.evaluate(() => { const e = document.querySelector('.lt-shop .lt-rates .lt-done'); const l = document.querySelector('.lt'); return { phase: l?.dataset.phase, vis: !!e && getComputedStyle(e).visibility !== 'hidden' && getComputedStyle(e).display !== 'none' }; });
-    if (shown.phase !== 'buy' && shown.vis) fail(`(t9c) "Done, no buy" shows outside the buy step (${shown.phase})`, 't9');
+    if (shown.phase !== 'buy' && shown.vis) fail(`(t9c) "Done, no recruit" shows outside the buy step (${shown.phase})`, 't9');
   }
   v = await view();
   // (t4)

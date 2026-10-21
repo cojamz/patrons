@@ -140,7 +140,7 @@ export function memberRows(state, pid, viewer = null, optionFor = () => null) {
     const on = c.on !== false;
     let tag = null;
     const ask = asks.get(uid) || null;
-    if (ask) tag = { text: ask.kind === 'again' ? 'buying again now' : 'asking now', tone: 'lit', title: ask.say };
+    if (ask) tag = { text: ask.kind === 'again' ? 'recruiting again now' : 'asking now', tone: 'lit', title: ask.say };
     else if (kind === 'use') {
       const once = (eff.activate === 'round') ? 'this round' : '';
       if (c.used) tag = { text: once ? 'used this round' : 'used', tone: 'dim' };
@@ -211,7 +211,7 @@ export function memberAsks(state, pid) {
     if (uid != null) {
       const name = cardDef(state, uid).name;
       const pass = pend.options.find(o => o.kind === 'pass') || null;
-      out.set(uid, { uid, name, kind: 'again', say: 'Buying again now: a member or followers.', skip: pass ? { option: pass.id, label: 'Skip, keep it for later', title: `Skip the second buy: ${name} keeps it for a later turn this round.` } : null });
+      out.set(uid, { uid, name, kind: 'again', say: 'Recruiting again now: a member or followers.', skip: pass ? { option: pass.id, label: 'Skip, keep it for later', title: `Skip the second recruit: ${name} keeps it for a later turn this round.` } : null });
     }
   } else if (pend.kind === 'choose') {
     const title = (String(pend.prompt || '').match(/^([^:]{2,28}):\s*(.*)$/) || []);

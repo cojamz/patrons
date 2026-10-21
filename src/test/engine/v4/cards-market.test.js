@@ -100,11 +100,11 @@ describe('Blue actions', () => {
     for (const u of top) expect(ids(s)).not.toContain(`card:${u}`);
   });
 
-  it('Buy Twice: +1 blue and two buys this turn', () => {
+  it('Recruit Twice: +1 blue and two buys this turn', () => {
     let s = table(Q, { round: 2, res: [{ gold: 2, red: 2 }], shop: ROW5 });
     s = take(s, 'market.clearance');
     expect(R(s).blue).toBe(1);
-    expect(s.log).toContain('P1 buys twice this turn.');
+    expect(s.log).toContain('P1 recruits twice this turn.');
     for (let k = 0; k < 2; k++) { expect(s.pending.kind).toBe('buy'); s = move(s, 'tier:small'); }
     expect(s.players[0].bonus).toBe(2);
     expect(s.pending?.kind).not.toBe('buy');
@@ -132,7 +132,7 @@ describe('Blue actions', () => {
     let s = table(Q, { round: 3, res: [{ gold: 2, red: 2 }], shop: ROW, left: 5 });
     s = take(s, 'market.spree');
     expect(R(s).blue).toBe(3);
-    expect(s.log).toContain('P1 goes on a spree: 3 buys this turn.');
+    expect(s.log).toContain('P1 goes on a spree: 3 recruits this turn.');
     for (let k = 0; k < 3; k++) { expect(s.pending.kind).toBe('buy'); s = move(s, 'tier:small'); }
     expect(s.players[0].bonus).toBe(3);
     expect(s.pending?.kind).not.toBe('buy');
@@ -162,7 +162,7 @@ describe('Blue members', () => {
     let s = table(Q, { round: 2, members: [['echo.doppel', 'market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
     s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'market.stylist';
     s = move(take(s, 'market.clearance'), card(s, 'market.curator'));
-    expect(R(s).blue).toBe(4 + 1 - 4 + 2 + 1); // Buy Twice's 1, Curator paid 4 blue, the two Stylists 2, Curator's own 1 (Stylist)
+    expect(R(s).blue).toBe(4 + 1 - 4 + 2 + 1); // Recruit Twice's 1, Curator paid 4 blue, the two Stylists 2, Curator's own 1 (Stylist)
   });
 
   it('Onlooker: whenever a rival recruits a blue member, +2 blue; not for other colors or its owner\'s own', () => {
@@ -191,12 +191,12 @@ describe('Blue members', () => {
     s = buyTurn([['market.connoisseur']], [{ red: 8 }], 'red.bigfamily');
     expect(R(s).blue).toBe(0);
   });
-  it('× Buy Twice: both blue recruits pay Connoisseur', () => {
+  it('× Recruit Twice: both blue recruits pay Connoisseur', () => {
     let s = table(Q, { round: 2, members: [['market.connoisseur']], res: [{ blue: 8 }], shop: ['market.recluse', 'market.curator', ...ROW] });
     s = move(take(s, 'market.clearance'), card(s, 'market.recluse'));
     s = move(s, card(s, 'market.curator'));
     expect(owns(s, 0, 'market.recluse') && owns(s, 0, 'market.curator')).toBe(true);
-    // 8, Buy Twice's 1, two members at 4 blue each, Connoisseur's 1 twice, Curator's own 2 (Connoisseur, Recluse)
+    // 8, Recruit Twice's 1, two members at 4 blue each, Connoisseur's 1 twice, Curator's own 2 (Connoisseur, Recluse)
     expect(R(s).blue).toBe(8 + 1 - 8 + 2 + 2);
     expect(named(s, 'Connoisseur').length).toBe(2);
   });
@@ -211,7 +211,7 @@ describe('Blue members', () => {
     let s = table(Q, { round: 2, members: [['market.reseller']], res: [{ red: 4 }], shop: ['benders.frontrunner', ...ROW.slice(1)] });
     s = move(take(s, 'market.clearance'), card(s, 'benders.frontrunner'));
     expect(owns(s, 0, 'benders.frontrunner')).toBe(true);
-    expect(Object.values(R(s)).reduce((a, b) => a + b, 0)).toBe(1); // only Buy Twice's 1 blue
+    expect(Object.values(R(s)).reduce((a, b) => a + b, 0)).toBe(1); // only Recruit Twice's 1 blue
     expect(named(s, 'Reseller')).toEqual([]);
   });
 

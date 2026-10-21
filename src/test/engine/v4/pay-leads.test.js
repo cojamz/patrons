@@ -89,13 +89,14 @@ describe('a payment that breaks your only full set is marked (live panel r1)', (
 });
 
 describe('a payment that cuts a member’s game-end bonus is marked (tester A: Kingpin paid +0 unwarned)', () => {
-  it('buying followers: paying magenta cuts Kingpin (+1 per 2 magenta); paying gold does not', () => {
-    let s = sceneQ({ quadrants: ['thieves', 'silver', 'trading', 'gold'], res: [{ magenta: 2, gold: 3 }, { magenta: 9, gold: 9 }], members: [['thieves.kingpin'], []], queue: [{ t: 'buy', p: 0 }] });
+  // Kingpin counted held magenta until Oct 21 (now: per magenta member), so Tycoon carries the case
+  it('buying followers: paying gold cuts Tycoon (+1 per 2 gold); paying magenta does not', () => {
+    let s = sceneQ({ quadrants: ['gold', 'silver', 'trading', 'thieves'], res: [{ gold: 2, magenta: 3 }, { magenta: 9, gold: 9 }], members: [['gold.tycoon'], []], queue: [{ t: 'buy', p: 0 }] });
     s = applyMove(s, { player: 0, option: 'tier:small' });
     expect(s.pending.kind).toBe('pay');
-    const by = color => s.pending.options.find(o => o.spend?.[color] === 1 && o.spend?.gold === (color === 'gold' ? 1 : 0));
-    expect(by('magenta').cuts).toEqual([{ member: 'Kingpin', from: 1, to: 0 }]);
-    expect(by('gold').cuts).toBeUndefined();
+    const by = color => s.pending.options.find(o => o.spend?.[color] === 1 && Object.values(o.spend).reduce((x, y) => x + y, 0) === 1);
+    expect(by('gold').cuts).toEqual([{ member: 'Tycoon', from: 1, to: 0 }]);
+    expect(by('magenta').cuts).toBeUndefined();
   });
 });
 

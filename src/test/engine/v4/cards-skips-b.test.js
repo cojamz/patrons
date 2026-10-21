@@ -28,8 +28,8 @@ function run(name, rich) {
   const before = numbers(s), len = s.log.length;
   s = take(s, name);
   const asked = s.pending?.kind === 'choose' && s.pending.player === 0;
-  // the engine's own "couldn't buy anything" (a barren buy step) isn't the action speaking
-  return { s, asked, changed: numbers(s) !== before, said: s.log.slice(len + 1).filter(l => !/couldn't buy anything/.test(l)) };
+  // the engine's own "couldn't afford anything" (a barren buy step) isn't the action speaking
+  return { s, asked, changed: numbers(s) !== before, said: s.log.slice(len + 1).filter(l => !/couldn't afford anything/.test(l)) };
 }
 
 describe('every Blue, Magenta, White and Green action says when it skips a printed part', () => {

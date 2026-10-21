@@ -30,7 +30,7 @@ export default {
 
   actions: [
     {
-      key: 'harvest', ring: 1, name: 'Harvest', text: '+1 yellow, plus 1 per other color you hold.',
+      key: 'harvest', ring: 1, name: 'Harvest', text: '+1 yellow, and +1 more per other color you hold.',
       estimate: (ctx, p) => harvestAmount(ctx, p),
       resolve(ctx, p) { ctx.gain(p, Y, harvestAmount(ctx, p), { fromAction: true }); },
     },
@@ -38,7 +38,7 @@ export default {
       // the fewest, not "none of" (Claude under Cory's go-with-your-gut, from the dead-window audit): it printed Gardener's
       // text. Raising every lowest color always adds one full set.
       // scales by round (Cory, 2026-10-18), in the "× round" form Gather and Build Up print
-      key: 'bloom', ring: 1, name: 'Top Up', text: '+1 × round of each color you hold the fewest of (ties: all of them).',
+      key: 'bloom', ring: 1, name: 'Top Up', text: 'Each color you hold the fewest of (ties: all of them): +1 in round I, +2 in round II, +3 in round III.',
       byRound: { lead: 'Each color you hold the fewest of (ties: all of them):', lines: ['+1', '+2', '+3'] },
       estimate: (ctx, p) => fewest(ctx, p).length * ctx.state.round + 0.5,
       resolve(ctx, p) {
@@ -64,7 +64,7 @@ export default {
       },
     },
     {
-      key: 'gather', ring: 2, name: 'Potluck', text: 'Each of your members brings you 1 of its color.',
+      key: 'gather', ring: 2, name: 'Potluck', text: '+1 per member you have, in that member’s color.',
       estimate: (ctx, p) => ctx.memberCount(p),
       resolve(ctx, p) {
         for (const qid of ctx.state.quadrants) {
@@ -102,14 +102,14 @@ export default {
   },
 
   members: [
-    m('gardener', 'Gardener', 2, 0, 'Now and at round start, +1 of each color you have none of.', { now: true,
+    m('gardener', 'Gardener', 2, 0, 'Now and at round start: +1 of each color you have none of.', { now: true,
       onRoundStart(ctx, owner) { for (const c of missing(ctx, owner)) ctx.gain(owner, c, 1); },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
-    m('peddler', 'Peddler', 4, 4, 'Now and at round start, +1 of each color.', { now: true,
+    m('peddler', 'Peddler', 4, 4, 'Now and at round start: +1 of each color.', { now: true,
       onRoundStart(ctx, owner) { for (const c of colors(ctx)) ctx.gain(owner, c, 1); },
     }),
-    m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2+ of another color at once, +1 yellow.', {
+    m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2 or more of another color at once, +1 yellow.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== Y && g.n >= 2) owner.res[Y] += 1; },
     }),
     m('admirer', 'Admirer', 3, 1, 'Whenever a rival recruits a member of a color you have none of, +1 of that color.', {
@@ -124,10 +124,10 @@ export default {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow' && colorOf(ctx, recruited)) ctx.gain(owner, colorOf(ctx, recruited), 1);
       },
     }),
-    m('dyer', 'Dyer', 4, 2, 'At round end, +1 yellow per color you hold.', {
+    m('dyer', 'Dyer', 4, 2, 'Round end: +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
-    m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. On recruit and at round start, if you have the fewest followers (excluding this card; ties count), +1 of each color.', { now: true, f: 2,
+    m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. Now and at round start: if you have the fewest followers (not counting this card; ties count), +1 of each color.', { now: true, f: 2,
       onRoundStart(ctx, owner, card) {
         // Exclude this physical card, including its value when a Doppelganger copies it.
         const mine = ctx.followers(owner) - Math.max(2, card.def.f);
@@ -179,7 +179,7 @@ export default {
     m('pilgrim', 'Pilgrim', 2, 2, 'When recruited: +1 of each color.', {
       onRecruited(ctx, owner) { eachColor(ctx, owner, 1); },
     }),
-    m('farmer', 'Farmer', 4, 2, 'Whenever an action gains you yellow, +1 more.', {
+    m('farmer', 'Farmer', 4, 2, 'Whenever an action gains you yellow, +1 yellow.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === Y && g.n > 0) owner.res[Y] += 1; },
     }),
     m('weaver', 'Weaver', 4, 2, 'Whenever you buy 5 or more followers, +1 of each color.', {
@@ -191,7 +191,7 @@ export default {
       afterAction(ctx, owner, card, qid) { if (qid !== 'yellow') ctx.gain(owner, Y, 1); },
     }),
     // was Feastmaker 6+4 (Cory, 2026-10-18): Chefs, a little cheaper, counts as 2 members (worth 2 followers, as Twins)
-    m('chefs', 'Chefs', 6, 3, 'Worth 2 followers. Once per game: +1 of each color per round number.', {
+    m('chefs', 'Chefs', 6, 3, 'Worth 2 followers. Once per game: +1 of each color in round I, +2 in round II, +3 in round III.', {
       f: 2,
       byRound: { lead: 'Worth 2 followers. Once per game:', lines: ['+1 of each color', '+2 of each color', '+3 of each color'] },
       activate: 'game',

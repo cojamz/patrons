@@ -70,6 +70,13 @@ export function extraBuyer(state, p) {
   return null;
 }
 
+/** The line under your first "place a minion" of each round: where the open spaces are. */
+export const RING_NOTE = {
+  1: 'The dark inner rings open in rounds II and III.',
+  2: 'The middle ring opened this round.',
+  3: 'The inner ring opened this round.',
+};
+
 /**
  * Header line, phrased for people. `me` is true when the seat to act is controlled here.
  * Returns { who, text } where who is the acting player (or null).
@@ -125,10 +132,14 @@ export function promptFor(state, mine) {
       }
     }
     // falls through
-    case 'place-plain':
-      return mine
-        ? { who: p, text: `Place a minion on a glowing space`, ...(use ? { sub: `…or use ${use} first` } : {}) }
-        : { who: p, text: `${name} is placing a minion` };
+    case 'place-plain': {
+      if (!mine) return { who: p, text: `${name} is placing a minion` };
+      // your first placement of a round says which rings are open (a friend's first game: he missed the inner rings):
+      // once a round, one short line, and a usable member's line wins the room
+      const first = !Object.values(state.slots || {}).includes(p.id);
+      const sub = use ? `…or use ${use} first` : first ? RING_NOTE[state.round] : null;
+      return { who: p, text: `Place a minion on a glowing space`, ...(sub ? { sub } : {}) };
+    }
     // the headline is a verb phrase that fits one line at 1270×700; the details go in the line under it (sub)
     case 'buy':
       return mine
@@ -139,19 +150,30 @@ export function promptFor(state, mine) {
         // (w3: the game-feel tester thought Big Spender fired twice)
         // once the member glows on your seat with its own "Skip, keep it for later" (memberUse.js memberAsks), the line
         // under the headline would say it a second time: it goes, all but another way out
-        ? (pend.extra ? { who: p, text: `Buy again (${extraBuyer(state, p) || 'a second buy'})`, keepCase: false,
+        ? (pend.extra ? { who: p, text: `Recruit again (${extraBuyer(state, p) || 'a second recruit'})`, keepCase: false,
           ...([...memberAsks(state, p.id).values()].some(a => a.kind === 'again')
             ? (use ? { sub: `…or use ${use}` } : {})
             : { sub: `Once a round: pass and ${extraBuyer(state, p) || 'it'} keeps it for a later turn${use ? `; or use ${use}` : ''}` }) }
           // one line for one step (blind testers, 2026-10-15: headline, a subtitle saying it again and the step tabs):
           // the headline says it all; the line under it only when there's another way out
           : { who: p, text: 'Recruit a member or buy followers', ...(use ? { sub: `…or use ${use}` } : {}) })
-        : { who: p, text: pend.extra ? `${name} buys again (${extraBuyer(state, p) || 'a second buy'})` : `${name} is shopping` };
+        : { who: p, text: pend.extra ? `${name} recruits again (${extraBuyer(state, p) || 'a second recruit'})` : `${name} is shopping` };
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };
     case 'choose': {
       if (!mine) return { who: p, text: `${name} is choosing` };
       // the question itself is in the note on the board; the headline names what's asking ("Kickback: choose below")
+      // a ransom ("Shake Down: pay P2 4 (2 red, 2 gold) to keep Magnate?") is your call, said as "P2 holds Magnate: keep it
+      // for 4?" (RC1 round 3 #55), never "Shake Down: choose one"
+      const ransom = String(pend.prompt || '').match(/^Shake Down: pay (.+?) (\d+(?: \([^)]+\))?) to keep (.+)\?$/);
+      if (ransom) {
+        // it's the thief's turn and your call (w3b #37: "Your turn — …" during P4's turn); with too little to pay,
+        // say so, rather than leave "Let Middleman go" as the only button with no reason
+        const have = Object.values(p.res || {}).reduce((a, b) => a + b, 0);
+        const can = pend.options.some(o => o.value === 'pay');
+        return { who: p, lead: 'Your call — ', text: `${ransom[1]} holds ${ransom[3]}: keep it for ${ransom[2]}?`, keepCase: true,
+          ...(can ? {} : { sub: `You hold ${have}: not enough to pay ${ransom[2]}, so it goes` }) };
+      }
       const asker = (String(pend.prompt || '').match(/^([^:]{2,28}):\s/) || [])[1];
       const short = String(pend.prompt || '').length <= 36;
       if (asker && asker !== name) {
@@ -159,18 +181,8 @@ export function promptFor(state, mine) {
         return { who: p, text: `${asker}: ${pend.options.some(o => o.target) ? 'pick on the board' : 'choose one'}`, keepCase: true };
       }
       if (short) return { who: p, text: pend.prompt };
-      // a long question says what it asks, never "Choose below" (RC1 round 3 #55): a ransom is "keep Magnate for 4?",
-      // and your own name before the question goes ("P2: take 6 more from the release, in any colors")
+      // your own name before the question goes ("P2: take 6 more from the release, in any colors")
       const pr = String(pend.prompt || '');
-      const ransom = pr.match(/^(.+?) holds your (.+) to ransom: pay (\d+(?: \([^)]+\))?) to keep it\?$/);
-      if (ransom) {
-        // it's the thief's turn and your call (w3b #37: "Your turn — …" during P4's turn); with too little to pay,
-        // say so, rather than leave "Let Middleman go" as the only button with no reason
-        const have = Object.values(p.res || {}).reduce((a, b) => a + b, 0);
-        const can = pend.options.some(o => o.value === 'pay');
-        return { who: p, lead: 'Your call — ', text: `${ransom[1]} holds ${ransom[2]}: keep it for ${ransom[3]}?`, keepCase: true,
-          ...(can ? {} : { sub: `You hold ${have}: not enough to pay ${ransom[3]}, so it goes` }) };
-      }
       const own = pr.startsWith(`${name}: `) ? pr.slice(name.length + 2) : pr;
       return { who: p, text: own.length <= 46 ? own : 'answer the question below' };
     }
@@ -938,7 +950,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
       else if ((m = own.match(/^ uses (.+?)\.$/))) said.push(`used ${m[1]}`);
       // a buy step skipped because nothing was affordable is said on the card (blind tester B: after Lie Low it passed
       // silently, straight into the round's scoring, where the toast never showed)
-      else if (/^ couldn't buy anything\.$/.test(own)) said.push('nothing affordable to buy');
+      else if (/^ couldn't afford anything\.$/.test(own)) said.push('nothing affordable');
       else if ((m = own.match(/^ traded (.+)\.$/))) said.push(youName(`traded ${m[1]}`));
       else if ((m = own.match(/^ pulled a heist: (.+)\.$/))) said.push(youName(`took ${m[1]}`));
       // the card that gave it, named (Cory: "Log did not indicate a Night Owl turn"): "Night Owl: an extra turn after this one"

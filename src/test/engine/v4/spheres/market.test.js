@@ -104,7 +104,7 @@ describe('Blue actions', () => {
     expect(ids(s)).toContain(`card:${top[1]}`);
     expect(ids(s)).not.toContain(`card:${s.pile[4]}`);
   });
-  it('Buy Twice (ring II): two buys', () => {
+  it('Recruit Twice (ring II): two buys', () => {
     expect(() => take(scene({ round: 1, shop: SHOP }), 'market.clearance')).toThrow();
     let s = take(scene({ round: 2, res: [{ red: 10, gold: 8 }], shop: CHEAP }), 'market.clearance');
     s = move(s, card(s, 'red.intern'));
@@ -155,18 +155,18 @@ describe('Blue members', () => {
   it('Connoisseur: whenever you recruit a blue member, +1 blue', () => {
     let s = take(scene({ round: 2, res: [{ gold: 9, blue: 1 }], members: [['market.connoisseur']], shop: ['market.recluse', ...SHOP.slice(0, 5)] }), 'market.clearance');
     s = move(s, card(s, 'market.recluse'));
-    expect(R(s).gold).toBe(8); // the 1 blue held and Buy Twice's 1 pay Recluse's blue part, 1 gold the rest
+    expect(R(s).gold).toBe(8); // the 1 blue held and Recruit Twice's 1 pay Recluse's blue part, 1 gold the rest
     expect(R(s).blue).toBe(2 - 2 + 1);
     let t = take(scene({ round: 2, res: [{ red: 9 }], members: [['market.connoisseur']], shop: CHEAP }), 'market.clearance');
     t = move(t, card(t, 'red.twins'));
-    // Buy Twice's 1 blue is kept (Blue scores held blue since Oct 20, like Red's held red), Twins is all red,
+    // Recruit Twice's 1 blue is kept (Blue scores held blue since Oct 20, like Red's held red), Twins is all red,
     // and no +1 comes back for a red member
     expect(R(t)).toMatchObject({ red: 7, blue: 1 });
   });
   it('Reseller: whenever you recruit, +1 of that member’s color', () => {
     let s = take(scene({ round: 2, res: [{ gold: 9 }], members: [['market.reseller']], shop: SHOP }), 'market.clearance');
     s = move(s, card(s, 'gold.tycoon'));
-    // Held-blue scoring keeps Buy Twice's blue out of the default payment: 4 gold paid, Reseller's +1 gold back.
+    // Held-blue scoring keeps Recruit Twice's blue out of the default payment: 4 gold paid, Reseller's +1 gold back.
     expect(R(s)).toEqual({ gold: 6, red: 0, blue: 1, green: 0 });
   });
   it('Curator: round start, +1 blue per other blue member', () => {

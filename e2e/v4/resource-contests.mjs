@@ -14,8 +14,9 @@ let s=createGame({seats,seed:53,quadrants:['gold','red','purple','echo']});
 Object.assign(s,{round:1,queue:[{t:'turn',p:0},{t:'endRound'},{t:'afterRound'}],pending:null,slots:{},squats:{},order:[0],log:[]});
 delete s.echo;
 s.players.forEach((p,i)=>{p.left=i===0?1:0;p.res=Object.fromEntries(s.resources.map(r=>[r,0]));});
-for(const def of ['red.bigfamily','red.twins','red.volunteer','echo.evergreen','echo.muse']){
+for(const def of ['red.mob','red.twins','red.volunteer','echo.evergreen','echo.muse']){
  const uid=Object.keys(s.cards).map(Number).find(u=>s.cards[u].def===def);
+ if(uid==null)throw new Error('Missing deck member '+def);
  s.shop=s.shop.filter(u=>u!==uid);s.pile=s.pile.filter(u=>u!==uid);s.players[0].members.push(uid);
 }
 s.players[1].res.red=7;s.players[1].res.green=1;

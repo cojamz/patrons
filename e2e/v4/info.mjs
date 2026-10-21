@@ -15,10 +15,11 @@ import { browserPath } from './lib/browser.mjs';
 //  (e) a cult member hops when its own trace line appears in the log;
 //  (f) no seat sigil shapes anywhere (identity is the leader's emoji and the name);
 //  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere;
-//  (h) the member deck heads the shop strip: after a refill its count is the engine's pile length (the saved game's
+//  (h) the member deck heads the members (below the follower buys, beside the first member card): after a refill its count is the engine's pile length (the saved game's
 //      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up);
 //  (i) while you place, the space under the pointer brightens the shop cards it would make affordable, with no
-//      badge over their portraits (w2a #37) (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
+//      badge over their portraits (w2a #37) and no "Can afford" row in its card (#42) (a saved scene where one does:
+//      e2e/v4/lib/tick-save.mjs), once its dry run lands;
 //  (k) a resource is the plain dot (Cory, 2026-10-15: simplify): every pip and every coin (setup, pay) draws the dot
 //      glyph, never a bare colored disc or an old shaped coin, and the setup picker's labels read on its paper (≥ 4.5);
 //  (l) who's winning and who's next, on the chairs (no score row, Cory 2026-10-15): every chair's total carries its
@@ -30,7 +31,7 @@ import { browserPath } from './lib/browser.mjs';
 //  (m) the hover card opens right next to what it explains (Cory, 2026-10-15: never a docked spot elsewhere): whole
 //      on screen, at the page's top level above every strip, beside or above its target and not over it;
 //  (o) the rim: pointing at a quadrant's rule or a leader's emoji opens that quadrant's standings, never a space;
-//  (p) a space's card lists every player in its contest line (the 4th never drops off);
+//  (p) a space's card says what the space does, no contest line and no "how it helps you" (Cory, 2026-10-17 #42);
 //  (q) every shop card and every member in every chair opens its card, whole on screen and on top (Kingpin had
 //      none; bottom-seat member cards ran under the shop strip), and so does every rival's seat, each whole at once:
 //      what it says and its height 400ms later are what it first painted (speed squad 2026-10-15: testers saw hover
@@ -355,26 +356,27 @@ try {
         if (!(await page.locator('.peek, [data-hover-card="space"], [data-space-card]').count())) fail('(b) hovering a space shows no card', step);
         // the space is what the player sees: its panel when the wheel draws panels (R2), else the slot itself
         await anchorCheck(page, 'a space', step, await slot.evaluate(e => { const w = e.closest('.stage') && e.closest('.stage').querySelector(`[data-cell="${e.dataset.slot}"] .wash`); return (w || e).getBoundingClientRect().toJSON(); }));
-        // (p) the space's contest line names every player: you as a sentence ("You’d have 4 and lead it"), each rival
-        //     in plain words ("P2 has 3"), never a run of middots (w3a #28)
+        // (p) a space's card says what the space does and no more (Cory, 2026-10-17 #42: "we dont need to tell players
+        //     how it will help them"; 8097779a cut the contest line and the "Can afford" row): over the first twelve lit
+        //     spaces, every one opens its card, and none carries a contest line or a help-you row
         {
-          const names = await page.evaluate(() => { try { const st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return st.players.map(p => p.name); } catch { return null; } });
-          let line = null;
           const lit = page.locator('.slot.can');
-          for (let k = 0; k < Math.min(12, await lit.count()) && !line; k++) { // a space that moves no contest has no line (w3b)
+          let opened = 0;
+          const n = Math.min(12, await lit.count());
+          for (let k = 0; k < n; k++) {
             await page.mouse.move(4, 690); await page.waitForTimeout(160);
             await lit.nth(k).hover(); await page.waitForTimeout(700);
-            line = await page.evaluate(() => { const r = document.querySelector('[data-hover-layer] [data-race]'); return r ? { text: r.textContent, parts: [...r.querySelectorAll('[data-race-p]')].map(e => e.textContent) } : null; });
+            const r = await page.evaluate(() => {
+              const L = document.querySelector('[data-hover-layer][data-open="1"]');
+              if (!L) return null;
+              return { race: !!L.querySelector('[data-race], [data-race-p], .lt-race'), help: (L.innerText.match(/Can afford|You[’']d have \d|and lead it|you[’']d lead/i) || [])[0] || '' };
+            });
+            if (!r) continue;
+            opened++;
+            if (r.race) fail('(p) a space card still carries a contest line (#42 cut it)', step);
+            if (r.help) fail(`(p) a space card still tells you how it helps you ("${r.help}", #42)`, step);
           }
-          if (!names) fail('(p) no saved game to read the players from', step);
-          else if (!line) fail('(p) no space card showed its contest line', step);
-          else {
-            if (line.parts.length !== names.length) fail(`(p) a space's contest line names ${line.parts.length} of ${names.length} players: "${line.text}"`, step);
-            if (!/^You’d have \d/.test(line.parts[0] || '')) fail(`(p) the contest line doesn't start with you: "${line.text}"`, step);
-            const missing = names.slice(1).filter(n => !line.parts.some(t => new RegExp(`(^|, )${n} has \\d`).test(t)));
-            if (missing.length) fail(`(p) a space's contest line leaves out ${missing.join(', ')}: "${line.text}"`, step);
-            if (/·.*·.*·/.test(line.text)) fail(`(p) the contest line is a run of middots: "${line.text}"`, step);
-          }
+          if (n && !opened) fail('(p) no lit space opened its card', step);
         }
         await rimCheck(page, step);
         await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });
@@ -390,12 +392,19 @@ try {
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
-        // (h) the deck heads the strip and shows its count; it has no hover card (Cory, 2026-10-15: "the deck doesn't need a hover")
+        // (h) the deck heads the members and shows its count; it has no hover card (Cory, 2026-10-15: "the deck doesn't
+        //     need a hover"). One market since v0.8.2: the follower buys lead the grid, then the deck, beside the first
+        //     member card and level with it (it takes two rows: shop.css, Cory 2026-10-20 shop at 7)
         const deck = page.locator('[data-deck]');
         if (!(await deck.count())) fail('(h) no member deck at the head of the shop strip', step);
         else {
-          const placed = await page.evaluate(() => { const d = document.querySelector('[data-deck]').getBoundingClientRect(), c = document.querySelector('.lt-shop .lt-cards .card').getBoundingClientRect(); return d.right <= c.left + 1 && Math.abs(d.top - c.top) < 2; });
-          if (!placed) fail('(h) the deck is not before the first shop card', step);
+          const placed = await page.evaluate(() => {
+            const d = document.querySelector('[data-deck]').getBoundingClientRect(), c = document.querySelector('.lt-shop .lt-cards .card[data-uid]').getBoundingClientRect();
+            const buys = [...document.querySelectorAll('.lt-shop .lt-cards .lt-rate')].map(e => e.getBoundingClientRect());
+            return { beside: d.right <= c.left + 1 && Math.abs(d.top - c.top) < 2, afterBuys: buys.length > 0 && buys.every(r => r.bottom <= d.top + 1) };
+          });
+          if (!placed.beside) fail('(h) the deck is not before the first member card, level with it', step);
+          if (!placed.afterBuys) fail('(h) the deck is not below the follower buys', step);
           await deck.hover();
           await page.waitForTimeout(400);
           const dc = await page.evaluate(() => !!document.querySelector('[data-hover-layer] [data-hover-card="deck"]'));
@@ -404,7 +413,10 @@ try {
           await page.waitForTimeout(300);
         }
         // (m) your own seat's card opens beside it; (l) the ranked line and the turn-order places
-        const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
+        // (pointing at your name, and the card opens right by it: the head's centre can fall on its turn words, "two
+        // turns in a row", which open their own Turn order card by design, w2a #14; a hover opens next to what you point
+        // at, w3a A8)
+        const head = page.locator('.lt > .lt-seat-0 .cs-who').first();
         if (await head.count()) { await head.hover(); await page.waitForTimeout(300 + HOVER_DELAY_MS); await anchorCheck(page, 'your seat', step, await head.evaluate(e => e.getBoundingClientRect().toJSON())); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
         // (m) w2a #14/#28/#29: a seat's turn words, the "each round" line, a name in the strip and your member figure
         // each open their own card right by them, never the seat's list or a card across the screen
@@ -593,9 +605,11 @@ try {
     const ok = await pg.waitForFunction(us => us.some(u => { const c = document.querySelector(`.lt-shop .card[data-uid="${u}"]`); return !!c && c.hasAttribute('data-after') && !c.classList.contains('dim'); }), uids, { timeout: 6000 }).then(() => true, () => false);
     if (!ok) fail(`(i) hovering space ${key} never brightened the card(s) it unlocks (${uids.join(', ')})`, 'tick');
     else console.log(`info.mjs: space ${key} brightens card ${uids.join(', ')}`);
-    // the brightened card says why, in the space's hover (a lit Kingpin under Lie Low had no reason on screen)
-    const why = await pg.waitForFunction(() => { const r = [...document.querySelectorAll('[data-hover-layer][data-open="1"] .lt-yd-row')].find(x => /can afford/i.test(x.innerText)); return r ? r.innerText : null; }, null, { timeout: 3000 }).then(h => h.jsonValue(), () => null);
-    if (ok && !why) fail(`(i) hovering space ${key} brightens card(s) ${uids.join(', ')} but its hover never says why ("Can afford")`, 'tick');
+    // the brightening is the whole answer: the space's own card opens, with no "Can afford" row (Cory, 2026-10-17 #42:
+    // no telling players how a space helps them; 8097779a cut the row)
+    const why = await pg.waitForFunction(() => { const L = document.querySelector('[data-hover-layer][data-open="1"]'); return L && L.innerText.trim() ? (L.innerText.match(/can afford/i) || [''])[0] || 'open' : null; }, null, { timeout: 3000 }).then(h => h.jsonValue(), () => null);
+    if (ok && !why) fail(`(i) hovering space ${key} brightens card(s) ${uids.join(', ')} but opens no space card`, 'tick');
+    else if (why && why !== 'open') fail(`(i) hovering space ${key}: its card still says "${why}" (#42 cut the row)`, 'tick');
     if (await pg.$('.lt-shop .card .tick')) fail('(i) an "after X" badge covers a shop portrait again (w2a #37)', 'tick');
     await pg.screenshot({ path: `${SHOTS}/07-shop-tick.png` });
     await pg.close();
@@ -621,8 +635,9 @@ try {
     if (!ok) fail(`(s) hovering Open Door lit [${await lit()}], not the cheapest face-up members [${want}]`, 'aim');
     // the lit card looks lit: the lamp's ring, not a near-invisible change
     await pg.waitForTimeout(300); // the light's quick fade-in, done
-    const glow = await pg.evaluate(u => { const c = document.querySelector(`.lt-shop .card[data-uid="${u}"]`); return c ? getComputedStyle(c).boxShadow : ''; }, cheapest[0]);
-    if (!/255, 243, 212|rgb\(255, 243, 212\)/.test(glow)) fail(`(s) a lit cheapest card carries no lamp ring (box-shadow ${glow})`, 'aim');
+    // the unified shop's aim ring (shop.css): a 3px outline in the lamp's warm light, the same light ringing it inside
+    const glow = await pg.evaluate(u => { const c = document.querySelector(`.lt-shop .card[data-uid="${u}"]`); if (!c) return null; const cs = getComputedStyle(c); return { outline: `${cs.outlineStyle} ${cs.outlineWidth} ${cs.outlineColor}`, w: parseFloat(cs.outlineWidth) || 0, shadow: cs.boxShadow }; }, cheapest[0]);
+    if (!glow || glow.w < 2 || !/^solid/.test(glow.outline) || !/255, 224, 161/.test(glow.outline) || !/255, 224, 161[^)]*\) 0px 0px 0px 2px inset/.test(glow.shadow)) fail(`(s) a lit cheapest card carries no lamp ring (${JSON.stringify(glow)})`, 'aim');
     const line = await pg.waitForFunction(() => { const r = document.querySelector('[data-hover-layer][data-open="1"] [data-aims]'); return r ? { aims: r.getAttribute('data-aims'), text: r.closest('.lt-yd-row').innerText } : null; }, null, { timeout: 4000 }).then(h => h.jsonValue(), () => null);
     const names = cheapest.map(u => defById(save.state.cards[u].def).name);
     if (!line) fail('(s) the Open Door hover card has no line naming what it lights', 'aim');
@@ -701,10 +716,11 @@ try {
           const p = c.closest('.popover'), b = p.getBoundingClientRect();
           // your member's hover card is see-through to clicks (only its buttons take them), so the hit test asks with
           // its surface solid for a moment: is anything drawn over it?
-          const thru = [...p.querySelectorAll('.see-through')];
-          thru.forEach(e => e.classList.remove('see-through'));
+          // (a rival's member card is passive, the pointer goes through it altogether (members.css): solid too)
+          const thru = [...p.querySelectorAll('.see-through')], passive = [...p.querySelectorAll('.passive')];
+          thru.forEach(e => e.classList.remove('see-through')); passive.forEach(e => e.classList.remove('passive'));
           const hit = document.elementFromPoint(b.left + b.width / 2, b.top + Math.min(20, b.height / 2));
-          thru.forEach(e => e.classList.add('see-through'));
+          thru.forEach(e => e.classList.add('see-through')); passive.forEach(e => e.classList.add('passive'));
           return { name: c.dataset.card, inView: b.top >= 0 && b.left >= 0 && b.bottom <= innerHeight + 0.5 && b.right <= innerWidth + 0.5, onTop: !!hit && p.contains(hit), y: [Math.round(b.top), Math.round(b.bottom)] };
         }, null, { timeout: 1500 + HOVER_DELAY_MS }).then(h => h.jsonValue(), () => null);
         members++;

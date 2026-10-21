@@ -183,7 +183,7 @@ export default {
     {
       // fill-in (critic): replaces Lend a Hand. Counted before your minion lands (Cory, 2026-10-15: it never paid; the old
       // count took in the minion just placed, so a rival one ahead, the only lead turn order gives, read as a tie)
-      key: 'catchup', ring: 1, name: 'Catch Up', text: '+1 purple, and +1 per rival who’s placed more minions than you this round.',
+      key: 'catchup', ring: 1, name: 'Catch Up', text: '+1 purple, and +1 more per rival who has placed more minions than you this round.',
       estimate: (ctx, p) => 1 + ahead(ctx, p, 0),
       resolve(ctx, p) { ctx.gain(p, P, 1 + ahead(ctx, p, 1), { fromAction: true }); },
     },
@@ -210,22 +210,22 @@ export default {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take your next 2 turns right away.',
+      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take your next 2 turns now.',
       estimate: (ctx, p) => turnsNowEstimate(ctx, p, 2),
       resolve(ctx, p) { turnsNow(ctx, p, 2, 'Crunch Time'); },
     },
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 6, 2, 'Once per game, from round II: take an extra turn right after this one.', {
+    m('secondwind', 'Go-Getter', 6, 2, 'Once per game, from round II: take an extra turn after this one.', {
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
     }),
-    m('errand', 'Errand Runner', 4, 4, 'When recruited: take an extra turn right after this one.', {
+    m('errand', 'Errand Runner', 4, 4, 'When recruited: take an extra turn after this one.', {
       onRecruited(ctx, owner) { extraTurns(ctx, owner, 1, 'Errand Runner'); },
     }),
-    m('taskmaster', 'Taskmaster', 4, 2, 'Once per round: pay 5 purple to take an extra turn right after this one.', {
+    m('taskmaster', 'Taskmaster', 4, 2, 'Once per round: pay 5 purple to take an extra turn after this one.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -233,7 +233,7 @@ export default {
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
-    m('lateriser', 'Late Riser', 4, 2, 'At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.', {
+    m('lateriser', 'Late Riser', 4, 2, 'Round start: if you have the fewest followers (ties count), take an extra turn before anyone places.', {
       // the round's turns are queued after round-start hooks, so this one goes first
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
@@ -264,31 +264,31 @@ export default {
     // fill-in (critic): took the slot of an earlier card called Timekeeper (the name now belongs to the game-end purple card)
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 4 (the most one pass moves);
     // balance pass 2 (pooled bench, midpoint 2.1; design/eval/balance-pass-2.md): 4 → 2
-    m('doubletime', 'Corner-Cutter', 2, 0,'When you pay purple for extra turns, pay half (rounded up).', { halfTurns: true }),
+    m('doubletime', 'Corner-Cutter', 2, 0,'Purple you pay for extra turns costs half, rounded up.', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
     // Cory, 2026-10-15: pays when your last turn of the round ends, after an Overtime or Night Owl minion has landed
-    m('bookkeeper', 'Bookkeeper', 4, 2, 'At the end of your last turn each round, +1 purple per 2 minions you have on the board.', {
+    m('bookkeeper', 'Bookkeeper', 4, 2, 'After your last turn each round: +1 purple per 2 of your minions on the board.', {
       onTurnEnd(ctx, owner, card, who) {
         if (who !== owner || owner.left !== 0 || card.paidRound === ctx.state.round) return;
         card.paidRound = ctx.state.round;
         ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
       },
     }),
-    m('clockmaker', 'Clockmaker', 2, 2, 'Now and at round start, +1 purple per 2 purple you have.', { now: true,
+    m('clockmaker', 'Clockmaker', 2, 2, 'Now and at round start: +1 purple per 2 purple you have.', { now: true,
       // round start, not end (Claude, 2026-10-14, after Cory: purple left at the end of round III is worth nothing)
       // counts after other round-start income (Lamplighter…), like Steward
       onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 12
-    m('lamplighter', 'Lamplighter', 6, 2,'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
+    m('lamplighter', 'Lamplighter', 6, 2,'Now and at round start: +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       // Cory, 2026-10-15: every minion you get counts (Extra Hand's too)
       onRoundStart(ctx, owner) { ctx.gain(owner, P, owner.workers || [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win
     // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
     // pays from round II. Fires once per round (owlRound), whether or not the board had room.
-    m('nightowl', 'Night Owl', 8, 2, 'Rounds II–III: after placing your last minion, take 1 extra turn if there’s room. Once per round.', { f: 2,
+    m('nightowl', 'Night Owl', 8, 2, 'Once per round, from round II: after you place your last minion, take an extra turn.', { f: 2,
       // recruited after your last minion of the round (its buy step): it waits for next round, and says so
       onRecruited(ctx, owner, card) {
         if (owner.left !== 0 || ctx.state.round < 1) return;
@@ -305,6 +305,6 @@ export default {
     m('patience', 'Timekeeper', 4, 2, 'Game end: +1 follower per 3 purple.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),
-    m('crew', 'Shift Crew', 1, 1, 'Worth 2 followers. No effect.', { f: 2, vanilla: true }),
+    m('crew', 'Shift Crew', 1, 1, 'Worth 2 followers.', { f: 2, vanilla: true }),
   ],
 };

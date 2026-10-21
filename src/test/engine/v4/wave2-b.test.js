@@ -41,7 +41,7 @@ describe('#7 Crime Wave: half of one rival\'s one-color stack, and the choice sa
     let s = sceneQ({ quadrants: MAG, n: 4, round: 2, res: [{}, { gold: 5 }, { gold: 5, red: 1 }, { gold: 4 }] });
     s.players[3].hideout = s.round; // P4 lies low
     s = take(s, 'thieves.rob');
-    expect(s.pending.prompt).toMatch(/Crime Wave: steal half of which resource pile/);
+    expect(s.pending.prompt).toMatch(/Crime Wave: choose a pile to halve\./);
     expect(s.pending.options.map(o => [o.id, o.take]).sort()).toEqual([['take:1:gold', 2], ['take:2:gold', 2]]);
     s = move(s, 'take:2:gold');
     expect(s.players[0].res).toMatchObject({ gold: 2, magenta: 1 });

@@ -17,9 +17,9 @@ const choosePair = (s, a, b) => {
 const owner = (s, uid) => s.players.find(p => p.members.includes(uid))?.id ?? (s.shop.includes(uid) ? 'shop' : null);
 
 describe('Even Swap — any equal-cost pair', () => {
-  it('stays in round I and says any two members, plus inherent red', () => {
+  it('stays in round I and says any 2 members, plus inherent red', () => {
     const a = quadrant('red').actions.find(a => a.key === 'evenswap');
-    expect(a.ring).toBe(1); expect(a.text).toMatch(/any two members.*equal cost/i);
+    expect(a.ring).toBe(1); expect(a.text).toMatch(/any 2 members.*equal cost/i);
     expect(a.text).toMatch(/1 red/);
   });
   it('offers only equal printed total costs, including shop targets', () => {

@@ -36,19 +36,19 @@ const P = {
   },
   red: {
     evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+1 red' },
-    turnout: r => ({ main: `+${r + 1} red`, second: '1 × round, +1' }),
+    turnout: r => ({ main: `+${r + 1} red`, second: grows(r) }),
     hire: { verb: 'Recruit the cheapest', second: 'in the shop, free', note: '+1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
     trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
     take: { verb: 'Recruit any member', second: 'in the shop, free', note: '+1 red' },
   },
   market: {
-    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: '1 × round, +1' }),
+    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: grows(r) }),
     restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
-    showroom: { verb: 'Peek at the top 4', second: 'reorder; may buy one', note: '+1 blue' },
-    clearance: { verb: 'Buy twice', second: 'this turn', note: '+1 blue' },
+    showroom: { verb: 'Peek at the top 4', second: 'reorder; may recruit one', note: '+1 blue' },
+    clearance: { verb: 'Recruit twice', second: 'this turn', note: '+1 blue' },
     pricecheck: { verb: 'Bury a shop member', second: 'gain half its cost in blue', note: '+1 blue' },
-    spree: { verb: 'Buy 3 times', second: 'this turn', note: '+3 blue' },
+    spree: { verb: 'Recruit 3 times', second: 'this turn', note: '+3 blue' },
   },
   purple: {
     hourly: r => ({ main: `+${3 + r} purple`, second: grows(r) }),
@@ -95,8 +95,8 @@ const P = {
     pickpocket: r => ({ verb: `Steal ${r}, +${r} @f`, second: '+1 magenta', note: grows(r) }),
     tipoff: { verb: 'Steal 1 per magenta action', second: 'already holding a minion', note: '+1 magenta' },
     hideout: r => ({ verb: `Steal ${r}; safe from steals`, second: 'this round', note: '+1 magenta' }),
-    rob: { verb: 'Steal half a rival’s pile', second: 'one color; round down', note: '+1 magenta' },
-    ransom: { verb: 'Rival pays or loses member', second: 'pay its cost; member ≤5', note: '+1 magenta' },
+    rob: { verb: 'Steal half a rival’s pile', second: 'one color, rounded down', note: '+1 magenta' },
+    ransom: { verb: 'Rival pays or loses a member', second: 'costing 5 or less', note: '+1 magenta' },
     heist: { verb: 'Take a rival’s member', note: '+1 magenta' },
   },
   trading: {
@@ -113,7 +113,7 @@ const P = {
   },
   echo: {
     hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? 'per other green action with a minion' : '1 per other green action with a minion', note: '+1 green' }),
-    chant: r => ({ main: `+${r + 1} green`, second: '1 × round, +1' }),
+    chant: r => ({ main: `+${r + 1} green`, second: grows(r) }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
     echo: { verb: 'Copy previous action', note: '+1 green' },
     encore: { verb: 'Copy an action', second: 'with a rival minion', note: '+1 green' },

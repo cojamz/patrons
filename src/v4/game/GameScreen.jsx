@@ -417,6 +417,12 @@ function TurnCard({ card, root, state }) {
     return () => t.forEach(clearTimeout);
   }, [lifeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const gone = life === 'gone';
+  // docked under the story, the card leaves the story's heading and Log in view: a card too tall for the room under
+  // them sums up its last lines ("+N more") one at a time until it fits (four seats at 1270x700: a five-line card
+  // covered the heading; turndock d2). Kept per card text, so a new card starts at the full count again.
+  const fitKey = `${card.n}|${card.text}`;
+  const [fitOf, setFit] = useState({ key: '', max: 5 });
+  const MAXL = fitOf.key === fitKey ? fitOf.max : 5;
   // Where the card sits, written straight to its style in one layout effect (perf, 2026-10-15): as React state its place
   // and its lift cost every step one or two more commits of their own, each reading the layout again
   const box = useRef(null);
@@ -436,7 +442,10 @@ function TurnCard({ card, root, state }) {
     const table = tableOf();
     const pos = turnCardDock(card, table);
     if (!pos) { el.style.display = 'none'; return; }
-    const px = v => (v == null ? '' : `${v}px`);
+    // a large screen zooms the card with the columns (layout.css --gz): its place is measured on screen, so it's written
+    // in the card's own (zoomed) pixels
+    const z = parseFloat(getComputedStyle(el).zoom) || 1;
+    const px = v => (v == null ? '' : `${z === 1 ? v : Math.round((v / z) * 10) / 10}px`);
     Object.assign(el.style, { display: '', left: px(pos.left), right: px(pos.right), top: px(pos.top), bottom: px(pos.bottom), width: px(pos.width), maxWidth: px(pos.width), transformOrigin: `${pos.ox} ${pos.oy}` });
     // the card always fits on screen (wave-2: a bot's card ran off the bottom): slid back up if it reaches past the bottom
     if (pos.top != null) {
@@ -445,16 +454,22 @@ function TurnCard({ card, root, state }) {
     }
     // (only the dock under the story uses it: layout.css)
     if (!pos.since) return;
+    const story = table && table.querySelector(':scope > .lt-since');
+    // the story's heading sits where the chairs end, never where the card is, so this read can't feed back
+    // (the card's resting top, from its dock: its rise from 4px higher is not where it stays)
+    const head = story && story.querySelector(':scope > .since-head');
+    if (head && MAXL > 1 && card.text.split(' · ').length - 1 > 1 && innerHeight - pos.bottom - el.getBoundingClientRect().height < head.getBoundingClientRect().bottom + 4) {
+      setFit({ key: fitKey, max: Math.min(MAXL, card.text.split(' · ').length - 1) - 1 });
+      return;
+    }
     const h = Math.ceil(el.offsetHeight) + 8;
     // written on the story itself, its only reader (layout.css): on the table, an inherited custom property re-styled all
     // ~5,000 elements of the page every time it changed (perf, 2026-10-15)
-    const story = table && table.querySelector(':scope > .lt-since');
     if (story && (h !== turnH.current || turnHOn.current !== story)) { turnH.current = h; turnHOn.current = story; story.style.setProperty('--turn-h', `${h}px`); }
-  }, [card.pid, card.n, card.text, root, gone]);
+  }, [card.pid, card.n, card.text, root, gone, MAXL]); // eslint-disable-line react-hooks/exhaustive-deps
   if (gone) return null;
   // at most a few lines, the rest summed up (every line stays in the strip's card and the log)
   const [head, ...all] = card.text.split(' · ');
-  const MAXL = 5;
   const rest = all.length > MAXL ? [...all.slice(0, MAXL - 1), `+${all.length - MAXL + 1} more`] : all;
   return (
     <div ref={box} className={`turn-card${card.live ? ' live' : ''}${card.folding || life === 'folding' ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
@@ -534,7 +549,7 @@ function PromptActions({ optionFor, onPick, afterPurchase = false }) {
   const pass = optionFor('pass');
   return (
     <span className="pr-actions">
-      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title={afterPurchase ? "Finish your turn" : "End your turn without recruiting or buying"} data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>{afterPurchase ? 'End turn' : 'Done, no buy'}</button>
+      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title={afterPurchase ? "Finish your turn" : "End your turn without recruiting or buying"} data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>{afterPurchase ? 'End turn' : 'Done, no recruit'}</button>
     </span>
   );
 }
@@ -599,11 +614,28 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // the round card closes in the click's own frame: this commit only unmounts it, and the new round's table follows as a
   // transition (useTable dismiss), so the button answers at once instead of after the whole table has redrawn
   const [closedMoment, setClosedMoment] = useState(null);
+  // the wheel's minions leave for home in the press's own frame (lag pass 2026-10-21: at 4x CPU the old round's table
+  // held ~0.3s, dimmed, while the new round rendered): the first beat of the new round's chain (director.js 'home', at 0)
+  // starts here, its ghosts on the compositor's clock, and the chain then only times the seats' columns to their landings
+  const homeEarly = useRef(null); // { at, snap, els }
   // the old row is measured as the card closes (it still stands there): the new round sends it to the deck (director.js)
   const nextRound = useCallback(() => {
     { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
+    const mins = minionSnap.current;
+    if (root.current && moment && !moment.after?.over && !state.over && motionOK() && mins && mins.length) {
+      const r = root.current;
+      // they leave in the press's own frame, as the card closes (the new round renders meanwhile); waiting a frame lost
+      // them to the new round's render on a slow laptop
+      const els = [...r.querySelectorAll('.lt-wheel [data-slot] .worker[data-seat]')];
+      flyMinionsHome(r, mins);
+      for (const el of els) el.style.visibility = 'hidden';
+      const early = { at: performance.now(), snap: mins, els };
+      homeEarly.current = early;
+      // (a round that never came: they stand again)
+      setTimeout(() => { if (homeEarly.current === early) { homeEarly.current = null; for (const el of early.els) if (el.isConnected) el.style.visibility = ''; } }, 3000);
+    }
     setClosedMoment(moment); dismissMoment();
-  }, [moment, dismissMoment]);
+  }, [moment, dismissMoment, state.over]); // eslint-disable-line react-hooks/exhaustive-deps
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
   // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
   // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)
@@ -617,12 +649,27 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const layColumn = () => {
     const r = root.current;
     if (!r) return;
-    if (sortOwed.current) return; // (round I's order waits for its own beat: a chair resizing meanwhile keeps the old order)
     const rail = r.querySelector(':scope > .lt-snake');
     const seats = [...r.querySelectorAll(':scope > .lt-seat')].filter(e => e.dataset.pid != null);
-    if (!rail || !rail.offsetHeight) { seats.forEach(e => e.style.removeProperty('--y')); return; }
+    if (!rail || !rail.offsetHeight) { seats.forEach(e => { e.style.removeProperty('--y'); e.style.removeProperty('--seat-h'); }); return; }
     const GAP = 8;
-    const rows = seats.map(e => ({ e, slot: Number(e.dataset.slot) || 0, h: e.offsetHeight })).sort((a, b) => a.slot - b.slot);
+    // every chair has one height (mockup A, Cory 2026-10-21: "a little bigger so there's more room to show members"):
+    // an equal share of the column, less what stands under the chairs there (layout.css --seats-reserve: the story and
+    // the turn card), between --seat-min and --seat-max. It comes from the window, never from what a chair holds, so no
+    // chair changes height during a turn (hotseat region gate); a member arriving only changes what folds into "+N".
+    const cs = getComputedStyle(rail);
+    const hi = parseFloat(cs.getPropertyValue('--seat-max')) || 0;
+    if (hi) {
+      const lo = parseFloat(cs.getPropertyValue('--seat-min')) || 0, reserve = parseFloat(cs.getPropertyValue('--seats-reserve')) || 0;
+      const h = `${Math.max(lo, Math.min(hi, Math.floor((rail.offsetHeight - reserve - GAP * Math.max(0, seats.length - 1)) / Math.max(1, seats.length))))}px`;
+      for (const e of seats) if (e.style.getPropertyValue('--seat-h') !== h) e.style.setProperty('--seat-h', h);
+    } else seats.forEach(e => e.style.removeProperty('--seat-h'));
+    // round I's order waits for its own beat: a chair resizing meanwhile (your chair loses its starting-pick row, ~36px)
+    // is re-stacked in the old order, so the chairs under it close up now. Returning early here left them standing
+    // under the taller chair until the sort beat, then sliding up mid-turn (hotseat region gate, 2026-10-21).
+    const held = sortOwed.current;
+    if (held && !seats.every(e => e.style.getPropertyValue('--y'))) return;
+    const rows = seats.map(e => ({ e, slot: held ? parseFloat(e.style.getPropertyValue('--y')) : Number(e.dataset.slot) || 0, h: e.offsetHeight })).sort((a, b) => a.slot - b.slot);
     const total = rows.reduce((t, x) => t + x.h, 0) + GAP * Math.max(0, rows.length - 1);
     const fromTop = getComputedStyle(rail).getPropertyValue('--seats-align').trim() === 'start';
     let y = fromTop ? 0 : Math.max(0, Math.round((rail.offsetHeight - total) / 2));
@@ -634,7 +681,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // a chair placed for the first time (the screen just mounted, as after a hot-seat handoff, or back from a phone size)
     // stands at its place at once: its first style was the fallback (slot × 108px), and sliding from there read as the
     // chairs moving 8–24px between setup and the first turn (hotseat region gate, 2026-10-15). Only a new order slides.
-    const fresh = rows.filter(x => !x.e.style.getPropertyValue('--y'));
+    // A chair that only changed size (the same order) closes the column up in the same frame, with no slide: sliding
+    // there read as the chairs under it moving mid-turn (hotseat region gate, 2026-10-21).
+    const was = rows.map(x => x.e.style.getPropertyValue('--y'));
+    const sameOrder = was.every(Boolean) && rows.every((x, i) => i === 0 || parseFloat(was[i]) > parseFloat(was[i - 1]));
+    const fresh = sameOrder ? rows.filter((x, i) => was[i] !== `${y + rows.slice(0, i).reduce((t, z) => t + z.h + GAP, 0)}px`) : rows.filter(x => !x.e.style.getPropertyValue('--y'));
     for (const x of fresh) x.e.style.transition = 'none';
     for (const x of rows) { x.e.style.setProperty('--y', `${y}px`); y += x.h + GAP; }
     if (fresh.length) {
@@ -668,6 +719,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, []);
   const layColumnNow = useRef(layColumn);
   layColumnNow.current = layColumn;
+  // your chair drops its starting-pick row when the last pick lands (~36px shorter): the column closes up in that same
+  // commit, not a frame later in the ResizeObserver, so nothing ever sees the chairs under it standing in the old place
+  const draftShown = !!(state.pending && state.pending.kind === 'setup' && !state.over);
+  useLayoutEffect(() => { layColumn(); }, [draftShown]); // eslint-disable-line react-hooks/exhaustive-deps
   const colRO = useRef(null), colWatched = useRef(new Set());
   useLayoutEffect(() => {
     const r = root.current;
@@ -843,7 +898,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // Contest and final bonuses belong exclusively to the Reckoning's landing callbacks.
     // The fallback diff must not turn those already-scored followers into a closing-action payout/tag.
     const animationState = scoringMoment ? scoringSeatState(state, scoringMoment, 0) : state;
-    const played = playChain(root.current, before, animationState, { snap: shopSnap.current, minionsBefore: state.round !== before.round && before.round >= 1 ? wasOnWheel : null, mine: mySeats, chips: chipSnap.current });
+    const newRound = state.round !== before.round && before.round >= 1;
+    const early = newRound && homeEarly.current && homeEarly.current.at != null ? homeEarly.current : null;
+    if (newRound) homeEarly.current = null;
+    const played = playChain(root.current, before, animationState, { snap: shopSnap.current, minionsBefore: newRound ? (early ? early.snap : wasOnWheel) : null, homeFlownAt: early ? early.at : null, mine: mySeats, chips: chipSnap.current });
     retimeTable(played);
 
     const lines = newLogLines(before, state);
@@ -891,9 +949,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       }
     }
     // Nothing to afford: say so in a readable toast — after anything you just got has landed.
-    const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't buy anything.`));
+    const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't afford anything.`));
     if (skipped) {
-      const msg = humansHere ? skipped.replace("couldn't buy anything.", 'can’t afford anything. Turn passes.') : 'Nothing you can afford. Turn passes.';
+      const msg = humansHere ? skipped.replace("couldn't afford anything.", 'can’t afford anything. Turn passes.') : 'Nothing you can afford. Turn passes.';
       setTimeout(() => showToast(msg, 2000), motionOK() ? played.total : 0);
     }
 
@@ -1052,6 +1110,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         busyNow.current = false;
         startTransition(() => setBusy(false));
       });
+    // the table took it (the Wheel stands your minion on its space in this same frame, before the table redraws)
+    return session.getState() !== physicalState;
   }, [mine, busy, needHandoff, options, session, pend, interactionState, physicalState]);
   useEffect(() => {
     if (busy) return;
@@ -1107,7 +1167,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
-      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers, or end your turn: Done, no buy' : 'You can’t take this space right now';
+      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers, or end your turn: Done, no recruit' : 'You can’t take this space right now';
     } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a minion first, then recruit' : 'Place a minion first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
     // what you have beside what it needs (w4 skeptic #20: "Need 8, you have 4")
@@ -1337,9 +1397,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     lockUntil.current = 0;
     lastPick.current = { id: null, t: 0, x: null, y: null };
     lastDown.current = { x: null, y: null, t: 0 };
-    say(k === 'buy' ? 'Buy undone — choose again' : k === 'setup' ? 'Pick undone — pick again' : 'Placement undone — place again', 'info', 1800);
+    say(k === 'buy' ? 'Recruit undone — choose again' : k === 'setup' ? 'Pick undone — pick again' : 'Placement undone — place again', 'info', 1800);
   };
-  const undoWord = undoKind === 'buy' ? 'buy' : undoKind === 'setup' ? 'pick' : 'placement';
+  const undoWord = undoKind === 'buy' ? 'recruit' : undoKind === 'setup' ? 'pick' : 'placement';
 
   // The lamp follows the decision; the furniture never moves (fixed regions, phase only re-lights them).
   const memberPicking = mine && !needHandoff && pend?.kind === 'choose' && pend.options.some(o => o.kind === 'card');
@@ -1380,7 +1440,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : <span className="say" data-prompt tabIndex={-1} />}
           {buyingNow && !wide && <PromptActions optionFor={live} onPick={onPick} afterPurchase={pend.afterPurchase} />}
           <span className="undo-slot">
-            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your draft pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your draft pick' : 'Take back your minion until you recruit or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
         </div>
         <div className="bar-row steps-row">

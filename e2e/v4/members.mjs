@@ -26,7 +26,7 @@ import { browserPath } from './lib/browser.mjs';
 //  (m13) w3b #39/#47, A30: the follower total opens a breakdown adding up to it; a seat's body and resources open its card;
 //       a rival's card says what it could buy now; one card on screen at a time.
 //  (m14) w4b #2: one move onto a seat, its body or its follower number, and no more, opens its card within 150ms.
-//  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Stunt Double, subdued); a seat no one can
+//  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Raider, subdued); a seat no one can
 //       steal from this round shows the "safe this round" shield, named in its hover (P3 lies low), and says so in its card.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/members/).
 import { chromium } from 'playwright';
@@ -35,6 +35,7 @@ import { membersSave, HAND } from './lib/members-save.mjs';
 import { cardDef } from '../../src/engine/v4/index.js';
 import { spendingPower } from '../../src/v4/game/memberUse.js';
 import { seedSave } from './lib/seed.mjs';
+import { HOVER_DELAY_MS } from '../../src/v4/game/hoverDelay.js';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/members`;
 mkdirSync(SHOTS, { recursive: true });
@@ -115,11 +116,11 @@ try {
   if (fig['thieves.bigscore'] && fig['thieves.bigscore'].lit) fail('Safecracker is lit, but using it now gives 0', 'm8');
   // (m9) a rival's loaded use, subdued; the seat that lies low says so
   const marks = await page.evaluate(() => ({
-    stunt: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="echo.hourglass"]'); return m ? { loaded: m.classList.contains('loaded'), ready: m.classList.contains('ready'), filter: getComputedStyle(m.querySelector('.sprite')).filter } : null; })(),
+    stunt: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="trading.raider"]'); return m ? { loaded: m.classList.contains('loaded'), ready: m.classList.contains('ready'), filter: getComputedStyle(m.querySelector('.sprite')).filter } : null; })(),
     pincher: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="gold.thrift"]'); return m ? m.classList.contains('loaded') : null; })(),
     safe: [0, 1, 2, 3].map(id => !!document.querySelector(`[data-cult="${id}"] [data-safe]`) && /safe this round/i.test(document.querySelector(`[data-cult="${id}"] [data-safe]`).getAttribute('aria-label') + ' ' + document.querySelector(`[data-cult="${id}"] [data-safe]`).title)),
   }));
-  if (!marks.stunt || !marks.stunt.loaded || marks.stunt.ready || !/drop-shadow/.test(marks.stunt.filter)) fail(`P2's Stunt Double (a use in hand) isn't marked on P2's seat: ${JSON.stringify(marks.stunt)}`, 'm9');
+  if (!marks.stunt || !marks.stunt.loaded || marks.stunt.ready || !/drop-shadow/.test(marks.stunt.filter)) fail(`P2's Raider (a use in hand) isn't marked on P2's seat: ${JSON.stringify(marks.stunt)}`, 'm9');
   if (marks.pincher) fail('P2\'s Penny Pincher (no use) is marked as a use in hand', 'm9');
   if (JSON.stringify(marks.safe) !== JSON.stringify([false, false, true, false])) fail(`"safe this round" on seats ${JSON.stringify(marks.safe)} (want only P3's)`, 'm9');
   if (fig['gold.midas'] && fig['gold.midas'].sw !== 'on') fail(`Midas's switch in your seat: ${JSON.stringify(fig['gold.midas'])}`, 'm2');
@@ -155,7 +156,9 @@ try {
     // w4b #20: no button that does nothing; the quiet state says so, the reason in its hover
     if (zero.state !== 'idle' || zero.use || zero.tag !== 'nothing to gain now') fail(`Safecracker (worth 0 now) in the seat card: ${JSON.stringify(zero)}`, 'm8');
     if (row('gold.midas').sw !== 'on' || row('echo.translator').sw !== 'off') fail(`switches in the seat card: Midas ${row('gold.midas').sw}, Translator ${row('echo.translator').sw}`, 'm1');
-    if (row('gold.tycoon').tag !== 'scores at game end') fail(`Tycoon's tag: "${row('gold.tycoon').tag}"`, 'm1');
+    // a game-end scorer carries no tag since faee2109 (the hover lists drop "scores at game end"/"pays at round start":
+    // the ability says it); its whole ability names the game end instead
+    if (row('gold.tycoon').tag || !/game end/i.test(row('gold.tycoon').ability || '')) fail(`Tycoon's row: tag "${row('gold.tycoon').tag}", ability "${row('gold.tycoon').ability}"`, 'm1');
   }
   await away();
 
@@ -179,7 +182,7 @@ try {
       return { gap: Math.round(Math.max(t.left - f.right, f.left - t.right, t.top - f.bottom, f.top - t.bottom)), over: ov(t, f), neighbours: others.reduce((s2, r) => s2 + ov(t, r), 0) };
     });
     if (near.gap > 16 || near.over > 0) fail(`the member's card isn't right next to the member: ${JSON.stringify(near)}`, 'm3');
-    if (near.neighbours > 0) fail(`the member's card covers the members beside it (${Math.round(near.neighbours)}px²)`, 'm3');
+    // (covering the members beside it is fine: Cory, 2026-10-21, "eh delete that one" about moving the card off a second row)
     if (!/^Use: \+7/.test(label)) fail(`the hover's button reads "${label}" (want "Use: +7 …")`, 'm3');
     await page.screenshot({ path: `${SHOTS}/2-member-hover.png` });
     const b = await btn.boundingBox();
@@ -191,6 +194,10 @@ try {
     // w2a #1: the result shows at the member, and the prompt stops naming it at once
     const shown = await page.waitForFunction(() => document.querySelector('[data-cult="0"] [data-use-result]')?.dataset.useResult || null, null, { timeout: 1500 }).then(h => h.jsonValue(), () => null);
     if (shown !== '+7 gold') fail(`the use's result at the member reads ${JSON.stringify(shown)} (want "+7 gold")`, 'm3');
+    // the use plays out whole before the view moves on (decisions 2026-10-15 22:40: a chain's view holds until it ends),
+    // then the prompt stops naming it
+    await page.waitForFunction(() => !document.querySelector('.app.game[data-chain="1"]'), null, { timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(120);
     const sub2 = await page.evaluate(() => document.querySelector('[data-prompt-sub]')?.textContent || '');
     if (/Lottery Winner/.test(sub2)) fail(`after the use the prompt still names it: "${sub2}"`, 'm3');
     await page.screenshot({ path: `${SHOTS}/3-use-flight.png` });
@@ -208,7 +215,7 @@ try {
     await page.waitForTimeout(300);
     await page.waitForFunction(() => (document.querySelector('[data-tip-body]')?.innerText || '').length > 0, null, { timeout: 1500 }).catch(() => {});
     const hov = await page.evaluate(() => document.querySelector('[data-tip-body]')?.innerText || '');
-    if (!/\bused\b/.test(hov) || /Use:/.test(hov)) fail(`after use, its hover reads: "${hov.replace(/\s+/g, ' ')}"`, 'm3');
+    if (!/\bused\b/i.test(hov) || /Use:/.test(hov)) fail(`after use, its hover reads: "${hov.replace(/\s+/g, ' ')}"`, 'm3');
     await away();
     await pointAt('[data-cult="0"] .cs-head', 14);
     await page.waitForTimeout(250);
@@ -284,7 +291,7 @@ try {
   await page.screenshot({ path: `${SHOTS}/5-rival-seat-card.png` });
   if (!rc) fail('hovering P2\'s seat opened no seat card', 'm6');
   else {
-    for (const id of ['gold.thrift', 'echo.hourglass']) if (!rc.rows.some(x => x.id === id)) fail(`P2's seat card doesn't list ${id}`, 'm6');
+    for (const id of ['gold.thrift', 'trading.raider']) if (!rc.rows.some(x => x.id === id)) fail(`P2's seat card doesn't list ${id}`, 'm6');
     if (rc.rows.some(x => x.use)) fail('P2\'s seat card offers you a Use button', 'm6');
   }
   // (m11) a click always acts on what's under the pointer, at once, hover card or not: open a card (your seat's, your
@@ -451,9 +458,10 @@ try {
       await pg.mouse.move(t.x, t.y); // one move, then the pointer rests
       await pg.waitForFunction(() => window.__m14.open != null, null, { timeout: 1500 }).catch(() => {});
       const m = await pg.evaluate(() => window.__m14);
-      const dt = m.open != null && m.at != null ? Math.round(m.open - m.at) : null;
+      // from the end of the hover wait (HOVER_DELAY_MS, Cory 2026-10-15; e971f156), as the other hover gates time it
+      const dt = m.open != null && m.at != null ? Math.round(m.open - m.at - HOVER_DELAY_MS) : null;
       if (dt == null) fail(`a single move onto ${what} opened nothing`, 'm14');
-      else if (dt > 150) fail(`a single move onto ${what} took ${dt}ms to open its card (want ≤ 150ms)`, 'm14');
+      else if (dt > 150) fail(`a single move onto ${what} took ${dt}ms past the hover wait to open its card (want ≤ 150ms)`, 'm14');
     }
     await ctx.close();
   }

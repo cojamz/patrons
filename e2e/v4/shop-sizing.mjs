@@ -4,7 +4,7 @@ import { mkdirSync } from 'node:fs';
 import { browserPath } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
-import { createGame, cardDef } from '../../src/engine/v4/index.js';
+import { createGame, cardDef, SHOP_SIZE, TIERS } from '../../src/engine/v4/index.js';
 import { resume } from '../../src/engine/v4/core.js';
 const base=process.env.V4_URL||'http://localhost:5331';
 const out=process.env.V4_SHOTS||'/tmp/cults-shop-sizing';mkdirSync(out,{recursive:true});
@@ -13,11 +13,12 @@ function fixture(quadrants){
  let s=createGame({seats,quadrants,seed:53});s.pending=null;s.queue=[{t:'buy',p:0}];s.current=0;
  s.players[0].res=Object.fromEntries(s.resources.map(r=>[r,6]));
  const pool=[...s.shop,...s.pile];pool.sort((a,b)=>cardDef(s,b).text.length-cardDef(s,a).text.length);
- s.shop=pool.slice(0,8);s.pile=pool.slice(8);s=resume(s);s.build=buildStamp();
+ s.shop=pool.slice(0,SHOP_SIZE);s.pile=pool.slice(SHOP_SIZE);s=resume(s);s.build=buildStamp(); // the shop deals SHOP_SIZE (7 since v0.8.11)
  return {config:{seats,speed:'quick'},state:s,undo:null,savedAt:Date.now()};
 }
 const browser=await chromium.launch({executablePath:browserPath});
-try{for(const[tag,opts]of[['laptop',{viewport:{width:1270,height:700}}],['desktop',{viewport:{width:1600,height:900}}],['tablet',{viewport:{width:1100,height:700}}],['phone',devices['iPhone 13']]]){
+// the phone pass runs only with V4_PHONE=1 (phone is out of scope, Cory 2026-10-20)
+try{for(const[tag,opts]of[['laptop',{viewport:{width:1270,height:700}}],['desktop',{viewport:{width:1600,height:900}}],['tablet',{viewport:{width:1100,height:700}}],...(process.env.V4_PHONE?[['phone',devices['iPhone 13']]]:[])]){
  for(const[group,quads]of[['core',['gold','red','purple','echo']],['others',['market','thieves','silver','yellow']]]){
  const ctx=await browser.newContext(opts),p=await ctx.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
  await seedSave(p,fixture(quads));await p.goto(`${base}/?intro=0`);await p.locator('[data-home="resume"]').click();
@@ -35,7 +36,9 @@ try{for(const[tag,opts]of[['laptop',{viewport:{width:1270,height:700}}],['deskto
  const a=await inspect();await p.screenshot({path:`${out}/${tag}-${group}-compact.png`});
  await p.getByRole('button',{name:'Show member abilities'}).click();const b=await inspect();
  await p.screenshot({path:`${out}/${tag}-${group}-details.png`});
- if(a.cards.length!==11||b.cards.length!==11)throw Error(`${tag}: missing cards`);
+ // every member face up plus the follower buys (one shop since v0.8.2)
+ const want=SHOP_SIZE+TIERS.length;
+ if(a.cards.length!==want||b.cards.length!==want)throw Error(`${tag}: missing cards (${a.cards.length}/${b.cards.length}, want ${want})`);
  if(!b.deck)throw Error(`${tag}: deck disappeared`);
  for(let i=0;i<a.cards.length;i++)for(const k of ['id','x','y','w','h'])if(a.cards[i][k]!==b.cards[i][k])throw Error(`${tag}: ${a.cards[i].id} moved/resized ${k}: ${a.cards[i][k]} -> ${b.cards[i][k]}`);
  if(b.cards.some(c=>c.clipped))throw Error(`${tag}: ability overlaps price: ${JSON.stringify(b.cards.filter(c=>c.clipped))}`);

@@ -9,7 +9,7 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
+import { cardColor, cardGround, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { timingOf, unlockedBy, surely } from './cards.js';
@@ -71,6 +71,9 @@ export function CostShapes({ parts }) {
   );
 }
 
+// a card's element as last built: the same element, no render (ShopCards' built cache)
+const Kept = memo(function KeptCard({ el }) { return el; });
+
 function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null, onViewChange = null }) {
   const pend = state.pending;
   const viewer = me != null ? state.players[me] : null;
@@ -118,7 +121,33 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const detailed = view === 'details' || (view === null && memberPick);
   const toggleView = () => { const next = detailed ? 'compact' : 'details'; setView(next); hover?.close?.(); try { localStorage.setItem(VIEW_KEY, next); } catch { /* this visit only */ } };
   useEffect(() => { onViewChange?.(detailed); }, [detailed, onViewChange]);
-  const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
+  // with details on, an ability that would run under the price sets one step tighter, so the card keeps its slot and
+  // the whole rule stays readable (Straggler at 1270x700 ran under its footer; shop-sizing gate)
+  const fitKey = detailed ? `${uids.join(',')}|${state.round}` : '';
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!fitKey || !row) return undefined;
+    const fit = () => {
+      for (const a of row.querySelectorAll('.lt-pick-ability')) {
+        const card = a.closest('.lt-card'), ft = card && card.querySelector('.ft');
+        if (!ft) continue;
+        a.removeAttribute('data-fit');
+        const over = () => a.getBoundingClientRect().bottom > ft.getBoundingClientRect().top + 0.5 || ft.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom + 0.5;
+        if (over()) a.setAttribute('data-fit', 'tight');
+      }
+    };
+    fit();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
+    ro?.observe(row);
+    return () => ro?.disconnect();
+  }, [fitKey]);
+  const canPay = new Map(uids.map(u => [u, viewer ? !!paymentPlan(state, viewer, u) : false]));
+  const affordable = viewer ? uids.filter(u => canPay.get(u)).length : 0;
+  // each card's element is kept while what it shows is the same (lag pass 2026-10-21: a rival's step re-rendered every
+  // card in the row, 5-35ms at 4x CPU, for no change on screen); its handlers read the latest props through a ref
+  const live = useRef({});
+  live.current = { onPick, onDenied, hover, detailed };
+  const built = useRef(new Map()); // uid → { sig, el }
   return (
     <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-fade={viewer && fade ? 'on' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
@@ -141,7 +170,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
         {uids.map(uid => {
           const d = cardDef(state, uid);
           const opt = optionFor(`card:${uid}`);
-          const can = viewer ? !!paymentPlan(state, viewer, uid) : false;
+          const optId = opt ? opt.id : null;
+          const can = canPay.get(uid);
           // buying: the lamp lights only what you can recruit, the rest recede (Cory); placing: what you can't
           // afford yet is quieter, except a card the space under your pointer would unlock
           const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can));
@@ -152,28 +182,33 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           // a discount on you: the price you'd pay, the list price small and struck beside it (decisions.md, 2026-10-15)
           const paid = paidParts(state, viewer, uid, d);
           const fromPile = !state.shop.includes(uid);
-          return (
+          const color = cardColor(state, d), ground = cardGround(state, d), sphere = sphereOf(state, d);
+          const sig = [d.id, d.name, d.f, d.n, d.text, optId ?? '', dim ? 1 : 0, lit ? 1 : 0, short ? 1 : 0, buying || picking ? 1 : 0, JSON.stringify(parts), JSON.stringify(paid), fromPile ? 1 : 0, tray ? 1 : 0, detailed ? 1 : 0, state.round, color, ground, sphere].join('|');
+          const had = built.current.get(uid);
+          if (had && had.sig === sig) return <Kept key={uid} el={had.el} />;
+          const el = (
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
               className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying || picking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
-              style={{ '--q': cardColor(state, d) }} aria-disabled={!opt} data-unaffordable={short || undefined}
+              style={{ '--q': color }} data-ground={ground} aria-disabled={!opt} data-unaffordable={short || undefined}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
-              onPointerEnter={e => { if (hover && !detailed && realHover(e)) { if (fresh(uid)) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } }}
-              onPointerMove={e => { if (waiting.current.has(uid) && hover && !detailed && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } }}
-              onPointerLeave={e => { waiting.current.delete(uid); if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
+              onPointerEnter={e => { const { hover, detailed } = live.current; if (hover && !detailed && realHover(e)) { if (fresh(uid)) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } }}
+              onPointerMove={e => { const { hover, detailed } = live.current; if (waiting.current.has(uid) && hover && !detailed && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } }}
+              onPointerLeave={e => { const { hover } = live.current; waiting.current.delete(uid); if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
               onClick={e => {
+                const { hover, onPick, onDenied } = live.current;
                 if (fresh(uid)) return; // just arrived under the pointer: not a deliberate click
                 // touch: a tap reads the card (a sheet with Recruit); it never recruits by itself
                 if (pointer.current === 'touch' && hover) { hover.onCardHover(uid, e.currentTarget, { pinned: true }); return; }
-                if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
+                if (optId) onPick(optId); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
               }}
             >
               {/* identity and price (Cory, 2026-10-15: "members can't be translated to shorthand"): the picture on its
                   tinted field, the name, the cost in dots and the worth; what it does is the hover's one plain sentence */}
               <span className="band" aria-hidden="true" />
-              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
+              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} />
                 {/* the price as one faint number in the corner, for a quick look across the row (Cory, 2026-10-21): what
                     you'd pay, so it agrees with the dots below; the dots stay the price's words */}
                 <span className="lt-corner-cost num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>
@@ -185,7 +220,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
               {/* a rule that grows by round reads by round, this round lit, as in every hover (RuleText; compact on the small card) */}
               {detailed && <span className="lt-pick-ability"><RuleText def={d} round={state.round} plain compact /></span>}
-              <span className="ft">
+              <span className="ft" data-discount={paid ? '' : undefined}>
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>
                     {/* the list price as one struck number, BEFORE the price you pay (a shop's "was 4, now 2"): after it, it
@@ -202,6 +237,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               </span>
             </button>
           );
+          built.current.set(uid, { sig, el });
+          return <Kept key={uid} el={el} />;
         })}
       </div>
       </div>
@@ -273,9 +310,9 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
       return ways.length === 1 ? <>Pays <CostDots parts={Object.entries(ways[0]).filter(([, n]) => n > 0).map(([color, n]) => ({ color, n }))} /></> : 'Choose how to pay';
     }
     if (viewer && held < t.cost) return `You hold ${held}: ${t.cost - held} short.`;
-    if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You buy after you place a minion, in your buy step.';
+    if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You buy followers after you place a minion.';
     if (tierLeft(state, t) <= 0) return 'None left.';
-    return 'You buy in your buy step, after placing a minion.';
+    return 'You buy followers after placing a minion.';
   };
   return (
     <div className="lt-rates" role="group" aria-label="Buy followers">
@@ -295,7 +332,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
             <Tip key={state.moves} className="fb-tip" beside=".lt-rate" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
               <div className="pop-card rate-card" data-rate-card={t.key}>
                 <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
-                <span>Any colors, any mix, as your one buy.</span>
+                <span>Any colors, any mix, as your one recruit.</span>
                 {/* one buy per placement (the rule): "as many as you like" beside "your one buy" read as a contradiction (w4 A#25) */}
                 {t.limited && <span>{left} left at this table (2 per player at the start).</span>}
                 <small data-pays={opt ? 'tier' : undefined}>{when(t, opt)}</small>
@@ -311,7 +348,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
           step starts or ends (it's hidden then, and on phones folded away). */}
       <button type="button" className={`btn lt-done${done ? '' : ' idle'}`} data-option={done ? 'pass' : undefined} data-done-no-buy={done ? 'on' : 'off'}
         disabled={!done} tabIndex={done ? 0 : -1} aria-hidden={done ? undefined : 'true'}
-        title={done ? (state.pending?.afterPurchase ? 'Finish your turn' : 'End your turn without recruiting or buying') : undefined} onClick={() => done && onPick('pass')}>{state.pending?.afterPurchase ? 'End turn' : 'Done, no buy'}</button>
+        title={done ? (state.pending?.afterPurchase ? 'Finish your turn' : 'End your turn without recruiting or buying') : undefined} onClick={() => done && onPick('pass')}>{state.pending?.afterPurchase ? 'End turn' : 'Done, no recruit'}</button>
     </div>
   );
 }

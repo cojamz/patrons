@@ -59,7 +59,7 @@ describe('panel words (w3)', () => {
     const churn = panelText('market', { key: 'bargain' }, 2);
     expect(churn.main).toBe('+3 blue');
     expect(churn.second).toBe('send 3 to the bottom');
-    expect(churn.note).toBe('1 × round, +1');
+    expect(churn.note).toBe('more each round');
     expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
 
@@ -68,11 +68,10 @@ describe('panel words (w3)', () => {
     expect(panelText('purple', { key: 'rally' }, 3).verb).toMatch(/^Your next 2 turns, now$/);
     // w4b #5: "A rival's member or its cost" read as "I choose": the rival pays or loses, in line 1
     // shortened to fit on phones (v0.8.8 Magenta, 68c9bf0f): line 1 still says the rival decides, pay or lose
-    expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^Rival pays or loses member$/);
+    expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^Rival pays or loses a member$/);
     expect(panelText('silver', { key: 'jubilee' }, 3).verb).toMatch(/per 2 silver held/);
-    // Shake Down says what the rival pays: the member's cost (f8), and the limit, in line 2
-    expect(panelText('thieves', { key: 'ransom' }, 2).second).toMatch(/pay its cost/);
-    expect(panelText('thieves', { key: 'ransom' }, 2).second).toMatch(/member ≤5/);
+    // Shake Down's line 2 is the limit (Cory's wording pass, 2026-10-21; line 1 says the rival pays or loses it)
+    expect(panelText('thieves', { key: 'ransom' }, 2).second).toBe('costing 5 or less');
   });
 
   it('says 1 of what, what a space costs, and whose cost (live panel r1)', () => {
@@ -98,7 +97,7 @@ describe('panel words (w3)', () => {
     s.recruits = 5;
     const t = panelText('red', quadrant('red').actions.find(x => x.key === 'turnout'), 1, s, 0);
     expect(t.main).toBe('+2 red');
-    expect(t.second).toBe('1 × round, +1');
+    expect(t.second).toBe('more each round');
     // Tithe: +1 gold per member you have, for the viewer
     const w = panelText('gold', quadrant('gold').actions.find(x => x.key === 'windfall'), 2, s, 0);
     expect(w.main).toBe(`+${s.players[0].members.length} gold`);
@@ -127,7 +126,7 @@ describe('panel words (w3)', () => {
   it('Spree prints its blue and says it is 3 buys (Name Drop, the live-payout space, left with Blue\'s Oct 20 rework)', () => {
     const a = quadrant('market').actions.find(x => x.key === 'spree');
     const t = panelText('market', a, 3);
-    expect([t.verb, t.second, t.note]).toEqual(['Buy 3 times', 'this turn', '+3 blue']);
+    expect([t.verb, t.second, t.note]).toEqual(['Recruit 3 times', 'this turn', '+3 blue']);
   });
 
   it('"You\'d get" says the likely and the best case, or the best pick, or the mix, in numbers', () => {

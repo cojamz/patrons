@@ -1,3 +1,4 @@
+// SKIPPED (phone-only): phone is out of scope (Cory, 2026-10-20). scripts/v4-check.mjs runs it only with V4_PHONE=1.
 // Basic touch compatibility, not a mobile layout/polish verdict. Tests the built game supplied in V4_URL.
 import { chromium } from 'playwright';
 import { browserPath } from './lib/browser.mjs';

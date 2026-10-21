@@ -66,7 +66,11 @@ describe('Green current actions', () => {
     expect(term('copy').def).toMatch(/choose again/);
     expect(readFileSync(new URL('../../../../design/rulebook.md', import.meta.url), 'utf8')).toMatch(/choose again/);
     expect(quadrant('echo').rule).toMatch(/already in its chain/);
-    for (const d of quadrant('echo').actions) expect(d.text).toContain('+1 green');
+    // Build Up's +1 green sits inside its by-round run (+1 × round, +1: 2 / 3 / 4)
+    for (const d of quadrant('echo').actions) {
+      if (d.key === 'chant') expect(d.text).toBe('+2 green in round I, +3 in round II, +4 in round III.');
+      else expect(d.text).toContain('+1 green');
+    }
   });
   it('Greatest Hits copies all your ordinary actions in order and adds one green', () => {
     let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(0, 0, 0) });
@@ -201,7 +205,7 @@ describe('Green current members', () => {
     const agents = quadrant('echo').members.find(d => d.key === 'agents');
     expect([agents.f, agents.n]).toEqual([2, 2]);
     const bait = quadrant('echo').members.find(d => d.key === 'bait');
-    expect(bait.text).toMatch(/loses 1 follower.*you gain 1 follower/);
+    expect(bait.text).toMatch(/they −1 follower\. If it’s a rival, \+1 follower\./);
   });
   it('Chronicler scores weighted green members, ignoring held green', () => {
     const s = table(Q, { res: [{ green: 50 }], members: [['echo.chronicler', 'echo.agents', 'red.twins']], queue: [{ t: 'finish' }] });

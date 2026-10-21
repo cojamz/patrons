@@ -282,8 +282,8 @@ describe('Magenta members', () => {
     expect([R(s).magenta, R(s, 1).magenta]).toEqual([7, 2]);
   });
 
-  it('Kingpin: game end, +1 follower per 2 magenta', () => {
-    const s = table(Q, { res: [{ magenta: 7 }], members: [['thieves.kingpin']], shop: ROW, queue: [{ t: 'finish' }] });
+  it('Kingpin: game end, +1 follower per magenta member you have (itself included)', () => {
+    const s = table(Q, { res: [{ magenta: 7 }], members: [['thieves.kingpin', 'thieves.crew', 'red.twins']], shop: ROW, queue: [{ t: 'finish' }] });
     expect(s.players[0].final.parts).toContain('Kingpin +3');
   });
 });

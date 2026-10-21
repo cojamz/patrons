@@ -4,12 +4,14 @@ import { browserPath } from './lib/browser.mjs';
 // default speed (Steady), for each move P1 makes, a piece (or the member itself) must fly from where the rules take it
 // to where they put it, and be in the air before the number it lands on changes:
 //  (t1) a steal in round I and (t2) one in round III: from the rival's stack to yours;
-//  (t3) a gift (Kickback): from the space to the rival's stack;
+//  (t3) a gift (Kickback): from the space's resource (its color's rim on the wheel, where a space's resources come
+//       from since the wheel-slice rework) to the rival's stack;
 //  (t4) a member taken (Poach): the member flies from the rival's seat to its new chip in yours;
 //  (t5) a ransom paid: from your seat to the rival's stack;
 //  (t6) a member's Use: from the member to your stack.
 // Since the action stage (decisions 2026-10-15 20:30) a path may relay through the wheel's hub: the member steps off
-// its seat (or the piece flies) to the stage, and what it gives flies on from there; both legs are checked.
+// its seat (or the piece flies) to the stage, and what it gives flies on from there (from the member's card as it
+// stands on the stage); both legs are checked.
 // Every flight ghost is recorded as it's added to the page (a MutationObserver, so a loaded box that paints rarely can't
 // hide one), with where it starts and where its path ends. Saves: e2e/v4/lib/travel-save.mjs.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5430.
@@ -64,7 +66,8 @@ const INSTRUMENT = () => {
       const m = ks.length && /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(ks[0].transform || '');
       if (m) { dx = Number(m[1]); dy = Number(m[2]); break; }
     }
-    return { cls: 'stage ' + el.dataset.stage, t: performance.now() - t0, x0: x1 + dx, y0: y1 + dy, x1, y1, w: r.width };
+    const hw = el.offsetWidth / 2, hh = el.offsetHeight / 2;
+    return { cls: 'stage ' + el.dataset.stage, t: performance.now() - t0, x0: x1 + dx, y0: y1 + dy, x1, y1, w: r.width, box: { l: x1 - hw, r: x1 + hw, t: y1 - hh, b: y1 + hh } };
   };
   new MutationObserver(list => {
     for (const m of list) for (const el of m.addedNodes) {
@@ -83,6 +86,9 @@ const RECT = (w) => {
   switch (w.kind) {
     case 'stack': return box(seat(w.pid) && seat(w.pid).querySelector(`.cs-stack[data-res="${w.r}"]`));
     case 'space': return box(document.querySelector(`[data-slot="${w.key}"] .base`) || document.querySelector(`[data-slot="${w.key}"]`));
+    // a resource a space gives comes from its color's own rim on the wheel (director.js: "Resources live at their
+    // matching wheel rim")
+    case 'rim': return box(document.querySelector(`.rim[data-rim-res="${w.r}"]`));
     case 'member': return box(seat(w.pid) && seat(w.pid).querySelector(`.cs-member[data-uids~="${w.uid}"]`));
     case 'crowd': case 'seat': return box(seat(w.pid));
     default: return null;
@@ -104,7 +110,8 @@ async function check(kind, label) {
     await page.waitForSelector('.lt-cult-seat[data-seat]', { timeout: 60000 });
     await page.evaluate(INSTRUMENT);
     await page.mouse.move(5, 690);
-    const { from, to } = sv.expect;
+    const { to } = sv.expect;
+    const from = sv.expect.from.kind === 'space' && to.kind === 'stack' ? { kind: 'rim', r: to.r } : sv.expect.from;
     let fromR = null, toR = null;
     const want = to.kind === 'stack' ? String(sv.after.players[to.pid].res[to.r] || 0) : null;
     for (const [k, id] of sv.moves.entries()) {
@@ -155,7 +162,8 @@ async function check(kind, label) {
     // straight from the source to the destination, or relayed through the action stage (Cory, 2026-10-15; decisions
     // 2026-10-15 20:30): one leg leaves the source for the hub, a later leg leaves the hub where it landed for the
     // destination, and that last leg is in the air before the destination's number changes
-    const meet = (a, b) => Math.hypot(a.x1 - b.x0, a.y1 - b.y0) <= 48;
+    // (a member on the stage is a wide card: what it gives leaves from its portrait, inside the card it landed as)
+    const meet = (a, b) => Math.hypot(a.x1 - b.x0, a.y1 - b.y0) <= 48 || (!!a.box && near(b.x0, b.y0, a.box, 8));
     const ok = fl.filter(f => near(f.x1, f.y1, toBox) && f.t <= landedAt + 5 &&
       (near(f.x0, f.y0, fromR) || fl.some(a => a !== f && near(a.x0, a.y0, fromR) && !near(a.x0, a.y0, toBox, 0) && a.t <= f.t + 5 && meet(a, f))));
     console.log(`${label}: ${fl.length} flight(s) after the click, ${ok.length} from the source to the destination; landed ${Math.round(landedAt - clickAt)}ms after the click`);

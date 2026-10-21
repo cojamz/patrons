@@ -22,8 +22,9 @@ describe('the curated member decks', () => {
 
   // Overseer (purple) and Social Climber (blue) cut on Cory's 2026-10-18 call; their replacements are his, so those
   // two decks deal 9 until he names them
-  const DEALT = { echo: 12, red: 12, purple: 9, market: 9 };
-  it('Green and Red deal 12 members, Purple and Blue 9 (two cuts awaiting replacements), other spheres 10, neutral 5; no cut card is dealt', () => {
+  // Magenta deals 13 (Cory, 2026-10-21: 12 per color, Magenta stays at 13 for now, a cut is on the backlog)
+  const DEALT = { echo: 12, red: 12, thieves: 13, purple: 9, market: 9 };
+  it('Green and Red deal 12 members, Magenta 13, Purple and Blue 9 (two cuts awaiting replacements), other spheres 10, neutral 5; no cut card is dealt', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });
       const dealt = Object.values(s.cards).map(c => c.def);

@@ -1,8 +1,48 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.19, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.21 — 2026-10-21 — unreleased
+## v0.8.31 — 2026-10-21 — shipped (source cbf1440)
+
+- Members say "Recruit" instead of "Buy": "Done, no recruit", "Undo recruit", "Recruit twice this turn". "Buy followers" stays. The space Buy Twice is now Recruit Twice.
+
+## v0.8.30 — 2026-10-21 — shipped (source bd09cf9)
+
+- New player panels: the follower total is big on the right, minions left in a row under the name, resources in one even strip, members sorted by cost with room for two rows. The turn story folds to one line and opens on a tap.
+
+## v0.8.29 — 2026-10-21 — shipped (source d12bd01)
+
+- Player panels no longer slide up a step after the round I picks.
+
+## v0.8.28 — 2026-10-21 — unreleased
+
+- Magenta members: Kingpin now pays per magenta member; new Snitch, Fence and Shoplifter; prices set from balance tests
+
+## v0.8.27 — 2026-10-21 — shipped (source 6266070)
+
+- Faster: your minion stands on the space the moment you click, the wheel spin no longer stalls, round II starts with no dim pause, the shop stops redrawing on rivals' turns, and card flights cost less to draw.
+
+## v0.8.26 — 2026-10-21 — went live together with v0.8.27
+
+- Shorter, more consistent card texts: one opener then a colon, "When recruited:", "each rival", "steal", growing amounts written per round. No card works differently.
+
+## v0.8.25 — 2026-10-21 — shipped (source ed22298)
+
+- Member swaps with the shop cross both portraits at once. A big gain flies every coin (12 coins as 12) without slowing the turn. Round end is smoother: the scoring card fades up, totals count as prizes land, minions fill their columns as they arrive. The follower mark on each rim has a soft sheen. Bots now judge member swaps properly.
+
+## v0.8.24 — 2026-10-21 — shipped (source 2831c45)
+
+- Shop: long abilities in details view fit their card, and a discounted card's old price no longer runs into its worth. The since-your-last-turn story never shows a line cut in half, and a tall turn card sums up its last lines so the story's heading stays visible.
+
+## v0.8.23 — 2026-10-21 — shipped (source 1343cb1)
+
+- Clearer motion: a space's result shows beside its space, members pop out of their seat when they act, a recruit shows itself at the middle before flying to its buyer, and a steal says what was taken at once. Round start plays in steps: minions home, income seat by seat, then the shop refills. Skipping no longer sets off a burst of sounds. Undo plays the move backwards.
+
+## v0.8.22 — 2026-10-21 — shipped (source febdee1)
+
+- Laptops: chairs run full height beside a narrower shop; the story holds two turns. Big screens scale the whole table. Silver, white and colorless members get their own card look. Your first placement each round says which rings are open.
+
+## v0.8.21 — 2026-10-21 — shipped (source e606c44)
 
 - "Safe this round" is a small shield. Big coin piles on the pay sheet stay short and print their count. A buy or recruit pulses before its reward flies. At round start the old shop cards go into the deck and the new ones deal out.
 

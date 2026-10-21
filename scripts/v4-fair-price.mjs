@@ -24,12 +24,17 @@ import { fileURLToPath } from 'node:url';
 import { writeFileSync, readFileSync } from 'node:fs';
 import { createGame, applyMove, followers, memberCount, paymentChoices } from '../src/engine/v4/core.js';
 import { chooseNormalMove } from '../src/engine/v4/bots.js';
+import { chooseThinkerMove } from '../src/engine/v4/thinker.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
 import { allQuadrantIds, quadrant, guestMembers, registerQuadrant, DEFAULT_QUADRANTS } from '../src/engine/v4/content/index.js';
 
 // seats and the base table can change per run (--seats, --table); the worker threads read them from params
 let SEATS = 4;
 let BASE_TABLE = null;
+// --level=hard: every seat plays Hard (lookahead) in the forked games, with a fixed budget and no clock so the run
+// stays deterministic; --budget trims the lookahead (simulated moves per decision; the game's Hard uses 100 and a clock)
+let LEVEL = 'normal', BUDGET = 100;
+const botMove = (s, rand) => (LEVEL === 'hard' ? chooseThinkerMove(s, rand, { budget: BUDGET, maxMs: Infinity }) : chooseNormalMove(s, rand));
 const ROLLOUT = { noise: 0.6, payWays: 2, payOptions: 2 };
 const ALL_Q = allQuadrantIds();
 const allDefs = () => [...ALL_Q.flatMap(q => quadrant(q).members), ...guestMembers()];
@@ -255,7 +260,7 @@ function playOut(fork, seed, seat, arm, uid, rollouts, think = 3) {
     const pend = s.pending, pl = pend.player;
     if (arm !== 'none' && !bought && pl === seat && pend.kind === 'buy' && paymentChoices(s, s.players[seat], uid).length) {
       affordable = true;
-      const base = chooseNormalMove(s, rands[pl]);
+      const base = botMove(s, rands[pl]);
       let take = arm === 'forced';
       if (arm === 'free' && decisions < think) {
         decisions++;
@@ -271,7 +276,7 @@ function playOut(fork, seed, seat, arm, uid, rollouts, think = 3) {
       s = applyMove(s, base);
       continue;
     }
-    s = applyMove(s, chooseNormalMove(s, rands[pl]));
+    s = applyMove(s, botMove(s, rands[pl]));
   }
   return {
     mx: margin(s, seat), m: followers(s, s.players[seat]) - mean(s.players.filter(p => p.id !== seat).map(p => followers(s, p))), own: followers(s, s.players[seat]), win: s.ranking[0] === seat ? 1 : 0, bought: bought ? 1 : 0, affordable: affordable ? 1 : 0, boughtRound,
@@ -372,7 +377,8 @@ function runPool(kind, n, params, workers, raw) {
     let next = 0, done = 0;
     const t0 = Date.now();
     const pool = Array.from({ length: Math.min(workers, n) }, () => new Worker(fileURLToPath(import.meta.url), { workerData: { kind, params } }));
-    const feed = w => { if (next < n) w.postMessage(next++); else w.postMessage(-1); };
+    // --first: game numbers start there, so several runs (--raw each) cover different games and merge with --from
+    const feed = w => { if (next < n) w.postMessage((params.first || 0) + next++); else w.postMessage(-1); };
     pool.forEach(w => {
       w.on('message', r => {
         results.push(r); done++;
@@ -389,7 +395,9 @@ if (!isMainThread) {
   const { kind, params } = workerData;
   if (params.seats) SEATS = params.seats;
   if (params.table) BASE_TABLE = params.table;
-  if (kind === 'screen') { const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js'); params.tables = makeTables(4242, 2).tables; }
+  if (params.level) LEVEL = params.level;
+  if (params.budget) BUDGET = params.budget;
+  if (kind === 'screen') { const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js'); params.tables = params.table ? [params.table] : makeTables(4242, 2).tables; }
   parentPort.on('message', g => {
     if (g < 0) { process.exit(0); }
     parentPort.postMessage(kind === 'screen' ? screenGame(g, params) : sweepSeed(g, params));
@@ -404,8 +412,9 @@ if (!isMainThread) {
   if (mode === 'screen') {
     const games = Number(flags.games || 3000), jitter = Number(flags.jitter || 0.4);
     let res, printed = Object.fromEntries(allDefs().map(d => [d.id, priceOf(d)]));
-    if (flags.from) { const R = JSON.parse(readFileSync(flags.from, 'utf8')); res = R.results; printed = R.params.printed || printed; }
-    else res = await runPool('screen', games, { jitter, printed }, workers, flags.raw);
+    if (flags.from) { const Rs = String(flags.from).split(',').map(f => JSON.parse(readFileSync(f, 'utf8'))); res = Rs.flatMap(R => R.results).sort((a, b) => a.g - b.g); printed = Rs[0].params.printed || printed; }
+    // --from accepts several raw files, comma-separated (chunked runs)
+    else res = await runPool('screen', games, { jitter, printed, first: Number(flags.first || 0), table: flags.table ? String(flags.table).split(',') : null }, workers, flags.raw);
     const A = analyseScreen(res, { printed });
     const out = { mode, games, jitter, secs: (Date.now() - t0) / 1000, ...A };
     if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
@@ -431,7 +440,7 @@ if (!isMainThread) {
     if (flags.table) BASE_TABLE = String(flags.table).split(',');
     const cards = findDefs((names || 'anchors').split(',')).map(d => d.id);
     const params = {
-      seats: SEATS, table: BASE_TABLE,
+      seats: SEATS, table: BASE_TABLE, level: flags.level || 'normal', budget: Number(flags.budget || 100),
       cards, round: Number(flags.round || 2), freeN: Number(flags.free ?? 40), rollouts: Number(flags.rollouts || 2), think: Number(flags.think || 3),
       deltas: (flags.deltas || '-6,-4,-2,0,2,4').split(',').map(Number),
     };

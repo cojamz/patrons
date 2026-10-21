@@ -305,7 +305,7 @@ const echoQ = {
       resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', greenOccupied(ctx), { fromAction: true }); },
     },
     {
-      key: 'chant', ring: 1, name: 'Build Up', text: '+1 green × round. +1 green.',
+      key: 'chant', ring: 1, name: 'Build Up', text: '+2 green in round I, +3 in round II, +4 in round III.',
       byRound: { lines: ['+2 green', '+3 green', '+4 green'] },
       estimate: ctx => 1 + ctx.state.round,
       resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', ctx.state.round, { fromAction: true }); },
@@ -371,12 +371,12 @@ const echoQ = {
 
   members: [
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
-    m('evergreen', 'Busker', 1, 3, 'Recruit / round start: +2 green.', {
+    m('evergreen', 'Busker', 1, 3, 'Now and at round start: +2 green.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', 2); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 2); },
     }),
     m('choir', 'Choir', 4, 2, 'Whenever you copy a space, +1 green.'),
-    m('muse', 'Muse', 2, 2, 'When another player copies an action: +1 green.'),
+    m('muse', 'Muse', 2, 2, 'Whenever a rival copies an action, +1 green.'),
     // Understudy and Ensemble replaced Choirmaster (green for a rival's copy: a gift for doing nothing, and Muse's
     // twin) and Fan (green when a rival takes the center: nothing to do with copying). Claude, 2026-10-14.
     m('understudy', 'Understudy', 4, 2, 'When recruited: copy the previous action.', {
@@ -388,20 +388,20 @@ const echoQ = {
     }),
     // was "Game end: +1 follower per green member." (2+2) until the design critic's follow-ups (2026-10-14): now it
     // pays for the copy itself, a rival's space only, and the follower counts at once (heard() above).
-    m('ensemble', 'Ensemble', 3, 3, 'When you copy your own action: +1 follower.'),
+    m('ensemble', 'Ensemble', 3, 3, 'Whenever you copy your own action, +1 follower.'),
     m('groupie', 'Groupie', 4, 4, 'Whenever anyone recruits a green member, +1 green.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (recruited.uid !== card.uid && recruited.def.id.startsWith('echo.')) ctx.gain(owner, 'green', 1);
       },
     }),
-    m('translator', 'Translator', 3, 1, 'What you copy comes as green. You can switch it off or on when you buy.', {
+    m('translator', 'Translator', 3, 1, 'What you copy comes as green. Switch it on or off when you recruit.', {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
     }),
-    m('tuningfork', 'Impressionist', 2, 2, 'When you copy an action: +1 resource of its color.'),
-    m('wallflower', 'Wallflower', 2, 2, 'While no one has fewer followers than you, the resources you copy are doubled.'),
+    m('tuningfork', 'Impressionist', 2, 2, 'Whenever you copy an action, +1 of its color.'),
+    m('wallflower', 'Wallflower', 2, 2, 'While no rival has fewer followers than you, double the resources you copy.'),
     // Keepsake ("When recruited: copy one of your spaces from this round") is cut: Reprise does the same on a space.
-    m('mirror', 'Mime', 4, 2, 'When recruited: gain as much green as the rival with the most green.', {
+    m('mirror', 'Mime', 4, 2, 'When recruited: gain green equal to the most green a rival holds.', {
       onRecruited(ctx, owner) {
         const g = Math.max(0, ...ctx.rivals(owner).map(o => o.res.green || 0));
         if (g) ctx.gain(owner, 'green', g);
@@ -415,7 +415,7 @@ const echoQ = {
         offer(ctx, owner, list, 'Sleepwalker: copy which of your spaces from last round?', 'last', 'Sleepwalker');
       },
     }),
-    m('hourglass', 'Stunt Double', 2, 2, 'Recruit: copy the action you just took.', {
+    m('hourglass', 'Stunt Double', 2, 2, 'When recruited: copy the action you just took.', {
       onRecruited(ctx, owner) {
         const e = justTook(ctx, owner);
         if (!e) { ctx.log(`${owner.name}'s Stunt Double has nothing to copy.`); return; }
@@ -433,7 +433,7 @@ const echoQ = {
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
     // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
-    m('doppel', 'Doppelganger', 3, 2, 'Recruit: becomes a copy of one of your members.', {
+    m('doppel', 'Doppelganger', 3, 2, 'When recruited: it becomes a copy of one of your members.', {
       onRecruited(ctx, owner, card) {
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && (c.copy || !['doppel', 'impostor'].includes(c.def.key)));
         if (!own.length) return;
@@ -443,7 +443,7 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('impostor', 'Impostor', 4, 2, 'Recruit: becomes a copy of a rival’s member.', {
+    m('impostor', 'Impostor', 4, 2, 'When recruited: it becomes a copy of a rival’s member.', {
       onRecruited(ctx, owner, card) {
         const rivals = ctx.rivals(owner).flatMap(p => ctx.membersOf(p)).filter(c => c.copy || !['doppel', 'impostor'].includes(c.def.key));
         if (!rivals.length) return;
@@ -453,12 +453,12 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('connector', 'Connector', 4, 2, 'Recruit / round start: +1 green per non-green member.', {
+    m('connector', 'Connector', 4, 2, 'Now and at round start: +1 green per non-green member you have.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
     }),
-    m('agents', 'Agents', 1, 2, 'Your actions can’t be copied.', { f: 2, n: 2 }),
-    m('bait', 'Bait', 3, 2, 'Anyone who copies your action loses 1 follower. If they’re a rival, you gain 1 follower.'),
+    m('agents', 'Agents', 1, 2, 'No one can copy your actions, you included.', { f: 2, n: 2 }),
+    m('bait', 'Bait', 3, 2, 'Whenever anyone copies your action, they −1 follower. If it’s a rival, +1 follower.'),
     m('chronicler', 'Chronicler', 2, 3, 'Game end: +1 follower per green member.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'echo'),
     }),

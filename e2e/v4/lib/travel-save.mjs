@@ -19,7 +19,7 @@ export const TRAVEL = {
   // a member taken: Poach, a rival's member to your crowd
   member: { q: ['gold', 'thieves', 'red', 'purple'], hit: (s, mv, n) => /^Poach: take which/.test(prompt(s)) && (e => e && { from: { kind: 'crowd', pid: e.from.pid }, to: { kind: 'member', pid: 0, uid: e.what.uid } })(fx(n).find(e => e.type === 'member-move' && e.to.pid === 0)) },
   // a ransom paid: your resources to the rival who holds your member (arriving as magenta)
-  ransom: { q: ['gold', 'thieves', 'red', 'purple'], force: 'pay', hit: (s, mv, n) => /to ransom/.test(prompt(s)) && mv.option === 'pay' && (g => g && { from: { kind: 'seat', pid: 0 }, to: g.to })(fx(n).find(e => e.type === 'gain' && e.to.pid !== 0)) },
+  ransom: { q: ['gold', 'thieves', 'red', 'purple'], force: 'pay', hit: (s, mv, n) => /^Shake Down: pay /.test(prompt(s)) && mv.option === 'pay' && (g => g && { from: { kind: 'seat', pid: 0 }, to: g.to })(fx(n).find(e => e.type === 'gain' && e.to.pid !== 0)) },
   // a member's Use: what it gives flies from the member to your stack
   use: { q: ['gold', 'red', 'blue', 'green'], hit: (s, mv, n) => String(mv.option).startsWith('use:') && s.pending.kind === 'buy' && (g => g && { from: { kind: 'member', pid: 0, uid: g.cause.uid }, to: g.to })(fx(n).find(e => e.type === 'gain' && e.cause.kind === 'member' && e.to.pid === 0)) },
 };
@@ -41,7 +41,7 @@ export function travelSave(kind) {
     const turn = [];
     for (let k = 0; k < 3000 && !s.over; k++) {
       let mv = chooseBotMove(s, rand);
-      if (sc.force && s.pending && s.pending.player === 0 && /to ransom/.test(prompt(s)) && s.pending.options.some(o => o.id === sc.force)) mv = { player: 0, option: sc.force };
+      if (sc.force && s.pending && s.pending.player === 0 && /^Shake Down: pay /.test(prompt(s)) && s.pending.options.some(o => o.id === sc.force)) mv = { player: 0, option: sc.force };
       let n;
       try { n = applyMove(s, mv, { effects: true }); } catch { break; }
       if (s.pending && s.pending.player === 0) {

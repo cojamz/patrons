@@ -1,6 +1,6 @@
 import { browserPath } from './lib/browser.mjs';
 // E2E motion gate: what you do yourself moves, at laptop size (1270×700) and on a phone (390×844, real touch).
-//  (m1) a +6 follower buy counts up: your follower number shows at least 3 values between old and new (sampled per
+//  (m1) a +5 follower buy (the 5-for-5 tier) counts up: your follower number shows at least 3 values between old and new (sampled per
 //       painted frame; Tick.jsx steps one whole number per painted frame for small changes, so a loaded box that paints
 //       rarely slows the count instead of skipping numbers);
 //  (m2) your placement sends a worker token flying to the space;
@@ -22,9 +22,13 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
 import { seedSave } from './lib/seed.mjs';
-import { MO, motionSpeed } from '../../src/v4/motion.js';
+import { MO, motionSpeed, setMotionSpeed } from '../../src/v4/motion.js';
+import { TIERS } from '../../src/engine/v4/index.js';
+const GAIN = TIERS.find(t => t.key === 'mid').get; // the 5-for-5 buy
 
-// (node has no saved speed: this reads Steady's own numbers)
+// node has no saved speed, so it starts at the default (Relaxed since Cory's 2026-10-16 call); this gate's budgets are
+// Steady's own numbers, and every page it times opens with ?speed=steady (or relaxed for m5's comparison)
+setMotionSpeed('steady');
 if (motionSpeed() !== 'steady') throw new Error('motion.mjs reads Steady budgets');
 const FLOOR = MO.stepFloor; // a rival's visible step stays up at least this long at Steady (m4)
 
@@ -106,13 +110,13 @@ async function place(page, go, prof) {
 }
 
 for (const prof of PROFILES) {
-  // (m1) + (m2): place, then buy +6 followers
+  // (m1) + (m2): place, then buy +5 followers
   {
     const { ctx, page, go } = await resumeRich(prof);
     try {
       await place(page, go, prof);
-      // the +6 buy: "+6" on the older screen, "8 → 6" on the Lamplit shop's follower rates
-      const big = await page.waitForSelector('[data-option^="tier:"][data-rate="big"], [data-option^="tier:"]:has-text("+6"), [data-option^="tier:"]:has-text("→ 6")', { timeout: 8000 });
+      // the 5-follower buy (the tiers are 1, 5 and 10 since 2026-10-16; the old +6 'big' tier is gone): a card in the shop
+      const big = await page.waitForSelector('.lt-shop [data-option^="tier:"][data-rate="mid"]', { timeout: 8000 });
       await page.evaluate(() => { window.__fol = [window.__fol[window.__fol.length - 1]]; });
       await big.scrollIntoViewIfNeeded();
       await go(big);
@@ -120,13 +124,13 @@ for (const prof of PROFILES) {
       if (pay) { await page.waitForTimeout(450); await go(pay); }
       // the buy plays as a chain at the default speed (director.js): coins in, followers out, then the count; wait for the
       // count to reach its new total (a loaded box paints rarely and takes longer), then judge the values it showed
-      await page.waitForFunction(sel => { const f = window.__fol; return f.length && Number(f[f.length - 1]) - Number(f[0]) >= 6; }, null, { timeout: 12000 }).catch(() => {});
+      await page.waitForFunction(GAIN => { const f = window.__fol; return f.length && Number(f[f.length - 1]) - Number(f[0]) >= GAIN; }, GAIN, { timeout: 12000 }).catch(() => {});
       await page.waitForTimeout(300);
       const seq = await page.evaluate(() => window.__fol);
       const from = Number(seq[0]), to = Number(seq[seq.length - 1]);
       const between = [...new Set(seq.slice(1, -1).map(Number))].filter(v => v > Math.min(from, to) && v < Math.max(from, to));
-      console.log(`${prof.tag}: +6 buy showed ${seq.join(' > ')}`);
-      if (to - from < 6) errors.push(`[${prof.tag}] (m1) the +6 buy didn't land (${seq.join(' > ')})`);
+      console.log(`${prof.tag}: +${GAIN} buy showed ${seq.join(' > ')}`);
+      if (to - from < GAIN) errors.push(`[${prof.tag}] (m1) the +${GAIN} buy didn't land (${seq.join(' > ')})`);
       else if (between.length < 3) errors.push(`[${prof.tag}] (m1) follower count jumped ${from} → ${to} with ${between.length} values between (need 3)`);
       await page.screenshot({ path: `${SHOTS}/${prof.tag}-after-buy.png` });
     } catch (e) { errors.push(`[${prof.tag}] m1 run: ${e.message}`); await page.screenshot({ path: `${SHOTS}/${prof.tag}-m1-fail.png` }).catch(() => {}); }
@@ -137,7 +141,8 @@ for (const prof of PROFILES) {
     const { ctx, page, go } = await resumeRich(prof);
     try {
       await place(page, go, prof);
-      const card = await page.waitForSelector('.lt-shop .card.can[data-option]', { timeout: 8000 });
+      // a member card (the follower buys share the shop since v0.8.2 and carry no uid)
+      const card = await page.waitForSelector('.lt-shop .card.can[data-uid][data-option]', { timeout: 8000 });
       await card.scrollIntoViewIfNeeded();
       await page.evaluate(() => { window.__ghosts = []; });
       await go(card);

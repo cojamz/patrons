@@ -1,0 +1,106 @@
+/* A chair at the table on a laptop: Cory's mockup A (2026-10-21, /mnt/project-files/seat-mockups/A.png), "a little
+   bigger so there's more room to show members (as they get them)". Top: the leader, the name with the round's minions
+   as a short row under it (placed ones faded; "done this round" when a rival is out), and the follower total big on the
+   right with its mark. Then what it holds as one strip of even boxes, one per color in play, zeros dimmed. Then its
+   members, grouped by color, with "N members" at the right. Every chair has one height (GameScreen layColumn writes
+   --seat-h from the window, never from what the chair holds), so nothing in the column moves during a turn; the members'
+   area takes what's left and the figures wrap into as many rows as it holds (CultSeat useFigureFold). */
+
+/* phones and the results' seats: the figures stand in the crowd's own row */
+.lt-cult-seat .cs-figs{display:contents}
+.lt-cult-seat .cs-name{display:flex;align-items:baseline;gap:8px;min-width:0}
+.lt-cult-seat .cs-pips{display:flex;align-items:center;gap:6px;min-width:0}
+.lt-cult-seat .cs-min.placed{opacity:.18;filter:grayscale(1);animation:none}
+.lt-cult-seat .cs-done{font-size:11px;font-weight:600;color:var(--cream-3);white-space:nowrap}
+
+@media (min-width:861px) and (min-height:500px){
+  /* the column's share for each chair (read by GameScreen layColumn): what stands under the chairs is reserved first */
+  .app.game.lt > .lt-snake{--seat-min:118px;--seat-max:184px;--seats-reserve:0px}
+  .app.game.lt > .lt-seat{height:var(--seat-h, auto);padding:7px 14px;box-sizing:border-box;container:seat / inline-size}
+  .app.game.lt > .lt-seat > .lt-cult-seat{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;gap:0;padding:0;background:none;box-shadow:none;max-width:none}
+
+  /* the top: leader, name over minions, total */
+  .app.game.lt > .lt-seat > .lt-cult-seat > .cs-head{order:0;flex:none;display:grid;grid-template-columns:32px minmax(0,1fr) auto;column-gap:10px;align-items:center;height:34px;min-height:0;gap:0 10px}
+  .app.game.lt > .lt-seat .cs-head .cs-leader{grid-column:1;display:flex;align-items:center;justify-content:center;width:32px;height:34px}
+  .app.game.lt > .lt-seat .cs-head .cs-who{grid-column:2;display:flex;flex-direction:column;justify-content:center;gap:0;min-width:0;position:relative;padding:0}
+  .app.game.lt > .lt-seat .cs-who .cs-name{height:18px;align-items:baseline;gap:8px;white-space:nowrap}
+  .app.game.lt > .lt-seat .cs-who b{font-family:var(--sans);font-weight:800;font-size:18px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .app.game.lt > .lt-seat .cs-pips{height:16px;margin-top:0;gap:6px;white-space:nowrap}
+  .app.game.lt > .lt-seat .cs-minions{display:flex;flex-direction:row;align-items:center;gap:3px;min-width:0;height:16px}
+  .app.game.lt > .lt-seat .cs-minions.out{display:none}
+  .app.game.lt > .lt-seat .cs-min svg{width:16px;height:16px}
+  .app.game.lt > .lt-seat .lt-cult-seat .cs-turn{position:static;flex:none;font-size:14px;line-height:16px;font-weight:700}
+  .app.game.lt > .lt-seat .lt-cult-seat .cs-turn.now{color:var(--lamp-ink)}
+  .app.game.lt > .lt-seat .cs-done{font-size:14px;line-height:16px;font-weight:700;color:var(--muted, #b09f82)}
+  .app.game.lt > .lt-seat .cs-head .cs-total{grid-column:3;margin-left:0;display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);font-weight:800;
+    font-size:36px;line-height:34px;letter-spacing:-.02em;color:var(--cream)}
+  .app.game.lt > .lt-seat .cs-total .follower-mark{width:18px;height:18px;color:var(--cream)}
+  .app.game.lt > .lt-seat .cs-total.lead{color:var(--light, #fff3d4)}
+  .app.game.lt > .lt-seat .cs-total.lead .tv{color:inherit;text-shadow:none}
+
+  /* what it holds: one strip of even boxes, a hairline between them */
+  .app.game.lt > .lt-seat > .lt-cult-seat > .cs-foot{order:1;flex:none;margin-top:6px;min-width:0;display:block}
+  .app.game.lt > .lt-seat .cs-res{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;height:22px;border-radius:6px;background:rgba(0,0,0,.18);max-width:none}
+  .app.game.lt > .lt-seat .cs-stack{display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:5px;min-width:0;font-family:var(--sans);font-size:14px;font-weight:800;line-height:22px}
+  .app.game.lt > .lt-seat .cs-stack + .cs-stack{box-shadow:inset 1px 0 0 var(--hair, rgba(242,232,210,.10))}
+  .app.game.lt > .lt-seat .cs-stack .res-glyph{width:12px;height:12px;flex:none}
+  /* a zero: its number quiet, its hollow ring kept visible (layout.css) */
+  .app.game.lt > .lt-seat .cs-stack.zero{opacity:.62}
+  .app.game.lt > .lt-seat .cs-stack.zero .num{opacity:.5;font-weight:700}
+  /* a stack that's a pick (a steal, a gift) is its own pill inside its box */
+  .app.game.lt > .lt-seat .cs-stack.pick-on,.app.game.lt > .lt-seat .cs-stack.pick-off{justify-self:center;align-self:center;height:20px;padding:0 7px 0 5px;gap:3px;box-shadow:none}
+  .app.game.lt > .lt-seat .cs-stack.pick-on + .cs-stack,.app.game.lt > .lt-seat .cs-stack + .cs-stack.pick-on{box-shadow:none}
+
+  /* its members: "N members" at the right, the figures flowing beside and under it, grouped by color */
+  .app.game.lt > .lt-seat > .lt-cult-seat > .cs-crowd{order:2;flex:1 1 0;min-height:24px;margin-top:6px;display:block;position:relative}
+  .app.game.lt > .lt-seat .cs-crowd > .cs-member-count{float:right;height:24px;margin-left:8px;display:inline-flex;align-items:center;gap:0;
+    font-family:var(--sans);font-size:14px;line-height:24px;font-weight:800;color:var(--cream);white-space:nowrap;cursor:help}
+  .app.game.lt > .lt-seat .cs-crowd > .cs-member-count > span{font-size:14px;font-weight:700;color:var(--muted, #b09f82);white-space:pre}
+  .app.game.lt > .lt-seat .cs-crowd > .cs-safe{float:right;clear:right;width:16px;height:16px;margin:4px 0 0 8px}
+  .app.game.lt > .lt-seat .cs-crowd > .cs-figs{display:block;position:relative;height:100%;line-height:0;padding-left:1px}
+  .app.game.lt > .lt-seat .cs-figs .cs-member{display:inline-flex;vertical-align:top;height:24px;margin:0 0 1px}
+  .app.game.lt > .lt-seat .cs-figs .cs-member + .cs-member{margin-left:1px}
+  .app.game.lt > .lt-seat .cs-figs .cs-member[data-c0]{margin-left:7px}
+  .app.game.lt > .lt-seat .cs-member .sprite{width:24px;height:24px}
+  .app.game.lt > .lt-seat .cs-figs .cs-more{display:inline-flex;vertical-align:top;align-items:center;justify-content:center;min-width:24px;height:24px;margin-left:6px;
+    font-size:11px;line-height:24px;font-weight:700;color:var(--cream-2,#b9a98c)}
+  /* at 24px a lit member's ring and a switch keep inside their own cell, so the rows never collide */
+  .app.game.lt > .lt-seat .cs-member.ready .fig::before{width:calc(100% + 4px);box-shadow:0 0 0 1.5px rgba(var(--lamp,255,206,140),.85),0 0 8px 2px rgba(var(--lamp,255,206,140),.4)}
+  .app.game.lt > .lt-seat .cs-member .mu-switch,.app.game.lt > .lt-seat .cs-member .mu-sw-tip{bottom:-5px}
+  /* a choice that picks one of this chair's members shows every one: the area grows over what's under the chair, on
+     the chair's own ground, and folds back after */
+  .app.game.lt > .lt-seat .lt-cult-seat.pick-all > .cs-crowd{z-index:6}
+  .app.game.lt > .lt-seat .lt-cult-seat.pick-all > .cs-crowd > .cs-figs{height:auto;min-height:100%;background:var(--seat, #221a15);border-radius:0 0 8px 8px;box-shadow:0 8px 0 4px var(--seat, #221a15)}
+
+  /* your starting pick stands where your members will */
+  .app.game.lt > .lt-seat > .lt-cult-seat > .cs-setup{order:2;flex:1 1 0;min-height:0;margin-top:6px;justify-content:center}
+  .app.game.lt > .lt-seat > .lt-cult-seat > .cs-setup{gap:3px;align-self:stretch}
+  .app.game.lt > .lt-seat .cs-setup .cs-setup-token{height:28px}
+  /* while it's yours to pick, the picks take the strip's place too (it holds nothing yet), so two rows of them fit; while
+     the others pick, the strip is back (your pick lands on it) and only the words stand where your members will */
+  .app.game.lt > .lt-seat > .lt-cult-seat.setup-now > .cs-foot{display:none}
+  .app.game.lt > .lt-seat > .lt-cult-seat.setup-now > .cs-setup{flex:1 1 0;margin-top:4px}
+  .app.game.lt > .lt-seat .cs-setup.wait .cs-setup-row{display:none}
+
+  /* Robin Hood in a steal: one line at the chair's foot, in the lamp's ink */
+  .app.game.lt > .lt-seat > .lt-cult-seat > .cs-build{order:3;flex:none;align-self:flex-end;margin-top:2px;white-space:nowrap}
+  .app.game.lt > .lt-seat .cs-build .cs-income{display:inline-flex;flex-direction:row;align-items:center;gap:6px;line-height:16px;margin-left:0}
+  .app.game.lt > .lt-seat .cs-build .cs-income small{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  .app.game.lt > .lt-seat .cs-build .cs-inc b{font-size:14px;font-weight:800}
+
+  /* a rival out of minions for the round steps back (it isn't a pick) */
+  .app.game.lt > .lt-seat > .lt-cult-seat.done:not(.picking){opacity:.62}
+}
+/* a narrow chair (the narrowest laptops): your turn words take their own line under your name, and your top grows to
+   hold it all round (so it never changes height mid-round); a rival's top is the same as ever */
+@media (min-width:861px) and (min-height:500px){
+  @container seat (max-width:243px){
+    .app.game.lt > .lt-seat > .lt-cult-seat.mine > .cs-head{height:52px}
+    .app.game.lt > .lt-seat > .lt-cult-seat.mine .cs-who .cs-name{flex-direction:column;align-items:flex-start;height:36px;gap:0}
+  }
+}
+/* from 1200px the story of the turns (a compact log) and the turn card stand under the chairs: their room comes first */
+/* (the story's heading and its newest line, or its heading over a turn card of a two-line head and "+N more", with a little to spare: 124px
+   at 1270x700, which leaves each chair about 133px, two rows of members; from 800px tall the story stands 14px lower) */
+@media (min-width:1200px) and (min-height:500px){ .app.game.lt > .lt-snake{--seats-reserve:138px} }
+@media (min-width:1200px) and (min-height:500px) and (max-height:799px){ .app.game.lt > .lt-snake{--seats-reserve:124px} }

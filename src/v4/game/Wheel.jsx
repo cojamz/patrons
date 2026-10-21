@@ -16,7 +16,7 @@
 // shakes it and says why at the pointer ("Taken by P3", "Opens in round II"), never silence.
 // Each quadrant's contest is engraved on its rim (rule, prize, tiebreak, leaders), with the standings on hover/tap.
 // Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes a second tap.
-import { memo, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { memo, startTransition, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { quadrant, roman, spaceOpen, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, standings, seatEmoji, shortLabel } from '../format.js';
@@ -160,7 +160,20 @@ export function Marked({ text }) {
 // ---------- panels (the default look): the visual language's flat wedges, plate 1b ----------
 const PANEL_GUT = 4, PANEL_RC = 4; // the gutter between neighbouring panels and their corner, in board units
 /** A ring cell as the plate draws it: straight, parallel gutters (`gut` wide) and rounded corners (`rc`). */
+// a panel's outline depends only on its numbers, and the panels never move on the paper (the paper turns): drawn once
+// each (lag pass 2026-10-21: every render of the wheel recomputed all of them, a few ms each commit at 4x CPU)
+const panelPaths = new Map();
 function panelPath(a0, a1, r0, r1, gut = PANEL_GUT, rc = PANEL_RC) {
+  const k = `${a0}|${a1}|${r0}|${r1}|${gut}|${rc}`;
+  let d = panelPaths.get(k);
+  if (d === undefined) {
+    if (panelPaths.size > 2000) panelPaths.clear();
+    d = drawPanelPath(a0, a1, r0, r1, gut, rc);
+    panelPaths.set(k, d);
+  }
+  return d;
+}
+function drawPanelPath(a0, a1, r0, r1, gut, rc) {
   const h = gut / 2, deg = x => (x * 180) / Math.PI;
   const s0 = r => a0 + deg(Math.asin(h / r)), s1 = r => a1 - deg(Math.asin(h / r));
   const O0 = polar(s0(r1), r1), O1 = polar(s1(r1), r1), I1 = polar(s1(r0), r0), I0 = polar(s0(r0), r0);
@@ -366,6 +379,11 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // online: the space just picked, lit as chosen while its move crosses to the host and back (until the table moves on),
   // so the click answers at once; locally the move lands in the same frame
   const [sent, setSent] = useState(null);
+  // locally, the placement you just made, drawn at once (lag pass 2026-10-21: at 4x CPU your minion stood on the space only
+  // once the whole table's update had rendered, 300-500ms after the click): only a placement the table took (onPick
+  // answered true), and only against the state it was made on; the table's own state replaces it in its next commit,
+  // the same picture
+  const [ghost, setGhost] = useState(null); // { key, pid, squat, state }
   // the space card itself is UI-B's hover layer: the wheel only says which space is under the pointer (or pinned)
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
@@ -392,13 +410,15 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   const moved = useRef(false);
   const lastPointer = useRef('mouse');
   // On-screen scale of the board, so text is sized in real pixels.
+  const stageSize = useRef(null); // [clientWidth, clientHeight], from the ResizeObserver
   const [scale, setScale] = useState(1);
   // measured before the first paint (wave-4 B #32: measured after it, the first frame laid the panels out for a 416px
   // board and they reflowed bigger a frame later); one layout read at mount, then the ResizeObserver
   useLayoutEffect(() => {
     const el = stage.current;
     if (!el) return undefined;
-    const measure = () => { const w = el.getBoundingClientRect().width; if (w) setScale(w / VBS); };
+    // (the stage's inner size is kept too: a spin reads its spaces' places from it, never forcing a layout in the key's frame)
+    const measure = () => { const w = el.getBoundingClientRect().width; stageSize.current = [el.clientWidth, el.clientHeight]; if (w) setScale(w / VBS); };
     measure();
     if (typeof ResizeObserver === 'undefined') return undefined;
     const ro = new ResizeObserver(measure);
@@ -407,10 +427,15 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   }, []);
   const boardPx = scale * VBS;
 
+  // React takes a landed angle as a transition: the board already shows it (paintRot), and the re-lay of every space that
+  // follows (~200ms at 4× CPU) can't hold up the next press, key or hover. Until it commits, any other render draws the
+  // old angle, which the painted transforms still correct.
   const applyRot = useCallback(r => {
     rotRef.current = r;
-    setRot(r);
-    onFacing(facingOf(r, nq));
+    startTransition(() => {
+      setRot(r);
+      onFacing(facingOf(r, nq));
+    });
   }, [nq, onFacing]);
 
   // A spin or a drag paints straight onto the board, with no render per frame (a whole-wheel render each frame cost
@@ -422,14 +447,16 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   const geo = useRef(null); // the stage's size and each space's place, read once per turn (no layout read per frame)
   // Spin and drag share the compositor path. Rewriting SVG group transforms every frame re-rasterized
   // the paper, panel glows and lettering; rotate their already-painted layers until the landing commit.
+  const readGeo = root => {
+    if (geo.current) return;
+    const [w, h] = stageSize.current && stageSize.current[0] ? stageSize.current : [root.clientWidth, root.clientHeight];
+    geo.current = [...root.querySelectorAll(':scope > [data-slot]')].map(el => [el, (parseFloat(el.style.left) / 100 - 0.5) * w, (parseFloat(el.style.top) / 100 - 0.5) * h]);
+  };
   const paintRot = r => {
     rotRef.current = r;
     const root = stage.current;
     if (!root) return;
-    if (!geo.current) {
-      const w = root.clientWidth, h = root.clientHeight;
-      geo.current = [...root.querySelectorAll(':scope > [data-slot]')].map(el => [el, (parseFloat(el.style.left) / 100 - 0.5) * w, (parseFloat(el.style.top) / 100 - 0.5) * h]);
-    }
+    readGeo(root);
     // Read slot geometry above before writing transforms: the first frame must not force a layout.
     const dr = r - painted.current;
     for (const sv of root.querySelectorAll(':scope > svg')) sv.style.transform = Math.abs(dr) > 0.001 ? `rotate(${dr.toFixed(2)}deg)` : '';
@@ -446,27 +473,87 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     for (const sv of root.querySelectorAll(':scope > svg')) if (sv.style.transform) sv.style.transform = '';
     for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${rot} ${CX} ${CY})`);
     for (const el of root.querySelectorAll(':scope > [data-slot]')) if (el.style.translate) el.style.translate = '';
+    // a spin still turning when an earlier landing commits (its re-lay runs as a transition): its frames were drawn from
+    // the old angle, so they're drawn again from this one, on the same clock
+    if (spin.current) { root.classList.add('turning'); spinAnims(spin.current); }
   }, [rot]);
-  const stop = () => { if (anim.current) cancelAnimationFrame(anim.current); anim.current = null; };
+  // A spin (arrow keys, the settle after a drag, a facing change) runs on the compositor (lag pass 2026-10-21: at 4× CPU a
+  // rAF spin got 4 frames in ~800ms while a rival's move rendered): the board's layers turn by a CSS transform and each
+  // space slides round by `translate`, as Web Animations sampled from the spin's own easing, so a busy main thread can't
+  // stall it. The main thread only starts it and, when it ends, writes the landed angle in (paintRot) and drops them.
+  const spin = useRef(null); // { from, to, t0, dur, anims }
+  // where a spin is now, by its animations' own clock
+  const spinAt = sp => {
+    const ct = sp.anims.length && sp.anims[0].currentTime != null ? Number(sp.anims[0].currentTime) : performance.now() - sp.t0;
+    return sp.from + (sp.to - sp.from) * spinEase(Math.min(1, Math.max(0, ct / sp.dur)));
+  };
+  // keyframes even in angle (one per ~9°: a chord strays under a pixel from the circle), each at the moment the easing
+  // reaches it, linear between; relative to the angle React drew (drawn) and the layers' base (painted)
+  const SPIN_DEG = 9;
+  const spinAnims = sp => {
+    const root = stage.current;
+    for (const a of sp.anims) a.cancel();
+    sp.anims = [];
+    if (!root) return;
+    readGeo(root); // (the spaces' places, read once)
+    const { from, to, dur } = sp;
+    const n = Math.max(2, Math.min(40, Math.ceil(Math.abs(to - from) / SPIN_DEG)));
+    // the moment the easing (motion.js spinEase, rising) reaches fraction f, found by halving
+    const when = f => { let lo = 0, hi = 1; for (let j = 0; j < 20; j++) { const m = (lo + hi) / 2; if (spinEase(m) < f) lo = m; else hi = m; } return hi; };
+    const ks = Array.from({ length: n + 1 }, (_, i) => [from + ((to - from) * i) / n, i === 0 ? 0 : i === n ? 1 : when(i / n)]);
+    const opts = { duration: dur, easing: 'linear', fill: 'forwards' };
+    for (const sv of root.querySelectorAll(':scope > svg')) sp.anims.push(sv.animate(ks.map(([r, offset]) => ({ offset, transform: `rotate(${(r - painted.current).toFixed(2)}deg)` })), opts));
+    for (const [el, x, y] of geo.current || []) {
+      if (!Number.isFinite(x + y)) continue;
+      sp.anims.push(el.animate(ks.map(([r, offset]) => {
+        const d = ((r - drawn.current) * Math.PI) / 180, c = Math.cos(d), s = Math.sin(d);
+        return { offset, translate: `${(x * c - y * s - x).toFixed(1)}px ${(x * s + y * c - y).toFixed(1)}px` };
+      }), opts));
+    }
+    // started on the spin's own clock, not pending until the compositor picks them up (a frame or two later on a loaded
+    // box): the first frame after the key already shows the turn under way
+    const tl = document.timeline && document.timeline.currentTime;
+    if (sp.start == null) sp.start = tl;
+    if (sp.start != null) for (const an of sp.anims) an.startTime = sp.start;
+    if (sp.anims.length) sp.anims[0].onfinish = () => sp.land();
+  };
+  const stop = () => {
+    if (anim.current) cancelAnimationFrame(anim.current);
+    anim.current = null;
+    const sp = spin.current;
+    if (!sp) return;
+    spin.current = null;
+    // a spin cut short (a key, a drag) holds where it was
+    const at = spinAt(sp);
+    for (const a of sp.anims) a.cancel();
+    paintRot(at);
+  };
   const animateTo = useCallback(to => {
     stop();
-    const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : MO.spin;
+    const from = rotRef.current, dur = reduced() ? 1 : MO.spin;
     geo.current = null;
-    stage.current?.classList.add('turning');
+    const root = stage.current;
+    root?.classList.add('turning');
     setPeek(p => (p && !p.pinned ? null : p)); // a hover card doesn't ride along on a turning board
     if (hoverRef.current && hoverRef.current.card && !hoverRef.current.card.pinned) hoverRef.current.close();
-    const step = now => {
-      const k = Math.min(1, (now - t0) / dur);
-      if (k < 1) { paintRot(from + (to - from) * spinEase(k)); anim.current = requestAnimationFrame(step); return; }
-      anim.current = null;
-      // land on the exact angle in this frame (the spin ends at MO.spin); React's commit of it follows and changes nothing
-      // on screen (snappy gate s1: waiting on the commit read as a ~500ms spin)
+    const sp = { from, to, t0: performance.now(), dur, anims: [], start: null };
+    sp.land = () => {
+      if (spin.current !== sp) return;
+      spin.current = null;
+      // land on the exact angle (the spin ends at MO.spin); React's commit of it follows and changes nothing on screen
+      // (snappy gate s1: waiting on the commit read as a ~500ms spin)
       paintRot(to);
+      for (const a of sp.anims) a.cancel();
       // A return to the same React angle has no commit to clean up its promoted layers.
       if (to === drawn.current && stage.current) stage.current.classList.remove('turning'); // (a drag that came back where it started commits nothing)
       applyRot(to);
     };
-    anim.current = requestAnimationFrame(step);
+    spin.current = sp;
+    if (!root || dur <= 1 || typeof root.animate !== 'function' || Math.abs(to - from) < 0.01) { sp.land(); return; }
+    paintRot(from); // the layers carry the start (a drag ends with a turn on them), and the spaces' places are read
+    rotRef.current = to;
+    spinAnims(sp);
+    if (!sp.anims.length) sp.land();
   }, [applyRot]); // eslint-disable-line react-hooks/exhaustive-deps
   const touched = useRef(onTouched);
   touched.current = onTouched;
@@ -474,7 +561,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
 
   // Parent asked to face a quadrant (a tab, or a rival's move): spin there the short way.
   useEffect(() => {
-    if (anim.current || drag.current) return;
+    if (spin.current || drag.current) return;
     if (facingOf(rotRef.current, nq) !== facing) animateTo(rotRef.current + norm(-SEC * facing - rotRef.current));
   }, [facing, nq, SEC, animateTo]);
 
@@ -515,6 +602,23 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   useEffect(() => { if (Math.abs(rot - rotSeen.current) > 2) { rotSeen.current = rot; setPeek(p => (p && !p.pinned ? null : p)); } }, [rot]);
   // A new decision clears a stale selection and any note.
   useEffect(() => { setPeek(null); setDeny(null); setSent(null); }, [state]);
+  // a placement the table took but whose state never came (it can't happen locally; belt and braces): gone after 2s.
+  // A ghost the new state has replaced is simply ignored (no render to clear it)
+  const stateNow = useRef(state);
+  stateNow.current = state;
+  useEffect(() => {
+    if (!ghost) return undefined;
+    const t = setTimeout(() => { if (stateNow.current === ghost.state) setGhost(g => (g === ghost ? null : g)); }, 2000);
+    return () => clearTimeout(t);
+  }, [ghost]);
+  const ghostNow = ghost && ghost.state === state ? ghost : null;
+  // the board as drawn: the state, with the placement on its way (if any) standing on its space and no longer lit
+  const withGhost = slots => (ghostNow && !ghostNow.squat ? { ...slots, [ghostNow.key]: ghostNow.pid } : slots);
+  const slotsV = withGhost(state.slots), shadeV = withGhost(interactionState.slots);
+  const squatsV = ghostNow && ghostNow.squat ? { ...state.squats, [ghostNow.key]: [...((state.squats && state.squats[ghostNow.key]) || []), ghostNow.pid] } : state.squats;
+  const legalV = ghostNow ? new Map([...legal].filter(([k]) => k !== ghostNow.key)) : legal;
+  // its landing starts at the press too (the table's commit then keeps the same flash, so it doesn't land twice)
+  const flashV = ghostNow ? new Set([ghostNow.key]) : flash;
   // the note at the pointer fades on its own
   useEffect(() => {
     if (!deny) return undefined;
@@ -609,9 +713,17 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     }
   };
   const touchTapped = useRef(0);
+  // pick a space's option; a placement taken locally stands its minion there in this same frame
+  const place = (key, opt) => {
+    const ok = onPick(opt);
+    if (ok === true && !confirmPlace && /^(slot|squat):/.test(opt) && state.pending && state.pending.player != null) {
+      setGhost({ key, pid: state.pending.player, squat: opt.startsWith('squat:'), state });
+    }
+  };
   const tap = (s, el, pt = null) => {
     if (moved.current) return;
-    const opt = legal.get(s.key);
+    if (ghostNow) return; // a placement is on its way: the board answers it, not a second click
+    const opt = legalV.get(s.key);
     // online, a placement asks to confirm on its card ("Place here": no Undo online). A choice answered on a space (a
     // copy's target, boardPick.js) has no confirm on that card, so it picks at once, as it does locally: pinning it
     // left the click doing nothing, and the online e2e circled the lit spaces forever (2026-10-15)
@@ -619,9 +731,9 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     const touch = confirmHere || lastPointer.current === 'touch';
     // A copy target is already the answer to a choice. Its read-only touch card has no
     // confirmation button, so choose it on the first tap, just as with a mouse.
-    if (opt && (!touch || !/^(slot|squat|to):/.test(opt))) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
+    if (opt && (!touch || !/^(slot|squat|to):/.test(opt))) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); place(s.key, opt); return; }
     if (opt && touch) {
-      if (peek && peek.key === s.key && peek.pinned) { setPeek(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
+      if (peek && peek.key === s.key && peek.pinned) { setPeek(null); if (confirmPlace) setSent(s.key); place(s.key, opt); return; }
       setPeek({ key: s.key, pinned: true });
       return;
     }
@@ -771,8 +883,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     for (const s of spaces) {
       const R = rings[s.ring], c = qCenter(s.q, nq), w = SEC / R.n;
       const a1 = c + SEC / 2 - s.idx * w, a0 = a1 - w;
-      const owner = interactionState.slots[s.key], fresh = freshOf(s.key);
-      const status = faceStatus({ legal: legal.has(s.key), owner, open: spaceOpen(s.a, round), fresh });
+      const owner = shadeV[s.key], fresh = freshOf(s.key);
+      const status = faceStatus({ legal: legalV.has(s.key), owner, open: spaceOpen(s.a, round), fresh });
       paper.push(
         <g key={`fc${s.key}`} className={`face-cell ${status}`} data-cell={s.key} style={{ '--c': `var(--${s.qid})`, pointerEvents: 'none' }}>
           <Cell key={s.key} q={s.qid} action={s.a} ring={s.ring} round={round} status={status} ang={s.ang} a0={a0} a1={a1} r0={R.r0} r1={R.r1}
@@ -786,10 +898,10 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // outline). The wedge is the space's click and hover target; its print is the upright box above it (sockets below).
   if (panels) {
     for (const s of spaces) {
-      const R = rings[s.ring], open = spaceOpen(s.a, round), owner = interactionState.slots[s.key];
-      const lit = legal.has(s.key);
+      const R = rings[s.ring], open = spaceOpen(s.a, round), owner = shadeV[s.key];
+      const lit = legalV.has(s.key);
       // yours to take but worth nothing right now (its hover says so): placeable, without the lamp's glow
-      const squat = String(legal.get(s.key) || '').startsWith('squat:');
+      const squat = String(legalV.get(s.key) || '').startsWith('squat:');
       const quiet = lit && !squat && !!(idle && idle.has(s.key));
       const fresh = freshOf(s.key);
       const a0 = s.ang - s.half, a1 = s.ang + s.half;
@@ -949,21 +1061,45 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     for (const t of [1, 2, 3]) sizeTo(spaces.filter(x => x.ring === t).map(x => out.get(x.key)).filter(v => v.said.verb));
     return out;
   }, [panels, state.quadrants, round, rot, scale, fontsIn, shopSig, liveSig]); // eslint-disable-line react-hooks/exhaustive-deps
-  live.current = { tap, onPick, hover, anchorOf };
+  // the panels' layouts for the neighbouring turns, worked out in idle time: a spin's landing then finds them laid out
+  // (lag pass 2026-10-21: laying out every panel for an angle not seen yet was ~90ms of the landing's ~120ms render at 4×
+  // CPU). The same pure function and cache (panelLayout): nothing on screen changes.
+  useEffect(() => {
+    if (!panelLays || typeof requestIdleCallback !== 'function') return undefined;
+    const k = scale || 1;
+    const said = new Map();
+    const todo = [];
+    for (const d of [SEC, -SEC, 2 * SEC]) for (const s of spaces) todo.push([s, rot + d]);
+    let i = 0, h = null;
+    const run = deadline => {
+      while (i < todo.length && deadline.timeRemaining() > 2) {
+        const [s, r] = todo[i++];
+        try {
+          if (!said.has(s.key)) said.set(s.key, panelText(s.qid, s.a, round, state, meId));
+          panelLayout({ s, R: rings[s.ring], rot: r, k, said: said.get(s.key), taken: false });
+        } catch { /* only a warm-up */ }
+      }
+      h = i < todo.length ? requestIdleCallback(run, { timeout: 2000 }) : null;
+    };
+    h = requestIdleCallback(run, { timeout: 2000 });
+    return () => { if (h != null) cancelIdleCallback(h); };
+  }, [panelLays]); // eslint-disable-line react-hooks/exhaustive-deps
+  live.current = { tap, place, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
-  const flashKey = [...flash].join('|');
-  const legalKey = [...legal.entries()].map(([k, v]) => `${k}=${v}`).join('|');
+  const flashKey = [...flashV].join('|');
+  const legalKey = [...legalV.entries()].map(([k, v]) => `${k}=${v}`).join('|');
+  const ghostKey = ghostNow ? `${ghostNow.key}:${ghostNow.pid}:${ghostNow.squat ? 1 : 0}` : '';
   const idleKey = idle ? [...idle].join('|') : '';
   const built = useRef(new Map()); // key → { sig, el }: each space's last element and what it showed
   const sockets = useMemo(() => spaces.map(s => {
     const { key, q, a, ring: t, qid } = s;
     const [X, Y] = turned(s.xy[0], s.xy[1]);
-    const owner = state.slots[key];
-    const shadeOwner = interactionState.slots[key];
-    const joiners = (state.squats && state.squats[key]) || [];
+    const owner = slotsV[key];
+    const shadeOwner = shadeV[key];
+    const joiners = (squatsV && squatsV[key]) || [];
     const open = t <= round;
-    const opt = legal.get(key);
+    const opt = legalV.get(key);
     const squat = String(opt || '').startsWith('squat:');
     const quiet = !!(opt && !squat && idle && idle.has(key));
     const selected = pinnedKey === key || sent === key;
@@ -974,11 +1110,11 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     // everything this space shows, as one string: the same string, the same element (Space skips it)
     const crewIds = owner !== undefined ? [owner, ...joiners] : [];
     const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', shadeOwner ?? '', joiners.join(','), open ? 1 : 0, opt || '', quiet ? 1 : 0, selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
-      flash.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', said ? `${said.main || said.verb}/${said.second || ''}` : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
+      flashV.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', said ? `${said.main || said.verb}/${said.second || ''}` : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
       fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? `${scale}:${fontsIn}` : ''].join('|');
     const had = built.current.get(key);
     if (had && had.sig === sig) return <Space key={key} el={had.el} />;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', squat ? 'squat' : '', quiet ? 'idle' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', shadeOwner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', squat ? 'squat' : '', quiet ? 'idle' : '', flashV.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', shadeOwner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -997,8 +1133,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
         const crew = owner !== undefined ? [owner, ...joiners].map(id => ({ emoji: seatEmoji(state, id), pid: id, fresh: !!(fresh && fresh.pid === id), color: playerColor(id), name: state.players[id].name })) : [];
         face = (
           <FaceBox Face={Face} q={qid} action={a} ring={t} round={round} name={a.name} effect={pipEffect(qid, a, round)}
-            status={faceStatus({ legal: !!opt, owner: shadeOwner, open, fresh })} minions={crew} onPick={opt ? () => live.current.onPick(opt) : null}
-            px={1 / (scale || 1)} color={`var(--${qid})`} angle={(norm(s.ang + rot) + 360) % 360} flash={flash.has(key)} selected={selected} />
+            status={faceStatus({ legal: !!opt, owner: shadeOwner, open, fresh })} minions={crew} onPick={opt ? () => live.current.place(key, opt) : null}
+            px={1 / (scale || 1)} color={`var(--${qid})`} angle={(norm(s.ang + rot) + 360) % 360} flash={flashV.has(key)} selected={selected} />
         );
       }
     }
@@ -1008,7 +1144,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
         data-panel={lay ? `${lay.oneLines}.${lay.twoLines}.${lay.noteLines}${lay.tight ? ' tight' : ''}` : undefined}
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
         onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); }}
-        onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}
+        onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.place(key, opt); } }}
         onPointerEnter={e => { const h = live.current.hover; if (panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
         onPointerLeave={e => { const h = live.current.hover; if (panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
         onFocus={e => { const h = live.current.hover; if (h && keyboardLed() && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
@@ -1054,7 +1190,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     );
     built.current.set(key, { sig, el });
     return <Space key={key} el={el} />;
-  }), [state, interactionState, rot, legalKey, idleKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [state, interactionState, rot, legalKey, ghostKey, idleKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>
@@ -1063,6 +1199,10 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
           <defs>
             <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
             <filter id="ltGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" /></filter>
+            {/* the contest rim's follower mark: a pearly sheen and a soft halo, so it reads as followers and not as one
+                more cream resource mark on the band (Claude, under Cory's go-with-your-gut, 2026-10-21) */}
+            <linearGradient id="ltSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffffff" /><stop offset=".42" stopColor="#fff4dc" /><stop offset=".55" stopColor="#ffffff" /><stop offset=".72" stopColor="#ffe9bd" /><stop offset="1" stopColor="#e9c88a" /></linearGradient>
+            <filter id="ltSheenHalo" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="b" /><feFlood floodColor="#fff6e0" floodOpacity=".75" /><feComposite in2="b" operator="in" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
             <pattern id="ltHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.2)" strokeWidth="1" /></pattern>
           </defs>
           <circle cx={CX} cy={CY} r="200" fill="url(#ltPaper)" className="disk" />

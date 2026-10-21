@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant, defById } from '../../../engine/v4/index.js';
-import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn, plainLine } from '../../../v4/format.js';
+import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn, plainLine, RING_NOTE } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor, useIdle } from '../../../engine/v4/core.js';
 
@@ -170,7 +170,9 @@ describe('v4 format helpers', () => {
         const n = applyMove(s, chooseBotMove(s, () => 0.4), { effects: true });
         const line = n.log.slice(s.log.length).map(l => l.match(/^(\w+) swapped (\w+)'s (.+) and Shop's (.+)\.$/)).find(Boolean);
         // the game's last move also tells the game-end scoring ("you +6 followers (Tycoon) · swapped …"): judge the rest
-        if (line && !n.over) {
+        // (Even Swap may also trade two shop members' places, 'swapped Shop's X and Shop's Y': no member left a cult, so
+        // there's nothing to name here; bots pick it since their swaps are scored for real, 2026-10-21. todo.md tracks its story line.)
+        if (line && !n.over && line[2] !== 'Shop') {
           const [, actorName, ownerName, out, inc] = line;
           const actor = n.players.findIndex(p => p.name === actorName), owner = n.players.findIndex(p => p.name === ownerName);
           for (const me of [actor, (actor + 1) % 3]) {
@@ -361,6 +363,27 @@ describe('v4 format helpers', () => {
     expect(promptFor(s, false).text).not.toMatch(/^Your|^Extra/);
   });
 
+  it('your first placement of each round says which rings are open; later placements and rivals\' turns do not (first play)', () => {
+    const seen = {};
+    let s = createGame({ seats, seed: 7 });
+    while (!s.over) {
+      const pend = s.pending;
+      if (pend && pend.kind === 'place' && !(currentTurn(s) || {}).again) {
+        const pr = promptFor(s, pend.player === 0);
+        const first = !Object.values(s.slots).includes(pend.player);
+        if (pend.player === 0 && !/use/.test(pr.sub || '')) {
+          expect(pr.text).toBe('Place a minion on a glowing space');
+          if (first) { expect(pr.sub).toBe(RING_NOTE[s.round]); seen[s.round] = true; } else expect(pr.sub).toBeUndefined();
+        }
+        if (pend.player !== 0) expect(pr.sub).toBeUndefined();
+      }
+      s = applyMove(s, chooseBotMove(s, () => 0.4));
+    }
+    expect(Object.keys(seen).length).toBeGreaterThan(0);
+    expect(RING_NOTE[1]).toMatch(/inner rings open in rounds II and III/);
+    for (const r of [1, 2, 3]) expect(RING_NOTE[r].length).toBeLessThanOrEqual(48); // one short line at 900px
+  });
+
   it('an extra turn from a card is told as one, naming the card or space that gave it', () => {
     let found = null;
     for (let seed = 1; seed < 40 && !found; seed++) {
@@ -388,8 +411,8 @@ describe('v4 format helpers', () => {
   it('a long question in the headline says what it asks, never "Choose below" (RC1 round 3 #55)', () => {
     const s = createGame({ seats, seed: 3 });
     const at = prompt => ({ ...s, pending: { kind: 'choose', player: 1, prompt, options: [{ id: 'a', label: 'Pay 4' }, { id: 'b', label: 'Let it go' }] } });
-    expect(promptFor(at('Cy holds your Magnate to ransom: pay 4 to keep it?'), true).text).toBe('Cy holds Magnate: keep it for 4?');
-    expect(promptFor(at('Cy holds your Magnate to ransom: pay 4 (2 red, 2 gold) to keep it?'), true).text).toBe('Cy holds Magnate: keep it for 4 (2 red, 2 gold)?');
+    expect(promptFor(at('Shake Down: pay Cy 4 to keep Magnate?'), true).text).toBe('Cy holds Magnate: keep it for 4?');
+    expect(promptFor(at('Shake Down: pay Cy 4 (2 red, 2 gold) to keep Magnate?'), true).text).toBe('Cy holds Magnate: keep it for 4 (2 red, 2 gold)?');
     expect(promptFor(at('Bo: take 6 more from the release, in any colors'), true).text).toBe('take 6 more from the release, in any colors');
   });
 

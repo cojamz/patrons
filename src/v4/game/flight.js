@@ -2,7 +2,7 @@
 // travels from its leader to the space it took, and at round end the minions fly home. All use fixed-position
 // ghosts + Web Animations.
 import { reducedMotion } from './Tick.jsx';
-import { MO } from '../motion.js';
+import { MO, streamGap } from '../motion.js';
 
 export const motionOK = () => !reducedMotion() && typeof document !== 'undefined' && !!document.body.animate;
 
@@ -163,11 +163,17 @@ export function relative(el, frames, opts) {
   anim.addEventListener('cancel', off, { once: true });
   return track(anim);
 }
-export function landAll() { for (const a of [...live]) { try { a.finish(); } catch { try { a.cancel(); } catch { /* gone */ } } } live.clear(); for (const token of [...countedMotions]) { if (token.finish) token.finish(); countedMotions.delete(token); } motionChanged(); }
+// motions a skip landed at once (landAll): their finish isn't a landing on screen, so nothing sounds for it
+const forced = new WeakSet();
+/** Whether `anim` finished because a skip landed it, not by playing out. */
+export const landedEarly = anim => !!anim && forced.has(anim);
+export function landAll() { for (const a of [...live]) { forced.add(a); try { a.finish(); } catch { try { a.cancel(); } catch { /* gone */ } } } live.clear(); for (const token of [...countedMotions]) { if (token.finish) token.finish(); countedMotions.delete(token); } motionChanged(); }
 
 export function flyCards(root, snap, moves) {
   if (!root || !motionOK()) return;
   const cells = [...root.querySelectorAll(SHOP_CARDS)];
+  // every place is measured first, then every ghost goes in: a read after an append laid the page out again per card
+  const plans = [];
   for (const { uid, to } of moves) {
     const s = snap.get(uid);
     const cell = s && (s.rect ? true : (cells[s.index] || cells[cells.length - 1]));
@@ -183,7 +189,10 @@ export function flyCards(root, snap, moves) {
     const chip = root.querySelector(`.lt-seat[data-pid="${to}"] [data-uids~="${uid}"]`) || root.querySelector(`.lt-seat[data-pid="${to}"] [data-uid="${uid}"]`);
     const land = chip && visibleEl(chip) ? chip : target;
     const lb = land.getBoundingClientRect();
-    ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: MO.cardFly, scaleTo: 0.28, hold: true });
+    plans.push({ s, a, b: lb.width ? lb : b, chip });
+  }
+  for (const { s, a, b, chip } of plans) {
+    ghostFly(s.html, 'flight', a, b, { duration: MO.cardFly, scaleTo: 0.28, hold: true });
     if (chip && chip.animate) {
       chip.animate([
         { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' },
@@ -256,22 +265,45 @@ export function snapshotMinions(root) {
   });
   return snap;
 }
-/** At round end the wheel's minions fly home to their leaders, one after another. */
-export function flyMinionsHome(root, snap) {
+/** At round end the wheel's minions fly home to their leaders, one after another. `flownAt` (performance.now): their
+ *  ghosts already left then (the round card's press, before the new round had rendered), so only the seats' columns are
+ *  timed here, to the same landings. */
+export function flyMinionsHome(root, snap, { flownAt = null } = {}) {
   if (!root || !motionOK() || !snap || !snap.length) return 0;
+  const since = flownAt != null ? Math.max(0, performance.now() - flownAt) : 0;
   let n = 0;
-  snap.forEach((m, k) => {
+  const landsAt = {}; // pid → when each of its minions lands (ms from now)
+  // every home is read first, then every ghost is added (lag pass 2026-10-21: a read after each added ghost forced a
+  // fresh layout per minion, ~100ms of the round's first commit at 4x CPU); each seat's home is read once
+  const homes = new Map(); // pid → its rect, or null
+  const homeOf = pid => {
+    if (homes.has(pid)) return homes.get(pid);
     // home is the seat's column of minions still to place (where the next placement leaves from), else the leader
-    const col = root.querySelector(`.lt-cult-seat[data-seat="${m.pid}"] .cs-minions`);
-    const home = (col && visible(col) && col) || playerAnchor(root, m.pid);
-    if (!home) return;
-    const h = home.getBoundingClientRect();
-    if (!h.width) return;
+    const col = root.querySelector(`.lt-cult-seat[data-seat="${pid}"] .cs-minions`);
+    const home = (col && visible(col) && col) || playerAnchor(root, pid);
+    const h = home ? home.getBoundingClientRect() : null;
+    homes.set(pid, h && h.width ? h : null);
+    return homes.get(pid);
+  };
+  const flights = snap.map((m, k) => ({ m, k, h: homeOf(m.pid) }));
+  for (const { m, k, h } of flights) {
+    if (!h) continue;
+    if (flownAt != null) { n++; (landsAt[m.pid] ||= []).push(Math.max(0, k * MO.minionsHomeStagger + MO.minionsHome - since)); continue; }
     const b = { left: h.left + h.width / 2 - m.rect.width / 2, top: h.top + h.height / 2 - m.rect.height / 2, width: m.rect.width, height: m.rect.height };
     // (staggered by the animation's own delay, not a timer per minion: they leave on the compositor's clock)
     ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: MO.minionsHome, scaleTo: 0.8, fadeTo: 0.2, arc: 40, delay: k * MO.minionsHomeStagger });
     n++;
-  });
+    (landsAt[m.pid] ||= []).push(k * MO.minionsHomeStagger + MO.minionsHome);
+  }
+  // (round-end smoothing) a seat's column fills as its minions land, one by one, never before they've left the wheel:
+  // each standing minion waits unseen until one lands; a column's extra minion (a round with more) shows with its last
+  for (const [pid, times] of Object.entries(landsAt)) {
+    const col = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${pid}"] .cs-minions [data-minion]`)];
+    col.forEach((el, i) => {
+      const at = times[Math.min(i, times.length - 1)];
+      if (el.animate && at > 0) track(el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.9 }, { opacity: 1 }], { duration: Math.round(at * 1.04) }));
+    });
+  }
   return n;
 }
 
@@ -406,7 +438,9 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
     if (!ok || !a || !b) continue;
     const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
     if (!ar.width || !br.width) continue;
-    const n = Math.min(m.n, MO.pieceMax), per = m.n / n;
+    // every unit of a resource flies (12 coins as 12), its gap tightened so the whole stream leaves within streamSpread;
+    // followers keep their cap
+    const n = m.what === 'res' ? m.n : Math.min(m.n, MO.pieceMax), per = m.n / n, gap = m.what === 'res' ? streamGap(n) : MO.pieceStagger;
     const html = pieceHtml(root, m);
     // stacks show what they held before this move, then count each piece out (a payment) or in (a gain)
     const fromStack = m.from.kind === 'stack' ? a : null, toStack = m.to.kind === 'stack' ? b : null;
@@ -415,11 +449,11 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
     const into = toStack ? held(toStack, startOf(m.to)) : null;
     if (out) out.left += n;
     if (into) into.left += n;
-    if (m.to.kind === 'total') arrivals.set(b, { at: performance.now() + t + MO.pieceFly, span: (n - 1) * MO.pieceStagger });
+    if (m.to.kind === 'total') arrivals.set(b, { at: performance.now() + t + MO.pieceFly, span: (n - 1) * gap });
     const size = m.what === 'fol' ? 20 : 18;
     for (let k = 0; k < n; k++) {
       const share = Math.round(per * (k + 1)) - Math.round(per * k);
-      const at = t + k * MO.pieceStagger;
+      const at = t + Math.round(k * gap);
       const go = () => {
         const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
         const jitter = (k % 3 - 1) * 4;
@@ -449,7 +483,7 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
 //      an inner one rises and falls) · line: a take (a steal), straight, a snatch · drop: a payment, lifts 6px then falls
 //      into what it pays, shrinking and fading (it's spent) · cross: a swap, the arc bowing the other way.
 // `turnTo`: a piece that changes color on its way (a steal that arrives as magenta) turns at its midpoint.
-export function flyPath(html, className, a, b, { path = 'arc', duration = 320, label = '', trail = 0, trailGap = 30, turnTo = null, fade = false } = {}) {
+export function flyPath(html, className, a, b, { path = 'arc', duration = 320, label = '', trail = 0, trailGap = 30, turnTo = null, fade = false, full = false } = {}) {
   if (typeof document === 'undefined' || !document.body.animate) return null;
   const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
   const dist = Math.hypot(dx, dy);
@@ -477,7 +511,7 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
     if (fade && path !== 'drop') track(outer.animate([{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], { duration, delay, fill: 'both' }));
     if (h) track(inner.animate([{ translate: '0 0' }, { translate: `0 ${-h}px`, offset: 0.5, easing: 'ease-in' }, { translate: '0 0' }], { duration, delay, easing: 'ease-out', fill: 'both' }));
     if (k === 0 && label) { const n = inner.querySelector('.bundle-n'); if (n) track(n.animate([{ opacity: 1 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], { duration, delay, fill: 'both' })); }
-    if (turnTo && k === 0) {
+    if (turnTo && (k === 0 || full)) {
       const tint = document.createElement('div');
       tint.className = 'path-turn';
       tint.innerHTML = turnTo;
@@ -494,7 +528,9 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
     return anim;
   };
   const lead = one(0, 1, 1, 0);
-  for (let k = 1; k <= trail; k++) one(k, 0.7, k === 1 ? 0.6 : 0.3, k * trailGap);
+  // a stream (full): every follower in the trail is a whole piece of its own (12 coins fly as 12); else a bundle's
+  // fading echo
+  for (let k = 1; k <= trail; k++) { if (full) one(k, 1, 1, Math.round(k * trailGap)); else one(k, 0.7, k === 1 ? 0.6 : 0.3, k * trailGap); }
   if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
   return lead;
 }

@@ -85,7 +85,7 @@ try {
     if (on.some(x => x.id !== 'benders.bigspender')) fail(`other members are lit too: ${JSON.stringify(on)}`, 'a1');
     const card = await hoverFig(page, 'benders.bigspender');
     await page.screenshot({ path: `${SHOTS}/a1-big-spender-card.png` });
-    if (!card || !/buying again/i.test(card.ask) || !/^Skip/.test(card.skip) || card.skipOption !== 'pass') fail(`Big Spender's card during its second buy: ${JSON.stringify(card)}`, 'a1');
+    if (!card || !/recruiting again/i.test(card.ask) || !/^Skip/.test(card.skip) || card.skipOption !== 'pass') fail(`Big Spender's card during its second buy: ${JSON.stringify(card)}`, 'a1');
     else {
       if (!(await pressSkip(page, 'a1'))) fail('pressing Skip on Big Spender\'s card did nothing', 'a1');
       const s = await saved(page);

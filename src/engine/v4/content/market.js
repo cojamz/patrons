@@ -151,7 +151,7 @@ const market = {
   // +1 blue (the economy call). Names are working names. A copy (Echo) does the action itself: the doing is the value.
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 shop members to the bottom of the pile, then refill. +1 blue × round. +1 blue.', copyDoesIt: true,
+      key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 members in the shop to the bottom of the pile, then refill. +2 blue in round I, +3 in round II, +4 in round III.', copyDoesIt: true,
       estimate: ctx => ctx.state.round + 1,
       byRound: { lines: ['+2 blue', '+3 blue', '+4 blue'] },
       resolve(ctx, p) {
@@ -174,7 +174,7 @@ const market = {
       },
     },
     {
-      key: 'showroom', ring: 1, name: 'Peek', text: 'Look at the top 4 of the pile and put them back in any order. This turn you may recruit one of them as your buy. +1 blue.', copyDoesIt: true,
+      key: 'showroom', ring: 1, name: 'Peek', text: 'Look at the top 4 of the pile and put them back in any order. This turn your recruit may be one of them. +1 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 1 + Math.max(0, ...ctx.state.pile.slice(0, 4).map(u => ctx.card(u)).filter(c => ctx.payChoices(p, c.uid, {}).length).map(botWorth)) * 0.3,
       resolve(ctx, p) {
         ctx.gain(p, B, 1, { fromAction: true });
@@ -185,9 +185,9 @@ const market = {
       },
     },
     {
-      key: 'clearance', ring: 2, name: 'Buy Twice', text: 'This turn you buy twice. +1 blue.', copyDoesIt: true,
+      key: 'clearance', ring: 2, name: 'Recruit Twice', text: 'Recruit twice this turn. +1 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 1 + Math.min(10, Math.max(0, totalRes(p) - 2)) * 0.4,
-      resolve(ctx, p) { ctx.gain(p, B, 1, { fromAction: true }); extraBuys(ctx, p, 1); ctx.log(`${p.name} buys twice this turn.`); },
+      resolve(ctx, p) { ctx.gain(p, B, 1, { fromAction: true }); extraBuys(ctx, p, 1); ctx.log(`${p.name} recruits twice this turn.`); },
     },
     {
       key: 'pricecheck', ring: 2, name: 'Bury', text: 'Send a shop member to the bottom of the pile, then refill. Gain blue equal to half its cost, rounded down. +1 blue.', copyDoesIt: true,
@@ -202,9 +202,9 @@ const market = {
       },
     },
     {
-      key: 'spree', ring: 3, name: 'Spree', text: 'This turn you buy 3 times. +2 blue. +1 blue.', copyDoesIt: true,
+      key: 'spree', ring: 3, name: 'Spree', text: 'Recruit 3 times this turn. +3 blue.', copyDoesIt: true,
       estimate: (ctx, p) => 3 + Math.min(10, Math.max(0, totalRes(p) - 3)) * 0.8,
-      resolve(ctx, p) { ctx.gain(p, B, 3, { fromAction: true }); extraBuys(ctx, p, 2); ctx.log(`${p.name} goes on a spree: 3 buys this turn.`); },
+      resolve(ctx, p) { ctx.gain(p, B, 3, { fromAction: true }); extraBuys(ctx, p, 2); ctx.log(`${p.name} goes on a spree: 3 recruits this turn.`); },
     },
   ],
 
