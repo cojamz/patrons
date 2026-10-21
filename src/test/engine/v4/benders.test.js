@@ -41,7 +41,7 @@ describe('guest members join the deck', () => {
     const has = s => Object.values(s.cards).some(c => c.def === 'benders.squatter');
     expect(has(on)).toBe(true);
     expect(has(off)).toBe(false);
-    expect(Object.keys(on.cards).length - Object.keys(off.cards).length).toBe(7);
+    expect(Object.keys(on.cards).length - Object.keys(off.cards).length).toBe(9); // 7 guests since Launderer and Tiebreaker (Oct 21)
   });
   it('a bender whose color is not on the table is paid in any colors', () => {
     // Squatter leans Magenta; the default table has no magenta
@@ -52,9 +52,9 @@ describe('guest members join the deck', () => {
     expect(R(t).red + R(t).blue).toBe(10 - cost('benders.squatter'));
   });
   it('a guest is colorless even when the sphere it leans to is on the table: no sphere counts it, and its whole cost is any colors', () => {
-    // Front-runner leans Purple (printed 4 colored + 0 any): on a table with Purple, it's still nobody's color
+    // Front-runner leans Purple (printed 5 colored + 0 any): on a table with Purple, it's still nobody's color
     const Q = ['gold', 'red', 'purple', 'green'];
-    expect(defById('benders.frontrunner')).toMatchObject({ quadrant: 'guest', lean: 'purple', s: 0, w: 4 });
+    expect(defById('benders.frontrunner')).toMatchObject({ quadrant: 'guest', lean: 'purple', s: 0, w: 5 });
     const s = scene({ quadrants: Q, res: [{ red: 20 }], shop: ['benders.frontrunner'], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0;
     const u = uidOf(s, 'benders.frontrunner', 'shop');
