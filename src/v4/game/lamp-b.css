@@ -157,6 +157,7 @@
 .lt-yd{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(42,31,23,.28);font-size:13px;color:var(--paper-ink);display:flex;flex-direction:column;gap:5px}
 .lt-yd-row{display:flex;align-items:baseline;gap:6px}
 .lt-yd-row .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-3);width:66px;flex:none;line-height:1.5}
+.lt-yd-row .lt-swept-note{font-size:11px}
 .lt-yd-row .v{min-width:0;flex:1}
 .lt-yd .youd-get{border:0;padding:0;margin:0;color:var(--paper-ink)}
 .lt-yd .youd-get b{display:none}

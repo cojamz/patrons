@@ -145,7 +145,7 @@ try {
     await page.waitForFunction(() => [...document.querySelectorAll('.lt-cult-seat .cs-setup [data-option], .prompt.choice.setup')].some(e => e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden') || !!document.querySelector('.app.game[data-phase="place"]'), null, { timeout: 30000 });
     await page.waitForTimeout(300);
     const r = await page.evaluate(() => {
-      const cards = [...document.querySelectorAll('.lt-shop .card')];
+      const cards = [...document.querySelectorAll('.lt-shop .card:not(.lt-rate)')]; // members only: follower buys share the grid since v0.8.2
       const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden' || e.closest('[aria-hidden="true"]')) return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 && b.left >= -0.5 && b.top >= -0.5 && b.right <= innerWidth + 0.5 && b.bottom <= innerHeight + 0.5; };
       return { n: cards.length, shown: cards.filter(vis).length, named: cards.filter(c => (c.querySelector('.nm') || {}).textContent).length };
     });
