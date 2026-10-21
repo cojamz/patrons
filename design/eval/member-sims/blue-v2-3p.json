@@ -1,0 +1,890 @@
+{
+ "mode": "sweep",
+ "games": 300,
+ "seats": 3,
+ "table": [
+  "market",
+  "red",
+  "echo",
+  "thieves"
+ ],
+ "cards": [
+  "market.connoisseur",
+  "market.patroness",
+  "market.makeover",
+  "blue.regular",
+  "market.critic",
+  "market.doorman",
+  "market.plusone"
+ ],
+ "round": 2,
+ "freeN": 0,
+ "rollouts": 2,
+ "think": 3,
+ "deltas": [
+  -4,
+  -2,
+  0,
+  2,
+  4
+ ],
+ "printed": {
+  "market.connoisseur": 4,
+  "market.patroness": 4,
+  "market.makeover": 3,
+  "blue.regular": 3,
+  "market.critic": 3,
+  "market.doorman": 3,
+  "market.plusone": 2
+ },
+ "secs": 5267.553,
+ "rows": [
+  {
+   "id": "market.connoisseur",
+   "name": "Connoisseur",
+   "printed": 4,
+   "table": "market,red,echo",
+   "fair": 5.439777210489673,
+   "slope": -1.4363333333333332,
+   "at0": 7.8133333333333335,
+   "interp": 4.698664027709055,
+   "interpCens": "",
+   "cens": "",
+   "lo": 4.127566931450426,
+   "hi": 6.912862584236742,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      7.365,
+      3.037221260640547
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.14,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.506666666666666,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      6.595,
+      3.0508982614022018
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.12,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.48888888888889,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.013333333333333
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      1.1766666666666667,
+      2.914654284622845
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.03666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.122222222222218,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.026666666666667
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      -2.191666666666667,
+      2.824154401649326
+     ],
+     "forcedBuy": 0.99,
+     "forcedWin": -0.023333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.111111111111109,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.047138047138047
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -2.605,
+      2.953178739573798
+     ],
+     "forcedBuy": 0.9866666666666667,
+     "forcedWin": -0.03,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.96888888888889,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.097972972972973
+    }
+   ]
+  },
+  {
+   "id": "market.patroness",
+   "name": "Patroness",
+   "printed": 4,
+   "table": "market,red,echo",
+   "fair": 8.564422582776595,
+   "slope": -1.1350833333333334,
+   "at0": 9.721333333333334,
+   "interp": 8,
+   "interpCens": "≥",
+   "cens": "",
+   "lo": 6.998095553531506,
+   "hi": 10.694543246291316,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      9.785,
+      2.6733950753065576
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.23,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.076666666666664,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      7.0616666666666665,
+      2.5913708431998406
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.18666666666666668,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.926666666666662,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.013333333333333
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      6.076666666666667,
+      2.756063401181852
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.1,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.638888888888888,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.026666666666667
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      2.033333333333333,
+      2.7621475340083466
+     ],
+     "forcedBuy": 0.99,
+     "forcedWin": 0.023333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.866666666666676,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.047138047138047
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      0.9483333333333334,
+      2.4886865364903246
+     ],
+     "forcedBuy": 0.9866666666666667,
+     "forcedWin": 0.056666666666666664,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.636666666666663,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.097972972972973
+    }
+   ]
+  },
+  {
+   "id": "market.makeover",
+   "name": "Makeover",
+   "printed": 3,
+   "table": "market,red,echo",
+   "fair": 2.422793813580349,
+   "slope": -1.228760162601626,
+   "at0": 2.9770325203252033,
+   "interp": 2.049382716049383,
+   "interpCens": "",
+   "cens": "",
+   "lo": 0.7954956994114988,
+   "hi": 3.902552047218793,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      3.4583333333333335,
+      3.0917145138385442
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.043333333333333335,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.114444444444443,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 1,
+     "n": 300,
+     "forced": [
+      1.9833333333333334,
+      3.0272330031146897
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.03666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.008888888888892,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 3,
+     "n": 300,
+     "forced": [
+      -1.7966666666666666,
+      2.5640274134601406
+     ],
+     "forcedBuy": 1,
+     "forcedWin": -0.016666666666666666,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.825555555555557,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.013333333333333
+    },
+    {
+     "P": 5,
+     "n": 300,
+     "forced": [
+      -3.381666666666667,
+      2.603925134421256
+     ],
+     "forcedBuy": 1,
+     "forcedWin": -0.05333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.698888888888892,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.026666666666667
+    },
+    {
+     "P": 7,
+     "n": 300,
+     "forced": [
+      -5.038333333333333,
+      2.6650110060087737
+     ],
+     "forcedBuy": 0.9966666666666667,
+     "forcedWin": -0.08333333333333333,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.696666666666669,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.0334448160535117
+    }
+   ]
+  },
+  {
+   "id": "blue.regular",
+   "name": "Blue Regular",
+   "printed": 3,
+   "table": "blue,red,echo",
+   "fair": 3.842293488824101,
+   "slope": -1.045731707317073,
+   "at0": 4.0180081300813,
+   "interp": 3.8466453674121404,
+   "interpCens": "",
+   "cens": "",
+   "lo": 2.9640829155816593,
+   "hi": 4.767797496881162,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      4.085,
+      1.9795525392502655
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.08333333333333333,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 14.65333333333333,
+     "mppB": 13.951111111111107,
+     "boughtRound": 2
+    },
+    {
+     "P": 1,
+     "n": 300,
+     "forced": [
+      2.89,
+      1.6726142896028722
+     ],
+     "forcedBuy": 0.9933333333333333,
+     "forcedWin": 0.06333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 14.242222222222221,
+     "mppB": 13.951111111111107,
+     "boughtRound": 2.110738255033557
+    },
+    {
+     "P": 3,
+     "n": 300,
+     "forced": [
+      0.8833333333333333,
+      1.590123583491756
+     ],
+     "forcedBuy": 0.9933333333333333,
+     "forcedWin": 0.016666666666666666,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 14.294444444444432,
+     "mppB": 13.951111111111107,
+     "boughtRound": 2.1241610738255035
+    },
+    {
+     "P": 5,
+     "n": 300,
+     "forced": [
+      -1.2033333333333334,
+      1.4240187208110586
+     ],
+     "forcedBuy": 0.95,
+     "forcedWin": -0.03,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 14.168888888888896,
+     "mppB": 13.951111111111107,
+     "boughtRound": 2.3263157894736843
+    },
+    {
+     "P": 7,
+     "n": 300,
+     "forced": [
+      -3.296666666666667,
+      1.319751343740589
+     ],
+     "forcedBuy": 0.9433333333333334,
+     "forcedWin": -0.08,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 14.08333333333334,
+     "mppB": 13.951111111111107,
+     "boughtRound": 2.385159010600707
+    }
+   ]
+  },
+  {
+   "id": "market.critic",
+   "name": "Critic",
+   "printed": 3,
+   "table": "market,red,echo",
+   "fair": 5.740326496612115,
+   "slope": -1.0003963414634147,
+   "at0": 5.74260162601626,
+   "interp": 6.106768350810295,
+   "interpCens": "",
+   "cens": "",
+   "lo": 3.976166155941437,
+   "hi": 8.100102578614127,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      6.261666666666667,
+      2.7379470185963517
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.10666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.215555555555554,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 1,
+     "n": 300,
+     "forced": [
+      4.555,
+      2.8104854057078406
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.08,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.080000000000005,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 3,
+     "n": 300,
+     "forced": [
+      1.5166666666666666,
+      2.5006862484361765
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.04,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.664444444444442,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.013333333333333
+    },
+    {
+     "P": 5,
+     "n": 300,
+     "forced": [
+      1.935,
+      2.808512411623463
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.013333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.776666666666669,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.026666666666667
+    },
+    {
+     "P": 7,
+     "n": 300,
+     "forced": [
+      -1.5616666666666668,
+      2.8541115238504604
+     ],
+     "forcedBuy": 0.9966666666666667,
+     "forcedWin": -0.02,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.581111111111108,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.0334448160535117
+    }
+   ]
+  },
+  {
+   "id": "market.doorman",
+   "name": "Doorman",
+   "printed": 3,
+   "table": "market,red,echo",
+   "fair": 4.213909211901557,
+   "slope": -1.3515345528455285,
+   "at0": 5.6952439024390245,
+   "interp": 3.473381294964029,
+   "interpCens": "",
+   "cens": "",
+   "lo": 2.762652303852343,
+   "hi": 5.627091288997766,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      6.46,
+      2.9258396228577706
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.14333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.947777777777778,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 1,
+     "n": 300,
+     "forced": [
+      4.415,
+      3.0426367740527756
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.09,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.105555555555565,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 3,
+     "n": 300,
+     "forced": [
+      0.5483333333333333,
+      2.762344305309833
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.03666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.718888888888884,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.013333333333333
+    },
+    {
+     "P": 5,
+     "n": 300,
+     "forced": [
+      -1.7683333333333333,
+      2.559907227796315
+     ],
+     "forcedBuy": 1,
+     "forcedWin": -0.006666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.72666666666667,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.026666666666667
+    },
+    {
+     "P": 7,
+     "n": 300,
+     "forced": [
+      -2.8033333333333332,
+      2.7927878812708475
+     ],
+     "forcedBuy": 0.9966666666666667,
+     "forcedWin": -0.04,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.747777777777777,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.0334448160535117
+    }
+   ]
+  },
+  {
+   "id": "market.plusone",
+   "name": "Plus-One",
+   "printed": 2,
+   "table": "market,red,echo",
+   "fair": 5.757938885560216,
+   "slope": -1.1126666666666667,
+   "at0": 6.406666666666666,
+   "interp": 6.3587674247982395,
+   "interpCens": "",
+   "cens": "",
+   "lo": 4.21241352431063,
+   "hi": 7.628401626524866,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      6.13,
+      2.4919367043181
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.11666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.631111111111107,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2
+    },
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      3.3516666666666666,
+      2.932098756054828
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.06333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.502222222222224,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.013333333333333
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      3.2116666666666664,
+      3.004696575822766
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.06666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 12.352222222222212,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.026666666666667
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      0.815,
+      2.9250707746099303
+     ],
+     "forcedBuy": 0.99,
+     "forcedWin": 0.02666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.96666666666667,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.047138047138047
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -3.7283333333333335,
+      2.756699447058404
+     ],
+     "forcedBuy": 0.9866666666666667,
+     "forcedWin": -0.07333333333333333,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 11.90555555555556,
+     "mppB": 11.917777777777774,
+     "boughtRound": 2.097972972972973
+    }
+   ]
+  }
+ ]
+}
