@@ -9,7 +9,7 @@ import { startEffects, stopEffects, abandonEffects, underCause } from './effects
 
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
-export const SHOP_SIZE = 8;
+export const SHOP_SIZE = 7;
 // Any colors, no stock limit. The three rounds remain the game clock.
 export const TIERS = [
   { key: 'small', cost: 1, get: 1, colors: 1, label: '1 of anything' },

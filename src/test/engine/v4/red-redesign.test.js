@@ -6,7 +6,7 @@ import { table, uidIn, useCosts } from './cards-helpers-b.js';
 import { actionName, move, take } from './helpers.js';
 
 const Q = ['gold', 'red', 'trading', 'echo'];
-const ROW = ['gold.banker', 'red.twins', 'red.intern', 'red.volunteer', 'gold.tycoon', 'echo.evergreen', 'echo.muse', 'echo.chronicler'];
+const ROW = ['gold.banker', 'red.twins', 'red.intern', 'red.volunteer', 'gold.tycoon', 'echo.evergreen', 'echo.muse']; // one full row (SHOP_SIZE)
 useCosts({
   'red.intern': [1, 0], 'red.twins': [1, 1], 'red.volunteer': [2, 2], 'gold.banker': [2, 2],
   'gold.tycoon': [4, 2], 'echo.evergreen': [1, 3], 'echo.muse': [2, 2], 'echo.chronicler': [2, 3],
@@ -92,7 +92,7 @@ describe('locked Red action progression', () => {
     expect([s.players[0].res.gold, s.players[0].res.green, s.recruits]).toEqual([0, 0, 0]);
   });
 
-  it('shop/cult swaps are atomic, retain eight cards and count only the actor acquisition', () => {
+  it('shop/cult swaps are atomic, retain a full row and count only the actor acquisition', () => {
     let s = take(table(Q, { members: [['red.volunteer', 'red.recruiter', 'red.proselytizer']], shop: ROW.map(d => d === 'red.volunteer' ? 'red.bigfamily' : d) }), 'red.evenswap');
     const a = uidIn(s, 'red.volunteer', 0), b = uidIn(s, 'echo.evergreen', 'shop');
     const before = remaining(s).sort((x, y) => x - y), pile = [...s.pile];
