@@ -366,6 +366,7 @@ const market = {
       },
     }),
     // Claude's fill-in counters, Oct 21, not approved
+    // Cory, Oct 21: no ("they can just pay such that they don't lose blue")
     m('jealousex', 'Jealous Ex', 1, 2, 'Whenever a rival recruits a blue member, they lose 1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) {
         if (by === owner || !isBlue(ctx.defOf(rec)) || !(by.res[B] > 0)) return;
