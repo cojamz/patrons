@@ -2,7 +2,7 @@
 # Fair-price sweeps for Blue v2 (Cory's Oct 21 calls: Connoisseur +1, Patroness on bottom-of-pile, Makeover, Regular,
 # Critic; Doorman counting swaps; Plus-One worth 2). Normal bots, round II fork. Commits each seat count.
 cd "$(dirname "$0")/../../.."
-CARDS=connoisseur,patroness,makeover,regular,critic,doorman,plusone
+CARDS=connoisseur,patroness,makeover,regular,critic,doorman,plusone,trendsetter
 for n in 2 3 4; do
   o=design/eval/member-sims/blue-v2-${n}p
   [ -s $o.json ] && continue

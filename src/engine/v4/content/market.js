@@ -329,14 +329,14 @@ const market = {
       onGameEnd: (ctx, owner) => 2 * rivalsBigger(ctx, owner),
     }),
     // concepts, Oct 21, not approved (design/eval/member-concepts-2026-10-21.md): prices are sim starting points
-    m('shopaholic', 'Shopaholic', 3, 5, 'You can always buy twice.', { buyTwice: true }),
+    m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true }),
     m('windowdresser', 'Window Dresser', 1, 2, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', {
       onRecruited(ctx, owner) {
         churnStep(ctx, owner, { left: Math.min(3, ctx.state.shop.length) });
         ctx.defer(owner, `${Q}.churnRefill`);
       },
     }),
-    m('plusone', 'Plus-One', 1, 1, 'When recruited: buy again this turn.', { f: 2,
+    m('plusone', 'Plus-One', 1, 1, 'When recruited: recruit again this turn.', { f: 2,
       onRecruited(ctx, owner) { extraBuys(ctx, owner, 1); },
     }),
     // Cory, Oct 21: "any time a player recruits more than once in a turn", swaps and takes included (they all reach
@@ -356,8 +356,17 @@ const market = {
     m('makeover', 'Makeover', 1, 2, 'When recruited: send the whole shop to the bottom of the pile, then refill.', {
       onRecruited(ctx) { sweepRow(ctx); },
     }),
+    // Cory's, Oct 21: "when you buy followers +1 blue"; his Oct 21 definition makes buying followers a recruit
     m('regular', 'Regular', 1, 1, 'Whenever you buy followers, +1 blue.', {
       onBuyFollowers(ctx, owner, card, by) { if (by.id === owner.id && ctx.gain(owner, B, 1)) ctx.log(`${owner.name}'s Regular: +1 blue.`); },
+    }),
+    // Cory's pick for Blue's 12th, Oct 21 ("trendsetter is good!")
+    m('trendsetter', 'Trendsetter', 1, 2, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', {
+      onAnyRecruit(ctx, owner, card, by, rec) {
+        if (by !== owner || rec.uid === card.uid || !ctx.state.shop.length) return;
+        churnStep(ctx, owner, { left: 1 });
+        ctx.defer(owner, `${Q}.churnRefill`);
+      },
     }),
     // Cory's yes, Oct 21
     m('critic', 'Critic', 1, 2, 'Whenever a rival recruits a blue member, +1 follower.', {
