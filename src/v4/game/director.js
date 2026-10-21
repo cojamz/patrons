@@ -897,7 +897,7 @@ export const noteTable = root => { void root; };
  * `minionsBefore` the wheel's minions as they were (snapshotMinions), `mine` the viewer's seats. Returns the plan.
  * A chain may start while the last one's tail is still landing (the same player's next step shows at its handoff).
  */
-export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [], chips = null } = {}) {
+export function playChain(root, before, state, { snap = null, minionsBefore = null, homeFlownAt = null, mine = [], chips = null } = {}) {
   // the new row's deal, noted by useDeal in this same commit (it lays out first): this chain says when it starts
   const deals = roundDeals.splice(0);
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
@@ -1011,7 +1011,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           }
           return;
         }
-        case 'home': if (!skip && minionsBefore) flyMinionsHome(root, minionsBefore); return;
+        // (homeFlownAt: they already left when the round card's button was pressed; only their seats' columns wait here)
+        case 'home': if (!skip && minionsBefore) flyMinionsHome(root, minionsBefore, { flownAt: homeFlownAt }); return;
         // the chairs re-sort into the new round's order now (GameScreen lays the column out; a skip sorts them too)
         case 'sort': try { dispatchEvent(new Event('patrons:seat-sort')); } catch { /* no window */ } return;
         case 'pulse': if (!skip) pulse(where(a.place), a.dur, { press: !!a.press }); return;

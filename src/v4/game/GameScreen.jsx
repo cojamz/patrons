@@ -614,11 +614,28 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // the round card closes in the click's own frame: this commit only unmounts it, and the new round's table follows as a
   // transition (useTable dismiss), so the button answers at once instead of after the whole table has redrawn
   const [closedMoment, setClosedMoment] = useState(null);
+  // the wheel's minions leave for home in the press's own frame (lag pass 2026-10-21: at 4x CPU the old round's table
+  // held ~0.3s, dimmed, while the new round rendered): the first beat of the new round's chain (director.js 'home', at 0)
+  // starts here, its ghosts on the compositor's clock, and the chain then only times the seats' columns to their landings
+  const homeEarly = useRef(null); // { at, snap, els }
   // the old row is measured as the card closes (it still stands there): the new round sends it to the deck (director.js)
   const nextRound = useCallback(() => {
     { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
+    const mins = minionSnap.current;
+    if (root.current && moment && !moment.after?.over && !state.over && motionOK() && mins && mins.length) {
+      const r = root.current;
+      // they leave in the press's own frame, as the card closes (the new round renders meanwhile); waiting a frame lost
+      // them to the new round's render on a slow laptop
+      const els = [...r.querySelectorAll('.lt-wheel [data-slot] .worker[data-seat]')];
+      flyMinionsHome(r, mins);
+      for (const el of els) el.style.visibility = 'hidden';
+      const early = { at: performance.now(), snap: mins, els };
+      homeEarly.current = early;
+      // (a round that never came: they stand again)
+      setTimeout(() => { if (homeEarly.current === early) { homeEarly.current = null; for (const el of early.els) if (el.isConnected) el.style.visibility = ''; } }, 3000);
+    }
     setClosedMoment(moment); dismissMoment();
-  }, [moment, dismissMoment]);
+  }, [moment, dismissMoment, state.over]); // eslint-disable-line react-hooks/exhaustive-deps
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
   // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
   // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)
@@ -858,7 +875,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // Contest and final bonuses belong exclusively to the Reckoning's landing callbacks.
     // The fallback diff must not turn those already-scored followers into a closing-action payout/tag.
     const animationState = scoringMoment ? scoringSeatState(state, scoringMoment, 0) : state;
-    const played = playChain(root.current, before, animationState, { snap: shopSnap.current, minionsBefore: state.round !== before.round && before.round >= 1 ? wasOnWheel : null, mine: mySeats, chips: chipSnap.current });
+    const newRound = state.round !== before.round && before.round >= 1;
+    const early = newRound && homeEarly.current && homeEarly.current.at != null ? homeEarly.current : null;
+    if (newRound) homeEarly.current = null;
+    const played = playChain(root.current, before, animationState, { snap: shopSnap.current, minionsBefore: newRound ? (early ? early.snap : wasOnWheel) : null, homeFlownAt: early ? early.at : null, mine: mySeats, chips: chipSnap.current });
     retimeTable(played);
 
     const lines = newLogLines(before, state);
