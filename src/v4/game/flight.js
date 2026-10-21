@@ -172,6 +172,8 @@ export function landAll() { for (const a of [...live]) { forced.add(a); try { a.
 export function flyCards(root, snap, moves) {
   if (!root || !motionOK()) return;
   const cells = [...root.querySelectorAll(SHOP_CARDS)];
+  // every place is measured first, then every ghost goes in: a read after an append laid the page out again per card
+  const plans = [];
   for (const { uid, to } of moves) {
     const s = snap.get(uid);
     const cell = s && (s.rect ? true : (cells[s.index] || cells[cells.length - 1]));
@@ -187,7 +189,10 @@ export function flyCards(root, snap, moves) {
     const chip = root.querySelector(`.lt-seat[data-pid="${to}"] [data-uids~="${uid}"]`) || root.querySelector(`.lt-seat[data-pid="${to}"] [data-uid="${uid}"]`);
     const land = chip && visibleEl(chip) ? chip : target;
     const lb = land.getBoundingClientRect();
-    ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: MO.cardFly, scaleTo: 0.28, hold: true });
+    plans.push({ s, a, b: lb.width ? lb : b, chip });
+  }
+  for (const { s, a, b, chip } of plans) {
+    ghostFly(s.html, 'flight', a, b, { duration: MO.cardFly, scaleTo: 0.28, hold: true });
     if (chip && chip.animate) {
       chip.animate([
         { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' },
