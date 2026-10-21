@@ -2,7 +2,7 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.31 — 2026-10-21 — unreleased
+## v0.8.31 — 2026-10-21 — shipped (source cbf1440)
 
 - Members say "Recruit" instead of "Buy": "Done, no recruit", "Undo recruit", "Recruit twice this turn". "Buy followers" stays. The space Buy Twice is now Recruit Twice.
 
