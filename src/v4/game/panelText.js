@@ -43,7 +43,7 @@ const P = {
     take: { verb: 'Recruit any member', second: 'in the shop, free', note: '+1 red' },
   },
   market: {
-    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 shop members to the bottom', note: '1 × round, +1' }),
+    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: '1 × round, +1' }),
     restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
     showroom: { verb: 'Peek at the top 4', second: 'reorder; may buy one', note: '+1 blue' },
     clearance: { verb: 'Buy twice', second: 'this turn', note: '+1 blue' },

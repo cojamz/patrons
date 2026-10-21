@@ -58,7 +58,7 @@ describe('panel words (w3)', () => {
     expect(seeds.second).toBe('then swap up to 3');
     const churn = panelText('market', { key: 'bargain' }, 2);
     expect(churn.main).toBe('+3 blue');
-    expect(churn.second).toBe('send 3 shop members to the bottom');
+    expect(churn.second).toBe('send 3 to the bottom');
     expect(churn.note).toBe('1 × round, +1');
     expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
