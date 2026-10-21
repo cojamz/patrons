@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.29 — 2026-10-21 — unreleased
+
+- Player panels no longer slide up a step after the round I picks.
+
 ## v0.8.28 — 2026-10-21 — unreleased
 
 - Magenta members: Kingpin now pays per magenta member; new Snitch, Fence and Shoplifter; prices set from balance tests
