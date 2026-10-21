@@ -407,7 +407,7 @@ try {
     else if (part === '.cs-foot') {
       const spend = await page.evaluate(() => document.querySelector('[data-hover-layer][data-open="1"] [data-spend]')?.textContent || '');
       const want = spendingPower(s0, s0.players[1]);
-      if (!new RegExp(`Holding ${want.held}(?!\\d).*could buy about ${want.get}(?!\\d)`).test(spend.replace(/\s+/g, ' '))) fail(`P2's spending line reads "${spend}" (want holding ${want.held}, about ${want.get})`, 'm13');
+      if (!new RegExp(`Holding ${want.held}(?!\\d).*could recruit about ${want.get}(?!\\d)`).test(spend.replace(/\s+/g, ' '))) fail(`P2's spending line reads "${spend}" (want holding ${want.held}, about ${want.get})`, 'm13');
     }
   }
   await away();

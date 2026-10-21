@@ -46,7 +46,7 @@ export function MemberSwitch({ name, on, option = null, onPick = null, about = n
   const rule = String(about).replace(/\s*You can switch it[^.]*\./i, '').trim();
   return (
     <Tip className={`mu-sw-tip${on ? ' on' : ''}`} label={say} data-switch-tip={on ? 'on' : 'off'}
-      content={() => <div className="pop-card gloss mu-sw-card" data-switch-card={name}><b>{name} is {on ? 'on' : 'off'}</b>{rule ? <span><Rich text={rule} /></span> : null}<span className="mu-sw-how">{option ? `Click to switch it ${on ? 'off' : 'on'}.` : 'You can switch it when you buy.'}</span></div>}>
+      content={() => <div className="pop-card gloss mu-sw-card" data-switch-card={name}><b>{name} is {on ? 'on' : 'off'}</b>{rule ? <span><Rich text={rule} /></span> : null}<span className="mu-sw-how">{option ? `Click to switch it ${on ? 'off' : 'on'}.` : 'You can switch it when you recruit.'}</span></div>}>
       {sw}
     </Tip>
   );
@@ -167,7 +167,7 @@ export function UseResult({ result }) {
 export function SpendingLine({ state, pid }) {
   if (!(state.round >= 1) || state.over) return null;
   const { held, get } = spendingPower(state, state.players[pid]);
-  return <small className="seat-spend" data-spend={get}><Rich text={`Holding ${held} any · could buy about ${get} follower${get === 1 ? '' : 's'} now`} /></small>;
+  return <small className="seat-spend" data-spend={get}><Rich text={`Holding ${held} any · could recruit about ${get} follower${get === 1 ? '' : 's'} now`} /></small>;
 }
 
 /**

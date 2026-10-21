@@ -549,7 +549,7 @@ function PromptActions({ optionFor, onPick, afterPurchase = false }) {
   const pass = optionFor('pass');
   return (
     <span className="pr-actions">
-      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title={afterPurchase ? "Finish your turn" : "End your turn without recruiting or buying"} data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>{afterPurchase ? 'End turn' : 'Done, no recruit'}</button>
+      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title={afterPurchase ? "Finish your turn" : "End your turn without recruiting"} data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>{afterPurchase ? 'End turn' : 'Done, no recruit'}</button>
     </span>
   );
 }
@@ -1167,11 +1167,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
-      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers, or end your turn: Done, no recruit' : 'You can’t take this space right now';
+      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit a member or followers, or end your turn: Done, no recruit' : 'You can’t take this space right now';
     } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a minion first, then recruit' : 'Place a minion first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
     // what you have beside what it needs (w4 skeptic #20: "Need 8, you have 4")
-    else if (info.type === 'tier') text = tierLeft(state, info.tier) <= 0 ? `No +${info.tier.get} buys left` : `+${info.tier.get} needs ${tierCostText(info.tier)}; you have ${Object.values(who.res || {}).reduce((a, b) => a + b, 0)}`;
+    else if (info.type === 'tier') text = tierLeft(state, info.tier) <= 0 ? `No +${info.tier.get} follower recruits left` : `+${info.tier.get} needs ${tierCostText(info.tier)}; you have ${Object.values(who.res || {}).reduce((a, b) => a + b, 0)}`;
     else text = 'Not right now';
     if (text) say(text);
     // the translate property, so the element's own transform (a socket's centring, a card's lift) stays put
@@ -1455,7 +1455,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
                 : mine && !needHandoff && buyingNow ? null : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
               <span className={step === 'place' ? 'on' : ''}>Place</span>
-              <span className={step === 'buy' ? 'on' : ''}>Recruit or buy</span>
+              <span className={step === 'buy' ? 'on' : ''}>Recruit</span>
             </span>
           )}
         </div>

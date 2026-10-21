@@ -310,12 +310,12 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
       return ways.length === 1 ? <>Pays <CostDots parts={Object.entries(ways[0]).filter(([, n]) => n > 0).map(([color, n]) => ({ color, n }))} /></> : 'Choose how to pay';
     }
     if (viewer && held < t.cost) return `You hold ${held}: ${t.cost - held} short.`;
-    if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You buy followers after you place a minion.';
+    if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You recruit followers after you place a minion.';
     if (tierLeft(state, t) <= 0) return 'None left.';
-    return 'You buy followers after placing a minion.';
+    return 'You recruit followers after placing a minion.';
   };
   return (
-    <div className="lt-rates" role="group" aria-label="Buy followers">
+    <div className="lt-rates" role="group" aria-label="Recruit followers">
       <span className="lt-rates-grid">
       {TIERS.map(t => {
         const opt = optionFor(`tier:${t.key}`);
@@ -326,13 +326,13 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
         return (
           <button key={t.key} type="button" className={`fb lt-rate lt-card card paper${look}`} style={{ '--q': 'var(--any)' }} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
             aria-haspopup="dialog" data-rate={t.key}
-            aria-label={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game)` : ''}`}
+            aria-label={`Recruit ${t.get} follower${t.get > 1 ? 's' : ''}: pay ${t.cost} resources of any colors${t.limited ? ` (${left} left in this game)` : ''}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}>
             {/* a move closes it (keyed by the move): after a buy it stayed open and flipped to "You hold 0: 10 short" (w2b #47) */}
-            <Tip key={state.moves} className="fb-tip" beside=".lt-rate" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
+            <Tip key={state.moves} className="fb-tip" beside=".lt-rate" hint={`Recruit ${t.get} follower${t.get > 1 ? 's' : ''}: pay ${t.cost} resources of any colors`} content={() => (
               <div className="pop-card rate-card" data-rate-card={t.key}>
-                <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
-                <span>Any colors, any mix, as your one recruit.</span>
+                <b>Recruit {t.get} follower{t.get > 1 ? 's' : ''}</b>
+                <span>Pay {t.cost} resources, any colors, any mix, as your one recruit.</span>
                 {/* one buy per placement (the rule): "as many as you like" beside "your one buy" read as a contradiction (w4 A#25) */}
                 {t.limited && <span>{left} left at this table (2 per player at the start).</span>}
                 <small data-pays={opt ? 'tier' : undefined}>{when(t, opt)}</small>
@@ -348,7 +348,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
           step starts or ends (it's hidden then, and on phones folded away). */}
       <button type="button" className={`btn lt-done${done ? '' : ' idle'}`} data-option={done ? 'pass' : undefined} data-done-no-buy={done ? 'on' : 'off'}
         disabled={!done} tabIndex={done ? 0 : -1} aria-hidden={done ? undefined : 'true'}
-        title={done ? (state.pending?.afterPurchase ? 'Finish your turn' : 'End your turn without recruiting or buying') : undefined} onClick={() => done && onPick('pass')}>{state.pending?.afterPurchase ? 'End turn' : 'Done, no recruit'}</button>
+        title={done ? (state.pending?.afterPurchase ? 'Finish your turn' : 'End your turn without recruiting') : undefined} onClick={() => done && onPick('pass')}>{state.pending?.afterPurchase ? 'End turn' : 'Done, no recruit'}</button>
     </div>
   );
 }

@@ -242,5 +242,8 @@ it('glossary matches confirmed member quantity, protection and recruit rules', (
   expect(term('steal').def).toContain('protects your members and resources until round end');
   expect(term('when recruited').def).toContain('paid or free');
   expect(term('when recruited').def).toContain('recruit, take or swap');
-  expect(term('when recruited').def).toContain('Being given a member does not trigger it.');
+  expect(term('when recruited').def).toContain('Being given a member does not trigger it, and a rival moving it into your cult doesn’t either.');
+  // Cory, 2026-10-21: recruiting is a member or followers, by your own doing
+  expect(term('recruit').def).toContain('each follower purchase is one recruit');
+  expect(term('recruit').def).toContain('A member a rival moves into your cult isn’t your recruit.');
 });

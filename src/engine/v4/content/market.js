@@ -342,7 +342,8 @@ const market = {
     // Cory, Oct 21: "any time a player recruits more than once in a turn", swaps and takes included (they all reach
     // onAnyRecruit through memberAcquired)
     m('doorman', 'Doorman', 1, 2, 'Whenever a rival recruits more than once in a turn (swaps count), +1 blue.', {
-      onAnyRecruit(ctx, owner, card, by) {
+      // every recruit (members, own red swaps, follower buys) reaches onRecruit (core.js recruited)
+      onRecruit(ctx, owner, card, by) {
         if (by === owner) return;
         const stamp = `${ctx.state.round}:${(ctx.state.turns || []).length}`;
         const seen = card.doorSeen || (card.doorSeen = {});
@@ -362,8 +363,8 @@ const market = {
     }),
     // Cory's pick for Blue's 12th, Oct 21 ("trendsetter is good!")
     m('trendsetter', 'Trendsetter', 1, 2, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', {
-      onAnyRecruit(ctx, owner, card, by, rec) {
-        if (by !== owner || rec.uid === card.uid || !ctx.state.shop.length) return;
+      onRecruit(ctx, owner, card, by, what) {
+        if (by !== owner || what.member?.uid === card.uid || !ctx.state.shop.length) return;
         churnStep(ctx, owner, { left: 1 });
         ctx.defer(owner, `${Q}.churnRefill`);
       },

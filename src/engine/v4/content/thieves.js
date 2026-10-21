@@ -379,8 +379,8 @@ const thieves = {
     }),
     // Cory's #26 "Steal when you buy a member - should be essential to magenta" (Cory's yes, Oct 21)
     m('shoplifter', 'Shoplifter', 3, 2, 'Whenever you recruit, steal 1 resource.', {
-      onAnyRecruit(ctx, owner, card, by, recruited) {
-        if (by === owner && recruited.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1, { fromAction: false });
+      onRecruit(ctx, owner, card, by, what) {
+        if (by === owner && what.member?.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1, { fromAction: false });
       },
     }),
     m('fence', 'Fence', 2, 2, 'Whenever you steal, +1 magenta.', {

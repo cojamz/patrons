@@ -446,7 +446,7 @@ function inputFor(state, task) {
       const real = opts.filter(o => o.kind === 'card' || o.kind === 'tier' || o.kind === 'use' || o.kind === 'release');
       if (!real.length) return { kind: 'buy', prompt: '', options: [], onEmpty: task.extra ? undefined : () => log(state, `${p.name} couldn't afford anything.`) };
       opts.push({ id: 'pass', label: 'Pass', kind: 'pass' });
-      return { kind: 'buy', extra: !!task.extra, prompt: task.extra ? `${p.name}: recruit again (Big Spender), or pass` : `${p.name}: recruit a member, buy followers, or pass`, options: opts };
+      return { kind: 'buy', extra: !!task.extra, prompt: task.extra ? `${p.name}: recruit again (Big Spender), or pass` : `${p.name}: recruit a member or followers, or pass`, options: opts };
     }
     case 'choose': {
       // only the options whose cards are still where they were when the choice was queued (see liveOptions)
@@ -911,7 +911,7 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   log(state, `${p.name} recruited ${def.name}${idx < 0 ? (peeked ? ' from the pile with Peek' : ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}`) : ''} (${paid}).`);
   memberAcquired(state, p, uid);
 }
-/** Recruit is an active acquisition for the acting leader, including a take or their side of a swap. */
+/** A member recruit: p took it (shop, free, a steal) or swapped it in with their own red action (see recruited). */
 function memberAcquired(state, p, uid, { stolen = false } = {}) {
   state.recruits += memberWeight(state, uid);
   p.turnRecruits += memberWeight(state, uid);
@@ -921,11 +921,27 @@ function memberAcquired(state, p, uid, { stolen = false } = {}) {
   if (!stolen) { card.recruitedRound = state.round; card.recruitedBy = p.id; }
   const ctx = ctxFor(state);
   const w = wrap(state, card);
-  eachMember(state, (owner, c, d) => { if (d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, w); });
+  recruited(state, p, { member: w });
   // a when-recruited effect leaves a trace like any other member hook (Seed Money, Pilgrim, Retinue…)
   if (def.onRecruited) recruitAbility(state, p, w, def, () => def.onRecruited(ctx, p, w));
   joinNow(state, p, w, [def]);
   workersNow(state, p, def, uid);
+}
+/**
+ * "You recruited" (Cory, 2026-10-21): you brought a member or followers into your cult by your own doing. The one
+ * event every recruit trigger reads. It happens for a member you take (the shop, a free recruit, a steal you make),
+ * for each member your own red action swaps into your cult, and for each follower purchase (one recruit per buy).
+ * It never happens for a member a rival's action moves into your cult (that's an arrival: memberJoined).
+ * Hooks: onRecruit(ctx, owner, card, by, what) for "whenever you recruit" (what: { member: card } or
+ * { followers: n, tier }); onAnyRecruit(ctx, owner, card, by, member) for cards that name a member ("a blue member",
+ * "2 or more members"), so a follower purchase never reaches them.
+ */
+function recruited(state, p, what) {
+  const ctx = ctxFor(state);
+  eachMember(state, (owner, c, d) => {
+    if (what.member && d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, what.member);
+    if (d.onRecruit) d.onRecruit(ctx, owner, c, p, what);
+  });
 }
 /**
  * A member's "now" part, as it joins p: "Now and at round start" members (flag now) fire their round-start effect once
@@ -1071,6 +1087,8 @@ function buyFollowersNow(state, p, tier, chosen) {
   if (tier.limited) state.stock[tier.key] -= 1;
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });
+  // buying followers is a recruit (Cory, 2026-10-21): "whenever you recruit" members fire once per purchase
+  recruited(state, p, { followers: tier.get, tier });
 }
 
 // again: a later part of a gain the same action already paid (Collect Debts' second victim), so "whenever an action
