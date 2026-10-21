@@ -39,6 +39,7 @@ export default {
       // text. Raising every lowest color always adds one full set.
       // scales by round (Cory, 2026-10-18), in the "× round" form Gather and Build Up print
       key: 'bloom', ring: 1, name: 'Top Up', text: '+1 × round of each color you hold the fewest of (ties: all of them).',
+      byRound: { lead: 'Each color you hold the fewest of (ties: all of them):', lines: ['+1', '+2', '+3'] },
       estimate: (ctx, p) => fewest(ctx, p).length * ctx.state.round + 0.5,
       resolve(ctx, p) {
         const list = fewest(ctx, p), n = ctx.state.round;
