@@ -20,6 +20,22 @@ const words = (state, key) => {
   try { const [q, i] = key.split('-').map(Number); const qid = state.quadrants[q]; return panelWords(qid, quadrant(qid).actions[i], Math.max(1, state.round)) || ''; } catch { return ''; }
 };
 
+/** The story stands under the chairs (the wide laptop layout, layout.css): there it's the compact log. */
+const UNDER_CHAIRS = '(min-width:1200px) and (min-height:500px)';
+function useCompact() {
+  const get = () => typeof matchMedia === 'function' && matchMedia(UNDER_CHAIRS).matches;
+  const [on, setOn] = useState(get);
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return undefined;
+    const m = matchMedia(UNDER_CHAIRS);
+    const set = () => setOn(m.matches);
+    set();
+    m.addEventListener('change', set);
+    return () => m.removeEventListener('change', set);
+  }, []);
+  return on;
+}
+
 /** One placement's full card (the same lines as the turn card by the cult), its names hover targets. */
 export function StoryCard({ story, color, state, hover }) {
   // open in a tip: body[data-since-tip] (since.css), in place of a body:has() that re-styled the whole page
@@ -64,7 +80,19 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
     addEventListener('resize', check);
     return () => { mo.disconnect(); removeEventListener('resize', check); };
   }, []);
-  const sig = `${entries.map(e => e.n).join(',')}|${roomKey}`;
+  // under the chairs (from 1200px wide), the story is a compact log (Cory, 2026-10-21: "we should still have a log
+  // somewhere but it doesn't need to take up too much space just make it expandable"): one line, the newest turn, with
+  // the earlier ones a tap away above it; the chairs take the room it gave back. Elsewhere it keeps its column.
+  const compact = useCompact();
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return undefined;
+    const esc = e => { if (e.key === 'Escape') setOpen(false); };
+    addEventListener('keydown', esc);
+    return () => removeEventListener('keydown', esc);
+  }, [open]);
+  const folded = compact && !open;
+  const sig = `${entries.map(e => e.n).join(',')}|${roomKey}|${compact ? (open ? 'open' : 'one') : 'all'}`;
   // how many of the oldest lines are folded, for these lines in this room: anything new starts it over at 0 (worked out
   // here, not by a second commit)
   const [dropState, setDrop] = useState({ sig: '', n: 0, bare: false });
@@ -75,7 +103,7 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   // and when even the newest line doesn't fit whole on its two lines, it sets on one (1); if not even that, the strip
   // shows only its header and the count (2): a cut line never shows (wave 4: the chairs' figures grew to 40px)
   const lvl = dropState.sig === sig ? (dropState.lvl || 0) : 0;
-  const base = entries.slice(-MAX);
+  const base = entries.slice(folded ? -1 : -MAX);
   const cut = Math.min(drop, Math.max(0, base.length - 1));
   // Checked when the layout has settled, from a ResizeObserver on the list and its own lines (perf, 2026-10-15: reading
   // the computed style and scrollHeight in a layout effect forced a page layout every step). A ResizeObserver runs after
@@ -161,18 +189,25 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   // stays (blind panel: "No moves since yours yet." narrated nothing)
   const empty = !entries.length;
   return (
-    <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}${empty ? ' empty' : ''}`} data-since data-empty={empty || undefined} data-folded={cut || undefined} aria-label="Since your last turn">
+    <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}${empty ? ' empty' : ''}${compact ? ` compact${open ? ' open' : ''}` : ''}`} data-since data-empty={empty || undefined} data-folded={cut || undefined} data-open={compact ? (open ? '1' : '0') : undefined} aria-label="Since your last turn">
       <header className="since-head">
         {!empty && <span className="since-title">Since your last turn</span>}
+        {/* the compact log's control: how many turns are tucked away, and a tap opens them above (or tucks them back) */}
+        {compact && !empty && (open || more + (lvl >= 2 ? shown.length : 0) > 0) && (
+          <button type="button" className={`since-more since-expand${open ? ' open' : ''}`} data-since-expand aria-expanded={open} onClick={() => setOpen(o => !o)}
+            title={open ? 'Show only the newest turn' : 'Show every turn since yours'}>
+            {open ? 'Less' : lvl >= 2 ? `${more + shown.length} ${more + shown.length === 1 ? 'move' : 'moves'}` : `${more} earlier`}<i className="since-chev" aria-hidden="true" />
+          </button>
+        )}
         {/* the newest line alone: the earlier ones are counted up here, beside the Log, taking no line of their own */}
-        {(bare || lvl >= 2) && more + (lvl >= 2 ? shown.length : 0) > 0 && (
+        {!compact && (bare || lvl >= 2) && more + (lvl >= 2 ? shown.length : 0) > 0 && (
           <button type="button" className="since-more in-head" onClick={onLog} title="Open the log">{lvl >= 2 ? `${more + shown.length} ${more + shown.length === 1 ? 'move' : 'moves'}` : `${more} earlier`}</button>
         )}
         <button type="button" className="since-log" data-open-log onClick={onLog} title="The whole game, move by move">Log</button>
       </header>
       {shown.length ? (
         <ol className="since-list" ref={listRef}>
-          {more > 0 && !bare && <li className="since-more"><button type="button" onClick={onLog}>{more} earlier… open the log</button></li>}
+          {more > 0 && !bare && !folded && <li className="since-more"><button type="button" onClick={onLog}>{more} earlier… open the log</button></li>}
           {shown.map(e => (
             <li key={e.n} className={`since-row${e.hit ? ' hit' : ''}${lvl === 1 ? ' brief' : ''}`} hidden={lvl >= 2 || undefined} style={{ '--pc': playerColor(e.actor) }} onClick={pinLine}>
               <Tip className="since-line" data-since-line={e.n} label={`${e.head}: show what happened`}

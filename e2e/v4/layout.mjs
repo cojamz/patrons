@@ -11,8 +11,10 @@ import { browserPath } from './lib/browser.mjs';
 //       the order???").
 //  (l7) live panel r1 (G4): every chair says how many members it has, whole and in view ("+N more" hid them, so "Most
 //       members" couldn't be counted): its count equals the engine's, the figures and "+N" add up to it, the figures
-//       stand in at most two rows inside the chair, overlapping nothing; a chair with no "each round" line shows at
-//       least ten figures; the minions still to place stand in one column; an empty stack's ring stays visible;
+//       stand in no more rows than the chair's member area holds (two at 1270x700; Cory, 2026-10-21, mockup A: taller
+//       chairs, "more room to show members"), inside the chair, overlapping nothing (the count included); a chair with
+//       no "each round" line shows at least ten figures; the round's minions stand in one row under the name (mockup A,
+//       was one column); an empty stack's ring stays visible;
 //  (l8) keyboard: a rival's member figures are off the Tab path (their seat's head opens the card that lists them),
 //       and the follower buys and "Done, no buy" wear a visible cream focus ring, never the lamp's gold of a lit tile.
 // Checked at 1270×700, 900×700 (the "900px clipping") and 1100×700, from a saved game (e2e/v4/lib/rich-save.mjs).
@@ -225,20 +227,25 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
       const more = seat.querySelector('.cs-more');
       const build = seat.querySelector(':scope > .cs-build');
       const over = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
-      const parts = [...figs, ...(more ? [r(more)] : []), ...(count ? [r(count)] : []), ...(build ? [r(build)] : [])];
+      const tally = seat.querySelector('.cs-member-count');
+      const parts = [...figs, ...(more ? [r(more)] : []), ...(count ? [r(count)] : []), ...(tally ? [r(tally)] : []), ...(build ? [r(build)] : [])];
       let clash = 0;
       for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) if (over(parts[i], parts[j])) clash++;
       // (rows by layout, not paint: a lit member lifts 2px and the crowd breathes)
       const rows = new Set([...seat.querySelectorAll('.cs-figs > .cs-member, .cs-figs > .cs-more')].map(m => m.offsetTop)).size;
+      // the rows the member area holds: its height over one figure's row (24px and its 1px gap)
+      const crowd = seat.querySelector(':scope > .cs-crowd');
+      const room = crowd ? Math.max(1, Math.floor((crowd.getBoundingClientRect().height + 1) / 25)) : 2;
       const inside = parts.every(b => b.left >= box.left - 0.5 && b.right <= box.right + 0.5 && b.top >= box.top - 0.5 && b.bottom <= box.bottom + 0.5);
-      const mins = [...seat.querySelectorAll('.cs-minions .cs-min')].map(e => Math.round(r(e).left + r(e).width / 2));
+      // (rows by layout, not paint: a minion still to place bobs a pixel or two)
+      const mins = [...seat.querySelectorAll('.cs-minions .cs-min')].map(e => e.offsetTop);
       const zero = [...seat.querySelectorAll('.cs-stack.zero')].map(e => parseFloat(getComputedStyle(e).opacity));
       const accessible = seat.getAttribute('aria-label') || '';
       return {
         pid: Number(seat.dataset.seat), countRemoved: !count, accessible,
         figs: figs.length, groups: seat.querySelectorAll('.cs-member').length, more: more ? Number(more.dataset.more) : 0,
         n: [...seat.querySelectorAll('.cs-member')].reduce((s, m) => s + m.dataset.uids.split(' ').length, 0) + (more ? Number(more.dataset.more) : 0),
-        clash, rows, inside, built: !!build, cols: new Set(mins).size, zero: zero.length ? Math.min(...zero) : 1,
+        clash, rows, room, inside, built: !!build, lines: new Set(mins).size, zero: zero.length ? Math.min(...zero) : 1,
         rivalTabs: seat.closest('.mine') ? 0 : [...seat.querySelectorAll('.cs-member .fig')].filter(f => f.tabIndex >= 0).length,
       };
     }));
@@ -248,10 +255,10 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
       if (!x.accessible.includes(`${want} member`)) errors.push(`[${tag}] (l7) P${x.pid + 1}'s accessible count misses ${want} members`);
       if (x.n !== want) errors.push(`[${tag}] (l7) P${x.pid + 1}'s figures and "+N" add up to ${x.n}, not ${want}`);
       if (x.clash) errors.push(`[${tag}] (l7) P${x.pid + 1}'s count, figures, "+N" and "each round" overlap (${x.clash} pair(s))`);
-      if (x.rows > 2) errors.push(`[${tag}] (l7) P${x.pid + 1}'s figures stand in ${x.rows} rows`);
+      if (x.rows > x.room) errors.push(`[${tag}] (l7) P${x.pid + 1}'s figures stand in ${x.rows} rows; its member area holds ${x.room}`);
       if (!x.inside) errors.push(`[${tag}] (l7) P${x.pid + 1}'s members run out of the chair`);
       if (!x.built && want >= 10 && x.figs < 10) errors.push(`[${tag}] (l7) P${x.pid + 1}'s chair, with room, shows only ${x.figs} of ${want} members`);
-      if (x.cols > 1) errors.push(`[${tag}] (l7) P${x.pid + 1}'s minions stand in ${x.cols} columns, not one`);
+      if (x.lines > 1) errors.push(`[${tag}] (l7) P${x.pid + 1}'s minions stand in ${x.lines} rows, not one`);
       if (x.zero < 0.55) errors.push(`[${tag}] (l7) P${x.pid + 1}'s empty stacks fade to ${x.zero} (their rings vanish on purple and magenta)`);
       if (x.rivalTabs) errors.push(`[${tag}] (l8) P${x.pid + 1}'s ${x.rivalTabs} member figure(s) are on the Tab path`);
     }

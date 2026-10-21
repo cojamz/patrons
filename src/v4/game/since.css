@@ -59,3 +59,19 @@ body[data-since-tip][data-since-tip] .lt-hover.popover{z-index:46}
 /* a space named off the wheel, pointed at: its place on the wheel lights (HoverNames.jsx) */
 .hn-locate .base,[data-cell].hn-locate{box-shadow:0 0 0 3px rgba(var(--lamp),.95),0 0 16px 4px rgba(var(--lamp),.7) !important}
 path.hn-locate,rect.hn-locate,polygon.hn-locate{filter:drop-shadow(0 0 5px rgba(var(--lamp),.95))}
+
+/* the compact log under the chairs (SinceStrip `compact`, from 1200px; Cory, 2026-10-21: "doesn't need to take up too
+   much space just make it expandable"): the newest turn on one line under its heading, the earlier ones counted beside
+   the Log; a tap opens them in a card above it, over the chairs, and "Less" (or Esc) tucks them back. The strip's own box
+   stays the same size either way, so nothing under it (the turn card) moves. */
+.lt-since.compact{position:relative}
+.lt-since.compact.open{overflow:visible}
+.lt-since.compact .since-head{gap:6px}
+.lt-since.compact .since-title{margin-right:auto}
+.lt-since .since-expand{display:inline-flex;align-items:center;gap:4px;flex:none;font:inherit;font-size:11px;letter-spacing:.06em;color:var(--cream-2,#d9cbb0);
+  background:none;border:0;border-radius:7px;padding:2px 6px;cursor:pointer;min-height:22px}
+.lt-since .since-expand:hover,.lt-since .since-expand:focus-visible{color:var(--cream);background:rgba(243,230,200,.07)}
+.lt-since .since-expand .since-chev{width:6px;height:6px;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:translateY(1px) rotate(-135deg)}
+.lt-since .since-expand.open .since-chev{transform:translateY(-2px) rotate(45deg)}
+.lt-since.compact.open .since-list{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:30;max-height:none;overflow:visible;padding:6px 4px;border-radius:8px;
+  background:var(--table-2,#2a2019);box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.14)),0 10px 24px rgba(0,0,0,.5)}

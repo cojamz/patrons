@@ -487,13 +487,8 @@
 
 /* the plate's three sizes on the chairs (14 / 18 / 36): names and the rivals' totals 18, your total 36, the rest 14 */
 @media (min-width:861px) and (min-height:500px){
-  .lt > .lt-seat .cs-who b{font-size:18px}
-  .lt > .lt-seat .cs-total{font-size:18px;color:var(--cream-2)}
-  .lt > .lt-seat.mine .cs-total{font-size:36px;line-height:40px;color:var(--cream)}
   .lt > .lt-seat .cs-total.lead{color:var(--light, #fff3d4)}
   .lt > .lt-seat .cs-total.lead .tv{color:inherit;text-shadow:none}
-  .lt > .lt-seat .cs-stack{font-size:14px}
-  .lt > .lt-seat.mine .cs-stack{font-size:18px}
   .lt > .lt-seat .cs-build small,.lt > .lt-seat .cs-build .cs-inc b,.lt > .lt-seat .cs-last b{font-size:14px}
   .lt > .lt-seat .cs-build .cs-inc b{font-weight:800}
 }

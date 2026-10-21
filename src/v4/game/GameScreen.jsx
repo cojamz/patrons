@@ -651,8 +651,19 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (!r) return;
     const rail = r.querySelector(':scope > .lt-snake');
     const seats = [...r.querySelectorAll(':scope > .lt-seat')].filter(e => e.dataset.pid != null);
-    if (!rail || !rail.offsetHeight) { seats.forEach(e => e.style.removeProperty('--y')); return; }
+    if (!rail || !rail.offsetHeight) { seats.forEach(e => { e.style.removeProperty('--y'); e.style.removeProperty('--seat-h'); }); return; }
     const GAP = 8;
+    // every chair has one height (mockup A, Cory 2026-10-21: "a little bigger so there's more room to show members"):
+    // an equal share of the column, less what stands under the chairs there (layout.css --seats-reserve: the story and
+    // the turn card), between --seat-min and --seat-max. It comes from the window, never from what a chair holds, so no
+    // chair changes height during a turn (hotseat region gate); a member arriving only changes what folds into "+N".
+    const cs = getComputedStyle(rail);
+    const hi = parseFloat(cs.getPropertyValue('--seat-max')) || 0;
+    if (hi) {
+      const lo = parseFloat(cs.getPropertyValue('--seat-min')) || 0, reserve = parseFloat(cs.getPropertyValue('--seats-reserve')) || 0;
+      const h = `${Math.max(lo, Math.min(hi, Math.floor((rail.offsetHeight - reserve - GAP * Math.max(0, seats.length - 1)) / Math.max(1, seats.length))))}px`;
+      for (const e of seats) if (e.style.getPropertyValue('--seat-h') !== h) e.style.setProperty('--seat-h', h);
+    } else seats.forEach(e => e.style.removeProperty('--seat-h'));
     // round I's order waits for its own beat: a chair resizing meanwhile (your chair loses its starting-pick row, ~36px)
     // is re-stacked in the old order, so the chairs under it close up now. Returning early here left them standing
     // under the taller chair until the sort beat, then sliding up mid-turn (hotseat region gate, 2026-10-21).
