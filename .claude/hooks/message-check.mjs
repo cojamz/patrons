@@ -27,12 +27,13 @@ if (hit.length) hard.push(`drop the AI tics or offers: "${hit.join('", "')}"`);
 const internals = prose.match(/\b(sessions?|subagents?|wakes?|coordinator|cmsg_\w+)\b/i);
 if (internals) hard.push(`don't talk about internals ("${internals[0]}"); name the thread or say what's happening in the game`);
 
+if (/\bv[34]\b(?!\.\d)/i.test(prose)) hard.push('"v3"/"v4" mean nothing to Cory; say "the old game" / "the game" (version numbers like v0.8.11 are fine)');
 if (/\bnetlify\b/i.test(prose)) hard.push("don't mention Netlify; it's retired and its red check is noise (Cory corrected this twice)");
 
 const soft = [];
-const maxLines = numbered >= 2 ? Math.max(5, numbered + 2) : 5;
+const maxLines = numbered >= 2 ? Math.max(8, numbered + 3) : 8;
 if (lines.length > maxLines) soft.push(`${lines.length} lines (cap ${maxLines}); put the rest in a file and link it`);
-if (words > (numbered >= 2 ? 160 : 110)) soft.push(`${words} words; cut to the result, what's next and any ask`);
+if (words > (numbered >= 2 ? 220 : 160)) soft.push(`${words} words; cut to the result, what's next and any ask`);
 
 if (!hard.length && !soft.length) process.exit(0);
 

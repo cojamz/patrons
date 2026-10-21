@@ -15,13 +15,13 @@ describe('message check hook (Cory voice gate)', () => {
     expect(check('Two calls:\n1. Cut Social Climber [yes]\n2. Guests stay colorless [yes]\n3. Tiebreaker is most members [yes]')).toBeNull();
   });
   it('bounces tables, headers, UTC times, em dashes and tics every time', () => {
-    for (const t of ['| a | b |\n|---|---|\n| 1 | 2 |', '## Status\nDone.', 'Back at 23:40 UTC.', 'Done — next is red.', 'Fair point, shipping now.', 'Want me to ship it?', 'The Netlify check is red.']) {
+    for (const t of ['| a | b |\n|---|---|\n| 1 | 2 |', '## Status\nDone.', 'Back at 23:40 UTC.', 'Done — next is red.', 'Fair point, shipping now.', 'Want me to ship it?', 'The Netlify check is red.', 'New threads start on v4 now.']) {
       expect(check(t)).toMatch(/bounced/);
       expect(check(t)).toMatch(/bounced/);
     }
   });
   it('bounces a long message once, then lets the identical resend through', () => {
-    const t = `long ${Date.now()}\n` + 'line\n'.repeat(8);
+    const t = `long ${Date.now()}\n` + 'line\n'.repeat(10);
     expect(check(t)).toMatch(/lines/);
     expect(check(t)).toBeNull();
     rmSync('/tmp/cults-message-check', { recursive: true, force: true });
