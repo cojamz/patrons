@@ -2,5 +2,6 @@
 
 - Live: v0.8.32 (main:play/build.json, source 9aec1a1). Today: speed pass (v0.8.27), panels close up after the round I picks (v0.8.29), player panel A with members by cost and a compact expandable log (v0.8.30), Recruit wording + Recruit Twice (v0.8.31), Cory's recruit definition: follower buys count as recruits, forced arrivals don't (v0.8.32).
 - Backlog thread ("Where we are this week"): idle, waiting for Cory's next pick. Open, ours: Even Swap's shop-to-shop trade tells nothing in the story; the game log still says "bought N followers"; lag leftovers in design/eval/perf/lag-2026-10-21.md (round II commit ~200ms, bots think on the main thread, SinceStrip/TurnCard re-render every state, hover gutter grace); wording rows held as rules questions (⚑) in /mnt/project-files/overnight/lane8/wording-sheet.md.
-- Better design process thread: members, pricing, Crowd-Pleaser + Recruiter stacking (Cory sent it there).
+- Better design process thread: member card design. Done today: Magenta 13 (v0.8.28), Blue 12 picked (Window Dresser and Trendsetter in), guests Launderer/Tiebreaker/Front-runner yes. Old colors' members parked until their actions are redesigned. Crowd-Pleaser is cut, so no Recruiter stacking.
+- Member balance thread: prices at Cory's 1.5× rule for Magenta, Blue, Red, Green and guests, then one follower-only check; builds on claude/members-blue-v2.
 - Live status lines: node scripts/status.mjs (board at /mnt/project-files/status/board.md).
