@@ -1,7 +1,7 @@
 // Saved hot-seat games stopped on a board-picker choice for P1, the only person.
 //  Steals and gifts (Gold, Magenta, Blue, Green): Help Yourself, Redistribute, Lie Low, Collect Debts (round II),
 //  Kickback ("give 1 gold to…"); the rivals hold known piles so a test can say which stacks light up.
-//  Copies and members (Green, Red, Blue, Magenta): Echo, Encore (round II), Snap Up, Shake Down (round II),
+//  Copies and members (Green, Red, Blue, Magenta): Echo, Encore (round II), Bury (round II), Shake Down (round II),
 //  Hand-pick (round III).
 // Used by the board-picker gate (e2e/v4/steal.mjs) and the before/after shots.
 import { createGame, applyMove, chooseBotMove, quadrant } from '../../../src/engine/v4/index.js';
@@ -14,7 +14,7 @@ export const BOARD_TABLE = ['echo', 'red', 'market', 'thieves'];
 export const SPACES = {
   help: [STEAL_TABLE, 'thieves', 'pickpocket'], redistribute: [STEAL_TABLE, 'thieves', 'tipoff'], lielow: [STEAL_TABLE, 'thieves', 'hideout'],
   debts: [STEAL_TABLE, 'gold', 'steal'], kickback: [STEAL_TABLE, 'gold', 'jv'],
-  echo: [BOARD_TABLE, 'echo', 'echo'], encore: [BOARD_TABLE, 'echo', 'encore'], snapup: [BOARD_TABLE, 'market', 'bargain'],
+  echo: [BOARD_TABLE, 'echo', 'echo'], encore: [BOARD_TABLE, 'echo', 'encore'], bury: [BOARD_TABLE, 'market', 'pricecheck'],
   shakedown: [BOARD_TABLE, 'thieves', 'ransom'], handpick: [BOARD_TABLE, 'red', 'take'],
 };
 // what everyone holds when P1 takes a steal space (P4 holds less than P1: Redistribute still takes from P4, one from

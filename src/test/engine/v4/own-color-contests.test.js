@@ -5,14 +5,14 @@ import { quadrant, defById } from '../../../engine/v4/content/index.js';
 import { standings, bannerText } from '../../../v4/format.js';
 import { ruleWords } from '../../../v4/shorts.js';
 const seats = ['Ana', 'Bo', 'Cy', 'Di'].map(name => ({ name, kind: 'bot' }));
-const arcs = ['blue', 'green', 'market', 'purple', 'trading'];
+const arcs = ['blue', 'green', 'purple', 'trading'];
 function table(qid) {
   const s = createGame({ seats, seed: 5, quadrants: [qid, 'gold', 'silver', 'yellow'] });
   s.players.forEach(p => { p.members = []; for (const r of s.resources) p.res[r] = 0; });
   return s;
 }
 describe('own-color arc contests', () => {
-  it.each(['red', 'echo', 'thieves'])('%s uses held resources even when another cult has more printed members', qid => {
+  it.each(['red', 'echo', 'thieves', 'market'])('%s uses held resources even when another cult has more printed members', qid => {
     const s = table(qid), resource = quadrant(qid).resource;
     const own = Object.keys(s.cards).map(Number).filter(u => defById(s.cards[u].def).quadrant === qid);
     s.players[0].members = own.slice(0, 4);

@@ -1,7 +1,7 @@
 // The hover's "Why" and "You'd get" rows tell the real payout (blind testers B and C):
 // - Grand Host's doubling is named, the biggest part of a Silver space's payout (Toast, Good Deed);
 // - a member that fires more than once in one branch says its sum (Greatest Hits: Impressionist +1 per copy);
-// - Snap Up's own +2 blue is never dropped from "You'd get" when your best pick spends it.
+// - a space whose gain is your pick (Out of Style: one color) says its best case as your pick.
 import { describe, it, expect } from 'vitest';
 import { previewSpace } from '../../../engine/v4/index.js';
 import { sceneQ, spaceOf } from '../../engine/v4/cards-helpers.js';
@@ -22,7 +22,7 @@ describe('Why rows', () => {
     s = take(s, 'gold.rush'); while (s.pending?.kind === 'buy') s = move(s, 'pass');
     s = take(s, 'red.turnout'); while (s.pending?.kind === 'buy') s = move(s, 'pass');
     s = take(s, 'gold.windfall'); while (s.pending?.kind === 'buy') s = move(s, 'pass');
-    s = take(s, 'market.showroom'); while (s.pending?.kind === 'buy') s = move(s, 'pass');
+    s = take(s, 'market.clearance'); while (s.pending?.kind === 'buy') s = move(s, 'pass');
     const p = pv(s, 'echo.eternity');
     const line = p.reasons.find(l => l.startsWith('Impressionist'));
     expect(line).toBe('Impressionist: +2 gold');
@@ -30,17 +30,13 @@ describe('Why rows', () => {
 });
 
 describe("You'd get", () => {
-  it('Snap Up keeps its own +2 blue beside the best pick that spends it', () => {
-    const restore = pinCosts({ 'market.stylist': [2, 3] });
-    try {
-      // only Stylist face up, 5 in any colors: the +2 blue and 3 silver are exactly its price
-      const s = sceneQ({ quadrants: ['market', 'silver', 'gold', 'red'], res: [{ silver: 3 }, { silver: 9 }], shop: ['market.stylist'] });
-      s.shop = s.shop.filter(u => s.cards[u].def === 'market.stylist');
-      const y = youdWords(pv(s, 'market.bargain'), s, 'blue');
-      // the recruit by its price, never a net "−3 silver" (live panel r1: Snap Up's "−4" matched nothing paid)
-      expect(y.text).toMatch(/^\+2 blue, or \+1 member \(Stylist\).* for 5$/);
-      expect(y.note).toBe('your pick');
-    } finally { restore(); }
+  it('Out of Style says its best color as your pick: +1 per member sent, plus its own +1', () => {
+    // 3 red and 2 gold face up: sending red is the best case
+    const s = sceneQ({ quadrants: ['market', 'silver', 'gold', 'red'], shop: ['red.intern', 'red.twins', 'red.volunteer', 'gold.banker', 'gold.taxman'] });
+    s.shop = s.shop.slice(0, 5);
+    const y = youdWords(pv(s, 'market.restock'), s, 'blue');
+    expect(y.text).toBe('up to +4 blue');
+    expect(y.note).toBe('your pick');
   });
   it('Open Door with tied cheapest members: "+1 member" once, naming each one you could get', () => {
     // plain one-member cards tied at the cheapest cost (Mob stopped being plain in the Red rebuild: it counts as 5

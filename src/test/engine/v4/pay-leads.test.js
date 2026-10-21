@@ -1,6 +1,6 @@
 // One pay rule everywhere (decisions.md 2026-10-15 17:55; panel tester C): a payment with one way pays at once unless
 // it gives up a contest lead or tie you hold; then it asks, saying so. More than one way, the player picks. This covers
-// the recruits outside the buy step (Snap Up, Half Price, Talent Scout) and follower purchases. Cheap Seats grants followers for held white and no longer spends coins.
+// the recruits outside the buy step (Talent Scout) and follower purchases. Cheap Seats grants followers for held white and no longer spends coins.
 import { describe, it, expect, afterEach } from 'vitest';
 import { sceneQ } from './cards-helpers.js';
 import { take, pinCosts } from './helpers.js';
@@ -12,37 +12,40 @@ const Q = ['market', 'silver', 'trading', 'gold'];
 let restore = null;
 afterEach(() => { restore?.(); restore = null; });
 
-function snapUpTo(res, rivalRes) {
-  restore = pinCosts({ 'market.stylist': [2, 3] }); // 5 in any colors
-  let s = sceneQ({ quadrants: Q, res: [res, rivalRes], shop: ['market.stylist'] });
-  s = take(s, 'market.bargain'); // +2 blue, then recruit a face-up member in any colors
-  const o = s.pending.options.find(x => x.kind === 'card' && s.cards[x.value].def === 'market.stylist');
-  return applyMove(s, { player: 0, option: o.id });
+// Talent Scout recruits off the top of the pile, outside the buy step, through the same pay rule
+function scoutTo(res, rivalRes) {
+  restore = pinCosts({ 'market.stylist': [0, 5] }); // 5 in any colors
+  let s = sceneQ({ quadrants: Q, res: [res, rivalRes], members: [['market.blackmarket']] });
+  const st = Number(Object.keys(s.cards).find(u => s.cards[u].def === 'market.stylist'));
+  s.shop = s.shop.filter(u => u !== st); s.pile = [st, ...s.pile.filter(u => u !== st)];
+  const scout = s.players[0].members[0];
+  s = applyMove(s, { player: 0, option: `use:${scout}` });
+  return applyMove(s, { player: 0, option: `card:${st}` });
 }
 
 describe('one way to pay that gives up a lead asks first', () => {
-  it('Snap Up: the only way spends the silver P1 leads with, so the pay sheet asks (with Cancel)', () => {
-    const s = snapUpTo({ silver: 3 }, { silver: 2, blue: 4 });
+  it('Talent Scout: the only way spends the silver P1 leads with, so the pay sheet asks (with Cancel)', () => {
+    const s = scoutTo({ silver: 3, blue: 2 }, { silver: 2, blue: 4 });
     expect(s.pending.kind).toBe('choose');
     const pays = s.pending.options.filter(o => o.kind === 'pay');
     expect(pays).toHaveLength(1);
     expect(pays[0].breaks).toContain('silver');
     expect(s.pending.options.some(o => o.kind === 'back')).toBe(true);
     expect(payChoice(s.pending)).toBe(true);
-    expect(s.players[0].members).toHaveLength(0);
+    expect(s.players[0].members).toHaveLength(1);
     // Cancel recruits nothing and keeps the coins
     const c = applyMove(s, { player: 0, option: 'back' });
     expect(c.players[0].res.silver).toBe(3);
     expect(c.log.some(l => /recruits nothing/.test(l))).toBe(true);
   });
-  it('Snap Up: the only way gives up no lead, so it pays at once', () => {
-    const s = snapUpTo({ silver: 3 }, { silver: 5, blue: 5 });
+  it('Talent Scout: the only way gives up no lead, so it pays at once', () => {
+    const s = scoutTo({ silver: 3, blue: 2 }, { silver: 5, blue: 5 });
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.players[0].members).toHaveLength(1);
+    expect(s.players[0].members).toHaveLength(2);
     expect(s.players[0].res.silver).toBe(0);
   });
-  it('Snap Up: several ways, the player picks', () => {
-    const s = snapUpTo({ silver: 3, gold: 3 }, { silver: 5, blue: 5, gold: 5 });
+  it('Talent Scout: several ways, the player picks', () => {
+    const s = scoutTo({ silver: 3, gold: 3, blue: 2 }, { silver: 5, blue: 5, gold: 5 });
     expect(s.pending.kind).toBe('choose');
     expect(s.pending.options.filter(o => o.kind === 'pay').length).toBeGreaterThan(1);
     expect(payChoice(s.pending)).toBe(true);

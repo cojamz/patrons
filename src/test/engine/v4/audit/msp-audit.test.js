@@ -26,9 +26,11 @@ describe('audit', () => {
     expect(s.players[0].res.purple).toBe(6);
   });
 
-  it('Show Off: half of a 3-cost member rounds down to 1 (text never says rounded down)', () => {
-    const s = take(sc(QM, { round: 2, members: [['trading.shareholder']] }), 'market.pricecheck');
-    expect(s.players[0].res.blue).toBe(1);
+  it('Bury: half of a 3-cost member rounds down to 1, plus its own +1', () => {
+    let s = take(sc(QM, { round: 2, shop: ['trading.shareholder'] }), 'market.pricecheck');
+    const u = s.shop.find(x => s.cards[x].def === 'trading.shareholder');
+    s = move(s, `card:${u}`);
+    expect(s.players[0].res.blue).toBe(1 + 1);
   });
 
   it('Overseer: 1 purple held gives nothing (half, rounded down)', () => {

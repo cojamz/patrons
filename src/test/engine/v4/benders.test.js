@@ -171,13 +171,13 @@ describe('Freelancer: pay any member’s colored part in any colors', () => {
 describe('Insider: also recruit from the top 3 of the pile', () => {
   it('offers the top 3 of the pile (not the 4th) and takes the card from the pile', () => {
     let s = scene({ members: [['benders.insider']], res: [{ gold: 30, red: 30, blue: 30, green: 30 }], rules: { release: false }, queue: [{ t: 'buy', p: 0 }] });
-    const top = s.pile.slice(0, 4);
+    const top = s.pile.slice(0, 4), row = s.shop.length;
     for (const u of top.slice(0, 3)) expect(ids(s)).toContain(`card:${u}`);
     expect(ids(s)).not.toContain(`card:${top[3]}`);
     s = move(s, `card:${top[1]}`);
     expect(s.players[0].members).toContain(top[1]);
     expect(s.pile).not.toContain(top[1]);
-    expect(s.shop.length).toBe(SHOP_SIZE);
+    expect(s.shop.length).toBe(row);
   });
   it('a Doppelganger copying Insider does not reach deeper', () => {
     let s = scene({ members: [['benders.insider', 'echo.doppel']], res: [{ gold: 30, red: 30, blue: 30, green: 30 }], rules: { release: false }, queue: [{ t: 'buy', p: 0 }] });

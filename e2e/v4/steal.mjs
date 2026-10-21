@@ -22,8 +22,8 @@ import { browserPath } from './lib/browser.mjs';
 //  (s5) Encore (Echo copies only the previous action since Cory's 2026-10-16 call, so it asks no pick on the wheel):
 //       exactly the copyable spaces light on the wheel, the caption covers none of them, a lit space's hover says
 //       what the copy gives, and clicking it copies (your resources match the engine's).
-//  (s6) Snap Up: exactly the offered face-up members light in the shop, each priced as Snap Up asks; no duplicate
-//       card by the space (feedback #14); "Recruit nothing" is offered; clicking a lit shop card recruits it.
+//  (s6) Bury: exactly the offered face-up members light in the shop; no duplicate
+//       card by the space (feedback #14); clicking a lit shop card sends it.
 //  (s7) Shake Down: the offered members glow on the rivals' seats; clicking one picks it.
 // Starts from saved games stopped on each choice (e2e/v4/lib/steal-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
@@ -281,29 +281,15 @@ try {
     await expectCounts(page, 's5', mine);
     await ctx.close();
   }
-  // (s6) Snap Up: recruit from the shop strip. The shop is its only recruit surface since feedback #14 (2026-10-17:
-  // "why also have the pop up window"; the duplicate card by the space went), "Recruit nothing" by the question
+  // (s6) Bury: pick from the shop strip. The shop is the only surface for a space's shop pick since feedback #14
+  // (2026-10-17: "why also have the pop up window"; the duplicate card by the space went)
   {
-    const { ctx, page, save } = await open('snapup', '.lt-shop .card.lit');
+    const { ctx, page, save } = await open('bury', '.lt-shop .card.lit');
     const want = save.state.pending.options.filter(o => o.target && Number.isInteger(o.target.uid)).map(o => String(o.target.uid)).sort();
     const got = await page.$$eval('.lt-shop .card.lit[data-uid]', els => els.map(e => e.dataset.uid).sort());
     if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`(s6) lit shop cards ${got.join(' ')} ≠ the engine's ${want.join(' ')}`);
-    if (await page.$('.gift-card[data-gift="recruit"]')) errors.push('(s6) Snap Up still opens the duplicate card by the space (#14)');
-    // each lit card's price (what you'd pay, after any discount) is what Snap Up asks
-    const prices = await page.$$eval('.lt-shop .card.lit[data-uid]', els => els.map(e => {
-      const now = e.querySelector('.cost-now[data-paid]');
-      const listed = (e.getAttribute('aria-label').match(/costs (.*)$/) || [])[1] || '';
-      return [e.dataset.uid, now ? Number(now.dataset.paid) : listed.split(' + ').reduce((t, x) => t + (parseInt(x, 10) || 0), 0)];
-    }));
-    for (const [uid, c] of prices) {
-      const o = save.state.pending.options.find(x => x.target && String(x.target.uid) === uid);
-      const pay = o && Number((o.label.match(/pay (\d+)$/) || [])[1]);
-      if (c !== pay) errors.push(`(s6) member ${uid} in the shop shows cost ${c}, Snap Up asks ${pay}`);
-    }
-    const skip = save.state.pending.options.find(o => !o.target);
-    const none = await page.$eval(`button[data-option="${skip.id}"]`, e => e.textContent.trim()).catch(() => null);
-    if (none !== skip.label) errors.push(`(s6) the engine's "${skip.label}" is not offered (${JSON.stringify(none)})`);
-    await page.screenshot({ path: `${SHOTS}/s6-snapup.png` });
+    if (await page.$('.gift-card[data-gift="recruit"]')) errors.push('(s6) Bury opens a duplicate card by the space (#14)');
+    await page.screenshot({ path: `${SHOTS}/s6-bury.png` });
     await click(page, `.lt-shop .card.lit[data-uid="${want[0]}"]`);
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s6) clicking the lit card did nothing'));
     await ctx.close();
@@ -393,4 +379,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`board-picker gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('board-picker gate: ok (Help Yourself, Collect Debts and Take all, Redistribute, Kickback and Escape, Encore, Snap Up, Hand-pick, Straggler, Shake Down)');
+console.log('board-picker gate: ok (Help Yourself, Collect Debts and Take all, Redistribute, Kickback and Escape, Encore, Bury, Hand-pick, Straggler, Shake Down)');

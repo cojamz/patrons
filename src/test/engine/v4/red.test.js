@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { memberCount, resume } from '../../../engine/v4/core.js';
 import { scene as baseScene, take, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
-import { SHOP_SIZE } from '../../../engine/v4/core.js';
+import { SHOP_SIZE, shopSize } from '../../../engine/v4/core.js';
 
 useTestCosts();
 
@@ -24,7 +24,7 @@ describe('Red action progression', () => {
     const s = take(scene({ res: [{ gold: 9 }], shop: ['red.volunteer', ...SHOP.slice(1)] }), 'red.hire');
     expect(defs(s, 0)).toEqual(['red.volunteer']);
     expect(R(s)[0]).toMatchObject({ gold: 9, red: 1 });
-    expect(s.shop).toHaveLength(SHOP_SIZE);
+    expect(s.shop).toHaveLength(shopSize(s));
   });
   it('Open Door offers every tied cheapest member', () => {
     let s = take(scene({ shop: ['red.intern', 'red.crowd', 'gold.midas', 'gold.jackpot', 'red.mentor', 'red.bigfamily'] }), 'red.hire');
@@ -76,13 +76,13 @@ describe('Red members', () => {
   });
 
   it('Mentor & Protégé: also take the cheapest face-up member free', () => {
-    let s = scene({ res: [{ red: 3, gold: 2 }], shop: ['red.mentor', 'red.intern', 'gold.midas', 'gold.jackpot', 'red.bigfamily', 'gold.tycoon'], pileFirst: ['red.volunteer'] });
+    let s = scene({ res: [{ red: 3, gold: 2 }], shop: ['red.mentor', 'red.intern', 'gold.midas', 'gold.jackpot', 'red.bigfamily'], pileFirst: ['red.volunteer'] });
     s = beginBuy(s);
     s = move(s, `card:${uidOf(s, 'red.mentor', 'shop')}`);
     // the Volunteer refilled into the shop and is now the cheapest
     expect(defs(s, 0)).toEqual(['red.mentor', 'red.volunteer']);
     expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 0, green: 0 });
-    expect(s.shop).toHaveLength(SHOP_SIZE);
+    expect(s.shop).toHaveLength(shopSize(s));
   });
 
   it('Proselytizer: +1 follower whenever you recruit (not for itself)', () => {

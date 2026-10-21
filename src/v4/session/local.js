@@ -47,16 +47,20 @@ export function checkpointValid(cp, state) {
   if (cp.kind === 'buy') return true;
   // a first starting pick, while its second pick is still open
   if (cp.kind === 'setup') return !!(state.pending && state.pending.player === cp.player && state.pending.kind === 'setup');
-  // a placement that showed hidden cards (New Faces' fresh row, a draw from the pile) can't be taken back: undoing it
+  // a placement that showed hidden cards (a draw from the pile, Peek's look at its top) can't be taken back: undoing it
   // would put the old row back after you'd seen what's coming (blind tester: undo leaked the deck)
   if (revealed(cp.state, state)) return false;
   return !!(state.pending && state.pending.player === cp.player && state.pending.kind !== 'place');
 }
-/** Did any card leave the face-down pile between `before` and `after` (dealt face up, drawn, or taken)? */
+/** Did any card leave the face-down pile between `before` and `after` (dealt face up, drawn, or taken), or does
+ *  `after`'s decision show pile cards `before`'s didn't (Peek looking at the top 4)? */
 export function revealed(before, after) {
   if (!before || !after || !Array.isArray(before.pile) || !Array.isArray(after.pile)) return false;
   const still = new Set(after.pile);
-  return before.pile.some(u => !still.has(u));
+  if (before.pile.some(u => !still.has(u))) return true;
+  const shown = st => new Set((st.pending?.options || []).flatMap(o => Object.entries(o.at || {}).filter(([, w]) => w === 'pile').map(([u]) => u)));
+  const was = shown(before);
+  return [...shown(after)].some(u => !was.has(u));
 }
 /** Why a move is refused in a tab that no longer owns the local game (another tab took it). */
 export const AWAY_TEXT = 'This game is open in another tab.';

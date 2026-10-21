@@ -111,18 +111,18 @@ describe('Green copies the risky spaces', () => {
     expect(labels(s)).toEqual(['Your Call (P2): +2 white']);
   });
 
-  it('copying Blue’s Snap Up doesn’t hand out the member its taker paid for', () => {
+  it('copying Blue’s Churn does Churn again for the copier', () => {
     const B = ['gold', 'red', 'market', 'echo'];
     let s = scene({ quads: B, turns: [1, 0] });
     s = take(s, 'market.bargain');
-    // +2 blue, then pays those 2 blue for the Intern (its one way gives up P2's blue lead, so the sheet asks first)
-    s = play(s, opt('Intern'));
-    if (s.pending?.kind === 'choose' && s.pending.options.some(o => o.kind === 'pay')) s = move(s, s.pending.options.find(o => o.kind === 'pay').id);
+    for (let k = 0; k < 3; k++) s = move(s, s.pending.options[0].id);
     s = pass(s);
-    expect(defs(s, 1)).toEqual(['red.intern']);
-    expect(R(s, 1).blue).toBe(0);
+    expect(R(s, 1).blue).toBe(2);
     s = take(s, 'echo.echo');
-    expect(labels(s)).toEqual(['Snap Up (P2): do Snap Up yourself']);
+    expect(labels(s)).toEqual(['Churn (P2): do Churn yourself']);
+    s = move(s, s.pending.options[0].id);
+    expect(R(s, 0).blue).toBe(2);
+    expect(s.pending.prompt).toMatch(/^Churn: send which member/);
   });
 
   it('a Silver space’s chip shows its own gain, not the host’s Caterer or Grand Host', () => {
@@ -244,22 +244,22 @@ describe('Silver gifts with Guest and Kickback', () => {
 describe('Blue’s out-of-buy recruits with Pied Piper and Proselytizer', () => {
   const Q = ['gold', 'red', 'market', 'green'];
   const rich = { gold: 9, red: 9, blue: 9, green: 9 };
-  it('Snap Up’s recruit and the normal buy make 2: Drive pays, Proselytizer pays twice', () => {
-    // P2 leads blue (Blue's ring counts blue), so P1's default payment may spend blue, as it did before that ring
-    let s = scene({ quads: Q, res: [rich, { blue: 30 }], members: [['red.drive', 'red.proselytizer']] });
-    s = payUp(play(take(s, 'market.bargain'), opt('Intern')));
-    expect(R(s, 0).red).toBeLessThanOrEqual(9);
+  it('Buy Twice makes 2 recruits: Drive pays, Proselytizer pays twice', () => {
+    let s = scene({ quads: Q, round: 2, res: [rich, { blue: 30 }], members: [['red.drive', 'red.proselytizer']] });
+    s = take(s, 'market.clearance');
+    s = payUp(move(s, `card:${uidOf(s, 'red.intern', 'shop')}`));
     const red = R(s, 0).red;
-    s = move(s, `card:${uidOf(s, 'red.patriarch', 'shop')}`);
+    s = payUp(move(s, `card:${uidOf(s, 'red.patriarch', 'shop')}`));
     expect(R(s, 0).red).toBe(red + 2 - 3); // Drive's +2, Patriarch's 3 red
     expect(s.players[0].bonus).toBe(2);
-  });
-  it('Half Price is the buy: one recruit, no buy step after it', () => {
-    let s = scene({ quads: Q, round: 2, res: [rich], members: [['red.drive', 'red.proselytizer']] });
-    s = payUp(play(take(s, 'market.clearance'), opt('Patriarch')));
     expect(s.pending?.kind).not.toBe('buy');
-    expect(s.players[0].bonus).toBe(1);
-    expect(s.players[0].turnRecruits).toBe(1);
+  });
+  it('Bury is not a buy: the normal buy step follows it', () => {
+    let s = scene({ quads: Q, round: 2, res: [rich], members: [['red.drive', 'red.proselytizer']] });
+    s = take(s, 'market.pricecheck');
+    s = move(s, `card:${uidOf(s, 'red.patriarch', 'shop')}`);
+    expect(s.pending?.kind).toBe('buy');
+    expect(s.players[0].turnRecruits).toBe(0);
   });
   it('Spree: 3 buys, Drive pays once', () => {
     let s = scene({ quads: Q, round: 3, res: [{ gold: 20, red: 20, blue: 20, green: 20 }, { blue: 30 }], members: [['red.drive']] });

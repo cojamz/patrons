@@ -1,5 +1,6 @@
-// New Faces (Restock) sweeps the face-up row under the deck: its preview lists every member it sends away, and its
-// space card says the whole row goes (a few by name), so nobody sweeps their own target by surprise. Spaces that sweep nothing list nothing.
+// A space that sends face-up members under the deck whatever you choose lists them in its preview, and its space card
+// says so (the whole row as one), so nobody sweeps their own target by surprise. Spaces that sweep nothing list nothing.
+// New Faces (the whole-row sweep) is gone since Blue's Oct 20 rework; Out of Style with one color face up sweeps it all.
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove, previewSpace, quadrant, cardDef } from '../../../engine/v4/index.js';
@@ -15,12 +16,18 @@ function restockScene() {
     for (let k = 0; k < 400 && !(s.pending && s.pending.kind === 'place' && s.pending.player === 0 && s.round >= 1); k++) s = applyMove(s, chooseBotMove(s, () => 0.3));
     const q = s.quadrants.indexOf('market');
     const i = quadrant('market').actions.findIndex(a => a.key === 'restock');
-    if (s.pending.options.some(o => o.id === `slot:${q}-${i}`)) return { s, q, i };
+    if (!s.pending.options.some(o => o.id === `slot:${q}-${i}`)) continue;
+    // a row of one color: Out of Style's only choice sends every face-up member
+    const red = [...s.shop, ...s.pile].filter(u => s.cards[u].def.startsWith('red.')).slice(0, s.shop.length);
+    if (red.length < s.shop.length) continue;
+    s.pile = [...s.pile.filter(u => !red.includes(u)), ...s.shop.filter(u => !red.includes(u))];
+    s.shop = red;
+    return { s, q, i };
   }
   return null;
 }
 
-describe('New Faces names what it sweeps', () => {
+describe('Out of Style names what it sweeps', () => {
   it('the preview lists every face-up member it sends under the deck', () => {
     const { s, q, i } = restockScene();
     const pv = previewSpace(s, 0, q, i);

@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove, resume, contestTable, SHOP_SIZE, DEFAULT_RULES } from '../../../engine/v4/core.js';
+import { createGame, applyMove, resume, contestTable, DEFAULT_RULES } from '../../../engine/v4/core.js';
 import { defById } from '../../../engine/v4/content/index.js';
 import { sceneQ } from './cards-helpers.js';
 import { take, move } from './helpers.js';
 const Q=['gold','red','yellow','green'];
+const costOf=(s,u)=>{const d=defById(s.cards[u].def);return d.s+d.w;};
 describe('October17 explicit rules',()=>{
  it('drafts one resource per player in reverse first-turn order without replacement',()=>{
   let s=createGame({seats:[{},{},{}],quadrants:['red','green','blue'],seed:19});
@@ -35,7 +36,7 @@ describe('October17 explicit rules',()=>{
  });
  it('refreshes the complete market between rounds without losing cards',()=>{
   let s=sceneQ({quadrants:Q,queue:[{t:'turn',p:0}]});
-  const old=[...s.shop],next=s.pile.slice(0,SHOP_SIZE),all=[...s.shop,...s.pile].sort((a,b)=>a-b);
+  const old=[...s.shop],next=s.pile.slice(0,6),/* round II shows 6 */all=[...s.shop,...s.pile].sort((a,b)=>a-b);
   s.pending=null;s.queue=[{t:'round',r:2}];s=resume(s);
   expect(s.shop).toEqual(next);expect(s.pile.slice(-old.length)).toEqual(old);
   expect([...s.shop,...s.pile].sort((a,b)=>a-b)).toEqual(all);
@@ -55,12 +56,13 @@ describe('October17 explicit rules',()=>{
   const s=take(sceneQ({quadrants:['silver','red','yellow','green'],round:2,res:[{},{silver:3}]}),'silver.tide');
   expect(s.players.map(p=>p.res.silver)).toEqual([3,5]);
  });
- it('Show Off logs the gain, including converted gains',()=>{
+ it('Bury logs the gain, including converted gains',()=>{
   for(const converted of [false,true]){
-   let s=sceneQ({quadrants:['market','gold','red','yellow'],round:2,members:[converted?['gold.tycoon','gold.midas']:['gold.tycoon']]});
+   let s=sceneQ({quadrants:['market','gold','red','yellow'],round:2,members:[converted?['gold.midas']:[]]});
    if(converted){const uid=s.players[0].members.find(u=>s.cards[u].def==='gold.midas');s.cards[uid].on=true;}
-   const k=Math.floor(Math.max(...s.players[0].members.map(u=>{const d=defById(s.cards[u].def);return d.s+d.w}))/2);
-   s=take(s,'market.pricecheck');expect(s.log).toContain(`P1's Show Off: +${k} ${converted?'gold':'blue'}.`);
+   const uid=[...s.shop].sort((a,b)=>costOf(s,b)-costOf(s,a))[0],k=Math.floor(costOf(s,uid)/2);
+   s=take(s,'market.pricecheck');s=applyMove(s,{player:0,option:`card:${uid}`});
+   expect(s.log).toContain(`P1's Bury: +${k} ${converted?'gold':'blue'}.`);
   }
  });
 

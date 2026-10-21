@@ -82,7 +82,7 @@ export function boardPicker(state, pend) {
  * same card while their targets stay lit on the board (board: where else they're picked):
  *   steal   Help Yourself, Collect Debts, Redistribute, Lie Low, Crime Wave: each rival's face and the stacks you can
  *           take from, one coin per click, and "Take all N" (plan: the picks it makes, biggest pile first)
- *   recruit Snap Up, Half Price, Hand-pick: the members you can recruit, picture, name and what you pay
+ *   recruit Hand-pick, Open Door (and Churn, Bury: the shop members they send to the bottom): picture, name, price
  *   move    Straggler: the lit spaces on the wheel are the answer; the card says so and holds Stay put
  * The model: { kind, title, head, n, color, actor, chosen, firsts, seconds, others, rest, done, sameCost, board }.
  *   firsts: the first row, [{ id, a, chosen }]: id "@pick:a" lifts it, "@unpick" (the one lifted) puts it down; another
@@ -162,7 +162,7 @@ function lastSpaceName(state, p) {
   const [q, i] = l.key.split('-').map(Number);
   try { const a = quadrant(state.quadrants[q]).actions[i]; return a ? a.name : null; } catch { return null; }
 }
-const SHOP_HEADS = { 'Hand-pick': 'Take a member, free', 'Recruit a Member': 'Recruit a shop member, free', 'Open Door': 'Recruit the cheapest shop member, free', 'Snap Up': 'Recruit a member, any colors', 'Half Price': 'Recruit a member at half price' };
+const SHOP_HEADS = { 'Hand-pick': 'Take a member, free', 'Recruit a Member': 'Recruit a shop member, free', 'Open Door': 'Recruit the cheapest shop member, free', 'Bury': 'Send one to the bottom: half its cost in blue' };
 
 /** The steal, the recruit from the row and the minion's move, on the card by the space (see giftPick), or null. */
 function farPick(state, pend, title, question, base) {

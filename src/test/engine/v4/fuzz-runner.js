@@ -1,5 +1,5 @@
 // Shared runner for the fuzz tests: plays seeded games and checks every invariant after every move.
-import { createGame, applyMove, legalMoves, followers, TIERS, SHOP_SIZE } from '../../../engine/v4/core.js';
+import { createGame, applyMove, legalMoves, followers, TIERS, shopSize } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 
@@ -46,8 +46,8 @@ export function checkInvariants(s, ctx) {
   s.players.forEach(p => p.members.forEach(u => put(u, p.name)));
   const all = Object.keys(s.cards).map(Number);
   if (seen.size !== all.length || all.some(u => !seen.has(u))) fail(`cards lost: ${seen.size} of ${all.length}`, s, ctx);
-  // the shop is full while the pile lasts
-  if (s.shop.length !== Math.min(SHOP_SIZE, s.shop.length + s.pile.length)) fail(`shop ${s.shop.length} with pile ${s.pile.length}`, s, ctx);
+  // the shop is full while the pile lasts (Churn refills once, after its last pick)
+  if (s.queue[0]?.h !== 'market.churn' && s.shop.length !== Math.min(shopSize(s), s.shop.length + s.pile.length)) fail(`shop ${s.shop.length} with pile ${s.pile.length}`, s, ctx);
   // pending exists exactly while the game runs
   if (!s.pending !== !!s.over) fail(`pending ${!!s.pending} but over ${s.over}`, s, ctx);
   if (s.pending) {

@@ -1,12 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { contextFor, liveOptions, resume, SHOP_SIZE } from '../../../engine/v4/core.js';
+import { contextFor, liveOptions, resume, SHOP_SIZE, shopSize } from '../../../engine/v4/core.js';
 import { ledger } from '../../../engine/v4/content/echo.js';
 import { table, uidIn, useCosts } from './cards-helpers-b.js';
 import { actionName, move, take } from './helpers.js';
 
 const Q = ['gold', 'red', 'trading', 'echo'];
-const ROW = ['gold.banker', 'red.twins', 'red.intern', 'red.volunteer', 'gold.tycoon', 'echo.evergreen', 'echo.muse']; // one full row (SHOP_SIZE)
+const ROW = ['gold.banker', 'red.twins', 'red.intern', 'red.volunteer', 'gold.tycoon', 'echo.evergreen', 'echo.muse']; // one full round-III row (SHOP_SIZE); round I shows shopSize = 5
 useCosts({
   'red.intern': [1, 0], 'red.twins': [1, 1], 'red.volunteer': [2, 2], 'gold.banker': [2, 2],
   'gold.tycoon': [4, 2], 'echo.evergreen': [1, 3], 'echo.muse': [2, 2], 'echo.chronicler': [2, 3],
@@ -23,12 +23,12 @@ describe('locked Red action progression', () => {
   });
 
   it('cheapest recruitment is free, gives inherent red and refills only the removed member', () => {
-    let s = table(Q, { shop: ROW });
+    let s = table(Q, { shop: ROW.slice(0, 5) });
     const pile = s.pile.length;
     s = take(s, 'red.hire');
     expect(defs(s, 0)).toEqual(['red.intern']);
     expect(s.players[0].res.red).toBe(1);
-    expect(s.shop).toHaveLength(SHOP_SIZE);
+    expect(s.shop).toHaveLength(shopSize(s));
     expect(s.pile).toHaveLength(pile - 1);
   });
 
@@ -97,7 +97,7 @@ describe('locked Red action progression', () => {
     const a = uidIn(s, 'red.volunteer', 0), b = uidIn(s, 'echo.evergreen', 'shop');
     const before = remaining(s).sort((x, y) => x - y), pile = [...s.pile];
     s = move(s, swapId(a, b));
-    expect(s.shop).toHaveLength(SHOP_SIZE);
+    expect(s.shop).toHaveLength(ROW.length);
     expect(s.pile).toEqual(pile);
     expect(remaining(s).sort((x, y) => x - y)).toEqual(before);
     expect(defs(s, 0)).toContain('echo.evergreen'); expect(s.shop).toContain(a);

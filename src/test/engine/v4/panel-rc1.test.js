@@ -50,13 +50,13 @@ describe('11 · every choice names the card or space that asked', () => {
 });
 
 describe('12 · one price rule for every recruit', () => {
-  it('Snap Up offers Underdog when Penny Pincher makes it affordable (2 gold count as 4, plus 2 blue)', () => {
+  it('Talent Scout offers Underdog when Penny Pincher makes it affordable (2 gold count as 4, plus 2 blue)', () => {
     const restore = pinCosts({ 'gold.underdog': [4, 2] }); // the price this case was written at (Underdog is 8 since 2026-10-15)
     try {
-    let s = sceneQ({ quadrants: CLASSIC, res: [{ gold: 2 }], members: [['gold.thrift']] });
-    row(s, ['gold.underdog', 'red.patriarch'], ['red.mob']);
-    s = take(s, 'market.bargain');
-    const ud = uidOf(s, 'gold.underdog', 'shop');
+    let s = sceneQ({ quadrants: CLASSIC, res: [{ gold: 2, blue: 2 }], members: [['gold.thrift', 'market.blackmarket']] });
+    row(s, ['red.patriarch', 'red.mob'], ['gold.underdog']);
+    s = move(s, `use:${uidOf(s, 'market.blackmarket', 0)}`);
+    const ud = uidOf(s, 'gold.underdog', 'pile');
     expect(paymentPlan(s, s.players[0], ud)).not.toBeNull();
     expect(s.pending.options.map(o => o.value)).toContain(ud);
     s = move(s, `card:${ud}`);
@@ -65,13 +65,13 @@ describe('12 · one price rule for every recruit', () => {
     expect(s.players[0].res).toMatchObject({ gold: 0, blue: 0 });
     } finally { restore(); }
   });
-  it('Snap Up uses (and spends) an Intro Offer discount', () => {
+  it('Talent Scout uses (and spends) an Intro Offer discount', () => {
     const restore = pinCosts({ 'gold.underdog': [4, 2] }); // the price this case was written at (Underdog is 8 since 2026-10-15)
     try {
-    let s = sceneQ({ quadrants: CLASSIC, res: [{ red: 2 }], discount: [4] });
-    row(s, ['red.patriarch', 'gold.underdog'], ['red.mob']);
-    s = take(s, 'market.bargain'); // +2 blue: 4 in all; Underdog costs 6, 2 after the discount
-    const ud = uidOf(s, 'gold.underdog', 'shop');
+    let s = sceneQ({ quadrants: CLASSIC, res: [{ red: 2, blue: 2 }], discount: [4], members: [['market.blackmarket']] });
+    row(s, ['red.patriarch'], ['gold.underdog', 'red.mob']);
+    s = move(s, `use:${uidOf(s, 'market.blackmarket', 0)}`); // 4 in all; Underdog costs 6, 2 after the discount
+    const ud = uidOf(s, 'gold.underdog', 'pile');
     expect(s.pending.options.map(o => o.value)).toContain(ud);
     s = move(s, `card:${ud}`);
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
@@ -200,17 +200,18 @@ describe('19 · Collect Debts keeps its count through a save and load', () => {
   });
 });
 
-// The online gate stalled on a Snap Up pay choice (a seat in round III, 2026-10-15). Drive Snap Up → pay to the end
+// The online gate stalled on a Snap Up pay choice (a seat in round III, 2026-10-15). Snap Up is gone (Blue's Oct 20
+// rework); Talent Scout keeps that off-buy recruit path, so drive Talent Scout → pay to the end
 // with Penny Pincher and an Intro Offer, by the bot and by the first option, also through a JSON save (the online
 // session stores stateJson), and check every offered pay option is legal and finishes.
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { STRAYS, stray } from './stray.js';
 const json = v => JSON.parse(JSON.stringify(v)); // the online session stores the state as a JSON string
-describe('Snap Up → pay always finishes', () => {
+describe('Talent Scout → pay always finishes', () => {
   const start = (extra = {}) => {
-    const s = sceneQ({ quadrants: CLASSIC, round: 3, res: [{ gold: 3, red: 2, green: 2 }], members: [['gold.thrift']], discount: [4], ...extra });
-    row(s, ['gold.underdog', 'red.patriarch', 'gold.jackpot', 'red.sponsor', 'echo.evergreen'], ['red.mob', 'red.intern']);
-    return take(s, 'market.bargain');
+    const s = sceneQ({ quadrants: CLASSIC, round: 3, res: [{ gold: 3, red: 2, green: 2, blue: 2 }], members: [['gold.thrift', 'market.blackmarket']], discount: [4], ...extra });
+    row(s, ['red.mob', 'red.intern'], ['gold.underdog', 'red.patriarch', 'gold.jackpot', 'red.sponsor', 'echo.evergreen']);
+    return move(s, `use:${uidOf(s, 'market.blackmarket', 0)}`);
   };
   const finish = (s, pickFn, save = x => x) => {
     let guard = 0;
@@ -241,7 +242,7 @@ describe('Snap Up → pay always finishes', () => {
       finish(start(), s => chooseBotMove(s, () => 0.5, { level: 'easy' }), save);
       expect(start().pending.options.at(-1).id).toBe('none');
       const s = finish(start(), () => ({ player: 0, option: 'none' }), save);
-      expect(s.players[0].members.length).toBe(1);
+      expect(s.players[0].members.length).toBe(2);
     }
   });
 });

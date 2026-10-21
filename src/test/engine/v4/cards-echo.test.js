@@ -226,7 +226,7 @@ describe('legacy Green members remain readable in old records', () => {
   });
   it('Groupie hears green recruitment', () => {
     let s = table(Q, { res: [{ green: 6 }], shop: ['echo.muse', ...ROW], members: [[], ['echo.groupie']] });
-    s = move(take(s, 'market.showroom'), cardOpt(s, 'echo.muse'));
+    s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.muse'));
     expect(R(s, 1).green).toBe(1);
   });
   it('Translator converts the copied gain and can remain switched off', () => {
@@ -252,7 +252,7 @@ describe('legacy Green members remain readable in old records', () => {
   });
   it('Mime recruits with green equal to the richest rival', () => {
     let s = table(Q, { n: 3, shop: ['echo.mirror', ...ROW], res: [{ green: 4, red: 2 }, { green: 5 }, { green: 2 }] });
-    s = move(take(s, 'market.showroom'), cardOpt(s, 'echo.mirror'));
+    s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.mirror'));
     expect(R(s).green).toBe(5);
   });
   it('Sleepwalker can copy the prior round’s printed chip on recruitment and round start', () => {

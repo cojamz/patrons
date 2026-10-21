@@ -148,7 +148,7 @@ export function cheapSeatsSave(white = 7) {
   throw new Error('dialog-save: never reached P1 on Cheap Seats');
 }
 
-// Wave-2 tester B's moments (#8–#12): Snap Up's payment, Talent Scout's top 5, Your Call, Release, Double Agent.
+// Wave-2 tester B's moments (#8–#12): an off-buy payment (Talent Scout's, Snap Up's before), Talent Scout's top 5, Your Call, Release, Double Agent.
 export const BOARD_TABLE = ['echo', 'red', 'market', 'thieves'];
 export const CALL_TABLE = ['gold', 'red', 'trading', 'echo'];
 /** Bots play until P1 is asked `kind` (in round `round` or later), then P1's resources and members are set. */
@@ -173,13 +173,15 @@ function playToOn(table, seed, ready) {
 }
 const slotOf = (table, qid, key) => `slot:${table.indexOf(qid)}-${quadrant(qid).actions.findIndex(a => a.key === key)}`;
 export function momentSave(name) {
-  if (name === 'snappay') {
-    // Snap Up, then a member with several ways to pay (any colors)
-    const slot = slotOf(BOARD_TABLE, 'market', 'bargain');
-    const s0 = at(BOARD_TABLE, 'place', { res: { green: 2, red: 2, blue: 1, magenta: 2 }, need: st => st.pending.options.some(o => o.id === slot) });
-    const s = applyMove(s0, { player: 0, option: slot });
+  if (name === 'scoutpay') {
+    // Talent Scout, then a member off the pile with several ways to pay (the pay sheet outside the buy step; Snap Up
+    // asked this before Blue's Oct 20 rework)
+    const s0 = at(BOARD_TABLE, 'buy', { res: { green: 3, red: 3, blue: 3, magenta: 3 }, members: ['market.blackmarket'] });
+    const use = s0.pending.options.find(o => o.id.startsWith('use:'));
+    if (!use) throw new Error('dialog-save: Talent Scout not usable');
+    const s = applyMove(s0, { player: 0, option: use.id });
     const o = s.pending && s.pending.options.find(x => x.kind === 'card' && applyMove(s, { player: 0, option: x.id }).pending?.options?.filter(y => y.kind === 'pay').length > 1);
-    if (!o) throw new Error('dialog-save: no Snap Up member with two ways to pay');
+    if (!o) throw new Error('dialog-save: no Talent Scout member with two ways to pay');
     return wrap(applyMove(s, { player: 0, option: o.id }));
   }
   if (name === 'scout') {

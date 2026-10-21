@@ -9,7 +9,8 @@ import { TEXT_CLIP } from './lib/textclip.mjs';
 import { LEGACY } from './lib/legacy.mjs';
 import { TYPE_SCALE } from './lib/typescale.mjs';
 import { answerChoice } from './lib/answer.mjs';
-import { SHOP_SIZE } from '../../src/engine/v4/index.js';
+import { shopSize } from '../../src/engine/v4/index.js';
+const SETUP_SHOP = shopSize({ round: 0 }); // the shop at setup and in round I (5; it grows 6, 7 by round)
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -149,7 +150,7 @@ try {
       const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden' || e.closest('[aria-hidden="true"]')) return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 && b.left >= -0.5 && b.top >= -0.5 && b.right <= innerWidth + 0.5 && b.bottom <= innerHeight + 0.5; };
       return { n: cards.length, shown: cards.filter(vis).length, named: cards.filter(c => (c.querySelector('.nm') || {}).textContent).length };
     });
-    if (r.n !== SHOP_SIZE || r.shown !== SHOP_SIZE || r.named !== SHOP_SIZE) { errors.push(`setup: ${r.shown} of ${r.n} shop members fully on screen at 1270×700 (want ${SHOP_SIZE})`); await shot('zz-setup-shop'); }
+    if (r.n !== SETUP_SHOP || r.shown !== SETUP_SHOP || r.named !== SETUP_SHOP) { errors.push(`setup: ${r.shown} of ${r.n} shop members fully on screen at 1270×700 (want ${SETUP_SHOP})`); await shot('zz-setup-shop'); }
     await shot('02b-setup-shop');
   }
   const seen = new Set();

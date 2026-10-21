@@ -104,7 +104,10 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
   // a pick from the top of the pile (Talent Scout): the strip becomes a tray of those 5, in pile order; what you can't
   // pay for recedes (dialogs pod, wave-2 tester: one text chip, the other four never shown)
-  const tray = picking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, 5).includes(o.value)) ? state.pile.slice(0, 5) : null;
+  // Peek (Blue) puts the top 4 back in your order: its tray is those 4, and the caption says what the pick does
+  const peeking = picking && /^Peek: /.test(pend.prompt || '');
+  const reach = peeking ? 4 : 5;
+  const tray = picking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, reach).includes(o.value)) ? state.pile.slice(0, reach) : null;
   const steady = useRef(null);
   // a turn's own key: state.turns grows by one as each turn starts (the engine's record of this round's turns)
   const rowKey = `${sort}|${state.round}|${(state.turns || []).length}`;
@@ -123,7 +126,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
         {/* a discount is said once, here, beside the struck prices (w4 A#23: its sentence was on all ten hovers) */}
-        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} members affordable` : `${state.shop.length} members`}</small></h3>
+        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? (peeking ? 'Pick the next one on top' : `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for`) : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} members affordable` : `${state.shop.length} members`}</small></h3>
         <span className="lt-shop-controls">
           {viewer && <button type="button" className="lt-view-btn" aria-label="Fade members you can't afford" title="Fade members you can't afford right now" aria-pressed={fade} onClick={toggleFade}>affordable</button>}
           <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} onClick={toggleView}>details</button>
@@ -133,7 +136,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
         </span>
       </div>
       <div className="lt-shop-body">
-      <div className="lt-cards" ref={rowRef}>
+      <div className="lt-cards" data-n={uids.length} ref={rowRef}>
       <MemberDeck state={state} deckRef={deckRef} />
       <FollowerRates state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} buying={buying || picking} />
         {uids.map(uid => {

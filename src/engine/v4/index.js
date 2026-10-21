@@ -2,7 +2,7 @@
 export {
   createGame, applyMove, legalMoves, isLegal,
   followers, memberCount, memberWeight, countMembersOfColor, cardDef, actionAt, openSlots, spaceOpen,
-  memberPrice, paymentPlan, followerPlan, paymentChoices, followerChoices, RING_VALUE, WORKERS, SHOP_SIZE, TIERS, tierLeft, roman,
+  memberPrice, paymentPlan, followerPlan, paymentChoices, followerChoices, RING_VALUE, WORKERS, SHOP_SIZE, shopSize, TIERS, tierLeft, roman,
   contestTable, turnRail, roundOrder, roundWorkers,
 } from './core.js';
 export { quadrant, defById, DEFAULT_QUADRANTS, CLASSIC, classicFor, defaultQuadrants, allQuadrantIds } from './content/index.js';

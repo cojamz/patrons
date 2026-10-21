@@ -19,7 +19,8 @@ import { browserPath } from './lib/browser.mjs';
 // Server: $V4_URL if set, else starts `npx vite` on a free port from 5182.
 import { chromium, devices } from 'playwright';
 import { TEXT_CLIP } from './lib/textclip.mjs';
-import { SHOP_SIZE } from '../../src/engine/v4/index.js';
+import { shopSize } from '../../src/engine/v4/index.js';
+const SETUP_SHOP = shopSize({ round: 0 }); // the shop at setup and in round I (5; it grows 6, 7 by round)
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -180,7 +181,7 @@ async function setupPhase() {
           const b = strip && strip.getBoundingClientRect();
           return { n: document.querySelectorAll('.for-sale .fs-card').length, on: !!b && b.top >= -0.5 && b.bottom <= innerHeight + 0.5 && b.left >= -0.5 && b.right <= innerWidth + 0.5 };
         });
-        if (r.n !== SHOP_SIZE) note(`(k) iPhone 13 (${how}): ${r.n} members for sale in the setup tray (want ${SHOP_SIZE})`, 'setup');
+        if (r.n !== SETUP_SHOP) note(`(k) iPhone 13 (${how}): ${r.n} members for sale in the setup tray (want ${SETUP_SHOP})`, 'setup');
         if (!r.on) note(`(k) iPhone 13 (${how}): the setup tray's shop strip is not fully on screen`, 'setup');
         if (how === 'tap') {
           for (let c = 0; c < r.n; c++) {

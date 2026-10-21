@@ -10,6 +10,8 @@ import { startEffects, stopEffects, abandonEffects, underCause } from './effects
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
 export const SHOP_SIZE = 7;
+/** Face-up members by round: 5 in round I (and setup), 6 in round II, 7 in round III (Cory, 2026-10-21). SHOP_SIZE is the most. */
+export const shopSize = state => (state.round <= 1 ? 5 : state.round === 2 ? 6 : SHOP_SIZE);
 // Any colors, no stock limit. The three rounds remain the game clock.
 export const TIERS = [
   { key: 'small', cost: 1, get: 1, colors: 1, label: '1 of anything' },
@@ -627,6 +629,7 @@ function runTask(state, task) {
       (state.turns = state.turns || []).push(p.id);
       p.turnRecruits = 0;
       p.turnBuys = 0;
+      delete p.peekReach;
       // task.ring: a turn limited to spaces of that ring or lower (a weaker extra worker)
       const source = workerSourceOf(task);
       state.queue.unshift({ t: 'place', p: p.id, ...source, ...(task.ring ? { ring: task.ring } : {}) }, { t: 'buy', p: p.id, ...source }, { t: 'buy', p: p.id, ...source, extra: true }, { t: 'endTurn', p: p.id, ...source });
@@ -851,7 +854,7 @@ export const roundWorkers = (state, p) => p.workers ?? WORKERS[Math.max(1, state
 // ---------- recruiting, buying, gaining ----------
 
 function refill(state) {
-  while (state.shop.length < SHOP_SIZE && state.pile.length) state.shop.push(state.pile.shift());
+  while (state.shop.length < shopSize(state) && state.pile.length) state.shop.push(state.pile.shift());
 }
 
 // how: a recruit priced by a space's own rule (Snap Up: { anyColors }, Half Price: { anyColors, half }), as memberPrice
@@ -895,12 +898,15 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
     // a discount waits for a member that actually costs something
     if (cardDef(state, uid).s + cardDef(state, uid).w > 0) { p.discount = 0; p.discountSources = []; }
   }
+  // Peek's reach is one recruit from the cards it showed; Insider's stays
+  const peeked = idx < 0 && fromPile < (p.peekReach || 0);
+  if (peeked) delete p.peekReach;
   if (idx >= 0) state.shop.splice(idx, 1);
   else state.pile.splice(fromPile, 1);
   refill(state);
   p.members.push(uid);
   const def = cardDef(state, uid);
-  log(state, `${p.name} recruited ${def.name}${idx < 0 ? ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}` : ''} (${paid}).`);
+  log(state, `${p.name} recruited ${def.name}${idx < 0 ? (peeked ? ' from the pile with Peek' : ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}`) : ''} (${paid}).`);
   memberAcquired(state, p, uid);
 }
 /** Recruit is an active acquisition for the acting leader, including a take or their side of a swap. */
@@ -1189,7 +1195,8 @@ function boughtOnce(state, p, task) {
 }
 /** How many cards off the top of the pile p may recruit from (Insider: flag pileReach; copies don't stack). */
 export function pileReach(state, p) {
-  let n = 0;
+  // Peek (Blue) lets its taker reach the cards it looked at, this turn only
+  let n = p.peekReach || 0;
   for (const uid of p.members) for (const def of effectiveDefs(state.cards[uid])) if (def.pileReach) n = Math.max(n, def.pileReach);
   return n;
 }
@@ -1305,6 +1312,7 @@ function ctxFor(state) {
       traceChanges(state, before, owner, { name });
       return out;
     },
+    refillShop: () => refill(state),
     buryFromShop(uid) {
       const i = state.shop.indexOf(uid);
       if (i < 0) return;

@@ -92,15 +92,13 @@ const SUMS = {
   'yellow.prism': () => [R('set', '+1'), PER, R('yellow', 3)], //                                   +1⊛ / 3☀
   'yellow.gather': () => [R('any', '+1'), PER, MEM()], //                                          +1◌ / ▢       (each brings its own color)
   'yellow.flourish': () => [R('set', '+1'), PER, R('set')], //                                     +1⊛ / ⊛
-  // market (blue): the face-up row
-  'market.bargain': ({ n }) => [R('blue', plus(n(0, 2))), DOT, R('any'), ARROW, MEM()], //         +2■ · ◌ → ▢   (recruit now, any colors)
-  'market.restock': ({ n }) => [R('blue', plus(n(0, 2))), DOT, SWAP, MEM({ row: true })], //       +2■ · ⇄▤
-  'market.showroom': ({ a }) => (/badged/i.test(a.text)
-    ? [R('blue', '+1'), PER, MEM({ mod: 'high' })]
-    : [R('blue', '+1'), NUM('+1'), PER, MEM({ tint: 'blue' })]), //                                +1■ +1/▢(blue, face-up)
-  'market.clearance': () => [TAGT('½'), MEM()], //                                                 [½] ▢
-  'market.pricecheck': () => [R('blue', '+'), EQ, NUM('½'), MEM({ mod: 'high' })], //              +■ = ½▴▢
-  'market.spree': ({ n }) => [TAGT(), X(n(0, 3))], //                                              [ ] ×3
+  // market (blue): the shop and the pile (Blue's Oct 20 rework)
+  'market.bargain': ({ r }) => [R('blue', plus(r + 1)), DOT, MEM(), X(3), SWAP], //                    +2■ · ▢×3 ⇄   (3 to the bottom)
+  'market.restock': () => [R('blue', '+1'), PER, MEM({ row: true }), CUT, DOT, R('blue', '+1')], //   +1■ / ▤ · +1■ (one color sent)
+  'market.showroom': () => [MEM({ mod: 'new' }), X(4), ARROW, TAGT(), CUT, DOT, R('blue', '+1')], //  ▢×4 → [ ]    (peek, may buy one)
+  'market.clearance': () => [TAGT(), X(2), CUT, DOT, R('blue', '+1')], //                              [ ] ×2
+  'market.pricecheck': () => [MEM(), ARROW, R('blue', '+'), EQ, NUM('½'), CUT, DOT, R('blue', '+1')], // ▢ → +■ = ½
+  'market.spree': () => [TAGT(), X(3), DOT, R('blue', '+3')], //                                       [ ] ×3 · +3■
   // thieves (magenta): take
   'thieves.pickpocket': ({ r }) => [HOOD(), ARROW, R('any', r), DOT, FOL(plus(r)), CUT, DOT, R('magenta', '+1')],
   'thieves.tipoff': () => [HOOD(), ARROW, R('any', 1), PER, WORD('occupied magenta action'), MIN(), CUT, DOT, R('magenta', '+1')],

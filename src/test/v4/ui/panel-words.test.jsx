@@ -52,13 +52,14 @@ describe('panel words (w3)', () => {
     expect(panelText('purple', { key: 'windup' }).second).toBe('per minion you placed');
   });
 
-  it('Trade Seeds shows the gain before the swaps, and Snap Up says the recruit is paid and optional', () => {
+  it('Trade Seeds shows the gain before the swaps, and Churn its round gain before the 3 it sends', () => {
     const seeds = panelText('yellow', { key: 'transmute' });
     expect(seeds.main).toBe('+2 yellow');
     expect(seeds.second).toBe('then swap up to 3');
-    const snap = panelText('market', { key: 'bargain' });
-    expect(snap.second).toBe('may pay for a member');
-    expect(snap.note).toBe('in any colors; extra buy');
+    const churn = panelText('market', { key: 'bargain' }, 2);
+    expect(churn.main).toBe('+3 blue');
+    expect(churn.second).toBe('send 3 shop members to the bottom');
+    expect(churn.note).toBe('1 × round, +1');
     expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
 
@@ -86,8 +87,10 @@ describe('panel words (w3)', () => {
     expect(cs.main).toBe('+1 @f');
     expect(cs.second).toBe('per 3 white you hold');
     expect(lines(cs).join(' ')).not.toMatch(/buy|spend|resource each/i);
-    // Show Off: half a member's cost, never "half your priciest" alone (read as half your biggest pile); whole in line 1
-    expect(panelText('market', { key: 'pricecheck' }, 2).verb).toMatch(/^Gain half your priciest member’s cost$/);
+    // Bury: what it does in line 1, what it pays in line 2 ("half its cost": the member's, never your pile's)
+    const bury = panelText('market', { key: 'pricecheck' }, 2);
+    expect(bury.verb).toBe('Bury a shop member');
+    expect(bury.second).toBe('gain half its cost in blue');
   });
 
   it('Gather follows the round while Tithe counts the viewer’s members', () => {
@@ -121,15 +124,10 @@ describe('panel words (w3)', () => {
     expect(panelText('echo', a, 1).second).toBe('per other green action with a minion');
   });
 
-  it('Name Drop prints this turn\'s real payout big, with its rule small under it (f8)', () => {
-    const s = createGame({ seats: [{ name: 'A', kind: 'human' }, { name: 'B', kind: 'bot' }], seed: 5, quadrants: ['market', 'red', 'gold', 'yellow'] });
-    const a = quadrant('market').actions.find(x => x.key === 'showroom');
-    const blue = s.shop.filter(u => cardDef(s, u).quadrant === 'market').length;
-    const t = panelText('market', a, 1, s);
-    expect(t.main).toBe(`+${1 + blue} blue`);
-    expect(t.second).toBe('1, +1 per blue in the shop');
-    // without a table (the decipher table, the strip) it's the printed rule
-    expect(panelText('market', a, 1).main).toBe('+1 blue');
+  it('Spree prints its blue and says it is 3 buys (Name Drop, the live-payout space, left with Blue\'s Oct 20 rework)', () => {
+    const a = quadrant('market').actions.find(x => x.key === 'spree');
+    const t = panelText('market', a, 3);
+    expect([t.verb, t.second, t.note]).toEqual(['Buy 3 times', 'this turn', '+3 blue']);
   });
 
   it('"You\'d get" says the likely and the best case, or the best pick, or the mix, in numbers', () => {

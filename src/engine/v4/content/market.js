@@ -1,4 +1,3 @@
-import { memberScoring } from './member-scoring.js';
 // Blue (the market): bend the shop. Recruit outside your buy, ignore colors, pay half, churn the row.
 // Scoring: most blue (Cory, 2026-10-15; the old rule counted members costing 8 or more, a cutoff he cut).
 // Blue's members watch who recruits blue members, and Blue's spaces pay out in blue.
@@ -91,6 +90,38 @@ function bestRowValue(ctx, p, how) {
   return ok.length ? Math.max(...ok.map(([c, pr]) => botWorth(c) + (priceOf(c) - pr.total) * 0.6)) : 0;
 }
 
+/** Churn: pick shop members one at a time; the row refills once, after the last (churnRefill, queued behind the picks). */
+function churnStep(ctx, p, { left }) {
+  const shop = ctx.shopCards();
+  if (left <= 0 || !shop.length) return;
+  ctx.choose(p, `Churn: send which member to the bottom? (${left} to go)`, shop.map(c => ({
+    // bots send away the priciest (what a rival would buy next)
+    id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)})`, kind: 'card', value: c.uid, hint: priceOf(c),
+  })), `${Q}.churn`, { left });
+}
+/** Peek: the player sets the order of the top cards, top first; the last one falls in place. */
+function peekStep(ctx, p, { left, placed }) {
+  if (left.length <= 1) {
+    const order = [...placed, ...left];
+    const pile = ctx.state.pile;
+    const rest = pile.filter(u => !order.includes(u));
+    pile.splice(0, pile.length, ...order, ...rest);
+    if (order.length) ctx.log(`${p.name} puts the top ${order.length} of the pile back in a new order.`);
+    return;
+  }
+  ctx.choose(p, `Peek: which goes ${placed.length ? 'next' : 'on top'}?`, left.map(u => ctx.card(u)).map(c => ({
+    id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)})`, kind: 'card', value: c.uid,
+    // bots put what they can buy on top
+    hint: (ctx.payChoices(p, c.uid, {}).length ? 10 : 0) + botWorth(c),
+  })), `${Q}.peek`, { left, placed });
+}
+/** Colors of the face-up members, with how many of each. */
+function shopColors(ctx) {
+  const n = {};
+  for (const c of ctx.shopCards()) { const col = colorOf(ctx, c); if (col) n[col] = (n[col] || 0) + 1; }
+  return Object.entries(n);
+}
+
 function sweepRow(ctx) {
   const old = [...ctx.state.shop];
   for (const u of old) ctx.buryFromShop(u);
@@ -104,52 +135,98 @@ const market = {
   id: Q,
   name: 'Blue',
   resource: B,
-  scoring: memberScoring('market', 'blue'),
+  scoring: { label: 'Most blue', counts: 'the blue you hold when the round ends', score: (ctx, p) => p.res.blue },
 
+  // Cory's Blue (2026-10-20, decisions.md): churn the shop, dig into the pile, buy more than once. Every action gives
+  // +1 blue (the economy call). Names are working names. A copy (Echo) does the action itself: the doing is the value.
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Snap Up', text: '+2 blue. You may then pay for a member in the shop using any colors, in addition to your normal buy.',
-      estimate: (ctx, p) => 2 + bestRowValue(ctx, p, SNAP) * 0.3,
-      resolve(ctx, p) { ctx.gain(p, B, 2, { fromAction: true }); offerRow(ctx, p, SNAP, 'Snap Up'); },
-    },
-    {
-      key: 'restock', ring: 1, name: 'New Faces', text: '+2 blue, and sweep the face-up row: a fresh row of members comes out.',
-      estimate: () => 2.4,
+      key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 shop members to the bottom of the pile, then refill. +1 blue × round. +1 blue.', copyDoesIt: true,
+      estimate: ctx => ctx.state.round + 1,
       resolve(ctx, p) {
-        ctx.gain(p, B, 2, { fromAction: true });
-        sweepRow(ctx);
-        ctx.log(`${p.name} restocked the row.`);
+        ctx.gain(p, B, ctx.state.round + 1, { fromAction: true });
+        churnStep(ctx, p, { left: Math.min(3, ctx.state.shop.length) });
+        // runs after the last pick, even when a pick's cards were taken first and the choice fell away
+        ctx.defer(p, `${Q}.churnRefill`);
       },
     },
     {
-      // was +1 blue per face-up member costing 8 or more (3.1 face up on average, Normal bots); now 1 + 2.3 blue face up
-      key: 'showroom', ring: 1, name: 'Name Drop', text: '+1 blue, and +1 per blue member in the shop.',
-      estimate: ctx => 1 + showroomCount(ctx),
-      resolve(ctx, p) { ctx.gain(p, B, 1 + showroomCount(ctx), { fromAction: true }); },
-    },
-    {
-      key: 'clearance', ring: 2, name: 'Half Price', text: 'As your buy this turn: a face-up member for half its cost (rounded down), in any colors.',
-      estimate: (ctx, p) => bestRowValue(ctx, p, HALF),
-      resolve(ctx, p) { offerRow(ctx, p, HALF, 'Half Price'); },
-    },
-    {
-      key: 'pricecheck', ring: 2, name: 'Show Off', text: 'Gain blue equal to half the cost of your priciest member (rounded down).',
-      estimate: (ctx, p) => Math.floor(priciest(ctx, p) / 2),
+      key: 'restock', ring: 1, name: 'Out of Style', text: 'Send every shop member of one color to the bottom of the pile, then refill. +1 blue per member sent. +1 blue.', copyDoesIt: true,
+      estimate: ctx => 1 + Math.max(0, ...shopColors(ctx).map(([, n]) => n)),
       resolve(ctx, p) {
-        const k = Math.floor(priciest(ctx, p) / 2);
-        if (!k) ctx.log(`Show Off: ${p.name} has no member costing 2 or more, so gains nothing.`);
-        const got = ctx.gain(p, B, k, { fromAction: true });
-        if (got) ctx.log(`${p.name}'s Show Off: +${got.n} ${got.color}.`);
+        ctx.gain(p, B, 1, { fromAction: true });
+        const colors = shopColors(ctx);
+        if (!colors.length) return;
+        ctx.choose(p, 'Out of Style: send which color to the bottom?', colors.map(([c, n]) => ({
+          id: `color:${c}`, label: `${c} (${n})`, kind: 'color', value: c, hint: n,
+        })), `${Q}.outOfStyle`);
       },
     },
     {
-      key: 'spree', ring: 3, name: 'Spree', text: 'This turn you buy 3 times.',
-      estimate: (ctx, p) => Math.min(10, Math.max(0, totalRes(p) - 3)) * 0.8,
-      resolve(ctx, p) { extraBuys(ctx, p, 2); ctx.log(`${p.name} goes on a spree: 3 buys this turn.`); },
+      key: 'showroom', ring: 1, name: 'Peek', text: 'Look at the top 4 of the pile and put them back in any order. This turn you may recruit one of them as your buy. +1 blue.', copyDoesIt: true,
+      estimate: (ctx, p) => 1 + Math.max(0, ...ctx.state.pile.slice(0, 4).map(u => ctx.card(u)).filter(c => ctx.payChoices(p, c.uid, {}).length).map(botWorth)) * 0.3,
+      resolve(ctx, p) {
+        ctx.gain(p, B, 1, { fromAction: true });
+        const top = ctx.state.pile.slice(0, 4);
+        p.peekReach = Math.max(p.peekReach || 0, top.length);
+        ctx.log(`${p.name} peeks at the top ${top.length} of the pile.`);
+        peekStep(ctx, p, { left: top, placed: [] });
+      },
+    },
+    {
+      key: 'clearance', ring: 2, name: 'Buy Twice', text: 'This turn you buy twice. +1 blue.', copyDoesIt: true,
+      estimate: (ctx, p) => 1 + Math.min(10, Math.max(0, totalRes(p) - 2)) * 0.4,
+      resolve(ctx, p) { ctx.gain(p, B, 1, { fromAction: true }); extraBuys(ctx, p, 1); ctx.log(`${p.name} buys twice this turn.`); },
+    },
+    {
+      key: 'pricecheck', ring: 2, name: 'Bury', text: 'Send a shop member to the bottom of the pile, then refill. Gain blue equal to half its cost, rounded down. +1 blue.', copyDoesIt: true,
+      estimate: ctx => 1 + Math.max(0, ...ctx.shopCards().map(c => Math.floor(priceOf(c) / 2))),
+      resolve(ctx, p) {
+        ctx.gain(p, B, 1, { fromAction: true });
+        const shop = ctx.shopCards();
+        if (!shop.length) return;
+        ctx.choose(p, 'Bury: send which member to the bottom?', shop.map(c => ({
+          id: `card:${c.uid}`, label: `${c.def.name} (+${Math.floor(priceOf(c) / 2)} blue)`, kind: 'card', value: c.uid, hint: Math.floor(priceOf(c) / 2),
+        })), `${Q}.bury`);
+      },
+    },
+    {
+      key: 'spree', ring: 3, name: 'Spree', text: 'This turn you buy 3 times. +2 blue. +1 blue.', copyDoesIt: true,
+      estimate: (ctx, p) => 3 + Math.min(10, Math.max(0, totalRes(p) - 3)) * 0.8,
+      resolve(ctx, p) { ctx.gain(p, B, 3, { fromAction: true }); extraBuys(ctx, p, 2); ctx.log(`${p.name} goes on a spree: 3 buys this turn.`); },
     },
   ],
 
   handlers: {
+    churn(ctx, p, uid, data) {
+      if (ctx.state.shop.includes(uid)) {
+        const i = ctx.state.shop.indexOf(uid);
+        ctx.state.shop.splice(i, 1);
+        ctx.state.pile.push(uid);
+        ctx.log(`Churn: ${p.name} sends ${ctx.card(uid).def.name} to the bottom of the pile.`);
+      }
+      churnStep(ctx, p, { left: data.left - 1 });
+    },
+    churnRefill(ctx) { ctx.refillShop(); },
+    outOfStyle(ctx, p, color) {
+      const out = ctx.shopCards().filter(c => colorOf(ctx, c) === color);
+      for (const c of out) { ctx.state.shop.splice(ctx.state.shop.indexOf(c.uid), 1); ctx.state.pile.push(c.uid); }
+      ctx.refillShop();
+      ctx.log(`Out of Style: ${p.name} sends ${out.length} ${color} member${out.length === 1 ? '' : 's'} to the bottom.`);
+      const got = out.length ? ctx.gain(p, B, out.length, { fromAction: true }) : null;
+      if (got) ctx.log(`${p.name}'s Out of Style: +${got.n} ${got.color}.`);
+    },
+    peek(ctx, p, uid, data) {
+      peekStep(ctx, p, { left: data.left.filter(u => u !== uid), placed: [...data.placed, uid] });
+    },
+    bury(ctx, p, uid) {
+      if (!ctx.state.shop.includes(uid)) return;
+      const c = ctx.card(uid), k = Math.floor(priceOf(c) / 2);
+      ctx.buryFromShop(uid);
+      ctx.log(`Bury: ${p.name} sends ${c.def.name} to the bottom of the pile.`);
+      const got = k ? ctx.gain(p, B, k, { fromAction: true }) : null;
+      if (got) ctx.log(`${p.name}'s Bury: +${got.n} ${got.color}.`);
+    },
     pickRow(ctx, p, uid, data) {
       if (uid === null) { ctx.log(`${data.why}: ${p.name} recruits nothing.`); return; }
       buyAt(ctx, p, uid, howFor(data.why), data.why);

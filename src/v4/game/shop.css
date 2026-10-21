@@ -88,6 +88,12 @@
   .app.game.lt .lt-shop-cards .lt-card.card,.app.game.lt .lt-shop-cards .lt-deck{min-height:0}
   /* 3 follower buys + deck + 7 members: the deck takes two rows so the twelve slots stay full (Cory, 2026-10-20: shop at 7) */
   .app.game.lt .lt-shop-cards .lt-deck{grid-row:span 2}
+  /* the shop grows 5/6/7 by round (Cory, 2026-10-20): 6 members, the deck takes three rows; 5 members, three rows and the deck takes one */
+  .app.game.lt .lt-shop-cards .lt-cards[data-n="6"] .lt-deck{grid-row:span 3}
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="5"]{grid-template-rows:repeat(3,minmax(0,1fr))}
+  .app.game.lt .lt-shop-cards .lt-cards[data-n="5"] .lt-deck{grid-row:span 1}
+  /* Peek's tray of 4: three rows, the deck takes two */
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="4"]{grid-template-rows:repeat(3,minmax(0,1fr))}
   /* the narrower column (Cory, 2026-10-20: a bigger wheel): the price and worth keep their whole width */
   .app.game.lt .lt-shop-cards .lt-card .ft{margin:auto 4px 0}
   .app.game.lt .lt-shop-cards .lt-card .lt-res{margin-right:3px}
@@ -115,6 +121,7 @@
 @media (min-width:1200px) and (min-height:500px) and (max-height:679px){
   .app.game.lt .lt-shop-cards .lt-shop-body{overflow-y:auto}
   .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards{height:auto;grid-template-rows:repeat(4,145px)}
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="5"],.app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="4"]{grid-template-rows:repeat(3,145px)}
   .app.game.lt .lt-shop-cards .lt-rates .lt-done{position:static;grid-column:1 / -1;width:100%}
 }
 

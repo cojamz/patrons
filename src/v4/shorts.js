@@ -34,7 +34,7 @@ const S = {
     harvest: '+1 yellow per color', bloom: r => `+${r} of your fewest`, transmute: '+2 yellow · then swap up to 3', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
   },
   market: {
-    bargain: '+2 blue · may pay for an extra member', restock: '+2 blue · new row', showroom: '+1 blue, +1 per face-up blue', clearance: 'half-price buy', pricecheck: 'half your priciest member’s cost', spree: 'buy 3 times',
+    bargain: r => `send 3 to the bottom; +${r + 1} blue`, restock: 'one color to the bottom; +1 blue each, +1', showroom: 'peek at 4, may buy one; +1 blue', clearance: 'buy twice; +1 blue', pricecheck: 'bury one, half its cost in blue; +1', spree: 'buy 3 times; +3 blue',
   },
   thieves: {
     pickpocket: r => `steal ${r}; +${r} followers; +1 magenta`, tipoff: 'steal 1 per already occupied magenta action; +1 magenta', hideout: r => `steal ${r}; safe from steals this round; +1 magenta`, rob: 'steal half a rival’s one-color pile, round down; +1 magenta', ransom: 'rival pays member’s cost or loses it; cost 5 or less; +1 magenta', heist: 'take a rival’s member; +1 magenta',
@@ -53,7 +53,7 @@ const PIPS = {
   purple: { rushhour: '+1 purple per 2 minions' },
   silver: { tide: 'half the top rival’s', jubilee: 'silver for followers' },
   yellow: { gather: '+1 per member' },
-  market: { clearance: 'half price', spree: 'buy 3 times' },
+  market: { clearance: 'buy twice', pricecheck: 'bury for half its cost', spree: 'buy 3 times' },
   thieves: { rob: 'steal half a one-color pile', ransom: 'rival pays or loses member', heist: 'take a rival’s member' },
   trading: { sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower', boom: 'all for followers' },
   echo: { refrain: 'copy yours', eternity: 'copy all' },

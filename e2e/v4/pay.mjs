@@ -26,7 +26,7 @@ import { browserPath } from './lib/browser.mjs';
 //  (s0) Wave f4: the "since your last turn" strip with nothing to tell says nothing ("No moves since yours yet." went),
 //       and no strip line is ever clamped with an ellipsis ("took your Tax…").
 //  (k1) The keyboard list: absent for the mouse; Tab from the caption opens it with every pick.
-//  Wave-2 tester B: (s8) Snap Up pays through the sheet; (t1) Talent Scout's top 5 as cards; (y1) Your Call in marks at
+//  Wave-2 tester B: (s8) a recruit outside the buy step (Talent Scout's) pays through the sheet; (t1) Talent Scout's top 5 as cards; (y1) Your Call in marks at
 //  the space; (r1) Release from your member's card, no header dropdown; (d1) Double Agent's forced swap explained.
 // Saves: e2e/v4/lib/dialog-save.mjs. Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
 import { chromium } from 'playwright';
@@ -437,15 +437,15 @@ try {
     }
     await ctx.close();
   }
-  // (s8) Snap Up's payment uses the same sheet: the lifted coins pay the price it's paid under (any colors), Enter pays
+  // (s8) a recruit outside the buy step (Talent Scout's) uses the same sheet: the lifted coins pay its price, Enter pays
   {
-    const save = momentSave('snappay');
+    const save = momentSave('scoutpay');
     const st = save.state, w = st.pending.options[0];
     const { ctx, page } = await open('s8', save, '.dialog.pay');
     const n = await page.$$eval('.dialog.pay .ps-out .ps-coin', els => els.length);
-    if (n !== memberPrice(st, st.players[0], w.uid, w.how).total) errors.push(`(s8) ${n} coins lifted for Snap Up's price ${memberPrice(st, st.players[0], w.uid, w.how).total}`);
-    if (await page.$('.prompt.choice .opts')) errors.push('(s8) Snap Up still shows a list of ways to pay');
-    await page.screenshot({ path: `${SHOTS}/s8-snapup-pay.png` });
+    if (n !== memberPrice(st, st.players[0], w.uid, w.how).total) errors.push(`(s8) ${n} coins lifted for Talent Scout's price ${memberPrice(st, st.players[0], w.uid, w.how).total}`);
+    if (await page.$('.prompt.choice .opts')) errors.push('(s8) Talent Scout still shows a list of ways to pay');
+    await page.screenshot({ path: `${SHOTS}/s8-scout-pay.png` });
     const want = await page.$eval('.pay-go', e => e.dataset.option);
     await page.keyboard.press('Enter');
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(s8) Enter did not pay'));
@@ -589,4 +589,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`dialogs gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed (card and seats), Goody Bags and Cheap Seats on the card, Even Swap, keyboard list, Snap Up pay, Talent Scout tray, Your Call, Release, Double Agent, Hustler)');
+console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed (card and seats), Goody Bags and Cheap Seats on the card, Even Swap, keyboard list, Talent Scout pay, Talent Scout tray, Your Call, Release, Double Agent, Hustler)');

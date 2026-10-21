@@ -43,18 +43,12 @@ const P = {
     take: { verb: 'Recruit any member', second: 'in the shop, free', note: '+1 red' },
   },
   market: {
-    // "then recruit" read as a normal recruit (w3a #21): its perk, paying in any colors, is on the panel
-    bargain: { main: '+2 blue', second: 'may pay for a member', note: 'in any colors; extra buy' },
-    restock: { main: '+2 blue', second: 'refresh the shop' },
-    // one wording with the hover: "per blue member in the shop" (w3a #22: "on sale" here, "face-up" there)
-    // live (f8): line 1 is this turn's real payout, like a space that grows by round shows this round's number; the
-    // rule goes small under it ("+1 blue" in big type read as the whole gain with three blue members in the shop)
-    showroom: (r, now) => (now == null ? { main: '+1 blue', second: '+1 per blue in the shop' } : { main: `+${now} blue`, second: '1, +1 per blue in the shop' }),
-    clearance: { verb: 'Half-price recruit', second: 'as your buy', note: 'in any colors' },
-    // "half your priciest" read as half your biggest pile (live panel r1): the whole rule in line 1 (ring II can drop
-    // line 2), "member's cost" beside "priciest"; the color is the quadrant's own
-    pricecheck: { verb: 'Gain half your priciest member’s cost', second: 'in blue' },
-    spree: { verb: 'Buy 3 times', second: 'this turn' },
+    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 shop members to the bottom', note: '1 × round, +1' }),
+    restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
+    showroom: { verb: 'Peek at the top 4', second: 'reorder; may buy one', note: '+1 blue' },
+    clearance: { verb: 'Buy twice', second: 'this turn', note: '+1 blue' },
+    pricecheck: { verb: 'Bury a shop member', second: 'gain half its cost in blue', note: '+1 blue' },
+    spree: { verb: 'Buy 3 times', second: 'this turn', note: '+3 blue' },
   },
   purple: {
     hourly: r => ({ main: `+${3 + r} purple`, second: grows(r) }),
@@ -133,7 +127,7 @@ const P = {
 // own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
 // A space that pays per something shows this turn's gain big and its rate small (round 3 skeptic: Bandwagon's "+1●"
 // paid +5, Roll Call's +3), for `pid` (the viewer; else whoever's turn it is).
-const LIVE = new Set(['market.showroom', 'gold.windfall', 'red.turnout', 'purple.catchup', 'purple.windup', 'purple.planahead', 'purple.rushhour', 'yellow.harvest', 'trading.haggle', 'trading.dividend', 'echo.hum']);
+const LIVE = new Set(['gold.windfall', 'red.turnout', 'purple.catchup', 'purple.windup', 'purple.planahead', 'purple.rushhour', 'yellow.harvest', 'trading.haggle', 'trading.dividend', 'echo.hum']);
 function liveYield(qid, action, state, pid) {
   if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
   const p = state.players && state.players[pid ?? state.current ?? 0];

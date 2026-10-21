@@ -8,7 +8,7 @@ import {
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { scene as baseScene, take, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
-import { SHOP_SIZE } from '../../../engine/v4/core.js';
+import { SHOP_SIZE, shopSize } from '../../../engine/v4/core.js';
 
 useTestCosts();
 
@@ -92,8 +92,8 @@ describe('setup', () => {
     expect(TABLE.reduce((n, q) => n + quadrant(q).members.reduce((a, d) => a + d.copies, 0), 0)).toBe(deck);
     expect(Object.keys(s.cards)).toHaveLength(deck);
     expect(Object.values(s.cards).every(c => TABLE.includes(c.def.split('.')[0]))).toBe(true);
-    expect(s.shop).toHaveLength(SHOP_SIZE);
-    expect(s.pile).toHaveLength(deck - SHOP_SIZE);
+    expect(s.shop).toHaveLength(shopSize(s));
+    expect(s.pile).toHaveLength(deck - shopSize(s));
     expect(Object.keys(createGame({ quadrants: TABLE, seats: seats(2), seed: 9 }).cards)).toHaveLength(deck + guestMembers().length);
     expect(s.stock).toEqual({}); // all three buys are unlimited
     const t = createGame({ quadrants: TABLE, seats: seats(2), seed: 10 });
@@ -187,13 +187,13 @@ describe('rings', () => {
 });
 
 describe('shop', () => {
-  it('refills to 6 after each recruit while the pile lasts, then shrinks', () => {
-    let s = scene({ shop: ['red.volunteer', 'gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.bigfamily'], queue: [] });
+  it('refills to the round\'s size (5 in round I) after each recruit while the pile lasts, then shrinks', () => {
+    let s = scene({ shop: ['red.volunteer', 'gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor'], queue: [] });
     s.pile = s.pile.slice(0, 1);
     s.queue = [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }];
     resume(s);
     s = take(s, 'red.hire');
-    expect(s.shop).toHaveLength(6) // only 1 card left in the pile to refill with;
+    expect(s.shop).toHaveLength(5); // only 1 card left in the pile to refill with
     expect(s.pile).toHaveLength(0);
     const t = scene({ shop: ['red.volunteer', 'gold.midas'], queue: [] });
     t.pile = [];

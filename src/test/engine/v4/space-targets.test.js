@@ -51,10 +51,10 @@ describe('space targets', () => {
     const t = targetsAt(s, 'take');
     expect(sorted(t.shop)).toEqual(sorted(['gold.tycoon', 'red.intern', 'red.bigfamily', 'gold.taxman', 'red.mentor'].map(d => uidIn(s, d, 'shop'))));
   });
-  it('Snap Up: only what you could pay for after its +2 blue', () => {
-    const s = table(Q, { shop: ['gold.tycoon', 'red.intern', 'red.bigfamily'] });
-    const t = targetsAt(s, 'bargain');
-    expect(sorted(t.shop)).toEqual(sorted([uidIn(s, 'red.intern', 'shop')]));
+  it('Churn and Bury: no member is lit up front, since the player picks which go to the bottom', () => {
+    const defs = ['gold.tycoon', 'red.intern', 'red.bigfamily'];
+    expect(targetsAt(table(Q, { shop: defs }), 'bargain')).toBe(null);
+    expect(targetsAt(table(Q, { round: 2, shop: defs }), 'pricecheck')).toBe(null);
   });
   // any two members of equal cost, either way round (red-redesign-2026-10-18.md; red-redesign.test.js offers both)
   it('Even Swap: the pairs of equal cost, in either orientation', () => {

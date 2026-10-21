@@ -4,7 +4,7 @@ import { applyMove } from '../../../engine/v4/index.js';
 import { previewSpace } from '../../../engine/v4/preview.js';
 import { youdWords, cachedPreview } from '../../../v4/game/Info.jsx';
 import { raceAfter, whyLine } from '../../../v4/game/HoverCards.jsx';
-import { quadrant } from '../../../engine/v4/content/index.js';
+import { quadrant, defById } from '../../../engine/v4/content/index.js';
 import { sceneQ, spaceOf } from '../../engine/v4/cards-helpers.js';
 import { take } from '../../engine/v4/helpers.js';
 
@@ -35,10 +35,12 @@ describe('hover honesty (live panel r1)', () => {
     for (const t of r.them) expect(t.text).toMatch(/^P[23] has 3 now, \d( or \d| to \d)? after$/);
   });
 
-  it('Snap Up: the recruit is said by its price after the +2 blue, never as a net loss', () => {
-    const s = sceneQ({ quadrants: T, round: 1, n: 3, res: [{ gold: 9, red: 3 }], shop: ['red.bigfamily'] });
-    const { y } = words(s, 'Snap Up');
-    expect(y.text).toBe('+2 blue, or +3 members (Big Family), +3 followers for 4');
+  it('Bury: says the most it can give, as your pick (1 + half the priciest face-up cost), never a loss', () => {
+    const s = sceneQ({ quadrants: T, round: 2, n: 3, res: [{ gold: 9, red: 3 }], shop: ['red.bigfamily', 'gold.tycoon', 'red.intern', 'gold.taxman', 'red.twins', 'red.volunteer'] });
+    const most = Math.max(...s.shop.map(u => { const d = defById(s.cards[u].def); return d.s + d.w; }));
+    const { y } = words(s, 'Bury');
+    expect(y.text).toBe(`up to +${1 + Math.floor(most / 2)} blue`);
+    expect(y.note).toBe('your pick');
     expect(y.text).not.toMatch(/−/);
   });
 

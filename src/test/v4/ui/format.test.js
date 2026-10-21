@@ -269,7 +269,8 @@ describe('v4 format helpers', () => {
       expect(st.text.startsWith(st.actor === 0 ? 'You' : name)).toBe(true);
       // exactly one placement per card, and the head names it
       expect(st.text.match(/ (took|joined) /g) || []).toHaveLength(st.space ? 1 : 0);
-      if (st.space) expect(st.head).toMatch(new RegExp(`${st.space.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+      // a minion joining a rival's space says whose doing it is: "… joined Bo on Recruit a Member (Squatter)"
+      if (st.space) expect(st.head).toMatch(new RegExp(`${st.space.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}( \\(Squatter\\))?$`));
       for (const id of st.touched) { touched++; expect(st.text).toMatch(new RegExp(`(from |· |: )${id === 0 ? 'you' : s.players[id].name}( |$)`)); }
       if (/recruited /.test(st.text)) { recruits++; expect(st.text).toMatch(/recruited [^·]+\((paid [^)]+|free)\)/); }
     });

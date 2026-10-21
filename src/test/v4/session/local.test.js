@@ -79,7 +79,7 @@ const expectUndo = (before, move, after, humans, placedFrom = null) => {
   if (!before.pending || !humans.includes(move.player) || after.over || after.round !== before.round) return false;
   const k = before.pending.kind;
   // a placement: while it's still the placer's decision
-  // ...and never once it showed hidden cards (New Faces' fresh row): undo would leak the deck
+  // ...and never once it showed hidden cards (a draw from the pile, Peek's look): undo would leak the deck
   if (k === 'place') return !revealed(before, after) && !!(after.pending && after.pending.player === move.player && after.pending.kind !== 'place');
   // a completed purchase: until anyone moves next (paid at once, or after choosing how to pay)
   // ...but never once the device passes to another person
@@ -126,23 +126,23 @@ describe('local session: undo', () => {
     s.destroy();
   });
 
-  it('is not offered after a placement that showed hidden cards (New Faces), and is after one that did not', async () => {
+  it('is not offered after a placement that showed hidden cards (Peek), and is after one that did not', async () => {
     const s = createLocalSession({ seats: humans2, seed: 21, botDelayMs: 0, quadrants: ['market', 'gold', 'red', 'silver'] });
     await driveUntil(s, st => st.pending && st.pending.kind === 'place');
     const pre = s.getState();
     const slot = name => pre.pending.options.find(o => o.kind === 'slot' && o.label === name).id;
     // a placement that shows nothing new: undo is there
-    await s.submit({ option: slot('Name Drop') });
+    await s.submit({ option: slot('Golden Years') });
     expect(s.canUndo()).toBe(true);
     expect(s.undo()).toBe(true);
-    // New Faces sweeps the row: the old row must not come back
-    await s.submit({ option: slot('New Faces') });
+    // Peek shows the top of the pile: undoing it would leak the deck
+    await s.submit({ option: slot('Peek') });
     const after = s.getState();
-    expect(after.shop).not.toEqual(pre.shop);
     expect(after.pending.player).toBe(pre.pending.player);
+    expect(after.pending.options.some(o => Object.values(o.at || {}).includes('pile'))).toBe(true);
     expect(s.canUndo()).toBe(false);
     expect(s.undo()).toBe(false);
-    expect(s.getState().shop).toEqual(after.shop);
+    expect(s.getState()).toEqual(after);
     s.destroy();
   });
 

@@ -3,7 +3,7 @@
 // member costs, through real legal moves, plus one cross-sphere case each. Every number a
 // card changes must show up in a log line that names the card.
 import { describe, it, expect } from 'vitest';
-import { applyMove, followers, SHOP_SIZE } from '../../../engine/v4/core.js';
+import { applyMove, followers } from '../../../engine/v4/core.js';
 import { take, move, play, ids, actionName } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
@@ -27,94 +27,111 @@ const pickPay = (s, color = 'red') => (s.pending?.kind === 'choose' && s.pending
   ? move(s, (s.pending.options.find(o => Object.entries(o.value).every(([c, n]) => !n || c === color)) || s.pending.options[0]).id) : s);
 
 describe('Blue actions', () => {
-  it('Snap Up: +2 blue, then recruit a face-up member now in any colors; the normal buy is still there', () => {
-    let s = table(Q, { res: [{ red: 4 }], shop: ROW });
+  const ROW5 = ROW.slice(0, 5);
+  it('Churn: +1 blue × round, +1 blue; send exactly 3 chosen members to the bottom, then the row refills once', () => {
+    let s = table(Q, { round: 2, shop: [...ROW5, 'red.volunteer'] });
+    const top = s.pile.slice(0, 3);
     s = take(s, 'market.bargain');
-    expect(R(s).blue).toBe(2);
-    expect(s.pending.prompt).toMatch(/Snap Up: recruit/);
-    s = pickPay(move(s, card(s, 'red.twins')));
-    expect(owns(s, 0, 'red.twins')).toBe(true);
-    expect(R(s).red + R(s).blue).toBe(2); // paid 4 of the 6 held
-    expect(s.log.some(l => /^Snap Up: P1 pays .* for Twins/.test(l))).toBe(true);
-    expect(s.pending.kind).toBe('buy');
+    expect(R(s).blue).toBe(3);
+    const sent = [];
+    for (let k = 3; k > 0; k--) {
+      expect(s.pending.prompt).toBe(`Churn: send which member to the bottom? (${k} to go)`);
+      const o = s.pending.options[0]; sent.push(o.value);
+      s = move(s, o.id);
+      // no refill until the last pick: a refilled card can't be churned
+      if (k > 1) expect(s.shop).toHaveLength(6 - (4 - k));
+    }
+    expect(s.pending?.kind).toBe('buy');
+    expect(s.shop).toHaveLength(6);
+    expect(s.shop.slice(-3)).toEqual(top);
+    expect(s.pile.slice(-3)).toEqual(sent);
+    expect(s.log.filter(l => /^Churn: P1 sends .* to the bottom of the pile\.$/.test(l))).toHaveLength(3);
   });
-  it('× Echo: copying a Snap Up (a paid recruit) does Snap Up again for the copier', () => {
-    let s = table(QE, { res: [{ red: 4 }, { gold: 2 }], shop: ROW, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
-    s = move(pickPay(move(take(s, 'market.bargain'), card(s, 'red.twins'))), 'pass');
-    s = take(s, 'echo.echo');
-    s = move(s, s.pending.options.find(o => o.label.startsWith(actionName('market.bargain'))).id);
-    expect(R(s, 1).blue).toBe(2);
-    expect(s.pending.prompt).toMatch(/Snap Up: recruit/);
-    expect(s.log.some(l => /P2 copies Snap Up \(P1's\): doing it again/.test(l))).toBe(true);
-  });
-
-  it('New Faces: +2 blue and a whole fresh row (SHOP_SIZE cards, none of the old ones)', () => {
-    let s = table(Q, { shop: ROW });
-    const old = [...s.shop];
-    s = take(s, 'market.restock');
-    expect(R(s).blue).toBe(2);
-    expect(s.shop).toHaveLength(SHOP_SIZE);
-    expect(s.shop.filter(u => old.includes(u))).toEqual([]);
-    expect(s.log).toContain('P1 restocked the row.');
-  });
-  it('× Midas: New Faces\'s blue comes as gold, and the log names Midas', () => {
-    let s = table(Q, { shop: ROW, members: [['gold.midas']] });
-    s = take(s, 'market.restock');
+  it('× Midas: Churn\'s blue comes as gold, and the log names Midas', () => {
+    let s = table(Q, { shop: ROW5, members: [['gold.midas']] });
+    s = take(s, 'market.bargain');
     expect([R(s).blue, R(s).gold]).toEqual([0, 2]);
     expect(named(s, 'Midas').length).toBe(1);
   });
 
-  it('Name Drop: +1 blue, and +1 per blue face-up member', () => {
-    // Stylist and Curator are blue; the gold and red members (however pricey) don't count
-    expect(R(take(table(Q, { shop: ['market.stylist', 'market.curator', ...ROW] }), 'market.showroom')).blue).toBe(1 + 2);
-    // no blue member face up: the 1 alone
-    expect(R(take(table(Q, { shop: ROW }), 'market.showroom')).blue).toBe(1);
-  });
-  it('× Encore: a copy of Name Drop gives what it gave (3), whatever the row holds by then', () => {
-    let s = table(QE, { res: [{ blue: 1 }], shop: ['market.stylist', 'market.curator', ...ROW], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }], round: 2 });
-    s = move(take(s, 'market.showroom'), card(s, 'market.stylist')); // the row loses a blue member
-    s = take(s, 'echo.encore');
-    s = move(s, s.pending.options.find(o => o.label.startsWith(actionName('market.showroom'))).id);
-    expect(R(s, 1).blue).toBe(3);
+  it('Out of Style: one color to the bottom, refill, +1 blue per member sent, plus the inherent +1', () => {
+    // ROW5: Tycoon, Big Family, Twins, Intern, Tax Man: 3 red, 2 gold
+    let s = table(Q, { shop: ROW5 });
+    s = take(s, 'market.restock');
+    expect(R(s).blue).toBe(1);
+    expect(s.pending.options.map(o => o.id).sort()).toEqual(['color:gold', 'color:red']);
+    const reds = s.shop.filter(u => s.cards[u].def.startsWith('red.'));
+    s = move(s, 'color:red');
+    expect(R(s).blue).toBe(1 + 3);
+    expect(s.shop).toHaveLength(5);
+    expect(s.shop.filter(u => reds.includes(u))).toEqual([]);
+    expect(s.pile.slice(-3)).toEqual(reds);
+    expect(s.log).toContain('Out of Style: P1 sends 3 red members to the bottom.');
+    expect(s.log).toContain("P1's Out of Style: +3 blue.");
   });
 
-  it('Half Price: as your buy, a face-up member for half its cost rounded down, any colors', () => {
-    // Lottery Winner costs 11: half is 5
-    let s = table(Q, { round: 2, res: [{ red: 5 }], shop: ['gold.jackpot', ...ROW.slice(1)] });
+  it('Peek: reorder the top 4 of the pile; this turn\'s buy may recruit one of them, and only one', () => {
+    let s = table(Q, { res: [{ gold: 9, red: 9, blue: 9 }], shop: ROW5, pileFirst: ['market.stylist', 'gold.banker', 'market.curator', 'red.mentor', 'market.planner'] });
+    const top = s.pile.slice(0, 4), fifth = s.pile[4];
+    s = take(s, 'market.showroom');
+    expect(R(s).blue).toBe(10);
+    // put them back bottom-to-top reversed: the 4th on top
+    for (const u of [top[3], top[2], top[1]]) { expect(s.pending.prompt).toMatch(/^Peek: which goes/); s = move(s, `card:${u}`); }
+    expect(s.pile.slice(0, 5)).toEqual([top[3], top[2], top[1], top[0], fifth]);
+    expect(s.pending.kind).toBe('buy');
+    for (const u of top) expect(ids(s)).toContain(`card:${u}`);
+    expect(ids(s)).not.toContain(`card:${fifth}`);
+    s = move(s, `card:${top[1]}`);
+    expect(s.players[0].members).toContain(top[1]);
+    expect(s.log.some(l => /^P1 recruited Banker from the pile with Peek/.test(l))).toBe(true);
+    // the reach is spent: no more pile cards on a later buy
+    expect(s.players[0].peekReach).toBeUndefined();
+  });
+  it('Peek: the reach ends with the turn', () => {
+    let s = table(Q, { res: [{ gold: 20, red: 20, blue: 20 }], shop: ROW5, pileFirst: ['market.stylist', 'gold.banker', 'market.curator', 'red.mentor'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 0 }] });
+    s = take(s, 'market.showroom');
+    while (s.pending.kind === 'choose') s = first(s);
+    const top = s.pile.slice(0, 4);
+    for (const u of top) expect(ids(s)).toContain(`card:${u}`);
+    s = move(s, 'pass');
+    s = move(take(s, 'gold.rush'), 'pass');
+    expect(s.pending.player).toBe(0);
+    s = take(s, 'red.turnout');
+    for (const u of top) expect(ids(s)).not.toContain(`card:${u}`);
+  });
+
+  it('Buy Twice: +1 blue and two buys this turn', () => {
+    let s = table(Q, { round: 2, res: [{ gold: 2, red: 2 }], shop: ROW5 });
     s = take(s, 'market.clearance');
-    expect(s.pending.options.find(o => o.id === card(s, 'gold.jackpot')).label).toMatch(/pay 5/);
-    s = pickPay(move(s, card(s, 'gold.jackpot')));
-    expect(owns(s, 0, 'gold.jackpot')).toBe(true);
-    expect(R(s).red).toBe(0);
-    // it used the buy: the turn is over
+    expect(R(s).blue).toBe(1);
+    expect(s.log).toContain('P1 buys twice this turn.');
+    for (let k = 0; k < 2; k++) { expect(s.pending.kind).toBe('buy'); s = move(s, 'tier:small'); }
+    expect(s.players[0].bonus).toBe(2);
     expect(s.pending?.kind).not.toBe('buy');
   });
-  it('× Big Spender: Half Price counts as your first buy, so Big Spender still gives a second', () => {
-    let s = table(Q, { round: 2, res: [{ red: 5, gold: 2 }], shop: ['gold.jackpot', ...ROW.slice(1)], members: [['benders.bigspender']] });
-    s = take(s, 'market.clearance');
-    s = pickPay(move(s, card(s, 'gold.jackpot')));
-    expect(owns(s, 0, 'gold.jackpot')).toBe(true);
-    expect(s.pending?.kind).toBe('buy');
-    expect(s.pending.extra).toBe(true);
-    s = move(s, 'tier:small');
-    expect(s.players[0].bonus).toBe(1);
-    expect(s.log).toContain('P1 uses Big Spender.');
+
+  it('Bury: one shop member to the bottom, refill, gain half its cost rounded down, plus the inherent +1', () => {
+    let s = table(Q, { round: 2, shop: ROW5 });
+    const top = s.pile[0], tycoon = uidIn(s, 'gold.tycoon', 'shop');
+    s = take(s, 'market.pricecheck');
+    expect(R(s).blue).toBe(1);
+    s = move(s, `card:${tycoon}`);
+    expect(R(s).blue).toBe(1 + 6); // Tycoon costs 12
+    expect(s.pile[s.pile.length - 1]).toBe(tycoon);
+    expect(s.shop).toContain(top);
+    expect(s.shop).toHaveLength(6); // round II shows 6
+    expect(s.log).toContain("P1's Bury: +6 blue.");
+  });
+  it('Bury: an odd cost rounds down (Lottery Winner 11 gives 5)', () => {
+    let s = table(Q, { round: 2, shop: ['gold.jackpot', ...ROW5.slice(1)] });
+    s = move(take(s, 'market.pricecheck'), card(s, 'gold.jackpot'));
+    expect(R(s).blue).toBe(1 + 5);
   });
 
-  it('Show Off: blue equal to half the cost of your priciest member (rounded down)', () => {
-    const s = take(table(Q, { round: 2, members: [['gold.jackpot', 'red.twins']], shop: ROW }), 'market.pricecheck');
-    expect(R(s).blue).toBe(5); // Lottery Winner 11
-  });
-  it('× Doppelganger: a copy of a pricier member doesn\'t count its copy\'s price (printed cost of the card)', () => {
-    // Doppelganger (6) copying Tycoon (12): Show Off reads the Doppelganger's own printed cost
-    const s0 = table(Q, { round: 2, members: [['echo.doppel', 'red.twins']], shop: ROW });
-    s0.cards[uidIn(s0, 'echo.doppel', 0)].copy = 'gold.tycoon';
-    expect(R(take(s0, 'market.pricecheck')).blue).toBe(3);
-  });
-
-  it('Spree: you buy 3 times this turn', () => {
-    let s = table(Q, { round: 3, res: [{ gold: 2, red: 2, blue: 2 }], shop: ROW, left: 5 });
+  it('Spree: +3 blue and you buy 3 times this turn', () => {
+    let s = table(Q, { round: 3, res: [{ gold: 2, red: 2 }], shop: ROW, left: 5 });
     s = take(s, 'market.spree');
+    expect(R(s).blue).toBe(3);
     expect(s.log).toContain('P1 goes on a spree: 3 buys this turn.');
     for (let k = 0; k < 3; k++) { expect(s.pending.kind).toBe('buy'); s = move(s, 'tier:small'); }
     expect(s.players[0].bonus).toBe(3);
@@ -137,17 +154,15 @@ describe('Blue members', () => {
   };
   it('Stylist: whenever anyone recruits a blue member, +1 blue (named)', () => {
     let s = table(Q, { members: [[], ['market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
-    s = move(take(s, 'market.restock'), 'pass');
-    s = table(Q, { members: [[], ['market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
-    s = move(take(s, 'market.showroom'), card(s, 'market.curator'));
+    s = move(take(s, 'thieves.tipoff'), card(s, 'market.curator'));
     expect(R(s, 1).blue).toBe(1);
     expect(named(s, 'Stylist').length).toBe(1);
   });
   it('× Doppelganger copying Stylist: +2 for one blue recruit', () => {
-    let s = table(Q, { members: [['echo.doppel', 'market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
+    let s = table(Q, { round: 2, members: [['echo.doppel', 'market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
     s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'market.stylist';
-    s = move(take(s, 'market.showroom'), card(s, 'market.curator'));
-    expect(R(s).blue).toBe(2 + 2 + 1); // Name Drop 2 (1, and Curator face up), the two Stylists 2, Curator's now 1 (Stylist)
+    s = move(take(s, 'market.clearance'), card(s, 'market.curator'));
+    expect(R(s).blue).toBe(4 + 1 - 4 + 2 + 1); // Buy Twice's 1, Curator paid 4 blue, the two Stylists 2, Curator's own 1 (Stylist)
   });
 
   it('Onlooker: whenever a rival recruits a blue member, +2 blue; not for other colors or its owner\'s own', () => {
@@ -176,13 +191,14 @@ describe('Blue members', () => {
     s = buyTurn([['market.connoisseur']], [{ red: 8 }], 'red.bigfamily');
     expect(R(s).blue).toBe(0);
   });
-  it('× Snap Up: a blue member recruited through Snap Up still pays Connoisseur', () => {
-    let s = table(Q, { members: [['market.connoisseur']], res: [{ red: 4 }], shop: ['market.recluse', ...ROW] });
-    s = pickPay(move(take(s, 'market.bargain'), card(s, 'market.recluse')));
-    expect(owns(s, 0, 'market.recluse')).toBe(true);
-    // Snap Up's recruit is in any colors: 4 red, Snap Up's 2 blue kept, then Connoisseur's 2
-    expect([R(s).blue, R(s).red]).toEqual([2 + 2, 0]);
-    expect(named(s, 'Connoisseur').length).toBe(1);
+  it('× Buy Twice: both blue recruits pay Connoisseur', () => {
+    let s = table(Q, { round: 2, members: [['market.connoisseur']], res: [{ blue: 8 }], shop: ['market.recluse', 'market.curator', ...ROW] });
+    s = move(take(s, 'market.clearance'), card(s, 'market.recluse'));
+    s = move(s, card(s, 'market.curator'));
+    expect(owns(s, 0, 'market.recluse') && owns(s, 0, 'market.curator')).toBe(true);
+    // 8, Buy Twice's 1, two members at 4 blue each, Connoisseur's 2 twice, Curator's own 2 (Connoisseur, Recluse)
+    expect(R(s).blue).toBe(8 + 1 - 8 + 4 + 2);
+    expect(named(s, 'Connoisseur').length).toBe(2);
   });
 
   it('Reseller: whenever you recruit, +1 of that member\'s color', () => {
@@ -192,10 +208,10 @@ describe('Blue members', () => {
   });
   it('× guest leaning to an absent sphere: Reseller gives nothing (no color on this table)', () => {
     // Front-runner leans purple; purple isn't on this table
-    let s = table(Q, { members: [['market.reseller']], res: [{ red: 4 }], shop: ['benders.frontrunner', ...ROW.slice(1)] });
-    s = move(take(s, 'market.showroom'), card(s, 'benders.frontrunner'));
+    let s = table(Q, { round: 2, members: [['market.reseller']], res: [{ red: 4 }], shop: ['benders.frontrunner', ...ROW.slice(1)] });
+    s = move(take(s, 'market.clearance'), card(s, 'benders.frontrunner'));
     expect(owns(s, 0, 'benders.frontrunner')).toBe(true);
-    expect(Object.values(R(s)).reduce((a, b) => a + b, 0)).toBe(1); // only Name Drop's 1 blue
+    expect(Object.values(R(s)).reduce((a, b) => a + b, 0)).toBe(1); // only Buy Twice's 1 blue
     expect(named(s, 'Reseller')).toEqual([]);
   });
 
@@ -292,10 +308,13 @@ describe('Blue members', () => {
     s = buyTurn([['market.sommelier']], [{ red: 8 }], 'red.bigfamily');
     expect(s.players[0].discount).toBe(0);
   });
-  it('× Half Price: a blue member bought at half price still counts for Sommelier', () => {
-    let s = table(Q, { round: 2, members: [['market.sommelier']], res: [{ red: 6 }], shop: ['market.reseller', ...ROW] });
-    s = pickPay(move(take(s, 'market.clearance'), card(s, 'market.reseller')));
-    expect(owns(s, 0, 'market.reseller')).toBe(true);
+  it('× Peek: a blue member recruited from the pile still counts for Sommelier', () => {
+    let s = table(Q, { members: [['market.sommelier']], res: [{ blue: 4 }], shop: ROW, pileFirst: ['market.recluse'] });
+    const recluse = s.pile[0];
+    s = take(s, 'market.showroom');
+    while (s.pending.kind === 'choose') s = first(s);
+    s = move(s, `card:${recluse}`);
+    expect(owns(s, 0, 'market.recluse')).toBe(true);
     expect(s.players[0].discount).toBe(2);
   });
   it('Patroness: whenever you recruit a blue member, +1 follower', () => {
@@ -332,9 +351,9 @@ describe('Blue members', () => {
     if (s.pending?.kind === 'buy') expect(ids(s)).not.toContain(use);
   });
   it('× Doppelganger copying Talent Scout: a second once-per-game use', () => {
-    let s = table(Q, { members: [['market.blackmarket', 'echo.doppel']], res: [{ red: 8 }], shop: ROW });
+    let s = table(Q, { round: 2, members: [['market.blackmarket', 'echo.doppel']], res: [{ red: 8 }], shop: ROW });
     s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'market.blackmarket';
-    s = take(s, 'market.showroom');
+    s = take(s, 'market.clearance');
     expect(ids(s)).toContain(`use:${uidIn(s, 'echo.doppel', 0)}`);
     expect(ids(s)).toContain(`use:${uidIn(s, 'market.blackmarket', 0)}`);
   });
