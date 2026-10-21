@@ -1,0 +1,224 @@
+screen: 1500 games, random 4-sphere tables, 4 normal bots, every price ×U[0.6,1.4]. 413s on 4 workers.
+price slope: each resource over printed costs 0.14 followers of margin (90% 0.07–0.20); used 0.75. Median card nets 1.52 at printed. Got in round I 0.57, round III -0.71 vs round II. Standing at round II carries 0.55.
+
+REPRICE (well sampled, 90% CI misses printed, gap ≥ 1.5). Instrument: jitter screen, normal bots, 1500 games.
+card                           printed → proposed (colored+any)  evidence: net followers at printed ±SE, fair 90% CI, buy%, mean round got, n owners
+benders.launderer              6 (0+6) → 1 (0+1)                -3.74±0.59, -0.3–2.4, 2%, R2.4, n=245 
+echo.agents                    3 (1+2) → 0 (0+0)                -3.70±0.32, -2.6–-1.2, 31%, R2.3, n=1301   NEEDS AN ABILITY CHANGE, NOT A PRICE
+thieves.doubleagent            3 (2+1) → 0 (0+0)                -3.29±0.38, -2.3–-0.5, 10%, R2.5, n=761   NEEDS AN ABILITY CHANGE, NOT A PRICE
+benders.frontrunner            5 (0+5) → 1 (0+1)                -3.07±0.45, -0.1–2.0, 5%, R2.4, n=469 
+echo.bait                      5 (3+2) → 1 (1+0)                -2.75±0.52, 0.2–2.6, 5%, R2.4, n=363 
+benders.freelancer             6 (0+6) → 3 (0+3)                -2.43±0.59, 1.4–4.2, 3%, R2.4, n=317 
+market.connoisseur             4 (2+2) → 1 (1+0)                -2.14±0.44, 0.2–2.1, 7%, R2.3, n=559 
+echo.doppel                    5 (3+2) → 2 (1+1)                -1.91±0.82, 0.9–4.4, 1%, R2.7, n=158 
+red.volunteer                  0 (0+0) → 0 (0+0)                -1.88±0.36, -3.3–-1.8, 72%, R2.1, n=1413   NEEDS AN ABILITY CHANGE, NOT A PRICE
+red.recruitbonus               4 (2+2) → 2 (1+1)                -1.87±0.49, 0.5–2.5, 4%, R2.3, n=419 
+market.trendsetter             3 (1+2) → 1 (0+1)                -1.56±0.33, 0.2–1.6, 17%, R2.2, n=1002 
+red.loyalists                  5 (2+3) → 3 (1+2)                -1.43±0.38, 2.3–3.9, 8%, R2.5, n=687 
+red.movementpenalty            5 (3+2) → 3 (2+1)                -1.41±0.64, 1.9–4.5, 3%, R2.5, n=235 
+market.makeover                3 (1+2) → 1 (0+1)                -1.31±0.44, 0.4–2.3, 4%, R2.5, n=581 
+market.windowdresser           3 (1+2) → 1 (0+1)                -1.28±0.46, 0.4–2.4, 4%, R2.6, n=534 
+red.twins                      2 (2+0) → 0 (0+0)                -1.13±0.37, -0.3–1.4, 12%, R2.5, n=967   NEEDS AN ABILITY CHANGE, NOT A PRICE
+echo.hourglass                 4 (2+2) → 6 (3+3)                +1.16±0.37, 4.7–6.4, 38%, R2.5, n=950 
+thieves.kingpin                3 (1+2) → 5 (2+3)                +1.30±0.39, 4.0–5.7, 11%, R2.6, n=942 
+red.patriarch                  5 (3+2) → 7 (4+3)                +1.41±0.54, 5.7–8.1, 8%, R2.9, n=433 
+echo.impostor                  6 (4+2) → 8 (5+3)                +1.45±0.82, 6.2–9.7, 2%, R2.9, n=144 
+thieves.watchdog               8 (5+3) → 10 (6+4)               +1.65±0.86, 8.6–12.3, 1%, R2.8, n=87 
+market.snob                    5 (3+2) → 7 (4+3)                +1.75±0.47, 6.3–8.4, 6%, R2.8, n=428 
+market.shopaholic              8 (3+5) → 10 (4+6)               +1.87±0.81, 8.9–12.5, 1%, R2.8, n=146 
+red.panel                      6 (4+2) → 9 (6+3)                +2.18±0.55, 7.8–10.1, 5%, R2.9, n=428 
+red.proselytizer               6 (4+2) → 9 (6+3)                +2.47±1.02, 7.2–11.5, 1%, R2.6, n=117 
+thieves.shoplifter             5 (3+2) → 9 (5+4)                +2.70±0.69, 7.1–10.1, 4%, R2.3, n=266 
+benders.tiebreaker             6 (0+6) → 10 (0+10)              +2.98±0.72, 8.5–11.8, 3%, R2.4, n=270 
+thieves.extortionist           4 (3+1) → 8 (6+2)                +3.17±0.56, 6.8–9.4, 4%, R2.4, n=354 
+market.patroness               4 (2+2) → 8 (4+4)                +3.24±0.42, 7.4–9.3, 8%, R2.3, n=600 
+benders.extrahand              9 (0+9) → 18 (0+18)              +6.81±1.29, 15.2–21.2, 1%, R2.9, n=86 
+red.mob                        10 (6+4) → 21 (13+8)             +8.17±0.59, 19.5–22.2, 40%, R3.0, n=515 
+benders.straggler              5 (0+5) → 16 (0+16)              +8.61±0.56, 15.3–17.7, 5%, R2.3, n=444 
+echo.dejavu                    10 (8+2) → 25 (20+5)             +11.15±1.55, 21.1–28.1, 0%, R3.0, n=90 
+also worth ~nothing even free: thieves.cutpurse (printed 1, fair -0.0, n=1369); thieves.crew (printed 1, fair -0.2, n=1290)
+low sample (<40 owners): gold.midas n=0, gold.banker n=0, gold.prospector n=0, gold.taxman n=0, gold.merchant n=0, gold.thrift n=0, gold.coinpurse n=0, gold.underdog n=0, gold.tinker n=0, gold.investor n=0, gold.jackpot n=0, gold.speculator n=0, gold.tycoon n=0, gold.seed n=0, gold.hustler n=0, red.bigfamily n=0, red.intern n=0, red.drive n=0, red.sponsor n=0, red.crowd n=0, red.reserve n=0, blue.recruit n=0, blue.hand n=0, blue.helper n=0, blue.regular n=0, blue.devotee n=0, blue.elder n=0, blue.pillar n=0, blue.patron n=0, green.recruit n=0, green.hand n=0, green.helper n=0, green.regular n=0, green.devotee n=0, green.elder n=0, green.pillar n=0, green.patron n=0, purple.secondwind n=0, purple.errand n=0, purple.taskmaster n=0, purple.lateriser n=0, purple.foreman n=0, purple.courier n=0, purple.apprentice n=0, purple.overseer n=0, purple.doubletime n=0, purple.bookkeeper n=0, purple.clockmaker n=0, purple.lamplighter n=0, purple.nightowl n=0, purple.patience n=0, purple.crew n=0, silver.guest n=0, silver.benefactor n=0, silver.caterer n=0, silver.majordomo n=0, silver.silversmith n=0, silver.steward n=0, silver.retinue n=0, silver.revelers n=0, silver.heir n=0, silver.spoon n=0, silver.toastmaster n=0, silver.gala n=0, silver.dowager n=0, silver.grandhost n=0, silver.saint n=0, yellow.gardener n=0, yellow.peddler n=0, yellow.gleaner n=0, yellow.admirer n=0, yellow.gobetween n=0, yellow.dyer n=0, yellow.latebloomer n=0, yellow.sower n=0, yellow.harmonist n=0, yellow.rainmaker n=0, yellow.pilgrim n=0, yellow.farmer n=0, yellow.weaver n=0, yellow.explorer n=0, yellow.chefs n=0, market.onlooker n=0, market.reseller n=0, market.curator n=0, market.planner n=0, market.underbidder n=0, market.minimalist n=0, market.climber n=0, market.auctioneer n=0, market.sommelier n=0, market.blackmarket n=0, market.recluse n=0, market.shoppers n=0, market.jealousex n=0, thieves.mole n=0, thieves.accomplice n=0, thieves.lookout n=0, thieves.lightfingers n=0, thieves.bigscore n=0, trading.shopkeeper n=0, trading.dealer n=0, trading.pawnbroker n=0, trading.safetynet n=0, trading.tipster n=0, trading.lender n=0, trading.magnate n=0, trading.shareholder n=0, trading.heiress n=0, trading.bulkbuyer n=0, trading.broker n=0, trading.exporter n=0, trading.liquidator n=0, trading.reinvestor n=0, trading.raider n=0, echo.choir n=0, echo.understudy n=0, echo.groupie n=0, echo.translator n=0, echo.wallflower n=0, echo.mirror n=0, echo.afterimage n=0, benders.bigspender n=0, benders.insider n=0
+
+most bought gold: Midas 0, Banker 0, Prospector 0, Tax Collector 0, Merchant 0
+most bought red: Volunteer 1407, Twins 527, Host 347, Loyalists 310, Patriarch 294
+card                   print  fair   90% CI      owners offers buy% demand  net@printed
+benders.straggler          5  16.5 15.3–17.7        444   8944    5   -4.4  10.13±0.56 
+red.mob                   10  20.9 19.5–22.2        515    262   40   -2.0   9.69±0.59 
+echo.agents                3  -1.9 -2.6–-1.2       1301   3502   31   -2.2  -2.18±0.32 
+thieves.doubleagent        3  -1.4 -2.3–-0.5        761   5350   10   -1.8  -1.76±0.38 
+market.patroness           4   8.3 7.4–9.3          600   6355    8   -3.1   4.77±0.42 
+echo.dejavu               10  24.9 21.1–28.1         90    943    0  -63.0  12.67±1.55 
+benders.frontrunner        5   0.9 -0.1–2.0         469   9188    5   -4.2  -1.54±0.45 
+benders.launderer          6   1.0 -0.3–2.4         245   9536    2   -3.9  -2.22±0.59 
+thieves.extortionist       4   8.2 6.8–9.4          354   4878    4   -4.8   4.69±0.56 
+benders.extrahand          9  18.1 15.2–21.2         86   5054    1  -10.0   8.34±1.29 
+echo.bait                  5   1.3 0.2–2.6          363   6015    5   -5.6  -1.22±0.52 
+red.volunteer              0  -2.5 -3.3–-1.8       1413   1945   72      –  -0.36±0.36 
+market.connoisseur         4   1.1 0.2–2.1          559   6625    7   -3.8  -0.62±0.44 
+market.trendsetter         3   0.9 0.2–1.6         1002   5598   17   -2.5  -0.04±0.33 
+benders.tiebreaker         6  10.0 8.5–11.8         270   8682    3   -5.2   4.50±0.72 
+benders.freelancer         6   2.8 1.4–4.2          317   8591    3   -5.0  -0.91±0.59 
+red.panel                  6   8.9 7.8–10.1         428   1821    5   -0.4   3.70±0.55 
+thieves.shoplifter         5   8.6 7.1–10.1         266   4520    4   -4.2   4.22±0.69 
+red.recruitbonus           4   1.5 0.5–2.5          419   5531    4   -4.4  -0.35±0.49 
+red.loyalists              5   3.1 2.3–3.9          687   4011    8   -4.7   0.10±0.38 
+market.snob                5   7.3 6.3–8.4          428   5329    6   -2.7   3.27±0.47 
+thieves.kingpin            3   4.7 4.0–5.7          942   6809   11   -2.5   2.83±0.39 
+echo.hourglass             4   5.6 4.7–6.4          950   3055   38   -1.4   2.69±0.37 
+red.twins                  2   0.5 -0.3–1.4         967   4430   12   -2.8   0.39±0.37 
+market.makeover            3   1.2 0.4–2.3          581  10385    4   -3.9   0.21±0.44 
+thieves.crew               1  -0.2 -0.9–0.4        1290   3232   35      –   0.62±0.32 
+market.windowdresser       3   1.3 0.4–2.4          534  10209    4   -3.6   0.24±0.46 
+red.patriarch              5   6.9 5.7–8.1          433   3650    8   -1.5   2.93±0.54 
+red.proselytizer           6   9.3 7.2–11.5         117   2511    1   -6.9   3.99±1.02 
+echo.doppel                5   2.5 0.9–4.4          158   7924    1   -6.6  -0.39±0.82 
+market.shopaholic          8  10.5 8.9–12.5         146   4002    1   -5.7   3.39±0.81 
+red.movementpenalty        5   3.1 1.9–4.5          235   4186    3   -6.0   0.11±0.64 
+thieves.cutpurse           1  -0.0 -0.6–0.8        1369   1718   69      –   0.76±0.35 
+echo.evergreen             4   3.1 2.3–3.8         1236   2403   58   -2.8   0.83±0.34 
+echo.muse                  4   2.9 2.0–3.8          596   6771    7   -3.7   0.68±0.42 
+thieves.watchdog           8  10.2 8.6–12.3          87   1565    1  -13.2   3.17±0.86 
+echo.impostor              6   7.9 6.2–9.7          144   4804    2   -2.4   2.97±0.82 
+thieves.fence              4   5.1 3.9–6.2          446   5868    5   -3.9   2.36±0.50 
+red.host                   6   5.1 4.2–6.0          572   1182   29   -2.7   0.84±0.42 
+market.doorman             3   3.7 3.0–4.4          999   5546   18   -2.7   2.02±0.32 
+red.mentor                 8   9.9 7.9–12.2         116   1255    2   -2.7   2.96±0.98 
+thieves.sticky             3   3.7 2.5–4.6          741   5397   10   -4.2   2.07±0.46 
+market.plusone             2   1.5 0.7–2.2         1151   4613   20   -2.3   1.12±0.35 
+thieves.desperado          4   3.3 2.3–4.6          451   6311    5   -4.4   1.03±0.48 
+thieves.robinhood          3   2.5 1.8–3.2          716   5283   10   -4.2   1.17±0.34 
+echo.connector             6   6.4 5.7–7.5          754   1977   35   -2.2   1.86±0.42 
+market.regular             2   2.4 1.6–3.2         1198   3761   30   -1.3   1.79±0.35 
+market.critic              3   3.3 2.5–4.1         1020   5658   17   -2.6   1.76±0.36 
+echo.tuningfork            4   3.6 2.7–4.6          605   6596    7   -3.7   1.26±0.43 
+thieves.snitch             3   2.8 2.0–3.7          718   5683    9   -4.2   1.36±0.38 
+benders.squatter           7   7.4 5.9–8.8          216   7102    2   -4.6   1.80±0.67 
+echo.chronicler            5   5.3 4.0–6.5          382   7235    4   -4.8   1.75±0.56 
+thieves.grifter            3   2.8 2.0–3.5         1009   3285   28   -1.5   1.41±0.35 
+market.stylist             4   3.9 2.8–5.0          537   6610    7   -3.7   1.43±0.52 
+echo.ensemble              6   6.0 4.4–7.7          187   5562    3   -5.0   1.53±0.74 
+red.recruiter              4   4.0 3.0–5.3          369   4230    4   -5.0   1.52±0.54 
+red.crowd                  2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+blue.hand                  2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+blue.helper                2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+green.hand                 2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+green.helper               2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+green.devotee              2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.doubletime          2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.crew                2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.retinue             2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.gardener            2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.sower               2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.underbidder         2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.minimalist          2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.climber             2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.shoppers            2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.dealer             2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.safetynet          2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.broker             2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.raider             2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+benders.bigspender         2  -0.0 -0.0–-0.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.midas                 4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.prospector            4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.thrift                4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.coinpurse             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.seed                  4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.hustler               4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+red.bigfamily              4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+red.drive                  4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+blue.devotee               4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+blue.elder                 4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+green.elder                4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+green.pillar               4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.apprentice          4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.overseer            4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.clockmaker          4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.caterer             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.steward             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.revelers            4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.toastmaster         4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.dowager             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.admirer             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.gobetween           4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.latebloomer         4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.harmonist           4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.rainmaker           4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.pilgrim             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.curator             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.planner             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.sommelier           4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.blackmarket         4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.recluse             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+thieves.mole               4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+thieves.bigscore           4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.shopkeeper         4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.pawnbroker         4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.lender             4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.magnate            4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.exporter           4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.reinvestor         4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+echo.translator            4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+echo.wallflower            4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+benders.insider            4   2.0 2.0–2.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+blue.regular               3   1.0 1.0–1.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+green.regular              3   1.0 1.0–1.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.jealousex           3   1.0 1.0–1.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.shareholder        3   1.0 1.0–1.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.liquidator         3   1.0 1.0–1.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+red.intern                 1  -1.0 -1.0–-1.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+red.reserve                1  -1.0 -1.0–-1.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+blue.recruit               1  -1.0 -1.0–-1.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+green.recruit              1  -1.0 -1.0–-1.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.merchant              6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.tinker                6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.investor              6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.tycoon                6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+blue.pillar                6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+blue.patron                6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+green.patron               6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.taskmaster          6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.lateriser           6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.foreman             6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.courier             6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.bookkeeper          6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.patience            6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.benefactor          6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.majordomo           6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.silversmith         6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.heir                6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.spoon               6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.saint               6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.dyer                6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.farmer              6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.weaver              6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.reseller            6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.auctioneer          6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+thieves.lookout            6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.tipster            6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.heiress            6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+trading.bulkbuyer          6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+echo.choir                 6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+echo.understudy            6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+echo.mirror                6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+echo.afterimage            6   4.0 4.0–4.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.banker                8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.taxman                8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.underdog              8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.speculator            8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.secondwind          8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.errand              8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.lamplighter         8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.guest               8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.gala                8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.peddler             8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.explorer            8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+thieves.accomplice         8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+thieves.lightfingers       8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+echo.groupie               8   6.0 6.0–6.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.chefs               9   7.0 7.0–7.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+gold.jackpot              10   8.0 8.0–8.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+red.sponsor               10   8.0 8.0–8.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+purple.nightowl           10   8.0 8.0–8.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+yellow.gleaner            10   8.0 8.0–8.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+market.onlooker           10   8.0 8.0–8.0            0      0  NaN      –   0.00±0.00 LOW SAMPLE
+silver.grandhost          12  10.0 10.0–10.0          0      0  NaN      –   0.00±0.00 LOW SAMPLE
