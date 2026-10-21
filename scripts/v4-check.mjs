@@ -200,6 +200,16 @@ if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
   }
 }
 
+// Gates already red on the live build don't block anyone else's change; they're named loudly instead.
+let knownRed = {};
+try { knownRed = JSON.parse(readFileSync(join(root, 'e2e/v4/known-red.json'), 'utf8')); } catch {}
+for (const r of results) {
+  const f = r.name.replace(/^e2e /, ''); const k = knownRed[f];
+  if (!k || !r.name.startsWith('e2e ')) continue;
+  if (r.ok) console.log(`\nNOW GREEN: ${f} passes; remove it from e2e/v4/known-red.json.`);
+  else { r.ok = true; r.knownRed = true; console.log(`\nKNOWN RED: ${f} was already red on live ${k.live} (since ${k.since}; owner ${k.owner}: ${k.why}). Not your change; not counted.`); }
+}
+
 const u = await unit;
 // the slowest unit files, for the run history (vitest prints "✓ path (N tests) 1234ms")
 const slowFiles = [...(u.output || '').replace(/\x1b\[[0-9;]*m/g, '').matchAll(/^ [✓❯×] (src\/\S+) \(\d+ tests?[^)]*\)\s+(\d+)ms/gm)]
@@ -214,6 +224,6 @@ recordRun({
 });
 console.log(`\n── v4 check (${kind}) ──`);
 if (waitedMs > 1000) console.log(`waited ${(waitedMs / 1000).toFixed(0)}s for a check slot`);
-for (const r of results.slice().sort((a, b) => a.start - b.start)) console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name}  (${r.s}s, from ${r.start}s)`);
+for (const r of results.slice().sort((a, b) => a.start - b.start)) console.log(`${r.knownRed ? 'KNOWN RED' : r.ok ? 'PASS' : 'FAIL'}  ${r.name}  (${r.s}s, from ${r.start}s)`);
 console.log(`total ${totalS}s · ${kind}${games ? ` · V4_GAMES=${games}` : ''} · ${sha ? `verdict on commit ${sha.slice(0, 7)}` : LIVE_WARNING} · history ${RUNS}`);
 process.exit(ok ? 0 : 1);

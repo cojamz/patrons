@@ -60,6 +60,8 @@ git worktree add -q --detach "$WT" origin/main
 rm -rf "$WT/play"
 mkdir "$WT/play"
 cp -R "$TMP/play/." "$WT/play/"
+# Pages serves main as plain files: skipping Jekyll makes each publish deploy faster.
+[ -f "$WT/.nojekyll" ] || { touch "$WT/.nojekyll"; git -C "$WT" add .nojekyll; }
 git -C "$WT" add --all -- play
 # New threads clone main: keep its copy of the harness in step with the shipped commit.
 [ -f "$TMP/source/scripts/harness-sync-main.sh" ] && bash "$TMP/source/scripts/harness-sync-main.sh" --into "$TMP/source" "$WT"
@@ -100,7 +102,7 @@ while [ "$SECONDS" -le "$DEADLINE" ]; do
   fi
   [ "$SECONDS" -lt "$DEADLINE" ] || break
   echo "Waiting for Pages to serve ${SHORT}..."
-  sleep 10
+  sleep "${V4_PAGES_POLL:-5}"
 done
 echo "Pages did not serve verified build $SHORT within ${WAIT}s. main was pushed; inspect its Pages deployment before retrying." >&2
 exit 1

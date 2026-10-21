@@ -19,6 +19,8 @@ mirror() { # $1 source tree, $2 main worktree
     [ -e "$src/$p" ] || continue
     rm -rf "${wt:?}/$p"; mkdir -p "$(dirname "$wt/$p")"; cp -R "$src/$p" "$wt/$p"
   done
+  [ -f "$wt/.nojekyll" ] || touch "$wt/.nojekyll"   # Pages skips Jekyll: faster deploys
+  git -C "$wt" add -- .nojekyll
   git -C "$wt" add --all -- "${PARTS[@]}" archive/v3-claude 2>/dev/null || git -C "$wt" add --all -- "${PARTS[@]}"
 }
 

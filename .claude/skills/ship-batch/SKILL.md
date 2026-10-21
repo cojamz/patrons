@@ -5,6 +5,7 @@ description: Ship checked work live to the play link (version bump, changelog, p
 
 # Ship a batch
 
+0. A single small screen or wording change: `bash scripts/v4-ship-ui.sh "<line>" <files>` does steps 2–4 in about 2 minutes; then do 5–7.
 1. Read design/lessons/shipping.md. Pull and rebase on `claude/gifted-newton-3lcy3i` (never force-push). Group 5–10 related backlog items when there are several; a single fix ships alone.
 2. `npm run version:v4 -- patch "<plain summary>"` (stay on v0.8.x). Fill the new CHANGELOG.md section with one plain player-facing line per change.
 3. Commit, then `npm run check:v4:quick -- --related <files>` on the change. The verdict for a big batch is `npm run check:v4 -- --commit <sha>`.
