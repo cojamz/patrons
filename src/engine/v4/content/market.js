@@ -366,7 +366,12 @@ const market = {
       },
     }),
     // Claude's fill-in counters, Oct 21, not approved
-    m('bouncer', 'Bouncer', 1, 2, 'Rivals can’t recruit more than 2 members in one turn.', { capRivalRecruits: 2 }),
+    m('jealousex', 'Jealous Ex', 1, 2, 'Whenever a rival recruits a blue member, they lose 1 blue.', {
+      onAnyRecruit(ctx, owner, card, by, rec) {
+        if (by === owner || !isBlue(ctx.defOf(rec)) || !(by.res[B] > 0)) return;
+        by.res[B] -= 1; ctx.log(`${owner.name}'s Jealous Ex: ${by.name} loses 1 blue.`);
+      },
+    }),
   ],
 };
 
