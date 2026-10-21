@@ -1,0 +1,205 @@
+
+## gold (gold) name=Gold
+  A[1] Kickback: +3 gold, and +1 gold to a rival you choose.
+  A[1] Golden Years: +2 gold in round I, +4 in round II, +6 in round III.
+  A[1] Intro Offer: Your next member costs 4 less, off any part of its cost.
+  A[2] Collect Debts: Take up to 3 gold from rivals, split however you like.
+  A[2] Tithe: +1 gold per member you have.
+  A[3] Double Down: Double your gold.
+  M Banker 4+4 f1: Now and at round start, +3 gold.
+  M Prospector 2+2 f1: When an action gains you gold, +1 gold.
+  M Tax Collector 4+4 f1: Whenever a rival buys followers, +1 gold.
+  M Merchant 4+2 f1: Whenever anyone recruits a gold member, +1 gold.
+  M Penny Pincher 4+0 f1: Gold you spend on members counts double.
+  M Underdog 5+3 f1: While anyone has more gold than you, your gold gains are doubled.
+  M Alchemist 4+2 f1: Whenever an action gains you another color, +1 gold.
+  M Speculator 4+4 f1: Once per game: double your gold.
+  M Tycoon 4+2 f1: Game end: +1 follower per 2 gold.
+  M Treasurer 4+0 f1: When recruited: gain gold equal to your member count (counting this one).
+
+## red (red) name=Red
+  A[1] Even Swap: Swap any two members of equal cost. +1 red.
+  A[1] Gather: +1 red × round. +1 red.
+  A[1] Open Door: Recruit the cheapest shop member. +1 red.
+  A[2] Promote: Swap a member with a shop member costing up to 2 more. +1 red.
+  A[2] Demote: Swap a member with a shop member costing at least 2 less. +1 red.
+  A[3] Recruit a Member: Recruit a shop member. +1 red.
+  M Twins 2+0 f2 n2: Worth 2 followers.
+  M Volunteer 0+0 f1: No effect.
+  M Mentor & Protégé 5+3 f1: Recruit: recruit the cheapest shop member.
+  M Proselytizer 4+2 f1: Whenever you recruit, +1 follower.
+  M Mob 6+4 f5 n5: Game end: +1 follower per red member.
+  M Recruiter 3+1 f1: When you recruit, +1 red.
+  M Host 4+2 f1: Now and at round start, +1 red per 2 members.
+  M Patriarch 3+2 f1: Game end: +1 follower per 2 members.
+  M Recruit Bonus 2+2 f1: When you trigger a member’s On Recruit, +1 of its color.
+  M Movement Penalty 3+2 f1: When you move a rival’s member out of their cult, they lose 1 follower.
+  M Panel 4+2 f3 n3: On Recruit: Promote or Demote another member.
+  M Loyalists 2+3 f2 n2: Your members can’t be swapped.
+
+## blue (blue) name=Blue
+  A[1] Tide: +3 blue.
+  A[1] Current: +2 blue, +1 red.
+  A[1] Shoal: +2 blue, +1 green.
+  A[2] Swell: +5 blue.
+  A[2] Harbor: +4 blue, +1 gold.
+  A[3] Flood: +8 blue.
+  M Blue Recruit 1+0 f1: Worth 1 follower.
+  M Blue Hand 1+1 f1: Worth 1 follower.
+  M Blue Helper 2+0 f1: Worth 1 follower.
+  M Blue Regular 2+1 f2: Worth 2 followers.
+  M Blue Devotee 2+2 f2: Worth 2 followers.
+  M Blue Elder 3+1 f3: Worth 3 followers.
+  M Blue Pillar 3+3 f5: Worth 5 followers.
+  M Blue Patron 4+2 f5: Worth 5 followers.
+
+## green (green) name=Green
+  A[1] Sprout: +3 green.
+  A[1] Graft: +2 green, +1 gold.
+  A[1] Root: +2 green, +1 blue.
+  A[2] Grove: +5 green.
+  A[2] Orchard: +4 green, +1 red.
+  A[3] Bloom: +8 green.
+  M Green Recruit 1+0 f1: Worth 1 follower.
+  M Green Hand 1+1 f1: Worth 1 follower.
+  M Green Helper 2+0 f1: Worth 1 follower.
+  M Green Regular 2+1 f2: Worth 2 followers.
+  M Green Devotee 1+1 f2: Worth 2 followers.
+  M Green Elder 3+1 f3: Worth 3 followers.
+  M Green Pillar 2+2 f5: Worth 5 followers.
+  M Green Patron 4+2 f5: Worth 5 followers.
+
+## purple (purple) name=Purple
+  A[1] Clock In: +4 purple in round I, +5 in round II, +6 in round III.
+  A[1] Catch Up: +1 purple, and +1 per rival who’s placed more minions than you this round.
+  A[1] Roll Call: +1 purple per minion you have on the board, this one included.
+  A[2] Plan Ahead: +1 purple per minion you have left to place this round.
+  A[2] Rush Hour: +1 purple per 2 minions on the board (everyone’s, this one included).
+  A[3] Crunch Time: Take your next 2 turns right away.
+  M Go-Getter 6+2 f1: Once per game, from round II: take an extra turn right after this one.
+  M Late Riser 4+2 f1: At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.
+  M Courier 4+2 f1: Whenever you take an extra turn, +1 of each other color.
+  M Overseer 2+2 f1: Whenever a rival takes an extra turn, gain half your purple, rounded down (at most 4).
+  M Bookkeeper 4+2 f1: At the end of your last turn each round, +1 purple per 2 minions you have on the board.
+  M Clockmaker 2+2 f1: Now and at round start, +1 purple per 2 purple you have.
+  M Lamplighter 6+2 f1: Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).
+  M Night Owl 8+2 f2: Rounds II–III: after placing your last minion, take 1 extra turn if there’s room. Once per round.
+  M Timekeeper 4+2 f1: Game end: +1 follower per 3 purple.
+  M Shift Crew 1+1 f2: Worth 2 followers. No effect.
+
+## silver (silver) name=Silver
+  A[1] Toast: +3 silver in round I, +6 in round II, +9 in round III. Everyone else +1 / +2 / +3 silver.
+  A[1] Goody Bags: +2 silver and +2 of another color you choose; everyone else gets 1 of that color.
+  A[1] Good Deed: +4 silver, and a rival you choose gets 2 of a color you choose.
+  A[2] Sweet Talk: +4 silver, then swap half or all of your silver for one other color, one for one. Everyone else +1 silver.
+  A[2] Rising Tide: Everyone else +2 silver. Then gain half the silver of the rival with the most (rounded up).
+  A[3] Hold Court: Gain 1 follower per 2 silver you hold (keep the silver). Everyone else +2 silver.
+  M Guest 4+4 f1: Whenever another player gives you something, +1 more of it.
+  M Benefactor 4+2 f1: Now and at round start, +3 silver, and a rival you pick gets 1 silver.
+  M Majordomo 4+2 f1: Whenever you take a Silver space, +2 silver.
+  M Retinue 1+1 f3: Worth 3 followers. When recruited, everyone else +1 silver.
+  M Revelers 3+1 f1 n3: Counts as 3 members.
+  M Heir 4+2 f1: Now and at the start of round III: +1 silver per member you have.
+  M Upstart 4+2 f1: When recruited, gain half the silver of the richest rival (rounded up).
+  M Debutante 4+4 f1: Once per game: double your silver, and everyone else +2 silver.
+  M Grand Host 8+4 f1: Silver spaces you take give you twice the silver.
+  M Patron Saint 4+2 f1: Game end: +1 follower per 2 silver members in play, anyone’s.
+
+## yellow (yellow) name=Yellow
+  A[1] Harvest: +1 yellow, plus 1 per other color you hold.
+  A[1] Top Up: +1 of each color you hold the fewest of (ties: all of them).
+  A[1] Trade Seeds: +2 yellow, then swap up to 3 of your resources for other colors.
+  A[2] Branch Out: +1 of each other color per 3 yellow you have (you keep the yellow).
+  A[2] Potluck: Each of your members brings you 1 of its color.
+  A[3] Bumper Crop: +1 of each other color per full set you hold.
+  M Peddler 4+4 f1: Now and at round start, +1 of each color.
+  M Admirer 3+1 f1: Whenever a rival recruits a member of a color you have none of, +1 of that color.
+  M Go-Between 2+2 f1: Whenever you recruit a non-yellow member, +1 of its color.
+  M Dyer 4+2 f1: At round end, +1 yellow per color you hold.
+  M Late Bloomers 2+2 f2: Worth 2 followers. On recruit and at round start, if you have the fewest followers (excluding this card; ties count), +1 of each color.
+  M Rainmaker 3+1 f1: Once per game: raise each of your colors to match your yellow.
+  M Pilgrim 2+2 f1: When recruited: +1 of each color.
+  M Weaver 4+2 f1: Whenever you buy 5 or more followers, +1 of each color.
+  M Explorer 4+4 f1: Whenever you take a space outside Yellow, +1 yellow.
+  M Feastmaker 6+4 f1: Once per game: +1 of each color per round number.
+
+## market (blue) name=Blue
+  A[1] Snap Up: +2 blue. You may then pay for a member in the shop using any colors, in addition to your normal buy.
+  A[1] New Faces: +2 blue, and sweep the face-up row: a fresh row of members comes out.
+  A[1] Name Drop: +1 blue, and +1 per blue member in the shop.
+  A[2] Half Price: As your buy this turn: a face-up member for half its cost (rounded down), in any colors.
+  A[2] Show Off: Gain blue equal to half the cost of your priciest member (rounded down).
+  A[3] Spree: This turn you buy 3 times.
+  M Stylist 2+2 f1: Whenever anyone recruits a blue member, +1 blue.
+  M Connoisseur 2+2 f1: Whenever you recruit a blue member, +2 blue.
+  M Planner 2+2 f1: Now and at round start, your next member costs 2 less per round number.
+  M Underbidder 2+0 f1: Now and at round start, your next member costs 2 less per rival with more members than you.
+  M Minimalist 2+0 f1: Now and at round start, +1 blue per rival with more members than you.
+  M Social Climber 2+0 f1: Whenever you release another member, +2 of any color you choose.
+  M Sommelier 2+2 f1: Whenever you recruit a blue member, your next member costs 2 less.
+  M Patroness 2+2 f1: Whenever you recruit a blue member, +1 follower.
+  M Snob 3+2 f1: Game end: +1 follower per blue member you have.
+  M Recluse 2+2 f1: Game end: +2 followers per rival with more members than you.
+
+## thieves (magenta) name=Magenta
+  A[1] Help Yourself: Steal 1 resource × round. Gain 1 follower × round. +1 magenta.
+  A[1] Redistribute: Steal 1 resource per Magenta action that already has a minion. +1 magenta.
+  A[1] Lie Low: Steal 1 resource × round. Your members and resources can’t be stolen this round. +1 magenta.
+  A[2] Crime Wave: Steal half of a rival’s resource pile, rounded down. +1 magenta.
+  A[2] Shake Down: Choose a rival’s member costing 5 or less. They pay you its cost to keep it, or you take it. +1 magenta.
+  A[3] Poach: Take any rival’s member. +1 magenta.
+  M Cutpurse 2+2 f1: Now and at round start, take 1 resource from the richest rival you can steal from.
+  M Grifter 4+2 f1: When recruited: take 1 resource per 2 members you have. Each pick comes from a rival holding the most resources.
+  M Sticky Fingers 4+4 f1: Your steals from spaces take +1 resource.
+  M Desperado 2+2 f1: While you have the fewest followers (ties count), double the base resources stolen from spaces.
+  M Robin Hood 2+2 f1: Whenever you steal from the player with the most followers, +1 follower.
+  M Extortionist 8+2 f1: Whenever a rival buys 5 or more followers, take 2 resources from them.
+  M Bodyguard 4+2 f1: Rivals can’t steal from you.
+  M Crew 1+1 f2: Worth 2 followers.
+  M Double Agent 4+2 f1: When recruited: swap it for any rival’s member.
+  M Kingpin 4+0 f1: Game end: +1 follower per 2 magenta.
+
+## trading (white) name=White
+  A[1] Sob Story: +2 white, and +1 white per rival with more followers than you.
+  A[1] Cheap Seats: +1 follower per 3 white you hold (you keep the white).
+  A[1] Your Call: +1 follower in round I, +2 in round II, +3 in round III; take 2 white in place of any of them.
+  A[2] Sell High: Sell up to 2 followers you bought or won, for 3 white each.
+  A[2] Dividend: +1 white per follower you bought or won.
+  A[3] All In: Trade all your resources for followers, 1 for 1 (you may keep your white).
+  M Shopkeeper 2+2 f1: Now and at round start, +2 white.
+  M Rich Uncle 2+0 f1: Now and at round start, if you have no white, +3 white.
+  M Magnate 2+2 f1: Game end: +1 follower per 3 white.
+  M Shareholder 2+1 f3: Worth 3 followers.
+  M Heiress 4+2 f1: Once per game: +1 white per member you have.
+  M Bulk Buyer 4+2 f1: Whenever you buy 3 or more followers, +1 more.
+  M Broker 2+0 f1: Whenever a White action gives you followers, +1 more (once per action).
+  M Exporter 2+2 f1: Whenever you recruit a non-white member, +1 white.
+  M Reinvestor 2+2 f1: Whenever you sell followers, your next member costs 2 less per follower sold.
+  M Raider 2+0 f1: Once per game: take up to 3 followers from the leader, paying them 1 white each.
+
+## echo (green) name=Green
+  A[1] Chorus: +1 green per other green action with a minion. +1 green.
+  A[1] Build Up: +1 green × round. +1 green.
+  A[1] Echo: Copy the previous action. +1 green.
+  A[2] Encore: Copy an action with a rival minion. +1 green.
+  A[2] Reprise: Copy an action with your minion. +1 green.
+  A[3] Greatest Hits: Copy every action with your minion. +1 green.
+  M Busker 1+3 f1: Recruit / round start: +2 green.
+  M Muse 2+2 f1: When another player copies an action: +1 green.
+  M Ensemble 3+3 f1: When you copy your own action: +1 follower.
+  M Impressionist 2+2 f1: When you copy an action: +1 resource of its color.
+  M Stunt Double 2+2 f1: Recruit: copy the action you just took.
+  M Tribute Band 8+2 f1: Once per game: copy every action you took this round.
+  M Doppelganger 3+2 f1: Recruit: becomes a copy of one of your members.
+  M Impostor 4+2 f1: Recruit: becomes a copy of a rival’s member.
+  M Connector 4+2 f1: Recruit / round start: +1 green per non-green member.
+  M Agents 1+2 f2 n2: Your actions can’t be copied.
+  M Bait 3+2 f1: Anyone who copies your action loses 1 follower. If they’re a rival, you gain 1 follower.
+  M Chronicler 2+3 f1: Game end: +1 follower per green member.
+
+## guests
+  M Squatter 5+2 f1 lean=thieves: Once per round: place a minion on a space a rival already took.
+  M Freelancer 3+3 f1 lean=yellow: You may pay any member’s colored part in any colors.
+  M Extra Hand 6+3 f1 lean=purple: +1 minion in round III.
+  M Front-runner 4+0 f1 lean=purple: You always pick first in a round.
+  M Straggler 4+1 f1 lean=purple: Once per round, after the last minion is placed: your last minion may move to an unused space and do that action.
