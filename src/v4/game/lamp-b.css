@@ -414,6 +414,9 @@
 .lt-card .need .nd{display:inline-flex;align-items:center;margin-left:2px}
 .lt-card .need b{font-weight:800}
 .lt-card .need .pip{width:.9em;height:.9em}
+/* the price at a glance (Cory, 2026-10-21): one faint number in the top right, the dots below stay the price itself */
+.lt-card .lt-corner-cost{position:absolute;top:5px;right:7px;font-size:14px;line-height:1;font-weight:800;color:var(--pl-ink,#2b2018);opacity:.45;pointer-events:none}
+.lt-card .need.from-pile{right:auto;left:6px}
 
 /* follower buys: the same paper and grammar ("2◐ → 1👤"), "8 left" quiet */
 .lt-rates .lt-rate{border-radius:var(--corner,8px);background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}

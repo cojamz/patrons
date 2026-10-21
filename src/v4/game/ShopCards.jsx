@@ -164,6 +164,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                   tinted field, the name, the cost in dots and the worth; what it does is the hover's one plain sentence */}
               <span className="band" aria-hidden="true" />
               <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
+                {/* the price as one faint number in the corner, for a quick look across the row (Cory, 2026-10-21): what
+                    you'd pay, so it agrees with the dots below; the dots stay the price's words */}
+                <span className="lt-corner-cost num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>
                 {/* no "need N" on the face (Cory: "the shouting 'need N' goes"; grammar: what you can't afford is the card
                     fading, not text). What you're short of is the hover's one quiet line. */}
                 {fromPile && !tray && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
