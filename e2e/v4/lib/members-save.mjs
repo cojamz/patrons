@@ -7,7 +7,7 @@
 // members (its card scrolls inside the window). The round-start snapshot
 // is saved too. No round-start income, so the seat has room for six figures.
 import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/index.js';
-import { resume } from '../../../src/engine/v4/core.js';
+import { resume, memberWeight, SHOP_SIZE } from '../../../src/engine/v4/core.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
 import { buildStamp } from './stamp.mjs';
 import { freeCard } from './deal.mjs';
@@ -39,9 +39,10 @@ export function membersSave(from = 1) {
     };
     const uids = HAND.map(id => give(0, id));
     const theirs = RIVAL.map(id => give(1, id));
-    // P4 holds a crowd (w2a #16: a 12+ member seat card ran off the screen): the first 13 members left in the pile
-    for (const u of s.pile.filter(x => !s.players.some(p => p.members.includes(x))).slice(0, 13)) give(3, s.cards[u].def);
-    while (s.shop.length < 10 && s.pile.length) s.shop.push(s.pile.shift());
+    // P4 holds a crowd (w2a #16: a 12+ member seat card ran off the screen): the first 13 one-body members left in
+    // the pile (a printed group like Mob counts several members, which would blur cards against members here)
+    for (const u of s.pile.filter(x => !s.players.some(p => p.members.includes(x)) && memberWeight(s, x) === 1).slice(0, 13)) give(3, s.cards[u].def);
+    while (s.shop.length < SHOP_SIZE && s.pile.length) s.shop.push(s.pile.shift());
     s.cards[uids[HAND.indexOf('gold.midas')]].on = true;
     s.cards[uids[HAND.indexOf('echo.translator')]].on = false;
     s.cards[uids[HAND.indexOf('gold.speculator')]].used = true;

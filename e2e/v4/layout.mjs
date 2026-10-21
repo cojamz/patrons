@@ -94,7 +94,8 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     await page.waitForSelector('.lt-shop .card');
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${SHOTS}/${tag}-place.png` });
-    await check('place', ['.lt-shop .card .nm', '.lt-shop .card .ft', '.lt-shop .card .lt-cost', '.lt-shop .lt-rate b', '.lt-shop .lt-rate']);
+    // a follower buy's paper stack (::before, Cory's stacked-paper look) hangs 3px past the tile on purpose: measure its face
+    await check('place', ['.lt-shop .card .nm', '.lt-shop .card .ft', '.lt-shop .card .lt-cost', '.lt-shop .lt-rate b', '.lt-shop .lt-rate .fb-tip']);
     // (l4) the classic table has no magenta: a magenta-leaning guest's cost reads in "any"
     const res = await page.evaluate(() => [...document.querySelectorAll('.lt-seat[data-pid="0"] [data-res]')].map(e => e.getAttribute('title') || e.textContent));
     // a cost is drawn as shapes: its words are in its label
@@ -115,7 +116,7 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     await page.waitForSelector('.lt[data-phase="buy"][data-yours="1"]', { timeout: 5000 });
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${SHOTS}/${tag}-buy.png` });
-    await check('buy', ['.lt-shop .lt-rate b', '.lt-shop .lt-rate', '.lt-shop .card .nm']);
+    await check('buy', ['.lt-shop .lt-rate b', '.lt-shop .lt-rate .fb-tip', '.lt-shop .card .nm']);
     // (l8) the follower buys and "Done, no buy" show keyboard focus: a cream ring, not the lamp's gold a lit tile wears
     // (a key pressed first, so the browser treats the focus as the keyboard's)
     const rings = [];
@@ -152,7 +153,16 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
     await page.goto(`${base}/?botDelay=20&intro=0`);
     await page.click('[data-home="local"]');
     await page.click('[data-start]');
-    await page.waitForSelector('.lt > .lt-seat.mine .cs-setup [data-option]', { timeout: 20000 });
+    // the draft's last color is automatic: a seat drawn last in the reverse draft never sees a pick (start again)
+    for (let tries = 0; ; tries++) {
+      await page.waitForSelector('.lt > .lt-seat.mine .cs-setup [data-option], .app.game[data-phase="place"]', { timeout: 20000 });
+      if (await page.$('.lt > .lt-seat.mine .cs-setup [data-option]')) break;
+      if (tries >= 5) throw new Error('your chair never drew a draft pick in 6 games');
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(`${base}/?botDelay=20&intro=0`);
+      await page.click('[data-home="local"]');
+      await page.click('[data-start]');
+    }
     await page.waitForTimeout(700);
     const order0 = await page.$$eval('.lt > .lt-seat[data-pid]', els => els.map(e => [Number(e.dataset.pid), Math.round(e.getBoundingClientRect().top)]).sort((x, y) => x[1] - y[1]).map(x => x[0]).join());
     const r = await page.evaluate(() => {
@@ -160,13 +170,14 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
       const toks = [...document.querySelectorAll('.lt > .lt-seat.mine .cs-setup [data-option]')].map(e => ({ b: e.getBoundingClientRect(), lit: /rgba?\(/.test(getComputedStyle(e).boxShadow), whole: [...e.querySelectorAll('.tk-name')].every(n => n.scrollWidth <= n.clientWidth + 1) && e.scrollWidth <= e.clientWidth + 1 && e.scrollHeight <= e.clientHeight + 1 && [...e.children].every(c => { const cb = c.getBoundingClientRect(), eb = e.getBoundingClientRect(); return cb.top >= eb.top - 0.5 && cb.bottom <= eb.bottom + 0.5; }) }));
       const vis = e => { const st = getComputedStyle(e); const b = e.getBoundingClientRect(); return st.display !== 'none' && st.visibility !== 'hidden' && b.width > 0 && b.height > 0; };
       return {
-        n: toks.length, inSeat: toks.every(t => t.b.left >= seat.left && t.b.right <= seat.right && t.b.top >= seat.top && t.b.bottom <= seat.bottom),
+        n: toks.length, want: document.querySelectorAll('[data-setup-order] [data-order="draft"] .setup-order-step').length, inSeat: toks.every(t => t.b.left >= seat.left && t.b.right <= seat.right && t.b.top >= seat.top && t.b.bottom <= seat.bottom),
         onScreen: toks.every(t => t.b.left >= 0 && t.b.top >= 0 && t.b.right <= innerWidth && t.b.bottom <= innerHeight),
         lit: toks.every(t => t.lit), whole: toks.every(t => t.whole), big: toks.every(t => t.b.height >= 24),
         panel: [...document.querySelectorAll('.prompt.choice.setup')].filter(vis).length,
       };
     });
-    if (r.n !== 4) errors.push(`[${tag} setup] (l6) your chair offers ${r.n} starting picks, not 4`);
+    // the reverse draft (v0.8.5): one pick each from a shrinking pool, one color per player still to draft
+    if (!r.want || r.n !== r.want) errors.push(`[${tag} setup] (l6) your chair offers ${r.n} starting picks, not the ${r.want} left in the draft`);
     if (!r.inSeat) errors.push(`[${tag} setup] (l6) the starting pick runs out of your chair`);
     if (!r.onScreen) errors.push(`[${tag} setup] (l6) the starting pick runs off the window`);
     if (!r.lit) errors.push(`[${tag} setup] (l6) the starting pick isn't lit`);
@@ -174,12 +185,9 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
     if (!r.big) errors.push(`[${tag} setup] (l6) the starting picks are under 24px tall`);
     if (r.panel) errors.push(`[${tag} setup] (l6) a second pick panel still shows outside your chair`);
     await page.screenshot({ path: `${SHOTS}/${tag}-setup.png` });
-    // pick both, then round I: the chairs keep the order they showed during the picks
-    for (let k = 0; k < 2; k++) {
-      await page.waitForSelector('.lt > .lt-seat.mine .cs-setup [data-option]', { timeout: 20000 });
-      await page.click('.lt > .lt-seat.mine .cs-setup [data-option]');
-      await page.waitForTimeout(800);
-    }
+    // draft your one pick, then round I: the chairs keep the order they showed during the picks
+    await page.click('.lt > .lt-seat.mine .cs-setup [data-option]');
+    await page.waitForTimeout(800);
     await page.waitForSelector('.lt[data-round="1"]', { timeout: 20000 });
     await page.waitForTimeout(1200);
     const order1 = await page.$$eval('.lt > .lt-seat[data-pid]', els => els.map(e => [Number(e.dataset.pid), Math.round(e.getBoundingClientRect().top)]).sort((x, y) => x[1] - y[1]).map(x => x[0]).join());
