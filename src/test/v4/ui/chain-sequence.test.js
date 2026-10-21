@@ -1,5 +1,5 @@
 import { afterEach, expect, it } from 'vitest';
-import { planChain } from '../../../v4/game/director.js';
+import { planChain, rewindPlan, isUndo } from '../../../v4/game/director.js';
 import { motionSpeed, setMotionSpeed } from '../../../v4/motion.js';
 import { sceneQ } from '../../engine/v4/cards-helpers.js';
 
@@ -213,4 +213,25 @@ it('says what a steal takes at once: the victim pile is tagged as the take start
   expect(pieces).toHaveLength(1);
   expect(pieces[0]).toMatchObject({ n: 3, bundle: true, take: true });
   expect(pieces[0].at).toBeGreaterThanOrEqual(tug.at);
+});
+
+it('plays an undone placement backwards: your minion home and its pieces back where they came from, quicker, nothing landing again (H24)', () => {
+  setMotionSpeed('steady');
+  const restored = sceneQ({ quadrants: ['gold', 'silver'], res: [{ gold: 2 }] });
+  const undone = { ...restored, moves: restored.moves + 1, slots: { ...restored.slots, '0-0': 0 },
+    effects: [{ type: 'gain', cause: { kind: 'space', pid: 0, key: '0-0' }, from: { kind: 'space', key: '0-0' }, to: stack(0, 'gold'), what: { r: 'gold', n: 2 } }] };
+  expect(isUndo(undone, restored)).toBe(true);
+  expect(isUndo(restored, undone)).toBe(false);
+  const fwd = planChain(restored, undone, { mine: [0] });
+  const back = rewindPlan(fwd);
+  // only motion: no lands (no count steps, no sounds), no pulses or stage cards
+  expect(new Set(back.atoms.map(a => a.op))).toEqual(new Set(['piece', 'minion']));
+  const fp = fwd.atoms.filter(a => a.op === 'piece'), bp = back.atoms.filter(a => a.op === 'piece');
+  expect(bp.length).toBe(fp.length);
+  for (const a of bp) { expect(a.from.kind).toBe('stack'); expect(a.to.kind).not.toBe('stack'); }
+  // the minion came first in the move, so it goes home last
+  const m = back.atoms.find(a => a.op === 'minion');
+  expect(m.at).toBeGreaterThanOrEqual(Math.max(...bp.map(a => a.at)));
+  expect(back.total).toBeLessThan(fwd.total);
+  expect(back.total).toBeGreaterThan(0);
 });

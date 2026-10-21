@@ -634,6 +634,7 @@ export function skipChain() {
   const q = chain.queue;
   chain.queue = [];
   for (const item of q) item.fn(true);
+  clearRewind();
   landAll();
   clearFlights(0);
   chain.flying = 0;
@@ -758,6 +759,112 @@ const roundDeals = [];
 /** useDeal's deal of a new round's row: `anim` (the picture flying off the deck), `hide` (the real card waiting). */
 export function noteRoundDeal(anim, hide) { if (anim && hide && anim.effect && hide.effect) roundDeals.push({ anim, hide }); }
 
+// ---------- undo (H24): the move's motion, backwards ----------
+// Undo restores the state at once (session/local.js); what moved plays back the way it came, at twice the speed: pieces
+// fly back to where they came from, your minion returns to its column, a bought card to its slot. Nothing counts, rings
+// or sounds again (the numbers are already the restored ones), and it never holds the table: no chain runs.
+const REWIND = 0.5;
+const rewind = { timers: [], anims: [] };
+/** Whether going from `before` to `state` takes a step back (an undo): the same round, fewer moves. */
+export const isUndo = (before, state) => !!before && !!state && before.round === state.round && typeof before.moves === 'number' && state.moves < before.moves;
+function clearRewind() {
+  rewind.timers.forEach(clearTimeout);
+  rewind.timers = [];
+  const a = rewind.anims;
+  rewind.anims = [];
+  for (const x of a) { try { x.finish(); } catch { /* gone */ } }
+}
+/** The rewind of a move's plan (`fwd`, as planChain made it from the restored state to the undone one): its pieces,
+ *  minions and bought cards, each reversed in time and direction, at REWIND of the time. Pure. */
+export function rewindPlan(fwd) {
+  const T = fwd.total || 0, atoms = [];
+  const back = (at, d) => Math.round(Math.max(0, T - at - d) * REWIND);
+  for (const a of fwd.atoms || []) {
+    if (a.op === 'piece') {
+      const d = a.dur || 0;
+      atoms.push({ op: 'piece', at: back(a.at, d), dur: Math.max(1, Math.round(d * REWIND)), from: a.to, to: a.from, n: a.n, r: a.r, owner: a.owner, fol: !!a.fol, bundle: !!a.bundle });
+    } else if (a.op === 'minion') {
+      atoms.push({ op: 'minion', at: back(a.at, a.dur || 0), dur: Math.max(1, Math.round((a.dur || 0) * REWIND)), pid: a.pid, key: a.key });
+    } else if (a.op === 'card') {
+      const whole = (a.lift || 0) + (a.toHub || 0) + (a.show || 0) + (a.fromHub || 0);
+      const d = Math.round(((a.toHub || 0) + (a.fromHub || 0)) * REWIND);
+      atoms.push({ op: 'card', at: back(a.at, whole), dur: Math.max(1, d), uid: a.uid, pid: a.to });
+    }
+  }
+  atoms.sort((x, y) => x.at - y.at);
+  const total = atoms.reduce((m, a) => Math.max(m, a.at + a.dur), 0);
+  return { atoms, total, handoff: 0, rewind: true };
+}
+function playRewind(root, before, state, mine) {
+  // undone during the move's own motion: that motion lands at once (silently), and the rewind starts from its end
+  if (chainRunning()) skipChain();
+  clearRewind();
+  const ctx = { state, before, snap: null, chips: null };
+  const where = w => (w && w.kind !== 'stage' ? placeEl(root, w, ctx) : null);
+  const measure = (a, b) => { const A = where(a), B = where(b); if (!A || !B) return TYPICAL; const ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect(); return Math.hypot(rb.left + rb.width / 2 - ra.left - ra.width / 2, rb.top + rb.height / 2 - ra.top - ra.height / 2); };
+  const plan = rewindPlan(planChain(state, before, { mine, measure }));
+  if (!plan.atoms.length || !motionOK()) return plan;
+  const keep = x => { if (x) rewind.anims.push(x); return x; }; // (flyPath tracks its own; the rest are tracked here)
+  const hideUntil = (el, ms) => { if (el && el.animate) keep(track(el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: ms + 30 }))); };
+  const run = a => {
+    switch (a.op) {
+      case 'piece': {
+        const A = where(a.from), B = where(a.to);
+        if (!A || !B) return;
+        const size = a.fol ? 18 : 16;
+        const pid = a.from.kind === 'stack' || a.from.kind === 'count' ? a.from.pid : a.to.pid;
+        const html = a.fol ? folHtml(root, pid) : dotHtml(root, a.r, a.owner ?? pid);
+        keep(flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'} rewind`, square(A.getBoundingClientRect(), size), square(B.getBoundingClientRect(), size), { path: 'arc', duration: a.dur, trail: a.bundle ? 2 : 0, trailGap: MO.bundleTrail, fade: true }));
+        return;
+      }
+      case 'minion': {
+        const slot = root.querySelector(`[data-slot="${a.key}"]`);
+        const col = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions [data-minion]`)];
+        const home = col[col.length - 1] || root.querySelector(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions`);
+        if (!slot || !home) return;
+        const F = (slot.querySelector('.base') || slot).getBoundingClientRect(), H = home.getBoundingClientRect();
+        const size = Math.max(16, H.width || 18);
+        const html = col.length ? home.innerHTML : `<i style="background:${playerColor(a.pid)}"></i>`;
+        if (col.length) hideUntil(home, a.dur);
+        keep(flyPath(html, 'worker-flight minion-flight rewind', square(F, size), square(H, size), { path: 'arc', duration: a.dur }));
+        return;
+      }
+      case 'card': {
+        const card = root.querySelector(`.lt-shop .card[data-uid="${a.uid}"], .shop .card[data-uid="${a.uid}"]`);
+        const crowd = placeEl(root, { kind: 'crowd', pid: a.pid }, ctx);
+        if (!card || !crowd || !card.animate) return;
+        const C = card.getBoundingClientRect(), W = crowd.getBoundingClientRect();
+        if (!C.width) return;
+        const g = document.createElement('div');
+        g.className = 'flight card-flight ghost-layer rewind';
+        g.dataset.born = String(Date.now());
+        g.innerHTML = card.outerHTML;
+        Object.assign(g.style, { left: `${C.left}px`, top: `${C.top}px`, width: `${C.width}px`, height: `${C.height}px` });
+        document.body.appendChild(g);
+        const dx = W.left + W.width / 2 - (C.left + C.width / 2), dy = W.top + W.height / 2 - (C.top + C.height / 2);
+        const bow = onScreenBow(W, C, Math.max(16, Math.min(70, Math.hypot(dx, dy) * 0.18)));
+        // from the buyer's crowd (small) back into its slot (full size): the forward flight, run backwards
+        const frames = arcFrames(-dx, -dy, bow, { s0: 0.3, s1: 1, ease: CARD_EASE }).map(f => ({ ...f, transform: f.transform.replace(/translate\(([-\d.]+)px,([-\d.]+)px\)/, (m, x, y) => `translate(${(dx + Number(x)).toFixed(1)}px,${(dy + Number(y)).toFixed(1)}px)`) }));
+        const anim = keep(track(g.animate(frames, { duration: a.dur, fill: 'forwards' })));
+        keep(track(g.animate([{ opacity: 0.5 }, { opacity: 1, offset: 0.4 }, { opacity: 1 }], { duration: a.dur, fill: 'forwards' })));
+        const done = () => g.remove();
+        anim.addEventListener('finish', done);
+        anim.addEventListener('cancel', done);
+        setTimeout(done, a.dur + 500);
+        hideUntil(card, a.dur);
+        return;
+      }
+      default:
+    }
+  };
+  for (const a of plan.atoms) {
+    // a card going back hides its slot from the start, so the row never shows it twice
+    if (a.op === 'card' && a.at > 0) { const card = root.querySelector(`.lt-shop .card[data-uid="${a.uid}"], .shop .card[data-uid="${a.uid}"]`); hideUntil(card, a.at); }
+    if (a.at <= 0) run(a); else rewind.timers.push(setTimeout(() => run(a), a.at));
+  }
+  return plan;
+}
+
 /** (kept for callers: a placed minion's slot is read when its chain plays) */
 export const noteTable = root => { void root; };
 
@@ -770,6 +877,9 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // the new row's deal, noted by useDeal in this same commit (it lays out first): this chain says when it starts
   const deals = roundDeals.splice(0);
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
+  // an undo (H24): the table is already back; the move's own motion plays backwards over it, quickly, effects not again
+  if (isUndo(before, state)) return playRewind(root, before, state, mine);
+  clearRewind();
   const ctx = { state, before, snap, chips };
   if (chain.draining) cancelDrain(); // an externally delivered step adopts any explicit motion still finishing
   const chainId = (chain.n = (chain.n || 0) + 1);
