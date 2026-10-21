@@ -1,1 +1,3 @@
 # Lessons: screen (see README.md for the format)
+- 2026-10-21 · The todo blamed the Blue shop-cycling cards for a wheel redraw; a hook diff on GameScreen's fiber showed useIdleSpaces bumping once per landed preview (9×) · find the re-render's cause by diffing hook states in the render-budget walk before guessing from what changed in the deck · here only
+- 2026-10-21 · Undo returns the very state object a click was made on, so anything keyed "ghost.state === state" came back to life (steal e1) · state-identity caches must also drop when the state moves on, not only expire on a timer · Wheel.jsx
