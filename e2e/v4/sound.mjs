@@ -12,6 +12,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { lateSave } from './lib/late-save.mjs';
 import { seedSave } from './lib/seed.mjs';
+import { actionAt } from '../../src/engine/v4/index.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/sound';
 mkdirSync(SHOTS, { recursive: true });
@@ -36,7 +37,8 @@ const asked = () => page.evaluate(() => ({ ...(window.__patronsSounds || {}) }))
 const playTo = async (done, ms) => {
   const t0 = Date.now();
   while (!(await done()) && Date.now() - t0 < ms) {
-    const o = await page.$('.slot.can, [data-option]:not([disabled]):not([data-option^="toggle:"]):not([data-option^="release:"]):not([data-option="back"])');
+    // your placement takes the space that gains you resources (its printed text starts "+N color")
+    const o = await page.$('.slot.can[aria-label*=": +"]') || await page.$('.slot.can, [data-option]:not([disabled]):not([data-option^="toggle:"]):not([data-option^="release:"]):not([data-option="back"])');
     if (o) await o.click({ timeout: 800 }).catch(() => {});
     await page.waitForTimeout(60);
   }
@@ -44,7 +46,15 @@ const playTo = async (done, ms) => {
 
 let ok = false;
 try {
-  await seedSave(page, lateSave(21, 1));
+  // a save whose last placement can gain you resources (a space whose text starts "+N"): with P1 placing last, nothing
+  // else lands a coin before the summary (the round's prizes are followers)
+  let save = null;
+  for (let seed = 21; seed < 80 && !save; seed++) {
+    const sv = lateSave(seed, 1), st = sv.state;
+    if (st.pending.options.some(o => { const m = /^slot:(\d+)-(\d+)$/.exec(o.id); return m && /^\+\d/.test(actionAt(st, +m[1], +m[2]).text); })) save = sv;
+  }
+  if (!save) throw new Error('no late save with a gain space open');
+  await seedSave(page, save);
   await page.goto(`${base}/?botDelay=40&intro=0&speed=quick`);
   await page.click('[data-home="resume"]');
   await page.waitForSelector('.lt-wheel .slot');
