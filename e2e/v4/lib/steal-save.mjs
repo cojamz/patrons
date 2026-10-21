@@ -28,9 +28,12 @@ export const PILES = [
 
 // placed: false stops a step earlier, with P1 about to place on the space (a test then places it by clicking)
 // piles: what everyone holds in place of PILES (steal tables only)
-export function stealSave(space = 'help', { placed = true, piles = PILES } = {}) {
+// round: the round to take it in (default the space's own ring; Help Yourself steals 1 × round, so its gate asks for II)
+// occupy: { '<space key>': pid } rival minions put down before P1 places (Redistribute steals 1 per Magenta action
+//   already holding a minion); each takes one of that rival's minions for the round
+export function stealSave(space = 'help', { placed = true, piles = PILES, round: at = null, occupy = null } = {}) {
   const [table, qid, key] = SPACES[space];
-  const q = table.indexOf(qid), i = quadrant(qid).actions.findIndex(a => a.key === key), round = quadrant(qid).actions[i].ring;
+  const q = table.indexOf(qid), i = quadrant(qid).actions.findIndex(a => a.key === key), round = at || quadrant(qid).actions[i].ring;
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
   for (let seed = 1; seed < 400; seed++) {
     let s = createGame({ seats, seed, quadrants: table });
@@ -39,6 +42,11 @@ export function stealSave(space = 'help', { placed = true, piles = PILES } = {})
     for (let n = 0; n < 1500 && !ready(s) && !s.over; n++) s = applyMove(s, chooseBotMove(s, rand));
     if (!ready(s)) continue;
     if (table === STEAL_TABLE) piles.forEach((r, k) => { s.players[k].res = { ...r }; });
+    if (occupy) {
+      if (Object.keys(occupy).some(k => s.slots[k] !== undefined || k === `${q}-${i}`)) continue;
+      s = { ...s, slots: { ...s.slots }, players: s.players.map(p => ({ ...p })) };
+      for (const [k, pid] of Object.entries(occupy)) { s.slots[k] = pid; s.players[pid].left = Math.max(0, s.players[pid].left - 1); }
+    }
     const before = s;
     s = applyMove(s, { player: 0, option: `slot:${q}-${i}` });
     if (!(s.pending && s.pending.player === 0 && s.pending.kind === 'choose')) continue;
