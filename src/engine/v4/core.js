@@ -425,10 +425,12 @@ function inputFor(state, task) {
       // a second buy (Big Spender) is offered only after a real first buy, while an unspent one is held
       if (task.extra && !(p.turnBuys > 0 && (allowance(state, p, 'extraBuy') || alwaysBuysTwice(state, p)))) return { kind: 'buy', prompt: '', options: [] };
       const opts = [];
-      for (const uid of state.shop) if (paymentChoices(state, p, uid).length)
+      // Bouncer: a rival's cap on members recruited this turn
+      const capped = p.turnRecruits >= recruitCap(state, p);
+      for (const uid of state.shop) if (!capped && paymentChoices(state, p, uid).length)
         opts.push({ id: `card:${uid}`, label: cardDef(state, uid).name, kind: 'card', uid });
       // the top of the pile, for a player who can reach it (Insider: flag pileReach)
-      for (const uid of state.pile.slice(0, pileReach(state, p))) if (paymentChoices(state, p, uid).length)
+      for (const uid of state.pile.slice(0, pileReach(state, p))) if (!capped && paymentChoices(state, p, uid).length)
         opts.push({ id: `card:${uid}`, label: `${cardDef(state, uid).name} (from the pile)`, kind: 'card', uid, fromPile: true });
       TIERS.forEach(t => { if (followerChoices(state, p, t).length) opts.push({ id: `tier:${t.key}`, label: `+${t.get} followers`, kind: 'tier', tier: t.key }); });
       for (const uid of p.members) {
@@ -1179,6 +1181,8 @@ function allowanceCards(state, p, flag) {
 }
 const allowance = (state, p, flag) => allowanceCards(state, p, flag).length;
 // Shopaholic (concept): the second buy every turn, never spent
+const recruitCap = (state, p) => Math.min(Infinity, ...state.players.filter(o => o !== p)
+  .flatMap(o => o.members.flatMap(uid => effectiveDefs(state.cards[uid]).map(d => d.capRivalRecruits || Infinity))));
 const alwaysBuysTwice = (state, p) => p.members.some(uid => effectiveDefs(state.cards[uid]).some(d => d.buyTwice));
 function spendAllowance(state, p, flag) {
   const card = allowanceCards(state, p, flag)[0];

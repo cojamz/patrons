@@ -152,15 +152,15 @@ describe('Blue members', () => {
     expect(R(rivalBuys([['market.onlooker']], 'market.recluse')).blue).toBe(2);
     expect(R(rivalBuys([['market.onlooker']], 'gold.tycoon')).blue).toBe(0);
   });
-  it('Connoisseur: whenever you recruit a blue member, +2 blue', () => {
+  it('Connoisseur: whenever you recruit a blue member, +1 blue', () => {
     let s = take(scene({ round: 2, res: [{ gold: 9, blue: 1 }], members: [['market.connoisseur']], shop: ['market.recluse', ...SHOP.slice(0, 5)] }), 'market.clearance');
     s = move(s, card(s, 'market.recluse'));
     expect(R(s).gold).toBe(8); // the 1 blue held and Buy Twice's 1 pay Recluse's blue part, 1 gold the rest
-    expect(R(s).blue).toBe(2 - 2 + 2);
+    expect(R(s).blue).toBe(2 - 2 + 1);
     let t = take(scene({ round: 2, res: [{ red: 9 }], members: [['market.connoisseur']], shop: CHEAP }), 'market.clearance');
     t = move(t, card(t, 'red.twins'));
     // Buy Twice's 1 blue is kept (Blue scores held blue since Oct 20, like Red's held red), Twins is all red,
-    // and no +2 comes back for a red member
+    // and no +1 comes back for a red member
     expect(R(t)).toMatchObject({ red: 7, blue: 1 });
   });
   it('Reseller: whenever you recruit, +1 of that member’s color', () => {
@@ -209,14 +209,6 @@ describe('Blue members', () => {
     let t = take(scene({ round: 2, res: [{ gold: 9 }], members: [['market.sommelier']], shop: SHOP }), 'market.clearance');
     t = move(t, card(t, 'gold.tycoon'));
     expect(t.players[0].discount).toBe(0);
-  });
-  it('Patroness: whenever you recruit a blue member, +1 follower', () => {
-    let s = take(scene({ round: 2, res: [{ gold: 9, blue: 1 }], members: [['market.patroness']], shop: ['market.recluse', ...SHOP.slice(0, 5)] }), 'market.clearance');
-    s = move(s, card(s, 'market.recluse'));
-    expect(s.players[0].bonus).toBe(1);
-    let t = take(scene({ round: 2, res: [{ red: 9 }], members: [['market.patroness']], shop: CHEAP }), 'market.clearance');
-    t = move(t, card(t, 'red.twins'));
-    expect(t.players[0].bonus).toBe(0);
   });
   it('Talent Scout: once per game, also recruit one of the top 5 of the pile at its cost', () => {
     let s = scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });

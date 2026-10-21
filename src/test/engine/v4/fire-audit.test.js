@@ -75,7 +75,7 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // Agents denies copy targets without changing a number, like Bodyguard's steal protection. Keep it in the dealt
   // hands (preserving the audit's coverage distribution), but require no payout log from this pure restriction.
   // green-redesign-pressure.test.js verifies that it blocks both its owner's and rivals' copies, including copies of Agents.
-  const QUIET_RESTRICTIONS = new Set(['echo.agents']);
+  const QUIET_RESTRICTIONS = new Set(['echo.agents', 'market.bouncer']); // Bouncer only removes rivals' third recruit options (concept branch)
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
     ['gold', 'market', 'trading', 'echo'], ['red', 'thieves', 'market', 'trading'],

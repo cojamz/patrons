@@ -125,6 +125,16 @@ function shopColors(ctx) {
 function sweepRow(ctx) {
   const old = [...ctx.state.shop];
   for (const u of old) ctx.buryFromShop(u);
+  toBottom(ctx, old.length);
+}
+/** k shop members just went to the bottom of the pile on someone's turn: Patroness pays once (Cory, Oct 21: "just one
+ * follower each time it happens, not per card"), not for the round-start refresh. */
+function toBottom(ctx, k) {
+  if (!(k > 0)) return;
+  for (const p of ctx.state.players) for (const u of p.members) {
+    const def = ctx.defOf(ctx.card(u));
+    if (def.bottomFollowers) { p.bonus += 1; ctx.log(`${p.name}'s ${def.name}: +1 follower.`); }
+  }
 }
 /** Extra buys this turn: they run right after the current one (added to the engine's queue directly). */
 function extraBuys(ctx, p, k) {
@@ -208,12 +218,13 @@ const market = {
       }
       churnStep(ctx, p, { left: data.left - 1 });
     },
-    churnRefill(ctx) { ctx.refillShop(); },
+    churnRefill(ctx) { ctx.refillShop(); toBottom(ctx, 1); },
     outOfStyle(ctx, p, color) {
       const out = ctx.shopCards().filter(c => colorOf(ctx, c) === color);
       for (const c of out) { ctx.state.shop.splice(ctx.state.shop.indexOf(c.uid), 1); ctx.state.pile.push(c.uid); }
       ctx.refillShop();
       ctx.log(`Out of Style: ${p.name} sends ${out.length} ${color} member${out.length === 1 ? '' : 's'} to the bottom.`);
+      toBottom(ctx, out.length);
       const got = out.length ? ctx.gain(p, B, out.length, { fromAction: true }) : null;
       if (got) ctx.log(`${p.name}'s Out of Style: +${got.n} ${got.color}.`);
     },
@@ -225,6 +236,7 @@ const market = {
       const c = ctx.card(uid), k = Math.floor(priceOf(c) / 2);
       ctx.buryFromShop(uid);
       ctx.log(`Bury: ${p.name} sends ${c.def.name} to the bottom of the pile.`);
+      toBottom(ctx, 1);
       const got = k ? ctx.gain(p, B, k, { fromAction: true }) : null;
       if (got) ctx.log(`${p.name}'s Bury: +${got.n} ${got.color}.`);
     },
@@ -260,8 +272,8 @@ const market = {
     m('onlooker', 'Onlooker', 6, 4, 'Whenever a rival recruits a blue member, +2 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 2); },
     }),
-    m('connoisseur', 'Connoisseur', 2, 2, 'Whenever you recruit a blue member, +2 blue.', {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 2); },
+    m('connoisseur', 'Connoisseur', 2, 2, 'Whenever you recruit a blue member, +1 blue.', {
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1); },
     }),
     m('reseller', 'Reseller', 4, 2, 'Whenever you recruit, +1 of that member’s color.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && colorOf(ctx, rec)) ctx.gain(owner, colorOf(ctx, rec), 1); },
@@ -295,9 +307,9 @@ const market = {
     m('sommelier', 'Sommelier', 2, 2, 'Whenever you recruit a blue member, your next member costs 2 less.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.discount(owner, 2, 'Sommelier'); },
     }),
-    m('patroness', 'Patroness', 2, 2, 'Whenever you recruit a blue member, +1 follower.', {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) owner.bonus += 1; },
-    }),
+    // Cory, Oct 21: "whenever cards are placed on the bottom of the deck". Turns only, not the round-start refresh
+    // (Claude's fill-in: he called bottom-of-pile payouts "too strong between rounds" on Oct 20).
+    m('patroness', 'Patroness', 2, 2, 'Whenever a shop member goes to the bottom of the pile, +1 follower.', { bottomFollowers: true }),
     m('blackmarket', 'Talent Scout', 2, 2, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
       activate: 'game',
       onActivate(ctx, owner) {
@@ -324,7 +336,7 @@ const market = {
         ctx.defer(owner, `${Q}.churnRefill`);
       },
     }),
-    m('plusone', 'Plus-One', 1, 1, 'When recruited: buy again this turn.', {
+    m('plusone', 'Plus-One', 1, 1, 'When recruited: buy again this turn.', { f: 2,
       onRecruited(ctx, owner) { extraBuys(ctx, owner, 1); },
     }),
     m('doorman', 'Doorman', 1, 2, 'Whenever a rival recruits a second member in one turn, +1 blue.', {
@@ -338,6 +350,30 @@ const market = {
       },
     }),
     m('shoppers', 'Window Shoppers', 1, 1, 'Worth 2 followers.', { f: 2, n: 2, vanilla: true }),
+    // Cory's, Oct 21: "one recruit, refresh the shop. all the members"; prices are sim starting points
+    m('makeover', 'Makeover', 1, 2, 'When recruited: send the whole shop to the bottom of the pile, then refill.', {
+      onRecruited(ctx) { sweepRow(ctx); },
+    }),
+    m('regular', 'Regular', 1, 1, 'Whenever you buy followers, +1 blue.', {
+      onBuyFollowers(ctx, owner, card, by) { if (by.id === owner.id && ctx.gain(owner, B, 1)) ctx.log(`${owner.name}'s Regular: +1 blue.`); },
+    }),
+    // Cory's yes, Oct 21
+    m('critic', 'Critic', 1, 2, 'Whenever a rival recruits a blue member, +1 follower.', {
+      onAnyRecruit(ctx, owner, card, by, rec) {
+        if (by !== owner && isBlue(ctx.defOf(rec))) { owner.bonus += 1; ctx.log(`${owner.name}'s Critic: +1 follower.`); }
+      },
+    }),
+    // Claude's fill-in counters, Oct 21, not approved
+    m('tastemaker', 'Tastemaker', 1, 2, 'Round end, before scoring: take 1 blue from each rival with more blue than you.', {
+      onRoundEnd(ctx, owner) {
+        const mine = owner.res[B] || 0;
+        for (const o of ctx.state.players) if (o !== owner && (o.res[B] || 0) > mine) {
+          o.res[B] -= 1; owner.res[B] = (owner.res[B] || 0) + 1;
+          ctx.log(`${owner.name}'s Tastemaker takes 1 blue from ${o.name}.`);
+        }
+      },
+    }),
+    m('bouncer', 'Bouncer', 1, 2, 'Rivals can’t recruit more than 2 members in one turn.', { capRivalRecruits: 2 }),
   ],
 };
 

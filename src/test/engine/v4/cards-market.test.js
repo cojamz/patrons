@@ -184,9 +184,9 @@ describe('Blue members', () => {
     expect(R(s, 2).blue).toBe(0);
   });
 
-  it('Connoisseur: whenever you recruit a blue member, +2 blue; not for other colors', () => {
+  it('Connoisseur: whenever you recruit a blue member, +1 blue; not for other colors', () => {
     let s = buyTurn([['market.connoisseur']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
-    expect(R(s).blue).toBe(2);
+    expect(R(s).blue).toBe(1);
     expect(named(s, 'Connoisseur').length).toBe(1);
     s = buyTurn([['market.connoisseur']], [{ red: 8 }], 'red.bigfamily');
     expect(R(s).blue).toBe(0);
@@ -196,8 +196,8 @@ describe('Blue members', () => {
     s = move(take(s, 'market.clearance'), card(s, 'market.recluse'));
     s = move(s, card(s, 'market.curator'));
     expect(owns(s, 0, 'market.recluse') && owns(s, 0, 'market.curator')).toBe(true);
-    // 8, Buy Twice's 1, two members at 4 blue each, Connoisseur's 2 twice, Curator's own 2 (Connoisseur, Recluse)
-    expect(R(s).blue).toBe(8 + 1 - 8 + 4 + 2);
+    // 8, Buy Twice's 1, two members at 4 blue each, Connoisseur's 1 twice, Curator's own 2 (Connoisseur, Recluse)
+    expect(R(s).blue).toBe(8 + 1 - 8 + 2 + 2);
     expect(named(s, 'Connoisseur').length).toBe(2);
   });
 
@@ -317,17 +317,15 @@ describe('Blue members', () => {
     expect(owns(s, 0, 'market.recluse')).toBe(true);
     expect(s.players[0].discount).toBe(2);
   });
-  it('Patroness: whenever you recruit a blue member, +1 follower', () => {
-    let s = buyTurn([['market.patroness']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
-    expect(s.players[0].bonus).toBe(1);
+  it('Patroness: +1 follower each time shop members go to the bottom (once per Churn, not per card); not the round refresh', () => {
+    let s = table(Q, { round: 2, members: [[], ['market.patroness']], shop: ROW });
+    s = take(s, 'market.bargain');
+    for (let k = 3; k > 0; k--) s = move(s, s.pending.options[0].id);
+    expect(s.players[1].bonus).toBe(1);
     expect(named(s, 'Patroness').length).toBe(1);
-    s = buyTurn([['market.patroness']], [{ red: 8 }], 'red.bigfamily');
-    expect(s.players[0].bonus).toBe(0);
-  });
-  it('× Hand-pick: a blue member taken free still pays Patroness', () => {
-    let s = table(QE, { round: 3, left: 5, members: [['market.patroness']], shop: ['market.recluse', ...ROW] });
-    s = move(take(s, 'red.take'), card(s, 'market.recluse'));
-    expect(owns(s, 0, 'market.recluse')).toBe(true);
+    s = table(Q, { round: 2, members: [['market.patroness']], shop: ROW });
+    s = take(s, 'market.pricecheck');
+    s = move(s, s.pending.options[0].id);
     expect(s.players[0].bonus).toBe(1);
   });
 
