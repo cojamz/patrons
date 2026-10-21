@@ -24,12 +24,17 @@ import { fileURLToPath } from 'node:url';
 import { writeFileSync, readFileSync } from 'node:fs';
 import { createGame, applyMove, followers, memberCount, paymentChoices } from '../src/engine/v4/core.js';
 import { chooseNormalMove } from '../src/engine/v4/bots.js';
+import { chooseThinkerMove } from '../src/engine/v4/thinker.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
 import { allQuadrantIds, quadrant, guestMembers, registerQuadrant, DEFAULT_QUADRANTS } from '../src/engine/v4/content/index.js';
 
 // seats and the base table can change per run (--seats, --table); the worker threads read them from params
 let SEATS = 4;
 let BASE_TABLE = null;
+// --level=hard: every seat plays Hard (lookahead) in the forked games, with a fixed budget and no clock so the run
+// stays deterministic; --budget trims the lookahead (simulated moves per decision; the game's Hard uses 100 and a clock)
+let LEVEL = 'normal', BUDGET = 100;
+const botMove = (s, rand) => (LEVEL === 'hard' ? chooseThinkerMove(s, rand, { budget: BUDGET, maxMs: Infinity }) : chooseNormalMove(s, rand));
 const ROLLOUT = { noise: 0.6, payWays: 2, payOptions: 2 };
 const ALL_Q = allQuadrantIds();
 const allDefs = () => [...ALL_Q.flatMap(q => quadrant(q).members), ...guestMembers()];
@@ -255,7 +260,7 @@ function playOut(fork, seed, seat, arm, uid, rollouts, think = 3) {
     const pend = s.pending, pl = pend.player;
     if (arm !== 'none' && !bought && pl === seat && pend.kind === 'buy' && paymentChoices(s, s.players[seat], uid).length) {
       affordable = true;
-      const base = chooseNormalMove(s, rands[pl]);
+      const base = botMove(s, rands[pl]);
       let take = arm === 'forced';
       if (arm === 'free' && decisions < think) {
         decisions++;
@@ -271,7 +276,7 @@ function playOut(fork, seed, seat, arm, uid, rollouts, think = 3) {
       s = applyMove(s, base);
       continue;
     }
-    s = applyMove(s, chooseNormalMove(s, rands[pl]));
+    s = applyMove(s, botMove(s, rands[pl]));
   }
   return {
     mx: margin(s, seat), m: followers(s, s.players[seat]) - mean(s.players.filter(p => p.id !== seat).map(p => followers(s, p))), own: followers(s, s.players[seat]), win: s.ranking[0] === seat ? 1 : 0, bought: bought ? 1 : 0, affordable: affordable ? 1 : 0, boughtRound,
@@ -389,6 +394,8 @@ if (!isMainThread) {
   const { kind, params } = workerData;
   if (params.seats) SEATS = params.seats;
   if (params.table) BASE_TABLE = params.table;
+  if (params.level) LEVEL = params.level;
+  if (params.budget) BUDGET = params.budget;
   if (kind === 'screen') { const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js'); params.tables = makeTables(4242, 2).tables; }
   parentPort.on('message', g => {
     if (g < 0) { process.exit(0); }
@@ -431,7 +438,7 @@ if (!isMainThread) {
     if (flags.table) BASE_TABLE = String(flags.table).split(',');
     const cards = findDefs((names || 'anchors').split(',')).map(d => d.id);
     const params = {
-      seats: SEATS, table: BASE_TABLE,
+      seats: SEATS, table: BASE_TABLE, level: flags.level || 'normal', budget: Number(flags.budget || 100),
       cards, round: Number(flags.round || 2), freeN: Number(flags.free ?? 40), rollouts: Number(flags.rollouts || 2), think: Number(flags.think || 3),
       deltas: (flags.deltas || '-6,-4,-2,0,2,4').split(',').map(Number),
     };
