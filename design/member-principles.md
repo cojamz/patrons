@@ -176,3 +176,7 @@ When unsure, err cheaper for quiet cards and dearer for universal ones. That is 
    - Pitching at the wrong level: access or information with no power ("dig… so weak"), or a flat gain far above its round ("cash in… like +10 blue", Tinker "way too strong", Early Bird).
 
    A related trap: trusting Claude's own audits over his words. member-feel.md ranked Recluse 9th worst and treated Underdog-style catch-up as weak; he loves both. It praised scaling, yet he disliked Hustler and Lottery Winner, which both scale. Cite only his quotes as taste, and judge a card first by the different way to win it opens.
+
+## Added 2026-10-21 (Cory on the neutral prices)
+- Spread prices wide. "Everything is roughly the same cost" is a flaw on its own: a row should hold a cheap pickup and a big buy. Guests run 3 to 9, and only a truly big effect (an extra minion) sits at the top.
+- Our prices run a little high. Start a notch cheaper than the sum-of-parts math says, except where a card can swing contests on the last buy (Launderer).
