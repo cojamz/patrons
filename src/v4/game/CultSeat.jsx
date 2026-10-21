@@ -37,9 +37,11 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const react = given || own;
   // (total: the count so far while the results' scoring runs (FinalScore.jsx); otherwise the engine's)
   const f = total ?? followers(state, p);
-  // grouped by color (the approved plate: "the color mix is their lean"), table order, colorless last
+  // by printed cost, highest first (Cory, 2026-10-21: "perhaps members on a player's card should be in descending order
+  // of cost"); equal costs grouped by color (table order, colorless last), then in the order they were recruited
   const colorAt = d => (onTable(state, d) ? state.quadrants.indexOf(d.quadrant) : state.quadrants.length);
-  const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
+  const costOf = d => (d.s || 0) + (d.w || 0);
+  const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => costOf(b.g.def) - costOf(a.g.def) || colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
   // your members you can use right now, with an effect (the engine's own dry run; one it would refuse stays unlit)
   const safe = safeThisRound(state, pid);
   // what a use just did, over that member for a moment (even "+0"); and the member giving a second buy hops as it does
@@ -197,7 +199,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {/* Lie Low and the like: no one can steal from this seat this round (w2b #21). A small shield under the member
             count (Cory's todo: the words crowded the row); its hover says it in words, the seat card too */}
         {safe && <small className="cs-safe" data-safe="1" role="img" aria-label="safe this round" title={`Safe this round: no one can steal members or resources from ${mine ? 'you' : p.name} until it ends`}><SafeShield /></small>}
-        {/* the figures grouped by color (mockup A): a color's figures stand close, with air before the next color;
+        {/* the figures by cost, highest first; a run of one color stands close, with air before the next color;
             the figures never overlap */}
         <span className="cs-figs">
         {shown.map((g, i) => {
