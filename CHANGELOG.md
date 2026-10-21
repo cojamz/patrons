@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.18, published 2026-10-20. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.19 — 2026-10-21 — unreleased
+
+- Blue reworked: churn the shop, peek at the pile, buy twice, bury, Spree; the shop grows 5/6/7 by round.
+
 ## v0.8.18 — 2026-10-20 — shipped (source 902e175)
 
 - Round cards appear faster (no fade-in blur). The final results show where each cult's points came from: followers, then each member's people, then the followers it grants.
