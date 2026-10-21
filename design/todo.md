@@ -29,6 +29,8 @@ Answer by number. Claude's default in [brackets].
 11. Tiebreaker on followers is most members (built, format.js:377). [keep]
 12. Online on the real link: allow *.firebaseio.com, identitytoolkit.googleapis.com, securetoken.googleapis.com in the environment, or he plays one 2-laptop game. [he plays one]
 13. Faint marks for colorblind players (morning note #6). [no, unless a friend needs them]
+15. Your seat's member card: with two rows of members, a member's hover card covers the second row wherever it opens. Open it below the whole member block? [yes]
+16. Wording pass sheet: /mnt/project-files/overnight/lane8/wording-sheet.md, yes/no per row (⚑ rows are rules questions). [nothing ships until you answer]
 14. Old notes nobody can place: "Hover over in the glossary", "Round 3 actions", "This should straight up steal", "follower claims visibility". [drop them]
 
 ## Ours, open
@@ -52,7 +54,7 @@ Laptop UI clarity
 - [ ] Seat pass: minions, follower number, currencies, and rivals' points and engine readable at a glance. Show Cory 2 mockups first.
 - [x] Laptop fits: at 900×600 a rival's stacks crowd its total; at 1270×700 the strip squeezes "since your last turn" and holds one line under a turn card. (Lane 8, 10-21: chairs run full height beside the narrow shop strip; 1270×700 story holds two turns. turnstory t2/t9 fail before and after, pre-existing.)
 - [x] Large screens (≥1600px): side columns scale with the wheel (zoom proposal, design-pod queue.md). (Lane 8, 10-21: zoom steps 1.25/1.4/1.6/2; hover cards stay 1×.)
-- [ ] Contest arc: follower mark distinct (a sheen). (Centering on the text line done 10-21.)
+- [x] Contest arc: follower mark distinct (a sheen). (Centering on the text line done 10-21.) (v0.8.25: sheen)
 - [x] Silver, white and colorless members look alike at card size. (Lane 8, 10-21: own card grounds.)
 - [x] Trade Seeds: its "Swap nothing" button reads as part of the caption; set it apart (yellow.js:221).
 - [ ] Wording pass: member texts much tighter, steal text, wheel text (rule-style.md). Before/after sheet for Cory. (Sheet ready for his yes/no: /mnt/project-files/overnight/lane8/wording-sheet.md; nothing shipped.)
@@ -66,17 +68,17 @@ Motion and lag
 - [x] Animate the member shop refreshing at round start.
 - [x] Clarity motion (Cory, 10-18): a recruit flies to the middle, shows its effect, goes to the buyer; a steal shows what's taken at once; action effects play beside the action; bulletin cards gather in one spot before the log. Members acting pop from the seat (his idea). (v0.8.23; bulletin cards gathering before the log not done)
 - [x] Round start as separate beats: home flights, net income, member hooks, market refill (A5 remainder). (v0.8.23)
-- [ ] End-of-round animations: smoothing.
+- [x] End-of-round animations: smoothing. (v0.8.25)
 - [x] Undo plays the motion backwards without repeating effects (H24). (v0.8.23)
 - [x] Sounds land with their animation (audit #44). (v0.8.23: only skips were off)
-- [ ] Animation audit: the Green/Red animations Cory found missing (feedback-audit-2026-10-19.md).
-- [ ] 12 coins animate as 12, any count. Trim pace elsewhere first; never raise the pacing cap.
+- [x] Animation audit: the Green/Red animations Cory found missing (feedback-audit-2026-10-19.md). (v0.8.25: swaps cross as portraits; no other Red/Green effect without motion)
+- [x] 12 coins animate as 12, any count. Trim pace elsewhere first; never raise the pacing cap. (v0.8.25; pace unchanged)
 - [ ] Lag (needs Cory's go for perf runs): React commits 80–130ms at 4×; seat re-renders as cards land; hover "a tiny bit wonky" (film it frame by frame); linger motion starts late; re-measure the old 4× regression and hover p95.
 - [ ] Re-port minion-on-press and the compositor wheel spin (6543c7f; /mnt/project-files/handoff/speed/) onto the 2/3/4-sector wheel.
 - [ ] Round I resource draft animated, once the perf items are in (H04).
 
 Tooling
-- [ ] Browser gates all green (10-21: 16 stale gates repaired; 5 real overlaps being fixed: Straggler details text, discounted price into worth, turn card over the story at 4 players and on a rival's turn, Lottery Winner hover over your second row), and a check:v4 that doesn't fail from the load it puts on the box.
+- [x] Browser gates all green (10-21: 16 stale gates repaired; 5 real overlaps being fixed: Straggler details text, discounted price into worth, turn card over the story at 4 players and on a rival's turn, Lottery Winner hover over your second row), and a check:v4 that doesn't fail from the load it puts on the box. (v0.8.24: four overlaps fixed; members m3 known red, needs a seat call)
 - [ ] Later (engineering review): structured events instead of log parsing; shared verbs for copies; online auth rules; type checking.
 
 ## Parked

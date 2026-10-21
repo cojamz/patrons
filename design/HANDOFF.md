@@ -1,10 +1,13 @@
 # Cults — handoff (current state; update in place, don't stack sections)
 
-Last updated 2026-10-20 8:50pm Eastern. Older handoffs: design/archive/handoff-before-2026-10-20.md (v0.6–v0.8.9 detail and evidence).
+Last updated 2026-10-21 3:50am Eastern. Older handoffs: design/archive/handoff-before-2026-10-20.md (v0.6–v0.8.9 detail and evidence).
 
 ## Live
-- https://cojamz.github.io/patrons/play/ is **v0.8.9**, source eab7757, Pages main d657180 (main:play/build.json). Branch claude/gifted-newton-3lcy3i (PR #1) holds the same game plus docs.
-- v0.7.0–v0.8.9 (Oct 18–19) were built with ChatGPT/Codex; it commits as "Codex". Read its commits as material like any other.
+- https://cojamz.github.io/patrons/play/ is **v0.8.25** (see main:play/build.json for the exact source; CHANGELOG.md marks each section "shipped (source X)"). Branch claude/gifted-newton-3lcy3i (PR #1) holds the game plus docs.
+- Overnight Oct 20–21 (Cory's job 1, "fix all the open items"): v0.8.13–v0.8.25 except v0.8.14/0.8.19/0.8.20 (other threads). Colorless guests, Cory's made calls (Social Climber and Overseer cut, Grifter, Top Up, Chefs, Pants, affordable toggle), laptop fits and large-screen zoom, card grounds, first-play ring line, motion pass (members pop from seats, recruit via the hub, round-start beats, undo backwards, quiet skips), screen overlaps, swap portraits, every coin flies, round-end smoothing, rim sheen, bot swap scoring.
+- Unit suite all green; browser gates honest (lane 6 sweep, /mnt/project-files/overnight/lane6/gates.md). Known red: members.mjs m3 (e2e/v4/known-red.json) needs a seat-layout call.
+- Job 2 (color reworks) belongs to the "Better design process" thread; nothing from it ships before Cory approves.
+- v0.7.0–v0.8.9 were built with ChatGPT/Codex; it commits as "Codex".
 
 ## The game now
 - Economy direction (decisions.md, 2026-10-20): each action gives 1 of its color, sometimes more; members cheaper and worth followers; held resources score contests; hold vs spend.
@@ -15,7 +18,8 @@ Last updated 2026-10-20 8:50pm Eastern. Older handoffs: design/archive/handoff-b
 - Deck sizes: Red and Green 12, others 10 (target equal). Member cost ceiling 10. Release numbering stays v0.8.x.
 
 ## Known not-green
-- No full unit run has passed since Oct 17. Stale old-Magenta tests (spheres/thieves.test.js, cross-color expectations) and six UI failures that predate v0.8.8 (design/eval/magenta-v088/previous-release-ui.log). Fix against today's rules; never weaken an assertion.
+- members.mjs m3 (Lottery Winner's hover in a two-row seat covers the second row; no spot within 16px clears it). Needs a seat layout call; listed in e2e/v4/known-red.json.
+- Box load: parallel agents' checks starve each other (hotseat's 4-minute bound). Re-run alone once; run at most two worktree lanes at a time.
 
 ## Working this week
 - Token-conscious (Cory, 2026-10-20): no sims or game batches unless he asks; open the game only for UI checks; run tests by file.
