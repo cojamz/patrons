@@ -1,7 +1,7 @@
 ## This week, in order (2026-10-20, Cory back; full picture in /mnt/project-files/week-oct20/where-we-are.md)
 Mine, no design call:
 - [ ] 1. Docs: one current state in HANDOFF/in-flight (archive the stacked v0.8.x sections), stale items folded here.
-- [ ] 2. Tests green against today's rules: migrate the old Magenta tests (spheres/thieves.test.js, cross-color ones); fix or update the six UI failures (previous-release-ui.log). Never weaken an assertion.
+- [x] 2. Tests green against today's rules: migrate the old Magenta tests (spheres/thieves.test.js, cross-color ones); fix or update the six UI failures (previous-release-ui.log). Never weaken an assertion.
 - [ ] 3. Cory's made calls: remove "its color isn't on the table"; guest members stay colorless; cut Social Climber (dead while Release is off; fill-in replacement later); cherry-pick the bots' swap-back fix b1ae1db; long shop member names fit.
 - [ ] 4. Done-check the Oct 17 triage list (backlog-triage-2026-10-17.md) and the sections below against the code; tick what shipped.
 - [ ] 5. Clarity: "I: / II: / III:" lines with other rounds dimmed; "P2 took X from you" shorter, near your card; shop refresh animates at round start; Red picker toast clear of the choice sheet.

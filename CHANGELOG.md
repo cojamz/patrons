@@ -1,8 +1,8 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.12, published 2026-10-20. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.13, published 2026-10-20. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.13 — 2026-10-20 — unreleased
+## v0.8.13 — 2026-10-20 — shipped (source 80aa541, main 251daf6)
 
 - Bots no longer swap back a member they swapped away.
 - A member swapped into the shop comes back clean, with no trace of its old owner.
