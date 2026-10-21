@@ -2,7 +2,7 @@
 // Starting prices for member concepts, before the sim sweep sets the real ones (design/member-process.md step 6).
 // Cory, Oct 21: "my members aren't priced the best right now", so the backtest below only shows the arithmetic sits
 // near his intuition; it is not the standard. Every yield is a short sum over the "typical game" table below.
-// The model and its rules: design/member-pricing.md.
+// The model and its rules: design/member-process.md.
 //
 //   node scripts/member-price.mjs            backtest + the Magenta deck as it is
 //   node scripts/member-price.mjs --json     the same, as JSON
@@ -21,7 +21,7 @@ export const GAME = {
   buy: [0, 0.5, 1.5], // what one extra buy is worth, by round (resources bind early, buys bind late)
 };
 
-// Cory's price rules, as the model applies them (design/member-pricing.md says where each comes from):
+// Cory's price rules, as the model applies them (design/member-process.md says where each comes from):
 // 1. price = followers printed + what the ability yields, in the build that wants it, for the round it's bought.
 // 2. Halves round down: when in doubt, a step cheaper.
 // 3. A card that brings a whole extra member or minion sits on his ladder (8 to 10), whatever the sum says.
