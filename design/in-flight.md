@@ -5,3 +5,4 @@
 - Better design process thread: member card design. Done today: Magenta 13 (v0.8.28), Blue 12 picked (Window Dresser and Trendsetter in), guests Launderer/Tiebreaker/Front-runner yes. Old colors' members parked until their actions are redesigned. Crowd-Pleaser is cut, so no Recruiter stacking.
 - Member balance thread: prices at Cory's 1.5× rule for Magenta, Blue, Red, Green and guests, then one follower-only check; builds on claude/members-blue-v2.
 - Live status lines: node scripts/status.mjs (board at /mnt/project-files/status/board.md).
+- Gold redesign: paused by Cory (Oct 22) to ship Purple. State and open slots: design/spheres/gold-redesign-2026-10-22.md. Next: wait for him to reopen Gold.
