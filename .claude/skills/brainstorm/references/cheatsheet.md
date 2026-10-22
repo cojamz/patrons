@@ -12,6 +12,9 @@
 - A space does its whole effect the moment it's taken. "Whenever", "this round", "at round end" are member effects.
 - Colors own verbs: Red moves members, Green copies, Magenta steals, Blue works the shop and recruits more, Purple bends turns, White cashes white into followers, Yellow gets many colors, Gold doubles gold, Silver gives.
 
+## The core
+Engines and synergy, not good picks in a vacuum (Cory). Judge every idea by what it combines with: name its members and the other colors' spaces it feeds. Strength bands (design-core section 5): round I about 2 to 4, round II 4 to 6 or a member changing hands, round III a burst; members 2 to 10.
+
 ## Make it land (design-core.md section 4)
 Trade one scarce thing for another (Last Call: position for followers). Break a felt limit, best in round III (Crowd In, the white cash-in). Read the table (Echo). Flip what a resource means (High Tide: you want rivals rich in silver). Hand a rival the choice (Shake Down). One visible count. One sentence, done when taken.
 

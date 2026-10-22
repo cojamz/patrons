@@ -1,6 +1,18 @@
 # The design core: how Cults plays, and what makes a space land
 
-Read once per thread, with the cheatsheet. This is the positive half: what the game is about, the arcs every space sits in, what each color's player is trying to do, and why the spaces Cory loved worked. Use it to *generate*; use the cheatsheet's kill list to *cut*. Facts are from the live rules and decisions.md; readings are marked as Claude's.
+Read once per thread, with the cheatsheet. This is the positive half: what the game is about, the arcs every space sits in, what each color's player is trying to do, and why the spaces Cory loved worked. Use it to *generate*; use the cheatsheet's kill list to *cut*. Section 0 is the point of the whole game; start there. Facts are from the live rules and decisions.md; readings are marked as Claude's.
+
+## 0. The core: engines and synergy, not picking well in a vacuum
+
+Cory, Oct 22: "The game is more about getting value from synergy, than drafting value arbitrage… It's more about the engine building than about making good action choices in a vacuum." So a space or member is judged by **what it combines with**, not by its standalone total. A good space is an elemental verb that members and other spaces can hook into ("whenever you steal", "whenever a turn is skipped", "whenever you recruit"), modest on its own, strong in the right cult. Engines that already work this way:
+
+- Red: Open Door and Recruit a Member (free recruits) feed Proselytizer ("Whenever you recruit, +1 follower"), Recruiter and Mob ("Game end: +1 follower per red member").
+- Magenta: every steal space feeds Fence ("Whenever you steal, +1 magenta"), Sticky Fingers (+1 per space steal) and Robin Hood.
+- Purple: Hold Up and Sleep In feed Gossip ("Whenever a player's turn is skipped, +1 follower"); Right Away and Crunch Time feed Courier and Hot Streak (turns in a row).
+- Blue: Churn, Out of Style and Bury feed Patroness ("Whenever a shop member goes to the bottom of the pile, +1 follower"); Recruit Twice and Spree feed Proselytizer, Snob and Connoisseur.
+- Green: Echo and Encore copy whatever the table built, and Impressionist, Ensemble and Choir pay on every copy.
+
+For every idea, name the two or three members (its color's or another's) and the other color's space it combines with. If it combines with nothing, it's drafting arbitrage: cut it or find its hook.
 
 ## 1. The game in one breath
 
@@ -59,13 +71,22 @@ The shapes underneath, to generate from:
 6. **One visible count**: minions left, members held, the biggest pile. Players can do the math at a glance and plan around it.
 7. **One sentence, done when taken.** Lasting effects belong on members.
 
-## 5. Balance anchors (for your own sanity check; numbers go to Cory as fill-ins)
+## 5. Strength baselines (from the live reworked cards: Red, Green, Magenta, Blue, Purple)
 
-- A resource is about a follower at par (follower cards are 1 for 1), but a follower that skips the recruit is worth more late, and one that skips the 10 cap more still.
-- Typical space totals, counting the +1 of its color, by round: round I about 2 to 4 (Gather +2/+3/+4; Help Yourself "steal 1 and +1 follower" 3/5/7 counting both), round II about 4 to 6 or a real ownership change (Promote, Shake Down), round III a burst (Spree, Poach, Double Down, Cash Out). Cory leans conservative on resources.
-- Price a space by when it will really be taken, and compare it with the best other space a player could take with that minion that turn.
-- A member returns about 1.5× its cost over the game; costs never go below 2.
-- Buy-followers-only should win about 25% of 4-player games. A space that mostly helps a player who only recruits follower cards pushes the wrong way.
+Totals count the space's own +1. A space with a real effect usually gives just the +1; the effect carries it.
+
+- **Round I spaces: about 2 to 4, growing by round.** Plain scaling gain: Gather and Build Up "+2 in round I, +3 in round II, +4 in round III". With an effect: Open Door (the cheapest shop member, free), Even Swap, Echo, Churn (2/3/4 blue plus a shop shuffle), Peek, Hold Up (1/2/3 and the next turn is skipped), Right Away (another turn right after). The top of the band: Help Yourself, "steal 1 and +1 follower" by round, 3/5/7 counting both. A one-off big gain with a cost: Sleep In, "+4 purple. Skip your next turn."
+- **Round II spaces: about 4 to 6, or a member changing hands.** Promote and Demote (a free swap up or down the cost ladder), Shake Down (a member costing up to 5, or its cost), Crime Wave (half of one rival's pile of one color, often 3 to 6), Recruit Twice (an extra recruit, up to 10 followers late), Bury (half a shop member's cost), Crunch Time (two turns now), Last Call (2 followers per minion left, often 6, for going last).
+- **Round III spaces: the burst, 8 to 15 or more, or a felt limit broken.** Recruit a Member (any shop member free, up to about 10 in cost), Poach (a rival's member), Spree (3 recruits, up to 30 followers from a big pile), Greatest Hits (every action with your minion again), Crowd In (place on taken spaces), White's cash-in (all your white, no cap, no recruit).
+- **Members by cost (colored part + any, floor 2):**
+  - 2: a body or a small trigger. Twins, Crew and Shift Crew (worth 2); Window Dresser, Makeover and Trendsetter (worth 3 with a shop effect); Cutpurse, Regular.
+  - 3 to 4: a narrow trigger or a steady trickle. Muse, Connoisseur, Snitch, Kingpin, Chronicler, Clockmaker, Host, Busker (+2 green now and each round start).
+  - 5 to 6: an engine piece. Proselytizer, Shoplifter, Patriarch, Panel (worth 3, counts as 3), Gossip, Hot Streak.
+  - 7 to 8: a rule-bender or centerpiece. Shopaholic ("You can always recruit twice"), Bodyguard, Go-Getter, Night Owl, Mentor & Protégé, Extra Shift.
+  - 9 to 10: game-shaping. Mob (worth 5, counts as 5, +1 per red member), Tribute Band, Extra Hand (+1 minion in round III).
+  - A member should return about 1.5× its cost over the game, in the cult it belongs to. Price a little above what bots suggest; lift a weak card's followers before cutting its price.
+- **Range, not a point.** Each color wants a strong and a weak option in each ring (Open Door beside Open House), and members spread from 2 to 10, so a cheap pickup and a big buy sit in the same row.
+- Buy-followers-only should win about 25% of 4-player games. An idea that mostly helps someone who only recruits follower cards pushes the wrong way: it's arbitrage, not engine.
 
 ## 6. Prompts that start good ideas
 
