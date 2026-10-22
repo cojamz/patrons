@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Publish one checked commit to https://cojamz.github.io/patrons/play/.
 # Usage: bash scripts/v4-play.sh [checked-commit] (defaults to HEAD).
-# Only play/ changes on main; the old v3 game stays intact.
+# Only play/ and rules/ change on main; the old v3 game stays intact.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 ROOT=$(pwd)
@@ -56,13 +56,19 @@ MANIFEST
 
 git fetch -q origin main:refs/remotes/origin/main
 git worktree add -q --detach "$WT" origin/main
-# Replace only play/, including dotfiles, and preserve every other main path.
+# Replace only play/ (and rules/ below), including dotfiles, and preserve every other main path.
 rm -rf "$WT/play"
 mkdir "$WT/play"
 cp -R "$TMP/play/." "$WT/play/"
 # Pages serves main as plain files: skipping Jekyll makes each publish deploy faster.
 [ -f "$WT/.nojekyll" ] || { touch "$WT/.nojekyll"; git -C "$WT" add .nojekyll; }
 git -C "$WT" add --all -- play
+# The rules page (https://cojamz.github.io/patrons/rules/): this build's rulebook and glossary as a plain page.
+if [ -f "$TMP/source/scripts/v4-rules-page.mjs" ]; then
+  node "$TMP/source/scripts/v4-rules-page.mjs" "$TMP/rules" "$TMP/source" >/dev/null
+  rm -rf "$WT/rules"; mkdir "$WT/rules"; cp -R "$TMP/rules/." "$WT/rules/"
+  git -C "$WT" add --all -- rules
+fi
 # New threads clone main: keep its copy of the harness in step with the shipped commit.
 [ -f "$TMP/source/scripts/harness-sync-main.sh" ] && bash "$TMP/source/scripts/harness-sync-main.sh" --into "$TMP/source" "$WT"
 if ! git -C "$WT" diff --cached --quiet; then
