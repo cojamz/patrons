@@ -49,7 +49,7 @@ describe('Night Owl', () => {
   it('and buy again; one more, not two: that minion is a last minion too, and nothing more comes of it', () => {
     let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.windup');
     ({ s } = nextPlacer(s));
-    s = take(s, 'purple.rushhour'); // the one more minion: the last again
+    s = take(s, 'purple.lastcall'); // the one more minion: the last again
     expect(s.pending).toMatchObject({ kind: 'buy', player: 0 }); // buy again
     expect(s.players[0].left).toBe(0);
     expect(owl(s)).toHaveLength(1);

@@ -45,6 +45,17 @@ function nextMove(s, rand, crunch) {
   return chooseBotMove(s, rand);
 }
 
+/** A bot move that leaves Purple's other turn-moving spaces alone when anything else is open (so the round's shape
+ *  is Crunch Time's alone). */
+const MOVES = ['skip', 'holdup', 'again', 'lastcall'];
+function plainBot(s, rand) {
+  const m = chooseBotMove(s, rand);
+  const o = s.pending?.options?.find(x => x.id === m.option);
+  const moves = x => x.kind === 'slot' && x.q !== undefined && MOVES.includes(actionAt(s, x.q, x.i).key);
+  const alt = o && moves(o) && s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && !moves(x));
+  return alt ? { player: m.player, option: alt.id } : m;
+}
+
 describe('turn labels agree with the engine', () => {
   // gaps closed per table, over its six seeds: which seed closes one moves with prices and bot buys (2026-10-18)
   const closedBy = {};
@@ -138,11 +149,11 @@ describe('a gap closed by Crunch Time is said as such (Cory #98, #99)', () => {
     // a seeded bot game with the A A A B C C B A A B C C B B C shape (seed 13 since the Oct 21 member prices changed what bots buy)
     let s = createGame({ seats: Array.from({ length: 3 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 13, quadrants: ['gold', 'red', 'purple', 'green'] });
     const rand = seededRandom(13);
-    while (!(s.round === 3 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
+    while (!(s.round === 3 && s.pending?.kind === 'place')) s = applyMove(s, plainBot(s, rand));
     const [A, B] = s.order;
     s = applyMove(s, nextMove(s, rand, true)); // A takes Crunch Time: A A A B C C B A A B C C B B C, give or take extra turns
     // walk the round by what the turn record says, not by fixed turn numbers (bots' buys shift extra turns around)
-    const step = () => { s = applyMove(s, chooseBotMove(s, rand)); };
+    const step = () => { s = applyMove(s, plainBot(s, rand)); };
     const placing = () => s.round === 3 && s.pending?.kind === 'place';
     let plainSeen = false, pairSeen = false;
     while (s.round === 3 && !s.over && !pairSeen) {

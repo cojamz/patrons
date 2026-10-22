@@ -59,7 +59,7 @@ const P = {
     // "per minion to place" read as +2 (round 3 skeptic): live, it's the count after this one
     planahead: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion to place' } : { main: `+${now} purple`, second: '1 per minion left to place' }),
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
-    rushhour: (r, now) => ({ main: `+${now ?? 1} purple`, second: 'per 2 minions on the board', note: now == null ? null : 'this one too' }),
+    lastcall: { main: '+2 followers', second: 'per minion left; skip till others are out', note: '+1 purple' },
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
     // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
@@ -134,7 +134,7 @@ const P = {
 // own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
 // A space that pays per something shows this turn's gain big and its rate small (round 3 skeptic: Bandwagon's "+1●"
 // paid +5, Roll Call's +3), for `pid` (the viewer; else whoever's turn it is).
-const LIVE = new Set(['gold.windfall', 'red.turnout', 'purple.windup', 'purple.rushhour', 'yellow.harvest', 'trading.haggle', 'trading.dividend', 'echo.hum']);
+const LIVE = new Set(['gold.windfall', 'red.turnout', 'purple.windup', 'yellow.harvest', 'trading.haggle', 'trading.dividend', 'echo.hum']);
 function liveYield(qid, action, state, pid) {
   if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
   const p = state.players && state.players[pid ?? state.current ?? 0];

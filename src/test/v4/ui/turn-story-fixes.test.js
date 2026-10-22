@@ -50,16 +50,16 @@ describe('an extra turn names the card that gave it', () => {
     d.take('purple.windup');
     d.on();
     expect(d.s.log).toContain("P1's Night Owl: P1 takes an extra turn.");
-    d.take('purple.rushhour');
+    d.take('purple.lastcall');
     d.on();
     const [earn, extra] = d.t.stories;
     expect(earn.lines).toContain('Night Owl: an extra turn after this one');
     expect(earn.lines).not.toContain('an extra turn');
     expect(earn.short).toContain('Night Owl: an extra turn after this one');
     // the extra turn's own card leads with why it happened, and so does its line in the strip
-    expect(extra.head).toBe(`P1 took ${actionName('purple.rushhour')}`);
+    expect(extra.head).toBe(`P1 took ${actionName('purple.lastcall')}`);
     expect(extra.lines[0]).toBe('Night Owl: extra turn');
-    expect(extra.text.startsWith(`P1 took ${actionName('purple.rushhour')} · Night Owl: extra turn`)).toBe(true);
+    expect(extra.text.startsWith(`P1 took ${actionName('purple.lastcall')} · Night Owl: extra turn`)).toBe(true);
     expect(extra.short.startsWith('Night Owl: extra turn')).toBe(true);
     // and the live card as the extra turn is played
     expect(lastLive(d).lines[0]).toBe('Night Owl: extra turn');
@@ -77,7 +77,7 @@ describe('an extra turn names the card that gave it', () => {
     d.use();
     d.take('purple.windup');
     d.on();
-    d.take('purple.rushhour');
+    d.take('purple.lastcall');
     d.on();
     const [earn, extra] = d.t.stories;
     expect(earn.head).toBe(`P1 used Go-Getter, then took ${actionName('purple.windup')}`);

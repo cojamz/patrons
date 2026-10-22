@@ -21,8 +21,6 @@ const TURN_VALUE = [3, 5, 7]; // a placement plus its buy, by round
 /** Workers p has on the board right now (a worker sharing a rival's space counts too). */
 export const onBoard = (ctx, p) => Object.values(ctx.state.slots).filter(o => o === p.id).length
   + Object.values(ctx.state.squats || {}).reduce((s, list) => s + list.filter(o => o === p.id).length, 0);
-/** Every minion on the board right now, everyone's (a worker sharing a space counts too). */
-const allOnBoard = ctx => Object.keys(ctx.state.slots).length + Object.values(ctx.state.squats || {}).reduce((n, l) => n + l.length, 0);
 /** Open spaces right now, as [quadrant index, action index]. */
 function openSpaces(ctx) {
   const out = [];
@@ -103,7 +101,7 @@ export function extraTurns(ctx, p, n = 1, why = null) {
 }
 
 /** p is passed over on their next turn this round; that minion places once the snake carries on past everyone else. */
-function skipNext(ctx, p, why, by = p) {
+function skipNext(ctx, p, why, by = p, quiet = false) {
   const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn');
   const close = q.findIndex(t => t.t === 'allPlaced'), stop = close < 0 ? q.length : close;
   let i = end + 1;
@@ -122,8 +120,13 @@ function skipNext(ctx, p, why, by = p) {
     if (!s.early || s.early.round !== s.round) s.early = { round: s.round, moves: [] };
     s.early.moves.push({ p: p.id, from: at, to: order.length - 1, why, late: true });
   }
-  ctx.log(`${by.name}'s ${why}: ${p.name} skips their next turn.`);
+  if (!quiet) ctx.log(`${by.name}'s ${why}: ${p.name} skips their next turn.`);
 }
+/** How many turns p still has to come this round, after the one now running. */
+const turnsLeft = (ctx, p) => {
+  const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
+  return q.slice(end + 1, close < 0 ? q.length : close).filter(t => t.t === 'turn' && t.p === p.id).length;
+};
 /** Whose turn comes next this round, after the one now running (yours too, at a snake end); null when none. */
 const nextTurnOf = ctx => {
   const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
@@ -244,12 +247,18 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, 2, { fromAction: true }); p.squatAll = ctx.state.round; ctx.log(`${p.name} can place on taken spaces for the rest of this round.`); },
     },
     {
-      // replaces Overtime (Cory, 2026-10-15: "overtime fucking SUCKS": it spent a minion to hand one back, a space
-      // for a space). Name and rule are Claude's fill-in, built while Cory looks: purple for a busy table.
-      key: 'rushhour', ring: 2, name: 'Rush Hour', text: '+1 purple per 2 minions on the board, rounded down (everyone’s, this one included).',
-      // at least 1 (Cory, 2026-10-22: "all should give at least 1"): the round's first minion alone rounds to 0
-      estimate: ctx => Math.max(1, Math.floor((allOnBoard(ctx) + 1) / 2)),
-      resolve(ctx, p) { ctx.gain(p, P, Math.max(1, Math.floor(allOnBoard(ctx) / 2)), { fromAction: true }); },
+      // Cory, 2026-10-22: a follower bonus for taking the rest of your turns last ("YES now you're cooking"), in his
+      // words ("take the remainder of your turns when others are out of minions"), "let's just try it at 2 followers
+      // per minion left". Replaces Rush Hour. Name is Claude's fill-in.
+      key: 'lastcall', ring: 2, name: 'Last Call', text: '+1 purple. +2 followers per minion you have left. Skip your turns until everyone else is out of minions.',
+      estimate: (ctx, p) => 1 + 2 * Math.max(0, p.left - 1),
+      resolve(ctx, p) {
+        ctx.gain(p, P, 1, { fromAction: true });
+        const k = turnsLeft(ctx, p), f = 2 * p.left;
+        if (f) { p.bonus += f; ctx.log(`${p.name}'s Last Call: +${f} followers.`); }
+        for (let i = 0; i < k; i++) skipNext(ctx, p, 'Last Call', p, true);
+        if (k) ctx.log(`${p.name}'s Last Call: ${p.name} skips their turns until everyone else is out of minions.`);
+      },
     },
     {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"

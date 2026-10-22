@@ -68,7 +68,7 @@ export function checkContestTruth(g0, n) {
         // Own-color member labels are intentional; no former secondary tiebreak remains.
         const tb = quadrant(qid).scoring.tiebreak;
         if (tb) expect(li.textContent).toContain(tb.text);
-        if (qid === 'purple') expect(li.textContent).toMatch(/Most purple members/i);
+        if (qid === 'purple') expect(li.textContent).toMatch(/Most purple resources/i); // held purple since 2026-10-22
         const shownPrize = Number(li.querySelector('.re-chip').textContent.match(/\+(\d+)/)?.[1]);
         expect(shownPrize, `${where}: displayed prize`).toBe(prize / (shown.length > 1 ? 2 : 1));
       }

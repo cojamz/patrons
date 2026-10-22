@@ -21,7 +21,7 @@ it('keeps Night Owl named in the visible log through its granted extra placement
   expect(state.pending.player).toBe(0);
   expect(currentTurn(state)).toMatchObject({ kind: 'extra', why: 'Night Owl' });
   expect(promptFor(state, true).lead).toContain('Night Owl');
-  state = take(state, 'purple.rushhour');
+  state = take(state, 'purple.lastcall');
   const { getByRole } = render(<Chronicle state={state} onClose={() => {}} />);
   expect(getByRole('dialog').textContent).toContain("P1's Night Owl: P1 takes an extra turn.");
 });
