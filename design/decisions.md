@@ -1117,3 +1117,4 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - (Cory, 2026-10-22 9:22am Eastern) Yellow round III "+2 of every other color" (and members bring 2 of their color): "that round III doesn't feel very good. let's brainstorm other options". Contest question still open.
 - (Cory, 2026-10-22 9:24am Eastern) Yellow round III "swap any resources one for one" and "raise a color to match your biggest": "both terrible".
 - (Cory, 2026-10-22 9:26am Eastern, Purple thread) "contests are always resources now": Yellow's contest becomes most yellow held, replacing most full sets (answers the open Yellow contest question).
+- (Cory, 2026-10-22 9:29am Eastern) Yellow round III direction: "Do one round I action of each other color" (+1 yellow): "i like that quite a bit. it becomes a bit too strong with green." Not locked; Claude pitched excluding copies (Echo) and copies of it giving only its +1 yellow.
