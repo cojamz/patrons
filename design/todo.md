@@ -11,7 +11,7 @@ Cory's calls (numbered picks when asked):
 - [x] Magenta members: his light rework and tested prices shipped in v0.8.28 (Oct 21).
 - [ ] Backlog (Cory, Oct 21): cut one Magenta member so Magenta has 12 like every color (it has 13 for now).
 - [ ] Member prices at 1.5× for Magenta, Blue (12, all approved), Red, Green, guests; then the follower-only check (Member balance thread, claude/members-blue-v2).
-- [ ] Gold, Silver, Yellow, Purple, White members: wait for each color's action redesign (Cory, Oct 21).
+- [ ] Gold, Silver, Yellow, White members: wait for each color's action redesign (Cory, Oct 21).
 - [ ] White redesign, paused (Cory, Oct 22): 3 of 6 spaces decided; open slots and members in design/spheres/white-actions-draft-2026-10-22.md. Resume when he picks it up.
 - [ ] Silver redesign, paused Oct 22: round III High Tide and round II Rising Tide decided; second round II space, round I and members open. design/spheres/silver-redesign-2026-10-22.md
 - [ ] Neutral members (Cory, Oct 21): Front-runner 5, Tiebreaker in, Launderer 6, prices spread 3–9 (decisions.md). Build on his go; nothing ships from the rework panel before it.
@@ -96,7 +96,7 @@ Tooling
 - Art: pixel animations "good enough for now"; living cults (idle loops, reactions); a higher-fidelity Extra Hand sample (H20).
 - Cory's ideas, read when that color's rework starts: a color about swapping minions (Oct 22; his worry: few spaces keep working after you place, so a swap has little to change); members worth 2 followers (Snob); deeper sphere themes, members themed with their sphere; Silver II–III reward getting rid of silver members; White rework, fewer followers as catch-up; Patron Saint 1 follower per silver member in play; every sphere has a member end-game and a resource end-game card; a reverse sphere (actions gain followers, members cost followers); a defensive blocking sphere.
 - Cory's layout and motion ideas: log in the middle of the player boxes; remote mouse pointers (H05); flights from a resource bank (H12).
-- Low priority (balance thread, after member prices ship): test Crunch Time ("Take your next 2 turns now", Purple round III) at 2 turns vs 3. It stays 2 for now (Cory, Oct 21: "It should maybe even be 3 turns. but let's do 2"). Run it only after the Purple redesign ships (Crunch Time then takes your last turns of the round, so you finish early).
+- Low priority (balance thread, after member prices ship): test Crunch Time ("Take your next 2 turns now", Purple round III) at 2 turns vs 3. It stays 2 for now (Cory, Oct 21: "It should maybe even be 3 turns. but let's do 2"). Purple redesign shipped v0.8.45; ready to run when asked (Crunch Time then takes your last turns of the round, so you finish early).
 - Low priority (Cory, Oct 21): balance-test Crunch Time at 3 turns against 2.
 - [x] After v0.8.35 timing checks (lag thread, Oct 21): seat card on rest (v0.8.36), start-of-turn redraw (useIdleSpaces bumped per preview, not the Blue cards; v0.8.36), rival turns in budget (cardLift 80; v0.8.36).
 - [x] Red browser checks on live: spaces (load, green alone), magenta-actions (stale fixture price), steal e1 (real: undo revived the click's ghost; v0.8.37), info q (stale placement; also red on live). scoring.mjs fixed by Cory's call (no second count-up, v0.8.38).
