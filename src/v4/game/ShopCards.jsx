@@ -214,6 +214,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 <span className="lt-corner-cost num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>
                 {/* no "need N" on the face (Cory: "the shouting 'need N' goes"; grammar: what you can't afford is the card
                     fading, not text). What you're short of is the hover's one quiet line. */}
+                {/* works from round II on (Cory, 2026-10-22: "a better way to denote round II/round III only"): a corner tag, not words */}
+                {d.from > 1 && <span className="lt-round-tag" data-round-tag="" title="Works from round II on">II+</span>}
                 {fromPile && !tray && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
               </span>
               {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}

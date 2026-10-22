@@ -287,7 +287,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 6, 2, 'Once per game: take an extra turn after this one.', {
+    m('secondwind', 'Go-Getter', 6, 2, 'Once per game: take an extra turn after this one.', { from: 2,
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -303,7 +303,7 @@ export default {
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
-    m('lateriser', 'Late Riser', 4, 2, 'Round start: if you have the fewest followers (ties count), take an extra turn before anyone places.', {
+    m('lateriser', 'Late Riser', 4, 2, 'Round start: if you have the fewest followers (ties count), take an extra turn before anyone places.', { from: 2,
       // the round's turns are queued after round-start hooks, so this one goes first
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
@@ -358,7 +358,7 @@ export default {
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win
     // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
     // pays from round II. Fires once per round (owlRound), whether or not the board had room.
-    m('nightowl', 'Night Owl', 8, 2, 'Once per round, from round II: after you place your last minion, take an extra turn.', { f: 2,
+    m('nightowl', 'Night Owl', 8, 2, 'Once per round: after you place your last minion, take an extra turn.', { f: 2, from: 2,
       // recruited after your last minion of the round (its buy step): it waits for next round, and says so
       onRecruited(ctx, owner, card) {
         if (owner.left !== 0 || ctx.state.round < 1) return;
@@ -398,7 +398,7 @@ export default {
     m('gossip', 'Gossip', 2, 2, 'Whenever a player’s turn is skipped, +1 follower.', {
       onSkip(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Gossip: +1 follower.`); },
     }),
-    m('extrashift', 'Extra Shift', 5, 3, 'When recruited: +1 minion this round.', {
+    m('extrashift', 'Extra Shift', 5, 3, 'When recruited: +1 minion this round.', { from: 2,
       // the snake carries on until every minion is placed, so the new one goes after everyone else's
       onRecruited(ctx, owner) {
         if (ctx.state.round === 1) { ctx.log(`No extra minions in round I: ${owner.name} gets no extra minion from Extra Shift.`); return; }

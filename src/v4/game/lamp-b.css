@@ -473,6 +473,8 @@
 .mc .mc-text{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);text-wrap:pretty}
 .mc .mc-text .pip.glyph,.mc .mc-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
 /* a member you use: a small caps "USE" before its rule (w3a #5) */
+.mc .mc-round-tag{display:inline-block;margin-right:6px;padding:0 5px;border-radius:3px;font-size:11px;line-height:16px;font-weight:800;vertical-align:1px;color:var(--pl-ink,#2b2018);border:1px solid currentColor;opacity:.8}
+.lt-card .lt-round-tag{position:absolute;top:5px;left:7px;font-size:11px;line-height:1;font-weight:800;color:var(--pl-ink,#2b2018);opacity:.6;pointer-events:none}
 .mc .mc-use-tag{display:inline-block;margin-right:6px;padding:0 5px;border-radius:3px;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:1px;color:var(--pl-paper,#f2e8d2);background:var(--pl-ink,#2b2018)}
 .mc .mc-live{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
 .mc .mc-live + .mc-live{margin-top:2px;padding-top:0;border-top:0}
