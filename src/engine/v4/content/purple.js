@@ -322,7 +322,7 @@ export default {
     m('foreman', 'Foreman', 4, 2, 'Whenever you take an extra turn, +1 purple per minion you have on the board.', {
       onExtraTurn(ctx, owner) { ctx.gain(owner, P, onBoard(ctx, owner)); },
     }),
-    m('courier', 'Courier', 4, 2, 'Whenever you take an extra turn, +1 of each other color.', {
+    m('courier', 'Courier', 2, 2, 'Whenever you take an extra turn, +1 of each other color.', {
       onExtraTurn(ctx, owner) { for (const c of ctx.state.resources) if (c !== P) ctx.gain(owner, c, 1); },
     }),
     m('apprentice', 'Apprentice', 2, 2, 'Whenever you take an extra turn, your next member costs 4 less.', {
@@ -345,7 +345,7 @@ export default {
         ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
       },
     }),
-    m('clockmaker', 'Clockmaker', 2, 2, 'Now and at round start: +1 purple per 2 purple you have.', { now: true,
+    m('clockmaker', 'Clockmaker', 1, 2, 'Now and at round start: +1 purple per 2 purple you have.', { now: true,
       // round start, not end (Claude, 2026-10-14, after Cory: purple left at the end of round III is worth nothing)
       // counts after other round-start income (Lamplighter…), like Steward
       onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
@@ -358,7 +358,7 @@ export default {
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win
     // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
     // pays from round II. Fires once per round (owlRound), whether or not the board had room.
-    m('nightowl', 'Night Owl', 8, 2, 'Once per round: after you place your last minion, take an extra turn.', { f: 2, from: 2,
+    m('nightowl', 'Night Owl', 6, 2, 'Once per round: after you place your last minion, take an extra turn.', { f: 2, from: 2,
       // recruited after your last minion of the round (its buy step): it waits for next round, and says so
       onRecruited(ctx, owner, card) {
         if (owner.left !== 0 || ctx.state.round < 1) return;
@@ -376,8 +376,8 @@ export default {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),
     // Cory's Purple members (2026-10-22); names are Claude's fill-ins; prices are the pricing thread's educated guesses
-    m('earlybird', 'Early Bird', 4, 3, 'Your turns can’t be skipped.', { noSkip: true }),
-    m('bouncer', 'Bouncer', 4, 2, 'When recruited: the next two rivals’ turns are skipped.', {
+    m('earlybird', 'Early Bird', 4, 2, 'Your turns can’t be skipped.', { noSkip: true }),
+    m('bouncer', 'Bouncer', 3, 2, 'When recruited: the next two rivals’ turns are skipped.', {
       // the next two turns that belong to rivals; your own turn between them still happens (Cory's yes)
       onRecruited(ctx, owner) {
         const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
@@ -395,7 +395,7 @@ export default {
         }
       },
     }),
-    m('gossip', 'Gossip', 2, 2, 'Whenever a player’s turn is skipped, +1 follower.', {
+    m('gossip', 'Gossip', 5, 2, 'Whenever a player’s turn is skipped, +1 follower.', {
       onSkip(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Gossip: +1 follower.`); },
     }),
     m('extrashift', 'Extra Shift', 5, 3, 'When recruited: +1 minion this round.', { from: 2,
@@ -410,14 +410,14 @@ export default {
         extraHooks(ctx, owner);
       },
     }),
-    m('closer', 'Closer', 4, 2, 'When you place your last minion each round: +4 purple.', {
+    m('closer', 'Closer', 5, 2, 'When you place your last minion each round: +4 purple.', {
       afterAction(ctx, owner, card) {
         if (owner.left !== 0 || card.paidRound === ctx.state.round) return;
         card.paidRound = ctx.state.round;
         ctx.gain(owner, P, 4);
       },
     }),
-    m('streak', 'Hot Streak', 3, 2, 'Once per round: +2 followers per turn in a row you’ve taken just before this one.', {
+    m('streak', 'Hot Streak', 2, 2, 'Once per round: +2 followers per turn in a row you’ve taken just before this one.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {

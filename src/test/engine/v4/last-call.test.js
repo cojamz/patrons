@@ -40,7 +40,9 @@ describe('Last Call', () => {
       s = applyMove(s, next);
     }
     const L = p => 'ABCD'[base.indexOf(p)];
-    expect(placed.map(L).join(' ')).toBe('A B C D D C A A C D D C A B B B');
+    // everyone else places all 4, then B places the rest in a row (more than 3 if a bought member adds one)
+    expect(placed.map(L).join(' ').startsWith('A B C D D C A A C D D C A B B B')).toBe(true);
+    expect(placed.slice(13).every(p => p === B)).toBe(true);
   });
 
   it('with your last minion: +1 purple and nothing else', () => {

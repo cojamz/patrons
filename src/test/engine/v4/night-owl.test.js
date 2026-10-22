@@ -25,9 +25,9 @@ function nextPlacer(s) {
 const queuedTurns = (s, id) => s.queue.filter(t => t.t === 'turn' && t.p === id).length;
 
 describe('Night Owl', () => {
-  it('is printed as decided: 8 purple + 2 any, worth 2 followers, in plain words', () => {
+  it('is printed as decided: 6 purple + 2 any, worth 2 followers, in plain words', () => {
     const d = defById('purple.nightowl');
-    expect([d.s, d.w, d.f]).toEqual([8, 2, 2]);
+    expect([d.s, d.w, d.f]).toEqual([6, 2, 2]); // 8 → 6 purple after the Oct 22 bot run
     expect(d.text).toBe('Once per round: after you place your last minion, take an extra turn.');
     expect(d.from).toBe(2); // the II+ tag (Cory, 2026-10-22)
   });
