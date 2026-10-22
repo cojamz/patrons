@@ -200,14 +200,14 @@ describe('online session over the memory transport', () => {
     host.lobby.destroy(); guests[0].lobby.destroy(); again.lobby.destroy();
   });
 
-  it('two joins at once get distinct seats; a fifth player is turned away', async () => {
+  it('joins at once get distinct seats; a seventh player is turned away', async () => {
     const store = createMemoryStore();
     const host = await createRoom({ name: 'H', transport: createMemoryTransport(store) });
-    const joins = await Promise.all(['A', 'B', 'C'].map(name => joinRoom({ code: host.code, name, transport: createMemoryTransport(store) })));
+    const joins = await Promise.all(['A', 'B', 'C', 'D', 'E'].map(name => joinRoom({ code: host.code, name, transport: createMemoryTransport(store) })));
     const seats = joins.map(j => j.lobby.getView().me.seat);
-    expect(new Set(seats).size).toBe(3);
-    expect(seats.every(s => s >= 1 && s <= 3)).toBe(true);
-    await expect(joinRoom({ code: host.code, name: 'D', transport: createMemoryTransport(store) })).rejects.toThrow(/full/);
+    expect(new Set(seats).size).toBe(5);
+    expect(seats.every(s => s >= 1 && s <= 5)).toBe(true);
+    await expect(joinRoom({ code: host.code, name: 'F', transport: createMemoryTransport(store) })).rejects.toThrow(/full/);
     await expect(host.lobby.addBot()).rejects.toThrow(/full/);
     // host removes a seat, then a bot fills it; seats compact on start
     await host.lobby.removeSeat(2);
@@ -216,7 +216,7 @@ describe('online session over the memory transport', () => {
     await host.lobby.start();
     await until(() => host.lobby.getView().status === 'playing', { label: 'playing' });
     const view = host.lobby.getView();
-    expect(view.players.map(p => p.seat)).toEqual([0, 1, 2, 3]);
+    expect(view.players.map(p => p.seat)).toEqual([0, 1, 2, 3, 4, 5]);
     host.lobby.destroy(); joins.forEach(j => j.lobby.destroy());
   });
 

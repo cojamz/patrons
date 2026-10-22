@@ -27,10 +27,10 @@ describe('cross-sphere tables', () => {
     for (const t of tables) expect(new Set(t.map(resOf)).size).toBe(4);
   });
 
-  it('a table seats 2 to 4', () => {
+  it('a table seats 2 to 6', () => {
     const seats = k => Array.from({ length: k }, (_, i) => ({ name: `P${i + 1}` }));
-    for (const k of [0, 1, 5]) expect(() => createGame({ seats: seats(k), quadrants: tables[0] }), String(k)).toThrow();
-    for (const k of [2, 3, 4]) expect(createGame({ seats: seats(k), quadrants: tables[0] }).players).toHaveLength(k);
+    for (const k of [0, 1, 7]) expect(() => createGame({ seats: seats(k), quadrants: tables[0] }), String(k)).toThrow();
+    for (const k of [2, 3, 4, 5, 6]) expect(createGame({ seats: seats(k), quadrants: tables[0] }).players).toHaveLength(k);
   });
 
   if (HEAVY) for (const n of [2, 3, 4]) {

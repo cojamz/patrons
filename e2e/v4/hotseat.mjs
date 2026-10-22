@@ -103,7 +103,8 @@ try {
     await shot('02-setup-emoji');
     await page.click(`[data-emoji-grid] [data-pick="${PICK}"]`);
     await page.waitForSelector('[data-emoji-grid]', { state: 'detached', timeout: 2000 }).catch(() => errors.push('the emoji picker stayed open after a pick'));
-    const faces = await page.$$eval('[data-seat-row]', rows => rows.map(r => { const e = r.querySelector('[data-emoji-btn], [data-emoji-face]'); return e ? (e.getAttribute('data-emoji-btn') ?? e.getAttribute('data-emoji-face')) : ''; }));
+    // the seats that play (P5 and P6 start empty since five and six player games, 2026-10-22; an empty seat's name box is off)
+    const faces = await page.$$eval('[data-seat-row]', rows => rows.filter(r => !r.querySelector('input:disabled')).map(r => { const e = r.querySelector('[data-emoji-btn], [data-emoji-face]'); return e ? (e.getAttribute('data-emoji-btn') ?? e.getAttribute('data-emoji-face')) : ''; }));
     if (faces[0] !== PICK) errors.push(`setup: seat 1 shows "${faces[0]}" after picking ${PICK}`);
     const worn = faces.filter(Boolean);
     if (worn.length !== faces.length || new Set(worn).size !== worn.length) errors.push(`setup: every seat should wear its own emoji: ${JSON.stringify(faces)}`);

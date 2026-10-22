@@ -47,6 +47,6 @@ describe('player colors', () => {
     }
     PLAYER_COLORS.forEach((a, i) => PLAYER_COLORS.slice(i + 1).forEach(b => expect(dE(a, b), `${a} vs ${b}`).toBeGreaterThanOrEqual(30)));
     // and a distinct sigil per seat, so color is never the only cue
-    expect(new Set(SEAT_SIGILS).size).toBe(4);
+    expect(new Set(SEAT_SIGILS).size).toBe(6);
   });
 });

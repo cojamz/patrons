@@ -81,7 +81,7 @@ describe('setup', () => {
 
   it('rejects bad seat counts', () => {
     expect(() => createGame({ quadrants: TABLE, seats: seats(1) })).toThrow();
-    expect(() => createGame({ quadrants: TABLE, seats: seats(5) })).toThrow();
+    expect(() => createGame({ quadrants: TABLE, seats: seats(7) })).toThrow();
   });
 
   it('starts with a shuffled deck of every table sphere\'s members (plus the guest rule-benders) and a full row face up', () => {

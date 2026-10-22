@@ -78,6 +78,8 @@ const SIGILS = {
   triangle: 'M6 1.5L10.8 10.3H1.2Z',
   square: 'M2 2H10V10H2Z',
   star: 'M6 .8L7.4 4.6L11.2 6L7.4 7.4L6 11.2L4.6 7.4L.8 6L4.6 4.6Z',
+  diamond: 'M6 1L11 6L6 11L1 6Z',
+  cross: 'M4.5 1.5H7.5V4.5H10.5V7.5H7.5V10.5H4.5V7.5H1.5V4.5H4.5Z',
 };
 
 /** tall: a player named Max (Cory's easter egg): the robe drawn 20% taller, the emblem kept square. */
