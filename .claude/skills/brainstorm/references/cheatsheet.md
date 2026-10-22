@@ -13,6 +13,7 @@
 - Colors own verbs: Red moves members, Green copies, Magenta steals, Blue works the shop and recruits more, Purple bends turns, White cashes white into followers, Yellow gets many colors, Gold doubles gold, Silver gives.
 
 ## The core
+Start from the color's theme in one line; each idea is that theme in one clean mechanic, never the theme plus a bonus (Cory: ideas "lack an elegance and a connection to the core theme").
 Engines and synergy, not good picks in a vacuum (Cory). Judge every idea by what it combines with: name its members and the other colors' spaces it feeds. Strength bands (design-core section 5): round I about 2 to 4, round II 4 to 6 or a member changing hands, round III a burst; members 2 to 10.
 
 ## Make it land (design-core.md section 4)
