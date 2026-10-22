@@ -99,6 +99,20 @@
     .app.game.lt > .lt-seat > .lt-cult-seat.mine .cs-who .cs-name{flex-direction:column;align-items:flex-start;height:36px;gap:0}
   }
 }
+/* five and six chairs (2026-10-22): a shorter chair, so all of them and the story under them fit a 700px laptop (about
+   87px each at 1270x700): less padding, a shorter top and a smaller total; members still fold into "+N" */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-snake{--seat-min:84px}
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat{padding:4px 12px}
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat > .lt-cult-seat > .cs-head{height:30px}
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-head .cs-leader{height:30px}
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-head .cs-total{font-size:30px;line-height:30px}
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat > .lt-cult-seat > :is(.cs-crowd,.cs-setup){margin-top:4px;min-height:22px}
+  /* the starting pick: up to six colors in rows of three, under the prompt's own "draft 1 resource" */
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-setup .cs-setup-say{display:none}
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-setup .cs-setup-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 4px}
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-setup .cs-setup-token{height:21px;padding:0 4px;gap:4px;font-size:12px}
+}
 /* from 1200px the story of the turns (a compact log) and the turn card stand under the chairs: their room comes first */
 /* (the story's heading and its newest line, or its heading over a turn card of a two-line head and "+N more", with a little to spare: 124px
    at 1270x700, which leaves each chair about 133px, two rows of members; from 800px tall the story stands 14px lower) */

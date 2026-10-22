@@ -2,12 +2,12 @@
 // spheres for X number of players"). Classic (Gold, Red, Blue and Green, all real spheres; fewer players take its first
 // N), random, or a custom pick. Classic was Gold, Red and the plain stand-in Blue/Green until Cory moved the friends
 // build to the real ones (2026-10-14).
-import { allQuadrantIds, quadrant, CLASSIC, classicFor } from '../engine/v4/index.js';
+import { allQuadrantIds, quadrant, CLASSIC, MAX_PLAYERS, classicFor } from '../engine/v4/index.js';
 import { seededRandom } from '../engine/v4/rng.js';
 
 export { CLASSIC, classicFor };
-/** How many spheres a table of `players` plays: one each, 2 to 4. */
-export const sphereCount = players => Math.max(2, Math.min(4, Number(players) || 4));
+/** How many spheres a table of `players` plays: one each, 2 to 6. */
+export const sphereCount = players => Math.max(2, Math.min(MAX_PLAYERS, Number(players) || 4));
 const ALIAS = { magenta: 'thieves', white: 'trading', blue: 'market', green: 'echo' };
 
 /** Current playable arcs. Legacy Basic definitions remain only for replay compatibility. */
@@ -47,7 +47,7 @@ const usesColors = id => {
 /** Why a table can't be played, or '' when it can. `n`: the spheres it needs (the player count); without it, 2 to 4. */
 export function tableProblem(ids, n = null) {
   if (n != null && (!Array.isArray(ids) || ids.length !== n)) return `Pick ${n} spheres.`;
-  if (!Array.isArray(ids) || ids.length < 2 || ids.length > 4) return 'Pick 2 to 4 spheres.';
+  if (!Array.isArray(ids) || ids.length < 2 || ids.length > MAX_PLAYERS) return `Pick 2 to ${MAX_PLAYERS} spheres.`;
   const known = new Set(allQuadrantIds());
   if (ids.some(id => !known.has(id))) return 'Unknown sphere.';
   if (ids.some(id => quadrant(id).standIn)) return 'Basic arcs are retired. Choose Blue or Green.';

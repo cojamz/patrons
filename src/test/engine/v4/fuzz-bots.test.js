@@ -20,6 +20,26 @@ describe('bot fuzz: invariants after every move', () => {
   }
 });
 
+// Five and six players (Cory, 2026-10-22): Classic adds Purple, then Yellow; no other rule changes.
+// 6 seats cost ~8 s of bot CPU a game (two extra spheres, twice the moves), so the verdict plays 8 per count, nightly 40.
+const BIG = games(40, 2, 8);
+describe('bot fuzz: five and six players', () => {
+  for (const n of [5, 6]) {
+    it(`${n} players, ${BIG} seeded games`, () => {
+      const lengths = [];
+      for (let seed = 1; seed <= BIG; seed++) {
+        const { state, moves } = runGame({ n, seed, kind: 'bot' });
+        expect(state.quadrants).toEqual(['gold', 'red', 'market', 'echo', 'purple', 'yellow'].slice(0, n));
+        lengths.push(moves.length);
+      }
+      expect(Math.max(...lengths)).toBeLessThan(MOVE_CAP.bot);
+    });
+  }
+  it('seven seats are refused', () => {
+    expect(() => createGame({ seats: Array.from({ length: 7 }, () => ({ kind: 'bot' })) })).toThrow(/2 to 6 seats/);
+  });
+});
+
 describe('determinism', () => {
   it('same seed and moves replay to an identical final state', () => {
     for (const [n, seed, kind] of [[2, 11, 'bot'], [3, 12, 'random'], [4, 13, 'bot'], [4, 14, 'random']]) {

@@ -39,11 +39,14 @@ export const DEFAULT_QUADRANTS = ['gold', 'red', 'blue', 'green'];
 // players"), so every round-I space still fills (3 per sphere, 3 minions each). Classic, by table size: four seats
 // play Gold, Red, Blue (market) and Green (echo); three drop Green (echo); two play Gold and Red (Claude, under
 // Cory's go-with-your-gut: the two longest-tested real spheres, and the economy/recruit pair the game is about).
-export const CLASSIC = ['gold', 'red', 'market', 'echo'];
-export const classicFor = n => CLASSIC.slice(0, Math.max(2, Math.min(4, n)));
+// Five and six seats add Purple, then Yellow, with no other rule change (Cory, 2026-10-22: "just an additional color on
+// the board per player", "lets say purple and yellow").
+export const CLASSIC = ['gold', 'red', 'market', 'echo', 'purple', 'yellow'];
+export const MAX_PLAYERS = CLASSIC.length;
+export const classicFor = n => CLASSIC.slice(0, Math.max(2, Math.min(MAX_PLAYERS, n)));
 /** The engine's default table for n seats: the plain 4-sphere test table, or Classic's first n when fewer play (the
  *  plain Blue and Green hand out each other's colors, so they don't split). */
-export const defaultQuadrants = n => (n >= 4 ? [...DEFAULT_QUADRANTS] : classicFor(n));
+export const defaultQuadrants = n => (n === 4 ? [...DEFAULT_QUADRANTS] : classicFor(n));
 // Guest members' stand-in sphere: colorless, never on a table, so no color counts them and no sphere scores them.
 const GUEST_QUADRANT = Object.freeze({ id: 'guest', name: 'Guest', resource: 'colorless', members: [], actions: [] });
 export const quadrant = id => {
