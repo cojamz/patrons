@@ -1115,3 +1115,4 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - (Cory, 2026-10-22 9:18am Eastern) Purple round II: "+1 purple, you can play on occupied spaces this round" (+2 with the usual +1; maybe +3 later, balance after play). Built as "Crowd In" (name is Claude's fill-in): any taken space, yours or a rival's, for the rest of that round. Takes Plan Ahead's spot; Rush Hour stays until Cory picks the other round II space.
 - (Cory, 2026-10-22 9:19am Eastern) Lean conservative on resource gains in general. Why: his call.
 - (Cory, 2026-10-22 9:22am Eastern) Yellow round III "+2 of every other color" (and members bring 2 of their color): "that round III doesn't feel very good. let's brainstorm other options". Contest question still open.
+- (Cory, 2026-10-22 9:24am Eastern) Yellow round III "swap any resources one for one" and "raise a color to match your biggest": "both terrible".
