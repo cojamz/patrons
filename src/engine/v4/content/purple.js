@@ -192,11 +192,11 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, onBoard(ctx, p), { fromAction: true }); },
     },
     {
-      // replaces Linger (Cory: "just bad"): the time you have left this round, banked as purple.
-      // +1 per minion, was +2 (Cory, 2026-10-15, balance pass 1 #4: both bots read +2 at about 20u in round III)
-      key: 'planahead', ring: 2, name: 'Plan Ahead', text: '+1 purple per minion you have left to place this round.',
-      estimate: (ctx, p) => Math.max(0, p.left - 1),
-      resolve(ctx, p) { ctx.gain(p, P, p.left, { fromAction: true }); },
+      // Cory, 2026-10-22: "+1 purple, you can play on occupied spaces this round" (+2 with the inherent +1; he may
+      // raise it to +3 after play). Any taken space, yours or a rival's, for the rest of this round. Name is Claude's fill-in.
+      key: 'crowdin', ring: 2, name: 'Crowd In', text: '+2 purple. This round you can place on taken spaces.',
+      estimate: ctx => 2 + (ctx.state.round < 3 ? 1 : 0),
+      resolve(ctx, p) { ctx.gain(p, P, 2, { fromAction: true }); p.squatAll = ctx.state.round; ctx.log(`${p.name} can place on taken spaces for the rest of this round.`); },
     },
     {
       // replaces Overtime (Cory, 2026-10-15: "overtime fucking SUCKS": it spent a minion to hand one back, a space

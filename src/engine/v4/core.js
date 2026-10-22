@@ -546,7 +546,7 @@ function resolveTask(state, task, optionId) {
       const [q, i] = optionId.slice(optionId.indexOf(':') + 1).split('-').map(Number);
       const key = `${q}-${i}`;
       if (squat) {
-        spendAllowance(state, p, 'squat');
+        if (p.squatAll !== state.round) spendAllowance(state, p, 'squat');
         (state.squats[key] = state.squats[key] || []).push(p.id);
       } else state.slots[key] = p.id;
       p.lastSlot = { key, joined: squat }; // the minion Straggler moves (Cory, 2026-10-15: it's always the last one)
@@ -1230,10 +1230,12 @@ export function pileReach(state, p) {
 }
 /** Rivals' taken spaces p may join this round (Squatter: flag squat). One extra worker per space. */
 export function squatSlots(state, p) {
-  if (!allowance(state, p, 'squat')) return [];
+  // Purple's round II space (Cory, 2026-10-22): "you can play on occupied spaces this round", any taken space, no limit
+  const open = p.squatAll === state.round;
+  if (!open && !allowance(state, p, 'squat')) return [];
   const out = [];
   for (const [key, owner] of Object.entries(state.slots)) {
-    if (owner === p.id || state.squats?.[key]?.length) continue;
+    if (!open && (owner === p.id || state.squats?.[key]?.length)) continue;
     if (!spaceOpen(actionAt(state, ...key.split('-').map(Number)), state.round)) continue;
     out.push(key.split('-').map(Number));
   }

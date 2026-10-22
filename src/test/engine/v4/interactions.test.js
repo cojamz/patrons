@@ -143,16 +143,6 @@ describe('Green copies the risky spaces', () => {
     expect(labels(t)).toEqual(['Toast (P2): +3 silver']);
   });
 
-  it('copying Plan Ahead gives what it gave its taker (their workers left), not your own count', () => {
-    const P = ['gold', 'red', 'purple', 'echo'];
-    let s = scene({ quads: P, round: 2, turns: [1, 0] }); // 5 workers each
-    s = go(s, 'purple.planahead'); // P2: 4 left → +4 purple
-    expect(R(s, 1).purple).toBe(4);
-    s = take(s, 'echo.encore');
-    expect(labels(s)).toContain('Plan Ahead (P2): +4 purple');
-    s = pass(move(s, s.pending.options.find(opt('Plan Ahead')).id));
-    expect(R(s, 0).purple).toBe(4);
-  });
 
   it('Midas turns a copied gain into gold; a Midas taker’s chip still shows the printed color', () => {
     const S = ['gold', 'red', 'silver', 'echo'];

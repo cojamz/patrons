@@ -102,14 +102,6 @@ describe('Purple actions', () => {
     expect(R(take(scene(), 'purple.windup')).purple).toBe(1);
     expect(R(take(scene({ slots: { [JV]: 0, [HIRE]: 0, [RUSH]: 1 } }), 'purple.windup')).purple).toBe(3);
   });
-  it('Plan Ahead (ring II): +1 purple per minion you have left to place this round', () => {
-    expect(() => take(scene({ round: 1 }), 'purple.planahead')).toThrow();
-    // the scene gives 3 workers; placing this one leaves 2
-    expect(R(take(scene({ round: 2, queue: turns(0, 1) }), 'purple.planahead')).purple).toBe(2);
-    const last = scene({ round: 3, queue: turns(0, 1) });
-    last.players[0].left = 1;
-    expect(R(take(last, 'purple.planahead')).purple).toBe(0); // your last worker: nothing left to plan
-  });
   it('Overtime (ring II): take 1 extra turn right after this one; nothing to pay', () => {
     let s = take(scene({ round: 2, res: [{ purple: 9 }], queue: turns(0, 1) }), 'purple.overtime');
     expect(R(s).purple).toBe(9); // nothing spent

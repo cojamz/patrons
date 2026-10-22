@@ -27,10 +27,6 @@ describe('Purple actions', () => {
     expect(P(take(sc(), 'purple.catchup'))).toBe(1); // the +1 always
     expect(P(take(sc({ slots: { '0-0': 0, '0-1': 0 } }), 'purple.windup'))).toBe(3);
   });
-  it('Plan Ahead: +1 purple per minion you have left to place this round', () => {
-    expect(P(take(sc({ round: 2 }), 'purple.planahead'))).toBe(2); // 3 minions, this one placed: 2 left
-    expect(P(take(sc({ round: 3, left: 5 }), 'purple.planahead'))).toBe(4);
-  });
   it('Overtime: 1 extra turn right after this one, free; Crunch Time: your next 2 turns right away, free, no new minion', () => {
     for (const held of [0, 7, 8]) {
       const s = take(sc({ round: 2, res: [{ purple: held }] }), 'purple.overtime');
