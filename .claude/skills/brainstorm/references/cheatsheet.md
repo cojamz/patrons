@@ -13,7 +13,7 @@
 - Colors own verbs: Red moves members, Green copies, Magenta steals, Blue works the shop and recruits more, Purple bends turns, White cashes white into followers, Yellow gets many colors, Gold doubles gold, Silver gives.
 
 ## Make it land (design-core.md section 4)
-Trade one scarce thing for another (Last Call: position for followers). Break a felt limit, best in round III (Crowd In, the white cash-in). Read the table (Echo). Hand a rival the choice (Shake Down). One visible count. One sentence, done when taken.
+Trade one scarce thing for another (Last Call: position for followers). Break a felt limit, best in round III (Crowd In, the white cash-in). Read the table (Echo). Flip what a resource means (High Tide: you want rivals rich in silver). Hand a rival the choice (Shake Down). One visible count. One sentence, done when taken.
 
 ## Kill an idea if
 1. It needs a piece or rule that doesn't exist (follower cards of another size).
