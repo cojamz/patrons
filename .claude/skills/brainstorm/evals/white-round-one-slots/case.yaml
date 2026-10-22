@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: white-round-one-slots
+expected_outcome: |
+  One to three White round I spaces, each quoted as printed card text, each giving at least 1 white, built on a real piece of the game (not a pile formula), walked through a real turn, totals in line with Help Yourself and the approved +1 follower and +1 white x round, none repeating refused pitches.

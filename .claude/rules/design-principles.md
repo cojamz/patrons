@@ -12,7 +12,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Aim for **precise and minimal**. Preserve the exact amount, trigger, target, timing, limits and optionality that affect a decision. Do not shorten to an impression of the rule. Use exact formulas where clearer, e.g. `2 gold × round`; keep necessary words when compression introduces ambiguity.
 
 ## Theme (working frame: Cult Wars)
-- Say "buy followers", never "fixtures" (or Laurel/Garland/Diadem) when talking to Cory. Rates (2026-10-14): 2→1, 4→3, 8→6 (limited, 2 per player), and a top tier of 10→10 (unlimited). The game always ends after round III: "the turns are the end game clock" (Cory). Member costs were doubled the same day.
+- Say "buy followers", never "fixtures" (or Laurel/Garland/Diadem) when talking to Cory. The follower cards today (code, TIERS): 1 for 1, 5 for 5, 10 for 10, any colors, unlimited; they're fixed cards in the shop, and a space never changes them (Cory, 2026-10-22). The 2→1/4→3/8→6 rates of 2026-10-14 are history. The game always ends after round III: "the turns are the end game clock" (Cory). Member costs were doubled the same day.
 - The frame is light. You lead a following: items are members, VP are followers. Don't over-index on 'cult' (religious, sacrificial, ritual).
 - Quadrants are defined by their mechanics first: economy, tempo, space, market, information, interaction… They should be unique and varied, with names and flavor that fit the mechanic, not a forced theme.
 - Items are **members**: people you recruit. Each quadrant has 15 member types, one copy each for now (15 cards; 60 in the deck). Everything stacks. Each one leans toward a sphere, through its color and its ability.
@@ -27,7 +27,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Board: a spinning wheel of 4 color quadrants (no god names). Outer ring is round I (3 spaces per quadrant), inner ring is round II (2 spaces), center is round III (1 space). Spaces carry over: earlier rings stay open in later rounds.
 - Workers per round: 3, then 4, then 5. Every round-I space fills. Whoever is last in Favor picks first each round.
 - Setup: each player picks 2 starting resources in one go, first seat to last, while everyone watches. This replaces champions.
-- Shop: one shared deck of every sphere's members, 10 face up in a slim strip beside the wheel (Cory, 2026-10-14). Follower buys take any resources, repeatable and Dominion-style (2→1, 4→3, 8→6 and 10→10; 8→6 is limited to 2 per player, 10→10 is unlimited, and the game always ends after round III).
+- Shop: one shared deck of every sphere's members, face up 5 in round I, 6 in round II, 7 in round III (Cory, 2026-10-21). Follower cards: 1, 5 or 10 followers for as many resources of any colors, one per recruit, unlimited (code). The game always ends after round III.
 - After each placement you buy one thing: any face-up member, or followers. The deck is far bigger than one game's buys.
 - Everyone's items are public.
 
