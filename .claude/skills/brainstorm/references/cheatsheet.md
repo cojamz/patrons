@@ -1,4 +1,4 @@
-# Pitch cheatsheet (read once per thread, keep in mind)
+# Pitch cheatsheet (read once per thread, with design-core.md)
 
 ## The game in ten lines
 - Turn: place a minion on an open space and do it, then recruit ONE thing: a shop member or one follower card. Minions 3/4/5 by round; snake order; fewest followers goes first from round II.
@@ -11,6 +11,9 @@
 - Every space gives at least 1 of its color; lean conservative; grows by round.
 - A space does its whole effect the moment it's taken. "Whenever", "this round", "at round end" are member effects.
 - Colors own verbs: Red moves members, Green copies, Magenta steals, Blue works the shop and recruits more, Purple bends turns, White cashes white into followers, Yellow gets many colors, Gold doubles gold, Silver gives.
+
+## Make it land (design-core.md section 4)
+Trade one scarce thing for another (Last Call: position for followers). Break a felt limit, best in round III (Crowd In, the white cash-in). Read the table (Echo). Hand a rival the choice (Shake Down). One visible count. One sentence, done when taken.
 
 ## Kill an idea if
 1. It needs a piece or rule that doesn't exist (follower cards of another size).

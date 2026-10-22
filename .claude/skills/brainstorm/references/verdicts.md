@@ -13,6 +13,7 @@ Read these as the target. Almost every space he approved is **one plain verb aim
 - Recruit Twice / Spree: more recruits, the thing that's scarce late. "I like Buy Twice."
 - Churn, "send 3 shop members to the bottom, then refill": a verb on the shared row.
 - Crunch Time, "Take two turns after this one": "Crunch Time is great." Moves two turns, not one.
+- Last Call, "+2 followers per minion you have left. Skip your turns until everyone else is out of minions": "YES now you're cooking". Position traded for followers by a count everyone can see.
 - Crowd In, "you can place on taken spaces this round" (his idea): bends the one rule everyone feels.
 - Hold Up, "a rival you pick skips their next turn": a mild sting on timing.
 - Rising Tide, "Each rival +2 silver, then gain half the silver of the rival with the most": "I like this one a lot". A gift that sets up your own take.
