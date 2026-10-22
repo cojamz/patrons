@@ -57,9 +57,6 @@ function buyTurn(ctx, p, base, what, fallback, member = false, n = 1) {
   if (fallback) ctx.gain(p, P, fallback, { fromAction: true });
   return false;
 }
-/** Rivals who've placed more minions than p this round, counting p's before the one now landing (mine = 1 when it
- *  has landed, as in resolve; 0 before, as in estimate). Minions all come home between rounds, so the board is the count. */
-const ahead = (ctx, p, mine) => ctx.rivals(p).filter(o => onBoard(ctx, o) > onBoard(ctx, p) - mine).length;
 const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
 /** A free space: n extra turns right after this one, as many as the board has room for. */
 const freeTurnsEstimate = (ctx, n) => Math.max(0, Math.min(n, room(ctx) - 1)) * turnValue(ctx);
@@ -104,12 +101,12 @@ export function extraTurns(ctx, p, n = 1, why = null) {
 }
 
 /** p is passed over on their next turn this round; that minion places once the snake carries on past everyone else. */
-function skipNext(ctx, p, why) {
+function skipNext(ctx, p, why, by = p) {
   const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn');
   const close = q.findIndex(t => t.t === 'allPlaced'), stop = close < 0 ? q.length : close;
   let i = end + 1;
   while (i < stop && !(q[i].t === 'turn' && q[i].p === p.id)) i++;
-  if (i >= stop) { ctx.log(`${p.name}'s ${why}: no turn left to skip this round.`); return; }
+  if (i >= stop) { ctx.log(`${by.name}'s ${why}: ${p === by ? 'no turn' : `${p.name} has no turn`} left to skip this round.`); return; }
   // where that turn sat in the round's order, matched as the seats match it (as turnsNow does)
   const s = ctx.state, { order } = ctx.roundOrder();
   const seq = [...(s.turns || []).map(pid => ({ pid })), ...q.filter(t => t.t === 'turn').map(task => ({ pid: task.p, task }))];
@@ -123,8 +120,13 @@ function skipNext(ctx, p, why) {
     if (!s.early || s.early.round !== s.round) s.early = { round: s.round, moves: [] };
     s.early.moves.push({ p: p.id, from: at, to: order.length - 1, why, late: true });
   }
-  ctx.log(`${p.name}'s ${why}: ${p.name} skips their next turn.`);
+  ctx.log(`${by.name}'s ${why}: ${p.name} skips their next turn.`);
 }
+/** True when p still has a turn to come this round, after the one now running. */
+const turnLeft = (ctx, p) => {
+  const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
+  return q.slice(end + 1, close < 0 ? q.length : close).some(t => t.t === 'turn' && t.p === p.id);
+};
 
 /**
  * p takes up to n of their own turns still to come this round right after this one (Crunch Time; Cory, 2026-10-15:
@@ -193,6 +195,9 @@ export default {
   // Most purple: honest about what the old "most workers on the board" measured (everyone places every worker, so
   // purple's tiebreak decided it). Holding purple for the ring is the price of spending it on turns.
   // held purple, like every reworked color (Cory, 2026-10-22: "contests are always resources now")
+  handlers: {
+    holdup(ctx, p, id) { skipNext(ctx, ctx.player(id), 'Hold Up', p); },
+  },
   scoring: { label: 'Most purple', counts: 'the purple you hold when the round ends', score: (ctx, p) => p.res.purple || 0 },
 
   actions: [
@@ -204,11 +209,19 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, 4, { fromAction: true }); skipNext(ctx, p, 'Sleep In'); },
     },
     {
-      // fill-in (critic): replaces Lend a Hand. Counted before your minion lands (Cory, 2026-10-15: it never paid; the old
-      // count took in the minion just placed, so a rival one ahead, the only lead turn order gives, read as a tie)
-      key: 'catchup', ring: 1, name: 'Catch Up', text: '+1 purple, and +1 more per rival who has placed more minions than you this round.',
-      estimate: (ctx, p) => 1 + ahead(ctx, p, 0),
-      resolve(ctx, p) { ctx.gain(p, P, 1 + ahead(ctx, p, 1), { fromAction: true }); },
+      // Cory, 2026-10-22: replaces Catch Up ("the skip should replace catch up"); "1 purple per round" so it isn't weak
+      // late. Wording and name are Claude's fill-in. The rival is passed over once and still places every minion.
+      key: 'holdup', ring: 1, name: 'Hold Up', text: '+1 purple (+2 in round II, +3 in round III). A rival you pick skips their next turn.',
+      estimate: ctx => ctx.state.round + 1,
+      resolve(ctx, p) {
+        ctx.gain(p, P, ctx.state.round, { fromAction: true });
+        const can = ctx.rivals(p).filter(o => turnLeft(ctx, o));
+        if (!can.length) { ctx.log(`${p.name}'s Hold Up: no rival has a turn left to skip this round.`); return; }
+        const top = Math.max(...can.map(o => ctx.followers(o)));
+        ctx.choose(p, 'Hold Up: which rival skips their next turn?', can.map(o => ({
+          id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: ctx.followers(o) === top ? 1 : 0,
+        })), 'purple.holdup');
+      },
     },
     {
       key: 'windup', ring: 1, name: 'Roll Call', text: '+1 purple per minion you have on the board, this one included.',
@@ -225,7 +238,7 @@ export default {
     {
       // replaces Overtime (Cory, 2026-10-15: "overtime fucking SUCKS": it spent a minion to hand one back, a space
       // for a space). Name and rule are Claude's fill-in, built while Cory looks: purple for a busy table.
-      key: 'rushhour', ring: 2, name: 'Rush Hour', text: '+1 purple per 2 minions on the board (everyone’s, this one included).',
+      key: 'rushhour', ring: 2, name: 'Rush Hour', text: '+1 purple per 2 minions on the board, rounded down (everyone’s, this one included).',
       estimate: ctx => Math.floor((allOnBoard(ctx) + 1) / 2),
       resolve(ctx, p) { ctx.gain(p, P, Math.floor(allOnBoard(ctx) / 2), { fromAction: true }); },
     },

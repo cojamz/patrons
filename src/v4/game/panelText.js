@@ -64,6 +64,7 @@ const P = {
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
     // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
     skip: { main: '+4 purple', second: 'skip your next turn' },
+    holdup: r => ({ main: `+${r} purple`, second: 'a rival you pick skips their next turn' }),
     crowdin: { main: '+2 purple', second: 'place on taken spaces this round' },
     rally: { verb: 'Two turns after this one' },
   },
@@ -131,7 +132,7 @@ const P = {
 // own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
 // A space that pays per something shows this turn's gain big and its rate small (round 3 skeptic: Bandwagon's "+1●"
 // paid +5, Roll Call's +3), for `pid` (the viewer; else whoever's turn it is).
-const LIVE = new Set(['gold.windfall', 'red.turnout', 'purple.catchup', 'purple.windup', 'purple.rushhour', 'yellow.harvest', 'trading.haggle', 'trading.dividend', 'echo.hum']);
+const LIVE = new Set(['gold.windfall', 'red.turnout', 'purple.windup', 'purple.rushhour', 'yellow.harvest', 'trading.haggle', 'trading.dividend', 'echo.hum']);
 function liveYield(qid, action, state, pid) {
   if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
   const p = state.players && state.players[pid ?? state.current ?? 0];

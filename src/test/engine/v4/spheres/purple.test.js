@@ -85,23 +85,11 @@ describe('Purple scoring: most purple held', () => {
 });
 
 describe('Purple actions', () => {
-  it('Catch Up: +1 purple, and +1 per rival who\'s placed more minions than you this round (counted before yours lands)', () => {
-    // two rivals two minions ahead: +1, and +1 for each
-    expect(R(take(scene({ n: 3, slots: { [RUSH]: 1, [HIRE]: 1, '1-0': 2, '1-1': 2 } }), 'purple.catchup')).purple).toBe(3);
-    // equal counts before yours lands don't pay: only the +1
-    expect(R(take(scene({ n: 3, slots: { [RUSH]: 0, [HIRE]: 1, '1-0': 2 } }), 'purple.catchup')).purple).toBe(1);
-    // nobody on the board yet: the +1 is still granted
-    expect(R(take(scene(), 'purple.catchup')).purple).toBe(1);
-  });
-  it('Catch Up pays in ordinary turn order: a rival one minion ahead counts (yours, landing, does not count against you)', () => {
-    // Cory got nothing from Catch Up: the old count included the minion just placed, so a rival one ahead (the only
-    // lead turn order gives) tied it, and the bonus never paid without someone's extra turns.
-    // P2 went first this round and has 1 out; P1's first minion takes Catch Up.
-    let s = take(scene({ slots: { [RUSH]: 1 }, queue: turns(0, 1) }), 'purple.catchup');
-    expect(R(s).purple).toBe(1 + 1);
-    // 4 players, P1 last in the snake: three rivals one ahead, +1 each
-    s = take(scene({ n: 4, slots: { [RUSH]: 1, [HIRE]: 2, '1-0': 3 }, queue: turns(0, 1) }), 'purple.catchup');
-    expect(R(s).purple).toBe(1 + 3);
+  it('Hold Up: +1 purple per round, then you pick the rival who skips their next turn', () => {
+    const s = take(scene({ round: 2, queue: turns(0, 1) }), 'purple.holdup');
+    expect(R(s).purple).toBe(2);
+    expect(s.pending).toMatchObject({ kind: 'choose', player: 0 });
+    expect(s.pending.options.map(o => o.id)).toEqual(['player:1']);
   });
   it('Roll Call: +1 purple per worker you have on the board, this one included', () => {
     expect(R(take(scene(), 'purple.windup')).purple).toBe(1);

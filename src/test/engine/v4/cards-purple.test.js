@@ -18,12 +18,8 @@ const rich = { gold: 30, red: 30, purple: 30, green: 30 };
 const turnsQueued = (s, id, placed = id === s.current || id === 0 ? 1 : 0) => s.players[id].left - (3 - placed);
 
 describe('Purple actions', () => {
-  it('Catch Up +1 and +1 per rival who has placed more this round; Roll Call +1 per worker on the board', () => {
-    // P2 placed 2, P3 placed 1, P1 none before this one: both ahead
-    expect(P(take(sc({ n: 3, slots: { '0-0': 1, '0-1': 1, '0-2': 2 } }), 'purple.catchup'))).toBe(1 + 2);
-    // P1 placed 1 before this one, P2 1, P3 2: only P3 ahead (P1's landing minion doesn't count against it)
-    expect(P(take(sc({ n: 3, slots: { '0-0': 0, '0-1': 1, '0-2': 2, '1-0': 2 } }), 'purple.catchup'))).toBe(1 + 1);
-    expect(P(take(sc(), 'purple.catchup'))).toBe(1); // the +1 always
+  it('Hold Up +1 purple per round (rival pick named in hold-up.test.js); Roll Call +1 per worker on the board', () => {
+    expect(P(take(sc({ n: 3, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] }), 'purple.holdup'))).toBe(1);
     expect(P(take(sc({ slots: { '0-0': 0, '0-1': 0 } }), 'purple.windup'))).toBe(3);
   });
   it('Overtime: 1 extra turn right after this one, free; Crunch Time: your next 2 turns right away, free, no new minion', () => {

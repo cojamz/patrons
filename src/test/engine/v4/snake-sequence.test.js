@@ -38,12 +38,12 @@ function playRound(s, rand, onTurn) {
   }
   return seq;
 }
-/** A bot move, minus Purple's skip space (it moves a seat's turn; these tests count the plain snake against Crunch Time). */
+/** A bot move, minus Purple's skip spaces (Sleep In, Hold Up: they move a seat's turn; these tests count the plain snake against Crunch Time). */
 function botMove(s, rand) {
   const m = chooseBotMove(s, rand);
   const o = s.pending?.options?.find(x => x.id === m.option);
-  if (o?.kind === 'slot' && o.q !== undefined && actionAt(s, o.q, o.i).key === 'skip') {
-    const alt = s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && actionAt(s, x.q, x.i).key !== 'skip');
+  if (o?.kind === 'slot' && o.q !== undefined && ['skip', 'holdup'].includes(actionAt(s, o.q, o.i).key)) {
+    const alt = s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && !['skip', 'holdup'].includes(actionAt(s, x.q, x.i).key));
     if (alt) return { player: m.player, option: alt.id };
   }
   return m;
@@ -53,8 +53,8 @@ const others = (seq, who) => seq.filter(p => p !== who);
 
 describe('snake vs real sequence, 3 players, one seat taking turns out of it', () => {
   const crunch = at => {
-    // seed 12: no seat's members hand out an extra turn in this round III (seed 11's bots did after the 5/6/7 shop)
-    const { s, rand } = toRound(3, 12);
+    // seed 14: no seat's members hand out an extra turn in this round III (seeds 11 and 12's bots did)
+    const { s, rand } = toRound(3, 14);
     const base = s.order.slice(0, 3), who = base[at];
     const seq = playRound(s, rand, st => {
       if (st.pending.player !== who || st.turns.filter(p => p === who).length !== 1) return null;
