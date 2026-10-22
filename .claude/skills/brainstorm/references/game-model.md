@@ -44,22 +44,9 @@ Every turn spends a placement and a recruit, and moves your pile. Which one is s
 - **Member value** (Cory, Oct 21). A member should return about 1.5× its cost in followers over the game. Prices are educated guesses, a little pricier than bots suggest, never below 2; lift a weak card with more followers before cutting its price. Don't put prices in a pitch unless he asks.
 - **Buy-followers-only** wins about 25% of 4-player games; a good engine should beat it. An idea that mostly helps someone who only recruits follower cards pushes the wrong way.
 
-## 4. What each color is, as a verb
+## 4. What each color is
 
-Identity comes from a verb, not a theme or a resource (Cory). Never pitch a verb another color already owns. Run `scripts/live-board.mjs <id>` for today's texts; ids: red, echo (Green), thieves (Magenta), market (Blue), purple, gold, silver, yellow, trading (White).
-
-- **Red: moves members.** Free recruits (Open Door, Recruit a Member) and swaps with the shop and across cults (Even Swap, Promote, Demote). Reworked.
-- **Green: copies actions.** Echo, Encore, Reprise, Greatest Hits; chains pay +1 green per link. Reworked. Echo is Cory's bar for a round I action: "simple, strategic, scales because it copies better actions later".
-- **Magenta: steals.** Resources (Help Yourself, Lie Low, Crime Wave's half a pile) and members (Shake Down, Poach). Reworked.
-- **Blue: works the shop and recruits more.** Churn, Out of Style, Peek, Recruit Twice, Bury, Spree. Reworked.
-- **Purple: bends turn order.** Sleep In (+4, skip your next turn), Hold Up (a rival skips their next turn), Crunch Time ("take two turns after this one", now round II), Crowd In (place on taken spaces, round III). In rework; Cory likes its shape.
-- **White: a better exchange into followers** (Cory, Oct 22). Round I "+1 follower and +1 white × round", round II "bury one of your members, gain white equal to its cost", round III "turn all your white into followers" (no cap, no recruit). Three slots open. In rework.
-- **Yellow: gets many colors.** Closest to done as is; round III still open after four rejected shapes. In rework.
-- **Gold: Double Down** ("double your gold") stays as round III; a gold "bank" is his lean. Cory: holding one color is no longer special now that every contest is held resources. In rework.
-- **Silver: giving to rivals.** Rising Tide is the one he loves. In rework.
-- **Guests** (no color, Cory designs these himself): rule-benders like Squatter, Straggler, Extra Hand, Front-runner, Tiebreaker.
-
-Unclaimed ground (Claude's read, a prompt, not a plan): helping rivals on purpose, the contest itself (ties, timing of scoring), members' worth and member count as a resource, the pile as hidden information. Check the ledger before using any of these; several have been tried.
+See design-core.md section 3 (each color's fantasy, how it wins, who it rubs against). Run `scripts/live-board.mjs <id>` for today's texts; ids: red, echo (Green), thieves (Magenta), market (Blue), purple, gold, silver, yellow, trading (White). Guests (no color) are Cory's to design.
 
 ## 5. Interactions that break ideas
 
