@@ -97,9 +97,9 @@ describe('turn labels agree with the engine', () => {
             const turnaround = b - a === 1 && b % nP === 0;
             if (turnaround) expect(text, `step ${step}`).toMatch(/snake order/);
             else {
-              // the gap closed because a rival took turns early: the header and the seat say so, never "snake order"
+              // the gap closed because a rival took turns early (or had one skipped): the header and the seat say so, never "snake order"
               expect(text, `step ${step}: plain snake had them at ${a} and ${b}`).not.toMatch(/snake order/);
-              expect(text).toMatch(/took turns early/);
+              expect(text).toMatch(/took turns early|turn was skipped/);
               closedSeen++;
             }
           }

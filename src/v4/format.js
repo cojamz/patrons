@@ -253,7 +253,9 @@ export function turnSequence(state) {
     // (after your own Crunch Time chain your next turn may follow at once: still your own run, nothing closed)
     if (a.pid !== t.pid || a.kind === 'extra' || t.kind === 'extra' || t.early || a.early || t.late || a.late || t.src === a.src + 1) continue;
     const by = seq.find(x => x.early && x.pid !== t.pid && x.src > a.src && x.src < t.src);
-    t.closed = by ? { pid: by.pid, why: by.early } : { pid: null, why: null };
+    // or a rival's turn in between was skipped (Sleep In, Hold Up) and now comes after everyone's
+    const gone = !by && seq.find(x => x.late && x.pid !== t.pid && x.src > a.src && x.src < t.src);
+    t.closed = by ? { pid: by.pid, why: by.early } : gone ? { pid: gone.pid, why: gone.late, skipped: true } : { pid: null, why: null };
   }
   const grants = extraGrants(state), used = {};
   const begins = state.log.slice(roundLogStart(state.log)).find(l => /^Round \S+ begins\./.test(l)) || '';
@@ -264,9 +266,11 @@ export function turnSequence(state) {
   }
   return seq;
 }
-/** Why two turns came back to back off the snake (turnSequence's closed): "P1 took turns early with Crunch Time". */
+/** Why two turns came back to back off the snake (turnSequence's closed): "P1 took turns early with Crunch Time",
+ *  or "P2's turn was skipped (Hold Up)". */
 export function closedBy(state, closed, me = null) {
   if (!closed || closed.pid == null) return 'turns in between were taken early';
+  if (closed.skipped) return `${closed.pid === me ? 'your' : `${state.players[closed.pid].name}'s`} turn was skipped${closed.why ? ` (${closed.why})` : ''}`;
   const who = closed.pid === me ? 'you' : state.players[closed.pid].name;
   return `${who} took turns early${closed.why ? ` with ${closed.why}` : ''}`;
 }

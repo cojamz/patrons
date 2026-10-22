@@ -112,7 +112,7 @@ describe('Purple actions', () => {
   });
   it('extra turns never squeeze a later player out of the last space', () => {
     // round II: only Overtime and two other spaces open (Rush Hour taken), P2 still has a turn
-    const slots = { ...fullRoundI(JV, RUSH), '0-3': 1, '0-4': 1, '1-3': 1, '1-4': 1, '3-3': 1, '3-4': 1, '2-3': 1, '2-4': 1 }; // 2-4: Rush Hour, where Overtime stood (Overtime is a test-only 7th space)
+    const slots = { ...fullRoundI(JV, RUSH), '0-3': 1, '0-4': 1, '1-3': 1, '1-4': 1, '3-3': 1, '3-4': 1, '2-3': 1, '2-4': 1, '2-5': 1 }; // 2-4: Rush Hour, where Overtime stood; 2-5: Crunch Time (round II since Oct 22) (Overtime is a test-only 7th space)
     const s0 = scene({ round: 2, slots, queue: turns(0, 1) });
     expect(spareSpace(contextFor(s0))).toBe(true); // 3 open, 1 turn queued
     let s = take(s0, 'purple.overtime');
@@ -129,7 +129,7 @@ describe('Purple actions', () => {
   const upcoming = s => s.queue.filter(t => t.t === 'turn').map(t => t.p);
   // every turn after the scene's first (the one that took Crunch Time), however far the scene has run on
   const after1 = s => { const r = turnRail(s); return [...r.done, ...(r.current != null ? [r.current] : []), ...r.next].slice(1); };
-  it('Crunch Time (ring III): your next 2 turns right away; nothing to pay, no new minion', () => {
+  it('Crunch Time (ring II): your next 2 turns right away; nothing to pay, no new minion', () => {
     const rally = purpleHeld => take(scene({ round: 3, res: [{ purple: purpleHeld }], queue: turns(0, 1, 0, 1, 0, 1) }), 'purple.rally');
     for (const held of [0, 3, 5, 30]) {
       const s = rally(held);
@@ -139,7 +139,7 @@ describe('Purple actions', () => {
       expect(s.log).toContain("P1's Crunch Time: P1 takes their next 2 turns now.");
       expect(nextPlacer(s)).toBe(0);
     }
-    expect(() => take(scene({ round: 2 }), 'purple.rally')).toThrow(); // the center opens in round III
+    expect(() => take(scene({ round: 1 }), 'purple.rally')).toThrow(); // it opens in round II (Cory, 2026-10-22)
   });
   it('Crunch Time needs no spare space: on a full board it still moves your turns', () => {
     // round III: 4 spaces open once Crunch Time is taken, and 4 turns to come: no room for an extra turn, room for these

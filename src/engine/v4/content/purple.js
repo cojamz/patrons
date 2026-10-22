@@ -62,6 +62,8 @@ const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
 const freeTurnsEstimate = (ctx, n) => Math.max(0, Math.min(n, room(ctx) - 1)) * turnValue(ctx);
 function freeTurns(ctx, p, n, what) {
   if (!spareSpace(ctx)) { ctx.log(`${p.name}'s ${what}: no free space this round, so no extra turn.`); return 0; }
+  // a seat placing on taken spaces (Crowd In) could take the same extra-turn space forever: none that round
+  if (p.squatAll === ctx.state.round) { ctx.log(`${p.name}'s ${what}: no extra turn while placing on taken spaces.`); return 0; }
   return extraTurns(ctx, p, n);
 }
 
@@ -231,7 +233,7 @@ export default {
     {
       // Cory, 2026-10-22: "+1 purple, you can play on occupied spaces this round" (+2 with the inherent +1; he may
       // raise it to +3 after play). Any taken space, yours or a rival's, for the rest of this round. Name is Claude's fill-in.
-      key: 'crowdin', ring: 2, name: 'Crowd In', text: '+2 purple. This round you can place on taken spaces.',
+      key: 'crowdin', ring: 3, name: 'Crowd In', text: '+2 purple. This round you can place on taken spaces.',
       estimate: ctx => 2 + (ctx.state.round < 3 ? 1 : 0),
       resolve(ctx, p) { ctx.gain(p, P, 2, { fromAction: true }); p.squatAll = ctx.state.round; ctx.log(`${p.name} can place on taken spaces for the rest of this round.`); },
     },
@@ -246,7 +248,7 @@ export default {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take two turns after this one.',
+      key: 'rally', ring: 2, name: 'Crunch Time', text: 'Take two turns after this one.',
       estimate: (ctx, p) => turnsNowEstimate(ctx, p, 2),
       resolve(ctx, p) { turnsNow(ctx, p, 2, 'Crunch Time'); },
     },
