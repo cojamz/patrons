@@ -27,7 +27,7 @@ describe('rules that grow by round', () => {
 
   it('the lines say what the space pays in each round', () => {
     const num = l => Number(l.match(/\d+/)[0]);
-    for (const [qid, key] of [['gold', 'rush'], ['red', 'turnout'], ['purple', 'hourly'], ['echo', 'chant']]) {
+    for (const [qid, key] of [['gold', 'rush'], ['red', 'turnout'], ['echo', 'chant']]) {
       const a = quadrant(qid).actions.find(x => x.key === key);
       for (const r of [1, 2, 3]) expect(num(a.byRound.lines[r - 1]), `${qid}.${key} round ${r}`).toBe(a.estimate({ state: { round: r } }));
     }

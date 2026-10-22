@@ -31,7 +31,7 @@ export function previewSpace(state, pid, q, i) {
   try {
     // notes: the engine's preview-only reasons (a member that changed the result, or one that stayed off and why)
     base = structuredClone({ ...state, log: [], pending: null, notes: [] });
-    const joined = base.slots[key] !== undefined && base.slots[key] !== pid;
+    const joined = base.slots[key] !== undefined; // a taken space, a rival's or (Crowd In) your own
     if (joined) (base.squats[key] = base.squats[key] || []).push(pid);
     else base.slots[key] = pid;
     // as the engine's placement does: the act reads it (ctx.placement.joined: Redistribute counts the space it joins)

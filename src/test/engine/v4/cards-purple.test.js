@@ -18,8 +18,7 @@ const rich = { gold: 30, red: 30, purple: 30, green: 30 };
 const turnsQueued = (s, id, placed = id === s.current || id === 0 ? 1 : 0) => s.players[id].left - (3 - placed);
 
 describe('Purple actions', () => {
-  it('Clock In 4 / 5 / 6; Catch Up +1 and +1 per rival who has placed more this round; Roll Call +1 per worker on the board', () => {
-    for (const r of [1, 2, 3]) expect(P(take(sc({ round: r }), 'purple.hourly'))).toBe(3 + r);
+  it('Catch Up +1 and +1 per rival who has placed more this round; Roll Call +1 per worker on the board', () => {
     // P2 placed 2, P3 placed 1, P1 none before this one: both ahead
     expect(P(take(sc({ n: 3, slots: { '0-0': 1, '0-1': 1, '0-2': 2 } }), 'purple.catchup'))).toBe(1 + 2);
     // P1 placed 1 before this one, P2 1, P3 2: only P3 ahead (P1's landing minion doesn't count against it)
@@ -47,28 +46,28 @@ describe('Purple actions', () => {
 describe('Purple members', () => {
   it('Go-Getter: once per game, an extra turn right after this one; the log names Go-Getter', () => {
     let s = sc({ round: 2, members: [['purple.secondwind']] }); // no extra minions in round I
-    s = take(s, 'purple.hourly');
+    s = take(s, 'purple.windup');
     s = move(s, `use:${uidOf(s, 'purple.secondwind', 0)}`);
     expect(turnsQueued(s, 0)).toBe(1);
     expect(named(s, 'Go-Getter')).toHaveLength(1);
   });
   it('Go-Getter × Foreman: the extra turn pays Foreman, named', () => {
     let s = sc({ round: 2, members: [['purple.secondwind', 'purple.foreman']] });
-    s = take(s, 'purple.hourly');
+    s = take(s, 'purple.windup');
     s = move(s, `use:${uidOf(s, 'purple.secondwind', 0)}`);
-    expect(P(s)).toBe(5 + 1); // Clock In +5 in round II
+    expect(P(s)).toBe(1 + 1); // Roll Call +1 (one minion on the board), Foreman +1
     expect(named(s, 'Foreman')[0]).toMatch(/P1's Foreman: \+1 purple/);
   });
 
   it('Errand Runner: when recruited, an extra turn right after this one; named', () => {
     let s = sc({ round: 2, res: [rich], shop: ['purple.errand'] });
-    s = take(s, 'purple.hourly'); s = buy(s, 'purple.errand');
+    s = take(s, 'purple.windup'); s = buy(s, 'purple.errand');
     expect(turnsQueued(s, 0)).toBe(1);
     expect(named(s, 'Errand Runner')).toHaveLength(1);
   });
   it('Errand Runner × a rival’s Overseer: it reacts to the extra turn, named', () => {
     let s = sc({ round: 2, res: [rich, { purple: 6 }], members: [[], ['purple.overseer']], shop: ['purple.errand'] });
-    s = take(s, 'purple.hourly'); s = buy(s, 'purple.errand');
+    s = take(s, 'purple.windup'); s = buy(s, 'purple.errand');
     expect(P(s, 1)).toBe(6 + 3);
     expect(named(s, 'Overseer')[0]).toMatch(/P2's Overseer: \+3 purple/);
   });

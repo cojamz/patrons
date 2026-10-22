@@ -44,7 +44,7 @@ describe('an extra turn names the card that gave it', () => {
   it('Night Owl: the turn that earns it and the extra turn itself both say so, on the card and in the strip', () => {
     const d = table({ quadrants: ['gold', 'red', 'purple', 'green'], round: 2, left: 1, members: [['purple.nightowl']],
       queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }], order: [0, 1] }, 1);
-    d.take('purple.hourly');
+    d.take('purple.windup');
     d.on();
     expect(d.s.log).toContain("P1's Night Owl: P1 takes an extra turn.");
     d.take('purple.windup');
@@ -72,12 +72,12 @@ describe('an extra turn names the card that gave it', () => {
     const d = table({ quadrants: ['gold', 'red', 'purple', 'green'], round: 2, left: 1, members: [['purple.secondwind']],
       queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }], order: [0, 1] }, 1);
     d.use();
-    d.take('purple.hourly');
+    d.take('purple.windup');
     d.on();
     d.take('purple.windup');
     d.on();
     const [earn, extra] = d.t.stories;
-    expect(earn.head).toBe(`P1 used Go-Getter, then took ${actionName('purple.hourly')}`);
+    expect(earn.head).toBe(`P1 used Go-Getter, then took ${actionName('purple.windup')}`);
     expect(earn.lines).toContain('Go-Getter: an extra turn after this one');
     expect(extra.lines[0]).toBe('Go-Getter: extra turn');
   });

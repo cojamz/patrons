@@ -1,4 +1,3 @@
-import { memberScoring } from './member-scoring.js';
 // Purple: extra turns. Its spaces give them free (Cory, 2026-10-15: no board action requires spending); purple held
 // counts for the ring, and members (Taskmaster) can still buy a turn with it.
 // Most purple at round end takes the ring's followers.
@@ -104,6 +103,29 @@ export function extraTurns(ctx, p, n = 1, why = null) {
   return k;
 }
 
+/** p is passed over on their next turn this round; that minion places once the snake carries on past everyone else. */
+function skipNext(ctx, p, why) {
+  const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn');
+  const close = q.findIndex(t => t.t === 'allPlaced'), stop = close < 0 ? q.length : close;
+  let i = end + 1;
+  while (i < stop && !(q[i].t === 'turn' && q[i].p === p.id)) i++;
+  if (i >= stop) { ctx.log(`${p.name}'s ${why}: no turn left to skip this round.`); return; }
+  // where that turn sat in the round's order, matched as the seats match it (as turnsNow does)
+  const s = ctx.state, { order } = ctx.roundOrder();
+  const seq = [...(s.turns || []).map(pid => ({ pid })), ...q.filter(t => t.t === 'turn').map(task => ({ pid: task.p, task }))];
+  let j = 0;
+  for (const t of seq) if (j < order.length && order[j] === t.pid) t.at = j++;
+  const [task] = q.splice(i, 1);
+  q.splice(stop - 1, 0, task);
+  const at = (seq.find(t => t.task === task) || {}).at;
+  // its new place: after every other turn of the round's order still to come
+  if (at !== undefined && at !== order.length - 1) {
+    if (!s.early || s.early.round !== s.round) s.early = { round: s.round, moves: [] };
+    s.early.moves.push({ p: p.id, from: at, to: order.length - 1, why, late: true });
+  }
+  ctx.log(`${p.name}'s ${why}: ${p.name} skips their next turn.`);
+}
+
 /**
  * p takes up to n of their own turns still to come this round right after this one (Crunch Time; Cory, 2026-10-15:
  * "it's not extra turns, it's taking two immediate turns with existing minions"). No new minion, so placements this
@@ -170,14 +192,16 @@ export default {
   resource: P,
   // Most purple: honest about what the old "most workers on the board" measured (everyone places every worker, so
   // purple's tiebreak decided it). Holding purple for the ring is the price of spending it on turns.
-  scoring: memberScoring('purple', 'purple'),
+  // held purple, like every reworked color (Cory, 2026-10-22: "contests are always resources now")
+  scoring: { label: 'Most purple', counts: 'the purple you hold when the round ends', score: (ctx, p) => p.res.purple || 0 },
 
   actions: [
     {
-      key: 'hourly', ring: 1, name: 'Clock In', text: '+4 purple in round I, +5 in round II, +6 in round III.',
-      byRound: { lines: ['+4 purple', '+5 purple', '+6 purple'] },
-      estimate: ctx => [3, 4, 5][ctx.state.round - 1] + 1,
-      resolve(ctx, p) { ctx.gain(p, P, [3, 4, 5][ctx.state.round - 1] + 1, { fromAction: true }); },
+      // Cory, 2026-10-22: "+4 purple, skip your next turn" (always +4: +3 and the space's +1), from the old game's
+      // "Gain 4 purple, skip next turn". You're passed over once; the snake carries on and you still place every minion.
+      key: 'skip', ring: 1, name: 'Sleep In', text: '+4 purple. Skip your next turn.',
+      estimate: () => 3,
+      resolve(ctx, p) { ctx.gain(p, P, 4, { fromAction: true }); skipNext(ctx, p, 'Sleep In'); },
     },
     {
       // fill-in (critic): replaces Lend a Hand. Counted before your minion lands (Cory, 2026-10-15: it never paid; the old

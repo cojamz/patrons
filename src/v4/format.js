@@ -231,7 +231,7 @@ export function turnSequence(state) {
   const r = turnRail(state);
   const seq = [...r.done.map(pid => ({ pid, at: 'done' })), ...(r.current != null ? [{ pid: r.current, at: 'now' }] : []), ...r.next.map(pid => ({ pid, at: 'later' }))];
   // the round's order, with turns taken early (Crunch Time) moved up: they're the player's own turns, not extra ones
-  const { order, early, src } = roundOrder(state);
+  const { order, early, src, late } = roundOrder(state);
   const snake = (WORKERS[state.round - 1] || 0) * state.players.length;
   // the round's order is the sequence with the extra turns taken out: match it in order, and what's left over is extra
   let j = 0;
@@ -241,6 +241,7 @@ export function turnSequence(state) {
       t.kind = src[j] < snake ? 'snake' : 'hand';
       t.src = src[j];
       if (early[j]) t.early = early[j];
+      if (late && late[j]) t.late = late[j];
       j++;
     } else t.kind = 'extra';
   }
@@ -250,7 +251,7 @@ export function turnSequence(state) {
   for (let i = 1; i < seq.length; i++) {
     const a = seq[i - 1], t = seq[i];
     // (after your own Crunch Time chain your next turn may follow at once: still your own run, nothing closed)
-    if (a.pid !== t.pid || a.kind === 'extra' || t.kind === 'extra' || t.early || a.early || t.src === a.src + 1) continue;
+    if (a.pid !== t.pid || a.kind === 'extra' || t.kind === 'extra' || t.early || a.early || t.late || a.late || t.src === a.src + 1) continue;
     const by = seq.find(x => x.early && x.pid !== t.pid && x.src > a.src && x.src < t.src);
     t.closed = by ? { pid: by.pid, why: by.early } : { pid: null, why: null };
   }

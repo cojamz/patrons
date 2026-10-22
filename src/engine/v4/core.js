@@ -842,13 +842,14 @@ export function turnRail(state) {
  * [index each turn had in state.order] }.
  */
 export function roundOrder(state) {
-  const order = [...(state.order || [])], early = order.map(() => null), src = order.map((_, i) => i);
+  const order = [...(state.order || [])], early = order.map(() => null), src = order.map((_, i) => i), late = order.map(() => null);
   const e = state.early;
+  // a move marked late is a skipped turn (Purple's skip space): the seat is passed over once, so its turn goes last
   if (e && e.round === state.round) for (const m of e.moves) {
-    const [pid] = order.splice(m.from, 1); early.splice(m.from, 1); const [i] = src.splice(m.from, 1);
-    order.splice(m.to, 0, pid); early.splice(m.to, 0, m.why); src.splice(m.to, 0, i);
+    const [pid] = order.splice(m.from, 1); early.splice(m.from, 1); const [i] = src.splice(m.from, 1); late.splice(m.from, 1);
+    order.splice(m.to, 0, pid); early.splice(m.to, 0, m.late ? null : m.why); src.splice(m.to, 0, i); late.splice(m.to, 0, m.late ? m.why : null);
   }
-  return { order, early, src };
+  return { order, early, src, late };
 }
 /** Workers p had this round (Extra Hand adds to the round's count); older saves fall back to the round's count. */
 export const roundWorkers = (state, p) => p.workers ?? WORKERS[Math.max(1, state.round) - 1];

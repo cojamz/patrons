@@ -20,7 +20,7 @@ const L = 'ABC'; // A, B, C: the round's first pass (A picks first)
 function toRound(r, seed = 11) {
   let s = createGame({ seats: Array.from({ length: 3 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: Q });
   const rand = seededRandom(seed);
-  while (!(s.round === r && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
+  while (!(s.round === r && s.pending?.kind === 'place')) s = applyMove(s, botMove(s, rand));
   return { s, rand };
 }
 /** Plays the round out; onTurn may answer the first decision of a turn. Returns who started each turn, in order. */
@@ -34,9 +34,19 @@ function playRound(s, rand, onTurn) {
       const t = onTurn?.(s);
       if (t) { s = t; continue; }
     }
-    s = applyMove(s, chooseBotMove(s, rand));
+    s = applyMove(s, botMove(s, rand));
   }
   return seq;
+}
+/** A bot move, minus Purple's skip space (it moves a seat's turn; these tests count the plain snake against Crunch Time). */
+function botMove(s, rand) {
+  const m = chooseBotMove(s, rand);
+  const o = s.pending?.options?.find(x => x.id === m.option);
+  if (o?.kind === 'slot' && o.q !== undefined && actionAt(s, o.q, o.i).key === 'skip') {
+    const alt = s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && actionAt(s, x.q, x.i).key !== 'skip');
+    if (alt) return { player: m.player, option: alt.id };
+  }
+  return m;
 }
 const letters = (base, seq) => seq.map(p => L[base.indexOf(p)]).join(' ');
 const others = (seq, who) => seq.filter(p => p !== who);

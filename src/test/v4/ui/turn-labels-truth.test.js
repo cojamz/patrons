@@ -140,22 +140,38 @@ describe('a gap closed by Crunch Time is said as such (Cory #98, #99)', () => {
     const rand = seededRandom(13);
     while (!(s.round === 3 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
     const [A, B] = s.order;
-    s = applyMove(s, nextMove(s, rand, true)); // A takes Crunch Time: A A A B C C B A A (A: an extra turn) B C C B B C
-    const at = (n, ok = () => true) => { while (!(s.pending?.kind === 'place' && s.turns.length === n && ok(s))) s = applyMove(s, chooseBotMove(s, rand)); };
-    // the plain snake turnaround first (C C at turns 12-13) still says snake order
-    at(13);
-    expect(currentTurn(s).again).toBe(true);
-    expect(promptFor(s, false).text).toMatch(/again \(snake order\)$/);
-    at(14); // B's first of the pair (turn 14 of 16): A's last two turns moved up, closing B's gap
-    expect(s.current).toBe(B);
-    expect(turnPlaces(s, B).places[B]).toMatchObject({ label: 'now', twice: true });
-    expect(turnPlaces(s, B).places[B].title).toMatch(new RegExp(`Back to back because ${s.players[A].name} took turns early with Crunch Time\\.`));
-    expect(turnPlaces(s, B).places[B].title).not.toMatch(/snake order/);
-    expect(turnPlaces(s, s.order[2]).places[B].title).toMatch(new RegExp(`because ${s.players[A].name} took turns early`));
-    expect(turnPlaces(s, A).places[B].title).toMatch(/because you took turns early with Crunch Time/);
-    at(15);
-    expect(s.current).toBe(B);
-    expect(promptFor(s, false).text).toBe(`${s.players[B].name} again (${s.players[A].name} took turns early with Crunch Time)`);
-    expect(promptFor(s, true).lead).toBe(`Your turn again (${s.players[A].name} took turns early with Crunch Time) — `);
+    s = applyMove(s, nextMove(s, rand, true)); // A takes Crunch Time: A A A B C C B A A B C C B B C, give or take extra turns
+    // walk the round by what the turn record says, not by fixed turn numbers (bots' buys shift extra turns around)
+    const step = () => { s = applyMove(s, chooseBotMove(s, rand)); };
+    const placing = () => s.round === 3 && s.pending?.kind === 'place';
+    let plainSeen = false, pairSeen = false;
+    while (s.round === 3 && !s.over && !pairSeen) {
+      if (placing()) {
+        const t = currentTurn(s);
+        if (t?.again && t.kind === 'snake' && !t.closed && s.current !== A && !plainSeen) {
+          // a plain snake turnaround still says snake order
+          expect(promptFor(s, false).text).toMatch(/again \(snake order\)$/);
+          plainSeen = true;
+        }
+        const seq = turnSequence(s), k = seq.findIndex(x => x.at !== 'done');
+        if (s.current === B && seq[k + 1]?.pid === B && seq[k + 1]?.closed) {
+          // B's first of the pair: A's last two turns moved up, closing B's gap
+          expect(turnPlaces(s, B).places[B]).toMatchObject({ label: 'now', twice: true });
+          expect(turnPlaces(s, B).places[B].title).toMatch(new RegExp(`Back to back because ${s.players[A].name} took turns early with Crunch Time\\.`));
+          expect(turnPlaces(s, B).places[B].title).not.toMatch(/snake order/);
+          expect(turnPlaces(s, s.order[2]).places[B].title).toMatch(new RegExp(`because ${s.players[A].name} took turns early`));
+          expect(turnPlaces(s, A).places[B].title).toMatch(/because you took turns early with Crunch Time/);
+          do step(); while (!placing() && s.round === 3);
+          expect(s.current).toBe(B);
+          expect(promptFor(s, false).text).toBe(`${s.players[B].name} again (${s.players[A].name} took turns early with Crunch Time)`);
+          expect(promptFor(s, true).lead).toBe(`Your turn again (${s.players[A].name} took turns early with Crunch Time) — `);
+          pairSeen = true;
+          break;
+        }
+      }
+      step();
+    }
+    expect(plainSeen).toBe(true);
+    expect(pairSeen).toBe(true);
   });
 });

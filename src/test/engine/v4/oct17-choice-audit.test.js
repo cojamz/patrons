@@ -48,7 +48,7 @@ describe('October 17 reported choices', () => {
 
   it('Go-Getter bought after your last scheduled placement remains usable when the board has room', () => {
     let s = take(sceneQ({ quadrants: ['gold', 'red', 'purple', 'green'], round: 2, left: 1,
-      res: [rich], shop: ['purple.secondwind'], queue: [{ t: 'turn', p: 0 }, { t: 'allPlaced' }] }), 'purple.hourly');
+      res: [rich], shop: ['purple.secondwind'], queue: [{ t: 'turn', p: 0 }, { t: 'allPlaced' }] }), 'purple.windup');
     s = buy(s, 'purple.secondwind');
     const uid = uidOf(s, 'purple.secondwind', 0);
     expect(s.players[0].left).toBe(0);
@@ -67,7 +67,7 @@ describe('October 17 reported choices', () => {
   });
   it('post-purchase Done ends the turn without a second purchase or forced activation', () => {
     let s = take(sceneQ({ quadrants: ['gold', 'red', 'purple', 'green'], round: 2, left: 1,
-      res: [rich], shop: ['purple.secondwind'], queue: [{ t: 'turn', p: 0 }, { t: 'allPlaced' }] }), 'purple.hourly');
+      res: [rich], shop: ['purple.secondwind'], queue: [{ t: 'turn', p: 0 }, { t: 'allPlaced' }] }), 'purple.windup');
     s = buy(s, 'purple.secondwind');
     const uid = uidOf(s, 'purple.secondwind', 0);
     const paid = { ...s.players[0].res };
@@ -80,10 +80,10 @@ describe('October 17 reported choices', () => {
   it('does not offer an unusable Go-Getter activation when the board is full', () => {
     const qs = ['gold', 'red', 'purple', 'green'], slots = {};
     qs.forEach((qid, q) => quadrant(qid).actions.forEach((a, i) => {
-      if (a.ring <= 2 && !(qid === 'purple' && a.key === 'hourly')) slots[`${q}-${i}`] = 1;
+      if (a.ring <= 2 && !(qid === 'purple' && a.key === 'windup')) slots[`${q}-${i}`] = 1;
     }));
     let s = take(sceneQ({ quadrants: qs, round: 2, left: 1, slots,
-      res: [rich], shop: ['purple.secondwind'], queue: [{ t: 'turn', p: 0 }, { t: 'allPlaced' }] }), 'purple.hourly');
+      res: [rich], shop: ['purple.secondwind'], queue: [{ t: 'turn', p: 0 }, { t: 'allPlaced' }] }), 'purple.windup');
     s = buy(s, 'purple.secondwind');
     expect(s.pending).toBe(null);
     expect(s.cards[uidOf(s, 'purple.secondwind', 0)].used).not.toBe(true);

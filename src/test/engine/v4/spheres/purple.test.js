@@ -75,11 +75,6 @@ describe('Purple scoring: most purple members', () => {
 });
 
 describe('Purple actions', () => {
-  it('Clock In: +4 / +5 / +6 purple, by round', () => {
-    expect(R(take(scene(), 'purple.hourly')).purple).toBe(4);
-    expect(R(take(scene({ round: 2 }), 'purple.hourly')).purple).toBe(5);
-    expect(R(take(scene({ round: 3 }), 'purple.hourly')).purple).toBe(6);
-  });
   it('Catch Up: +1 purple, and +1 per rival who\'s placed more minions than you this round (counted before yours lands)', () => {
     // two rivals two minions ahead: +1, and +1 for each
     expect(R(take(scene({ n: 3, slots: { [RUSH]: 1, [HIRE]: 1, '1-0': 2, '1-1': 2 } }), 'purple.catchup')).purple).toBe(3);
@@ -108,7 +103,7 @@ describe('Purple actions', () => {
     expect(s.players[0].left).toBe(2 + 1); // one minion in, one back
     expect(s.log).toContain('P1 takes an extra turn.');
     expect(nextPlacer(s)).toBe(0);
-    s = pass(take(pass(pass(s)), 'purple.hourly'));
+    s = pass(take(pass(pass(s)), 'purple.windup'));
     expect(nextPlacer(s)).toBe(1);
     // with no purple at all, the same: no payment, no fallback gain
     s = take(scene({ round: 2, queue: turns(0, 1) }), 'purple.overtime');
@@ -212,7 +207,7 @@ describe('Purple actions', () => {
 describe('Purple members', () => {
   const start = (members, extra = {}) => scene({ members, queue: [{ t: 'round', r: 2 }], ...extra });
   // round II: no extra minions in round I (Cory, 2026-10-15); Clock In gives +5 there
-  const afterTake = (members, extra = {}) => take(scene({ round: 2, queue: turns(0, 1), members, ...extra }), 'purple.hourly');
+  const afterTake = (members, extra = {}) => take(scene({ round: 2, queue: turns(0, 1), members, ...extra }), 'purple.windup');
 
   it('Go-Getter: once per game, an extra turn right after this one', () => {
     let s = afterTake([['purple.secondwind']]);
@@ -223,7 +218,7 @@ describe('Purple members', () => {
   });
   it('Errand Runner: when recruited, an extra turn right after this one', () => {
     let s = scene({ round: 2, res: [{ purple: 2, gold: 2 }], shop: ['purple.errand'], queue: turns(0, 1) });
-    s = take(s, 'purple.hourly');
+    s = take(s, 'purple.windup');
     s = move(s, `card:${uidOf(s, 'purple.errand', 'shop')}`);
     expect(nextPlacer(s)).toBe(0);
   });
@@ -285,7 +280,7 @@ describe('Purple members', () => {
     s.players[0].left = 2;
     s = pass(take(s, 'gold.rush')); // 1 worker left after this: nothing yet
     expect(R(s).purple).toBe(0);
-    s = pass(take(s, 'purple.hourly')); // P2
+    s = pass(take(s, 'purple.windup')); // P2
     s = take(s, 'red.turnout'); // the last one lands; Bookkeeper waits for the turn's end (Cory, 2026-10-15)
     expect(R(s).purple).toBe(0);
     expect(s.pending.kind).toBe('buy');

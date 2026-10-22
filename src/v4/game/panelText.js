@@ -62,6 +62,8 @@ const P = {
     rushhour: (r, now) => ({ main: `+${now ?? 1} purple`, second: 'per 2 minions on the board', note: now == null ? null : 'this one too' }),
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
+    // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
+    skip: { main: '+4 purple', second: 'skip your next turn' },
     crowdin: { main: '+2 purple', second: 'place on taken spaces this round' },
     rally: { verb: 'Two turns after this one' },
   },

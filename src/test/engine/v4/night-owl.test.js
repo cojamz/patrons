@@ -29,13 +29,13 @@ describe('Night Owl', () => {
   });
 
   it('does nothing on a minion that is not your last', () => {
-    const s = take(sc({ round: 2, left: 3, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.hourly');
+    const s = take(sc({ round: 2, left: 3, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.windup');
     expect(s.players[0].left).toBe(2);
     expect(owl(s)).toEqual([]);
   });
 
   it('after your last minion (and that turn’s buy), you place one more before the next player does, named', () => {
-    let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.hourly');
+    let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.windup');
     expect(s.players[0].left).toBe(1);
     expect(owl(s)).toEqual(["P1's Night Owl: P1 takes an extra turn."]);
     expect(queuedTurns(s, 0)).toBe(1);
@@ -44,9 +44,9 @@ describe('Night Owl', () => {
   });
 
   it('and buy again; one more, not two: that minion is a last minion too, and nothing more comes of it', () => {
-    let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.hourly');
+    let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.windup');
     ({ s } = nextPlacer(s));
-    s = take(s, 'purple.windup'); // the one more minion: the last again
+    s = take(s, 'purple.rushhour'); // the one more minion: the last again
     expect(s.pending).toMatchObject({ kind: 'buy', player: 0 }); // buy again
     expect(s.players[0].left).toBe(0);
     expect(owl(s)).toHaveLength(1);
@@ -57,7 +57,7 @@ describe('Night Owl', () => {
   it('each round: it works again in the next round', () => {
     let s = sc({ round: 3, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) });
     s.cards[uidOf(s, 'purple.nightowl', 0)].owlRound = 2; // it fired last round
-    s = take(s, 'purple.hourly');
+    s = take(s, 'purple.windup');
     expect(owl(s)).toEqual(["P1's Night Owl: P1 takes an extra turn."]);
     expect(s.players[0].left).toBe(1);
   });
@@ -65,9 +65,9 @@ describe('Night Owl', () => {
   it('round I, no minion more: it says so, and does not try again that round', () => {
     // round I, two players: every space taken but two, and P2 still has a turn to come
     const probe = sc({});
-    const free = [spaceOf(probe, 'purple.hourly'), spaceOf(probe, 'gold.rush')];
+    const free = [spaceOf(probe, 'purple.windup'), spaceOf(probe, 'gold.rush')];
     const slots = Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => !free.includes(k)).map(k => [k, 1]));
-    let s = take(sc({ round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.hourly');
+    let s = take(sc({ round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.windup');
     expect(s.players[0].left).toBe(0);
     expect(queuedTurns(s, 0)).toBe(0);
     expect(s.log).toContain('No extra minions in round I: P1 gets no extra turn from Night Owl.');
@@ -75,9 +75,9 @@ describe('Night Owl', () => {
   });
 
   it('× Foreman: the one more minion counts as an extra turn, so Foreman pays, named', () => {
-    const s = take(sc({ round: 2, left: 1, slots: { '0-0': 0, '0-1': 0 }, members: [['purple.nightowl', 'purple.foreman']], queue: turns(0, 1) }), 'purple.hourly');
-    // Clock In +5 in round II, then Foreman: +1 per minion on the board (3)
-    expect(s.players[0].res.purple).toBe(5 + 3);
+    const s = take(sc({ round: 2, left: 1, slots: { '0-0': 0, '0-1': 0 }, members: [['purple.nightowl', 'purple.foreman']], queue: turns(0, 1) }), 'purple.windup');
+    // Roll Call +3 (three minions on the board, this one included), then Foreman: +1 per minion on the board (3)
+    expect(s.players[0].res.purple).toBe(3 + 3);
     expect(linesNaming(s.log, 'Foreman')).toHaveLength(1);
   });
 });
@@ -87,9 +87,9 @@ describe('Night Owl', () => {
 describe('Night Owl says why it gave no extra turn', () => {
   it('4 players, round I: no extra minions even on the final free space', () => {
     const probe = sceneQ({ quadrants: Q, n: 4 });
-    const free = spaceOf(probe, 'purple.hourly');
+    const free = spaceOf(probe, 'purple.windup');
     const slots = Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => k !== free).map(k => [k, 1]));
-    const s = take(sceneQ({ quadrants: Q, n: 4, round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0) }), 'purple.hourly');
+    const s = take(sceneQ({ quadrants: Q, n: 4, round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0) }), 'purple.windup');
     expect(queuedTurns(s, 0)).toBe(0);
     expect(owl(s)).toEqual([]);
     expect(s.log).toContain('No extra minions in round I: P1 gets no extra turn from Night Owl.');

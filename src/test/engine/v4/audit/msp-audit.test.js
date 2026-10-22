@@ -66,7 +66,7 @@ describe('audit', () => {
   it('Bookkeeper + Night Owl: the same pay whichever card you bought first (Cory 2026-10-15)', () => {
     const run = members => {
       let s = sc(QP, { round: 2, left: 1, slots: { '0-0': 0, '0-1': 0, '0-2': 0, '0-3': 0 }, members: [members], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
-      s = take(s, 'purple.hourly'); // 5 purple; 5th minion
+      s = take(s, 'purple.windup'); // 5 purple; 5th minion
       while (s.pending?.kind === 'buy') s = move(s, 'pass');
       s = move(s, s.pending.options.find(o => o.kind === 'slot').id); // Night Owl's 6th
       while (s.pending?.kind === 'buy' && s.pending.player === 0) s = move(s, 'pass');
