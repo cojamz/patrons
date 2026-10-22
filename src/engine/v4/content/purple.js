@@ -241,16 +241,18 @@ export default {
       // replaces Overtime (Cory, 2026-10-15: "overtime fucking SUCKS": it spent a minion to hand one back, a space
       // for a space). Name and rule are Claude's fill-in, built while Cory looks: purple for a busy table.
       key: 'rushhour', ring: 2, name: 'Rush Hour', text: '+1 purple per 2 minions on the board, rounded down (everyone’s, this one included).',
-      estimate: ctx => Math.floor((allOnBoard(ctx) + 1) / 2),
-      resolve(ctx, p) { ctx.gain(p, P, Math.floor(allOnBoard(ctx) / 2), { fromAction: true }); },
+      // at least 1 (Cory, 2026-10-22: "all should give at least 1"): the round's first minion alone rounds to 0
+      estimate: ctx => Math.max(1, Math.floor((allOnBoard(ctx) + 1) / 2)),
+      resolve(ctx, p) { ctx.gain(p, P, Math.max(1, Math.floor(allOnBoard(ctx) / 2)), { fromAction: true }); },
     },
     {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', ring: 2, name: 'Crunch Time', text: 'Take two turns after this one.',
-      estimate: (ctx, p) => turnsNowEstimate(ctx, p, 2),
-      resolve(ctx, p) { turnsNow(ctx, p, 2, 'Crunch Time'); },
+      key: 'rally', ring: 2, name: 'Crunch Time', text: '+1 purple. Take two turns after this one.',
+      // Cory, 2026-10-22: "all should give at least 1"
+      estimate: (ctx, p) => 1 + turnsNowEstimate(ctx, p, 2),
+      resolve(ctx, p) { ctx.gain(p, P, 1, { fromAction: true }); turnsNow(ctx, p, 2, 'Crunch Time'); },
     },
   ],
 

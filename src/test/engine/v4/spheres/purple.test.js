@@ -133,7 +133,7 @@ describe('Purple actions', () => {
     const rally = purpleHeld => take(scene({ round: 3, res: [{ purple: purpleHeld }], queue: turns(0, 1, 0, 1, 0, 1) }), 'purple.rally');
     for (const held of [0, 3, 5, 30]) {
       const s = rally(held);
-      expect(R(s).purple).toBe(held); // nothing spent, nothing gained
+      expect(R(s).purple).toBe(held + 1); // nothing spent; its +1 purple (Cory, 2026-10-22: "all should give at least 1")
       expect(s.players[0].left).toBe(2); // the 3 it started with, less this one: no extra minion
       expect(after1(s)).toEqual([0, 0, 1, 1, 1]);
       expect(s.log).toContain("P1's Crunch Time: P1 takes their next 2 turns now.");
@@ -246,7 +246,7 @@ describe('Purple members', () => {
     expect(R(s)).toEqual({ gold: 1, red: 1, purple: 2, green: 1 });
     expect(s.players[0].discount).toBe(4);
     const t = take(scene({ round: 3, slots: { [JV]: 0 }, members: trio, queue: turns(0, 1, 0, 1, 0) }), 'purple.rally');
-    expect(R(t)).toEqual({ gold: 0, red: 0, purple: 0, green: 0 });
+    expect(R(t)).toEqual({ gold: 0, red: 0, purple: 1, green: 0 }); // Crunch Time's own +1 only
     expect(t.players[0].discount).toBe(0);
   });
   it('Overseer: whenever a rival takes an extra turn, gain half your purple, up to 4; not on Crunch Time', () => {
@@ -268,7 +268,7 @@ describe('Purple members', () => {
     expect(R(s).purple).toBe(4);
     expect(s.players[0].left).toBe(2 + 1);
     s = take(scene({ round: 3, res: [{ purple: 2 }], members: [['purple.doubletime']], queue: turns(0, 1, 0) }), 'purple.rally');
-    expect(R(s).purple).toBe(2);
+    expect(R(s).purple).toBe(2 + 1); // its +1, nothing halved
     expect(s.players[0].left).toBe(2); // Crunch Time adds no minion
     expect(s.log.some(l => l.includes('Corner-Cutter'))).toBe(false);
   });
