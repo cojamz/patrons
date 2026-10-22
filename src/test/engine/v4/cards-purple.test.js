@@ -43,7 +43,7 @@ describe('Purple actions', () => {
       expect(P(s)).toBe(held);
       expect(turnsQueued(s, 0)).toBe(0); // no extra minion
       expect(upcoming(s)).toEqual([0, 0, 1, 1]);
-      expect(named(s, 'Crunch Time')[0]).toBe("P1's Crunch Time: P1 takes 2 more turns now and finishes the round early.");
+      expect(named(s, 'Crunch Time')[0]).toBe("P1's Crunch Time: P1 takes their next 2 turns now.");
     }
   });
 });

@@ -141,7 +141,7 @@ export function turnsNow(ctx, p, n, why) {
   }
   const k = tasks.length;
   const few = k < n ? ` (${k === 1 ? 'their last minion' : `their last ${k} minions`})` : '';
-  ctx.log(`${p.name}'s ${why}: ${p.name} takes ${k === 1 ? '1 more turn' : `${k} more turns`} now and finishes the round early${few}.`);
+  ctx.log(`${p.name}'s ${why}: ${p.name} takes ${k === 1 ? 'their next turn' : `their next ${k} turns`} now${few}.`);
   return k;
 }
 /** Playing your own turns sooner: each one that jumps rivals gets first pick of the spaces they'd have taken. */
@@ -209,7 +209,7 @@ export default {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take 2 more turns now. You finish the round early.',
+      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take your next 2 turns now.',
       estimate: (ctx, p) => turnsNowEstimate(ctx, p, 2),
       resolve(ctx, p) { turnsNow(ctx, p, 2, 'Crunch Time'); },
     },

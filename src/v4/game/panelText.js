@@ -61,7 +61,7 @@ const P = {
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
     rushhour: (r, now) => ({ main: `+${now ?? 1} purple`, second: 'per 2 minions on the board', note: now == null ? null : 'this one too' }),
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
-    rally: { verb: '2 more turns now' },
+    rally: { verb: 'Your next 2 turns, now' },
   },
   silver: {
     // "others get 1" left "1 of what?" (live panel r1): silver
