@@ -8,7 +8,7 @@ import { panelWords } from './game/panelText.js';
 // Seat colors are an accent now (identity is the player's emoji on their leader, Cory 2026-10-14): ochre, teal,
 // terracotta-rose, lavender-plum, each ΔE ≥ 30 (CIE76) from every resource color on screen (the Lamplit inks) and
 // readable on walnut, measured in src/test/v4/ui/colors.test.js.
-export const PLAYER_COLORS = ['#9c845a', '#48c8d4', '#fca2a8', '#eac0fc'];
+export const PLAYER_COLORS = ['#9c845a', '#48c8d4', '#fca2a8', '#eac0fc', '#b8e07a', '#f0b45c']; // P5 and P6: five and six players (2026-10-22)
 export const SEAT_SIGILS = ['circle', 'triangle', 'square', 'star'];
 export const seatSigil = id => SEAT_SIGILS[id % SEAT_SIGILS.length];
 /** The emoji a player picked (their minions, and the emblem on their leader), or the seat's default. */

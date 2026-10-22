@@ -536,10 +536,10 @@ function turnCardPlace(card, root) {
 }
 
 /** Which player sits in each corner chair: you bottom left (0), then clockwise from you (1 top left, 2 top right,
- *  3 bottom right). Empty chairs (2–3 players) stay empty. */
+ *  3 bottom right; 4 and 5 at five and six players). Empty chairs (2–3 players) stay empty. */
 function seatCorners(state, me) {
   const n = state.players.length, base = me != null ? me : 0;
-  return [0, 1, 2, 3].map(k => (k < n ? (base + k) % n : null));
+  return Array.from({ length: Math.max(4, n) }, (_, k) => (k < n ? (base + k) % n : null)); // five and six: chairs 4 and 5
 }
 
 /** On phones the buy step's other answer also lives with the question (the shop and its "Done, no buy" are a scroll
@@ -652,7 +652,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const rail = r.querySelector(':scope > .lt-snake');
     const seats = [...r.querySelectorAll(':scope > .lt-seat')].filter(e => e.dataset.pid != null);
     if (!rail || !rail.offsetHeight) { seats.forEach(e => { e.style.removeProperty('--y'); e.style.removeProperty('--seat-h'); }); return; }
-    const GAP = 8;
+    const GAP = seats.length >= 5 ? 4 : 8; // five and six chairs stand closer (seat.css, 2026-10-22)
     // every chair has one height (mockup A, Cory 2026-10-21: "a little bigger so there's more room to show members"):
     // an equal share of the column, less what stands under the chairs there (layout.css --seats-reserve: the story and
     // the turn card), between --seat-min and --seat-max. It comes from the window, never from what a chair holds, so no
@@ -1411,7 +1411,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   if (phase === 'place') stepRef.current = 'place'; else if (phase === 'buy' || phase === 'pay') stepRef.current = 'buy';
   const step = phase === 'choose' ? stepRef.current : phase === 'pay' ? 'buy' : phase;
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-shop-details={shopDetails || undefined} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-presentation-moves={interactionState.moves} data-animating={physicalState !== interactionState || undefined} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-shop-details={shopDetails || undefined} data-phase={phase} data-seats={state.players.length} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-presentation-moves={interactionState.moves} data-animating={physicalState !== interactionState || undefined} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}

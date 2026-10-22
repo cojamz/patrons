@@ -1,6 +1,7 @@
 // Home, local setup and the online lobby.
 import { useEffect, useRef, useState } from 'react';
-import { PLAYER_COLORS, lowColor } from '../format.js';
+import { MAX_PLAYERS as MAX_SEATS } from '../../engine/v4/index.js';
+import { playerColor, lowColor } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
 import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
@@ -205,6 +206,7 @@ function TableChip({ id }) {
 
 // Every seat wears an emoji, none twice: the first person starts with the one this browser picked last, everyone
 // else (bots too) with a random free one. People outrank bots: picking a bot's emoji makes the bot take another.
+const padSeats = seats => [...seats, ...Array.from({ length: Math.max(0, MAX_SEATS - seats.length) }, (_, k) => ({ kind: 'empty', name: `P${seats.length + k + 1}` }))];
 function dressSeats(seats) {
   const first = seats.findIndex(s => s.kind === 'human');
   const wish = lastEmoji();
@@ -214,9 +216,10 @@ function dressSeats(seats) {
 }
 
 export function LocalSetup({ initial, onStart, onBack }) {
-  const [seats, setSeats] = useState(() => dressSeats(initial?.seats || [
+  // four seats play by default; P5 and P6 wait empty (Cory, 2026-10-22: five and six players)
+  const [seats, setSeats] = useState(() => dressSeats(padSeats(initial?.seats || [
     { kind: 'human', name: 'P1' }, { kind: 'bot', name: 'P2' }, { kind: 'bot', name: 'P3' }, { kind: 'bot', name: 'P4' },
-  ]));
+  ])));
   // one speed (Quick / Steady / Relaxed): the bots' pace and how moves play out, the same setting as the ☰ menu's
   const [speed, setSpeed] = useState(motionSpeed);
   const [level, setLevel] = useState(initial?.level || DEFAULT_BOT_LEVEL);
@@ -249,7 +252,7 @@ export function LocalSetup({ initial, onStart, onBack }) {
         <h2>Play on this device</h2>
         <p className="hint">Everyone plays on this screen. Bots fill the other seats.</p>
         {seats.map((s, i) => (
-          <div className="seat" key={i} style={{ '--pc': PLAYER_COLORS[i] }} data-seat-row={i}>
+          <div className="seat" key={i} style={{ '--pc': playerColor(i) }} data-seat-row={i}>
             {s.kind === 'human'
               ? <EmojiButton value={s.emoji} label={`${s.name.trim() || `P${i + 1}`}’s emoji`} taken={holders(i, 'human')} bots={holders(i, 'bot')} onPick={id => pickEmoji(i, id)} />
               : <EmojiFace id={s.kind === 'bot' ? s.emoji : null} title={s.kind === 'bot' ? `${emojiName(s.emoji)}: a random one for this bot. Pick it for a person and the bot takes another.` : null} />}
@@ -326,7 +329,7 @@ export function Lobby({ lobby, myId, onLeave }) {
         </div>
         <ul className="seats">
           {players.map(p => (
-            <li key={p.id} className="seat" style={{ '--pc': PLAYER_COLORS[p.seat % 4] }} data-lobby-seat={p.seat}>
+            <li key={p.id} className="seat" style={{ '--pc': playerColor(p.seat) }} data-lobby-seat={p.seat}>
               {p.id === me && lobby.setEmoji && view.status === 'lobby'
                 ? <EmojiButton value={p.emoji} label="Your emoji" taken={held('human')} bots={held('bot')} onPick={pickEmoji} />
                 : <EmojiFace id={p.emoji} title={p.emoji ? `${p.name}: ${emojiName(p.emoji)}` : null} />}
@@ -341,7 +344,7 @@ export function Lobby({ lobby, myId, onLeave }) {
         </ul>
         {isHost && (
           <div className="seat add-bot">
-            <button type="button" className="btn" data-add-bot disabled={players.length >= 4} title={`Add a ${levelInfo(botLevel).name} bot: ${levelInfo(botLevel).blurb}`} onClick={() => act(() => lobby.addBot(undefined, undefined, botLevel))}>Add bot</button>
+            <button type="button" className="btn" data-add-bot disabled={players.length >= MAX_SEATS} title={`Add a ${levelInfo(botLevel).name} bot: ${levelInfo(botLevel).blurb}`} onClick={() => act(() => lobby.addBot(undefined, undefined, botLevel))}>Add bot</button>
             <Seg label="Bot level" value={botLevel} options={BOT_LEVEL_INFO.map(l => [l.level, l.name, l.blurb])} onChange={setBotLevel} />
           </div>
         )}

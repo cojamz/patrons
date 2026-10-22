@@ -5,6 +5,6 @@ export {
   memberPrice, paymentPlan, followerPlan, paymentChoices, followerChoices, RING_VALUE, WORKERS, SHOP_SIZE, shopSize, TIERS, tierLeft, roman,
   contestTable, turnRail, roundOrder, roundWorkers,
 } from './core.js';
-export { quadrant, defById, DEFAULT_QUADRANTS, CLASSIC, classicFor, defaultQuadrants, allQuadrantIds } from './content/index.js';
+export { quadrant, defById, DEFAULT_QUADRANTS, CLASSIC, MAX_PLAYERS, classicFor, defaultQuadrants, allQuadrantIds } from './content/index.js';
 export { previewSpace, roundStartIncome, spaceTargets } from './preview.js';
 export { chooseBotMove, BOT_LEVELS, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL, botLevel, setBotLevels } from './bots.js';

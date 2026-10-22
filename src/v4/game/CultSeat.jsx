@@ -190,7 +190,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <div className="cs-setup wait" aria-live="polite" data-setup-wait="">
           <small className="cs-setup-say">{setupWait.id === pid ? 'Your pick is next' : `${setupWait.name} is picking`}</small>
           <span className="cs-setup-row" aria-hidden="true">
-            {(state.quadrants || []).slice(0, 4).map(q => <span key={q} className="token cs-setup-token" style={{ '--c': `var(--${q})` }} />)}
+            {(state.quadrants || []).map(q => <span key={q} className="token cs-setup-token" style={{ '--c': `var(--${q})` }} />)}
           </span>
         </div>
       )}

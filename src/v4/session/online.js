@@ -12,7 +12,7 @@
 //   moves/<key>:  { by, seat, move:{player, option}, n, mid } // guests (and the host) push; host consumes
 //   rejects/<playerId>/<key>: { mid, reason }                // host's answer to a refused move
 // Codes are 5 characters, so they can't collide with v3's 4-character rooms.
-import { isLegal, chooseBotMove, setBotLevels, BOT_LEVELS } from '../../engine/v4/index.js';
+import { isLegal, chooseBotMove, setBotLevels, BOT_LEVELS, MAX_PLAYERS } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { parseTable, fitTable, tableProblem } from '../tables.js';
 import { randomFreeEmoji, settleEmojis } from '../emojiPick.js';
@@ -25,7 +25,7 @@ export const VERSION_MISMATCH = 'That room is on a different version of Cults. R
 const sameBuild = room => !!(room && room.build && room.build.content === CONTENT_HASH);
 
 export const ROOM_ROOT = 'v3rooms';
-export const MAX_SEATS = 4;
+export const MAX_SEATS = MAX_PLAYERS;
 export const MIN_SEATS = 2;
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1
 const RECENT_KEEP = 24;
