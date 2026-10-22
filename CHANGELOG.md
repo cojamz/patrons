@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.43 — 2026-10-22 — unreleased
+
+- Five and six player games: Purple joins the board at 5 players, Yellow at 6, with shorter chairs so everyone fits.
+
 ## v0.8.42 — 2026-10-22 — unreleased
 
 - Purple round II: "+2 purple. This round you can place on taken spaces" replaces Plan Ahead.
