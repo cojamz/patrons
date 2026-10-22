@@ -25,6 +25,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Never mention Netlify: it's retired, and its red check on PR #1 is noise. "Fix CI" means our own tests and gates. The message check bounces it.
 - Never talk about sessions, tools or harness internals. If a tool is missing, say so once with the one thing he can do.
 - Label your own fill-ins; they are never approved until he says so.
+- When he asks for options in a live conversation, they come in about a minute. Never quote a wait for a short list (/brainstorm's quick path).
 - Voice notes ramble: pull out decisions, ideas and to-dos, log them, read back only what's ambiguous (the /note skill).
 
 ## Never make him ask
@@ -56,3 +57,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-22: Then Claude got it wrong the other way ("you lose that turn"); Cory: "you still don't get it… you don't lose a turn! give me an example". Third time on turn rules: always answer a turn-rule question with one played-out example first.
 - 2026-10-22: Cory, on a "2-3 days" estimate for 5-6 players: "by what measure. i bet you can build it way faster than that". Estimates are Claude's own build time in hours, with when it's live.
 - 2026-10-22: Cory, on "back with a fresh list in about 15 minutes" for a round II pitch: "15 minutes????? what the fuck". Pitches and recaps come within a few minutes; don't pad estimates.
+- 2026-10-22: Same correction, skill side: /brainstorm now has a one-minute path (a one-page cheatsheet read once per thread, ideas played through in your head); deep loading is for new directions only.

@@ -6,11 +6,27 @@ argument-hint: <the slot or question, e.g. "White round I, two empty slots">
 
 # Brainstorm with Cory
 
-Cory designs Cults; Claude brings ideas he can react to. He has said the ideas are lackluster and that Claude doesn't understand the game ("are you aware of how the game works?", "do you understand this game at all?"). Every one of those moments traces to one of three causes: an idea built on a piece of the game that doesn't work that way, an idea that was never played through a real turn, or a small formula on your own pile dressed up as a design. This skill exists to stop all three. It costs more reading than a quick pitch, and that's the point: one idea that lands beats five he has to wave off.
+Cory designs Cults; Claude brings ideas he can react to. He has called the ideas lackluster and asked whether Claude understands the game. Those moments came from three causes: an idea built on a piece of the game that doesn't work that way, an idea never played through a turn, or a small formula on your own pile dressed up as a design.
+
+**Speed is part of the job.** He's in a live conversation. A pitch takes about a minute, never a quoted wait ("15 minutes????? what the fuck"). The heavy reading happens once per thread; after that, pitch from what you already know.
+
+## Every pitch (about a minute)
+
+1. If this thread hasn't read it yet, read [references/cheatsheet.md](references/cheatsheet.md) (one page). That's the only required read.
+2. Think of 6 or so ideas as a verb on a real piece (a space, turn, the recruit, the shop row, the pile, a member of yours or a rival's, recruited followers, a contest), not a number on your pile.
+3. Play each through one turn in your head: what you'd get here versus your best other space, in round I and round III. Kill anything that fails the cheatsheet's list.
+4. Send 1 to 3 that touch different pieces: numbered, the card text as it would print, what changes for a player, one played example if needed, your pick in brackets, numbers marked as yours. At most eight lines.
+5. Log the pitch in design/pitch-ledger.md and push, after sending.
+
+If nothing survives, say so in one line and ask him one sharp question about the color. Don't send filler.
+
+## Deeper work (a new color or direction, or when he says the ideas miss)
+
+Only when there's time, never while he's waiting on a short list.
 
 ## 1. Load the real game
 
-Do all of this before writing a single idea, every time; the game changes daily, and memory of last week's cards is how wrong pitches happen.
+Once per thread, or when he says the ideas miss; the game changes daily.
 
 - Read [references/game-model.md](references/game-model.md) in full. It's the pieces, the scarce things by round, and the math.
 - Read [references/verdicts.md](references/verdicts.md) in full. It's what he said yes and no to, and why.
