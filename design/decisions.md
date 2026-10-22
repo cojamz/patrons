@@ -1124,3 +1124,4 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - 2026-10-22: Rush Hour's text says "rounded down" (Cory: "in general we round down"). Cory still doesn't like Rush Hour; it stays until a replacement is picked.
 - (Cory, 2026-10-22 11:39am Eastern) 5 and 6 player games: "i don’t think they need any special rules, just an additional color on the board per player". One color per player, as at 2-4. Scoped only, not built.
 - (Cory, 2026-10-22 11:42am Eastern) 5 and 6 players: cards that count "per rival", "per member that anyone has" or "per minion on the board" get stronger with more players: "i think that’s ok". Leave them as printed.
+- (Cory, 2026-10-22 11:46am Eastern) Yellow round III "Do one round I action of each other color" is out: round I actions get stronger in round III ("let's nix this idea"). He asked to see the live Yellow actions next.
