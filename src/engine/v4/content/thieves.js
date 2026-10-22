@@ -279,7 +279,7 @@ const thieves = {
           got = n; stash(ctx, p, take);
         }
         // whose call it was, what they gave and why that much (blind tester: "+4 or a member" paid +2, unexplained)
-        ctx.log(`${v.name} chose to pay ${got} (${takeWords(take)}) to keep ${c.def.name}: its cost is ${n}.`);
+        ctx.log(`${v.name} chose to pay ${p.name} ${got} (${takeWords(take)}) to keep ${c.def.name}: its cost is ${n}.`);
       } else {
         const short = total(v) < n;
         ctx.steal(p, v, { uid: data.uid });

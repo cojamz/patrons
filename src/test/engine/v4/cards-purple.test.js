@@ -35,7 +35,7 @@ describe('Purple actions', () => {
       expect(P(s)).toBe(held + 1); // its +1 purple (Cory, 2026-10-22: "all should give at least 1")
       expect(turnsQueued(s, 0)).toBe(0); // no extra minion
       expect(upcoming(s)).toEqual([0, 0, 1, 1]);
-      expect(named(s, 'Crunch Time')[0]).toBe("P1's Crunch Time: P1 takes their next 2 turns now.");
+      expect(named(s, 'Crunch Time')).toEqual(["P1's Crunch Time: +1 purple.", "P1's Crunch Time: P1 takes their next 2 turns now."]);
     }
   });
 });

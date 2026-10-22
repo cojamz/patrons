@@ -502,6 +502,23 @@ export function foldRepeats(lines, groups) {
   return { groups: out, times };
 }
 
+/**
+ * A turn's lines as [key, text], with back-to-back gains from the same card joined: "Ana's Last Call: +1 purple." and
+ * "Ana's Last Call: +4 followers." read "Ana's Last Call: +1 purple, +4 followers." (Cory, 2026-10-22: the log is
+ * scannable, concise but thorough). Only lines that are nothing but numbers ("+1 purple", "−2 blue") join.
+ */
+export function mergeGains(items) {
+  const out = [];
+  const gains = /^(.+?'s [^:]+): ([+−][^.()]*)\.$/;
+  for (const [j, text] of items) {
+    const m = text.match(gains), prev = out[out.length - 1];
+    const pm = prev && prev[1].match(gains);
+    if (m && pm && m[1] === pm[1]) { prev[1] = `${pm[1]}: ${pm[2]}, ${m[2]}.`; continue; }
+    out.push([j, text]);
+  }
+  return out;
+}
+
 // ---------- contest standings: the engine's contestTable, the same function that scores the round ----------
 /**
  * One contest for display: { qid, label, rule, counts, tiebreak, prize, rows:[{ id, score, shown, tiebreak }],
@@ -945,7 +962,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
       const rival = P.find(p => p.id !== actor && l.startsWith(`${p.name} `));
       if (rival) {
         const rest = l.slice(rival.name.length + 1), who2 = cap(nm(rival.id));
-        if ((m = rest.match(/^chose to pay (\d+) \((.+)\) to keep (.+): its cost is \d+\.$/))) { said.push(`${who2} paid ${m[1]} to keep ${m[3]} (its cost)`); continue; }
+        if ((m = rest.match(/^chose to pay (?:.+? )?(\d+) \((.+)\) to keep (.+): its cost is \d+\.$/))) { said.push(`${who2} paid ${m[1]} to keep ${m[3]} (its cost)`); continue; }
         if ((m = rest.match(/^chose to let (.+) go to .+ rather than pay (\d+)\.$/))) { said.push(`${who2} let ${m[1]} go rather than pay ${m[2]}`); continue; }
         if ((m = rest.match(/^couldn't pay (\d+) \(held (\d+)\), so lost (.+) to .+\.$/))) { said.push(`${who2} couldn’t pay ${m[1]}, so lost ${m[3]}`); continue; }
         if ((m = rest.match(/^gets no replacement: (.+)\.$/))) { said.push(`${who2} gets no replacement: ${m[1]}`); continue; }

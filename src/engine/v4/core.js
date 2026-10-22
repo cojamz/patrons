@@ -94,7 +94,7 @@ export function applyMove(prev, move, { effects = false } = {}) {
   // effects (effects.js): what moved and why, for the table to play back; recorded only when asked (the play session)
   if (effects) startEffects(state, moveCause(state, task, move), { followers, worth: valueOf });
   try {
-    resolveTask(state, task, move.option);
+    accounted(state, causeOf(state, task), () => resolveTask(state, task, move.option), task.p);
     clearFresh(state);
     advance(state);
   } catch (err) { if (effects) abandonEffects(); throw err; }
@@ -386,7 +386,7 @@ function advance(state) {
       continue;
     }
     state.queue.shift();
-    runTask(state, task);
+    accounted(state, causeOf(state, task), () => runTask(state, task), task.p);
     clearFresh(state);
   }
   state.pending = null;
@@ -681,7 +681,7 @@ function runTask(state, task) {
       eachMemberOf(state, p, (card, def) => { if (def.onRelease) def.onRelease(ctx, p, card, defById(task.def)); });
       return;
     }
-    case 'endRound': return endRound(state);
+    case 'endRound': return accounted(state, null, () => endRound(state));
     case 'afterRound':
       if (state.round < 3) state.queue.push({ t: 'round', r: state.round + 1 });
       else state.queue.push({ t: 'finish' });
@@ -1132,8 +1132,7 @@ function eachMemberOf(state, p, fn) {
     const card = state.cards[uid];
     for (const def of effectiveDefs(card)) {
       const before = traceSnapshot(state);
-      underCause({ kind: 'member', pid: p.id, uid, def: card.def }, () => fn(wrap(state, card), def));
-      traceChanges(state, before, p, def);
+      accounted(state, null, () => { underCause({ kind: 'member', pid: p.id, uid, def: card.def }, () => fn(wrap(state, card), def)); traceChanges(state, before, p, def); });
     }
   }
 }
@@ -1533,6 +1532,84 @@ function fCredit(state, mark, label, owner = null) {
  */
 function note(state, p, member, text, res = null) {
   if (Array.isArray(state.notes)) state.notes.push({ p: p.id, member, text, ...(res ? { res } : {}) });
+}
+
+// ---------- the log's accounting: every change to a player is said ----------
+// Cory, 2026-10-22: "every game-state change and why… resource gain or spend, follower gain, member movement, shop
+// update… who did it, who gained who lost". Each task runs in a frame; when it ends, any change to a player's resources,
+// followers or members that no line of its own said (and no member hook inside it said) is logged under what caused it
+// ("Tide: P2 +2 blue."), and cards new in the shop are named. New cards log themselves this way.
+const frames = [];
+function accounted(state, cause, fn, actor = null) {
+  const f = { cause, actor, len: state.log.length, last: state.log[state.log.length - 1], shop: [...state.shop], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus, members: [...o.members] })), inner: state.players.map(() => ({ res: {}, bonus: 0 })), innerLines: [] };
+  frames.push(f);
+  let ok = false;
+  try { const out = fn(); ok = true; return out; } finally {
+    frames.pop();
+    if (ok) settle(state, f);
+  }
+}
+const freshSince = (state, f) => (f.len <= state.log.length && state.log[f.len - 1] === f.last ? state.log.slice(f.len) : state.log.slice(state.log.lastIndexOf(f.last) + 1));
+function settle(state, f) {
+  const parent = frames[frames.length - 1];
+  if (f.cause !== null) {
+    let own = freshSince(state, f);
+    for (const l of f.innerLines) { const i = own.indexOf(l); if (i >= 0) own = [...own.slice(0, i), ...own.slice(i + 1)]; }
+    // a line naming the player (or everyone) and a number of that color says it (a recruit's "5 yellow" covers the
+    // −4 left after its own +1 member line)
+    const says = (o, re) => own.some(l => (l.includes(o.name) || /everyone|each player|all players/i.test(l)) && re.test(l));
+    const out = [];
+    state.players.forEach((o, i) => {
+      const b = f.players[i], inn = f.inner[i];
+      if (!b) return;
+      const parts = [];
+      for (const r of Object.keys({ ...b.res, ...o.res })) {
+        const d = (o.res[r] || 0) - (b.res[r] || 0) - (inn.res[r] || 0);
+        if (d && !says(o, new RegExp(`\\d ${r}\\b`))) parts.push(`${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`);
+      }
+      const fd = o.bonus - b.bonus - inn.bonus;
+      if (fd && !says(o, /\d followers?\b|[+−-]\d/)) parts.push(`${fd > 0 ? '+' : '−'}${Math.abs(fd)} follower${Math.abs(fd) === 1 ? '' : 's'}`);
+      const name = u => cardDef(state, u).name;
+      for (const u of o.members.filter(u => !b.members.includes(u))) if (!own.some(l => l.includes(name(u)))) parts.push(`gets ${name(u)}`);
+      for (const u of b.members.filter(u => !o.members.includes(u))) if (!own.some(l => l.includes(name(u)))) parts.push(`loses ${name(u)}`);
+      if (parts.length) out.push({ o, text: parts.join(', ') });
+    });
+    // said right where its cause starts: under "P2 took Tide", before what the space's members did
+    if (out.length) {
+      // "P2's Tide: +3 blue." when only the one who did it changed, else who gained and who lost: "Hold Up: P3 −1 purple."
+      const mine = f.actor != null && out.length === 1 && out[0].o.id === f.actor;
+      const said = mine ? (f.cause ? `${out[0].o.name}'s ${f.cause}: ${out[0].text}` : `${out[0].o.name}: ${out[0].text}`)
+        : `${f.cause ? `${f.cause}: ` : ''}${out.map(e => `${e.o.name} ${e.text}`).join('; ')}`;
+      log(state, `${said}.`);
+      const at = state.log.length - 1 - freshSince(state, f).length + 1;
+      if (at >= 0 && at < state.log.length - 1) state.log.splice(at, 0, state.log.pop());
+    }
+  }
+  if (!parent) {
+    const added = state.shop.filter(u => !f.shop.includes(u));
+    if (added.length && state.round > 0) log(state, `New in the shop: ${added.map(u => cardDef(state, u).name).join(', ')}.`);
+    return;
+  }
+  // everything in this frame is now said: the frame around it doesn't say it again
+  state.players.forEach((o, i) => {
+    const b = f.players[i], inn = parent.inner[i];
+    if (!b) return;
+    for (const r of Object.keys({ ...b.res, ...o.res })) inn.res[r] = (inn.res[r] || 0) + (o.res[r] || 0) - (b.res[r] || 0);
+    inn.bonus += o.bonus - b.bonus;
+  });
+  parent.innerLines.push(...freshSince(state, f));
+}
+/** What a task's changes are logged under: the space it resolves, or the card that asked the question. */
+function causeOf(state, task) {
+  if (task.t === 'act') { try { return actionAt(state, task.q, task.i).name; } catch { return ''; } }
+  if (task.t === 'choose' || task.t === 'content') {
+    const by = task.data?.by || task.data?.who;
+    if (typeof by === 'string') return by;
+    const pr = String(task.prompt || '');
+    if (pr.includes(':') && !/^P\d|^[^:]*'s turn/.test(pr)) return pr.split(':')[0];
+    if (task.cause?.def) { try { return defById(task.cause.def).name; } catch { /* unknown */ } }
+  }
+  return '';
 }
 
 function log(state, text) {

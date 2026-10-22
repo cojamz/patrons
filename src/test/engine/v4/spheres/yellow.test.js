@@ -102,7 +102,7 @@ describe('Yellow actions', () => {
     s = move(s, 'done');
     expect(R(s)).toEqual({ gold: 3, red: 1, yellow: 3, green: 1 });
     expect(s.pending.kind).toBe('buy');
-    expect(s.log.join('\n')).toContain('P1 transmuted 1 gold → yellow, 1 gold → green.');
+    expect(s.log.join('\n')).toContain('P1 swapped 1 gold for 1 yellow (Trade Seeds).\nP1 swapped 1 gold for 1 green (Trade Seeds).');
   });
 
   it('Trade Seeds: stops after 3 swaps; with nothing held it still gives +2 yellow', () => {
