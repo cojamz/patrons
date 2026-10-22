@@ -109,6 +109,8 @@ const ALLOW = {
   // since 10-for-10 is unlimited, bots convert their purple before game end, so a holder can end with fewer than 3
   'purple.patience': 'pays only on 3+ purple still held at game end (cards-purple: Timekeeper)',
   // Overtime and Crunch Time went free (2026-10-15): only Taskmaster still pays purple for a turn, and both are cut
+  // extra turns got rarer when Purple's spaces moved turns instead (2026-10-22); the Purple members are being redone
+  'purple.foreman': 'pays only on an extra turn, from members now (cards-purple: Foreman)',
   'purple.doubletime': 'halves only Taskmaster’s paid turn now (cards-purple: Corner-Cutter); cut from the deck',
   // like Bodyguard and Agents above: a pure restriction (its cult's members drop out of every swap's options) that
   // changes no number, so there is no payout line to name it (v0.8.2 Red deck)
