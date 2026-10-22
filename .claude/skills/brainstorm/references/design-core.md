@@ -80,12 +80,12 @@ Totals count the space's own +1. A space with a real effect usually gives just t
 - **Round III spaces: the burst, 8 to 15 or more, or a felt limit broken.** Recruit a Member (any shop member free, up to about 10 in cost), Poach (a rival's member), Spree (3 recruits, up to 30 followers from a big pile), Greatest Hits (every action with your minion again), Crowd In (place on taken spaces), White's cash-in (all your white, no cap, no recruit).
 - **Members by cost (colored part + any, floor 2):**
   - 2: a body or a small trigger. Twins, Crew and Shift Crew (worth 2); Window Dresser, Makeover and Trendsetter (worth 3 with a shop effect); Cutpurse, Regular.
-  - 3 to 4: a narrow trigger or a steady trickle. Muse, Connoisseur, Snitch, Kingpin, Chronicler, Clockmaker, Host, Busker (+2 green now and each round start).
-  - 5 to 6: an engine piece. Proselytizer, Shoplifter, Patriarch, Panel (worth 3, counts as 3), Gossip, Hot Streak.
-  - 7 to 8: a rule-bender or centerpiece. Shopaholic ("You can always recruit twice"), Bodyguard, Go-Getter, Night Owl, Mentor & Protégé, Extra Shift.
+  - 3 to 4: a narrow trigger or a steady trickle. Muse, Connoisseur, Snitch, Kingpin, Chronicler, Clockmaker, Hot Streak, Host, Busker (+2 green now and each round start).
+  - 5 to 6: an engine piece. Proselytizer, Shoplifter, Patriarch, Panel (worth 3, counts as 3).
+  - 7 to 8: a rule-bender or centerpiece. Shopaholic ("You can always recruit twice"), Bodyguard, Go-Getter, Night Owl, Mentor & Protégé, Extra Shift, Gossip.
   - 9 to 10: game-shaping. Mob (worth 5, counts as 5, +1 per red member), Tribute Band, Extra Hand (+1 minion in round III).
   - A member should return about 1.5× its cost over the game, in the cult it belongs to. Price a little above what bots suggest; lift a weak card's followers before cutting its price.
-- **Range, not a point.** Each color wants a strong and a weak option in each ring (Open Door beside Open House), and members spread from 2 to 10, so a cheap pickup and a big buy sit in the same row.
+- **Range, not a point.** Each color wants a strong and a weaker option side by side (Cory likes weak twins next to strong spaces: the draft makes them matter), and members spread from 2 to 10, so a cheap pickup and a big buy sit in the same row.
 - Buy-followers-only should win about 25% of 4-player games. An idea that mostly helps someone who only recruits follower cards pushes the wrong way: it's arbitrage, not engine.
 
 ## 6. Prompts that start good ideas
