@@ -95,6 +95,14 @@ for (const [key, name, source] of [
   const art = BY_ID.get(`red.${source}`);
   if (art) BY_ID.set(`red.${key}`, { ...art, id: `red.${key}`, name });
 }
+// Purple's new members (Cory, 2026-10-22) reuse cut Purple portraits while names and artwork settle.
+for (const [key, name, source] of [
+  ['earlybird', 'Early Bird', 'bookkeeper'], ['bouncer', 'Bouncer', 'overseer'], ['gossip', 'Gossip', 'apprentice'],
+  ['extrashift', 'Extra Shift', 'errand'], ['closer', 'Closer', 'lamplighter'], ['streak', 'Hot Streak', 'taskmaster'],
+]) {
+  const art = BY_ID.get(`purple.${source}`);
+  if (art) BY_ID.set(`purple.${key}`, { ...art, id: `purple.${key}`, name });
+}
 // Feastmaker became Chefs (Cory, 2026-10-18): same drawing under the new id
 { const art = BY_ID.get('yellow.feastmaker'); if (art) BY_ID.set('yellow.chefs', { ...art, id: 'yellow.chefs', name: 'Chefs' }); }
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */

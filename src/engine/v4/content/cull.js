@@ -11,6 +11,7 @@ export const CUT = new Set([
   'market.minimalist', 'market.recluse', // Cory, 2026-10-21: Minimalist no; Recluse to another color
   'purple.errand', 'purple.foreman', 'purple.apprentice', 'purple.taskmaster', 'purple.doubletime',
   'purple.overseer', // Cory, 2026-10-18: cut; its replacement is his call
+  'purple.bookkeeper', 'purple.lamplighter', 'purple.patience', // Cory, 2026-10-22: his Purple set of 12
   'silver.silversmith', 'silver.toastmaster', 'silver.caterer', 'silver.dowager', 'silver.steward',
   'yellow.harmonist', 'yellow.sower', 'yellow.farmer', 'yellow.gardener', 'yellow.gleaner',
   'thieves.accomplice', 'thieves.mole', 'thieves.lightfingers', 'thieves.bigscore', 'thieves.lookout',

@@ -102,11 +102,14 @@ export function extraTurns(ctx, p, n = 1, why = null) {
 
 /** p is passed over on their next turn this round; that minion places once the snake carries on past everyone else. */
 function skipNext(ctx, p, why, by = p, quiet = false) {
+  // Early Bird (Cory, 2026-10-22): "your turns cannot be skipped", your own Sleep In and Last Call too
+  const guard = ctx.membersOf(p).find(c => c.def.noSkip || (c.copy && c.copy.endsWith('.earlybird')));
+  if (guard) { if (!quiet) ctx.log(`${p.name}'s Early Bird: ${p.name}'s turn can't be skipped.`); return false; }
   const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn');
   const close = q.findIndex(t => t.t === 'allPlaced'), stop = close < 0 ? q.length : close;
   let i = end + 1;
   while (i < stop && !(q[i].t === 'turn' && q[i].p === p.id)) i++;
-  if (i >= stop) { ctx.log(`${by.name}'s ${why}: ${p === by ? 'no turn' : `${p.name} has no turn`} left to skip this round.`); return; }
+  if (i >= stop) { ctx.log(`${by.name}'s ${why}: ${p === by ? 'no turn' : `${p.name} has no turn`} left to skip this round.`); return false; }
   // where that turn sat in the round's order, matched as the seats match it (as turnsNow does)
   const s = ctx.state, { order } = ctx.roundOrder();
   const seq = [...(s.turns || []).map(pid => ({ pid })), ...q.filter(t => t.t === 'turn').map(task => ({ pid: task.p, task }))];
@@ -121,11 +124,21 @@ function skipNext(ctx, p, why, by = p, quiet = false) {
     s.early.moves.push({ p: p.id, from: at, to: order.length - 1, why, late: true });
   }
   if (!quiet) ctx.log(`${by.name}'s ${why}: ${p.name} skips their next turn.`);
+  // Gossip (Cory, 2026-10-22): "+1 follower every time a players turn is skipped", anyone's, yours too
+  for (const o of ctx.state.players) for (const c of ctx.membersOf(o)) if (c.def.onSkip) ctx.asMember(o, c.def.name, () => c.def.onSkip(ctx, o, c, p));
+  return true;
 }
 /** How many turns p still has to come this round, after the one now running. */
 const turnsLeft = (ctx, p) => {
   const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
   return q.slice(end + 1, close < 0 ? q.length : close).filter(t => t.t === 'turn' && t.p === p.id).length;
+};
+/** Turns in a row p took just before the one now running (this round's turn record; the last entry is this turn). */
+const inARow = (ctx, p) => {
+  const turns = ctx.state.turns || [];
+  let k = 0;
+  for (let i = turns.length - 2; i >= 0 && turns[i] === p.id; i--) k++;
+  return ctx.state.current === p.id ? k : 0;
 };
 /** Whose turn comes next this round, after the one now running (yours too, at a snake end); null when none. */
 const nextTurnOf = ctx => {
@@ -256,8 +269,10 @@ export default {
         ctx.gain(p, P, 1, { fromAction: true });
         const k = turnsLeft(ctx, p), f = 2 * p.left;
         if (f) { p.bonus += f; ctx.log(`${p.name}'s Last Call: +${f} followers.`); }
-        for (let i = 0; i < k; i++) skipNext(ctx, p, 'Last Call', p, true);
-        if (k) ctx.log(`${p.name}'s Last Call: ${p.name} skips their turns until everyone else is out of minions.`);
+        let moved = 0;
+        for (let i = 0; i < k; i++) if (skipNext(ctx, p, 'Last Call', p, true)) moved++;
+        if (moved) ctx.log(`${p.name}'s Last Call: ${p.name} skips their turns until everyone else is out of minions.`);
+        else if (k) ctx.log(`${p.name}'s Early Bird: ${p.name}'s turns can't be skipped.`);
       },
     },
     {
@@ -272,7 +287,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 6, 2, 'Once per game, from round II: take an extra turn after this one.', {
+    m('secondwind', 'Go-Getter', 6, 2, 'Once per game: take an extra turn after this one.', {
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -359,6 +374,59 @@ export default {
     }),
     m('patience', 'Timekeeper', 4, 2, 'Game end: +1 follower per 3 purple.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
+    }),
+    // Cory's Purple members (2026-10-22); names are Claude's fill-ins; prices are the pricing thread's educated guesses
+    m('earlybird', 'Early Bird', 4, 3, 'Your turns can’t be skipped.', { noSkip: true }),
+    m('bouncer', 'Bouncer', 4, 2, 'When recruited: the next two rivals’ turns are skipped.', {
+      // the next two turns that belong to rivals; your own turn between them still happens (Cory's yes)
+      onRecruited(ctx, owner) {
+        const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
+        const who = q.slice(end + 1, close < 0 ? q.length : close).filter(x => x.t === 'turn' && x.p !== owner.id).slice(0, 2).map(x => x.p);
+        if (!who.length) { ctx.log(`${owner.name}'s Bouncer: no rival has a turn left to skip this round.`); return; }
+        // the second is the next rival turn after the first one moves to the end: skip in order
+        let n = 0;
+        while (n < 2) {
+          const q2 = ctx.state.queue, e2 = q2.findIndex(t => t.t === 'endTurn'), c2 = q2.findIndex(t => t.t === 'allPlaced');
+          const rest = q2.slice(e2 + 1, c2 < 0 ? q2.length : c2).filter(x => x.t === 'turn');
+          const next = rest.slice(0, rest.length - n).find(x => x.p !== owner.id);
+          if (!next) break;
+          skipNext(ctx, ctx.player(next.p), 'Bouncer', owner);
+          n++;
+        }
+      },
+    }),
+    m('gossip', 'Gossip', 2, 2, 'Whenever a player’s turn is skipped, +1 follower.', {
+      onSkip(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Gossip: +1 follower.`); },
+    }),
+    m('extrashift', 'Extra Shift', 5, 3, 'When recruited: +1 minion this round.', {
+      // the snake carries on until every minion is placed, so the new one goes after everyone else's
+      onRecruited(ctx, owner) {
+        if (ctx.state.round === 1) { ctx.log(`No extra minions in round I: ${owner.name} gets no extra minion from Extra Shift.`); return; }
+        if (!spareSpace(ctx)) { ctx.log(`${owner.name}'s Extra Shift: no free space this round, so no extra minion.`); return; }
+        const q = ctx.state.queue, close = q.findIndex(t => t.t === 'allPlaced');
+        q.splice(close < 0 ? q.length : close, 0, { t: 'turn', p: owner.id });
+        owner.left += 1;
+        ctx.log(`${owner.name}'s Extra Shift: ${owner.name} gets 1 more minion this round.`);
+        extraHooks(ctx, owner);
+      },
+    }),
+    m('closer', 'Closer', 4, 2, 'When you place your last minion each round: +4 purple.', {
+      afterAction(ctx, owner, card) {
+        if (owner.left !== 0 || card.paidRound === ctx.state.round) return;
+        card.paidRound = ctx.state.round;
+        ctx.gain(owner, P, 4);
+      },
+    }),
+    m('streak', 'Hot Streak', 3, 2, 'Once per round: +2 followers per turn in a row you’ve taken just before this one.', {
+      activate: 'round',
+      onRoundStart(ctx, owner, card) { card.used = false; },
+      onActivate(ctx, owner, card) {
+        const k = inARow(ctx, owner);
+        if (!k) { card.used = false; ctx.log(`${owner.name}'s Hot Streak: no turns in a row just before this one yet.`); return; }
+        owner.bonus += 2 * k;
+        ctx.log(`${owner.name}'s Hot Streak: +${2 * k} followers.`);
+      },
+      botActivate: (ctx, owner) => inARow(ctx, owner) >= 2 || (inARow(ctx, owner) >= 1 && ctx.state.round === 3),
     }),
     m('crew', 'Shift Crew', 1, 1, 'Worth 2 followers.', { f: 2, vanilla: true }),
   ],
