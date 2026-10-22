@@ -1,7 +1,7 @@
 // @vitest-environment node
 // Purple (extra turns): every action and every member with exact numbers, plus 200 seeded bot games on a Purple table.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createGame, applyMove, resume, followers, contextFor, roundOrder, turnRail } from '../../../../engine/v4/core.js';
+import { createGame, applyMove, resume, followers, contextFor, roundOrder, turnRail, actionAt } from '../../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
 import { registerQuadrant } from '../../../../engine/v4/content/index.js';
@@ -52,23 +52,33 @@ function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null
 const R = (s, i = 0) => s.players[i].res;
 const pass = s => (s.pending?.kind === 'buy' ? move(s, 'pass') : s);
 const turns = (...ps) => ps.map(p => ({ t: 'turn', p }));
+/** A bot move, minus Sleep In (it skips a turn; the turnsNow test counts the plain snake). */
+function noSkip(s, rand) {
+  const m = chooseBotMove(s, rand);
+  const o = s.pending?.options?.find(x => x.id === m.option);
+  if (o?.kind === 'slot' && o.q !== undefined && actionAt(s, o.q, o.i).key === 'skip') {
+    const alt = s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && actionAt(s, x.q, x.i).key !== 'skip');
+    if (alt) return { player: m.player, option: alt.id };
+  }
+  return m;
+}
 const nextPlacer = s => { while (s.pending && s.pending.kind !== 'place') s = pass(s); return s.pending?.player; };
 const JV = '0-0', RUSH = '0-1', HIRE = '1-2';
 // every round-I space but the ones named, taken by P2
 const fullRoundI = (...free) => Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => !free.includes(k)).map(k => [k, 1]));
 
-describe('Purple scoring: most purple members', () => {
-  it('pays the ring for purple members; ties get half and zero scores nothing', () => {
+describe('Purple scoring: most purple held', () => {
+  it('pays the ring for purple held; ties get half and zero scores nothing', () => {
     const s = scene({ res: [{ purple: 20 }, {}], members: [[], ['purple.foreman']], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most purple members: P2 +2');
-    const t = scene({ members: [['purple.foreman'], ['purple.clockmaker']], queue: [{ t: 'endRound' }] });
-    expect(t.log.at(-1)).toContain('Most purple members: P1 & P2 +1');
-    const u = scene({ res: [{ purple: 40 }, {}], queue: [{ t: 'endRound' }] });
-    expect(u.log.at(-1)).not.toContain('Most purple members');
+    expect(s.log.at(-1)).toContain('Most purple: P1 +2');
+    const t = scene({ res: [{ purple: 3 }, { purple: 3 }], queue: [{ t: 'endRound' }] });
+    expect(t.log.at(-1)).toContain('Most purple: P1 & P2 +1');
+    const u = scene({ members: [['purple.foreman'], []], queue: [{ t: 'endRound' }] });
+    expect(u.log.at(-1)).not.toContain('Most purple');
   });
-  it('ignores held purple and board minions when counting purple members', () => {
+  it('counts held purple, not purple members or board minions', () => {
     const s = scene({ res: [{ purple: 7 }], members: [['purple.foreman'], []], slots: { [JV]: 0, [RUSH]: 0, [HIRE]: 1 } });
-    expect(purple.scoring.score(contextFor(s), s.players[0])).toBe(1);
+    expect(purple.scoring.score(contextFor(s), s.players[0])).toBe(7);
     expect(purple.scoring.score(contextFor(s), s.players[1])).toBe(0);
     expect(onBoard(contextFor(s), s.players[0])).toBe(2);
   });
@@ -183,7 +193,7 @@ describe('Purple actions', () => {
     const seq = [];
     for (let guard = 0; guard < 500 && s.round === 1 && !s.over; guard++) {
       if (s.pending?.kind === 'place' && (seq.length === 0 || seq[seq.length - 1].turn !== s.turns.length)) { seq.push({ p: s.pending.player, turn: s.turns.length }); placed[s.pending.player]++; }
-      s = applyMove(s, chooseBotMove(s, rand));
+      s = applyMove(s, noSkip(s, rand));
     }
     expect(Object.values(placed)).toEqual([3, 3, 3, 3]);
     expect(seq.slice(0, 3).map(t => t.p)).toEqual([first, first, first]);
@@ -206,7 +216,7 @@ describe('Purple actions', () => {
 
 describe('Purple members', () => {
   const start = (members, extra = {}) => scene({ members, queue: [{ t: 'round', r: 2 }], ...extra });
-  // round II: no extra minions in round I (Cory, 2026-10-15); Clock In gives +5 there
+  // round II: no extra minions in round I (Cory, 2026-10-15); Roll Call gives +1 per minion on the board there
   const afterTake = (members, extra = {}) => take(scene({ round: 2, queue: turns(0, 1), members, ...extra }), 'purple.windup');
 
   it('Go-Getter: once per game, an extra turn right after this one', () => {
@@ -223,7 +233,7 @@ describe('Purple members', () => {
     expect(nextPlacer(s)).toBe(0);
   });
   it('Taskmaster: once per round, pay 5 purple for an extra turn', () => {
-    let s = afterTake([['purple.taskmaster']], { res: [{ purple: 1 }] }); // 1 + 5 = 6
+    let s = afterTake([['purple.taskmaster']], { res: [{ purple: 5 }] }); // 5 + 1 = 6
     const u = uidOf(s, 'purple.taskmaster', 0);
     s = move(s, `use:${u}`);
     expect(R(s).purple).toBe(1);
@@ -260,7 +270,7 @@ describe('Purple members', () => {
     expect(R(s, 1).purple).toBe(20);
   });
   it('Corner-Cutter: extra turns you pay purple for cost half, rounded up (Taskmaster 3); free spaces stay free and never name it', () => {
-    let s = afterTake([['purple.taskmaster', 'purple.doubletime']], { res: [{ purple: 0 }] }); // 5 purple
+    let s = afterTake([['purple.taskmaster', 'purple.doubletime']], { res: [{ purple: 4 }] }); // 4 + 1 = 5 purple
     s = move(s, `use:${uidOf(s, 'purple.taskmaster', 0)}`);
     expect(R(s).purple).toBe(2); // pays 5 → 3
     expect(s.log.some(l => l.includes('Corner-Cutter: 5 → 3'))).toBe(true);
