@@ -1118,3 +1118,5 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - (Cory, 2026-10-22 9:24am Eastern) Yellow round III "swap any resources one for one" and "raise a color to match your biggest": "both terrible".
 - (Cory, 2026-10-22 9:26am Eastern, Purple thread) "contests are always resources now": Yellow's contest becomes most yellow held, replacing most full sets (answers the open Yellow contest question).
 - (Cory, 2026-10-22 9:29am Eastern) Yellow round III direction: "Do one round I action of each other color" (+1 yellow): "i like that quite a bit. it becomes a bit too strong with green." Not locked; Claude pitched excluding copies (Echo) and copies of it giving only its +1 yellow.
+- (Cory, 2026-10-22 9:26am Eastern) Cut Clock In and Catch Up from Purple round I: "we need different ideas there". "+4 purple, skip your next turn" takes Clock In's spot (built as "Sleep In", Claude's fill-in name). Catch Up stays on the wheel only until its replacement is picked.
+- (Cory, 2026-10-22 9:26am Eastern) "Contests are always resources now": Purple's contest scores the purple you hold at round end.
