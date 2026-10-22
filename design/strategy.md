@@ -61,7 +61,7 @@ Not reworked:
 
 ## Checks for any pitch (from Cory's principles)
 
-Before pitching a color: does every action feel good and distinct to take; does the R3 action feel like the burst the engine builds toward; does Round I stay worth taking in round III; is the harm mild except in R3; is it playable on a real table (nothing remembers last round); does it avoid naming another color; does it give members that make radically different cults. Pitch themes and play, never cards or numbers.
+Placement accounting first (Claude, after Cory's Oct 22 "do you understand this game at all?"): every space costs a minion and a turn. A space that only hands back a turn or a minion (an extra minion, take a minion back, one turn after this one, Overtime, Linger, Rally) is net zero placements, so it must pay for itself some other way: move two or more turns (Crunch Time), pay resources for giving up position (the skip space), or change what you or a rival own or get. Write the net out before pitching. Before pitching a color: does every action feel good and distinct to take; does the R3 action feel like the burst the engine builds toward; does Round I stay worth taking in round III; is the harm mild except in R3; is it playable on a real table (nothing remembers last round); does it avoid naming another color; does it give members that make radically different cults. Pitch themes and play, never cards or numbers.
 
 ## Cory's taste, with evidence
 
