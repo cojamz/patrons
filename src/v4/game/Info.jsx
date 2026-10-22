@@ -623,7 +623,7 @@ export function previewWords(pv, state) {
     ...state.resources.map(r => span(pv.you.res[r], r, r)),
     span(pv.you.followers, 'follower'), span(pv.you.members, 'member'), span(pv.you.turns, 'extra turn'),
     // your own turns moved up (Crunch Time): sooner, not extra
-    pv.you.early && pv.you.early[1] > 0 ? (pv.you.early[0] === pv.you.early[1] ? `your next ${pv.you.early[1] === 1 ? 'turn' : `${pv.you.early[1]} turns`} now` : `up to ${pv.you.early[1]} of your turns now`) : null,
+    pv.you.early && pv.you.early[1] > 0 ? (pv.you.early[0] === pv.you.early[1] ? `${pv.you.early[1] === 1 ? 'a turn' : `${pv.you.early[1]} turns`} after this one` : `up to ${pv.you.early[1]} turns after this one`) : null,
     // a discount gained ("next member −4"); one used up isn't a gain, and printed "next member −-6" (w3 words pass)
     pv.you.discount && pv.you.discount[1] > 0 ? `next member −${Math.max(0, pv.you.discount[0]) === pv.you.discount[1] ? pv.you.discount[1] : `${Math.max(0, pv.you.discount[0])}–${pv.you.discount[1]}`}` : null,
   ].filter(Boolean);
@@ -639,7 +639,7 @@ export function previewWords(pv, state) {
 function sureWords(pv, state) {
   const fixed = (r, unit, plural = unit + 's') => (r[0] === r[1] ? span(r, unit, plural) : null);
   return [...state.resources.map(r => fixed(pv.you.res[r], r, r)), fixed(pv.you.followers, 'follower'), fixed(pv.you.members, 'member'), fixed(pv.you.turns, 'extra turn'),
-    pv.you.early && pv.you.early[0] > 0 && pv.you.early[0] === pv.you.early[1] ? `your next ${pv.you.early[0] === 1 ? 'turn' : `${pv.you.early[0]} turns`} now` : null,
+    pv.you.early && pv.you.early[0] > 0 && pv.you.early[0] === pv.you.early[1] ? `${pv.you.early[0] === 1 ? 'a turn' : `${pv.you.early[0]} turns`} after this one` : null,
     pv.you.discount && pv.you.discount[0] > 0 && pv.you.discount[0] === pv.you.discount[1] ? `next member −${pv.you.discount[0]}` : null]
     .filter(Boolean).join(', ');
 }
@@ -657,7 +657,7 @@ export function changeWords(d, state) {
   if (d.members > 0) gain.push(n(d.members, 'member') + who);
   if (d.followers > 0) gain.push(n(d.followers, 'follower'));
   if (d.turns > 0) gain.push(n(d.turns, 'extra turn'));
-  if (d.early > 0) gain.push(`your next ${d.early === 1 ? 'turn' : `${d.early} turns`} now`);
+  if (d.early > 0) gain.push(`${d.early === 1 ? 'a turn' : `${d.early} turns`} after this one`);
   if (d.discount > 0) gain.push(`next member −${d.discount}`);
   // a member traded for another (Swap Sides, Even Swap): the count stays, so say it, never "nothing"
   if (d.swapped > 0) gain.push(`${d.swapped} member${d.swapped === 1 ? '' : 's'} swapped`);
