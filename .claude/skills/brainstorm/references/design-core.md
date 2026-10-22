@@ -47,15 +47,17 @@ Each line names the card, his words, and the reason it worked. Generate new idea
 - **White's cash-in**, "Turn all your white into followers": *it breaks a limit everyone feels*, the 10-per-card cap and one recruit a turn, but only for the player who built a pile for it.
 - **Sending your own member to the bottom of the pile for white equal to its cost**: "improves on mine". *A sacrifice that turns a spent asset into fuel* for the color's burst.
 - **Rising Tide**, "Each rival +2 silver, then gain half the silver of the rival with the most": "I like this one a lot". *Generosity that sets up your grab.* The gift makes your take bigger.
+- **High Tide** (Silver), "Each rival +1 silver. +1 follower per silver the rival with the most holds" (wording pending): "1 is quite good. then you try to get others more silver, and you can pay yours down. I like it quite a bit". *It flips a resource's meaning*: you want rivals rich in silver and yourself poor, so gifts become a plan and spending your own silver is the right move.
 - **Recruit Twice / Spree**: *more of the scarcest thing late.*
 
 The shapes underneath, to generate from:
 1. **Trade a scarce thing for a different scarce thing**: position for followers, a member for fuel, a turn now for a turn later at a price. Write down what's given up; if nothing is, it's a number.
 2. **Break a limit everyone feels, for one player, once**: the recruit, the 10-card cap, taken spaces, turn order. Best in round III.
 3. **Read the table**: value from what others did, hold or placed (the previous action, the biggest pile, minions left). It scales without "× round".
-4. **Give another player the choice**: they pay or lose, they get a gift or a turn. Choices make table talk.
-5. **One visible count**: minions left, members held, the biggest pile. Players can do the math at a glance and plan around it.
-6. **One sentence, done when taken.** Lasting effects belong on members.
+4. **Flip what a resource means for this player**: High Tide makes rivals' silver your score and your own silver something to pay down.
+5. **Give another player the choice**: they pay or lose, they get a gift or a turn. Choices make table talk.
+6. **One visible count**: minions left, members held, the biggest pile. Players can do the math at a glance and plan around it.
+7. **One sentence, done when taken.** Lasting effects belong on members.
 
 ## 5. Balance anchors (for your own sanity check; numbers go to Cory as fill-ins)
 
