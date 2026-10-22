@@ -10,10 +10,9 @@ Kept by Cory (7:54pm Eastern):
 
 Cut: Rich Uncle, Magnate, Shareholder, Reinvestor. Recluse does not join White.
 
-Six new, pitched (Claude's, not approved):
-1. "When recruited: turn all your white into followers."
-2. "Whenever you send one of your members to the bottom of the pile, +2 followers."
-3. "Whenever a rival recruits followers, +1 white."
-4. "When recruited: +2 followers."
-5. "Whenever a rival gains 5 or more followers in one turn, +1 follower." (counter)
-6. "Game end: +1 follower per white member you have."
+New, kept (Oct 22 7:57pm):
+- "When recruited: turn all your white into followers." At least 2 white in its cost.
+
+Seven kept, five to go. Rejected: +2 followers whenever you send a member to the bottom (close, wording), whenever a rival recruits followers +1 white, When recruited +2 followers, rival gains 5+ followers +1 follower, Game end +1 per white member.
+
+Pitched next (Claude's): followers equal to the cost of your priciest other member (When recruited); whenever you recruit followers, +1 follower per white member; whenever you turn one of your members into followers or white, +2 followers.
