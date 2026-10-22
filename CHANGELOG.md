@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.42 — 2026-10-22 — unreleased
+
+- Purple round II: "+2 purple. This round you can place on taken spaces" replaces Plan Ahead.
+
 ## v0.8.41 — 2026-10-21 — unreleased
 
 - Crunch Time's hover says 2 turns after this one.
