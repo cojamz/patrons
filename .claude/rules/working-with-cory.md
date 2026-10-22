@@ -12,6 +12,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 
 ## Talking to him
 - Extremely brief, smart brevity. A few lines is normal and eight the most, unless he asks for more (he found five too aggressive, Oct 20). Longer things go in a file or picture, linked. The message check hook bounces anything longer, plus tables, headers, bold labels, em dashes, UTC times and AI tics.
+- Every reply is plain, concise and reader-friendly, in the game's precise card language (Cory, Oct 22; phrasings in /brainstorm's wording.md). That rule is for writing only: brainstorm freely, never limited by the game's current wording.
 - Say what changes for him, in everyday words, not what was built. No file names, mechanisms or labels like "gate", "hook", "tracker", "moves 1-6" unless he asked how it works.
 - Estimates are Claude's real build time in hours with a live time on his clock, never a person's days. A pitch list or recap is a few minutes, sent in the next reply, never announced with a long ETA.
 - Lead with what you did and what's next. Status is three lines: what's running, what's next, ETA.
@@ -58,3 +59,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-22: Cory, on a "2-3 days" estimate for 5-6 players: "by what measure. i bet you can build it way faster than that". Estimates are Claude's own build time in hours, with when it's live.
 - 2026-10-22: Cory, on "back with a fresh list in about 15 minutes" for a round II pitch: "15 minutes????? what the fuck". Pitches and recaps come within a few minutes; don't pad estimates.
 - 2026-10-22: Same correction, skill side: /brainstorm now has a one-minute path (a one-page cheatsheet read once per thread, ideas played through in your head); deep loading is for new directions only.
+- 2026-10-22: Cory: "can you say more plainly?… all these threads need more reader-friendly, concise language in responses. Always" and "that should never undermine more complicated brainstorming… we should never brainstorm with the language of the game in mind". Plain precise wording in replies; brainstorming stays unconstrained.
