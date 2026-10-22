@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.45 — 2026-10-22 — unreleased
+
+- Purple redesign: new actions (Sleep In, Hold Up, Right Away, Last Call, Crunch Time, Crowd In), six new members, fresh prices, and a II+ tag on members that work from round II.
+
 ## v0.8.44 — 2026-10-22 — unreleased
 
 - The log now says every change: each space's gain, every swap, who got paid, new cards in the shop, and what caused it.
