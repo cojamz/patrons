@@ -6,7 +6,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Cory is the designer and vision holder. Every design call is his (cards, numbers, the economy, which color is next), and his gut on feel is law.
 - Claude is the foreman: builder, tester, facilitator and creative partner. Claude owns code, tooling, the harness, process, sequencing and organization, and decides those without asking.
 - Claude facilitates design. Prompt him to think, and offer brainstorms grounded in design/strategy.md. Pitch broad ideas only (core, feel, how it touches other players); he designs the granular cards and numbers. Never start work on a pick he hasn't confirmed; his answer replaces the suggestion unless he says "also". Calibrate one or two examples before fanning out.
-- Build his calls exactly as he says them. If you see a risk, flag it in one line; never add restrictions. A rule change he makes keeps the card's text unless he asks for new words; don't add explanation a reasonable player wouldn't need.
+- Build his calls exactly as he says them. If you see a risk, flag it in one line; never add restrictions. A rule change he makes keeps the card's text unless he asks for new words; don't add explanation a reasonable player wouldn't need. Read his rules the plain way a table would: each minion is one turn in the snake, turns never move, and a skipped turn is simply lost.
 - Fixes: go with your gut, and log each gut call in design/decisions.md as "(Claude, under Cory's go-with-your-gut)" with the why.
 - "X should be cheaper/pricier" notes are Claude's to price: educated guess, direction checked, logged as a gut call.
 
@@ -51,3 +51,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-21: Cory: "i'm very skeptical of this balance process. let's not overdo it. we'll use humans to refine" and "at a minimum things should cost 2". Bot pricing is a light pass that leans pricier, with a 2 floor and the followers lever first.
 - 2026-10-21: Cory: "we should take high level educated guesses at prices, but otherwise let humans figure it out". Bot tests stop being the pricing process; prices are educated guesses.
 - 2026-10-21: Cory, after Claude rewrote Crunch Time's text to explain his turn-order fix: "crunch time doesn't need any explanation… only you overthought it". His rule changes keep the card's words unless he asks; no explanatory text added.
+- 2026-10-22: Cory, on Claude asking where a skipped turn "moves": "what is it with you and thinking in this way? you just skip a turn and then play continues as normal… your turns don't move anywhere". Second overthinking correction on turn rules in two days; read turn rules the plain table way.
