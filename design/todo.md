@@ -12,6 +12,7 @@ Cory's calls (numbered picks when asked):
 - [ ] Backlog (Cory, Oct 21): cut one Magenta member so Magenta has 12 like every color (it has 13 for now).
 - [ ] Member prices at 1.5× for Magenta, Blue (12, all approved), Red, Green, guests; then the follower-only check (Member balance thread, claude/members-blue-v2).
 - [ ] Gold, Silver, Yellow, Purple, White members: wait for each color's action redesign (Cory, Oct 21).
+- [ ] Silver redesign, paused Oct 22: round III High Tide and round II Rising Tide decided; second round II space, round I and members open. design/spheres/silver-redesign-2026-10-22.md
 - [ ] Neutral members (Cory, Oct 21): Front-runner 5, Tiebreaker in, Launderer 6, prices spread 3–9 (decisions.md). Build on his go; nothing ships from the rework panel before it.
 - [ ] Names: Recruit Bonus, Movement Penalty, Chronicler.
 - [ ] Greatest Hits repeating a copied Echo's gain [no]; tiebreaker most members [yes]; new abilities for the dropped cost reductions.
