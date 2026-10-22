@@ -13,7 +13,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 ## Talking to him
 - Extremely brief, smart brevity. A few lines is normal and eight the most, unless he asks for more (he found five too aggressive, Oct 20). Longer things go in a file or picture, linked. The message check hook bounces anything longer, plus tables, headers, bold labels, em dashes, UTC times and AI tics.
 - Say what changes for him, in everyday words, not what was built. No file names, mechanisms or labels like "gate", "hook", "tracker", "moves 1-6" unless he asked how it works.
-- Estimates are Claude's real build time in hours with a live time on his clock, never a person's days.
+- Estimates are Claude's real build time in hours with a live time on his clock, never a person's days. A pitch list or recap is a few minutes, sent in the next reply, never announced with a long ETA.
 - Lead with what you did and what's next. Status is three lines: what's running, what's next, ETA.
 - Every call is a plain yes/no question about what changes for a player, in game words, with when it applies (end of game, each round). No file names, test names or system terms (Cory, Oct 21, second phrasing correction this week).
 - Decisions come as a numbered list he answers by number ("1 yes, 2 no"), one line each, your default in brackets. Only design and feel calls go to him.
@@ -55,3 +55,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-22: Cory, on Claude asking where a skipped turn "moves": "what is it with you and thinking in this way? you just skip a turn and then play continues as normal… your turns don't move anywhere". Second overthinking correction on turn rules in two days; read turn rules the plain table way.
 - 2026-10-22: Then Claude got it wrong the other way ("you lose that turn"); Cory: "you still don't get it… you don't lose a turn! give me an example". Third time on turn rules: always answer a turn-rule question with one played-out example first.
 - 2026-10-22: Cory, on a "2-3 days" estimate for 5-6 players: "by what measure. i bet you can build it way faster than that". Estimates are Claude's own build time in hours, with when it's live.
+- 2026-10-22: Cory, on "back with a fresh list in about 15 minutes" for a round II pitch: "15 minutes????? what the fuck". Pitches and recaps come within a few minutes; don't pad estimates.
