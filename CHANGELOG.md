@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.39 — 2026-10-21 — unreleased
+
+- Crunch Time reads "Take your next 2 turns now" again.
+
 ## v0.8.38 — 2026-10-21 — unreleased
 
 - The final results open with every total already in place; no second count-up after round III.
