@@ -1,9 +1,3 @@
 {
-  "_about": "Browser gates already red on the live build. The check still runs them and prints KNOWN RED, but they don't fail the run; when one passes again, the check says to remove it. Add an entry only after seeing it fail on the live commit. Owner fixes it; nobody weakens it.",
-  "scoring.mjs": {
-    "live": "7d69cabb",
-    "since": "2026-10-21",
-    "owner": "Lag from the new deck thread",
-    "why": "real conflict: results replay the end-game count-up (Claude gut call 10-21) after round III already landed the bonuses; the test wants no second count. Cory decides."
-  }
+  "_about": "Browser gates already red on the live build. The check still runs them and prints KNOWN RED, but they don't fail the run; when one passes again, the check says to remove it. Add an entry only after seeing it fail on the live commit. Owner fixes it; nobody weakens it."
 }

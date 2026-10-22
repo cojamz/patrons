@@ -1475,8 +1475,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {state.over && !moment ? (
         <div className="main over">
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} meId={mySeats.length === 1 ? mySeats[0] : null} />
-          {/* the cults at the end, scored where their followers come from (FinalScore.jsx, taste rule 11) */}
-          <FinalScore state={state} me={me} hover={hover} onPick={onPick} CultSeat={CultSeat}>
+          {/* the cults at the end, with their final totals already in place: round III's Reckoning has scored the
+              end-game bonuses, so the results never count up a second time (Cory, 2026-10-21) */}
+          <FinalScore animate={false} state={state} me={me} hover={hover} onPick={onPick} CultSeat={CultSeat}>
             <Log state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} />
           </FinalScore>
         </div>
