@@ -57,7 +57,7 @@ Run each survivor past every failure mode in verdicts.md. Then compare with the 
 
 One message, at most eight lines, in the foreman voice:
 
-- A numbered list he can answer by number. Each line quotes the card text as it would print, then what changes for a player in a few words. One played example if the effect isn't obvious from the text.
+- A numbered list he can answer by number. Each line quotes the card text as it would print, then what changes for a player in a few words. Say what a card makes happen in its own printed terms; a loose summary ("does it twice", "basically a steal") reads to him as not knowing the card. One played example if the effect isn't obvious from the text.
 - Your default in brackets. Numbers are your fill-ins; say so once.
 - One or two ideas when calibrating a new slot or color; up to three when he asked for options. More only if he asks.
 - No prices on members unless he asks. No file names, system words or coined labels.
