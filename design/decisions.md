@@ -1110,3 +1110,4 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - (Cory, 2026-10-22 8:44am Eastern) Crunch Time taken on the first of a snake pair: four placements in a row is fine (the two Crunch turns use up your last two turns of the round; the paired turn stays). No change to the live rule.
 - (Cory, 2026-10-22 9:08am Eastern) Purple skip space pays +4 purple in every round (+3, plus the space's usual +1), and you skip your next turn. Which slot it takes and how the skip works still open.
 - (Cory, 2026-10-22 9:10am Eastern) Skip, corrected: you do NOT lose a turn or a minion. You're passed over once and play continues; you still place every minion (Claude's earlier "you lose that turn and its minion" line was wrong). Example read back to him for confirmation.
+- (Cory, 2026-10-22 9:11am Eastern) Skip confirmed by example: "+4 purple, skip your next turn" passes you over once; the snake carries on and you place every minion, just later.
