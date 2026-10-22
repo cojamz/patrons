@@ -1,4 +1,6 @@
-# White actions, current state (Oct 22)
+# White actions, current state (Oct 22, paused by Cory)
+
+Paused 7:18pm Eastern Oct 22 ("we are going to pause redesigns for now"). Also pending: "bury" as the word for sending a member to the bottom of the pile, or a member discard pile (his question); pitched, no answer.
 
 Cory's gist (Oct 22): White is "basically better exchange for followers". Every action gives at least 1 white (his rule); resource gains lean conservative. The follower cards in the shop (1, 5 and 10) are fixed by design; White's spaces never change them.
 
