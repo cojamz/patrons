@@ -30,7 +30,7 @@ ln -s "$ROOT/node_modules" "$TMP/source/node_modules"
 # A public release number identifies one immutable source; prevent silent reuse.
 if ! curl -fsSL --connect-timeout 5 --max-time 10 "$URL/build.json?version-check=$SHA" -o "$TMP/previous-build.json"; then
   # Some boxes can't reach github.io: the published stamp is also main's play/build.json.
-  git fetch -q origin main:refs/remotes/origin/main
+  git fetch -q origin '+main:refs/remotes/origin/main'
   git show origin/main:play/build.json > "$TMP/previous-build.json" || echo '{}' > "$TMP/previous-build.json"
   SERVED_UNREACHABLE=1
 fi
@@ -54,7 +54,7 @@ const {VERSION}=await import(pathToFileURL(process.argv[4]));
 writeFileSync(process.argv[2],JSON.stringify({version:VERSION,commit:process.argv[3],builtAt:new Date().toISOString()})+'\n');
 MANIFEST
 
-git fetch -q origin main:refs/remotes/origin/main
+git fetch -q origin '+main:refs/remotes/origin/main'
 git worktree add -q --detach "$WT" origin/main
 # Replace only play/ (and rules/ below), including dotfiles, and preserve every other main path.
 rm -rf "$WT/play"
@@ -79,7 +79,7 @@ for attempt in 1 2 3 4; do
   if git -C "$WT" push -q origin HEAD:main; then PUSHED=1; break; fi
   [ "$attempt" -lt 4 ] || break
   echo "main advanced; retrying publish ($attempt/4)"
-  git -C "$WT" fetch -q origin main:refs/remotes/origin/main
+  git -C "$WT" fetch -q origin '+main:refs/remotes/origin/main'
   git -C "$WT" rebase -q origin/main
 done
 [ "$PUSHED" = 1 ] || { echo 'Publishing failed after four push attempts.' >&2; exit 1; }
