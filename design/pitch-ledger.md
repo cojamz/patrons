@@ -104,3 +104,4 @@ Tags (✅ yes / ❌ no; ↔ and … uncounted): `too-strong` more power than its
 - 2026-10-09 · Each quadrant has one printed way to earn followers · ✅ · became the color contests · tags: scoring-shape
 - 2026-10-09 · Three alternate directions (Shrines, Patron Hand, Piles); Claude's pick Shrines · ❌ · "too much redesign" · tags: core-redesign
 - 2026-10-22 Purple, Rush Hour's round II spot (Cory: "i still don't like rush hour"): pitched "+1 purple. Trade places in turn order with a rival for the rest of this round" [Claude's pick] and "+1 purple per rival who places before your next turn". Awaiting Cory.
+- 2026-10-22 Cory on "trade places in turn order with a rival": "I like changing turn order. but it'd be very confusing at a table." Not taken as written; Rush Hour's spot still open.
