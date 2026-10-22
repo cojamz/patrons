@@ -7,9 +7,8 @@ Cory's gist (Oct 22): White is "basically better exchange for followers". Every 
 - Round II: "Send one of your members to the bottom of the pile, gain white equal to its cost." (Replaces his "get rid of a member for 4 followers": "3 is good improves on mine".)
 - Round III: "Turn all your white into followers." 1 for 1, no cap, no recruit spent ("the idea is you can have a lot of white and go above 10").
 
-## Open (Claude's fill-ins, not approved)
-- Round I: "Turn up to 2 × round of your resources into white." Feeds the round III cash-in.
-- Round I, last slot: "+1 white per member you have (at most 3)" (Claude's pick), or "Gain white equal to the cheapest shop member's cost".
+## Open
+- Round I: two slots empty. Rejected Oct 22 ("uhg i don't like these"): turn up to 2 × round of your resources into white; +1 white per member (at most 3); white equal to the cheapest shop member's cost.
 - Round II, second slot: empty. "This turn your follower recruit has no limit" was rejected (the follower cards are set).
 
 ## Dropped
