@@ -67,6 +67,7 @@ Unclaimed ground (Claude's read, a prompt, not a plan): helping rivals on purpos
 - **Extra turns and skips.** Extra turns only exist after round I and only while spare spaces remain. Snake ends already double up, so "two turns in a row" happens naturally.
 - **More players.** At 5 and 6 players Purple and Yellow join with no rule change. "Per rival", "per minion on the board" and "per member anyone has" grow with players, which Cory accepted (Oct 22).
 - **Between rounds.** Anything that pays when cards move between rounds is "too strong between rounds" (the row refreshes every round).
+- **Spaces resolve at once; members carry what lasts** (Cory, Oct 22). An action does everything when it's taken. Watching for events ("whenever"), effects for the rest of the round, and anything that waits for round end belong on members, whose card is the reminder. Lie Low's "can't be stolen from this round" is the exception he knows.
 - **Real-table test.** A player at a cardboard table must be able to run it without remembering past events (no "last round", no debts to track). A visible pile on the board is fine; a memory isn't.
 
 ## 6. Questions to answer before pitching

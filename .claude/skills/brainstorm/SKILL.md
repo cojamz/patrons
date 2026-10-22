@@ -41,6 +41,7 @@ This is the step that was skipped every time he lost patience. For every seed st
 - At 4 players (and 2 if it counts rivals or spaces): which round, who you are (holding what, roughly), what else you could place this minion on, and what you get here instead. The gain is this space minus the best alternative, not this space alone.
 - The same space taken in round III (round I spaces stay open all game), and what Green's copies do with it.
 - Placement accounting: does it hand back a minion or a turn and nothing else? Then it nets zero.
+- Does it finish the moment it's taken? A space that watches for later events or waits for round end is a member effect; move the idea to members or drop it.
 - What a rival at the table feels: nothing, a sting, a gift, a reason to block it.
 
 Two short examples of the walkthrough deciding:
