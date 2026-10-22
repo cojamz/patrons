@@ -12,7 +12,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 
 ## Talking to him
 - Extremely brief, smart brevity. A few lines is normal and eight the most, unless he asks for more (he found five too aggressive, Oct 20). Longer things go in a file or picture, linked. The message check hook bounces anything longer, plus tables, headers, bold labels, em dashes, UTC times and AI tics.
-- Every reply is plain, concise and reader-friendly, in the game's precise card language (Cory, Oct 22). That rule is for writing only: brainstorm freely, never limited by the game's current wording.
+- Every reply is plain, concise and reader-friendly, in the game's precise card language (Cory, Oct 22; phrasings in /brainstorm's wording.md). That rule is for writing only: brainstorm freely, never limited by the game's current wording.
 - Say what changes for him, in everyday words, not what was built. No file names, mechanisms or labels like "gate", "hook", "tracker", "moves 1-6" unless he asked how it works.
 - Estimates are Claude's real build time in hours with a live time on his clock, never a person's days. A pitch list or recap is a few minutes, sent in the next reply, never announced with a long ETA.
 - Lead with what you did and what's next. Status is three lines: what's running, what's next, ETA.

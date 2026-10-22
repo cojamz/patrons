@@ -13,9 +13,9 @@ Cory designs Cults; Claude brings ideas he can react to. He has called the ideas
 ## Every pitch (about a minute)
 
 1. Once per thread, before the first pitch: read [references/design-core.md](references/design-core.md) (how the game plays, each color's fantasy, why his favorite spaces landed) and [references/cheatsheet.md](references/cheatsheet.md) (the rules in ten lines and the kill list). About two minutes, then never again in that thread.
-2. Start from the color's sentence ("Purple: I act when it matters most") and the arc of this slot's round. Generate 6 or so ideas from the shapes in design-core section 4: trade one scarce thing for another, break a limit everyone feels, read the table, hand someone a choice, one visible count. Each idea names what the taker gives up.
+2. Start from the color's sentence ("Purple: I act when it matters most") and the arc of this slot's round. Generate 6 or so ideas from the shapes in design-core section 4: trade one scarce thing for another, break a limit everyone feels, read the table, hand someone a choice, one visible count. Each idea names what the taker gives up. Think freely here, in any terms that help; the game's exact wording comes later and must never narrow the ideas.
 3. Play each through one turn in your head: what you'd get here versus your best other space, in round I and round III. Cut anything on the cheatsheet's kill list.
-4. Send 1 to 3 that touch different pieces: numbered, the card text as it would print, what changes for a player, one played example if needed, your pick in brackets, numbers marked as yours. At most eight lines.
+4. Only now, write them up in the game's words ([references/wording.md](references/wording.md)), plainly and briefly. Send 1 to 3 that touch different pieces: numbered, the card text as it would print, what changes for a player, one played example if needed, your pick in brackets, numbers marked as yours. At most eight lines.
 5. Log the pitch in design/pitch-ledger.md and push, after sending.
 
 If nothing survives, say so in one line and ask him one sharp question about the color. Don't send filler.
