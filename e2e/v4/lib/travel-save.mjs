@@ -28,7 +28,9 @@ function takeOf(n) {
   if (t) return { from: t.from, to: t.to };
   // a steal that arrives as magenta: a rival's pay and your gain under one cause
   const p = fx(n).find(e => e.type === 'pay' && e.from.pid !== 0 && e.from.kind === 'stack');
-  const g = p && fx(n).find(e => e.type === 'gain' && e.to.pid === 0 && e.cause === p.cause);
+  // (two picks in one move pay and gain under one cause: pair the gain of the same color first)
+  const gs = p ? fx(n).filter(e => e.type === 'gain' && e.to.pid === 0 && e.cause === p.cause) : [];
+  const g = gs.find(e => e.to.r === p.from.r) || gs[0];
   return g ? { from: p.from, to: g.to } : null;
 }
 
