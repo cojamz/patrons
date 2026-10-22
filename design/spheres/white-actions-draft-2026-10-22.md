@@ -4,6 +4,17 @@ Paused 7:18pm Eastern Oct 22, resumed 7:28pm: "maybe white should be all about g
 
 Cory's gist (Oct 22): White is "basically better exchange for followers". Every action gives at least 1 white (his rule); resource gains lean conservative. The follower cards in the shop (1, 5 and 10) are fixed by design; White's spaces never change them.
 
+## White's six spaces (all set by Cory, Oct 22; every space +1 white)
+- Round I: "+1 follower and +1 white × round."
+- Round I: "This turn, +1 follower for every 2 resources you spend on your recruit."
+- Round I: "Turn 1 resource into 2 followers (2 resources in round II, 3 in round III)."
+- Round II: "Send one of your members to the bottom of the pile, gain followers equal to its cost."
+- Round II: "Send one of your members to the bottom of the pile, gain white equal to its cost."
+- Round III: "Turn all your white into followers." No cap, no recruit spent.
+- Contest: most white held.
+Numbers are Claude's fill-ins he took as pitched. Still open: the word for sending a member to the bottom ("bury" pitched). Next: 12 members.
+
+## History
 ## Approved by Cory
 - Round I: "This turn, +1 follower for every 2 resources you spend on your recruit." (Oct 22 7:35pm, "1 is really good"; the 1-per-2 is Claude's number.)
 - Round I: "+1 follower and +1 white × round." With the inherent +1 white: 3 / 5 / 7, matching Magenta's Help Yourself (white in place of the steal).
