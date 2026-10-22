@@ -1,9 +1,9 @@
 # Cults — How to play
 
-You lead a cult for three rounds. Send minions to the wheel, gather resources, recruit members and win contests. Whoever has the most **followers** after round III wins.
+For 2 to 6 players. You lead a cult for three rounds. Send minions to the wheel, gather resources, recruit members and win contests. Whoever has the most **followers** after round III wins.
 
 ## Pieces
-- **Followers** are your score, shown by a little-person mark. You start with 1 (yourself). Each member you hold adds what it is worth, the number beside the mark on its card. Followers you recruit or win are yours too, and only those can be sold or stolen.
+- **Followers** are your score, shown by the follower mark. You start with 1 (yourself). Each member you hold adds what it is worth, the number beside the mark on its card. Followers you recruit or win are yours too, and only those can be sold or stolen.
 - **Minions** are your workers, small copies of your emoji: 3 in round I, 4 in round II, 5 in round III.
 - **Resources** come in one color per sphere on the table. A resource is a plain dot in its color. A dot split into the table's colors means "any resources", your choice of colors.
 - **Members** are cards you recruit from the shop. Most have an ability. Each member counts as many members as it is worth in followers (at least 1), or more if its card says so. Followers from abilities never add members.

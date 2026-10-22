@@ -14,7 +14,7 @@ export const GLOSSARY = [
   { key: 'member', word: 'Member', link: false, match: /\bmembers?\b/,
     def: 'A card you recruit. It counts as its printed follower value in members, or a larger member count stated on the card. Bonus followers do not add members. Most cards have an ability.' },
   { key: 'worth', word: 'Worth', match: /\bworth \d+ followers?\b/i,
-    def: 'How many followers a member counts for while you hold it: the number beside the little person on the card.' },
+    def: 'How many followers a member counts for while you hold it: the number beside the follower mark on the card.' },
   { key: 'full set', word: 'Full set', match: /\bfull sets?\b/,
     def: 'One resource of each color on the table. Holding 2 of every color is 2 full sets; your fewest color sets how many you have.' },
   { key: 'plant', word: 'Plant', match: /\bplants?\b/,
