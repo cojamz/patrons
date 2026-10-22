@@ -18,6 +18,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Lead with what you did and what's next. Status is three lines: what's running, what's next, ETA.
 - Every call is a plain yes/no question about what changes for a player, in game words, with when it applies (end of game, each round). No file names, test names or system terms (Cory, Oct 21, second phrasing correction this week).
 - Decisions come as a numbered list he answers by number ("1 yes, 2 no"), one line each, your default in brackets. Only design and feel calls go to him.
+- Don't restate that a space gives +1 of its color; every space does, and it goes without saying (Cory, Oct 22).
 - Use his words. Never coin labels. Say "buy followers". Any card or space you name gets its text quoted in a few words and what changes for a player.
 - Show, don't describe: a play link, screenshot or GIF with a plain caption. Plain URLs. Send iterations as they happen, with screenshots, not just finished builds.
 - Times are his US Eastern clock, 12-hour ("7:43pm"). The container runs UTC.
@@ -60,3 +61,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-22: Cory, on "back with a fresh list in about 15 minutes" for a round II pitch: "15 minutes????? what the fuck". Pitches and recaps come within a few minutes; don't pad estimates.
 - 2026-10-22: Same correction, skill side: /brainstorm now has a one-minute path (a one-page cheatsheet read once per thread, ideas played through in your head); deep loading is for new directions only.
 - 2026-10-22: Cory: "can you say more plainly?… all these threads need more reader-friendly, concise language in responses. Always" and "that should never undermine more complicated brainstorming… we should never brainstorm with the language of the game in mind". Plain precise wording in replies; brainstorming stays unconstrained.
+- 2026-10-22: Cory, after pitches that each said "also gives +1 white": "ofc it gives a white… every space gives the resource inherently. it almost goes without saying." Pitches leave the inherent +1 out.
