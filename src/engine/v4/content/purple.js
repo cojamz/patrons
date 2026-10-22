@@ -209,7 +209,7 @@ export default {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take your next 2 turns now.',
+      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take two turns after this one.',
       estimate: (ctx, p) => turnsNowEstimate(ctx, p, 2),
       resolve(ctx, p) { turnsNow(ctx, p, 2, 'Crunch Time'); },
     },

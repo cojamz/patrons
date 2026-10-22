@@ -65,7 +65,7 @@ describe('panel words (w3)', () => {
 
   it('a space whose center or ring II panel drops line 2 is whole in line 1', () => {
     // w3b #18: "Extra turns for all purple" read as a group effect; w3b #19: "Ransom a member" read backwards
-    expect(panelText('purple', { key: 'rally' }, 3).verb).toMatch(/^Your next 2 turns, now$/);
+    expect(panelText('purple', { key: 'rally' }, 3).verb).toMatch(/^Two turns after this one$/);
     // w4b #5: "A rival's member or its cost" read as "I choose": the rival pays or loses, in line 1
     // shortened to fit on phones (v0.8.8 Magenta, 68c9bf0f): line 1 still says the rival decides, pay or lose
     expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^Rival pays or loses a member$/);
