@@ -932,6 +932,8 @@ export function turnStory(start, end, actor, me = null, mid = null) {
     const said = [];
     for (const l of ls) {
       const t = traceLine(l, P, res);
+      // the space's own gain, said by the log under its name ("Ana's Tide: +3 blue."), is the gross line's: not a member's
+      if (t && t.card === space && t.target === actor && !t.followers && !t.discount) continue;
       if (t) {
         for (const r in t.res) traced[t.target][r] = (traced[t.target][r] || 0) + t.res[r];
         tracedF[t.target] += t.followers;
