@@ -8,7 +8,7 @@ Cory's gist (Oct 22): White is "basically better exchange for followers". Every 
 - Round III: "Turn all your white into followers." 1 for 1, no cap, no recruit spent ("the idea is you can have a lot of white and go above 10").
 
 ## Open
-- Round I: two slots empty. Rejected Oct 22 ("uhg i don't like these"): turn up to 2 × round of your resources into white; +1 white per member (at most 3); white equal to the cheapest shop member's cost.
+- Round I: two slots empty. Rejected Oct 22 ("uhg i don't like these"): turn up to 2 × round of your resources into white; +1 white per member (at most 3); white equal to the cheapest shop member's cost. Also rejected (other thread's calibration): "+1 white. This round, whenever a rival buys followers, +1 white" ("that's more of a member effect… i don't like actions with ongoing effects"): spaces resolve at once.
 - Round II, second slot: empty. "This turn your follower recruit has no limit" was rejected (the follower cards are set).
 
 ## Dropped
@@ -16,4 +16,4 @@ Cory's gist (Oct 22): White is "basically better exchange for followers". Every 
 - "+1 follower × round" alone: worse than Help Yourself.
 
 ## For members later
-- "Take 2 followers from each rival ahead of you" (his round III pick before the exchange idea) as a White member, the catch-up. Recluse moves in from Blue.
+- "Take 2 followers from each rival ahead of you" (his round III pick before the exchange idea) as a White member, the catch-up. Recluse moves in from Blue. "Whenever a rival buys followers, +1 white" as a member.
