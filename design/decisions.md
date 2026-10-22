@@ -1122,3 +1122,4 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - (Cory, 2026-10-22 9:26am Eastern) "Contests are always resources now": Purple's contest scores the purple you hold at round end.
 - 2026-10-22: Purple round I: the rival skip replaces Catch Up (Cory: "the skip should replace catch up"; "1 purple per round i think is right but the wording is wrong"). Built as Hold Up: "+1 purple (+2 in round II, +3 in round III). A rival you pick skips their next turn." Name and wording are Claude's fill-in, pending Cory.
 - 2026-10-22: Rush Hour's text says "rounded down" (Cory: "in general we round down"). Cory still doesn't like Rush Hour; it stays until a replacement is picked.
+- (Cory, 2026-10-22 11:39am Eastern) 5 and 6 player games: "i don’t think they need any special rules, just an additional color on the board per player". One color per player, as at 2-4. Scoped only, not built.
