@@ -25,7 +25,7 @@ const key = (q, k) => `${QUADS.indexOf(q)}-${quadrant(q).actions.findIndex(a => 
 const GH = key('echo', 'eternity');
 const COPIES = [key('echo', 'echo'), key('echo', 'refrain')];
 // what you take in round III before Greatest Hits, first that's open (a copy space at least once)
-const WANT = [key('echo', 'echo'), key('echo', 'refrain'), key('gold', 'steal'), key('red', 'hireup'), key('purple', 'windup'), key('red', 'turnout'), key('echo', 'hum'), key('gold', 'rush')];
+const WANT = [key('echo', 'echo'), key('echo', 'refrain'), key('gold', 'steal'), key('red', 'hireup'), key('red', 'turnout'), key('echo', 'hum'), key('gold', 'rush')];
 
 /** Round III, P1 (the only person) to place their last minion, having taken a mix that includes a copy space. */
 function copyAllSave() {

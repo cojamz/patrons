@@ -9,6 +9,9 @@ import { describe, it, expect } from 'vitest';
 import { defById } from '../../../engine/v4/content/index.js';
 import { take, move, uidOf } from './helpers.js';
 import { sceneQ, linesNaming, spaceOf } from './cards-helpers.js';
+import { useRetiredRollCall } from './retired-overtime.js';
+
+useRetiredRollCall(); // Roll Call, a plain purple space, kept for these tests (it left the board 2026-10-22)
 
 const Q = ['gold', 'red', 'purple', 'green'];
 const sc = o => sceneQ({ quadrants: Q, ...o });

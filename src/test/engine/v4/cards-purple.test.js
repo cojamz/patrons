@@ -5,9 +5,10 @@ import { describe, it, expect } from 'vitest';
 import { followers, turnRail } from '../../../engine/v4/core.js';
 import { take, move, uidOf } from './helpers.js';
 import { sceneQ, buy, linesNaming, passBuys } from './cards-helpers.js';
-import { useRetiredOvertime } from './retired-overtime.js';
+import { useRetiredOvertime, useRetiredRollCall } from './retired-overtime.js';
 
 useRetiredOvertime();
+useRetiredRollCall();
 
 const Q = ['gold', 'red', 'purple', 'green'];
 const sc = o => sceneQ({ quadrants: Q, ...o });

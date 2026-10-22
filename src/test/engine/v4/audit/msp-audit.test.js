@@ -3,9 +3,10 @@
 import { describe, it, expect } from 'vitest';
 import { take, move } from '../helpers.js';
 import { sceneQ } from '../cards-helpers.js';
-import { useRetiredOvertime } from '../retired-overtime.js';
+import { useRetiredOvertime, useRetiredRollCall } from '../retired-overtime.js';
 
 useRetiredOvertime();
+useRetiredRollCall();
 
 const QP = ['gold', 'red', 'purple', 'silver'];
 const QM = ['gold', 'trading', 'market', 'purple'];

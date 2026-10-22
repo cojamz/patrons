@@ -10,6 +10,9 @@ import { applyMove, actionAt } from '../../../engine/v4/index.js';
 import { sceneQ } from '../../engine/v4/cards-helpers.js';
 import { actionName } from '../../engine/v4/helpers.js';
 import { createTrail, feed, liveStory } from '../../../v4/game/trail.js';
+import { useRetiredRollCall } from '../../engine/v4/retired-overtime.js';
+
+useRetiredRollCall(); // Roll Call, a plain purple space, kept for these tests (it left the board 2026-10-22)
 
 /** Drive a hand-made table through real moves (with the effects the play session records), feeding every state. */
 function table(opts, me = null) {

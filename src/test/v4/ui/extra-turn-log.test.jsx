@@ -4,6 +4,9 @@ import { sceneQ } from '../../engine/v4/cards-helpers.js';
 import { take, move } from '../../engine/v4/helpers.js';
 import { currentTurn, promptFor } from '../../../v4/format.js';
 import Chronicle from '../../../v4/game/Chronicle.jsx';
+import { useRetiredRollCall } from '../../engine/v4/retired-overtime.js';
+
+useRetiredRollCall(); // Roll Call, a plain purple space, kept for these tests (it left the board 2026-10-22)
 
 afterEach(cleanup);
 it('keeps Night Owl named in the visible log through its granted extra placement', () => {

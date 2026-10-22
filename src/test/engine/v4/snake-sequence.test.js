@@ -38,12 +38,12 @@ function playRound(s, rand, onTurn) {
   }
   return seq;
 }
-/** A bot move, minus Purple's skip spaces (Sleep In, Hold Up: they move a seat's turn; these tests count the plain snake against Crunch Time). */
+/** A bot move, minus Purple's turn-moving spaces (Sleep In, Hold Up, Right Away; these tests count the plain snake against Crunch Time). */
 function botMove(s, rand) {
   const m = chooseBotMove(s, rand);
   const o = s.pending?.options?.find(x => x.id === m.option);
-  if (o?.kind === 'slot' && o.q !== undefined && ['skip', 'holdup'].includes(actionAt(s, o.q, o.i).key)) {
-    const alt = s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && !['skip', 'holdup'].includes(actionAt(s, x.q, x.i).key));
+  if (o?.kind === 'slot' && o.q !== undefined && ['skip', 'holdup', 'again'].includes(actionAt(s, o.q, o.i).key)) {
+    const alt = s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && !['skip', 'holdup', 'again'].includes(actionAt(s, x.q, x.i).key));
     if (alt) return { player: m.player, option: alt.id };
   }
   return m;

@@ -9,9 +9,10 @@ import purple, { onBoard, spareSpace, turnsNow } from '../../../../engine/v4/con
 import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { games } from '../budget.js';
-import { useRetiredOvertime } from '../retired-overtime.js';
+import { useRetiredOvertime, useRetiredRollCall } from '../retired-overtime.js';
 
 useRetiredOvertime();
+useRetiredRollCall();
 
 // seeded games in the table block below: a game count, not a time budget (budget.js). The verdict plays 100 (catches a
 // bug in ≥3% of this table's games with 95% confidence), the nightly full run (check:v4:full) all 200, the fast gate 20.

@@ -183,6 +183,13 @@ const turnsNowEstimate = (ctx, p, n) => {
 
 /** Overtime, off the board since 2026-10-15 (Rush Hour took its space). Kept for the extra-turn member tests only:
  *  test/engine/v4/retired-overtime.js puts it back on Purple's quadrant for one test file. */
+/** Roll Call left the board on 2026-10-22 (Right Away took its space); tests that need a plain purple space keep it
+ *  in that space (test/engine/v4/retired-overtime.js useRetiredRollCall). */
+export const RETIRED_ROLLCALL = {
+  key: 'windup', ring: 1, name: 'Roll Call', text: '+1 purple per minion you have on the board, this one included.',
+  estimate: (ctx, p) => onBoard(ctx, p) + 1,
+  resolve(ctx, p) { ctx.gain(p, P, onBoard(ctx, p), { fromAction: true }); },
+};
 export const RETIRED_OVERTIME = {
   key: 'overtime', ring: 2, name: 'Overtime', text: 'Take 1 extra turn right after this one.',
   copyDoesIt: true,
@@ -226,9 +233,11 @@ export default {
       },
     },
     {
-      key: 'windup', ring: 1, name: 'Roll Call', text: '+1 purple per minion you have on the board, this one included.',
-      estimate: (ctx, p) => onBoard(ctx, p) + 1,
-      resolve(ctx, p) { ctx.gain(p, P, onBoard(ctx, p), { fromAction: true }); },
+      // Cory, 2026-10-22: "+1 purple, take another turn right after this one", in Roll Call's spot. One of your own
+      // turns, moved up (his yes: you still place the same minions that round), like Crunch Time's two. Name: fill-in.
+      key: 'again', ring: 1, name: 'Right Away', text: '+1 purple. Take another turn right after this one.',
+      estimate: (ctx, p) => 1 + turnsNowEstimate(ctx, p, 1),
+      resolve(ctx, p) { ctx.gain(p, P, 1, { fromAction: true }); turnsNow(ctx, p, 1, 'Right Away'); },
     },
     {
       // Cory, 2026-10-22: "+1 purple, you can play on occupied spaces this round" (+2 with the inherent +1; he may

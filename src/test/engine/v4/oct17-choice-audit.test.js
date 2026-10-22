@@ -8,6 +8,9 @@ import { stripFor } from '../../../v4/game/faces/token-art.js';
 import { boardPicker, giftPick } from '../../../v4/game/boardPick.js';
 import { chooseGreedyMove } from '../../../engine/v4/bots.js';
 import { quadrant } from '../../../engine/v4/content/index.js';
+import { useRetiredRollCall } from './retired-overtime.js';
+
+useRetiredRollCall(); // Roll Call, a plain purple space, kept for these tests (it left the board 2026-10-22)
 
 const rich = { gold: 30, red: 30, purple: 30, green: 30 };
 describe('October 17 reported choices', () => {
