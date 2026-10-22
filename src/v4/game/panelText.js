@@ -64,7 +64,7 @@ const P = {
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
     // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
     skip: { main: '+4 purple', second: 'skip your next turn' },
-    holdup: r => ({ main: `+${r} purple`, second: 'a rival you pick skips their next turn' }),
+    holdup: r => ({ main: `+${r} purple`, second: 'the next turn is skipped' }),
     // the center ring can drop line 2 (round III since Oct 22): line 1 says it whole
     crowdin: { verb: 'Place on taken spaces', second: 'for the rest of this round', note: '+2 purple' },
     rally: { verb: 'Two turns after this one', note: '+1 purple' },

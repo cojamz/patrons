@@ -124,10 +124,11 @@ function skipNext(ctx, p, why, by = p) {
   }
   ctx.log(`${by.name}'s ${why}: ${p.name} skips their next turn.`);
 }
-/** True when p still has a turn to come this round, after the one now running. */
-const turnLeft = (ctx, p) => {
+/** Whose turn comes next this round, after the one now running (yours too, at a snake end); null when none. */
+const nextTurnOf = ctx => {
   const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
-  return q.slice(end + 1, close < 0 ? q.length : close).some(t => t.t === 'turn' && t.p === p.id);
+  const t = q.slice(end + 1, close < 0 ? q.length : close).find(x => x.t === 'turn');
+  return t ? t.p : null;
 };
 
 /**
@@ -204,9 +205,6 @@ export default {
   // Most purple: honest about what the old "most workers on the board" measured (everyone places every worker, so
   // purple's tiebreak decided it). Holding purple for the ring is the price of spending it on turns.
   // held purple, like every reworked color (Cory, 2026-10-22: "contests are always resources now")
-  handlers: {
-    holdup(ctx, p, id) { skipNext(ctx, ctx.player(id), 'Hold Up', p); },
-  },
   scoring: { label: 'Most purple', counts: 'the purple you hold when the round ends', score: (ctx, p) => p.res.purple || 0 },
 
   actions: [
@@ -219,17 +217,16 @@ export default {
     },
     {
       // Cory, 2026-10-22: replaces Catch Up ("the skip should replace catch up"); "1 purple per round" so it isn't weak
-      // late. Wording and name are Claude's fill-in. The rival is passed over once and still places every minion.
-      key: 'holdup', ring: 1, name: 'Hold Up', text: '+1 purple (+2 in round II, +3 in round III). A rival you pick skips their next turn.',
+      // late. Wording and name are Claude's fill-in.
+      key: 'holdup', ring: 1, name: 'Hold Up', text: '+1 purple (+2 in round II, +3 in round III). The next turn is skipped.',
+      // Cory, 2026-10-22: "it has to be the next TURN not even the next player. so a player could skip their own in
+      // snake draft". Whoever's turn comes next is passed over once and still places every minion.
       estimate: ctx => ctx.state.round + 1,
       resolve(ctx, p) {
         ctx.gain(p, P, ctx.state.round, { fromAction: true });
-        const can = ctx.rivals(p).filter(o => turnLeft(ctx, o));
-        if (!can.length) { ctx.log(`${p.name}'s Hold Up: no rival has a turn left to skip this round.`); return; }
-        const top = Math.max(...can.map(o => ctx.followers(o)));
-        ctx.choose(p, 'Hold Up: which rival skips their next turn?', can.map(o => ({
-          id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: ctx.followers(o) === top ? 1 : 0,
-        })), 'purple.holdup');
+        const who = nextTurnOf(ctx);
+        if (who == null) { ctx.log(`${p.name}'s Hold Up: no turn left to skip this round.`); return; }
+        skipNext(ctx, ctx.player(who), 'Hold Up', p);
       },
     },
     {

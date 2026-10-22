@@ -86,11 +86,12 @@ describe('Purple scoring: most purple held', () => {
 });
 
 describe('Purple actions', () => {
-  it('Hold Up: +1 purple per round, then you pick the rival who skips their next turn', () => {
-    const s = take(scene({ round: 2, queue: turns(0, 1) }), 'purple.holdup');
+  it('Hold Up: +1 purple per round, and the next turn is skipped, whoever\'s it is', () => {
+    const s = take(scene({ round: 2, queue: turns(0, 1, 0) }), 'purple.holdup');
     expect(R(s).purple).toBe(2);
-    expect(s.pending).toMatchObject({ kind: 'choose', player: 0 });
-    expect(s.pending.options.map(o => o.id)).toEqual(['player:1']);
+    expect(s.log).toContain("P1's Hold Up: P2 skips their next turn.");
+    const t = take(scene({ round: 2, queue: turns(0, 0, 1) }), 'purple.holdup');
+    expect(t.log).toContain("P1's Hold Up: P1 skips their next turn.");
   });
   it('Roll Call: +1 purple per worker you have on the board, this one included', () => {
     expect(R(take(scene(), 'purple.windup')).purple).toBe(1);
