@@ -71,3 +71,4 @@ Source: Cory's play notes, 2026-10-16 (v0.5 build).
 51. **No way to find how to release a member.** "I can't figure out the UI to release a member."
 52. **The snake draft is unclear.** Nothing tells players the turn order is a snake.
 53. **Unexplained follower fly-out before round end.** Followers fly from the piles toward every player; not the contest followers, and nothing says what it is.
+54. **Peek reads like a free member.** "peek doesnt GIVE you the member from the top right? you have to pay for it" (Cory, Oct 22 playtest). The text says your recruit may be one of the top 4; it doesn't say you still pay.
