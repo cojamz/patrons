@@ -69,7 +69,7 @@ describe('panel words (w3)', () => {
     // w4b #5: "A rival's member or its cost" read as "I choose": the rival pays or loses, in line 1
     // shortened to fit on phones (v0.8.8 Magenta, 68c9bf0f): line 1 still says the rival decides, pay or lose
     expect(panelText('thieves', { key: 'ransom' }, 2).verb).toMatch(/^Rival pays or loses a member$/);
-    expect(panelText('silver', { key: 'jubilee' }, 3).verb).toMatch(/per 2 silver held/);
+    expect(panelText('silver', { key: 'jubilee' }, 3).verb).toMatch(/per silver the richest rival holds/);
     // Shake Down's line 2 is the limit (Cory's wording pass, 2026-10-21; line 1 says the rival pays or loses it)
     expect(panelText('thieves', { key: 'ransom' }, 2).second).toBe('costing 5 or less');
   });

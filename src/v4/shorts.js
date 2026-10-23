@@ -28,7 +28,7 @@ const S = {
     hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival who placed more', windup: '+1 purple per minion you placed', planahead: '+1 purple per minion left', overtime: '1 extra turn', skip: '+4 purple, skip your next turn', holdup: r => `+${r} purple, the next turn is skipped`, crowdin: '+2 purple, place on taken spaces', rally: '+1 purple, two turns after this one', again: '+1 purple, another turn after this one',
   },
   silver: {
-    toast: r => `+${3 * r} silver · others +${r} silver`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the top rival’s', jubilee: 'silver for followers',
+    toast: r => `+${3 * r} silver · others +${r} silver`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the top rival’s', jubilee: 'followers from the top rival’s silver',
   },
   yellow: {
     harvest: '+1 yellow per color', bloom: r => `+${r} of your fewest`, transmute: '+2 yellow · then swap up to 3', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
@@ -51,7 +51,7 @@ const PIPS = {
   gold: { steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold' },
   red: { hireup: 'promote a member', trade: 'demote a member', take: 'recruit any member, free' },
   purple: { lastcall: '+2 followers per minion left, rest go last' },
-  silver: { tide: 'half the top rival’s', jubilee: 'silver for followers' },
+  silver: { tide: 'half the top rival’s', jubilee: 'followers from the top rival’s silver' },
   yellow: { gather: '+1 per member' },
   market: { clearance: 'recruit twice', pricecheck: 'bury for half its cost', spree: 'recruit 3 times' },
   thieves: { rob: 'steal half a one-color pile', ransom: 'rival pays or loses member', heist: 'take a rival’s member' },

@@ -137,13 +137,13 @@ export const silverActions = [
     },
   },
   {
-    key: 'jubilee', ring: 3, name: 'Hold Court', text: '+1 follower per 2 silver you hold (you keep the silver). Each rival +2 silver.',
-    estimate: (ctx, p) => 2 * Math.floor(p.res[S] / 2) - spillCost(ctx, 2),
+    key: 'jubilee', ring: 3, name: 'High Tide', text: 'Each rival +1 silver. Then gain 1 follower per silver the rival with the most silver holds.',
+    estimate: (ctx, p) => 2 * (Math.max(0, ...ctx.rivals(p).map(o => o.res[S])) + 1) - spillCost(ctx, 1),
     resolve(ctx, p) {
-      const f = Math.floor(p.res[S] / 2);
+      giveAll(ctx, p, S, 1);
+      const f = Math.max(0, ...ctx.rivals(p).map(o => o.res[S]));
       p.bonus += f;
-      giveAll(ctx, p, S, 2);
-      ctx.log(`${p.name}'s Hold Court: +${f} followers, +2 silver to everyone else.`);
+      ctx.log(`${p.name}'s High Tide: +1 silver to everyone else, then +${f} followers.`);
     },
   },
 ];

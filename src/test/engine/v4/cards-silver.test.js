@@ -27,14 +27,14 @@ describe('Silver actions', () => {
     expect(named(s, 'Caterer')).toHaveLength(1); // one gift, not one per recipient
     expect(s.log).toContain(`P1 raised a toast: +${6 * round} silver, +${round} silver to everyone else.`);
   });
-  it('Sweet Talk +4 then swap; Rising Tide: others +2 then half the richest rival’s, rounded up; Hold Court', () => {
+  it('Sweet Talk +4 then swap; Rising Tide: others +2 then half the richest rival’s, rounded up; High Tide', () => {
     let s = move(take(sc({ round: 2 }), 'silver.tongue'), 'swap:red:4');
     expect(s.players.map(p => [p.res.silver, p.res.red])).toEqual([[0, 4], [1, 0]]);
     s = take(sc({ round: 2, res: [{}, { silver: 4 }] }), 'silver.tide');
     expect(s.players.map(p => p.res.silver)).toEqual([3, 6]);
-    s = take(sc({ round: 3, res: [{ silver: 7 }] }), 'silver.jubilee');
-    expect(s.players[0].bonus).toBe(3);
-    expect(s.players.map(p => p.res.silver)).toEqual([7, 2]);
+    s = take(sc({ round: 3, res: [{ silver: 7 }, { silver: 4 }] }), 'silver.jubilee');
+    expect(s.players[0].bonus).toBe(5);
+    expect(s.players.map(p => p.res.silver)).toEqual([7, 5]);
   });
 });
 

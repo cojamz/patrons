@@ -108,20 +108,20 @@ describe('Silver actions', () => {
     expect(R(s).silver).toBe(1 + 3);
   });
 
-  it('Hold Court (ring III): +1 follower per 2 silver, silver kept; everyone else +2 silver', () => {
-    const s = take(scene({ round: 3, res: [{ silver: 9 }] }), 'silver.jubilee');
-    expect(s.players[0].bonus).toBe(4);
+  it('High Tide (ring III): everyone else +1 silver, then 1 follower per silver the richest rival holds', () => {
+    const s = take(scene({ round: 3, res: [{ silver: 9 }, { silver: 3 }, { silver: 5 }] }), 'silver.jubilee');
+    expect(R(s, 1).silver).toBe(4);
+    expect(R(s, 2).silver).toBe(6);
+    expect(s.players[0].bonus).toBe(6);
     expect(R(s).silver).toBe(9);
-    expect(R(s, 1).silver).toBe(2);
-    expect(R(s, 2).silver).toBe(2);
   });
 
-  it('rings: Sweet Talk and Rising Tide open in round II, Hold Court in round III', () => {
+  it('rings: Sweet Talk and Rising Tide open in round II, High Tide in round III', () => {
     const names = s => s.pending.options.map(o => o.label);
     expect(names(scene())).not.toContain('Sweet Talk');
     expect(names(scene({ round: 2 }))).toContain('Rising Tide');
-    expect(names(scene({ round: 2 }))).not.toContain('Hold Court');
-    expect(names(scene({ round: 3 }))).toContain('Hold Court');
+    expect(names(scene({ round: 2 }))).not.toContain('High Tide');
+    expect(names(scene({ round: 3 }))).toContain('High Tide');
   });
 });
 

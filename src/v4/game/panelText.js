@@ -85,7 +85,7 @@ const P = {
     // "half the richest" read as half your own pile (blind testers, 2026-10-15): it's the top rival's
     tide: { verb: 'Gain silver', second: 'half the top rival’s', note: 'others get 2 silver' },
     // on the center line 2 drops: the rate is in line 1, and "held" says the silver stays
-    jubilee: { verb: '+1 @f per 2 silver held', second: 'others get 2 silver' },
+    jubilee: { verb: '+1 @f per silver the richest rival holds', second: 'others get 1 silver first' },
   },
   yellow: {
     harvest: (r, now) => ({ main: `+${now ?? 1} yellow`, second: now == null ? '+1 per other color' : '1, +1 per other color', note: 'you hold' }),

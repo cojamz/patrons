@@ -84,7 +84,7 @@ const SUMS = {
   'silver.alms': ({ n }) => [R('silver', plus(n(0, 4))), DOT, HOOD(), R('any', plus(n(1, 2)))], //   +4🔔 · ☗+2◌
   'silver.tongue': ({ n }) => [R('silver', plus(n(0, 4))), DOT, R('silver'), SWAP, R('any'), CUT, DOT, HOOD({ all: true }), R('silver', '+1')],
   'silver.tide': () => [R('silver', '+'), EQ, NUM('½'), HOOD({ mod: 'high' }), CUT, DOT, HOOD({ all: true }), R('silver', '+1')], // +🔔 = ½▴☗
-  'silver.jubilee': ({ n }) => [FOL(plus(n(0, 1))), PER, R('silver', n(1, 2)), CUT, DOT, HOOD({ all: true }), R('silver', '+2')], // +1☺/2🔔
+  'silver.jubilee': ({ n }) => [HOOD({ all: true }), R('silver', '+1'), CUT, FOL(plus(n(0, 1))), PER, R('silver', n(1, 1))], // others +1🔔, then +1☺ per 🔔 of the richest rival
   // yellow: colors
   'yellow.harvest': () => [R('yellow', '+1'), NUM('+1'), PER, R('any')], //                         +1☀ +1/◌      (per other color you hold)
   'yellow.bloom': ({ r }) => [R('any', plus(r), { mod: 'low' })], //                                       +1 ▾◌         (ties: all of them)
