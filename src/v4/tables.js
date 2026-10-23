@@ -36,6 +36,19 @@ const LINES = {
   green: 'Plain gains: green, with a little of another color.',
 };
 export const sphereLine = id => LINES[id] || '';
+// Which colors Cory has redesigned, shown small on the Custom picker so he remembers (Cory, 2026-10-22). One line per
+// color: '2.0' spaces and members redesigned, '1.5' spaces only, anything missing is '1.0'. Flip a color when it ships.
+const VERSION = {
+  red: '2.0',
+  echo: '2.0',
+  thieves: '2.0',
+  purple: '2.0',
+  market: '1.5',
+  trading: '1.0',
+};
+export const sphereVersion = id => VERSION[id] || '1.0';
+const VERSION_WORDS = { '2.0': 'Redesigned', '1.5': 'Spaces redesigned, members not yet', '1.0': 'Not redesigned yet' };
+export const sphereVersionWords = id => VERSION_WORDS[sphereVersion(id)];
 
 // Colors a stand-in hands out besides its own (read off its printed actions).
 const usesColors = id => {

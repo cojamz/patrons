@@ -5,7 +5,7 @@ import { playerColor, lowColor } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
 import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
-import { CLASSIC, spheres, sphereName, sphereLine, tableProblem, randomTable, urlTable, fitTable, sphereCount } from '../tables.js';
+import { CLASSIC, spheres, sphereName, sphereLine, sphereVersion, sphereVersionWords, tableProblem, randomTable, urlTable, fitTable, sphereCount } from '../tables.js';
 import { panelWords } from '../game/panelText.js';
 import { GAME_NAME, VERSION_LABEL } from '../version.js';
 import { copyText } from '../Recovery.jsx';
@@ -173,7 +173,7 @@ export function TablePicker({ value, onChange, readOnly = false, n = 4 }) {
                   disabled={clash} style={{ '--c': `var(--${id})` }} onClick={() => toggle(id)}
                   title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : over ? `Swap ${sphereName(id)} in for ${sphereName(last)} (the last one picked). ${sphereHint(id)}` : sphereHint(id)}>
                   <i className="dot" />{on && <span className="ord num">{quadrants.indexOf(id) + 1}</span>}
-                  <b>{sphereName(id)}</b><small>{lowColor(quadrant(id).scoring.label)}</small><small className="sphere-line">{sphereLine(id)}</small>
+                  <b>{sphereName(id)}</b><span className={`ver num${sphereVersion(id) === '2.0' ? ' new' : ''}`} data-version={sphereVersion(id)} title={sphereVersionWords(id)}>{sphereVersion(id)}</span><small>{lowColor(quadrant(id).scoring.label)}</small><small className="sphere-line">{sphereLine(id)}</small>
                 </button>
               );
             })}

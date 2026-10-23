@@ -1216,6 +1216,8 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .sphere.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--table));box-shadow:inset 0 0 0 1px var(--c)}
 .sphere:disabled{opacity:.38;cursor:default}
 .sphere .ord{position:absolute;top:4px;right:7px;font-size:var(--fs-1);font-weight:700;color:var(--c)}
+.sphere .ver{position:absolute;top:6px;right:24px;font-size:10px;line-height:1;padding:2px 4px;border-radius:5px;border:1px solid var(--rim);color:var(--muted);font-weight:600;letter-spacing:.02em}
+.sphere .ver.new{color:var(--c);border-color:color-mix(in srgb,var(--c) 55%,var(--rim))}
 
 /* bottom sheets never run off a short screen (landscape phones): capped height, the action button always in view */
 .peek.as-sheet,.popover.sheet-pop{max-height:calc(100dvh - 12px);overflow-y:auto;overscroll-behavior:contain}
