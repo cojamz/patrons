@@ -248,9 +248,10 @@ export default {
     {
       // Cory, 2026-10-22: "+1 purple, take another turn right after this one", in Roll Call's spot. One of your own
       // turns, moved up (his yes: you still place the same minions that round), like Crunch Time's two. Name: fill-in.
-      key: 'again', ring: 1, name: 'Right Away', text: '+1 purple. Take another turn right after this one.',
-      estimate: (ctx, p) => 1 + turnsNowEstimate(ctx, p, 1),
-      resolve(ctx, p) { ctx.gain(p, P, 1, { fromAction: true }); turnsNow(ctx, p, 1, 'Right Away'); },
+      // Cory, 2026-10-23: "Right Away should scale. +1 +2 +3" (Hold Up's wording).
+      key: 'again', ring: 1, name: 'Right Away', text: '+1 purple (+2 in round II, +3 in round III). Take another turn right after this one.',
+      estimate: (ctx, p) => ctx.state.round + turnsNowEstimate(ctx, p, 1),
+      resolve(ctx, p) { ctx.gain(p, P, ctx.state.round, { fromAction: true }); turnsNow(ctx, p, 1, 'Right Away'); },
     },
     {
       // Cory, 2026-10-22: "+1 purple, you can play on occupied spaces this round" (+2 with the inherent +1; he may

@@ -68,7 +68,7 @@ const P = {
     // the center ring can drop line 2 (round III since Oct 22): line 1 says it whole
     crowdin: { verb: 'Place on taken spaces', second: 'for the rest of this round', note: '+2 purple' },
     rally: { verb: 'Two turns after this one', note: '+1 purple' },
-    again: { verb: 'Another turn after this one', note: '+1 purple' },
+    again: r => ({ verb: 'Another turn after this one', note: `+${r} purple` }),
   },
   silver: {
     // "others get 1" left "1 of what?" (live panel r1): silver

@@ -25,7 +25,7 @@ const S = {
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },
   purple: {
-    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival who placed more', windup: '+1 purple per minion you placed', planahead: '+1 purple per minion left', overtime: '1 extra turn', skip: '+4 purple, skip your next turn', holdup: r => `+${r} purple, the next turn is skipped`, crowdin: '+2 purple, place on taken spaces', rally: '+1 purple, two turns after this one', again: '+1 purple, another turn after this one',
+    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival who placed more', windup: '+1 purple per minion you placed', planahead: '+1 purple per minion left', overtime: '1 extra turn', skip: '+4 purple, skip your next turn', holdup: r => `+${r} purple, the next turn is skipped`, crowdin: '+2 purple, place on taken spaces', rally: '+1 purple, two turns after this one', again: r => `+${r} purple, another turn after this one`,
   },
   silver: {
     toast: r => `+${3 * r} silver · others +${r} silver`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the top rival’s', jubilee: 'followers from the top rival’s silver',

@@ -23,7 +23,8 @@ function realNext(s, rand) {
   for (let g = 0; g < 400; g++) {
     t = applyMove(t, chooseBotMove(t, rand));
     if (t.round !== r || t.over) return null;
-    if ((t.turns || []).length > n0) return planned(t) === p0 && earlyN(t) === e0 ? t.turns[n0] : undefined;
+    // (a turn skipped on the way is a plan change too, even one already last in the order, which moves nothing)
+    if ((t.turns || []).length > n0) return planned(t) === p0 && earlyN(t) === e0 && !t.log.slice(s.log.length).some(l => / skips their next turn\./.test(l)) ? t.turns[n0] : undefined;
   }
   return undefined;
 }
