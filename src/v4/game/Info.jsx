@@ -5,7 +5,7 @@ import { discountSources } from '../../engine/v4/discount.js';
 // - CardName / MemberCard: a member named anywhere opens the full card (color, cost, ability).
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { memberWeight, cardDef, defById, quadrant, previewSpace, memberPrice } from '../../engine/v4/index.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
@@ -164,10 +164,21 @@ function sharedTail(lines) {
 }
 /** compact: on a small card (the shop's details view), a rule whose rounds differ only in their number reads as one
  *  line, "I +1 · II +2 · III +3 of each color", this round lit (the wheel's "+2 · +3 · +4 by round" grammar) */
-export function RuleText({ def, text = def && def.text, round = 1, plain = false, compact = false }) {
+/**
+ * A rule's separate effects, one per sentence (Cory, 2026-10-23: "actions that do different things should have the
+ * text on different lines in hover over; the +1 resource should be its own line"): Lie Low's "Rivals can't steal from
+ * you this round. +1 magenta." is two lines. A sentence ends at . ! ? before a space and anything but a lowercase word.
+ */
+export const effectLines = text => String(text || '').split(/(?<=[.!?])\s+(?=[^\sa-z])/u).filter(Boolean);
+// lines: each effect on its own line (the hover cards); a space between keeps the text one sentence run when read whole
+function Lines({ text, Text, className = 'fx-line' }) {
+  const parts = effectLines(text);
+  return <>{parts.map((t, k) => <Fragment key={k}>{k ? ' ' : null}<span className={className} data-effect-line=""><Text text={t} /></span></Fragment>)}</>;
+}
+export function RuleText({ def, text = def && def.text, round = 1, plain = false, compact = false, lines = false }) {
   const by = def && def.byRound;
   const Text = plain ? PlainText : CardText;
-  if (!by || !by.lines || by.lines.length !== 3) return <Text text={text} />;
+  if (!by || !by.lines || by.lines.length !== 3) return lines ? <span className="fx-lines"><Lines text={text} Text={Text} /></span> : <Text text={text} />;
   const now = Math.min(3, Math.max(1, round || 1));
   const shared = compact ? sharedTail(by.lines) : null;
   if (shared) {
@@ -186,13 +197,13 @@ export function RuleText({ def, text = def && def.text, round = 1, plain = false
   }
   return (
     <span className="by-round" data-by-round={now}>
-      {by.lead ? <span className="br-lead"><Text text={by.lead} /></span> : null}
+      {by.lead ? (lines ? <Lines text={by.lead} Text={Text} className="br-lead" /> : <span className="br-lead"><Text text={by.lead} /></span>) : null}
       {by.lines.map((l, k) => (
         <span key={k} className={`br-line${k + 1 === now ? ' now' : ''}`} data-round-line={k + 1} aria-current={k + 1 === now ? 'true' : undefined}>
           <span className="br-r">{ROMAN[k]}:</span><span className="br-v"><Text text={l} /></span>
         </span>
       ))}
-      {by.rest ? <span className="br-rest"><Text text={by.rest} /></span> : null}
+      {by.rest ? (lines ? <Lines text={by.rest} Text={Text} className="br-rest" /> : <span className="br-rest"><Text text={by.rest} /></span>) : null}
     </span>
   );
 }
@@ -278,7 +289,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {/* a member with no ability says so, never an empty card (w2a #36: Twins and Intern showed only a header) */}
       {/* a member you use (once a game, once a round) says so first (w3a #5: "you can't find out which members you use");
           in the shop, also how: on your turn, from your seat */}
-      {ability ? <p className="mc-text">{(copied || d).from > 1 && <span className="mc-round-tag" data-round-tag="" title="Works from round II on">II+</span>}{(copied || d).activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<RuleText def={copied || d} text={ability} round={state.round} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
+      {ability ? <p className="mc-text">{(copied || d).from > 1 && <span className="mc-round-tag" data-round-tag="" title="Works from round II on">II+</span>}{(copied || d).activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<RuleText def={copied || d} text={ability} round={state.round} lines /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {d.activate && where && !state.over && <small className="mc-live" data-use-how="">Once it’s yours, use it on your turn: it lights up in your seat.</small>}
       {copied && <small className="mc-live" data-copy-of="">Copy of <CardName state={state} def={copied} /></small>}
       {owner && card && card.used && !state.over && <small className="mc-live" data-member-used="">Used</small>}

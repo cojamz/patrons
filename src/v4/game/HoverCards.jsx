@@ -501,7 +501,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
     <div className="lt-card-body" data-space-card={spaceKey} style={{ '--q': `var(--q-${sphereOf(qid)}, var(--${qid}))` }}>
       {/* plate 1b: the name, its one-sentence rule, then "You'd get" (the picture lives on the space itself) */}
       <h4 className="sc-name" title={`${Q.name} · ${RINGS[a.ring - 1]}`}>{a.name}</h4>
-      <p className="sc-rule"><RuleText def={a} round={round} /></p>
+      <p className="sc-rule"><RuleText def={a} round={round} lines /></p>
       <div className="lt-yd">
         {pv && pv.copies && !all ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
         {all ? <Row k="Copies"><span data-copies-all>{all.names.length ? all.names.join(', ') : 'nothing yet'}</span></Row> : null}

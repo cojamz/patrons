@@ -577,6 +577,9 @@
 .by-round .br-r{display:inline-block;min-width:2.1em;font-weight:700}
 .by-round .br-lead + .br-line{margin-top:2px}
 .by-round .br-rest{display:block;margin-top:2px}
+/* one effect per line in the hover cards (RuleText lines); the first flows after a leading tag (II+, Use) */
+.fx-lines .fx-line{display:block;margin-top:3px}
+.fx-lines .fx-line:first-child{display:inline;margin-top:0}
 /* compact (the shop's small cards): one run of text, the rounds side by side, this round lit */
 .by-round.compact .br-line{display:inline;opacity:1;color:var(--pl-ink-3,#a39078)}
 .by-round.compact .br-line.now{color:inherit;font-weight:700}
