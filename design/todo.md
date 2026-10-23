@@ -15,7 +15,7 @@ Cory's calls (numbered picks when asked):
 - [ ] White redesign, paused (Cory, Oct 22): 3 of 6 spaces decided; open slots and members in design/spheres/white-actions-draft-2026-10-22.md. Resume when he picks it up.
 - [ ] Silver redesign, paused Oct 22: round III High Tide and round II Rising Tide decided; second round II space, round I and members open. design/spheres/silver-redesign-2026-10-22.md
 - [ ] Neutral members (Cory, Oct 21): Front-runner 5, Tiebreaker in, Launderer 6, prices spread 3–9 (decisions.md). Build on his go; nothing ships from the rework panel before it.
-- [ ] Hard bot balance batch (Cory, Oct 22, "at some point"): plan and timing in /mnt/project-files/hard-bot-batch/plan.md. Waits for his go.
+- [x] Hard bot balance reads (Cory, Oct 22): 152 mixed-table games and 46 White 2.0 games in design/eval/hard-batch/. Runner: `node scripts/v4-hard-batch.mjs <first> <count> <out.jsonl>` (MUST=<sphere> to force a color), report: scripts/v4-hard-batch-report.mjs. About 300 four-player games an hour on 4 cores. Open: Tiebreaker 6 to 4? (asked Cory).
 - [ ] Names: Recruit Bonus, Movement Penalty, Chronicler.
 - [ ] Greatest Hits repeating a copied Echo's gain [no]; tiebreaker most members [yes]; new abilities for the dropped cost reductions.
 Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 18 Green picks.
