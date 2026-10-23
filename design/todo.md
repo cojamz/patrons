@@ -26,6 +26,7 @@ Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 1
 - [x] Copying Open Door got nothing or kept the first taker's cost cap: a copy now does Open Door itself (answer key #55, #56).
 - Player feedback, no action yet (*): "Stealing spaces don't create money" (a player; Cory not sure he agrees); "more complex than anticipated"; shop needs more people; Red and Purple have too many actions that are bad at the end; members are best bought early but seen late.
 - [ ] Design list for after the playtest: Even Swap better (his "maybe +2 red"), Red weak early, Lie Low maybe scales, Recruit a Member maybe a cost limit, Shake Down maybe too strong. Crunch Time parked (keep +1 purple).
+- [ ] Peek weak in round I; anything based on owning or recruiting members is tough in round I (Cory, playtest). Ideas pitched, his pick.
 - [ ] Peek read as giving you the pile member; it doesn't ("This turn your recruit may be one of them", paid at cost). Card clarity, answer key #54.
 
 ## Waiting on Cory
