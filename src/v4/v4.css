@@ -156,8 +156,11 @@ header.bar .ticker::before{content:"Last: ";color:color-mix(in srgb,var(--muted)
 .wheel-wrap{min-width:0}
 .stage{position:relative;width:min(100%, calc(100dvh - 240px), 540px);min-width:min(260px,100%);aspect-ratio:1;margin:0 auto;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 /* the wheel's own drawing only: inline marks in a space's text (the follower in Your Call) kept their size until this was scoped */
-.stage > svg{width:100%;height:100%;display:block;overflow:visible;cursor:grab}
-.stage > svg:active{cursor:grabbing}
+.stage > svg,.stage > .turn-layer > svg{width:100%;height:100%;display:block;overflow:visible;cursor:grab}
+.stage > svg:active,.stage > .turn-layer > svg:active{cursor:grabbing}
+/* the layer each drawing turns in (Wheel.jsx): the board's own box */
+.stage > .turn-layer{position:absolute;inset:0;transform-origin:50% 50%}
+.stage > .turn-layer.rim-turn{z-index:5;pointer-events:none}
 .slot{cursor:pointer}
 .slot .name{pointer-events:none;letter-spacing:.02em}
 .slot.locked .name{font-weight:600}
@@ -198,7 +201,7 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 .prompt.choice.setup .token.chain-point .res-glyph{transform:translateY(-2px)}
 /* Spins and drags turn the wheel on the compositor (Wheel.jsx: Web Animations, paintRot). Its layers stay promoted (lag pass
    2026-10-21: promoting them as a spin began cost the key its first frame, ~250ms at 4x CPU, and the spin read as a snap) */
-.lt .stage > svg{will-change:transform}
+.lt .stage > .turn-layer{will-change:transform}
 .lt .stage > [data-slot]{will-change:translate}
 /* the round's end, a beat of its own before the first rim (Reckoning.jsx; wave 4 #6): the card stamps in at the wheel's
    centre (the grammar's stamp: 1.25 and clear to 1 and solid). `scale`, so the card's own centring transform stays. */

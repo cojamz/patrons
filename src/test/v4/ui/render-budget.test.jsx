@@ -146,9 +146,13 @@ describe('render budget', () => {
       R.reset();
       act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); });
       const turning = { Wheel: R.n('Wheel'), GameScreen: R.n('GameScreen') };
-      const layers = anims.filter(a => a.el.tagName.toLowerCase() === 'svg'), spaces = anims.filter(a => a.el.matches('[data-slot]'));
+      const layers = anims.filter(a => a.el.matches('.stage > .turn-layer')), spaces = anims.filter(a => a.el.matches('[data-slot]'));
       const angles = new Set(layers.length ? layers[0].frames.map(f => f.transform) : []);
       expect(layers.length).toBeGreaterThan(0);
+      // the turn goes on the plain layer around each drawing, never on an <svg>: a turn on the svg itself redrew the whole
+      // board every frame of a drag and a spin (2026-10-23, Cory: "the wheel spin is laggy")
+      expect(anims.filter(a => a.el.tagName.toLowerCase() === 'svg')).toHaveLength(0);
+      expect(container.querySelectorAll('.stage > svg')).toHaveLength(0);
       expect(spaces.length).toBe(container.querySelectorAll('.stage > [data-slot]').length);
       expect(angles.size).toBeGreaterThan(2); // it turns through several angles
       expect(turning.Wheel + turning.GameScreen).toBe(0); // the key itself renders nothing

@@ -53,7 +53,7 @@ try{
    await cdp.send('Tracing.start',{categories:'devtools.timeline,disabled-by-default-devtools.timeline,disabled-by-default-v8.cpu_profiler',options:'sampling-frequency=1000',transferMode:'ReportEvents'});
   }
   await page.evaluate(()=>{
-   const g=document.querySelector('.stage svg g.wheel');const sig=()=>`${g?.getAttribute('transform')}|${g?.ownerSVGElement.style.transform}`;
+   const g=document.querySelector('.stage svg g.wheel');const sig=()=>`${g?.getAttribute('transform')}|${g?.ownerSVGElement.parentElement.style.transform}`;
    const w=window.__contention={frames:[],rot:[],longtasks:[],base:sig(),phaseAtStart:document.querySelector('.app.game')?.dataset.phase,filterAtStart:getComputedStyle(document.querySelector('.lt-wheel')).filter,flightsAtStart:document.querySelectorAll('.piece-flight,.worker-flight,.token-flight').length,activeAtStart:document.querySelector('.app.game')?.dataset.chain||document.querySelector('.lt-reckon:not(.waiting)')?.dataset.reckon||'idle'};
    new PerformanceObserver(list=>{if(w.t0)for(const e of list.getEntries())if(e.startTime>=w.t0)w.longtasks.push(e.duration)}).observe({type:'longtask',buffered:true});
    addEventListener('keydown',e=>{if(e.key==='ArrowRight')w.t0=performance.now()},{capture:true,once:true});

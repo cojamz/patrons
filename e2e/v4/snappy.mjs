@@ -112,7 +112,7 @@ await page.evaluate(delay => {
     const g = wheelG();
     if (g && W.key != null) {
       const m = /rotate\((-?[\d.e]+)/.exec(g.getAttribute('transform') || '');
-      const mm = /^matrix\((-?[\d.e]+),\s*(-?[\d.e]+)/.exec(g.ownerSVGElement ? getComputedStyle(g.ownerSVGElement).transform || '' : '');
+      const mm = /^matrix\((-?[\d.e]+),\s*(-?[\d.e]+)/.exec(g.ownerSVGElement ? getComputedStyle(g.ownerSVGElement.parentElement).transform || '' : '');
       const t = ((m ? Number(m[1]) : 0) + (mm ? (Math.atan2(Number(mm[2]), Number(mm[1])) * 180) / Math.PI : 0)).toFixed(1);
       if (!W.rot.length || W.rot[W.rot.length - 1][1] !== t) W.rot.push([performance.now(), t]);
     }

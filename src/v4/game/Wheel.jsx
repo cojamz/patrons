@@ -459,7 +459,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     readGeo(root);
     // Read slot geometry above before writing transforms: the first frame must not force a layout.
     const dr = r - painted.current;
-    for (const sv of root.querySelectorAll(':scope > svg')) sv.style.transform = Math.abs(dr) > 0.001 ? `rotate(${dr.toFixed(2)}deg)` : '';
+    for (const sv of root.querySelectorAll(':scope > .turn-layer')) sv.style.transform = Math.abs(dr) > 0.001 ? `rotate(${dr.toFixed(2)}deg)` : '';
     const d = ((r - drawn.current) * Math.PI) / 180, c = Math.cos(d), s = Math.sin(d);
     for (const [el, x, y] of geo.current) el.style.translate = Number.isFinite(x + y) ? `${(x * c - y * s - x).toFixed(1)}px ${(x * s + y * c - y).toFixed(1)}px` : '';
   };
@@ -470,8 +470,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     const root = stage.current;
     if (!root) return;
     root.classList.remove('turning');
-    for (const sv of root.querySelectorAll(':scope > svg')) if (sv.style.transform) sv.style.transform = '';
-    for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${rot} ${CX} ${CY})`);
+    for (const sv of root.querySelectorAll(':scope > .turn-layer')) if (sv.style.transform) sv.style.transform = '';
+    for (const g of root.querySelectorAll(':scope > .turn-layer > svg > g[transform]')) g.setAttribute('transform', `rotate(${rot} ${CX} ${CY})`);
     for (const el of root.querySelectorAll(':scope > [data-slot]')) if (el.style.translate) el.style.translate = '';
     // a spin still turning when an earlier landing commits (its re-lay runs as a transition): its frames were drawn from
     // the old angle, so they're drawn again from this one, on the same clock
@@ -502,7 +502,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     const when = f => { let lo = 0, hi = 1; for (let j = 0; j < 20; j++) { const m = (lo + hi) / 2; if (spinEase(m) < f) lo = m; else hi = m; } return hi; };
     const ks = Array.from({ length: n + 1 }, (_, i) => [from + ((to - from) * i) / n, i === 0 ? 0 : i === n ? 1 : when(i / n)]);
     const opts = { duration: dur, easing: 'linear', fill: 'forwards' };
-    for (const sv of root.querySelectorAll(':scope > svg')) sp.anims.push(sv.animate(ks.map(([r, offset]) => ({ offset, transform: `rotate(${(r - painted.current).toFixed(2)}deg)` })), opts));
+    for (const sv of root.querySelectorAll(':scope > .turn-layer')) sp.anims.push(sv.animate(ks.map(([r, offset]) => ({ offset, transform: `rotate(${(r - painted.current).toFixed(2)}deg)` })), opts));
     for (const [el, x, y] of geo.current || []) {
       if (!Number.isFinite(x + y)) continue;
       sp.anims.push(el.animate(ks.map(([r, offset]) => {
@@ -1197,7 +1197,9 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>
       <div className={`stage${fontsIn ? '' : ' fonts-wait'}`} ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ '--wheel-px': `${Math.round(boardPx)}px`, '--px': (1 / (scale || 1)).toFixed(4) }}>
-        <svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} role="group" aria-label="Board" className={`wheel-paper${late ? ' late' : ''}`}>
+        {/* each drawing turns inside a plain layer of its own: a turn written on the <svg> itself redrew the whole board
+            every frame of a drag (and of a spin), where turning a layer around it redraws nothing (2026-10-23) */}
+        <div className="turn-layer paper-layer"><svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} role="group" aria-label="Board" className={`wheel-paper${late ? ' late' : ''}`}>
           <defs>
             <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
             <filter id="ltGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" /></filter>
@@ -1214,15 +1216,15 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
           <g transform={`rotate(${rot} ${CX} ${CY})`} className="wheel">{paper}</g>
           <circle cx={CX} cy={CY} r="199.5" fill="none" className="edge" />
           <circle cx={CX} cy={CY} r={hubR} className="hub" />
-        </svg>
+        </svg></div>
         <div className="hub-label" aria-label={`Round ${roman(round)}`}>
           <small>Round</small><b>{state.round ? roman(state.round) : '·'}</b>
           <span className="pips" aria-hidden="true">{[1, 2, 3].map(i => <i key={i} className={i <= state.round ? 'on' : ''} />)}</span>
         </div>
         {sockets}
-        <svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} className="rim-layer" role="group" aria-label="Contest standings">
+        <div className="turn-layer rim-turn"><svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} className="rim-layer" role="group" aria-label="Contest standings">
           <g transform={`rotate(${rot} ${CX} ${CY})`}>{rimHits}</g>
-        </svg>
+        </svg></div>
         {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}
       </div>
       {deny && typeof document !== 'undefined' && createPortal(
