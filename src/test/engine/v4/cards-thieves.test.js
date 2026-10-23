@@ -24,13 +24,14 @@ const sum = r => Object.values(r).reduce((a, b) => a + b, 0);
 const cardOpt = (s, def, who) => `card:${uidIn(s, def, who)}`;
 
 describe('Magenta actions', () => {
-  it.each([1, 2, 3])('Help Yourself steals round resources in original colors and gains round followers (round %i)', round => {
-    let s = table(Q, { round, left: 5, res: [{}, { gold: 9 }], shop: ROW });
+  it.each([1, 2, 3])('Help Yourself steals round resources in original colors and takes round followers from them (round %i)', round => {
+    let s = table(Q, { round, left: 5, res: [{}, { gold: 9 }], bonus: [0, 5], shop: ROW });
     s = take(s, 'thieves.pickpocket');
     for (let k = 0; k < round; k++) s = move(s, 'take:1:gold');
     expect(R(s)).toMatchObject({ magenta: 1, gold: round });
     expect(R(s, 1).gold).toBe(9 - round);
     expect(s.players[0].bonus).toBe(round);
+    expect(s.players[1].bonus).toBe(5 - round); // the followers come from whoever you took from (Cory, Oct 22)
     expect(s.log.some(l => l.includes('now magenta'))).toBe(false);
   });
   it('Sticky Fingers +1 and Desperado double base theft, separately from inherent grant and followers', () => {

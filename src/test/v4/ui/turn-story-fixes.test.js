@@ -164,31 +164,34 @@ describe('a steal is told once, in the colors it took', () => {
   const once = st => {
     expect(st.text).not.toMatch(/as magenta/);
     expect(st.lines.filter(l => /\+1 magenta/.test(l))).toHaveLength(1); // the inherent +1, never the stolen coins
-    expect(st.lines.filter(l => /follower/.test(l))).toHaveLength(1);
+    expect(st.lines.filter(l => /\+\d followers?/.test(l))).toHaveLength(1);
   };
   it('from the effects: the gain in its own colors, and one line for what you lost', () => {
     const st = steal(true);
     expect(st.fx).toBe(true);
-    expect(st.lines).toEqual(['+1 magenta +1 gold +1 follower', '1 gold from you']);
-    expect(st.hit).toBe('took 1 of your gold');
-    expect(st.short).toBe('took 1 of your gold · +1 magenta +1 gold +1 follower');
+    // Help Yourself's follower comes from the rival you took from (Cory, Oct 22)
+    expect(st.lines).toEqual(['+1 magenta +1 gold +1 follower', 'you −1 gold −1 follower']);
+    expect(st.hit).toBe('took 1 of your gold, 1 of your followers');
+    expect(st.short).toBe('took 1 of your gold, 1 of your followers · +1 magenta +1 gold +1 follower');
     once(st);
   });
   it('from the log (no effects recorded): the same steal, its followers told once', () => {
     const st = steal(false);
     expect(st.fx).toBeUndefined();
-    expect(st.lines).toEqual(['+1 gold +1 magenta', '1 gold from you', 'Help Yourself: +1 follower']);
+    expect(st.lines).toEqual(['+1 gold +1 magenta', '1 gold from you', '+1 follower', 'you −1 follower']);
     expect(st.hit).toBe('took 1 of your gold');
-    expect(st.short).toBe('+1 gold +1 magenta · 1 gold from you');
+    expect(st.short).toBe('+1 gold +1 magenta · 1 gold from you, you −1 follower');
     once(st);
   });
   it.each([true, false])('from both rivals (effects %s): each rival named once, in the color they lost', effects => {
     const st = steal(effects, 2, ['take:1:gold', 'take:2:red']);
-    expect(st.lines.filter(l => / from you/.test(l))).toEqual(['1 gold from you']);
-    expect(st.lines.filter(l => / from P3/.test(l))).toEqual(['1 red from P3']);
+    expect(st.lines.filter(l => /^you −1 gold|1 gold from you/.test(l))).toHaveLength(1);
+    expect(st.lines.filter(l => /^P3 −1 red|1 red from P3/.test(l))).toHaveLength(1);
+    expect(st.lines.filter(l => /^you −1 follower|^you .*−1 follower/.test(l))).toHaveLength(1);
+    expect(st.lines.filter(l => /^P3 .*−1 follower/.test(l))).toHaveLength(1);
     expect(st.lines[0]).toMatch(/\+1 gold/);
     expect(st.lines[0]).toMatch(/\+1 red/);
-    expect(st.hit).toBe('took 1 of your gold');
+    expect(st.hit).toMatch(/^took 1 of your gold/);
     once(st);
   });
 });

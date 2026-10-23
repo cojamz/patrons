@@ -19,11 +19,11 @@ describe('Magenta redesign edge cases', () => {
     const s = take(table(Q, { round: 3, shop }), `thieves.${key}`);
     expect(s.players[0].res.magenta).toBe(1);
     expect(s.pending.kind).toBe('buy');
-    expect(s.players[0].bonus).toBe(key === 'pickpocket' ? 3 : 0);
+    expect(s.players[0].bonus).toBe(0);
   });
-  it('empty theft still grants the full round follower effect', () => {
+  it('empty theft takes no followers: there is no one to take them from (Cory, Oct 22)', () => {
     const s = take(table(Q, { round: 2, shop }), 'thieves.pickpocket');
-    expect(s.players[0].bonus).toBe(2);
+    expect(s.players[0].bonus).toBe(0);
     expect(s.players[0].res.magenta).toBe(1);
   });
   it('occupied actions are counted once, irrespective of minion count or whose they are', () => {
@@ -48,7 +48,7 @@ describe('Magenta redesign edge cases', () => {
     expect(s.players[0].res).toMatchObject({ green: 1, magenta: 1, red: 1 });
   });
   it('copying Help Yourself grants its resource and followers once, with fresh rival choices', () => {
-    let s = table(Q, { round: 2, n: 3, res: [{}, {}, { gold: 9, red: 9 }], shop, queue: turns(1, 0) });
+    let s = table(Q, { round: 2, n: 3, res: [{}, {}, { gold: 9, red: 9 }], bonus: [0, 0, 5], shop, queue: turns(1, 0) });
     s = pass(move(move(take(s, 'thieves.pickpocket'), 'take:2:gold'), 'take:2:gold'));
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(o => o.kind === 'space' && o.label.startsWith(actionName('thieves.pickpocket'))).id);
@@ -57,9 +57,10 @@ describe('Magenta redesign edge cases', () => {
     expect(s.players[0].bonus).toBe(2);
     expect(s.players[1].res).toMatchObject({ magenta: 1, gold: 2 });
     expect(s.players[1].bonus).toBe(2);
+    expect(s.players[2].bonus).toBe(1);
   });
   it('JSON resume in a split theft neither repeats base grants nor loses the chosen colors', () => {
-    let s = table(Q, { round: 3, n: 3, res: [{}, { gold: 7 }, { red: 7 }], shop });
+    let s = table(Q, { round: 3, n: 3, res: [{}, { gold: 7 }, { red: 7 }], bonus: [0, 5, 5], shop });
     s = move(take(s, 'thieves.pickpocket'), 'take:1:gold');
     const before = JSON.stringify(s);
     const finish = x => move(move(x, 'take:2:red'), 'take:1:gold');
