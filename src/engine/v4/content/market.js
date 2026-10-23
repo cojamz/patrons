@@ -99,13 +99,19 @@ function churnStep(ctx, p, { left }) {
     id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)})`, kind: 'card', value: c.uid, hint: priceOf(c),
   })), `${Q}.churn`, { left });
 }
+/** Peek on one pile ('cheap' or 'pricey'): reach its top 4 this turn, then set their order. */
+function startPeek(ctx, p, key) {
+  const top = ctx.pileOf(key).slice(0, 4);
+  p.peekReach = Math.max(p.peekReach || 0, top.length);
+  p.peekPile = key;
+  ctx.log(`${p.name} peeks at the top ${top.length} of the ${key} pile.`);
+  peekStep(ctx, p, { left: top, placed: [] });
+}
 /** Peek: the player sets the order of the top cards, top first; the last one falls in place. */
 function peekStep(ctx, p, { left, placed }) {
   if (left.length <= 1) {
     const order = [...placed, ...left];
-    const pile = ctx.state.pile;
-    const rest = pile.filter(u => !order.includes(u));
-    pile.splice(0, pile.length, ...order, ...rest);
+    ctx.restackPile(p.peekPile === 'pricey' ? 'pricey' : 'cheap', order);
     if (order.length) ctx.log(`${p.name} puts the top ${order.length} of the pile back in a new order.`);
     return;
   }
@@ -177,13 +183,20 @@ const market = {
       key: 'showroom', ring: 1, name: 'Peek', text: 'Look at the top 4 of the pile and put them back in any order. This turn your recruit may be one of them. +2 blue in round I, +4 in round II, +6 in round III.', copyDoesIt: true,
       // scales, more blue (Cory, 2026-10-22 playtest: weak in round I, "should give more resource", "Peek should really really scale")
       byRound: { lead: 'Look at the top 4 of the pile and put them back in any order. This turn your recruit may be one of them.', lines: ['+2 blue', '+4 blue', '+6 blue'] },
-      estimate: (ctx, p) => 2 * ctx.state.round + Math.max(0, ...ctx.state.pile.slice(0, 4).map(u => ctx.card(u)).filter(c => ctx.payChoices(p, c.uid, {}).length).map(botWorth)) * 0.3,
+      estimate: (ctx, p) => 2 * ctx.state.round + Math.max(0, ...[...ctx.pileOf('cheap').slice(0, 4), ...(ctx.state.round > 1 ? ctx.pileOf('pricey').slice(0, 4) : [])].map(u => ctx.card(u)).filter(c => ctx.payChoices(p, c.uid, {}).length).map(botWorth)) * 0.3,
       resolve(ctx, p) {
         ctx.gain(p, B, 2 * ctx.state.round, { fromAction: true });
-        const top = ctx.state.pile.slice(0, 4);
-        p.peekReach = Math.max(p.peekReach || 0, top.length);
-        ctx.log(`${p.name} peeks at the top ${top.length} of the pile.`);
-        peekStep(ctx, p, { left: top, placed: [] });
+        // two shops (Cory, 2026-10-23): from round II, when both piles have cards, the taker picks which to peek at
+        if (ctx.state.round > 1 && ctx.pileOf('pricey').length && ctx.pileOf('cheap').length) {
+          const best = k => Math.max(0, ...ctx.pileOf(k).slice(0, 4).map(u => ctx.card(u))
+            .filter(c => ctx.payChoices(p, c.uid, {}).length).map(botWorth));
+          ctx.choose(p, 'Peek: which pile?', [
+            { id: 'pile:cheap', label: 'Cheap pile', kind: 'pile', value: 'cheap', hint: best('cheap') },
+            { id: 'pile:pricey', label: 'Pricey pile', kind: 'pile', value: 'pricey', hint: best('pricey') },
+          ], `${Q}.peekPile`);
+          return;
+        }
+        startPeek(ctx, p, ctx.pileOf('cheap').length || ctx.state.round <= 1 ? 'cheap' : 'pricey');
       },
     },
     {
@@ -230,6 +243,7 @@ const market = {
       const got = out.length ? ctx.gain(p, B, out.length, { fromAction: true }) : null;
       if (got) ctx.log(`${p.name}'s Out of Style: +${got.n} ${got.color}.`);
     },
+    peekPile(ctx, p, key) { startPeek(ctx, p, key === 'pricey' ? 'pricey' : 'cheap'); },
     peek(ctx, p, uid, data) {
       peekStep(ctx, p, { left: data.left.filter(u => u !== uid), placed: [...data.placed, uid] });
     },

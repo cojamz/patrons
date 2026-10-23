@@ -4,7 +4,7 @@
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft, quadrant, pileReach } from '../../engine/v4/index.js';
+import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft, quadrant, pileReachable, pileOf } from '../../engine/v4/index.js';
 import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
@@ -106,13 +106,13 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   // the top of the pile you can reach (Peek, Insider) joins the shop while you recruit, every card of it: one you can't
   // pay for recedes like a shop card, never hides (Cory, 2026-10-23: "should still be able to see Peek card they can't afford")
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
-  const pileTop = buying && viewer ? [...new Set([...state.pile.slice(0, pileReach(state, viewer)), ...pileOpts])] : [];
+  const pileTop = buying && viewer ? [...new Set([...pileReachable(state, viewer), ...pileOpts])] : [];
   // a pick from the top of the pile (Talent Scout): the strip becomes a tray of those 5, in pile order; what you can't
   // pay for recedes (dialogs pod, wave-2 tester: one text chip, the other four never shown)
   // Peek (Blue) puts the top 4 back in your order: those 4 join the shop rather than replace it, so the shop stays in
   // view while you order them (Cory, 2026-10-23: "with peek, player loses the ability to see the current shop")
-  const peeking = picking && /^Peek: /.test(pend.prompt || '');
-  const peekTop = peeking ? state.pile.slice(0, 4) : [];
+  const peeking = picking && /^Peek: which goes/.test(pend.prompt || '');
+  const peekTop = peeking ? pileOf(state, state.players[pend.player]?.peekPile === 'pricey' ? 'pricey' : 'cheap').slice(0, 4) : [];
   const tray = picking && !peeking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, 5).includes(o.value)) ? state.pile.slice(0, 5) : null;
   const steady = useRef(null);
   // a turn's own key: state.turns grows by one as each turn starts (the engine's record of this round's turns)
