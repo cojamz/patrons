@@ -14,4 +14,5 @@ Short version:
 2. Send numbered picks with the strong-to-weak order. No prices yet.
 3. Build his cut on `claude/members-<color>`, never live.
 4. Sweep prices with scripts/v4-fair-price.mjs at 2, 3 and 4 seats; buy-followers-only win rate with scripts/v4-big-followers.mjs.
-5. Report each price with its instrument. Nothing ships until he says yes.
+5. Balance followers too, not only cost: members should vary in how many followers they're worth (Cory, Oct 23); raise a weak card's followers before cutting its cost.
+6. Report each price with its instrument. Nothing ships until he says yes.
