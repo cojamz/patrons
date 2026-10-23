@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 import * as core from '../../../engine/v4/core.js';
 import { previewSpace } from '../../../engine/v4/preview.js';
 import { sceneQ, buy } from './cards-helpers.js';
+import { defById } from '../../../engine/v4/content/index.js';
 import { take, move, uidOf, pinCosts } from './helpers.js';
 
 const { applyMove, paymentPlan, paymentChoices } = core;
@@ -38,14 +39,17 @@ describe('11 · every choice names the card or space that asked', () => {
     s = take(s, 'red.hire');
     expect(s.pending.prompt).toMatch(/^Open Door: /);
   });
-  it('a copy’s free member names the copier (Encore copying Open Door), not a bare "Copy:"', () => {
+  it('a copy of Open Door does Open Door itself: Encore recruits the cheapest member face up now', () => {
     let s = sceneQ({ quadrants: CLASSIC, n: 2, round: 2, queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }] });
     row(s, ['red.intern', 'red.patriarch', 'red.mob'], ['red.sponsor', 'red.reserve']);
     s = take(s, 'red.hire'); // P2 takes Open Door: Intern (1), free
     while (s.pending && s.pending.player === 1) s = move(s, 'pass');
     s = take(s, 'echo.encore');
+    const price = u => { const d = defById(s.cards[u].def); return d.s + d.w; };
+    const low = Math.min(...s.shop.map(price));
     s = move(s, s.pending.options.find(o => o.label.startsWith('Open Door')).id);
-    expect(s.pending.prompt).toMatch(/^Encore: /);
+    if (s.pending?.kind === 'choose') expect(s.pending.prompt).toMatch(/^Open Door: /);
+    else expect(s.players[0].members.map(price)).toContain(low);
   });
 });
 

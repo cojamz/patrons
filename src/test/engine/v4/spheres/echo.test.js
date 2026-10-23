@@ -110,23 +110,17 @@ describe('Green table action boundaries', () => {
     expect(Object.keys(ledger(s).now)).toEqual(['0-1']);
     expect(Object.values(ledger(s).last).map(e => [e.name, e.res])).toEqual([['Build Up', { green: 2 }]]);
   });
-  it('a copied free recruit reports no eligible card instead of hanging', () => {
-    let s = scene({ turns: [1, 0], shop: ['red.intern', 'red.volunteer', ...SHOP.slice(0, 4)] });
+  // Cory's playtest, 2026-10-22: a copy of Open Door recruits the cheapest member face up now, not one capped at
+  // what the first taker's cost (that left the copy with nothing once the cheap card was gone)
+  it.each([['red.volunteer', 'red.intern'], ['red.intern', 'gold.seed']])('a copied Open Door after %s goes recruits %s, the cheapest left', (first, next) => {
+    let s = scene({ turns: [1, 0], shop: [first, next, ...SHOP.slice(0, 4)], left: 0 });
     s = go(s, 'red.hire');
-    expect(defs(s, 1)).toEqual(['red.volunteer']);
+    expect(defs(s, 1)).toEqual([first]);
     s = take(s, 'echo.echo');
-    expect(s.pending.options[0].label).toBe('Open Door (P2): +1 red, a free member (none face up)');
-    s = move(s, s.pending.options[0].id);
-    expect(defs(s, 0)).toEqual([]);
-    expect(s.pending?.kind).not.toBe('choose');
-  });
-  it('a positive free-recruit price cap also reports when no eligible card remains', () => {
-    let s = scene({ turns: [1, 0], shop: ['red.intern', 'gold.seed', ...SHOP.slice(0, 4)] });
-    s = go(s, 'red.hire');
-    s = take(s, 'echo.echo');
-    expect(s.pending.options[0].label).toBe('Open Door (P2): +1 red, a member costing 1 or less (none face up)');
-    s = move(s, s.pending.options[0].id);
-    expect(defs(s, 0)).toEqual([]);
+    expect(s.pending.options[0].label).toBe('Open Door (P2): do Open Door yourself');
+    s = pass(move(s, s.pending.options[0].id));
+    expect(defs(s, 0)).toEqual([next]);
+    expect([R(s).red, R(s).green]).toEqual([1, 1]); // Open Door's +1 red and Echo's +1 green, nothing spent
   });
   it('a copied free recruit offers only eligible face-up members and costs no resources', () => {
     let s = scene({ turns: [1, 0], shop: ['gold.taxman', 'red.twins', 'gold.seed', ...SHOP.slice(0, 3)] });
@@ -134,8 +128,8 @@ describe('Green table action boundaries', () => {
     s = pass(move(s, 'card:' + uidOf(s, 'gold.taxman', 'shop')));
     s = chooseTarget(take(s, 'echo.echo'), 'red.hire');
     const labels = s.pending.options.map(o => o.label);
-    expect(labels).toEqual(expect.arrayContaining(['Twins (2)', 'Treasurer (2)']));
-    expect(labels.every(l => Number(l.match(/\((\d+)\)$/)[1]) <= 2)).toBe(true);
+    expect(s.pending.prompt).toMatch(/^Open Door: which of the cheapest/);
+    expect(labels).toEqual(['Twins', 'Treasurer']);
     s = pass(move(s, 'card:' + uidOf(s, 'red.twins', 'shop')));
     expect(defs(s, 0)).toEqual(['red.twins']);
     // the copied Open Door's +1 red (v0.8.0) and Echo's +1 green; nothing spent on the recruit

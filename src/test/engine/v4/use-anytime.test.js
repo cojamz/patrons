@@ -68,9 +68,9 @@ describe('using a member any time on your turn', () => {
   it('a choice it asks comes first, then the placement: Tribute Band copying your Open Door on your next turn', () => {
     const price = d => d.s + d.w;
     const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.dejavu' && price(d) > 0);
-    const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 2));
-    const tied = defs.filter(d => price(d) === low).slice(0, 2).map(d => d.id);
-    const dear = defs.filter(d => price(d) > low).slice(0, 4).map(d => d.id);
+    const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 3));
+    const tied = defs.filter(d => price(d) === low).slice(0, 3).map(d => d.id);
+    const dear = defs.filter(d => price(d) > low).slice(0, 3).map(d => d.id);
     // the snake's double turn: P1 places, buys nothing, and places again
     let s = table(Q, { round: 2, members: [['echo.dejavu']], shop: [...tied, ...dear], queue: turns(0, 0) });
     s = take(s, N('red', 'hire'));
@@ -79,9 +79,9 @@ describe('using a member any time on your turn', () => {
     expect(s.pending.kind).toBe('place');
     const use = s.pending.options.find(o => o.kind === 'use');
     expect(use).toBeTruthy();
-    s = move(s, use.id); // copies the space P1 just took: a face-up member costing no more, free
+    s = move(s, use.id); // copies the space P1 just took: Open Door again, on the shop as it is now
     expect(s.pending.kind).toBe('choose');
-    expect(s.pending.prompt).toMatch(new RegExp(`costing ${low} or less`));
+    expect(s.pending.prompt).toMatch(/^Open Door: which of the cheapest/); // a copy does Open Door itself (Cory, 2026-10-22)
     s = move(s, s.pending.options[0].id);
     expect(s.pending.kind).toBe('place'); // then the placement, fresh
     expect(ids(s)).not.toContain(use.id);

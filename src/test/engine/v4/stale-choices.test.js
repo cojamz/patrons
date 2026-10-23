@@ -63,9 +63,9 @@ describe('a queued choice never offers a card that moved', () => {
     const Q = ['gold', 'red', 'market', 'echo'];
     const price = d => d.s + d.w;
     const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.dejavu' && price(d) > 0);
-    const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 2));
-    const tied = defs.filter(d => price(d) === low).slice(0, 2).map(d => d.id);
-    const dear = defs.filter(d => price(d) > low).slice(0, 4).map(d => d.id);
+    const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 3));
+    const tied = defs.filter(d => price(d) === low).slice(0, 3).map(d => d.id);
+    const dear = defs.filter(d => price(d) > low).slice(0, 3).map(d => d.id);
     // 2 red to spend, so the buy step has something to offer after the copy (Open Door no longer gives +2 red)
     let s = table(Q, { round: 2, members: [['echo.dejavu']], res: [{ red: 2 }], shop: [...tied, ...dear] });
     s = take(s, N('red', 'hire'));
@@ -74,7 +74,7 @@ describe('a queued choice never offers a card that moved', () => {
     const use = s.pending.options.find(o => o.kind === 'use');
     s = move(s, use.id);
     expect(s.pending.kind).toBe('choose'); // the copy's question now, not after the buy
-    expect(s.pending.prompt).toMatch(new RegExp(`costing ${low} or less`));
+    expect(s.pending.prompt).toMatch(/^Open Door: which of the cheapest/); // a copy does Open Door itself (Cory, 2026-10-22)
     const pick = cardOf(s.pending.options[0]);
     s = move(s, `card:${pick}`);
     expect(where(s, pick)).toBe('p0');

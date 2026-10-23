@@ -26,7 +26,7 @@ export default {
       },
     },
     {
-      key: 'hire', ring: 1, name: 'Open Door', text: 'Recruit the cheapest member in the shop. +1 red.',
+      key: 'hire', ring: 1, name: 'Open Door', text: 'Recruit the cheapest member in the shop. +1 red.', copyDoesIt: true,
       estimate: ctx => 1 + cheapValue(ctx),
       resolve(ctx, p) { ctx.gain(p, 'red', 1, { fromAction: true }); hireCheapest(ctx, p, 'Open Door'); },
     },
