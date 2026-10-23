@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.47 — 2026-10-22 — unreleased
+
+- Silver's round III space is now High Tide: each rival +1 silver, then gain 1 follower per silver the rival with the most silver holds.
+
 ## v0.8.46 — 2026-10-22 — unreleased
 
 - Custom table picker: a small 2.0 / 1.5 / 1.0 tag on each color shows which are redesigned
