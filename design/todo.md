@@ -52,6 +52,7 @@ Answer by number. Claude's default in [brackets].
 16. Wording pass sheet: /mnt/project-files/overnight/lane8/wording-sheet.md, yes/no per row (⚑ rows are rules questions). [nothing ships until you answer] (Cory 10-21: "ok.." → applying the rows that only reword; ⚑ rules rows held)
 
 ## Ours, open
+- Steady pacing check red: the longest wait for your turn (a run of 6 rival turns) is 22.7s on seeded bot games against a 21.06s cap. Cause read (2026-10-23): round III runs where every rival recruits (each recruit chain 1.6-3.1s: coins drop, card to the hub, its worth to the count); the 6/7/8 shop makes those runs more common. Fix is a motion trim on a rival's recruit (about 0.3s per turn), which is a feel call: show Cory before/after, don't raise the cap.
 Correctness and Cory's made calls
 - [x] Cut Social Climber ("whenever you release another member": dead, Release is off, core.js:25) and deal a Claude fill-in. (v0.8.16–0.8.21)
 - [x] Guests colorless: in flight, uncommitted (content/index.js, benders.js). (v0.8.16)
