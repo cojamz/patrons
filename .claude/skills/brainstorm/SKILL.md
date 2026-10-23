@@ -13,9 +13,9 @@ Cory designs Cults; Claude brings ideas he can react to. He has called the ideas
 ## Every pitch (about a minute)
 
 1. Once per thread, before the first pitch: read [references/design-core.md](references/design-core.md) (how the game plays, each color's fantasy, why his favorite spaces landed) and [references/cheatsheet.md](references/cheatsheet.md) (the rules in ten lines and the kill list). About two minutes, then never again in that thread.
-2. Write the color's theme in one line first ("Purple: I act when it matters most"; design-core section 3), and open the pitch to Cory with it so he can correct your read. Use it as a light guide, not a constraint: an idea should feel at home in the color and be one clean mechanic, not a mechanic with a numeric bonus bolted on. It doesn't have to echo the theme closely (Cory: "don't over index on the theme. it doesn't need to be super incestual"). Then consider the arc of this slot's round. Generate 6 or so ideas from the shapes in design-core section 4: trade one scarce thing for another, break a limit everyone feels, read the table, hand someone a choice, one visible count. Each idea names what the taker gives up and what it combines with (its members, other colors' spaces); the game is engines and synergy, not good picks in a vacuum. Think freely here, in any terms that help; the game's exact wording comes later and must never narrow the ideas.
+2. Write the color's theme in one line first ("Purple: I act when it matters most"; design-core section 3), and open the pitch to Cory with it so he can correct your read. Use it as a light guide, not a constraint: an idea should feel at home in the color and be one clean mechanic, not a mechanic with a numeric bonus bolted on. It doesn't have to echo the theme closely (Cory: "don't over index on the theme. it doesn't need to be super incestual"). Then consider the arc of this slot's round. Generate about 10 ideas from the shapes in design-core section 4: trade one scarce thing for another, break a limit everyone feels, read the table, hand someone a choice, one visible count. Each idea names what the taker gives up and what it combines with (its members, other colors' spaces); the game is engines and synergy, not good picks in a vacuum. Think freely here, in any terms that help; the game's exact wording comes later and must never narrow the ideas.
 3. Play each through one turn in your head: what you'd get here versus your best other space, in round I and round III. Then play its **best case**: the player who builds around it, in round III, with the most members or the biggest pile it reads. A member that triggers on something done every turn ("whenever you recruit followers") multiplies fast. If the best case is absurd, or the idea needs a sentence of explanation to do little, cut it. Cut anything on the cheatsheet's kill list.
-4. Only now, write them up in the game's words ([references/wording.md](references/wording.md)), plainly and briefly. Send 1 to 3 that touch different pieces: numbered, the card text as it would print, what changes for a player, one played example if needed, your pick in brackets, numbers marked as yours. At most eight lines.
+4. Only now, write them up in the game's words ([references/wording.md](references/wording.md)), plainly and briefly. Send about 5 per open slot, all at once, that touch different pieces (even when only one slot is left; never a single pick unless he asks; Cory: "Give me like 5 ideas… why are you doing these so piecemeal?"): numbered, the card text as it would print, what changes for a player, one played example if needed, your pick in brackets, numbers marked as yours. At most eight lines.
 5. Log the pitch in design/pitch-ledger.md and push, after sending.
 
 If nothing survives, say so in one line and ask him one sharp question about the color. Don't send filler.
@@ -68,7 +68,7 @@ Two short examples of the walkthrough deciding:
 
 ## 5. Filter
 
-Run each survivor past every failure mode in verdicts.md. Then compare with the bar from step 2: equal or better total, different side effect. Drop anything already refused in the ledger unless you can say in a few words what's different. From what's left, keep the 1 to 3 that touch the most different pieces. If nothing survives, say so and ask him a sharper question about the color instead of sending filler; a thin list costs more trust than a short one.
+Run each survivor past every failure mode in verdicts.md. Then compare with the bar from step 2: equal or better total, different side effect. Drop anything already refused in the ledger unless you can say in a few words what's different. From what's left, keep the 5 or so that touch the most different pieces. If nothing survives, say so and ask him a sharper question about the color instead of sending filler; a thin list costs more trust than a short one.
 
 ## 6. Send
 
@@ -76,7 +76,7 @@ One message, at most eight lines, in the foreman voice:
 
 - A numbered list he can answer by number. Each line quotes the card text as it would print, then what changes for a player in a few words. Say what a card makes happen in its own printed terms; a loose summary ("does it twice", "basically a steal") reads to him as not knowing the card. One played example if the effect isn't obvious from the text.
 - Your default in brackets. Numbers are your fill-ins; say so once.
-- One or two ideas when calibrating a new slot or color; up to three when he asked for options. More only if he asks.
+- About 5 ideas per open slot in one message, one line each, never one at a time.
 - No prices on members unless he asks. No file names, system words or coined labels.
 
 ## 7. Log the same turn

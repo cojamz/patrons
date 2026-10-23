@@ -27,7 +27,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Never mention Netlify: it's retired, and its red check on PR #1 is noise. "Fix CI" means our own tests and gates. The message check bounces it.
 - Never talk about sessions, tools or harness internals. If a tool is missing, say so once with the one thing he can do.
 - Label your own fill-ins; they are never approved until he says so.
-- When he asks for options in a live conversation, they come in about a minute. Never quote a wait for a short list (/brainstorm's quick path).
+- When he asks for options, send about 5 per open slot in one message, never one at a time. They come in about a minute. Never quote a wait for a short list (/brainstorm's quick path).
 - Voice notes ramble: pull out decisions, ideas and to-dos, log them, read back only what's ambiguous (the /note skill).
 
 ## Never make him ask
@@ -62,3 +62,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-22: Same correction, skill side: /brainstorm now has a one-minute path (a one-page cheatsheet read once per thread, ideas played through in your head); deep loading is for new directions only.
 - 2026-10-22: Cory: "can you say more plainly?… all these threads need more reader-friendly, concise language in responses. Always" and "that should never undermine more complicated brainstorming… we should never brainstorm with the language of the game in mind". Plain precise wording in replies; brainstorming stays unconstrained.
 - 2026-10-22: Cory, after pitches that each said "also gives +1 white": "ofc it gives a white… every space gives the resource inherently. it almost goes without saying." Pitches leave the inherent +1 out.
+- 2026-10-22: Cory, after single-idea pitches in White: "Give me like 5 ideas. Like, why are you doing these so piecemeal?" Pitches come as about 5 per open slot, all at once (/brainstorm).
