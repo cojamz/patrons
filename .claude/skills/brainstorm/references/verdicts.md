@@ -43,7 +43,7 @@ Each one has drawn a no. Run every idea past all of them.
 
 ## How he wants it delivered
 
-- One or two ideas, calibrated, then more only if he asks. He works one slot at a time.
+- About 5 ideas per open slot, in one message, one line each. He hates one-at-a-time pitches: "why are you doing these so piecemeal?" (Oct 22). He still decides one slot at a time.
 - Quote the card text as it would print. He reads the card, not your description of it.
 - Say what changes for a player in one line, in game words.
 - Your numbers are fill-ins; label them. He changes numbers by feel.
