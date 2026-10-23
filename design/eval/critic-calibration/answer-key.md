@@ -74,3 +74,5 @@ Source: Cory's play notes, 2026-10-16 (v0.5 build).
 54. **Peek reads like a free member.** "peek doesnt GIVE you the member from the top right? you have to pay for it" (Cory, Oct 22 playtest). The text says your recruit may be one of the top 4; it doesn't say you still pay.
 55. **Copy previous on Open Door gave nothing.** "Copy previous action -> recruit cheapest didnt work" (Cory, Oct 22 playtest). The copy was capped at the first taker's cost and that card was gone.
 56. **Copying Open Door kept the first player's cost limit.** "Copying open door seemed to apply the cost restrictions of the first person who did it?" (Cory, Oct 22 playtest). Same cause as 55.
+57. **Peek hides the shop.** "with peek, player loses the ability to see the current shop. The UI is rough I think" (Cory, Oct 22 playtest). Ordering the top 4 replaced the shop instead of sitting beside it.
+58. **Peeked cards you can't afford vanish.** "player should still be able to see Peek card they cant afford when recruiting" (Cory, Oct 22 playtest). Only the affordable pile cards joined the shop.
