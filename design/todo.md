@@ -22,6 +22,8 @@ Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 1
 
 ## Playtest notes (Cory, Oct 22 evening, human playtest; options offered after he's done)
 - [ ] Round I shop feels thin: "only 5 members is a bit few. If there are expensive ones, everyone is chasing the same members." Now: 5 face up in round I, 6 in II, 7 in III; the pile refills each gap at once; a fresh row each round. Design call, his.
+- [ ] Open Door too strong in round I with 5 members ("Recruit the cheapest member in the shop"). Options sent: 6 in round I [default], move it to round II, recruit at half cost.
+- [x] Copying Open Door got nothing or kept the first taker's cost cap: a copy now does Open Door itself (answer key #55, #56).
 - [ ] Peek read as giving you the pile member; it doesn't ("This turn your recruit may be one of them", paid at cost). Card clarity, answer key #54.
 
 ## Waiting on Cory

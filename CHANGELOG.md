@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.51 — 2026-10-22 — unreleased
+
+- Copying Open Door now recruits the cheapest member in the shop at that moment, instead of nothing once the first player's pick was gone.
+
 ## v0.8.50 — 2026-10-22 — unreleased
 
 - Dragging or spinning the wheel no longer redraws the whole board each frame, so it turns smoother.

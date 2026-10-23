@@ -72,3 +72,5 @@ Source: Cory's play notes, 2026-10-16 (v0.5 build).
 52. **The snake draft is unclear.** Nothing tells players the turn order is a snake.
 53. **Unexplained follower fly-out before round end.** Followers fly from the piles toward every player; not the contest followers, and nothing says what it is.
 54. **Peek reads like a free member.** "peek doesnt GIVE you the member from the top right? you have to pay for it" (Cory, Oct 22 playtest). The text says your recruit may be one of the top 4; it doesn't say you still pay.
+55. **Copy previous on Open Door gave nothing.** "Copy previous action -> recruit cheapest didnt work" (Cory, Oct 22 playtest). The copy was capped at the first taker's cost and that card was gone.
+56. **Copying Open Door kept the first player's cost limit.** "Copying open door seemed to apply the cost restrictions of the first person who did it?" (Cory, Oct 22 playtest). Same cause as 55.
