@@ -84,7 +84,6 @@ Totals count the space's own +1. A space with a real effect usually gives just t
   - 5 to 6: an engine piece. Proselytizer, Shoplifter, Patriarch, Panel (worth 3, counts as 3).
   - 7 to 8: a rule-bender or centerpiece. Shopaholic ("You can always recruit twice"), Bodyguard, Go-Getter, Night Owl, Mentor & Protégé, Extra Shift, Gossip.
   - 9 to 10: game-shaping. Mob (worth 5, counts as 5, +1 per red member), Tribute Band, Extra Hand (+1 minion in round III).
-  - **Followers are a second lever, not a default of 1** (Cory, Oct 23: "we should not only balance cost, but how many followers they give… members should basically vary in how many followers they give"). Most live members are worth 1; aim for a spread (1 to 4 or so) across a color, and in the evolved game members may be a main source of points. Raising a card's followers is often better than cutting its cost. Never a plain body with no ability, though.
   - A member should return about 1.5× its cost over the game, in the cult it belongs to. Price a little above what bots suggest; lift a weak card's followers before cutting its price.
 - **Range, not a point.** Each color wants a strong and a weaker option side by side (Cory likes weak twins next to strong spaces: the draft makes them matter), and members spread from 2 to 10, so a cheap pickup and a big buy sit in the same row.
 - Buy-followers-only should win about 25% of 4-player games. An idea that mostly helps someone who only recruits follower cards pushes the wrong way: it's arbitrage, not engine.
