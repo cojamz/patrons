@@ -62,11 +62,17 @@ describe('Magenta actions', () => {
     expect(s.pending?.kind).not.toBe('choose');
     expect(R(s)).toEqual([{ ...Z, gold: 1, magenta: 1 }, { ...Z, gold: 1 }, { ...Z, red: 1, blue: 1 }]);
     expect(followers(s, s.players[0])).toBe(f0 + 1);
+    // the follower comes from whoever you took from (Cory, Oct 22)
+    expect(followers(s, s.players[1])).toBe(0);
+    expect(followers(s, s.players[2])).toBe(1);
     for (const [round, n] of [[2, 2], [3, 3]]) {
       let t = scene({ round, res: [{}, { gold: 9 }] });
       const g0 = followers(t, t.players[0]);
+      t.players[1].bonus = 5;
+      const v0 = followers(t, t.players[1]);
       t = take(t, 'thieves.pickpocket');
       for (let k = 0; k < n; k++) t = move(t, 'take:1:gold');
+      expect(followers(t, t.players[1])).toBe(v0 - round);
       expect(t.pending?.kind).not.toBe('choose');
       expect(R(t)[0]).toEqual({ ...Z, gold: n, magenta: 1 });
       expect(R(t)[1].gold).toBe(9 - n);
@@ -74,7 +80,17 @@ describe('Magenta actions', () => {
     }
   });
 
-  it('Help Yourself: takes only what there is; nothing to take still gives the followers and the magenta', () => {
+  it('Help Yourself: followers split across whoever you took from, and never below 0', () => {
+    let s = scene({ round: 3, res: [{}, { gold: 2 }, { red: 1 }], bonus: [0, 0, 4] });
+    const f = i => followers(s, s.players[i]);
+    const [a0, b0, c0] = [f(0), f(1), f(2)];
+    s = play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold', 'take:2:red');
+    expect(s.pending?.kind).not.toBe('choose');
+    // P2 was robbed most and gives 1 (all they have); P3 gives the other 2
+    expect([f(0) - a0, b0 - f(1), c0 - f(2)]).toEqual([3, 1, 2]);
+  });
+
+  it('Help Yourself: takes only what there is; nothing to take gives no followers, just the magenta', () => {
     let s = take(scene({ round: 2, res: [{}, { gold: 1 }] }), 'thieves.pickpocket');
     s = move(s, 'take:1:gold');
     expect(s.pending?.kind).not.toBe('choose');
@@ -84,7 +100,7 @@ describe('Magenta actions', () => {
     z = take(z, 'thieves.pickpocket');
     expect(z.pending?.kind).not.toBe('choose');
     expect(R(z)[0]).toEqual({ ...Z, magenta: 1 });
-    expect(followers(z, z.players[0])).toBe(f0 + 1);
+    expect(followers(z, z.players[0])).toBe(f0);
   });
 
   it('Redistribute: steal 1 per Magenta action that already has a minion (not the one just placed), split as you like', () => {

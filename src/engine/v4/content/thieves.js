@@ -99,19 +99,32 @@ function stealStep(ctx, p, data) {
     return;
   }
   let got = 0;
-  const from = [];
+  const from = [], hit = [];
   // who led when the steal began: a follower one victim's theft wins (Robin Hood) doesn't un-lead the next victim
   const led = new Set(ctx.state.players.filter(o => isLeader(ctx, o)).map(o => o.id));
   for (const [id, pick] of Object.entries(data.picked)) {
     const v = ctx.player(Number(id)), x = commit(ctx, p, v, pick, false, data.fromAction !== false, led.has(v.id));
     // Each pile stays in its original color, including its recap.
     const what = Object.entries(pick).filter(([, k]) => k > 0).map(([c, k]) => `${k} ${c}`).join(' and ');
-    if (x) { got += x; from.push(x === Object.values(pick).reduce((a, b) => a + b, 0) ? `${what} from ${v.name}` : `${x} from ${v.name}`); }
+    if (x) { got += x; hit.push([v, x]); from.push(x === Object.values(pick).reduce((a, b) => a + b, 0) ? `${what} from ${v.name}` : `${x} from ${v.name}`); }
   }
   ctx.log(got ? `${p.name}${data.fromAction === false ? "'s " + data.name : ""} stole ${got} (${from.join(', ')}).` : `${p.name} found nothing to steal.`);
   if (data.followers) {
     p.bonus += data.followers;
     ctx.log(`${p.name}'s ${data.name}: +${data.followers} follower${data.followers === 1 ? '' : 's'}.`);
+  }
+  // Help Yourself: the followers come from whoever you took from, one at a time, most-robbed first (Cory, Oct 22)
+  if (data.stealFollowers) {
+    const owe = new Map(), order = hit.sort((a, b) => b[1] - a[1]).map(([v]) => v);
+    const room = o => ctx.followers(o) - (owe.get(o) || 0);
+    // round robin, so a split steal splits the followers too; nobody goes below 0
+    for (let k = data.stealFollowers; k > 0 && order.some(o => room(o) > 0);) {
+      for (const o of order) if (k > 0 && room(o) > 0) { owe.set(o, (owe.get(o) || 0) + 1); k--; }
+    }
+    for (const [v, k] of owe) {
+      v.bonus -= k; p.bonus += k;
+      ctx.log(`${p.name}'s ${data.name}: took ${k} follower${k === 1 ? '' : 's'} from ${v.name}.`);
+    }
   }
 }
 const startSteal = (ctx, p, name, n, extra = {}) => stealStep(ctx, p, { name, left: n, each: [], picked: {}, unit: 1, ...extra });
@@ -179,11 +192,11 @@ const thieves = {
 
   actions: [
     {
-      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 1 resource and +1 follower in round I, 2 and +2 in round II, 3 and +3 in round III. +1 magenta.',
-      byRound: { lines: ['Steal 1 resource. +1 follower.', 'Steal 2 resources. +2 followers.', 'Steal 3 resources. +3 followers.'], rest: '+1 magenta.' },
+      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 1 resource and 1 follower in round I, 2 and 2 in round II, 3 and 3 in round III. +1 magenta.',
+      byRound: { lines: ['Steal 1 resource and 1 follower.', 'Steal 2 resources and 2 followers.', 'Steal 3 resources and 3 followers.'], rest: '+1 magenta.' },
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round)) + ctx.state.round * 1.5,
       resolve(ctx, p) {
-        startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round, { say: true }), { followers: ctx.state.round });
+        startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round, { say: true }), { stealFollowers: ctx.state.round });
       },
     },
     {
