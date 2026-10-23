@@ -1063,7 +1063,8 @@ function swapMembers(state, actor, aUid, bUid) {
     cardLeaves(state, from.owner, uid);
   }
   a.list.splice(a.index, 1); b.list.splice(b.index, 1);
-  a.list.splice(a.index, 0, bUid); b.list.splice(b.index, 0, aUid);
+  // a member arriving in a cult joins the end of its row, oldest to newest (Cory, 2026-10-22); the shop keeps its slot
+  for (const [uid, dest] of [[bUid, a], [aUid, b]]) if (dest.owner) dest.list.push(uid); else dest.list.splice(dest.index, 0, uid);
   for (const [uid, from, to] of [[aUid, a, b], [bUid, b, a]]) if (from.owner) memberMoved(state, actor, uid, from.owner, to.owner || null, movedHooks);
   // A member swapped into the shop goes back wiped clean, as a released one does (no old owner's copy or flags).
   for (const [uid, from, to] of [[aUid, a, b], [bUid, b, a]]) if (from.owner && !to.owner) state.cards[uid] = { uid, def: state.cards[uid].def };

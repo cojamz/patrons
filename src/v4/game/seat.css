@@ -60,7 +60,6 @@
   .app.game.lt > .lt-seat .cs-crowd > .cs-figs{display:block;position:relative;height:100%;line-height:0;padding-left:1px}
   .app.game.lt > .lt-seat .cs-figs .cs-member{display:inline-flex;vertical-align:top;height:24px;margin:0 0 1px}
   .app.game.lt > .lt-seat .cs-figs .cs-member + .cs-member{margin-left:1px}
-  .app.game.lt > .lt-seat .cs-figs .cs-member[data-c0]{margin-left:7px}
   .app.game.lt > .lt-seat .cs-member .sprite{width:24px;height:24px}
   .app.game.lt > .lt-seat .cs-figs .cs-more{display:inline-flex;vertical-align:top;align-items:center;justify-content:center;min-width:24px;height:24px;margin-left:6px;
     font-size:11px;line-height:24px;font-weight:700;color:var(--cream-2,#b9a98c)}

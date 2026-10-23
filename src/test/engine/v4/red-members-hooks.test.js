@@ -96,7 +96,8 @@ describe('new Red member hooks', () => {
     const panel = uidIn(s, 'red.panel', 0), host = uidIn(s, 'gold.merchant', 0), mentor = uidIn(s, 'red.mentor', 'shop');
     expect(s.pending.options.every(o => !o.value?.includes(panel))).toBe(true);
     s = move(s, `trade:${host}:${mentor}`);
-    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.mentor', 'red.panel', 'red.volunteer']);
+    // oldest to newest (Cory, 2026-10-22): the promoted Mentor joins the end of the row, after Panel
+    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.panel', 'red.mentor', 'red.volunteer']);
     expect(s.players[0].res.red).toBe(0);
     expect(s.shop).toContain(host);
   });

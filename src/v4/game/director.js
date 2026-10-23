@@ -49,11 +49,35 @@ function fromGains(before, state) {
   // Its delta is income only; never reuse that state's full closing-turn effect stream.
   const deltaState = state.round > before.round && state.moves === before.moves
     ? { ...state, moves: before.moves + 1 } : state;
-  return gainsBetween(before, deltaState).map((m, i) => {
+  const out = gainsBetween(before, deltaState).map((m, i) => {
     const from = conv(m.from), to = conv(m.to);
     const cause = from.kind === 'member' ? { kind: 'member', pid: from.pid, def: from.def } : from.kind === 'space' ? { kind: 'space', key: from.key } : { kind: 'guess', n: i };
     return { n: i, type: m.what === 'fol' ? 'followers' : m.pay ? 'pay' : from.kind === 'stack' ? 'transfer' : 'gain', cause, from, to, what: m.what === 'fol' ? { n: m.n } : { r: m.r, n: m.n } };
   });
+  return [...membersBetween(before, state, out.length), ...out];
+}
+/** Members that changed hands between two states, as the engine's stream tells them (effects.js), for a step whose
+ *  stream is missing (several moves at once): a member never changes chairs unseen. */
+function membersBetween(before, state, n0) {
+  const out = [];
+  if (!before.players || !state.players) return out;
+  const cause = { kind: 'guess', n: n0 };
+  const was = new Map(), now = new Map();
+  before.players.forEach((p, pid) => p.members.forEach(u => was.set(u, pid)));
+  state.players.forEach((p, pid) => p.members.forEach(u => now.set(u, pid)));
+  for (const [u, pid] of now) {
+    const b = was.get(u);
+    if (b === pid) continue;
+    const i = (before.shop || []).indexOf(u);
+    if (b != null) out.push({ type: 'member-move', cause, from: { kind: 'crowd', pid: b }, to: { kind: 'crowd', pid }, what: { uid: u } });
+    else out.push({ type: 'recruit', cause, from: i >= 0 ? { kind: 'shop', index: i, uid: u } : { kind: 'pile' }, to: { kind: 'crowd', pid }, what: { uid: u } });
+  }
+  for (const [u, pid] of was) {
+    if (now.has(u)) continue;
+    const i = (state.shop || []).indexOf(u);
+    out.push({ type: 'release', cause, from: { kind: 'crowd', pid }, to: i >= 0 ? { kind: 'shop', index: i, uid: u } : { kind: 'pile' }, what: { uid: u } });
+  }
+  return out;
 }
 
 /** One cause's effects as moves: payments, takes (paired steals, color turns included), gives, gains, cards, followers. */

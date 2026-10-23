@@ -8,7 +8,7 @@
 //   seats/s<i>:   { kind: 'human'|'bot', name, id?, sub? } // id = playerId for humans. Compacted to s0..sN-1 at start.
 //                 sub: 'bot' = the player left and the host let a bot play for them; cleared the moment they're back
 //   players/<id>: { name, connected, lastSeen }
-//   state:        { stateJson, version, lastMove, recent, at } // engine state as a STRING (RTDB mangles arrays/nulls)
+//   state:        { stateJson, effectsJson, version, lastMove, recent, at } // engine state (and the move's effects) as STRINGS (RTDB mangles arrays/nulls)
 //   moves/<key>:  { by, seat, move:{player, option}, n, mid } // guests (and the host) push; host consumes
 //   rejects/<playerId>/<key>: { mid, reason }                // host's answer to a refused move
 // Codes are 5 characters, so they can't collide with v3's 4-character rooms.
@@ -593,6 +593,16 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   return api;
 }
 
+// The engine shares one cause object among the effects it explains; JSON makes copies, so one is shared again here.
+function relinkCauses(effects) {
+  const seen = new Map();
+  for (const e of effects) if (e && e.cause) {
+    const k = JSON.stringify(e.cause);
+    if (seen.has(k)) e.cause = seen.get(k); else seen.set(k, e.cause);
+  }
+  return effects;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Online session: the same contract as the local one. Guests never run the rules; they show the
 // host's snapshots and push moves.
@@ -625,6 +635,9 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     if (state && node.version <= version) return; // out-of-order or repeated snapshot
     let next;
     try { next = JSON.parse(node.stateJson); } catch { return; }
+    if (typeof node.effectsJson === 'string') {
+      try { Object.defineProperty(next, 'effects', { value: relinkCauses(JSON.parse(node.effectsJson)), enumerable: false, configurable: true, writable: true }); } catch { /* no chain: the table falls back to the diff */ }
+    }
     state = next;
     version = node.version;
     trackState(state);
@@ -746,6 +759,9 @@ function startHost({ transport, base, getRoom, botDelayMs }) {
     const V = ver;
     const nextRecent = [...recent, lastMove.mid].slice(-RECENT_KEEP);
     const node = { stateJson: JSON.stringify(next), version: V + 1, lastMove, recent: nextRecent.join(','), at: Date.now() };
+    // what moved and why (never part of the state): every table plays the move as the host's own does, a member
+    // changing hands included (Cory, 2026-10-22: online games showed no member moving between players)
+    if (Array.isArray(next.effects)) node.effectsJson = JSON.stringify(next.effects);
     let res;
     try {
       res = await transport.transaction(`${base}/state`, c => {
