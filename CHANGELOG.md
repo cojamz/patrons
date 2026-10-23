@@ -4,7 +4,7 @@ Player-facing releases and exact source/build verification are recorded separate
 
 ## v0.8.59 — 2026-10-22 — unreleased
 
-- The shop shows 6, 7 and 8 members in rounds I, II and III. Redistribute counts its own space, and the details view shows total cost. Members fly between players online too; seats list members oldest to newest. Top Up: fewest colors get a flat +1, only its yellow grows each round. Wheel and card words match what the spaces do. After an update, players in a game started on the version before go back to their seat on that version.
+- The shop shows 6, 7 and 8 members in rounds I, II and III. Peek gives +2/+4/+6 blue; Lie Low no longer steals; Raiders (renamed) costs 4. Redistribute counts its own space, and the details view shows total cost. Members fly between players online too; seats list members oldest to newest. Top Up: fewest colors get a flat +1, only its yellow grows each round. Wheel and card words match what the spaces do. After an update, players in a game started on the version before go back to their seat on that version.
 
 ## v0.8.58 — 2026-10-22 — unreleased
 
