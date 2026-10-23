@@ -164,7 +164,7 @@ describe('v4 format helpers', () => {
   it("Red's swap with the shop names the member that left and the one that came (backlog 2026-10-21)", () => {
     // real moves from bot games: every "X swapped A's Y and Shop's Z." turn tells both Y and Z
     let seen = 0, rival = 0;
-    for (let seed = 1; seed <= 40 && seen < 4; seed++) {
+    for (let seed = 1; seed <= 40 && (seen < 4 || !rival); seed++) {
       let s = createGame({ seats, seed });
       while (!s.over) {
         const n = applyMove(s, chooseBotMove(s, () => 0.4), { effects: true });
