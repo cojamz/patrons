@@ -19,4 +19,4 @@ Nine kept, three to go. Seven kept at 7:57pm. Rejected: +2 followers whenever yo
 
 Pitched next (Claude's): followers equal to the cost of your priciest other member (When recruited); whenever you recruit followers, +1 follower per white member; whenever you turn one of your members into followers or white, +2 followers.
 
-Last three, pitched Oct 23 (Claude's): cheap twins: When recruited: turn up to 3 white into followers; When recruited: turn 1 resource into 2 followers; Now and at round start: +1 white. General: when you get rid of this member, gain followers equal to twice its cost; Round end: turn up to 2 white into followers; counter: rivals can't steal your followers.
+Last three, pitched Oct 23 (Claude's): cheap twins: When recruited: turn up to 3 white into followers; When recruited: turn 1 resource into 2 followers; Now and at round start: +1 white. General: when you get rid of this member, gain followers equal to its cost (was twice: too strong stacked with the round II space); Round end: turn up to 2 white into followers; counter: rivals can't steal your followers.
