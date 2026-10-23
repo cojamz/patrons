@@ -84,7 +84,7 @@ describe('Green copies the risky spaces', () => {
 
   it('copying a steal can’t reach a player in the Lie Low', () => {
     let s = scene({ quads: Q, n: 3, turns: [2, 1, 0], res: [{ red: 3 }, { gold: 5 }, { red: 4 }] });
-    s = go(s, 'thieves.hideout', 'take:1:gold'); // P3 hides and lifts 1 gold from P2
+    s = go(s, 'thieves.hideout'); // P3 hides
     s = take(s, 'thieves.pickpocket');
     expect(ids(s)).toEqual(['take:0:red']); // P2 can only rob P1
     s = pass(move(s, 'take:0:red'));
@@ -359,8 +359,8 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
   const Q = ['gold', 'red', 'thieves', 'market'];
   it('Collect Debts can’t take from the player in the Lie Low this round, and can next round', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }] });
-    s = go(s, 'thieves.hideout', 'take:2:gold', 'take:2:gold'); // P2 hides (and lifts 2 gold from P3: 1 × round)
-    expect(R(s, 1)).toMatchObject({ gold: 6, magenta: 1 });
+    s = go(s, 'thieves.hideout'); // P2 hides (no steal since 2026-10-22)
+    expect(R(s, 1)).toMatchObject({ gold: 4, magenta: 1 });
     s = take(s, 'gold.steal');
     expect(ids(s)).toEqual(['player:2']);
     s.players[1].hideout = 1; // a Lie Low from an earlier round protects nothing
@@ -368,7 +368,7 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
   });
   it('Shake Down cannot pick a member protected by Lie Low', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }], members: [[], ['red.twins'], ['red.bigfamily']] });
-    s = go(s, 'thieves.hideout', 'take:2:gold', 'take:2:gold');
+    s = go(s, 'thieves.hideout');
     s = take(s, 'thieves.ransom');
     expect(ids(s)).toEqual([`card:${uidOf(s, 'red.bigfamily', 2)}`]);
     expect(defs(s, 1)).toEqual(['red.twins']);

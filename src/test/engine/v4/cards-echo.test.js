@@ -104,9 +104,11 @@ describe('Green current actions', () => {
     s = go(s, 'echo.echo', sp('thieves.pickpocket'), 'take:2:blue');
     // the copier steals for itself (blue stays blue) and gets Help Yourself's own +1 magenta
     expect([R(s).magenta, R(s).blue, R(s, 2).blue, R(s).green]).toEqual([1, 1, 1, 1]);
-    let t = table(QT, { n: 3, shop: ROW, res: [{}, { gold: 3 }, { blue: 3 }], queue: turns(2, 0) });
-    t = go(t, 'thieves.hideout', 'take:1:gold');
-    t = play(take(t, 'echo.echo'), sp('thieves.hideout'));
+    // Lie Low no longer steals (Cory, 2026-10-22): P3 hides, P2 steals from P1, P1's copy of that steal can't reach P3
+    let t = table(QT, { n: 3, shop: ROW, res: [{ red: 3 }, { gold: 3 }, { blue: 3 }], queue: turns(2, 1, 0) });
+    t = go(t, 'thieves.hideout');
+    t = go(t, 'thieves.pickpocket', 'take:0:red');
+    t = play(take(t, 'echo.echo'), sp('thieves.pickpocket'));
     expect(ids(t).length).toBeGreaterThan(0);
     expect(ids(t).every(id => id.startsWith('take:1:'))).toBe(true);
   });

@@ -119,18 +119,16 @@ describe('Magenta actions', () => {
     expect(R(z)).toEqual([{ ...Z, gold: 1, magenta: 1 }, { ...Z, gold: 4 }, { ...Z }]);
   });
 
-  it('Lie Low: steal 1 resource × round; then no one can steal your resources or members this round, Gold’s Collect Debts included', () => {
-    let s = scene({ round: 2, res: [{ gold: 4 }, {}, { gold: 3 }], members: [['red.intern'], [], []],
+  it('Lie Low: no steal (Cory, 2026-10-22); no one can steal your resources or members this round, Gold’s Collect Debts included', () => {
+    let s = scene({ round: 2, res: [{ gold: 4 }, {}, { gold: 2 }], members: [['red.intern'], [], []],
       queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 1 }, { t: 'turn', p: 1 }] });
-    s = take(s, 'thieves.hideout');
-    expect(ids(s)).toEqual(['take:2:gold']);
-    s = pass(play(s, 'take:2:gold', 'take:2:gold'));
-    expect(R(s)[0]).toEqual({ ...Z, gold: 6, magenta: 1 });
+    s = pass(take(s, 'thieves.hideout'));
+    expect(R(s)[0]).toEqual({ ...Z, gold: 4, magenta: 1 });
     expect(s.players[0].hideout).toBe(2);
     // P2's Help Yourself can only reach P3
     s = take(s, 'thieves.pickpocket');
     expect(ids(s)).toEqual(['take:2:gold']);
-    s = pass(move(s, 'take:2:gold'));
+    s = pass(play(s, 'take:2:gold', 'take:2:gold')); // round II: steal 2
     // Shake Down can't pick the Intern
     s = take(s, 'thieves.ransom');
     expect(s.pending?.kind).not.toBe('choose');
@@ -138,7 +136,7 @@ describe('Magenta actions', () => {
     expect(defs(s, 0)).toEqual(['red.intern']);
     s = take(s, 'gold.steal');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(R(s)[0].gold).toBe(6);
+    expect(R(s)[0].gold).toBe(4);
   });
 
   it('Crime Wave: steal half (rounded down) of one rival’s pile of one color, +1 magenta', () => {
@@ -305,8 +303,9 @@ describe('Magenta members', () => {
     // once per round: a second steal in the same round doesn't trigger it
     s = pass(s);
     s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
-    s = play(take(s, 'thieves.hideout'), 'take:1:gold');
-    expect(R(s)[0]).toEqual({ ...Z, gold: 1, magenta: 2 });
+    s = take(s, 'thieves.tipoff'); // a second steal (Lie Low no longer steals, 2026-10-22)
+    while (s.pending?.kind === 'choose') s = move(s, 'take:1:gold');
+    expect(R(s)[0]).toEqual({ ...Z, gold: 2, magenta: 2 }); // Redistribute's 2, and Lookout stays quiet
     expect(R(s)[2]).toEqual({ ...Z, gold: 1 });
     s = scene({ round: 2, res: [{}, { gold: 3 }, {}], members: [[], [], ['thieves.lookout']] });
     s = play(take(s, 'gold.steal'), 'player:1', 'player:1', 'player:1');

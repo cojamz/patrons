@@ -8,14 +8,14 @@ import GiftCard from '../../../v4/game/GiftCard.jsx';
 import { sceneQ } from '../../engine/v4/cards-helpers.js';
 
 describe('Magenta action wording and one-stack theft', () => {
-  it('separates scaling theft, followers, protection and the inherent color gain', () => {
+  it('separates scaling theft, followers, protection (no steal since 2026-10-22) and the inherent color gain', () => {
     for (const round of [1, 2, 3]) {
       const pick = panelText('thieves', { key: 'pickpocket' }, round);
       // the followers are stolen too, not gained from the bank (Cory, 2026-10-22)
       expect(pick.verb).toBe(`Steal ${round} and ${round} @f`);
       expect(pick.second).toBe('+1 magenta');
       const safe = panelText('thieves', { key: 'hideout' }, round);
-      expect(safe.verb).toBe(`Steal ${round}; safe from steals`);
+      expect(safe.verb).toBe('Safe from steals');
       expect(safe.second).toBe('this round');
       expect(safe.note).toBe('+1 magenta');
       expect(shortEffect('thieves', { key: 'pickpocket' }, round)).toContain(`steal ${round}`);

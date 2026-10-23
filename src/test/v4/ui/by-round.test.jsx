@@ -68,17 +68,17 @@ describe('rules that grow by round', () => {
 
 // Each separate effect gets its own line in the hover cards (Cory, 2026-10-23: "the +1 resource should be its own line").
 describe('one effect per line', () => {
-  it('splits a rule at its sentences, and Lie Low reads as three effects', async () => {
+  it('splits a rule at its sentences, and a scaling space reads as its three rounds, then the rest (Help Yourself)', async () => {
     const { effectLines } = await import('../../../v4/game/Info.jsx');
     expect(effectLines('Swap any 2 members of equal cost. +1 red.')).toEqual(['Swap any 2 members of equal cost.', '+1 red.']);
     expect(effectLines('+3 gold, and +1 gold to a rival you choose.')).toHaveLength(1);
-    const lie = quadrant('thieves').actions.find(a => a.key === 'hideout');
-    const { container } = render(<RuleText def={lie} round={2} lines />);
+    // Lie Low no longer steals (Cory, 2026-10-22), so Help Yourself is the scaling Magenta space
+    const help = quadrant('thieves').actions.find(a => a.key === 'pickpocket');
+    const { container } = render(<RuleText def={help} round={2} lines />);
     expect(container.querySelectorAll('.br-line')).toHaveLength(3);
     const rest = [...container.querySelectorAll('.br-rest')].map(e => e.textContent);
-    expect(rest).toHaveLength(2);
-    expect(rest[0]).toMatch(/^Rivals can.t steal from you this round\.$/);
-    expect(rest[1]).toMatch(/^\+1/);
+    expect(rest).toHaveLength(1);
+    expect(rest[0]).toMatch(/^\+1/); // the magenta is a dot
   });
   it('a member card puts each sentence on its own line', () => {
     const { container } = render(<RuleText def={defById('gold.investor')} round={1} lines />);

@@ -47,7 +47,7 @@ const P = {
   market: {
     bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: grows(r, 'more blue') }),
     restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
-    showroom: { verb: 'Peek at the top 4', second: 'reorder; may recruit one', note: '+1 blue' },
+    showroom: r => ({ verb: 'Peek at the top 4', second: 'reorder; may recruit one', note: `+${2 * r} blue, more each round` }),
     clearance: { verb: 'Recruit twice', second: 'this turn', note: '+1 blue' },
     pricecheck: { verb: 'Bury a shop member', second: 'gain half its cost in blue', note: '+1 blue' },
     spree: { verb: 'Recruit 3 times', second: 'this turn', note: '+3 blue' },
@@ -103,7 +103,7 @@ const P = {
   thieves: {
     pickpocket: r => ({ verb: `Steal ${r} and ${r} @f`, second: '+1 magenta', note: grows(r, 'steal and @f grow') }),
     tipoff: { verb: 'Steal 1 per magenta action', second: 'with a minion, this one too', note: '+1 magenta' },
-    hideout: r => ({ verb: `Steal ${r}; safe from steals`, second: 'this round', note: '+1 magenta' }),
+    hideout: { verb: 'Safe from steals', second: 'this round', note: '+1 magenta' },
     rob: { verb: 'Steal half a rival’s pile', second: 'one color, rounded down', note: '+1 magenta' },
     ransom: { verb: 'Rival pays or loses a member', second: 'costing 5 or less', note: '+1 magenta' },
     heist: { verb: 'Take a rival’s member', note: '+1 magenta' },

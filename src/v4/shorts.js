@@ -34,10 +34,10 @@ const S = {
     harvest: '+1 yellow per color', bloom: r => `+${r} yellow · +1 of your fewest`, transmute: '+2 yellow · then swap up to 3', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
   },
   market: {
-    bargain: r => `send 3 to the bottom; +${r + 1} blue`, restock: 'one color to the bottom; +1 blue each, +1', showroom: 'peek at 4, may recruit one; +1 blue', clearance: 'recruit twice; +1 blue', pricecheck: 'bury one, half its cost in blue; +1', spree: 'recruit 3 times; +3 blue',
+    bargain: r => `send 3 to the bottom; +${r + 1} blue`, restock: 'one color to the bottom; +1 blue each, +1', showroom: r => `peek at 4, may recruit one; +${2 * r} blue`, clearance: 'recruit twice; +1 blue', pricecheck: 'bury one, half its cost in blue; +1', spree: 'recruit 3 times; +3 blue',
   },
   thieves: {
-    pickpocket: r => `steal ${r} and ${r} followers; +1 magenta`, tipoff: 'steal 1 per magenta action with a minion; +1 magenta', hideout: r => `steal ${r}; safe from steals this round; +1 magenta`, rob: 'steal half a rival’s one-color pile, round down; +1 magenta', ransom: 'rival pays member’s cost or loses it; cost 5 or less; +1 magenta', heist: 'take a rival’s member; +1 magenta',
+    pickpocket: r => `steal ${r} and ${r} followers; +1 magenta`, tipoff: 'steal 1 per magenta action with a minion; +1 magenta', hideout: 'safe from steals this round; +1 magenta', rob: 'steal half a rival’s one-color pile, round down; +1 magenta', ransom: 'rival pays member’s cost or loses it; cost 5 or less; +1 magenta', heist: 'take a rival’s member; +1 magenta',
   },
   trading: {
     stipend: r => `+${r} followers +${r + 1} white`, splurge: '+1 follower per 2 spent on your recruit; +1 white', exchange: r => `turn ${r} into ${2 * r} followers; +1 white`, farewell: 'bury a member for its cost in followers; +1 white', estatesale: 'bury a member for its cost in white; +1 white', cashin: 'all your white into followers; +1 white',

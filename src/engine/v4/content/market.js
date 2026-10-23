@@ -174,10 +174,12 @@ const market = {
       },
     },
     {
-      key: 'showroom', ring: 1, name: 'Peek', text: 'Look at the top 4 of the pile and put them back in any order. This turn your recruit may be one of them. +1 blue.', copyDoesIt: true,
-      estimate: (ctx, p) => 1 + Math.max(0, ...ctx.state.pile.slice(0, 4).map(u => ctx.card(u)).filter(c => ctx.payChoices(p, c.uid, {}).length).map(botWorth)) * 0.3,
+      key: 'showroom', ring: 1, name: 'Peek', text: 'Look at the top 4 of the pile and put them back in any order. This turn your recruit may be one of them. +2 blue in round I, +4 in round II, +6 in round III.', copyDoesIt: true,
+      // scales, more blue (Cory, 2026-10-22 playtest: weak in round I, "should give more resource", "Peek should really really scale")
+      byRound: { lead: 'Look at the top 4 of the pile and put them back in any order. This turn your recruit may be one of them.', lines: ['+2 blue', '+4 blue', '+6 blue'] },
+      estimate: (ctx, p) => 2 * ctx.state.round + Math.max(0, ...ctx.state.pile.slice(0, 4).map(u => ctx.card(u)).filter(c => ctx.payChoices(p, c.uid, {}).length).map(botWorth)) * 0.3,
       resolve(ctx, p) {
-        ctx.gain(p, B, 1, { fromAction: true });
+        ctx.gain(p, B, 2 * ctx.state.round, { fromAction: true });
         const top = ctx.state.pile.slice(0, 4);
         p.peekReach = Math.max(p.peekReach || 0, top.length);
         ctx.log(`${p.name} peeks at the top ${top.length} of the pile.`);

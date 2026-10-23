@@ -56,15 +56,15 @@ describe('Magenta actions', () => {
 
   it('Redistribute counts occupied Magenta actions and respects Lie Low', () => {
     let s = table(Q, { n: 3, res: [{}, { gold: 3 }, { red: 3 }], shop: ROW, queue: turns(1, 0) });
-    s = pass(play(take(s, 'thieves.hideout'), 'take:2:red'));
+    s = pass(take(s, 'thieves.hideout'));
     s = take(s, 'thieves.tipoff');
     expect(ids(s).every(id => id.startsWith('take:2:'))).toBe(true);
     s = play(s, 'take:2:red', 'take:2:red'); // Lie Low and its own space
     expect(R(s)).toMatchObject({ magenta: 1, red: 2 });
   });
-  it('Lie Low: steal round resources; then resources are safe this round', () => {
+  it('Lie Low: no steal (Cory, 2026-10-22); resources are safe this round', () => {
     let s = table(Q, { res: [{ gold: 4 }, { red: 1 }], shop: ROW, queue: turns(0, 1) });
-    s = pass(play(take(s, 'thieves.hideout'), 'take:1:red'));
+    s = pass(take(s, 'thieves.hideout'));
     expect(R(s).magenta).toBe(1);
     s = take(s, 'thieves.pickpocket');
     expect(s.pending?.kind).toBe('buy'); // nothing to take

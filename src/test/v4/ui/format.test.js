@@ -308,7 +308,7 @@ describe('v4 format helpers', () => {
       let s = createGame({ seats: four, seed, quadrants: ['trading', 'gold', 'red', 'blue'] });
       const states = [s];
       while (!s.over) { s = applyMove(s, chooseBotMove(s, () => 0.4), { effects: true }); states.push(s); }
-      const raid = s.log.find(l => /Raider stole \d+ followers? from/.test(l));
+      const raid = s.log.find(l => /Raiders stole \d+ followers? from/.test(l));
       if (!raid) continue;
       const victim = s.players.find(p => raid.includes(`from ${p.name} `)).id;
       const t = createTrail(victim);
@@ -316,9 +316,9 @@ describe('v4 format helpers', () => {
       found = { t, n: Number(raid.match(/stole (\d+)/)[1]) };
     }
     expect(found).toBeTruthy();
-    const st = found.t.stories.find(x => /Raider took/.test(x.hit || ''));
+    const st = found.t.stories.find(x => /Raiders took/.test(x.hit || ''));
     expect(st).toBeTruthy();
-    expect(st.short.startsWith(`Raider took ${found.n} of your followers`)).toBe(true);
+    expect(st.short.startsWith(`Raiders took ${found.n} of your followers`)).toBe(true);
     for (const x of found.t.stories) {
       expect(new Set(x.lines).size).toBe(x.lines.length);
       // your own turn never reads as something done to you

@@ -46,18 +46,18 @@ describe('Yellow', () => {
 });
 
 describe('Magenta', () => {
-  it('Robin Hood: two rivals tied for most followers, both robbed in one Lie Low; the first payout un-leads the second', () => {
+  it('Robin Hood: two rivals tied for most followers, both robbed in one Help Yourself; the first payout un-leads the second', () => {
     const Q = ['gold', 'red', 'thieves', 'trading'];
     let s = table(Q, { n: 4, round: 2, res: [{}, { gold: 2 }, { gold: 2 }, { gold: 2 }], bonus: [3, 3, 3, 0], members: [['thieves.robinhood']], shop: ROW });
     // P1 4+1(Robin Hood)=5 followers? Robin Hood is worth 1: P1 = 1+3+1 = 5. Make P2, P3 equal at 5.
     s.players[1].bonus = 4; s.players[2].bonus = 4;
     expect([0, 1, 2].map(i => followers(s, s.players[i]))).toEqual([5, 5, 5]);
-    // Crime Wave now halves one rival's pile; Lie Low in round II steals 2, split among rivals
-    s = take(s, 'thieves.hideout');
+    // Help Yourself in round II steals 2, split among rivals (Lie Low no longer steals, 2026-10-22)
+    s = take(s, 'thieves.pickpocket');
     s = play(s, 'take:1:gold', 'take:2:gold');
     expect(s.pending?.kind).not.toBe('choose');
     // P2 and P3 both had the most followers when the steal began: the card says +1 each time
-    expect(s.players[0].bonus - 3).toBe(2);
+    expect(s.players[0].bonus - 3 - 2).toBe(2); // Help Yourself's own +2 followers, then Robin Hood +1 twice
   });
 });
 

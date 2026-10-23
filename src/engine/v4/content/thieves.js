@@ -207,13 +207,11 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Redistribute', ctx.stealCount(p, magentaOccupied(ctx, p), { say: true })); },
     },
     {
-      key: 'hideout', ring: 1, name: 'Lie Low', text: 'Steal 1 resource in round I, 2 in round II, 3 in round III. Rivals can’t steal from you this round. +1 magenta.',
-      byRound: { lines: ['Steal 1 resource.', 'Steal 2 resources.', 'Steal 3 resources.'], rest: 'Rivals can’t steal from you this round. +1 magenta.' },
-      estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round)) + 0.8 + 0.6 * ctx.state.round,
+      key: 'hideout', ring: 1, name: 'Lie Low', text: 'Rivals can’t steal from you this round. +1 magenta.', // no steal: the protection is the strength (Cory, 2026-10-22 playtest: "Lie Low probably shouldnt even steal")
+      estimate: (ctx, p) => 1.8 + 0.6 * ctx.state.round,
       resolve(ctx, p) {
         p.hideout = ctx.state.round;
         ctx.log(`${p.name} lies low: safe from thieves until round end.`);
-        startSteal(ctx, p, 'Lie Low', ctx.stealCount(p, ctx.state.round, { say: true }));
       },
     },
     {
