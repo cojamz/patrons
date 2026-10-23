@@ -11,7 +11,9 @@ const [first, count, out] = [Number(process.argv[2] || 1), Number(process.argv[3
 const all = allQuadrantIds().filter(q => q !== 'blue' && q !== 'green');
 for (let g = first; g < first + count; g++) {
   const rand = seededRandom(g * 7717 + 3);
-  const pool = [...all], quads = [];
+  // MUST=trading puts that sphere on every table (a quick read on one color); the rest are random.
+  const must = process.env.MUST ? process.env.MUST.split(',') : [];
+  const pool = all.filter(q => !must.includes(q)), quads = [...must];
   while (quads.length < 4) quads.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
   let s = createGame({ seats: Array.from({ length: 4 }, () => ({ kind: 'bot' })), seed: g, quadrants: quads });
   const buyer = g % 5 === 0 ? g % 4 : -1;
@@ -36,6 +38,11 @@ for (let g = first; g < first + count; g++) {
     players: s.players.map(p => ({
       seat: p.id, followers: followers(s, p), win: followers(s, p) === top, members: p.members.map(u => name(s.cards[u].def)),
       memberCount: memberCount(s, p), places: places[p.id],
+      // followers each member gave: its printed followers plus what its ability added during play (the ledger)
+      memberFollowers: Object.fromEntries(p.members.map(u => {
+        const c = s.cards[u], d = defById(c.def), f = c.copy ? Math.max(d.f || 0, defById(c.copy).f || 0) : d.f || 0;
+        return [name(c.def), f + ((s.ledger && s.ledger[p.id] && s.ledger[p.id][d.name]) || 0)];
+      })),
     })),
   };
   appendFileSync(out, JSON.stringify(row) + '\n');

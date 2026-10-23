@@ -1,11 +1,16 @@
 // Summarize v4-hard-batch.mjs output. Usage: node scripts/v4-hard-batch-report.mjs <files.jsonl...>
 // Win share splits ties. Hard seats only, except the buy-followers-only line. A 4-seat table's even share is 25%.
 import { readFileSync } from 'node:fs';
+import { allQuadrantIds, quadrant } from '../src/engine/v4/index.js';
+import { defById } from '../src/engine/v4/content/index.js';
+// A member's cost is its color plus wild (s + w). Cory, Oct 22: in member tests a member should give about 1.5x its cost in followers.
+const cost = {};
+for (const q of allQuadrantIds()) for (const d of quadrant(q).members) cost[`${d.name} (${q})`] = (d.s || 0) + (d.w || 0);
 const rows = process.argv.slice(2).flatMap(f => readFileSync(f, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse));
 const share = (r, p) => p.win ? 1 / r.players.filter(x => x.win).length : 0;
 const pct = x => `${Math.round(x * 100)}%`;
 const bump = (o, k, w) => { (o[k] ??= { n: 0, w: 0 }); o[k].n++; o[k].w += w; };
-const color = {}, member = {}, space = {}, offered = {}, buyer = { n: 0, w: 0 };
+const fol = {}, color = {}, member = {}, space = {}, offered = {}, buyer = { n: 0, w: 0 };
 for (const r of rows) {
   for (const m of r.shop) offered[m] = (offered[m] || 0) + 1;
   // colors: members of each color the winner owns vs another Hard seat
@@ -18,6 +23,7 @@ for (const r of rows) {
     const w = share(r, p);
     if (p.seat === r.buyer) { buyer.n++; buyer.w += w; continue; }
     for (const m of new Set(p.members)) bump(member, m, w);
+    for (const [m, f] of Object.entries(p.memberFollowers || {})) { (fol[m] ??= { n: 0, f: 0 }); fol[m].n++; fol[m].f += f; }
     for (const [k, c] of Object.entries(p.places)) { (space[k] ??= { uses: 0, win: 0, lose: 0, nw: 0, nl: 0 }); space[k].uses += c; }
   }
   // spaces: average uses per winner vs per other hard seat
@@ -32,7 +38,7 @@ for (const [q, v] of Object.entries(color).sort((a, b) => (b[1].gw / b[1].nw - b
   console.log(`  ${q}: on ${v.games} tables, winner ${(v.gw / (v.nw || 1)).toFixed(2)} vs others ${(v.gl / (v.nl || 1)).toFixed(2)}`);
 console.log('\nMembers (owned at game end by a Hard seat; owner win share; bought / times seen in shop), min 6 owners:');
 const ml = Object.entries(member).filter(([, v]) => v.n >= 6).map(([k, v]) => [k, v.w / v.n, v.n, offered[k] || 0]).sort((a, b) => b[1] - a[1]);
-for (const [k, wr, n, off] of ml) console.log(`  ${k}: wins ${pct(wr)}, owned ${n} times / in shop ${off} games`);
+for (const [k, wr, n, off] of ml) console.log(`  ${k}: wins ${pct(wr)}, owned ${n} times / in shop ${off} games${fol[k] ? `, gave ${(fol[k].f / fol[k].n).toFixed(1)} followers for cost ${cost[k] ?? '?'}${cost[k] ? ` (${(fol[k].f / fol[k].n / cost[k]).toFixed(1)}x)` : ''}, ${fol[k].n} games` : ''}`);
 const pick = Object.entries(offered).filter(([, o]) => o >= 8).map(([k, o]) => [k, (member[k]?.n || 0) / o]).sort((a, b) => b[1] - a[1]);
 console.log('\nMost and least bought when in the shop (seen in 8+ games):');
 console.log('  top: ' + pick.slice(0, 8).map(([k, x]) => `${k} ${pct(x)}`).join(', '));
