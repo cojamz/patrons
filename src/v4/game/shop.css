@@ -101,6 +101,10 @@
   .app.game.lt .lt-shop-cards .lt-cards[data-n="5"] .lt-deck{grid-row:span 1}
   /* Peek's tray of 4: three rows, the deck takes two */
   .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="4"]{grid-template-rows:repeat(3,minmax(0,1fr))}
+  /* the top of the pile beside the shop (Peek, Insider; Cory, 2026-10-23): up to 12 members, so five rows and the deck
+     steps aside; the pile cards follow the shop's, each tagged "pile" */
+  .app.game.lt .lt-shop-cards[data-pile-extra] .lt-shop-body > .lt-cards{grid-template-rows:repeat(5,minmax(0,1fr))}
+  .app.game.lt .lt-shop-cards[data-pile-extra] .lt-deck{display:none}
   /* the narrower column (Cory, 2026-10-20: a bigger wheel): the price and worth keep their whole width */
   .app.game.lt .lt-shop-cards .lt-card .ft{margin:auto 4px 0}
   .app.game.lt .lt-shop-cards .lt-card .lt-res{margin-right:3px}

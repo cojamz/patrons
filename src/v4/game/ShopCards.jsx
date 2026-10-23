@@ -4,7 +4,7 @@
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft, quadrant } from '../../engine/v4/index.js';
+import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft, quadrant, pileReach } from '../../engine/v4/index.js';
 import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
@@ -103,19 +103,24 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   }, [state.shop]);
   const fresh = uid => performance.now() - (arrived.current.get(uid) ?? -1e9) < 500;
   // the cards the space under the pointer would unlock brighten in ShopTicks (below): a hover never re-renders the shop
+  // the top of the pile you can reach (Peek, Insider) joins the shop while you recruit, every card of it: one you can't
+  // pay for recedes like a shop card, never hides (Cory, 2026-10-23: "should still be able to see Peek card they can't afford")
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
+  const pileTop = buying && viewer ? [...new Set([...state.pile.slice(0, pileReach(state, viewer)), ...pileOpts])] : [];
   // a pick from the top of the pile (Talent Scout): the strip becomes a tray of those 5, in pile order; what you can't
   // pay for recedes (dialogs pod, wave-2 tester: one text chip, the other four never shown)
-  // Peek (Blue) puts the top 4 back in your order: its tray is those 4, and the caption says what the pick does
+  // Peek (Blue) puts the top 4 back in your order: those 4 join the shop rather than replace it, so the shop stays in
+  // view while you order them (Cory, 2026-10-23: "with peek, player loses the ability to see the current shop")
   const peeking = picking && /^Peek: /.test(pend.prompt || '');
-  const reach = peeking ? 4 : 5;
-  const tray = picking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, reach).includes(o.value)) ? state.pile.slice(0, reach) : null;
+  const peekTop = peeking ? state.pile.slice(0, 4) : [];
+  const tray = picking && !peeking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, 5).includes(o.value)) ? state.pile.slice(0, 5) : null;
   const steady = useRef(null);
   // a turn's own key: state.turns grows by one as each turn starts (the engine's record of this round's turns)
   const rowKey = `${sort}|${state.round}|${(state.turns || []).length}`;
   const row = steadyOrder(steady.current, rowKey, sortShop(state, state.shop, sort));
   steady.current = { key: rowKey, uids: row };
-  const uids = tray || [...row, ...pileOpts];
+  const uids = tray || [...row, ...pileTop, ...peekTop];
+  const extra = !tray && (pileTop.length + peekTop.length) > 0;
   const memberPick = picking && uids.some(uid => optionFor(`card:${uid}`));
   // Show abilities for a first member choice, but a reader's explicit preference always wins, in every phase.
   const detailed = view === 'details' || (view === null && memberPick);
@@ -149,12 +154,12 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   live.current = { onPick, onDenied, hover, detailed };
   const built = useRef(new Map()); // uid → { sig, el }
   return (
-    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-fade={viewer && fade ? 'on' : undefined} aria-label="Shop">
+    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-pile-extra={extra || undefined} data-fade={viewer && fade ? 'on' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
         {/* a discount is said once, here, beside the struck prices (w4 A#23: its sentence was on all ten hovers) */}
-        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? (peeking ? 'Pick the next one on top' : `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for`) : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} members affordable` : `${state.shop.length} members`}</small></h3>
+        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : peeking ? 'Pick the next pile card on top' : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} members affordable` : `${state.shop.length} members`}</small></h3>
         <span className="lt-shop-controls">
           {viewer && <button type="button" className="lt-view-btn" aria-label="Fade members you can't afford" title="Fade members you can't afford right now" aria-pressed={fade} onClick={toggleFade}>affordable</button>}
           <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} onClick={toggleView}>details</button>
@@ -174,7 +179,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           const can = canPay.get(uid);
           // buying: the lamp lights only what you can recruit, the rest recede (Cory); placing: what you can't
           // afford yet is quieter, except a card the space under your pointer would unlock
-          const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can));
+          // ordering Peek's cards, the shop reads as it does while placing: there to look at, not to pick
+          const looking = peeking && !opt;
+          const dim = viewer && (((buying || picking) && !opt && !looking) || ((looking || (!buying && !picking)) && !can));
           const lit = (buying || picking) && !!opt;
           // the fade toggle: a member you can't pay for right now (and no choice offers) fades, in every phase
           const short = viewer && fade && !can && !opt;
@@ -183,13 +190,13 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           const paid = paidParts(state, viewer, uid, d);
           const fromPile = !state.shop.includes(uid);
           const color = cardColor(state, d), ground = cardGround(state, d), sphere = sphereOf(state, d);
-          const sig = [d.id, d.name, d.f, d.n, d.text, optId ?? '', dim ? 1 : 0, lit ? 1 : 0, short ? 1 : 0, buying || picking ? 1 : 0, JSON.stringify(parts), JSON.stringify(paid), fromPile ? 1 : 0, tray ? 1 : 0, detailed ? 1 : 0, state.round, color, ground, sphere].join('|');
+          const sig = [d.id, d.name, d.f, d.n, d.text, optId ?? '', dim ? 1 : 0, looking ? 1 : 0, lit ? 1 : 0, short ? 1 : 0, buying || picking ? 1 : 0, JSON.stringify(parts), JSON.stringify(paid), fromPile ? 1 : 0, tray ? 1 : 0, detailed ? 1 : 0, state.round, color, ground, sphere].join('|');
           const had = built.current.get(uid);
           if (had && had.sig === sig) return <Kept key={uid} el={had.el} />;
           const el = (
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
-              className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying || picking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
+              className={`card lt-card paper${opt ? ' can' : ''}${dim ? ((buying || picking) && !looking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
               style={{ '--q': color }} data-ground={ground} aria-disabled={!opt} data-unaffordable={short || undefined}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
@@ -216,9 +223,10 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                     fading, not text). What you're short of is the hover's one quiet line. */}
                 {/* works from round II on (Cory, 2026-10-22: "a better way to denote round II/round III only"): a corner tag, not words */}
                 {d.from > 1 && <span className="lt-round-tag" data-round-tag="" title="Works from round II on">II+</span>}
-                {fromPile && !tray && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
+                {fromPile && !tray && <span className="need from-pile" title="From the top of the pile">pile</span>}
               </span>
               {/* details hides the picture, so its corner number sits on the card itself (Cory, 2026-10-22: "total cost added to corner of details view") */}
+              {detailed && fromPile && !tray && <span className="need from-pile" title="From the top of the pile">pile</span>}
               {detailed && <span className="lt-corner-cost lt-corner-cost-detail num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>}
               {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
