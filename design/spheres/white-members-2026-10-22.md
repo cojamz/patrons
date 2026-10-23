@@ -31,6 +31,6 @@ Last three, pitched Oct 23 (Claude's): cheap twins: When recruited: turn up to 3
 7. "When recruited: turn all your white into followers." At least 2 white in its cost.
 8. "Whenever you get rid of one of your members, +2 followers."
 9. "Once per game: get rid of one of your members, gain followers or white equal to its cost." Activated, once per game (Cory, 8:14pm).
-11. "When this member leaves your cult, gain followers equal to its cost." Cheap, about 3.
 10. "Whenever you turn resources or members into followers, +1 white." (his idea, approved 8:14pm)
+11. "When this member leaves your cult, gain followers equal to its cost." Cheap, about 3.
 12. Open. Pitched: "Once per game: turn all your resources into white."
