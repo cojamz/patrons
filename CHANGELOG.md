@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.55 — 2026-10-22 — unreleased
+
+- Even Swap, Promote and Demote now offer "Don't swap", so the swap is your choice; you keep the +1 red.
+
 ## v0.8.54 — 2026-10-22 — unreleased
 
 - Hover cards put each separate effect on its own line.
