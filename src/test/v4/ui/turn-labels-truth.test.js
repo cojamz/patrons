@@ -17,6 +17,9 @@ const planned = s => (s.turns || []).length + s.queue.filter(t => t.t === 'turn'
 const earlyN = s => (s.early && s.early.round === s.round ? s.early.moves.length : 0);
 /** Who really places next (the next turn the engine starts this round), or undefined when the plan changed on the way
  *  (an extra turn granted, turns taken early) so no label could have known it; null when the round ends first. */
+/** A turn skipped or moved up on the way (Hold Up on a turn already last, Right Away next to its own turn) changes the
+ *  plan without moving any count above: read it from the log lines since s (the log is capped, so from s's last line). */
+const moved = (s, t) => t.log.slice(t.log.lastIndexOf(s.log.at(-1)) + 1).some(l => / skips their next turn\.| takes (their next|an extra|\d+ extra)/.test(l));
 function realNext(s, rand) {
   const r = s.round, n0 = (s.turns || []).length, p0 = planned(s), e0 = earlyN(s);
   let t = s;
@@ -24,7 +27,7 @@ function realNext(s, rand) {
     t = applyMove(t, chooseBotMove(t, rand));
     if (t.round !== r || t.over) return null;
     // (a turn skipped on the way is a plan change too, even one already last in the order, which moves nothing)
-    if ((t.turns || []).length > n0) return planned(t) === p0 && earlyN(t) === e0 && !t.log.slice(s.log.length).some(l => / skips their next turn\./.test(l)) ? t.turns[n0] : undefined;
+    if ((t.turns || []).length > n0) return planned(t) === p0 && earlyN(t) === e0 && !moved(s, t) ? t.turns[n0] : undefined;
   }
   return undefined;
 }

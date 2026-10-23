@@ -3,7 +3,7 @@
 // A takes it first; the snake comes back D C B, A is passed over, the next turn is A's anyway; B C D place their
 // last; A still has a minion, so the snake carries on and A places it. A places all 3 minions.
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove } from '../../../engine/v4/core.js';
+import { createGame, applyMove, actionAt } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { quadrant } from '../../../engine/v4/index.js';
@@ -20,8 +20,13 @@ describe('Sleep In', () => {
     s = applyMove(s, { player: A, option: `slot:${q}-${i}` });
     expect(s.players[A].res.purple).toBe(before + 4);
     const placed = [A];
+    // (the others leave turn-moving spaces and copies of them alone while anything else is open)
+    const moves = x => x.kind === 'slot' && x.q !== undefined && ['skip', 'holdup', 'again', 'echo', 'refrain'].includes(actionAt(s, x.q, x.i).key);
     while (s.round === 1) {
-      const next = chooseBotMove(s, rand);
+      let next = chooseBotMove(s, rand);
+      const o = s.pending?.options?.find(x => x.id === next.option);
+      const alt = o && moves(o) && s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && !moves(x));
+      if (alt) next = { player: next.player, option: alt.id };
       if (s.pending?.kind === 'place') placed.push(s.pending.player);
       s = applyMove(s, next);
     }
