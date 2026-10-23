@@ -117,6 +117,14 @@ const P = {
     dividend: (r, now) => (now == null ? { main: '+1 white', second: 'per @f bought or won' } : { main: `+${now} white`, second: '1 per @f bought or won' }),
     // "All for followers" hid that you pay (tester A, live panel r1; the charge is Cory's call): it says so in line 1
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
+    // White's Oct 22 spaces (Cory's set): they had no panel words, so the board cut each to its first four words
+    stipend: r => ({ main: `+${r} @f +${r + 1} white`, second: grows(r) }),
+    splurge: { verb: '+1 @f per 2 you spend', second: 'on your recruit this turn', note: '+1 white' },
+    exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+1 white' }),
+    // the gain leads: on ring II only one line fits, and the two read the same as "Bury one of your members"
+    farewell: { verb: 'Bury a member for its cost in @f', note: '+1 white' },
+    estatesale: { verb: 'Bury a member for its cost in white', note: '+1 white' },
+    cashin: { verb: 'Turn all your white into @f', note: '+1 white' },
   },
   echo: {
     hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? 'per other green action with a minion' : '1 per other green action with a minion', note: '+1 green' }),
