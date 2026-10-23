@@ -94,7 +94,7 @@ describe('new Red member hooks', () => {
     expect(s.pending.options.map(o => o.id)).toContain('promote');
     s = move(s, 'promote');
     const panel = uidIn(s, 'red.panel', 0), host = uidIn(s, 'gold.merchant', 0), mentor = uidIn(s, 'red.mentor', 'shop');
-    expect(s.pending.options.every(o => !o.value.includes(panel))).toBe(true);
+    expect(s.pending.options.every(o => !o.value?.includes(panel))).toBe(true);
     s = move(s, `trade:${host}:${mentor}`);
     expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.mentor', 'red.panel', 'red.volunteer']);
     expect(s.players[0].res.red).toBe(0);

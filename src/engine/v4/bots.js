@@ -138,7 +138,11 @@ function setupPick(pend, rand) {
 // valued on a copy of the game (chooseSwap).
 function followUp(pend, rand, state) {
   const move = o => ({ player: pend.player, option: o.id });
-  if (state && pend.kind === 'choose' && pend.options.length > 1 && pend.options.every(o => o.kind === 'trade')) return move(chooseSwap(state, pend));
+  // Red's swaps can be skipped ("Don't swap"); bots still swap, as before the skip existed
+  const trades = pend.kind === 'choose' ? pend.options.filter(o => o.kind === 'trade') : [];
+  if (state && trades.length && pend.options.every(o => o.kind === 'trade' || o.kind === 'pass')) {
+    return move(trades.length === 1 ? trades[0] : chooseSwap(state, { ...pend, options: trades }));
+  }
   if (pend.kind === 'pay') return move(pend.options.find(o => o.default) || pend.options[0]);
   if (pend.kind === 'choose') {
     const opts = state && pend.options.length > 1 ? avoidUndo(state, pend) : pend.options;

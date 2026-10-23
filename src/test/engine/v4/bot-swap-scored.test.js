@@ -13,7 +13,7 @@ describe('bot swap scoring', () => {
       let s = createGame({ seats: Array.from({ length: 4 }, () => ({ kind: 'bot' })), seed, quadrants: ['red', 'gold', 'blue', 'green'] });
       while (!s.over) {
         const pend = s.pending;
-        if (pend.kind === 'choose' && pend.options.length > 1 && pend.options.every(o => o.kind === 'trade')) swaps++;
+        if (pend.kind === 'choose' && pend.options.length > 1 && pend.options.every(o => o.kind === 'trade' || o.kind === 'pass')) swaps++;
         s = applyMove(s, chooseBotMove(s, rand, { level: 'normal' }));
       }
     }

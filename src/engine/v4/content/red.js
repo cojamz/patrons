@@ -62,7 +62,9 @@ export default {
     panelMode(ctx, p, mode, data) {
       if (mode === 'promote' || mode === 'demote') swap(ctx, p, mode, `Panel: ${mode} another member`, data?.excludeUid);
     },
-    trade(ctx, p, [a, b], data) {
+    trade(ctx, p, value, data) {
+      if (!Array.isArray(value)) { ctx.log(`${p.name} chose not to swap.`); return; }
+      const [a, b] = value;
       // Pinned choices reject a moved card; recheck prices/protection too before applying a queued choice.
       if (!swapPairs(ctx, p, data.mode, data.excludeUid).some(([x, y]) => x.uid === a && y.uid === b)) return;
       const names = [a, b].map(uid => `${ctx.ownerOf(uid)?.name || 'Shop'}'s ${ctx.card(uid).def.name}`);
@@ -169,5 +171,6 @@ function swap(ctx, p, mode, prompt, excludeUid = null) {
     id: `trade:${a.uid}:${b.uid}`, label: `${source(a)}: ${a.def.name} ↔ ${source(b)}: ${b.def.name}`, kind: 'trade',
     value: [a.uid, b.uid], hint: ctx.ownerOf(a.uid) === p ? (b.def.f + cost(b)) - (a.def.f + cost(a))
       : ctx.ownerOf(b.uid) === p ? (a.def.f + cost(a)) - (b.def.f + cost(b)) : 0,
-  })), 'red.trade', { mode, excludeUid });
+  // the swap is yours to skip (Cory, 2026-10-22 playtest: "You shouldnt HAVE to swap")
+  })).concat({ id: 'none', label: 'Don’t swap', kind: 'pass', value: null, hint: -99 }), 'red.trade', { mode, excludeUid });
 }

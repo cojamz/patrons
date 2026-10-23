@@ -42,7 +42,7 @@ describe('locked Red action progression', () => {
   it('Promote uses total printed cost, includes cheaper members, and excludes cost +3', () => {
     const s = take(table(Q, { round: 2, members: [['red.twins']], shop: ROW }), 'red.hireup');
     const a = uidIn(s, 'red.twins', 0);
-    const incoming = s.pending.options.filter(o => o.value[0] === a).map(o => s.cards[o.value[1]].def);
+    const incoming = s.pending.options.filter(o => o.value?.[0] === a).map(o => s.cards[o.value[1]].def);
     expect(incoming).toContain('gold.banker'); // 2 -> 4, exact boundary
     expect(incoming).toContain('red.intern');
     expect(incoming).not.toContain('echo.chronicler'); // 5
@@ -52,7 +52,7 @@ describe('locked Red action progression', () => {
   it('Demote permits a rival member and anything at least 2 cheaper', () => {
     let s = take(table(Q, { round: 2, members: [[], ['gold.tycoon']], shop: ROW }), 'red.trade');
     const a = uidIn(s, 'gold.tycoon', 1), b = uidIn(s, 'gold.banker', 'shop');
-    const incoming = s.pending.options.filter(o => o.value[0] === a).map(o => s.cards[o.value[1]].def);
+    const incoming = s.pending.options.filter(o => o.value?.[0] === a).map(o => s.cards[o.value[1]].def);
     expect(incoming).toContain('gold.banker'); // 6 -> 4
     expect(incoming).toContain('red.intern'); // 6 -> 1, not a narrow -2 limit
     expect(incoming).not.toContain('echo.chronicler'); // 6 -> 5
@@ -150,7 +150,7 @@ describe('locked Red action progression', () => {
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(o => o.label.startsWith(`${actionName('red.hireup')} (`)).id);
     expect(s.pending.kind).toBe('choose');
-    expect(s.pending.options.every(o => o.kind === 'trade')).toBe(true);
+    expect(s.pending.options.every(o => o.kind === 'trade' || o.id === 'none')).toBe(true);
     const actorMember = uidIn(s, 'red.volunteer', 1), target = uidIn(s, 'gold.banker', 'shop');
     s = move(s, swapId(actorMember, target));
     expect(defs(s, 1)).toContain('gold.banker');

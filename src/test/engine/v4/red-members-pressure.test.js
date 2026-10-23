@@ -109,8 +109,8 @@ describe('Red members: bounded acquisition and body invariants', () => {
     const panel = uidIn(reload, 'red.panel', 0), host = uidIn(reload, 'gold.merchant', 0), mentor = uidIn(reload, 'red.mentor', 'shop');
     expect(reload.pending.options.map(o => o.id)).toContain(pair(host, mentor));
     expect(reload.pending.options.map(o => o.id)).not.toContain(pair(host, uidIn(reload, 'red.mob', 'shop')));
-    expect(reload.pending.options.every(o => !o.value.includes(panel))).toBe(true);
-    expect(saved(reload).pending.options.every(o => !o.value.includes(panel))).toBe(true);
+    expect(reload.pending.options.every(o => !o.value?.includes(panel))).toBe(true);
+    expect(saved(reload).pending.options.every(o => !o.value?.includes(panel))).toBe(true);
     expect(reload.players[0].res.red).toBe(1); // Red space only; Panel itself pays no inherent red.
   });
 
@@ -131,7 +131,7 @@ describe('Red members: bounded acquisition and body invariants', () => {
     s.shop.push(panel);
     s = move(saved(s), 'promote');
     expect(s.pending.options.length).toBeGreaterThan(0);
-    expect(s.pending.options.every(o => !o.value.includes(panel))).toBe(true);
+    expect(s.pending.options.every(o => !o.value?.includes(panel))).toBe(true);
   });
 
   it('Recruit Bonus rewards Doppelganger’s identity choice once, using its physical color', () => {
@@ -196,7 +196,7 @@ describe('Red members: bounded acquisition and body invariants', () => {
     s.cards[impostor].copy = 'red.panel'; s.cards[doppel].copy = 'red.panel';
     s = move(take(s, 'red.hireup'), pair(doppel, panel));
     s = move(saved(s), 'promote');
-    expect(s.pending.options.every(o => !o.value.includes(panel))).toBe(true);
+    expect(s.pending.options.every(o => !o.value?.includes(panel))).toBe(true);
     expect(() => move(saved(s), pair(panel, doppel))).toThrow();
     s = move(saved(s), pair(impostor, doppel));
     s = move(saved(s), `card:${panel}`);
