@@ -53,11 +53,11 @@ describe('hover honesty (live panel r1)', () => {
   });
 
   it('Redistribute doubles its occupied-action total once, with fresh rival choices', () => {
-    const s = sceneQ({ quadrants: T, round: 3, n: 3, res: [{}, { gold: 5 }, { red: 4 }], bonus: [0, 3, 3], members: [['thieves.desperado'], [], []] });
-    s.slots['2-0'] = 1; s.slots['2-2'] = 2;
+    const s = sceneQ({ quadrants: T, round: 3, n: 3, res: [{}, { gold: 9 }, { red: 9 }], bonus: [0, 3, 3], members: [['thieves.desperado'], [], []] });
+    s.slots['2-0'] = 1; s.slots['2-2'] = 2; // and its own space: 3
     const { pv, y } = words(s, 'Redistribute');
-    expect(y.text).toBe('+1 magenta; steal 4 in colors you pick');
-    expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (2 → 4)');
+    expect(y.text).toBe('+1 magenta; steal 6 in colors you pick');
+    expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (3 → 6)');
   });
 
   it('Redistribute can choose poorer rivals for its occupied-action total', () => {

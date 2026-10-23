@@ -161,7 +161,8 @@ const nextTurnOf = ctx => {
  */
 export function turnsNow(ctx, p, n, why) {
   const s = ctx.state, q = s.queue;
-  const end = q.findIndex(t => t.t === 'endTurn');
+  // a preview has no endTurn: its hold stands in, so the moved-up turns wait behind the rest of this act (Greatest Hits)
+  const end = q.findIndex(t => t.t === 'endTurn' || t.t === 'previewHold');
   const close = q.findIndex(t => t.t === 'allPlaced');
   const stop = close < 0 ? q.length : close;
   // your LAST n turns of the round move up, so the turns in between stay where they are and you finish early

@@ -59,8 +59,8 @@ describe('Magenta actions', () => {
     s = pass(play(take(s, 'thieves.hideout'), 'take:2:red'));
     s = take(s, 'thieves.tipoff');
     expect(ids(s).every(id => id.startsWith('take:2:'))).toBe(true);
-    s = move(s, 'take:2:red');
-    expect(R(s)).toMatchObject({ magenta: 1, red: 1 });
+    s = play(s, 'take:2:red', 'take:2:red'); // Lie Low and its own space
+    expect(R(s)).toMatchObject({ magenta: 1, red: 2 });
   });
   it('Lie Low: steal round resources; then resources are safe this round', () => {
     let s = table(Q, { res: [{ gold: 4 }, { red: 1 }], shop: ROW, queue: turns(0, 1) });
@@ -177,11 +177,11 @@ describe('Magenta members', () => {
   });
 
   it('Accomplice: when recruited, take 1 from each rival (named)', () => {
-    let s = table(Q, { n: 3, res: [{ magenta: 8 }, { gold: 1 }, { red: 2 }], shop: ['thieves.accomplice', ...ROW] });
-    s = take(s, 'thieves.tipoff');
+    let s = table(Q, { n: 3, res: [{ magenta: 8 }, { gold: 1 }, { red: 3 }], shop: ['thieves.accomplice', ...ROW] });
+    s = move(take(s, 'thieves.tipoff'), 'take:2:red'); // its own space: steal 1
     s = move(s, cardOpt(s, 'thieves.accomplice', 'shop'));
     s = s.pending?.kind === 'pay' ? move(s, s.pending.options[0].id) : s;
-    expect([R(s).magenta, R(s).gold, R(s).red, R(s, 1).gold, R(s, 2).red]).toEqual([1, 1, 1, 0, 1]);
+    expect([R(s).magenta, R(s).gold, R(s).red, R(s, 1).gold, R(s, 2).red]).toEqual([2, 1, 1, 0, 1]); // the stolen red helped pay
     expect(named(s, 'Accomplice')).toEqual(["P1's Accomplice: took 1 from P2.", "P1's Accomplice: took 1 from P3."]);
   });
   it('× Poach: actively taking Accomplice triggers its On Recruit', () => {
@@ -194,12 +194,12 @@ describe('Magenta members', () => {
   });
 
   it('Grifter: when recruited, take 1 per 2 members you have, from any rivals you choose', () => {
-    let s = table(Q, { n: 3, res: [{ magenta: 6 }, { gold: 3 }, { red: 2 }], members: [['red.twins', 'red.intern', 'red.volunteer']], shop: ['thieves.grifter', ...ROW] });
-    s = take(s, 'thieves.tipoff');
+    let s = table(Q, { n: 3, res: [{ magenta: 6 }, { gold: 4 }, { red: 2 }], members: [['red.twins', 'red.intern', 'red.volunteer']], shop: ['thieves.grifter', ...ROW] });
+    s = move(take(s, 'thieves.tipoff'), 'take:1:gold'); // its own space: steal 1
     s = move(s, cardOpt(s, 'thieves.grifter', 'shop'));
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     // 4 members: take 2, split freely among rivals (Cory, 2026-10-18: the "richest rival" sentence went)
-    expect(R(s).magenta).toBe(1);
+    expect(R(s).magenta).toBe(2); // the stolen gold helped pay
     expect(R(s).gold + R(s).red).toBe(2);
     expect(R(s, 1).gold + R(s, 2).red).toBe(3);
     expect(named(s, 'Grifter').length).toBe(1);
@@ -269,7 +269,7 @@ describe('Magenta members', () => {
     s = take(s, 'thieves.tipoff');
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     s = move(s, `use:${uidIn(s, 'thieves.bigscore', 0)}`);
-    expect([R(s).magenta, R(s, 1).magenta, R(s, 2).magenta]).toEqual([4, 4, 3]);
+    expect([R(s).magenta, R(s, 1).magenta, R(s, 2).magenta]).toEqual([5, 3, 3]); // Redistribute's own space steals 1 first
     expect(named(s, 'Safecracker').length).toBe(1);
     expect(ids(s)).not.toContain(`use:${uidIn(s, 'thieves.bigscore', 0)}`);
   });
