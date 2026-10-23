@@ -53,8 +53,8 @@ const others = (seq, who) => seq.filter(p => p !== who);
 
 describe('snake vs real sequence, 3 players, one seat taking turns out of it', () => {
   const crunch = at => {
-    // seed 14: no seat's members hand out an extra turn in this round III (seeds 11 and 12's bots did)
-    const { s, rand } = toRound(3, 14);
+    // seed 15: no seat's members hand out an extra turn in this round III (seeds 11, 12 and, with the 6/7/8 shop, 14's bots did)
+    const { s, rand } = toRound(3, 15);
     const base = s.order.slice(0, 3), who = base[at];
     const seq = playRound(s, rand, st => {
       if (st.pending.player !== who || st.turns.filter(p => p === who).length !== 1) return null;
@@ -79,7 +79,7 @@ describe('snake vs real sequence, 3 players, one seat taking turns out of it', (
     expect(others(seq, who)).toEqual(others(plain, who));
   });
   for (const at of [0, 1]) it(`an extra turn (Go-Getter) for seat ${L[at]} in round II goes in; nobody else moves`, () => {
-    const { s, rand } = toRound(2);
+    const { s, rand } = toRound(2, 15);
     const base = s.order.slice(0, 3), who = base[at];
     let done = false;
     const seq = playRound(s, rand, st => {

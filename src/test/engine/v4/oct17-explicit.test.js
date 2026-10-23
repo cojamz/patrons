@@ -36,7 +36,7 @@ describe('October17 explicit rules',()=>{
  });
  it('refreshes the complete market between rounds without losing cards',()=>{
   let s=sceneQ({quadrants:Q,queue:[{t:'turn',p:0}]});
-  const old=[...s.shop],next=s.pile.slice(0,6),/* round II shows 6 */all=[...s.shop,...s.pile].sort((a,b)=>a-b);
+  const old=[...s.shop],next=s.pile.slice(0,7),/* round II shows 7 */all=[...s.shop,...s.pile].sort((a,b)=>a-b);
   s.pending=null;s.queue=[{t:'round',r:2}];s=resume(s);
   expect(s.shop).toEqual(next);expect(s.pile.slice(-old.length)).toEqual(old);
   expect([...s.shop,...s.pile].sort((a,b)=>a-b)).toEqual(all);

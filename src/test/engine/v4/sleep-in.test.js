@@ -10,8 +10,8 @@ import { quadrant } from '../../../engine/v4/index.js';
 
 describe('Sleep In', () => {
   it("Cory's round I example: A A-skipped, A places all 3, the last one after everyone", () => {
-    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 3, quadrants: ['gold', 'red', 'purple', 'echo'] });
-    const rand = seededRandom(3);
+    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 5, quadrants: ['gold', 'red', 'purple', 'echo'] });
+    const rand = seededRandom(5);
     while (!(s.round === 1 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
     const base = s.order.slice(0, 4);
     const A = s.pending.player, q = s.quadrants.indexOf('purple');

@@ -29,7 +29,7 @@ const pickPay = (s, color = 'red') => (s.pending?.kind === 'choose' && s.pending
 describe('Blue actions', () => {
   const ROW5 = ROW.slice(0, 5);
   it('Churn: +1 blue × round, +1 blue; send exactly 3 chosen members to the bottom, then the row refills once', () => {
-    let s = table(Q, { round: 2, shop: [...ROW5, 'red.volunteer'] });
+    let s = table(Q, { round: 2, shop: [...ROW5, 'red.volunteer', 'gold.seed'] });
     const top = s.pile.slice(0, 3);
     s = take(s, 'market.bargain');
     expect(R(s).blue).toBe(3);
@@ -39,10 +39,10 @@ describe('Blue actions', () => {
       const o = s.pending.options[0]; sent.push(o.value);
       s = move(s, o.id);
       // no refill until the last pick: a refilled card can't be churned
-      if (k > 1) expect(s.shop).toHaveLength(6 - (4 - k));
+      if (k > 1) expect(s.shop).toHaveLength(7 - (4 - k));
     }
     expect(s.pending?.kind).toBe('buy');
-    expect(s.shop).toHaveLength(6);
+    expect(s.shop).toHaveLength(7);
     expect(s.shop.slice(-3)).toEqual(top);
     expect(s.pile.slice(-3)).toEqual(sent);
     expect(s.log.filter(l => /^Churn: P1 sends .* to the bottom of the pile\.$/.test(l))).toHaveLength(3);
@@ -63,7 +63,7 @@ describe('Blue actions', () => {
     const reds = s.shop.filter(u => s.cards[u].def.startsWith('red.'));
     s = move(s, 'color:red');
     expect(R(s).blue).toBe(1 + 3);
-    expect(s.shop).toHaveLength(5);
+    expect(s.shop).toHaveLength(6); // round I shows 6
     expect(s.shop.filter(u => reds.includes(u))).toEqual([]);
     expect(s.pile.slice(-3)).toEqual(reds);
     expect(s.log).toContain('Out of Style: P1 sends 3 red members to the bottom.');
@@ -119,7 +119,7 @@ describe('Blue actions', () => {
     expect(R(s).blue).toBe(1 + 6); // Tycoon costs 12
     expect(s.pile[s.pile.length - 1]).toBe(tycoon);
     expect(s.shop).toContain(top);
-    expect(s.shop).toHaveLength(6); // round II shows 6
+    expect(s.shop).toHaveLength(7); // round II shows 7
     expect(s.log).toContain("P1's Bury: +6 blue.");
   });
   it('Bury: an odd cost rounds down (Lottery Winner 11 gives 5)', () => {
