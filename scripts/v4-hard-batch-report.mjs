@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { allQuadrantIds, quadrant } from '../src/engine/v4/index.js';
 import { defById } from '../src/engine/v4/content/index.js';
-// A member's cost is its color plus wild (s + w). Cory, Oct 22: in member tests a member should give about 1.5x its cost in followers.
+// A member's cost is its color plus wild (s + w). Cory, Oct 22 (9:49pm): a member should give about 2x its cost in followers (was 1.5x).
 const cost = {};
 for (const q of allQuadrantIds()) for (const d of quadrant(q).members) cost[`${d.name} (${q})`] = (d.s || 0) + (d.w || 0);
 const rows = process.argv.slice(2).flatMap(f => readFileSync(f, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse));
