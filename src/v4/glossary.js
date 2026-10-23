@@ -2,7 +2,9 @@
 // Card text, the How-to-play page and every underlined keyword read these definitions; nothing else defines them.
 // `match` finds the word in rules text (lowercase as printed on cards); `link: false` keeps a very common word
 // (member, follower) out of the underlining while it stays in the glossary.
-import { RING_VALUE, WORKERS } from '../engine/v4/index.js';
+import { RING_VALUE, WORKERS, allQuadrantIds, quadrant } from '../engine/v4/index.js';
+import { guestMembers } from '../engine/v4/content/index.js';
+import { CUT } from '../engine/v4/content/cull.js';
 
 const rings = RING_VALUE.map(v => `+${v}`).join(' / ');
 
@@ -10,16 +12,16 @@ export const GLOSSARY = [
   { key: 'follower', word: 'Followers', link: false, match: /\bfollowers?\b/,
     def: 'Your score. You start with 1 (yourself); members add what they are worth, and you gain more from contests, recruiting followers and abilities. Most followers after round III wins.' },
   { key: 'loose followers', word: 'Loose followers', match: /\bloose followers?\b/,
-    def: 'Followers you bought or won, not the ones your members are worth (and never yourself). Only loose followers can be sold or taken away.' },
+    def: 'Followers you bought or won, not the ones your members are worth (and never yourself). Only loose followers can be taken away.' },
   { key: 'member', word: 'Member', link: false, match: /\bmembers?\b/,
     def: 'A card you recruit. It counts as its printed follower value in members, or a larger member count stated on the card. Bonus followers do not add members. Most cards have an ability.' },
   { key: 'worth', word: 'Worth', match: /\bworth \d+ followers?\b/i,
     def: 'How many followers a member counts for while you hold it: the number beside the follower mark on the card.' },
   { key: 'full set', word: 'Full set', match: /\bfull sets?\b/,
     def: 'One resource of each color on the table. Holding 2 of every color is 2 full sets; your fewest color sets how many you have.' },
-  { key: 'plant', word: 'Plant', match: /\bplants?\b/,
+  { key: 'plant', word: 'Plant', card: true, match: /\bplants?\b/,
     def: 'Sower: at round start you put some of your yellow on the card (it leaves your supply). At round end you gain that many of each other color.' },
-  { key: 'set aside', word: 'Set aside', match: /\bset aside\b/,
+  { key: 'set aside', word: 'Set aside', card: true, match: /\bset aside\b/,
     def: 'Investor: at round start you put some of your gold on the card (it leaves your supply, so it doesn’t count for Most gold). At round end it comes back doubled.' },
   { key: 'in play', word: 'In play', match: /\bin play\b/,
     def: 'Held by any player. Members in the shop or the pile are not in play.' },
@@ -27,6 +29,17 @@ export const GLOSSARY = [
     def: 'Legacy rule, unavailable in normal play. Once per round, when you recruit: put one of your members (not one you recruited this round) at the bottom of the pile and take back only the colored part of its cost, in its own color. You keep your buy.' },
   { key: 'extra turn', word: 'Extra turn', match: /\bextra turns?\b/,
     def: 'Another turn right after this one: you place one more minion and may recruit again. Never in round I; later only if a space remains after every minion still due has landed.' },
+  // Cory, 2026-10-22: a skip passes you over once; you never lose the turn or the minion
+  { key: 'skip', word: 'Skip', match: /\bskip(?:s|ped)?\b/i,
+    def: 'A skipped turn is passed over: play goes on to the next turn, and the skipped player places that minion later in the round. Nobody loses a turn or a minion.' },
+  { key: 'get rid of', word: 'Get rid of', match: /\bget rid of\b/i,
+    def: 'Send one of your own members to the bottom of the pile with a White space or member. It leaves your cult.' },
+  { key: 'leaves your cult', word: 'Leaves your cult', match: /\bleaves your cult\b/i,
+    def: 'Any way a member stops being yours: you get rid of it, a rival steals it, or a swap takes it away.' },
+  { key: 'turn into followers', word: 'Turn into followers', match: /\bturn (?:\d+ |all your )?(?:[a-z]+ )*?(?:resources?|white|members?)(?: or members)? into (?:\d+ )?followers\b|\binto \d+ followers\b/i,
+    def: 'Trade resources or members for followers with a White space or member (Exchange, Cash In, Farewell…). Recruiting followers in your recruit step is not turning.' },
+  { key: 'now and at round start', word: 'Now and at round start', match: /\bnow and at (?:round start|the start of round)/i,
+    def: 'Happens once when you recruit the member, then again each time a later round starts.' },
   { key: 'copy', word: 'Copy', match: /\bcop(y|ies|ied)\b(?= (?:any|every|one|the|it|that|what|a)\b)|\bwhat you copy\b|\bcopy a space\b/,
     def: 'Copy an action: get its own printed gain (what its chip shows). Members’ bonuses on it and its gifts to others don’t repeat. Its taker keeps what they got. Copying a copy lets you choose again; never choose an action already in that chain. Each green action gives +1 green, including when copied. Agents blocks everyone from copying its owner’s actions. Echo copies the previous action, Encore an action with a rival minion, Reprise one with your minion, and Greatest Hits every action with your minion.' },
   { key: 'face-up', word: 'Face-up', match: /\bface-up\b/,
@@ -71,6 +84,37 @@ export const GLOSSARY = [
 ];
 
 const BY_KEY = Object.fromEntries(GLOSSARY.map(t => [t.key, t]));
+
+// Every space and member in the deck right now (cut cards left out), read from the cards themselves, so the
+// glossary's card lists can't lag a redesign (Cory, 2026-10-23: "has the glossary not been updated?").
+function liveCards() {
+  const out = [];
+  for (const id of allQuadrantIds()) {
+    const q = quadrant(id);
+    if (q.standIn) continue;
+    for (const a of q.actions) out.push({ name: a.name, text: a.text || '' });
+    for (const m of q.members) if (!CUT.has(m.id)) out.push({ name: m.name, text: m.text || '' });
+  }
+  for (const m of guestMembers()) if (!CUT.has(m.id)) out.push({ name: m.name, text: m.text || '' });
+  return out;
+}
+/** Cards in the deck whose text uses a term, by name. */
+export function cardsUsing(t) {
+  const re = new RegExp(t.match.source, 'i'); // a card's first word is capitalized ("Steal 1 resource")
+  return [...new Set(liveCards().filter(c => re.test(c.text)).map(c => c.name))];
+}
+/** The glossary as the rules show it: every term but legacy rules, each keyword with the cards in the deck that use
+ *  it today ({ ...term, cards: [names], out }; common words list none). out: a card word no card in the deck uses
+ *  right now (its cards were cut), kept and marked so (Cory, 2026-10-23: show what's in and what's not). */
+export function glossaryEntries() {
+  return GLOSSARY.filter(t => !t.legacy).map(t => {
+    const cards = t.link === false ? [] : cardsUsing(t);
+    return { ...t, cards, out: !!t.card && !cards.length };
+  });
+}
+/** "Sleep In, Hold Up, Last Call and 3 more" */
+export const cardList = (names, most = 6) => names.length <= most ? names.join(', ')
+  : `${names.slice(0, most).join(', ')} and ${names.length - most} more`;
 /** The glossary entry for a key ('full set', 'plant'…), or null. */
 export const term = key => BY_KEY[key] || null;
 

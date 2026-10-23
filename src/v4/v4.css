@@ -1512,3 +1512,5 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 .tab-away-card .btn{min-height:44px;min-width:140px}
 .field .name-need{font-size:inherit;font-weight:400;color:var(--cream-3,#a39078)}
 .nowrap{white-space:nowrap}
+.rules-body .glossary-cards{color:var(--cream-3)}
+.rules-body dl.glossary .out{opacity:.55}

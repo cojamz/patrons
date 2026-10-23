@@ -3,7 +3,7 @@ import { Fragment } from 'react';
 import { useDialog } from './game/parts.jsx';
 import { RULEBOOK } from './rulebook.js';
 import { GAME_NAME, VERSION_LABEL } from './version.js';
-import { GLOSSARY } from './glossary.js';
+import { glossaryEntries, cardList } from './glossary.js';
 import { Follower } from './art/Follower.jsx';
 import { ResourceGlyph } from './game/Glyphs.jsx';
 
@@ -60,9 +60,9 @@ export default function HowToPlay({ onClose }) {
       <div className="dialog rules" ref={box}>
         <button type="button" className="btn ghost close" onClick={onClose} data-autofocus aria-label="Close how to play">Close</button>
         <div className="rules-body">{renderRules(RULEBOOK)}
-          {/* every game word, from the one glossary the underlined keywords open */}
+          {/* every game word, from the one glossary the underlined keywords open, with the cards in the deck that use it */}
           <h3 id="glossary">Glossary</h3>
-          <dl className="glossary" data-glossary>{GLOSSARY.filter(t => !t.legacy).map(t => <Fragment key={t.key}><dt>{t.word}</dt><dd>{t.def}</dd></Fragment>)}</dl>
+          <dl className="glossary" data-glossary>{glossaryEntries().map(t => <Fragment key={t.key}><dt className={t.out ? 'out' : undefined}>{t.word}</dt><dd className={t.out ? 'out' : undefined}>{t.def}{t.cards.length > 0 && <span className="glossary-cards"> On: {cardList(t.cards)}.</span>}{t.out && <span className="glossary-cards"> No card in the deck uses this right now.</span>}</dd></Fragment>)}</dl>
         </div>
         <p className="version" data-version>{GAME_NAME} {VERSION_LABEL}</p>
       </div>

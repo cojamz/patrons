@@ -15,12 +15,14 @@ const vite = await createServer({ root, configFile: false, logLevel: 'error', se
 try {
   const { renderRules } = await vite.ssrLoadModule('/src/v4/HowToPlay.jsx');
   const { RULEBOOK } = await vite.ssrLoadModule('/src/v4/rulebook.js');
-  const { GLOSSARY } = await vite.ssrLoadModule('/src/v4/glossary.js');
+  const { glossaryEntries, cardList } = await vite.ssrLoadModule('/src/v4/glossary.js');
   const { GAME_NAME, VERSION } = await vite.ssrLoadModule('/src/v4/version.js');
   const body = renderToStaticMarkup(h(Fragment, null,
     ...renderRules(RULEBOOK),
     h('h3', { id: 'glossary' }, 'Glossary'),
-    h('dl', { className: 'glossary' }, ...GLOSSARY.filter(t => !t.legacy).flatMap(t => [h('dt', { key: `${t.key}t` }, t.word), h('dd', { key: `${t.key}d` }, t.def)]))));
+    h('dl', { className: 'glossary' }, ...glossaryEntries().flatMap(t => [h('dt', { key: `${t.key}t`, className: t.out ? 'out' : undefined }, t.word), h('dd', { key: `${t.key}d`, className: t.out ? 'out' : undefined }, t.def,
+      t.cards.length ? h('span', { className: 'glossary-cards' }, ` On: ${cardList(t.cards)}.`) : null,
+      t.out ? h('span', { className: 'glossary-cards' }, ' No card in the deck uses this right now.') : null)]))));
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -49,6 +51,8 @@ b{color:var(--ink);font-weight:700}
 .glossary{margin:6px 0 0}
 .glossary dt{font-weight:700;margin-top:10px}
 .glossary dd{margin:2px 0 0 0;color:var(--ink-2)}
+.glossary-cards{color:var(--ink-3);font-style:italic}
+.glossary .out{opacity:.55}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px;color:var(--ink-3);margin-bottom:14px}
 .top a,.foot a{color:var(--accent)}
 .foot{margin-top:28px;font-size:14px;color:var(--ink-3);text-align:right}

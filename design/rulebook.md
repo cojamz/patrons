@@ -3,7 +3,7 @@
 For 2 to 6 players. You lead a cult for three rounds. Send minions to the wheel, gather resources, recruit members and win contests. Whoever has the most **followers** after round III wins.
 
 ## Pieces
-- **Followers** are your score, shown by the follower mark. You start with 1 (yourself). Each member you hold adds what it is worth, the number beside the mark on its card. Followers you recruit or win are yours too, and only those can be sold or stolen.
+- **Followers** are your score, shown by the follower mark. You start with 1 (yourself). Each member you hold adds what it is worth, the number beside the mark on its card. Followers you recruit or win are yours too, and only those can be stolen.
 - **Minions** are your workers, small copies of your emoji: 3 in round I, 4 in round II, 5 in round III.
 - **Resources** come in one color per sphere on the table. A resource is a plain dot in its color. A dot split into the table's colors means "any resources", your choice of colors.
 - **Members** are cards you recruit from the shop. Most have an ability. Each member counts as many members as it is worth in followers (at least 1), or more if its card says so. Followers from abilities never add members.
@@ -21,6 +21,7 @@ Round I's turn order is drawn at random. Then, starting with the player who goes
 - Turns snake: down the order and back up, one minion per turn (1-2-3-4, 4-3-2-1, 1-2-3-4…) until everyone has placed every minion. The players at each end take two turns in a row.
 - Round I's order is the random draw. From round II, fewest followers goes first; ties go to whoever went later last round.
 - An **extra turn** (Overtime, Go-Getter, Night Owl…) lets you place one more minion and recruit again, right away. Extra turns never happen in round I, and later only while a space would still be free after every minion still to come has landed.
+- A **skipped** turn is passed over: play goes on to the next turn, and you place that minion later in the round. Nobody loses a turn or a minion.
 
 ## Your turn
 1. **Place a minion** on an open space and do what it says. If no space is open, that minion sits out.
