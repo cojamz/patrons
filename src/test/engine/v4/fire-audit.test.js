@@ -73,7 +73,9 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // cards-thieves.test.js (Double Agent) covers its line.
   // Hoarder fires only when its bot chooses to, in round III with 3+ non-white; the 6/7/8 shop (2026-10-23) has bots
   // spending down by then in all 6 games it was held. cards-trading.test.js (Hoarder) covers its line.
-  const EXEMPT = new Set(['thieves.watchdog', 'market.climber', 'trading.magnate', 'thieves.doubleagent', 'trading.hoarder']);
+  // Cashier acts only when recruited, like Double Agent; two shops (2026-10-23) moved the games so it was dealt in 3 and
+  // never recruited. cards-trading.test.js (Cashier) covers its line.
+  const EXEMPT = new Set(['thieves.watchdog', 'market.climber', 'trading.magnate', 'thieves.doubleagent', 'trading.hoarder', 'trading.cashier']);
   // Agents denies copy targets without changing a number, like Bodyguard's steal protection. Keep it in the dealt
   // hands (preserving the audit's coverage distribution), but require no payout log from this pure restriction.
   // green-redesign-pressure.test.js verifies that it blocks both its owner's and rivals' copies, including copies of Agents.

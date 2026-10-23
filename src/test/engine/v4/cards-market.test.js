@@ -3,7 +3,7 @@
 // member costs, through real legal moves, plus one cross-sphere case each. Every number a
 // card changes must show up in a log line that names the card.
 import { describe, it, expect } from 'vitest';
-import { applyMove, followers } from '../../../engine/v4/core.js';
+import { applyMove, followers, pileOf, pileKeyOf, shopSize } from '../../../engine/v4/core.js';
 import { take, move, play, ids, actionName } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
@@ -30,7 +30,6 @@ describe('Blue actions', () => {
   const ROW5 = ROW.slice(0, 5);
   it('Churn: +1 blue × round, +1 blue; send exactly 3 chosen members to the bottom, then the row refills once', () => {
     let s = table(Q, { round: 2, shop: [...ROW5, 'red.volunteer', 'gold.seed'] });
-    const top = s.pile.slice(0, 3);
     s = take(s, 'market.bargain');
     expect(R(s).blue).toBe(3);
     const sent = [];
@@ -42,8 +41,9 @@ describe('Blue actions', () => {
       if (k > 1) expect(s.shop).toHaveLength(7 - (4 - k));
     }
     expect(s.pending?.kind).toBe('buy');
-    expect(s.shop).toHaveLength(7);
-    expect(s.shop.slice(-3)).toEqual(top);
+    // two shops: both rows fill from their own piles, 5 each in round II
+    expect(s.shop).toHaveLength(shopSize(s));
+    for (const k of ['cheap', 'pricey']) expect(s.shop.filter(u => pileKeyOf(s, u) === k)).toHaveLength(5);
     expect(s.pile.slice(-3)).toEqual(sent);
     expect(s.log.filter(l => /^Churn: P1 sends .* to the bottom of the pile\.$/.test(l))).toHaveLength(3);
   });
@@ -63,7 +63,7 @@ describe('Blue actions', () => {
     const reds = s.shop.filter(u => s.cards[u].def.startsWith('red.'));
     s = move(s, 'color:red');
     expect(R(s).blue).toBe(1 + 3);
-    expect(s.shop).toHaveLength(6); // round I shows 6
+    expect(s.shop.filter(u => pileKeyOf(s, u) === 'cheap')).toHaveLength(5); // round I deals 5 from the cheap pile
     expect(s.shop.filter(u => reds.includes(u))).toEqual([]);
     expect(s.pile.slice(-3)).toEqual(reds);
     expect(s.log).toContain('Out of Style: P1 sends 3 red members to the bottom.');
@@ -72,18 +72,20 @@ describe('Blue actions', () => {
 
   it('Peek: reorder the top 4 of the pile; this turn\'s buy may recruit one of them, and only one', () => {
     let s = table(Q, { res: [{ gold: 9, red: 9, blue: 9 }], shop: ROW5, pileFirst: ['market.stylist', 'gold.banker', 'market.curator', 'red.mentor', 'market.planner'] });
-    const top = s.pile.slice(0, 4), fifth = s.pile[4];
+    // round I: Peek looks at the cheap pile (two shops; the pricey one isn't dealt yet)
+    const cheap = () => pileOf(s, 'cheap');
+    const top = cheap().slice(0, 4), fifth = cheap()[4];
     s = take(s, 'market.showroom');
     expect(R(s).blue).toBe(11); // 9, +2 in round I (Peek scales, Cory 2026-10-22)
     // put them back bottom-to-top reversed: the 4th on top
     for (const u of [top[3], top[2], top[1]]) { expect(s.pending.prompt).toMatch(/^Peek: which goes/); s = move(s, `card:${u}`); }
-    expect(s.pile.slice(0, 5)).toEqual([top[3], top[2], top[1], top[0], fifth]);
+    expect(cheap().slice(0, 5)).toEqual([top[3], top[2], top[1], top[0], fifth]);
     expect(s.pending.kind).toBe('buy');
     for (const u of top) expect(ids(s)).toContain(`card:${u}`);
     expect(ids(s)).not.toContain(`card:${fifth}`);
     s = move(s, `card:${top[1]}`);
     expect(s.players[0].members).toContain(top[1]);
-    expect(s.log.some(l => /^P1 recruited Banker from the pile with Peek/.test(l))).toBe(true);
+    expect(s.log.some(l => /^P1 recruited .* from the pile with Peek/.test(l))).toBe(true);
     // the reach is spent: no more pile cards on a later buy
     expect(s.players[0].peekReach).toBeUndefined();
   });
@@ -91,7 +93,7 @@ describe('Blue actions', () => {
     let s = table(Q, { res: [{ gold: 20, red: 20, blue: 20 }], shop: ROW5, pileFirst: ['market.stylist', 'gold.banker', 'market.curator', 'red.mentor'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 0 }] });
     s = take(s, 'market.showroom');
     while (s.pending.kind === 'choose') s = first(s);
-    const top = s.pile.slice(0, 4);
+    const top = pileOf(s, 'cheap').slice(0, 4);
     for (const u of top) expect(ids(s)).toContain(`card:${u}`);
     s = move(s, 'pass');
     s = move(take(s, 'gold.rush'), 'pass');
@@ -112,14 +114,14 @@ describe('Blue actions', () => {
 
   it('Bury: one shop member to the bottom, refill, gain half its cost rounded down, plus the inherent +1', () => {
     let s = table(Q, { round: 2, shop: ROW5 });
-    const top = s.pile[0], tycoon = uidIn(s, 'gold.tycoon', 'shop');
+    const top = pileOf(s, 'pricey')[0], tycoon = uidIn(s, 'gold.tycoon', 'shop');
     s = take(s, 'market.pricecheck');
     expect(R(s).blue).toBe(1);
     s = move(s, `card:${tycoon}`);
     expect(R(s).blue).toBe(1 + 6); // Tycoon costs 12
     expect(s.pile[s.pile.length - 1]).toBe(tycoon);
     expect(s.shop).toContain(top);
-    expect(s.shop).toHaveLength(7); // round II shows 7
+    expect(s.shop).toHaveLength(shopSize(s)); // round II shows 5 cheap and 5 pricey
     expect(s.log).toContain("P1's Bury: +6 blue.");
   });
   it('Bury: an odd cost rounds down (Lottery Winner 11 gives 5)', () => {

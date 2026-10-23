@@ -9,9 +9,23 @@ import { startEffects, stopEffects, abandonEffects, underCause } from './effects
 
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
-export const SHOP_SIZE = 8;
-/** Face-up members by round: 6 in round I (and setup), 7 in round II, 8 in round III (Cory, 2026-10-22). SHOP_SIZE is the most. */
-export const shopSize = state => (state.round <= 1 ? 6 : state.round === 2 ? 7 : SHOP_SIZE);
+export const SHOP_SIZE = 10;
+/** Two shops (Cory, 2026-10-23): a cheap pile (members costing CHEAP_MAX or less) and a pricey pile. Round I (and
+ *  setup) shows 5 cheap members only; rounds II and III show 5 of each. SHOP_SIZE is the most face up. */
+export const CHEAP_MAX = 4;
+export const ROW_SIZE = 5;
+export const shopSize = state => (state.round <= 1 ? ROW_SIZE : 2 * ROW_SIZE);
+/** Which pile a member belongs to by its printed cost: 'cheap' or 'pricey'. */
+export const pileKeyOf = (state, uid) => (cardDef(state, uid).s + cardDef(state, uid).w <= CHEAP_MAX ? 'cheap' : 'pricey');
+/** One pile array holds both piles, each in its own order: the cheap pile is its cheap members top first, the pricey
+ *  pile its pricey ones. Sending a member to the bottom of either is a push. */
+export const pileOf = (state, key) => state.pile.filter(u => pileKeyOf(state, u) === key);
+/** Put `order` (cards of one pile) back on top of that pile, the rest of it after, leaving the other pile alone. */
+function restackPile(state, key, order) {
+  const slots = state.pile.map((u, i) => (pileKeyOf(state, u) === key ? i : -1)).filter(i => i >= 0);
+  const seq = [...order, ...pileOf(state, key).filter(u => !order.includes(u))];
+  slots.forEach((i, k) => { state.pile[i] = seq[k]; });
+}
 // Any colors, no stock limit. The three rounds remain the game clock.
 export const TIERS = [
   { key: 'small', cost: 1, get: 1, colors: 1, label: '1 of anything' },
@@ -428,7 +442,7 @@ function inputFor(state, task) {
       for (const uid of state.shop) if (paymentChoices(state, p, uid).length)
         opts.push({ id: `card:${uid}`, label: cardDef(state, uid).name, kind: 'card', uid });
       // the top of the pile, for a player who can reach it (Insider: flag pileReach)
-      for (const uid of state.pile.slice(0, pileReach(state, p))) if (paymentChoices(state, p, uid).length)
+      for (const uid of pileReachable(state, p)) if (paymentChoices(state, p, uid).length)
         opts.push({ id: `card:${uid}`, label: `${cardDef(state, uid).name} (from the pile)`, kind: 'card', uid, fromPile: true });
       TIERS.forEach(t => { if (followerChoices(state, p, t).length) opts.push({ id: `tier:${t.key}`, label: `+${t.get} followers`, kind: 'tier', tier: t.key }); });
       for (const uid of p.members) {
@@ -630,6 +644,7 @@ function runTask(state, task) {
       p.turnRecruits = 0;
       p.turnBuys = 0;
       delete p.peekReach;
+      delete p.peekPile;
       delete p.perSpend;
       // task.ring: a turn limited to spaces of that ring or lower (a weaker extra worker)
       const source = workerSourceOf(task);
@@ -858,7 +873,20 @@ export const roundWorkers = (state, p) => p.workers ?? WORKERS[Math.max(1, state
 // ---------- recruiting, buying, gaining ----------
 
 function refill(state) {
-  while (state.shop.length < shopSize(state) && state.pile.length) state.shop.push(state.pile.shift());
+  // the cheap row stands before the pricey row; a member that came in another way (a swap) counts by its cost
+  const inRow = key => state.shop.filter(u => pileKeyOf(state, u) === key).length;
+  const deal = key => {
+    const k = state.pile.findIndex(u => pileKeyOf(state, u) === key);
+    if (k < 0) return false;
+    const u = state.pile.splice(k, 1)[0];
+    const i = key === 'cheap' ? state.shop.findIndex(v => pileKeyOf(state, v) === 'pricey') : -1;
+    state.shop.splice(i < 0 ? state.shop.length : i, 0, u);
+    return true;
+  };
+  // a swap can leave a sixth cheap member face up: the cheap row still fills to 5, the pricey row only to 10 face up
+  while (inRow('cheap') < ROW_SIZE && deal('cheap'));
+  if (state.round <= 1) return;
+  while (inRow('pricey') < ROW_SIZE && state.shop.length < shopSize(state) && deal('pricey'));
 }
 
 // how: a recruit priced by a space's own rule (Snap Up: { anyColors }, Half Price: { anyColors, half }), as memberPrice
@@ -867,8 +895,8 @@ function recruit(state, p, uid, opts) {
 }
 function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   const idx = state.shop.indexOf(uid);
-  const fromPile = idx < 0 ? state.pile.indexOf(uid) : -1;
-  if (idx < 0 && (fromPile < 0 || fromPile >= pileReach(state, p))) throw new Error(`Card ${uid} is not in the shop`);
+  const fromPile = idx < 0 && pileReachable(state, p).includes(uid);
+  if (idx < 0 && !fromPile) throw new Error(`Card ${uid} is not in the shop`);
   let paid = 'free';
   if (!free) {
     const spend = chosen || paymentPlan(state, p, uid, how);
@@ -904,10 +932,10 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
     if (cardDef(state, uid).s + cardDef(state, uid).w > 0) { p.discount = 0; p.discountSources = []; }
   }
   // Peek's reach is one recruit from the cards it showed; Insider's stays
-  const peeked = idx < 0 && fromPile < (p.peekReach || 0);
-  if (peeked) delete p.peekReach;
+  const peeked = idx < 0 && pileOf(state, p.peekPile === 'pricey' ? 'pricey' : 'cheap').slice(0, p.peekReach || 0).includes(uid);
+  if (peeked) { delete p.peekReach; delete p.peekPile; }
   if (idx >= 0) state.shop.splice(idx, 1);
-  else state.pile.splice(fromPile, 1);
+  else state.pile.splice(state.pile.indexOf(uid), 1);
   refill(state);
   p.members.push(uid);
   const def = cardDef(state, uid);
@@ -1074,6 +1102,8 @@ function swapMembers(state, actor, aUid, bUid) {
     // Extra minions are entitlements rather than Recruit effects; a gifted Extra Hand still owns its grant.
     for (const def of effectiveDefs(state.cards[uid])) workersNow(state, dest.owner, def, uid);
   }
+  // two shops: a swap can leave a row short (a cheap member into the shop for a pricey one); it fills from its pile
+  if (!a.owner || !b.owner) refill(state);
   return true;
 }
 
@@ -1245,6 +1275,13 @@ export function pileReach(state, p) {
   for (const uid of p.members) for (const def of effectiveDefs(state.cards[uid])) if (def.pileReach) n = Math.max(n, def.pileReach);
   return n;
 }
+/** The pile cards p may recruit this turn: Peek's look (on the pile it chose) and Insider's reach (the cheap pile). */
+export function pileReachable(state, p) {
+  const peek = pileOf(state, p.peekPile === 'pricey' ? 'pricey' : 'cheap').slice(0, p.peekReach || 0);
+  let n = 0;
+  for (const uid of p.members) for (const def of effectiveDefs(state.cards[uid])) if (def.pileReach) n = Math.max(n, def.pileReach);
+  return [...new Set([...peek, ...pileOf(state, 'cheap').slice(0, n)])];
+}
 /** Rivals' taken spaces p may join this round (Squatter: flag squat). One extra worker per space. */
 export function squatSlots(state, p) {
   // Purple's round II space (Cory, 2026-10-22): "you can play on occupied spaces this round", any taken space, no limit
@@ -1360,6 +1397,9 @@ function ctxFor(state) {
       return out;
     },
     refillShop: () => refill(state),
+    /** The cheap or pricey pile, top first (two shops). */
+    pileOf: key => pileOf(state, key),
+    restackPile: (key, order) => restackPile(state, key, order),
     /** Send one of p's members to the bottom of the pile, wiped clean (White: "get rid of"). Returns its printed cost. */
     buryMember(p, uid) {
       if (!p.members.includes(uid)) return 0;

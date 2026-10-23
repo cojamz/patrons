@@ -2,7 +2,7 @@
 // Red and the stand-ins: every action and every member hook, with exact numbers.
 import { describe, it, expect } from 'vitest';
 import { memberCount, resume } from '../../../engine/v4/core.js';
-import { scene as baseScene, take, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
+import { scene as baseScene, take, move, uidOf, ids, hasOpt, fol, useTestCosts, rowsFull } from './helpers.js';
 import { SHOP_SIZE, shopSize } from '../../../engine/v4/core.js';
 
 useTestCosts();
@@ -24,7 +24,7 @@ describe('Red action progression', () => {
     const s = take(scene({ res: [{ gold: 9 }], shop: ['red.volunteer', ...SHOP.slice(1)] }), 'red.hire');
     expect(defs(s, 0)).toEqual(['red.volunteer']);
     expect(R(s)[0]).toMatchObject({ gold: 9, red: 1 });
-    expect(s.shop).toHaveLength(shopSize(s));
+    expect(rowsFull(s)).toBe(true);
   });
   it('Open Door offers every tied cheapest member', () => {
     let s = take(scene({ shop: ['red.intern', 'red.crowd', 'gold.midas', 'gold.jackpot', 'red.mentor', 'red.bigfamily'] }), 'red.hire');
@@ -82,7 +82,7 @@ describe('Red members', () => {
     // the Volunteer refilled into the shop and is now the cheapest
     expect(defs(s, 0)).toEqual(['red.mentor', 'red.volunteer']);
     expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 0, green: 0 });
-    expect(s.shop).toHaveLength(shopSize(s));
+    expect(rowsFull(s)).toBe(true);
   });
 
   it('Proselytizer: +1 follower whenever you recruit (not for itself)', () => {

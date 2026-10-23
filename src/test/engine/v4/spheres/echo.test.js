@@ -113,7 +113,8 @@ describe('Green table action boundaries', () => {
   // Cory's playtest, 2026-10-22: a copy of Open Door recruits the cheapest member face up now, not one capped at
   // what the first taker's cost (that left the copy with nothing once the cheap card was gone)
   it.each([['red.volunteer', 'red.intern'], ['red.intern', 'gold.seed']])('a copied Open Door after %s goes recruits %s, the cheapest left', (first, next) => {
-    let s = scene({ turns: [1, 0], shop: [first, next, ...SHOP.slice(0, 5)], left: 0 });
+    // two shops: the refill after the first recruit comes from the cheap pile, so pricier cheap members wait on top
+    let s = scene({ turns: [1, 0], shop: [first, next, ...SHOP.slice(0, 5)], left: 0, pileFirst: ['gold.prospector', 'gold.thrift', 'gold.coinpurse'] });
     s = go(s, 'red.hire');
     expect(defs(s, 1)).toEqual([first]);
     s = take(s, 'echo.echo');
@@ -123,7 +124,7 @@ describe('Green table action boundaries', () => {
     expect([R(s).red, R(s).green]).toEqual([1, 1]); // Open Door's +1 red and Echo's +1 green, nothing spent
   });
   it('a copied free recruit offers only eligible face-up members and costs no resources', () => {
-    let s = scene({ turns: [1, 0], shop: ['gold.taxman', 'red.twins', 'gold.seed', ...SHOP.slice(0, 4)] });
+    let s = scene({ turns: [1, 0], shop: ['gold.taxman', 'red.twins', 'gold.seed', ...SHOP.slice(0, 4)], pileFirst: ['gold.prospector', 'gold.thrift', 'gold.coinpurse'] });
     s = take(s, 'red.hire');
     s = pass(move(s, 'card:' + uidOf(s, 'gold.taxman', 'shop')));
     s = chooseTarget(take(s, 'echo.echo'), 'red.hire');

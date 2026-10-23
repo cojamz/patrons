@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove, resume, contestTable, DEFAULT_RULES } from '../../../engine/v4/core.js';
+import { createGame, applyMove, resume, contestTable, DEFAULT_RULES, pileOf } from '../../../engine/v4/core.js';
 import { defById } from '../../../engine/v4/content/index.js';
 import { sceneQ } from './cards-helpers.js';
 import { take, move } from './helpers.js';
@@ -36,7 +36,7 @@ describe('October17 explicit rules',()=>{
  });
  it('refreshes the complete market between rounds without losing cards',()=>{
   let s=sceneQ({quadrants:Q,queue:[{t:'turn',p:0}]});
-  const old=[...s.shop],next=s.pile.slice(0,7),/* round II shows 7 */all=[...s.shop,...s.pile].sort((a,b)=>a-b);
+  const old=[...s.shop],next=[...pileOf(s,'cheap').slice(0,5),...pileOf(s,'pricey').slice(0,5)],/* round II: 5 cheap, then 5 pricey */all=[...s.shop,...s.pile].sort((a,b)=>a-b);
   s.pending=null;s.queue=[{t:'round',r:2}];s=resume(s);
   expect(s.shop).toEqual(next);expect(s.pile.slice(-old.length)).toEqual(old);
   expect([...s.shop,...s.pile].sort((a,b)=>a-b)).toEqual(all);

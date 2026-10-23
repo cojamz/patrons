@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { contextFor, liveOptions, resume, SHOP_SIZE, shopSize } from '../../../engine/v4/core.js';
 import { ledger } from '../../../engine/v4/content/echo.js';
 import { table, uidIn, useCosts } from './cards-helpers-b.js';
-import { actionName, move, take } from './helpers.js';
+import { actionName, move, take, rowsFull } from './helpers.js';
 
 const Q = ['gold', 'red', 'trading', 'echo'];
 const ROW = ['gold.banker', 'red.twins', 'red.intern', 'red.volunteer', 'gold.tycoon', 'echo.evergreen', 'echo.muse', 'gold.taxman']; // one full round-III row (SHOP_SIZE); round I shows shopSize = 6
@@ -24,12 +24,12 @@ describe('locked Red action progression', () => {
 
   it('cheapest recruitment is free, gives inherent red and refills only the removed member', () => {
     let s = table(Q, { shop: ROW.slice(0, 6) });
-    const pile = s.pile.length;
+    const all = s.shop.length + s.pile.length;
     s = take(s, 'red.hire');
     expect(defs(s, 0)).toEqual(['red.intern']);
     expect(s.players[0].res.red).toBe(1);
-    expect(s.shop).toHaveLength(shopSize(s));
-    expect(s.pile).toHaveLength(pile - 1);
+    expect(rowsFull(s)).toBe(true);
+    expect(s.shop.length + s.pile.length).toBe(all - 1);
   });
 
   it('round III recruits any shop member free and adds inherent red', () => {
@@ -60,7 +60,7 @@ describe('locked Red action progression', () => {
     s = move(s, swapId(a, b));
     expect(defs(s, 1)).toEqual(['gold.banker']);
     expect(s.shop).toContain(a);
-    expect(s.shop).toHaveLength(row); expect(s.pile).toHaveLength(pile);
+    expect(s.shop.length + s.pile.length).toBe(row + pile);
     expect(s.players[1].res.gold).toBe(0); // recipient did not Recruit
     expect(s.recruits).toBe(0);
   });
