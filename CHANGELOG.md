@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.53 — 2026-10-22 — unreleased
+
+- The glossary lists the cards that use each word and adds Skip, Get rid of, Turn into followers and more; the Members list shows colors not in this game, dimmed. Right Away now scales by round.
+
 ## v0.8.52 — 2026-10-22 — unreleased
 
 - White prices: Exporter, Undertaker and Appraiser cost more; Money Changer, Heiress, Broker and Martyr are worth 2 followers
