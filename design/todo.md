@@ -24,6 +24,7 @@ Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 1
 - [ ] Round I shop feels thin: "only 5 members is a bit few. If there are expensive ones, everyone is chasing the same members." Now: 5 face up in round I, 6 in II, 7 in III; the pile refills each gap at once; a fresh row each round. Design call, his.
 - [ ] Open Door too strong in round I with 5 members ("Recruit the cheapest member in the shop"). Options sent: 6 in round I [default], move it to round II, recruit at half cost.
 - [x] Copying Open Door got nothing or kept the first taker's cost cap: a copy now does Open Door itself (answer key #55, #56).
+- Player feedback, no action yet (*): White's round II spaces (Farewell, Estate Sale) need members people usually don't have yet; cheaper members will probably solve it (Cory).
 - Player feedback, no action yet (*): "Stealing spaces don't create money" (a player; Cory not sure he agrees); "more complex than anticipated"; shop needs more people; Red and Purple have too many actions that are bad at the end; members are best bought early but seen late.
 - [ ] Design list for after the playtest: Even Swap better (his "maybe +2 red"), Red weak early, Lie Low maybe scales, Recruit a Member maybe a cost limit, Shake Down maybe too strong. Crunch Time parked (keep +1 purple).
 - [ ] Peek weak in round I; anything based on owning or recruiting members is tough in round I (Cory, playtest). Ideas pitched, his pick.
