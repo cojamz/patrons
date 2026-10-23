@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.56 — 2026-10-22 — unreleased
+
+- Help Yourself now steals its followers from the rivals you take from, instead of getting them from the bank.
+
 ## v0.8.55 — 2026-10-22 — unreleased
 
 - Even Swap, Promote and Demote now offer "Don't swap", so the swap is your choice; you keep the +1 red.
