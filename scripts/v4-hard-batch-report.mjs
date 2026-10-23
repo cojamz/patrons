@@ -37,7 +37,7 @@ console.log('\nColors (members of that color, winner vs other Hard seats, on tab
 for (const [q, v] of Object.entries(color).sort((a, b) => (b[1].gw / b[1].nw - b[1].gl / b[1].nl) - (a[1].gw / a[1].nw - a[1].gl / a[1].nl)))
   console.log(`  ${q}: on ${v.games} tables, winner ${(v.gw / (v.nw || 1)).toFixed(2)} vs others ${(v.gl / (v.nl || 1)).toFixed(2)}`);
 console.log('\nMembers (owned at game end by a Hard seat; owner win share; bought / times seen in shop), min 6 owners:');
-const ml = Object.entries(member).filter(([, v]) => v.n >= 6).map(([k, v]) => [k, v.w / v.n, v.n, offered[k] || 0]).sort((a, b) => b[1] - a[1]);
+const ml = Object.entries(member).filter(([, v]) => v.n >= Number(process.env.MIN || 6)).map(([k, v]) => [k, v.w / v.n, v.n, offered[k] || 0]).sort((a, b) => b[1] - a[1]);
 for (const [k, wr, n, off] of ml) console.log(`  ${k}: wins ${pct(wr)}, owned ${n} times / in shop ${off} games${fol[k] ? `, gave ${(fol[k].f / fol[k].n).toFixed(1)} followers for cost ${cost[k] ?? '?'}${cost[k] ? ` (${(fol[k].f / fol[k].n / cost[k]).toFixed(1)}x)` : ''}, ${fol[k].n} games` : ''}`);
 const pick = Object.entries(offered).filter(([, o]) => o >= 8).map(([k, o]) => [k, (member[k]?.n || 0) / o]).sort((a, b) => b[1] - a[1]);
 console.log('\nMost and least bought when in the shop (seen in 8+ games):');
