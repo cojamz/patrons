@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.60 — 2026-10-22 — unreleased
+
+- Peek: the 4 cards you peek at sit beside the shop instead of replacing it, and ones you can't afford stay visible, faded
+
 ## v0.8.59 — 2026-10-22 — unreleased
 
 - The shop shows 6, 7 and 8 members in rounds I, II and III. Peek gives +2/+4/+6 blue; Lie Low no longer steals; Raiders (renamed) costs 4. Redistribute counts its own space, and the details view shows total cost. Members fly between players online too; seats list members oldest to newest. Top Up: fewest colors get a flat +1, only its yellow grows each round. Wheel and card words match what the spaces do. After an update, players in a game started on the version before go back to their seat on that version.
