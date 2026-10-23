@@ -127,7 +127,7 @@ export default {
         ctx.choose(owner, 'Panel: Promote or Demote?', options, 'red.panelMode', { excludeUid: card.uid });
       },
     }),
-    m('loyalists', 'Loyalists', 1, 2, 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
+    m('loyalists', 'Loyalists', 2, 3, /* Claude's fill-in price 5, was 3 (Cory, 2026-10-22: "too cheap") */ 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
     m('reserve', 'Benchwarmer', 1, 0, 'Worth 1 follower.'), // placeholder until Cory designs its hold (then it becomes Seat Saver)
   ],
 };

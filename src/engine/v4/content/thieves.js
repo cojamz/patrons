@@ -152,6 +152,8 @@ export function magentaOccupied(ctx, p) {
   const placingHere = ctx.placement?.key === key && !ctx.placement.joined;
   return Object.keys(ctx.state.slots).filter(k => k.startsWith(`${q}-`) && !(placingHere && k === key)).length;
 }
+// Sticky Fingers on a member's steal (spaces get it through ctx.stealCount, with Desperado's double)
+const stickyMore = (ctx, p) => ctx.membersOf(p).reduce((n, c) => n + (typeof c.def.stealMore === 'number' ? c.def.stealMore : 0), 0);
 const memberHint = c => c.def.f * 1.5 + cost(c) + (c.def.vanilla || c.used ? 0 : 1);
 // What a ransom costs its holder: n from their biggest piles, one at a time ({ color: count }). The prompt names it
 // before they answer (card audit #23: the payment was taken without saying which colors, and could cost a lead).
@@ -315,7 +317,7 @@ const thieves = {
 
   members: [
     m('cutpurse', 'Cutpurse', 1, 1, 'Now and at round start: steal 1 resource from the rival with the most resources.', { now: true,
-      onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Cutpurse', 1, { fromAction: false, richest: true }); },
+      onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Cutpurse', 1 + stickyMore(ctx, owner), { fromAction: false, richest: true }); },
     }),
     m('mole', 'Mole', 2, 2, 'Now and at round start: steal 1 resource from each rival with more followers than you.', { now: true,
       onRoundStart(ctx, owner) {
@@ -329,10 +331,11 @@ const thieves = {
       // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, like any steal
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
-        startSteal(ctx, owner, 'Grifter', n, { fromAction: false });
+        startSteal(ctx, owner, 'Grifter', n + (n > 0 ? stickyMore(ctx, owner) : 0), { fromAction: false });
       },
     }),
-    m('sticky', 'Sticky Fingers', 2, 1, 'Your steals from spaces take 1 more resource.', { stealMore: 1 }),
+    // every steal, a member's too (Cory, 2026-10-22 playtest: "it should proc on member recruits (like grifter)")
+    m('sticky', 'Sticky Fingers', 2, 1, 'Your steals take 1 more resource.', { stealMore: 1 }),
     m('desperado', 'Desperado', 2, 2, 'While you have the fewest followers (ties count), double what you steal from spaces, before other bonuses.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
@@ -393,7 +396,7 @@ const thieves = {
     // Cory's #26 "Steal when you buy a member - should be essential to magenta" (Cory's yes, Oct 21)
     m('shoplifter', 'Shoplifter', 3, 2, 'Whenever you recruit, steal 1 resource.', {
       onRecruit(ctx, owner, card, by, what) {
-        if (by === owner && what.member?.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1, { fromAction: false });
+        if (by === owner && what.member?.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1 + stickyMore(ctx, owner), { fromAction: false });
       },
     }),
     m('fence', 'Fence', 2, 2, 'Whenever you steal, +1 magenta.', {
