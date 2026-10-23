@@ -14,5 +14,5 @@ Short version:
 2. Send numbered picks with the strong-to-weak order. No prices yet.
 3. Build his cut on `claude/members-<color>`, never live.
 4. Sweep prices with scripts/v4-fair-price.mjs at 2, 3 and 4 seats; buy-followers-only win rate with scripts/v4-big-followers.mjs.
-5. Price with three levers, all tuned in the price tests toward the 1.5× target (a member returns about 1.5× its cost in followers): the total cost; the mix of its color and "any" in that cost (its own color is scarcer than any, so a colored-heavy cost is pricier than the same total in any); and the followers it's worth, 1 to 4, 5 only rarely. Raise a weak card's followers before cutting its cost. Don't get crazy with any lever (Cory, Oct 22).
+5. Price with three levers, all tuned in the price tests toward the 2× target (a member returns about 2× its cost in followers): the total cost; the mix of its color and "any" in that cost (its own color is scarcer than any, so a colored-heavy cost is pricier than the same total in any); and the followers it's worth, 1 to 4, 5 only rarely. Raise a weak card's followers before cutting its cost. Don't get crazy with any lever (Cory, Oct 22).
 6. Report each price with its instrument. Nothing ships until he says yes.

@@ -10,6 +10,7 @@
 //   node scripts/v4-price-1p5.mjs design/eval/member-sims/sweep-4p/*.json            the price list
 //   node scripts/v4-price-1p5.mjs <files> --apply                                     also writes the content files
 //   --keep=id,id   leave these cards at their printed price (e.g. a card Cory set himself)
+//   --target=n     followers returned per resource of cost (default 2, Cory Oct 22; was 1.5)
 //   --cap=n        move no price more than n in one pass (one sweep's noise is about ±2 followers per price)
 // A card with an ability never drops below 1: a free one would be a reflex pick, whatever the bots think of it.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -19,6 +20,9 @@ import { dirname, join } from 'node:path';
 const argv = process.argv.slice(2);
 const files = argv.filter(a => !a.startsWith('--'));
 const flags = Object.fromEntries(argv.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
+// Cory, 2026-10-22: "we should update our member gain to 2x followers" (was 1.5x). --target=n overrides.
+const TARGET = Number(flags.target ?? 2);
+const EXCESS = TARGET - 1; // a resource buys one follower, so earning TARGET×P beats the game without the card by EXCESS·P
 const keep = new Set(String(flags.keep || '').split(',').filter(Boolean));
 const FLOOR8 = new Set(['red.mentor', 'benders.extrahand']); // an extra member / an extra minion: his 8-to-10 ladder
 const CONTENT = join(dirname(fileURLToPath(import.meta.url)), '../src/engine/v4/content');
@@ -26,13 +30,13 @@ const CONTENT = join(dirname(fileURLToPath(import.meta.url)), '../src/engine/v4/
 // where margin − 0.5·P·(buy rate) crosses zero
 function cross(r) {
   // only the games where the test seat could afford it bought it, so the target scales by the buy rate
-  const pts = r.per.map(p => [p.P, p.forced[0] - 0.5 * p.P * p.forcedBuy]);
+  const pts = r.per.map(p => [p.P, p.forced[0] - EXCESS * p.P * p.forcedBuy]);
   for (let i = 0; i + 1 < pts.length; i++) {
     const [x0, y0] = pts[i], [x1, y1] = pts[i + 1];
     if (y0 >= 0 && y1 < 0) return x0 + ((x1 - x0) * y0) / (y0 - y1);
   }
   // no crossing inside the grid: the line a + b·P against 0.5·P
-  return r.at0 / (0.5 - r.slope);
+  return r.at0 / (EXCESS - r.slope);
 }
 const price = (id, x) => {
   let p = Math.min(10, Math.max(0, Math.ceil(x - 0.5)));
@@ -62,6 +66,6 @@ for (const r of rows) {
   out.push({ id: r.id, name: r.name, was: `${T} (${s}+${w})`, worth: cross(r), margins: r.per.map(p => `${p.P}:${p.forced[0].toFixed(1)}/${Math.round(p.forcedBuy * 100)}%`).join(' '), slope: r.slope, P, split: `${ns}+${nw}` });
   if (flags.apply && P !== T) src[q] = read(q).replace(pattern(q, key), `$1${ns}, ${nw}`);
 }
-console.log('card'.padEnd(22), 'was'.padEnd(10), '1.5x at', ' → price (colored+any)', '  margin at each tested price');
+console.log('card'.padEnd(22), 'was'.padEnd(10), `${TARGET}x at`, ' → price (colored+any)', '  margin at each tested price');
 for (const o of out) console.log(o.name.padEnd(22), o.was.padEnd(10), o.worth.toFixed(1).padStart(7), `   ${o.P} (${o.split})${keep.has(o.id) ? ' kept' : ''}`.padEnd(22), o.margins);
 if (flags.apply) { for (const [q, t] of Object.entries(src)) writeFileSync(join(CONTENT, `${q}.js`), t); console.log('written'); }

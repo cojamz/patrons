@@ -20,7 +20,7 @@ You lead a cult for three rounds. Each turn you put a minion somewhere others no
 
 - **Where?** Spaces are shared and snake-drafted. "Will my spot still be open?" is the heartbeat (Cory). Blocking is real play.
 - **Hold or spend?** Each color's contest pays whoever holds the most of it at round end (+2 / +4 / +6). A resource held wins contests; a resource spent becomes a member or followers. Theft and gifts move piles, so a big pile is both a lead and a target.
-- **What do I turn it into?** One recruit a turn: a member (an ability, worth followers, a bet that should return about 1.5× its cost) or one follower card (1, 5 or 10 at 1 for 1).
+- **What do I turn it into?** One recruit a turn: a member (an ability, worth followers, a bet that should return about 2× its cost) or one follower card (1, 5 or 10 at 1 for 1).
 
 ## 2. The arcs a space sits in
 
@@ -84,7 +84,7 @@ Totals count the space's own +1. A space with a real effect usually gives just t
   - 5 to 6: an engine piece. Proselytizer, Shoplifter, Patriarch, Panel (worth 3, counts as 3).
   - 7 to 8: a rule-bender or centerpiece. Shopaholic ("You can always recruit twice"), Bodyguard, Go-Getter, Night Owl, Mentor & Protégé, Extra Shift, Gossip.
   - 9 to 10: game-shaping. Mob (worth 5, counts as 5, +1 per red member), Tribute Band, Extra Hand (+1 minion in round III).
-  - A member should return about 1.5× its cost over the game, in the cult it belongs to. Price a little above what bots suggest; lift a weak card's followers before cutting its price.
+  - A member should return about 2× its cost over the game, in the cult it belongs to. Price a little above what bots suggest; lift a weak card's followers before cutting its price.
 - **Range, not a point.** Each color wants a strong and a weaker option side by side (Cory likes weak twins next to strong spaces: the draft makes them matter), and members spread from 2 to 10, so a cheap pickup and a big buy sit in the same row.
 - Buy-followers-only should win about 25% of 4-player games. An idea that mostly helps someone who only recruits follower cards pushes the wrong way: it's arbitrage, not engine.
 

@@ -41,7 +41,7 @@ Every turn spends a placement and a recruit, and moves your pile. Which one is s
 - **Sibling parity.** Compare against the reworked color's space in the same ring. Cory checks this himself: "+1 follower × round" lost to Help Yourself ("steal 1 and +1 follower × round") — "way worse than magenta one". The fix that worked was matching totals with a different side effect.
 - **Placement accounting.** Every space costs a minion and a turn. A space that only hands back a minion or a turn (take a minion back, one turn after this one, an extra minion) nets zero and must pay some other way. Write the net out.
 - **Exchanges.** Judge any trade against all three limits on the follower card: 1 for 1, 10 per card, one recruit per turn. "Turn all your white into followers, 1 for 1, no cap, no recruit" is strong because it skips the cap and the recruit, not because of its rate. Cory: "the idea is you can have a lot of white and go above 10".
-- **Member value** (Cory, Oct 21). A member should return about 1.5× its cost in followers over the game. Prices are educated guesses, a little pricier than bots suggest, never below 2; lift a weak card with more followers before cutting its price. Don't put prices in a pitch unless he asks.
+- **Member value** (Cory, Oct 21). A member should return about 2× its cost in followers over the game (Cory, Oct 22, raised from 1.5×). Prices are educated guesses, a little pricier than bots suggest, never below 2; lift a weak card with more followers before cutting its price. Don't put prices in a pitch unless he asks.
 - **Buy-followers-only** wins about 25% of 4-player games; a good engine should beat it. An idea that mostly helps someone who only recruits follower cards pushes the wrong way.
 
 ## 4. What each color is
