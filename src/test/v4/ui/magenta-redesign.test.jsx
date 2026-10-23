@@ -11,7 +11,8 @@ describe('Magenta action wording and one-stack theft', () => {
   it('separates scaling theft, followers, protection and the inherent color gain', () => {
     for (const round of [1, 2, 3]) {
       const pick = panelText('thieves', { key: 'pickpocket' }, round);
-      expect(pick.verb).toBe(`Steal ${round}, +${round} @f`);
+      // the followers are stolen too, not gained from the bank (Cory, 2026-10-22)
+      expect(pick.verb).toBe(`Steal ${round} and ${round} @f`);
       expect(pick.second).toBe('+1 magenta');
       const safe = panelText('thieves', { key: 'hideout' }, round);
       expect(safe.verb).toBe(`Steal ${round}; safe from steals`);
@@ -20,7 +21,7 @@ describe('Magenta action wording and one-stack theft', () => {
       expect(shortEffect('thieves', { key: 'pickpocket' }, round)).toContain(`steal ${round}`);
     }
     const occupied = panelText('thieves', { key: 'tipoff' });
-    expect(`${occupied.verb} ${occupied.second}`).toBe('Steal 1 per magenta action already holding a minion');
+    expect(`${occupied.verb} ${occupied.second}`).toBe('Steal 1 per magenta action with a minion, this one too');
     expect(occupied.note).toBe('+1 magenta');
     expect(panelText('thieves', { key: 'ransom' }, 2).second).toBe('costing 5 or less');
     expect(panelText('thieves', { key: 'rob' }, 2).second).toBe('one color, rounded down');

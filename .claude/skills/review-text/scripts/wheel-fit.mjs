@@ -22,7 +22,7 @@ if (!base) {
   let port = 5296;
   while (!(await free(port))) port++;
   base = `http://localhost:${port}`;
-  server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
+  server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: 'pipe', detached: true });
   let up = false;
   for (let k = 0; k < 60 && !up; k++) { await new Promise(r => setTimeout(r, 500)); up = await fetch(base).then(r => r.ok, () => false); }
   if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
@@ -77,6 +77,7 @@ try {
     }
     await page.close();
   }
-} finally { await browser.close(); if (server) server.kill(); }
+} finally { await browser.close(); if (server) try { process.kill(-server.pid); } catch { server.kill(); } }
 const text = `# Wheel print at 1270×700\n\n## Dropped lines\n${[...drops].map(([k, v]) => `- ${k}: ${[...new Set(v)].join(', ')}`).join('\n') || '- none'}\n\n## Every space\n${rows.join('\n')}\n`;
 if (out) { writeFileSync(out, text); console.log(`wrote ${out} (${drops.size} spaces drop a line)`); } else process.stdout.write(text);
+process.exit(0); // vite's own children can hold the event loop open

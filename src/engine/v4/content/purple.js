@@ -243,6 +243,7 @@ export default {
       // Cory, 2026-10-22: replaces Catch Up ("the skip should replace catch up"); "1 purple per round" so it isn't weak
       // late. Wording and name are Claude's fill-in.
       key: 'holdup', copyDoesIt: true, ring: 1, name: 'Hold Up', text: '+1 purple (+2 in round II, +3 in round III). The next turn is skipped.',
+      byRound: { lines: ['+1 purple', '+2 purple', '+3 purple'], rest: 'The next turn is skipped.' },
       // Cory, 2026-10-22: "it has to be the next TURN not even the next player. so a player could skip their own in
       // snake draft". Whoever's turn comes next is passed over once and still places every minion.
       estimate: ctx => ctx.state.round + 1,
@@ -258,6 +259,7 @@ export default {
       // turns, moved up (his yes: you still place the same minions that round), like Crunch Time's two. Name: fill-in.
       // Cory, 2026-10-23: "Right Away should scale. +1 +2 +3" (Hold Up's wording).
       key: 'again', copyDoesIt: true, ring: 1, name: 'Right Away', text: '+1 purple (+2 in round II, +3 in round III). Take another turn right after this one.',
+      byRound: { lines: ['+1 purple', '+2 purple', '+3 purple'], rest: 'Take another turn right after this one.' },
       estimate: (ctx, p) => ctx.state.round + turnsNowEstimate(ctx, p, 1),
       resolve(ctx, p) { ctx.gain(p, P, ctx.state.round, { fromAction: true }); turnsNow(ctx, p, 1, 'Right Away'); },
     },

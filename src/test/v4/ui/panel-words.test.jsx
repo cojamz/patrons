@@ -30,12 +30,13 @@ describe('panel words (w3)', () => {
     }
   });
 
-  it('Build Up includes the inherent green gain; Golden Years keeps its exact multiplier', () => {
+  it('Build Up includes the inherent green gain; Golden Years shows this round\'s number, like its rule', () => {
     for (const r of [1, 2, 3]) {
       expect(panelText('echo', { key: 'chant' }, r).main).toBe(`+${r + 1} green`);
       const gold = panelText('gold', { key: 'rush' }, r);
-      expect(gold.main).toBe('+2 gold × round');
-      expect(gold.second).toBeNull();
+      // "+2 gold × round" made a round III player do the math (text review, 2026-10-23)
+      expect(gold.main).toBe(`+${2 * r} gold`);
+      expect(gold.second).toBe(r < 3 ? 'more each round' : null);
     }
   });
 
@@ -112,8 +113,9 @@ describe('panel words (w3)', () => {
     const a = quadrant('echo').actions.find(x => x.key === 'hum');
     const t = panelText('echo', a, 1, s, 0);
     expect(t.main).toBe('+1 green');
-    expect(t.second).toBe('1 per other green action with a minion');
-    expect(t.note).toBe('+1 green');
+    expect(t.second).toBe('1, +1 per other green action with a minion');
+    // the flat +1 is in the total, said once (text review, 2026-10-23: "+1 green" printed twice)
+    expect(t.note).toBeNull();
     // a rival on another Green space adds one; a minion on Chorus itself adds nothing
     const q = s.quadrants.indexOf('echo'), chorus = quadrant('echo').actions.indexOf(a);
     const other = quadrant('echo').actions.findIndex((x, i) => i !== chorus && x.ring === 1);
@@ -121,7 +123,7 @@ describe('panel words (w3)', () => {
     expect(panelText('echo', a, 1, { ...s, slots: { [`${q}-${other}`]: 1, [`${q}-${chorus}`]: 1 } }, 0).main).toBe('+2 green');
     // the printed rule, without a table
     expect(panelText('echo', a, 1).main).toBe('+1 green');
-    expect(panelText('echo', a, 1).second).toBe('per other green action with a minion');
+    expect(panelText('echo', a, 1).second).toBe('+1 more per other green action with a minion');
   });
 
   it('Spree prints its blue and says it is 3 buys (Name Drop, the live-payout space, left with Blue\'s Oct 20 rework)', () => {

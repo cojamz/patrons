@@ -28,7 +28,7 @@ const P = {
     // "+1 to anyone" (w3): the gift goes to a rival only, never to you. "1 of what?" says gold; "you pick who" read
     // awkwardly (live panel r1): the note runs on from line 2 ("…to a rival / of your choice")
     jv: { main: '+3 gold', second: '+1 gold to a rival', note: 'of your choice' },
-    rush: () => ({ main: '+2 gold × round' }),
+    rush: r => ({ main: `+${2 * r} gold`, second: grows(r) }),
     // "Save 4" read as keeping 4 resources (blind testers, 2026-10-15): it's money off, said as a shop says it
     discount: { verb: '4 off', second: 'your next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
@@ -76,13 +76,13 @@ const P = {
     // "others get 1" left "1 of what?" (live panel r1): silver
     toast: r => ({ main: `+${3 * r} silver`, second: `others get ${r} silver`, note: grows(r, 'both grow') }),
     // "+2 of a color": which one? (w3a #56) yours to pick
-    gift: { main: '+2 silver', second: '+2 of a color you pick', note: 'others get 1 of it' },
+    gift: { main: '+2 silver', second: '+2 of a color you choose', note: 'others get 1 of it' },
     // said like Kickback's gift ("a rival gets 2" ran on as "+4 silver a rival gets 2" off the wheel)
     // "+2 to a rival" left "2 of what?" (blind testers, 2026-10-15): the color is yours to pick too
-    alms: { main: '+4 silver', second: '+2 of a color to a rival', note: 'you pick both' },
+    alms: { main: '+4 silver', second: '+2 of a color to a rival', note: 'you choose both' },
     // "trade silver" (w3a #57): with whom? it's a swap of your silver into one other color. Line 2 within 16 letters
     // ("swap silver for a color" didn't fit ring II, and dropped whole)
-    tongue: { main: '+4 silver', second: 'swap for a color', note: 'others get 2 silver' },
+    tongue: { main: '+4 silver', second: 'swap for a color', note: 'others get 1 silver' },
     // the richest in silver: the hover says "the rival with the most" ("Gain half the silver" left no room for line 2)
     // "half the richest" read as half your own pile (blind testers, 2026-10-15): it's the top rival's
     tide: { verb: 'Gain silver', second: 'half the top rival’s', note: 'others get 2 silver' },
@@ -90,7 +90,7 @@ const P = {
     jubilee: { verb: '+1 @f per silver the richest rival holds', second: 'others get 1 silver first' },
   },
   yellow: {
-    harvest: (r, now) => ({ main: `+${now ?? 1} yellow`, second: now == null ? '+1 per other color' : '1, +1 per other color', note: 'you hold' }),
+    harvest: (r, now) => ({ main: `+${now ?? 1} yellow`, second: now == null ? '+1 per other color you hold' : '1, +1 per other color you hold' }),
     bloom: r => ({ main: `+${r} yellow`, second: '+1 of each fewest color', note: grows(r, 'more yellow') }),
     // Match the current rule: the yellow arrives before the optional swaps.
     transmute: { main: '+2 yellow', second: 'then swap up to 3', note: 'for other colors' },
@@ -101,8 +101,8 @@ const P = {
     flourish: { verb: '+1 each other color, per full set' },
   },
   thieves: {
-    pickpocket: r => ({ verb: `Steal ${r}, +${r} @f`, second: '+1 magenta', note: grows(r, 'steal and @f grow') }),
-    tipoff: { verb: 'Steal 1 per magenta action', second: 'already holding a minion', note: '+1 magenta' },
+    pickpocket: r => ({ verb: `Steal ${r} and ${r} @f`, second: '+1 magenta', note: grows(r, 'steal and @f grow') }),
+    tipoff: { verb: 'Steal 1 per magenta action', second: 'with a minion, this one too', note: '+1 magenta' },
     hideout: r => ({ verb: `Steal ${r}; safe from steals`, second: 'this round', note: '+1 magenta' }),
     rob: { verb: 'Steal half a rival’s pile', second: 'one color, rounded down', note: '+1 magenta' },
     ransom: { verb: 'Rival pays or loses a member', second: 'costing 5 or less', note: '+1 magenta' },
@@ -129,7 +129,7 @@ const P = {
     cashin: { verb: 'Turn all your white into @f', note: '+1 white' },
   },
   echo: {
-    hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? 'per other green action with a minion' : '1 per other green action with a minion', note: '+1 green' }),
+    hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? '+1 more per other green action with a minion' : '1, +1 per other green action with a minion' }),
     chant: r => ({ main: `+${r + 1} green`, second: grows(r) }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
     echo: { verb: 'Copy previous action', note: '+1 green' },
