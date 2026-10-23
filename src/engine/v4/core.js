@@ -9,9 +9,9 @@ import { startEffects, stopEffects, abandonEffects, underCause } from './effects
 
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
-export const SHOP_SIZE = 7;
-/** Face-up members by round: 5 in round I (and setup), 6 in round II, 7 in round III (Cory, 2026-10-21). SHOP_SIZE is the most. */
-export const shopSize = state => (state.round <= 1 ? 5 : state.round === 2 ? 6 : SHOP_SIZE);
+export const SHOP_SIZE = 8;
+/** Face-up members by round: 6 in round I (and setup), 7 in round II, 8 in round III (Cory, 2026-10-22). SHOP_SIZE is the most. */
+export const shopSize = state => (state.round <= 1 ? 6 : state.round === 2 ? 7 : SHOP_SIZE);
 // Any colors, no stock limit. The three rounds remain the game clock.
 export const TIERS = [
   { key: 'small', cost: 1, get: 1, colors: 1, label: '1 of anything' },

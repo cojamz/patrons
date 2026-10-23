@@ -32,7 +32,7 @@ Round I's turn order is drawn at random. Then, starting with the player who goes
 You can use a member's ability any time during your own turn, as often as its card allows ("once per round", "once per game"). A space that recruits a member for you (Open Door) doesn't use up your recruit. Recruit Twice and Spree let you recruit more than once this turn.
 
 ## The shop
-- 5 members are face up in round I, 6 in round II and 7 in round III. When one leaves, the top of the face-down pile refills the row. The pile shows how many are left.
+- 6 members are face up in round I, 7 in round II and 8 in round III. When one leaves, the top of the face-down pile refills the row. The pile shows how many are left.
 - Between rounds the whole row goes to the bottom of the pile and a fresh row is dealt.
 - A cost has a colored part, paid only in that member's color, and an "any" part, paid in any resources. Members of no color (guests) cost only "any".
 - The pay sheet suggests a payment; tap one of your resources to swap it in.
