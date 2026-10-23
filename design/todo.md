@@ -23,7 +23,7 @@ Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 1
 ## Text review (2026-10-23, /review-text; findings: design/eval/text-review/2026-10-23.md)
 - [x] Board words that disagreed with the cards fixed on the branch (2803d4e4); ship after Cory's game.
 - [ ] Wheel hides most spaces' flat "+1 <color>" (line 3) and some deciding conditions (line 2: Last Call, Chorus, Shake Down, Demote, Bury, Crime Wave, Crowd In). Layout fix, Claude's; screenshots at 1270×700 before shipping. Re-run wheel-fit.mjs after.
-- [ ] Cory's calls asked Oct 22 11:30pm: Allowance "+1 follower and +2 white…" [yes], Top Up "+1 of each color you hold the fewest of." [yes], Late Bloomers "if no rival has fewer followers than you (not counting this card)" [yes], Exchange "up to" every round [yes].
+- [x] Cory said yes Oct 23 11:54am, live v0.8.61: Allowance "+1 follower and +2 white…" [yes], Top Up "+1 of each color you hold the fewest of." [yes], Late Bloomers "if no rival has fewer followers than you (not counting this card)" [yes], Exchange "up to" every round [yes].
 
 ## Playtest notes (Cory, Oct 22 evening, human playtest; options offered after he's done)
 - [ ] Round I shop feels thin: "only 5 members is a bit few. If there are expensive ones, everyone is chasing the same members." Now: 5 face up in round I, 6 in II, 7 in III; the pile refills each gap at once; a fresh row each round. Design call, his.
