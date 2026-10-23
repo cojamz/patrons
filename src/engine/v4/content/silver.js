@@ -137,7 +137,7 @@ export const silverActions = [
     },
   },
   {
-    key: 'jubilee', ring: 3, name: 'High Tide', text: 'Each rival +1 silver. Then gain 1 follower per silver the rival with the most silver holds.',
+    key: 'jubilee', copyDoesIt: true, ring: 3, name: 'High Tide', text: 'Each rival +1 silver. Then gain 1 follower per silver the rival with the most silver holds.',
     estimate: (ctx, p) => 2 * (Math.max(0, ...ctx.rivals(p).map(o => o.res[S])) + 1) - spillCost(ctx, 1),
     resolve(ctx, p) {
       giveAll(ctx, p, S, 1);

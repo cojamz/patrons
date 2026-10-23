@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { followers } from '../../../engine/v4/core.js';
 import { take, move, uidOf } from './helpers.js';
-import { sceneQ, buy, linesNaming } from './cards-helpers.js';
+import { sceneQ, buy, linesNaming, passBuys } from './cards-helpers.js';
 
 const Q = ['gold', 'red', 'purple', 'green'];
 const sc = o => sceneQ({ quadrants: Q, ...o });
@@ -30,8 +30,11 @@ describe('Purple members, Oct 22', () => {
     expect(s.pending.player).toBe(0); // P1's own turn comes next, then the rest
     expect(upcoming(s)).toEqual([1, 2, 1, 2]);
   });
-  it('Gossip: +1 follower whenever anyone’s turn is skipped', () => {
-    const s = take(sc({ round: 2, members: [[], ['purple.gossip']], queue: turns(0, 1, 0, 1) }), 'purple.skip');
+  it('Gossip: +1 follower whenever anyone’s turn is skipped, when play reaches the skipped turn', () => {
+    let s = take(sc({ round: 2, members: [[], ['purple.gossip']], queue: turns(0, 1, 0, 1) }), 'purple.skip');
+    expect(s.players[1].bonus).toBe(0);
+    s = passBuys(take(passBuys(s), 'gold.rush'));
+    expect(s.log).toContain("P1's turn is skipped (Sleep In).");
     expect(s.players[1].bonus).toBe(1);
     expect(linesNaming(s.log, 'Gossip')).toEqual(["P2's Gossip: +1 follower."]);
   });
@@ -46,11 +49,14 @@ describe('Purple members, Oct 22', () => {
     t = take(t, 'gold.rush'); t = buy(t, 'purple.extrashift');
     expect(t.log).toContain('No extra minions in round I: P1 gets no extra minion from Extra Shift.');
   });
-  it('Closer: +4 purple when you place your last minion, once a round', () => {
-    const s = take(sc({ round: 2, left: 1, members: [['purple.closer']], queue: turns(0, 1) }), 'gold.rush');
+  it('Closer: +4 purple when you place the last minion of the round (Cory, Oct 23), not just your own last', () => {
+    const last = sc({ round: 2, left: 1, members: [['purple.closer']], queue: turns(0) });
+    last.players.forEach((o, i) => { if (i) o.left = 0; });
+    const s = take(last, 'gold.rush');
     expect(s.players[0].res.purple).toBe(4);
     expect(linesNaming(s.log, 'Closer')).toHaveLength(1);
-    const t = take(sc({ round: 2, left: 2, members: [['purple.closer']], queue: turns(0, 1) }), 'gold.rush');
+    // your own last minion while a rival still has one to place: nothing
+    const t = take(sc({ round: 2, left: 1, members: [['purple.closer']], queue: turns(0, 1) }), 'gold.rush');
     expect(t.players[0].res.purple || 0).toBe(0);
   });
   it('Hot Streak: +2 followers per turn in a row just before this one; nothing to use with none', () => {

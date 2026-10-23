@@ -81,7 +81,7 @@ const trading = {
   // exchange for followers". The names are Claude's fill-ins.
   actions: [
     {
-      key: 'stipend', ring: 1, name: 'Allowance', text: '+1 follower and +1 white in round I, +2 and +2 in round II, +3 and +3 in round III. +1 white.',
+      key: 'stipend', copyDoesIt: true, ring: 1, name: 'Allowance', text: '+1 follower and +1 white in round I, +2 and +2 in round II, +3 and +3 in round III. +1 white.',
       byRound: { lines: ['+1 follower. +1 white.', '+2 followers. +2 white.', '+3 followers. +3 white.'], rest: '+1 white.' },
       estimate: ctx => ctx.state.round * (1 + fv(ctx)) + 1,
       resolve(ctx, p) {

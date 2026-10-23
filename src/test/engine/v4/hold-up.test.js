@@ -16,7 +16,7 @@ const Q = ['gold', 'red', 'purple', 'echo'];
 function plain(s, rand) {
   const m = chooseBotMove(s, rand);
   const o = s.pending?.options?.find(x => x.id === m.option);
-  const moves = x => x.kind === 'slot' && x.q !== undefined && ['skip', 'holdup', 'again'].includes(actionAt(s, x.q, x.i).key);
+  const moves = x => x.kind === 'slot' && x.q !== undefined && ['skip', 'holdup', 'again', 'echo', 'refrain'].includes(actionAt(s, x.q, x.i).key);
   const alt = o && moves(o) && s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && !moves(x));
   return alt ? { player: m.player, option: alt.id } : m;
 }

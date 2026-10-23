@@ -116,7 +116,9 @@ function skipNext(ctx, p, why, by = p, quiet = false) {
   let j = 0;
   for (const t of seq) if (j < order.length && order[j] === t.pid) t.at = j++;
   const [task] = q.splice(i, 1);
-  q.splice(stop - 1, 0, task);
+  // where the turn sat, a marker: the turn is really skipped when play reaches it (Gossip pays then)
+  q.splice(i, 0, { t: 'content', p: p.id, h: 'purple.skipped', data: { why } });
+  q.splice(stop, 0, task);
   const at = (seq.find(t => t.task === task) || {}).at;
   // its new place: after every other turn of the round's order still to come
   if (at !== undefined && at !== order.length - 1) {
@@ -124,9 +126,13 @@ function skipNext(ctx, p, why, by = p, quiet = false) {
     s.early.moves.push({ p: p.id, from: at, to: order.length - 1, why, late: true });
   }
   if (!quiet) ctx.log(`${by.name}'s ${why}: ${p.name} skips their next turn.`);
-  // Gossip (Cory, 2026-10-22): "+1 follower every time a players turn is skipped", anyone's, yours too
-  for (const o of ctx.state.players) for (const c of ctx.membersOf(o)) if (c.def.onSkip) ctx.asMember(o, c.def.name, () => c.def.onSkip(ctx, o, c, p));
   return true;
+}
+/** The skip marker reached: p's turn is passed over now. Gossip (Cory, 2026-10-22: "+1 follower every time a players
+ *  turn is skipped", anyone's, yours too; Oct 23: "should pay when turn is actually skipped"). */
+function skipped(ctx, p, value, data) {
+  ctx.log(`${p.name}'s turn is skipped${data?.why ? ` (${data.why})` : ''}.`);
+  for (const o of ctx.state.players) for (const c of ctx.membersOf(o)) if (c.def.onSkip) ctx.asMember(o, c.def.name, () => c.def.onSkip(ctx, o, c, p));
 }
 /** How many turns p still has to come this round, after the one now running. */
 const turnsLeft = (ctx, p) => {
@@ -218,6 +224,7 @@ export default {
   id: 'purple',
   name: 'Purple',
   resource: P,
+  handlers: { skipped },
   // Most purple: honest about what the old "most workers on the board" measured (everyone places every worker, so
   // purple's tiebreak decided it). Holding purple for the ring is the price of spending it on turns.
   // held purple, like every reworked color (Cory, 2026-10-22: "contests are always resources now")
@@ -227,14 +234,14 @@ export default {
     {
       // Cory, 2026-10-22: "+4 purple, skip your next turn" (always +4: +3 and the space's +1), from the old game's
       // "Gain 4 purple, skip next turn". You're passed over once; the snake carries on and you still place every minion.
-      key: 'skip', ring: 1, name: 'Sleep In', text: '+4 purple. Skip your next turn.',
+      key: 'skip', copyDoesIt: true, ring: 1, name: 'Sleep In', text: '+4 purple. Skip your next turn.',
       estimate: () => 3,
       resolve(ctx, p) { ctx.gain(p, P, 4, { fromAction: true }); skipNext(ctx, p, 'Sleep In'); },
     },
     {
       // Cory, 2026-10-22: replaces Catch Up ("the skip should replace catch up"); "1 purple per round" so it isn't weak
       // late. Wording and name are Claude's fill-in.
-      key: 'holdup', ring: 1, name: 'Hold Up', text: '+1 purple (+2 in round II, +3 in round III). The next turn is skipped.',
+      key: 'holdup', copyDoesIt: true, ring: 1, name: 'Hold Up', text: '+1 purple (+2 in round II, +3 in round III). The next turn is skipped.',
       // Cory, 2026-10-22: "it has to be the next TURN not even the next player. so a player could skip their own in
       // snake draft". Whoever's turn comes next is passed over once and still places every minion.
       estimate: ctx => ctx.state.round + 1,
@@ -249,14 +256,14 @@ export default {
       // Cory, 2026-10-22: "+1 purple, take another turn right after this one", in Roll Call's spot. One of your own
       // turns, moved up (his yes: you still place the same minions that round), like Crunch Time's two. Name: fill-in.
       // Cory, 2026-10-23: "Right Away should scale. +1 +2 +3" (Hold Up's wording).
-      key: 'again', ring: 1, name: 'Right Away', text: '+1 purple (+2 in round II, +3 in round III). Take another turn right after this one.',
+      key: 'again', copyDoesIt: true, ring: 1, name: 'Right Away', text: '+1 purple (+2 in round II, +3 in round III). Take another turn right after this one.',
       estimate: (ctx, p) => ctx.state.round + turnsNowEstimate(ctx, p, 1),
       resolve(ctx, p) { ctx.gain(p, P, ctx.state.round, { fromAction: true }); turnsNow(ctx, p, 1, 'Right Away'); },
     },
     {
       // Cory, 2026-10-22: "+1 purple, you can play on occupied spaces this round" (+2 with the inherent +1; he may
       // raise it to +3 after play). Any taken space, yours or a rival's, for the rest of this round. Name is Claude's fill-in.
-      key: 'crowdin', ring: 3, name: 'Crowd In', text: '+2 purple. This round you can place on taken spaces.',
+      key: 'crowdin', copyDoesIt: true, ring: 3, name: 'Crowd In', text: '+2 purple. This round you can place on taken spaces.',
       estimate: ctx => 2 + (ctx.state.round < 3 ? 1 : 0),
       resolve(ctx, p) { ctx.gain(p, P, 2, { fromAction: true }); p.squatAll = ctx.state.round; ctx.log(`${p.name} can place on taken spaces for the rest of this round.`); },
     },
@@ -264,7 +271,7 @@ export default {
       // Cory, 2026-10-22: a follower bonus for taking the rest of your turns last ("YES now you're cooking"), in his
       // words ("take the remainder of your turns when others are out of minions"), "let's just try it at 2 followers
       // per minion left". Replaces Rush Hour. Name is Claude's fill-in.
-      key: 'lastcall', ring: 2, name: 'Last Call', text: '+1 purple. +2 followers per minion you have left. Skip your turns until everyone else is out of minions.',
+      key: 'lastcall', copyDoesIt: true, ring: 2, name: 'Last Call', text: '+1 purple. +2 followers per minion you have left. Skip your turns until everyone else is out of minions.',
       estimate: (ctx, p) => 1 + 2 * Math.max(0, p.left - 1),
       resolve(ctx, p) {
         ctx.gain(p, P, 1, { fromAction: true });
@@ -280,7 +287,7 @@ export default {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', ring: 2, name: 'Crunch Time', text: '+1 purple. Take two turns after this one.',
+      key: 'rally', copyDoesIt: true, ring: 2, name: 'Crunch Time', text: '+1 purple. Take two turns after this one.',
       // Cory, 2026-10-22: "all should give at least 1"
       estimate: (ctx, p) => 1 + turnsNowEstimate(ctx, p, 2),
       resolve(ctx, p) { ctx.gain(p, P, 1, { fromAction: true }); turnsNow(ctx, p, 2, 'Crunch Time'); },
@@ -411,9 +418,10 @@ export default {
         extraHooks(ctx, owner);
       },
     }),
-    m('closer', 'Closer', 5, 2, 'When you place your last minion each round: +4 purple.', {
+    // Cory, 2026-10-23: "its when you place THE last minion of the round. so it benefits folks going last"
+    m('closer', 'Closer', 2, 2, 'When you place the last minion of the round: +4 purple.', {
       afterAction(ctx, owner, card) {
-        if (owner.left !== 0 || card.paidRound === ctx.state.round) return;
+        if (card.paidRound === ctx.state.round || ctx.state.players.some(o => o.left > 0)) return;
         card.paidRound = ctx.state.round;
         ctx.gain(owner, P, 4);
       },
