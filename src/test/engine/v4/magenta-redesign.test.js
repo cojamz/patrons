@@ -33,13 +33,13 @@ describe('Magenta redesign edge cases', () => {
     s.slots[magentaSlot('hideout')] = 1;
     s.slots['0-0'] = 1; // occupied Gold never counts
     s = take(s, 'thieves.tipoff');
-    expect(s.pending.count).toEqual({ of: 2, left: 2 });
-    s = move(move(s, 'take:1:gold'), 'take:1:gold');
-    expect(s.players[0].res).toMatchObject({ magenta: 1, gold: 2 });
+    expect(s.pending.count).toEqual({ of: 3, left: 3 }); // its own space counts too (Cory, Oct 22)
+    s = move(move(move(s, 'take:1:gold'), 'take:1:gold'), 'take:1:gold');
+    expect(s.players[0].res).toMatchObject({ magenta: 1, gold: 3 });
   });
   it('copying occupied-action theft excludes no older Magenta placement', () => {
     let s = table(Q, { res: [{}, { gold: 8 }, { red: 8 }], n: 3, shop, queue: turns(1, 0) });
-    s = pass(take(s, 'thieves.tipoff')); // no previous occupied Magenta action
+    s = pass(move(take(s, 'thieves.tipoff'), 'take:2:red')); // only its own space: 1 to steal
     expect(s.players[1].res.magenta).toBe(1);
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(o => o.kind === 'space' && o.label.startsWith(actionName('thieves.tipoff'))).id);

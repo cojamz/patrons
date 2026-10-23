@@ -103,19 +103,20 @@ describe('Magenta actions', () => {
     expect(followers(z, z.players[0])).toBe(f0);
   });
 
-  it('Redistribute: steal 1 per Magenta action that already has a minion (not the one just placed), split as you like', () => {
+  it('Redistribute: steal 1 per Magenta action that has a minion (the one just placed too), split as you like', () => {
     let s = scene({ n: 4, res: [{ gold: 2 }, { gold: 3 }, { red: 1, blue: 2 }, { gold: 2 }] });
     // Magenta is the 4th quadrant (index 3): Help Yourself (3-0) and Lie Low (3-2) are taken; a Gold space doesn't count
     s.slots = { '3-0': 1, '3-2': 2, '0-0': 3 };
     s = take(s, 'thieves.tipoff');
     expect(ids(s)).toEqual(['take:1:gold', 'take:2:red', 'take:2:blue', 'take:3:gold']);
-    s = play(s, 'take:2:red', 'take:2:blue');
+    s = play(s, 'take:2:red', 'take:2:blue', 'take:3:gold');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(R(s).map(r => [r.gold, r.red, r.blue, r.magenta])).toEqual([[2, 1, 1, 1], [3, 0, 0, 0], [0, 0, 1, 0], [2, 0, 0, 0]]);
-    // no other Magenta space taken: nothing to steal, just the magenta
-    const z = take(scene({ res: [{}, { gold: 5 }] }), 'thieves.tipoff');
+    expect(R(s).map(r => [r.gold, r.red, r.blue, r.magenta])).toEqual([[3, 1, 1, 1], [3, 0, 0, 0], [0, 0, 1, 0], [1, 0, 0, 0]]);
+    // no other Magenta space taken: its own space still counts, so 1 to steal
+    let z = take(scene({ res: [{}, { gold: 5 }] }), 'thieves.tipoff');
+    z = play(z, 'take:1:gold');
     expect(z.pending?.kind).not.toBe('choose');
-    expect(R(z)).toEqual([{ ...Z, magenta: 1 }, { ...Z, gold: 5 }, { ...Z }]);
+    expect(R(z)).toEqual([{ ...Z, gold: 1, magenta: 1 }, { ...Z, gold: 4 }, { ...Z }]);
   });
 
   it('Lie Low: steal 1 resource × round; then no one can steal your resources or members this round, Gold’s Collect Debts included', () => {

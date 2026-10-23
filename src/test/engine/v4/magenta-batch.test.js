@@ -11,8 +11,8 @@ describe('Magenta corrections retained through the redesign', () => {
     s = take(s, 'thieves.tipoff');
     expect(ids(s)).toContain('take:1:gold');
     expect(ids(s)).toContain('take:2:red');
-    s = move(s, 'take:1:gold');
-    expect(s.players[0].res).toMatchObject({ gold: 7, magenta: 1 });
+    s = move(move(s, 'take:1:gold'), 'take:2:red'); // 2: Help Yourself and Redistribute's own space
+    expect(s.players[0].res).toMatchObject({ gold: 7, red: 1, magenta: 1 });
   });
   it('Lie Low prevents member and resource theft', () => {
     let s = table(Q, { round: 3, left: 5, res: [{ gold: 4 }, { red: 3 }], members: [['red.intern']], shop, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
@@ -43,7 +43,7 @@ describe('Magenta corrections retained through the redesign', () => {
   });
   it('Grifter offers color choices and logs the colors actually transferred', () => {
     let s = table(Q, { res: [{ magenta: 10 }, { gold: 3, red: 3 }], members: [['red.intern']], shop: ['thieves.grifter', ...shop] });
-    s = take(s, 'thieves.tipoff');
+    s = move(take(s, 'thieves.tipoff'), 'take:1:gold'); // its own space counts: 1 to steal
     s = move(s, `card:${uidIn(s, 'thieves.grifter', 'shop')}`);
     expect(s.pending.prompt).toMatch(/Grifter/);
     expect(ids(s)).toEqual(['take:1:gold', 'take:1:red']);

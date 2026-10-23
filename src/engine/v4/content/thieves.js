@@ -148,9 +148,9 @@ function halfPiles(ctx, p) {
 // The current placement is not an already occupied action. Copies and squatters
 // still count the minion that was there before this use; each action counts once.
 export function magentaOccupied(ctx, p) {
-  const q = ctx.state.quadrants.indexOf('thieves'), key = `${q}-1`;
-  const placingHere = ctx.placement?.key === key && !ctx.placement.joined;
-  return Object.keys(ctx.state.slots).filter(k => k.startsWith(`${q}-`) && !(placingHere && k === key)).length;
+  // counts the minion you just placed too (Cory, Oct 22)
+  const q = ctx.state.quadrants.indexOf('thieves');
+  return Object.keys(ctx.state.slots).filter(k => k.startsWith(`${q}-`)).length;
 }
 // Sticky Fingers on a member's steal (spaces get it through ctx.stealCount, with Desperado's double)
 const stickyMore = (ctx, p) => ctx.membersOf(p).reduce((n, c) => n + (typeof c.def.stealMore === 'number' ? c.def.stealMore : 0), 0);
@@ -202,7 +202,7 @@ const thieves = {
       },
     },
     {
-      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Steal 1 resource per Magenta action that already has a minion. +1 magenta.',
+      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Steal 1 resource per Magenta action that has a minion. +1 magenta.',
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, magentaOccupied(ctx, p))),
       resolve(ctx, p) { startSteal(ctx, p, 'Redistribute', ctx.stealCount(p, magentaOccupied(ctx, p), { say: true })); },
     },

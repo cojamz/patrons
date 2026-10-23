@@ -10,3 +10,5 @@
   .app.game.lt .lt-shop-cards .lt-card.card{flex-basis:132px;height:166px;min-height:166px}
   .app.game.lt .lt-shop-cards .lt-deck{min-height:166px}
 }
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card .lt-corner-cost-detail{top:4px;right:5px;font-size:12px;z-index:1}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card .nm{padding:0 11px}

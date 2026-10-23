@@ -14,24 +14,24 @@ const MAG = ['gold', 'thieves', 'market', 'echo'];
 const takeFrom = (s, pid) => move(s, s.pending.options.find(o => o.value[0] === pid).id);
 
 // Magenta redesign (design/spheres/magenta-redesign-2026-10-19.md): Redistribute steals 1 per Magenta action that
-// already has a minion, Crime Wave halves one rival's one-color stack, and general steals split freely among rivals.
+// has a minion (its own space too, Cory Oct 22), Crime Wave halves one rival's one-color stack, and general steals split freely among rivals.
 describe('#6 Redistribute: the count is the occupied Magenta actions, and a rival lying low is never offered', () => {
-  it('a rival lying low is not counted: 2 to take, both may come from P2, never from P3', () => {
+  it('a rival lying low is not counted: 3 to take (its own space too), all may come from P2, never from P3', () => {
     let s = sceneQ({ quadrants: MAG, n: 4, res: [{ gold: 1 }, { gold: 3, red: 2 }, { gold: 4 }, { gold: 3 }] });
     s.slots[spaceOf(s, 'thieves.pickpocket')] = 2;
     s.slots[spaceOf(s, 'thieves.hideout')] = 3;
     s.players[2].hideout = s.round; // P3 lies low
     s = take(s, 'thieves.tipoff');
-    expect(s.pending.count).toEqual({ of: 2, left: 2 });
+    expect(s.pending.count).toEqual({ of: 3, left: 3 }); // Help Yourself, Lie Low and its own space
     expect(s.pending.options.some(o => o.value[0] === 2)).toBe(false);
     expect(s.pending.blocked[2]).toMatch(/P3 can’t be stolen from now/);
     s = takeFrom(s, 1);
     expect(s.pending.options.some(o => o.value[0] === 1)).toBe(true); // a free split: P2 again is fine
     expect(s.pending.options.some(o => o.value[0] === 2)).toBe(false);
-    s = takeFrom(s, 1);
+    s = takeFrom(takeFrom(s, 1), 1);
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.players[0].res).toMatchObject({ gold: 3, magenta: 1 });
-    expect(s.players[1].res.gold).toBe(1);
+    expect(s.players[0].res).toMatchObject({ gold: 4, magenta: 1 });
+    expect(s.players[1].res.gold).toBe(0);
     expect(s.players[2].res.gold).toBe(4);
   });
 });

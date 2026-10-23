@@ -218,6 +218,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 {d.from > 1 && <span className="lt-round-tag" data-round-tag="" title="Works from round II on">II+</span>}
                 {fromPile && !tray && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
               </span>
+              {/* details hides the picture, so its corner number sits on the card itself (Cory, 2026-10-22: "total cost added to corner of details view") */}
+              {detailed && <span className="lt-corner-cost lt-corner-cost-detail num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>}
               {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
               {/* a rule that grows by round reads by round, this round lit, as in every hover (RuleText; compact on the small card) */}
