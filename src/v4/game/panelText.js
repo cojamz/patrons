@@ -14,7 +14,9 @@ import { contextFor } from '../../engine/v4/core.js';
 // "2 · 4 · 6 by round" run under "+4●" said the number twice, and "+2●" alone read as flat). It takes line 2 when the
 // panel has nothing else to say there, else line 3 (joined onto line 2 it made the line too long, and a line 2 that
 // doesn't fit drops whole). The run itself is the hover's rule sentence. Round III has nothing left to grow into.
-const grows = r => (r < 3 ? 'more each round' : null);
+// what grows, said when a space does more than one thing (Cory, 2026-10-22: "'more each round' is confusing on actions
+// that do multiple things")
+const grows = (r, what = 'more') => (r < 3 ? `${what} each round` : null);
 // Line 2 stays within about 16 letters a line: at 1270×700 a narrow panel holds two short lines of it (Cory: "cut words
 // or step the size down. Never clip and never abbreviate into code"); a line 2 that doesn't fit drops whole. A condition
 // that decides the gain never sits only in line 3 (at 1270×700 line 3 shows on few rings: measured on five tables, w3),
@@ -43,7 +45,7 @@ const P = {
     take: { verb: 'Recruit any member', second: 'in the shop, free', note: '+1 red' },
   },
   market: {
-    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: grows(r) }),
+    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: grows(r, 'more blue') }),
     restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
     showroom: { verb: 'Peek at the top 4', second: 'reorder; may recruit one', note: '+1 blue' },
     clearance: { verb: 'Recruit twice', second: 'this turn', note: '+1 blue' },
@@ -72,7 +74,7 @@ const P = {
   },
   silver: {
     // "others get 1" left "1 of what?" (live panel r1): silver
-    toast: r => ({ main: `+${3 * r} silver`, second: `others get ${r} silver`, note: grows(r) }),
+    toast: r => ({ main: `+${3 * r} silver`, second: `others get ${r} silver`, note: grows(r, 'both grow') }),
     // "+2 of a color": which one? (w3a #56) yours to pick
     gift: { main: '+2 silver', second: '+2 of a color you pick', note: 'others get 1 of it' },
     // said like Kickback's gift ("a rival gets 2" ran on as "+4 silver a rival gets 2" off the wheel)
@@ -99,7 +101,7 @@ const P = {
     flourish: { verb: '+1 each other color, per full set' },
   },
   thieves: {
-    pickpocket: r => ({ verb: `Steal ${r}, +${r} @f`, second: '+1 magenta', note: grows(r) }),
+    pickpocket: r => ({ verb: `Steal ${r}, +${r} @f`, second: '+1 magenta', note: grows(r, 'steal and @f grow') }),
     tipoff: { verb: 'Steal 1 per magenta action', second: 'already holding a minion', note: '+1 magenta' },
     hideout: r => ({ verb: `Steal ${r}; safe from steals`, second: 'this round', note: '+1 magenta' }),
     rob: { verb: 'Steal half a rival’s pile', second: 'one color, rounded down', note: '+1 magenta' },
@@ -110,7 +112,7 @@ const P = {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers
     haggle: (r, now) => ({ main: `+${now ?? 2} white`, second: now == null ? '+1 per rival with more @f' : '2, +1 per rival with more @f' }),
     buylow: { main: '+1 @f', second: 'per 3 white you hold' },
-    pawn: r => ({ main: `+${r} @f`, second: 'or 2 white per @f', note: grows(r) }),
+    pawn: r => ({ main: `+${r} @f`, second: 'or 2 white per @f', note: grows(r, 'more @f') }),
     // the gain first: "Sell followers" lost its "3 white each" on ring II whenever the panel was tight (w3 words pass)
     sellhigh: { main: '+3 white', second: 'per follower sold', note: 'up to 2' },
     // "loose" is a rulebook word a newcomer won't remember (w3a #57): what it means, in the glossary's own words
@@ -118,7 +120,7 @@ const P = {
     // "All for followers" hid that you pay (tester A, live panel r1; the charge is Cory's call): it says so in line 1
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
     // White's Oct 22 spaces (Cory's set): they had no panel words, so the board cut each to its first four words
-    stipend: r => ({ main: `+${r} @f +${r + 1} white`, second: grows(r) }),
+    stipend: r => ({ main: `+${r} @f +${r + 1} white`, second: grows(r, 'both grow') }),
     splurge: { verb: '+1 @f per 2 you spend', second: 'on your recruit this turn', note: '+1 white' },
     exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+1 white' }),
     // the gain leads: on ring II only one line fits, and the two read the same as "Bury one of your members"

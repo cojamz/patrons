@@ -17,9 +17,10 @@ describe('panel words (w3)', () => {
   });
 
   it('a gain that grows by round says so in rounds I and II, and not in III (w3a #54: "+2●" read as flat)', () => {
-    for (const [qid, key] of [['silver', 'toast'], ['thieves', 'pickpocket'], ['trading', 'pawn']]) {
-      for (const r of [1, 2]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain('more each round');
-      expect(lines(panelText(qid, { key }, 3)), `${qid}.${key} round III`).not.toContain('more each round');
+    // a space that does more than one thing says what grows (Cory, 2026-10-22)
+    for (const [qid, key, says] of [['silver', 'toast', 'both grow each round'], ['thieves', 'pickpocket', 'steal and @f grow each round'], ['trading', 'pawn', 'more @f each round']]) {
+      for (const r of [1, 2]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain(says);
+      expect(lines(panelText(qid, { key }, 3)).join(' '), `${qid}.${key} round III`).not.toMatch(/each round/);
     }
     // Cheap Seats now pays for held white at the same rate in every round, without a growing cap.
     for (const r of [1, 2, 3]) {
@@ -59,7 +60,7 @@ describe('panel words (w3)', () => {
     const churn = panelText('market', { key: 'bargain' }, 2);
     expect(churn.main).toBe('+3 blue');
     expect(churn.second).toBe('send 3 to the bottom');
-    expect(churn.note).toBe('more each round');
+    expect(churn.note).toBe('more blue each round');
     expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
 
