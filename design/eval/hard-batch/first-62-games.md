@@ -1,0 +1,149 @@
+# 62 Hard bot games, random 4-color tables (Oct 22, 8:03pm)
+Hard bots, thinking fully. One game in 5 had a seat that only buys followers. Small sample: a member owned 15 times has about ±12 points of noise.
+
+62 games, 4 seats, random tables of 4 colors. Buy-followers-only seat: 14 games, won 7%.
+
+Colors (members of that color, winner vs other Hard seats, on tables with it):
+  red: on 18 tables, winner 2.50 vs others 1.20
+  thieves: on 27 tables, winner 1.43 vs others 1.00
+  market: on 23 tables, winner 2.04 vs others 1.77
+  silver: on 30 tables, winner 0.88 vs others 0.71
+  gold: on 26 tables, winner 0.69 vs others 0.53
+  echo: on 34 tables, winner 1.31 vs others 1.25
+  trading: on 30 tables, winner 1.42 vs others 1.38
+  yellow: on 26 tables, winner 0.64 vs others 0.62
+  purple: on 34 tables, winner 0.47 vs others 0.53
+
+Members (owned at game end by a Hard seat; owner win share; bought / times seen in shop), min 6 owners:
+  Snitch (thieves): wins 69%, owned 8 times / in shop 21 games
+  Extortionist (thieves): wins 67%, owned 6 times / in shop 22 games
+  Host (red): wins 61%, owned 14 times / in shop 15 games
+  Stunt Double (echo): wins 58%, owned 18 times / in shop 24 games
+  Fence (thieves): wins 57%, owned 7 times / in shop 20 games
+  Movement Penalty (red): wins 57%, owned 7 times / in shop 15 games
+  Treasurer (gold): wins 53%, owned 15 times / in shop 18 games
+  Extra Hand (benders): wins 50%, owned 8 times / in shop 51 games
+  Patroness (market): wins 50%, owned 9 times / in shop 23 games
+  Upstart (silver): wins 50%, owned 8 times / in shop 24 games
+  Busker (echo): wins 48%, owned 22 times / in shop 26 games
+  Window Dresser (market): wins 47%, owned 19 times / in shop 22 games
+  Magnate (trading): wins 44%, owned 9 times / in shop 24 games
+  Shareholder (trading): wins 43%, owned 20 times / in shop 20 games
+  Robin Hood (thieves): wins 42%, owned 12 times / in shop 24 games
+  Plus-One (market): wins 42%, owned 12 times / in shop 22 games
+  Grifter (thieves): wins 41%, owned 11 times / in shop 19 games
+  Trendsetter (market): wins 40%, owned 21 times / in shop 22 games
+  Front-runner (benders): wins 39%, owned 19 times / in shop 47 games
+  Connector (echo): wins 39%, owned 19 times / in shop 22 games
+  Loyalists (red): wins 39%, owned 14 times / in shop 16 games
+  Freelancer (benders): wins 38%, owned 32 times / in shop 51 games
+  Volunteer (red): wins 37%, owned 15 times / in shop 13 games
+  Raider (trading): wins 35%, owned 17 times / in shop 20 games
+  Sticky Fingers (thieves): wins 35%, owned 10 times / in shop 16 games
+  Recruit Bonus (red): wins 33%, owned 15 times / in shop 15 games
+  Straggler (benders): wins 33%, owned 24 times / in shop 52 games
+  Tycoon (gold): wins 33%, owned 6 times / in shop 19 games
+  Pilgrim (yellow): wins 33%, owned 15 times / in shop 21 games
+  Stylist (market): wins 31%, owned 8 times / in shop 23 games
+  Tiebreaker (benders): wins 31%, owned 21 times / in shop 48 games
+  Shift Crew (purple): wins 31%, owned 21 times / in shop 27 games
+  Banker (gold): wins 30%, owned 10 times / in shop 15 games
+  Cutpurse (thieves): wins 29%, owned 19 times / in shop 19 games
+  Panel (red): wins 29%, owned 7 times / in shop 17 games
+  Makeover (market): wins 29%, owned 21 times / in shop 21 games
+  Muse (echo): wins 29%, owned 14 times / in shop 20 games
+  Twins (red): wins 27%, owned 13 times / in shop 16 games
+  Late Bloomers (yellow): wins 27%, owned 15 times / in shop 20 games
+  Majordomo (silver): wins 25%, owned 6 times / in shop 23 games
+  Patriarch (red): wins 25%, owned 6 times / in shop 12 games
+  Benefactor (silver): wins 25%, owned 14 times / in shop 24 games
+  Rich Uncle (trading): wins 24%, owned 19 times / in shop 21 games
+  Exporter (trading): wins 23%, owned 13 times / in shop 21 games
+  Heir (silver): wins 22%, owned 18 times / in shop 20 games
+  Courier (purple): wins 22%, owned 9 times / in shop 25 games
+  Regular (market): wins 22%, owned 18 times / in shop 23 games
+  Reinvestor (trading): wins 22%, owned 16 times / in shop 23 games
+  Retinue (silver): wins 22%, owned 23 times / in shop 25 games
+  Impressionist (echo): wins 21%, owned 19 times / in shop 27 games
+  Broker (trading): wins 21%, owned 24 times / in shop 25 games
+  Shopkeeper (trading): wins 20%, owned 20 times / in shop 23 games
+  Connoisseur (market): wins 20%, owned 15 times / in shop 23 games
+  Heiress (trading): wins 20%, owned 10 times / in shop 23 games
+  Squatter (benders): wins 19%, owned 27 times / in shop 47 games
+  Double Agent (thieves): wins 18%, owned 11 times / in shop 22 games
+  Doorman (market): wins 17%, owned 12 times / in shop 23 games
+  Alchemist (gold): wins 17%, owned 6 times / in shop 23 games
+  Clockmaker (purple): wins 17%, owned 18 times / in shop 22 games
+  Ensemble (echo): wins 15%, owned 13 times / in shop 30 games
+  Critic (market): wins 15%, owned 13 times / in shop 23 games
+  Bait (echo): wins 13%, owned 19 times / in shop 29 games
+  Snob (market): wins 13%, owned 8 times / in shop 22 games
+  Crew (thieves): wins 13%, owned 16 times / in shop 21 games
+  Prospector (gold): wins 11%, owned 9 times / in shop 16 games
+  Kingpin (thieves): wins 10%, owned 10 times / in shop 18 games
+  Peddler (yellow): wins 10%, owned 10 times / in shop 19 games
+  Agents (echo): wins 8%, owned 20 times / in shop 26 games
+  Chronicler (echo): wins 5%, owned 10 times / in shop 28 games
+  Launderer (benders): wins 5%, owned 10 times / in shop 49 games
+  Bulk Buyer (trading): wins 0%, owned 9 times / in shop 22 games
+  Impostor (echo): wins 0%, owned 6 times / in shop 26 games
+
+Most and least bought when in the shop (seen in 8+ games):
+  top: Volunteer (red) 115%, Shareholder (trading) 100%, Recruit Bonus (red) 100%, Cutpurse (thieves) 100%, Makeover (market) 100%, Broker (trading) 96%, Trendsetter (market) 95%, Host (red) 93%
+  bottom: Underdog (gold) 4%, Extra Shift (purple) 4%, Late Riser (purple) 4%, Go-Getter (purple) 4%, Tax Collector (gold) 0%, Bouncer (purple) 0%, Early Bird (purple) 0%, Weaver (yellow) 0%
+
+Spaces (uses per game; winner vs other seats, uses per seat):
+  red: Even Swap: 0.6/game, winner 1.00 vs others 0.48
+  echo: Echo: 1.6/game, winner 1.00 vs others 0.66
+  purple: Crowd In: 0.4/game, winner 0.52 vs others 0.18
+  red: Open Door: 0.8/game, winner 1.00 vs others 0.68
+  gold: Tithe: 0.7/game, winner 0.71 vs others 0.40
+  thieves: Lie Low: 1.3/game, winner 0.96 vs others 0.68
+  red: Recruit a Member: 0.3/game, winner 0.50 vs others 0.22
+  trading: Dividend: 0.9/game, winner 0.71 vs others 0.44
+  thieves: Help Yourself: 1.4/game, winner 1.04 vs others 0.78
+  market: Churn: 1.0/game, winner 0.88 vs others 0.62
+  yellow: Potluck: 0.7/game, winner 0.65 vs others 0.42
+  echo: Greatest Hits: 0.4/game, winner 0.43 vs others 0.20
+  yellow: Trade Seeds: 1.1/game, winner 0.84 vs others 0.63
+  market: Spree: 0.4/game, winner 0.45 vs others 0.25
+  market: Recruit Twice: 0.3/game, winner 0.47 vs others 0.28
+  purple: Last Call: 1.0/game, winner 0.61 vs others 0.45
+  trading: All In: 0.2/game, winner 0.38 vs others 0.23
+  gold: Intro Offer: 0.4/game, winner 0.38 vs others 0.24
+  echo: Encore: 1.2/game, winner 0.67 vs others 0.56
+  silver: Sweet Talk: 0.8/game, winner 0.52 vs others 0.42
+  red: Demote: 0.1/game, winner 0.33 vs others 0.25
+  echo: Reprise: 1.0/game, winner 0.56 vs others 0.47
+  thieves: Shake Down: 0.8/game, winner 0.54 vs others 0.47
+  thieves: Redistribute: 1.3/game, winner 0.82 vs others 0.77
+  yellow: Bumper Crop: 0.4/game, winner 0.29 vs others 0.27
+  gold: Double Down: 0.4/game, winner 0.29 vs others 0.27
+  gold: Collect Debts: 0.7/game, winner 0.44 vs others 0.47
+  gold: Golden Years: 1.2/game, winner 0.73 vs others 0.76
+  yellow: Harvest: 1.0/game, winner 0.60 vs others 0.65
+  silver: Hold Court: 0.6/game, winner 0.30 vs others 0.36
+  silver: Toast: 1.3/game, winner 0.69 vs others 0.76
+  trading: Sell High: 0.5/game, winner 0.25 vs others 0.34
+  trading: Cheap Seats: 0.8/game, winner 0.37 vs others 0.46
+  market: Bury: 0.7/game, winner 0.42 vs others 0.51
+  market: Peek: 0.5/game, winner 0.38 vs others 0.47
+  trading: Your Call: 1.3/game, winner 0.65 vs others 0.76
+  echo: Build Up: 1.4/game, winner 0.60 vs others 0.71
+  yellow: Branch Out: 0.4/game, winner 0.25 vs others 0.37
+  red: Promote: 0.4/game, winner 0.29 vs others 0.44
+  silver: Rising Tide: 0.8/game, winner 0.34 vs others 0.50
+  thieves: Poach: 0.4/game, winner 0.15 vs others 0.31
+  trading: Sob Story: 1.2/game, winner 0.52 vs others 0.70
+  red: Gather: 0.8/game, winner 0.56 vs others 0.74
+  purple: Crunch Time: 0.2/game, winner 0.17 vs others 0.35
+  yellow: Top Up: 1.2/game, winner 0.64 vs others 0.83
+  purple: Right Away: 0.8/game, winner 0.26 vs others 0.47
+  purple: Hold Up: 1.5/game, winner 0.56 vs others 0.76
+  purple: Sleep In: 1.5/game, winner 0.58 vs others 0.79
+  silver: Goody Bags: 1.0/game, winner 0.45 vs others 0.67
+  echo: Chorus: 1.5/game, winner 0.58 vs others 0.81
+  thieves: Crime Wave: 0.8/game, winner 0.33 vs others 0.56
+  gold: Kickback: 1.0/game, winner 0.46 vs others 0.70
+  market: Out of Style: 1.0/game, winner 0.58 vs others 0.84
+  silver: Good Deed: 1.2/game, winner 0.41 vs others 0.81
