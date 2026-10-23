@@ -304,16 +304,16 @@ describe('v4 format helpers', () => {
     // wave-2 blocker: P2's Raider bought 3 of the tester's followers and the strip never said so
     const four = [...seats, { name: 'Di', kind: 'bot' }];
     let found = null;
-    for (let seed = 1; seed < 12 && !found; seed++) {
+    for (let seed = 1; seed < 60 && !found; seed++) {
       let s = createGame({ seats: four, seed, quadrants: ['trading', 'gold', 'red', 'blue'] });
       const states = [s];
       while (!s.over) { s = applyMove(s, chooseBotMove(s, () => 0.4), { effects: true }); states.push(s); }
-      const raid = s.log.find(l => /Raider bought \d+ followers? from/.test(l));
+      const raid = s.log.find(l => /Raider stole \d+ followers? from/.test(l));
       if (!raid) continue;
       const victim = s.players.find(p => raid.includes(`from ${p.name} `)).id;
       const t = createTrail(victim);
       for (const x of states) feed(t, x);
-      found = { t, n: Number(raid.match(/bought (\d+)/)[1]) };
+      found = { t, n: Number(raid.match(/stole (\d+)/)[1]) };
     }
     expect(found).toBeTruthy();
     const st = found.t.stories.find(x => /Raider took/.test(x.hit || ''));

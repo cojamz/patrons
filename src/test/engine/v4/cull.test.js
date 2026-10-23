@@ -22,7 +22,7 @@ describe('the curated member decks', () => {
 
   // Purple's set of 12 (Cory, 2026-10-22). Blue is 12 (Cory, 2026-10-21).
   // Magenta deals 13 (Cory, 2026-10-21: 12 per color, Magenta stays at 13 for now, a cut is on the backlog)
-  const DEALT = { echo: 12, red: 12, thieves: 13, purple: 12, market: 12 };
+  const DEALT = { echo: 12, red: 12, thieves: 13, purple: 12, market: 12, trading: 12 };
   it('Green, Red and Blue deal 12 members, Magenta 13, Purple 12, other spheres 10, guests 7; no cut card is dealt', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });

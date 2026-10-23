@@ -75,78 +75,106 @@ const trading = {
   name: 'White',
   resource: W,
   // Cory, 2026-10-17: competitions count their own-color members, except Gold/Silver/Yellow.
-  scoring: memberScoring('trading', 'white'),
+  scoring: { label: 'Most white', counts: 'the white you hold when the round ends', score: (ctx, p) => p.res.white },
 
+  // White, reworked by Cory (2026-10-22, design/spheres/white-actions-draft-2026-10-22.md): "basically better
+  // exchange for followers". The names are Claude's fill-ins.
   actions: [
     {
-      key: 'haggle', ring: 1, name: 'Sob Story', text: '+2 white, and +1 white per rival with more followers than you.',
-      estimate: (ctx, p) => 2 + ahead(ctx, p),
-      resolve(ctx, p) { ctx.gain(p, W, 2 + ahead(ctx, p), { fromAction: true }); },
-    },
-    {
-      // Cory, 2026-10-15: was "trade resources for followers, 1 for 1, up to 2 per round number" (the shop does that,
-      // and it charged you): now it pays for holding white, which is what White scores
-      key: 'buylow', ring: 1, name: 'Cheap Seats', text: `+1 follower per ${CHEAP_SEATS.per} white you hold (you keep the white).`,
-      estimate: (ctx, p) => Math.floor((p.res[W] || 0) / CHEAP_SEATS.per) * fv(ctx),
+      key: 'stipend', ring: 1, name: 'Allowance', text: '+1 follower and +1 white in round I, +2 and +2 in round II, +3 and +3 in round III. +1 white.',
+      byRound: { lines: ['+1 follower. +1 white.', '+2 followers. +2 white.', '+3 followers. +3 white.'], rest: '+1 white.' },
+      estimate: ctx => ctx.state.round * (1 + fv(ctx)) + 1,
       resolve(ctx, p) {
-        const n = Math.floor((p.res[W] || 0) / CHEAP_SEATS.per);
-        if (!n) { ctx.log(`${p.name}'s Cheap Seats: fewer than ${CHEAP_SEATS.per} white, no followers.`); return; }
-        actionFollowers(ctx, p, n);
-        ctx.log(`${p.name}'s Cheap Seats: +${n} follower${n > 1 ? 's' : ''} (${p.res[W]} white held).`);
+        const r = ctx.state.round;
+        ctx.gain(p, W, r + 1, { fromAction: true });
+        actionFollowers(ctx, p, r);
+        ctx.log(`${p.name}'s Allowance: +${plural(r, 'follower')}, +${r + 1} white.`);
       },
     },
     {
-      // 2026-10-14 rework: was "+2 white, and sell up to 1 follower per round number for 2 white each", whose sale was
-      // dead in round I (only won or bought followers sell). Now an either/or per unit, always live, no sale.
-      key: 'pawn', ring: 1, name: 'Your Call', text: `+1 follower in round I, +2 in round II, +3 in round III. Take ${PAWN.each} white in place of any of them.`,
-      byRound: { lines: ['+1 follower', '+2 followers', '+3 followers'], rest: `Take ${PAWN.each} white in place of any of them.` },
-      estimate: ctx => ctx.state.round * Math.max(fv(ctx), PAWN.each),
+      key: 'splurge', copyDoesIt: true, ring: 1, name: 'Splurge', text: 'This turn, +1 follower for every 2 resources you spend on your recruit. +1 white.',
+      estimate: (ctx, p) => 1 + Math.floor(Math.min(totalRes(p) + 1, 7) / 2) * fv(ctx) * 0.8,
       resolve(ctx, p) {
-        const r = ctx.state.round, v = fv(ctx), late = lastTurn(ctx, p);
-        // amount:k = take k of them as white, the rest as followers
-        ctx.choose(p, `Your Call: up to ${plural(r, 'follower')}. Each one you turn down pays ${PAWN.each} white instead.`, Array.from({ length: r + 1 }, (_, k) => ({
-          id: `amount:${k}`, kind: 'amount', value: k,
-          label: [r - k ? `+${plural(r - k, 'follower')}` : '', k ? `+${PAWN.each * k} white` : ''].filter(Boolean).join(', '),
-          // bots take white while it still builds, and followers on their last turn
-          hint: late ? -k : k * (PAWN.each - v),
-        })), 'trading.pawn');
+        ctx.gain(p, W, 1, { fromAction: true });
+        p.perSpend = true;
       },
     },
     {
-      key: 'sellhigh', ring: 2, name: 'Sell High', text: 'Sell up to 2 followers you bought or won, for 3 white each.',
-      estimate: (ctx, p) => Math.min(SELL_HIGH.most, sellable(p)) * (SELL_HIGH.each - fv(ctx)) * (lastTurn(ctx, p) ? 0 : 1),
+      key: 'exchange', copyDoesIt: true, ring: 1, name: 'Exchange', text: 'Turn 1 resource into 2 followers in round I, 2 into 4 in round II, 3 into 6 in round III. +1 white.',
+      byRound: { lines: ['Turn 1 resource into 2 followers.', 'Turn up to 2 resources into 2 followers each.', 'Turn up to 3 resources into 2 followers each.'], rest: '+1 white.' },
+      estimate: (ctx, p) => 1 + Math.min(ctx.state.round, totalRes(p) + 1) * (2 * fv(ctx) - 1),
       resolve(ctx, p) {
-        if (!sellable(p)) { ctx.log(`Sell High: ${p.name} has ${NOTHING_TO_SELL}.`); return; }
-        sellChoice(ctx, p, `Sell High: sell how many followers for ${SELL_HIGH.each} white each?`, SELL_HIGH.most, SELL_HIGH.each, 'sold');
+        ctx.gain(p, W, 1, { fromAction: true });
+        exchangeStep(ctx, p, { left: ctx.state.round, done: 0 });
       },
     },
     {
-      // Cory cut Barter (2026-10-14: "I don't like that"), which had replaced Cash In. Dividend fills the slot
-      // (Claude, under go-with-your-gut): your loose followers pay out without being sold, so nothing leaves.
-      key: 'dividend', ring: 2, name: 'Dividend', text: '+1 white per follower you bought or won.',
-      estimate: (ctx, p) => sellable(p),
+      key: 'farewell', copyDoesIt: true, ring: 2, name: 'Farewell', text: 'Send one of your members to the bottom of the pile, gain followers equal to its cost. +1 white.',
+      estimate: (ctx, p) => 1 + Math.max(0, ...ctx.membersOf(p).map(c => buryValue(ctx, p, c, fv(ctx)))),
       resolve(ctx, p) {
-        const n = sellable(p);
-        if (!n) { ctx.log(`${p.name}'s Dividend: no followers bought or won yet.`); return; }
-        ctx.gain(p, W, n, { fromAction: true });
-        ctx.log(`${p.name}'s Dividend: +${n} white (${plural(n, 'follower')} bought or won).`);
+        ctx.gain(p, W, 1, { fromAction: true });
+        buryChoice(ctx, p, 'Farewell', 'followers');
       },
     },
     {
-      key: 'boom', ring: 3, name: 'All In', text: 'Trade all your resources for followers, 1 for 1 (you may keep your white).',
-      estimate: (ctx, p) => 0.6 * totalRes(p),
+      key: 'estatesale', copyDoesIt: true, ring: 2, name: 'Estate Sale', text: 'Send one of your members to the bottom of the pile, gain white equal to its cost. +1 white.',
+      estimate: (ctx, p) => 1 + Math.max(0, ...ctx.membersOf(p).map(c => buryValue(ctx, p, c, 1))),
       resolve(ctx, p) {
-        if (!totalRes(p)) { ctx.log(`${p.name} had nothing to turn into followers.`); return; }
-        const all = totalRes(p), rest = all - p.res[W], last = p.left === 0;
-        const opts = [{ id: 'boom:all', label: `Everything: ${Math.floor(all * BOOM.per)} followers`, kind: 'boom', value: 'all', spend: { ...p.res }, hint: last ? 2 : 0.5 }];
-        if (p.res[W] && rest) opts.push({ id: 'boom:keep', label: `Keep your white: ${Math.floor(rest * BOOM.per)} followers`, kind: 'boom', value: 'keep', spend: { ...p.res, [W]: 0 }, hint: 1 });
-        opts.push({ id: 'boom:none', label: 'Nothing', kind: 'boom', value: 'none', hint: 0 });
-        ctx.choose(p, 'All In: trade which resources for followers, 1 for 1?', opts, 'trading.boom');
+        ctx.gain(p, W, 1, { fromAction: true });
+        buryChoice(ctx, p, 'Estate Sale', 'white');
+      },
+    },
+    {
+      key: 'cashin', copyDoesIt: true, ring: 3, name: 'Cash In', text: 'Turn all your white into followers. +1 white.',
+      estimate: (ctx, p) => (p.res[W] || 0) * fv(ctx) + 1,
+      resolve(ctx, p) {
+        const n = p.res[W] || 0;
+        if (n) {
+          p.res[W] = 0;
+          actionFollowers(ctx, p, n);
+          ctx.log(`${p.name}'s Cash In: ${n} white became ${plural(n, 'follower')}.`);
+          turned(ctx, p);
+        } else ctx.log(`${p.name}'s Cash In: no white to turn into followers.`);
+        ctx.gain(p, W, 1, { fromAction: true });
       },
     },
   ],
 
   handlers: {
+    exchange(ctx, p, value, data) {
+      if (value === 'done') return;
+      p.res[value] -= 1;
+      if (data.done === 0) actionFollowers(ctx, p, 2); else p.bonus += 2;
+      ctx.log(`${p.name}'s Exchange: 1 ${value} became 2 followers.`);
+      if (data.done === 0) turned(ctx, p);
+      exchangeStep(ctx, p, { left: data.left - 1, done: data.done + 1 });
+    },
+    bury(ctx, p, uid, data) {
+      if (!p.members.includes(uid)) return;
+      const name = ctx.card(uid).def.name;
+      const run = () => {
+        const c = ctx.buryMember(p, uid);
+        if (data.gain === 'white') { ctx.gain(p, W, c, { fromAction: !data.by }); ctx.log(`${p.name}'s ${data.what}: ${name} paid ${c} white.`); }
+        else {
+          if (data.by) p.bonus += c; else actionFollowers(ctx, p, c);
+          ctx.log(`${p.name}'s ${data.what}: ${name} paid ${plural(c, 'follower')}.`);
+          if (c) turned(ctx, p);
+        }
+        gotRidOf(ctx, p);
+      };
+      if (data.by) ctx.asMember(p, data.by, run); else run();
+    },
+    buryPick(ctx, p, value, data) { if (value !== 'done') trading.handlers.bury(ctx, p, value, data); },
+    appraise(ctx, p, value, data) {
+      // Appraiser: first the member, then followers or white
+      ctx.choose(p, `Appraiser: ${ctx.card(value).def.name} pays followers or white?`, [
+        { id: 'pick:followers', label: `${plural(cost(ctx, value), 'follower')}`, kind: 'choice', value: 'followers', hint: fv(ctx) },
+        { id: 'pick:white', label: `${cost(ctx, value)} white`, kind: 'choice', value: 'white', hint: ctx.state.round < 3 ? 1.5 : 0.5 },
+      ], 'trading.appraiseGain', { uid: value });
+    },
+    appraiseGain(ctx, p, value, data) {
+      trading.handlers.bury(ctx, p, data.uid, { gain: value, what: 'Appraiser', by: 'Appraiser' });
+    },
     boom(ctx, p, value) {
       if (value === 'none') return;
       let n = 0;
@@ -174,11 +202,85 @@ const trading = {
     },
   },
 
+  // Cory's 12 (2026-10-22, design/spheres/white-members-2026-10-22.md). Prices are Claude's educated guesses
+  // (white + any, followers printed); names marked new are Claude's fill-ins.
   members: [
     m('shopkeeper', 'Shopkeeper', 2, 2, 'Now and at round start: +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
-    // 2+0 since the 2026-10-14 rework (was 2+2): with Your Call no longer selling, bots sell half as often; value 6.2 → 2.1
+    m('heiress', 'Heiress', 3, 2, 'Once per game: +1 white per member you have.', {
+      activate: 'game',
+      onActivate(ctx, owner) {
+        const n = ctx.memberCount(owner);
+        ctx.gain(owner, W, n);
+        ctx.log(`${owner.name} used Heiress: +${n} white.`);
+      },
+      botActivate: (ctx, owner) => ctx.state.round === 3 || (ctx.state.round === 2 && ctx.memberCount(owner) >= 5),
+    }),
+    m('bulkbuyer', 'Bulk Buyer', 1, 2, 'Whenever you buy 5 or more followers, +1 follower.', { f: 2,
+      onBuyFollowers(ctx, owner, card, buyer, tier) {
+        if (buyer === owner && tier?.get >= 5) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
+      },
+    }),
+    m('broker', 'Broker', 2, 2, 'Whenever a White action gives you followers, +1 follower.', { brokerBonus: 1 }),
+    m('exporter', 'Exporter', 1, 2, 'Whenever you recruit a non-white member, +1 white.', { f: 2,
+      onAnyRecruit(ctx, owner, card, by, recruited) {
+        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
+      },
+    }),
+    m('raider', 'Raider', 3, 2, 'Once per game: steal 4 followers from the leader. Pay them 2 white.', {
+      activate: 'game',
+      onActivate(ctx, owner, card) {
+        const t = raidTarget(ctx, owner);
+        const k = t ? Math.min(4, sellable(t)) : 0;
+        if (!k || (owner.res[W] || 0) < 2) { card.used = false; ctx.log(`${owner.name}'s Raider: ${!k ? 'no leader to steal from' : 'needs 2 white'}.`); return; }
+        owner.res[W] -= 2; t.res[W] = (t.res[W] || 0) + 2;
+        t.bonus -= k; owner.bonus += k;
+        ctx.log(`${owner.name}'s Raider stole ${plural(k, 'follower')} from ${t.name} and paid 2 white.`);
+      },
+      botActivate: (ctx, owner) => { const t = raidTarget(ctx, owner); return !!t && sellable(t) >= 3 && (owner.res[W] || 0) >= 2; },
+    }),
+    // new (Claude's names from here down)
+    m('cashier', 'Cashier', 3, 1, 'When recruited: turn all your white into followers.', {
+      onRecruited(ctx, owner) {
+        const n = owner.res[W] || 0;
+        if (!n) { ctx.log(`${owner.name}'s Cashier: no white to turn into followers.`); return; }
+        owner.res[W] = 0; owner.bonus += n;
+        ctx.log(`${owner.name}'s Cashier: ${n} white became ${plural(n, 'follower')}.`);
+        turned(ctx, owner);
+      },
+    }),
+    m('undertaker', 'Undertaker', 2, 1, 'Whenever you get rid of one of your members, +2 followers.', { onGotRidOf: 2 }),
+    m('appraiser', 'Appraiser', 2, 2, 'Once per game: get rid of one of your members, gain followers or white equal to its cost.', {
+      activate: 'game',
+      onActivate(ctx, owner, card) {
+        const list = ctx.membersOf(owner).filter(c => c.uid !== card.uid);
+        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Appraiser: no other member to get rid of.`); return; }
+        ctx.choose(owner, 'Appraiser: get rid of which member?', list.map(c => ({
+          id: `card:${c.uid}`, label: `${c.def.name} (${cost(ctx, c.uid)})`, kind: 'card', value: c.uid, hint: buryValue(ctx, owner, c, fv(ctx)),
+        })), 'trading.appraise');
+      },
+      botActivate: (ctx, owner) => ctx.state.round >= 2 && ctx.membersOf(owner).some(c => c.def.key !== 'appraiser' && buryValue(ctx, owner, c, fv(ctx)) >= 2),
+    }),
+    m('changer', 'Money Changer', 2, 1, 'Whenever you turn resources or members into followers, +1 white.', { onTurned: 1 }),
+    m('martyr', 'Martyr', 2, 1, 'When this member leaves your cult, gain followers equal to its cost.', {
+      onLeave(ctx, owner, card) {
+        const c = card.def.s + card.def.w;
+        ctx.asMember(owner, 'Martyr', () => { owner.bonus += c; ctx.log(`${owner.name}'s Martyr left: +${plural(c, 'follower')}.`); });
+      },
+    }),
+    m('hoarder', 'Hoarder', 4, 3, 'Once per game: turn all your resources into white.', {
+      activate: 'game',
+      onActivate(ctx, owner, card) {
+        let n = 0;
+        for (const r of ctx.state.resources) if (r !== W && owner.res[r]) { n += owner.res[r]; owner.res[r] = 0; }
+        if (!n) { card.used = false; ctx.log(`${owner.name}'s Hoarder: nothing but white already.`); return; }
+        owner.res[W] = (owner.res[W] || 0) + n;
+        ctx.log(`${owner.name}'s Hoarder: ${n} resources became white.`);
+      },
+      botActivate: (ctx, owner) => ctx.state.round === 3 && totalRes(owner) - (owner.res[W] || 0) >= 3,
+    }),
+    // cut by Cory (2026-10-22); kept defined for old records and card tests
     m('dealer', 'Dealer', 2, 0, 'Whenever you sell followers, +1 white per follower sold.', {
       onSell(ctx, owner, card, k) { ctx.gain(owner, W, k); },
     }),
@@ -186,7 +288,6 @@ const trading = {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
-        // nothing to sell: the use doesn't count
         if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name}'s Pawnbroker: ${NOTHING_TO_SELL}.`); return; }
         sell(ctx, owner, 1, 3, { by: 'Pawnbroker' });
       },
@@ -200,45 +301,17 @@ const trading = {
     }),
     m('lender', 'Lender', 4, 0, 'When it joins you: +5 white. Game end: lose 2 followers.', {
       onRecruited(ctx, owner, card) { payLoan(ctx, owner, card); },
-      // a Doppelganger copying Lender is a full copy (Cory): it gets the +5 too, at once (the copy runs onRecruited).
-      // This turn-end check is a fallback for a copy made some other way (loanPaid unset).
       onTurnEnd(ctx, owner, card) { if (!card.loanPaid) payLoan(ctx, owner, card); },
-      // can't take you below the followers you've won or bought (never yourself or a member)
       onGameEnd: (ctx, owner) => -Math.min(2, sellable(owner)),
     }),
-    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 8 → 4
     m('magnate', 'Magnate', 2, 2, 'Game end: +1 follower per 3 white.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 3),
     }),
     m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),
-    m('heiress', 'Heiress', 4, 2, 'Once per game: +1 white per member you have.', {
-      activate: 'game',
-      onActivate(ctx, owner) {
-        const n = ctx.memberCount(owner);
-        ctx.gain(owner, W, n);
-        ctx.log(`${owner.name} used Heiress: +${n} white.`);
-      },
-      botActivate: (ctx, owner) => ctx.state.round === 3 || (ctx.state.round === 2 && ctx.memberCount(owner) >= 6),
-    }),
-    m('bulkbuyer', 'Bulk Buyer', 4, 2, 'Whenever you buy 3 or more followers, +1 follower.', {
-      onBuyFollowers(ctx, owner, card, buyer, tier) {
-        if (buyer === owner && tier?.get >= 3) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
-      },
-    }),
-    // once per action use, and 2+0 (was 2+2), since the 2026-10-14 rework: Cheap Seats paid it per resource traded,
-    // and Cash In, its main trigger, is gone. Member value 3.5 → 0.6 (160 games, normal bots, White table)
-    m('broker', 'Broker', 2, 0, 'Whenever a White action gives you followers, +1 follower (once per action).', { brokerBonus: 1 }),
-    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4
-    m('exporter', 'Exporter', 2, 2,'Whenever you recruit a non-white member, +1 white.', {
-      onAnyRecruit(ctx, owner, card, by, recruited) {
-        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
-      },
-    }),
     m('liquidator', 'Liquidator', 2, 1, `Once per game: sell up to ${LIQUIDATE.most} followers you bought or won, for ${LIQUIDATE.each} white each.`, {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name}'s Liquidator: ${NOTHING_TO_SELL}.`); return; }
-        // sells as many as it can (up to the cap) the moment you use it, so the white is there for this buy
         sell(ctx, owner, LIQUIDATE.most, LIQUIDATE.each, { why: 'liquidated', by: 'Liquidator' });
       },
       botActivate: (ctx, owner) => ctx.state.round === 2 && sellable(owner) >= 3,
@@ -246,23 +319,44 @@ const trading = {
     m('reinvestor', 'Reinvestor', 2, 2, 'Whenever you sell followers, your next member costs 2 less per follower sold.', {
       onSell(ctx, owner, card, k) { ctx.discount(owner, 2 * k, 'Reinvestor'); ctx.log(`${owner.name}'s Reinvestor: next member costs ${owner.discount} less.`); },
     }),
-    m('raider', 'Raider', 2, 0, 'Once per game: steal up to 3 followers from the leader. Pay them 1 white per follower.', {
-      activate: 'game',
-      onActivate(ctx, owner, card) {
-        const t = raidTarget(ctx, owner);
-        const k = t ? raidAmount(ctx, owner, t) : 0;
-        if (!k) { card.used = false; ctx.log(`${owner.name}'s Raider found no one to buy from.`); return; }
-        // "up to 3": the player picks how many (decisions.md, card verifier B: "Liquidator and Raider let the player
-        // choose how many"); white is Most white's measure, so fewer can be the right call
-        if (k === 1) { raid(ctx, owner, t, 1); return; }
-        ctx.choose(owner, `Raider: buy how many followers from ${t.name}, 1 white each?`, Array.from({ length: k }, (_, j) => ({
-          id: `amount:${j + 1}`, label: `${plural(j + 1, 'follower')} for ${j + 1} white`, kind: 'amount', value: j + 1, hint: j + 1,
-        })), 'trading.raid', { t: t.id });
-      },
-      botActivate: (ctx, owner) => { const t = raidTarget(ctx, owner); return !!t && raidAmount(ctx, owner, t) >= 2; },
-    }),
   ],
 };
+
+const cost = (ctx, uid) => { const d = ctx.card(uid).def; return d.s + d.w; };
+const defsOf = (ctx, c) => [c.def, c.copy ? defById(c.copy) : null].filter(Boolean);
+// Banker: "Whenever you turn resources or members into followers, +1 white" (once per turning)
+function turned(ctx, p) {
+  for (const c of ctx.membersOf(p)) for (const d of defsOf(ctx, c)) if (d.onTurned) { ctx.gain(p, W, d.onTurned); ctx.log(`${p.name}'s ${d.name}: +${d.onTurned} white.`); }
+}
+// Undertaker: "Whenever you get rid of one of your members, +2 followers"
+function gotRidOf(ctx, p) {
+  for (const c of ctx.membersOf(p)) for (const d of defsOf(ctx, c)) if (d.onGotRidOf) { p.bonus += d.onGotRidOf; ctx.log(`${p.name}'s ${d.name}: +${d.onGotRidOf} followers.`); }
+}
+// What getting rid of a member is worth to a bot: its cost (in followers or white) less what it's worth kept
+function buryValue(ctx, p, c, each) {
+  const kept = c.def.f + (c.used || ctx.state.round === 3 ? 0 : 1) + (c.def.onLeave ? -cost(ctx, c.uid) : 0);
+  return cost(ctx, c.uid) * each - kept;
+}
+function buryChoice(ctx, p, what, gain) {
+  const list = ctx.membersOf(p);
+  if (!list.length) { ctx.log(`${p.name}'s ${what}: no members to send away.`); return; }
+  const each = gain === 'white' ? 1 : fv(ctx);
+  const opts = list.map(c => ({ id: `card:${c.uid}`, label: `${c.def.name} (${cost(ctx, c.uid)})`, kind: 'card', value: c.uid, hint: buryValue(ctx, p, c, each) }));
+  opts.push({ id: 'done', label: 'Keep them all', kind: 'done', value: 'done', hint: 0 });
+  ctx.choose(p, `${what}: send which member to the bottom of the pile?`, opts, 'trading.buryPick', { gain, what });
+}
+// Exchange: one resource at a time (you pick the color), 2 followers each, up to the round's limit or Done
+function exchangeStep(ctx, p, data) {
+  const held = ctx.state.resources.filter(r => p.res[r] > 0);
+  if (data.left <= 0 || !held.length) return;
+  const v = fv(ctx);
+  const opts = held.map(r => ({
+    id: `color:${r}`, label: `1 ${r} → 2 followers`, kind: 'color', value: r, spend: { [r]: 1 },
+    hint: (2 * v - 1) + 0.01 * (p.res[r] - (r === W ? 3 : 0)),
+  }));
+  opts.push({ id: 'done', label: data.done ? 'Done' : 'Turn nothing', kind: 'done', value: 'done', hint: 0.1 });
+  ctx.choose(p, `Exchange: turn which resource into 2 followers? (${data.left} left)`, opts, 'trading.exchange', data);
+}
 
 const totalRes = p => Object.values(p.res).reduce((a, b) => a + b, 0);
 // Cheap Seats pays one resource at a time (you pick the color), until the round's limit or Done.

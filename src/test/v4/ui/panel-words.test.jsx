@@ -131,7 +131,7 @@ describe('panel words (w3)', () => {
 
   it('"You\'d get" says the likely and the best case, or the best pick, or the mix, in numbers', () => {
     const q = ['thieves', 'trading', 'purple', 'silver'];
-    const seen = { ransom: null, pawn: null, sellhigh: null, gift: null };
+    const seen = { ransom: null, gift: null };
     for (let seed = 1; seed < 40 && Object.values(seen).some(v => !v); seed++) {
       let s = createGame({ seats: [0, 1, 2, 3].map(i => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: q });
       const rand = seededRandom(seed);
@@ -155,11 +155,6 @@ describe('panel words (w3)', () => {
     expect(seen.ransom.likely).toMatch(/^up to \+\d+ (magenta|member)/);
     expect(seen.ransom.best).toMatch(/^\+\d+ (magenta|member)/);
     expect(seen.ransom.best).not.toBe(seen.ransom.likely);
-    // every pick worth the same: the two ends of the mix
-    expect(seen.pawn.text).toMatch(/^\+\d+ followers? or \+\d+ white$/);
-    // your pick: your best pick's numbers
-    // your pick: the best pick's gains as "up to", never a promise (w4 skeptic #10)
-    expect(seen.sellhigh).toEqual({ text: expect.stringMatching(/^up to \+\d+ white, −\d+ followers?$/), note: 'your pick' });
     // one color of your choosing
     expect(seen.gift.text).toMatch(/\+2 of a color you pick$/);
     for (const y of Object.values(seen)) expect(JSON.stringify(y)).not.toMatch(/depends on|−-/);

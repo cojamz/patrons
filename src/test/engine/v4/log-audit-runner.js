@@ -6,7 +6,7 @@ import { seededRandom } from '../../../engine/v4/rng.js';
 import { makeTables } from './fuzz-tables-runner.js';
 
 // bookkeeping a player never sees as a change of their own (turn counters, per-turn scratch)
-const QUIET = new Set(['turnRecruits', 'final', 'contest', 'bought', 'turnBuys', 'workers', 'peekReach']);
+const QUIET = new Set(['turnRecruits', 'final', 'contest', 'bought', 'turnBuys', 'workers', 'peekReach', 'perSpend']);
 
 function snap(p) { return JSON.parse(JSON.stringify(p)); }
 function changed(a, b) {

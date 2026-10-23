@@ -117,6 +117,10 @@ const ALLOW = {
   'red.loyalists': 'only removes its cult from swap options (red-members-hooks / red-members-pressure: Loyalists)',
   // needs its holder to Promote/Demote a rival's member out of their cult; the 5/6/7 shop (2026-10-21) moved the
   // seeded games where a bot did
+  // White's rework (2026-10-22) moved the seeded games: these were held in a game or two without their moment coming
+  'trading.cashier': 'acts only on its own recruit; a holder who got it by a swap or steal never sees it (cards-trading: Cashier)',
+  'market.shopaholic': 'a pure allowance (a second buy) that shows only when its holder buys twice (cards-market: Shopaholic)',
+  'thieves.lookout': 'pays only when a rival steals from someone else while it is unspent (cards-thieves: Lookout)',
   'red.movementpenalty': 'pays only when you move a rival’s member out of their cult (red-members-hooks: Movement Penalty)',
 };
 

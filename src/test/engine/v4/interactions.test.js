@@ -94,21 +94,13 @@ describe('Green copies the risky spaces', () => {
     expect(ids(s).every(id => id.startsWith('take:1:'))).toBe(true); // never P3
   });
 
-  it('copying a White sale means selling followers yourself, not free white', () => {
+  it('copying a White Exchange means turning your own resources into followers, not free followers', () => {
     const W = ['gold', 'red', 'trading', 'echo'];
-    let s = scene({ quads: W, round: 2, turns: [1, 0], bonus: [0, 3] });
-    s = go(s, 'trading.sellhigh', 'amount:1'); // sells 1 follower for white
+    let s = scene({ quads: W, turns: [1, 0], res: [{}, { gold: 2 }] });
+    s = go(s, 'trading.exchange', 'color:gold'); // round I: 1 gold into 2 followers
     expect(s.players[1].bonus).toBe(2);
-    s = take(s, 'echo.encore');
-    expect(labels(s)).toEqual(['Sell High (P2): do Sell High yourself']);
-  });
-  it('copying a Your Call taken as white gives that white (Your Call sells nothing since the 2026-10-14 rework)', () => {
-    const W = ['gold', 'red', 'trading', 'echo'];
-    let s = scene({ quads: W, turns: [1, 0], bonus: [0, 3] });
-    s = go(s, 'trading.pawn', 'amount:1'); // round I: 2 white instead of its 1 follower
-    expect([R(s, 1).white, s.players[1].bonus]).toEqual([2, 3]);
     s = take(s, 'echo.echo');
-    expect(labels(s)).toEqual(['Your Call (P2): +2 white']);
+    expect(labels(s)).toEqual(['Exchange (P2): do Exchange yourself']);
   });
 
   it('copying Blue’s Churn does Churn again for the copier', () => {
@@ -339,15 +331,6 @@ describe('Magenta takes members that carry state', () => {
 // ---------------------------------------------------------------------------------------------------------
 describe('White sells followers that contests and bonuses counted', () => {
   const Q = ['gold', 'red', 'trading', 'green'];
-  it('you can sell contest followers, never yourself or your members', () => {
-    let s = scene({ quads: Q, round: 2, bonus: [2], members: [['red.twins']] });
-    s.players[0].contest = 2;
-    s = take(s, 'trading.sellhigh');
-    expect(ids(s)).toEqual(['amount:0', 'amount:1', 'amount:2']);
-    s = pass(move(s, 'amount:2'));
-    expect(followers(s, s.players[0])).toBe(1 + 2);
-    expect(R(s, 0).white).toBe(6);
-  });
   it('Bulk Buyer pays on a big buy even when a rival’s Tax Collector reacts first', () => {
     let s = scene({ quads: Q, turns: [1, 0], res: [{}, { gold: 2, red: 2 }], members: [['gold.taxman'], ['trading.bulkbuyer']] });
     s = take(s, 'gold.rush');

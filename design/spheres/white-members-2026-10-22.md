@@ -34,3 +34,22 @@ Last three, pitched Oct 23 (Claude's): cheap twins: When recruited: turn up to 3
 10. "Whenever you turn resources or members into followers, +1 white." (his idea, approved 8:14pm)
 11. "When this member leaves your cult, gain followers equal to its cost." Cheap, about 3.
 12. Open. Pitched: "Once per game: turn all your resources into white."
+
+## Final list and first prices (Oct 22 8:18pm Eastern)
+Cory: "let's just put in the one that once per game one, turn all resources to white. It's super strong, but like let's price it high and then see what happens in the balance tests... That's our list." Prices are Claude's educated guesses (his levers: total cost, the white-vs-wild mix since white is scarcer, and followers, 1 to 4, 5 rarely). Names marked * are Claude's working names. Cost is written white + any.
+
+1. Shopkeeper: "Now and at round start: +2 white." 2 white + 2 any, worth 1 follower.
+2. Heiress: "Once per game: +1 white per member you have." 3 + 2, worth 1.
+3. Bulk Buyer: "Whenever you buy 5 or more followers, +1 follower." 1 + 2, worth 2.
+4. Broker: "Whenever a White action gives you followers, +1 follower." 2 + 2, worth 1.
+5. Exporter: "Whenever you recruit a non-white member, +1 white." 1 + 2, worth 2.
+6. Raider: "Once per game: steal 4 followers from the leader. Pay them 2 white." 3 + 2, worth 1. (Reading of "2 white" as 2 in total is Claude's; open.)
+7. Cashier*: "When recruited: turn all your white into followers." 3 + 1, worth 1.
+8. Undertaker*: "Whenever you get rid of one of your members, +2 followers." 2 + 1, worth 1.
+9. Appraiser*: "Once per game: get rid of one of your members, gain followers or white equal to its cost." 2 + 2, worth 1.
+10. Money Changer*: "Whenever you turn resources or members into followers, +1 white." 2 + 1, worth 1.
+11. Martyr*: "When this member leaves your cult, gain followers equal to its cost." 2 + 1, worth 1.
+12. Hoarder*: "Once per game: turn all your resources into white." 4 + 3, worth 1. Priced high on purpose.
+
+Strong to weak (Claude's read): Hoarder, Raider, Heiress, Shopkeeper, Broker, Cashier, Appraiser, Money Changer, Undertaker, Martyr, Exporter, Bulk Buyer.
+Next: the Member balance thread builds them and balance-tests prices.

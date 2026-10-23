@@ -14,12 +14,12 @@ describe('base rules', () => {
   it('5 for 5: one player can buy repeatedly without a stock limit', () => {
     const Q = ['gold', 'red', 'yellow', 'trading'];
     let s = table(Q, { n: 4, res: [{ gold: 30 }], shop: ROW, queue: turns(0, 0, 0) });
-    for (const sp of ['yellow.harvest', 'yellow.bloom', 'trading.haggle']) {
+    for (const sp of ['yellow.harvest', 'yellow.bloom', 'trading.stipend']) {
       s = take(s, sp);
       expect(ids(s)).toContain('tier:mid');
       s = move(s, 'tier:mid');
     }
-    expect(s.players[0].bonus).toBe(15); // three buys by the same player
+    expect(s.players[0].bonus).toBe(16); // three buys by the same player, and Allowance's +1 follower
     expect(s.stock).toEqual({});
   });
 });
@@ -72,13 +72,10 @@ describe('Robin Hood through Gold’s Collect Debts', () => {
 });
 
 describe('White', () => {
-  it('Raider: "up to 3" lets you choose how many (decisions.md: Liquidator and Raider let the player choose how many)', () => {
+  it('Raider: steals 4 followers from the leader and pays them 2 white (Cory, 2026-10-22)', () => {
     const Q = ['gold', 'red', 'trading', 'thieves'];
     let s = table(Q, { res: [{ white: 5 }], bonus: [0, 6], members: [['trading.raider']], shop: ROW });
     s = move(s, `use:${uidIn(s, 'trading.raider', 0)}`);
-    expect(s.pending.kind).toBe('choose');
-    expect(ids(s)).toEqual(['amount:1', 'amount:2', 'amount:3']);
-    s = move(s, 'amount:1');
-    expect([R(s).white, s.players[0].bonus, s.players[1].bonus, R(s, 1).white]).toEqual([4, 1, 5, 1]);
+    expect([R(s).white, s.players[0].bonus, s.players[1].bonus, R(s, 1).white]).toEqual([3, 4, 2, 2]);
   });
 });

@@ -30,7 +30,7 @@ const LINES = {
   yellow: 'Gathers every color, and scores full sets.',
   market: 'Bends the shop: extra recruits, pay half, refresh the row.',
   thieves: 'Steals resources and members from rivals.',
-  trading: 'Sells followers for white, and buys them back cheap.',
+  trading: 'Turns what you have into followers.',
   echo: 'Copies spaces: a rival’s, or your own again.',
   blue: 'Plain gains: blue, with a little of another color.',
   green: 'Plain gains: green, with a little of another color.',
@@ -44,7 +44,7 @@ const VERSION = {
   thieves: '2.0',
   purple: '2.0',
   market: '2.0',
-  trading: '1.0',
+  trading: '2.0',
 };
 export const sphereVersion = id => VERSION[id] || '1.0';
 const VERSION_WORDS = { '2.0': 'Redesigned', '1.5': 'Spaces redesigned, members not yet', '1.0': 'Not redesigned yet' };

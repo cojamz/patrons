@@ -10,8 +10,8 @@ afterEach(cleanup);
 describe('setup sphere hints', () => {
   it('pluralise the follower mark where the words are plural', () => {
     const t = sphereHint('trading');
-    expect(t).toMatch(/with more followers/);
-    expect(t).toMatch(/\+1 follower, or/);
+    expect(t).toMatch(/into followers/);
+    expect(t).toMatch(/\+1 follower and/);
     expect(t).not.toMatch(/@f|more follower\b/);
   });
 

@@ -630,6 +630,7 @@ function runTask(state, task) {
       p.turnRecruits = 0;
       p.turnBuys = 0;
       delete p.peekReach;
+      delete p.perSpend;
       // task.ring: a turn limited to spaces of that ring or lower (a weaker extra worker)
       const source = workerSourceOf(task);
       state.queue.unshift({ t: 'place', p: p.id, ...source, ...(task.ring ? { ring: task.ring } : {}) }, { t: 'buy', p: p.id, ...source }, { t: 'buy', p: p.id, ...source, extra: true }, { t: 'endTurn', p: p.id, ...source });
@@ -873,6 +874,7 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
     const spend = chosen || paymentPlan(state, p, uid, how);
     if (!spend || !memberPayOk(state, p, cardDef(state, uid), spend, how) || Object.keys(spend).some(r => spend[r] > (p.res[r] || 0))) throw new Error('Cannot afford');
     for (const r in spend) p.res[r] -= spend[r];
+    spendBonus(state, p, spend);
     paid = payString(spend);
     // name what made it cheaper: a discount, cost reductions, gold paying double
     const notes = [];
@@ -1074,6 +1076,19 @@ function swapMembers(state, actor, aUid, bUid) {
   return true;
 }
 
+// White's round I space (Cory, 2026-10-22): "This turn, +1 follower for every 2 resources you spend on your recruit".
+// p.perSpend is set by the space and cleared at turn start; it pays once, on the turn's first paid recruit.
+// A White action giving followers, so Broker adds its +1.
+function spendBonus(state, p, spend) {
+  if (!p.perSpend) return;
+  delete p.perSpend;
+  const n = Math.floor(Object.values(spend).reduce((a, b) => a + b, 0) / 2);
+  if (!n) return;
+  const extra = sumMemberFlag(state, p, 'brokerBonus'), mark = fMark(state);
+  p.bonus += n + extra;
+  fCredit(state, mark, 'Splurge');
+  log(state, `${p.name}'s Splurge: +${n} follower${n > 1 ? 's' : ''} for spending.${extra ? ` Broker: +${extra}.` : ''}`);
+}
 function buyFollowers(state, p, tier, chosen) {
   return underCause({ kind: 'buy', pid: p.id, tier: tier.key, get: tier.get }, () => buyFollowersNow(state, p, tier, chosen));
 }
@@ -1081,6 +1096,7 @@ function buyFollowersNow(state, p, tier, chosen) {
   const spend = chosen || followerPlan(state, p, tier);
   if (!spend) throw new Error('Cannot afford');
   for (const r in spend) p.res[r] -= spend[r];
+  spendBonus(state, p, spend);
   p.bonus += tier.get;
   fBump(state, p, tier.get);
   p.bought = (p.bought || 0) + tier.get;
@@ -1343,6 +1359,17 @@ function ctxFor(state) {
       return out;
     },
     refillShop: () => refill(state),
+    /** Send one of p's members to the bottom of the pile, wiped clean (White: "get rid of"). Returns its printed cost. */
+    buryMember(p, uid) {
+      if (!p.members.includes(uid)) return 0;
+      const def = cardDef(state, uid), c = def.s + def.w;
+      cardLeaves(state, p, uid);
+      p.members.splice(p.members.indexOf(uid), 1);
+      state.cards[uid] = { uid, def: state.cards[uid].def };
+      state.pile.push(uid);
+      log(state, `${p.name} sent ${def.name} to the bottom of the pile.`);
+      return c;
+    },
     buryFromShop(uid) {
       const i = state.shop.indexOf(uid);
       if (i < 0) return;
