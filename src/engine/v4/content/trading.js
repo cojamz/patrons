@@ -208,7 +208,7 @@ const trading = {
     m('shopkeeper', 'Shopkeeper', 2, 2, 'Now and at round start: +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
-    m('heiress', 'Heiress', 3, 2, 'Once per game: +1 white per member you have.', {
+    m('heiress', 'Heiress', 3, 2, 'Once per game: +1 white per member you have.', { f: 2,
       activate: 'game',
       onActivate(ctx, owner) {
         const n = ctx.memberCount(owner);
@@ -222,8 +222,8 @@ const trading = {
         if (buyer === owner && tier?.get >= 5) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
       },
     }),
-    m('broker', 'Broker', 2, 2, 'Whenever a White action gives you followers, +1 follower.', { brokerBonus: 1 }),
-    m('exporter', 'Exporter', 1, 2, 'Whenever you recruit a non-white member, +1 white.', { f: 2,
+    m('broker', 'Broker', 2, 2, 'Whenever a White action gives you followers, +1 follower.', { f: 2, brokerBonus: 1 }),
+    m('exporter', 'Exporter', 2, 3, 'Whenever you recruit a non-white member, +1 white.', { f: 2,
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },
@@ -250,8 +250,8 @@ const trading = {
         turned(ctx, owner);
       },
     }),
-    m('undertaker', 'Undertaker', 2, 1, 'Whenever you get rid of one of your members, +2 followers.', { onGotRidOf: 2 }),
-    m('appraiser', 'Appraiser', 2, 2, 'Once per game: get rid of one of your members, gain followers or white equal to its cost.', {
+    m('undertaker', 'Undertaker', 2, 2, 'Whenever you get rid of one of your members, +2 followers.', { onGotRidOf: 2 }),
+    m('appraiser', 'Appraiser', 3, 2, 'Once per game: get rid of one of your members, gain followers or white equal to its cost.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const list = ctx.membersOf(owner).filter(c => c.uid !== card.uid);
@@ -262,8 +262,8 @@ const trading = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && ctx.membersOf(owner).some(c => c.def.key !== 'appraiser' && buryValue(ctx, owner, c, fv(ctx)) >= 2),
     }),
-    m('changer', 'Money Changer', 2, 1, 'Whenever you turn resources or members into followers, +1 white.', { onTurned: 1 }),
-    m('martyr', 'Martyr', 2, 1, 'When this member leaves your cult, gain followers equal to its cost.', {
+    m('changer', 'Money Changer', 2, 1, 'Whenever you turn resources or members into followers, +1 white.', { f: 2, onTurned: 1 }),
+    m('martyr', 'Martyr', 2, 1, 'When this member leaves your cult, gain followers equal to its cost.', { f: 2,
       onLeave(ctx, owner, card) {
         const c = card.def.s + card.def.w;
         ctx.asMember(owner, 'Martyr', () => { owner.bonus += c; ctx.log(`${owner.name}'s Martyr left: +${plural(c, 'follower')}.`); });

@@ -53,3 +53,5 @@ Cory: "let's just put in the one that once per game one, turn all resources to w
 
 Strong to weak (Claude's read): Hoarder, Raider, Heiress, Shopkeeper, Broker, Cashier, Appraiser, Money Changer, Undertaker, Martyr, Exporter, Bulk Buyer.
 Next: the Member balance thread builds them and balance-tests prices.
+
+Price moves Oct 22 9:15pm (Claude's gut, from 46 Hard-bot games): Exporter 2 + 3; Undertaker 2 + 2; Appraiser 3 + 2; Money Changer, Heiress, Broker, Martyr worth 2 followers.

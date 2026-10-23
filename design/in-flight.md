@@ -8,4 +8,3 @@
 - Live status lines: node scripts/status.mjs (board at /mnt/project-files/status/board.md).
 - Gold redesign: paused by Cory (Oct 22) to ship Purple. State and open slots: design/spheres/gold-redesign-2026-10-22.md. Next: wait for him to reopen Gold.
 - White redesign thread: all six spaces set by Cory (Oct 22 7:45pm, design/spheres/white-actions-draft-2026-10-22.md). Next: 12 members, then Member balance for prices. Nothing built.
-- White price moves (decisions.md 2026-10-22 9:12pm): ship after Cory's playtest. Owner: White redesign thread.
