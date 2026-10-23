@@ -418,7 +418,11 @@ const echoQ = {
     m('hourglass', 'Stunt Double', 2, 2, 'When recruited: copy the action you just took.', {
       onRecruited(ctx, owner) {
         const e = justTook(ctx, owner);
-        if (!e) { ctx.log(`${owner.name}'s Stunt Double has nothing to copy.`); return; }
+        if (!e) {
+          const mine = Object.values(ledger(ctx.state).now).some(x => x.p === owner.id);
+          ctx.log(mine && has(ctx, owner, 'agents') ? `${owner.name}'s Stunt Double: Agents keeps your actions from being copied.` : `${owner.name}'s Stunt Double has nothing to copy.`);
+          return;
+        }
         // A recruited member begins its own chain, even when an action recruited it for free.
         withPath(ctx, [], () => copy(ctx, owner, e, { by: 'Stunt Double' }), e.key);
       },
@@ -467,7 +471,8 @@ const echoQ = {
 
 export function justTook(ctx, p) {
   const L = ledger(ctx.state);
-  const last = L.lastBy && L.now[L.lastBy];
+  // your own latest space this round (a rival's space or a copy that ran since can't stand in for it)
+  const last = Object.values(L.now).filter(x => x.p === p.id).sort((a, b) => (b.seq || 0) - (a.seq || 0))[0];
   // Recruit hooks can run inside a still-resolving take/swap, before its wrapper settles the yield.
   // Read a settled copy so Stunt Double sees that action without mutating the ledger during UI previews.
   const e = last && { ...last };

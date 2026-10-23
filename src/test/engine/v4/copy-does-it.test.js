@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { allQuadrantIds, quadrant } from '../../../engine/v4/content/index.js';
 import { take } from './helpers.js';
-import { sceneQ, settle, passBuys } from './cards-helpers.js';
+import { sceneQ, settle, passBuys, buy } from './cards-helpers.js';
 
 const FILL = ['gold', 'red', 'market', 'echo', 'purple'];
 const turns = s => s.queue.filter(t => t.t === 'turn' || (t.t === 'content' && t.h === 'purple.skipped')).map(t => `${t.t}${t.p}`).join(' ');
@@ -57,5 +57,15 @@ describe('Echo copying Sleep In (Cory’s playtest, Oct 23)', () => {
     expect(s.log).toContain("P2's turn is skipped (Sleep In).");
     expect(s.pending.player).toBe(0);
     expect(s.players[2].bonus).toBe(2); // P1's skip and P2's
+  });
+});
+
+describe('Stunt Double (Cory’s playtest, Oct 23)', () => {
+  it('recruited right after Lie Low and its steal picks, repeats Lie Low', () => {
+    const rich = { magenta: 9, green: 9, gold: 9, red: 9 };
+    let s = sceneQ({ quadrants: ['thieves', 'echo', 'purple', 'red'], n: 2, round: 3, res: [rich, { red: 1, purple: 1, magenta: 1, gold: 2 }], shop: ['echo.hourglass'], queue: [0, 1].map(p => ({ t: 'turn', p })) });
+    s = settle(take(s, 'thieves.hideout'));
+    s = settle(buy(s, 'echo.hourglass'));
+    expect(s.log).toContain("P1's Stunt Double: P1 copies Lie Low: doing it again.");
   });
 });
