@@ -83,3 +83,6 @@ Scoring alternatives
 - Unspent resources are still above the blue table. If it feels like waste, Gather goes to 1 per 2 members next.
 - Transmute needs a small swap panel in the UI (up to 3 swaps).
 - Engine: Weaver tells the 6-follower buy apart with a bigLeft workaround. The clean fix is onBuyFollowers(ctx, owner, card, buyer, tier). Painter (32) would need a per-player "counts as any color for follower buys" member flag in wildColors. The green stand-in hands out blue, which is dead on a table without Blue.
+
+## Notes for when Yellow reopens
+- (Cory, 2026-10-22 playtest) "Peddler and Pilgrim too similar - send that to yellow." Peddler: "Now and at round start: +1 of each color." Pilgrim: "When recruited: +1 of each color." No card change until Yellow reopens.
