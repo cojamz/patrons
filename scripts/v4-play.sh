@@ -56,10 +56,26 @@ MANIFEST
 
 git fetch -q origin '+main:refs/remotes/origin/main'
 git worktree add -q --detach "$WT" origin/main
+# Keep the last few releases playable at play/v/<version>/, so a game started before this deploy can still be rejoined
+# on its own rules (src/v4/oldBuild.js sends a player there). The release being replaced joins them; older ones go.
+KEEP_OLD=${KEEP_OLD:-3}
+mkdir -p "$TMP/old"
+[ -d "$WT/play/v" ] && cp -R "$WT/play/v/." "$TMP/old/"
+PREV_VERSION=$(node -e 'try{process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1])).version||"")}catch{}' "$WT/play/build.json")
+NEW_VERSION=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1])).version)' "$TMP/play/build.json")
+if [[ "$PREV_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && [ "$PREV_VERSION" != "$NEW_VERSION" ] && [ -f "$WT/play/index.html" ]; then
+  rm -rf "$TMP/old/$PREV_VERSION"; mkdir "$TMP/old/$PREV_VERSION"
+  for f in "$WT/play/"* "$WT/play/".[!.]*; do
+    case "$(basename "$f")" in v|_redirects|'.[!.]*') ;; *) cp -R "$f" "$TMP/old/$PREV_VERSION/" ;; esac
+  done
+fi
+rm -rf "$TMP/old/$NEW_VERSION"
+ls "$TMP/old" | sort -V | head -n "-$KEEP_OLD" | while read -r old; do rm -rf "$TMP/old/$old"; done
 # Replace only play/ (and rules/ below), including dotfiles, and preserve every other main path.
 rm -rf "$WT/play"
 mkdir "$WT/play"
 cp -R "$TMP/play/." "$WT/play/"
+if [ -n "$(ls "$TMP/old")" ]; then mkdir "$WT/play/v"; cp -R "$TMP/old/." "$WT/play/v/"; echo "Older releases kept for rejoins: $(ls "$TMP/old" | sort -V | tr '\n' ' ')"; fi
 # Pages serves main as plain files: skipping Jekyll makes each publish deploy faster.
 [ -f "$WT/.nojekyll" ] || { touch "$WT/.nojekyll"; git -C "$WT" add .nojekyll; }
 git -C "$WT" add --all -- play

@@ -7,6 +7,7 @@ import { createLocalSession } from './session/local.js';
 import { loadLocal, saveLocalSoon, flushLocalSave, clearLocal, finishLocal, loadLast, clearLast, claimLocal, ownsLocal, onLocalLost, releaseLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
 import { friendlyError, OFFLINE } from './errors.js';
+import { oldBuildUrl } from './oldBuild.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
 import OnlineBar from './screens/OnlineBar.jsx';
 import { tableProblem, fitTable } from './tables.js';
@@ -191,6 +192,11 @@ function App() {
     } catch (e) {
       // a late new seat is freed (the retry takes one); a late rejoin just stops listening (the seat stays yours)
       if (gaveUp) attempt.then(r => (r && r.lobby ? (r.rejoined ? r.lobby.destroy() : r.lobby.leave()) : null)).catch(() => {});
+      // the room runs another release: open that one (the page goes away, so this never settles) or say why not
+      if (e && e.roomVersion) {
+        const url = await oldBuildUrl(e.roomVersion);
+        if (url) { location.replace(url); return new Promise(() => {}); }
+      }
       return friendlyError(e);
     }
   }, []);

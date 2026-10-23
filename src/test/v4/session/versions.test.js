@@ -129,6 +129,9 @@ describe('online rooms from another version', () => {
     room(store, host.code).build = { ...BUILD, content: 'olderContent' };
     await expect(joinRoom({ code: host.code, name: 'X', transport: createMemoryTransport(store) })).rejects.toThrow(VERSION_MISMATCH);
     await expect(rejoinRoom({ code: host.code, playerId: guest.playerId, transport: createMemoryTransport(store) })).rejects.toThrow(VERSION_MISMATCH);
+    // the refusal names the room's release, so the page can open that release instead (oldBuild.js)
+    room(store, host.code).build = { ...BUILD, content: 'olderContent', version: 'v0.8.1' };
+    await expect(rejoinRoom({ code: host.code, playerId: guest.playerId, transport: createMemoryTransport(store) })).rejects.toMatchObject({ roomVersion: 'v0.8.1' });
     // a room from before stamps is refused the same way
     delete room(store, host.code).build;
     await expect(joinRoom({ code: host.code, playerId: guest.playerId, transport: createMemoryTransport(store) })).rejects.toThrow(/different version/);

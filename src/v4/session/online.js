@@ -172,7 +172,8 @@ export async function joinRoom({ code, name, emoji, transport, playerId, knownId
   if (!room) throw new Error('Room not found.');
   if (room.game !== 'v4') throw new Error('That code belongs to an old (v3) game.');
   // Mixed builds would apply different rules to one state (or crash on an unknown card): refuse, rejoins included.
-  if (!sameBuild(room)) throw new Error(VERSION_MISMATCH);
+  // roomVersion lets the page send this player to the room's own build, if that one is still published (oldBuild.js).
+  if (!sameBuild(room)) throw Object.assign(new Error(VERSION_MISMATCH), { roomVersion: room.build?.version || null });
 
   const status = room.status || 'lobby';
   const humans = seatList(room).filter(s => s.kind === 'human' && s.id);
