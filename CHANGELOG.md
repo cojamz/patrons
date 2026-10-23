@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.58 — 2026-10-22 — unreleased
+
+- Loyalists costs 5 (was 3). Sticky Fingers: "Your steals take 1 more resource", now members' steals too.
+
 ## v0.8.57 — 2026-10-22 — unreleased
 
 - Right Away scales (+1, +2, +3 purple). Gossip pays when a turn is really skipped. Closer pays whoever places the round's last minion, now cheaper. Copying Sleep In, Hold Up, Right Away, Crunch Time, Last Call, Crowd In, High Tide or Allowance does the whole action. Stunt Double repeats the space you just took.
