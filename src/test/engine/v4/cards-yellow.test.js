@@ -15,15 +15,15 @@ const rich = { gold: 30, red: 30, yellow: 30, green: 30 };
 describe('Yellow actions', () => {
   it('Harvest: +1 yellow plus 1 per other color held; Top Up: +1 of each color you lack', () => {
     expect(R(take(sc({ res: [{ gold: 1, red: 2 }] }), 'yellow.harvest')).yellow).toBe(3);
-    expect(R(take(sc({ res: [{ gold: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
+    expect(R(take(sc({ res: [{ gold: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 1, red: 1, yellow: 2, green: 1 }); // +1 each fewest, +1 yellow (round I)
   });
   // the fewest, not "none of" (dead-window audit, 2026-10-14): it was dead whenever you held every color
   it('Top Up: +1 of each color you hold the fewest of (ties: all), named; holding every color still pays', () => {
     let s = take(sc({ res: [{ gold: 2, red: 1, yellow: 1, green: 3 }] }), 'yellow.bloom');
-    expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 2, green: 3 });
+    expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 3, green: 3 });
     // a tie says why it pays each tied color (panel tester C: only the hover said so)
-    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +1 of each.", "P1's Top Up: +1 red, +1 yellow."]);
-    expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
+    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +1 of each.", "P1's Top Up: +1 red, +2 yellow."]);
+    expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 3, green: 2 });
   });
   it('Trade Seeds: +2 yellow, then up to 3 one-for-one swaps', () => {
     let s = take(sc({ res: [{ gold: 4 }] }), 'yellow.transmute');
@@ -209,9 +209,9 @@ describe('Yellow members', () => {
     expect(memberCount(s, s.players[0])).toBe(2);
     expect(followers(s, s.players[0]) - followers(sc({}), sc({}).players[0])).toBe(2);
   });
-  it('Top Up: +1 × round of each fewest color, named with the round amount', () => {
+  it('Top Up: +1 of each fewest color and +1 yellow × round (Cory, 2026-10-22), named', () => {
     const s = take(sc({ round: 3, res: [{ gold: 2, red: 1, yellow: 1, green: 3 }] }), 'yellow.bloom');
-    expect(R(s)).toEqual({ gold: 2, red: 4, yellow: 4, green: 3 });
-    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +3 of each.", "P1's Top Up: +3 red, +3 yellow."]);
+    expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 5, green: 3 });
+    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +1 of each.", "P1's Top Up: +1 red, +4 yellow."]);
   });
 });

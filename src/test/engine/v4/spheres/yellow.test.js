@@ -80,14 +80,14 @@ describe('Yellow actions', () => {
   });
 
   it('Top Up: +1 of each color you hold the fewest of (ties: all), which always adds a full set', () => {
-    expect(R(take(scene({ res: [{ gold: 3, red: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 3, red: 1, yellow: 1, green: 1 });
-    expect(R(take(scene({}), 'yellow.bloom'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
+    expect(R(take(scene({ res: [{ gold: 3, red: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 3, red: 1, yellow: 2, green: 1 });
+    expect(R(take(scene({}), 'yellow.bloom'))).toEqual({ gold: 1, red: 1, yellow: 2, green: 1 });
     // holding every color: the fewest (here all, tied) still get +1 (dead-window audit, 2026-10-14; it gave nothing)
-    expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
+    expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 3, green: 2 });
   });
-  it('Top Up scales by round (Cory, 2026-10-18): +2 of each fewest color in round II, +3 in round III', () => {
-    expect(R(take(scene({ round: 2, res: [{ gold: 3, red: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 3, red: 1, yellow: 2, green: 2 });
-    expect(R(take(scene({ round: 3, res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 4, red: 4, yellow: 4, green: 4 });
+  it('Top Up: only its yellow scales by round (Cory, 2026-10-22): the fewest colors get a flat +1', () => {
+    expect(R(take(scene({ round: 2, res: [{ gold: 3, red: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 3, red: 1, yellow: 3, green: 1 });
+    expect(R(take(scene({ round: 3, res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 5, green: 2 });
   });
 
   it('Trade Seeds: +2 yellow first, then up to 3 one-for-one swaps (the new yellow can be swapped too)', () => {
@@ -140,7 +140,7 @@ describe('Yellow actions', () => {
 
   it('Midas turns Top Up into gold (action gains)', () => {
     const s = take(scene({ members: [['gold.midas']] }), 'yellow.bloom');
-    expect(R(s)).toEqual({ ...Z, gold: 4 });
+    expect(R(s)).toEqual({ ...Z, gold: 5 }); // 1 each of 4 fewest, +1 yellow, all as gold
   });
 });
 
@@ -158,7 +158,7 @@ describe('Yellow members', () => {
 
   it('Gleaner: an action gaining 2+ of another color gives +1 yellow (once per color gained)', () => {
     const s = take(scene({ members: [['yellow.gleaner']], res: [{ gold: 1 }] }), 'yellow.bloom');
-    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 }); // 1s don't trigger it
+    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 2, green: 1 }); // 1s of other colors don't trigger it
     expect(R(take(scene({ members: [['yellow.gleaner']] }), 'gold.rush')).yellow).toBe(1);
     expect(R(take(scene({ members: [['yellow.gleaner']] }), 'gold.jv')).yellow).toBe(1);
     expect(R(take(scene({ members: [['yellow.gleaner']], res: [{ gold: 1 }] }), 'yellow.harvest')).yellow).toBe(2);
@@ -235,7 +235,7 @@ describe('Yellow members', () => {
 
   it('Farmer: whenever an action gains you yellow, +1 more', () => {
     expect(R(take(scene({ members: [['yellow.farmer']], res: [{ gold: 1 }] }), 'yellow.harvest')).yellow).toBe(3);
-    expect(R(take(scene({ members: [['yellow.farmer']], res: [{ gold: 1 }] }), 'yellow.bloom')).yellow).toBe(2);
+    expect(R(take(scene({ members: [['yellow.farmer']], res: [{ gold: 1 }] }), 'yellow.bloom')).yellow).toBe(3); // one yellow gain of 2, +1
   });
 
   it('Weaver: buying 5 or more followers gives +1 of each color', () => {

@@ -37,16 +37,20 @@ export default {
     {
       // the fewest, not "none of" (Claude under Cory's go-with-your-gut, from the dead-window audit): it printed Gardener's
       // text. Raising every lowest color always adds one full set.
-      // scales by round (Cory, 2026-10-18), in the "× round" form Gather and Build Up print
-      key: 'bloom', ring: 1, name: 'Top Up', text: 'Each color you hold the fewest of (ties: all of them): +1 in round I, +2 in round II, +3 in round III.',
-      byRound: { lead: 'Each color you hold the fewest of (ties: all of them):', lines: ['+1', '+2', '+3'] },
-      estimate: (ctx, p) => fewest(ctx, p).length * ctx.state.round + 0.5,
+      // the fewest colors get a flat +1 and only the yellow scales (Cory, 2026-10-22 playtest: +2 on each of 4 tied
+      // colors paid 8 in one action in round II; "Maybe + yellow scales and the rest dont")
+      key: 'bloom', ring: 1, name: 'Top Up', text: 'Each color you hold the fewest of (ties: all of them): +1. +1 yellow in round I, +2 in round II, +3 in round III.',
+      byRound: { lead: 'Each color you hold the fewest of (ties: all of them): +1.', lines: ['+1 yellow', '+2 yellow', '+3 yellow'] },
+      estimate: (ctx, p) => fewest(ctx, p).length + ctx.state.round + 0.5,
       resolve(ctx, p) {
         const list = fewest(ctx, p), n = ctx.state.round;
         // a tie pays each tied color: the result says so, not only the hover (panel tester C)
-        if (list.length > 1) ctx.log(`${p.name}'s Top Up: ${list.slice(0, -1).join(', ')} and ${list[list.length - 1]} tie for your fewest (${p.res[list[0]] || 0} each), so +${n} of each.`);
-        for (const c of list) ctx.gain(p, c, n, { fromAction: true });
-        ctx.log(`${p.name}'s Top Up: +${n} ${list.join(`, +${n} `)}.`);
+        if (list.length > 1) ctx.log(`${p.name}'s Top Up: ${list.slice(0, -1).join(', ')} and ${list[list.length - 1]} tie for your fewest (${p.res[list[0]] || 0} each), so +1 of each.`);
+        // yellow lands as one gain (Farmer adds 1 per gain, not per part of the space)
+        for (const c of list) if (c !== Y) ctx.gain(p, c, 1, { fromAction: true });
+        const y = n + (list.includes(Y) ? 1 : 0);
+        ctx.gain(p, Y, y, { fromAction: true });
+        ctx.log(`${p.name}'s Top Up: ${[...list.filter(c => c !== Y).map(c => `+1 ${c}`), `+${y} yellow`].join(', ')}.`);
       },
     },
     {

@@ -31,7 +31,7 @@ const S = {
     toast: r => `+${3 * r} silver · others +${r} silver`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the top rival’s', jubilee: 'followers from the top rival’s silver',
   },
   yellow: {
-    harvest: '+1 yellow per color', bloom: r => `+${r} of your fewest`, transmute: '+2 yellow · then swap up to 3', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
+    harvest: '+1 yellow per color', bloom: r => `+${r} yellow · +1 of your fewest`, transmute: '+2 yellow · then swap up to 3', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
   },
   market: {
     bargain: r => `send 3 to the bottom; +${r + 1} blue`, restock: 'one color to the bottom; +1 blue each, +1', showroom: 'peek at 4, may recruit one; +1 blue', clearance: 'recruit twice; +1 blue', pricecheck: 'bury one, half its cost in blue; +1', spree: 'recruit 3 times; +3 blue',
