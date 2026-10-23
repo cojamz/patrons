@@ -43,7 +43,7 @@ const VERSION = {
   echo: '2.0',
   thieves: '2.0',
   purple: '2.0',
-  market: '1.5',
+  market: '2.0',
   trading: '1.0',
 };
 export const sphereVersion = id => VERSION[id] || '1.0';
