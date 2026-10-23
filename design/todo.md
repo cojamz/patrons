@@ -28,6 +28,7 @@ Closed as superseded: Help Yourself 2/4/6, Crime Wave vs Redistribute, the Oct 1
 - [ ] Design list for after the playtest: Even Swap better (his "maybe +2 red"), Red weak early, Lie Low maybe scales, Recruit a Member maybe a cost limit, Shake Down maybe too strong. Crunch Time parked (keep +1 purple).
 - [ ] Peek weak in round I; anything based on owning or recruiting members is tough in round I (Cory, playtest). Ideas pitched, his pick.
 - [ ] Late Bloomers is anti-synergy with itself (Cory, playtest): its colors buy followers, which ends "fewest followers". Five fixes pitched, his pick.
+- [ ] Top Up maybe shouldn't scale (Cory, playtest). Options sent: flat +2 [default], flat +1 plus +1 yellow, +2 to one fewest color, keep.
 - [ ] Peek read as giving you the pile member; it doesn't ("This turn your recruit may be one of them", paid at cost). Card clarity, answer key #54.
 
 ## Waiting on Cory
