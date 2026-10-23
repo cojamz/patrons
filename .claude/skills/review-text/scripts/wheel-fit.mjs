@@ -1,7 +1,7 @@
 // What the wheel really prints for every space at 1270×700, round by round: which of a panel's lines (the gain or
 // verb, line 2, the small note) show, and which drop because they don't fit. A dropped line is text the player never
 // sees on the board; if it carries a number, a condition or a second effect, the space reads wrong.
-//   node .claude/skills/review-text/scripts/wheel-fit.mjs [--out file.md]
+//   node .claude/skills/review-text/scripts/wheel-fit.mjs [--out file.md] [--shots dir]
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5296.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -16,6 +16,8 @@ import { seedSave } from '../../../../e2e/v4/lib/seed.mjs';
 
 const argv = process.argv.slice(2);
 const oi = argv.indexOf('--out'), out = oi < 0 ? null : argv[oi + 1];
+const si = argv.indexOf('--shots'), shots = si < 0 ? null : argv[si + 1]; // a screenshot per table and round
+if (shots) (await import('node:fs')).mkdirSync(shots, { recursive: true });
 let base = process.env.V4_URL, server = null;
 if (!base) {
   const free = port => new Promise(res => { const srv = createServer().once('error', () => res(false)).once('listening', () => srv.close(() => res(true))).listen(port, 'localhost'); });
@@ -58,6 +60,7 @@ try {
     { const skip = await page.$('[data-intro-skip]'); if (skip) await skip.click(); }
     await page.waitForSelector('.lt[data-yours="1"][data-phase="place"] .lt-wheel .slot[data-option]', { timeout: 15000 });
     await page.waitForTimeout(700);
+    if (shots) await page.screenshot({ path: `${shots}/${quads[0]}-r${round}.png` });
     const seen = await page.$$eval('.lt-wheel .slot[data-slot]', els => els.map(e => ({
       key: e.dataset.slot, panel: e.dataset.panel || '', taken: e.classList.contains('taken'),
       one: e.querySelector('[data-yield]')?.textContent || '', two: e.querySelector('[data-second]')?.textContent || '', note: e.querySelector('[data-note]')?.textContent || '',
