@@ -35,4 +35,16 @@ describe('Blue concepts', () => {
     expect(s.players[1].bonus).toBe(1);
     expect(named(s, 'Critic').length).toBe(1);
   });
+  // the fire audit deals members straight into hands, so these recruit-only cards are checked here (2026-10-22)
+  it('Plus-One and Window Dresser: recruited, they act and the log names them', () => {
+    let s = table(Q, { res: [{ blue: 9, gold: 9 }], shop: ['market.plusone', ...ROW.slice(1)] });
+    s = move(take(s, 'thieves.tipoff'), card(s, 'market.plusone'));
+    expect(owns(s, 0, 'market.plusone')).toBe(true);
+    expect(named(s, 'Plus-One').length).toBeGreaterThan(0);
+    let t = table(Q, { res: [{ blue: 9, gold: 9 }], shop: ['market.windowdresser', ...ROW.slice(1)] });
+    t = move(take(t, 'thieves.tipoff'), card(t, 'market.windowdresser'));
+    while (t.pending?.kind === 'choose') t = move(t, t.pending.options[0].id);
+    expect(owns(t, 0, 'market.windowdresser')).toBe(true);
+    expect(named(t, 'Window Dresser').length).toBeGreaterThan(0);
+  });
 });

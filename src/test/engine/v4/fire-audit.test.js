@@ -87,7 +87,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     const silent = hand.filter(id => !QUIET_RESTRICTIONS.has(id) && st[id]?.held >= 3 && !st[id].fired).map(id => `${id} (held in ${st[id].held} games, never named)`);
     // Light Fingers is dealt in only 2 of these games; it reached a third through a bot's recruit until the shop went
     // 5/6/7 (2026-10-21) moved the seeded games. Still judged when held 3+; cards-thieves.test.js (Light Fingers) covers it.
-    const THIN = new Set(['thieves.lightfingers']);
+    // Lookout and Cashier fell under 3 holds when White's rework and Help Yourself's follower steal (2026-10-22) moved the games; cards-thieves (Lookout) and cards-trading (Cashier) cover them.
+    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier']);
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
@@ -121,6 +122,8 @@ const ALLOW = {
   'trading.cashier': 'acts only on its own recruit; a holder who got it by a swap or steal never sees it (cards-trading: Cashier)',
   'market.shopaholic': 'a pure allowance (a second buy) that shows only when its holder buys twice (cards-market: Shopaholic)',
   'thieves.lookout': 'pays only when a rival steals from someone else while it is unspent (cards-thieves: Lookout)',
+  // Help Yourself taking followers (2026-10-22) moved the seeded games; its own tests name it when it fires
+  'yellow.admirer': 'pays only when a rival recruits a color its holder has none of (cards-yellow: Admirer)',
   'red.movementpenalty': 'pays only when you move a rival’s member out of their cult (red-members-hooks: Movement Penalty)',
 };
 

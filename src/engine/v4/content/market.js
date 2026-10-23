@@ -332,12 +332,13 @@ const market = {
     m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true }),
     m('windowdresser', 'Window Dresser', 1, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx, owner) {
+        ctx.log(`${owner.name}'s Window Dresser: send 3 shop members to the bottom of the pile.`);
         churnStep(ctx, owner, { left: Math.min(3, ctx.state.shop.length) });
         ctx.defer(owner, `${Q}.churnRefill`);
       },
     }),
     m('plusone', 'Plus-One', 2, 1, 'When recruited: recruit again this turn.', { f: 2,
-      onRecruited(ctx, owner) { extraBuys(ctx, owner, 1); },
+      onRecruited(ctx, owner) { extraBuys(ctx, owner, 1); ctx.log(`${owner.name}'s Plus-One: recruit again this turn.`); },
     }),
     // Cory, Oct 21: "any time a player recruits more than once in a turn", swaps and takes included (they all reach
     // onAnyRecruit through memberAcquired)
