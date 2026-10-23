@@ -6,7 +6,7 @@
 // and checks.
 import { describe, it, expect } from 'vitest';
 import { allQuadrantIds, quadrant } from '../../../engine/v4/content/index.js';
-import { take } from './helpers.js';
+import { take, move } from './helpers.js';
 import { sceneQ, settle, passBuys, buy } from './cards-helpers.js';
 
 const FILL = ['gold', 'red', 'market', 'echo', 'purple'];
@@ -67,5 +67,36 @@ describe('Stunt Double (Cory’s playtest, Oct 23)', () => {
     s = settle(take(s, 'thieves.hideout'));
     s = settle(buy(s, 'echo.hourglass'));
     expect(s.log).toContain("P1's Stunt Double: P1 copies Lie Low: doing it again.");
+  });
+});
+
+describe('Greatest Hits copying turn spaces (Cory’s playtest, Oct 23)', () => {
+  const after = (sp) => {
+    const rich = { purple: 9, green: 9, gold: 9, red: 9 };
+    let s = sceneQ({ quadrants: ['purple', 'echo', 'gold', 'red'], n: 2, round: 3, res: [rich, rich], queue: [0, 1, 0, 1, 0, 1].map(p => ({ t: 'turn', p })).concat({ t: 'allPlaced' }) });
+    s = passBuys(settle(take(s, sp)));
+    // the rival takes plain spaces (gold or red) meanwhile
+    while (!(s.pending?.kind === 'place' && s.pending.player === 0)) {
+      const o = s.pending.options.find(x => x.kind === 'slot' && ['gold', 'red'].includes(s.quadrants[x.q]));
+      s = passBuys(settle(move(s, o.id)));
+    }
+    const n = s.log.length;
+    s = passBuys(settle(take(s, 'echo.eternity')));
+    return { s, log: s.log.slice(n) };
+  };
+  it('Right Away: the copy gives its turn too', () => {
+    const { s, log } = after('purple.again');
+    expect(log).toContain('P1 copies Right Away: doing it again.');
+    expect(log).toContain("P1's Right Away: P1 takes their next turn now.");
+    expect(s.pending.player).toBe(0);
+  });
+  it('Crunch Time: the copy moves up your last turn', () => {
+    const { s, log } = after('purple.rally');
+    expect(log.some(l => /^P1's Crunch Time: P1 takes their next turn now/.test(l))).toBe(true);
+    expect(s.pending.player).toBe(0);
+  });
+  it('Sleep In: the copy skips your next turn', () => {
+    const { log } = after('purple.skip');
+    expect(log).toContain("P1's Sleep In: P1 skips their next turn.");
   });
 });
