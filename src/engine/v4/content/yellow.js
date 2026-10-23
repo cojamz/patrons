@@ -39,8 +39,8 @@ export default {
       // text. Raising every lowest color always adds one full set.
       // the fewest colors get a flat +1 and only the yellow scales (Cory, 2026-10-22 playtest: +2 on each of 4 tied
       // colors paid 8 in one action in round II; "Maybe + yellow scales and the rest dont")
-      key: 'bloom', ring: 1, name: 'Top Up', text: 'Each color you hold the fewest of (ties: all of them): +1. +1 yellow in round I, +2 in round II, +3 in round III.',
-      byRound: { lead: 'Each color you hold the fewest of (ties: all of them): +1.', lines: ['+1 yellow', '+2 yellow', '+3 yellow'] },
+      key: 'bloom', ring: 1, name: 'Top Up', text: '+1 of each color you hold the fewest of. +1 yellow in round I, +2 in round II, +3 in round III.', // Cory, 2026-10-23
+      byRound: { lead: '+1 of each color you hold the fewest of.', lines: ['+1 yellow', '+2 yellow', '+3 yellow'] },
       estimate: (ctx, p) => fewest(ctx, p).length + ctx.state.round + 0.5,
       resolve(ctx, p) {
         const list = fewest(ctx, p), n = ctx.state.round;
@@ -133,7 +133,7 @@ export default {
     m('dyer', 'Dyer', 4, 2, 'Round end: +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
-    m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. Now and at round start: if you have the fewest followers (not counting this card; ties count), +1 of each color.', { now: true, f: 2,
+    m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. Now and at round start: if no rival has fewer followers than you (not counting this card), +1 of each color.', { now: true, f: 2,
       onRoundStart(ctx, owner, card) {
         // Exclude this physical card, including its value when a Doppelganger copies it.
         const mine = ctx.followers(owner) - Math.max(2, card.def.f);

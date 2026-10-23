@@ -81,8 +81,8 @@ const trading = {
   // exchange for followers". The names are Claude's fill-ins.
   actions: [
     {
-      key: 'stipend', copyDoesIt: true, ring: 1, name: 'Allowance', text: '+1 follower and +1 white in round I, +2 and +2 in round II, +3 and +3 in round III. +1 white.',
-      byRound: { lines: ['+1 follower. +1 white.', '+2 followers. +2 white.', '+3 followers. +3 white.'], rest: '+1 white.' },
+      key: 'stipend', copyDoesIt: true, ring: 1, name: 'Allowance', text: '+1 follower and +2 white in round I, +2 and +3 in round II, +3 and +4 in round III.', // Cory, 2026-10-23: white printed once
+      byRound: { lines: ['+1 follower. +2 white.', '+2 followers. +3 white.', '+3 followers. +4 white.'] },
       estimate: ctx => ctx.state.round * (1 + fv(ctx)) + 1,
       resolve(ctx, p) {
         const r = ctx.state.round;
@@ -100,8 +100,8 @@ const trading = {
       },
     },
     {
-      key: 'exchange', copyDoesIt: true, ring: 1, name: 'Exchange', text: 'Turn 1 resource into 2 followers in round I, 2 into 4 in round II, 3 into 6 in round III. +1 white.',
-      byRound: { lines: ['Turn 1 resource into 2 followers.', 'Turn up to 2 resources into 2 followers each.', 'Turn up to 3 resources into 2 followers each.'], rest: '+1 white.' },
+      key: 'exchange', copyDoesIt: true, ring: 1, name: 'Exchange', text: 'Turn up to 1 resource (2 in round II, 3 in round III) into 2 followers each. +1 white.', // Cory, 2026-10-23: "up to", you can stop early
+      byRound: { lines: ['Turn up to 1 resource into 2 followers.', 'Turn up to 2 resources into 2 followers each.', 'Turn up to 3 resources into 2 followers each.'], rest: '+1 white.' },
       estimate: (ctx, p) => 1 + Math.min(ctx.state.round, totalRes(p) + 1) * (2 * fv(ctx) - 1),
       resolve(ctx, p) {
         ctx.gain(p, W, 1, { fromAction: true });
