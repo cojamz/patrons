@@ -37,11 +37,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const react = given || own;
   // (total: the count so far while the results' scoring runs (FinalScore.jsx); otherwise the engine's)
   const f = total ?? followers(state, p);
-  // by printed cost, highest first (Cory, 2026-10-21: "perhaps members on a player's card should be in descending order
-  // of cost"); equal costs grouped by color (table order, colorless last), then in the order they were recruited
-  const colorAt = d => (onTable(state, d) ? state.quadrants.indexOf(d.quadrant) : state.quadrants.length);
-  const costOf = d => (d.s || 0) + (d.w || 0);
-  const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => costOf(b.g.def) - costOf(a.g.def) || colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
+  // oldest to newest, the order they joined (Cory, 2026-10-22: "easier to track changes"; it replaced highest cost
+  // first), so a member that just arrived is always at the end of the row; copies of one member stay one stack
+  const groups = memberChips(state, p);
   // your members you can use right now, with an effect (the engine's own dry run; one it would refuse stays unlit)
   const safe = safeThisRound(state, pid);
   // what a use just did, over that member for a moment (even "+0"); and the member giving a second buy hops as it does
@@ -199,12 +197,10 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {/* Lie Low and the like: no one can steal from this seat this round (w2b #21). A small shield under the member
             count (Cory's todo: the words crowded the row); its hover says it in words, the seat card too */}
         {safe && <small className="cs-safe" data-safe="1" role="img" aria-label="safe this round" title={`Safe this round: no one can steal members or resources from ${mine ? 'you' : p.name} until it ends`}><SafeShield /></small>}
-        {/* the figures by cost, highest first; a run of one color stands close, with air before the next color;
-            the figures never overlap */}
+        {/* the figures oldest to newest; they never overlap */}
         <span className="cs-figs">
-        {shown.map((g, i) => {
+        {shown.map(g => {
           const d = g.def;
-          const c0 = i > 0 && colorAt(d) !== colorAt(shown[i - 1].def);
           // yours to use now (Cory, 2026-10-15): the figure is lit, and its card carries the Use button (MemberUse.jsx)
           const readyUid = mine ? g.uids.find(u => ready.has(u)) : undefined;
           const pendingRound = !state.over && state.round > 0 && d.key === 'straggler'
@@ -220,7 +216,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // the board picker: a member the choice offers is clicked right here (seat figure)
           const pickM = pick && pick.members ? g.uids.map(u => pick.members[u]).find(Boolean) : null;
           return (
-            <span key={g.key} className={`cs-member${g.card.used && !state.over ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${pendingRound ? ' round-pending' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-round-pending={pendingRound || undefined} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used && !state.over ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} data-c0={c0 || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+            <span key={g.key} className={`cs-member${g.card.used && !state.over ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${pendingRound ? ' round-pending' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-round-pending={pendingRound || undefined} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used && !state.over ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
               {pendingRound && <span className="round-pending-mark" aria-hidden="true" />}
               <Tip className="fig" sticky={mine} {...(mine ? {} : { tabIndex: -1 })} label={`${d.name}: ${pendingRound ? 'pending this round, show the card' : readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
