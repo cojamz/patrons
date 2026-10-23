@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.62 — 2026-10-23 — unreleased
+
+- The wheel shows more of each space: Right Away's and Crunch Time's purple, and Last Call's followers per minion left.
+
 ## v0.8.61 — 2026-10-23 — unreleased
 
 - Clearer card text: Allowance, Top Up, Late Bloomers and Exchange; the board's words now match each card (Sweet Talk, Help Yourself, Redistribute, Golden Years, Chorus, Harvest).
