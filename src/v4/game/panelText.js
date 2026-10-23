@@ -61,7 +61,8 @@ const P = {
     // "per minion to place" read as +2 (round 3 skeptic): live, it's the count after this one
     planahead: (r, now) => (now == null ? { main: '+1 purple', second: 'per minion to place' } : { main: `+${now} purple`, second: '1 per minion left to place' }),
     // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
-    lastcall: { main: '+2 followers', second: 'per minion left; skip till others are out', note: '+1 purple' },
+    // line 1 alone must not read as a flat +2 (text review, 2026-10-23: line 2 drops on ring II)
+    lastcall: { verb: '+2 @f per minion left', second: 'skip till others are out', note: '+1 purple' },
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
     // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
@@ -160,7 +161,13 @@ export function panelText(qid, action, round = 1, state = null, pid = null) {
   const r = Math.max(1, Math.min(3, round));
   let v = P[qid] && P[qid][action.key];
   if (typeof v === 'function') v = v(r, liveYield(qid, action, state, pid));
-  if (v) return { main: v.main || null, verb: v.main ? null : v.verb || null, second: v.second || null, note: v.note || null };
+  if (v) {
+    // a space's flat gain ("+1 white") sat in line 3, which the wheel drops first: on most rings it never showed
+    // (text review, 2026-10-23). With line 2 free, it moves up there; line 2 shows wherever the panel has room.
+    const flat = typeof v.note === 'string' && /^\+\d+ [a-z]+$/.test(v.note);
+    if (flat && !v.second) return { main: v.main || null, verb: v.main ? null : v.verb || null, second: v.note, note: null };
+    return { main: v.main || null, verb: v.main ? null : v.verb || null, second: v.second || null, note: v.note || null };
+  }
   // the plain spheres: "+2 blue +1 red" is the gain, a clause a line when the panel is narrow
   const [main, ...rest] = String(pipEffect(qid, action, r)).split(' · ');
   return { main, verb: null, second: rest.length ? rest.join(', ') : null, note: null };
