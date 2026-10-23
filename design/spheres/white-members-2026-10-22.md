@@ -20,3 +20,17 @@ Nine kept, three to go. Seven kept at 7:57pm. Rejected: +2 followers whenever yo
 Pitched next (Claude's): followers equal to the cost of your priciest other member (When recruited); whenever you recruit followers, +1 follower per white member; whenever you turn one of your members into followers or white, +2 followers.
 
 Last three, pitched Oct 23 (Claude's): cheap twins: When recruited: turn up to 3 white into followers; When recruited: turn 1 resource into 2 followers; Now and at round start: +1 white. General: when you get rid of this member, gain followers equal to its cost (was twice: too strong stacked with the round II space); Round end: turn up to 2 white into followers; counter: rivals can't steal your followers.
+
+## Where it stands (Oct 22 8:08pm Eastern): eleven kept
+1. Shopkeeper: "Now and at round start: +2 white."
+2. Heiress: "Once per game: +1 white per member you have."
+3. Bulk Buyer: "Whenever you buy 5 or more followers, +1 follower."
+4. Broker: "Whenever a White action gives you followers, +1 follower."
+5. Exporter: "Whenever you recruit a non-white member, +1 white."
+6. Raider: changing (steal 4 followers from the leader for 2 white; exact reading open).
+7. "When recruited: turn all your white into followers." At least 2 white in its cost.
+8. "Whenever you get rid of one of your members, +2 followers."
+9. "Once per game: get rid of one of your members, gain followers or white equal to its cost." Activated (Cory); once per game is Claude's fill-in.
+10. "Now and at round start: +1 white." Cheap.
+11. "When this member leaves your cult, gain followers equal to its cost." Cheap, about 3.
+12. Pending: his idea, "Whenever you turn resources or members into followers, +1 white."
