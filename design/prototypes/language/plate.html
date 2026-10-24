@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1270">
+<title>Language Plate</title>
+<style>
+@font-face{font-family:'AS';src:url(fonts/as-500.woff2) format('woff2');font-weight:500}
+@font-face{font-family:'AS';src:url(fonts/as-700.woff2) format('woff2');font-weight:700}
+@font-face{font-family:'AS';src:url(fonts/as-800.woff2) format('woff2');font-weight:800}
+
+/* ---------- tokens ---------- */
+:root{
+  /* table and board */
+  --table:#191310; --seat:#221a15; --board:#2b2119; --hub:#130e0b;
+  --hair:rgba(242,232,210,.10); --hair-2:rgba(242,232,210,.18);
+  /* paper (spaces, cards) */
+  --paper:#f2e8d2; --paper-lit:#fbf6ea; --paper-taken:#cfc2a6;
+  --ink:#2b2018; --ink-2:#6e5c49; --ink-3:#a39078;
+  /* type on the table */
+  --cream:#f2e8d2; --cream-2:#b9a98c; --cream-3:#7d6e5a;
+  /* the one accent: light = yours to act on */
+  --light:#fff3d4;
+  /* resources: color only ever means a resource or its quadrant */
+  --gold:#d49b27; --red:#c4533f; --blue:#4a80b8; --green:#3f9467;
+  /* type scale: three sizes */
+  --s:12px; --m:16px; --l:28px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--table)}
+body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-serif;font-weight:500;color:var(--cream);
+  font-variant-numeric:lining-nums tabular-nums;-webkit-font-smoothing:antialiased}
+#plate{position:relative;width:1270px;height:700px;
+  background:radial-gradient(640px 520px at 344px 420px,rgba(255,226,170,.07),transparent 70%),var(--table)}
+#board{position:absolute;left:0;top:0}
+
+/* ---------- glyphs: sized by the type they sit in ---------- */
+.g{display:inline-block;width:.8em;height:.8em;vertical-align:-.1em;overflow:visible;flex:none}
+.g + .g{margin-left:.06em}
+.n{font-weight:800;letter-spacing:-.01em}
+.n + .g{margin-left:.06em}
+.op{font-weight:500;color:var(--ink-3);margin:0 .14em}
+.gap{display:inline-block;width:.32em}
+
+/* ---------- type ---------- */
+.cap{font-size:var(--s);line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.s{font-size:var(--s);line-height:16px}
+.m{font-size:var(--m);line-height:20px;text-wrap:pretty}
+.pop .m{text-wrap:balance}
+.l{font-size:var(--l);line-height:32px}
+
+/* ---------- spaces ---------- */
+.cc{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--ink);text-align:center;white-space:nowrap}
+.cc .cap{color:var(--ink-2)}
+.cc .fine{font-size:var(--s);line-height:16px;color:var(--ink-2);font-weight:700}
+.cc .fine .n{font-weight:800}
+.cc.taken > *{opacity:.5}
+.cc .who{height:16px;display:flex;align-items:flex-end;justify-content:center}
+.cc.taken > .who{opacity:1}
+.cc .who svg{margin-bottom:-4px;filter:drop-shadow(0 2px 0 rgba(43,32,24,.25))}
+.cc.closed{color:var(--cream-2)}
+.cc.closed > *{opacity:.6}
+.cc.closed .cap,.cc.closed .fine{color:var(--cream-3)}
+.cc .dim{color:var(--ink-3);font-weight:700}
+.cc .now{color:var(--ink);font-weight:800}
+.minion{position:absolute;transform:translate(-50%,-100%);filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+
+/* ---------- popovers ---------- */
+.pop{position:absolute;background:var(--paper-lit);color:var(--ink);border-radius:8px;
+  box-shadow:0 0 0 1px rgba(43,32,24,.10),0 12px 32px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3)}
+.pop .nub{position:absolute;width:12px;height:12px;background:var(--paper-lit);transform:rotate(45deg);border-radius:2px}
+.pop .rule{height:1px;background:rgba(43,32,24,.12);margin:12px 0}
+
+/* ---------- seats ---------- */
+.seat{position:absolute;background:var(--seat);border-radius:8px;box-shadow:inset 0 0 0 1px var(--hair)}
+.row{display:flex;align-items:center}
+.px{image-rendering:pixelated;display:block}
+
+/* ---------- member cards ---------- */
+.card{position:absolute;width:140px;height:200px;border-radius:8px;background:var(--paper);color:var(--ink);overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
+.card .art{height:72px;display:grid;place-items:center}
+.card .nm{position:absolute;left:0;right:0;top:80px;text-align:center;color:var(--ink-3)}
+.card .when{position:absolute;left:12px;right:12px;top:104px;height:32px;display:flex;align-items:flex-end;justify-content:center;text-align:center;
+  font-size:var(--s);line-height:16px;font-weight:700;color:var(--ink-2)}
+.card .eff{position:absolute;left:0;right:0;top:136px;text-align:center}
+.card .foot{position:absolute;left:12px;right:12px;bottom:0;height:32px;display:flex;justify-content:space-between;align-items:center;
+  box-shadow:inset 0 1px 0 rgba(43,32,24,.12)}
+.card.lit{box-shadow:0 0 0 2px var(--light),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
+
+/* ---------- plate captions (not game UI) ---------- */
+.note{position:absolute;color:var(--cream-3)}
+.lead{position:absolute;background:var(--cream-3);opacity:.6}
+.key{position:absolute;display:flex;gap:16px;align-items:center;color:var(--cream-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key .g{width:14px;height:14px;vertical-align:0}
+</style>
+<script src="../pixel-art/icons.js"></script>
+<script src="../pixel-art/icons-gold-red-guests.js"></script>
+<script src="../pixel-art/icons-blue-white-green-purple.js"></script>
+<script src="../pixel-art/emojis.js"></script>
+<script src="../pixel-art/leaders.js"></script>
+</head>
+<body>
+<!-- The ten primitives. Every glyph lives on a 16-unit grid; strokes are 2 units, ends round. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- resource dot: a flat disc in its color, a quiet darker edge -->
+    <symbol id="dot" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.25" fill="var(--c)"/><circle cx="8" cy="8" r="5.75" fill="none" stroke="rgba(30,18,8,.28)" stroke-width="1"/></symbol>
+    <!-- any: the wheel in miniature, each color where its quadrant sits -->
+    <symbol id="any" viewBox="0 0 16 16">
+      <path d="M8 8 L3.58 3.58 A6.25 6.25 0 0 1 12.42 3.58 Z" fill="var(--gold)"/>
+      <path d="M8 8 L12.42 3.58 A6.25 6.25 0 0 1 12.42 12.42 Z" fill="var(--blue)"/>
+      <path d="M8 8 L12.42 12.42 A6.25 6.25 0 0 1 3.58 12.42 Z" fill="var(--green)"/>
+      <path d="M8 8 L3.58 12.42 A6.25 6.25 0 0 1 3.58 3.58 Z" fill="var(--red)"/>
+      <circle cx="8" cy="8" r="5.75" fill="none" stroke="rgba(30,18,8,.28)" stroke-width="1"/>
+    </symbol>
+    <!-- follower: a head and shoulders (the score) -->
+    <symbol id="fol" viewBox="0 0 16 16"><circle cx="8" cy="4.4" r="3" fill="currentColor"/><path d="M2.4 15.2 C2.4 10.6 4.9 8.6 8 8.6 C11.1 8.6 13.6 10.6 13.6 15.2 Z" fill="currentColor"/></symbol>
+    <!-- member: a card with a person on it -->
+    <symbol id="mem" viewBox="0 0 16 16"><rect x="3" y="1.5" width="10" height="13" rx="2" fill="none" stroke="var(--c,currentColor)" stroke-width="2"/><circle cx="8" cy="6.2" r="1.9" fill="var(--c,currentColor)"/><path d="M5 12 C5 10 6.3 9 8 9 C9.7 9 11 10 11 12 Z" fill="var(--c,currentColor)"/></symbol>
+    <!-- minion: the worker you place -->
+    <symbol id="min" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1 A2.9 2.9 0 0 1 10.6 5.2 C12.6 5.6 14.6 6.3 14.6 7.9 C14.6 9 13.6 9.4 12 9.6 L13.6 13.6 C13.9 14.4 13.5 15 12.7 15 H9.8 L8 12.2 L6.2 15 H3.3 C2.5 15 2.1 14.4 2.4 13.6 L4 9.6 C2.4 9.4 1.4 9 1.4 7.9 C1.4 6.3 3.4 5.6 5.4 5.2 A2.9 2.9 0 0 1 8 1 Z"/></symbol>
+    <!-- rival: another hooded leader -->
+    <symbol id="riv" viewBox="0 0 16 16"><path fill-rule="evenodd" fill="currentColor" d="M8 1 C11.7 1 13.4 4.4 13.4 8.6 L14.4 15 H1.6 L2.6 8.6 C2.6 4.4 4.3 1 8 1 Z M8 5.4 C6.5 5.4 5.6 6.8 5.6 8.6 C5.6 10.4 6.5 11.6 8 11.6 C9.5 11.6 10.4 10.4 10.4 8.6 C10.4 6.8 9.5 5.4 8 5.4 Z"/></symbol>
+    <!-- becomes: what's on the left turns into what's on the right -->
+    <symbol id="arr" viewBox="0 0 16 16"><path d="M2 8 H13 M9 4 L13 8 L9 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <!-- extra turn: go round again -->
+    <symbol id="turn" viewBox="0 0 16 16"><path d="M13 8 A5 5 0 1 1 10.5 3.67" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8.6 1.6 L11.4 3.4 L9.6 6.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div id="plate">
+  <svg id="board" width="1270" height="700" viewBox="0 0 1270 700"></svg>
+  <div id="ui"></div>
+</div>
+
+<script>
+// ---------------------------------------------------------------- helpers
+const COL = { gold:'var(--gold)', red:'var(--red)', blue:'var(--blue)', green:'var(--green)' };
+const g = (id, c) => `<svg class="g" style="${c ? `--c:${COL[c] || c}` : ''}"><use href="#${id}"/></svg>`;
+const dot = c => g('dot', c);
+const n = t => `<span class="n">${t}</span>`;
+const op = t => `<span class="op">${t}</span>`;
+const sp = '<span class="gap"></span>';
+const el = (html, style, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.style.cssText = style || ''; d.innerHTML = html; document.getElementById('ui').appendChild(d); return d; };
+const svgEl = (tag, attrs, parent = document.getElementById('board')) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+const memberIcon = id => Object.values(CultIconBatches).flat().find(i => i.id === id);
+const bluePortrait = (id, size) => portrait(id, size);
+const portrait = (id, size) => { const i = memberIcon(id); return CultIcons.toSVG({ ...i, px: i.px || i.rows }, size, { title: false }).replace('<svg ', '<svg class="px" '); };
+const minion = (id, size) => CultMinions.toSVG(id, size, { title: false }).replace('<svg ', '<svg class="px" ');
+const leader = (id, accent, size) => CultLeaders.leaderSVG(id, accent, size).replace('<svg ', '<svg class="px" ');
+
+// ---------------------------------------------------------------- the wheel
+const C = { x: 344, y: 568 };
+const R = { hub: 48, iii: [56, 148], ii: [156, 248], i: [256, 356], rim: [364, 400] };
+const GUT = 8, RC = 8;                       // gutter between spaces, corner radius
+const rad = d => d * Math.PI / 180;
+const P = (r, a) => [C.x + r * Math.cos(a), C.y + r * Math.sin(a)];
+const f = p => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`;
+
+// a ring segment with straight, parallel gutters and rounded corners
+function cellPath(r0, r1, a0, a1) {
+  const h = GUT / 2;
+  const s0 = r => a0 + Math.asin(h / r), s1 = r => a1 - Math.asin(h / r);
+  const O0 = P(r1, s0(r1)), O1 = P(r1, s1(r1)), I1 = P(r0, s1(r0)), I0 = P(r0, s0(r0));
+  const along = (A, B, d) => { const L = Math.hypot(B[0] - A[0], B[1] - A[1]); return [A[0] + (B[0] - A[0]) * d / L, A[1] + (B[1] - A[1]) * d / L]; };
+  return [
+    'M', f(along(I0, O0, RC)), 'L', f(along(O0, I0, RC)),
+    'Q', f(O0), f(P(r1, s0(r1) + RC / r1)),
+    'A', r1, r1, 0, 0, 1, f(P(r1, s1(r1) - RC / r1)),
+    'Q', f(O1), f(along(O1, I1, RC)),
+    'L', f(along(I1, O1, RC)),
+    'Q', f(I1), f(P(r0, s1(r0) - RC / r0)),
+    'A', r0, r0, 0, 0, 0, f(P(r0, s0(r0) + RC / r0)),
+    'Q', f(I0), f(along(I0, O0, RC)), 'Z'].join(' ');
+}
+const bandPath = (r0, r1, a0, a1) => ['M', f(P(r1, a0)), 'A', r1, r1, 0, 0, 1, f(P(r1, a1)), 'L', f(P(r0, a1)), 'A', r0, r0, 0, 0, 0, f(P(r0, a0)), 'Z'].join(' ');
+
+const defs = svgEl('defs', {});
+defs.innerHTML = `
+  <filter id="lift" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="b"/>
+    <feFlood flood-color="#ffe9b8" flood-opacity=".55"/><feComposite in2="b" operator="in" result="glow"/>
+    <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <radialGradient id="fade" cx="${C.x}" cy="${C.y}" r="420" gradientUnits="userSpaceOnUse">
+    <stop offset=".1" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity=".25"/>
+  </radialGradient>
+  <mask id="others"><rect width="1270" height="700" fill="url(#fade)"/></mask>`;
+
+// board disc
+svgEl('circle', { cx: C.x, cy: C.y, r: R.rim[1] + 4, fill: 'var(--board)' });
+
+// quadrants: gold on top, blue right, green bottom, red left (angles in degrees, 0 = east)
+const QUADS = [
+  { id: 'gold', a: -135, focus: true },
+  { id: 'blue', a: -45 }, { id: 'green', a: 45 }, { id: 'red', a: 135 },
+];
+const others = svgEl('g', { mask: 'url(#others)', opacity: '.5' });
+for (const q of QUADS) {
+  const a0 = rad(q.a), a1 = rad(q.a + 90);
+  const parent = q.focus ? document.getElementById('board') : others;
+  // rim band: the quadrant's color, deep, engraved
+  svgEl('path', { d: bandPath(R.rim[0], R.rim[1], a0 + 0.004, a1 - 0.004), fill: `color-mix(in srgb, ${COL[q.id]} ${q.focus ? 50 : 30}%, #1a120c)` }, parent);
+  if (q.focus) svgEl('path', { d: bandPath(R.rim[0], R.rim[0] + 1, a0 + 0.004, a1 - 0.004), fill: `color-mix(in srgb, ${COL[q.id]} 80%, #fff)`, opacity: .35 }, parent);
+  if (!q.focus) {
+    const rings = [[R.i, 3], [R.ii, 2], [R.iii, 1]];
+    for (const [[r0, r1], k] of rings) for (let j = 0; j < k; j++) {
+      const b0 = a0 + (a1 - a0) * j / k, b1 = a0 + (a1 - a0) * (j + 1) / k;
+      svgEl('path', { d: cellPath(r0, r1, b0, b1), fill: 'rgba(242,232,210,.035)', stroke: 'rgba(242,232,210,.16)', 'stroke-width': 1 }, parent);
+    }
+  }
+}
+// quadrant seams on the rim
+for (const q of QUADS) { const a = rad(q.a); svgEl('line', { x1: P(R.rim[0], a)[0], y1: P(R.rim[0], a)[1], x2: P(R.rim[1] + 4, a)[0], y2: P(R.rim[1] + 4, a)[1], stroke: 'var(--table)', 'stroke-width': 4 }); }
+
+// ---------------------------------------------------------------- gold's six spaces
+const GA = -135;
+const spaces = [
+  // ring I (outer): three spaces, round I on
+  { ring: 'i', j: 0, k: 3, state: 'taken', who: 'frog', name: 'Kickback',
+    big: `${n('+3')}${dot('gold')}`, fine: `a rival gets ${n('1')}${dot('gold')}` },
+  { ring: 'i', j: 1, k: 3, state: 'open', name: 'Golden Years',
+    big: `${n('+4')}${dot('gold')}`, fine: `<span class="dim">2</span>${op('·')}<span class="now">4</span>${op('·')}<span class="dim">6</span>${sp}by round` },
+  { ring: 'i', j: 2, k: 3, state: 'taken', who: 'cactus', name: 'Intro Offer',
+    big: `${g('mem')}${n('−4')}`, fine: 'off your next member' },
+  // ring II (middle): round II on
+  { ring: 'ii', j: 0, k: 2, state: 'lit', name: 'Collect Debts',
+    big: `${n('+3')}${dot('gold')}`, fine: 'up to 3, from rivals' },
+  { ring: 'ii', j: 1, k: 2, state: 'open', name: 'Tithe',
+    big: `${n('+1')}${dot('gold')}${op('/')}${g('mem')}`, fine: 'per member you have' },
+  // ring III (center): opens in round III
+  { ring: 'iii', j: 0, k: 1, state: 'closed', name: 'Double Down',
+    big: `${n('×2')}${sp}${dot('gold')}`, fine: 'opens in round III' },
+];
+const cellLayer = svgEl('g', {});
+for (const s of spaces) {
+  const [r0, r1] = R[s.ring];
+  const a0 = rad(GA + 90 * s.j / s.k), a1 = rad(GA + 90 * (s.j + 1) / s.k);
+  const fill = { open: 'var(--paper)', lit: 'var(--paper-lit)', taken: 'var(--paper-taken)', closed: 'rgba(242,232,210,.035)' }[s.state];
+  const path = svgEl('path', { d: cellPath(r0, r1, a0, a1), fill }, cellLayer);
+  if (s.state === 'lit') {
+    path.setAttribute('filter', 'url(#lift)');
+    svgEl('path', { d: cellPath(r0, r1, a0, a1), fill: 'none', stroke: 'var(--light)', 'stroke-width': 2 }, cellLayer);
+  }
+  if (s.state === 'closed') { path.setAttribute('stroke', 'rgba(242,232,210,.22)'); path.setAttribute('stroke-width', 1); }
+  const am = (a0 + a1) / 2, rm = (r0 + r1) / 2;
+  const [x, y] = P(rm, am);
+  s.x = x; s.y = y; s.a0 = a0; s.a1 = a1;
+  const head = s.who ? `<div class="who">${minion(s.who, 32)}</div>` : `<div class="cap">${s.name}</div>`;
+  el(`${head}<div class="l">${s.big}</div><div class="fine">${s.fine}</div>`, `left:${x}px;top:${y}px`, `cc ${s.state}`);
+}
+
+// ---------------------------------------------------------------- rim rule, laid out along the arc
+(function rim() {
+  const r = (R.rim[0] + R.rim[1]) / 2;
+  const ctx = document.createElement('canvas').getContext('2d');
+  const tokens = [
+    { t: 'MOST', font: '700 12px AS', ls: 1 }, { g: 'dot' },
+    { t: '+4', font: '800 16px AS' }, { g: 'fol' },
+  ];
+  const gaps = [6, 16, 3];
+  const glyphW = 16;
+  tokens.forEach(k => { if (k.t) { ctx.font = k.font; k.w = ctx.measureText(k.t).width + (k.ls ? k.ls * (k.t.length - 1) : 0); } else k.w = glyphW; });
+  const total = tokens.reduce((s, k) => s + k.w, 0) + gaps.reduce((s, x) => s + x, 0);
+  let s = -total / 2;
+  const rimG = svgEl('g', {});
+  tokens.forEach((k, i) => {
+    const mid = s + k.w / 2;
+    const a = rad(-90) + mid / r;
+    const [x, y] = P(r, a);
+    const rot = (a * 180 / Math.PI) + 90;
+    if (k.t) {
+      const t = svgEl('text', { x, y, transform: `rotate(${rot} ${x} ${y})`, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: '#f6deb0', 'font-family': 'AS', 'font-weight': k.font.startsWith('800') ? 800 : 700, 'font-size': k.font.includes('16px') ? 16 : 12,
+        'letter-spacing': k.ls || 0 }, rimG);
+      t.textContent = k.t;
+    } else {
+      const u = svgEl('g', { transform: `translate(${x} ${y}) rotate(${rot}) translate(-8 -8)` }, rimG);
+      if (k.g === 'dot') { u.innerHTML = `<circle cx="8" cy="8" r="7" fill="#f6deb0"/><circle cx="8" cy="8" r="5.5" fill="var(--gold)"/>`; }
+      else u.innerHTML = `<use href="#fol" width="16" height="16" style="color:#f6deb0"/>`;
+    }
+    s += k.w + (gaps[i] || 0);
+  });
+  // who leads it right now: their minion stands on the rim
+    const la = rad(-90) + (total / 2 + 32) / r;
+  const [lx, ly] = P(r, la);
+  el(minion('frog', 32), `left:${lx}px;top:${ly + 15}px`, 'minion');
+})();
+
+// hub
+svgEl('circle', { cx: C.x, cy: C.y, r: R.hub, fill: 'var(--hub)', stroke: 'rgba(242,232,210,.10)', 'stroke-width': 1 });
+el(`<div class="cap" style="color:var(--cream-3);font-size:12px">Round</div><div class="n" style="font-size:28px;line-height:28px;color:var(--cream)">II</div>`,
+  `position:absolute;left:${C.x}px;top:${C.y - 8}px;transform:translate(-50%,-50%);text-align:center`);
+
+// ---------------------------------------------------------------- the lit space's hover, anchored where you point
+(function spaceHover() {
+  const s = spaces[3];
+  const w = 232, x = 32, y = 448;
+  const pop = el(`
+    <div class="m" style="font-weight:800">Collect Debts</div>
+    <div class="m" style="margin-top:4px">Take up to ${n('3')}${dot('gold')} from rivals, split however you like.</div>
+    <div class="rule"></div>
+    <div class="row s" style="justify-content:space-between;color:var(--ink-2)"><span>You'd get</span><span class="m" style="color:var(--ink)">${n('+3')}${dot('gold')}</span></div>
+    <div class="nub" style="right:20px;top:-6px"></div>`,
+    `left:${x}px;top:${y}px;width:${w}px;padding:12px 16px 12px`, 'pop');
+})();
+
+// ---------------------------------------------------------------- right column
+const RX = 784, RW = 454;
+
+// your seat
+el(`
+  <div class="row" style="gap:16px;align-items:flex-start">
+    ${leader('cactus', 'moss', 64)}
+    <div style="flex:1;min-width:0">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <div><span class="m" style="font-weight:800">You</span><span class="s" style="color:var(--cream-2);margin-left:8px">place a minion</span></div>
+        <div class="l" style="color:var(--cream)">${n('12')}${g('fol')}</div>
+      </div>
+      <div class="row m" style="margin-top:8px;gap:20px">
+        <span>${n('7')}${dot('gold')}</span><span>${n('2')}${dot('red')}</span><span style="opacity:.4">${n('0')}${dot('blue')}</span><span>${n('3')}${dot('green')}</span>
+        <span style="flex:1"></span>
+        <span class="row" style="gap:4px"><span class="s" style="color:var(--cream-3);margin-right:4px">to place</span>${minion('cactus', 32)}${minion('cactus', 32)}</span>
+      </div>
+    </div>
+  </div>`,
+  `left:${RX}px;top:32px;width:${RW}px;height:104px;padding:16px`, 'seat');
+
+// a rival's seat: what they hold, who they've recruited, what that makes each round, what they just did
+el(`
+  <div class="row" style="gap:12px">
+    ${leader('frog', 'slate', 32)}
+    <span class="m" style="font-weight:800">P3</span>
+    <span class="row m" style="gap:16px;margin-left:8px">
+      <span>${n('3')}${dot('gold')}</span><span>${n('1')}${dot('red')}</span><span>${n('4')}${dot('blue')}</span><span style="opacity:.4">${n('0')}${dot('green')}</span>
+    </span>
+    <span style="flex:1"></span>
+    <span class="m">${n('9')}${g('fol')}</span>
+  </div>
+  <div class="row" style="margin-top:12px;gap:16px;white-space:nowrap">
+    <span class="row" style="gap:4px">${['gold.coinpurse','gold.investor','gold.taxman'].map(id => portrait(id, 24)).join('')}${bluePortrait('market.curator', 24)}</span>
+    <span class="row" style="gap:8px"><span class="s" style="color:var(--cream-3)">each round</span><span class="m">${n('+3')}${dot('gold')}${sp}${n('+2')}${dot('blue')}</span></span>
+    <span style="flex:1"></span>
+    <span class="row" style="gap:8px"><span class="s" style="color:var(--cream-3)">just took</span><span class="m" style="font-weight:700">Kickback</span></span>
+  </div>`,
+  `left:${RX}px;top:152px;width:${RW}px;height:104px;padding:16px`, 'seat');
+
+// the shop: three members, the middle one under your pointer
+const shop = [
+  { id: 'gold.seed', name: 'Treasurer', c: 'gold', when: 'When recruited', eff: `${n('+1')}${dot('gold')}${op('/')}${g('mem')}`, cost: `${n('4')}${dot('gold')}`, worth: 1 },
+  { id: 'gold.prospector', name: 'Prospector', c: 'gold', when: `When a space<br>gives you ${dot('gold')}`, eff: `${n('+1')}${dot('gold')}`, cost: `${n('2')}${dot('gold')}${sp}${n('2')}${g('any')}`, worth: 1, lit: true },
+  { id: 'red.recruiter', name: 'Recruiter', c: 'red', when: 'When you recruit', eff: `${n('+1')}${dot('red')}`, cost: `${n('4')}${dot('red')}${sp}${n('4')}${g('any')}`, worth: 1 },
+];
+const CW = 140, CG = 17, CY = 484;
+shop.forEach((m, i) => {
+  const x = RX + i * (CW + CG);
+  m.x = x;
+  el(`
+    <div class="art" style="background:color-mix(in srgb, ${COL[m.c]} 16%, var(--paper))">${portrait(m.id, 48)}</div>
+    <div class="nm cap">${m.name}</div>
+    <div class="when"><span>${m.when}</span></div>
+    <div class="eff l">${m.eff}</div>
+    <div class="foot m"><span>${m.cost}</span><span>${n(m.worth)}${g('fol')}</span></div>`,
+    `left:${x}px;top:${CY}px`, `card${m.lit ? ' lit' : ''}`);
+});
+
+// the member's hover, anchored over its card
+(function memberHover() {
+  const m = shop[1];
+  const w = 320, h = 192;
+  const x = Math.round(m.x + CW / 2 - w / 2), y = CY - 16 - h;
+  el(`
+    <div class="row" style="gap:16px;align-items:flex-start">
+      <div style="width:48px;height:48px;border-radius:4px;background:color-mix(in srgb, var(--gold) 16%, var(--paper))">${portrait(m.id, 48)}</div>
+      <div style="flex:1">
+        <div class="row" style="justify-content:space-between;align-items:baseline">
+          <span class="m" style="font-weight:800">Prospector</span>
+          <span class="m">${n('1')}${g('fol')}</span>
+        </div>
+        <div class="row s" style="justify-content:space-between;color:var(--ink-2);margin-top:4px">
+          <span>costs ${n('2')}${dot('gold')}${sp}${n('2')}${g('any')}</span>
+        </div>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="m">Whenever a space gives you ${dot('gold')}, you get ${n('1')} more.</div>
+    <div class="rule"></div>
+    <div class="s" style="color:var(--ink-2)">Golden Years would give you ${n('5')}${dot('gold')} instead of ${n('4')}${dot('gold')}.</div>
+    <div class="nub" style="left:${w / 2 - 6}px;bottom:-6px"></div>`,
+    `left:${x}px;top:${y}px;width:${w}px;height:${h}px;padding:16px`, 'pop');
+})();
+
+// ---------------------------------------------------------------- the alphabet (plate caption, not game UI)
+el(`<span class="cap" style="color:var(--cream-3)">Cults · visual language · plate 1</span><span class="s" style="color:var(--cream-3);margin-left:16px">Round II, your turn. You're pointing at Collect Debts; Prospector's card is open.</span>`, 'left:32px;top:24px', 'note');
+el(`
+  <span>${dot('gold')}${dot('red')}${dot('blue')}${dot('green')} resources</span>
+  <span>${g('any')} any</span>
+  <span style="color:var(--cream)">${g('fol')}<i style="font-style:normal;color:var(--cream-2)">follower</i></span>
+  <span style="color:var(--cream)">${g('mem')}<i style="font-style:normal;color:var(--cream-2)">member</i></span>
+  <span style="color:var(--cream)">${g('min')}<i style="font-style:normal;color:var(--cream-2)">minion</i></span>
+  <span style="color:var(--cream)">${g('riv')}<i style="font-style:normal;color:var(--cream-2)">rival</i></span>
+  <span style="color:var(--cream)">${g('arr')}<i style="font-style:normal;color:var(--cream-2)">becomes</i></span>
+  <span><b class="n" style="color:var(--cream);font-size:16px;line-height:14px">/</b> per</span>
+  <span><b class="n" style="color:var(--cream);font-size:16px;line-height:14px">×</b> times</span>
+  <span style="color:var(--cream)">${g('turn')}<i style="font-style:normal;color:var(--cream-2)">extra turn</i></span>`,
+  'left:32px;top:56px', 'key s');
+</script>
+</body>
+</html>

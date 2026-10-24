@@ -1,0 +1,31 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+ RUN  v4.0.9 /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons/.v4-wt/check-189b064-50566
+
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ src/test/v4/ui/panel-words.test.jsx (11 tests) 546ms
+     ✓ "You'd get" says the likely and the best case, or the best pick, or the mix, in numbers  536ms
+ ✓ src/test/v4/ui/trade.test.jsx (4 tests) 161ms
+ ✓ src/test/engine/v4/interactions.test.js (45 tests) 103ms
+ ✓ src/test/engine/v4/cards-echo.test.js (33 tests) 71ms
+ ✓ src/test/engine/v4/stale-choices.test.js (5 tests | 1 skipped) 2939ms
+     ✓ buying or taking away a card a queued choice offers never throws and is never offered again  2918ms
+ ✓ src/test/engine/v4/cards-red.test.js (16 tests) 55ms
+ ✓ src/test/engine/v4/green-redesign-pressure.test.js (19 tests) 44ms
+ ✓ src/test/v4/ui/hover-honesty.test.jsx (6 tests) 41ms
+ ✓ src/test/engine/v4/use-anytime.test.js (4 tests) 12ms
+ ✓ src/test/engine/v4/red.test.js (35 tests) 28ms
+ ✓ src/test/engine/v4/red-redesign.test.js (19 tests) 24ms
+ ✓ src/test/engine/v4/extra-hand-transfer.test.js (5 tests) 11ms
+ ✓ src/test/engine/v4/even-swap.test.js (6 tests) 10ms
+ ✓ src/test/engine/v4/green-bait-trading.test.js (3 tests) 13ms
+ ✓ src/test/engine/v4/action-recruit-bonuses.test.js (3 tests) 11ms
+ ✓ src/test/engine/v4/now-members.test.js (3 tests) 14ms
+
+ Test Files  16 passed (16)
+      Tests  216 passed | 1 skipped (217)
+   Start at  21:02:39
+   Duration  5.35s (transform 992ms, setup 682ms, collect 2.28s, tests 4.08s, environment 1.77s, prepare 106ms)
+

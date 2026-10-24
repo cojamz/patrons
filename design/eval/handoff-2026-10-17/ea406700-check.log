@@ -1,0 +1,82 @@
+box at start: load 2.8 on 8 CPUs, 0 vitest run(s) and 0 browser(s) already going
+verdict run on commit ea40670, exported to /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons/.v4-wt/check-ea40670-14799
+quick run (V4_GAMES=fast); each stage's full output: /tmp/v4-check-logs/2026-10-17T16-53-21-444Z-14799
+
+── PASS production build (4s, done at   12s) ──
+… (/tmp/v4-check-logs/2026-10-17T16-53-21-444Z-14799/production_build.log)
+             199.93 kB │ gzip:  69.90 kB
+.v4-build/assets/index.esm-DH8C4Ikr.js               251.85 kB │ gzip:  57.18 kB
+.v4-build/assets/Glyphs-BK9DqV1s.js                  367.09 kB │ gzip:  95.53 kB
+.v4-build/assets/App-Bm_uY14p.js                     456.69 kB │ gzip: 121.93 kB
+✓ built in 3.79s
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+── PASS unit tests (144.2s, done at  152s) ──
+… (/tmp/v4-check-logs/2026-10-17T16-53-21-444Z-14799/unit_tests.log)
+ests) 50ms
+ ✓ src/test/v4/ui/hoverDelay.test.jsx (4 tests) 42ms
+ ✓ src/test/engine/v4/cards-purple.test.js (18 tests) 38ms
+ ✓ src/test/engine/v4/cards-trading.test.js (31 tests) 59ms
+ ✓ src/test/engine/v4/cards-benders.test.js (12 tests) 37ms
+ ✓ src/test/v4/ui/doppel-text.test.jsx (3 tests) 37ms
+ ✓ src/test/engine/v4/red.test.js (35 tests) 39ms
+ ✓ src/test/v4/ui/swap-animation.test.js (1 test) 34ms
+ ✓ src/test/engine/v4/oct17-choice-audit.test.js (7 tests) 32ms
+ ✓ src/test/engine/v4/audit/gold-red-echo.test.js (9 tests) 28ms
+ ✓ src/test/engine/v4/audit/msp-audit.test.js (8 tests) 22ms
+ ✓ src/test/v4/ui/online-table-sync.test.jsx (3 tests) 34ms
+ ✓ src/test/v4/ui/preview-fallback.test.jsx (6 tests) 22ms
+ ✓ src/test/engine/v4/rival-answers.test.js (7 tests) 19ms
+ ✓ src/test/engine/v4/pay-leads.test.js (8 tests) 16ms
+ ✓ src/test/engine/v4/use-anytime.test.js (4 tests) 15ms
+ ✓ src/test/engine/v4/audit/yellow-magenta-white-audit.test.js (6 tests) 17ms
+ ✓ src/test/v4/ui/why-rows.test.js (4 tests) 18ms
+ ✓ src/test/v4/ui/chain-sequence.test.js (6 tests) 11ms
+ ✓ src/test/engine/v4/night-owl.test.js (9 tests) 15ms
+ ✓ src/test/engine/v4/even-swap.test.js (9 tests) 12ms
+ ✓ src/test/engine/v4/magenta-batch.test.js (5 tests) 17ms
+ ✓ src/test/engine/v4/payment.test.js (7 tests) 13ms
+ ✓ src/test/engine/v4/oct17-explicit.test.js (8 tests) 14ms
+ ✓ src/test/v4/ui/hover-intent.test.js (4 tests) 13ms
+ ✓ src/test/engine/v4/space-targets.test.js (6 tests) 13ms
+ ✓ src/test/v4/ui/roundstart.test.js (2 tests) 14ms
+ ✓ src/test/v4/ui/member-origin.test.js (1 test) 9ms
+ ✓ src/test/engine/v4/discount-sources.test.js (3 tests) 9ms
+ ✓ src/test/engine/v4/now-members.test.js (3 tests) 11ms
+ ✓ src/test/engine/v4/member-weight.test.js (5 tests) 10ms
+ ✓ src/test/engine/v4/action-recruit-bonuses.test.js (3 tests) 7ms
+ ✓ src/test/engine/v4/payment-protect.test.js (6 tests) 10ms
+ ✓ src/test/engine/v4/straggler-twice.test.js (1 test) 6ms
+ ✓ src/test/v4/perf.test.js (3 tests) 2ms
+ ✓ src/test/v4/ui/colors.test.js (1 test) 4ms
+ ✓ src/test/v4/session/bot-level.test.js (2 tests) 4ms
+ ✓ src/test/engine/v4/release-used.test.js (1 test) 2ms
+ ✓ src/test/v4/ui/shop-steady.test.js (4 tests) 2ms
+ ✓ src/test/v4/ui/shop-steal-plan.test.js (2 tests) 2ms
+ ✓ src/test/v4/ui/copy-rule.test.js (1 test) 2ms
+
+ Test Files  138 passed (138)
+      Tests  1238 passed | 1 skipped (1239)
+   Start at  12:53:29
+   Duration  143.86s (transform 3.03s, setup 5.76s, collect 24.31s, tests 210.83s, environment 30.58s, prepare 1.16s)
+
+── FAIL e2e hotseat.mjs (247s, done at  259s) ──
+the seat-0 region moved between setup and place (62,304,296,178 -> 62,304,296,142) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t450.183 h130.0 top478.2, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-2 region moved between setup and place (62,490,296,130 -> 62,478,296,130) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t450.183 h130.0 top478.2, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-0 region moved between setup and place (62,304,296,178 -> 62,304,296,142) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t426 h130.0 top454.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-2 region moved between setup and place (62,490,296,130 -> 62,454,296,130) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t426 h130.0 top454.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-0 region moved between setup and pay (62,304,296,178 -> 62,304,296,142) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t426 h130.0 top454.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-2 region moved between setup and pay (62,490,296,130 -> 62,454,296,130) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t426 h130.0 top454.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-0 region moved between setup and choose (62,304,296,178 -> 62,304,296,142) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t426 h130.0 top454.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-2 region moved between setup and choose (62,490,296,130 -> 62,454,296,130) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t426 h130.0 top454.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-0 region moved between setup and buy (62,304,296,178 -> 62,304,296,142) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t426 h130.0 top454.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+the seat-2 region moved between setup and buy (62,490,296,130 -> 62,454,296,130) [was seat-0 y276px t276 h178.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y462px t462 h130.0 top490.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0; now seat-0 y276px t276 h142.0 top304.0, seat-1 y0px t0 h130.0 top28.0, seat-2 y426px t426 h130.0 top454.0, seat-3 y138px t138 h130.0 top166.0 | column 664.0]
+run: Error: game did not finish in 4 minutes
+    at file:///Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons/.v4-wt/check-ea40670-14799/e2e/v4/hotseat.mjs:163:41
+FAIL hotseat
+
+── v4 check (quick) ──
+PASS  production build  (4s, from 7.7s)
+PASS  unit tests  (144.2s, from 7.7s)
+FAIL  e2e hotseat.mjs  (247s, from 12s)
+total 259.1s · quick · V4_GAMES=fast · verdict on commit ea40670 · history /tmp/v4-check-slots/runs.jsonl

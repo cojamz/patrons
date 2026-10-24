@@ -1,0 +1,432 @@
+/* The laptop composition from 1200px up (design pod, 2026-10-15; the comparison is in design/eval/design-pod/layout.md).
+   Cory: "too much prime real estate was given to the log." Three columns, each with one job and each running the full
+   height: who (the chairs in turn order, the story of the turns since yours under them, then the turn being told), where
+   (the wheel, as large as the height allows), and what to buy (the deck and the members, then the followers: Cory's
+   "slim strip beside the wheel"). No strip runs under the wheel, so nothing squeezes it.
+   Narrower laptops keep lamp.css's grid (a chair needs ~300px; the wheel would shrink); phones keep their stack. */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt{
+    --col-l:320px;--col-r:clamp(308px, 24vw, 370px);--col-gap:16px;
+    --col-top:20px; /* the chairs start on the same line as the follower buys (which sit under their label) */
+    --turn-dock:since; /* GameScreen's turn card docks under the story of the turns */
+    grid-template-columns:var(--col-l) minmax(0,1fr) var(--col-r);
+    /* the question gets room for two lines (the buy step's, beside Release… and Pass, wraps at this width): the wheel is
+       bound by its width here, so the taller row costs it nothing */
+    grid-template-rows:72px minmax(0,1fr);
+    grid-template-areas:"seats prompt shop" "seats wheel shop";
+    column-gap:var(--col-gap);row-gap:6px;padding:8px 18px
+  }
+  /* the chairs stack from the column's top (GameScreen reads --seats-align and writes --seats-end, their foot) */
+  .app.game.lt > .lt-snake{grid-area:seats;--seats-align:start;margin-top:var(--col-top)}
+  .app.game.lt > .lt-seat{margin-top:var(--col-top)}
+  /* the members' row (live panel r1, G4: "+N more" hid members, so "Most members" couldn't be counted): the count
+     first, then the figures at the sprites' own 24px, two rows deep in a 50px row (the rules are at the file's foot) */
+  .app.game.lt > .lt-since{grid-area:seats;align-self:start;margin:calc(var(--col-top) + var(--seats-end, 0px) + 20px) 0 0 44px;
+    max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px)}
+  /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */
+  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px - var(--turn-h, 112px))}
+
+  /* the shop column: the follower buys first (three fixed offers, always whole: Cory, "too hidden"), then the members,
+     the deck heading them like a card, three to a row; the member grid takes whatever height is left, so nothing in
+     the column is ever cut off */
+  /* the column never clips: its grid shrinks to fit, and a lit card's or tile's glow at the column's edge stays whole */
+  .app.game.lt > .lt-shop{grid-area:shop;align-self:stretch;overflow:visible}
+  .app.game.lt .lt-shop-cards{flex-direction:column;justify-content:flex-start;gap:12px;height:100%}
+  .app.game.lt .lt-rates{flex:none;order:-1;position:relative}
+  /* Keep the no-buy action beside the follower heading instead of reserving an empty 54px row below the buys.
+     Its heading slot stays reserved while hidden, so entering the buy step never moves the member cards. */
+  .app.game.lt .lt-rates-head{height:24px;flex-direction:row;align-items:baseline;gap:8px;padding-right:0}
+  .app.game.lt .lt-rates .lt-done{position:static;width:100%;height:44px;min-height:44px;margin-top:8px;padding:0 12px;font-size:18px}
+  .app.game.lt .lt-rates-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:52px;gap:6px}
+  .app.game.lt .lt-shop-main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+  .app.game.lt .lt-shop-body{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,150px));align-content:start;gap:8px}
+  .app.game.lt .lt-shop-body > .lt-cards{display:contents}
+  /* cards grow toward the plate's portrait shape; the picture's band takes the extra height (and gives it back first
+     on a short screen) */
+  .app.game.lt .lt-card.card{height:auto;min-height:0}
+  .app.game.lt .lt-card .art{flex:1 1 auto;height:auto;min-height:36px}
+  .app.game.lt .lt-deck{height:auto;min-height:0;flex:none}
+
+  /* the turn card now owns the column's foot: an error stands at the foot of the wheel instead (above everything), and an
+     online room's code at the top of the chairs' column */
+  .lt > .error{left:50%;right:auto;bottom:12px;translate:-50% 0;z-index:45}
+  .lt > .room{top:4px;bottom:auto;left:62px}
+}
+/* Large screens (from 1600×880): the wheel grew with the window and the side columns didn't (design pod queue, 09:00:
+   at 1920×1080 the chairs filled half their column and read small beside a 1000px wheel). The 1270×700 composition
+   scales whole: the columns, the prompt, the chairs, the story, the turn card and the shop zoom by one step (--gz), and
+   the grid's tracks grow by the same step. Steps, not a smooth factor, so a resize never re-lays the shop's cards a pixel
+   at a time. Hover cards and flights live on the page, outside the zoom, and place themselves from what they measure, so
+   they land where things are drawn (lane 8, 2026-10-21). */
+@media (min-width:1600px) and (min-height:880px){
+  .app.game.lt{--gz:1.25;--col-l:calc(320px * var(--gz));--col-r:calc(340px * var(--gz));--col-gap:calc(16px * var(--gz));
+    grid-template-rows:calc(72px * var(--gz)) minmax(0,1fr);padding:calc(8px * var(--gz)) calc(18px * var(--gz))}
+  .app.game.lt > .lt-prompt,.app.game.lt > .lt-snake,.app.game.lt > .lt-seat,.app.game.lt > .lt-since,.app.game.lt > .lt-shop,.app.game.lt > .turn-card{zoom:var(--gz)}
+}
+@media (min-width:1780px) and (min-height:980px){ .app.game.lt{--gz:1.4} }
+@media (min-width:2030px) and (min-height:1120px){ .app.game.lt{--gz:1.6} }
+@media (min-width:2540px) and (min-height:1400px){ .app.game.lt{--gz:2} }
+/* a short wide laptop (1270×700): four chairs reach ~575px, and the story under them had ~70px (one line, under an
+   "N earlier"), and while a turn card was up the card covered even its heading (lane 8, 2026-10-21). The chairs start
+   higher (their heights: seat.css), and the story starts closer under them: two whole turns once the card folds, and
+   the heading and Log stay in view above the card while it's up */
+@media (min-width:1200px) and (min-height:500px) and (max-height:799px){
+  .app.game.lt{--col-top:2px}
+  .app.game.lt > .lt-since{margin-top:calc(var(--col-top) + var(--seats-end, 0px) + 6px);max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 6px)}
+  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 6px - var(--turn-h, 112px))}
+}
+/* setup (w3b #5; Cory: "the starting-resource pick must be an obvious call to action"): the pick stands at the wheel's
+   centre, where the eye lands, as one compact row: it covers only the inner rings, locked until rounds II and III, never a
+   ring-I space you'll take nor a rim (layout gate l6). Sized from the wheel's region (container units), so it fits the
+   inner rings at every laptop width. */
+.lt-prompt .setup-order{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%;font:500 11px/16px var(--sans);letter-spacing:0;text-transform:none;color:var(--cream-2)}
+.setup-order-row{display:flex;align-items:baseline;gap:8px;min-width:0}
+.setup-order-label{flex:none;width:76px;text-align:right;color:var(--cream-3)}
+.setup-order-names{display:flex;align-items:baseline;min-width:0;flex:1;gap:3px}
+.setup-order-step{display:flex;align-items:baseline;gap:3px;min-width:0}
+.setup-order-step[data-self]{flex-shrink:0}
+.setup-order-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.setup-order-name[data-current]{color:var(--cream);text-decoration:underline;text-underline-offset:3px}
+.setup-order-arrow,.setup-order-tail{flex:none;color:var(--cream-3)}
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:50%;top:50%;right:auto;bottom:auto;translate:-50% -50%;
+    width:50cqmin;max-width:300px;padding:8px 10px;gap:4px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{text-align:center;font-size:var(--s);line-height:18px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{padding:4px 0;row-gap:2px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{height:22px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .tk-plus{display:none}
+}
+/* From 1200px the pick leaves the wheel for the foot of the chairs' column, empty until the turns begin (blind panel: at
+   the centre it hid the 8 middle and 4 inner spaces, and stood over the shop's member cards, just when the rulebook says
+   to pick toward a member). It sits under the chairs, where the resource goes, still lamp-lit; the wheel and the shop
+   stay whole and readable, and their hover cards open over it, never under it. */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:auto;top:auto;right:calc(100% + var(--col-gap, 18px));bottom:12px;translate:none;
+    width:calc(var(--col-l, 340px) - 44px);max-width:none;padding:10px 12px 12px;gap:8px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{font-size:18px;line-height:24px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{padding:8px 0;row-gap:4px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{height:28px}
+}
+@media (min-width:861px) and (min-height:500px){
+  /* the story clips its oldest lines first, never the newest (the whole log is one tap away), and SinceStrip folds
+     them into "N earlier" whole: at every laptop width, wherever the story stands (the narrow band clipped the newest) */
+  .app.game.lt > .lt-since .since-list{min-height:0;overflow:hidden;justify-content:flex-end}
+  .app.game.lt > .lt-since .since-list > li{flex:none}
+}
+
+/* Narrower laptops (861–1199px) keep lamp.css's grid, with two fixes: the follower buys move to the right column (it
+   held only the story of the turns, so the member strip gets the full width and all ten cards show, down to ~74px
+   each, long names breaking at their seam); the prompt row gets room for a two-line question. The turn card docks under
+   the story, above the follower buys. */
+@media (min-width:861px) and (max-width:1199px) and (min-height:500px){
+  .app.game.lt{--turn-dock:since;grid-template-rows:68px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px);
+    /* the chairs run the full height, beside the shop strip (lane 8, 2026-10-21: four chairs need ~560px; above a 210px
+       strip they had 370–470, so the strip covered the third and fourth chairs at 900×600 and the "You" chair at
+       1100×700). Like the wide layout: "who" is one full-height column; the strip sits under the wheel and the story */
+    grid-template-areas:"seats prompt side" "seats wheel side" "seats wheel side" "seats shop shop"}
+  /* the follower buys stand at the column's foot, 182px tall (their label 20, two rows of 52 and a gap of 8, then
+     "Done, no buy" 36 and its 8 above, 6 below); the story starts 8px down and stops 8px above them, or 8px above the
+     turn card docked 12px over them */
+  .app.game.lt > .lt-since{align-self:start;margin-top:8px;max-height:calc(100% - 198px)}
+  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - 202px - var(--turn-h, 112px))}
+  /* the shop's wrappers give up their boxes (and, having none, never claim to clip) */
+  .app.game.lt > .lt-shop,.app.game.lt > .lt-shop > .lt-shop-cards{display:contents;overflow:visible}
+  .app.game.lt .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}
+  .app.game.lt .lt-rates{grid-column:3;grid-row:1 / 4;align-self:end;position:relative;z-index:3;padding-bottom:6px}
+  .app.game.lt .lt-rates-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:52px;gap:6px}
+  .app.game.lt .lt-cards{grid-template-columns:repeat(8,minmax(0,1fr))}
+  .lt[data-yours="1"][data-phase="place"] .lt-shop-main,.lt[data-yours="1"][data-phase="place"] .lt-rates{opacity:1}
+  .lt[data-phase="reckon"] .lt-shop-main,.lt[data-phase="reckon"] .lt-rates{opacity:.55}
+}
+/* the narrowest laptops (861–1049px): ten cards of ~76px; their footers take the room the margins had */
+@media (min-width:861px) and (max-width:1049px) and (min-height:500px){
+  .app.game.lt .lt-shop-body{gap:5px}
+  .app.game.lt .lt-shop-body .lt-deck{flex-basis:48px}
+  .app.game.lt .lt-cards{gap:5px}
+  .app.game.lt .lt-card .ft{margin:auto 3px 0}
+  .app.game.lt .lt-card .lt-res{margin-right:3px}
+}
+/* the lamp at the starting pick (w2b #25: "at a squint the eye lands on the wheel"): the pick holds the decision, so the
+   wheel steps back like it does in your buy step, and the members you're choosing toward stay readable */
+/* (the stage only: the picker lives inside the wheel's region and keeps its light) */
+.lt.in-setup[data-yours="1"] .lt-wheel .stage{filter:brightness(.7) saturate(.8)}
+.lt.in-setup[data-yours="1"] .lt-shop{opacity:1}
+/* the log (w2b #48: "covers a third of the board"): a modest drawer out of the left column, where the story of the turns
+   and its Log button live, as wide as that column; the wheel and the shop stay in view, under a light shade */
+@media (min-width:861px) and (min-height:500px){
+  .lt-drawer-back{background:rgba(10,7,5,.22)}
+  .lt-drawer{left:0;right:auto;width:min(var(--col-l, 340px), 100vw);border-radius:0 12px 12px 0;box-shadow:12px 0 32px rgba(0,0,0,.45)}
+}
+
+/* the wheel turns (w2a #42): its knurled edge (Wheel.jsx), and a hand that grabs it */
+.lt .stage svg.wheel-paper .knurl circle{stroke:var(--cream,#f2e8d2);stroke-opacity:.22;stroke-width:4;stroke-dasharray:1.2 3.2}
+@media (pointer:fine){ .lt .lt-wheel .stage{cursor:grab} .lt .lt-wheel .stage:active{cursor:grabbing} }
+/* while a round is scored, the counts stand in the gutter beside each chair (Reckoning.jsx), and the turn words, which
+   mean nothing once the round is scored, step out */
+.lt[data-phase="reckon"] .lt-seat .cs-turn{visibility:hidden}
+/* phones: your starting pick stands at the screen's foot (it sat below the fold, under the wheel, with nothing saying
+   to scroll); the table scrolls behind it as usual */
+@media (max-width:860px), (max-height:499px){
+  .app.game.lt.in-setup[data-yours="1"] > .lt-wheel > .prompt.choice.setup{position:fixed;left:8px;right:8px;bottom:8px;z-index:30;margin:0;
+    box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.35),0 14px 34px rgba(0,0,0,.6)}
+  /* only the pick rides along: the members for sale are in the shop under the wheel (a scroll away), and a second copy
+     here covered half the wheel */
+  .app.game.lt.in-setup[data-yours="1"] > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
+}
+
+/* ---------- the screens before the game ---------- */
+/* Setup, Custom table (w2b #32: "Back and Start overlap the tile grid until you scroll"): the twelve spheres don't fit
+   under the seats at a laptop's height. The table stands beside the seats instead: who plays on the left, the table on
+   the right, Back and Start under both; nothing scrolls. Every table mode keeps this one width (blind panel: Custom
+   jumped the page from 520 to 1000px, moving every control under the pointer). */
+@media (min-width:1100px) and (min-height:500px){
+  .app.narrow:has(> .dialog.page > .table-pick.editable){max-width:1000px}
+  .app.narrow > .dialog.page:has(> .table-pick.editable){max-width:1000px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-rows:repeat(9,auto) 1fr;column-gap:32px;row-gap:12px;align-items:center;align-content:start;overflow:visible;max-height:none;
+    min-height:530px} /* Custom's height: Back and Start stay put too when the twelve spheres open */
+  .app.narrow > .dialog.page:has(> .table-pick.editable) > *{grid-column:1}
+  .app.narrow > .dialog.page:has(> .table-pick.editable) > .table-pick{grid-column:2;grid-row:1 / 11;align-self:start;padding-left:32px;margin-left:-16px;
+    box-shadow:inset 1px 0 0 var(--hair, rgba(242,232,210,.10))}
+  .app.narrow > .dialog.page:has(> .table-pick.editable) > .row-btns:last-child{grid-column:1 / -1;grid-row:11;position:static;margin:4px 0 0;padding:0;background:none}
+  .app.narrow > .dialog.page:has(> .table-pick.editable) .sphere-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* Classic and Random 4 fill the same column: each sphere on its own line, with what it does under its name */
+  .app.narrow > .dialog.page > .table-pick.editable .table-chips{flex-direction:column;align-items:stretch;gap:12px;margin-top:4px}
+  .app.narrow > .dialog.page > .table-pick.editable .table-chip{display:grid;grid-template-columns:10px minmax(0,1fr);column-gap:8px;row-gap:2px;padding:0}
+  .app.narrow > .dialog.page > .table-pick.editable .table-chip .chip-line{display:block;grid-column:2;font-weight:400;font-size:var(--fs-1);line-height:1.3;color:var(--muted)}
+  .app.narrow > .dialog.page > .table-pick.editable .table-chips > .btn{align-self:flex-start}
+}
+.table-chip .chip-line{display:none}
+/* a fifth sphere with four picked: dim like a tile you can't take, but it answers a click with a quiet note by the count */
+.sphere.over{opacity:.72} /* with four picked, a click swaps it in for the last one picked (its hover says so) */
+.table-pick .link-btn{background:none;border:0;padding:0 2px;font:inherit;color:var(--cream-2,#b9a98c);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
+.table-pick .link-btn:hover{color:var(--cream)}
+.table-pick .link-btn:focus-visible{outline:2px solid rgba(var(--lamp),.9);outline-offset:2px;border-radius:3px}
+.table-pick .full-note{color:var(--muted)}
+
+/* Home (the first screen Cory sees): the brand, then the choices, each group with air (the brand sat 8px over its first
+   button, everything 8 apart). One rhythm on the 4px grid: 32 between the brand and the choices, 16 between choices; the
+   version steps out of the title/tagline pair to sit quietly under it. */
+.app.home{gap:32px}
+.app.home .menu{gap:16px}
+.app.home .hero .version{order:3;margin-top:2px}
+/* last game's results is a look back, not a way into play (w3a A39: the big pill above "Play on this device" pushed it
+   down 66px after a game, and a click on Play's old spot reopened the results): it stands last, a quiet line beside "How
+   to play", so Play and Resume keep their places whether or not a game was played before */
+.app.home .menu .last-results{order:10;align-self:center;min-height:0;padding:5px 16px;background:none;border-color:var(--rim);box-shadow:none;color:var(--muted);font-size:var(--fs-2)}
+.app.home .menu .last-results small{font-size:11px}
+.app.home .menu .rules-link{order:11}
+
+/* Results (laptop): the four cults stand in one row under the table, so the whole result fits the screen at 700px (the
+   second row of cards fell below the fold) */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt > .main.over > .over-cults{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+
+/* the header's answers ("You've placed this turn — recruit, buy followers or pass") wrap like the question, onto the
+   row's second line, instead of the old pill's one-line ellipsis (v4.css .say.nudge): with Release… and Undo beside
+   it, the text spilled 58–152px out of its box */
+.lt-prompt .status .say.nudge,.lt-prompt .status .say.info{white-space:normal;text-wrap:balance;overflow:visible;text-overflow:clip}
+/* narrower laptops: Undo says just "Undo" (its label and hover still say what), so the answer keeps its room */
+@media (min-width:861px) and (max-width:1199px){ .lt-prompt .undo .undo-word{display:none} }
+/* the Reckoning's rule sentence breaks evenly (it left "ties." alone on its second line) */
+.lt-reckon .reckon-head .reckon-counts{text-wrap:balance}
+/* a steal or gift (w2b #5: "the lit pills cover the follower count, exactly when you choose whom to hit by score"):
+   while a chair's stacks are picks, they stand closer (each pill brings its own padding), so the row ends before the
+   chair's total */
+.lt > .lt-seat .lt-cult-seat.picking .cs-res{gap:3px}
+.lt > .lt-seat .lt-cult-seat .cs-stack.pick-on,.lt > .lt-seat .lt-cult-seat .cs-stack.pick-off{padding:3px 5px 3px 3px;gap:2px}
+/* a chair you can pick from is lit at its own edge, not by a second outline drawn inside it (a frame inside a frame) */
+@media (min-width:861px) and (min-height:500px){
+  /* when its stacks or members are the picks: quiet, the lit pills or figures are the one glow */
+  .lt > .lt-seat:has(> .lt-cult-seat.picking.pick-lit:not(.pick-seat)){background:color-mix(in srgb,var(--seat, #221a15) 95%,rgb(var(--lamp)));box-shadow:inset 0 0 0 1px rgba(var(--lamp),.3)}
+  /* when the chair itself is the answer (a gift, Kickback: "click a rival's cult"), the chair is what you act on: it
+     wears the lit edge and glow a space you can take wears (w3b: "rival seats get a thin outline only, weak CTA") */
+  .lt > .lt-seat:has(> .lt-cult-seat.picking.pick-lit.pick-seat){background:color-mix(in srgb,var(--seat, #221a15) 86%,rgb(var(--lamp)));
+    box-shadow:inset 0 0 0 2px rgba(var(--lamp),.85),0 0 22px 2px rgba(var(--lamp),.35);cursor:pointer}
+  .lt > .lt-seat:has(> .lt-cult-seat.picking.pick-lit.pick-seat):hover{box-shadow:inset 0 0 0 2px #fffaf0,0 0 26px 4px rgba(var(--lamp),.5)}
+  .lt > .lt-seat > .lt-cult-seat.picking.pick-lit{background:none;box-shadow:none}
+}
+/* the round summary's counts: each name with its number, the number heavier, and clear air between players ("P2 2  P4 2"
+   read as "P22 P42", w3b) */
+.re-counts{gap:2px 16px}
+.re-counts .n{font-weight:800;margin-left:2px}
+/* a taken panel of two or more lines: the minion stands over its last line, as Cory placed it ("over line 2"), so the
+   first words read above it (w3b: "the minion sits on the space text, 'Steal 1 each' half-covered"; #30 for the inner
+   rings). One-line panels keep it under their gain (lamp.css). Every ring alike: lifted above the words, a ring-I minion
+   ran past its panel's edge once panels showed their own line 3 (spaces.mjs s9, 0-1 on red/yellow/market/thieves). */
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit):not([data-panel^="1.0.0"]) .face .worker-fig{top:auto;bottom:-3px;transform:translate(-50%,0)}
+/* a steal that pays the thief's Robin Hood on this seat: its second row says so in the lamp's ink */
+.lt > .lt-seat .cs-bonus,.lt > .lt-seat .cs-bonus small{color:var(--lamp-ink)}
+.lt > .lt-seat .cs-bonus .cs-inc{display:inline-flex;align-items:center;gap:4px}
+.lt > .lt-seat .cs-bonus .follower-mark{color:var(--lamp-ink)}
+/* the Reckoning's card at the wheel's centre (Reckoning.jsx at-mid): narrow enough to stay inside every rim */
+.lt-reckon .reckon-head.at-mid{bottom:auto;transform:translate(-50%,-50%);width:max-content;max-width:min(var(--mid-w, 440px), 440px);box-sizing:border-box}
+.lt-reckon .reckon-head.at-mid .reckon-counts{max-width:100%}
+
+/* a zero is a hollow ring in its own color (w3a A4, w3b #40: a dimmed dot went grey, like silver or white): "hollow"
+   always means none; the number stays quiet */
+.cs-stack.zero .res-glyph path{fill:none}
+.cs-stack.zero .res-glyph .any-cross{display:none}
+.cs-stack.zero .res-glyph .res-ring{stroke:currentColor;stroke-width:1.25}
+/* a zero is clearly dimmer than any resource (final panel A#72: white's filled pearl and an empty cream ring read alike) */
+.lt > .lt-seat .cs-stack.zero,.lt-cult-seat .cs-stack.zero{opacity:.42}
+.lt > .lt-seat .cs-stack.zero .num,.lt-cult-seat .cs-stack.zero .num{opacity:.6}
+/* the white rim is light: its words and prize mark are dark ink on it */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule[data-rim-res="white"]{fill:#2b2018}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark[data-rim-res="white"]{color:#2b2018}
+
+/* A13 (w3a): on a rival's turn nothing in the shop is yours to act on, so it steps back (the follower tiles' cream was
+   the brightest thing on screen); what you could afford stays a step above the rest, quietly. Every shop step-back is
+   opacity over the dark table, never a filter: rivals' cards deal in under it, and a filter re-rasterized the column
+   every frame they moved (perf, 2026-10-15) */
+.lt[data-yours="0"][data-phase]:not([data-phase="over"]):not([data-phase="reckon"]) .lt-shop-main,
+.lt[data-yours="0"][data-phase]:not([data-phase="over"]):not([data-phase="reckon"]) .lt-rates{opacity:1}
+
+/* A42 (w3a): Pass (final: it ends your turn) and Undo (forgiving) were twin ghost pills. Pass keeps the firm outlined
+   pill; Undo is a quiet text button with its arrow, a step back in color, so the two never read as a pair */
+.lt-prompt .undo{border:0;background:none;padding:0 6px;color:var(--cream-3);text-decoration:underline dotted;text-underline-offset:3px;text-decoration-color:rgba(243,230,200,.35)}
+.lt-prompt .undo:hover{color:var(--cream);text-decoration-color:currentColor}
+.lt-prompt .pr-actions .pass{border-color:rgba(243,230,200,.65);color:var(--cream)}
+
+/* what a chair's members make each round (w3a A16): the gains under an 11px caps label, so the block takes a figure or
+   two of the row instead of four, and the figures fill the rest (CultSeat measures how many fit). The Robin Hood mark in
+   a steal pick stands the same way. It stays in that one spot on every seat, yours too: yours used to move up beside
+   your name when it fit, so it jumped between rounds (blind testers, 2026-10-15). */
+.lt-cult-seat .cs-gains{display:inline-flex;align-items:center;gap:5px}
+/* phones: a chair's column is ~120px, so "each round +3● +2◐" ran off its edge (detail designer, 08:05): the gains drop
+   under the label when they don't fit beside it */
+@media (max-width:860px), (max-height:499px){
+  .lt-cult-seat .cs-build .cs-income{flex-wrap:wrap;row-gap:0;min-width:0;max-width:100%}
+}
+
+/* players are their emoji, never a tint or a dot (w3b #41: P3's pink read as magenta and P4's lavender as purple, "P3
+   Help Yourself reads like a magenta effect"; the grammar: a dot only ever means a resource). A name in running text
+   takes the text's own color; the dot that stood beside a name in a caption or a hot-seat "P3's turn" goes. The
+   player's color stays where it marks a thing, never words: a minion, the bar beside a turn's card, a count's ring. */
+.lt .lt-since .since-line .who{color:var(--cream)}
+.lt .lt-wheel > .prompt.choice .turn-of,.app.game.lt .lt-wheel > .prompt.choice .turn-of{color:var(--cream)}
+.lt .turn-of i,.lt .caption i{display:none}
+.roundend .re-p .nm,.re-p .nm,.results .win > span:first-child{color:inherit}
+/* taken since your last turn (w3a A44, w3b #31): the dotted edge, the third state of a space, was read as selectable,
+   or not told from "taken earlier" at a squint, three panels running (w2a #30 made it quieter and explained it in the
+   space's hover). It goes: the story of the turns lists those moves and lights each one's space on the wheel when
+   pointed at, and the space's hover still says "since your last turn". A space is open or taken, nothing between. */
+.lt .stage .slot .fresh-ring,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{display:none}
+
+/* your turn's line under the headline wraps to a second line rather than cutting a name mid-word (w3b #46: "…or use
+   Lottery Wi…", "release a mem…"); the prompt row holds two (72px on a wide laptop, 68 below) */
+@media (min-width:861px) and (min-height:500px){
+  .lt-prompt .steps-row .say-sub{white-space:normal;text-wrap:balance;line-height:17px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+}
+
+/* a shop card's name and worth (w3a A25/A26, w3b #28): the name stays the plate's 11px caps label but in ink, not grey
+   (it read as the card's quietest element); a long single word sets with no tracking, so "DOPPELGANGER" fits its line
+   whole on a laptop and breaks at its seam only on the narrowest cards; the worth stands apart from the price behind a
+   hairline, so "4● 2◐ │ 1👤" never reads as one price */
+.lt-card .nm{color:color-mix(in srgb,var(--pl-ink,#2b2018) 80%,var(--pl-ink-2,#6e5c49))}
+.lt-card .nm[data-long]{letter-spacing:0}
+.lt-card .ft .val{display:inline-flex;align-items:center;gap:2px;padding-left:5px;margin-left:auto;box-shadow:inset 1px 0 0 var(--hair-ink,rgba(43,32,24,.16))}
+
+/* a member you can't afford steps back without going dark (w3a A55: in round I nine of ten cards faded and the shop read
+   as a disabled panel); the label counts what you can afford only when there is something ("0 you can afford" said what
+   the fade already says) */
+.lt-shop .lt-card.dim{opacity:.94;filter:none}
+
+/* a miss beside a chair's lit picks: they pulse once (CultSeat .pick-nudge) */
+.lt-cult-seat.pick-nudge .cs-stack.pick-on,.lt-cult-seat.pick-nudge .cs-member.pick-on{animation:pick-nudge .6s ease-out}
+@keyframes pick-nudge{0%{transform:none}35%{transform:scale(1.18);box-shadow:0 0 0 2px #fffaf0,0 0 18px 6px rgba(var(--lamp),.9)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){ .lt-cult-seat.pick-nudge .cs-stack.pick-on,.lt-cult-seat.pick-nudge .cs-member.pick-on{animation:none;box-shadow:0 0 0 2px #fffaf0,0 0 18px 6px rgba(var(--lamp),.9)} }
+
+/* the Reckoning is the wheel's moment: the shop steps well back on every laptop (the narrow band already did; on a wide
+   one the cards and the 2→1 tile stayed the brightest things on screen while the rims were scored). Keyed on the shop's
+   own region, not the table root (perf, 2026-10-15) */
+@media (min-width:861px) and (min-height:500px){
+  .lt-shop-cards[data-phase="reckon"] .lt-shop-main,.lt-shop-cards[data-phase="reckon"] .lt-rates{opacity:.55}
+}
+
+/* the story's "N earlier" in its header, when the room holds only the newest line (SinceStrip `bare`) */
+.lt-since .since-head .since-more.in-head{margin-left:auto;font:inherit;font-size:11px;letter-spacing:.06em;color:var(--cream-3);background:none;border:0;padding:2px 4px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
+
+
+/* a member with no sphere (a guest from no quadrant on the table) stands on no colored ground: its grey halo read as a
+   state nobody explained (w3b #53, "an unexplained gray halo") */
+.cs-member[data-sphere="colorless"] .aura{display:none}
+
+/* a card's worth is quiet when it's the usual 1 (wave-4 B #39: "as loud as the cost; on the 12 cards worth 1 it's
+   noise"); worth 2 and up keeps the ink and weight, since there it's the point (Crew) */
+.lt-card .ft .val[data-worth="1"]{color:var(--pl-ink-3,#a39078)}
+.lt-card .ft .val[data-worth="1"] b{font-weight:600}
+.lt-card .ft .val[data-worth="1"] .follower-mark{opacity:.7}
+
+/* the turn card steps down to the body size (wave-4 B #14: "the toast is the biggest type in the left column"): its
+   head at 14 like the story's lines, so the members above are what the eye finds; it reads as a card by its paper */
+.app.game.lt > .turn-card{padding:7px 11px 8px;gap:1px}
+.app.game.lt > .turn-card .tc-head{font-size:var(--s);font-weight:700;line-height:1.25}
+/* "each round" with three or four gains (wave-4 B #35: "+1● +1● +1● +1○" pushed into the member row): two to a line
+   under the label, so the block stays a figure and a half wide */
+
+/* a rim with keyboard focus (wave-4 B #34: after an arrow-key spin the green rim kept a gold outline that "looks like a
+   highlight"): the focus ring is a cream dashed hairline, never the lamp's gold, which means "lit" on this table */
+.lt .stage svg.rim-layer .rim-hit:focus-visible{stroke:var(--cream,#f2e8d2);stroke-width:1.5;stroke-dasharray:4 4;stroke-opacity:.75;fill:transparent}
+
+/* the wheel's print waits for its font (Wheel.jsx fonts-wait, wave-4 B #32): laid out once, in the font it's set in */
+.lt .stage.fonts-wait .slot .face,.lt .stage.fonts-wait svg .rim-rule,.lt .stage.fonts-wait svg .rim-mark,.lt .stage.fonts-wait svg .rim-dot{visibility:hidden}
+
+
+/* the starting pick is the call to action: no hover card ever covers it (the final panel, S#11: a space's card opened
+   over "Pick 1 of 2"); a card that reaches it slides under it. (From 1200px it stands off the wheel and the shop, so
+   their cards open over nothing of it.) */
+@media (min-width:861px) and (max-width:1199px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{z-index:61}
+}
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{z-index:5}
+}
+
+/* your buy step: you've placed, so the wheel steps back and only the buys are bright (final panel S#27: "the spaces
+   stay bright cream"). Opacity on the stage over the dark table, keyed on the wheel's own region, never a filter */
+.lt-wheel[data-step="buy"] .stage{opacity:.8;transition:opacity .2s}
+.lt-cult-seat .cs-more{white-space:nowrap;cursor:help}
+
+
+
+
+/* an empty stack's hollow ring stays visible on the dark seat in every color (live panel r1: purple's and magenta's
+   rings all but vanished): the ring is its color lifted toward cream, and the dim is lighter; the number stays quiet */
+.lt > .lt-seat .cs-stack.zero,.lt-cult-seat .cs-stack.zero{opacity:.62}
+.cs-stack.zero .res-glyph .res-ring{stroke:color-mix(in srgb,currentColor 55%,var(--cream,#f2e8d2));stroke-width:1.5}
+.lt > .lt-seat .cs-stack.zero .num,.lt-cult-seat .cs-stack.zero .num{opacity:.5}
+
+/* what a use just did ("extra turn", "+7 ●") rises over the row above it: it stands on its own dark ground, so it never
+   runs into a count under it (live panel r1: "extra turn1") */
+.lt-cult-seat .cs-member .mu-result{background:rgba(25,19,16,.94);border-radius:6px;padding:0 6px;box-shadow:0 0 0 1px rgba(243,230,200,.18)}
+
+/* keyboard focus on the follower buys and "Done, no buy" (live panel r1: invisible): a lit tile already wears the lamp's
+   ring, so focus is a cream ring outside it, with a dark gap between, never the lamp's gold (the rims' rule, wave-4 B #34) */
+.lt .lt-rates .lt-rate:focus-visible,.lt .lt-rates .lt-done:focus-visible{outline:2px solid #fffaf0;outline-offset:5px}
+/* a seat's head and your own members take the same cream ring */
+.lt-cult-seat .cs-head:focus-visible,.lt-cult-seat .cs-member .fig:focus-visible{outline:2px solid #fffaf0;outline-offset:2px;border-radius:6px}
+
+/* ---------- your starting pick, in your own chair (Cory, 2026-10-15) ----------
+   "I looked around for 10s before I realized that's what I needed to do. It could just show it IN the player card."
+   On a laptop the pick stands in your chair, lit, where your members will stand; the panel at the column's foot goes
+   (a rival's pick shows as its dot landing on their chair). Phones keep the docked pick at the screen's foot. */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{display:none}
+  .app.game.lt > .lt-seat.mine .lt-cult-seat.setup-pick > .cs-crowd,.app.game.lt > .lt-seat.mine .lt-cult-seat.setup-pick > .cs-build{display:none}
+  .app.game.lt > .lt-seat.mine:has(> .lt-cult-seat.setup-pick){box-shadow:inset 0 0 0 2px rgba(var(--lamp),.85),0 0 22px 2px rgba(var(--lamp),.35)}
+  .lt-cult-seat .cs-setup{display:flex;flex-direction:column;gap:4px;align-self:center;min-width:0}
+  .lt-cult-seat .cs-setup-say{font-size:14px;line-height:16px;font-weight:700;color:var(--lamp-ink,#ffd98c)}
+  .lt-cult-seat .cs-setup-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .lt-cult-seat .cs-setup-token{min-width:0;display:inline-flex;flex-direction:row;flex-wrap:nowrap;row-gap:0;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 8px;
+    border-radius:8px;border:0;cursor:pointer;background:var(--paper,#f3e6c8);color:var(--paper-ink,#2b2018);font:600 14px/1 var(--sans);
+    box-shadow:0 0 0 1px rgba(var(--lamp),.9),0 0 12px 2px rgba(var(--lamp),.45);transition:transform .1s}
+  .lt-cult-seat .cs-setup-token:hover{transform:translateY(-2px);background:#fff7e6}
+  .lt-cult-seat .cs-setup-token:active{transform:translateY(1px)}
+  .lt-cult-seat .cs-setup.wait .cs-setup-say{color:var(--cream-2,#cdbf9f);font-weight:600}
+  .lt-cult-seat .cs-setup.wait .cs-setup-token{opacity:.18;pointer-events:none}
+  .lt-cult-seat .cs-setup-token:focus-visible{outline:2px solid #fffaf0;outline-offset:3px}
+  .lt-cult-seat .cs-setup-token .tk-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:16px;text-transform:capitalize}
+  .lt-cult-seat .cs-setup-token .res-glyph{flex:none;width:16px;height:16px}
+}
+@media (max-width:860px), (max-height:499px){ .lt-cult-seat .cs-setup{display:none} }

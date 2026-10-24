@@ -1,0 +1,237 @@
+// Yellow: abundance. Gather every color, keep them in balance, and score on full sets.
+// A full set is one of each color on the table. Most full sets at round end takes the ring's followers;
+// Ties all score. The tension: the 6-follower buy eats 3 colors, which breaks the sets you're holding.
+const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
+
+const Y = 'yellow';
+const colors = ctx => ctx.state.resources;
+const others = ctx => colors(ctx).filter(c => c !== Y);
+/** Full sets: one of each color on the table. */
+export const setsOf = (ctx, p) => Math.min(...colors(ctx).map(c => p.res[c] || 0));
+const held = (ctx, p) => colors(ctx).filter(c => (p.res[c] || 0) > 0);
+const missing = (ctx, p) => colors(ctx).filter(c => !(p.res[c] > 0));
+/** The colors p holds the fewest of (ties: all of them). */
+const fewest = (ctx, p) => { const low = Math.min(...colors(ctx).map(c => p.res[c] || 0)); return colors(ctx).filter(c => (p.res[c] || 0) === low); };
+const total = (ctx, p) => colors(ctx).reduce((a, c) => a + (p.res[c] || 0), 0);
+// a member's color, or null when its sphere isn't on this table (a guest member leaning to an absent sphere)
+const colorOf = (ctx, card) => { const r = ctx.quadrant(ctx.defOf(card).quadrant).resource; return ctx.state.resources.includes(r) ? r : null; };
+const eachColor = (ctx, p, n, opts) => { for (const c of colors(ctx)) ctx.gain(p, c, n, opts); };
+
+export default {
+  id: 'yellow',
+  name: 'Yellow',
+  resource: Y,
+  scoring: {
+    label: 'Most full sets',
+    // A full set is one of each color; every player tied for most scores.
+    score: (ctx, p) => setsOf(ctx, p),
+    counts: 'full sets: how many times you hold one of each color on the table',
+  },
+
+  actions: [
+    {
+      key: 'harvest', ring: 1, name: 'Harvest', text: '+1 yellow, and +1 more per other color you hold.',
+      estimate: (ctx, p) => harvestAmount(ctx, p),
+      resolve(ctx, p) { ctx.gain(p, Y, harvestAmount(ctx, p), { fromAction: true }); },
+    },
+    {
+      // the fewest, not "none of" (Claude under Cory's go-with-your-gut, from the dead-window audit): it printed Gardener's
+      // text. Raising every lowest color always adds one full set.
+      // the fewest colors get a flat +1 and only the yellow scales (Cory, 2026-10-22 playtest: +2 on each of 4 tied
+      // colors paid 8 in one action in round II; "Maybe + yellow scales and the rest dont")
+      key: 'bloom', ring: 1, name: 'Top Up', text: '+1 of each color you hold the fewest of. +1 yellow in round I, +2 in round II, +3 in round III.', // Cory, 2026-10-23
+      byRound: { lead: '+1 of each color you hold the fewest of.', lines: ['+1 yellow', '+2 yellow', '+3 yellow'] },
+      estimate: (ctx, p) => fewest(ctx, p).length + ctx.state.round + 0.5,
+      resolve(ctx, p) {
+        const list = fewest(ctx, p), n = ctx.state.round;
+        // a tie pays each tied color: the result says so, not only the hover (panel tester C)
+        if (list.length > 1) ctx.log(`${p.name}'s Top Up: ${list.slice(0, -1).join(', ')} and ${list[list.length - 1]} tie for your fewest (${p.res[list[0]] || 0} each), so +1 of each.`);
+        // yellow lands as one gain (Farmer adds 1 per gain, not per part of the space)
+        for (const c of list) if (c !== Y) ctx.gain(p, c, 1, { fromAction: true });
+        const y = n + (list.includes(Y) ? 1 : 0);
+        ctx.gain(p, Y, y, { fromAction: true });
+        ctx.log(`${p.name}'s Top Up: ${[...list.filter(c => c !== Y).map(c => `+1 ${c}`), `+${y} yellow`].join(', ')}.`);
+      },
+    },
+    {
+      key: 'transmute', ring: 1, name: 'Trade Seeds', text: '+2 yellow, then swap up to 3 of your resources for other colors.', // Cory, 2026-10-15: the gain first, then the swap (was swap, then +1)
+      estimate: (ctx, p) => 2 + Math.min(3, Math.max(0, Math.floor(total(ctx, p) / colors(ctx).length) - setsOf(ctx, p))) * 0.8,
+      resolve(ctx, p) { ctx.gain(p, Y, 2, { fromAction: true }); transmuteStep(ctx, p, { left: Math.min(3, total(ctx, p)), done: 0 }); },
+    },
+    {
+      key: 'prism', ring: 2, name: 'Branch Out', text: '+1 of each other color per 3 yellow you have (you keep the yellow).',
+      estimate: (ctx, p) => 3 * Math.floor(p.res[Y] / 3),
+      resolve(ctx, p) {
+        const k = Math.floor(p.res[Y] / 3);
+        for (const c of others(ctx)) ctx.gain(p, c, k, { fromAction: true });
+        ctx.log(k ? `${p.name}'s Branch Out: +${k} of each other color.` : `${p.name}'s Branch Out had too little yellow.`);
+      },
+    },
+    {
+      key: 'gather', ring: 2, name: 'Potluck', text: '+1 per member you have, in that member’s color.',
+      estimate: (ctx, p) => ctx.memberCount(p),
+      resolve(ctx, p) {
+        for (const qid of ctx.state.quadrants) {
+          const n = ctx.countMembersOfColor(p, qid);
+          if (n) ctx.gain(p, ctx.quadrant(qid).resource, n, { fromAction: true });
+        }
+      },
+    },
+    {
+      key: 'flourish', ring: 3, name: 'Bumper Crop', text: '+1 of each other color per full set you hold.',
+      estimate: (ctx, p) => 3 * setsOf(ctx, p),
+      resolve(ctx, p) {
+        const k = setsOf(ctx, p);
+        for (const c of others(ctx)) ctx.gain(p, c, k, { fromAction: true });
+        ctx.log(k ? `${p.name} flourishes: +${k} of each other color.` : `${p.name} had no full set to flourish.`);
+      },
+    },
+  ],
+
+  handlers: {
+    swap(ctx, p, value, data) {
+      if (value === 'done') { finishTransmute(ctx, p, data); return; }
+      const [from, to] = value;
+      p.res[from] -= 1; p.res[to] += 1;
+      // each swap said as it happens, so the log never lags the coins (Cory, 2026-10-22: every change and why)
+      ctx.log(`${p.name} swapped 1 ${from} for 1 ${to} (Trade Seeds).`);
+      const tally = { ...(data.tally || {}) };
+      tally[`${from}>${to}`] = (tally[`${from}>${to}`] || 0) + 1;
+      transmuteStep(ctx, p, { left: data.left - 1, done: data.done + 1, tally });
+    },
+    sow(ctx, p, x, data) {
+      if (!x) return;
+      const card = ctx.card(data.uid);
+      p.res[Y] -= x; card.sown = (card.sown || 0) + x;
+      ctx.log(`${p.name}'s Sower plants ${x} yellow.`);
+    },
+  },
+
+  members: [
+    m('gardener', 'Gardener', 2, 0, 'Now and at round start: +1 of each color you have none of.', { now: true,
+      onRoundStart(ctx, owner) { for (const c of missing(ctx, owner)) ctx.gain(owner, c, 1); },
+    }),
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
+    m('peddler', 'Peddler', 4, 4, 'Now and at round start: +1 of each color.', { now: true,
+      onRoundStart(ctx, owner) { for (const c of colors(ctx)) ctx.gain(owner, c, 1); },
+    }),
+    m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2 or more of another color at once, +1 yellow.', {
+      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== Y && g.n >= 2) owner.res[Y] += 1; },
+    }),
+    m('admirer', 'Admirer', 3, 1, 'Whenever a rival recruits a member of a color you have none of, +1 of that color.', {
+      onAnyRecruit(ctx, owner, card, by, recruited) {
+        const c = colorOf(ctx, recruited);
+        if (c && by !== owner && !(owner.res[c] > 0)) ctx.gain(owner, c, 1);
+      },
+    }),
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4
+    m('gobetween', 'Go-Between', 2, 2,'Whenever you recruit a non-yellow member, +1 of its color.', {
+      onAnyRecruit(ctx, owner, card, by, recruited) {
+        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow' && colorOf(ctx, recruited)) ctx.gain(owner, colorOf(ctx, recruited), 1);
+      },
+    }),
+    m('dyer', 'Dyer', 4, 2, 'Round end: +1 yellow per color you hold.', {
+      onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
+    }),
+    m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. Now and at round start: if no rival has fewer followers than you (not counting this card), +1 of each color.', { now: true, f: 2,
+      onRoundStart(ctx, owner, card) {
+        // Exclude this physical card, including its value when a Doppelganger copies it.
+        const mine = ctx.followers(owner) - Math.max(2, card.def.f);
+        if (ctx.rivals(owner).every(o => ctx.followers(o) >= mine)) eachColor(ctx, owner, 1);
+      },
+    }),
+    m('sower', 'Sower', 1, 1, 'Round start: plant any of your yellow. Round end: gain that many of each other color.', {
+      onRoundStartLate(ctx, owner, card) {
+        const y = owner.res[Y];
+        if (!y) return;
+        const amounts = [...new Set([0, Math.floor(y / 4), Math.floor(y / 2), Math.floor((3 * y) / 4), y])];
+        ctx.choose(owner, `Sower: plant how much yellow? (you have ${y})`, amounts.map(x => ({
+          id: `amount:${x}`, label: x === 0 ? 'None' : x === y ? `All ${x}` : `${x}`, kind: 'amount', value: x, ...(x ? { spend: { yellow: x } } : {}), hint: x === Math.floor(y / 2) ? 1 : 0,
+        })), 'yellow.sow', { uid: card.uid });
+      },
+      onRoundEnd(ctx, owner, card) {
+        const x = card.sown || 0;
+        if (!x) return;
+        card.sown = 0;
+        for (const c of others(ctx)) owner.res[c] += x;
+        ctx.log(`${owner.name}'s Sower harvests +${x} of each other color.`);
+      },
+      // leaving mid-round (released, stolen, swapped): the planted yellow comes back, unharvested (as Investor's gold does)
+      onLeave(ctx, owner, card) {
+        const x = card.sown || 0;
+        if (x) { owner.res[Y] += x; card.sown = 0; ctx.log(`${owner.name}'s Sower leaves: ${x} planted yellow comes back.`); }
+      },
+    }),
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4 (the most one pass moves)
+    m('harmonist', 'Harmonist', 4, 0,'Game end: +1 follower per full set you hold.', {
+      onGameEnd: (ctx, owner) => setsOf(ctx, owner),
+    }),
+    m('rainmaker', 'Rainmaker', 3, 1, 'Once per game: raise each of your colors to match your yellow.', {
+      activate: 'game',
+      onActivate(ctx, owner) {
+        const top = owner.res[Y];
+        let got = 0;
+        for (const c of others(ctx)) { const d = Math.max(0, top - owner.res[c]); got += d; ctx.gain(owner, c, d); }
+        ctx.log(`${owner.name} used Rainmaker: every color up to ${top} (+${got}).`);
+      },
+      // bots: a big catch-up in round III, or anything at all on their last buy of the game (they left it unused
+      // in 4 of 6 holdings, dead-window audit 2026-10-14)
+      botActivate: (ctx, owner) => {
+        const gain = others(ctx).reduce((s, c) => s + Math.max(0, owner.res[Y] - owner.res[c]), 0);
+        const last = ctx.state.round === 3 && owner.left === 0;
+        return (ctx.state.round === 3 && gain >= 6) || (last && gain > 0);
+      },
+    }),
+    m('pilgrim', 'Pilgrim', 2, 2, 'When recruited: +1 of each color.', {
+      onRecruited(ctx, owner) { eachColor(ctx, owner, 1); },
+    }),
+    m('farmer', 'Farmer', 4, 2, 'Whenever an action gains you yellow, +1 yellow.', {
+      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === Y && g.n > 0) owner.res[Y] += 1; },
+    }),
+    m('weaver', 'Weaver', 4, 2, 'Whenever you buy 5 or more followers, +1 of each color.', {
+      onBuyFollowers(ctx, owner, card, buyer, tier) {
+        if (buyer === owner && tier?.get >= 5) eachColor(ctx, owner, 1);
+      },
+    }),
+    m('explorer', 'Explorer', 4, 4, 'Whenever you take a space outside Yellow, +1 yellow.', {
+      afterAction(ctx, owner, card, qid) { if (qid !== 'yellow') ctx.gain(owner, Y, 1); },
+    }),
+    // was Feastmaker 6+4 (Cory, 2026-10-18): Chefs, a little cheaper, counts as 2 members (worth 2 followers, as Twins)
+    m('chefs', 'Chefs', 6, 3, 'Worth 2 followers. Once per game: +1 of each color in round I, +2 in round II, +3 in round III.', {
+      f: 2,
+      byRound: { lead: 'Worth 2 followers. Once per game:', lines: ['+1 of each color', '+2 of each color', '+3 of each color'] },
+      activate: 'game',
+      onActivate(ctx, owner) {
+        const r = ctx.state.round;
+        eachColor(ctx, owner, r);
+        ctx.log(`${owner.name} used Chefs: +${r} of each color.`);
+      },
+      botActivate: ctx => ctx.state.round === 3,
+    }),
+  ],
+};
+
+function harvestAmount(ctx, p) {
+  return 1 + others(ctx).filter(c => p.res[c] > 0).length;
+}
+
+// Trade Seeds is +2 yellow, then up to 3 one-for-one swaps, with Done at any time.
+function transmuteStep(ctx, p, data) {
+  const cs = colors(ctx);
+  const opts = [];
+  if (data.left > 0) {
+    for (const a of cs) if (p.res[a] > 0) for (const b of cs) if (b !== a) {
+      opts.push({
+        id: `swap:${a}:${b}`, label: `1 ${a} → 1 ${b}`, kind: 'swap', value: [a, b], spend: { [a]: 1, [b]: -1 },
+        // bots even out their colors: a swap helps when it moves from a pile 2+ bigger
+        hint: p.res[a] - p.res[b] - 1,
+      });
+    }
+  }
+  if (!opts.length) { finishTransmute(ctx, p, data); return; }
+  opts.push({ id: 'done', label: data.done ? 'Done' : 'Swap nothing', kind: 'done', value: 'done', hint: 0.5 });
+  ctx.choose(p, `Trade Seeds: swap one for one, or stop (${data.done} swapped so far)`, opts, 'yellow.swap', data);
+}
+function finishTransmute(ctx, p, data) {
+  if (!data.done) ctx.log(`${p.name} swapped nothing.`);
+}

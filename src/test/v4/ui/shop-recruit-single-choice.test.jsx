@@ -1,0 +1,21 @@
+import { afterEach, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
+import GameScreen from '../../../v4/game/GameScreen.jsx';
+import { table } from '../../engine/v4/cards-helpers-b.js';
+import { take } from '../../engine/v4/helpers.js';
+afterEach(() => { cleanup(); localStorage.clear(); });
+it('Bury picks on the enlarged shop cards, one click, one answer', async () => {
+  const base = table(['gold', 'red', 'market', 'echo'], { round: 2, res: [{gold:20,red:20,blue:20,green:20},{}], shop:['market.recruit','gold.banker'] });
+  const state = take(base, 'market.pricecheck');
+  expect(state.pending.kind).toBe('choose');
+  expect(state.pending.options.every(o => o.target && state.shop.includes(o.target.uid))).toBe(true);
+  const submit = vi.fn(() => Promise.resolve(state));
+  const session = { getState: () => state, subscribe: () => () => {}, mySeats:[0], info:{mode:'local'}, submit, canUndo:()=>false };
+  const {container} = render(<GameScreen session={session} />);
+  expect(container.querySelector('.gift-card[data-gift="recruit"]')).toBeNull();
+  expect(container.querySelectorAll('.lt-shop .lt-pick-ability')).toHaveLength(state.shop.length);
+  const one = container.querySelector(`button[data-option="${state.pending.options[0].id}"]`);
+  expect(one).not.toBeNull();
+  await act(async()=>fireEvent.click(one));
+  expect(submit).toHaveBeenCalledTimes(1);
+});

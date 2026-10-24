@@ -1,0 +1,11 @@
+
+ RUN  v4.0.9 /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ src/test/engine/v4/extra-hand-transfer.test.js (5 tests) 9ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  18:20:28
+   Duration  370ms (transform 88ms, setup 34ms, collect 115ms, tests 9ms, environment 0ms, prepare 4ms)
+

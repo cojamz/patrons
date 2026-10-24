@@ -1,0 +1,35 @@
+# Card audit, culled deck (2026-10-15)
+
+Three auditors read every space and dealt member against its text and design/rulebook.md, and proved each mismatch with a scripted engine test (src/test/engine/v4/audit/). Branch claude/project-thread-y12vs0.
+
+## Engine bugs, fixed on the branch
+1. Green copies: a choice made in the buy step (Understudy's copy, a Doppelganger's payment) was written onto the chip of the space just taken, so a rival's Echo of it got extra or became "do it yourself". The window now closes on the buy step that follows the space (echo.js windowOpen).
+2. Tribute Band with nothing to copy spent its once-per-game use. It now keeps it, like Stunt Double.
+3. Sponsor's log said "saves 2" even on a free Volunteer, and discounts said "−4" when they took 2 off. Each note now says what it actually took off (core.js).
+4. Speculator with Underdog logged "gold doubled to 9" from 3. It now says "+6 gold, now 9".
+5. Toast and Rising Tide with Grand Host logged the undoubled amount ("+6" when 12 arrived). They now log what came.
+6. Raider says "up to 3" but always took the most. The player now picks how many; bots take the most.
+7. Robin Hood (and Collect Debts) against two rivals tied for most followers: the first theft's +1 made the thief the leader, so the second victim no longer counted. The leaders are now fixed as they stood when the steal began.
+
+## Engine bugs that needed a call (Cory, 21:16: all as proposed; 8–11 built, 12 left)
+8. Sweet Talk, "swap any of your silver for one other color": the engine offers only half or all. Either offer every amount, or the text becomes "swap half or all of your silver".
+9. Bookkeeper, "when you place your last minion of a round": it pays before the space acts, so an Overtime last minion pays for 3 and the real 4th pays nothing; with Night Owl it depends on recruit order. The fix moves its payout after the turn's buy (Cory's call).
+10. Lamplighter, "+1 purple per minion you get this round (3/4/5)": always pays 3/4/5, so Extra Hand's 6th minion pays nothing. Pay per minion, or the text says "+3/+4/+5 purple".
+11. Prospector, "whenever an action gains you gold, +1 more": Collect Debts across two rivals pays it twice. Fix: one gain at the end of the steal (touches every steal's order).
+12. Open Door recruiting Understudy: Understudy's copy lands on Open Door's chip. Rare (Understudy costs 6).
+
+## Wording (for the words fixer)
+13. Night Owl, Overtime, Go-Getter: an extra turn needs a free space, and with 4 players round I has none. Rulebook line: "An extra turn only happens while the board has a space to spare; with 4 players, round I has none."
+14. Show Off: "half the cost of your priciest member (rounded down)".
+15. Overseer: "gain half your purple, rounded down (at most 4)".
+16. Grand Host: "Silver spaces you take give you twice the silver."
+17. Late Bloomer: recruiting it while tied for fewest pays nothing, since it counts itself. "...if you have the fewest followers, counting this one (ties count)".
+18. The 8-for-6 buy is one shared stock, not 2 per player. Rulebook: "the table has 2 per player (8 with four players), first come, first served."
+19. Sticky Fingers and Desperado only grow steals from spaces: "Your steals from spaces take 1 more resource." / "...your steals from spaces take double."
+20. Raider isn't a follower buy (Tax Collector, Bulk Buyer, Weaver and Extortionist don't fire): "Once per game: take up to 3 followers from the leader, paying them 1 white each."
+21. Guest members whose color isn't on the table have no color, so Potluck, Go-Between and Admirer skip them. Rulebook: "A guest member whose color isn't on the table has no color: it brings nothing to cards that pay 'its color'."
+22. Cutpurse skips a rival who is lying low: "...from the richest rival you can steal from".
+23. Shake Down: the holder's payment is taken from their biggest piles without asking, which can cost a lead. Their prompt should name the colors ("pay 4 (2 red, 2 gold) to keep Crew?") or let them choose.
+24. Copies give what the space printed, not the taker's member extras. Rulebook: "you get what the space itself gave its taker, not what their members added."
+25. Doppelganger also takes the copied member's followers: "becomes a copy of one of your other members (its effect and its followers)."
+26. Open House reads the printed cost: "a face-up member with a printed cost of 4 or less". Treasurer: "your member count (counting this one)".

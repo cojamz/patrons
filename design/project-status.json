@@ -1,0 +1,63 @@
+{
+  "live": "v0.8.9 \u2014 Straggler selection",
+  "liveCommit": "eab7757cab1bff5150e4e4514dd9a136e011a80c",
+  "work": [
+    {
+      "id": "straggler-selection",
+      "name": "Straggler destinations",
+      "owner": "Root",
+      "status": "Shipped",
+      "label": "Live",
+      "scope": "Wheel unobstructed; hover/tap action details; phone Move here; Stay put/Escape",
+      "evidence": "24 focused checks and production build; six public desktop/phone flows",
+      "next": "Cory playtest"
+    },
+    {
+      "id": "magenta-actions",
+      "name": "Six Magenta actions",
+      "owner": "Root +3 helper lanes",
+      "status": "Shipped",
+      "label": "Live",
+      "scope": "Scaling theft/safety/followers, occupied theft, half pile, ransom\u22645, member taking",
+      "evidence": "88 focused checks; production build; all14 actual public desktop/phone action scenes",
+      "next": "Cory playtest"
+    },
+    {
+      "id": "magenta-theft",
+      "name": "Theft rules and Bodyguard",
+      "owner": "Root + checks/UI",
+      "status": "Shipped",
+      "label": "Live",
+      "scope": "Original colors; split among rivals; modifiers once overall; full theft protection",
+      "evidence": "Independent amounts, copy/resume/protection and direct color flights; public contest still matches",
+      "next": "Cory playtest"
+    }
+  ],
+  "next": [
+    {
+      "name": "Magenta members and color",
+      "next": "Design deck and replacement color/name with Cory."
+    },
+    {
+      "name": "Remaining UI and test backlog",
+      "next": "General motion, precise wheel labels/phone crowding, round summary; migrate historical test expectations."
+    }
+  ],
+  "releaseSummary": "v0.8.9 live \u00b7 Clear Straggler destinations \u00b7 Inspect before moving",
+  "upNext": [
+    {
+      "source": "Cory / design",
+      "name": "Magenta member deck",
+      "summary": "Actions live; no unapproved member overhaul. Color/name remains open.",
+      "doneWhen": "Cory chooses effects/prices; implemented, checked and shipped."
+    },
+    {
+      "source": "Existing audits",
+      "name": "Motion, wording and legacy checks",
+      "summary": "General motion audit and narrow-phone label crowding remain; six old UI failures reproduced on prior release.",
+      "doneWhen": "Scoped fixes verified and shipped; historical tests aligned to current rules."
+    }
+  ],
+  "batchStatus": "Shipped \u2014 ready to test",
+  "batchNote": "24 focused checks/build; six actual public desktop/phone flows verified"
+}

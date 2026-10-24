@@ -1,0 +1,12 @@
+
+ RUN  v4.0.9 /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons/.v4-wt/check-c387ebd-80782
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ src/test/engine/v4/cards-thieves.test.js (29 tests) 105ms
+ ✓ src/test/engine/v4/own-color-contests.test.js (10 tests) 12ms
+
+ Test Files  2 passed (2)
+      Tests  39 passed (39)
+   Start at  18:54:36
+   Duration  997ms (transform 653ms, setup 193ms, collect 861ms, tests 116ms, environment 0ms, prepare 18ms)
+

@@ -1,0 +1,16 @@
+
+ RUN  v4.0.9 /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons/.v4-wt/check-68e9a5d-53995
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ src/test/engine/v4/member-weight.test.js (5 tests) 12ms
+ ✓ src/test/engine/v4/own-color-contests.test.js (9 tests) 10ms
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ src/test/v4/ui/score-arrival.test.jsx (1 test) 271ms
+
+ Test Files  3 passed (3)
+      Tests  15 passed (15)
+   Start at  21:17:44
+   Duration  2.85s (transform 1.52s, setup 198ms, collect 2.21s, tests 293ms, environment 628ms, prepare 24ms)
+

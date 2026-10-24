@@ -1,0 +1,637 @@
+/* The Lamplit Table (approved by Cory, 2026-10-14; design/prototypes/vision/). Loaded after v4.css.
+   Theme tokens for every screen, then the game screen's fixed regions, the paper wheel, the prompt and the overlays.
+   Region contract (shared with UI-B): .lt > .lt-prompt | .lt-wheel | .lt-seat-0..3 (the four chairs: 0 is you,
+   bottom left; then clockwise) | .lt-shop (a slim strip), each with data-region; .lt[data-phase] moves the lamp, never
+   the furniture. */
+
+/* ---------- the plate's face: Alegreya Sans 500/700/800, from local files (never a remote URL) ---------- */
+@font-face{font-family:'Alegreya Sans';src:url(./fonts/as-500.woff2) format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:'Alegreya Sans';src:url(./fonts/as-700.woff2) format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:'Alegreya Sans';src:url(./fonts/as-800.woff2) format('woff2');font-weight:800;font-display:swap}
+
+/* ---------- tokens: walnut, cream paper, muted inks, Alegreya ---------- */
+:root{
+  --walnut:#1d1611; --walnut-2:#271d16; --walnut-3:#33271e;
+  --table:var(--walnut); --table-2:var(--walnut-2); --table-3:var(--walnut-3);
+  --rim:#4a3b2d; --ink:#f3e6c8; --muted:#b09f82;
+  --cream:#f3e6c8; --cream-2:#cbb894; --cream-3:#8f7f66;
+  --paper:#f4ebd7; --paper-2:#eadfc4; --paper-3:#d9caa8; --paper-edge:#c2ae86;
+  --paper-ink:#2a1f17; --paper-ink-2:#5f4e3d; --paper-ink-3:#8a7760;
+  --lamp:255,206,140; --lamp-ink:#ffd99a;
+  /* quadrant inks: muted, printed */
+  --gold:#d49b27; --red:#c4533f; --blue:#4a80b8; --green:#3f9467; --magenta:#b2386c; --thieves:var(--magenta);
+  --silver:#94a3b2; /* steel with a coin edge, clearly not white, not a grey zero, not blue (w3a A4) */
+  --yellow:#ead844; /* warm lemon: less green than the old #d2d23a; brighter than amber gold on the dark wheel rim */
+  --purple:#7d5ba6; --white:#e6dcc6; --any:#a8977a;
+  --serif:'Alegreya', Georgia, serif; --sans:'Alegreya Sans', system-ui, sans-serif;
+  --display:var(--serif); --body:var(--sans);
+}
+
+/* ---------- the visual language (plate 1b, Cory 2026-10-15; design/prototypes/language/ kit.css + grammar.md) ----------
+   The plate's own names. Four already meant something else here, so they carry "pl-": --pl-table, --pl-paper,
+   --pl-ink* (here --ink is cream type on the table; the plate's ink is type on paper) and --pl-cream*.
+   The resource colors are the plate's too (--gold --red --blue --green, below): color only ever means a resource. */
+:root{
+  /* table and board */
+  --pl-table:#191310; --seat:#221a15; --board:#2b2119; --hub:#130e0b;
+  /* hairlines: on the table, and on paper */
+  --hair:rgba(242,232,210,.10); --hair-2:rgba(242,232,210,.18); --hair-ink:rgba(43,32,24,.12);
+  /* paper (spaces, cards, hovers): plain, lit (yours to act on), taken */
+  --pl-paper:#f2e8d2; --paper-lit:#fbf6ea; --paper-taken:#cfc2a6;
+  /* type on paper, and type on the table */
+  --pl-ink:#2b2018; --pl-ink-2:#6e5c49; --pl-ink-3:#a39078;
+  --pl-cream:#f2e8d2; --pl-cream-2:#b9a98c; --pl-cream-3:#7d6e5a;
+  /* the one accent: light = yours to act on */
+  --light:#fff3d4;
+  /* three type sizes and their lines (kit.css); a glyph is .8em of the type it sits in */
+  --s:14px; --m:18px; --l:36px; --lh-s:20px; --lh-m:24px; --lh-l:40px; --glyph:.8em;
+  /* one grid (4px): paddings 16/20, 24 between doors, 32 between cards and from the screen edge */
+  --grid:4px; --pad:16px; --pad-2:20px; --gap-door:24px; --gap-card:32px; --edge:32px;
+  /* one corner (containers 8, art boxes 4), one stroke (1/8 of a glyph) */
+  --corner:8px; --corner-art:4px; --stroke:.125em;
+  /* "any": the wheel in miniature, each color where its quadrant sits (GameScreen sets the live table's) */
+  --any-top:var(--gold); --any-right:var(--blue); --any-bottom:var(--green); --any-left:var(--red);
+}
+/* two symbols in running text (Cory, 2026-10-15: simplify): the dot and the follower, .8em of the type they sit in, flat,
+   no ring or shadow; every other old mark is a plain word now */
+.pip.glyph,.pip.wild{background:none;box-shadow:none;border-radius:0;-webkit-mask:none;mask:none;width:var(--glyph);height:var(--glyph);vertical-align:-.1em;margin:0 .06em}
+.pip.glyph > svg,.pip.wild > svg{display:block;width:100%;height:100%;overflow:visible}
+.rich-n{font-weight:800;letter-spacing:-.01em}
+/* a number and its dot (or follower) are one unit, the same everywhere (hovers, panels, the strip, the log): tight,
+   and never split across a line, with the punctuation after it kept on its line (Rich.jsx amounts; design pod). One
+   rule here beats the per-place margins the pips carried. */
+.amt,.cost-dots .cd,.cp{white-space:nowrap}
+.amt > .pip.glyph,.amt > .pip.wild,.cost-dots .cd > .pip,.cp > .pip{margin-left:-.02em !important;margin-right:0 !important}
+.amt > .rich-f,.amt > .follower-mark{margin-left:.06em !important;margin-right:0 !important}
+/* the follower in text: Cory's 10-pixel person at .8em, rounded to whole half-pixels so it stays crisp */
+.rich-f{width:round(nearest, var(--glyph), 5px);height:round(nearest, var(--glyph), 5px);vertical-align:-.12em;margin:0 .04em}
+body{
+  background:
+    radial-gradient(ellipse 70% 80% at 28% 52%, rgba(var(--lamp),.13), rgba(var(--lamp),.03) 55%, transparent 75%),
+    repeating-linear-gradient(92deg, rgba(0,0,0,0) 0 9px, rgba(0,0,0,.07) 9px 10px, rgba(255,255,255,.012) 10px 23px, rgba(0,0,0,.05) 23px 24px),
+    repeating-linear-gradient(88deg, rgba(255,220,180,.018) 0 41px, rgba(0,0,0,.06) 41px 43px),
+    linear-gradient(180deg,#221a14,#1a140f);
+  background-attachment:fixed;background-color:var(--walnut);
+  font-family:var(--sans);
+}
+h1,h2,h3{font-family:var(--serif)}
+.btn.pri{background:var(--cream);color:var(--paper-ink)}
+.btn.pri:hover:not(:disabled){background:#fff6e2}
+
+/* ---------- the game screen: fixed regions ---------- */
+.app.game.lt{max-width:none;margin:0;gap:0}
+.lt .lt-wheel{position:relative;min-width:0}
+.lt .lt-shop,.lt .lt-seat{min-width:0}
+
+@media (min-width:861px) and (min-height:500px){
+  #root:has(> .app.game.lt){padding:0}
+  /* the chairs in turn order on the left, the wheel in the middle, the story of the turns on the right; the shop a slim
+     strip along the bottom */
+  .app.game.lt{
+    height:100dvh;display:grid;
+    /* the chairs' column a little wider than the story column on the right: the wheel between them */
+    grid-template-columns:minmax(250px,1.2fr) minmax(0,1.85fr) minmax(190px,.85fr);
+    /* the prompt holds two short lines: the question, the round and its steps (or the details); who's winning is on
+       the chairs (Cory, 2026-10-15: no score row), so the wheel gets the room back */
+    grid-template-rows:54px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px);
+    /* the chairs stand in one column in turn order (Cory, 2026-10-15: "position IS order"); the right column holds the
+       story of the turns (since your last turn) */
+    grid-template-areas:"seats prompt side" "seats wheel side" "seats wheel side" "shop shop shop";
+    column-gap:18px;row-gap:6px;padding:6px 18px 8px;overflow:hidden
+  }
+  .lt > .lt-prompt{grid-area:prompt}
+  .lt > .lt-wheel{grid-area:wheel;container-type:size;min-height:0;display:flex;align-items:center;justify-content:center}
+  /* each chair is as tall as its content (the plate's panels) and stands at its place in the order: GameScreen stacks
+     them (--y), centred in the column; a new round's order slides them there */
+  .lt > .lt-seat{grid-area:seats;align-self:start;margin-left:44px;transform:translateY(var(--y, calc(var(--slot, 0) * 108px)));
+    transition:transform calc(.35s * var(--mo-slow, 1)) cubic-bezier(.3,.7,.4,1),box-shadow var(--mo-dim, .3s),background var(--mo-dim, .3s);
+    min-height:0;min-width:0;overflow:visible;border-radius:8px}
+  .lt > .lt-seat:empty{visibility:hidden}
+  /* each chair as the approved plate's seat panel (design/prototypes/language/plate1b.png): the seat ground, an 8px
+     corner, a hairline; the leader beside the name and what it holds (number, then dot), the total big on the right;
+     then its members, then what they make each round and what it just took */
+  .lt > .lt-seat{background:var(--seat, #221a15);box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.10));border-radius:8px;padding:10px 14px}
+  .lt > .lt-seat.now{background:color-mix(in srgb,var(--seat, #221a15) 88%,rgb(var(--lamp)));box-shadow:inset 0 0 0 1px rgba(var(--lamp),.45)}
+  /* the chair inside (leader, name, minions, total; resources; members) is laid out in game/seat.css (mockup A) */
+  /* what a rival just took from this seat, short, on the seat's lower edge (Cory, 2026-10-18: "shorter, near your
+     player card"); the seat's own resource stacks flash with it */
+  .lt > .lt-seat > .seat-stolen{position:absolute;right:14px;bottom:-12px;z-index:4;padding:2px 10px;border-radius:999px;
+    background:var(--table-2);box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.18)),0 4px 12px rgba(0,0,0,.45);
+    font:500 var(--fs-2)/20px var(--sans);white-space:nowrap;pointer-events:none;animation:rise .2s ease-out}
+  .lt > .lt-seat > .seat-stolen .pip.glyph{width:.85em;height:.85em;vertical-align:-.1em}
+  /* the right column: the turns since yours, from the top (the turn card tells the live turn at its foot) */
+  .app.game.lt > .lt-since{grid-column:3;grid-row:1 / 4;align-self:center;max-height:calc(100% - 140px)}
+  /* you, wherever you land: a cream edge */
+  .lt > .lt-seat.mine{box-shadow:inset 0 0 0 1.5px rgba(243,230,200,.32)}
+  .lt > .lt-seat.mine.now{box-shadow:inset 0 0 0 1.5px rgba(var(--lamp),.6)}
+  /* the column the chairs stack in (GameScreen measures it); no rail is drawn in it any more (Cory, 2026-10-16): each
+     chair says its turn in words under its name. Its gutter holds the round's counts while a round is scored. */
+  .lt > .lt-snake{grid-area:seats;justify-self:start;align-self:stretch;width:44px;position:relative;pointer-events:none}
+  .lt > .lt-shop{grid-area:shop;min-height:0;overflow:hidden}
+  .lt > .room,.lt > .error{position:fixed;left:26px;bottom:10px;z-index:20}
+  .app.game.lt > .main.over{grid-column:1 / -1;grid-row:2 / -1;min-height:0;overflow:auto}
+}
+
+/* the lamp: whichever region holds the decision is lit; the rest sit a little in shadow */
+.lt .lt-wheel{transition:opacity var(--mo-dim) ease}
+.lt .lt-shop{transition:opacity var(--mo-dim) ease}
+/* Keep animated wheel layers composited while buys resolve: filtering this ancestor can force extra
+   rasterization of moving SVG descendants when flights and spins overlap. Opacity keeps the same focus cue. */
+.lt[data-yours="1"][data-phase="buy"] .lt-wheel,.lt[data-yours="1"][data-phase="pay"] .lt-wheel{opacity:.86}
+.lt[data-yours="1"][data-phase="place"] .lt-shop{filter:none}
+
+/* ---------- prompt: one question, italic emphasis; Undo inline; one menu glyph ---------- */
+.lt header.bar.lt-prompt{
+  position:relative;display:flex;flex-direction:column;justify-content:center;gap:2px;margin:0;padding:0 48px 0 0;
+  background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border:0;min-width:0
+}
+.lt-prompt .bar-row{display:flex !important;align-items:center;gap:10px;min-width:0;max-width:100%} /* never wider than the cell (w2b #15) */
+.lt-prompt .status .say{border:0;background:none;padding:0;min-height:0;font-family:var(--serif);font-size:24px;font-weight:500;line-height:1.1;color:var(--cream);box-shadow:none;max-width:100%;min-width:0}
+.lt-prompt .status .say > i{display:none}
+.lt-prompt .status .say .say-text{font-size:inherit;-webkit-line-clamp:2}
+.lt-prompt .status .say em{font-style:italic;color:var(--lamp-ink)}
+.lt-prompt .status .say .lead{color:var(--cream)}
+.lt-prompt .status .say:not(.mine){color:var(--cream-2);font-size:var(--m)}
+.lt-prompt .status .say.nudge,.lt-prompt .status .say.info{font-size:18px;color:var(--lamp-ink)}
+.lt-prompt .undo-slot{display:flex;width:auto;flex:none}
+.lt-prompt .undo{border:1px solid rgba(243,230,200,.22);color:var(--cream-2);font-family:var(--sans);font-size:var(--s);min-height:26px;height:26px;padding:0 12px}
+.lt-prompt .steps-row{gap:16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
+.lt-prompt .round{font-family:var(--sans) !important;font-size:11px !important;color:var(--cream-3) !important;letter-spacing:.08em}
+.lt header.bar.lt-prompt .round small{font-size:inherit;color:inherit} /* beats v4.css's header.bar .round small (13px) */
+.lt-prompt .steps{display:flex;gap:14px;font-size:14px;text-transform:none;letter-spacing:0}
+/* the turn's two steps are words: the one you're on is bright, heavier and underlined (no dots: a dot only ever means a
+   resource; no glow: nothing here is clickable). At 11px caps they read as ~9px, and only the underline told them
+   apart (live panel r1): text size, the other step dim */
+.lt-prompt .steps span{padding-bottom:1px;border-bottom:2px solid transparent;color:var(--cream-3)}
+.lt-prompt .steps .on{color:var(--cream);font-weight:600;border-bottom-color:var(--lamp-ink)}
+.lt-prompt .steps-row .say-sub{text-transform:none;letter-spacing:0;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--cream-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lt-menu{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:30}
+.lt-menu .menu-glyph{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:none;color:var(--cream-3);border:1px solid rgba(243,230,200,.16);cursor:pointer}
+.lt-menu .menu-glyph i{width:14px;height:2px;background:currentColor;display:block;box-shadow:0 -5px 0 currentColor,0 5px 0 currentColor}
+.lt-menu .menu-glyph:hover,.lt-menu .menu-glyph[aria-expanded="true"]{color:var(--cream);border-color:rgba(243,230,200,.4)}
+.lt-menu .menu-list{position:absolute;right:0;top:50px;display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:12px;background:var(--walnut-2);box-shadow:0 0 0 1px rgba(243,230,200,.12),0 12px 30px rgba(0,0,0,.6);min-width:170px}
+.lt-menu .menu-list .btn{justify-content:flex-start;text-align:left;border:0;color:var(--cream);font-size:14px;min-height:44px;border-radius:8px;margin:0}
+.lt-menu .menu-list .btn:hover{background:rgba(243,230,200,.08)}
+
+/* ---------- the wheel: printed paper on the walnut ---------- */
+.lt .lt-wheel .wheel-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;min-height:0}
+.lt .lt-wheel .stage{position:relative;aspect-ratio:1;margin:0 auto;touch-action:pan-y;user-select:none;-webkit-user-select:none;isolation:isolate}
+/* the wheel's shadow, painted once behind the disk (r 200 of the 416 board: inset 1.923%), the same two shadows the
+   stage's drop-shadow filter drew (a box-shadow blur is the same Gaussian, sigma = half the radius). As a filter on the
+   stage, every frame of any animation anywhere re-blurred the whole wheel in a software compositor: 15 frames a second
+   on your turn, hovers and presses up to 100ms late (perf, 2026-10-15) */
+.lt .lt-wheel .stage::before{content:'';position:absolute;inset:1.923%;border-radius:50%;box-shadow:0 18px 22px rgba(0,0,0,.55),0 2px 2px rgba(0,0,0,.5);pointer-events:none;z-index:-1}
+/* the board as large as the table allows (Cory, 2026-10-15: "way better use of the space"): the stage's square is the
+   disc plus a margin for the rim's leaders and glow, so it may overhang the prompt and shop rows by that margin (the
+   paper disc itself stays inside its cell); those rows sit above it, so the overhang never takes their clicks */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt .lt-wheel .stage{width:min(100cqw, calc(100cqh + 20px))} /* the board's margin is thin now (Wheel.jsx VB0) */
+  .lt > .lt-prompt,.lt > .lt-shop{position:relative;z-index:3}
+}
+.lt .stage svg.wheel-paper{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lt .stage svg.wheel-paper .disk{stroke:none}
+.lt .stage svg.wheel-paper .band{transition:fill-opacity .3s}
+.lt .stage svg.wheel-paper .ring-line{stroke:rgba(42,31,23,.32);stroke-width:1}
+.lt .stage svg.wheel-paper .seam{stroke:rgba(42,31,23,.42);stroke-width:1.3}
+.lt .stage svg.wheel-paper .edge{stroke:#7a6244;stroke-width:1.5}
+.lt .stage svg.wheel-paper .hub{fill:#2a1f17;stroke:rgba(243,230,200,.18)}
+.lt .stage .hub-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;color:var(--cream);font-family:var(--serif);pointer-events:none;line-height:1}
+.lt .stage .hub-label small{font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfa984}
+.lt .stage .hub-label b{font-size:clamp(20px, calc(var(--wheel-px) * .05), 32px);font-weight:700;margin-top:1px}
+/* no pips: a dot only ever means a resource; the header says "Round I of 3" */
+.lt .stage .hub-label .pips{display:none}
+.lt .stage .hub-label .pips i{width:6px;height:6px;border-radius:50%;border:1px solid #8f7f66}
+.lt .stage .hub-label .pips i.on{background:var(--lamp-ink);border-color:var(--lamp-ink)}
+
+/* spaces: upright sockets (sizes are shares of the board, so they scale with it). Three states read at a glance:
+   lit (yours to take), taken (dimmed to ~40%, the owner's minion standing on it), not open yet (a hollow with its round). */
+.lt .stage .slot{position:absolute;transform:translate(-50%,-50%);width:14%;aspect-ratio:1;border-radius:50%;cursor:default;z-index:2;outline:none}
+.lt .stage .slot.r2{width:10.6%}
+.lt .stage .slot.r3{width:11%}
+.lt .stage .slot .hit{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max(140%, 46px);aspect-ratio:1;border-radius:50%}
+.lt .stage .slot .base{position:absolute;inset:0;border-radius:50%;transition:opacity var(--mo-fade),transform var(--mo-quick) var(--mo-ease-out);
+  background:radial-gradient(circle at 50% 38%, #fbf5e7, #efe3c8 70%);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 72%,#5a4630),inset 0 2px 4px rgba(60,40,15,.25),0 1px 0 rgba(255,255,255,.6)}
+/* not open yet: a hollow pressed into the paper, its round printed faintly (no dashes: those never mean "open") */
+.lt .stage .slot.locked .base{background:rgba(42,31,23,.05);box-shadow:inset 0 1px 3px rgba(42,31,23,.3),0 1px 0 rgba(255,250,238,.45);opacity:.85}
+.lt .stage .slot .seal{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:13px;letter-spacing:.06em;color:color-mix(in srgb,var(--c) 40%,#6e5a40);opacity:.6;pointer-events:none}
+.lt .stage .slot .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 2px;text-align:center;pointer-events:none;color:var(--paper-ink);transition:opacity var(--mo-fade)}
+.lt .stage .slot .face .ico{line-height:0;margin-top:-2px}
+.lt .stage .slot .face .ico svg{width:clamp(18px, calc(var(--wheel-px) * .046), 24px);height:auto;image-rendering:pixelated}
+.lt .stage .slot.r2 .face .ico svg,.lt .stage .slot.r3 .face .ico svg{width:clamp(14px, calc(var(--wheel-px) * .036), 20px)}
+/* every word on the wheel is at least 12px */
+.lt .stage .slot .face .nm{font-family:var(--serif);font-weight:700;font-size:12px;line-height:1;margin-top:1px;max-width:100%;color:var(--paper-ink-2)}
+.lt .stage .slot .face .yl{font-family:var(--sans);font-weight:700;font-size:12px;line-height:1.05;color:var(--paper-ink);display:block;max-width:140%;white-space:normal}
+.lt .stage .slot .face .yl .pip{width:.95em;height:.95em}
+/* lit: yours to take. A lamp-lit edge and a warm glow that breathes; the picture at full strength */
+.lt .stage .slot.can{cursor:pointer}
+.lt .stage .slot.lit .base{background:radial-gradient(circle at 50% 38%, #fffaf0, #f7ecd3 72%);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 85%,#5a4630),0 0 0 2.5px #ffe6b5,0 0 14px 4px rgba(var(--lamp),.75)}
+.lt .stage .slot.lit .base::after{content:"";position:absolute;inset:-3px;border-radius:50%;box-shadow:0 0 18px 7px rgba(var(--lamp),.6);animation:litbreath 2.4s ease-in-out infinite;pointer-events:none}
+@keyframes litbreath{0%,100%{opacity:.35}50%{opacity:1}}
+/* while you place, open spaces you can't take recede a little, so the lit ones lead */
+.lt[data-yours="1"][data-phase="place"] .stage .slot.open:not(.lit):not(.taken) .base,.lt[data-yours="1"][data-phase="choose"] .stage .slot.open:not(.lit):not(.taken) .base{opacity:.62}
+.lt[data-yours="1"][data-phase="place"] .stage .slot.open:not(.lit):not(.taken) .face,.lt[data-yours="1"][data-phase="choose"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.55}
+.lt .stage .slot.can:hover,.lt .stage .slot.sel{z-index:4}
+.lt .stage .slot.can:hover .base,.lt .stage .slot.sel .base{transform:scale(1.08);box-shadow:inset 0 0 0 2.5px var(--paper-ink),0 0 0 4px var(--lamp-ink),0 8px 18px rgba(0,0,0,.45)}
+/* tactile: a lit space presses down under the pointer (src/v4/motion.js) */
+.lt .stage .slot.can:active .base{transform:scale(.96);transition-duration:var(--mo-press)}
+.lt .stage .slot:focus-visible .base{box-shadow:inset 0 0 0 2.5px var(--paper-ink),0 0 0 4px var(--lamp-ink)}
+/* taken: the space drops to ~40%; the owner's minion stands on it at full strength, over its picture */
+.lt .stage .slot.taken .base,.lt .stage .slot.taken .face{opacity:.4}
+.lt .stage .slot.taken.lit .base,.lt .stage .slot.taken.lit .face{opacity:1}
+.lt .stage .slot.taken .face .ico{visibility:hidden}
+.lt .stage .slot .worker-fig{position:absolute;left:50%;top:8%;transform:translateX(-50%);display:flex;gap:1px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45));pointer-events:none;z-index:3}
+.lt .stage .slot.r2 .worker-fig,.lt .stage .slot.r3 .worker-fig{top:4%}
+.lt .stage .slot .worker-fig .worker{display:block;line-height:0}
+.lt .stage .slot .worker-fig svg{display:block;width:clamp(18px, calc(var(--wheel-px) * .05), 26px);height:auto;image-rendering:pixelated}
+/* a rival's fresh move: a dotted ring in that player's color (never the lamp's color, never solid like the lit edge) */
+.lt .stage .slot .fresh-ring{position:absolute;inset:-9%;border-radius:50%;border:2px dotted var(--pc,#8f7f66);opacity:.9;pointer-events:none}
+.lt .stage .slot.newest .fresh-ring{border-width:2.5px;opacity:1;animation:freshspin 9s linear infinite}
+@keyframes freshspin{to{transform:rotate(360deg)}}
+.lt .stage .slot.flash .base{animation:socketland calc(.5s * var(--mo-slow)) ease-out}
+@keyframes socketland{0%{transform:scale(1.15)}60%{transform:scale(.96)}100%{transform:none}}
+/* "not this one": a small shake (the translate property, so the space's centring transform stays) */
+.lt .stage .shake{animation:spaceshake .34s ease-out}
+@keyframes spaceshake{0%,100%{translate:0 0}20%{translate:-4px 0}40%{translate:4px 0}60%{translate:-3px 0}80%{translate:2px 0}}
+@media (prefers-reduced-motion:reduce){ .lt .stage .slot.lit .base::after{animation:none;opacity:.8} .lt .stage .slot.newest .fresh-ring{animation:none} }
+/* a face from src/v4/game/faces/ (?spaces=<name>): the box is the face's size; the face draws everything in it */
+.lt [data-face] .stage .slot{border-radius:0}
+.lt [data-face] .stage .slot .base,.lt [data-face] .stage .slot.lit .base,.lt [data-face] .stage .slot.locked .base{background:none;box-shadow:none;opacity:1;transform:none}
+.lt [data-face] .stage .slot .base::after{display:none}
+.lt [data-face] .stage .slot.can:hover .base,.lt [data-face] .stage .slot.sel .base{transform:none;box-shadow:none}
+.lt [data-face] .stage .slot.flash .base{animation:none}
+.lt [data-face] .stage .slot:focus-visible .base{box-shadow:0 0 0 2.5px var(--lamp-ink);border-radius:6px}
+.lt .slot .face-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+/* inside a face's HTML (FaceHtml), the marks and pips are 1em, not the stage's svg 100% */
+.lt .stage .face-svg .face-html svg{display:inline-block;width:1em;height:1em;vertical-align:-.15em;cursor:inherit}
+/* ...and why, at the pointer: "Taken by P3", "Opens in round II" */
+.deny-note{position:fixed;z-index:60;transform:translate(14px,-135%);padding:5px 10px;border-radius:8px;background:var(--walnut-2);color:var(--cream);font-family:var(--sans);font-size:14px;font-weight:600;white-space:nowrap;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(243,230,200,.24),0 8px 18px rgba(0,0,0,.5);animation:denyin .16s ease-out,denyout .3s ease-in 1.35s forwards}
+@keyframes denyin{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
+@keyframes denyout{to{opacity:0}}
+
+/* ---------- panels (the default look; the visual language, plate 1b): flat paper wedges on a dark board ----------
+   Each space is a wedge of paper (Wheel.jsx panelPath) with its print upright above it: the action's small picture,
+   the big line (the number first and biggest), one line of small print when there's room. Lit: a warm-white edge,
+   and the plate's full glow on the one under your pointer. Taken: the paper dims, the minion stands where the picture
+   was. Fresh: a dotted edge in the mover's color. Locked: a faint outline, "opens in round N". */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .disk{fill:var(--board,#2b2119)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .edge{stroke:var(--hair,rgba(242,232,210,.10));stroke-width:1}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .hub{fill:var(--hub,#130e0b);stroke:var(--hair,rgba(242,232,210,.10))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .seam{stroke:var(--board,#2b2119);stroke-width:3}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell path{pointer-events:none}
+/* each space carries a light tint of its sphere's colour (Cory, 2026-10-15 22:03: "a very light hue … i prefer a light tint") */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{pointer-events:all;fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--pl-paper,#f2e8d2));transition:fill var(--mo-hover,.15s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit{cursor:pointer}
+/* yours to take (Cory, 2026-10-15: "'lit' spaces should be clearer"): lit paper with the lamp's warm glow at its edge;
+   the one under your pointer lifts and glows brighter. Not your turn: nothing glows. Taken: clearly dim. Locked:
+   darker still. A squint at the board shows the spaces you can take as the bright ones (design/eval/rollout/r2-lit-*) */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--paper-lit,#fbf6ea))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:rgb(var(--lamp,255,206,140));stroke-width:7;filter:url(#ltGlow);opacity:.6;transition:opacity var(--mo-hover,.15s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .edge-lit{fill:none;stroke:var(--lamp-ink,#ffd99a);stroke-width:2;opacity:.9;transition:opacity var(--mo-hover,.15s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{transition:fill var(--mo-hover,.15s),filter var(--mo-quick,.12s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .wash,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .wash{filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:1;stroke-width:9}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1;stroke:#fffaf0;stroke-width:2.4}
+/* a space you can take that would give you nothing right now (its hover says so; blind testers, 2026-10-15: it glowed
+   like a useful one): still placeable, but no glow, a fainter edge and its print stepped back. Pointing at it lights
+   the edge as usual */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.idle .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--pl-paper,#f2e8d2))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.idle:not(.hot):not(.sel) .edge-lit{opacity:.35}
+.lt .stage .slot.lit.idle:not(:hover):not(.sel) .face{opacity:.6}
+.lt .stage .slot.lit.idle .base::after{display:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:color-mix(in srgb,color-mix(in srgb,var(--c) var(--tint,11%),var(--paper-taken,#cfc2a6)) 52%,var(--board,#2b2119))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--paper-lit,#fbf6ea))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .wash{fill:rgba(242,232,210,.03);stroke:rgba(242,232,210,.16);stroke-width:1}
+/* calm: a fine dotted edge that reads as "someone was here", never as the lit edge of a space you can take (w2a #30) */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{fill:none;stroke-width:1.5;stroke-dasharray:.1 3.6;stroke-linecap:round;opacity:.7}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh.newest{stroke-width:2;opacity:.85}
+/* while you place, open panels you can't take (a pick that names a few) step back toward the taken ones */
+/* a choice made off the wheel (a stack, a seat, a member): open spaces step back like unlit ones, nothing there is yours to take */
+.lt[data-yours="1"][data-phase="choose"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash,.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,color-mix(in srgb,var(--c) var(--tint,11%),var(--pl-paper,#f2e8d2)) 60%,var(--board,#2b2119))}
+/* not your turn: the open panels rest a step below lit paper, so the lamp means something when it comes */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--pl-paper,#f2e8d2))}
+/* the rim (plate 1b): light type on the quadrant's deep band; the color as its dot in a light ring; the prize a size up */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule{fill:#f6deb0;stroke:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule .rim-prize{font-weight:800}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot{pointer-events:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot .rim-dot-ring{fill:#f6deb0}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot.wait{opacity:.5}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{color:#f6deb0}
+/* the follower mark on a contest rim wears a pearly sheen and a soft halo: followers, not one more resource mark */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{filter:url(#ltSheenHalo)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark .follower-mark path{fill:url(#ltSheen)}
+.lt [data-spaces="panels"] .stage .hub-label small{display:none}
+/* a serif numeral: "II" in a heavy sans inside the dark disc read as a pause button */
+.lt [data-spaces="panels"] .stage .hub-label b{font-family:var(--serif);font-weight:700;font-size:18px}
+.lt [data-spaces="panels"] .stage .hub-label .pips{gap:3px;margin-top:2px}
+.lt [data-spaces="panels"] .stage .hub-label .pips i{width:5px;height:5px}
+/* the print: an upright box over its panel (its width from the room the panel has where it sits now) */
+.lt [data-spaces="panels"] .stage .slot{aspect-ratio:auto;border-radius:6px}
+.lt [data-spaces="panels"] .stage .slot .hit{display:none}
+.lt [data-spaces="panels"] .stage .slot .base,.lt [data-spaces="panels"] .stage .slot.lit .base,.lt [data-spaces="panels"] .stage .slot.locked .base,.lt [data-spaces="panels"] .stage .slot.taken .base{inset:0;border-radius:6px;background:none;box-shadow:none;opacity:1}
+.lt [data-spaces="panels"] .stage .slot.lit .base::after{display:none}
+.lt [data-spaces="panels"] .stage .slot.can:hover .base,.lt [data-spaces="panels"] .stage .slot.sel .base,.lt [data-spaces="panels"] .stage .slot.can:active .base{transform:none;box-shadow:none}
+.lt [data-spaces="panels"] .stage .slot:focus-visible .base{box-shadow:0 0 0 2px var(--lamp-ink)}
+.lt [data-spaces="panels"] .stage .slot.flash .base{animation:none}
+.lt [data-spaces="panels"] .stage .slot .face{position:relative;inset:auto;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0;text-align:center;white-space:nowrap;color:var(--pl-ink,#2b2018);opacity:1;font-family:var(--sans)}
+/* 1. the gain: the number heaviest, its resource dot right after it */
+.lt [data-spaces="panels"] .stage .slot .face .main{display:block;max-width:none;font-size:var(--one,18px);font-weight:800;line-height:1.06;letter-spacing:-.01em;color:inherit;white-space:nowrap}
+/* with no gain, line 1 is the verb in plain words, the same weight, wrapping between words when it must */
+.lt [data-spaces="panels"] .stage .slot.wrap1 .face .main.verb{white-space:normal;text-wrap:balance;max-width:100%}
+.lt [data-spaces="panels"] .stage .slot .face .main .cl{display:block}
+.lt [data-spaces="panels"] .stage .slot .face .n{font-weight:800}
+.lt [data-spaces="panels"] .stage .slot .face .pip{width:.8em;height:.8em;margin:0 0 0 .08em;vertical-align:-.06em}
+.lt [data-spaces="panels"] .stage .slot .face svg.follower-mark{display:inline-block;width:.8em;height:.8em;vertical-align:-.06em;margin:0 0 0 .08em}
+/* 2. the effect in plain words */
+.lt [data-spaces="panels"] .stage .slot .face .second{display:block;max-width:100%;font-size:14px;line-height:15px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot.wrap .face .second{white-space:normal;text-wrap:balance}
+/* a narrow panel sets its effect a size down (the clarification's size, at the effect's weight) before it wraps thrice */
+.lt [data-spaces="panels"] .stage .slot.small .face .second{font-size:12px;line-height:13px}
+/* 3. the clarification, small and quiet */
+.lt [data-spaces="panels"] .stage .slot .face .note{display:block;font-size:12px;line-height:13px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot .face .note .dim{color:var(--pl-ink-3,#a39078);font-weight:500}
+.lt [data-spaces="panels"] .stage .slot .face .note .now{color:var(--pl-ink,#2b2018);font-weight:800}
+/* taken: the lines fade and the minion stands over them, at full strength (the panel never reflows) */
+.lt [data-spaces="panels"] .stage .slot .face .worker-fig{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:1px;filter:drop-shadow(0 1px 0 rgba(43,32,24,.5)) drop-shadow(0 0 3px rgba(43,32,24,.35))}
+.lt [data-spaces="panels"] .stage .slot .face .worker-fig svg{width:auto;height:21px}
+/* the inner rings' panels are shallower: the minion scales with the board there, so it never runs past the panel's edge */
+.lt [data-spaces="panels"] .stage .slot.r2 .face .worker-fig svg,.lt [data-spaces="panels"] .stage .slot.r3 .face .worker-fig svg{height:clamp(14px, calc(var(--wheel-px, 480px) * .038), 19px)}
+/* a taken panel with exactly one line: the minion stands under its gain, never on it (it hid "+3●" outright; design pod).
+   Two lines or more stay under it: below a wrapped verb it ran past an inner panel's edge (spaces.mjs s9) */
+.lt [data-spaces="panels"] .stage .slot.taken[data-panel^="1.0.0"] .face .worker-fig{top:100%;transform:translate(-50%,1px)}
+/* a taken panel that's yours to pick (a copy): its lines are what you're choosing, so the minion steps up off them */
+.lt [data-spaces="panels"] .stage .slot.taken.lit .face .worker-fig{top:0;transform:translate(-50%,-100%)}
+.lt [data-spaces="panels"] .stage .slot.taken.lit .face .worker-fig svg{height:16px}
+.lt [data-spaces="panels"] .stage .slot.flash .face .worker-fig{animation:panelland calc(.3s * var(--mo-slow)) ease-out}
+@keyframes panelland{0%{transform:translate(-50%,calc(-50% - 5px))}60%{transform:translate(-50%,calc(-50% + 1px))}100%{transform:translate(-50%,-50%)}}
+.lt [data-spaces="panels"] .stage .slot.taken .face{opacity:1}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .main,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .second,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .note{opacity:.35}
+/* emojis never cover words (Cory, 2026-10-15; blind testers saw minions on a taken space's words, bigger than them): a
+   taken space keeps its gain, faded, and the minion stands where its small print was (that print hides, the panel
+   keeps its size), no taller than that print */
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .second,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .note{visibility:hidden}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .worker-fig{top:calc(var(--one,18px) * 1.06 + 2px);transform:translate(-50%,0)}
+.lt [data-spaces="panels"] .stage .slot.taken.wrap1:not(.lit) .face .worker-fig{top:calc(var(--one,18px) * 2.12 + 2px)}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .worker-fig svg{height:14px}
+.lt [data-spaces="panels"] .stage .slot.taken.flash:not(.lit) .face .worker-fig{animation-name:panelland-under}
+@keyframes panelland-under{0%{transform:translate(-50%,-5px)}60%{transform:translate(-50%,1px)}100%{transform:translate(-50%,0)}}
+.lt [data-spaces="panels"] .stage .slot.can:hover .face{transform:translateY(-1px);transition:transform var(--mo-quick,.12s)}
+/* locked: faint on the board */
+.lt [data-spaces="panels"] .stage .slot.locked .face{color:var(--pl-cream-2,#b9a98c)}
+.lt [data-spaces="panels"] .stage .slot.locked .face > *{opacity:.55}
+.lt [data-spaces="panels"] .stage .slot.locked .face .second,.lt [data-spaces="panels"] .stage .slot.locked .face .note,.lt [data-spaces="panels"] .stage .slot.locked .face .note .now{color:var(--pl-cream-3,#7d6e5a)}
+.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage .slot.open:not(.lit):not(.taken) .face,.lt[data-yours="1"][data-phase="choose"] [data-spaces="panels"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.6}
+
+/* the hover card on a space: paper */
+.lt .stage .peek{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border:0;box-shadow:0 0 0 1px rgba(80,60,30,.25),0 12px 30px rgba(0,0,0,.55);border-radius:10px;width:250px;z-index:20}
+.lt .stage .peek b{font-family:var(--serif);font-size:19px;color:var(--paper-ink)}
+.lt .stage .peek small,.lt .stage .peek em{color:var(--paper-ink-3)}
+.lt .stage .peek span{color:var(--paper-ink)}
+
+/* the turn's story, by the board */
+.lt .stage .caption{background:var(--walnut-2);color:var(--cream);border-color:rgba(243,230,200,.25);top:-4px;z-index:6}
+
+/* a question that isn't a space or a card: a paper note at the foot of the board (it never moves the furniture) */
+@media (min-width:861px) and (min-height:500px){
+  .lt .lt-wheel > .prompt.choice{position:absolute;left:4%;right:4%;bottom:0;z-index:12;max-height:62%;overflow-y:auto;overscroll-behavior:contain;
+    background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border:0;border-radius:12px;padding:14px 16px;
+    box-shadow:0 0 0 1px rgba(80,60,30,.25),0 14px 34px rgba(0,0,0,.6)}
+  .lt .lt-wheel > .prompt.choice p,.lt .lt-wheel > .prompt.choice .hint{color:var(--paper-ink)}
+  /* the note keeps the cards' scale (14 text, 11 small print): its question and answers were 15px */
+  .lt .lt-wheel > .prompt.choice p,.lt .lt-wheel > .prompt.choice .btn{font-size:14px;line-height:20px}
+  .lt .lt-wheel > .prompt.choice .btn{color:var(--paper-ink);border-color:rgba(42,31,23,.35);background:rgba(255,255,255,.35)}
+  .lt .lt-wheel > .prompt.choice .btn:hover:not(:disabled){background:#fffaf0}
+  .lt .lt-wheel > .prompt.choice .btn small,.lt .lt-wheel > .prompt.choice .rich-body small{color:var(--paper-ink-2)}
+  .lt .lt-wheel > .prompt.choice .opts:has(.btn.rich){grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lt .lt-wheel > .prompt.choice .opts:has(.btn.rich):has(> :nth-child(7)){grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lt .lt-wheel > .prompt.choice .turn-of{color:var(--pc)}
+}
+
+/* ---------- phones and narrow screens: one column; the prompt sticks to the top ---------- */
+@media (max-width:860px), (max-height:499px){
+  .app.game.lt{display:flex;flex-direction:column;gap:10px}
+  .lt header.bar.lt-prompt{position:sticky;top:0;z-index:16;margin:-10px -12px 0;padding:6px 56px 6px 12px;min-height:56px;background:color-mix(in srgb,var(--walnut) 94%,transparent);border-bottom:1px solid rgba(243,230,200,.08)}
+  .lt-prompt .status .say{font-size:18px}
+  .lt-prompt .status .say:not(.mine){font-size:16px}
+  .lt-prompt .steps-row{font-size:11px}
+  .lt-prompt .undo,.lt-prompt .pr-actions .pass,.lt-prompt .pr-actions .rel-toggle{min-height:44px}
+  .lt-menu{right:6px}
+  .lt .lt-wheel .stage{width:min(100%, 520px)}
+  /* phones: rivals' chairs in a row up top, the wheel, the shop strip, and your chair docked at the bottom */
+  .app.game.lt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"prompt prompt prompt" "s1 s2 s3" "wheel wheel wheel" "shop shop shop" "s0 s0 s0";gap:8px}
+  .lt > .lt-prompt{grid-area:prompt}
+  .lt > .lt-wheel{grid-area:wheel}
+  .lt > .lt-shop{grid-area:shop;min-width:0;overflow:hidden}
+  .lt > .lt-seat-0{grid-area:s0;margin:0 -12px -10px;padding:8px 12px 10px;background:color-mix(in srgb,var(--walnut-2) 96%,transparent);border-top:1px solid rgba(243,230,200,.1)}
+  .lt .lt-wheel .stage{width:min(100% - 64px, 480px)}
+  .lt > .lt-seat-1{grid-area:s1}.lt > .lt-seat-2{grid-area:s2}.lt > .lt-seat-3{grid-area:s3}
+  /* the strip and its turn card span the page (they fell into one 117px column: "SINCE YOU…") */
+  .app.game.lt > .lt-since,.app.game.lt > .turn-card{grid-column:1 / -1}
+  /* …and so do the final results (they fell into the same 117px column: "P3 wins / with 76 / followers") */
+  .app.game.lt > .main.over{grid-column:1 / -1;min-width:0}
+  .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:12px}
+
+}
+
+/* the buy step's other answers, beside the question */
+.lt-prompt .pr-actions{display:inline-flex;align-items:center;gap:8px;flex:none}
+.lt-prompt .pr-actions .pass{min-height:26px;height:26px;padding:0 16px;border-color:rgba(243,230,200,.4)}
+.lt-prompt .pr-actions .btn{font-size:var(--s)} /* the scale's 14, like Undo */
+.lt-prompt .pr-actions .rel-toggle{min-height:26px;height:26px}
+.lt-prompt .pr-actions .rel-list{display:inline-flex;flex-wrap:wrap;gap:6px}
+.lt-prompt .pr-actions .rel{min-height:36px;border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
+
+/* the question is a sentence: the scale's 18 (grammar: 14 / 18 / 36), its emphasis in the lamp's italic */
+.lt-prompt .status .say{font-size:var(--m)}
+
+/* the question's first letter keeps its overhang (the line clamp clips at the box edge) */
+.lt-prompt .status .say .say-text{padding-left:5px;padding-right:2px}
+.lt-menu .record-text{width:100%;min-height:110px;background:var(--walnut);color:var(--cream);border:1px solid rgba(243,230,200,.2);border-radius:8px;font:12px ui-monospace,monospace}
+/* a minion in flight: its own sprite, crisp, with a shadow that says it's in the air */
+.minion-flight svg{display:block;width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(0 8px 6px rgba(0,0,0,.45))}
+/* (a minion flying home carries the class `home`, which the title screen's .home also uses: its 8vh top padding squashed the minion to nothing) */
+.minion-flight.home{padding:0;max-width:none}
+
+/* ---------- the Reckoning: the room dims, the lamp walks the rim, prizes arc to the winners ---------- */
+.lt-reckon{position:fixed;inset:0;z-index:40;background:none;cursor:pointer}
+/* the room dims around the board while it pays: the wheel and the chairs being paid stay in the light */
+.lt[data-phase="reckon"] .lt-shop,.lt[data-phase="reckon"] .lt-prompt{opacity:.6;transition:opacity .3s}
+/* the chairs step back by opacity over the dark table, never a filter: their counts roll and settle as the prizes land
+   (taste.md: no filter on a container whose children animate) */
+.lt[data-phase="reckon"] .lt-seat{opacity:.82;transition:opacity .3s,transform calc(.35s * var(--mo-slow, 1)) cubic-bezier(.3,.7,.4,1)}
+.lt-reckon .reckon-head{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 26px 10px;border-radius:14px;
+  background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);box-shadow:0 0 0 2px var(--c,var(--paper-edge)),0 14px 30px rgba(0,0,0,.55);min-width:min(420px, 92vw);text-align:center}
+/* the card never covers the rim it scores: a rim in the wheel's lower half sends it to the top (motion review #29) */
+.lt-reckon .reckon-head.at-top{bottom:auto;top:14px}
+/* round-end smoothing (frame by frame at Steady, 1270×700): the card came up in one frame over the last move; it now
+   fades up in a beat, and each rim's words fade in as the lamp moves (opacity and scale only: its transform places it) */
+.lt-reckon:not(.waiting) .reckon-head{animation:reckonin calc(.2s * var(--mo-slow, 1)) cubic-bezier(.3,.7,.4,1) both}
+@keyframes reckonin{from{opacity:0;scale:.96}to{opacity:1;scale:1}}
+.lt-reckon .reckon-head .reckon-rule,.lt-reckon .reckon-head .reckon-counts{animation:fade calc(.18s * var(--mo-slow, 1)) ease-out both}
+/* a seat's count stamps in, then ticks (the counting is the motion, #30); the leader's count hops once */
+.lt-reckon .reckon-count{animation:reckonstamp var(--mo-land) cubic-bezier(.3,1.5,.5,1) both}
+@keyframes reckonstamp{from{opacity:0;scale:1.25}to{opacity:1;scale:1}}
+.lt-reckon .reckon-head small{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-ink-3)}
+.lt-reckon .reckon-head b{font-family:var(--serif);font-size:22px;line-height:1.15}
+/* the caption over the dimmed shop (clear of the wheel's plaques): what is scored, what it counts, then who wins */
+.lt-reckon .reckon-head{font-family:var(--sans)}
+.lt-reckon .reckon-head small{font-size:14px;letter-spacing:.08em}
+.lt-reckon .reckon-head .reckon-rule{font-family:var(--sans);font-size:18px;font-weight:800;color:color-mix(in srgb,var(--c) 70%,var(--paper-ink))}
+.lt-reckon .reckon-head .reckon-counts{font-size:14px;line-height:20px;color:var(--paper-ink-2);max-width:520px}
+.lt-reckon .reckon-head .reckon-verdict{font-family:var(--sans);font-size:18px;line-height:24px;min-height:24px;color:var(--paper-ink-3);font-weight:500;transition:color .25s}
+.lt-reckon .reckon-head .reckon-verdict.on{color:var(--paper-ink);font-weight:800;animation:rise calc(.3s * var(--mo-slow)) ease-out}
+.lt-reckon .reckon-head .reckon-verdict.none{color:var(--paper-ink-3);font-weight:500}
+/* "2 of 4" already says where the scoring is: the four dots after it were a second telling, in dots that aren't
+   resources (design pod, from the detail designer) */
+.lt-reckon .reckon-dots{display:none}
+.lt-reckon .reckon-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);opacity:.6}
+.lt-reckon .reckon-dots i.done{background:var(--c);opacity:.55}
+.lt-reckon .reckon-dots i.on{background:var(--c);opacity:1;box-shadow:0 0 8px var(--c)}
+.lt-reckon .reckon-count{position:fixed;transform:translate(0,-50%);display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
+  background:var(--paper);color:var(--paper-ink);font-family:var(--sans);font-weight:800;font-size:18px;box-shadow:0 0 0 2px var(--c),0 8px 18px rgba(0,0,0,.5);pointer-events:none;animation:rise calc(.25s * var(--mo-slow)) ease-out}
+.lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:reckonstamp var(--mo-land) cubic-bezier(.3,1.5,.5,1) both,reckonwin calc(180ms * var(--mo-scale)) ease-out 1}
+@keyframes reckonwin{50%{transform:translate(0,-50%) scale(1.18)}}
+.lt-reckon .reckon-skip{position:absolute;right:18px;bottom:18px;min-height:44px;padding:0 18px;color:var(--cream);border-color:rgba(243,230,200,.4);background:rgba(29,22,17,.7)}
+.token-flight{position:fixed;z-index:45;pointer-events:none;display:grid;place-items:center;will-change:transform}
+.token-flight .reckon-token{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--lamp-ink);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:14px;box-shadow:0 0 0 2px var(--pc),0 6px 14px rgba(0,0,0,.5)}
+
+/* ---------- the rim: each quadrant's rule engraved along its arc, its leader beside it (Cory: elegant, typographic,
+   part of the board) ---------- */
+.lt .stage svg.wheel-paper .rim{transition:fill-opacity .3s}
+.lt .stage svg.wheel-paper .rim.wait{fill-opacity:.45}
+.lt .stage svg.wheel-paper .rim-rule{fill:rgba(255,249,236,.95);font-family:var(--sans);font-weight:700;letter-spacing:.11em;dominant-baseline:central;pointer-events:none;paint-order:stroke;stroke:rgba(42,31,23,.18);stroke-width:.6}
+.lt .stage svg.wheel-paper .rim-rule.wait{opacity:.5}
+.lt .stage svg.wheel-paper .rim-rule.lit{fill:#fffdf6}
+.lt .stage svg.wheel-paper .rim-hit{fill:transparent;cursor:help;pointer-events:all}
+/* the rim's hover target sits in its own layer above the spaces (Wheel.jsx rimHits): the rule and the leaders' emojis
+   always open the standings; a faint wash says the band is one target */
+.lt .stage svg.rim-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:5}
+.lt .stage svg.rim-layer .rim-hit{fill:rgba(255,250,238,0);cursor:help;pointer-events:all;outline:none;transition:fill .15s}
+/* no fill on hover: the band reaches past the paper, so a fill drew a grey arc on the wood; the card is the answer */
+.lt .stage svg.rim-layer .rim-hit:hover{fill:transparent}
+.lt .stage svg.rim-layer .rim-hit:focus-visible{stroke:var(--lamp-ink);stroke-width:2;fill:rgba(255,250,238,.1)}
+/* the tiebreak, quieter than the rule: "· ties: red members" */
+.lt .stage svg.wheel-paper .rim-rule .rim-tie{letter-spacing:.04em;font-weight:600;fill-opacity:.9}
+/* the chairs: yours only a little larger than the rivals' (same layout) */
+/* (your chair was zoomed 1.15×; in the ordered column every chair has the same slot, so yours is marked by its edge
+   and its larger type instead) */
+
+/* (the chairs carried no box of their own; the approved plate gives each its seat panel: see the ordered column above) */
+/* game over: every cult in final order, its followers big, the winner lit */
+.lt .over-cults{display:flex;flex-direction:column;gap:10px}
+.lt .over-seat{position:relative;display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:rgba(243,230,200,.03)}
+.lt .over-seat .rank{font-family:var(--serif);font-size:18px;color:var(--cream-3)}
+.lt .over-seat .final{font-family:var(--serif);font-size:34px;color:var(--cream)}
+.lt .over-seat.won{background:rgba(var(--lamp),.1);box-shadow:0 0 0 1px rgba(var(--lamp),.45),0 0 26px rgba(var(--lamp),.18)}
+.lt .over-seat.won .final{color:var(--lamp-ink)}
+/* the end-game scoring (FinalScore.jsx, taste rule 11): a "+x" with the follower mark rises over the head it came from
+   (the leader, then each member, then what a member grants), holds, and fades; the same face as a member's use result */
+.lt .over-seat .fs-pop{position:absolute;z-index:5;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;
+  font-family:var(--sans);font-size:14px;line-height:18px;font-weight:800;color:var(--light,#fff3d4);text-shadow:0 1px 2px rgba(0,0,0,.8);
+  transform:translate(-50%,-100%);animation:fs-rise .9s ease-out both}
+.lt .over-seat .fs-pop.grants{color:var(--lamp-ink)}
+.lt .over-seat .fs-pop.down{color:var(--cream-3)}
+@keyframes fs-rise{0%{opacity:0;transform:translate(-50%,-80%) scale(.85)}22%{opacity:1;transform:translate(-50%,-100%) scale(1)}78%{opacity:1;transform:translate(-50%,-125%)}100%{opacity:0;transform:translate(-50%,-140%)}}
+@media (prefers-reduced-motion:reduce){.lt .over-seat .fs-pop{animation:none}}
+/* the turn card: one turn told by its cult, a line per beat; it folds into the chair when the turn has passed */
+.turn-card{position:fixed;z-index:30;max-width:280px;width:max-content;display:flex;flex-direction:column;gap:2px;padding:9px 13px 10px;border-radius:12px;
+  background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);box-shadow:0 0 0 1.5px var(--pc),0 12px 26px rgba(0,0,0,.5);
+  pointer-events:none;animation:rise calc(.2s * var(--mo-slow)) ease-out;transition:transform calc(.45s * var(--mo-slow)) cubic-bezier(.5,0,.7,.4),opacity calc(.45s * var(--mo-slow))}
+.turn-card .tc-head{font-family:var(--serif);font-size:var(--m);line-height:1.15}
+.turn-card .tc-line{font-size:var(--s);line-height:1.3;color:var(--paper-ink-2);animation:tcline calc(.3s * var(--mo-slow)) ease-out}
+.turn-card .tc-line .pip{width:.95em;height:.95em}
+@keyframes tcline{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.turn-card.folding{transform:scale(.15);opacity:0}
+@media (max-width:860px), (max-height:499px){ .turn-card{max-width:calc(100vw - 24px)} }
+
+/* the leader's emoji inline on the engraved rim line; lit with the label during the Reckoning */
+.lt .stage svg.wheel-paper .rim-emoji{pointer-events:none;filter:drop-shadow(0 .4px .4px rgba(42,31,23,.35))}
+.lt .stage svg.wheel-paper .rim-emoji.wait{opacity:.5}
+.lt .stage svg.wheel-paper .rim-rule.lit{filter:drop-shadow(0 0 3px rgba(var(--lamp),.95))}
+.lt .stage svg.wheel-paper .rim.lit{fill-opacity:1;filter:drop-shadow(0 0 6px rgba(var(--lamp),.9))}
+/* Release opens as a small list under its button, so the question never gets squeezed */
+.lt-prompt .pr-actions .release-row{position:relative}
+.lt-prompt .pr-actions .rel-list{position:absolute;top:calc(100% + 6px);left:0;z-index:35;display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;width:max-content;max-width:320px;
+  border-radius:12px;background:var(--walnut-2);box-shadow:0 0 0 1px rgba(243,230,200,.14),0 14px 30px rgba(0,0,0,.6)}
+.lt-prompt .pr-actions .rel-list .rel{justify-content:flex-start;gap:6px;min-height:40px;color:var(--cream)}
+/* Release is picked in your seat now; the list is the keyboard's way in only: hidden until a key brings focus into it */
+.lt-prompt .pr-actions .rel-list.keys:not(:focus-within){clip-path:inset(50%);width:1px;height:1px;padding:0;overflow:hidden;box-shadow:none}
+/* a sphere's own rule, under its standings in the rim's hover card ("Whatever you steal turns magenta…") */
+.lt-sphere-rule{margin:8px 0 0;padding-top:7px;border-top:1px solid rgba(42,31,23,.15);font-size:14px;line-height:1.35;color:var(--paper-ink-2);max-width:260px}
+
+/* setup (RC1 panel: the starting-resource note covered the wheel's lower half, so a newcomer only found out by accident
+   that it spins; Cory, 2026-10-15: "make way better use of the space"): the wheel keeps its full size and the picker
+   stands in the right column (empty until the turns begin), never over the wheel, the chairs or the shop */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{right:auto;left:calc(100% + 18px);bottom:auto;top:50%;translate:0 -50%;
+    width:max(190px, calc(100% * .85 / 1.85));max-height:none;overflow:visible; /* the right column's width (grid .85fr vs the wheel's 1.85fr) */
+    display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 12px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{margin:0;font-weight:700;line-height:1.2}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .tokens{flex:1 1 auto;gap:4px;display:grid;grid-template-columns:repeat(4,minmax(min-content,1fr))} /* a long name takes the room it needs: "Magenta +1" broke over two lines in a quarter */
+  /* a clean row of plain dots: the dot, then its color's name with "+1" quiet beside it (Cory, 2026-10-15: simplify) */
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:3px;row-gap:4px;padding:8px 0;min-width:0}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{flex:0 0 100%;height:28px;transition:transform .12s ease-out}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .tk-name{font-size:var(--s);line-height:var(--lh-s);font-weight:700}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .tk-plus{font-size:var(--s);line-height:var(--lh-s);color:var(--pl-ink-2);font-weight:500}
+  /* the call to action (Cory, 2026-10-15: nothing said "click here"): the note is lamp-lit and pulses once; each coin
+     wears the lit edge a space you can take wears */
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6);
+    animation:rise .25s ease-out both,cta-pulse 1.2s .3s ease-out 1}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{font-family:var(--serif);font-size:18px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p::after{content:none}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled):hover .res-glyph{transform:translateY(-2px)}
+}
+@keyframes cta-pulse{
+  0%{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6)}
+  40%{box-shadow:0 0 0 4px rgba(var(--lamp),1),0 0 46px 14px rgba(var(--lamp),.65),0 14px 34px rgba(0,0,0,.6)}
+  100%{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6)}
+}
+@media (prefers-reduced-motion:reduce){ .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{animation:none} }
+
+/* game over on a laptop (RC1 strategist: the result rows ran the full width and were mostly empty): the table holds
+   to a readable width, and the cults sit two to a row, each with its total beside it */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt > .main.over > .results{width:100%;max-width:900px;margin:0 auto}
+  .app.game.lt > .main.over > .results table.res-t{min-width:0}
+  .app.game.lt > .main.over > .over-cults{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;width:100%;max-width:900px;margin:8px auto 0}
+  .app.game.lt > .main.over > .over-cults > :not(.over-seat){grid-column:1 / -1}
+  /* each cult's build under the table: the table above already gives its place and total, and the seat its total, so
+     the rank and the big number beside the card go (RC1 #107: every score was shown three times) */
+  .app.game.lt > .main.over .over-seat{grid-template-columns:minmax(0,1fr);gap:0;padding:6px}
+  .app.game.lt > .main.over .over-seat .rank,.app.game.lt > .main.over .over-seat .final{display:none}
+  /* the card is the only frame: the seat's own "now" light (the winner) would draw a second one inside it */
+  .app.game.lt > .main.over .over-seat .lt-cult-seat{background:none;box-shadow:none}
+  /* the results' seats on the table's type scale (design pod): name and total 18 (the table above says the total too),
+     what they hold 11; they carried 16, 22, 25 and 12 */
+  .app.game.lt > .main.over .over-seat .cs-who b,.app.game.lt > .main.over .over-seat .cs-total .tv{font-size:18px;line-height:22px}
+  .app.game.lt > .main.over .over-seat .cs-stack b{font-size:11px}
+}
+.prompt.choice.setup .token .tk-label{white-space:nowrap}
+/* the Reckoning's scoreboard: every player's count side by side on the card; the winner's column cheers */
+.lt-reckon .reckon-board{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px;width:100%;margin:8px 0 4px}
+.lt-reckon .reckon-board .rc{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 6px;border-radius:10px;opacity:.25;transition:opacity calc(.2s * var(--mo-slow)),background-color calc(.2s * var(--mo-slow))}
+.lt-reckon .reckon-board .rc.in{opacity:1;animation:reckonstampcol var(--mo-land) cubic-bezier(.3,1.5,.5,1) both}
+/* a column stamps in from where it rested (.25), never blinking out to nothing first (round-end smoothing) */
+@keyframes reckonstampcol{from{opacity:.25;scale:1.12}to{opacity:1;scale:1}}
+.lt-reckon .reckon-board .rc-who{display:flex;align-items:center;gap:5px;font:600 14px/1 var(--sans);color:var(--paper-ink-2);max-width:100%;white-space:nowrap;overflow:hidden}
+.lt-reckon .reckon-board .rc-who svg{flex:none}
+.lt-reckon .reckon-board .rc-n{font:800 36px/1 var(--sans)!important;color:var(--paper-ink)}
+.lt-reckon .reckon-board .rc.lost{opacity:.45}
+.lt-reckon .reckon-board .rc.won{background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 2px var(--c);animation:reckoncheer calc(.7s * var(--mo-slow)) cubic-bezier(.3,1.4,.5,1) 2}
+@keyframes reckoncheer{0%,100%{transform:translateY(0) rotate(0)}15%{transform:translateY(-8px) rotate(-4deg)}30%{transform:translateY(-2px) rotate(3deg)}45%{transform:translateY(-6px) rotate(-2deg)}65%{transform:translateY(0) rotate(1deg)}}
+@media (prefers-reduced-motion: reduce){.lt-reckon .reckon-board .rc.won,.lt-reckon .reckon-board .rc.in,.lt-reckon .reckon-head,.lt-reckon .reckon-head .reckon-rule,.lt-reckon .reckon-head .reckon-counts{animation:none}}
+/* the round-end card waits, unseen, for the round's last move to land (Reckoning.jsx) */
+.lt-reckon.waiting{visibility:hidden}
+
+/* A fine sphere-colored seam makes each action slice readable without adding more labels. */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .slice-outline{fill:none;stroke:color-mix(in srgb,var(--c) 60%,#fff4df);stroke-width:1.1;opacity:.6;pointer-events:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .slice-outline{opacity:.28}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .slice-outline{opacity:.38}
+
+/* Squatter's occupied legal targets remain bright, with a cooler edge than empty spaces. */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.squat.lit .wash{fill:color-mix(in srgb,#d2c0eb 18%,var(--paper-lit,#fbf6ea))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.squat.lit .edge-lit{stroke:#d7baff}
+.lt .stage .slot.squat.lit .base{box-shadow:inset 0 0 0 2px #d7baff}

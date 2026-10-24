@@ -1,0 +1,22 @@
+# Turn clarity reads
+T1 (R1) P3 — board read: P3 minion on Top up; Crew card now in P3 seat; followers 1→3. Couldn't name resource gain from board (top-up says +1 of fewest). Log/strip: Top up +1 yellow +1 gold, recruited Crew (paid 1 mag 1 yel). PARTS: space ✓, recruit ✓, resource gain ✗ (missed second +1; never saw it on board) → 2/3
+T2-T5 (R1) P2,P4,P4,P2 ran back-to-back in ~8 s while I watched the pay modal close; I saw none of them live.
+ Board read: P2 on "+1 blue per blue in shop" and "+3 gold +1 to a rival"; P4 on "+1 yel per other color" and "+2 blue refresh". P2 seat shows Minimalist; P4 seat shows a yellow member with "EACH ROUND +1 each color".
+ Couldn't tell: how much each space paid (blue-in-shop count, "per other color" count), who received Kickback's +1 gold, where P4's 2 magenta came from (member paying now?).
+ Strip check: Name Drop +3 blue, recruited Minimalist; New Faces +2 blue; Harvest +4 yel, recruited Late Bloomer; Kickback +3 gold — strip ALSO omits who got the +1.
+ PARTS: spaces 4/4, recruits 2/2, amounts 0/4, gift recipient 0/1, member payout 0/1 → 6/12
+T6-T7 (R1) P3 x2 — board: skull on "+2 gold more each round" and "+2 blue then recruit in any colors"; P3 now 2 gold 2 blue; no new member. Read: +2 gold, +2 blue, no recruit. Strip: Golden Years +2 gold; Snap Up +2 blue. 4/4 parts. (Both turns finished within ~1.4 s of my pass — never saw them happen.)
+T8-T9 (R1) P2, P4 — fired the instant I recruited; round-I scoring overlay was already up when the screen settled (~5 s). Board read after: P2 "safe this round" tag + my magenta 3→2 → P2 stole 1 magenta from me (Steal 1 then safe) ✓; P4 has a new Freelancer card ✓, but what P4 swapped on "Swap up to 3" (resources went 2/2/2/2 → 1/1/1/2 after paying) ✗ — couldn't tell swap vs payment. 3/4.
+Running: 15/23 parts read right from the board.
+T10-T12 (R2 start) P2 Shake Down (took my Desperado — I was asked, so ✓), P4 on "+3 gold from rivals": +3 ✓ but from whom ✗ (deduced P2 −2, P3 −1 only by diffing numbers I hadn't memorised), P3 on "+4 gold more each round" +4 ✓. 4/5. Running 19/28.
+T13-T18 (R2) P3,P4,P2,P2,P4,P3 — six rival turns in ~6 s after my recruit click; I saw only P3 placing on "+3 from rivals". Board read after:
+ P3: "+3 mag from rivals" + "Gain blue half your priciest", recruited Cutpurse (EACH ROUND +1 mag). Who P3 robbed: ✗.
+ P4: "+1 gold per member" (Tithe) and "+1 blue per blue in shop"?; recruited Stylist + a blue bearded member (Connoisseur?) ✓/?; followers 7→9.
+ P2: "+1 yel per other color" and "+3 gold +1 to a rival"; LOST Minimalist (5→4 followers) — no idea why ✗; who got the +1 gold ✗.
+ Guess-parts: spaces 6/6, recruits 2/3, robbed-from 0/1, Minimalist loss 0/1, gift 0/1 → 8/12. Running 27/40.
+ Log check T13-18: Kickback +1 gold → P4 (missed); P2 released Minimalist for 2 blue (missed — I'd guessed "lost"); P4 Connoisseur +2 blue (missed); P3 Help Yourself 3 from P4 + Cutpurse took 1 more from P4 (missed). Corrected tally T13-18: 8/14. Running 27/42.
+T19-T22 (R2 end) P3 Trade Seeds (−2 blue +3 yel), P4 Potluck → Social Climber, P2 Half Price → Feastmaker, + round II reckoning: ALL finished in the gap between my Bodyguard click and my next look (~3–4 s). I saw P3's result only via the strip. Board read: P3 swap seen as numbers changing only; P4 new member ✓ (seat), P2 new member ✓; amounts ✗. 2/5. Running 29/47.
+T23 (R3) P2 Help Yourself: board ✓ space, ✓ Extortionist recruit; ✗ +8 (Desperado doubling invisible), ✗ who was robbed. 2/4. Running 31/51.
+T24-T27 (R3) P4 +6 gold & released Social Climber; P3 Name Drop +3 blue → Recluse; P3 Shake Down +4 mag (who paid? ✗); P4 Tithe +5 gold → Underbidder. Board: 4 spaces ✓, recruits 1/2 (P4 shows '+2 more' — can't count members), release ✗, payer ✗, amounts 2/4. 7/12. Leftover member cards (Stylist/Connoisseur/Patroness) hovered over the wheel centre for ~1 s into MY turn covering two spaces. Running 38/63.
+T28-29 (R3) P2 Crime Wave +6 mag, bought 8, Show Off +5 blue, released Desperado. Board: spaces ✓✓, release ✓ (card gone), robbed-from ✗, follower jump 10→21 unexplained (8 bought −1 released = 17 expected; +4 never shown anywhere on strip) ✗. 3/6. Running 41/69.
+T30-T33 (R3) P4 Potluck +2y +4b→Planner; P3 Harvest +4y, released Cutpurse; P3 Kickback +3 gold +1 to rival (who? ✗), bought 4; P4 Trade Seeds −3b +3y +1y → Banker. Board read: spaces 4/4, recruits 2/2, release ✓ (card gone), gift recipient ✗, P4 'EACH ROUND +4 gold' new line unexplained ✗, swap amounts ✗. 9/13. P4 seat shows '+6 more' members: uncountable. Running 50/82.

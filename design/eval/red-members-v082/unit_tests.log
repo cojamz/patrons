@@ -1,0 +1,30 @@
+
+ RUN  v4.0.9 /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons/.v4-wt/check-0a52230-63009
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ src/test/engine/v4/red-redesign.test.js (19 tests) 63ms
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ src/test/v4/ui/info.test.jsx (14 tests) 533ms
+ ✓ src/test/v4/ui/shop-recruit-single-choice.test.jsx (1 test) 257ms
+ ✓ src/test/engine/v4/cards-echo.test.js (33 tests) 89ms
+ ✓ src/test/engine/v4/interactions.test.js (45 tests) 112ms
+ ✓ src/test/v4/ui/trade.test.jsx (4 tests) 253ms
+ ✓ src/test/v4/ui/shop-unified.test.jsx (2 tests) 145ms
+ ✓ src/test/v4/ui/rich.test.jsx (9 tests) 78ms
+ ✓ src/test/engine/v4/cards-red.test.js (16 tests) 59ms
+ ✓ src/test/engine/v4/green-redesign-pressure.test.js (19 tests) 60ms
+ ✓ src/test/engine/v4/red-members-pressure.test.js (19 tests) 43ms
+ ✓ src/test/engine/v4/red.test.js (35 tests) 44ms
+ ✓ src/test/engine/v4/extra-hand-transfer.test.js (5 tests) 15ms
+ ✓ src/test/engine/v4/even-swap.test.js (6 tests) 15ms
+ ✓ src/test/engine/v4/red-members-hooks.test.js (8 tests) 14ms
+ ✓ src/test/engine/v4/red-recruit-chain.test.js (3 tests) 12ms
+ ✓ src/test/engine/v4/action-recruit-bonuses.test.js (3 tests) 19ms
+
+ Test Files  17 passed (17)
+      Tests  241 passed (241)
+   Start at  03:31:22
+   Duration  6.87s (transform 1.92s, setup 945ms, collect 4.61s, tests 1.81s, environment 3.05s, prepare 150ms)
+

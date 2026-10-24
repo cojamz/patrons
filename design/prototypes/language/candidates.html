@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1270">
+<title>Place Candidates</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+#sheet{position:relative;width:1270px;height:700px;background:radial-gradient(900px 600px at 640px 380px,rgba(255,226,170,.05),transparent 70%),var(--table)}
+.obj{position:absolute;width:120px;height:136px}
+.obj svg.shape{position:absolute;left:0;top:0;overflow:visible}
+.obj .big,.obj .fine{position:absolute;left:0;right:0;text-align:center;white-space:nowrap;color:var(--ink);transform:translateY(-50%)}
+.obj .fine{font-size:var(--s);line-height:20px;font-weight:700;color:var(--ink-2)}
+.obj.taken .big,.obj.taken .fine{opacity:.5}
+.obj.locked .big,.obj.locked .fine{color:var(--cream-2);opacity:.7}
+.obj .who{position:absolute;transform:translate(-50%,-100%)}
+.lab{position:absolute;color:var(--cream-3)}
+.ttl{position:absolute;color:var(--cream)}
+</style>
+<script src="../pixel-art/icons.js"></script>
+<script src="../pixel-art/emojis.js"></script>
+<script src="../pixel-art/leaders.js"></script>
+<script src="kit.js"></script>
+</head>
+<body>
+<div id="sheet"><div id="ui"></div></div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+const { n, dot, g, op, sp, minion, el } = Kit;
+const W = 120, H = 136;
+const ui = document.getElementById('ui');
+
+// what each state column shows (same content for every candidate, so only the object differs)
+const STATES = [
+  { id: 'open',   label: 'Open',            big: `${n('+4')}${dot('gold')}`, fine: '2 · 4 · 6 by round' },
+  { id: 'lit',    label: 'Lit (yours to take)', big: `${n('+3')}${dot('gold')}`, fine: 'from rivals' },
+  { id: 'taken',  label: 'Taken',           big: `${n('+1')}${dot('gold')}${op('/')}${g('mem')}`, fine: '', who: 'frog' },
+  { id: 'locked', label: 'Locked till round III', big: `${n('×2')}${dot('gold')}`, fine: '' },
+];
+
+const fillFor = s => ({ open: 'var(--paper)', lit: 'var(--paper-lit)', taken: 'var(--paper-taken)', locked: 'none' })[s];
+const strokeFor = s => s === 'locked' ? 'rgba(242,232,210,.30)' : 'none';
+const glow = s => s === 'lit' ? 'filter:drop-shadow(0 0 2px var(--light)) drop-shadow(0 0 12px rgba(255,233,184,.55))' : '';
+
+// each candidate: draw(state) returns SVG markup; bigY/fineY place the effect; spot = where the minion's feet go
+const CANDS = [
+  { name: 'Tile with a socket', idea: 'A plaque with a round hollow where the minion stands.',
+    bigY: 40, fineY: 70, spot: [60, 122],
+    draw: s => `<rect x="0" y="0" width="${W}" height="${H}" rx="12" fill="${fillFor(s)}" stroke="${strokeFor(s)}"/>
+      <circle cx="60" cy="108" r="20" fill="${s === 'locked' ? 'none' : 'rgba(43,32,24,.13)'}" stroke="${s === 'locked' ? 'rgba(242,232,210,.3)' : 'none'}"/>
+      ${s === 'lit' ? '<circle cx="60" cy="108" r="20" fill="none" stroke="var(--light)" stroke-width="2"/>' : ''}` },
+  { name: 'Doorway', idea: 'An arch with a door at its foot. The minion walks in; a lit door glows.',
+    bigY: 46, fineY: 74, spot: [60, 134],
+    draw: s => {
+      const door = 'M40 136 V106 A20 20 0 0 1 80 106 V136 Z';
+      const doorFill = { open: '#3a2c21', lit: '#ffe6ad', taken: '#3a2c21', locked: 'rgba(242,232,210,.10)' }[s];
+      return `<path d="M0 136 V60 A60 60 0 0 1 120 60 V136 Z" fill="${fillFor(s)}" stroke="${strokeFor(s)}"/>
+        <path d="${door}" fill="${doorFill}"/>` + (s === 'locked' ? `<text x="60" y="126" text-anchor="middle" font-family="AS" font-weight="800" font-size="14" fill="var(--cream-3)">III</text>` : '');
+    } },
+  { name: 'Plinth', idea: 'A little stage, seen from the front. The minion stands on top.',
+    bigY: 78, fineY: 106, spot: [60, 30],
+    draw: s => `<path d="M2 22 V114 A58 16 0 0 0 118 114 V22 Z" fill="${s === 'locked' ? 'none' : (s === 'taken' ? 'var(--paper-taken)' : 'var(--paper)')}" stroke="${strokeFor(s)}"/>
+      <ellipse cx="60" cy="22" rx="58" ry="16" fill="${s === 'locked' ? 'none' : (s === 'lit' ? '#fffaf0' : s === 'taken' ? '#ddd2b8' : '#faf3e2')}" stroke="${s === 'locked' ? 'rgba(242,232,210,.3)' : 'rgba(43,32,24,.12)'}"/>` },
+  { name: 'Banner', idea: 'A hanging pennant; the minion stands under it.',
+    bigY: 40, fineY: 70, spot: [60, 136],
+    draw: s => `<line x1="-4" y1="2" x2="124" y2="2" stroke="var(--cream-3)" stroke-width="2" stroke-linecap="round"/>
+      <path d="M6 4 H114 V100 L60 116 L6 100 Z" fill="${fillFor(s)}" stroke="${strokeFor(s)}"/>
+      <ellipse cx="60" cy="132" rx="22" ry="5" fill="${s === 'locked' ? 'none' : 'rgba(242,232,210,.14)'}" stroke="${s === 'locked' ? 'rgba(242,232,210,.3)' : 'none'}"/>` },
+];
+
+const X0 = 288, DX = 232, Y0 = 84, DY = 152;
+el(`<span class="cap" style="color:var(--cream-3)">Cults · plate 2 · what a place looks like</span>
+    <span class="s" style="color:var(--cream-3);margin-left:16px">Four objects tried for an action space, each in its four states. Same effects in every column, so only the object differs.</span>`,
+  'position:absolute;left:32px;top:24px', '', ui);
+STATES.forEach((st, i) => el(`<span class="cap">${st.label}</span>`, `position:absolute;left:${X0 + i * DX + W / 2}px;top:56px;transform:translateX(-50%);color:var(--cream-2);white-space:nowrap`, '', ui));
+CANDS.forEach((c, r) => {
+  const y = Y0 + r * DY;
+  el(`<div class="m" style="font-weight:800;color:var(--cream)">${String.fromCharCode(65 + r)} · ${c.name}</div><div class="s" style="color:var(--cream-2);width:200px;margin-top:4px">${c.idea}</div>`,
+    `position:absolute;left:32px;top:${y + 36}px`, '', ui);
+  STATES.forEach((st, i) => {
+    const x = X0 + i * DX;
+    const o = el(`<svg class="shape" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="${glow(st.id)}">${c.draw(st.id)}</svg>
+      <div class="big l" style="top:${c.bigY}px">${st.big}</div>
+      ${st.fine ? `<div class="fine" style="top:${c.fineY}px">${st.fine}</div>` : ''}`,
+      `left:${x}px;top:${y}px`, `obj ${st.id}`, ui);
+    if (st.who) el(minion(st.who, 32), `left:${c.spot[0]}px;top:${c.spot[1]}px`, 'who', o);
+  });
+});
+});
+</script>
+</body>
+</html>

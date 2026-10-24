@@ -1,0 +1,15 @@
+
+ RUN  v4.0.9 /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ src/test/engine/v4/oct17-choice-audit.test.js (7 tests) 34ms
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ src/test/v4/ui/hover-honesty.test.jsx (6 tests) 66ms
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  23:32:37
+   Duration  1.58s (transform 735ms, setup 102ms, collect 1.01s, tests 100ms, environment 527ms, prepare 12ms)
+

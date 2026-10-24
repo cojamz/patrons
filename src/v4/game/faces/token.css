@@ -1,0 +1,64 @@
+/* The token face (token.jsx). Palette keys from token-art.js: the token is pixel-cut cardboard; --tkc is the
+   quadrant's ink. Scoped to [data-spaces="token"] where it styles the slot; the token's own classes are unique. */
+
+/* ---------- the cardboard: ink, the rim in the quadrant's ink (shade / base / highlight), the printed field ---------- */
+.tk .tk-k{fill:#1d1611}
+.tk .tk-k2{fill:color-mix(in srgb,#1d1611 72%,var(--tkc))}
+.tk .tk-q1{fill:color-mix(in srgb,var(--tkc) 64%,#1d1611)}
+.tk .tk-q2{fill:var(--tkc)}
+.tk .tk-q3{fill:color-mix(in srgb,var(--tkc) 74%,#fff6e0)}
+.tk .tk-qL{fill:color-mix(in srgb,var(--tkc) 50%,#fff1c8)}
+.tk .tk-L{fill:#ffdf9e}
+.tk .tk-cr{fill:#efe2c2}
+.tk .tk-p{fill:#f4ebd7}
+.tk .tk-p0{fill:#fcf7ea}
+.tk .tk-p2{fill:#e2d2ae}
+/* the token's side: two rows of cardboard below the face */
+.tk .tk-e{fill:color-mix(in srgb,var(--tkc) 30%,#2a1d14)}
+.tk .tk-e2{fill:#150f0b}
+/* ring III's gilt band, riveted */
+.tk .tk-G1{fill:#8d5c16}
+.tk .tk-G2{fill:#d4a03a}
+.tk .tk-G3{fill:#f3d47e}
+.tk .tk-G4{fill:#fff3c4}
+/* the blank cardboard back (locked) */
+.tk .tk-b0{fill:#d3c39d}
+.tk .tk-b1{fill:#a48c64}
+.tk .tk-b2{fill:#bba277}
+.tk .tk-b3{fill:#cdb88d}
+
+/* ---------- light, lift and shadow ---------- */
+.tk .tk-shadow{fill:rgba(28,16,8,.30)}
+.tk.lit .tk-shadow{fill:rgba(28,16,8,.22);transform:translateY(1.2px)}
+.tk .tk-glow{fill:rgba(255,206,120,.30)}
+.tk .tk-body{transition:transform .16s cubic-bezier(.3,1.4,.5,1)}
+[data-spaces="token"] .slot.can:hover .tk-body,[data-spaces="token"] .slot.sel .tk-body{transform:translateY(-3.2px)}
+[data-spaces="token"] .slot.can:hover .tk .tk-shadow{transform:translateY(2.4px);fill:rgba(28,16,8,.18)}
+[data-spaces="token"] .slot.can:hover .tk .tk-glow{fill:rgba(255,206,120,.55)}
+/* taken: the token reads face-down, about 40% light; its minion stands on it at full strength */
+.tk .tk-down{filter:brightness(.42) saturate(.55)}
+.tk.locked .tk-body{opacity:.82}
+.tk .tk-numeral{font-family:var(--serif);font-weight:800;fill:rgba(42,31,23,.55);font-variant-numeric:lining-nums}
+/* fresh: a dotted ring in the mover's colour */
+.tk .tk-fresh{fill:none;stroke:#8f7f66;stroke-width:1.6;stroke-dasharray:1.5 1.5}
+.slot.newest .tk .tk-fresh{animation:tk-unwind 1.6s linear infinite}
+@keyframes tk-unwind{to{stroke-dashoffset:-12}}
+/* a minion just landed: a one-frame squash */
+.tk.flash .tk-body{animation:tk-land .28s ease-out}
+@keyframes tk-land{40%{transform:translateY(1px) scaleY(.94)}}
+@media (prefers-reduced-motion: reduce){.tk .tk-body{transition:none}.slot.newest .tk .tk-fresh,.tk.flash .tk-body{animation:none}}
+
+/* ---------- the strip ---------- */
+.tk .tk-ribbon{fill:#231912}
+.tk .tk-ribbon-hi{fill:color-mix(in srgb,var(--tkc) 70%,#f3e6c8)}
+.tk .r3 .tk-ribbon-hi,.tk.r3 .tk-ribbon-hi{fill:#e9c060}
+.tk .tk-tail{fill:color-mix(in srgb,var(--tkc) 55%,#1d1611)}
+.tk.r3 .tk-tail{fill:#8d5c16}
+.tk .tk-num{font-family:var(--sans);font-weight:800;font-size:13px;fill:#f6ecd6;letter-spacing:-.01em;font-variant-numeric:lining-nums}
+.tk .tk-jointext{font-family:var(--sans);font-weight:800;font-size:13px;fill:#cbb894}
+.tk .tk-join{fill:#cbb894}
+.tk .tk-sep{fill:rgba(243,230,200,.4)}
+.tk .tk-tagtext{font-family:var(--sans);font-weight:800;font-size:12px;fill:#1d1611;font-variant-numeric:lining-nums}
+/* resource glyphs on the dark strip: a cream edge instead of the paper's ink one */
+.tk .tk-res .res-glyph path:first-of-type{stroke:#f6ecd6;stroke-width:1.15}
+.tk .tk-res .res-glyph{overflow:visible}

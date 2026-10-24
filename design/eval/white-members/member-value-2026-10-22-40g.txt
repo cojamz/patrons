@@ -1,0 +1,15 @@
+member value when handed over at the start of round II (40 games each, 4 normal bots, release on). Baseline win rate 25%.
+name                 cost  +followers  win%
+Exporter                3         7.7    38
+Broker                  4         5.3    28
+Heiress                 5         5.1    30
+Martyr                  3         4.8    30
+Cashier                 4         4.7    25
+Appraiser               4         4.0    33
+Money Changer           3         3.8    30
+Raider                  5         3.8    23
+Shopkeeper              4         2.7    20
+Hoarder                 7         2.6    25
+Undertaker              3         1.8    18
+Bulk Buyer              3         1.3    18
+done

@@ -1,0 +1,79 @@
+vite v5.4.21 building for production...
+transforming...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 698 modules transformed.
+rendering chunks...
+computing gzip size...
+.v4-build-draft-retinue/index.html                                   1.53 kB │ gzip:   0.81 kB
+.v4-build-draft-retinue/assets/as-500-DS713u5J.woff2                23.93 kB
+.v4-build-draft-retinue/assets/as-800-CpHsWMQ0.woff2                23.96 kB
+.v4-build-draft-retinue/assets/as-700-DEbcy2sF.woff2                23.98 kB
+.v4-build-draft-retinue/assets/previewWorker-087MBdes.js           129.77 kB
+.v4-build-draft-retinue/assets/golden_ring-Bz0o4whq.png            888.99 kB
+.v4-build-draft-retinue/assets/gold_crown-BtMzpFXJ.png             902.64 kB
+.v4-build-draft-retinue/assets/onyx_spyglass-ClV43_Og.png          914.04 kB
+.v4-build-draft-retinue/assets/horn_of_plenty-DRoyj8TX.png         929.74 kB
+.v4-build-draft-retinue/assets/thieves_gloves-DsK9Z5T4.png         960.42 kB
+.v4-build-draft-retinue/assets/gold_idol-Bl3t-J0C.png              962.65 kB
+.v4-build-draft-retinue/assets/crystal_ball-_Gd05Ikq.png           963.60 kB
+.v4-build-draft-retinue/assets/abundance_charm-DsVUjgAq.png        999.02 kB
+.v4-build-draft-retinue/assets/poisoned_blade-D7POHgpN.png       1,028.85 kB
+.v4-build-draft-retinue/assets/diadem_of_expertise-BSyarYLS.png  1,037.90 kB
+.v4-build-draft-retinue/assets/golden_scepter-BM84VydZ.png       1,038.44 kB
+.v4-build-draft-retinue/assets/golden_chalice-DrhJvORW.png       1,053.03 kB
+.v4-build-draft-retinue/assets/cursed_blade-DwSfypBA.png         1,060.91 kB
+.v4-build-draft-retinue/assets/voodoo_doll-D9pa2CIo.png          1,062.21 kB
+.v4-build-draft-retinue/assets/emerald_coin-DGp9MgCB.png         1,076.82 kB
+.v4-build-draft-retinue/assets/gold_vault-CpJUFr6s.png           1,098.47 kB
+.v4-build-draft-retinue/assets/obsidian_coin-CSkCXOQK.png        1,112.20 kB
+.v4-build-draft-retinue/assets/golden_scope-CGVhBNIJ.png         1,121.60 kB
+.v4-build-draft-retinue/assets/alchemists_trunk-Cfykn-66.png     1,123.42 kB
+.v4-build-draft-retinue/assets/resonance_crystal-D5EX6EhR.png    1,123.67 kB
+.v4-build-draft-retinue/assets/skeleton_key-C1oesBix.png         1,144.07 kB
+.v4-build-draft-retinue/assets/rainbow_scepter-CQqmhUgq.png      1,149.49 kB
+.v4-build-draft-retinue/assets/tome_of_deeds-Nr-NNqF6.png        1,162.42 kB
+.v4-build-draft-retinue/assets/travelers_journal-D96uEdGM.png    1,176.66 kB
+.v4-build-draft-retinue/assets/slag_catcher-Bpc87ryO.png         1,178.10 kB
+.v4-build-draft-retinue/assets/golden_idol-TrcQQB3X.png          1,178.89 kB
+.v4-build-draft-retinue/assets/prismatic_gem-DQTNpMTA.png        1,185.73 kB
+.v4-build-draft-retinue/assets/temporal_patent-DlxU-SQK.png      1,191.73 kB
+.v4-build-draft-retinue/assets/extraction_vial-sPNJ5jfN.png      1,207.14 kB
+.v4-build-draft-retinue/assets/chrono_compass-BqtsK3DG.png       1,238.12 kB
+.v4-build-draft-retinue/assets/rainbow_crest-CXUpxtoI.png        1,251.08 kB
+.v4-build-draft-retinue/assets/timeline_splitter-sDAurXU7.png    1,253.12 kB
+.v4-build-draft-retinue/assets/hourglass-BWrp-rWp.png            1,297.57 kB
+.v4-build-draft-retinue/assets/flux_capacitor-C94MQe8s.png       1,310.19 kB
+.v4-build-draft-retinue/assets/crystal_watch-DJtxzdCX.png        1,368.91 kB
+.v4-build-draft-retinue/assets/philosophers_stone-C587iFPr.png   1,391.24 kB
+.v4-build-draft-retinue/assets/capacitor-CpQkWVBY.png            1,438.28 kB
+.v4-build-draft-retinue/assets/sum-CTJg3MHb.css                      0.31 kB │ gzip:   0.22 kB
+.v4-build-draft-retinue/assets/landmark-CJsVLKTq.css                 0.80 kB │ gzip:   0.36 kB
+.v4-build-draft-retinue/assets/token-Cii_URc2.css                    2.50 kB │ gzip:   0.89 kB
+.v4-build-draft-retinue/assets/Intro-DKmAjoF7.css                    8.01 kB │ gzip:   2.41 kB
+.v4-build-draft-retinue/assets/Wheel-DdQVGxGQ.css                   13.96 kB │ gzip:   3.44 kB
+.v4-build-draft-retinue/assets/App-ZE3XLYaS.css                     42.56 kB │ gzip:   8.79 kB
+.v4-build-draft-retinue/assets/CultSeat-Byl53_pQ.css                63.45 kB │ gzip:  12.33 kB
+.v4-build-draft-retinue/assets/index-DXqXcLwy.css                   70.81 kB │ gzip:  11.19 kB
+.v4-build-draft-retinue/assets/Glyphs-Ddn5-g19.css                 133.36 kB │ gzip:  25.89 kB
+.v4-build-draft-retinue/assets/IntroLab-BHp1svBE.js                  0.43 kB │ gzip:   0.32 kB
+.v4-build-draft-retinue/assets/kit-CtlOugay.js                       1.11 kB │ gzip:   0.62 kB
+.v4-build-draft-retinue/assets/demo-B9cxEcLK.js                      1.33 kB │ gzip:   0.73 kB
+.v4-build-draft-retinue/assets/index.esm-BvUaoj6Q.js                 1.34 kB │ gzip:   0.75 kB
+.v4-build-draft-retinue/assets/LabB-4VTvMDqs.js                      2.92 kB │ gzip:   1.38 kB
+.v4-build-draft-retinue/assets/FacesLab-BLNIvgo3.js                  6.75 kB │ gzip:   3.04 kB
+.v4-build-draft-retinue/assets/token-C-iQjG0O.js                    11.79 kB │ gzip:   4.95 kB
+.v4-build-draft-retinue/assets/sum-BNd_YLH-.js                      15.72 kB │ gzip:   5.95 kB
+.v4-build-draft-retinue/assets/landmark-C8IxGPjQ.js                 21.03 kB │ gzip:   6.98 kB
+.v4-build-draft-retinue/assets/Intro-D9Q7aTWf.js                    37.55 kB │ gzip:  13.80 kB
+.v4-build-draft-retinue/assets/Wheel-B5UruBRh.js                   108.52 kB │ gzip:  39.97 kB
+.v4-build-draft-retinue/assets/config-6fcfdDgf.js                  113.44 kB │ gzip:  23.10 kB
+.v4-build-draft-retinue/assets/CultSeat-CwdgmwRs.js                117.09 kB │ gzip:  41.23 kB
+.v4-build-draft-retinue/assets/index-BKcFULf0.js                   164.72 kB │ gzip:  54.23 kB
+.v4-build-draft-retinue/assets/App-DK6dP5Se.js                     205.28 kB │ gzip:  71.82 kB
+.v4-build-draft-retinue/assets/index.esm-DH8C4Ikr.js               251.85 kB │ gzip:  57.18 kB
+.v4-build-draft-retinue/assets/Glyphs-8Azhsn1u.js                  377.55 kB │ gzip:  99.02 kB
+.v4-build-draft-retinue/assets/App-BMVtRv_9.js                     456.69 kB │ gzip: 121.93 kB
+✓ built in 4.65s

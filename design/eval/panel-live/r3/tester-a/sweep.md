@@ -1,0 +1,69 @@
+# Tester A sweep
+## Home / How to play / Setup
+- polish (22/30) Setup: Red card rule line wraps to 2 lines ("Most members (red members break ties)"), so its description sits lower than siblings; uneven card rhythm. shot 005
+- polish (7) Custom table starts with 4 preselected (Classic); to build a custom table you must first deselect 4 cards (8 clicks for 4 picks). "4 of 4" counter is tiny. shot 005
+- polish (2) Setup copy "Pick 4: they go round the wheel in the order you pick them (the corner number)." – a parenthetical explaining a tiny corner digit; could the order matter be dropped or shown on a mini wheel. shot 014
+- polish (24) How to play opened 276 first / 460 complete (load 5.1, indicative)
+## Picks / Round I (Steady), load 4-13 throughout (timings indicative)
+- major (11/28d) Starting-resource picker sits bottom-left (210,620); header prompt is at (640,36): ~700 px apart. "Undo pick" is in the header, ~640 px from the picker you just clicked. shot 022
+- polish (30) Intro "Cults in thirty seconds" plays after Start before the game; fine, but Skip intro is the only way out top-right. shot 016
+- major (2/22) Wheel text changes with rotation: Goody Bags reads "+2● +2 of a color you pick · others get 1 of it" upright at top, but after dragging the wheel the same panel drops "others get 1 of it" entirely. A space's terms must not depend on wheel angle. shots 019, 029
+- polish (30) Arrow-key spin snaps back to default and leaves a dashed white focus arc outside the yellow rim that looks like a debug outline. shot 032
+- major (2) Decipher: Good Deed face "+4● +2 of a color to a rival" read as "I give a rival 2" — hover says the rival gets 2 free. Face should say "a rival gets 2". shot 033
+- major (2) Good Deed hover: "MOST SILVER: ...and +2 goes to the one you pick" — reads like +2 followers; it means the 2 gifted resources. shot 033
+- major (12) Space hovers are big cards (~280×190) that cover the neighbouring spaces of the same quadrant (Good Deed hover covers Goody Bags/Toast). shot 033
+- major (24) Space hovers: 360 first / 918 complete, 3 bursts (Good Deed); 134/433, 2 bursts (Redistribute); 163/696, 3 bursts (Help Yourself); 180/1644, 6 bursts (Lie Low). Fill-in after appearing breaks "hovers open complete". (load 5-8)
+- major (24) Member hovers: 125/353 (Desperado), 132/226, 159/366 2 bursts (Retinue). Over 100 ms complete.
+- major (28d/20) Steal/take choices are picked on rival seats (left column, ~330-370 px from the magenta space you clicked); not "a picker beside the space". shots 038, 058
+- polish (7) Redistribute with a forced outcome (1 each from P2, P4) still costs one click per rival (2 extra clicks).
+- polish (8) Toast "You took Help Yourself" bottom-left narrates what I just did; toast then repeats in the strip. shot 038
+- major (1) "Undo placement" vanishes after the first steal pick; no way back mid-choice. shot 040
+- major (13/9) Kingpin card lit pink while I hovered Lie Low (preview of what becomes affordable?) with no explanation; I read it as a selection. shot 056
+- major (1/15) "Since your last turn" strip hides turns behind "1 earlier… open the log" / "2 earlier" with just 2-3 rows; it showed Toast once, then collapsed it again a moment later. It flickers between lengths. shots 047, 066, 068, 073
+- major (2) Strip "P4 Toast (+3●, others get 1): you +2● (Retinue)" – credits both +1s to Retinue and never says P4 recruited Retinue. shot 068
+- major (28c) Log omits a gain: "P2 took Goody Bags. P2 gains 2● yellow; everyone else gains 1●" — the space's +2 silver main gain is not logged (seat math shows it was paid). shot 051
+- major (13) Hovering a member name in the log (Go-Between) opened nothing; Goody Bags (a space) opened its card. shot 053
+- polish (8) Strip lines repeat the space name twice: "P4 Top Up (Top up: +1 of your fewest)". shot 025
+- major (21) Seats: each is 300×100 holding one name, a score, 4 tiny "0 ○" pairs; the empty "0" resources render as dim zeros + dim rings at ~10px, hard to count; lots of dead space right of resources. shot 020
+- major (2/17) Seat resources read "0 ○ 1 ● 1 ● 0 ○": number BEFORE dot while costs on cards are "2● 2◐" (number before too) but the follower shop reads "2◐ → 1👤" – fine; however zero holdings are drawn as hollow rings, a 3rd dot form to learn.
+- polish (23) Rim leader emojis pile up (3-4 emojis) after "+2 👤" on the rim; at ties the rim gets crowded. shot 025
+- major (28/E14) Bot turns at Steady: P4 x2 turns played while I was idle; the Retinue "everyone else +1 silver" gift isn't shown as a cause on my seat – my silver just rose.
+- major (2) Round summary column "THIS ROUND: +4 new members" for P4 who recruited 2 members (worth 4 followers); "+1 new members" for me. Label counts followers but says members, and bad plural. shot 076
+- polish (27) Round-end scoring per quadrant ("Most purple · counts the purple you hold… P2 wins +2 followers") was followable at Steady: good. Card covers the wheel center, fine.
+## Round II (Relaxed for one bot stretch, then Quick)
+- major (28c/28g) Rising Tide face "Gain silver · half the top rival's" hides "Everyone else +1●" (hover only). Sweet Talk face "+4● swap for a color" also hides "everyone else +1●". A gift to all rivals is the most important line for a race on most-silver and it's missing from the face. shots 082, 084
+- major (28c/28g) Poach face "Take a rival's member" hides "They recruit any face-up member costing up to the same, free". shot 098
+- major (2/28c) Shake Down hover YOU'D GET: "up to +1 member (Admirer), +1👤, or +1 member (Shift Crew), +2👤 their choice" – unreadable; the likely outcome (they pay, I get magenta) isn't in the summary. I got +2 magenta. Rival's choice happened invisibly. shots 100, 105
+- major (28f/22) My minion token on Shake Down sits on the panel's words ("loses it"). shot 102
+- major (12/24) Pay dialog for a member opens screen-center (~480 px from the card clicked) as a modal that blacks out the board; "Faded coins pay. The number under each stack is what you keep." is a decode instruction (inverse logic). shots 109, 154
+- polish (30) 4-followers pay dialog shows 3 follower marks (2 grey, 1 black) as its picture; meaningless. shot 154
+- good: "Paying this gives up your tie for most silver / your lead in purple" warning is excellent error prevention. shots 109, 165
+- major (21/22) Shop reflows after a recruit with cards sliding over one another (Majordomo/Weaver, Debutante/Guest overlapping mid-motion) – looks broken for ~0.5 s. shot 167
+- major (21/6) Rival seats collapse members into "+2 more" text once they hold 3+; you must hover the seat to see what they own. Room exists (seat is mostly empty; 'EACH ROUND' block takes the space instead). shot 173
+- major (2/28e) Seat badge "EACH ROUND +1● +1● +1●" (P3) / "+3●" (P2): no member named; hover says "Next round starts with +3● for P2, as things stand now". It's a forecast that duplicates member hovers; could go (or live in the seat hover). shot 136
+- polish (12) P2 "Each round" hover opens over P3's seat (above), covering P3's members. shot 136
+- major (13) No hover on the deck (25 left), the sort toggle, hub numeral, phase line "ROUND II OF 3 · PLACE · RECRUIT OR BUY". shots 146-152
+- good (13) Score hover breaks down followers (You 1, Members +3, Round-end prizes +2). Rim hover lists full standings with "tied lead". shots 132, 140
+- major (24) Seat member hover (Retinue) 342 first / 586 complete, 2 bursts; Go-Getter seat hover 283/571, 2 bursts.
+- polish (2) Plan Ahead face "+1● per minion to place" — hover clarifies "you have left" and counts after this one (+1 with 2 in hand). Face reads like +2.
+- polish (8) Toast after using Go-Getter: "You / an extra turn" — broken sentence. shot 178
+- good (B20/house) Sweet Talk / Trade Seeds pickers open next to the space (~150 px) – this is the target pattern; but steals still go to seats.
+- polish (1) Trade Seeds picker re-lays out after the first swap (button "Swap nothing" becomes "Done", rows change), and Undo placement disappears from the header after first step. shot 188
+- major (27) Round II scoring at Quick: each quadrant card first shows 0s/greyed counts with the verdict line already printed ("P2 and P4 tie: +4 each" above "0 0"), then numbers fill in. Verdict before evidence. shot 191 frames
+- major (2) Summary "THIS ROUND" column: "+3 new members · +4 bought" for me (I recruited 2 members; +3 is followers) – still mislabels followers as members. "−2 from members who left" for P3 is good. shot 192
+- polish (28a) Relaxed: ~2.5 s per bot turn vs ~1.2 s at Steady – clearly slower (by eye ~2x). Quick: bot turns in under 1 s each, I could not follow placements while also reading the strip.
+## Round III (Quick)
+- major (28g) Hold Court face "+1👤 per 2● held" hides "Everyone else +2●" (rivals +6 in all). Fourth space whose face omits a gift to rivals. shot 206
+- major (14/2) Hold Court hover "MOST SILVER: P3 has 17, P2 has 15, P4 has 3" while seats read 15, 13, 1: the hover shows post-gift numbers but says "has". shot 206
+- major (28c) Poach: hover promised the victim "recruits any face-up member costing up to the same, free"; after I took P3's Rainmaker, nothing visible happened (shop unchanged, no toast line, P3 no new card). shots 196, 198
+- major (22/28f) My minion on Poach covers "member" again; tokens on inner panels sit on words. shot 196
+- good: Rainmaker seat hover shows "USE … Use: +1●" button computed for my state, "Release: +3●" – exactly the house style; worked as stated. shot 200
+- major (28) Quick: six bot turns in ~4.5 s; strip shows 3, hides "3 earlier"; I could name about half the changes from the board.
+- major (5) 4-for-4 follower pay dialog takes my yellow and silver, breaking my only full set (I'm tied for most full sets, +6), with NO 'gives up your tie' warning – member dialogs warned, this one doesn't. shot 214
+## Round III end / Results
+- polish (8) Round III summary banner "End-game bonuses still to add: P4 Kingpin +1, Timekeeper +0" – a +0 line is noise. shot 236
+- major (2) Summary "THIS ROUND" for me: "+1 new members · −1 from members who left · +12 bought · +1 won" – "won" undefined; members vs followers mixed again. shot 236
+- good: Results table explains the win ("P4 won by 2, mostly from the rims' prizes… then buying"), columns sum, "Each number opens what it's made of". shot 238
+- polish (15) Results repeats every player twice (table + seat cards below) and the seat cards' resource rows are dead information at game end. shot 238
+- major (balance/feel) Bots bought 10-for-10 repeatedly in round III (+19..+26 bought); followers by purchase dwarfed everything I did on the board (my 18 placements ≈ +3 followers net). Not a screen issue, but felt like the wheel didn't matter.
+- major (1) Header "Your turn again (snake order)" shown on a Crunch Time turn; then "Your next turn, now (Crunch Time)". The seat said "two turns in a row" before I took Crunch Time. Three phrasings for the same state. shots 210, 217
