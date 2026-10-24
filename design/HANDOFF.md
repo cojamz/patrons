@@ -24,4 +24,4 @@ Last updated 2026-10-24 by the tidy-up thread. Before this: design/archive/hando
 ## How to work
 - Ship: quick check on the exact commit, push to the game branch (rebase, never force), bash scripts/v4-play.sh <sha>, confirm the stamp, go-live note with a screenshot.
 - Token-conscious: no sims or game batches unless Cory asks; open the game only for UI checks.
-- Old thread branches were archived as tags archive/<branch-name> on Oct 24 (see design/in-flight.md); restore one with git push origin archive/<name>:refs/heads/<name>.
+- About 50 old thread branches (Oct 14 to 23) are stale; this box can't push tags or delete branches, so they stay. List: design/in-flight.md.

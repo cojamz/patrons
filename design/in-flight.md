@@ -14,4 +14,4 @@ Branches
 - claude/gifted-newton-3lcy3i: the game (PR #1). main: the old game plus play/, rules/ and the harness mirror.
 - claude/project-thread-tmeqf2: two shops, open.
 - Kept as they are: gh-pages (retired, Pages serves main), ux-work-may-1 (old, from May).
-- Every other claude/* branch (old thread workspaces, sweeps, benches, panels) was turned into a tag archive/<branch-name> and the branch removed on Oct 24. Their content is merged or recorded in design/eval/.
+- Every other claude/* branch is an old thread workspace (sweeps, benches, panels, member sims, five-six players) and stale: its work is merged into the game branch or recorded in design/eval/. The Oct 24 tidy-up couldn't archive them (pushing tags is refused from this box), so they stay until someone with GitHub access deletes them; none are needed.
