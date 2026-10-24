@@ -1,123 +1,123 @@
 # Cults changelog
 
-Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.21, published 2026-10-21. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
-## v0.8.62 — 2026-10-23 — unreleased
+## v0.8.62 — 2026-10-23 — shipped (source 07ec995, main 7b510cc)
 
 - The wheel shows more of each space: Right Away's and Crunch Time's purple, and Last Call's followers per minion left.
 
-## v0.8.61 — 2026-10-23 — unreleased
+## v0.8.61 — 2026-10-23 — shipped (source 523b518, main 500e3bc)
 
 - Clearer card text: Allowance, Top Up, Late Bloomers and Exchange; the board's words now match each card (Sweet Talk, Help Yourself, Redistribute, Golden Years, Chorus, Harvest).
 
-## v0.8.60 — 2026-10-22 — unreleased
+## v0.8.60 — 2026-10-22 — shipped (source c1eee17, main eb45b92)
 
 - Peek: the 4 cards you peek at sit beside the shop instead of replacing it, and ones you can't afford stay visible, faded
 
-## v0.8.59 — 2026-10-22 — unreleased
+## v0.8.59 — 2026-10-22 — shipped (source c919007, main 3eb46a0)
 
 - The shop shows 6, 7 and 8 members in rounds I, II and III. Peek gives +2/+4/+6 blue; Lie Low no longer steals; Raiders (renamed) costs 4. Redistribute counts its own space, and the details view shows total cost. Members fly between players online too; seats list members oldest to newest. Top Up: fewest colors get a flat +1, only its yellow grows each round. Wheel and card words match what the spaces do. After an update, players in a game started on the version before go back to their seat on that version.
 
-## v0.8.58 — 2026-10-22 — unreleased
+## v0.8.58 — 2026-10-22 — shipped (source 314e445, main a5cca4f)
 
 - Loyalists costs 5 (was 3). Sticky Fingers: "Your steals take 1 more resource", now members' steals too.
 
-## v0.8.57 — 2026-10-22 — unreleased
+## v0.8.57 — 2026-10-22 — shipped (source 33d3f67, main 1458721)
 
 - Right Away scales (+1, +2, +3 purple). Gossip pays when a turn is really skipped. Closer pays whoever places the round's last minion, now cheaper. Copying Sleep In, Hold Up, Right Away, Crunch Time, Last Call, Crowd In, High Tide or Allowance does the whole action. Stunt Double repeats the space you just took.
 
-## v0.8.56 — 2026-10-22 — unreleased
+## v0.8.56 — 2026-10-22 — shipped (source 8b73f52, main f6ea99e)
 
 - Help Yourself now steals its followers from the rivals you take from, instead of getting them from the bank.
 
-## v0.8.55 — 2026-10-22 — unreleased
+## v0.8.55 — 2026-10-22 — shipped (source 4fd20c7, main 6272bf6)
 
 - Even Swap, Promote and Demote now offer "Don't swap", so the swap is your choice; you keep the +1 red.
 
-## v0.8.54 — 2026-10-22 — unreleased
+## v0.8.54 — 2026-10-22 — shipped (source f45c601, main 84d5563)
 
 - Hover cards put each separate effect on its own line.
 
-## v0.8.53 — 2026-10-22 — unreleased
+## v0.8.53 — 2026-10-22 — shipped (source ba3d88d, main 37b3327)
 
 - The glossary lists the cards that use each word and adds Skip, Get rid of, Turn into followers and more; the Members list shows colors not in this game, dimmed. Right Away now scales by round.
 
-## v0.8.52 — 2026-10-22 — unreleased
+## v0.8.52 — 2026-10-22 — shipped (source 24f6038, main 1aecb82)
 
 - White prices: Exporter, Undertaker and Appraiser cost more; Money Changer, Heiress, Broker and Martyr are worth 2 followers
 
-## v0.8.51 — 2026-10-22 — unreleased
+## v0.8.51 — 2026-10-22 — shipped (source 95516d9, main c272a6e)
 
 - Copying Open Door now recruits the cheapest member in the shop at that moment, instead of nothing once the first player's pick was gone.
 
-## v0.8.50 — 2026-10-22 — unreleased
+## v0.8.50 — 2026-10-22 — shipped (source 8f3e174, main 1e93cb7)
 
 - Dragging or spinning the wheel no longer redraws the whole board each frame, so it turns smoother.
 
-## v0.8.49 — 2026-10-22 — unreleased
+## v0.8.49 — 2026-10-22 — shipped (source 2a10608, main 3c7959f)
 
 - White is redesigned: six new spaces about turning what you have into followers, 12 members, and the contest is Most white
 
-## v0.8.48 — 2026-10-22 — unreleased
+## v0.8.48 — 2026-10-22 — shipped (source 1c61d84, main 0e0f24e)
 
 - Custom table picker: Blue is tagged 2.0
 
-## v0.8.47 — 2026-10-22 — unreleased
+## v0.8.47 — 2026-10-22 — shipped (source 61ccbf3, main 318800d)
 
 - Silver's round III space is now High Tide: each rival +1 silver, then gain 1 follower per silver the rival with the most silver holds.
 
-## v0.8.46 — 2026-10-22 — unreleased
+## v0.8.46 — 2026-10-22 — shipped (source 10b225b, main cb2f026)
 
 - Custom table picker: a small 2.0 / 1.5 / 1.0 tag on each color shows which are redesigned
 
-## v0.8.45 — 2026-10-22 — unreleased
+## v0.8.45 — 2026-10-22 — shipped (source dc4564e, main 9747394)
 
 - Purple redesign: new actions (Sleep In, Hold Up, Right Away, Last Call, Crunch Time, Crowd In), six new members, fresh prices, and a II+ tag on members that work from round II.
 
-## v0.8.44 — 2026-10-22 — unreleased
+## v0.8.44 — 2026-10-22 — shipped (source cd94f94, main 9c45335)
 
 - The log now says every change: each space's gain, every swap, who got paid, new cards in the shop, and what caused it.
 
-## v0.8.43 — 2026-10-22 — unreleased
+## v0.8.43 — 2026-10-22 — shipped (source b7e4550, main 24e5221)
 
 - Five and six player games: Purple joins the board at 5 players, Yellow at 6, with shorter chairs so everyone fits.
 
-## v0.8.42 — 2026-10-22 — unreleased
+## v0.8.42 — 2026-10-22 — shipped (source f4bd276, main e87c033)
 
 - Purple round II: "+2 purple. This round you can place on taken spaces" replaces Plan Ahead.
 
-## v0.8.41 — 2026-10-21 — unreleased
+## v0.8.41 — 2026-10-21 — shipped (source aa791b5, main 29f6ecf)
 
 - Crunch Time's hover says 2 turns after this one.
 
-## v0.8.40 — 2026-10-21 — unreleased
+## v0.8.40 — 2026-10-21 — shipped (source 99b8c53, main ccd71ed)
 
 - Crunch Time reads "Take two turns after this one."
 
-## v0.8.39 — 2026-10-21 — unreleased
+## v0.8.39 — 2026-10-21 — shipped (source 42f448f, main e7599be)
 
 - Crunch Time reads "Take your next 2 turns now" again.
 
-## v0.8.38 — 2026-10-21 — unreleased
+## v0.8.38 — 2026-10-21 — shipped (source 82542e6, main 7196887)
 
 - The final results open with every total already in place; no second count-up after round III.
 
-## v0.8.37 — 2026-10-21 — unreleased
+## v0.8.37 — 2026-10-21 — shipped (source 214e269, main 8d3c539)
 
 - Taking back a placement with Escape (Kickback) now really frees the space again.
 
-## v0.8.36 — 2026-10-21 — unreleased
+## v0.8.36 — 2026-10-21 — shipped (source 1eb83e7, main ce32b97)
 
 - Snappier: a rival's seat card opens as soon as you rest on it, the start of your turn no longer stutters, and rivals' turns run a touch quicker.
 
-## v0.8.35 — 2026-10-21 — unreleased
+## v0.8.35 — 2026-10-21 — shipped (source f9882c0, main 97b0632)
 
 - New member prices for Magenta, Blue, Red, Green and the guests: educated guesses from bot tests, leaning a little pricier, nothing below 2 (one color, one wild). Most cards got cheaper; human play will set the rest. Price list: /mnt/project-files/member-balance/prices-2026-10-21.md
 - The new Blue members are in: Shopaholic, Patroness, Snob, Stylist, Connoisseur, Plus-One, Doorman, Critic, Regular, Window Dresser, Makeover, Trendsetter. Window Dresser, Makeover and Trendsetter are now worth 3 followers each.
 - Guests: Front-runner, Tiebreaker ("Ties you're in go to you alone") and Launderer ("turn all your resources into one color you choose") join the deck.
 - Recruit Bonus is worth 2 followers. Shopaholic's second recruit is named in the game log.
 
-## v0.8.34 — 2026-10-21 — unreleased
+## v0.8.34 — 2026-10-21 — shipped (source 08776e3, main 9b95004)
 
 - Crunch Time's hover says 2 more turns now.
 

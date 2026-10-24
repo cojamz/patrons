@@ -1,12 +1,17 @@
-# In flight (2026-10-21 12:05pm Eastern)
+# In flight (2026-10-24, tidy-up)
 
-- Live: v0.8.32 (main:play/build.json, source 9aec1a1). Today: speed pass (v0.8.27), panels close up after the round I picks (v0.8.29), player panel A with members by cost and a compact expandable log (v0.8.30), Recruit wording + Recruit Twice (v0.8.31), Cory's recruit definition: follower buys count as recruits, forced arrivals don't (v0.8.32).
-- Backlog thread ("Where we are this week"): idle, waiting for Cory's next pick. Open, ours: Even Swap's shop-to-shop trade tells nothing in the story; the game log still says "bought N followers"; lag leftovers in design/eval/perf/lag-2026-10-21.md (round II commit ~200ms, bots think on the main thread, SinceStrip/TurnCard re-render every state, hover gutter grace); wording rows held as rules questions (⚑) in /mnt/project-files/overnight/lane8/wording-sheet.md.
-- Better design process thread: member card design. Done today: Magenta 13 (v0.8.28), Blue 12 picked (Window Dresser and Trendsetter in), guests Launderer/Tiebreaker/Front-runner yes. Old colors' members parked until their actions are redesigned. Crowd-Pleaser is cut, so no Recruiter stacking.
-- Member balance thread: prices at Cory's 1.5× rule for Magenta, Blue, Red, Green and guests, then one follower-only check; builds on claude/members-blue-v2.
-- Yellow redesign thread (paused by Cory Oct 22, 7:17pm; he may work on it himself): Yellow stays "the color that gets many colors"; contest is most yellow held. Round III open: refused so far "+2 of every other color", pile swaps, "match your biggest", "do one round I action of each other color", and (another thread) "yellow counts in another contest at round end". Live Yellow spaces unchanged. Trail: design/pitch-ledger.md, /mnt/project-files/yellow/.
-- Rejoin across versions: live in v0.8.59 (Oct 22, 11:55pm). Each ship keeps the last 3 releases at play/v/<version>/; a reload into a room on an older release lands back in the seat there (checked locally: v0.8.58 room, reload into v0.8.59). Nothing left.
-- Live status lines: node scripts/status.mjs (board at /mnt/project-files/status/board.md).
-- Gold redesign: paused by Cory (Oct 22) to ship Purple. State and open slots: design/spheres/gold-redesign-2026-10-22.md. Next: wait for him to reopen Gold.
-- White redesign thread: all six spaces set by Cory (Oct 22 7:45pm, design/spheres/white-actions-draft-2026-10-22.md). Next: 12 members, then Member balance for prices. Nothing built.
-- Action text review thread (Oct 22 11:20pm): /review-text skill built and run once (design/eval/text-review/). Board-word fixes committed, not shipped (freeze). Next: the wheel's dropped lines (layout), then Cory's 4 card-text calls when he answers.
+Nothing is running. Live: v0.8.62 (main:play/build.json, source 07ec995). Before this: design/archive/in-flight-2026-10-21-to-23.md.
+
+Threads and where each stands
+- Action text review: v0.8.60 to v0.8.62 shipped. Waiting on Cory's #12 (how the wheel shows "+1" on long spaces). Owner of /review-text.
+- Engine start and round I: two shops built on claude/project-thread-tmeqf2, not live. Waiting on Cory's #1 to #4.
+- Tonight's playtest notes (Oct 22): everything decided is live. Waiting on #6 to #11.
+- Purple redesign: shipped v0.8.45, playtest fixes v0.8.57. Waiting on #5 (Sleep In +3).
+- Gold, Silver, Yellow redesigns: paused by Cory. Waiting on #20 (which color next).
+- Finished: White redesign (spaces, 12 members, prices v0.8.52), Member balance (v0.8.35 prices; the 2x repass is #15), Member design, Rules rewrite (glossary reads the cards, v0.8.53), Bigger shop 6/7/8 (v0.8.59), Wheel spin lag (v0.8.50; #14 asks if it still lags), Hard bot balance runs, Brainstorming skill, Where we are this week.
+
+Branches
+- claude/gifted-newton-3lcy3i: the game (PR #1). main: the old game plus play/, rules/ and the harness mirror.
+- claude/project-thread-tmeqf2: two shops, open.
+- Kept as they are: gh-pages (retired, Pages serves main), ux-work-may-1 (old, from May).
+- Every other claude/* branch (old thread workspaces, sweeps, benches, panels) was turned into a tag archive/<branch-name> and the branch removed on Oct 24. Their content is merged or recorded in design/eval/.

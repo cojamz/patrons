@@ -1,29 +1,27 @@
 # Cults — handoff (current state; update in place, don't stack sections)
 
-Last updated 2026-10-21 3:50am Eastern. Older handoffs: design/archive/handoff-before-2026-10-20.md (v0.6–v0.8.9 detail and evidence).
-
-## Live
-- https://cojamz.github.io/patrons/play/ is **v0.8.38** (Oct 21 10:24pm Eastern: results open with final totals; lag thread's seat-hover, turn-start redraw, rival pace and Escape fixes on top of v0.8.35's prices and Blue deck) (see main:play/build.json for the exact source; CHANGELOG.md marks each section "shipped (source X)"). Branch claude/gifted-newton-3lcy3i (PR #1) holds the game plus docs.
-- Oct 22 7:45pm Eastern: **v0.8.45** live (source dc4564e): the Purple redesign (Sleep In, Hold Up, Right Away, Last Call, Crunch Time, Crowd In; members Early Bird, Bouncer, Gossip, Extra Shift, Closer, Hot Streak plus repriced Go-Getter, Late Riser, Night Owl, Courier, Clockmaker, Shift Crew; II+ tag), plus the log rewrite and 5-6 players. Prices: design/eval/purple-oct22/README.md.
-- Oct 22 12:35pm Eastern: **v0.8.43** live = v0.8.42 + 5 and 6 player games (Purple at 5, Yellow at 6; shorter chairs at 5-6; source b7e4550 on branch claude/ship-five-six-players). The branch's unshipped Purple changes (Sleep In, Hold Up, Crowd In/Crunch Time swap) are NOT live; the next ship from this branch must bump to v0.8.44.
-- Overnight Oct 20–21 (Cory's job 1, "fix all the open items"): v0.8.13–v0.8.25 except v0.8.14/0.8.19/0.8.20 (other threads). Colorless guests, Cory's made calls (Social Climber and Overseer cut, Grifter, Top Up, Chefs, Pants, affordable toggle), laptop fits and large-screen zoom, card grounds, first-play ring line, motion pass (members pop from seats, recruit via the hub, round-start beats, undo backwards, quiet skips), screen overlaps, swap portraits, every coin flies, round-end smoothing, rim sheen, bot swap scoring.
-- Unit suite all green; browser gates honest (lane 6 sweep, /mnt/project-files/overnight/lane6/gates.md). Known red: members.mjs m3 (e2e/v4/known-red.json) needs a seat-layout call.
-- Job 2 (color reworks) belongs to the "Better design process" thread; nothing from it ships before Cory approves.
-- v0.7.0–v0.8.9 were built with ChatGPT/Codex; it commits as "Codex".
+Last updated 2026-10-24 by the tidy-up thread. Before this: design/archive/handoff-2026-10-21-to-23.md.
+- Live: https://cojamz.github.io/patrons/play/ is v0.8.62 (source 07ec995, Oct 23 12:39pm Eastern). Branch claude/gifted-newton-3lcy3i (PR #1) is the game plus docs; every CHANGELOG.md section through v0.8.62 names its source and main commit.
+- Nothing is running. Cory asked for a clean start on Oct 23, 9:04pm Eastern.
+- Every open question for Cory is in one numbered list: design/notes/waiting-on-cory-2026-10-24.md (copy in /mnt/project-files/tidy-up/). Build nothing from it until he answers by number.
+- Biggest open call: two shops (cheap pile of members costing 4 or less, pricey pile 5+; round I shows 5 cheap, II and III 5 of each). Built and passing its rules checks on branch claude/project-thread-tmeqf2, 8 commits behind the game branch, not live. If he says yes: rebase it, split the two rows on screen, quick check, ship.
+- Our own open work, no call needed: design/todo.md ("Ours").
+- Ship freeze rule: while Cory says a game is running, push to the branch only; publish when he says it's over.
 
 ## The game now
-- Economy direction (decisions.md, 2026-10-20): each action gives 1 of its color, sometimes more; members cheaper and worth followers; held resources score contests; hold vs spend.
-- Reworked and live: Green (v0.7.0, spheres/green-redesign-2026-10-18.md), Red (v0.8.0 actions, v0.8.2 members, spheres/red-redesign-2026-10-18.md and red-members-2026-10-18.md), Magenta actions (v0.8.8, spheres/magenta-redesign-2026-10-19.md).
-- 2026-10-21 members: Cory's new process (design/member-process.md, /rework-members): concepts strong to weak with counters, his cut, then sim sweeps set prices. Magenta concepts are with him; live-Magenta price sweeps at 2/3/4 seats run in design/eval/member-sims/. Owner: the "Better design process" thread.
-- 2026-10-21 rework panel: retired by Cory ("didn't come up with good enough examples"); the "Better design process" thread owns job 2. Index: design/eval/rework-panel-2026-10-21/README.md. Picks for every open color are with Cory, unshipped (https://claude.ai/artifact/Cd8JTiPKtibYcmVPGLRUjo; depth in design/eval/rework-panel-2026-10-21/final/, neutral and Magenta in /mnt/project-files/color-reworks/). Build nothing until he answers by number.
-- Not reworked: Magenta members (old 10), Gold, Blue, Silver, Yellow, White. Blue/Purple/White contests still count members; Yellow counts full sets.
-- Deck sizes: Red and Green 12, others 10 (target equal). Member cost ceiling 10. Release numbering stays v0.8.x.
+- Redesigned and live (2.0 on the Custom table picker): Red, Green, Magenta, Purple, Blue, White. Not redesigned (1.0): Gold, Silver (High Tide is live in round III), Yellow. Their redesigns are paused by Cory; state in design/spheres/gold-redesign-2026-10-22.md, silver-redesign-2026-10-22.md and design/pitch-ledger.md (Yellow).
+- Core principle (Cory, Oct 22): the game is about synergy and engine building, not value in a vacuum. Strength baselines live in the /brainstorm skill.
+- Members: 12 per redesigned color (Magenta has 13; one to cut), 10 in the old colors, 9 colorless guests. Target: a member returns about 2x its cost in followers (Cory, Oct 22; was 1.5x). Live prices predate the 2x target. Pricing levers: total cost, colored vs any in the cost, followers printed (1 to 4, rarely 5).
+- Shop: 6, 7 and 8 members face up in rounds I, II and III (v0.8.59). Two shops would replace this.
+- Cory's playtest of Oct 22 drove v0.8.46 to v0.8.62: copies do the whole action, Red's swaps can be skipped, Help Yourself steals followers, Peek +2/+4/+6, Lie Low just blocks steals, Top Up's flat +1 with growing yellow, the glossary reads the cards, rejoin across versions (last 3 releases kept at play/v/<version>/).
+- Text review skill (/review-text): run after any card text change; it compares the card, hover, wheel panel, short face, prompts and log.
 
 ## Known not-green
-- Nothing on the known-red list (scoring.mjs fixed in v0.8.38 by Cory's call: no second count-up).
-- Box load: parallel agents' checks starve each other (hotseat's 4-minute bound). Re-run alone once; run at most two worktree lanes at a time.
+- Steady pacing check: the longest wait for your turn is 22.7s against a 21.06s cap on seeded bot games (round III recruit runs). Fix is a motion trim, a feel call (Cory's list, #13). Never raise the cap.
+- Known-red browser list (e2e/v4/known-red.json) is empty.
+- Box load: parallel checks starve each other. Re-run a failure alone once before calling it real.
 
-## Working this week
-- Token-conscious (Cory, 2026-10-20): no sims or game batches unless he asks; open the game only for UI checks; run tests by file.
-- Ordered backlog: top of design/todo.md. Plan: /mnt/project-files/week-oct20/how-we-work.md.
-- Ship: quick check on the exact commit → push to the v4 branch (rebase, never force) → bash scripts/v4-play.sh <sha> → confirm stamp → go-live note with a screenshot.
+## How to work
+- Ship: quick check on the exact commit, push to the game branch (rebase, never force), bash scripts/v4-play.sh <sha>, confirm the stamp, go-live note with a screenshot.
+- Token-conscious: no sims or game batches unless Cory asks; open the game only for UI checks.
+- Old thread branches were archived as tags archive/<branch-name> on Oct 24 (see design/in-flight.md); restore one with git push origin archive/<name>:refs/heads/<name>.

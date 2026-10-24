@@ -110,7 +110,7 @@ try {
     const hole = await page.$eval('.pay-hole', e => ({ at: !!e.dataset.at, r: e.getBoundingClientRect().toJSON() })).catch(() => null);
     if (!hole || !hole.at || hole.r.left > tile.left || hole.r.right < tile.right || hole.r.top > tile.top || hole.r.bottom < tile.bottom) errors.push(`(f3) the tile is not lit in the hole: ${JSON.stringify(hole)}`);
     // the "you can pay this more than one way" line was taken off the sheet (Cory, 2026-10-17 feedback H09,
-    // design/feedback-addendum-2026-10-17.md); the instant receipt (f1, f2) is what tells the two flows apart now
+    // design/archive/old-notes-to-2026-10-20/feedback-addendum-2026-10-17.md); the instant receipt (f1, f2) is what tells the two flows apart now
     if (await page.$('[data-pay-legend]')) errors.push('(f3) the sheet still carries the retired "more than one way" legend');
     if (/more than one way/.test(await page.$eval('.dialog.pay', e => e.textContent))) errors.push('(f3) the sheet still says "more than one way"');
     // two rows (Cory, 2026-10-15: "hard to decipher"): what pays sits in Paying by color, what stays in Keeping, numbered
