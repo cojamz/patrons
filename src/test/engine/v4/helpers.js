@@ -1,6 +1,6 @@
 // Test helpers for the v4 engine: build a game, set it up by hand, then drive it by option id.
 import { beforeEach, afterEach } from 'vitest';
-import { createGame, applyMove, resume, actionAt, followers, pileKeyOf, pileOf, shopSize, ROW_SIZE } from '../../../engine/v4/core.js';
+import { createGame, applyMove, resume, actionAt, followers } from '../../../engine/v4/core.js';
 import { defById, quadrant } from '../../../engine/v4/content/index.js';
 import { STRAYS, stray } from './stray.js';
 
@@ -129,11 +129,4 @@ export function useTestCosts() {
   let restore = null;
   beforeEach(() => { restore = pinCosts(TEST_COSTS); });
   afterEach(() => { restore?.(); restore = null; });
-}
-
-/** Two shops: the cheap row is full while its pile lasts; from round II the pricey row is too (10 face up at most). */
-export function rowsFull(s) {
-  const row = k => s.shop.filter(u => pileKeyOf(s, u) === k).length;
-  const cheap = row('cheap') >= ROW_SIZE || !pileOf(s, 'cheap').length;
-  return cheap && (s.round <= 1 || row('pricey') >= ROW_SIZE || s.shop.length >= shopSize(s) || !pileOf(s, 'pricey').length);
 }

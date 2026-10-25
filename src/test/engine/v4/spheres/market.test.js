@@ -7,7 +7,7 @@ import { seededRandom } from '../../../../engine/v4/rng.js';
 import { registerQuadrant } from '../../../../engine/v4/content/index.js';
 import market, { memberValue, install } from '../../../../engine/v4/content/market.js';
 import { contextFor } from '../../../../engine/v4/core.js';
-import { take, move, uidOf, ids, fol, pinCosts, TEST_COSTS, rowsFull } from '../helpers.js';
+import { take, move, uidOf, ids, fol, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { shopSize } from '../../../../engine/v4/core.js';
 import { games } from '../budget.js';
@@ -86,7 +86,7 @@ describe('Blue actions', () => {
     expect(s.pending.kind).toBe('buy');
     expect(s.pile.slice(-3)).toEqual(sent);
     expect(s.shop.filter(u => sent.includes(u))).toEqual([]);
-    expect(rowsFull(s)).toBe(true);
+    expect(s.shop).toHaveLength(shopSize(s));
   });
   it('Out of Style (ring I): one color to the bottom, +1 blue per member sent, +1', () => {
     let s = take(scene({ shop: S5 }), 'market.restock'); // Midas, Jackpot, Tycoon gold; Mentor, Proselytizer red
@@ -96,7 +96,7 @@ describe('Blue actions', () => {
     s = move(s, 'color:gold');
     expect(R(s).blue).toBe(1 + gold);
     expect(s.shop.some(u => s.cards[u].def.startsWith('gold.'))).toBe(s.shop.slice(2).some(u => s.cards[u].def.startsWith('gold.')));
-    expect(rowsFull(s)).toBe(true);
+    expect(s.shop).toHaveLength(shopSize(s));
   });
   it('Peek (ring I): reorder the top 4; one of them may be this turn\'s buy', () => {
     let s = take(scene({ res: [{ red: 20, gold: 20, blue: 20, green: 20 }], shop: S5 }), 'market.showroom');

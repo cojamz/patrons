@@ -22,8 +22,8 @@ function plain(s, rand) {
 
 describe('Last Call', () => {
   it('round II, 4 players: B on their first turn gets +6 followers and places their other 3 after everyone', () => {
-    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 9, quadrants: Q }); // a seed where nobody copies Last Call (two shops changed the deal, 2026-10-23)
-    const rand = seededRandom(9);
+    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 5, quadrants: Q });
+    const rand = seededRandom(5);
     while (!(s.round === 2 && s.pending?.kind === 'place')) s = applyMove(s, plain(s, rand));
     const base = s.order.slice(0, 4), [A, B] = base;
     const placed = [];
@@ -41,7 +41,6 @@ describe('Last Call', () => {
     }
     const L = p => 'ABCD'[base.indexOf(p)];
     // everyone else places all 4, then B places the rest in a row (more than 3 if a bought member adds one)
-
     expect(placed.map(L).join(' ').startsWith('A B C D D C A A C D D C A B B B')).toBe(true);
     expect(placed.slice(13).every(p => p === B)).toBe(true);
   });
