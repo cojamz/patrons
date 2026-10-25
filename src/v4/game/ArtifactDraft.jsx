@@ -15,6 +15,8 @@ export function ArtifactTile({ q, res, title = null, size = 24 }) {
   return <span className="art-tile" style={{ '--c': `var(--${q})` }}><Sprite id={`artifact.${q}`} kind="artifact" sphere={res} size={size} title={title} /></span>;
 }
 
+export const SUB = 'Your cult’s bonus all game. Comes with 1 of its color.';
+
 export default function ArtifactDraft({ state, onPick, mine = false, busy = false }) {
   const pend = state.pending;
   const held = uid => state.players.some(p => p.artifact === uid);
@@ -25,9 +27,10 @@ export default function ArtifactDraft({ state, onPick, mine = false, busy = fals
   return (
     <section className={`art-draft${mine ? ' mine' : ''}`} aria-label={mine ? 'Your pick: take an artifact' : `${who.name} is picking an artifact`} data-art-draft="" data-picker={pend.player}>
       <p className="ad-head" style={{ '--pc': playerColor(who.id) }}>
-        {mine ? <>Your pick <small>· take an artifact and 1 of its color</small></>
-          : <><span className="ad-who">{who.name}</span> is picking <small>· each comes with 1 of its color</small></>}
+        {mine ? <>Your pick</> : <><span className="ad-who">{who.name}</span> is picking</>}
       </p>
+      {/* what an artifact is (Cory, 2026-10-25: "this is your cult's bonus for the game. but pithier") */}
+      <p className="ad-sub">{SUB}</p>
       <ul>
         {qs.map(q => {
           const uid = state.artifacts[q], def = cardDef(state, uid), res = quadrant(q).resource, o = option(q);
