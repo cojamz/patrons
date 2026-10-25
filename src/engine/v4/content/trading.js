@@ -250,13 +250,13 @@ const trading = {
         turned(ctx, owner);
       },
     }),
-    m('undertaker', 'Undertaker', 2, 2, 'Whenever you get rid of one of your members, +2 followers.', { onGotRidOf: 2 }),
-    m('appraiser', 'Appraiser', 3, 2, 'Once per game: get rid of one of your members, gain followers or white equal to its cost.', {
+    m('undertaker', 'Undertaker', 2, 2, 'Whenever you cast out one of your members, +2 followers.', { onGotRidOf: 2 }),
+    m('appraiser', 'Appraiser', 3, 2, 'Once per game: cast out one of your members, gain followers or white equal to its cost.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const list = ctx.membersOf(owner).filter(c => c.uid !== card.uid);
-        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Appraiser: no other member to get rid of.`); return; }
-        ctx.choose(owner, 'Appraiser: get rid of which member?', list.map(c => ({
+        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Appraiser: no other member to cast out.`); return; }
+        ctx.choose(owner, 'Appraiser: cast out which member?', list.map(c => ({
           id: `card:${c.uid}`, label: `${c.def.name} (${cost(ctx, c.uid)})`, kind: 'card', value: c.uid, hint: buryValue(ctx, owner, c, fv(ctx)),
         })), 'trading.appraise');
       },
@@ -328,7 +328,7 @@ const defsOf = (ctx, c) => [c.def, c.copy ? defById(c.copy) : null].filter(Boole
 function turned(ctx, p) {
   for (const c of ctx.membersOf(p)) for (const d of defsOf(ctx, c)) if (d.onTurned) { ctx.gain(p, W, d.onTurned); ctx.log(`${p.name}'s ${d.name}: +${d.onTurned} white.`); }
 }
-// Undertaker: "Whenever you get rid of one of your members, +2 followers"
+// Undertaker: "Whenever you cast out one of your members, +2 followers"
 function gotRidOf(ctx, p) {
   for (const c of ctx.membersOf(p)) for (const d of defsOf(ctx, c)) if (d.onGotRidOf) { p.bonus += d.onGotRidOf; ctx.log(`${p.name}'s ${d.name}: +${d.onGotRidOf} followers.`); }
 }
