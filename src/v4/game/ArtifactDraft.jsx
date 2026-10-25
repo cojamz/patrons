@@ -15,7 +15,7 @@ export function ArtifactTile({ q, res, title = null, size = 24 }) {
   return <span className="art-tile" style={{ '--c': `var(--${q})` }}><Sprite id={`artifact.${q}`} kind="artifact" sphere={res} size={size} title={title} /></span>;
 }
 
-export const SUB = 'Your cult’s bonus all game. Comes with 1 of its color.';
+export const SUB = 'A boon for your cult. Comes with 1 resource.';
 
 export default function ArtifactDraft({ state, onPick, mine = false, busy = false }) {
   const pend = state.pending;
