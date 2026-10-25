@@ -22,8 +22,9 @@ function plain(s, rand) {
 
 describe('Last Call', () => {
   it('round II, 4 players: B on their first turn gets +6 followers and places their other 3 after everyone', () => {
-    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 5, quadrants: Q });
-    const rand = seededRandom(5);
+    // seed 6 since Even Swap's +2 red (Oct 25): on seed 5 a second bot (D) took Last Call too
+    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 6, quadrants: Q });
+    const rand = seededRandom(6);
     while (!(s.round === 2 && s.pending?.kind === 'place')) s = applyMove(s, plain(s, rand));
     const base = s.order.slice(0, 4), [A, B] = base;
     const placed = [];

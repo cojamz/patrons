@@ -79,7 +79,9 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // green-redesign-pressure.test.js verifies that it blocks both its owner's and rivals' copies, including copies of Agents.
   // Cashier only acts when recruited; dealt into a starting hand it never does (Sleep In's +3, 2026-10-25, moved the
   // seeded games so it was dealt, never recruited, in 3). cards-trading (Cashier) covers its line.
-  const QUIET_RESTRICTIONS = new Set(['echo.agents', 'trading.cashier']);
+  // Doppelganger is the same: "When recruited" only. It passed while bots recruited one; Even Swap's +2 red (2026-10-25)
+  // moved the games so it was only dealt, in 4. cards-echo (Doppelganger) covers its line.
+  const QUIET_RESTRICTIONS = new Set(['echo.agents', 'trading.cashier', 'echo.doppel']);
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
     ['gold', 'market', 'trading', 'echo'], ['red', 'thieves', 'market', 'trading'],
