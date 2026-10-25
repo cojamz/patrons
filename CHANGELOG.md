@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.66 — 2026-10-24 — unreleased
+
+- Sleep In gives +3 purple (was +4).
+
 ## v0.8.65 — 2026-10-24 — unreleased
 
 - Even Swap gives +2 red. Recruit a Member takes a shop member costing 8 or less.
