@@ -77,7 +77,9 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // Agents denies copy targets without changing a number, like Bodyguard's steal protection. Keep it in the dealt
   // hands (preserving the audit's coverage distribution), but require no payout log from this pure restriction.
   // green-redesign-pressure.test.js verifies that it blocks both its owner's and rivals' copies, including copies of Agents.
-  const QUIET_RESTRICTIONS = new Set(['echo.agents']);
+  // Cashier only acts when recruited; dealt into a starting hand it never does (Sleep In's +3, 2026-10-25, moved the
+  // seeded games so it was dealt, never recruited, in 3). cards-trading (Cashier) covers its line.
+  const QUIET_RESTRICTIONS = new Set(['echo.agents', 'trading.cashier']);
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
     ['gold', 'market', 'trading', 'echo'], ['red', 'thieves', 'market', 'trading'],
@@ -90,7 +92,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     // Light Fingers is dealt in only 2 of these games; it reached a third through a bot's recruit until the shop went
     // 5/6/7 (2026-10-21) moved the seeded games. Still judged when held 3+; cards-thieves.test.js (Light Fingers) covers it.
     // Lookout and Cashier fell under 3 holds when White's rework and Help Yourself's follower steal (2026-10-22) moved the games; cards-thieves (Lookout) and cards-trading (Cashier) cover them.
-    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier']);
+    // Extortionist fell under 3 holds after the Oct 23-24 Magenta playtest calls moved the games; cards-thieves covers it.
+    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist']);
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
