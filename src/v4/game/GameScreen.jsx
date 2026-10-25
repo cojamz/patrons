@@ -42,6 +42,7 @@ import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpee
 import { PERF_ON } from '../perf.js';
 import { boardPicker, giftPick, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import GiftCard from './GiftCard.jsx';
+import ArtifactDraft from './ArtifactDraft.jsx';
 import ActionStage from './ActionStage.jsx';
 import { stageClear, stageRelease } from './stage.js';
 import { sameSeat } from './seatMemo.js';
@@ -1491,6 +1492,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               : <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />)}
             {/* the starting picks (motion gaps 1): the row stays on the table while the others pick (read-only), and until the
                 last pick has landed, so each rival's pick lights its coin and flies from it to their seat (director.js) */}
+            {/* the artifacts on the table, what each does, for the whole starting pick (ArtifactDraft.jsx) */}
+            {wide && setupNow && state.artifacts && <ArtifactDraft state={state} onPick={onPick} mine={showChoice} busy={busy} />}
             {/* your own starting pick lives in your seat on a laptop (CultSeat .cs-setup); only phones keep it here */}
             <AfterChain value={setupNow} hold={holdStory && !(setupNow && showChoice)} step={state.moves}>{v => v && !(wide && v === state && showChoice) && (
               <ChoicePrompt state={v} onPick={v === state && showChoice ? onPick : NOOP} busy={busy || !(v === state && showChoice)} watching={v === state && showChoice ? null : v.players[v.pending.player]} turnOf={v === state && humansHere && handedIn === pend.player ? state.players[pend.player] : null} />

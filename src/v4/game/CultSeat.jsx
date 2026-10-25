@@ -20,15 +20,12 @@ import { seatRanks } from './RankRow.jsx';
 import Tick from './Tick.jsx';
 import { MO } from '../motion.js';
 import { Rich } from './Rich.jsx';
+import { ArtifactTile } from './ArtifactDraft.jsx';
 import './lamp-b.css';
 import './seat.css'; // the laptop chair, mockup A
 
 /** Which color's artifact a card is (state.artifacts maps color to card). */
 const artifactColor = (state, uid) => Object.keys(state.artifacts || {}).find(q => state.artifacts[q] === uid) || null;
-/** An artifact's picture on a small plate in its color (the seat and the starting pick). */
-function ArtifactTile({ q, res, title = null }) {
-  return <span className="art-tile" style={{ '--c': `var(--${q})` }}><Sprite id={`artifact.${q}`} kind="artifact" sphere={res} size={24} title={title} /></span>;
-}
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
