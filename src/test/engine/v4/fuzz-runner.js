@@ -43,6 +43,7 @@ export function checkInvariants(s, ctx) {
   const put = (u, where) => { if (seen.has(u)) fail(`card ${u} in ${seen.get(u)} and ${where}`, s, ctx); seen.set(u, where); };
   s.pile.forEach(u => put(u, 'pile'));
   s.shop.forEach(u => put(u, 'shop'));
+  Object.entries(s.waiting || {}).forEach(([r, w]) => { if (Number(r) <= s.round) fail(`round ${r} members still waiting`, s, ctx); w.forEach(u => put(u, `waiting ${r}`)); });
   s.players.forEach(p => p.members.forEach(u => put(u, p.name)));
   // artifacts: each held by the player who picked it, or waiting unpicked (a color nobody took yet)
   s.players.forEach(p => { if (p.artifact !== undefined) put(p.artifact, `${p.name}'s artifact`); });

@@ -105,6 +105,7 @@ function lobbyView(room, code, playerId, { awaySince = new Map(), subAfterMs = S
   return {
     code, hostId: room.hostId ?? null, hostName: list.find(s => s.id === room.hostId)?.name || '', status, seed: room.seed ?? null,
     table: parseTable(room.table) ? { mode: room.tableMode || 'custom', quadrants: parseTable(room.table) } : null,
+    roundDecks: room.roundDecks === 2 ? 2 : 3,
     players, seats: players.length, maxSeats: MAX_SEATS,
     canStart: isHost && status === 'lobby' && players.length >= MIN_SEATS, startHint,
     me: { playerId, seat: mine ? mine.seat : null }, isHost, subAfterMs,
@@ -517,6 +518,11 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       if (!t.table) throw new Error('That table can’t be played.');
       await transport.update(base, t);
     },
+    /** Host: round III members arrive in round III (3) or with round II (2). */
+    async setRoundDecks(n) {
+      await hostOnly('pick when round III members arrive');
+      await transport.update(base, { roundDecks: n === 2 ? 2 : 3 });
+    },
     async start() {
       await hostOnly('start');
       let tableWhy = '';
@@ -533,7 +539,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
         const quadrants = fitTable({ mode: r.table ? r.tableMode || 'custom' : 'classic', quadrants: parseTable(r.table) || [] }, list.length).quadrants;
         tableWhy = tableProblem(quadrants, list.length);
         if (tableWhy) return undefined;
-        const game = newGame({ seats: list.map(s => ({ name: s.name, kind: s.kind, ...withEmoji(s.emoji) })), seed, quadrants });
+        const game = newGame({ seats: list.map(s => ({ name: s.name, kind: s.kind, ...withEmoji(s.emoji) })), seed, quadrants, ...(r.roundDecks === 2 || r.roundDecks === 3 ? { rules: { roundDecks: r.roundDecks } } : {}) });
         setBotLevels(game, list.map(s => (s.kind === 'bot' ? s.bot : null))); // the level the host picked for each bot
         return {
           ...r, seats, seed, status: 'playing', startedAt: Date.now(), build: { ...BUILD },

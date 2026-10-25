@@ -3,4 +3,4 @@
 export const GAME_NAME = 'Cults';
 export const VERSION = 'v0.8.66';
 export const BUILD_REF = typeof __V4_BUILD__ !== 'undefined' ? String(__V4_BUILD__).split('@')[0] : 'dev';
-export const VERSION_LABEL = `Try build (artifacts, two shops) · ${BUILD_REF}`;
+export const VERSION_LABEL = `Try build (artifacts, round decks) · ${BUILD_REF}`;
