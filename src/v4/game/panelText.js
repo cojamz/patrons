@@ -16,7 +16,9 @@ import { contextFor } from '../../engine/v4/core.js';
 // doesn't fit drops whole). The run itself is the hover's rule sentence. Round III has nothing left to grow into.
 // what grows, said when a space does more than one thing (Cory, 2026-10-22: "'more each round' is confusing on actions
 // that do multiple things")
-const grows = (r, what = 'more') => (r < 3 ? `${what} each round` : null);
+// "+3 / more each round" read as 3 more every round (Cory, 2026-10-24: "+X more each round reads weird and is probably
+// wrong"): a growing space says next round's number instead, and nothing in round III
+const next = (r, f) => (r < 3 ? `${f(r + 1)} next round` : null);
 // Line 2 stays within about 16 letters a line: at 1270×700 a narrow panel holds two short lines of it (Cory: "cut words
 // or step the size down. Never clip and never abbreviate into code"); a line 2 that doesn't fit drops whole. A condition
 // that decides the gain never sits only in line 3 (at 1270×700 line 3 shows on few rings: measured on five tables, w3),
@@ -28,7 +30,7 @@ const P = {
     // "+1 to anyone" (w3): the gift goes to a rival only, never to you. "1 of what?" says gold; "you pick who" read
     // awkwardly (live panel r1): the note runs on from line 2 ("…to a rival / of your choice")
     jv: { main: '+3 gold', second: '+1 gold to a rival', note: 'of your choice' },
-    rush: r => ({ main: `+${2 * r} gold`, second: grows(r) }),
+    rush: r => ({ main: `+${2 * r} gold`, second: next(r, n => `+${2 * n}`) }),
     // "Save 4" read as keeping 4 resources (blind testers, 2026-10-15): it's money off, said as a shop says it
     discount: { verb: '4 off', second: 'your next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
@@ -38,22 +40,22 @@ const P = {
   },
   red: {
     evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+2 red' },
-    turnout: r => ({ main: `+${r + 1} red`, second: grows(r) }),
+    turnout: r => ({ main: `+${r + 1} red`, second: next(r, n => `+${n + 1}`) }),
     hire: { verb: 'Recruit the cheapest', second: 'in the shop, free', note: '+1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
     trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
     take: { verb: 'Recruit a member', second: 'costing 8 or less, free', note: '+1 red' },
   },
   market: {
-    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: grows(r, 'more blue') }),
+    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: next(r, n => `+${n + 1} blue`) }),
     restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
-    showroom: r => ({ verb: 'Peek at the top 4', second: 'reorder; may recruit one', note: `+${2 * r} blue, more each round` }),
+    showroom: r => ({ verb: 'Peek at the top 4', second: 'reorder; may recruit one', note: r < 3 ? `+${2 * r} blue, +${2 * r + 2} next round` : '+6 blue' }),
     clearance: { verb: 'Recruit twice', second: 'this turn', note: '+1 blue' },
     pricecheck: { verb: 'Bury a shop member', second: 'gain half its cost in blue', note: '+1 blue' },
     spree: { verb: 'Recruit 3 times', second: 'this turn', note: '+3 blue' },
   },
   purple: {
-    hourly: r => ({ main: `+${3 + r} purple`, second: grows(r) }),
+    hourly: r => ({ main: `+${3 + r} purple`, second: next(r, n => `+${3 + n}`) }),
     // "per rival ahead" read as ahead on score (blind testers, 2026-10-15): it counts minions placed, said in line 2
     catchup: (r, now) => ({ main: `+${now ?? 1} purple`, second: now == null ? '+1 per rival who placed more' : '1, +1 per rival who placed more', note: 'minions this round' }),
     // Say whose placed minions count; "on the board" alone read as counting all players' minions.
@@ -75,7 +77,7 @@ const P = {
   },
   silver: {
     // "others get 1" left "1 of what?" (live panel r1): silver
-    toast: r => ({ main: `+${3 * r} silver`, second: `others get ${r} silver`, note: grows(r, 'both grow') }),
+    toast: r => ({ main: `+${3 * r} silver`, second: `others get ${r} silver`, note: next(r, n => `+${3 * n}, others ${n}`) }),
     // "+2 of a color": which one? (w3a #56) yours to pick
     gift: { main: '+2 silver', second: '+2 of a color you choose', note: 'others get 1 of it' },
     // said like Kickback's gift ("a rival gets 2" ran on as "+4 silver a rival gets 2" off the wheel)
@@ -92,7 +94,7 @@ const P = {
   },
   yellow: {
     harvest: (r, now) => ({ main: `+${now ?? 1} yellow`, second: now == null ? '+1 per other color you hold' : '1, +1 per other color you hold' }),
-    bloom: r => ({ main: `+${r} yellow`, second: '+1 of each fewest color', note: grows(r, 'more yellow') }),
+    bloom: r => ({ main: `+${r} yellow`, second: '+1 of each fewest color', note: next(r, n => `+${n} yellow`) }),
     // Match the current rule: the yellow arrives before the optional swaps.
     transmute: { main: '+2 yellow', second: 'then swap up to 3', note: 'for other colors' },
     prism: { verb: '+1 each other color', second: 'per 3 yellow', note: 'you keep the yellow' },
@@ -102,7 +104,7 @@ const P = {
     flourish: { verb: '+1 each other color, per full set' },
   },
   thieves: {
-    pickpocket: r => ({ verb: `Steal ${r} and ${r} @f`, second: '+1 magenta', note: grows(r, 'steal and @f grow') }),
+    pickpocket: r => ({ verb: `Steal ${r} and ${r} @f`, second: '+1 magenta', note: next(r, n => `steal ${n} and ${n} @f`) }),
     tipoff: { verb: 'Steal 1 per magenta action', second: 'with a minion, this one too', note: '+1 magenta' },
     hideout: { verb: 'Safe from steals', second: 'this round', note: '+1 magenta' },
     rob: { verb: 'Steal half a rival’s pile', second: 'one color, rounded down', note: '+1 magenta' },
@@ -113,7 +115,7 @@ const P = {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers
     haggle: (r, now) => ({ main: `+${now ?? 2} white`, second: now == null ? '+1 per rival with more @f' : '2, +1 per rival with more @f' }),
     buylow: { main: '+1 @f', second: 'per 3 white you hold' },
-    pawn: r => ({ main: `+${r} @f`, second: 'or 2 white per @f', note: grows(r, 'more @f') }),
+    pawn: r => ({ main: `+${r} @f`, second: 'or 2 white per @f', note: next(r, n => `+${n} @f`) }),
     // the gain first: "Sell followers" lost its "3 white each" on ring II whenever the panel was tight (w3 words pass)
     sellhigh: { main: '+3 white', second: 'per follower sold', note: 'up to 2' },
     // "loose" is a rulebook word a newcomer won't remember (w3a #57): what it means, in the glossary's own words
@@ -121,7 +123,7 @@ const P = {
     // "All for followers" hid that you pay (tester A, live panel r1; the charge is Cory's call): it says so in line 1
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
     // White's Oct 22 spaces (Cory's set): they had no panel words, so the board cut each to its first four words
-    stipend: r => ({ main: `+${r} @f +${r + 1} white`, second: grows(r, 'both grow') }),
+    stipend: r => ({ main: `+${r} @f +${r + 1} white`, second: next(r, n => `+${n} @f +${n + 1} white`) }),
     splurge: { verb: '+1 @f per 2 you spend', second: 'on your recruit this turn', note: '+1 white' },
     exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+1 white' }),
     // the gain leads: on ring II only one line fits, and the two read the same as "Bury one of your members"
@@ -131,7 +133,7 @@ const P = {
   },
   echo: {
     hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? '+1 more per other green action with a minion' : '1, +1 per other green action with a minion' }),
-    chant: r => ({ main: `+${r + 1} green`, second: grows(r) }),
+    chant: r => ({ main: `+${r + 1} green`, second: next(r, n => `+${n + 1}`) }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
     echo: { verb: 'Copy previous action', note: '+1 green' },
     encore: { verb: 'Copy an action', second: 'with a rival minion', note: '+1 green' },

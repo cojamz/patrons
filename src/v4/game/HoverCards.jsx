@@ -519,7 +519,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn' : ''}{((state.squats && state.squats[spaceKey]) || []).map(j => `; ${j === viewer ? 'you' : state.players[j].name} joined (Squatter)`).join('')}{opt ? ' — you can join it' : ''}</Row>}
         {/* a value that grows by round: its run is the rule sentence's ("+2● in round I, +4 in round II…"), said once
             (w3b #12: a "By round" row beside "per round number" was two descriptions of one thing); the panel prints this
-            round's number and "more each round" */}
+            round's number and next round's */}
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}
         {a.lastRound && round > a.lastRound && <Row k="Closed">after round {roman(a.lastRound)}</Row>}
       </div>
