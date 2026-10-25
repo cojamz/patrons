@@ -33,7 +33,7 @@ describe('v4 roundStartIncome', () => {
       const rand = seededRandom(seed);
       let s = createGame({ seats, seed });
       for (let k = 0; k < 400 && !s.over; k++) {
-        if (s.pending && s.pending.kind === 'place' && k % 7 === 0) {
+        if (s.pending && s.pending.kind === 'place' && k % 5 === 0) {
           const frozen = JSON.stringify(s);
           const inc = roundStartIncome(s);
           expect(JSON.stringify(s)).toBe(frozen);

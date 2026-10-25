@@ -299,7 +299,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 6, 2, 'Once per game: take an extra turn after this one.', { from: 2,
+    m('secondwind', 'Go-Getter', 4, 2, 'Once per game: take an extra turn after this one.', { from: 2,
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -388,8 +388,8 @@ export default {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),
     // Cory's Purple members (2026-10-22); names are Claude's fill-ins; prices are the pricing thread's educated guesses
-    m('earlybird', 'Early Bird', 4, 2, 'Your turns can’t be skipped.', { noSkip: true }),
-    m('bouncer', 'Bouncer', 3, 2, 'When recruited: the next two rivals’ turns are skipped.', {
+    m('earlybird', 'Early Bird', 2, 2, 'Your turns can’t be skipped.', { noSkip: true }),
+    m('bouncer', 'Bouncer', 1, 2, 'When recruited: the next two rivals’ turns are skipped.', {
       // the next two turns that belong to rivals; your own turn between them still happens (Cory's yes)
       onRecruited(ctx, owner) {
         const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
@@ -407,7 +407,7 @@ export default {
         }
       },
     }),
-    m('gossip', 'Gossip', 5, 2, 'Whenever a player’s turn is skipped, +1 follower.', {
+    m('gossip', 'Gossip', 3, 2, 'Whenever a player’s turn is skipped, +1 follower.', {
       onSkip(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Gossip: +1 follower.`); },
     }),
     m('extrashift', 'Extra Shift', 5, 3, 'When recruited: +1 minion this round.', { from: 2,

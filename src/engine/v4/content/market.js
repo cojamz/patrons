@@ -311,7 +311,7 @@ const market = {
     }),
     // Cory, Oct 21: "whenever cards are placed on the bottom of the deck". Turns only, not the round-start refresh
     // (Claude's fill-in: he called bottom-of-pile payouts "too strong between rounds" on Oct 20).
-    m('patroness', 'Patroness', 3, 2, 'Whenever a shop member goes to the bottom of the pile, +1 follower.', { bottomFollowers: true }),
+    m('patroness', 'Patroness', 5, 2, 'Whenever a shop member goes to the bottom of the pile, +1 follower.', { bottomFollowers: true }),
     m('blackmarket', 'Talent Scout', 2, 2, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
       activate: 'game',
       onActivate(ctx, owner) {
@@ -332,7 +332,7 @@ const market = {
     }),
     // concepts, Oct 21, not approved (design/eval/member-concepts-2026-10-21.md): prices are sim starting points
     m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true }),
-    m('windowdresser', 'Window Dresser', 1, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
+    m('windowdresser', 'Window Dresser', 2, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx, owner) {
         ctx.log(`${owner.name}'s Window Dresser: send 3 shop members to the bottom of the pile.`);
         churnStep(ctx, owner, { left: Math.min(3, ctx.state.shop.length) });
@@ -356,7 +356,7 @@ const market = {
       },
     }),
     // Cory's, Oct 21: "one recruit, refresh the shop. all the members"; prices are sim starting points
-    m('makeover', 'Makeover', 1, 1, 'When recruited: send the whole shop to the bottom of the pile, then refill.', { f: 3,
+    m('makeover', 'Makeover', 2, 1, 'When recruited: send the whole shop to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx) { sweepRow(ctx); },
     }),
     // Cory's, Oct 21: "when you buy followers +1 blue"; his Oct 21 definition makes buying followers a recruit
@@ -364,7 +364,7 @@ const market = {
       onBuyFollowers(ctx, owner, card, by) { if (by.id === owner.id && ctx.gain(owner, B, 1)) ctx.log(`${owner.name}'s Regular: +1 blue.`); },
     }),
     // Cory's pick for Blue's 12th, Oct 21 ("trendsetter is good!")
-    m('trendsetter', 'Trendsetter', 1, 1, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', { f: 3,
+    m('trendsetter', 'Trendsetter', 2, 1, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', { f: 3,
       onRecruit(ctx, owner, card, by, what) {
         if (by !== owner || what.member?.uid === card.uid || !ctx.state.shop.length) return;
         churnStep(ctx, owner, { left: 1 });

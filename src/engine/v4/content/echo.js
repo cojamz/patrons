@@ -427,7 +427,7 @@ const echoQ = {
         withPath(ctx, [], () => copy(ctx, owner, e, { by: 'Stunt Double' }), e.key);
       },
     }),
-    m('dejavu', 'Tribute Band', 8, 2, 'Once per game: copy every action you took this round.', {
+    m('dejavu', 'Tribute Band', 5, 2, 'Once per game: copy every action you took this round.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         // nothing to copy: the once-per-game use isn't spent (as Stunt Double's isn't)

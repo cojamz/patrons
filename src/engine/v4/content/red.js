@@ -90,7 +90,7 @@ export default {
       // a recruit is a member or a follower purchase (Cory, 2026-10-21); not its own arrival
       onRecruit(ctx, owner, card, by, what) { if (by === owner && what.member?.uid !== card.uid) owner.bonus += 1; },
     }),
-    m('mob', 'Mob', 6, 4, 'Game end: +1 follower per red member.', { f: 5, n: 5,
+    m('mob', 'Mob', 8, 4, 'Game end: +1 follower per red member.', { f: 5, n: 5,
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'red'),
     }),
     m('recruiter', 'Recruiter', 4, 1, 'Whenever you recruit, +1 red.', {
