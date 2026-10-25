@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.79 — 2026-10-25 — unreleased
+
+- The artifact draft says: A boon for your cult. Comes with 1 resource.
+
 ## v0.8.78 — 2026-10-25 — unreleased
 
 - Even Swap and Peek show their +2 on the wheel.
