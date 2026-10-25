@@ -126,7 +126,7 @@ const sameTable = (a, b) => a.length === b.length && a.every((x, i) => x === b[i
 // Round decks (Cory, 2026-10-25): whether round III members wait for round III or arrive with round II's
 const LATE_OPTS = [['3', 'Round III', 'Round III members are shuffled in when round III starts'], ['2', 'Round II', 'Round III members are shuffled in with round II members']];
 function LatePick({ value, onChange, readOnly }) {
-  return <div className="seat" data-late-pick={value}><span>Round III members</span>
+  return <div className="seat" data-late-pick={value}><span>Round III members join in</span>
     {readOnly ? <span className="hint">{value === 2 ? 'Arrive in round II' : 'Arrive in round III'}</span>
       : <Seg label="Round III members arrive" value={String(value)} options={LATE_OPTS} onChange={v => onChange(Number(v))} />}
   </div>;
