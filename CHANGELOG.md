@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.72 — 2026-10-25 — unreleased
+
+- Artifacts: at the start each player picks an artifact and 1 of its color. Each has its own picture on the player card.
+
 ## v0.8.71 — 2026-10-24 — unreleased
 
 - New members: Headhunter (Red), Fixer (Magenta), Window Shopper and Restocker (Blue), Timekeepers (Purple), Old Money (White). Bulk Buyer, Appraiser and Makeover leave the deck.
