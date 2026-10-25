@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.64 — 2026-10-24 — unreleased
+
+- "Cast out" on Undertaker and Appraiser too: one word for sending your own member to the bottom of the pile.
+
 ## v0.8.63 — 2026-10-24 — unreleased
 
 - "Cast out": Farewell and Estate Sale cast out one of your members to the bottom of the pile.
