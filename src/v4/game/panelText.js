@@ -66,7 +66,7 @@ const P = {
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
     // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
-    skip: { main: '+4 purple', second: 'skip your next turn' },
+    skip: { main: '+3 purple', second: 'skip your next turn' },
     holdup: r => ({ main: `+${r} purple`, second: 'the next turn is skipped' }),
     // the center ring can drop line 2 (round III since Oct 22): line 1 says it whole
     crowdin: { verb: 'Place on taken spaces', second: 'for the rest of this round', note: '+2 purple' },

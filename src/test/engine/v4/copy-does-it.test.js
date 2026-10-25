@@ -51,7 +51,7 @@ describe('Echo copying Sleep In (Cory’s playtest, Oct 23)', () => {
     s = passBuys(settle(take(s, 'purple.skip')));
     s = passBuys(settle(take(s, 'echo.echo')));
     expect(s.log).toContain("P2's Sleep In: P2 skips their next turn.");
-    expect(s.players[1].res.purple).toBe(9 + 4);
+    expect(s.players[1].res.purple).toBe(9 + 3);
     s = passBuys(settle(take(s, 'gold.rush'))); // P3
     s = passBuys(settle(take(s, 'red.turnout'))); // P3 again; P2's turn is next, passed over
     expect(s.log).toContain("P2's turn is skipped (Sleep In).");
