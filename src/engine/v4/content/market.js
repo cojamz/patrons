@@ -131,9 +131,11 @@ function sweepRow(ctx) {
  * follower each time it happens, not per card"), not for the round-start refresh. */
 function toBottom(ctx, k) {
   if (!(k > 0)) return;
-  for (const p of ctx.state.players) for (const u of p.members) {
+  for (const p of ctx.state.players) for (const u of [...p.members, ...(p.artifact !== undefined ? [p.artifact] : [])]) {
     const def = ctx.defOf(ctx.card(u));
     if (def.bottomFollowers) { p.bonus += 1; ctx.log(`${p.name}'s ${def.name}: +1 follower.`); }
+    // Blue's artifact (Cory, 2026-10-24): once per batch, turns only, as Patroness
+    if (def.bottomBlue) { const got = ctx.gain(p, B, 1); if (got) ctx.log(`${p.name}'s ${def.name}: +${got.n} ${got.color}.`); }
   }
 }
 /** Extra buys this turn: they run right after the current one (added to the engine's queue directly). */
@@ -320,6 +322,9 @@ const market = {
     }),
     // Cory, Oct 21: "whenever cards are placed on the bottom of the deck". Turns only, not the round-start refresh
     // (Claude's fill-in: he called bottom-of-pile payouts "too strong between rounds" on Oct 20).
+    // Blue's artifact only, never dealt (Cory, 2026-10-24: "whenever shop members go to the bottom of the pile, gain 1
+    // blue… one per batch"). Name is Claude's fill-in.
+    m('bargainbin', 'Bargain Bin', 0, 0, 'Whenever shop members go to the bottom of the pile, +1 blue.', { artifact: true, bottomBlue: true }),
     m('patroness', 'Patroness', 5, 2, 'Whenever a shop member goes to the bottom of the pile, +1 follower.', { bottomFollowers: true }),
     m('blackmarket', 'Talent Scout', 2, 2, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
       activate: 'game',

@@ -93,12 +93,12 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
     : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
   const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
-    <section className={`prompt choice${setup ? ' setup' : ' plain'}${watching ? ' watching' : ''}${place ? ` at-space ${place.up ? 'below' : 'above'}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={watching ? `${watching.name} is drafting a resource` : setup ? 'Draft 1 resource' : pend.prompt}
+    <section className={`prompt choice${setup ? ' setup' : ' plain'}${watching ? ' watching' : ''}${place ? ` at-space ${place.up ? 'below' : 'above'}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={watching ? `${watching.name} is drafting a resource` : setup ? (state?.artifacts && Object.keys(state.artifacts).length ? 'Pick an artifact' : 'Draft 1 resource') : pend.prompt}
       style={place ? { left: place.left, top: place.top } : undefined}>
       {turnOf && <TurnOf player={turnOf} />}
       {/* setup: the headline says "pick a starting resource (1 of 2)"; the panel says only which pick this is, not the
           same sentence again (RC1 sweep 24) */}
-      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `${watching ? `${watching.name} · ` : ''}Draft 1 resource` : <Rich text={pend.prompt} />}</p>
+      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `${watching ? `${watching.name} · ` : ''}${state?.artifacts && Object.keys(state.artifacts).length ? 'Pick an artifact' : 'Draft 1 resource'}` : <Rich text={pend.prompt} />}</p>
       {setup ? <><SetupTokens state={state} pend={pend} onPick={pick} busy={busy} /><ForSale state={state} /></>
         : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
       {!setup && left != null && Number(left) > 1 && (
