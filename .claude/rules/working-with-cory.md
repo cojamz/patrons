@@ -43,6 +43,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Spend freely on what makes us faster and sharper long term: harness, hooks, skills, organization.
 - Prices are high-level educated guesses, and human play refines them (Cory, Oct 21). Bot tests are not the pricing process: no sweeps or price batches unless he asks. Guess a little pricier than bots would say (they underuse members), never below 2 (one color, one wild), and lift a weak card with more followers before cutting its price.
 - Bot numbers name their instrument (Easy/Normal/Hard bot, thinking bots, AI tester), get a sanity check on which way the fix points, and come with the buy-followers-only win rate (target about 25%). Bot statistics are not design flaws.
+- Bot batches use only the 2.0 colors (Red, Green, Magenta, Purple, Blue, White; src/v4/tables.js) unless Cory names others (Cory, Oct 24).
 
 ## Changelog
 - 2026-10-20: Rewrote to current rules only; history archived. From Cory's Oct 20 notes: extremely brief (smart brevity), easy to track every parallel thread without asking, never make him ask to save or organize, Claude levels up as creative partner and facilitator while he makes design calls, careful with tokens on game runs, tests over blind panels (panel occasionally, suggested when due). Brevity is now a gate (message-check hook) after the third correction.
@@ -65,3 +66,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-22: Cory, after pitches that each said "also gives +1 white": "ofc it gives a white… every space gives the resource inherently. it almost goes without saying." Pitches leave the inherent +1 out.
 - 2026-10-22: Cory, after single-idea pitches in White: "Give me like 5 ideas. Like, why are you doing these so piecemeal?" Pitches come as about 5 per open slot, all at once (/brainstorm).
 - 2026-10-22: Cory, mid-playtest: "from now on * = player not but no action needed at the moment". Starred notes are logged only.
+- 2026-10-24: Cory, after a Hard bot batch on all nine colors: "you should only be testing on colors that are in 2.0". Bot batches default to the 2.0 colors; `ONLY=` on v4-hard-batch.mjs picks the pool.
