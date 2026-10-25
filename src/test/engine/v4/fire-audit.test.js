@@ -95,7 +95,9 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     // 5/6/7 (2026-10-21) moved the seeded games. Still judged when held 3+; cards-thieves.test.js (Light Fingers) covers it.
     // Lookout and Cashier fell under 3 holds when White's rework and Help Yourself's follower steal (2026-10-22) moved the games; cards-thieves (Lookout) and cards-trading (Cashier) cover them.
     // Extortionist fell under 3 holds after the Oct 23-24 Magenta playtest calls moved the games; cards-thieves covers it.
-    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist']);
+    // Impostor and Reseller (cut from the deck, still dealt here) fell under 3 holds when the Oct 24 member structure (six
+    // new members, three cut) moved the games; cards-echo and cards-market cover them.
+    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller']);
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
