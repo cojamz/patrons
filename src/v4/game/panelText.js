@@ -41,7 +41,8 @@ const P = {
     strike: { verb: 'Double your gold' },
   },
   red: {
-    evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+2 red' },
+    // the +2 red sat in line 3, which drops on the outer ring (round I review, Oct 25): it takes line 2, as Right Away's purple
+    evenswap: { verb: 'Swap 2 members of equal cost', second: '+2 red' },
     turnout: r => ({ main: `+${r + 2} red`, second: run(n => `+${n + 2}`) }),
     hire: { verb: 'Recruit the cheapest', second: 'in the shop, free', note: '+1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
@@ -51,7 +52,8 @@ const P = {
   market: {
     bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: run(n => `+${n + 1}`, 'blue: ') }),
     restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
-    showroom: r => ({ verb: 'Peek at the top 4', second: 'reorder; may recruit one', note: run(n => `+${2 * n}`, 'blue: ') }),
+    // line 2 was too long and dropped whole at the wheel's bottom, taking the blue with it (round I review, Oct 25)
+    showroom: r => ({ main: `+${2 * r} blue`, second: 'peek at the top 4', note: run(n => `+${2 * n}`, 'blue: ') }),
     clearance: { verb: 'Recruit twice', second: 'this turn', note: '+1 blue' },
     pricecheck: { verb: 'Bury a shop member', second: 'gain half its cost in blue', note: '+1 blue' },
     spree: { verb: 'Recruit 3 times', second: 'this turn', note: '+3 blue' },
