@@ -391,6 +391,9 @@ describe('v4 format helpers', () => {
     let found = null;
     for (let seed = 1; seed < 40 && !found; seed++) {
       let s = createGame({ seats, seed, quadrants: ['gold', 'purple', 'echo', 'silver'] });
+      // seat 1 holds Go-Getter from the start: since Oct 25's +1 on Gather, Hold Up and Crunch Time, bots stopped buying it here
+      const gg = Object.keys(s.cards).find(u => s.cards[u].def === 'purple.secondwind');
+      if (gg !== undefined) { s.pile = s.pile.filter(u => u !== gg); s.shop = s.shop.filter(u => u !== gg); s.players[0].members.push(gg); }
       for (let n = 0; n < 3000 && !s.over && !found; n++) {
         const t = s.pending && s.pending.kind === 'place' && currentTurn(s);
         if (t && t.again && t.kind === 'extra') found = { t, pr: promptFor(s, true), name: s.players[s.pending.player].name };

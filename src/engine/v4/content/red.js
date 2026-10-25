@@ -18,11 +18,12 @@ export default {
       },
     },
     {
-      key: 'turnout', ring: 1, name: 'Gather', text: '+2 red in round I, +3 in round II, +4 in round III.',
-      byRound: { lines: ['+2 red', '+3 red', '+4 red'] },
-      estimate: ctx => ctx.state.round + 1,
+      key: 'turnout', ring: 1, name: 'Gather', text: '+3 red in round I, +4 in round II, +5 in round III.',
+      // Cory, 2026-10-25: +1 each round (Hard bot read: mostly a losers' space).
+      byRound: { lines: ['+3 red', '+4 red', '+5 red'] },
+      estimate: ctx => ctx.state.round + 2,
       resolve(ctx, p) {
-        ctx.gain(p, 'red', ctx.state.round + 1, { fromAction: true });
+        ctx.gain(p, 'red', ctx.state.round + 2, { fromAction: true });
       },
     },
     {

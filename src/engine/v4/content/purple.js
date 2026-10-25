@@ -243,13 +243,14 @@ export default {
     {
       // Cory, 2026-10-22: replaces Catch Up ("the skip should replace catch up"); "1 purple per round" so it isn't weak
       // late. Wording and name are Claude's fill-in.
-      key: 'holdup', copyDoesIt: true, ring: 1, name: 'Hold Up', text: '+1 purple (+2 in round II, +3 in round III). The next turn is skipped.',
-      byRound: { lines: ['+1 purple', '+2 purple', '+3 purple'], rest: 'The next turn is skipped.' },
+      key: 'holdup', copyDoesIt: true, ring: 1, name: 'Hold Up', text: '+2 purple (+3 in round II, +4 in round III). The next turn is skipped.',
+      byRound: { lines: ['+2 purple', '+3 purple', '+4 purple'], rest: 'The next turn is skipped.' },
       // Cory, 2026-10-22: "it has to be the next TURN not even the next player. so a player could skip their own in
       // snake draft". Whoever's turn comes next is passed over once and still places every minion.
-      estimate: ctx => ctx.state.round + 1,
+      // Cory, 2026-10-25: +1 each round (Hard bot read).
+      estimate: ctx => ctx.state.round + 2,
       resolve(ctx, p) {
-        ctx.gain(p, P, ctx.state.round, { fromAction: true });
+        ctx.gain(p, P, ctx.state.round + 1, { fromAction: true });
         const who = nextTurnOf(ctx);
         if (who == null) { ctx.log(`${p.name}'s Hold Up: no turn left to skip this round.`); return; }
         skipNext(ctx, ctx.player(who), 'Hold Up', p);
@@ -291,10 +292,10 @@ export default {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', copyDoesIt: true, ring: 2, name: 'Crunch Time', text: '+1 purple. Take two turns after this one.',
-      // Cory, 2026-10-22: "all should give at least 1"
-      estimate: (ctx, p) => 1 + turnsNowEstimate(ctx, p, 2),
-      resolve(ctx, p) { ctx.gain(p, P, 1, { fromAction: true }); turnsNow(ctx, p, 2, 'Crunch Time'); },
+      key: 'rally', copyDoesIt: true, ring: 2, name: 'Crunch Time', text: '+2 purple. Take two turns after this one.',
+      // Cory, 2026-10-22: "all should give at least 1"; 2026-10-25: +2 (Hard bot read).
+      estimate: (ctx, p) => 2 + turnsNowEstimate(ctx, p, 2),
+      resolve(ctx, p) { ctx.gain(p, P, 2, { fromAction: true }); turnsNow(ctx, p, 2, 'Crunch Time'); },
     },
   ],
 

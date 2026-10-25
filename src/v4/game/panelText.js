@@ -42,7 +42,7 @@ const P = {
   },
   red: {
     evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+2 red' },
-    turnout: r => ({ main: `+${r + 1} red`, second: run(n => `+${n + 1}`) }),
+    turnout: r => ({ main: `+${r + 2} red`, second: run(n => `+${n + 2}`) }),
     hire: { verb: 'Recruit the cheapest', second: 'in the shop, free', note: '+1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
     trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
@@ -71,10 +71,10 @@ const P = {
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
     // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
     skip: { main: '+3 purple', second: 'skip your next turn' },
-    holdup: r => ({ main: `+${r} purple`, second: 'the next turn is skipped' }),
+    holdup: r => ({ main: `+${r + 1} purple`, second: 'the next turn is skipped' }),
     // the center ring can drop line 2 (round III since Oct 22): line 1 says it whole
     crowdin: { verb: 'Place on taken spaces', second: 'for the rest of this round', note: '+2 purple' },
-    rally: { verb: 'Two turns after this one', note: '+1 purple' },
+    rally: { verb: 'Two turns after this one', note: '+2 purple' },
     again: r => ({ verb: 'Another turn after this one', note: `+${r} purple` }),
   },
   silver: {

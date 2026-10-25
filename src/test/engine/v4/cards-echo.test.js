@@ -118,7 +118,7 @@ describe('Green current members', () => {
   it('Busker gives two green on recruit and at round start, naming the source', () => {
     let s = table(Q, { shop: ['echo.evergreen', ...ROW], res: [{ green: 4 }], queue: turns(0) });
     s = move(take(s, 'red.turnout'), cardOpt(s, 'echo.evergreen'));
-    expect(R(s).green).toBe(3); // Gather's red pays part of the wild cost; Busker still pays exactly 2 green.
+    expect(R(s).green).toBe(4); // Gather's red pays part of the wild cost; Busker still pays exactly 2 green.
     expect(named(s, 'Busker').length).toBe(1);
     const t = table(Q, { members: [['echo.evergreen']], queue: [{ t: 'round', r: 2 }] });
     expect(R(t).green).toBe(2);

@@ -19,7 +19,7 @@ const remaining = s => [...s.shop, ...s.pile, ...s.players.flatMap(p => p.member
 describe('locked Red action progression', () => {
   it.each([1, 2, 3])('Gather gives round +1 red in round %i', round => {
     const s = take(table(Q, { round, shop: ROW }), 'red.turnout');
-    expect(s.players[0].res.red).toBe(round + 1);
+    expect(s.players[0].res.red).toBe(round + 2);
   });
 
   it('cheapest recruitment is free, gives inherent red and refills only the removed member', () => {

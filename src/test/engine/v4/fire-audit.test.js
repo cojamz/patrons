@@ -97,7 +97,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     // Extortionist fell under 3 holds after the Oct 23-24 Magenta playtest calls moved the games; cards-thieves covers it.
     // Impostor and Reseller (cut from the deck, still dealt here) fell under 3 holds when the Oct 24 member structure (six
     // new members, three cut) moved the games; cards-echo and cards-market cover them.
-    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller']);
+    // Shopaholic, Fence and Doppelganger fell under 3 holds when Gather's +3 (Oct 25) moved the games; spheres/market (Shopaholic), interactions (Fence) and cards-echo (Doppelganger) cover them.
+    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller', 'market.shopaholic', 'thieves.fence', 'echo.doppel']);
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
@@ -114,6 +115,8 @@ const SPHERES = ['gold', 'red', 'purple', 'silver', 'yellow'];
 // Members that may stay unnamed on bot tables, with why (see design/eval/card-ledger-a.md).
 // Conditional cards that can go a whole bot game without their condition; each has a named test of its own.
 const ALLOW = {
+  // bots almost never buy it at 12 (Hard bot read, Oct 24); recruited once in the Oct 25 sample
+  'silver.grandhost': 'doubles silver from Silver spaces, rarely bought (cards-silver: Grand Host)',
   'purple.lateriser': 'needs the fewest followers at a round start, bought before it (cards-purple: Late Riser)',
   'yellow.harmonist': 'pays only with a full set at game end (cards-yellow: Harmonist)',
   // since 10-for-10 is unlimited, bots convert their purple before game end, so a holder can end with fewer than 3

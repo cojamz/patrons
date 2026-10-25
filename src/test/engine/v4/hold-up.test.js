@@ -32,7 +32,7 @@ describe('Hold Up', () => {
     while (!(s.pending?.kind === 'place' && s.pending.player === B)) s = applyMove(s, plain(s, rand));
     const before = s.players[B].res.purple || 0;
     s = applyMove(s, { player: B, option: `slot:${q}-${i}` });
-    expect(s.players[B].res.purple).toBe(before + 1);
+    expect(s.players[B].res.purple).toBe(before + 2);
     expect(s.log).toContain(`P${B + 1}'s Hold Up: P${C + 1} skips their next turn.`);
     const placed = [A, B];
     while (s.round === 1) {
@@ -64,16 +64,16 @@ describe('Hold Up', () => {
     expect(placed.map(L).join(' ')).toBe('A B C D C B A A B C D D');
   });
 
-  it('+2 purple in round II, +3 in round III', () => {
+  it('+3 purple in round II, +4 in round III', () => {
     for (const round of [2, 3]) {
       const s = take(sceneQ({ quadrants: Q, round, queue: [0, 1, 0, 1].map(p => ({ t: 'turn', p })) }), 'purple.holdup');
-      expect(s.players[0].res.purple).toBe(round);
+      expect(s.players[0].res.purple).toBe(round + 1);
     }
   });
 
   it('no turn left this round: the purple, and the log says so', () => {
     const s = take(sceneQ({ quadrants: Q, round: 2, queue: [{ t: 'turn', p: 0 }] }), 'purple.holdup');
-    expect(s.players[0].res.purple).toBe(2);
+    expect(s.players[0].res.purple).toBe(3);
     expect(s.log).toContain("P1's Hold Up: no turn left to skip this round.");
   });
 });

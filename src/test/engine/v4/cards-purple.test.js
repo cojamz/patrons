@@ -20,7 +20,7 @@ const turnsQueued = (s, id, placed = id === s.current || id === 0 ? 1 : 0) => s.
 
 describe('Purple actions', () => {
   it('Hold Up +1 purple per round (rival pick named in hold-up.test.js); Roll Call +1 per worker on the board', () => {
-    expect(P(take(sc({ n: 3, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] }), 'purple.holdup'))).toBe(1);
+    expect(P(take(sc({ n: 3, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] }), 'purple.holdup'))).toBe(2);
     expect(P(take(sc({ slots: { '0-0': 0, '0-1': 0 } }), 'purple.windup'))).toBe(3);
   });
   it('Overtime: 1 extra turn right after this one, free; Crunch Time: your next 2 turns right away, free, no new minion', () => {
@@ -32,10 +32,10 @@ describe('Purple actions', () => {
     const r = s => turnRail(s), upcoming = s => [...r(s).done, ...(r(s).current != null ? [r(s).current] : []), ...r(s).next].slice(1);
     for (const held of [0, 3, 4, 12]) {
       const s = take(sc({ round: 3, res: [{ purple: held }], queue: [0, 1, 0, 1, 0].map(p => ({ t: 'turn', p })) }), 'purple.rally');
-      expect(P(s)).toBe(held + 1); // its +1 purple (Cory, 2026-10-22: "all should give at least 1")
+      expect(P(s)).toBe(held + 2); // its +2 purple (Cory, 2026-10-25; was +1)
       expect(turnsQueued(s, 0)).toBe(0); // no extra minion
       expect(upcoming(s)).toEqual([0, 0, 1, 1]);
-      expect(named(s, 'Crunch Time')).toEqual(["P1's Crunch Time: +1 purple.", "P1's Crunch Time: P1 takes their next 2 turns now."]);
+      expect(named(s, 'Crunch Time')).toEqual(["P1's Crunch Time: +2 purple.", "P1's Crunch Time: P1 takes their next 2 turns now."]);
     }
   });
 });
@@ -101,14 +101,14 @@ describe('Purple members', () => {
     expect(P(s)).toBe(2);
     expect(named(s, 'Foreman')).toHaveLength(1);
     const t = crunch({ members: [['purple.foreman']], slots: { '0-0': 0 } });
-    expect(P(t)).toBe(1); // Crunch Time's own +1 only
+    expect(P(t)).toBe(2); // Crunch Time's own +2 only
     expect(named(t, 'Foreman')).toHaveLength(0);
   });
   it('Courier: +1 of each other color per extra turn, named; Midas leaves member income alone; not on Crunch Time', () => {
     const s = take(sc({ round: 2, members: [['purple.courier', 'gold.midas']] }), 'purple.overtime');
     expect(s.players[0].res).toEqual({ gold: 1, red: 1, purple: 0, green: 1 });
     expect(named(s, 'Courier')[0]).toMatch(/P1's Courier: \+1 gold, \+1 red, \+1 green/);
-    expect(crunch({ members: [['purple.courier']] }).players[0].res).toEqual({ gold: 0, red: 0, purple: 1, green: 0 });
+    expect(crunch({ members: [['purple.courier']] }).players[0].res).toEqual({ gold: 0, red: 0, purple: 2, green: 0 });
   });
   it('Apprentice: each extra turn makes your next member 4 cheaper, named; not on Crunch Time', () => {
     const s = take(sc({ round: 2, members: [['purple.apprentice']] }), 'purple.overtime');
@@ -132,7 +132,7 @@ describe('Purple members', () => {
     s = sc({ round: 3, res: [{ purple: 8 }], members: [['purple.doubletime', 'echo.doppel']] });
     s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'purple.doubletime';
     s = take(s, 'purple.rally');
-    expect(P(s)).toBe(8 + 1);
+    expect(P(s)).toBe(8 + 2);
     expect(turnsQueued(s, 0)).toBe(0); // Crunch Time adds no turn (and here P1 has none left to bring forward)
     expect(named(s, 'Corner-Cutter')).toHaveLength(0);
   });

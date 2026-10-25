@@ -213,6 +213,17 @@ describe('Blue members', () => {
     t = move(t, card(t, 'gold.tycoon'));
     expect(t.players[0].discount).toBe(0);
   });
+  it('Shopaholic: you can always recruit twice, and the second recruit names it', () => {
+    // its own test since Gather's +3 (Oct 25) moved the seeded fire-audit games under 3 holds
+    let s = scene({ res: [{ red: 6, gold: 6 }], members: [['market.shopaholic']], shop: CHEAP });
+    s = take(s, 'red.turnout');
+    const pay = st => st.pending?.kind === 'pay' ? move(st, st.pending.options[0].id) : st;
+    s = pay(move(s, `card:${uidOf(s, 'red.twins', 'shop')}`));
+    expect(s.pending.kind).toBe('buy');
+    s = pay(move(s, `card:${uidOf(s, 'red.volunteer', 'shop')}`));
+    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(expect.arrayContaining(['red.twins', 'red.volunteer']));
+    expect(s.log.some(l => /uses Shopaholic/.test(typeof l === 'string' ? l : l.text))).toBe(true);
+  });
   it('Talent Scout: once per game, also recruit one of the top 5 of the pile at its cost', () => {
     let s = scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });
     s = take(s, 'red.turnout'); // Gather (v0.8.0): +1 red × round and +1 red, so 9 gold and 2 red
@@ -225,11 +236,11 @@ describe('Blue members', () => {
     expect(s.pending.options.filter(o => o.kind === 'pay').length).toBeGreaterThan(1);
     const pay = s.pending.options[0]; // the suggested way comes first
     expect(pay.breaks).toBeUndefined();
-    expect(pay.value).toMatchObject({ gold: 5, red: 1 });
-    expect(s.pending.options.find(o => o.id === 'pay:4-2-0-0').breaks).toEqual(['red']);
+    expect(pay.value).toMatchObject({ gold: 4, red: 2 });
+    expect(s.pending.options.find(o => o.id === 'pay:3-3-0-0').breaks).toEqual(['red']);
     s = move(s, pay.id);
     expect(has(s, 'gold.jackpot')).toBe(true);
-    expect(R(s)).toMatchObject({ gold: 4, red: 1 });
+    expect(R(s)).toMatchObject({ gold: 5, red: 1 });
     expect(s.shop).toHaveLength(CHEAP.length); // a pile recruit leaves the row as it was
     expect(s.pile.includes(j)).toBe(false);
     expect(s.pending.kind).toBe('buy'); // then the buy step, fresh: used, so no second use

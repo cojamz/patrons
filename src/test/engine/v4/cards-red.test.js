@@ -16,7 +16,7 @@ const cost = id => defById(id).s + defById(id).w;
 describe('Red action gains', () => {
   it.each([1, 2, 3])('Gather is round %i plus its inherent red, independent of recruit count', round => {
     const s = sceneQ({ round }); s.recruits = 99;
-    expect(R(take(s, 'red.turnout')).red).toBe(round + 1);
+    expect(R(take(s, 'red.turnout')).red).toBe(round + 2);
   });
   it('Open Door and Recruit a Member give a free member plus inherent red', () => {
     for (const [action, round] of [['red.hire', 1], ['red.take', 3]]) {

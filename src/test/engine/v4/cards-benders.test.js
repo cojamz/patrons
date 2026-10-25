@@ -46,7 +46,7 @@ describe('Guest members (rule-benders)', () => {
       let s = sceneQ({ res: [{ red: 4 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
       s = take(s, 'red.turnout'); // current Gather adds2 red in roundI
       s = buy(s, 'gold.banker');
-      expect(s.players[0].res.red).toBe(4);
+      expect(s.players[0].res.red).toBe(5);
       expect(named(s, 'Freelancer')).toHaveLength(1);
     } finally { restore(); }
   });
