@@ -74,10 +74,10 @@ const TOKEN = (() => {
   const W = [0, 0, 0, 8, 12, 14, 16, 18, 18, 20, 20, 20, 20, 20, 20, 18, 18, 16, 14, 12, 8, 0, 0, 0];
   return W.map(w => row(w, '2'));
 })();
-const TEMPLATES = { member: { id: '_member', name: 'Member', kind: 'member', px: HOOD }, action: { id: '_action', name: 'Action', kind: 'action', px: TOKEN } };
+const TEMPLATES = { member: { id: '_member', name: 'Member', kind: 'member', px: HOOD }, action: { id: '_action', name: 'Action', kind: 'action', px: TOKEN }, artifact: { id: '_artifact', name: 'Artifact', kind: 'artifact', px: TOKEN } };
 
 // ids: engine ids for the batches ("gold.banker", "gold.rush"), kebab names for the calibration set ("banker")
-const BY_ID = new Map(SETS.filter(i => i.kind === 'member' || i.kind === 'action').map(i => [i.id, i]));
+const BY_ID = new Map(SETS.filter(i => i.kind === 'member' || i.kind === 'action' || i.kind === 'artifact').map(i => [i.id, i]));
 // Green's new members use distinct retired Green drawings while their final names/art settle.
 // New IDs preserve each member's own palette and cache entry; no live Green card shares these silhouettes.
 for (const [key, name, source] of [

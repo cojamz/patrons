@@ -19,8 +19,16 @@ import { seatTurns } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
 import Tick from './Tick.jsx';
 import { MO } from '../motion.js';
+import { Rich } from './Rich.jsx';
 import './lamp-b.css';
 import './seat.css'; // the laptop chair, mockup A
+
+/** Which color's artifact a card is (state.artifacts maps color to card). */
+const artifactColor = (state, uid) => Object.keys(state.artifacts || {}).find(q => state.artifacts[q] === uid) || null;
+/** An artifact's picture on a small plate in its color (the seat and the starting pick). */
+function ArtifactTile({ q, res, title = null }) {
+  return <span className="art-tile" style={{ '--c': `var(--${q})` }}><Sprite id={`artifact.${q}`} kind="artifact" sphere={res} size={24} title={title} /></span>;
+}
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
@@ -177,11 +185,11 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
               // artifacts (Cory, 2026-10-24): the pick names the color's artifact; its hover says what it does
               const art = state.artifacts?.[o.value] !== undefined ? cardDef(state, state.artifacts[o.value]) : null;
               const button = (
-                <button type="button" className="token cs-setup-token" data-option={o.id} style={{ '--c': `var(--${o.value})` }}
+                <button type="button" className={`token cs-setup-token${art ? ' art' : ''}`} data-option={o.id} style={{ '--c': `var(--${o.value})` }}
                   onClick={e => onPick(o.id, e.currentTarget)} aria-label={art ? `Take ${art.name} and 1 ${res}` : `Take 1 ${res}`} title={art ? `${art.name}: ${art.text} Start with 1 ${res}.` : `Start with 1 ${res}`}>
-                  <ResourceGlyph r={res} size={18} decorative /><span className="tk-name">{art ? art.name : res}</span>
+                  {art ? <ArtifactTile q={o.value} res={res} /> : <ResourceGlyph r={res} size={18} decorative />}<span className="tk-name">{art ? art.name : res}</span>
                 </button>);
-              return art ? <Tip key={o.id} label={art.name} content={<p>{art.text} Start with 1 {res}.</p>}>{button}</Tip> : <span key={o.id}>{button}</span>
+              return art ? <Tip key={o.id} label={art.name} content={<p><Rich text={art.text} /> Start with 1 <ResourceGlyph r={res} size={12} decorative /></p>}>{button}</Tip> : <span key={o.id}>{button}</span>
               ;
             })}
           </span>
@@ -196,7 +204,11 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         </div>
       )}
       <div className="cs-crowd" {...bodyHover} role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members: ${nMembers}`}>
-        {p.artifact !== undefined && <Tip label={cardDef(state, p.artifact).name} content={<p>Artifact: {cardDef(state, p.artifact).text}</p>}><small className="cs-artifact" data-artifact={p.artifact} title={`Artifact: ${cardDef(state, p.artifact).text}`} style={{ '--c': cardColor(state, cardDef(state, p.artifact)) }}>{cardDef(state, p.artifact).name}</small></Tip>}
+        {/* the artifact (Cory, 2026-10-25): its picture on a small plate in its color, first in the row; the hover names it */}
+        {p.artifact !== undefined && (() => {
+          const art = cardDef(state, p.artifact), q = artifactColor(state, p.artifact);
+          return <Tip className="cs-artifact" data-artifact={p.artifact} label={art.name} content={<p><Rich text={art.text} /></p>}><ArtifactTile q={q} res={q ? quadrant(q).resource : 'colorless'} title={`Artifact: ${art.name}`} /></Tip>;
+        })()}
         <b className="cs-member-count num" data-members={nMembers} title="Members: each card counts its printed follower value, or its stated member count if higher">{nMembers}<span> members</span></b>
         {/* Lie Low and the like: no one can steal from this seat this round (w2b #21). A small shield under the member
             count (Cory's todo: the words crowded the row); its hover says it in words, the seat card too */}
