@@ -82,10 +82,10 @@ describe('Green exact action targets alongside Red recruitment', () => {
 });
 
 describe('Red members: bounded acquisition and body invariants', () => {
-  it('the normal Red deck contains twelve approved members, all priced at twelve or less (Mob 12, Cory Oct 24)', () => {
+  it('the normal Red deck contains thirteen approved members, all priced at twelve or less (Mob 12, Cory Oct 24)', () => {
     const s = createGame({ seats: [{}, {}], quadrants: ['red', 'echo'], rules: { cull: true, guests: false } });
     const red = Object.values(s.cards).map(c => defById(c.def)).filter(d => d.quadrant === 'red');
-    expect(red.map(d => d.key).sort()).toEqual(['host', 'loyalists', 'mentor', 'mob', 'movementpenalty', 'panel', 'patriarch', 'proselytizer', 'recruitbonus', 'recruiter', 'twins', 'volunteer'].sort());
+    expect(red.map(d => d.key).sort()).toEqual(['host', 'loyalists', 'mentor', 'mob', 'movementpenalty', 'panel', 'patriarch', 'proselytizer', 'recruitbonus', 'recruiter', 'twins', 'volunteer', 'headhunter'].sort());
     expect(red.every(d => d.s + d.w <= 12)).toBe(true);
     expect(['red.bigfamily', 'red.intern', 'red.drive', 'red.sponsor', 'red.crowd', 'red.reserve'].every(id => CUT.has(id))).toBe(true);
   });

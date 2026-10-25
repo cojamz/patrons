@@ -111,6 +111,15 @@ for (const [key, name, source] of [
   const art = BY_ID.get(`trading.${source}`);
   if (art) BY_ID.set(`trading.${key}`, { ...art, id: `trading.${key}`, name });
 }
+// Member structure (Cory, 2026-10-24): the new members reuse cut portraits while names and artwork settle.
+for (const [id, name, source] of [
+  ['red.headhunter', 'Headhunter', 'red.sponsor'], ['thieves.fixer', 'Fixer', 'thieves.bigscore'],
+  ['market.windowshopper', 'Window Shopper', 'market.curator'], ['market.restocker', 'Restocker', 'market.makeover'],
+  ['purple.timekeepers', 'Timekeepers', 'purple.patience'], ['trading.oldmoney', 'Old Money', 'trading.shareholder'],
+]) {
+  const art = BY_ID.get(source);
+  if (art) BY_ID.set(id, { ...art, id, name });
+}
 // Feastmaker became Chefs (Cory, 2026-10-18): same drawing under the new id
 { const art = BY_ID.get('yellow.feastmaker'); if (art) BY_ID.set('yellow.chefs', { ...art, id: 'yellow.chefs', name: 'Chefs' }); }
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */

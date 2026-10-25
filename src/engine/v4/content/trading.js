@@ -269,6 +269,10 @@ const trading = {
         ctx.asMember(owner, 'Martyr', () => { owner.bonus += c; ctx.log(`${owner.name}'s Martyr left: +${plural(c, 'follower')}.`); });
       },
     }),
+    // Cory, 2026-10-24: "go deep card for every color" ("sure for now"); name and price Claude's fill-in, priced like Chronicler
+    m('oldmoney', 'Old Money', 1, 3, 'Game end: +1 follower per white member you have.', {
+      onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'trading'),
+    }),
     m('hoarder', 'Hoarder', 4, 3, 'Once per game: turn all your resources into white.', {
       activate: 'game',
       onActivate(ctx, owner, card) {

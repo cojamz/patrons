@@ -299,6 +299,12 @@ const thieves = {
         ctx.log(short ? `${v.name} couldn't pay ${n} (held ${total(v)}), so lost ${c.def.name} to ${p.name}.` : `${v.name} chose to let ${c.def.name} go to ${p.name} rather than pay ${n}.`);
       }
     },
+    fixer(ctx, p, uid) {
+      const v = ctx.ownerOf(uid), c = ctx.card(uid), price = cost(c);
+      if (!v || (p.res.magenta || 0) < price || !ctx.steal(p, v, { uid })) return;
+      p.res.magenta -= price;
+      ctx.log(`${p.name}'s Fixer: paid ${price} magenta for ${v.name}'s ${c.def.name}.`);
+    },
     heist(ctx, p, uid) {
       const v = ctx.ownerOf(uid), c = ctx.card(uid);
       if (!ctx.steal(p, v, { uid })) return;
@@ -379,6 +385,16 @@ const thieves = {
         ctx.log(`${owner.name}'s Safecracker: ${got} magenta from ${o.name}.`);
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 4),
+    }),
+    // Cory, 2026-10-24: Magenta's once per game (spend the magenta, not pay the rival: Claude's, his "ok"); name and price Claude's fill-in
+    m('fixer', 'Fixer', 3, 2, 'Once per game: spend magenta equal to a rival’s member’s cost to steal it.', {
+      activate: 'game',
+      onActivate(ctx, owner, card) {
+        const list = takeable(ctx, owner, owner.res.magenta || 0);
+        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Fixer: not enough magenta for any rival member.`); return; }
+        pickMember(ctx, owner, list, 'Fixer: steal which member?', 'thieves.fixer');
+      },
+      botActivate: (ctx, owner) => ctx.state.round >= 2 && takeable(ctx, owner, owner.res.magenta || 0).some(([, c]) => cost(c) >= 4),
     }),
     // Cory's #69 "King of Thieves… based more on members… shouldn't compete with ring competition" (Cory's yes, Oct 21)
     m('kingpin', 'Kingpin', 1, 2, 'Game end: +1 follower per magenta member you have.', {

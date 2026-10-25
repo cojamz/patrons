@@ -18,6 +18,7 @@ export const CUT = new Set([
   'trading.lender', 'trading.tipster', 'trading.dealer', 'trading.pawnbroker', 'trading.liquidator',
   'trading.safetynet', 'trading.magnate', 'trading.shareholder', 'trading.reinvestor', // Cory, 2026-10-22: his White set of 12
   'benders.bigspender', 'benders.insider',
+  'trading.bulkbuyer', 'trading.appraiser', 'market.makeover', // Cory, 2026-10-24: thinning ("I like Closer rest can go"); Restocker replaces Makeover
 ]);
 
 // The card and scenario tests pin seeded decks and deal cut cards by id, so the test setup deals the full deck through

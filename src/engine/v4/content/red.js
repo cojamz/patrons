@@ -128,6 +128,15 @@ export default {
       },
     }),
     m('loyalists', 'Loyalists', 2, 3, /* Claude's fill-in price 5, was 3 (Cory, 2026-10-22: "too cheap") */ 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
+    // Cory, 2026-10-24: Red's once per game, "swap a rivals with the shop" (equal or greater cost); name and price Claude's fill-in
+    m('headhunter', 'Headhunter', 3, 2, 'Once per game: swap a rival’s member with a shop member of equal or greater cost.', {
+      activate: 'game',
+      onActivate(ctx, owner, card) {
+        if (!swapPairs(ctx, owner, 'rival').length) { card.used = false; ctx.log(`${owner.name}'s Headhunter: no rival member to swap.`); return; }
+        swap(ctx, owner, 'rival', 'Headhunter: choose a rival’s member and its shop replacement');
+      },
+      botActivate: (ctx, owner) => ctx.state.round >= 2 && swapPairs(ctx, owner, 'rival').some(([a]) => cost(a) >= 5),
+    }),
     m('reserve', 'Benchwarmer', 1, 0, 'Worth 1 follower.'), // placeholder until Cory designs its hold (then it becomes Seat Saver)
   ],
 };
@@ -154,13 +163,13 @@ function hireCheapest(ctx, p, who) {
 }
 // A swap can rearrange any cult, but taking from a protected rival remains blocked.
 function swapPairs(ctx, p, mode, excludeUid = null) {
-  const cult = ctx.state.players.flatMap(owner => ctx.canSwapMembers(owner) && (owner === p || ctx.canSteal(p, owner, 'member')) ? ctx.membersOf(owner) : []);
+  const cult = ctx.state.players.flatMap(owner => ctx.canSwapMembers(owner) && (owner === p ? mode !== 'rival' : ctx.canSteal(p, owner, 'member')) ? ctx.membersOf(owner) : []);
   const shop = ctx.shopCards();
   const out = [];
   const first = mode === 'even' ? [...cult, ...shop] : cult;
   const second = mode === 'even' ? first : shop;
   for (const a of first) for (const b of second) if (a.uid !== b.uid && a.uid !== excludeUid && b.uid !== excludeUid && (mode === 'even' ? cost(a) === cost(b)
-    : mode === 'promote' ? cost(b) <= cost(a) + 2 : cost(b) <= cost(a) - 2)) out.push([a, b]);
+    : mode === 'promote' ? cost(b) <= cost(a) + 2 : mode === 'rival' ? cost(b) >= cost(a) : cost(b) <= cost(a) - 2)) out.push([a, b]);
   return out;
 }
 function swap(ctx, p, mode, prompt, excludeUid = null) {

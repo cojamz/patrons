@@ -211,6 +211,15 @@ const market = {
   ],
 
   handlers: {
+    windowShop(ctx, p, uid) {
+      if (!ctx.state.shop.includes(uid)) return;
+      const c = ctx.card(uid), col = colorOf(ctx, c);
+      ctx.state.shop.splice(ctx.state.shop.indexOf(uid), 1);
+      ctx.state.pile.push(uid);
+      if (col) ctx.gain(p, col, 1);
+      ctx.log(`${p.name}'s Window Shopper sends ${c.def.name} to the bottom of the pile${col ? `: +1 ${col}` : ''}.`);
+      ctx.refillShop(); toBottom(ctx, 1);
+    },
     churn(ctx, p, uid, data) {
       if (ctx.state.shop.includes(uid)) {
         const i = ctx.state.shop.indexOf(uid);
@@ -331,6 +340,26 @@ const market = {
       onGameEnd: (ctx, owner) => 2 * rivalsBigger(ctx, owner),
     }),
     // concepts, Oct 21, not approved (design/eval/member-concepts-2026-10-21.md): prices are sim starting points
+    // Cory, 2026-10-24: Blue's round start ("Yeah I kinda like it") and Blue's once per game, the shop refresh that replaces
+    // Makeover; names and prices Claude's fill-in
+    m('windowshopper', 'Window Shopper', 2, 2, 'Now and at round start: send 1 shop member to the bottom of the pile, gain 1 of its color.', { now: true,
+      onRoundStart(ctx, owner) {
+        const shop = ctx.shopCards();
+        if (!shop.length) return;
+        ctx.choose(owner, 'Window Shopper: send which member to the bottom?', shop.map(c => ({
+          id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)})`, kind: 'card', value: c.uid, hint: priceOf(c),
+        })), `${Q}.windowShop`);
+      },
+    }),
+    m('restocker', 'Restocker', 2, 1, 'Once per game: send the whole shop to the bottom of the pile, then refill.', {
+      activate: 'game',
+      onActivate(ctx, owner, card) {
+        if (!ctx.state.shop.length) { card.used = false; ctx.log(`${owner.name}'s Restocker: the shop is empty.`); return; }
+        sweepRow(ctx); ctx.refillShop();
+        ctx.log(`${owner.name}'s Restocker sends the whole shop to the bottom of the pile and refills it.`);
+      },
+      botActivate: (ctx, owner) => ctx.state.round >= 2 && !ctx.shopCards().some(c => ctx.payChoices(owner, c.uid, {}).length),
+    }),
     m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true }),
     m('windowdresser', 'Window Dresser', 2, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx, owner) {

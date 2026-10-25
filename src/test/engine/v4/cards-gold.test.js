@@ -130,7 +130,8 @@ describe('Gold members', () => {
   });
 
   it('Middleman: +1 gold when you recruit a non-gold member, named; a free Open Door counts too', () => {
-    let s = sceneQ({ members: [['gold.coinpurse']], shop: ['red.intern'] });
+    // a full row with Intern the one cheapest, so Open Door never asks which (the row's refill shifts with the deck)
+    let s = sceneQ({ members: [['gold.coinpurse']], shop: ['red.intern', 'gold.banker', 'gold.tycoon', 'red.mob', 'red.panel', 'red.mentor'] });
     s = take(s, 'red.hire');
     expect(s.players[0].members.length).toBe(2);
     expect(G(s)[0]).toBe(1);

@@ -86,9 +86,9 @@ describe('setup', () => {
 
   it('starts with a shuffled deck of every table sphere\'s members (plus the guest rule-benders) and a full row face up', () => {
     const s = createGame({ quadrants: TABLE, seats: seats(2), seed: 9, rules: { guests: false } });
-    // 63 on this table (tests deal the full deck, cut cards too) since the 12-member Red deck (v0.8.2: Recruit Bonus,
-    // Movement Penalty, Panel, Loyalists joined); the deck is whatever the spheres hold, every copy of every member
-    const deck = 63;
+    // 64 on this table (tests deal the full deck, cut cards too): the 12-member Red deck (v0.8.2: Recruit Bonus,
+    // Movement Penalty, Panel, Loyalists joined) plus Headhunter (Oct 24); the deck is whatever the spheres hold
+    const deck = 64;
     expect(TABLE.reduce((n, q) => n + quadrant(q).members.reduce((a, d) => a + d.copies, 0), 0)).toBe(deck);
     expect(Object.keys(s.cards)).toHaveLength(deck);
     expect(Object.values(s.cards).every(c => TABLE.includes(c.def.split('.')[0]))).toBe(true);
@@ -105,7 +105,7 @@ describe('turn order and workers', () => {
   it('round I, all tied: a seeded random order, snaking, 3 workers', () => {
     const s = scene({ n: 3, queue: [{ t: 'round', r: 1 }] });
     // random since 2026-10-14 (core.js startRound); pinned to this seed's draw
-    expect(s.order).toEqual([0, 1, 2, 2, 1, 0, 0, 1, 2]);
+    expect(s.order).toEqual([0, 2, 1, 1, 2, 0, 0, 2, 1]);
     expect(s.order.slice(3, 6)).toEqual([...s.order.slice(0, 3)].reverse()); // the snake
     expect(s.pending.player).toBe(0);
     expect(s.players.map(p => p.left)).toEqual([3, 3, 3]);

@@ -423,6 +423,10 @@ export default {
       },
     }),
     // Cory, 2026-10-23: "its when you place THE last minion of the round. so it benefits folks going last"
+    // Cory, 2026-10-24: "go deep card for every color" ("sure for now"); name and price Claude's fill-in, priced like Chronicler
+    m('timekeepers', 'Timekeepers', 1, 3, 'Game end: +1 follower per purple member you have.', {
+      onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'purple'),
+    }),
     m('closer', 'Closer', 2, 2, 'When you place the last minion of the round: +4 purple.', {
       afterAction(ctx, owner, card) {
         if (card.paidRound === ctx.state.round || ctx.state.players.some(o => o.left > 0)) return;

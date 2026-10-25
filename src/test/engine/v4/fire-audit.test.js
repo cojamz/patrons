@@ -132,6 +132,8 @@ const ALLOW = {
   // Help Yourself taking followers (2026-10-22) moved the seeded games; its own tests name it when it fires
   'yellow.admirer': 'pays only when a rival recruits a color its holder has none of (cards-yellow: Admirer)',
   'red.movementpenalty': 'pays only when you move a rival’s member out of their cult (red-members-hooks: Movement Penalty)',
+  // cut from the deck since 2026-10-18 (tests still deal it); the Oct 24 member structure moved the seeded games off its moment
+  'purple.overseer': 'pays only when a rival takes an extra turn; cut from the deck (cards-purple: Overseer)',
 };
 
 describe('namesCard: what counts as a line naming a card', () => {

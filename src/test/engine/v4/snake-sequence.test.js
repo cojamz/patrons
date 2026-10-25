@@ -53,8 +53,8 @@ const others = (seq, who) => seq.filter(p => p !== who);
 
 describe('snake vs real sequence, 3 players, one seat taking turns out of it', () => {
   const crunch = at => {
-    // seed 15: no seat's members hand out an extra turn in this round III (seeds 11, 12 and, with the 6/7/8 shop, 14's bots did)
-    const { s, rand } = toRound(3, 15);
+    // seed 19: no seat's members hand out an extra turn in this round III (seeds 11, 12, 14 and, after the Oct 24 member structure, 15 to 18 did)
+    const { s, rand } = toRound(3, 19);
     const base = s.order.slice(0, 3), who = base[at];
     const seq = playRound(s, rand, st => {
       if (st.pending.player !== who || st.turns.filter(p => p === who).length !== 1) return null;
