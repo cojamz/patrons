@@ -34,6 +34,9 @@ export const GLOSSARY = [
     def: 'A skipped turn is passed over: play goes on to the next turn, and the skipped player places that minion later in the round. Nobody loses a turn or a minion.' },
   { key: 'get rid of', word: 'Get rid of', match: /\bget rid of\b/i,
     def: 'Send one of your own members to the bottom of the pile with a White space or member. It leaves your cult.' },
+  // Cory, 2026-10-24: "cast out" instead of "bury a member", in the cult's own words
+  { key: 'cast out', word: 'Cast out', match: /\bcast out\b/i,
+    def: 'Send one of your own members to the bottom of the pile. It leaves your cult.' },
   { key: 'leaves your cult', word: 'Leaves your cult', match: /\bleaves your cult\b/i,
     def: 'Any way a member stops being yours: you get rid of it, a rival steals it, or a swap takes it away.' },
   { key: 'turn into followers', word: 'Turn into followers', match: /\bturn (?:\d+ |all your )?(?:[a-z]+ )*?(?:resources?|white|members?)(?: or members)? into (?:\d+ )?followers\b|\binto \d+ followers\b/i,

@@ -40,7 +40,7 @@ const S = {
     pickpocket: r => `steal ${r} and ${r} followers; +1 magenta`, tipoff: 'steal 1 per magenta action with a minion; +1 magenta', hideout: 'safe from steals this round; +1 magenta', rob: 'steal half a rival’s one-color pile, round down; +1 magenta', ransom: 'rival pays member’s cost or loses it; cost 5 or less; +1 magenta', heist: 'take a rival’s member; +1 magenta',
   },
   trading: {
-    stipend: r => `+${r} followers +${r + 1} white`, splurge: '+1 follower per 2 spent on your recruit; +1 white', exchange: r => `turn ${r} into ${2 * r} followers; +1 white`, farewell: 'bury a member for its cost in followers; +1 white', estatesale: 'bury a member for its cost in white; +1 white', cashin: 'all your white into followers; +1 white',
+    stipend: r => `+${r} followers +${r + 1} white`, splurge: '+1 follower per 2 spent on your recruit; +1 white', exchange: r => `turn ${r} into ${2 * r} followers; +1 white`, farewell: 'cast out a member for its cost in followers; +1 white', estatesale: 'cast out a member for its cost in white; +1 white', cashin: 'all your white into followers; +1 white',
     haggle: '+2 white, +1 per leader', buylow: '+1 follower per 3 white', pawn: r => `${r} follower · may take 2 white each instead`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower bought or won', boom: 'all for followers',
   },
   echo: { hum: '+1 green, +1 more per other green action with a minion', chant: r => `+${r + 1} green`, echo: 'copy previous; +1 green', encore: 'copy a rival’s action; +1 green', refrain: 'copy your action; +1 green', eternity: 'copy all your actions; +1 green' },
@@ -56,7 +56,7 @@ const PIPS = {
   yellow: { gather: '+1 per member' },
   market: { clearance: 'recruit twice', pricecheck: 'bury for half its cost', spree: 'recruit 3 times' },
   thieves: { rob: 'steal half a one-color pile', ransom: 'rival pays or loses member', heist: 'take a rival’s member' },
-  trading: { stipend: r => `+${r} followers +${r + 1} white`, splurge: '+1 follower per 2 spent', exchange: r => `${r} into ${2 * r} followers`, farewell: 'bury one for followers', estatesale: 'bury one for white', cashin: 'all white for followers', sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower', boom: 'all for followers' },
+  trading: { stipend: r => `+${r} followers +${r + 1} white`, splurge: '+1 follower per 2 spent', exchange: r => `${r} into ${2 * r} followers`, farewell: 'cast out one for followers', estatesale: 'cast out one for white', cashin: 'all white for followers', sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower', boom: 'all for followers' },
   echo: { refrain: 'copy yours', eternity: 'copy all' },
 };
 /** The pips-first form of a space's yield (falls back to the few words). */
