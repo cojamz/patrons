@@ -3,6 +3,7 @@
 Nothing is running. Live: v0.8.62 (main:play/build.json, source 07ec995). Before this: design/archive/in-flight-2026-10-21-to-23.md.
 
 Threads and where each stands
+- Member structure: v0.8.71 live (Headhunter, Fixer, Window Shopper, Restocker, Timekeepers, Old Money; Bulk Buyer, Appraiser, Makeover cut). Sort of every color into kinds: /mnt/project-files/member-structure/. Waiting on Cory's read after play; names and prices are Claude's.
 - Action text review: v0.8.60 to v0.8.62 shipped. Waiting on Cory's #12 (how the wheel shows "+1" on long spaces). Owner of /review-text.
 - Engine start and round I: two shops built on claude/project-thread-tmeqf2, not live. Waiting on Cory's #1 to #4.
 - Tonight's playtest notes (Oct 22): everything decided is live. Waiting on #6 to #11.
