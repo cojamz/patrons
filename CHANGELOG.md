@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.77 — 2026-10-25 — unreleased
+
+- The artifact draft says what an artifact is: your cult's bonus all game.
+
 ## v0.8.76 — 2026-10-25 — unreleased
 
 - Artifacts are picked only from the list on the wheel, which says whose pick it is; a taken one leaves the list.
