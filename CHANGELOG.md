@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.68 — 2026-10-24 — unreleased
+
+- Prices: Trendsetter, Makeover and Window Dresser cost 3; Patroness 7; Early Bird, Bouncer, Gossip and Go-Getter 2 cheaper; Tribute Band 7; Mob 12.
+
 ## v0.8.67 — 2026-10-24 — unreleased
 
 - Growing spaces on the wheel say next round's number ("+3 red, +4 next round") instead of "more each round".
