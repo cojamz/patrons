@@ -18,6 +18,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Lead with what you did and what's next. Status is three lines: what's running, what's next, ETA.
 - Every call is a plain yes/no question about what changes for a player, in game words, with when it applies (end of game, each round). No file names, test names or system terms (Cory, Oct 21, second phrasing correction this week).
 - Decisions come as a numbered list he answers by number ("1 yes, 2 no"), one line each, your default in brackets. Only design and feel calls go to him.
+- Every message ends with either the decision itself (numbered questions, one line each, quoting the card text and what changes for a player, default in brackets) or the plain line "Nothing needed from you." Never "ok?" or a status that leaves him guessing what he's deciding (Cory, Oct 25).
 - Don't restate that a space gives +1 of its color; every space does, and it goes without saying (Cory, Oct 22).
 - Use his words. Never coin labels. Say "buy followers". Any card or space you name gets its text quoted in a few words and what changes for a player.
 - Show, don't describe: a play link, screenshot or GIF with a plain caption. Plain URLs. Send iterations as they happen, with screenshots, not just finished builds.
@@ -67,3 +68,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-22: Cory, after single-idea pitches in White: "Give me like 5 ideas. Like, why are you doing these so piecemeal?" Pitches come as about 5 per open slot, all at once (/brainstorm).
 - 2026-10-22: Cory, mid-playtest: "from now on * = player not but no action needed at the moment". Starred notes are logged only.
 - 2026-10-24: Cory, after a Hard bot batch on all nine colors: "you should only be testing on colors that are in 2.0". Bot batches default to the 2.0 colors; `ONLY=` on v4-hard-batch.mjs picks the pool.
+- 2026-10-25: Cory: "ok? what's my decision? … it's rarely clear from the threads what my decision is". Every message now ends with the numbered decision or "Nothing needed from you."
