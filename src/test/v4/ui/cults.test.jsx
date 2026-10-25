@@ -83,4 +83,10 @@ describe('every member reads as its sphere', () => {
     expect(defs.length).toBeGreaterThan(100);
     expect(defs.filter(d => !d.artifact && !iconFor([d.id, spriteId(d.name)], 'member').drawn).map(d => d.id)).toEqual([]);
   });
+
+  it('every color with an artifact has its artifact drawn (an object on a plate, never the template)', async () => {
+    const { iconFor } = await import('../../../v4/art/index.js');
+    const { ARTIFACTS } = await import('../../../engine/v4/core.js');
+    expect(Object.keys(ARTIFACTS).filter(q => !iconFor(`artifact.${q}`, 'artifact').drawn)).toEqual([]);
+  });
 });
