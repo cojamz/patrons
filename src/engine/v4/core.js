@@ -38,7 +38,14 @@ const LOG_MAX = 300;
 // Rule flags a table can toggle (sims flip them). release: once per round, on your turn, release one of your
 // members (it goes to the bottom of the pile) for its colored part in its own color (not one recruited this round). guests: rule-bending guest
 // members join the deck.
-export const DEFAULT_RULES = { release: false, guests: true, cull: true };
+export const DEFAULT_RULES = { release: false, guests: true, cull: true, artifacts: true };
+/** Artifacts (Cory, 2026-10-24): each color on the table has one, picked at game start with 1 of its color. Ability
+ *  only: not a member, worth no followers, never swapped, stolen or sent to the pile. Each is a live member's ability;
+ *  that member leaves its color's deck. Which card is each color's artifact is Claude's pick until Cory says. */
+export const ARTIFACTS = {
+  gold: 'gold.prospector', red: 'red.recruiter', echo: 'echo.tuningfork', market: 'market.bargainbin', thieves: 'thieves.fence',
+  purple: 'purple.pocketwatch', silver: 'silver.caterer', yellow: 'yellow.farmer', trading: 'trading.changer',
+};
 
 // ---------- creation ----------
 
@@ -54,19 +61,23 @@ export function createGame({ seats, seed = 1, quadrants, rules = {} }) {
   const zero = Object.fromEntries(resources.map(r => [r, 0]));
   const cards = {};
   let uid = 0;
-  const table = { ...DEFAULT_RULES, ...(FULL_DECK.tests ? { cull: false } : {}), ...rules }; // tests: content/cull.js
-  const dealt = def => !(table.cull && CUT.has(def.id)); // the cull (content/cull.js)
+  const table = { ...DEFAULT_RULES, ...(FULL_DECK.tests ? { cull: false, artifacts: false } : {}), ...rules }; // tests: content/cull.js (artifacts too: a test asks for them)
+  const artifactIds = new Set(table.artifacts ? quadrants.map(q => ARTIFACTS[q]).filter(Boolean) : []);
+  const dealt = def => !(table.cull && CUT.has(def.id)) && !artifactIds.has(def.id) && !def.artifact; // the cull (content/cull.js); artifacts (an artifact-only card is never dealt)
   for (const q of quadrants) for (const def of quadrant(q).members.filter(dealt))
     for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
   if (table.guests) for (const def of guestMembers().filter(dealt))
     for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
+  // each color's artifact is a card of its own, held by nobody until the starting pick
+  const artifacts = {};
+  if (table.artifacts) for (const q of quadrants) if (ARTIFACTS[q]) { cards[uid] = { uid, def: ARTIFACTS[q] }; artifacts[q] = uid; uid++; }
   const state = {
     v: 4, seed: seed >>> 0, rng: seed >>> 0, quadrants: [...quadrants], resources, rules: table,
     players: seats.map((s, i) => ({
       id: i, name: s.name || `P${i + 1}`, kind: s.kind || 'human', ...(s.emoji ? { emoji: String(s.emoji) } : {}), // emoji: the player's pick (display only)
       res: { ...zero }, bonus: 0, contest: 0, bought: 0, members: [], discount: 0, left: 0, turnRecruits: 0, final: null,
     })),
-    cards, pile: Object.keys(cards).map(Number), shop: [],
+    cards, pile: Object.keys(cards).map(Number).filter(u => !Object.values(artifacts).includes(u)), shop: [], artifacts,
     round: 0, slots: {}, squats: {}, order: [], turnIndex: 0, current: null,
     recruits: 0, stock: Object.fromEntries(TIERS.filter(t => t.limited).map(t => [t.key, t.stock(seats.length)])),
     // contests: each round's scoring as the engine decided it (see contestTable); turns: who has taken a turn this round
@@ -415,7 +426,7 @@ function inputFor(state, task) {
     case 'setupPick':
       if (state.startPool?.length === 1) return null;
       return {
-        kind: 'setup', prompt: `${p.name}: draft 1 resource`,
+        kind: 'setup', prompt: state.artifacts && Object.keys(state.artifacts).length ? `${p.name}: pick an artifact` : `${p.name}: draft 1 resource`,
         options: (state.startPool || state.quadrants).map(q => ({ id: `color:${q}`, label: quadrant(q).name, kind: 'color', value: q })),
       };
     case 'place': {
@@ -550,7 +561,11 @@ function resolveTask(state, task, optionId) {
       const q = optionId.slice('color:'.length);
       p.res[quadrant(q).resource] += 1;
       if (state.startPool) state.startPool = state.startPool.filter(id => id !== q);
-      log(state, `${p.name} drafts +1 ${quadrant(q).resource}.`);
+      const art = state.artifacts?.[q];
+      if (art !== undefined) {
+        p.artifact = art;
+        log(state, `${p.name} takes ${quadrant(q).name}'s artifact, ${cardDef(state, art).name} ("${cardDef(state, art).text}"), and +1 ${quadrant(q).resource}.`);
+      } else log(state, `${p.name} drafts +1 ${quadrant(q).resource}.`);
       return;
     }
     case 'place': {
@@ -1175,7 +1190,8 @@ function effectiveDefs(card) {
   return [own, hooks];
 }
 function eachMemberOf(state, p, fn) {
-  for (const uid of [...p.members]) {
+  // an artifact's ability works like a member's (it isn't one: no count, no worth, never moves)
+  for (const uid of [...p.members, ...(p.artifact !== undefined ? [p.artifact] : [])]) {
     const card = state.cards[uid];
     for (const def of effectiveDefs(card)) {
       const before = traceSnapshot(state);
@@ -1368,6 +1384,8 @@ function ctxFor(state) {
     card: uid => wrap(state, state.cards[uid]),
     defOf: c => (typeof c === 'number' ? cardDef(state, c) : c.def),
     membersOf: p => p.members.map(u => wrap(state, state.cards[u])),
+    /** p's members and p's artifact: for ability hooks only (an artifact is not a member) */
+    abilitiesOf: p => [...p.members, ...(p.artifact !== undefined ? [p.artifact] : [])].map(u => wrap(state, state.cards[u])),
     ownerOf: uid => state.players.find(o => o.members.includes(uid)),
     shopCards: () => state.shop.map(u => wrap(state, state.cards[u])),
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
@@ -1509,6 +1527,7 @@ function whereIs(state, uid) {
   if (state.shop.includes(uid)) return 'shop';
   if (state.pile.includes(uid)) return 'pile';
   const o = state.players.find(q => q.members.includes(uid));
+  if (!o) { const a = state.players.find(q => q.artifact === uid); if (a) return `a${a.id}`; }
   return o ? `p${o.id}` : 'gone';
 }
 function pinCards(state, o) {

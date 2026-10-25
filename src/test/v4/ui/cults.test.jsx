@@ -81,6 +81,6 @@ describe('every member reads as its sphere', () => {
     const { guestMembers } = await import('../../../engine/v4/content/index.js');
     const defs = [...allQuadrantIds().filter(id => !quadrant(id).standIn).flatMap(id => quadrant(id).members), ...guestMembers()];
     expect(defs.length).toBeGreaterThan(100);
-    expect(defs.filter(d => !iconFor([d.id, spriteId(d.name)], 'member').drawn).map(d => d.id)).toEqual([]);
+    expect(defs.filter(d => !d.artifact && !iconFor([d.id, spriteId(d.name)], 'member').drawn).map(d => d.id)).toEqual([]);
   });
 });

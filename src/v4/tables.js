@@ -84,8 +84,10 @@ export function parseTable(str) {
 export const urlTable = () => { try { return parseTable(new URLSearchParams(location.search).get('table')); } catch { return null; } };
 
 /** n real spheres at random (4 by default), no two sharing a color. */
+/** The try build (artifacts and two shops, Cory 2026-10-24): only the 2.0 colors are dealt. */
+export const TRY_POOL = ['red', 'echo', 'thieves', 'purple', 'market', 'trading'];
 export function randomTable(rand = Math.random, n = 4) {
-  const pool = spheres().filter(id => !quadrant(id).standIn);
+  const pool = spheres().filter(id => !quadrant(id).standIn && TRY_POOL.includes(id));
   for (let tries = 0; tries < 200; tries++) {
     const ids = [...pool];
     for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
@@ -110,7 +112,7 @@ export function fitTable(table, players) {
   if (mode !== 'random') return { mode, quadrants: [...ids] };
   const seed = [...ids.join(',')].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 7);
   const rand = seededRandom(seed || 1);
-  const pool = spheres().filter(id => !quadrant(id).standIn && !ids.includes(id));
+  const pool = spheres().filter(id => !quadrant(id).standIn && TRY_POOL.includes(id) && !ids.includes(id));
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
   const out = [...ids];
   const used = new Set(out.map(id => quadrant(id).resource));

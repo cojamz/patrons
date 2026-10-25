@@ -132,7 +132,7 @@ function skipNext(ctx, p, why, by = p, quiet = false) {
  *  turn is skipped", anyone's, yours too; Oct 23: "should pay when turn is actually skipped"). */
 function skipped(ctx, p, value, data) {
   ctx.log(`${p.name}'s turn is skipped${data?.why ? ` (${data.why})` : ''}.`);
-  for (const o of ctx.state.players) for (const c of ctx.membersOf(o)) if (c.def.onSkip) ctx.asMember(o, c.def.name, () => c.def.onSkip(ctx, o, c, p));
+  for (const o of ctx.state.players) for (const c of ctx.abilitiesOf(o)) if (c.def.onSkip) ctx.asMember(o, c.def.name, () => c.def.onSkip(ctx, o, c, p));
 }
 /** How many turns p still has to come this round, after the one now running. */
 const turnsLeft = (ctx, p) => {
@@ -405,6 +405,11 @@ export default {
           n++;
         }
       },
+    }),
+    // Purple's artifact only, never dealt (Claude's pick, 2026-10-24, after Cory found Courier "a little too good").
+    // Name is Claude's fill-in.
+    m('pocketwatch', 'Pocket Watch', 0, 0, 'Whenever a player’s turn is skipped, +1 purple.', { artifact: true,
+      onSkip(ctx, owner) { const got = ctx.gain(owner, 'purple', 1); if (got) ctx.log(`${owner.name}'s Pocket Watch: +${got.n} ${got.color}.`); },
     }),
     m('gossip', 'Gossip', 5, 2, 'Whenever a player’s turn is skipped, +1 follower.', {
       onSkip(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Gossip: +1 follower.`); },

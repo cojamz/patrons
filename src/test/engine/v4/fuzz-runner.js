@@ -44,6 +44,9 @@ export function checkInvariants(s, ctx) {
   s.pile.forEach(u => put(u, 'pile'));
   s.shop.forEach(u => put(u, 'shop'));
   s.players.forEach(p => p.members.forEach(u => put(u, p.name)));
+  // artifacts: each held by the player who picked it, or waiting unpicked (a color nobody took yet)
+  s.players.forEach(p => { if (p.artifact !== undefined) put(p.artifact, `${p.name}'s artifact`); });
+  Object.values(s.artifacts || {}).forEach(u => { if (!seen.has(u)) put(u, 'artifact'); });
   const all = Object.keys(s.cards).map(Number);
   if (seen.size !== all.length || all.some(u => !seen.has(u))) fail(`cards lost: ${seen.size} of ${all.length}`, s, ctx);
   // the shop is full while the pile lasts (Churn refills once, after its last pick)
@@ -90,11 +93,11 @@ const botPicker = rand => s => chooseBotMove(s, rand);
 const randomPicker = rand => s => { const ms = legalMoves(s); return ms[Math.floor(rand() * ms.length)]; };
 
 /** Plays one game to the end, checking every step. Returns { state, moves }. */
-export function runGame({ n, seed, kind, full = true, quadrants }) {
+export function runGame({ n, seed, kind, full = true, quadrants, rules }) {
   const ctx = `${kind} n=${n} seed=${seed}`;
   const rand = seededRandom(seed * 7919 + n);
   const pick = (kind === 'bot' ? botPicker : randomPicker)(rand);
-  let s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants });
+  let s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants, rules });
   const moves = [];
   checkInvariants(s, ctx);
   while (s.pending) {

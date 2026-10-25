@@ -326,7 +326,7 @@ const cost = (ctx, uid) => { const d = ctx.card(uid).def; return d.s + d.w; };
 const defsOf = (ctx, c) => [c.def, c.copy ? defById(c.copy) : null].filter(Boolean);
 // Banker: "Whenever you turn resources or members into followers, +1 white" (once per turning)
 function turned(ctx, p) {
-  for (const c of ctx.membersOf(p)) for (const d of defsOf(ctx, c)) if (d.onTurned) { ctx.gain(p, W, d.onTurned); ctx.log(`${p.name}'s ${d.name}: +${d.onTurned} white.`); }
+  for (const c of ctx.abilitiesOf(p)) for (const d of defsOf(ctx, c)) if (d.onTurned) { ctx.gain(p, W, d.onTurned); ctx.log(`${p.name}'s ${d.name}: +${d.onTurned} white.`); }
 }
 // Undertaker: "Whenever you get rid of one of your members, +2 followers"
 function gotRidOf(ctx, p) {

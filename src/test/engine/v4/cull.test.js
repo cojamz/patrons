@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createGame, DEFAULT_RULES } from '../../../engine/v4/core.js';
+import { createGame, DEFAULT_RULES, ARTIFACTS } from '../../../engine/v4/core.js';
 import { CUT, FULL_DECK } from '../../../engine/v4/content/cull.js';
-import { allQuadrantIds, quadrant, guestMembers } from '../../../engine/v4/content/index.js';
+import { allQuadrantIds, quadrant, guestMembers, defById } from '../../../engine/v4/content/index.js';
 import { applyMove } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
@@ -26,8 +26,12 @@ describe('the curated member decks', () => {
   it('Green, Red and Blue deal 12 members, Magenta 13, Purple 12, other spheres 10, guests 7; no cut card is dealt', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });
-      const dealt = Object.values(s.cards).map(c => c.def);
-      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(DEALT[q] ?? 10);
+      // artifacts are picked, never dealt (Cory, 2026-10-24): their cards don't count here
+      const arts = new Set(Object.values(s.artifacts || {}));
+      const dealt = Object.values(s.cards).filter(c => !arts.has(c.uid)).map(c => c.def);
+      // a color whose artifact is one of its dealt members deals one fewer (that member is the artifact now)
+      const fromDeck = ARTIFACTS[q] && !CUT.has(ARTIFACTS[q]) && !defById(ARTIFACTS[q]).artifact ? 1 : 0;
+      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe((DEALT[q] ?? 10) - fromDeck);
       expect(dealt.filter(d => CUT.has(d))).toEqual([]);
       expect(dealt.filter(d => d.startsWith('benders.')).length).toBe(7);
     }
@@ -50,7 +54,9 @@ describe('the curated member decks', () => {
       let s = createGame({ seats: seats(4), seed, quadrants: qs });
       for (let n = 0; s.pending && n < 5000; n++) { s = applyMove(s, chooseBotMove(s, rand)); checkInvariants(s, `cull seed=${seed}`); }
       expect(s.over, qs.join(',')).toBe(true);
-      expect(Object.values(s.cards).some(c => CUT.has(c.def))).toBe(false);
+      // an artifact may be a cut card (Silver's Caterer): it's never dealt, only picked
+      const arts = new Set(Object.values(s.artifacts || {}));
+      expect(Object.values(s.cards).some(c => CUT.has(c.def) && !arts.has(c.uid))).toBe(false);
     }
   });
 });

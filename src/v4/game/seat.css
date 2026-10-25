@@ -117,3 +117,6 @@
    at 1270x700, which leaves each chair about 133px, two rows of members; from 800px tall the story stands 14px lower) */
 @media (min-width:1200px) and (min-height:500px){ .app.game.lt > .lt-snake{--seats-reserve:138px} }
 @media (min-width:1200px) and (min-height:500px) and (max-height:799px){ .app.game.lt > .lt-snake{--seats-reserve:124px} }
+
+/* artifacts (Cory, 2026-10-24): the color's artifact a player picked at the start, named in their seat; hover says it */
+.cs-artifact { font-size: 11px; line-height: 1.2; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--c, currentColor); color: inherit; opacity: .9; white-space: nowrap; cursor: help; }

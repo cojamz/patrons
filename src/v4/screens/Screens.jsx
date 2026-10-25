@@ -116,8 +116,8 @@ function wedge(q) {
 export function initialTable(prev) {
   const fromUrl = urlTable();
   if (fromUrl) return { mode: 'custom', quadrants: fromUrl };
-  if (prev && prev.quadrants && !tableProblem(prev.quadrants)) return prev;
-  return { mode: 'classic', quadrants: [...CLASSIC] };
+  // the try build deals a random table of the 2.0 colors each time (a last table from the live game may hold others)
+  return { mode: 'random', quadrants: randomTable() };
 }
 const sameTable = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
 

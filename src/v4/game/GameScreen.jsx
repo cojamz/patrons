@@ -1162,7 +1162,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (moment) text = 'Start the round first';
     else if (!mySeats.includes(pend.player)) text = `${who.name} is ${verbFor(pend.kind)} — your turn comes`;
     else if (needHandoff) text = `Hand the device to ${who.name}`;
-    else if (pend.kind === 'setup') text = 'Draft your resource first';
+    else if (pend.kind === 'setup') text = state.artifacts && Object.keys(state.artifacts).length ? 'Pick your artifact first' : 'Draft your resource first';
     else if (pend.kind === 'choose' || pend.kind === 'pay') text = 'Answer the question first';
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.

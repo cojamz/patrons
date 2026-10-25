@@ -7,7 +7,7 @@
 // choice resolves to nothing with a log line (no rescue gain).
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import { applyMove, isLegal, resume, createGame } from '../../../engine/v4/core.js';
+import { applyMove, isLegal, resume, createGame, pileKeyOf } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { quadrant } from '../../../engine/v4/content/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
@@ -22,7 +22,9 @@ const cardOf = o => Number(String(o.id ?? o.option).split(':')[1]); // an option
 // another player takes a face-up card (a buy, a steal…): out of the row, the pile refills its slot
 function takeAway(s, uid, to) {
   const i = s.shop.indexOf(uid);
-  s.shop.splice(i, 1, ...(s.pile.length ? [s.pile.shift()] : []));
+  // two shops: the slot refills from the taken card's own pile (cheap or pricey)
+  const k = s.pile.findIndex(v => pileKeyOf(s, v) === pileKeyOf(s, uid));
+  s.shop.splice(i, 1, ...(k >= 0 ? s.pile.splice(k, 1) : []));
   s.players[to].members.push(uid);
 }
 

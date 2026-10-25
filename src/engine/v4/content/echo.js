@@ -127,7 +127,7 @@ export function entryValue(ctx, e, p = null) {
   return v;
 }
 const copyable = e => e.echo || e.redo || spaceTotal(e) > 0 || e.discount > 0 || e.members.length > 0;
-const has = (ctx, p, key) => ctx.membersOf(p).filter(c => c.def.id === `echo.${key}` || c.copy === `echo.${key}`).length;
+const has = (ctx, p, key) => (key === 'tuningfork' ? ctx.abilitiesOf(p) : ctx.membersOf(p)).filter(c => c.def.id === `echo.${key}` || c.copy === `echo.${key}`).length;
 const actionKey = key => key.split('+')[0];
 const pathNow = ctx => ledger(ctx.state).path || [];
 const protectedAction = (ctx, e) => has(ctx, ctx.player(e.p), 'agents') > 0;

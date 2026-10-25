@@ -169,17 +169,20 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           what I needed to do. It could just show it IN the player card"): it stands where your members will, until both
           picks are in */}
       {setupPick && (
-        <div className="cs-setup" role="group" aria-label="Draft 1 resource" data-setup-k={setupPick.k}>
-          <small className="cs-setup-say">Draft 1 resource</small>
+        <div className="cs-setup" role="group" aria-label={state.artifacts ? 'Pick an artifact' : 'Draft 1 resource'} data-setup-k={setupPick.k}>
+          <small className="cs-setup-say">{state.artifacts ? 'Pick an artifact and 1 of its color' : 'Draft 1 resource'}</small>
           <span className="cs-setup-row">
             {setupPick.options.map(o => {
               const res = state.quadrants.includes(o.value) ? quadrant(o.value).resource : o.value;
-              return (
-                <button key={o.id} type="button" className="token cs-setup-token" data-option={o.id} style={{ '--c': `var(--${o.value})` }}
-                  onClick={e => onPick(o.id, e.currentTarget)} aria-label={`Take 1 ${res}`} title={`Start with 1 ${res}`}>
-                  <ResourceGlyph r={res} size={18} decorative /><span className="tk-name">{res}</span>
-                </button>
-              );
+              // artifacts (Cory, 2026-10-24): the pick names the color's artifact; its hover says what it does
+              const art = state.artifacts?.[o.value] !== undefined ? cardDef(state, state.artifacts[o.value]) : null;
+              const button = (
+                <button type="button" className="token cs-setup-token" data-option={o.id} style={{ '--c': `var(--${o.value})` }}
+                  onClick={e => onPick(o.id, e.currentTarget)} aria-label={art ? `Take ${art.name} and 1 ${res}` : `Take 1 ${res}`} title={art ? `${art.name}: ${art.text} Start with 1 ${res}.` : `Start with 1 ${res}`}>
+                  <ResourceGlyph r={res} size={18} decorative /><span className="tk-name">{art ? art.name : res}</span>
+                </button>);
+              return art ? <Tip key={o.id} label={art.name} content={<p>{art.text} Start with 1 {res}.</p>}>{button}</Tip> : <span key={o.id}>{button}</span>
+              ;
             })}
           </span>
         </div>
@@ -193,6 +196,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         </div>
       )}
       <div className="cs-crowd" {...bodyHover} role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members: ${nMembers}`}>
+        {p.artifact !== undefined && <Tip label={cardDef(state, p.artifact).name} content={<p>Artifact: {cardDef(state, p.artifact).text}</p>}><small className="cs-artifact" data-artifact={p.artifact} title={`Artifact: ${cardDef(state, p.artifact).text}`} style={{ '--c': cardColor(state, cardDef(state, p.artifact)) }}>{cardDef(state, p.artifact).name}</small></Tip>}
         <b className="cs-member-count num" data-members={nMembers} title="Members: each card counts its printed follower value, or its stated member count if higher">{nMembers}<span> members</span></b>
         {/* Lie Low and the like: no one can steal from this seat this round (w2b #21). A small shield under the member
             count (Cory's todo: the words crowded the row); its hover says it in words, the seat card too */}

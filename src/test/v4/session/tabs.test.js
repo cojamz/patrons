@@ -119,7 +119,7 @@ describe('the save guard (saved.js)', () => {
     finishLocal(null, { ...fake, over: true });
     expect(localStorage.getItem('patrons.v4.local')).toBe(ours);
     expect(localStorage.getItem(ROUND_START)).not.toBe(null);
-    expect(localStorage.getItem('patrons.v4.last')).toBe(null);
+    expect(localStorage.getItem('patrons.v4try.last')).toBe(null);
     // taking it back ("Play here") makes this tab the writer again
     claimLocal();
     expect(saveLocal({ a: 3 }, { ...fake, moves: 6 })).toBe(true);

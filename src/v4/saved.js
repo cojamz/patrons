@@ -9,7 +9,7 @@ const ONLINE = 'patrons.v4.online';
 const STALE = 'patrons.v4.stale';
 // The last finished local game, kept after its results have been on screen so a reload (or home's "Last game's
 // results") shows them again; dropped when a new local game starts.
-const LAST = 'patrons.v4.last';
+const LAST = 'patrons.v4try.last'; // the try build (artifacts, two shops) keeps its own saves
 
 // Local games live in localStorage (resume from any later visit). Online seats live in sessionStorage: a reload of
 // this tab rejoins, but a second tab is a second person, not a copy of you.
@@ -168,7 +168,7 @@ export const clearOnline = () => write(ONLINE, null);
 // Rooms this device has sat in: { [code]: { ids: [playerId…], at } }, in localStorage (sessionStorage dies with the tab).
 // A reopened invite link or a closed-then-reopened tab passes these ids to joinRoom (knownIds) and gets the seat back.
 // Several ids per room: two tabs of one browser are two people (tests, a shared laptop). Kept 12 h, at most 12 rooms.
-const ROOMS = 'patrons.v4.rooms';
+const ROOMS = 'patrons.v4try.rooms';
 const ROOM_TTL = 12 * 3600e3;
 const rooms = () => { const v = read(ROOMS); return v && typeof v === 'object' ? v : {}; };
 export const rememberRoom = (code, playerId) => {
