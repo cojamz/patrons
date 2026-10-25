@@ -16,3 +16,4 @@ vite.config.js.timestamp-*
 .v4-baseline/
 .v4-ui-perf/
 .v4-shop-visual/
+.status/
