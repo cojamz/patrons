@@ -29,4 +29,4 @@ Check here before drafting. A rejected form comes back only if you can say what'
 - "you pick": the house word is "you choose".
 
 ## Open
-- Growing-by-round panel line 2 (Oct 24): options with Cory; record his pick here.
+- Growing-by-round panel line 2 (Oct 25, Claude gut call, Cory to confirm): the schedule "I +2 · II +3 · III +4", this round's number on line 1. Rejected: "+4 next round" (reads as a promise to the taker), "more each round" (reads as extra, and unclear which part grows).
