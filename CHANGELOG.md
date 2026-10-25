@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.75 — 2026-10-25 — unreleased
+
+- Gather gives +3/+4/+5 red, Hold Up +2/+3/+4 purple, Crunch Time +2 purple.
+
 ## v0.8.74 — 2026-10-25 — unreleased
 
 - Dragging the wheel snaps it round to the next side right away, even while rivals are moving.
