@@ -169,6 +169,21 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   // face the start again (the rest measures the board as dealt)
   await page.keyboard.press('ArrowLeft');
   await page.waitForTimeout(900);
+  // (s1 drag) a drag hands the turn to the compositor after its first few degrees: the wheel is already spinning to the
+  // next quarter while the button is still down, so a busy page can't hold it under the pointer (Cory, 2026-10-25: "I
+  // want a super snappy spinning wheel even if other things are going on")
+  const [cx, cy, R] = await page.$eval('.stage', e => { const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2, r.width / 2]; });
+  const rr = R * 0.8, a0 = Math.PI * 0.9;
+  await page.mouse.move(cx + rr * Math.cos(a0), cy + rr * Math.sin(a0));
+  await page.mouse.down();
+  for (let k = 1; k <= 4; k++) { const a = a0 + (Math.PI / 180) * 5 * k; await page.mouse.move(cx + rr * Math.cos(a), cy + rr * Math.sin(a)); }
+  const spinning = await page.$$eval('.stage > .turn-layer', els => els.some(e => e.getAnimations().some(a => a.playState === 'running' || a.playState === 'finished')));
+  await page.mouse.up();
+  await page.waitForTimeout(700);
+  report.push(`drag: ${spinning ? 'spinning before release' : 'still following the pointer at 20°'}`);
+  if (!spinning) errors.push('(s1 drag) a 20° drag was still painted move by move: it should hand the turn to a spin after its first few degrees');
+  await page.keyboard.press('ArrowLeft');
+  await page.waitForTimeout(900);
 }
 
 // (s6) the page's own frames on your turn, with only the idle loops running (the minions' bob, the leaders' breath): at

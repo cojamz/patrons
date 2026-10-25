@@ -492,6 +492,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // keyframes even in angle (one per ~9°: a chord strays under a pixel from the circle), each at the moment the easing
   // reaches it, linear between; relative to the angle React drew (drawn) and the layers' base (painted)
   const SPIN_DEG = 9;
+  const DRAG_GRAB = 5; // degrees a drag follows the hand before it becomes a spin
   const spinAnims = sp => {
     const root = stage.current;
     for (const a of sp.anims) a.cancel();
@@ -642,7 +643,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     const p = local(e);
     if (p.d > 205 || p.d < 30) return; // only drags that start on the ring
     stop();
-    drag.current = { a: p.a, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch', start: rotRef.current, t: performance.now(), v: 0 };
+    drag.current = { a: p.a, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch', start: rotRef.current, home: Math.round(rotRef.current / SEC) * SEC, acc: 0, goal: null, t: performance.now(), v: 0 };
     geo.current = null;
     moved.current = false;
   };
@@ -668,7 +669,16 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     // angular speed (deg/ms), smoothed, so a quick flick can carry the wheel on to the next quadrant
     const now = performance.now(), dt = Math.max(1, now - dr.t);
     dr.v = 0.6 * (d / dt) + 0.4 * dr.v; dr.t = now;
-    paintRot(rotRef.current + d);
+    // The board follows the hand only for its first few degrees; then the turn is handed to the compositor as a spin to
+    // the next quarter that way, so it lands in the spin's own time however busy the page is (Cory, 2026-10-25: "I want
+    // a super snappy spinning wheel even if other things are going on"; a drag painted from each pointer move froze
+    // whenever a rival's move held the main thread). Dragging on another quarter's worth turns on another quarter;
+    // dragging back turns back.
+    dr.acc += d;
+    const n = Math.abs(dr.acc) < DRAG_GRAB ? 0 : Math.sign(dr.acc) * (1 + Math.floor((Math.abs(dr.acc) - DRAG_GRAB) / SEC));
+    if (n === 0 && dr.goal == null) { paintRot(rotRef.current + d); return; }
+    const goal = dr.home + n * SEC;
+    if (goal !== dr.goal) { dr.goal = goal; animateTo(goal); }
   };
   const onUp = e => {
     if (e && e.pointerType === 'touch' && !moved.current && drag.current) {
@@ -691,6 +701,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     if (!moved.current) return;
     // swipe right moves the facing quadrant right (the wheel turns counter-clockwise), and the other way round
     if (dr.swipe) { const dx = (e && e.type !== 'pointercancel' && e.clientX != null ? e.clientX : dr.lastX ?? dr.x) - dr.x; if (Math.abs(dx) > 24) nudge(dx > 0 ? -SEC : SEC); setTimeout(() => { moved.current = false; }, 0); return; }
+    // a drag past the grab is already spinning to its quarter
+    if (dr.goal != null) { setTimeout(() => { moved.current = false; }, 0); return; }
     // a fling (fast and recent) steps one quadrant in its direction; a slow drag settles on the nearest
     const home = Math.round(dr.start / SEC) * SEC;
     let target = Math.round(rotRef.current / SEC) * SEC;
