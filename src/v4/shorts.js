@@ -20,7 +20,7 @@ const S = {
     jv: '+3 gold · 1 gold to a rival', rush: r => `+${2 * r} gold`, discount: '−4 cost', steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold',
   },
   red: {
-    evenswap: 'swap any 2 equal-cost members; +1 red', turnout: r => `+${r + 1} red`, hire: 'recruit cheapest, free; +1 red', hireup: 'promote: shop costs up to 2 more; +1 red', trade: 'demote: shop costs at least 2 less; +1 red', take: 'recruit any shop member, free; +1 red',
+    evenswap: 'swap any 2 equal-cost members; +2 red', turnout: r => `+${r + 1} red`, hire: 'recruit cheapest, free; +1 red', hireup: 'promote: shop costs up to 2 more; +1 red', trade: 'demote: shop costs at least 2 less; +1 red', take: 'recruit any shop member, free; +1 red',
   },
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },
@@ -50,7 +50,7 @@ const S = {
 // everywhere"): resource words become dots and "N followers" the follower mark; everything else is a plain word.
 const PIPS = {
   gold: { steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold' },
-  red: { hireup: 'promote a member', trade: 'demote a member', take: 'recruit any member, free' },
+  red: { hireup: 'promote a member', trade: 'demote a member', take: 'recruit one costing 8 or less, free' },
   purple: { lastcall: '+2 followers per minion left, rest go last' },
   silver: { tide: 'half the top rival’s', jubilee: 'followers from the top rival’s silver' },
   yellow: { gather: '+1 per member' },

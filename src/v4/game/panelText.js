@@ -37,12 +37,12 @@ const P = {
     strike: { verb: 'Double your gold' },
   },
   red: {
-    evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+1 red' },
+    evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+2 red' },
     turnout: r => ({ main: `+${r + 1} red`, second: grows(r) }),
     hire: { verb: 'Recruit the cheapest', second: 'in the shop, free', note: '+1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
     trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
-    take: { verb: 'Recruit any member', second: 'in the shop, free', note: '+1 red' },
+    take: { verb: 'Recruit a member', second: 'costing 8 or less, free', note: '+1 red' },
   },
   market: {
     bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: grows(r, 'more blue') }),

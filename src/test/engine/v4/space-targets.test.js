@@ -46,10 +46,10 @@ describe('space targets', () => {
       [twins, uidIn(s, 'red.reserve', 'shop')], [intern, uidIn(s, 'red.reserve', 'shop')],
     ].map(key).sort());
   });
-  it('Recruit a Member: every face-up member', () => {
+  it('Recruit a Member: every face-up member costing 8 or less (Cory, 2026-10-25)', () => {
     const s = table(Q, { round: 3, shop: ['gold.tycoon', 'red.intern', 'red.bigfamily', 'gold.taxman', 'red.mentor'] });
     const t = targetsAt(s, 'take');
-    expect(sorted(t.shop)).toEqual(sorted(['gold.tycoon', 'red.intern', 'red.bigfamily', 'gold.taxman', 'red.mentor'].map(d => uidIn(s, d, 'shop'))));
+    expect(sorted(t.shop)).toEqual(sorted(['red.intern', 'red.bigfamily', 'gold.taxman'].map(d => uidIn(s, d, 'shop'))));
   });
   it('Churn and Bury: no member is lit up front, since the player picks which go to the bottom', () => {
     const defs = ['gold.tycoon', 'red.intern', 'red.bigfamily'];

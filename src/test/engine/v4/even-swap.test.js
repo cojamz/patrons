@@ -20,20 +20,20 @@ describe('Even Swap — any equal-cost pair', () => {
   it('stays in round I and says any 2 members, plus inherent red', () => {
     const a = quadrant('red').actions.find(a => a.key === 'evenswap');
     expect(a.ring).toBe(1); expect(a.text).toMatch(/any 2 members.*equal cost/i);
-    expect(a.text).toMatch(/1 red/);
+    expect(a.text).toMatch(/2 red/);
   });
   it('offers only equal printed total costs, including shop targets', () => {
     const s = take(sceneQ({ quadrants: T, n: 3, members: [['red.twins'], ['gold.banker'], ['red.bigfamily']], shop: ['red.intern', 'red.volunteer'] }), 'red.evenswap');
-    expect(s.players[0].res.red).toBe(1);
+    expect(s.players[0].res.red).toBe(2);
     for (const o of s.pending.options.filter(o => o.kind === 'trade')) expect(cost(s, o.value[0])).toBe(cost(s, o.value[1]));
   });
-  it('the swap can be skipped: "Don’t swap" keeps everyone’s members and the +1 red (Cory, 2026-10-22)', () => {
+  it('the swap can be skipped: "Don’t swap" keeps everyone’s members and the +2 red (Cory, 2026-10-22)', () => {
     let s = take(sceneQ({ quadrants: T, n: 3, members: [['red.twins'], ['gold.banker'], ['red.bigfamily']], shop: ['red.intern', 'red.volunteer'] }), 'red.evenswap');
     const before = s.players.map(p => [...p.members]);
     expect(s.pending.options.map(o => o.label)).toContain('Don’t swap');
     s = move(s, 'none');
     expect(s.players.map(p => [...p.members])).toEqual(before);
-    expect(s.players[0].res.red).toBe(1);
+    expect(s.players[0].res.red).toBe(2);
   });
   it('swaps two rivals even when the actor has no members', () => {
     let s = take(sceneQ({ quadrants: T, n: 3, members: [[], ['red.twins'], ['red.bigfamily']] }), 'red.evenswap');
@@ -66,7 +66,7 @@ describe('Even Swap — any equal-cost pair', () => {
     let s = sceneQ({ quadrants: T, members: [['red.intern'], ['gold.banker']] });
     s.shop = []; s.pile = [];
     s = take(s, 'red.evenswap');
-    expect(s.players[0].res.red).toBe(1);
+    expect(s.players[0].res.red).toBe(2);
     expect(s.pending?.kind).not.toBe('choose');
   });
 });
