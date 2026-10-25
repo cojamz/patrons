@@ -103,7 +103,7 @@ describe('locked Red action progression', () => {
     expect(defs(s, 0)).toContain('echo.evergreen'); expect(s.shop).toContain(a);
     expect(s.recruits).toBe(1); expect(s.players[0].turnRecruits).toBe(1);
     expect(s.players[0].res.green).toBe(2);
-    expect(s.players[0].res.red).toBe(2); // action + Recruiter
+    expect(s.players[0].res.red).toBe(3); // action + Recruiter
     expect(s.players[0].bonus).toBe(1);
   });
 

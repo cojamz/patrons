@@ -37,12 +37,12 @@ const P = {
     strike: { verb: 'Double your gold' },
   },
   red: {
-    evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+1 red' },
+    evenswap: { verb: 'Swap any 2 members', second: 'of equal cost', note: '+2 red' },
     turnout: r => ({ main: `+${r + 1} red`, second: grows(r) }),
     hire: { verb: 'Recruit the cheapest', second: 'in the shop, free', note: '+1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
     trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
-    take: { verb: 'Recruit any member', second: 'in the shop, free', note: '+1 red' },
+    take: { verb: 'Recruit a member', second: 'costing 8 or less, free', note: '+1 red' },
   },
   market: {
     bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: grows(r, 'more blue') }),
@@ -66,7 +66,7 @@ const P = {
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
     // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
-    skip: { main: '+4 purple', second: 'skip your next turn' },
+    skip: { main: '+3 purple', second: 'skip your next turn' },
     holdup: r => ({ main: `+${r} purple`, second: 'the next turn is skipped' }),
     // the center ring can drop line 2 (round III since Oct 22): line 1 says it whole
     crowdin: { verb: 'Place on taken spaces', second: 'for the rest of this round', note: '+2 purple' },
@@ -125,8 +125,8 @@ const P = {
     splurge: { verb: '+1 @f per 2 you spend', second: 'on your recruit this turn', note: '+1 white' },
     exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+1 white' }),
     // the gain leads: on ring II only one line fits, and the two read the same as "Bury one of your members"
-    farewell: { verb: 'Bury a member for its cost in @f', note: '+1 white' },
-    estatesale: { verb: 'Bury a member for its cost in white', note: '+1 white' },
+    farewell: { verb: 'Cast out a member for its cost in @f', note: '+1 white' },
+    estatesale: { verb: 'Cast out a member for its cost in white', note: '+1 white' },
     cashin: { verb: 'Turn all your white into @f', note: '+1 white' },
   },
   echo: {

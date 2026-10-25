@@ -150,9 +150,9 @@ describe('turn labels agree with the engine', () => {
 
 describe('a gap closed by Crunch Time is said as such (Cory #98, #99)', () => {
   it('3 players, round III: A takes Crunch Time first, so B places twice in a row: never "snake order"', () => {
-    // a seeded bot game with the A A A B C C B A A B C C B B C shape (seed 13 since the Oct 21 member prices changed what bots buy)
-    let s = createGame({ seats: Array.from({ length: 3 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 13, quadrants: ['gold', 'red', 'purple', 'green'] });
-    const rand = seededRandom(13);
+    // a seeded bot game with the A A A B C C B A A B C C B B C shape (seed 14 since Even Swap's +2 red (Oct 25) changed what bots buy)
+    let s = createGame({ seats: Array.from({ length: 3 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 14, quadrants: ['gold', 'red', 'purple', 'green'] });
+    const rand = seededRandom(14);
     while (!(s.round === 3 && s.pending?.kind === 'place')) s = applyMove(s, plainBot(s, rand));
     const [A, B] = s.order;
     s = applyMove(s, nextMove(s, rand, true)); // A takes Crunch Time: A A A B C C B A A B C C B B C, give or take extra turns

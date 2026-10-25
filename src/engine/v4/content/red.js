@@ -10,10 +10,10 @@ export default {
 
   actions: [
     {
-      key: 'evenswap', ring: 1, name: 'Even Swap', text: 'Swap any 2 members of equal cost. +1 red.', copyDoesIt: true,
-      estimate: (ctx, p) => 1 + (swapPairs(ctx, p, 'even').length ? 1 : 0),
+      key: 'evenswap', ring: 1, name: 'Even Swap', text: 'Swap any 2 members of equal cost. +2 red.', copyDoesIt: true, // +2 (Cory, 2026-10-24: Red weak early)
+      estimate: (ctx, p) => 2 + (swapPairs(ctx, p, 'even').length ? 1 : 0),
       resolve(ctx, p) {
-        ctx.gain(p, 'red', 1, { fromAction: true });
+        ctx.gain(p, 'red', 2, { fromAction: true });
         swap(ctx, p, 'even', 'Even Swap: choose two equal-cost members');
       },
     },
@@ -44,12 +44,12 @@ export default {
       resolve(ctx, p) { ctx.gain(p, 'red', 1, { fromAction: true }); swap(ctx, p, 'demote', 'Demote: choose a member and its shop replacement'); },
     },
     {
-      key: 'take', ring: 3, name: 'Recruit a Member', text: 'Recruit a member in the shop. +1 red.',
-      estimate: ctx => 1 + Math.max(0, ...ctx.shopCards().map(c => c.def.f + cost(c) * 0.6)),
+      key: 'take', ring: 3, name: 'Recruit a Member', text: 'Recruit a member in the shop costing 8 or less. +1 red.', // the cap (Cory, 2026-10-24: "8 or less")
+      estimate: ctx => 1 + Math.max(0, ...ctx.shopCards().filter(c => cost(c) <= 8).map(c => c.def.f + cost(c) * 0.6)),
       resolve(ctx, p) {
-        const shop = ctx.shopCards();
+        const shop = ctx.shopCards().filter(c => cost(c) <= 8);
         ctx.gain(p, 'red', 1, { fromAction: true });
-        if (!shop.length) return;
+        if (!shop.length) { ctx.log(`${p.name}: no shop member costs 8 or less.`); return; }
         ctx.choose(p, 'Recruit a Member: which member?', shop.map(c => ({
           id: `card:${c.uid}`, label: `${c.def.name} (${cost(c)})`, kind: 'card', value: c.uid, hint: c.def.f * 1.5 + cost(c),
         })), 'red.takeFree');

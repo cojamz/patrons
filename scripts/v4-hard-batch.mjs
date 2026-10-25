@@ -5,10 +5,11 @@ import { createGame, applyMove, followers, memberCount, allQuadrantIds, quadrant
 import { defById } from '../src/engine/v4/content/index.js';
 import { chooseBotMove, chooseFollowerBuyerMove } from '../src/engine/v4/bots.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
+import { sphereVersion } from '../src/v4/tables.js';
 
 const [first, count, out] = [Number(process.argv[2] || 1), Number(process.argv[3] || 1), process.argv[4] || 'hard-batch.jsonl'];
-// The colors in the game: Classic's spheres plus Silver, White (trading) and Magenta (thieves); not the plain Blue and Green test spheres.
-const all = allQuadrantIds().filter(q => q !== 'blue' && q !== 'green');
+// ONLY=red,echo,... sets the pool. Default: the 2.0 colors (src/v4/tables.js), Cory Oct 24.
+const all = process.env.ONLY ? process.env.ONLY.split(',') : allQuadrantIds().filter(q => sphereVersion(q) === '2.0');
 for (let g = first; g < first + count; g++) {
   const rand = seededRandom(g * 7717 + 3);
   // MUST=trading puts that sphere on every table (a quick read on one color); the rest are random.

@@ -109,7 +109,7 @@ const trading = {
       },
     },
     {
-      key: 'farewell', copyDoesIt: true, ring: 2, name: 'Farewell', text: 'Send one of your members to the bottom of the pile, gain followers equal to its cost. +1 white.',
+      key: 'farewell', copyDoesIt: true, ring: 2, name: 'Farewell', text: 'Cast out one of your members to the bottom of the pile, gain followers equal to its cost. +1 white.', // "cast out": Cory, 2026-10-24
       estimate: (ctx, p) => 1 + Math.max(0, ...ctx.membersOf(p).map(c => buryValue(ctx, p, c, fv(ctx)))),
       resolve(ctx, p) {
         ctx.gain(p, W, 1, { fromAction: true });
@@ -117,7 +117,7 @@ const trading = {
       },
     },
     {
-      key: 'estatesale', copyDoesIt: true, ring: 2, name: 'Estate Sale', text: 'Send one of your members to the bottom of the pile, gain white equal to its cost. +1 white.',
+      key: 'estatesale', copyDoesIt: true, ring: 2, name: 'Estate Sale', text: 'Cast out one of your members to the bottom of the pile, gain white equal to its cost. +1 white.',
       estimate: (ctx, p) => 1 + Math.max(0, ...ctx.membersOf(p).map(c => buryValue(ctx, p, c, 1))),
       resolve(ctx, p) {
         ctx.gain(p, W, 1, { fromAction: true });
@@ -250,13 +250,13 @@ const trading = {
         turned(ctx, owner);
       },
     }),
-    m('undertaker', 'Undertaker', 2, 2, 'Whenever you get rid of one of your members, +2 followers.', { onGotRidOf: 2 }),
-    m('appraiser', 'Appraiser', 3, 2, 'Once per game: get rid of one of your members, gain followers or white equal to its cost.', {
+    m('undertaker', 'Undertaker', 2, 2, 'Whenever you cast out one of your members, +2 followers.', { onGotRidOf: 2 }),
+    m('appraiser', 'Appraiser', 3, 2, 'Once per game: cast out one of your members, gain followers or white equal to its cost.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const list = ctx.membersOf(owner).filter(c => c.uid !== card.uid);
-        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Appraiser: no other member to get rid of.`); return; }
-        ctx.choose(owner, 'Appraiser: get rid of which member?', list.map(c => ({
+        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Appraiser: no other member to cast out.`); return; }
+        ctx.choose(owner, 'Appraiser: cast out which member?', list.map(c => ({
           id: `card:${c.uid}`, label: `${c.def.name} (${cost(ctx, c.uid)})`, kind: 'card', value: c.uid, hint: buryValue(ctx, owner, c, fv(ctx)),
         })), 'trading.appraise');
       },
@@ -328,7 +328,7 @@ const defsOf = (ctx, c) => [c.def, c.copy ? defById(c.copy) : null].filter(Boole
 function turned(ctx, p) {
   for (const c of ctx.abilitiesOf(p)) for (const d of defsOf(ctx, c)) if (d.onTurned) { ctx.gain(p, W, d.onTurned); ctx.log(`${p.name}'s ${d.name}: +${d.onTurned} white.`); }
 }
-// Undertaker: "Whenever you get rid of one of your members, +2 followers"
+// Undertaker: "Whenever you cast out one of your members, +2 followers"
 function gotRidOf(ctx, p) {
   for (const c of ctx.membersOf(p)) for (const d of defsOf(ctx, c)) if (d.onGotRidOf) { p.bonus += d.onGotRidOf; ctx.log(`${p.name}'s ${d.name}: +${d.onGotRidOf} followers.`); }
 }
@@ -343,7 +343,7 @@ function buryChoice(ctx, p, what, gain) {
   const each = gain === 'white' ? 1 : fv(ctx);
   const opts = list.map(c => ({ id: `card:${c.uid}`, label: `${c.def.name} (${cost(ctx, c.uid)})`, kind: 'card', value: c.uid, hint: buryValue(ctx, p, c, each) }));
   opts.push({ id: 'done', label: 'Keep them all', kind: 'done', value: 'done', hint: 0 });
-  ctx.choose(p, `${what}: send which member to the bottom of the pile?`, opts, 'trading.buryPick', { gain, what });
+  ctx.choose(p, `${what}: cast out which member?`, opts, 'trading.buryPick', { gain, what });
 }
 // Exchange: one resource at a time (you pick the color), 2 followers each, up to the round's limit or Done
 function exchangeStep(ctx, p, data) {

@@ -18,7 +18,7 @@ describe('Sleep In', () => {
     const i = quadrant('purple').actions.findIndex(a => a.key === 'skip');
     const before = s.players[A].res.purple || 0;
     s = applyMove(s, { player: A, option: `slot:${q}-${i}` });
-    expect(s.players[A].res.purple).toBe(before + 4);
+    expect(s.players[A].res.purple).toBe(before + 3);
     const placed = [A];
     // (the others leave turn-moving spaces and copies of them alone while anything else is open)
     const moves = x => x.kind === 'slot' && x.q !== undefined && ['skip', 'holdup', 'again', 'echo', 'refrain'].includes(actionAt(s, x.q, x.i).key);

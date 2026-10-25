@@ -32,10 +32,11 @@ export const GLOSSARY = [
   // Cory, 2026-10-22: a skip passes you over once; you never lose the turn or the minion
   { key: 'skip', word: 'Skip', match: /\bskip(?:s|ped)?\b/i,
     def: 'A skipped turn is passed over: play goes on to the next turn, and the skipped player places that minion later in the round. Nobody loses a turn or a minion.' },
-  { key: 'get rid of', word: 'Get rid of', match: /\bget rid of\b/i,
-    def: 'Send one of your own members to the bottom of the pile with a White space or member. It leaves your cult.' },
+  // Cory, 2026-10-24: "cast out" instead of "bury a member", in the cult's own words
+  { key: 'cast out', word: 'Cast out', match: /\bcast out\b/i,
+    def: 'Send one of your own members to the bottom of the pile. It leaves your cult.' },
   { key: 'leaves your cult', word: 'Leaves your cult', match: /\bleaves your cult\b/i,
-    def: 'Any way a member stops being yours: you get rid of it, a rival steals it, or a swap takes it away.' },
+    def: 'Any way a member stops being yours: you cast it out, a rival steals it, or a swap takes it away.' },
   { key: 'turn into followers', word: 'Turn into followers', match: /\bturn (?:\d+ |all your )?(?:[a-z]+ )*?(?:resources?|white|members?)(?: or members)? into (?:\d+ )?followers\b|\binto \d+ followers\b/i,
     def: 'Trade resources or members for followers with a White space or member (Exchange, Cash In, Farewell…). Recruiting followers in your recruit step is not turning.' },
   { key: 'now and at round start', word: 'Now and at round start', match: /\bnow and at (?:round start|the start of round)/i,

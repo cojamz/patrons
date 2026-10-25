@@ -235,9 +235,10 @@ export default {
     {
       // Cory, 2026-10-22: "+4 purple, skip your next turn" (always +4: +3 and the space's +1), from the old game's
       // "Gain 4 purple, skip next turn". You're passed over once; the snake carries on and you still place every minion.
-      key: 'skip', copyDoesIt: true, ring: 1, name: 'Sleep In', text: '+4 purple. Skip your next turn.',
+      // Cory, 2026-10-25: +3 instead of +4 ("skip a turn is basically automatically giving 2 followers")
+      key: 'skip', copyDoesIt: true, ring: 1, name: 'Sleep In', text: '+3 purple. Skip your next turn.',
       estimate: () => 3,
-      resolve(ctx, p) { ctx.gain(p, P, 4, { fromAction: true }); skipNext(ctx, p, 'Sleep In'); },
+      resolve(ctx, p) { ctx.gain(p, P, 3, { fromAction: true }); skipNext(ctx, p, 'Sleep In'); },
     },
     {
       // Cory, 2026-10-22: replaces Catch Up ("the skip should replace catch up"); "1 purple per round" so it isn't weak
