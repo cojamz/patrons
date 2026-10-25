@@ -18,10 +18,10 @@ describe('panel words (w3)', () => {
 
   it('a gain that grows by round says so in rounds I and II, and not in III (w3a #54: "+2●" read as flat)', () => {
     // a space that does more than one thing says what grows (Cory, 2026-10-22)
-    // next round's number, never "more each round" (Cory, 2026-10-24: "+X more each round reads weird and is probably wrong")
-    for (const [qid, key, says] of [['silver', 'toast', r => `+${3 * (r + 1)}, others ${r + 1} next round`], ['thieves', 'pickpocket', r => `steal ${r + 1} and ${r + 1} @f next round`], ['trading', 'pawn', r => `+${r + 1} @f next round`]]) {
-      for (const r of [1, 2]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain(says(r));
-      expect(lines(panelText(qid, { key }, 3)).join(' '), `${qid}.${key} round III`).not.toMatch(/next round|each round/);
+    // the space's schedule by round, never "more each round" or "+4 next round" (Cory, Oct 24: both misread; /card-words)
+    for (const [qid, key, says] of [['silver', 'toast', 'I\u00a0+3\u00a0· II\u00a0+6\u00a0· III\u00a0+9'], ['thieves', 'pickpocket', 'I\u00a01\u00a0· II\u00a02\u00a0· III\u00a03'], ['trading', 'pawn', 'I\u00a0+1\u00a0· II\u00a0+2\u00a0· III\u00a0+3']]) {
+      for (const r of [1, 2, 3]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain(says);
+      expect(lines(panelText(qid, { key }, 2)).join(' ')).not.toMatch(/next round|each round/);
     }
     // Cheap Seats now pays for held white at the same rate in every round, without a growing cap.
     for (const r of [1, 2, 3]) {
@@ -37,7 +37,7 @@ describe('panel words (w3)', () => {
       const gold = panelText('gold', { key: 'rush' }, r);
       // "+2 gold × round" made a round III player do the math (text review, 2026-10-23)
       expect(gold.main).toBe(`+${2 * r} gold`);
-      expect(gold.second).toBe(r < 3 ? `+${2 * r + 2} next round` : null);
+      expect(gold.second).toBe('I\u00a0+2\u00a0· II\u00a0+4\u00a0· III\u00a0+6');
     }
   });
 
@@ -62,7 +62,7 @@ describe('panel words (w3)', () => {
     const churn = panelText('market', { key: 'bargain' }, 2);
     expect(churn.main).toBe('+3 blue');
     expect(churn.second).toBe('send 3 to the bottom');
-    expect(churn.note).toBe('+4 blue next round');
+    expect(churn.note).toBe('blue: I\u00a0+2\u00a0· II\u00a0+3\u00a0· III\u00a0+4');
     expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
 
@@ -100,7 +100,7 @@ describe('panel words (w3)', () => {
     s.recruits = 5;
     const t = panelText('red', quadrant('red').actions.find(x => x.key === 'turnout'), 1, s, 0);
     expect(t.main).toBe('+2 red');
-    expect(t.second).toBe('+3 next round');
+    expect(t.second).toBe('I\u00a0+2\u00a0· II\u00a0+3\u00a0· III\u00a0+4');
     // Tithe: +1 gold per member you have, for the viewer
     const w = panelText('gold', quadrant('gold').actions.find(x => x.key === 'windfall'), 2, s, 0);
     expect(w.main).toBe(`+${s.players[0].members.length} gold`);

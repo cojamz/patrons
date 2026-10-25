@@ -212,7 +212,8 @@ export function fitHalfWidth(cx, cy, h, r0, r1, a0, a1, pad, side = pad) {
 }
 
 const PANEL_RES = new Set(['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white', 'any']);
-const PANEL_TOK = /@f|[+−-]?\d+|×\d+|½|[A-Za-z’'?;,.!-]+|\s+|./g;
+// a round and its value ("II\u00a0+3", panelText's schedule) is one token that never splits across a line
+const PANEL_TOK = /I{1,3}\u00a0[+−-]?\d+(?:\u00a0·)?|@f|[+−-]?\d+|×\d+|½|[A-Za-z’'?;,.!-]+|\s+|./g;
 const isNum = t => /^(?:[+−-]?\d+|×\d+|½)$/.test(t);
 const panelToks = text => [...String(text || '').matchAll(PANEL_TOK)].map(m => m[0]);
 /** One line of a panel: numbers heavy; a resource word right after a number is its dot ("+3●"), @f the follower
@@ -222,6 +223,7 @@ export function Said({ text }) {
   const out = [];
   let prev = null; // the last token that wasn't a space
   toks.forEach((t, k) => {
+    if (/\u00a0/.test(t)) { out.push(<span key={k} className="amt">{t}</span>); prev = t; return; }
     if (/^\s+$/.test(t)) {
       const next = toks[k + 1];
       if (!(prev && isNum(prev) && next && (PANEL_RES.has(next) || next === '@f'))) out.push(' ');
