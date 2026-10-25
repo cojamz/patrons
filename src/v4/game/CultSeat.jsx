@@ -80,6 +80,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
     : null;
   // the rest of the setup (a rival picking, or your picks in): the same box stays, quiet, so your seat never changes
   // height between picks (hotseat region gate)
+  // artifacts on the table: the wheel's list is the picker (ArtifactDraft.jsx)
+  const drafting = Object.keys(state.artifacts || {}).length > 0;
   const setupWait = !setupPick && mine && pend && pend.kind === 'setup' && !state.over ? state.players[pend.player] : null;
   // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
   // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
@@ -174,9 +176,10 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           what I needed to do. It could just show it IN the player card"): it stands where your members will, until both
           picks are in */}
       {setupPick && (
-        <div className="cs-setup" role="group" aria-label={state.artifacts ? 'Pick an artifact' : 'Draft 1 resource'} data-setup-k={setupPick.k}>
-          <small className="cs-setup-say">{state.artifacts ? 'Pick an artifact and 1 of its color' : 'Draft 1 resource'}</small>
-          <span className="cs-setup-row">
+        <div className="cs-setup" role="group" aria-label={drafting ? 'Pick an artifact' : 'Draft 1 resource'} data-setup-k={setupPick.k}>
+          <small className="cs-setup-say">{drafting ? 'Your pick: take an artifact from the wheel' : 'Draft 1 resource'}</small>
+          {/* artifacts are picked only from the wheel's list (Cory, 2026-10-25); the chair just says it's your pick */}
+          {!drafting && <span className="cs-setup-row">
             {setupPick.options.map(o => {
               const res = state.quadrants.includes(o.value) ? quadrant(o.value).resource : o.value;
               // artifacts (Cory, 2026-10-24): the pick names the color's artifact; its hover says what it does
@@ -189,7 +192,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
               return art ? <Tip key={o.id} label={art.name} content={<p><Rich text={art.text} /> Start with 1 <ResourceGlyph r={res} size={12} decorative /></p>}>{button}</Tip> : <span key={o.id}>{button}</span>
               ;
             })}
-          </span>
+          </span>}
         </div>
       )}
       {setupWait && (

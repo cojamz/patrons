@@ -1,4 +1,4 @@
-// The artifact draft shows what every artifact does without a hover (Cory, 2026-10-25), and on your pick its rows take.
+// The artifact draft (Cory, 2026-10-25): what every artifact does without a hover; the only place to pick; taken ones leave.
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, render, fireEvent } from '@testing-library/react';
 import { createGame, applyMove, cardDef } from '../../../engine/v4/index.js';
@@ -21,13 +21,14 @@ it('lists every artifact with its words, and only your pick makes them buttons',
   expect(onPick).toHaveBeenCalledWith(s.pending.options.find(o => o.value === 'purple').id, b);
 });
 
-it('a taken artifact shows who has it and is no longer a button', () => {
+it('a taken artifact leaves the list, and the head says whose pick it is', () => {
   let s = start();
   const purple = s.pending.options.find(o => o.value === 'purple');
   s = applyMove(s, { player: s.pending.player, option: purple.id });
-  const { container } = render(<ArtifactDraft state={s} onPick={() => {}} mine />);
-  const row = container.querySelector('[data-art-color="purple"]');
-  expect(row.classList.contains('taken')).toBe(true);
-  expect(row.querySelector('button')).toBeNull();
-  expect(row.querySelector('.ad-by')).not.toBeNull();
+  const { container, rerender } = render(<ArtifactDraft state={s} onPick={() => {}} />);
+  expect(container.querySelector('[data-art-color="purple"]')).toBeNull();
+  expect(container.querySelectorAll('[data-art-color]')).toHaveLength(3);
+  expect(container.querySelector('.ad-head').textContent).toContain(`${s.players[s.pending.player].name} is picking`);
+  rerender(<ArtifactDraft state={s} onPick={() => {}} mine />);
+  expect(container.querySelector('.art-draft.mine .ad-head').textContent).toMatch(/^Your pick/);
 });

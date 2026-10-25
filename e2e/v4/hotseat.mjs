@@ -146,7 +146,7 @@ try {
   // Setup: what's for sale decides the starting picks, so every face-up member is on screen (no scrolling)
   {
     // The final draft color is automatic: a first actor can reach placement without a personal draft button.
-    await page.waitForFunction(() => [...document.querySelectorAll('.lt-cult-seat .cs-setup [data-option], .prompt.choice.setup')].some(e => e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden') || !!document.querySelector('.app.game[data-phase="place"]'), null, { timeout: 30000 });
+    await page.waitForFunction(() => [...document.querySelectorAll('.lt-cult-seat .cs-setup [data-option], .art-draft [data-option], .prompt.choice.setup')].some(e => e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden') || !!document.querySelector('.app.game[data-phase="place"]'), null, { timeout: 30000 });
     await page.waitForTimeout(300);
     const r = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('.lt-shop .card:not(.lt-rate)')]; // members only: follower buys share the grid since v0.8.2
