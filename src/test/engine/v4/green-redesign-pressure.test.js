@@ -71,6 +71,8 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
     s = pass(choose(take(s, 'echo.echo'), 'gold.discount'));
     s = pass(choose(take(s, 'echo.refrain'), 'gold.rush'));
     s = take(s, 'echo.eternity');
+    // you pick the order (Cory, 2026-10-26): the placement order here
+    s = choose(saved(s), 'gold.rush'); s = choose(saved(s), 'echo.echo');
     // Its Echo now sees Reprise as the previous placement, rather than the original Intro Offer target.
     s = choose(saved(s), 'echo.refrain');
     s = choose(saved(s), 'gold.rush');
@@ -88,7 +90,7 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
     s = pass(move(s, memberOption(s, 'red.recruiter')));
     s = go(s, 'gold.rush');
     const before = s.players[0].res.gold;
-    s = take(s, 'echo.eternity');
+    s = choose(take(s, 'echo.eternity'), 'red.take');
     expect(s.pending.kind).toBe('choose');
     s = move(saved(s), memberOption(s, stunt));
     // Recruiting starts a fresh Stunt Double chain; nested Greatest Hits must preserve the outer remainder.
@@ -192,7 +194,7 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     s = pass(move(take(s, 'red.take'), memberOption(s, 'red.bigfamily')));
     s = go(s, 'gold.rush');
     const before = s.players[0].res.gold;
-    s = take(s, 'echo.eternity');
+    s = choose(take(s, 'echo.eternity'), 'red.take');
     expect(s.pending.kind).toBe('choose');
     s = move(saved(s), memberOption(s, 'echo.agents'));
     expect(s.players[0].res.gold).toBe(before);

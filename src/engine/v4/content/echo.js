@@ -206,8 +206,20 @@ function copyOwn(ctx, p, self, by, who) {
   // a member says it in the present ("P1's Tribute Band has nothing to copy"), a space in the past ("P1 had…")
   if (!take.length) { ctx.log(`${name} ${by ? 'has' : 'had'} nothing to copy${skipped ? `: it skips ${skipped}` : ''}.`); return false; }
   if (skipped) ctx.log(`${who} skips ${skipped}.`);
-  copyAll(ctx, p, take, by, who);
+  // Greatest Hits: you pick the order, one space at a time on the wheel (Cory, 2026-10-26, from playtester Maxwell)
+  if (!by) orderStep(ctx, p, take.map(e => e.key), who);
+  else copyAll(ctx, p, take, by, who);
   return true;
+}
+/** Greatest Hits' next copy: one left goes straight on; more ask which, and the rest wait until that copy is done. */
+function orderStep(ctx, p, keys, who) {
+  const L = ledger(ctx.state);
+  const left = keys.map(k => L.now[k]).filter(e => e && allowed(ctx, e));
+  if (left.length === 1) ctx.defer(p, 'echo.continueCopy', { key: left[0].key, by: null, who }, { kind: 'space', key: left[0].key, qid: left[0].color, pid: p.id });
+  if (left.length < 2) return;
+  ctx.choose(p, `${who}: copy which next?`, left.map(e => ({
+    id: `space:order:${e.key}`, label: `${e.name} (${ctx.player(e.p).name}): ${describe(ctx, e)}`, kind: 'space', value: e.key, hint: entryValue(ctx, e, p),
+  })), 'echo.order', { left: left.map(e => e.key), who });
 }
 /** Latest placement regardless of its owner; legality never makes us fall back to an earlier placement. */
 export const previousEntry = (ctx, skip = null) => Object.values(ledger(ctx.state).now)
@@ -345,6 +357,13 @@ const echoQ = {
       const e = ledger(ctx.state).now[data.key];
       if (e) copy(ctx, p, e, { by: data.by, asker: data.who });
     },
+    order(ctx, p, key, data) {
+      const L = ledger(ctx.state);
+      const e = L.now[key];
+      if (e) ctx.defer(p, 'echo.continueCopy', { key, by: null, who: data.who }, { kind: 'space', key, qid: e.color, pid: p.id });
+      ctx.defer(p, 'echo.orderNext', { left: data.left.filter(k => k !== key), who: data.who });
+    },
+    orderNext(ctx, p, _, data) { orderStep(ctx, p, data.left, data.who); },
     pick(ctx, p, key, data) {
       const L = ledger(ctx.state);
       const e = (data.from === 'last' ? L.last : L.now)[key];

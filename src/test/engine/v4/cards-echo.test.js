@@ -75,7 +75,7 @@ describe('Green current actions', () => {
   it('Greatest Hits copies all your ordinary actions in order and adds one green', () => {
     let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(0, 0, 0) });
     s = go(s, 'gold.rush'); s = go(s, 'echo.chant');
-    s = go(s, 'echo.eternity');
+    s = go(s, 'echo.eternity', sp('gold.rush'));
     expect(R(s)).toMatchObject({ gold: 12, green: 9 });
     expect(s.log.filter(l => /^P1 copied /.test(l)).map(l => l.split(':')[0])).toEqual(['P1 copied Golden Years', 'P1 copied Build Up']);
   });
@@ -84,6 +84,8 @@ describe('Green current actions', () => {
     s = go(s, 'gold.rush'); s = go(s, 'echo.chant');
     s = go(s, 'echo.refrain', sp('gold.rush'));
     s = take(s, 'echo.eternity');
+    expect(s.pending.prompt).toBe('Greatest Hits: copy which next?');
+    s = play(s, sp('echo.refrain'));
     expect(s.pending.prompt).toMatch(/Reprise/);
     s = pass(play(s, sp('gold.rush')));
     expect(R(s)).toMatchObject({ gold: 24, green: 3 });

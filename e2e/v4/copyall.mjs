@@ -105,7 +105,9 @@ try {
 
   // (c3) take it, answer its choices as a person would, then read the Chronicle
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  await page.waitForTimeout(900);
+  // Greatest Hits now asks which copy comes next (Cory, 2026-10-26): wait for the placement to land before reading
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('patrons.v4.local')).state.players[0].left === 0, null, { timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(600);
   for (let k = 0; k < 48; k++) {
     const st = await page.evaluate(() => JSON.parse(localStorage.getItem('patrons.v4.local')).state.pending);
     if (!st || st.player !== 0 || st.kind !== 'choose') break;

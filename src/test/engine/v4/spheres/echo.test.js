@@ -63,14 +63,28 @@ describe('Green table action boundaries', () => {
     s = go(s, 'gold.rush');
     const gold = R(s).gold;
     s = take(s, 'echo.eternity');
+    expect(s.pending.prompt).toBe('Greatest Hits: copy which next?');
+    s = chooseTarget(s, 'market.spree');
     expect(s.pending.kind).toBe('buy');
     expect(R(s).gold).toBeGreaterThan(gold);
     expect(s.pending.prompt).toMatch(/3 recruits left/);
   });
+  it('Greatest Hits copies in the order you click its spaces (Cory, Oct 26)', () => {
+    let s = scene({ round: 3, turns: [0, 0, 0, 0] });
+    s = go(s, 'gold.rush'); s = go(s, 'echo.chant'); s = go(s, 'red.turnout');
+    s = take(s, 'echo.eternity');
+    expect(s.pending.prompt).toBe('Greatest Hits: copy which next?');
+    expect(s.pending.options).toHaveLength(3);
+    s = chooseTarget(s, 'echo.chant');
+    expect(s.log.at(-1)).toMatch(/copied Build Up/);
+    expect(s.pending.options.map(o => o.value).sort()).toHaveLength(2);
+    s = chooseTarget(s, 'gold.rush');
+    expect(s.log.some(l => /copied Golden Years|copies Golden Years/.test(l))).toBe(true);
+  });
   it('an occupied center copies its printed gain, without recalculating the copier’s wealth', () => {
     let s = scene({ round: 3, turns: [0, 1, 0, 0], res: [{ gold: 3 }] });
     s = go(s, 'gold.strike'); s = go(s, 'echo.chant'); s = go(s, 'gold.rush');
-    s = go(s, 'echo.eternity');
+    s = go(s, 'echo.eternity', target('gold.strike'));
     expect(R(s)).toEqual({ ...Z, gold: 21, green: 1 });
   });
   it('the original owner’s passive bonuses never enter the chip', () => {
