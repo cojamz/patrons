@@ -120,6 +120,8 @@ header.bar .ticker::before{content:"Last: ";color:color-mix(in srgb,var(--muted)
 .chip.off{opacity:.55}
 .chips em{color:var(--muted);font-style:normal;font-size:var(--fs-1)}
 .popover{position:fixed;z-index:35;background:var(--table-2);border:1px solid var(--rim);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.55);padding:12px;animation:rise .18s ease-out}
+/* a hover tip shows whole where it stays (it opens a frame after the pointer arrives: Cory, 2026-10-25); a pinned one still rises */
+.popover.float{animation:none}
 .pop-card{display:flex;flex-direction:column;gap:6px;border-left:3px solid var(--c);padding-left:10px;font-size:var(--fs-2)}
 .pop-card .row{display:flex;justify-content:space-between;gap:10px}
 .pop-card small{color:var(--muted)}

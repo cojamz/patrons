@@ -396,7 +396,7 @@ export function Popover({ anchor, onClose, children, float = false, beside = nul
   }
   const { nub, mid, ...style } = pos;
   const nubAt = nub && typeof style.top === 'number' ? Math.round(Math.max(14, mid - style.top)) : null;
-  return out(<div className={`popover${nub ? ' beside' : ''}`} ref={box} role={hidden ? undefined : 'dialog'} aria-hidden={hidden || undefined} data-prep={hidden ? '' : undefined}
+  return out(<div className={`popover${nub ? ' beside' : ''}${float ? ' float' : ''}`} ref={box} role={hidden ? undefined : 'dialog'} aria-hidden={hidden || undefined} data-prep={hidden ? '' : undefined}
     style={hidden ? { ...style, left: -9999, right: 'auto', visibility: 'hidden' } : style}>
     {nubAt != null && <span className={`pop-nub ${nub}`} aria-hidden="true" style={{ top: `min(${nubAt}px, calc(100% - 14px))` }} />}{children}</div>);
 }
