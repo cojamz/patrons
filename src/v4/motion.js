@@ -195,6 +195,15 @@ const TABLE = {
   // a recruit holds at the hub, its rule readable, before it flies on to its buyer (Cory, 2026-10-18)
   recruitShow: [200,   300],
 };
+/**
+ * A rival's step plays quicker than your own (Cory, 2026-10-26: "Rival turns play quicker than yours, with beats
+ * overlapping, and pause only on buys and recruits"). Every duration, gap and hold of a rival's in-round step is this
+ * part of yours, at every speed (so Relaxed stays as far above Steady as before), and its beats overlap at the
+ * hand-off instead of waiting for each landing; a rival's recruit or follower buy keeps its full timing and hold.
+ * One place: director.js planChain (the chain) and holdAfter (the table's hold). Your own moves and what answers your
+ * hand never read it.
+ */
+export const RIVAL = 0.65;
 /** A budget at the viewer's speed: Quick's own number, else the base times the speed. */
 const atSpeed = ([quick, base]) => (speed === 'quick' ? quick : Math.round(base * speedScale()));
 

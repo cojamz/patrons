@@ -10,7 +10,10 @@ import { browserPath } from './lib/browser.mjs';
 //       flow at their hand-off. This pinned the old fixed bot pace (600ms a step); since
 //       Cory's 2026-10-15 calls ("clear and steady, not slow"; every action plays a chain) the chain sets the pace, a
 //       bot's next step shows at its chain's hand-off, and a step with nothing to show (a pass) holds no fixed time.
-//       The floor is MO.stepFloor at Steady (400ms × Steady's speed since the morning fixes: 480ms);
+//       The floor is MO.stepFloor at Steady (400ms × Steady's speed since the morning fixes: 648ms), and since Cory's
+//       2026-10-26 call ("Rival turns play quicker than yours ... and pause only on buys and recruits") a rival's plain
+//       step holds it at RIVAL (motion.js, 0.65: 421ms); a rival's recruit or follower buy keeps the full floor. The
+//       shortest hand-over is a plain step's, so the gate's floor is the scaled one (still over 400ms at Steady);
 //  (m5) laptop, the same seeded game at Steady and at Relaxed: a rival's whole turn (their placement showing → the next
 //       placement showing, bot to bot) takes at least 1.8× as long at Relaxed, at the median (Cory's play note, morning
 //       fixes: "Animations are too fast even on Relaxed": Relaxed is twice Steady, Steady a little slower than before).
@@ -22,7 +25,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
 import { seedSave } from './lib/seed.mjs';
-import { MO, motionSpeed, setMotionSpeed } from '../../src/v4/motion.js';
+import { MO, RIVAL, motionSpeed, setMotionSpeed } from '../../src/v4/motion.js';
 import { TIERS } from '../../src/engine/v4/index.js';
 const GAIN = TIERS.find(t => t.key === 'mid').get; // the 5-for-5 buy
 
@@ -30,7 +33,7 @@ const GAIN = TIERS.find(t => t.key === 'mid').get; // the 5-for-5 buy
 // Steady's own numbers, and every page it times opens with ?speed=steady (or relaxed for m5's comparison)
 setMotionSpeed('steady');
 if (motionSpeed() !== 'steady') throw new Error('motion.mjs reads Steady budgets');
-const FLOOR = MO.stepFloor; // a rival's visible step stays up at least this long at Steady (m4)
+const FLOOR = Math.round(MO.stepFloor * RIVAL); // a rival's visible step stays up at least this long at Steady (m4; a plain step's floor, RIVAL)
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/motion';
 mkdirSync(SHOTS, { recursive: true });
@@ -207,7 +210,7 @@ for (const prof of PROFILES) {
     let pairs = 0, worst = Infinity;
     for (let i = 1; i < st.length; i++) {
       if (!st[i].byBot || !st[i - 1].byBot || !st[i].inRound || !st[i - 1].inRound || st[i].modal || st[i - 1].modal) continue;
-      // what it guards: a rival's last visible step stays up at least 400ms before the next player's step (or that
+      // what it guards: a rival's last visible step stays up at least FLOOR before the next player's step (or that
       // rival's next turn, a new placement); the same bot's own sub-steps (the buy after a choice) flow at their
       // hand-off, and a pass between shows nothing of its own (Cory's pacing call)
       if (st[i].by === st[i - 1].by && st[i].kind !== 'place') continue;

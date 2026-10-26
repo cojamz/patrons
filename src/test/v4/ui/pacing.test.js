@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { planChain, holdAfter, foldBuys } from '../../../v4/game/director.js';
-import { MO, SPEEDS, motionSpeed, setMotionSpeed } from '../../../v4/motion.js';
+import { MO, RIVAL, SPEEDS, motionSpeed, setMotionSpeed } from '../../../v4/motion.js';
 
 const pct = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * p))] : NaN; };
 
@@ -94,5 +94,48 @@ describe('the table\'s pace at Steady (H2, H3)', () => {
     // the old Steady's p50 on these games was 1541ms (2026-10-15); "a little slower" is about a fifth more
     expect(s).toBeGreaterThan(1541 * 1.1);
     expect(q).toBeLessThan(s);
+  });
+});
+
+// Cory, 2026-10-26: "Rival turns play quicker than yours, with beats overlapping, and pause only on buys and
+// recruits." The same recorded steps, planned once as a rival's and once as the viewer's own: a rival's step without a
+// recruit or follower buy plays at RIVAL or quicker (its beats overlap), and holds its floor at that pace; a recruit's
+// card keeps its full flight and hold at the hub, and a recruit or buy step keeps the full floor.
+describe('a rival\'s step plays quicker than your own (RIVAL)', () => {
+  it('scales a rival\'s plain steps and keeps its recruits and buys at full timing', () => {
+    setMotionSpeed('steady');
+    let plainRival = 0, plainOwn = 0, plain = 0, cards = 0, kept = 0;
+    for (const seed of [2, 7]) {
+      const seats = Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' }));
+      let s = createGame({ seats, seed });
+      const rand = seededRandom(seed);
+      for (let k = 0; k < 800 && !s.over; k++) {
+        const next = applyMove(s, chooseBotMove(s, rand), { effects: true });
+        const actor = s.pending ? s.pending.player : null;
+        if (actor != null && s.round >= 1 && next.round === s.round && actor !== 0) {
+          const rival = planChain(s, next, { mine: [0] }), own = planChain(s, next, { mine: [actor] });
+          const buys = next.effects.some(e => e.cause && (e.cause.kind === 'buy' || (e.cause.kind === 'recruit' && e.type === 'recruit')));
+          if (rival.total && own.total) {
+            if (!buys) {
+              expect(rival.pace).toBe(RIVAL);
+              // (a placement shows differently for you and a rival, a stamp against a flight and a read: compare the rest)
+              if (s.pending.kind !== 'place') { plainRival += rival.total; plainOwn += own.total; plain++; }
+              expect(holdAfter(rival, { sameNext: false, rivalStep: true, floor: MO.stepFloor })).toBeGreaterThanOrEqual(Math.round(MO.stepFloor * RIVAL));
+            } else {
+              expect(rival.pace).toBe(1);
+              expect(holdAfter(rival, { sameNext: false, rivalStep: true, floor: MO.stepFloor })).toBeGreaterThanOrEqual(MO.stepFloor);
+              kept++;
+              const rc = rival.atoms.find(a => a.op === 'card'), oc = own.atoms.find(a => a.op === 'card');
+              if (rc && oc) { cards++; for (const f of ['lift', 'toHub', 'show', 'fromHub']) expect(Math.abs(rc[f] - oc[f])).toBeLessThanOrEqual(1); }
+            }
+          }
+        }
+        s = next;
+      }
+    }
+    console.log(`[pacing] a rival's plain step ${Math.round(plainRival / plain)}ms vs the same step as yours ${Math.round(plainOwn / plain)}ms (${plain} steps); ${kept} recruit/buy steps kept, ${cards} recruits' cards compared`);
+    expect(plain).toBeGreaterThan(10);
+    expect(cards).toBeGreaterThan(5);
+    expect(plainRival / plainOwn).toBeLessThanOrEqual(RIVAL + 0.05);
   });
 });

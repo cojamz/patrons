@@ -15,7 +15,7 @@
 // and timers (no React state). A click or Space skips the rest of a chain to its end (skipChain). Every duration comes
 // from src/v4/motion.js at the viewer's speed. A state without an effect stream (an online guest, a catch-up) falls
 // back to gains.js, which reads the change of state.
-import { MO, flightMs, nextBeatAt, speedScale, streamGap } from '../motion.js';
+import { MO, RIVAL, flightMs, nextBeatAt, speedScale, streamGap } from '../motion.js';
 import { playerColor } from '../format.js';
 import { play } from '../sound.js';
 import { gainsBetween } from './gains.js';
@@ -283,6 +283,10 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   // out because of it (Tax Collector on your follower buy) sends its gain from there to their pile (the skeptic, w4 #14:
   // "nothing travels from my buy to P4's seat")
   const mover = before.pending ? before.pending.player : null;
+  // a rival's step in a round plays at RIVAL (motion.js), its beats overlapping; `keep` holds the spans of its recruit
+  // and follower-buy beats, which keep their full timing
+  const rival = mover != null && !mine.includes(mover) && sameRound && before.round >= 1;
+  const keep = [];
   let movePlace = null;
   let lastStart = null; // when the last beat that wasn't a rival's reaction began
   for (const beat of beats) {
@@ -374,6 +378,8 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       m.pays.length = 0; m.fols.length = 0;
       next = ends(Math.max(next, o));
     }
+    const kept = isRecruit || c.kind === 'buy';
+    if (rival && kept) keep.push([s, Math.max(next, end)]);
     // everything else in the beat, in order: what was paid, what was taken, given, gained, the cards, the followers
     let cur = Math.max(s, next === s ? s : next);
     // a release (M8): the member drops to the pile first; its refund leaves when the card is 40% along
@@ -459,7 +465,9 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     }
     phase(m.fols.map(f => (f.what.n > 0 ? { from: f.from.kind === 'bank' && pulsed ? { kind: 'space', key: pulsed } : f.from, to: f.to, n: f.what.n, opt: { fol: true } } : { from: f.from, to: f.to, n: -f.what.n, opt: { fol: true, pay: true } })));
     // Each named cause gets a clear landing before the next source enters. Color fans within a cause stay together.
-    t = Math.max(t, cur, end);
+    // A rival's beats overlap instead: the next starts at this one's hand-off (its last piece two-thirds along, grammar
+    // §5), except after a recruit or a follower buy, which lands in full before anything else moves.
+    t = rival && !kept ? Math.max(t, cur) : Math.max(t, cur, end);
   }
   const turnPasses = !!(state.pending && before.pending && state.pending.player !== before.pending.player);
   // starting picks read one at a time: the next pick lights only when this one has landed, and a short rest between two
@@ -475,6 +483,20 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     end = Math.max(end, refillAt + rowOutMs(outs) + MO.deal + (outs - 1) * MO.dealStagger);
     hand = end;
   }
+  // a rival's step: its timeline runs at RIVAL outside its recruit and follower-buy beats (rivalClock), and its closing
+  // breath too when it has neither
+  const pace = rival && end ? (keep.length ? 1 : RIVAL) : 1;
+  if (rival && end) {
+    const W = rivalClock(keep);
+    for (const a of atoms) {
+      const t0 = a.at, w0 = W(t0);
+      if (a.op === 'card') { let x = t0; for (const f of ['lift', 'toHub', 'show', 'fromHub']) { const y = x + a[f]; a[f] = W(y) - W(x); x = y; } }
+      if (a.dur) a.dur = W(t0 + a.dur) - w0;
+      if (a.stream) a.stream = W(t0 + a.stream) - w0;
+      a.at = w0;
+    }
+    end = W(end); hand = W(hand); t = W(t);
+  }
   // Dense chains tighten proportionally, preserving cause order within the existing turn-wait budget.
   // a longer plan plays faster to fit, never faster than Quick (half)
   const cap = Math.round(2400 * speedScale());
@@ -484,7 +506,23 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); for (const f of ['toHub', 'show', 'fromHub']) if (a[f]) a[f] = Math.round(a[f] * k); }
     end *= k; hand *= k; t *= k;
   }
-  return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? Math.round(end + (turnPasses ? MO.breath : 0)) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses };
+  return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? Math.round(end + (turnPasses ? MO.breath * pace : 0)) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses, pace };
+}
+
+/** A rival step's clock: time runs at RIVAL, except inside the kept spans (a recruit's or follower buy's beat), where it
+ *  runs at full speed. Maps a time on the plan to its time on screen (whole ms, never out of order). */
+function rivalClock(keep) {
+  const spans = [];
+  for (const [a, b] of [...keep].sort((x, y) => x[0] - y[0])) {
+    if (!(b > a)) continue;
+    const last = spans[spans.length - 1];
+    if (last && a <= last[1]) last[1] = Math.max(last[1], b); else spans.push([a, b]);
+  }
+  return x => {
+    let kept = 0;
+    for (const [a, b] of spans) { if (x <= a) break; kept += Math.min(x, b) - a; }
+    return Math.round(RIVAL * x + (1 - RIVAL) * kept);
+  };
 }
 
 // ---------- a rival's run of follower buys, folded ----------
@@ -563,7 +601,8 @@ export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, ne
   const passes = plan.turnPasses && nextPlaces ? plan.total - MO.breath : plan.total;
   // the floor keeps a rival's visible step on screen before another player's step or the rival's next turn; never
   // between the same player's own sub-steps (a setup pick, the buy after a choice): those flow at their hand-off
-  const floored = rivalStep && (!sameNext || nextPlaces) ? floor : 0;
+  // (a rival's quick step holds its floor at its own pace, RIVAL; a recruit or follower buy holds the full floor)
+  const floored = rivalStep && (!sameNext || nextPlaces) ? Math.round(floor * (plan.pace ?? 1)) : 0;
   // a rival's placement hands on at its hand-off (its last piece two-thirds along), even when its turn ends there
   // the turn passing to another player (panel r1: rival turns overlapped your own coins still flying, and each other):
   // this turn's pieces all land before the next player's turn begins, so every turn is its own beat; only the closing
