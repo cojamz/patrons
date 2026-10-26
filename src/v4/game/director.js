@@ -15,8 +15,8 @@
 // and timers (no React state). A click or Space skips the rest of a chain to its end (skipChain). Every duration comes
 // from src/v4/motion.js at the viewer's speed. A state without an effect stream (an online guest, a catch-up) falls
 // back to gains.js, which reads the change of state.
-import { MO, RIVAL, flightMs, nextBeatAt, speedScale, streamGap } from '../motion.js';
-import { playerColor } from '../format.js';
+import { MO, RIVAL, flightMs, nextBeatAt, speedScale, streamGap, slowed } from '../motion.js';
+import { playerColor, roman } from '../format.js';
 import { play } from '../sound.js';
 import { gainsBetween } from './gains.js';
 import { seatOrder } from './seats.js';
@@ -480,7 +480,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   if (outs) {
     const refillAt = t;
     at(refillAt, { op: 'refill', n: outs });
-    end = Math.max(end, refillAt + rowOutMs(outs) + MO.deal + (outs - 1) * MO.dealStagger);
+    end = Math.max(end, refillAt + rowOutMs(outs) + shuffleInMs(joinedNow(before, state)) + MO.deal + (outs - 1) * MO.dealStagger);
     hand = end;
   }
   // a rival's step: its timeline runs at RIVAL outside its recruit and follower-buy beats (rivalClock), and its closing
@@ -844,6 +844,68 @@ export function shopOuts(before, state) {
 }
 /** How long n cards take to leave the row for the deck before the new ones may deal (each starts a stagger after the
  *  last; the deal begins as the last is halfway there, so the deck is never still between the two). */
+/** The members a new round shuffled into the deck (core.js startRound: state.joined), or 0. */
+export const joinedNow = (before, state) => (state && before && state.round > before.round && state.joined && state.joined.round === state.round ? state.joined.uids.length : 0);
+const SHUFFLE_BACKS = 5; // at most this many card backs fly in; the tag says how many joined
+// quicker than a deal: it's a beat in the round change, not a wait (Cory: "we don't want to gunk up between rounds")
+const shuffleBeats = () => ({ fly: Math.round(MO.deal * 0.75), gap: Math.round(MO.dealStagger * 0.8), riffle: Math.round(MO.shopSlide * 0.8) });
+/** How long the shuffle-in plays: the backs fly in to the deck, then it riffles (Cory, 2026-10-25). */
+export function shuffleInMs(n) { if (!(n > 0)) return 0; const b = shuffleBeats(); return b.fly + (Math.min(n, SHUFFLE_BACKS) - 1) * b.gap + b.riffle; }
+/**
+ * Round II and III members join the deck (Cory, 2026-10-25: "animation for the deck getting shuffled into the member
+ * deck … only happens twice a game, so it's meaningful", without gunking up the round change): after the old row has
+ * gone to the deck, a small stack of card backs flies from the wheel's hub into the deck, the deck riffles, and
+ * "+N round II" rises over it. Bookkeeping like the row: never holds the chain; a skip lands it.
+ */
+function shuffleIn(root, n, round, delay) {
+  if (!n || typeof document === 'undefined') return;
+  const deck = root.querySelector('[data-deck]');
+  const back = deck && (deck.querySelector('.back') || deck);
+  const pile = deck && (deck.querySelector('.pile') || deck);
+  if (!back) return;
+  const D = back.getBoundingClientRect();
+  if (!D.width) return;
+  const hub = hubRect ? hubRect() : null;
+  const from = hub && hub.width ? { x: hub.left + hub.width / 2, y: hub.top + hub.height / 2 } : { x: D.left + D.width / 2, y: D.top - 120 };
+  const { fly, gap, riffle } = shuffleBeats(), k = Math.min(n, SHUFFLE_BACKS);
+  for (let i = 0; i < k; i++) {
+    const g = back.cloneNode(true);
+    g.className = 'flight deck-join ghost-layer';
+    g.setAttribute('aria-hidden', 'true');
+    for (const x of g.querySelectorAll('.n')) x.remove(); // a card back, not the count
+    g.dataset.born = String(Date.now());
+    Object.assign(g.style, { left: `${D.left}px`, top: `${D.top}px`, width: `${D.width}px`, height: `${D.height}px` });
+    document.body.appendChild(g);
+    const dx = from.x - (D.left + D.width / 2), dy = from.y - (D.top + D.height / 2), tilt = (i % 2 ? 1 : -1) * (4 + i * 2);
+    const anim = track(g.animate([
+      { transform: `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(.7) rotate(${tilt * 2}deg)`, opacity: 0 },
+      { transform: `translate(${(dx * 0.6).toFixed(1)}px,${(dy * 0.6).toFixed(1)}px) scale(.85) rotate(${tilt}deg)`, opacity: 1, offset: 0.3 },
+      { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 1, offset: 0.92 },
+      { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 0 },
+    ], { duration: fly, delay: delay + i * gap, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'both' }));
+    onFinish(anim, () => g.remove());
+  }
+  const landed = delay + fly + (k - 1) * gap;
+  // the deck riffles as they're shuffled in: a quick left-right split and back
+  if (pile && pile.animate) track(pile.animate([
+    { transform: 'translateX(0) rotate(0deg)' }, { transform: 'translateX(-4px) rotate(-5deg)', offset: 0.25 },
+    { transform: 'translateX(4px) rotate(5deg)', offset: 0.55 }, { transform: 'translateX(0) rotate(0deg)' },
+  ], { duration: riffle, delay: landed, easing: 'ease-in-out' }));
+  const tag = document.createElement('b');
+  tag.className = 'deck-join-tag ghost-layer';
+  tag.dataset.born = String(Date.now());
+  tag.textContent = `+${n} round ${roman(round)}`;
+  Object.assign(tag.style, { left: `${Math.round(D.left + D.width / 2)}px`, top: `${Math.round(D.top - 4)}px` });
+  document.body.appendChild(tag);
+  const life = riffle + slowed(900);
+  const t = track(tag.animate([
+    { transform: 'translate(-50%,-30%)', opacity: 0 }, { transform: 'translate(-50%,-100%)', opacity: 1, offset: 0.15 },
+    { transform: 'translate(-50%,-100%)', opacity: 1, offset: 0.8 }, { transform: 'translate(-50%,-140%)', opacity: 0 },
+  ], { duration: life, delay: landed - Math.round(fly / 3), fill: 'both', easing: 'ease-out' }));
+  onFinish(t, () => tag.remove());
+  if (typeof window !== 'undefined') window.__patronsShuffles = (window.__patronsShuffles || 0) + 1;
+}
+
 export function rowOutMs(n) { return n > 0 ? Math.round(MO.shopSlide / 2 + (n - 1) * MO.rowOutStagger) : 0; }
 
 // the new row's deal animations at a new round (MemberDeck.jsx useDeal notes them; playChain times them)
@@ -1262,11 +1324,13 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // a new round's fresh row is its own last beat (planChain's refill): the old row leaves then, and the new deals after
   const refill = plan.atoms.find(a => a.op === 'refill');
   const refillOff = refill ? Math.max(0, base + refill.at - chain.clock) : 0;
+  const joinN = refill ? joinedNow(before, state) : 0, joinMs = shuffleInMs(joinN);
+  if (joinN) shuffleIn(root, joinN, state.round, refillOff + rowOutMs(outs.length));
   for (const d of deals) {
     try {
-      if (refillOff) {
-        d.anim.effect.updateTiming({ delay: (d.anim.effect.getTiming().delay || 0) + refillOff });
-        d.hide.effect.updateTiming({ duration: Number(d.hide.effect.getTiming().duration) + refillOff });
+      if (refillOff || joinMs) {
+        d.anim.effect.updateTiming({ delay: (d.anim.effect.getTiming().delay || 0) + refillOff + joinMs });
+        d.hide.effect.updateTiming({ duration: Number(d.hide.effect.getTiming().duration) + refillOff + joinMs });
       }
       track(d.anim); track(d.hide); // a skip deals them at once
     } catch { /* gone */ }

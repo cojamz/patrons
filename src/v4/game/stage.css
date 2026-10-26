@@ -45,3 +45,12 @@
 @media (prefers-reduced-motion: reduce){.take-tag{animation:none}}
 @keyframes seatdelta{0%{opacity:0;transform:translate(-100%,-3px)}8%{opacity:1;transform:translate(-100%,0)}82%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion: reduce){.seat-delta{animation:none}}
+
+/* round II and III members shuffled into the deck (director.js shuffleIn): card backs like the deck's top card, and
+   "+N round II" over the deck */
+.deck-join{display:flex;align-items:center;justify-content:center;border-radius:6px;
+  background:radial-gradient(circle at 50% 36%,rgba(255,217,120,.12),transparent 62%),repeating-linear-gradient(45deg,rgba(0,0,0,.16) 0 2px,transparent 2px 6px),linear-gradient(180deg,#4b2e41,#36202f);
+  box-shadow:0 0 0 1px #120c0a,inset 0 0 0 2px #36202f,inset 0 0 0 3px rgba(217,166,58,.72),0 6px 14px -6px rgba(0,0,0,.7)}
+.deck-join .cult-mark{display:block;flex:none}
+.deck-join-tag{position:fixed;transform:translate(-50%,-100%);z-index:62;pointer-events:none;padding:2px 7px;border-radius:5px;
+  font:800 12px/1.25 var(--sans);color:var(--cream,#f4ebd7);background:var(--walnut-2,#271d16);box-shadow:0 0 0 1px rgba(217,166,58,.55),0 1px 3px rgba(0,0,0,.5);white-space:nowrap;opacity:0}
