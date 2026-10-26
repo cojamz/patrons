@@ -81,7 +81,9 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // seeded games so it was dealt, never recruited, in 3). cards-trading (Cashier) covers its line.
   // Doppelganger is the same: "When recruited" only. It passed while bots recruited one; Even Swap's +2 red (2026-10-25)
   // moved the games so it was only dealt, in 4. cards-echo (Doppelganger) covers its line.
-  const QUIET_RESTRICTIONS = new Set(['echo.agents', 'trading.cashier', 'echo.doppel']);
+  // Makeover ("When recruited" only) and Wallflower (doubles only while no rival has fewer followers), both cut from the
+  // deck, went silent when the Oct 25 member deck changes moved the games; cards-market-concepts and cards-echo cover their lines.
+  const QUIET_RESTRICTIONS = new Set(['echo.agents', 'trading.cashier', 'echo.doppel', 'market.makeover', 'echo.wallflower']);
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
     ['gold', 'market', 'trading', 'echo'], ['red', 'thieves', 'market', 'trading'],
@@ -98,7 +100,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     // Impostor and Reseller (cut from the deck, still dealt here) fell under 3 holds when the Oct 24 member structure (six
     // new members, three cut) moved the games; cards-echo and cards-market cover them.
     // Shopaholic, Fence and Doppelganger fell under 3 holds when Gather's +3 (Oct 25) moved the games; spheres/market (Shopaholic), interactions (Fence) and cards-echo (Doppelganger) cover them.
-    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller', 'market.shopaholic', 'thieves.fence', 'echo.doppel']);
+    const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller', 'market.shopaholic', 'thieves.fence', 'echo.doppel',
+      'market.onlooker', 'echo.groupie']); // cut cards under 3 holds after the Oct 25 member deck changes; cards-market and cards-echo cover them
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
