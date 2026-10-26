@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.88 — 2026-10-26 — unreleased
+
+- Last Call keeps you waiting until everyone else is out of minions, even when a rival skips a turn after you take it. The shop no longer shows one member twice.
+
 ## v0.8.87 — 2026-10-26 — unreleased
 
 - Churn's tap button says Send to bottom; Spree's Done ends every recruit left and its prompt counts them; a steal's card stays put between picks; Shake Down asks 'P4 is taking your Trendsetter: pay 3 to keep it?'; extra clicks on Pay can't open the deck
