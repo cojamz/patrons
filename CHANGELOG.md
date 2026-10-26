@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.86 — 2026-10-25 — unreleased
+
+- Extortionist costs 6.
+
 ## v0.8.85 — 2026-10-25 — unreleased
 
 - Smoother: bots think without holding up the screen, and flying pieces and counts share one frame loop.
