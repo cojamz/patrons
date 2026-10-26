@@ -56,6 +56,17 @@ describe('Green table action boundaries', () => {
     const s = go(scene({ round: 3 }), action);
     expect(R(s)).toEqual({ ...Z, green: 1 });
   });
+  it('Spree copied by Greatest Hits recruits after the whole chain, in the recruit step (Maxwell, Oct 26)', () => {
+    let s = table(['gold', 'red', 'market', 'echo'], { round: 3, left: 8, shop: SHOP, queue: [0, 0, 0].map(p => ({ t: 'turn', p })) });
+    s = go(s, 'market.spree');
+    while (s.pending?.kind === 'buy') s = move(s, 'pass');
+    s = go(s, 'gold.rush');
+    const gold = R(s).gold;
+    s = take(s, 'echo.eternity');
+    expect(s.pending.kind).toBe('buy');
+    expect(R(s).gold).toBeGreaterThan(gold);
+    expect(s.pending.prompt).toMatch(/3 recruits left/);
+  });
   it('an occupied center copies its printed gain, without recalculating the copier’s wealth', () => {
     let s = scene({ round: 3, turns: [0, 1, 0, 0], res: [{ gold: 3 }] });
     s = go(s, 'gold.strike'); s = go(s, 'echo.chant'); s = go(s, 'gold.rush');

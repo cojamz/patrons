@@ -139,8 +139,16 @@ function toBottom(ctx, k) {
   }
 }
 /** Extra buys this turn: they run right after the current one (added to the engine's queue directly). */
+// "this turn" recruits join the turn's recruit step, after every action still resolving (a Greatest Hits chain) (Maxwell, Oct 26)
 function extraBuys(ctx, p, k) {
-  for (let i = 0; i < k; i++) ctx.state.queue.unshift({ t: 'buy', p: p.id });
+  const q = ctx.state.queue, adds = Array.from({ length: k }, () => ({ t: 'buy', p: p.id }));
+  let at = 0;
+  for (let i = 0; i < q.length; i++) {
+    if (q[i].p !== p.id) continue;
+    if (q[i].t === 'endTurn') break;
+    if (q[i].t === 'buy') { at = i; break; }
+  }
+  q.splice(at, 0, ...adds);
 }
 
 const market = {
