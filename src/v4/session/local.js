@@ -82,11 +82,11 @@ export const UNDO_BUY_HOLD_MS = 1600;
  * @returns {Session & { canUndo(): boolean, undo(): boolean, readonly undoCheckpoint: UndoCheckpoint|null,
  *   readonly roundHold: { moves: number }|null, continueRound(): boolean }}
  */
-export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, botLevel, state: saved, undo: savedUndo, holdRoundEnds = false, hold: savedHold = null, isOwner = null }) {
+export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, rules, botLevel, state: saved, undo: savedUndo, holdRoundEnds = false, hold: savedHold = null, isOwner = null }) {
   // A new game is stamped with this build's content hash and records its moves (state.build, state.history).
   // Every seat wears an emoji, none twice: a person's pick, else a random free one (bots too), seeded by the game.
   const dressed = saved ? null : settleEmojis(seats.map(s => ({ name: s.name, kind: s.kind || 'human', ...(s.emoji ? { emoji: s.emoji } : {}) })), seededRandom((seed ^ 0x5eed) >>> 0));
-  let state = saved || newGame({ seats: dressed, seed, ...(quadrants ? { quadrants } : {}) });
+  let state = saved || newGame({ seats: dressed, seed, ...(quadrants ? { quadrants } : {}), ...(rules ? { rules } : {}) });
   // The setup screen's bot level (Easy / Normal / Hard) goes on every bot seat of a new game; a resumed game keeps its own.
   if (!saved && botLevel) setBotLevels(state, state.players.map(p => (p.kind === 'bot' ? botLevel : null)));
   let version = 1;

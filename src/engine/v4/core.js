@@ -24,7 +24,15 @@ const LOG_MAX = 300;
 // Rule flags a table can toggle (sims flip them). release: once per round, on your turn, release one of your
 // members (it goes to the bottom of the pile) for its colored part in its own color (not one recruited this round). guests: rule-bending guest
 // members join the deck.
-export const DEFAULT_RULES = { release: false, guests: true, cull: true, artifacts: true };
+export const DEFAULT_RULES = { release: false, guests: true, cull: true, artifacts: true, roundDecks: 3 };
+/** Round decks (Cory, 2026-10-25): one deck, but round II and round III members wait out of it and are shuffled in
+ *  when their round starts. A member's round is its `round`, else its printed cost (ROUND_CUTOFFS). rules.roundDecks: 3 batches, 2 folds round III into round II, 0 is off. */
+/** Round cutoffs by printed cost (Cory, 2026-10-25: "3 or less / 4 / 5 and up"): the most a round I, then round II,
+ *  member costs; anything pricier joins in round III. */
+export const ROUND_CUTOFFS = [3, 4];
+export const memberRound = def => def.round ?? (def.s + def.w <= ROUND_CUTOFFS[0] ? 1 : def.s + def.w <= ROUND_CUTOFFS[1] ? 2 : 3);
+/** The round a member joins the deck in this game (1 when it starts in the deck). */
+export const joinsRound = (state, def) => (!state.rules?.roundDecks ? 1 : Math.min(memberRound(def), state.rules.roundDecks));
 /** Artifacts (Cory, 2026-10-24): each color on the table has one, picked at game start with 1 of its color. Ability
  *  only: not a member, worth no followers, never swapped, stolen or sent to the pile. Each is a live member's ability;
  *  that member leaves its color's deck. Which card is each color's artifact is Claude's pick until Cory says. */
@@ -47,7 +55,7 @@ export function createGame({ seats, seed = 1, quadrants, rules = {} }) {
   const zero = Object.fromEntries(resources.map(r => [r, 0]));
   const cards = {};
   let uid = 0;
-  const table = { ...DEFAULT_RULES, ...(FULL_DECK.tests ? { cull: false, artifacts: false } : {}), ...rules }; // tests: content/cull.js (artifacts too: a test asks for them)
+  const table = { ...DEFAULT_RULES, ...(FULL_DECK.tests ? { cull: false, artifacts: false, roundDecks: 0 } : {}), ...rules }; // tests: content/cull.js (artifacts too: a test asks for them)
   const artifactIds = new Set(table.artifacts ? quadrants.map(q => ARTIFACTS[q]).filter(Boolean) : []);
   const dealt = def => !(table.cull && CUT.has(def.id)) && !artifactIds.has(def.id) && !def.artifact; // the cull (content/cull.js); artifacts (an artifact-only card is never dealt)
   for (const q of quadrants) for (const def of quadrant(q).members.filter(dealt))
@@ -63,13 +71,18 @@ export function createGame({ seats, seed = 1, quadrants, rules = {} }) {
       id: i, name: s.name || `P${i + 1}`, kind: s.kind || 'human', ...(s.emoji ? { emoji: String(s.emoji) } : {}), // emoji: the player's pick (display only)
       res: { ...zero }, bonus: 0, contest: 0, bought: 0, members: [], discount: 0, left: 0, turnRecruits: 0, final: null,
     })),
-    cards, pile: Object.keys(cards).map(Number).filter(u => !Object.values(artifacts).includes(u)), shop: [], artifacts,
+    cards, pile: Object.keys(cards).map(Number).filter(u => !Object.values(artifacts).includes(u)), shop: [], artifacts, waiting: {},
     round: 0, slots: {}, squats: {}, order: [], turnIndex: 0, current: null,
     recruits: 0, stock: Object.fromEntries(TIERS.filter(t => t.limited).map(t => [t.key, t.stock(seats.length)])),
     // contests: each round's scoring as the engine decided it (see contestTable); turns: who has taken a turn this round
     contests: [], turns: [],
     queue: [], pending: null, log: [], moves: 0, over: false, ranking: null,
   };
+  // later rounds' members wait out of the deck (round decks)
+  for (const u of [...state.pile]) {
+    const r = joinsRound(state, cardDef(state, u));
+    if (r > 1) { (state.waiting[r] ||= []).push(u); state.pile.splice(state.pile.indexOf(u), 1); }
+  }
   shuffleInPlace(state, state.pile);
   refill(state);
   // Round I's turn order is drawn now, before the starting picks, and the picks run in it (Cory, 2026-10-15: "it had us
@@ -716,6 +729,15 @@ function startRound(state, r) {
   if (r > 1) {
     const old = state.shop.splice(0);
     state.pile.push(...old);
+    const join = state.waiting?.[r] || [];
+    if (join.length) {
+      state.pile.push(...join);
+      delete state.waiting[r];
+      // for the table's shuffle-in animation: which members joined the deck at this round's start
+      state.joined = { round: r, uids: [...join] };
+      shuffleInPlace(state, state.pile);
+      log(state, `Round ${roman(r)} members (${join.length}) are shuffled into the deck.`);
+    }
     refill(state);
     log(state, `The member market refreshes for round ${roman(r)}.`);
   }
@@ -1486,6 +1508,7 @@ const CARD_KINDS = new Set(['card', 'member', 'trade']);
 function whereIs(state, uid) {
   if (state.shop.includes(uid)) return 'shop';
   if (state.pile.includes(uid)) return 'pile';
+  if (Object.values(state.waiting || {}).some(w => w.includes(uid))) return 'waiting';
   const o = state.players.find(q => q.members.includes(uid));
   if (!o) { const a = state.players.find(q => q.artifact === uid); if (a) return `a${a.id}`; }
   return o ? `p${o.id}` : 'gone';

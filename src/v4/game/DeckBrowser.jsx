@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from 'react';
-import { cardDef, quadrant, allQuadrantIds } from '../../engine/v4/index.js';
+import { cardDef, quadrant, allQuadrantIds, roman } from '../../engine/v4/index.js';
 import { CUT } from '../../engine/v4/content/cull.js';
 import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
@@ -12,13 +12,16 @@ import { memberTimingWords } from './memberTiming.js';
 import './deck-browser.css';
 
 // A reference to the game's card types, grouped independently of the hidden draw order.
+// Round decks: a member still waiting to be shuffled in carries `later` (the round it joins) and shows greyed.
 export function deckCatalog(state) {
   const entries = new Map();
+  const waitRound = new Map(Object.entries(state.waiting || {}).flatMap(([r, w]) => w.map(u => [u, Number(r)])));
   for (const card of Object.values(state.cards)) {
     const def = cardDef(state, card.uid);
+    if (def.artifact || Object.values(state.artifacts || {}).includes(card.uid)) continue; // artifacts are not members
     if (entries.has(def.id)) { entries.get(def.id).copies++; continue; }
     const parts = costParts(def, state.resources);
-    entries.set(def.id, { def, parts, copies: 1, cost: parts.reduce((n, p) => n + p.n, 0), color: onTable(state, def) ? def.quadrant : 'colorless' });
+    entries.set(def.id, { def, parts, copies: 1, cost: parts.reduce((n, p) => n + p.n, 0), color: onTable(state, def) ? def.quadrant : 'colorless', ...(waitRound.has(card.uid) ? { later: waitRound.get(card.uid) } : {}) });
   }
   const cards = [...entries.values()].sort((a, b) => a.cost - b.cost || a.def.name.localeCompare(b.def.name));
   const rows = [...state.quadrants.map(q => ({ key: q, name: quadrant(q).name, color: `var(--${q})` })), { key: 'colorless', name: 'Colorless', color: 'var(--any)' }].filter(r => cards.some(c => c.color === r.key))
@@ -56,10 +59,10 @@ export default function DeckBrowser({ state, onClose }) {
   const art = d => <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={onTable(state, d) || outIds.has(d.id) ? quadrant(d.quadrant).resource : 'colorless'} size={40} />;
   return <div className="overlay top deck-browser-overlay" role="dialog" aria-modal="true" aria-label="Browse members" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
     <section className="dialog deck-browser" ref={dialog}>
-      <header className="deck-browser-head"><div><h2>Members</h2><p>Every member type in this game · color down, price across · dimmed rows are colors not in this game</p></div><button type="button" className="btn ghost" data-autofocus onClick={onClose} aria-label="Close member browser">Close</button></header>
-      {selected && <article className={`db-selected${selected.out ? ' out' : ''}`} data-deck-selected={selected.def.id} style={{ '--q': tint(selected.def) }}>
+      <header className="deck-browser-head"><div><h2>Members</h2><p>Every member type in this game · color down, price across · dimmed rows are colors not in this game{Object.keys(state.waiting || {}).length > 0 && ' · greyed members join the deck in a later round'}</p></div><button type="button" className="btn ghost" data-autofocus onClick={onClose} aria-label="Close member browser">Close</button></header>
+      {selected && <article className={`db-selected${selected.out ? ' out' : ''}${selected.later ? ' later' : ''}`} data-deck-selected={selected.def.id} style={{ '--q': tint(selected.def) }}>
         <div className="db-selected-art">{art(selected.def)}</div>
-        <div className="db-selected-words"><h3>{selected.def.name}{selected.out && <small className="db-out-note"> · not in this game</small>}</h3><p><Rich text={memberTimingWords(selected.def.text)} /></p>
+        <div className="db-selected-words"><h3>{selected.def.name}{selected.out && <small className="db-out-note"> · not in this game</small>}{selected.later && <small className="db-out-note"> · joins the deck in round {roman(selected.later)}</small>}</h3><p><Rich text={memberTimingWords(selected.def.text)} /></p>
           <footer><CostDots parts={selected.parts} /><span className="db-worth num">{selected.def.f}<FollowerGlyph size={13} /></span>{selected.copies > 1 && <small>{selected.copies} copies</small>}</footer>
         </div>
       </article>}
@@ -71,7 +74,7 @@ export default function DeckBrowser({ state, onClose }) {
             {row.out && !rows[i - 1]?.out && <div className="db-divider" style={{ gridColumn: '1 / -1' }}>Not in this game</div>}
             <h3 className={`db-color${row.out ? ' out' : ''}`} style={{ '--row-color': row.color }}>{row.name}</h3>
             {prices.map(price => <div className={`db-cell${row.out ? ' out' : ''}`} key={price} data-deck-color={row.key} data-deck-price={price} {...(row.out ? { 'data-deck-out': '' } : {})}>
-              {cards.filter(c => c.color === row.key && c.cost === price).map(({ def: d }) => <button type="button" className="db-card" key={d.id} style={{ '--q': tint(d) }} data-deck-member={d.id} aria-pressed={selected?.def.id === d.id} onClick={() => select(d.id)}>
+              {cards.filter(c => c.color === row.key && c.cost === price).map(({ def: d, later }) => <button type="button" className={`db-card${later ? ' later' : ''}`} key={d.id} {...(later ? { 'data-deck-later': later, title: `Joins the deck in round ${roman(later)}` } : {})} style={{ '--q': tint(d) }} data-deck-member={d.id} aria-pressed={selected?.def.id === d.id} onClick={() => select(d.id)}>
                 <span className="db-art">{art(d)}</span><span className="db-card-name">{d.name}</span>
               </button>)}
             </div>)}

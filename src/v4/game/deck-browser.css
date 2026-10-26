@@ -33,3 +33,6 @@
 .db-cell.out .db-card:hover,.db-cell.out .db-card:focus-visible{opacity:1}
 .db-selected.out{opacity:.8}
 .db-out-note{font-weight:600;font-size:13px;color:var(--pl-ink-2)}
+.db-card.later{filter:grayscale(1);opacity:.5}
+.db-card.later:hover,.db-card.later:focus-visible{opacity:.85}
+.db-selected.later .db-selected-art{filter:grayscale(1);opacity:.6}
