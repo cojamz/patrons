@@ -92,7 +92,7 @@ describe('Red members', () => {
     expect(s.players[0].bonus).toBe(0);
     s = take(s, 'red.hire');
     expect(s.players[0].bonus).toBe(1);
-    expect(fol(s, 0)).toBe(1 + 1 + 2);
+    expect(fol(s, 0)).toBe(2 + 1 + 2); // Proselytizer is worth 2 (Cory, 2026-10-25)
   });
 
   it('Mob: game end +1 follower per red member', () => {

@@ -116,6 +116,7 @@ for (const [id, name, source] of [
   ['red.headhunter', 'Headhunter', 'red.sponsor'], ['thieves.fixer', 'Fixer', 'thieves.bigscore'],
   ['market.windowshopper', 'Window Shopper', 'market.curator'], ['market.restocker', 'Restocker', 'market.makeover'],
   ['purple.timekeepers', 'Timekeepers', 'purple.patience'], ['trading.oldmoney', 'Old Money', 'trading.shareholder'],
+  ['trading.recluse', 'Recluse', 'market.recluse'], // Recluse moves to White (Cory, 2026-10-25)
 ]) {
   const art = BY_ID.get(source);
   if (art) BY_ID.set(id, { ...art, id, name });

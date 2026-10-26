@@ -78,7 +78,7 @@ export default {
     m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
     m('volunteer', 'Volunteer', 0, 0, 'Worth 1 follower.'),
     m('intern', 'Intern', 1, 0, 'Worth 1 follower.'),
-    m('mentor', 'Mentor & Protégé', 5, 3, 'When recruited: recruit the cheapest member in the shop.', {
+    m('mentor', 'Mentor & Protégé', 5, 3, 'When recruited: recruit the cheapest member in the shop.', { f: 2, // +1 follower (Cory, 2026-10-25)
       // card: this Mentor, or a Doppelganger copying it (its free pick says so)
       onRecruited(ctx, owner, card) {
         const who = card && card.def && card.def.key === 'doppel' ? 'Doppelganger (as Mentor & Protégé)' : 'Mentor & Protégé';
@@ -87,7 +87,7 @@ export default {
       },
     }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 12 → 6
-    m('proselytizer', 'Proselytizer', 3, 3,'Whenever you recruit, +1 follower.', {
+    m('proselytizer', 'Proselytizer', 3, 3,'Whenever you recruit, +1 follower.', { f: 2, // +1 follower (Cory, 2026-10-25)
       // a recruit is a member or a follower purchase (Cory, 2026-10-21); not its own arrival
       onRecruit(ctx, owner, card, by, what) { if (by === owner && what.member?.uid !== card.uid) owner.bonus += 1; },
     }),

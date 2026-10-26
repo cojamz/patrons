@@ -371,7 +371,8 @@ const echoQ = {
 
   members: [
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
-    m('evergreen', 'Busker', 1, 3, 'Now and at round start: +2 green.', {
+    m('evergreen', 'Busker', 1, 2, // Cory, 2026-10-25: cost 3 (was 4)
+      'Now and at round start: +2 green.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', 2); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 2); },
     }),
@@ -437,7 +438,7 @@ const echoQ = {
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
     // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
-    m('doppel', 'Doppelganger', 2, 2, 'When recruited: it becomes a copy of one of your members.', {
+    m('doppel', 'Doppelganger', 2, 2, 'When recruited: it becomes a copy of one of your members.', { round: 3, // joins in round III (Cory, 2026-10-25)
       onRecruited(ctx, owner, card) {
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && (c.copy || !['doppel', 'impostor'].includes(c.def.key)));
         if (!own.length) return;
@@ -447,7 +448,7 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('impostor', 'Impostor', 2, 2, 'When recruited: it becomes a copy of a rival’s member.', {
+    m('impostor', 'Impostor', 2, 2, 'When recruited: it becomes a copy of a rival’s member.', { round: 3, // joins in round III (Cory, 2026-10-25)
       onRecruited(ctx, owner, card) {
         const rivals = ctx.rivals(owner).flatMap(p => ctx.membersOf(p)).filter(c => c.copy || !['doppel', 'impostor'].includes(c.def.key));
         if (!rivals.length) return;

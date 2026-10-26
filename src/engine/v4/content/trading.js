@@ -205,7 +205,12 @@ const trading = {
   // Cory's 12 (2026-10-22, design/spheres/white-members-2026-10-22.md). Prices are Claude's educated guesses
   // (white + any, followers printed); names marked new are Claude's fill-ins.
   members: [
-    m('shopkeeper', 'Shopkeeper', 2, 2, 'Now and at round start: +2 white.', { now: true,
+    // Recluse moves here from Blue (Cory, 2026-10-25: "yes"), so a seat with few members has a payoff
+    m('recluse', 'Recluse', 2, 2, 'Game end: +2 followers per rival with more members than you.', {
+      onGameEnd: (ctx, owner) => 2 * ctx.rivals(owner).filter(o => ctx.memberCount(o) > ctx.memberCount(owner)).length,
+    }),
+    // Cory, 2026-10-25: cost 3 (was 4), so White has a cheap starter
+    m('shopkeeper', 'Shopkeeper', 2, 1, 'Now and at round start: +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
     m('heiress', 'Heiress', 3, 2, 'Once per game: +1 white per member you have.', { f: 2,

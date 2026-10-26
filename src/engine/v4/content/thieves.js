@@ -365,7 +365,7 @@ const thieves = {
         if (buyer !== owner && tier && tier.get >= 5) autoSteal(ctx, owner, buyer, 'Extortionist', 2);
       },
     }),
-    m('watchdog', 'Bodyguard', 5, 3, 'Rivals can’t steal from you.', {
+    m('watchdog', 'Bodyguard', 5, 3, 'Rivals can’t steal from you.', { f: 2, // +1 follower (Cory, 2026-10-25)
       guardSteal: () => true,
     }),
     m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2 }),

@@ -365,7 +365,7 @@ const market = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && !ctx.shopCards().some(c => ctx.payChoices(owner, c.uid, {}).length),
     }),
-    m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true }),
+    m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true, f: 2 }),
     m('windowdresser', 'Window Dresser', 2, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx, owner) {
         ctx.log(`${owner.name}'s Window Dresser: send 3 shop members to the bottom of the pile.`);

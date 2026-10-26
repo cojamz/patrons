@@ -1031,6 +1031,12 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   const useRe = new RegExp(`^${an} (?:uses|used) (.+?)(?::|\\.$)`);
   const placeAt = seg[0].findIndex(l => placeRe.test(l));
   const usedFirst = (placeAt < 0 ? seg[0] : seg[0].slice(0, placeAt)).map(l => (l.match(useRe) || [])[1]).filter(Boolean);
+  // a Use that logs only its own lines ("Ana's Tribute Band: +2 red.", no "Ana uses …") still leads the head
+  for (const c of Object.values(end.cards)) {
+    if (!c.used || start.cards[c.uid]?.used || !A.members.includes(c.uid)) continue;
+    const n = defById(c.def).name, at = seg[0].findIndex(l => l.startsWith(`${A.name}'s ${n}`));
+    if (at >= 0 && (placeAt < 0 || at < placeAt) && !usedFirst.includes(n)) usedFirst.push(n);
+  }
   for (const n of usedFirst) { const k = out.indexOf(`used ${n}`); if (k >= 0) out.splice(k, 1); } // said once, in the head
   if (!place && !out.length && !usedFirst.length) return null;
   const did = place ? (joined ? `joined ${nm(joined.id)} on ${space} (Squatter)` : `took ${space}`) : null;
