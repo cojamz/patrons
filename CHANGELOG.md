@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.92 — 2026-10-26 — unreleased
+
+- Greatest Hits: you pick the order of its copies by clicking your lit spaces on the wheel (playtester Maxwell's idea)
+
 ## v0.8.91 — 2026-10-26 — unreleased
 
 - Promote's and Demote's picker shows every player's row whole
