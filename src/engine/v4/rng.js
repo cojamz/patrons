@@ -14,13 +14,16 @@ export function shuffleInPlace(state, arr) {
   return arr;
 }
 
-// Stateless helper for bots: a small RNG from a numeric seed.
+// Stateless helper for bots: a small RNG from a numeric seed. Its position is readable and settable as `.state`
+// (seededRandom(r.state) continues exactly where r is), so a bot can think in a worker and hand the draws back.
 export function seededRandom(seed) {
   let s = seed >>> 0;
-  return () => {
+  const next = () => {
     let t = (s = (s + 0x6d2b79f5) >>> 0);
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+  Object.defineProperty(next, 'state', { get: () => s, set: v => { s = v >>> 0; } });
+  return next;
 }

@@ -19,6 +19,7 @@ import { randomFreeEmoji, settleEmojis } from '../emojiPick.js';
 import { createEmitter, randomId } from './emitter.js';
 import { moveProblem, normalizeMove } from './local.js';
 import { BUILD, CONTENT_HASH, newGame, step, trackState, botStep, reportProblem } from './record.js';
+import { askBot } from './botThink.js';
 
 /** Shown when a room was made by a build with different rules content (a deploy happened in between). */
 export const VERSION_MISMATCH = 'That room is on a different version of Cults. Refresh this page and try again; if it still won’t join, the host should refresh and make a new room.';
@@ -826,13 +827,25 @@ function startHost({ transport, base, getRoom, botDelayMs }) {
     const seat = cur.pending.player;
     if (!botPlays(seat)) return;
     const V = ver;
-    botTimer = setTimeout(() => {
+    const seedFor = st => ((st.seed ?? 1) ^ Math.imul(V, 2654435761)) >>> 0;
+    // In a browser the bot starts thinking in a worker now, during the delay (same seed, same move); with no
+    // worker or no usable answer it thinks here when the delay ends, as always.
+    const thought = cur;
+    const asked = askBot(cur, seedFor(cur));
+    botTimer = setTimeout(async () => {
       botTimer = null; // fired: a stale id here would stop roomChanged() from ever rescheduling
+      const answer = asked ? await asked : null;
       enqueue(async () => {
         if (stopped || ver !== V || !cur.pending || cur.pending.player !== seat || !botPlays(seat)) return;
-        const rand = seededRandom(((cur.seed ?? 1) ^ Math.imul(V, 2654435761)) >>> 0);
-        // a bot move that throws is logged and replaced by the first option that applies cleanly; the table is told
-        const r = botStep(cur, st => chooseBotMove(st, rand), { tag: 'v4 host', seat, report: notify });
+        let r = null;
+        if (answer && cur === thought && isLegal(cur, answer.move)) {
+          try { r = { state: step(cur, answer.move), move: answer.move }; } catch { r = null; }
+        }
+        if (!r) {
+          const rand = seededRandom(seedFor(cur));
+          // a bot move that throws is logged and replaced by the first option that applies cleanly; the table is told
+          r = botStep(cur, st => chooseBotMove(st, rand), { tag: 'v4 host', seat, report: notify });
+        }
         if (!r.state) return; // no option applies at all: the 'stuck' notice says the game can't continue
         const ok = await commit(r.state, { mid: `bot-${V}`, seat, option: r.move.option, by: 'bot' });
         if (!ok && !stopped && ver === V) setTimeout(scheduleBot, Math.max(50, botDelayMs)); // e.g. offline: try again

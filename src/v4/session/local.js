@@ -3,6 +3,7 @@ import { isLegal, chooseBotMove, setBotLevels } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { createEmitter } from './emitter.js';
 import { newGame, step, trackState, botStep } from './record.js';
+import { askBot } from './botThink.js';
 import { settleEmojis } from '../emojiPick.js';
 
 /**
@@ -150,22 +151,38 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
 
   const canUndo = () => !destroyed && checkpointValid(checkpoint, state);
 
+  let turn = 0; // bumps on every schedule(): a bot's answer for an older turn is dropped
   function schedule() {
     clearTimeout(timer);
     timer = null;
+    const my = ++turn;
     const p = state.pending;
     if (destroyed || roundHold || state.over || !p || state.players[p.player].kind !== 'bot') return;
     // (no hold after a buy: the payment step, with Back, is the safety net); a function reads the speed setting live
     const hold = typeof botDelayMs === 'function' ? botDelayMs() : botDelayMs;
-    timer = setTimeout(() => {
+    // In a browser the bot thinks in a worker from the moment its turn arrives, so the hold hides the thinking and
+    // none of it lands on the main thread mid-spin. Its draws start from this rng's position and come back with
+    // the answer, so the game goes exactly as if it had thought here. No worker (tests), or no usable answer:
+    // it thinks here when the hold ends, as always.
+    const asked = askBot(state, rand.state);
+    let held = false, answer;
+    const go = () => {
+      if (my !== turn || !held || (asked && answer === undefined)) return;
       timer = null;
       if (destroyed || roundHold || !mayMove()) return;
+      if (answer && isLegal(state, answer.move)) {
+        let next = null;
+        try { next = step(state, answer.move); } catch { next = null; }
+        if (next) { rand.state = answer.rng; apply(answer.move, next); return; }
+      }
       // A bot move that throws never stalls the game silently: it's logged, the first option that applies cleanly
       // is played instead, and a notice is reported (record.js reportProblem). Only if no option applies does the
       // game stop, with a 'stuck' notice.
       const r = botStep(state, st => chooseBotMove(st, rand), { tag: 'v4 local' });
       if (r.state) apply(r.move, r.state);
-    }, hold);
+    };
+    if (asked) asked.then(a => { answer = a || null; go(); });
+    timer = setTimeout(() => { held = true; go(); }, hold);
   }
   schedule();
 
@@ -213,6 +230,6 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     },
     get mySeats() { return [...mySeats]; },
     get info() { return info(); },
-    destroy() { destroyed = true; clearTimeout(timer); subs.clear(); },
+    destroy() { destroyed = true; turn += 1; clearTimeout(timer); subs.clear(); },
   };
 }
