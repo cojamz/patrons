@@ -32,6 +32,11 @@ const mech = prose.match(/\b(hooks?|gates?|repo|mirror(ed)?|orientation|harness|
 if (mech.length >= 3) hard.push(`too much machinery (${[...new Set(mech.map(m => m.toLowerCase()))].join(', ')}); say what changes for Cory in everyday words`);
 if (/\bnetlify\b/i.test(prose)) hard.push("don't mention Netlify; it's retired and its red check is noise (Cory corrected this twice)");
 
+// Cory, Oct 21 and Oct 25 ("it's rarely clear from the threads what my decision is"): a real message ends with his decision or says none is needed.
+const last = (lines[lines.length - 1] || '').trim();
+if (lines.length >= 3 && numbered < 1 && !/\?\s*(\[[^\]]*\])?\s*$/.test(last) && !/nothing needed from you/i.test(text))
+  hard.push('end with the numbered decision, a question for him, or "Nothing needed from you."');
+
 const soft = [];
 const maxLines = numbered >= 2 ? Math.max(8, numbered + 3) : 8;
 if (lines.length > maxLines) soft.push(`${lines.length} lines (cap ${maxLines}); put the rest in a file and link it`);

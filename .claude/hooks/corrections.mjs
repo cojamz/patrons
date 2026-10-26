@@ -13,7 +13,11 @@ if (!bodies.length) process.exit(0);
 
 const CUES = [/\bno[,.!]/i, /\bdon'?t\b/i, /\bstop\b/i, /\bnot relevant\b/i, /\bi (said|told you|asked)\b/i, /\bagain\b/i,
   /\bwhy (are|did|do) you\b/i, /\bwhat the (fuck|hell)\b/i, /\btoo (long|much|aggressive|slow)\b/i, /\bslop\b/i,
-  /\bthat'?s (wrong|not)\b/i, /\bnever\b/i, /\binstead\b/i, /\bshould(n'?t)? (be|have)\b/i, /\bidk what\b/i];
+  /\bthat'?s (wrong|not)\b/i, /\bnever\b/i, /\binstead\b/i, /\bshould(n'?t)? (be|have)\b/i, /\bidk what\b/i,
+  // Oct 26 weekly review: a week of corrections slipped past the list above ("you aren't doing a very good job keeping me updated").
+  /\byou (aren'?t|are not|still don'?t|never)\b/i, /\bnot (a )?(very )?good\b/i, /\bmore plainly\b/i, /\bwhat'?s my decision\b/i,
+  /\?{3,}/, /\bby what measure\b/i, /\boverthought\b/i, /\bdoesn'?t need\b/i, /\bwhy (is|are) (it|these|this)\b/i, /\bdo you understand\b/i,
+  /\bfrom now on\b/i, /\bso (strangely|piecemeal)\b/i, /\bskeptical\b/i];
 const STOP = new Set('the a an and or but to of in on for with is it that this you your i me my we our be are was were what how why just so not no do dont don\'t its it\'s at as by from about'.split(' '));
 const words = t => new Set(t.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !STOP.has(w)));
 
@@ -21,13 +25,19 @@ const dir = existsSync('/mnt/project-files') ? '/mnt/project-files/harness' : `$
 const file = process.env.CULTS_CORRECTIONS_FILE || `${dir}/corrections.jsonl`;
 let past = [];
 try { past = readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)); } catch {}
+// Corrections folded into the rules count too, so a repeat is caught even when the queue missed the first one.
+let logged = [];
+try {
+  const rules = readFileSync(`${process.env.CLAUDE_PROJECT_DIR || '.'}/.claude/rules/working-with-cory.md`, 'utf8');
+  logged = (rules.split('## Changelog')[1] || '').split('\n').filter(l => l.startsWith('- ')).map(l => ({ text: l.slice(2) }));
+} catch {}
 
 const notes = [];
 for (const body of bodies) {
   const hits = CUES.filter(r => r.test(body)).length;
   if (!hits || past.some(p => p.text === body)) continue;
   const w = words(body);
-  const similar = past.filter(p => {
+  const similar = [...logged, ...past].filter(p => {
     const v = words(p.text); const inter = [...w].filter(x => v.has(x)).length;
     return inter >= 2 && inter / Math.min(w.size, v.size || 1) >= 0.3;
   });
