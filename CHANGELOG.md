@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.82 — 2026-10-25 — unreleased
+
+- Round decks: round II and III members are shuffled into the deck when their round starts (cost 3 or less round I, 4 round II, 5 and up round III).
+
 ## v0.8.81 — 2026-10-25 — unreleased
 
 - Member decks: Shopkeeper and Busker cost 3; Recluse joins White; Stylist leaves Blue; Proselytizer, Mentor & Protégé, Bodyguard and Shopaholic are worth 1 more follower.
