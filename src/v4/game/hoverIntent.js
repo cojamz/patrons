@@ -114,6 +114,8 @@ export function claim(id, close) {
   current = { id, close };
 }
 export function unclaim(id) { if (current && current.id === id) current = null; }
+/** Another card holds the screen (not `id`'s). */
+export const claimedByOther = id => !!(current && current.id !== id);
 
 /** Where the pointer is now (null before it has moved). */
 export const pointer = () => pt;

@@ -11,7 +11,7 @@ import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
 import { Popover } from './parts.jsx';
-import { aimAt, arrived, heading, over, holdCard, dropCard, busyWith, claim, unclaim } from './hoverIntent.js';
+import { aimAt, arrived, heading, over, holdCard, dropCard, busyWith, claim, unclaim, claimedByOther } from './hoverIntent.js';
 import { Who } from './Glyphs.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
@@ -73,7 +73,10 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     pending.current = true;
     setOpen(o => o || { el: ref.current, pinned: false, hidden: true });
     // no wait (Cory, 2026-10-25): drawn hidden and placed this frame, shown the next, so it opens whole where it stays
-    timer.current = setTimeout(() => { pending.current = false; setOpen(o => (!o ? { el: ref.current, pinned: false } : o.hidden ? { ...o, hidden: false } : o)); }, HOVER_OPEN_MS);
+    // with another card up, a tip the pointer only passes over doesn't take its place: it waits that card's close beat
+    // (sweeping the wheel crossed the shop's header tip and flickered the space card shut: info.mjs d)
+    const wait = HOVER_DELAY_MS <= 0 && claimedByOther(me.current) ? Math.max(HOVER_OPEN_MS, MO.hoverClose) : HOVER_OPEN_MS;
+    timer.current = setTimeout(() => { pending.current = false; setOpen(o => (!o ? { el: ref.current, pinned: false } : o.hidden ? { ...o, hidden: false } : o)); }, wait);
   };
   // crossing toward another open card: this one stays shut (it opens on the next move once the crossing is over)
   // (the short detour allowance doesn't hold back a neighbour: moving along the row opens the next member at once,
