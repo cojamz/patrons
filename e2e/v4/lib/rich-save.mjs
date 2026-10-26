@@ -4,9 +4,9 @@ import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/ind
 import { seededRandom } from '../../../src/engine/v4/rng.js';
 import { buildStamp } from './stamp.mjs';
 
-export function richSave(seed = 4) {
+export function richSave(seed = 4, rules) {
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
-  let s = createGame({ seats, seed });
+  let s = createGame({ seats, seed, rules });
   s.build = buildStamp(); // this build's stamp, or the app sets the save aside as "older version"
   const rand = seededRandom(seed);
   for (let n = 0; n < 500 && !(s.round === 1 && s.pending && s.pending.player === 0 && s.pending.kind === 'place'); n++) s = applyMove(s, chooseBotMove(s, rand));

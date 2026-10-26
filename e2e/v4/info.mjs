@@ -657,7 +657,7 @@ try {
 
   // (q) every shop card and every chair's member opens its card, whole on screen and on top; then the pay dialog
   {
-    const save = richSave();
+    const save = richSave(4, { roundDecks: 0 }); // the pay dialog needs a gold member, which round decks hold back until round III
     const st = save.state;
     // every chair holds members (one with Penny Pincher and a discount: the pay dialog's rule-changers)
     const give = (pid, def) => {
