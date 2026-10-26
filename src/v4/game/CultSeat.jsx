@@ -209,7 +209,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           const art = cardDef(state, p.artifact), q = artifactColor(state, p.artifact);
           return <Tip className="cs-artifact" data-artifact={p.artifact} label={art.name} content={<p><Rich text={art.text} /></p>}><ArtifactTile q={q} res={q ? quadrant(q).resource : 'colorless'} title={`Artifact: ${art.name}`} /></Tip>;
         })()}
-        <b className="cs-member-count num" data-members={nMembers} title="Members: each card counts its printed follower value, or its stated member count if higher">{nMembers}<span> members</span></b>
+        <b className="cs-member-count num" data-members={nMembers} title="Members: each card counts its printed follower value, or its stated member count if higher">{nMembers}<span> member{nMembers === 1 ? '' : 's'}</span></b>
         {/* Lie Low and the like: no one can steal from this seat this round (w2b #21). A small shield under the member
             count (Cory's todo: the words crowded the row); its hover says it in words, the seat card too */}
         {safe && <small className="cs-safe" data-safe="1" role="img" aria-label="safe this round" title={`Safe this round: no one can steal members or resources from ${mine ? 'you' : p.name} until it ends`}><SafeShield /></small>}

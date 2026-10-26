@@ -119,6 +119,8 @@ h1,h2,h3{font-family:var(--serif)}
     background:var(--table-2);box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.18)),0 4px 12px rgba(0,0,0,.45);
     font:500 var(--fs-2)/20px var(--sans);white-space:nowrap;pointer-events:none;animation:rise .2s ease-out}
   .lt > .lt-seat > .seat-stolen .pip.glyph{width:.85em;height:.85em;vertical-align:-.1em}
+  /* on your own seat it stays until your next turn, everything rivals took since yours (panel Oct 26): it may wrap */
+  .lt > .lt-seat.mine > .seat-stolen{white-space:normal;max-width:calc(100% - 28px);text-align:right}
   /* the right column: the turns since yours, from the top (the turn card tells the live turn at its foot) */
   .app.game.lt > .lt-since{grid-column:3;grid-row:1 / 4;align-self:center;max-height:calc(100% - 140px)}
   /* you, wherever you land: a cream edge */

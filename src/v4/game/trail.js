@@ -24,10 +24,29 @@ function finish(trail, prev, s) {
   const story = tell(trail, c, end, s);
   if (!story) return;
   trail.n += 1;
-  trail.stories.push({ ...story, key: c.key, round: c.round, n: trail.n, endMoves: s.moves, acc: c });
+  const lost = c.actor === trail.me ? null : seatLoss(c.start, end, trail.me);
+  trail.stories.push({ ...story, key: c.key, round: c.round, n: trail.n, endMoves: s.moves, acc: c, ...(lost ? { lost } : {}) });
   if (trail.stories.length > MAX_STORIES) trail.stories.splice(0, trail.stories.length - MAX_STORIES);
   // only the latest few keep their states (an undo can reopen them)
   for (const st of trail.stories.slice(0, -3)) st.acc = null;
+}
+
+/**
+ * What a rival's turn took from your own seat, read off the states: { res: { color: n }, f: n, gone: [names],
+ * came: [names] } or null when it took nothing. Your seat shows it until your next turn (panel Oct 26: a swap or a steal
+ * through a chain of copies showed nowhere but the log). Gifts aren't losses: only drops count.
+ */
+export function seatLoss(a, b, me) {
+  if (me == null || !a || !b || !a.players[me] || !b.players[me]) return null;
+  const p0 = a.players[me], p1 = b.players[me];
+  const res = {};
+  for (const r of b.resources || []) { const d = (p0.res[r] || 0) - (p1.res[r] || 0); if (d > 0) res[r] = d; }
+  const f = Math.max(0, (p0.bonus || 0) - (p1.bonus || 0));
+  const name = (s, u) => (s.cards[u] ? cardDef(s, u).name : 'a member');
+  const gone = p0.members.filter(u => !p1.members.includes(u)).map(u => name(a, u));
+  if (!gone.length && !f && !Object.keys(res).length) return null;
+  const came = gone.length ? p1.members.filter(u => !p0.members.includes(u)).map(u => name(b, u)) : [];
+  return { res, f, gone, came };
 }
 
 /**

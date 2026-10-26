@@ -23,7 +23,7 @@ import { useHoverCards, HoverCardLayer, usePreviewWarmup } from './HoverCards.js
 import { replayIntro } from '../Intro.jsx';
 import Chronicle from './Chronicle.jsx';
 import SinceStrip from './SinceStrip.jsx';
-import { createTrail, feed, liveStory, sinceYourTurn } from './trail.js';
+import { createTrail, feed, liveStory, sinceYourTurn, seatLoss } from './trail.js';
 import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import FinalScore from './FinalScore.jsx';
@@ -560,6 +560,33 @@ function PromptActions({ optionFor, onPick, afterPurchase = false }) {
   );
 }
 
+/**
+ * What rivals took from your seat since your last turn, one clause per rival, oldest first: "P4 took 1 green 1 follower
+ * · P2 swapped your Busker for Doorman" (Rich turns the amounts into dots and the follower mark). '' when nothing.
+ */
+export function lossWords(list, players) {
+  const by = new Map();
+  for (const { actor, lost } of list || []) {
+    const m = by.get(actor) || { res: {}, f: 0, gone: [], came: [] };
+    for (const [r, n] of Object.entries(lost.res)) m.res[r] = (m.res[r] || 0) + n;
+    m.f += lost.f; m.gone.push(...lost.gone); m.came.push(...lost.came);
+    by.set(actor, m);
+  }
+  const out = [];
+  for (const [actor, m] of by) {
+    const name = players[actor] ? players[actor].name : 'A rival';
+    const amounts = [...Object.entries(m.res).map(([r, n]) => `${n} ${r}`), ...(m.f ? [`${m.f} follower${m.f === 1 ? '' : 's'}`] : [])].join(' ');
+    const names = l => l.join(', ');
+    const swap = m.gone.length && m.came.length;
+    const parts = [
+      swap ? `swapped your ${names(m.gone)} for ${names(m.came)}` : m.gone.length ? `took your ${names(m.gone)}` : null,
+      amounts ? `${swap ? 'and took ' : m.gone.length ? 'and ' : 'took '}${amounts}` : null,
+    ].filter(Boolean);
+    out.push(`${name} ${parts.join(' ')}`);
+  }
+  return out.join(' · ');
+}
+
 const verbFor = kind => ({ setup: 'drafting a resource', place: 'placing a minion', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
 function SetupOrderCue({ state, me }) {
@@ -789,6 +816,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       live: now ? { pid: now.actor, text: now.text, live: true, n: `c${t.cur.key}` } : null,
       told: tl && tl.round === live0.round && !live0.over ? { pid: tl.actor, text: tl.text, live: false, n: `t${tl.n}` } : null,
       touched: [...new Set(fresh.flatMap(st => st.touched))],
+      // what rivals took from your seat since your last turn, the turn in play included (seatLoss, trail.js)
+      lost: mySeats.length === 1 ? [
+        ...sinceYourTurn(t, mySeats).filter(st => st.lost).map(st => ({ actor: st.actor, lost: st.lost })),
+        ...(t.cur && t.last && t.cur.actor !== mySeats[0] && t.cur.round === live0.round ? [{ actor: t.cur.actor, lost: seatLoss(t.cur.start, t.last, mySeats[0]) }].filter(x => x.lost) : []),
+      ] : [],
     };
   }, [live0]); // eslint-disable-line react-hooks/exhaustive-deps
   // the card on screen: this turn's, as it builds; else the one that just passed, until it has held and folded
@@ -796,6 +828,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const toldCard = !toldShown ? null : turnCard && turnCard.n === toldShown.n ? (turnCard.gone ? null : turnCard) : toldShown;
   const cardNow = story.live || toldCard;
   const since = story.since;
+  const lostText = lossWords(story.lost, state.players);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const prevState = useRef(physicalState); // the state the table last committed (the flight effect moves it on)
@@ -1528,7 +1561,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               {pid == null ? null : (
                 <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={!!(pend && pend.player === pid && !state.over)} hover={hover} optionFor={pid === me ? live : undefined} onPick={shopPick} pick={pickParts[pid] || null} />
               )}
-              {pid != null && stolen.filter(x => x.pid === pid).map(x => <div key={x.n} className="seat-stolen" role="status" data-stolen={pid}><Rich text={x.text} /></div>)}
+              {pid != null && pid === me && lostText && <div className="seat-stolen" role="status" data-stolen={pid}><Rich text={lostText} /></div>}
+              {pid != null && !(pid === me && lostText) && stolen.filter(x => x.pid === pid).map(x => <div key={x.n} className="seat-stolen" role="status" data-stolen={pid}><Rich text={x.text} /></div>)}
             </section>
           ))}
           <section className="lt-shop" data-region="shop" aria-label="Shop">
