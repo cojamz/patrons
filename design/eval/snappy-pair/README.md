@@ -22,9 +22,11 @@ Steady frames beat fast ones. Hovers show without a wait and delay the hide inst
 5. Rival turns at 0.65 of your timing, beats overlapping; recruits and follower buys keep full time.
 6. Pulses, glows and the bought-card ring animate only transform and opacity; playChain finds places up front.
 
+## Built late 2026-10-25 (on the branch; publish after Cory's game)
+7. Bots think in a worker (src/v4/session/botWorker.js, botThink.js), local and online host; rng carries its .state so moves match.
+8. One frame loop (src/v4/game/clock.js) for the chain clock, holdStack and Tick; flying pieces pooled (flight.js takePiece); composite-keyframes.test.js guards transform/opacity-only keyframes (two named box-shadow exceptions); flight layers contained.
+
 ## Next engineering (Claude's, in order)
-- Bots think off the main thread (a worker, as previewWorker.js): eng-audit S2, 5-7h.
-- One animation clock and a reusable layer of flying pieces, keyframes only transform/opacity, with a test: S3, 8-10h.
 - Snappy gate: acknowledgment bar (first visible change < 50 ms p95), p95/max, no animation frame over 50 ms at 4x CPU.
 - cult-hop (lamp-b.css:256) still animates filter on a member's sprite mid-chain.
 

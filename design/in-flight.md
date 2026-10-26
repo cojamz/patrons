@@ -3,7 +3,7 @@
 Nothing is running. Live: v0.8.62 (main:play/build.json, source 07ec995). Before this: design/archive/in-flight-2026-10-21-to-23.md.
 
 Threads and where each stands
-- Snappy pair (Make the game feel snappy): v0.8.84 live (hovers open at once and close after 200 ms, choices light as the last piece lands, rival turns ×0.65 except recruits and buys, compositor-only pulses, round deck shuffle-in). Next: bots think in a worker (design/eval/snappy-pair/README.md, eng-audit S2). New gate: e2e/v4/midchain.mjs.
+- Snappy pair (Make the game feel snappy): v0.8.84 live (hovers open at once and close after 200 ms, choices light as the last piece lands, rival turns ×0.65 except recruits and buys, compositor-only pulses, round deck shuffle-in). Bot worker and shared clock slices 1-2 are on the branch, waiting to publish until Cory's playtest is over (bash scripts/v4-play.sh HEAD after a quick check). New gate: e2e/v4/midchain.mjs.
 - Member structure: v0.8.71 live (Headhunter, Fixer, Window Shopper, Restocker, Timekeepers, Old Money; Bulk Buyer, Appraiser, Makeover cut). Sort of every color into kinds: /mnt/project-files/member-structure/. Waiting on Cory's read after play; names and prices are Claude's.
 - Action text review: v0.8.60 to v0.8.62 shipped. Waiting on Cory's #12 (how the wheel shows "+1" on long spaces). Owner of /review-text.
 - Engine start and round I: artifacts live (draft list fix v0.8.83) and round decks live (v0.8.82). Waiting on Cory's next call. Shuffle-in animation is with the snappiness thread.
