@@ -360,7 +360,7 @@ const thieves = {
       },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 10
-    m('extortionist', 'Extortionist', 3, 1, 'Whenever a rival buys 5 or more followers, steal 2 resources from that rival.', {
+    m('extortionist', 'Extortionist', 4, 2, 'Whenever a rival buys 5 or more followers, steal 2 resources from that rival.', {
       onBuyFollowers(ctx, owner, card, buyer, tier) {
         if (buyer !== owner && tier && tier.get >= 5) autoSteal(ctx, owner, buyer, 'Extortionist', 2);
       },
