@@ -4,6 +4,7 @@ import { browserPath } from './lib/browser.mjs';
 //  (k1) Ordering Peek's 4: the whole shop stays on screen beside them; the 4 are lit and tagged "pile", the shop isn't lit.
 //  (k2) Recruiting after Peek: all 4 stay beside the shop; the ones you can pay for are lit, the others recede.
 //  (k3) Nothing runs off the bottom of the window.
+//  (k4) Ordering Peek's 4, with or without the "affordable" toggle: every shop member steps well back (Mike's playtest, 2026-10-26).
 // Saves: e2e/v4/lib/peek-save.mjs. Server: $V4_URL if set, else its own `npx vite` on a free port from 5405.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -29,11 +30,12 @@ if (!base) {
 const errors = [];
 const browser = await chromium.launch({ executablePath: browserPath });
 
-async function open(tag, save) {
+async function open(tag, save, { fade = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`[${tag}] pageerror: ${e.message}`));
   await seedSave(page, save);
+  if (fade) await page.addInitScript(() => { try { localStorage.setItem('patrons.v4.shopFade', 'on'); } catch { /* blocked: the check below says so */ } });
   await page.goto(`${base}/?intro=0`, { timeout: 90000 });
   await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
   await page.click('[data-home="resume"]');
@@ -44,7 +46,7 @@ async function open(tag, save) {
 }
 const cards = page => page.$$eval('.lt-shop .lt-card[data-uid]', els => els.map(e => {
   const r = e.getBoundingClientRect();
-  return { uid: e.dataset.uid, lit: e.classList.contains('lit'), recede: e.classList.contains('recede'), pile: !!e.querySelector('.from-pile'), bottom: r.bottom };
+  return { uid: e.dataset.uid, lit: e.classList.contains('lit'), recede: e.classList.contains('recede'), pile: !!e.querySelector('.from-pile'), bottom: r.bottom, opacity: Number(getComputedStyle(e).opacity) };
 }));
 
 try {
@@ -54,7 +56,8 @@ try {
     if (extraShop) save.state.shop.push(...save.state.pile.splice(10, extraShop));
     const st = save.state;
     const tag = `${stage}-${st.shop.length}`;
-    const { ctx, page } = await open(tag, save);
+    // the "affordable" toggle on for the round III shop (Mike's playtest, 2026-10-26: it kept the shop lit beside Peek's 4)
+    const { ctx, page } = await open(tag, save, { fade: !!extraShop });
     const shown = await cards(page);
     const top4 = st.pile.slice(0, 4).map(String);
     for (const u of st.shop.map(String)) if (!shown.some(c => c.uid === u)) errors.push(`(k1/k2 ${tag}) shop member ${u} is not on screen`);
@@ -66,6 +69,10 @@ try {
     const lit = shown.filter(c => c.lit).map(c => c.uid).sort();
     if (stage === 'order') {
       if (lit.join() !== [...top4].sort().join()) errors.push(`(k1 ${tag}) lit ${lit.join(' ')}, want the peeked ${top4.join(' ')}`);
+      // (k4) only the 4 read as clickable: every shop member steps well back, affordable or not, toggle or not
+      await page.waitForTimeout(300);
+      const again = await cards(page);
+      for (const c of again) if (!top4.includes(c.uid) && c.opacity > 0.5) errors.push(`(k4 ${tag}) shop member ${c.uid} stays bright (opacity ${c.opacity}) beside Peek's 4`);
     } else {
       const can = st.pending.options.filter(o => o.kind === 'card' && o.fromPile).map(o => String(o.uid));
       const cant = top4.filter(u => !can.includes(u));

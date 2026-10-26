@@ -157,4 +157,7 @@
    under your pointer would unlock (data-after) or aims at (data-aim) comes back, so the hover's answer still reads. */
 .lt-shop .lt-shop-cards .lt-card.card.paper{transition:transform .12s ease,filter .15s,box-shadow .12s ease-out,background-color .12s ease-out,opacity .2s ease-out}
 .lt-shop .lt-shop-cards[data-fade="on"] .lt-card.card.paper[data-unaffordable]:not([data-after]):not([data-aim]){opacity:.4}
+/* Ordering Peek's 4 (Mike's playtest, 2026-10-26: with "affordable" on, the shop stayed bright beside the 4 and it was
+   unclear what to click): everything but the 4 steps well back, toggle or not, and stays readable */
+.lt-shop .lt-shop-cards[data-peek] .lt-card.card.paper:not(.can){opacity:.4}
 @media (prefers-reduced-motion:reduce){.lt-shop .lt-shop-cards .lt-card.card.paper{transition:none}}

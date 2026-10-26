@@ -94,3 +94,5 @@ Source: blind tester panel, 2026-10-26 (v0.8.86); fixed in v0.8.87 to v0.8.91.
 71. **A member's bubble cuts its rule off.** "Whenever a rival recruits more tha…". The bubble now shows two lines.
 72. **The artifact pick isn't in the rulebook.** Setup now explains it.
 73. **"1 members" on a seat.** Now "1 member".
+74. **Ordering Peek's 4, the shop stays as bright as the 4.** With "affordable" on, every affordable shop member stayed lit beside the peeked cards and it was unclear what to click (Mike, Oct 26; Cory: "definitely confusing"). The shop now steps well back while you order, toggle or not. Gate: peek.mjs k4.
+75. **"4 off your next member" doesn't let me buy a 1 color + 2 any member** (Mike, Oct 26). Not reproduced: with 4 off and an empty hand, every such member on the 2.0 colors is offered free at the recruit. Likely a misread (a choice other than a recruit was up); ask the player what was on screen if it comes again.

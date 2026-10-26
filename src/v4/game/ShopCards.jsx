@@ -156,7 +156,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   live.current = { onPick, onDenied, hover, detailed };
   const built = useRef(new Map()); // uid → { sig, el }
   return (
-    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-pile-extra={extra || undefined} data-fade={viewer && fade ? 'on' : undefined} aria-label="Shop">
+    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-pile-extra={extra || undefined} data-fade={viewer && fade ? 'on' : undefined} data-peek={peeking || undefined} aria-label="Shop">
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
