@@ -21,10 +21,15 @@ describe('message check hook (Cory voice gate)', () => {
     }
   });
   it('bounces a long message once, then lets the identical resend through', () => {
-    const t = `long ${Date.now()}\n` + 'line\n'.repeat(10);
+    const t = `long ${Date.now()}\n` + 'line\n'.repeat(10) + 'Nothing needed from you.';
     expect(check(t)).toMatch(/lines/);
     expect(check(t)).toBeNull();
     rmSync('/tmp/cults-message-check', { recursive: true, force: true });
+  });
+  it('bounces a real update that leaves his decision unclear', () => {
+    expect(check('Shipped the wheel fix.\nIt spins in 300ms now.\nNext is the shop.')).toMatch(/Nothing needed from you/);
+    expect(check('Shipped the wheel fix.\nIt spins in 300ms now.\nNothing needed from you.')).toBeNull();
+    expect(check('Shipped the wheel fix.\nIt spins in 300ms now.\nShip the shop next? [yes]')).toBeNull();
   });
   it('ignores times and paths inside code and links', () => {
     expect(check('Log is `run-23:40.txt`, see https://x.io/a—b')).toBeNull();

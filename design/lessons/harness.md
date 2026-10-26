@@ -5,3 +5,4 @@
 - 2026-10-20 · Claude told Cory about the Netlify check three times · infrastructure that can't affect him is never reported · message check bounces it; orientation says so
 - 2026-10-20 · "v3"/"v4" meant nothing to Cory · internal labels never reach him · message check bounces them
 - 2026-10-20 · Cory called the harness report "total gibberish": numbered moves, file names and mechanisms · tell him what changes for him in everyday words; mechanisms only if he asks · working-with-cory.md "Talking to him"
+- 2026-10-26 · The corrections catcher logged nothing all week while ~17 corrections were folded into the rules by hand · test a catcher against the week's real quotes, and count the rules changelog as past corrections
