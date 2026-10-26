@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.90 — 2026-10-26 — unreleased
+
+- Promote's and swaps' rows fade at the edge when there are more; the space's hover closes when its question opens; the swap hover says '9 members for 7 shop members'; round summaries say gained/lost, not won; a member's bubble shows its whole rule; the rules explain the artifact pick
+
 ## v0.8.89 — 2026-10-26 — unreleased
 
 - Your seat keeps a line of what rivals took from you since your last turn: resources, followers, members, and swaps ('P2 swapped your Busker for Doorman'); seats say '1 member'
