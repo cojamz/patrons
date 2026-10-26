@@ -16,7 +16,7 @@
 // from src/v4/motion.js at the viewer's speed. A state without an effect stream (an online guest, a catch-up) falls
 // back to gains.js, which reads the change of state.
 import * as clock from './clock.js';
-import { MO, RIVAL, flightMs, nextBeatAt, speedScale, streamGap, slowed } from '../motion.js';
+import { MO, RIVAL, SPEEDS, flightMs, nextBeatAt, speedScale, streamGap, slowed } from '../motion.js';
 import { playerColor, roman } from '../format.js';
 import { play } from '../sound.js';
 import { gainsBetween } from './gains.js';
@@ -614,6 +614,10 @@ export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, ne
 }
 /** The longest a step may hold on screen: the chain's cap plus its breath and the floor (re-timing never goes past it). */
 export const holdCap = () => Math.round(2400 * speedScale()) + MO.breath + 400;
+/** The longest a step in a round may hold the table before the rest of its chain lands at once: Steady's cap even at
+ *  Relaxed, and half that while the table is `behind` (3+ steps waiting). A late-game recruit that sets off 4–6
+ *  members one by one held 7–9s at Relaxed, and the table fell minutes behind the game (Mike, Oct 26: "locking up"). */
+export const stepHoldCap = (behind = false) => Math.round((2400 * Math.min(speedScale(), SPEEDS.steady) + 400) * (behind ? 0.5 : 1));
 
 // ---------- the screen ----------
 // One clock for every chain on the table, run by the table's one frame loop (clock.js, which the count rolls share). It advances by at most two frames' worth per

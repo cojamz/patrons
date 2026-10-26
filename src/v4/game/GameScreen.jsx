@@ -35,7 +35,7 @@ import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, holdCap, installChainSkip, skipChain, onChainSkip, onChainEnd, onChainLanded, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, stepHoldCap, installChainSkip, skipChain, onChainSkip, onChainEnd, onChainLanded, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
 import { soundOn, onSound, setSound } from '../sound.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale, slowed } from '../motion.js';
@@ -121,6 +121,9 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   const dwellNext = useRef(0); // the hold the step being committed asks for (started once it's on screen)
   const remeasure = useRef(null); // how this step's hold follows from its chain's plan (retime: the measured plan)
   const timerAt = useRef(null);
+  // a step in a round never holds the table past stepHoldCap (director.js): what's left of its chain lands at once, as a click does
+  const capFor = useRef(null); // the step whose chain is capped, until it's on screen
+  const capTimer = useRef(null);
   const pace = useRef(null); // ?trace=1: this step's pacing record (perf.js summary().pace)
   const handedAt = useRef(null); // when the step now being drawn was handed to React
   const shownRef = useRef(first);
@@ -195,6 +198,8 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
       // pass, which holds a moment (MO.passHold).
       const plan = planChain(prev, next, { mine });
       waiting.current = motionOK() && plan.total > 0 ? next : null;
+      clearTimeout(capTimer.current);
+      capFor.current = waiting.current && next.round >= 1 && next.round === prev.round ? next : null;
       show(next, !!waiting.current);
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
       // (a rival's step that shows something stays on screen at least 400ms before the same bot's next step: motion.mjs m4)
@@ -236,6 +241,13 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     const w = waiting.current, mine = session.mySeats || [];
     if (w && !w.over && w.pending && mine.includes(w.pending.player)) finishPresentation();
   }), [finishPresentation, session]);
+  useLayoutEffect(() => {
+    const w = capFor.current;
+    if (!w || w !== table.shown) return;
+    capFor.current = null;
+    capTimer.current = setTimeout(() => { if (waiting.current === w && chainRunning()) skipChain(); }, stepHoldCap(queue.current.length >= 3));
+  }, [table.shown]);
+  useEffect(() => () => clearTimeout(capTimer.current), []);
   useLayoutEffect(() => {
     if (timer.current !== 'commit') return;
     const d = dwellNext.current;
