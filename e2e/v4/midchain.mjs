@@ -24,8 +24,13 @@ if (!resume) { console.error('midchain: the saved game did not resume'); process
 await resume.click();
 const moves = () => page.$eval('.app.game', e => Number(e.dataset.moves));
 let tried = 0, placed = null;
-for (let turn = 0; turn < 4 && placed == null; turn++) {
-  // your turn: place anywhere lit, then answer or end the turn until the bots are moving
+for (let turn = 0; turn < 8 && placed == null; turn++) {
+  // your turn: place anywhere lit (past a round's end card: Start round), then answer or end the turn until the bots move
+  for (let k = 0; k < 120 && !(await page.$('.slot.can .base')); k++) {
+    const next = await page.$('button:has-text("Start round")');
+    if (next) await next.click().catch(() => {});
+    await page.waitForTimeout(250);
+  }
   await page.waitForSelector('.slot.can .base', { timeout: 30000 });
   await page.waitForTimeout(300);
   await page.click('.slot.can .base');
