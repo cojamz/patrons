@@ -1,5 +1,5 @@
 // Summarize v4-hard-batch.mjs output. Usage: node scripts/v4-hard-batch-report.mjs <files.jsonl...>
-// Win share splits ties. Hard seats only, except the buy-followers-only line. A 4-seat table's even share is 25%.
+// Win share splits ties. Bot seats only, except the buy-followers-only line. A 4-seat table's even share is 25%.
 import { readFileSync } from 'node:fs';
 import { allQuadrantIds, quadrant } from '../src/engine/v4/index.js';
 import { defById } from '../src/engine/v4/content/index.js';
@@ -10,7 +10,7 @@ const rows = process.argv.slice(2).flatMap(f => readFileSync(f, 'utf8').trim().s
 const share = (r, p) => p.win ? 1 / r.players.filter(x => x.win).length : 0;
 const pct = x => `${Math.round(x * 100)}%`;
 const bump = (o, k, w) => { (o[k] ??= { n: 0, w: 0 }); o[k].n++; o[k].w += w; };
-const fol = {}, color = {}, member = {}, space = {}, offered = {}, buyer = { n: 0, w: 0 };
+const fol = {}, color = {}, member = {}, space = {}, offered = {}, buyer = { n: 0, w: 0 }, byCount = {}, art = {};
 for (const r of rows) {
   for (const m of r.shop) offered[m] = (offered[m] || 0) + 1;
   // colors: members of each color the winner owns vs another Hard seat
@@ -23,6 +23,8 @@ for (const r of rows) {
     const w = share(r, p);
     if (p.seat === r.buyer) { buyer.n++; buyer.w += w; continue; }
     for (const m of new Set(p.members)) bump(member, m, w);
+    bump(byCount, Math.min(p.memberCount ?? p.members.length, 8), w);
+    if (p.artifact) bump(art, p.artifact, w);
     for (const [m, f] of Object.entries(p.memberFollowers || {})) { (fol[m] ??= { n: 0, f: 0 }); fol[m].n++; fol[m].f += f; }
     for (const [k, c] of Object.entries(p.places)) { (space[k] ??= { uses: 0, win: 0, lose: 0, nw: 0, nl: 0 }); space[k].uses += c; }
   }
@@ -32,7 +34,11 @@ for (const r of rows) {
   for (const k of keys) for (const p of hard) { const c = p.places[k] || 0; if (p.win) { space[k].win += c; space[k].nw++; } else { space[k].lose += c; space[k].nl++; } }
 }
 const games = rows.length;
-console.log(`${games} games, 4 seats, random tables of 4 colors. Buy-followers-only seat: ${buyer.n} games, won ${pct(buyer.w / (buyer.n || 1))}.`);
+const lvl = [...new Set(rows.map(r => r.level || 'hard'))].join('+');
+console.log(`${lvl} bots. ${games} games, 4 seats, random tables of 4 colors. Buy-followers-only seat: ${buyer.n} games, won ${pct(buyer.w / (buyer.n || 1))}.`);
+console.log('\nWin share by members owned at game end (Hard seats; 8 = 8+; even share 25%):');
+for (const [k, v] of Object.entries(byCount).sort((a, b) => a[0] - b[0])) console.log(`  ${k}: ${pct(v.w / v.n)} of ${v.n} seats`);
+if (Object.keys(art).length) { console.log('\nArtifacts (owner win share):'); for (const [k, v] of Object.entries(art).sort((a, b) => b[1].w / b[1].n - a[1].w / a[1].n)) console.log(`  ${k}: ${pct(v.w / v.n)} of ${v.n}`); }
 console.log('\nColors (members of that color, winner vs other Hard seats, on tables with it):');
 for (const [q, v] of Object.entries(color).sort((a, b) => (b[1].gw / b[1].nw - b[1].gl / b[1].nl) - (a[1].gw / a[1].nw - a[1].gl / a[1].nl)))
   console.log(`  ${q}: on ${v.games} tables, winner ${(v.gw / (v.nw || 1)).toFixed(2)} vs others ${(v.gl / (v.nl || 1)).toFixed(2)}`);
