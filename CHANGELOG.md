@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.89 — 2026-10-26 — unreleased
+
+- Your seat keeps a line of what rivals took from you since your last turn: resources, followers, members, and swaps ('P2 swapped your Busker for Doorman'); seats say '1 member'
+
 ## v0.8.88 — 2026-10-26 — unreleased
 
 - Last Call keeps you waiting until everyone else is out of minions, even when a rival skips a turn after you take it. The shop no longer shows one member twice.
