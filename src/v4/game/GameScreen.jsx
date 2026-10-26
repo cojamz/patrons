@@ -582,6 +582,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const interactionState = moment && moment.board ? moment.board : settled0;
   // Counters and flying targets use physical state; ownership/options/order share one settled boundary.
   const state = useMemo(() => tableView(physicalState, interactionState), [physicalState, interactionState]);
+  // (for the mid-chain gate, e2e/v4/midchain.mjs: the spaces you can take in the newest state, while the table still shows an older one)
+  const liveOpen = physicalState !== interactionState && physicalState.pending && physicalState.pending.kind === 'place' && (session.mySeats || []).includes(physicalState.pending.player)
+    ? physicalState.pending.options.filter(o => o.q != null && o.i != null).map(o => `${o.q}-${o.i}`).join(',') || undefined : undefined;
   useAnyDot((state.quadrants || []).map(q => quadrant(q).resource)); // the "any" dot's four colors, where their quadrants sit
   const mySeats = session.mySeats || NO_SEATS;
   const pend = state.pending;
@@ -1412,7 +1415,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   if (phase === 'place') stepRef.current = 'place'; else if (phase === 'buy' || phase === 'pay') stepRef.current = 'buy';
   const step = phase === 'choose' ? stepRef.current : phase === 'pay' ? 'buy' : phase;
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-shop-details={shopDetails || undefined} data-phase={phase} data-seats={state.players.length} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-presentation-moves={interactionState.moves} data-animating={physicalState !== interactionState || undefined} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-member-pick={memberPicking || undefined} data-shop-details={shopDetails || undefined} data-phase={phase} data-seats={state.players.length} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-presentation-moves={interactionState.moves} data-animating={physicalState !== interactionState || undefined} data-live-open={liveOpen} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}
