@@ -969,6 +969,21 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
     if (a.to.kind === 'shop' && B && !B.rectOnly && B.animate && B.dataset && B.dataset.uid === String(a.uid)) { track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 })); continue; }
     if (B && !B.rectOnly && B.animate && B.dataset && B.dataset.uids === String(a.uid)) track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 }));
   }
+  // every place a beat will use, found now with the other reads (a lookup at beat time laid the page out mid-chain);
+  // a turn's chain (no round end: no re-sort, no going home, no fresh row) leaves seats and piles standing, so their
+  // rects are read now too. Stage items and the shop move: those stay live.
+  const still = !plan.atoms.some(a => a.op === 'sort' || a.op === 'home' || a.op === 'refill');
+  const pre = new Map();
+  for (const a of plan.atoms) {
+    if (!['pulse', 'point', 'hop', 'tug', 'piece', 'chip', 'stage'].includes(a.op)) continue;
+    for (const w of [a.from, a.to, a.place, a.toward]) if (w && typeof w === 'object' && w.kind) where(w);
+    if (!still) continue;
+    if (a.op === 'tug' && a.n && a.r) { const el = where(a.place); if (el && !el.rectOnly) pre.set(a, { tag: rectOf(el) }); }
+    if (a.op === 'stage' && a.kind !== 'space' && a.place) {
+      const el = where(a.place), seatEl = root.querySelector(`.lt-cult-seat[data-seat="${a.place.pid}"]`);
+      pre.set(a, { from: el && !el.rectOnly ? rectOf(el) : null, seat: seatEl ? rectOf(seatEl) : null });
+    }
+  }
   const firstLand = new Map();
   for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.to.kind === 'count' && !a.pay) {
     const el = where(a.to);
@@ -1051,13 +1066,15 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           return;
         }
         case 'hop': if (!skip) hopEl(where(a.place), MO.hop); return;
-        case 'stage': if (!skip) stageOut(root, a, ctx, where, chainId, mine); return;
+        case 'stage': if (!skip) stageOut(root, a, ctx, where, chainId, mine, pre.get(a)); return;
         case 'tug': {
           if (skip) return;
-          const el = where(a.place);
-          tug(el, where(a.toward), a.dur);
+          const el = where(a.place), toward = where(a.toward);
+          // (the pile's rect is read before the tug writes: measured up front, or here first)
+          const tagR = a.n && a.r && el && !el.rectOnly ? (pre.get(a) || {}).tag || el.getBoundingClientRect() : null;
+          tug(el, toward, a.dur);
           // what's taken says so on the victim's pile the moment it's taken: "−2 ●", gone as the handful lands
-          if (a.n && a.r) takeTag(el, a.n, dotHtml(root, a.r, a.owner));
+          if (tagR) takeTag(el, a.n, dotHtml(root, a.r, a.owner), tagR);
           return;
         }
         case 'card': {
@@ -1066,6 +1083,9 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           // its new chip in the buyer's crowd, which lands with its ring and sound
           const sn = snap && snap.get(a.uid);
           if (skip || !sn || !sn.rect) return;
+          // (the reads first: the chip and the hub, then the ghost goes in)
+          const chip = root.querySelector(`.lt-seat[data-pid="${a.to}"] [data-uids~="${a.uid}"]`) || placeEl(root, { kind: 'crowd', pid: a.to }, ctx);
+          const hub = hubRect(HUB_MEMBER) || sn.rect;
           const g = document.createElement('div');
           g.className = 'flight card-flight ghost-layer';
           g.dataset.born = String(Date.now());
@@ -1073,8 +1093,6 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px`, borderRadius: 'var(--corner, 8px)' });
           document.body.appendChild(g);
           if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
-          const chip = root.querySelector(`.lt-seat[data-pid="${a.to}"] [data-uids~="${a.uid}"]`) || placeEl(root, { kind: 'crowd', pid: a.to }, ctx);
-          const hub = hubRect(HUB_MEMBER) || sn.rect;
           const dx = hub.left + hub.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = hub.top + hub.height / 2 - (sn.rect.top + sn.rect.height / 2);
           const total = a.lift + a.toHub, k1 = a.lift / total;
           chain.flying++;
@@ -1089,19 +1107,20 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k1 + (1 - k1) * 0.55 }, { opacity: 0 }], { duration: total, fill: 'forwards' }));
           // the bought card says so before it leaves (H13): a warm ring comes up as it lifts and lets go as it flies. The
           // ring is its own empty box riding the same path: a shadow animated on the card itself repainted the whole
-          // card (its words, its portrait) every frame of the lift
+          // card (its words, its portrait) every frame of the lift. The ring's shadow is drawn once; only its opacity moves
           const ring = document.createElement('div');
           ring.className = 'flight card-ring ghost-layer';
           ring.dataset.born = g.dataset.born;
-          Object.assign(ring.style, { left: g.style.left, top: g.style.top, width: g.style.width, height: g.style.height, borderRadius: 'var(--corner, 8px)' });
+          Object.assign(ring.style, { left: g.style.left, top: g.style.top, width: g.style.width, height: g.style.height, borderRadius: 'var(--corner, 8px)',
+            boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', opacity: '0' });
           g.before(ring);
           track(ring.animate(path, { duration: total, fill: 'forwards' }));
           onFinish(anim, () => ring.remove());
           track(ring.animate([
-            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 0 },
-            { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 18px 3px rgba(255,200,120,.55)', offset: k1 },
-            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: Math.min(0.99, k1 + (1 - k1) * 0.4) },
-            { boxShadow: '0 0 0 0 rgba(255,214,140,0)', offset: 1 },
+            { opacity: 0, offset: 0 },
+            { opacity: 1, offset: k1 },
+            { opacity: 0, offset: Math.min(0.99, k1 + (1 - k1) * 0.4) },
+            { opacity: 0, offset: 1 },
           ], { duration: total, fill: 'forwards' }));
           slideShop(root, snap);
           if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total + a.show + a.fromHub }));
@@ -1240,7 +1259,12 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   const fdelta = new Map();
   for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.to.kind === 'count') fdelta.set(a.to.pid, (fdelta.get(a.to.pid) || 0) + (a.pay ? -a.by : a.by));
   for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.pay && a.to.kind !== 'count' && a.from && a.from.kind === 'count') fdelta.set(a.from.pid, (fdelta.get(a.from.pid) || 0) - a.by);
-  if ([...fdelta.values()].some(Boolean)) schedule(base + plan.total, skip => { for (const [pid, n] of fdelta) if (n) linger(where({ kind: 'count', pid }), n); });
+  if ([...fdelta.values()].some(Boolean)) schedule(base + plan.total, () => {
+    // every count read, then every delta written (one layout, not one per seat)
+    const at = [];
+    for (const [pid, n] of fdelta) if (n) { const el = where({ kind: 'count', pid }); if (el && !el.rectOnly) at.push([el, n, el.getBoundingClientRect()]); }
+    for (const [el, n, r] of at) linger(el, n, r);
+  });
   // what starts at once plays now, before this commit's first paint (the lifted card, the hidden chip, your minion's
   // stamp): never a frame of the end state first
   while (chain.queue.length && chain.queue[0].at <= chain.clock) chain.queue.shift().fn(false);
@@ -1250,9 +1274,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
 }
 
 /** "−2 ●" over a victim's pile as it's taken from (stage.css .take-tag). */
-function takeTag(el, n, dot) {
-  if (!el || el.rectOnly || typeof document === 'undefined') return;
-  const r = el.getBoundingClientRect();
+function takeTag(el, n, dot, r = el && !el.rectOnly ? el.getBoundingClientRect() : null) {
+  if (!el || el.rectOnly || !r || typeof document === 'undefined') return;
   if (!r.width) return;
   const b = document.createElement('b');
   b.className = 'take-tag ghost-layer';
@@ -1268,9 +1291,8 @@ function takeTag(el, n, dot) {
 /** A space or member flies out of its place onto the stage (stage.js; ActionStage.jsx draws it). */
 // a seat's follower change, lingering under its count
 const lingering = new Map();
-function linger(el, n) {
-  if (!el || el.rectOnly || typeof document === 'undefined') return;
-  const r = el.getBoundingClientRect();
+function linger(el, n, r = el && !el.rectOnly ? el.getBoundingClientRect() : null) {
+  if (!el || el.rectOnly || !r || typeof document === 'undefined') return;
   if (!r.width) return;
   const was = lingering.get(el);
   if (was) { clearTimeout(was.t); was.b.remove(); n += was.n; }
@@ -1305,10 +1327,11 @@ function memberLook(st, uid, def0 = null) {
   return { name: d.name, sprite: [d.id, spriteId(d.name)], sphere, color, text: d.text || '' };
 }
 
-function stageOut(root, a, ctx, where, chainId, mine = []) {
+function stageOut(root, a, ctx, where, chainId, mine = [], pre = null) {
   const st = ctx.state;
   const el = where(a.place);
-  const from = el && !el.rectOnly ? el.getBoundingClientRect() : null;
+  // (a member's chip and seat were measured up front on a turn's chain; a space on the wheel is read now)
+  const from = pre && pre.from ? pre.from : el && !el.rectOnly ? el.getBoundingClientRect() : null;
   if (a.kind === 'space') {
     const key = a.place.key;
     const [q, i] = String(key).split('-').map(Number);
@@ -1334,7 +1357,7 @@ function stageOut(root, a, ctx, where, chainId, mine = []) {
   if (!d) return;
   // its bubble pops out of the right side of its seat, level with its chip (Cory, 2026-10-18)
   const seatEl = root.querySelector(`.lt-cult-seat[data-seat="${pid}"]`);
-  const seatR = seatEl ? seatEl.getBoundingClientRect() : null;
+  const seatR = pre && pre.seat ? pre.seat : seatEl ? seatEl.getBoundingClientRect() : null;
   const k = stageItems().filter(it => it.kind === 'member' && !it.leaving && !it.recruit && it.pid === pid && it.chain === chainId).length;
   const at = seatR && seatR.width ? stagePlace(a.spot, bubbleRect(seatR, from, k)) : stageRect(a.spot);
   if (!at) return;
