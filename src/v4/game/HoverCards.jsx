@@ -216,12 +216,14 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   const box = useRef(null);
   const [pos, setPos] = useState(null);
   const side = useRef(null); // { el, side } the side chosen for the current target
-  useEffect(() => { if (c && !c.pinned) hover.close(); }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
   // the element the card explains; a target re-drawn under the pointer (a refilled shop card, a chair) is found again
   // a seat's card is one you can use (Cory, 2026-10-15: its Use buttons, a long list scrolls): the pointer may move onto it
   const live = !!(c && !c.pinned && c.kind === 'seat');
   const inside = useRef(false);
   const el = c ? anchorFor(c, live && inside.current) : null;
+  // a move closes the card only if what it explains is gone from under the pointer: a rival's step used to close the card
+  // you were reading, and it came back only after another move of the pointer and the hover delay (snappy pair Q1)
+  useEffect(() => { if (c && !c.pinned && !el) hover.close(); }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
   // what's drawn: the card that's up, else the one waiting out the delay (off screen until it opens)
   const drawn = c || (prep && !prep.pinned && prep.el && prep.el.isConnected ? prep : null);
   const drawEl = c ? el : drawn ? drawn.el : null;

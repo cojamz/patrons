@@ -340,8 +340,9 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
             aria-haspopup="dialog" data-rate={t.key}
             aria-label={`Recruit ${t.get} follower${t.get > 1 ? 's' : ''}: pay ${t.cost} resources of any colors${t.limited ? ` (${left} left in this game)` : ''}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}>
-            {/* a move closes it (keyed by the move): after a buy it stayed open and flipped to "You hold 0: 10 short" (w2b #47) */}
-            <Tip key={state.moves} className="fb-tip" beside=".lt-rate" hint={`Recruit ${t.get} follower${t.get > 1 ? 's' : ''}: pay ${t.cost} resources of any colors`} content={() => (
+            {/* your buy closes it (keyed by what you hold): after a buy it stayed open and flipped to "You hold 0: 10 short"
+                (w2b #47); a rival's step no longer remounts it (snappy pair Q4) */}
+            <Tip key={`${held}:${viewer ? viewer.bonus : ''}`} className="fb-tip" beside=".lt-rate" hint={`Recruit ${t.get} follower${t.get > 1 ? 's' : ''}: pay ${t.cost} resources of any colors`} content={() => (
               <div className="pop-card rate-card" data-rate-card={t.key}>
                 <b>Recruit {t.get} follower{t.get > 1 ? 's' : ''}</b>
                 <span>Pay {t.cost} resources, any colors, any mix, as your one recruit.</span>
