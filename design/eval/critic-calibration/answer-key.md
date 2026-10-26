@@ -78,3 +78,19 @@ Source: Cory's play notes, 2026-10-16 (v0.5 build).
 58. **Peeked cards you can't afford vanish.** "player should still be able to see Peek card they cant afford when recruiting" (Cory, Oct 22 playtest). Only the affordable pile cards joined the shop.
 59. **Last Call stops skipping.** "P2 took Last Call… and they have not been skipping turns" (Cory, Oct 26 playtest, round III, 4 players). A rival whose turn moved to the end after Last Call (their own Sleep In or Hold Up, Extra Shift's minion) landed behind the caller, so the caller placed before everyone else was out.
 60. **The same member shows twice in the shop.** "there are two courier cards in the member shop" (Cory, Oct 26 playtest). Nine cards in a shop of 8: after a pile buy (Peek, Insider), a pile card dealt into the row was drawn twice for a moment and the copy stuck.
+
+Source: blind tester panel, 2026-10-26 (v0.8.86); fixed in v0.8.87 to v0.8.91.
+
+61. **Churn's tap button says "Recruit".** On a phone, Churn's sheet button read "Recruit" and sent the card to the bottom. Now "Send to bottom" (Bury too; Peek says "Put on top").
+62. **Spree's "Done, no recruit" ends one recruit of three.** The screen looked the same and the player waited. Done now ends every recruit left, and the header counts them ("2 recruits left").
+63. **A steal's card moves under the pointer.** Redistribute's card dropped ~60 px after the first pick, so the second click took from the wrong rival. The card now keeps its place for the whole steal.
+64. **Shake Down's question names the wrong owner.** "P4 holds Trendsetter: keep it for 3?" when you hold it and P4 is the thief. Now "P4 is taking your Trendsetter: pay 3 to keep it?".
+65. **Spam-clicking Pay opens the deck catalog.** Clicks after the pay sheet closed landed on the deck. The deck ignores clicks right after a payment and double clicks.
+66. **Losses to rivals show nowhere on your seat.** A swap, a member taken, or a steal through a chain of copies was only in the log (all four testers). Your seat keeps a line of what rivals took since your last turn.
+67. **Promote's picker cuts off the last rival's row.** It overlapped the Shop row. Rows now show whole, and a row that scrolls fades at its edge.
+68. **Promote's hover says "COULD SWAP 98 lit pairs".** Now "9 members for 7 shop members".
+69. **The space's hover covers the question it opened.** After placing, the hover stayed over the steal and swap rows. It closes when the question opens.
+70. **"+6 won" in round summaries counts steals and trades.** It read as contest prizes. Now "gained" or "lost", with sources in its hover.
+71. **A member's bubble cuts its rule off.** "Whenever a rival recruits more tha…". The bubble now shows two lines.
+72. **The artifact pick isn't in the rulebook.** Setup now explains it.
+73. **"1 members" on a seat.** Now "1 member".
