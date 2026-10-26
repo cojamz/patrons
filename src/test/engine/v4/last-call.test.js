@@ -52,3 +52,21 @@ describe('Last Call', () => {
     expect(s.players[0].bonus).toBe(0);
   });
 });
+
+// Cory's playtest, 2026-10-26: P2 took Last Call in round III and kept placing. A rival whose turn moved to the end
+// after it (their own Sleep In, Hold Up, Extra Shift's minion) landed behind the caller, so the caller went first.
+describe('Last Call holds for the rest of the round', () => {
+  it('a rival who skips after it still places before the caller', () => {
+    let s = sceneQ({ quadrants: Q, round: 2, left: 2, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }] });
+    s = take(s, 'purple.lastcall');
+    while (s.pending?.kind !== 'place') s = applyMove(s, { player: s.pending.player, option: 'pass' });
+    expect(s.pending.player).toBe(1);
+    s = take(s, 'purple.skip'); // P2's Sleep In: their next turn goes to the end of the round
+    const placed = [];
+    while (s.round === 2 && s.pending && placed.length < 2) {
+      if (s.pending.kind === 'place') { placed.push(s.pending.player); s = applyMove(s, { player: s.pending.player, option: s.pending.options.find(o => o.kind === 'slot').id }); }
+      else s = applyMove(s, { player: s.pending.player, option: s.pending.options.find(o => o.id === 'pass')?.id ?? s.pending.options[0].id });
+    }
+    expect(placed).toEqual([1, 0]);
+  });
+});

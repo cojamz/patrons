@@ -105,7 +105,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   // the cards the space under the pointer would unlock brighten in ShopTicks (below): a hover never re-renders the shop
   // the top of the pile you can reach (Peek, Insider) joins the shop while you recruit, every card of it: one you can't
   // pay for recedes like a shop card, never hides (Cory, 2026-10-23: "should still be able to see Peek card they can't afford")
-  const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
+  // the choice can be a step older than the cards on show (mid-animation): a pile card it offers that has since been
+  // dealt into the shop shows there, once (Cory's playtest, 2026-10-26: two Couriers, the copy stuck under one key)
+  const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile && state.pile.includes(o.uid)).map(o => o.uid) : [];
   const pileTop = buying && viewer ? [...new Set([...state.pile.slice(0, pileReach(state, viewer)), ...pileOpts])] : [];
   // a pick from the top of the pile (Talent Scout): the strip becomes a tray of those 5, in pile order; what you can't
   // pay for recedes (dialogs pod, wave-2 tester: one text chip, the other four never shown)
@@ -119,7 +121,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const rowKey = `${sort}|${state.round}|${(state.turns || []).length}`;
   const row = steadyOrder(steady.current, rowKey, sortShop(state, state.shop, sort));
   steady.current = { key: rowKey, uids: row };
-  const uids = tray || [...row, ...pileTop, ...peekTop];
+  const uids = tray || [...new Set([...row, ...pileTop, ...peekTop])];
   const extra = !tray && (pileTop.length + peekTop.length) > 0;
   const memberPick = picking && uids.some(uid => optionFor(`card:${uid}`));
   // Show abilities for a first member choice, but a reader's explicit preference always wins, in every phase.

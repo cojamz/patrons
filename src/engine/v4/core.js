@@ -402,6 +402,7 @@ export function followerPlan(state, p, tier) {
 
 function advance(state) {
   while (state.queue.length) {
+    lastCallLast(state);
     const task = state.queue[0];
     const ask = inputFor(state, task);
     if (ask) {
@@ -416,6 +417,19 @@ function advance(state) {
     clearFresh(state);
   }
   state.pending = null;
+}
+
+/** Last Call (Purple): "Skip your turns until everyone else is out of minions" holds for the whole round, so a rival
+ *  turn that lands behind the caller's later (a rival's own skip, Extra Shift's minion) still goes first (Cory's
+ *  playtest, 2026-10-26: P2 took Last Call and kept placing). Two callers keep their order among themselves. */
+function lastCallLast(state) {
+  if (!state.players.some(p => p.lastCall === state.round)) return;
+  const q = state.queue, close = q.findIndex(t => t.t === 'allPlaced'), stop = close < 0 ? q.length : close;
+  const at = [];
+  for (let i = 0; i < stop; i++) if (q[i].t === 'turn') at.push(i);
+  const late = t => state.players[t.p].lastCall === state.round;
+  const turns = at.map(i => q[i]), sorted = [...turns.filter(t => !late(t)), ...turns.filter(late)];
+  at.forEach((i, k) => { q[i] = sorted[k]; });
 }
 
 // Tasks that need a decision describe it here; all others return null and just run.
