@@ -3,6 +3,7 @@
 // ghosts + Web Animations.
 import { reducedMotion } from './Tick.jsx';
 import { MO, streamGap } from '../motion.js';
+import * as clock from './clock.js';
 
 export const motionOK = () => !reducedMotion() && typeof document !== 'undefined' && !!document.body.animate;
 
@@ -386,10 +387,10 @@ export function holdStack(stackEl, from) {
   if (!b) return null;
   // v: where the number is going (what has landed); cur: what it shows. A roll moves cur toward v; an arrival mid-roll
   // retargets it (never a jump); done() while rolling lets go only when the roll has finished
-  let v = from, cur = from, raf = 0, dead = false, rolling = false, ending = false, rate = 0, finishMotion = null;
+  let v = from, cur = from, dead = false, rolling = false, ending = false, rate = 0, finishMotion = null;
   // a held number never shows below 0, whatever arrives out of order
   const show = x => { b.dataset.hold = String(Math.max(0, Math.round(x))); };
-  const end = () => { dead = true; cancelAnimationFrame(raf); if (finishMotion) { finishMotion(); finishMotion = null; } delete b.dataset.hold; };
+  const end = () => { dead = true; clock.remove(tick); if (finishMotion) { finishMotion(); finishMotion = null; } delete b.dataset.hold; };
   show(cur);
   let last = 0;
   const tick = now => {
@@ -398,7 +399,8 @@ export function holdStack(stackEl, from) {
     const d = v - cur;
     cur = Math.abs(d) <= rate * dt ? v : cur + Math.sign(d) * rate * dt;
     show(cur);
-    if (cur !== v) { raf = requestAnimationFrame(tick); return; }
+    if (cur !== v) return;
+    clock.remove(tick);
     rolling = false; last = 0;
     if (finishMotion) { finishMotion(); finishMotion = null; }
     if (ending) end();
@@ -410,7 +412,7 @@ export function holdStack(stackEl, from) {
       if (dead) return;
       v += by;
       rate = Math.max(rate, Math.abs(v - cur) / Math.max(1, ms));
-      if (!rolling) { rolling = true; finishMotion = beginCountMotion(() => { cur = v; show(cur); end(); }); last = 0; raf = requestAnimationFrame(tick); }
+      if (!rolling) { rolling = true; finishMotion = beginCountMotion(() => { cur = v; show(cur); end(); }); last = 0; clock.add(tick); }
     },
     /** let go (after a roll in progress has finished; `now`: at once, the real number shows, as a skip wants) */
     done(now = false) { if (dead) return; if (rolling && !now) ending = true; else end(); },

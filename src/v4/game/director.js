@@ -15,6 +15,7 @@
 // and timers (no React state). A click or Space skips the rest of a chain to its end (skipChain). Every duration comes
 // from src/v4/motion.js at the viewer's speed. A state without an effect stream (an online guest, a catch-up) falls
 // back to gains.js, which reads the change of state.
+import * as clock from './clock.js';
 import { MO, RIVAL, flightMs, nextBeatAt, speedScale, streamGap, slowed } from '../motion.js';
 import { playerColor, roman } from '../format.js';
 import { play } from '../sound.js';
@@ -615,7 +616,7 @@ export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, ne
 export const holdCap = () => Math.round(2400 * speedScale()) + MO.breath + 400;
 
 // ---------- the screen ----------
-// One clock for every chain on the table, run by requestAnimationFrame. It advances by at most two frames' worth per
+// One clock for every chain on the table, run by the table's one frame loop (clock.js, which the count rolls share). It advances by at most two frames' worth per
 // frame, so a late frame (a loaded box) stretches the show instead of bunching its pieces; and a piece's landing (its
 // count ticking, its stack settling) comes from that piece's own animation finishing, never from a separate timer.
 
@@ -656,7 +657,6 @@ export const onChainLanded = fn => { landSubs.add(fn); return () => landSubs.del
 export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0 || !!chain.draining;
 
 function tick(now) {
-  chain.raf = 0;
   if (chain.last == null) chain.wall = now - chain.clock;
   const dt = chain.last == null ? 0 : Math.min(34, Math.max(0, now - chain.last));
   chain.last = now;
@@ -666,10 +666,11 @@ function tick(now) {
   const behind = now - chain.wall - chain.clock;
   if (behind > 250) chain.clock += behind - 250;
   while (chain.queue.length && chain.queue[0].at <= chain.clock) chain.queue.shift().fn(false);
-  if (chain.queue.length || chain.flying > 0) chain.raf = requestAnimationFrame(tick);
-  else endChain();
+  if (chain.queue.length || chain.flying > 0) return;
+  clock.remove(tick); chain.raf = 0;
+  endChain();
 }
-const run = () => { if (!chain.raf && typeof requestAnimationFrame === 'function') chain.raf = requestAnimationFrame(tick); };
+const run = () => { if (!chain.raf && typeof requestAnimationFrame === 'function') { chain.raf = 1; clock.add(tick); } };
 function schedule(at, fn) {
   const item = { at, fn };
   let k = chain.queue.length;
@@ -728,7 +729,7 @@ export function skipChain() {
   clearFlights(0);
   chain.flying = 0;
   chain.epoch = (chain.epoch || 0) + 1; // landings still resolving from the skipped chain change nothing
-  if (chain.raf) { cancelAnimationFrame(chain.raf); chain.raf = 0; }
+  if (chain.raf) { clock.remove(tick); chain.raf = 0; }
   chain.handoffAt = 0;
   endChain(true);
   for (const fn of skipSubs) fn();
