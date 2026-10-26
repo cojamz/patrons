@@ -298,6 +298,12 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 .flight{position:fixed;z-index:61;pointer-events:none;will-change:transform,opacity}
 .flight .card{width:100%;height:100%;animation:none;box-shadow:0 12px 30px rgba(0,0,0,.55);border-color:var(--c);margin:0;max-width:none;min-width:0}
 .flight{overflow:hidden;border-radius:10px;transform-origin:center}
+/* every flying layer is a box of its own (eng-audit S3.4): appending or moving one never dirties the page's layout. A
+   card ghost already clips (overflow:hidden), so its paint is its own too; pieces and minions only get layout, since
+   their bob, count and shadows reach outside their box */
+.ghost-layer{contain:layout}
+.flight{contain:layout paint}
+.flight.piece-member.staged{contain:layout}
 .flight .ghost-ctx{display:block!important;position:static;width:100%;height:100%;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:hidden;animation:none;visibility:visible!important}
 .fbuy{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch}
 .fb{border:1px solid var(--rim);background:var(--table);color:var(--ink);border-radius:10px;padding:5px 12px;cursor:default;display:flex;flex-direction:column;gap:1px;text-align:left;opacity:.75;min-height:var(--tap)}

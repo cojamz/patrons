@@ -312,7 +312,7 @@ export function flyMinionsHome(root, snap, { flownAt = null } = {}) {
 export function clearFlights(maxAge = 0) {
   if (typeof document === 'undefined') return;
   const now = Date.now();
-  document.querySelectorAll('.ghost-layer').forEach(g => { if (!maxAge || now - Number(g.dataset.born || 0) > maxAge) g.remove(); });
+  document.querySelectorAll('.ghost-layer').forEach(g => { if (!maxAge || now - Number(g.dataset.born || 0) > maxAge) { const use = inUse.get(g); if (use) use.release(); else g.remove(); } });
 }
 
 /** The cards still in the shop slide from where they were to where they are now (no one-frame reflow). */
@@ -480,6 +480,61 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
   return flown;
 }
 
+// ---------- the piece pool (eng-audit S3.2): a stream of 12 coins used to build 24 nodes and parse 12 copies of the same
+// SVG, then throw them away. A piece that has landed goes back to a small pool by its look (its classes and its markup)
+// and the next piece that looks the same reuses it: same path, timing and landing, no new nodes, no parse.
+export const PIECE_POOL_CAP = 48;
+const pool = new Map(); // `${className}\n${html}` → detached outer nodes ready to fly again
+let pooled = 0;
+const inUse = new WeakMap(); // outer node in the air → its use (clearFlights hands it back)
+const markup = new WeakMap(); // inner node → its markup as first parsed, so a node someone changed never flies again
+/** How many landed pieces wait in the pool (tests). */
+export const piecePoolSize = () => pooled;
+/** Empty the pool (tests). */
+export function drainPiecePool() { pool.clear(); pooled = 0; }
+function takePiece(className, html) {
+  const key = `${className}\n${html}`;
+  const free = pool.get(key);
+  let outer = free && free.pop(), inner;
+  if (free && !free.length) pool.delete(key);
+  if (outer) { pooled--; inner = outer.firstChild; } else {
+    outer = document.createElement('div');
+    outer.className = className;
+    inner = document.createElement('div');
+    inner.className = 'path-inner';
+    inner.innerHTML = html;
+    markup.set(inner, inner.innerHTML);
+    outer.appendChild(inner);
+  }
+  const anims = [];
+  let done = false;
+  const use = {
+    keep: anim => { if (anim) anims.push(anim); return anim; },
+    // once per flight, whichever comes first (its landing, a cancel, the safety timer, a sweep); a later call is this
+    // flight's stale timer or event and never touches the node's next flight
+    release: () => {
+      if (done) return;
+      done = true;
+      if (inUse.get(outer) === use) inUse.delete(outer);
+      outer.remove();
+      // its animations let go of the node without being cancelled or finished: anything still waiting on them (a
+      // landing, a skip) sees them end exactly as before, and none of them can paint on the node's next flight
+      for (const x of anims) { try { if (x.effect) x.effect.target = null; } catch { /* old engine */ } }
+      for (const x of inner.querySelectorAll('.bundle-n, .path-turn')) x.remove();
+      outer.removeAttribute('style');
+      inner.removeAttribute('style');
+      delete outer.dataset.born;
+      const detached = anims.every(x => !x.effect || x.effect.target == null);
+      if (!detached || pooled >= PIECE_POOL_CAP || outer.className !== className || inner.innerHTML !== markup.get(inner)) return;
+      if (!pool.has(key)) pool.set(key, []);
+      pool.get(key).push(outer);
+      pooled++;
+    },
+  };
+  inUse.set(outer, use);
+  return { outer, inner, use };
+}
+
 // ---------- paths (design/prototypes/motion/grammar.md §2): the shape of a flight says what kind of move it is ----------
 // arc: gains, gifts, a card to its crowd, followers scored (a true parabola: an outer layer travels the straight line,
 //      an inner one rises and falls) · line: a take (a steal), straight, a snatch · drop: a payment, lifts 6px then falls
@@ -492,27 +547,23 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
   let h = path === 'arc' || path === 'cross' ? Math.max(16, Math.min(70, dist * 0.18)) * (path === 'cross' ? -1 : 1) : 0;
   h = onScreenBow(a, b, h);
   const one = (k, scale, opacity, delay) => {
-    const outer = document.createElement('div');
-    outer.className = `${className} ghost-layer path-${path}`;
+    const { outer, inner, use } = takePiece(`${className} ghost-layer path-${path}`, html);
     outer.dataset.born = String(Date.now());
     Object.assign(outer.style, { left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, height: `${a.height}px` });
-    const inner = document.createElement('div');
-    inner.className = 'path-inner';
-    inner.innerHTML = html + (k === 0 && label ? `<b class="bundle-n">${label}</b>` : '');
+    if (k === 0 && label) inner.insertAdjacentHTML('beforeend', `<b class="bundle-n">${label}</b>`);
     if (k > 0) Object.assign(inner.style, { transform: `scale(${scale})`, opacity: String(opacity) });
-    outer.appendChild(inner);
     document.body.appendChild(outer);
     const travel = path === 'line' ? 'cubic-bezier(.45,0,.6,1)' : path === 'drop' ? 'cubic-bezier(.5,0,.75,0)' : 'cubic-bezier(.4,0,.6,1)';
     const frames = path === 'drop'
       ? [{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(0,-6px) scale(1)', opacity: 1, offset: 0.2, easing: travel },
         { transform: `translate(${dx * 0.85}px,${dy * 0.85}px) scale(.85)`, opacity: 1, offset: 0.85 }, { transform: `translate(${dx}px,${dy}px) scale(.6)`, opacity: 0 }]
       : [{ transform: 'translate(0,0)' }, { transform: `translate(${dx}px,${dy}px)` }];
-    const anim = outer.animate(frames, { duration, delay, easing: path === 'drop' ? 'linear' : travel, fill: 'both' });
+    const anim = use.keep(outer.animate(frames, { duration, delay, easing: path === 'drop' ? 'linear' : travel, fill: 'both' }));
     track(anim);
     // it fades onto what it lands on in its last 15% (a payment fades in its own frames)
-    if (fade && path !== 'drop') track(outer.animate([{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], { duration, delay, fill: 'both' }));
-    if (h) track(inner.animate([{ translate: '0 0' }, { translate: `0 ${-h}px`, offset: 0.5, easing: 'ease-in' }, { translate: '0 0' }], { duration, delay, easing: 'ease-out', fill: 'both' }));
-    if (k === 0 && label) { const n = inner.querySelector('.bundle-n'); if (n) track(n.animate([{ opacity: 1 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], { duration, delay, fill: 'both' })); }
+    if (fade && path !== 'drop') track(use.keep(outer.animate([{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], { duration, delay, fill: 'both' })));
+    if (h) track(use.keep(inner.animate([{ translate: '0 0' }, { translate: `0 ${-h}px`, offset: 0.5, easing: 'ease-in' }, { translate: '0 0' }], { duration, delay, easing: 'ease-out', fill: 'both' })));
+    if (k === 0 && label) { const n = inner.querySelector('.bundle-n'); if (n) track(use.keep(n.animate([{ opacity: 1 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], { duration, delay, fill: 'both' }))); }
     if (turnTo && (k === 0 || full)) {
       const tint = document.createElement('div');
       tint.className = 'path-turn';
@@ -521,9 +572,9 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
       // the turn is a crossfade at the midpoint as long as the grammar's colour turn (80ms at Steady), however short the
       // flight: a 10% window was 26ms on a short take, and the colour seemed to change in the stack (motion gaps A10)
       const half = Math.min(0.3, MO.colorTurn / 2 / Math.max(1, duration));
-      track(tint.animate([{ opacity: 0 }, { opacity: 0, offset: 0.5 - half }, { opacity: 1, offset: 0.5 + half }, { opacity: 1 }], { duration, delay, fill: 'both' }));
+      track(use.keep(tint.animate([{ opacity: 0 }, { opacity: 0, offset: 0.5 - half }, { opacity: 1, offset: 0.5 + half }, { opacity: 1 }], { duration, delay, fill: 'both' })));
     }
-    const done = () => outer.remove();
+    const done = use.release;
     anim.addEventListener('finish', done);
     anim.addEventListener('cancel', done);
     setTimeout(done, duration + delay + 500);
