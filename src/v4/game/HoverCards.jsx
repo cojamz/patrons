@@ -463,7 +463,11 @@ export function targetLines(state, viewer, t) {
     out.push({ k: 'Could take', text: names, uids: t.seats });
   }
   if (t.pairs.length) {
-    const text = t.pairs.length > 2 ? `${t.pairs.length} lit pairs` : t.pairs.map(([a, b]) => `your ${def(a).name} for ${whose(b)} ${def(b).name}`).join(', or ');
+    // past two, which members could go and for what, counted (panel Oct 26: "98 lit pairs" read as a debug count)
+    const firsts = new Set(t.pairs.map(([a]) => a)), seconds = new Set(t.pairs.map(([, b]) => b));
+    const allShop = [...seconds].every(u => state.shop.includes(u));
+    const many = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+    const text = t.pairs.length > 2 ? `${many(firsts.size, 'member')} for ${allShop ? many(seconds.size, 'shop member') : `${many(seconds.size, 'member')} of the same cost`}` : t.pairs.map(([a, b]) => `your ${def(a).name} for ${whose(b)} ${def(b).name}`).join(', or ');
     out.push({ k: 'Could swap', text, uids: [...new Set(t.pairs.flat())] });
   }
   return out;

@@ -12,7 +12,8 @@ export const CARD = { w: 184, h: 104 };
 // a member acting is a small speech bubble out of the right side of its seat (Cory, 2026-10-18: "members pop out of the
 // right side of the player card when they act, maybe with a speech bubble"): its portrait, its name, its rule in one
 // line and what it just did; a recruit shows the same card, bigger, at the hub on its way to its buyer
-export const MEMBER = { w: 212, h: 52 };
+// (two lines of rule, panel Oct 26: one line cut "Whenever a rival recruits more tha…")
+export const MEMBER = { w: 248, h: 64 };
 export const HUB_MEMBER = { w: 248, h: 62 };
 
 let items = [];

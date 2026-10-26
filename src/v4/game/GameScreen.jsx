@@ -1300,6 +1300,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const slot = w && w.querySelector(`[data-slot="${key}"]`);
     const cap = w && w.querySelector('.prompt.choice.plain');
     if (!slot || !cap) { setPlainAt(null); return; }
+    // the space's card that stayed up after the placement gives way to the question beside it (panel Oct 26: the
+    // hover covered the steal's and Promote's rows)
+    if (state.pending && mySeats.includes(state.pending.player)) hover.close();
     const W = w.getBoundingClientRect(), S = slot.getBoundingClientRect(), C = cap.getBoundingClientRect();
     // beside the space just taken, on the rim's side of it, never centred on the wheel (w4b #4: a space on the wheel's
     // right put the card mid-wheel). The wheel's centre is the stage's; a space left or right of it gets the card outside

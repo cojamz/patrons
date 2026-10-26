@@ -121,10 +121,11 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             const play = g && g.effects ? `${g.effects > 0 ? '+' : '−'}${Math.abs(g.effects)}` : null;
             const endGame = fin ? `${fin > 0 ? '+' : '−'}${Math.abs(fin)}` : null;
             // short in the cell (w4b #30: it wrapped to three lines), whole in its hover, as the results' numbers open (w4b #10)
-            // "+2 in play" was jargon (blind testers, 2026-10-15): won or lost, in plain words; the sources are in its hover
+            // "+2 in play" was jargon (blind testers, 2026-10-15): gained or lost, in plain words; the sources are in its hover
+            // ("won" read as contest prizes, panel Oct 26: a steal or Exchange's followers aren't won)
             // "+1 new members" read as a count of members (live panel r1): it's followers, so "from new members"
-            const why = g ? [...membersParts(g).map(t => t.replace(/ that left$/, ' who left')), g.bought && `+${g.bought} bought`, play && `${play} ${g.effects > 0 ? 'won' : 'lost'}`, endGame && `${endGame} end-game`].filter(Boolean).join(' · ') : '';
-            const whyLong = g ? [...membersParts(g).map(t => t.replace(/ that left$/, ' who left')), g.bought && `+${g.bought} followers bought`, play && `${play} won or lost during play (members' abilities, spaces)`, endGame && `${endGame} from end-game bonuses`].filter(Boolean) : [];
+            const why = g ? [...membersParts(g).map(t => t.replace(/ that left$/, ' who left')), g.bought && `+${g.bought} bought`, play && `${play} ${g.effects > 0 ? 'gained' : 'lost'}`, endGame && `${endGame} end-game`].filter(Boolean).join(' · ') : '';
+            const whyLong = g ? [...membersParts(g).map(t => t.replace(/ that left$/, ' who left')), g.bought && `+${g.bought} followers bought`, play && `${play} ${g.effects > 0 ? 'gained' : 'lost'} from spaces and members' abilities (steals, trades and the like), not prizes`, endGame && `${endGame} from end-game bonuses`].filter(Boolean) : [];
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }} data-total={`${p.id}:${now}`}>
                 <span className="nm" role="cell"><Who state={after} id={p.id} meId={meId} /></span>

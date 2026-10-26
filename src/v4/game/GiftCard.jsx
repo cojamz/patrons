@@ -94,15 +94,16 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
   }, [pend, step]);
   // a second row that scrolls inside the card (a swap in round III: many rivals' members) fades at the edge that has
   // more, so it never reads as cut off
-  const more = useRef(null);
-  const edge = () => {
-    const el = more.current;
+  // (a swap's first row scrolls too: panel Oct 26, Promote's last rival read as cut in half with no fade)
+  const more = useRef(null), more1 = useRef(null);
+  const fade = el => {
     if (!el) return;
     const up = el.scrollTop > 1, down = el.scrollTop + el.clientHeight < el.scrollHeight - 1;
     const v = up && down ? 'both' : up ? 'up' : down ? 'down' : '';
     if ((el.dataset.more || '') !== v) { if (v) el.dataset.more = v; else delete el.dataset.more; }
   };
-  useEffect(edge);
+  const edge = () => fade(more.current), edge1 = () => fade(more1.current);
+  useEffect(() => { edge(); edge1(); });
   const [l1, l2] = LABELS[g.kind];
   const card = uid => cardDef(state, uid);
   const owner = uid => state.players.find(p => p.members.includes(uid));
@@ -317,7 +318,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
       {!far && l1 && (
         <div className="gc-row" data-row="1" data-live={step === 1 ? '1' : undefined}>
           <span className="gc-lbl">{l1}</span>
-          <div className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? memberGroups(g.firsts.map(f => f.a), true) : g.firsts.map(firstItem)}</div>
+          <div ref={more1} onScroll={edge1} className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? memberGroups(g.firsts.map(f => f.a), true) : g.firsts.map(firstItem)}</div>
         </div>
       )}
       {!far && (

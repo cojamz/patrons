@@ -76,7 +76,8 @@
 .gift-card .gc-group-items{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
 .gift-card[data-gift="trade"] .gc-what{white-space:normal}
 .gift-card[data-gift="trade"] .gc-row{min-height:0;flex:0 1 auto}
-.gift-card[data-gift="trade"] .gc-row > .gc-items{max-height:180px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:3px;margin:-3px}
+/* a whole member row and most of the next show, and a row that scrolls fades at its edge (the mask rules above) */
+.gift-card[data-gift="trade"] .gc-row > .gc-items{max-height:200px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:3px;margin:-3px}
 .gift-card .gc-holder{flex-direction:column;justify-content:center;min-width:40px;max-width:64px;height:auto;min-height:44px;text-align:center;gap:2px}
 .gift-card .gc-holder .gc-who-name{font-size:11px;line-height:13px;overflow-wrap:anywhere}
 

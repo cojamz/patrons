@@ -15,7 +15,7 @@ For 2 to 6 players. You lead a cult for three rounds. Send minions to the wheel,
 - A space holds one minion per round, unless a card lets you join a taken space (Crowd In). Every minion comes home at round end.
 
 ## Setup
-Round I's turn order is drawn at random. Then, starting with the player who goes last, each player takes 1 resource of a color still untaken. The first player gets the color left over. This happens only before round I.
+Round I's turn order is drawn at random. Then, starting with the player who goes last, each player picks an **artifact** from the list on the wheel: a boon for your cult all game, which comes with 1 resource of its color. Each sphere has one artifact, and a taken one leaves the list. The first player gets the one left over. This happens only before round I.
 
 ## Turn order
 - Turns snake: down the order and back up, one minion per turn (1-2-3-4, 4-3-2-1, 1-2-3-4…) until everyone has placed every minion. The players at each end take two turns in a row.

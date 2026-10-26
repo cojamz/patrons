@@ -26,7 +26,7 @@
 .as-member.bubble{gap:6px;padding:4px 8px 4px 4px;border-radius:8px}
 .as-member.bubble::before{content:"";position:absolute;left:-5px;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);
   background:color-mix(in srgb,var(--q) 22%,var(--walnut-2,#271d16));box-shadow:-1px 1px 0 0 color-mix(in srgb,var(--q) 55%,transparent);border-radius:0 0 0 2px}
-.as-member.bubble .as-rule{-webkit-line-clamp:1}
+.as-member.bubble .as-rule{-webkit-line-clamp:2}
 .as-member.bubble .as-got{font-size:11px;font-weight:800}
 @media (prefers-reduced-motion: reduce){.action-stage{display:none}}
 .as-card .as-note{font:500 11px/1.1 var(--sans);color:var(--pl-ink-3,#a39078)}
