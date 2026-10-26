@@ -12,23 +12,23 @@ Steady frames beat fast ones. Hovers show without a wait and delay the hide inst
 ## Shipped (engineering calls)
 1. A card you're reading stays open while rivals take their turns (it closed on every rival step, then needed another
    pointer move plus the 200 ms delay). Follower-rate tips no longer remount every step.
-2. A click during an animation does what it points at: the press lands the show and the table catches up before the
-   click arrives (it used to skip the show and drop the click, so you clicked twice).
+2. Not a bug after all: a press on a space while a rival's last step plays already skips the show and places your
+   minion. e2e/v4/midchain.mjs now guards it. The click that is lost is on things hidden until the chain drains
+   ("Done, no recruit", the shop's lit cards): that's feel call 2 below (S1 in eng-audit.md).
+
+## Built 2026-10-25 evening (Cory said yes to all three feel calls, 8:21pm)
+3. Hovers open the moment you point (drawn hidden and placed that frame, shown the next); closing waits 200 ms.
+4. Your next choices light as the last piece lands (director.js onChainLanded); settles and the stage's way home finish under them.
+5. Rival turns at 0.65 of your timing, beats overlapping; recruits and follower buys keep full time.
+6. Pulses, glows and the bought-card ring animate only transform and opacity; playChain finds places up front.
 
 ## Next engineering (Claude's, in order)
-3. Gate: time from the last landing to your choices lit, and a click 100 ms after a landing applied (catches 2 and 5).
-4. Pulses and glows animate only transform and opacity (filter and box-shadow repaint mid-chain): flight.js pulse/press,
-   director.js card ring, chip glow.
-5. Measure positions once per chain instead of inside animation frames (director.js tug, takeTag, linger, stageOut).
-6. Bots think off the main thread (a worker, as previewWorker.js), so a bot's 140-250 ms think never lands mid-spin or
-   mid-hover. 5-7h.
-7. One animation clock and a reusable layer of flying pieces, with a test that keyframes touch only transform/opacity.
-   8-10h.
-8. Add an acknowledgment bar (first visible change under 50 ms p95), p95/max instead of averages, and a frame-smoothness
-   bar (no animation frame over 50 ms at 4x CPU) to the snappy gate.
+- Bots think off the main thread (a worker, as previewWorker.js): eng-audit S2, 5-7h.
+- One animation clock and a reusable layer of flying pieces, keyframes only transform/opacity, with a test: S3, 8-10h.
+- Snappy gate: acknowledgment bar (first visible change < 50 ms p95), p95/max, no animation frame over 50 ms at 4x CPU.
+- cult-hop (lamp-b.css:256) still animates filter on a member's sprite mid-chain.
 
-## Feel calls (Cory's)
-See the thread message; defaults in brackets there.
+## Feel calls (Cory's, all answered yes 2026-10-25)
 - Hovers open the moment you point (the 200 ms wait moves to closing). Today a hover takes about 300 ms.
 - Your next choices light up as the last piece lands, not after the bounce and the seat's tidy-up (about 0.7 s sooner at
   Steady).
