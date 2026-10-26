@@ -649,6 +649,10 @@ export const onChainSkip = fn => { skipSubs.add(fn); return () => skipSubs.delet
 const endSubs = new Set();
 /** Called whenever the table's chains have all played out (or were skipped): the summary may show. */
 export const onChainEnd = fn => { endSubs.add(fn); return () => endSubs.delete(fn); };
+// the chain's last piece has landed (its settles, count rolls and the stage's way home may still be playing): your next
+// choices can light now (Cory, 2026-10-25: "your next choices light up as the last piece lands, not after the bounce")
+const landSubs = new Set();
+export const onChainLanded = fn => { landSubs.add(fn); return () => landSubs.delete(fn); };
 export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0 || !!chain.draining;
 
 function tick(now) {
@@ -698,13 +702,14 @@ function endChain(now = false) {
   // The final landing starts its settle/count; the stage then returns home. Those actual completions,
   // not the nominal plan length, release the next action. Ambient CSS animation is never tracked here.
   stageRelease();
-  let scheduled = false;
+  let scheduled = false, landed = false;
   const check = () => {
     if (scheduled) return;
     scheduled = true;
     queueMicrotask(() => {
       scheduled = false;
       if (chain.drainToken !== token || chain.queue.length || chain.flying > 0) return;
+      if (!landed) { landed = true; for (const fn of landSubs) fn(); }
       if (!motionPending() && !stageBusy()) finishChain();
     });
   };

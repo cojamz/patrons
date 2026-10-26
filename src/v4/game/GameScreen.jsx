@@ -35,7 +35,7 @@ import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, holdCap, installChainSkip, skipChain, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, installChainSkip, skipChain, onChainSkip, onChainEnd, onChainLanded, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
 import { soundOn, onSound, setSound } from '../sound.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale, slowed } from '../motion.js';
@@ -231,6 +231,11 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     if (!timer.current) startTransition(() => pumpRef.current());
   }, []);
   useEffect(() => onChainEnd(finishPresentation), [finishPresentation]);
+  // your turn: your choices light as the last piece lands; the settle and the stage's way home finish under them
+  useEffect(() => onChainLanded(() => {
+    const w = waiting.current, mine = session.mySeats || [];
+    if (w && !w.over && w.pending && mine.includes(w.pending.player)) finishPresentation();
+  }), [finishPresentation, session]);
   useLayoutEffect(() => {
     if (timer.current !== 'commit') return;
     const d = dwellNext.current;
