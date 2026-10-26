@@ -101,7 +101,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     // new members, three cut) moved the games; cards-echo and cards-market cover them.
     // Shopaholic, Fence and Doppelganger fell under 3 holds when Gather's +3 (Oct 25) moved the games; spheres/market (Shopaholic), interactions (Fence) and cards-echo (Doppelganger) cover them.
     const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller', 'market.shopaholic', 'thieves.fence', 'echo.doppel',
-      'market.onlooker', 'echo.groupie']); // cut cards under 3 holds after the Oct 25 member deck changes; cards-market and cards-echo cover them
+      'market.onlooker', 'echo.groupie', // cut cards under 3 holds after the Oct 25 member deck changes; cards-market and cards-echo cover them
+      'market.patroness']); // under 3 holds when Extortionist at 6 (Oct 25) moved the games; cards-market (Patroness) covers it
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
