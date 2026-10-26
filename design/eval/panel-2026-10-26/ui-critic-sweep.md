@@ -1,0 +1,101 @@
+# ui-critic sweep v0.8.86 (local http://localhost:5290/patrons/play/)
+(earlier note: live host blocked by proxy; rerun on local copy)
+- [blocker] (28c) R1 bot turn: P2 Help Yourself "Steal 1 and 1 follower" took P4's only follower (P4 1->0, popover "P4 1 / Help Yourself -1"); rulebook says only loose followers can be stolen and you start with 1 (yourself). shot 033
+- [major] (2) starting pick: header "pick an artifact", seat "take an artifact from the wheel", but the picker is a modal over the wheel; rulebook says pick a resource color, never mentions artifacts. shot 022
+- [major] (13) R1: hovering a rival's artifact icon (P3 potion) opens the seat popover "No members yet", not what the artifact does. shot 026
+- [major] (1) after pick: header "Your turn is over" while P2 plays; whose turn it is reads only from seat glow. shot 029
+- [major] (1/28e) turn order strip shows only during the draft; on my turn the header swaps it for "The dark inner rings open in rounds II and III." shot 031
+- [polish] (14) follower popover lists the player's own name "P2 1" as source for the starting follower; rulebook calls it "yourself". shot 027
+- [major] (17) unlabeled emoji tokens sit on the rim beside each contest banner (santa by green, ghosts by white/red/magenta): leader markers? no legend. shot 031
+- [polish] (4) setup shows bright seat emoji (santa, ghost, bee, pumpkin); in game each seat is a grey hooded cultist with the emoji shrunk to a ~10px chest badge. shot 023
+- [polish] (17) empty resource slots are thin outline rings in near-same hue (red vs magenta vs white grey) at 0; hard to tell which color you lack. shot 023
+- [major] (2) setup: "1.0 / 2.0" badges on each color, "Round III members join in: Round III / Round II": no hover, no explanation. shot 012
+- [polish] (30) setup default Speed is Relaxed (the slowest) though rulebook lists Quick, Steady, Relaxed.
+- [major] (24) Start: 1013 ms to first change, intro then plays (load 8). How to play opens 258 ms (load 5.8).
+- [polish] (22) intro: captions cross-fade on top of each other mid-transition ("Take actions You and your minions ...powers"). shot 018
+- [major] (2/13) wheel faces print the effect, log/toasts/hovers use names (Help Yourself, Open Door, Chorus, Exchange, Build Up); you can't match a log name to a space without hovering. shot 035/059
+- [major] (12) space hovers dock beside the wheel edge, covering the shop's follower cards (Build Up popover over 1/5 follower cards). shot 035
+- [polish] (15) Build Up hover: "I: +2" and "YOU'D GET +2" say the same thing.
+- [major] (7) Recruit Bonus: pay sheet opens even when the only payment is exactly what you hold; extra click every buy. shot 054
+- [major] (13) member hover (Recruit Bonus) omits the cost; you must look back at the card footer. shot 053
+- [polish] (4) "On Recruit" (Open Door, Double Agent) vs "When recruited" (Recruit Bonus) vs rulebook "On recruit": three spellings of one trigger. shot 042/053
+- [polish] (2) "1 members affordable" and "Pay 1 resources" grammar. shot 052/066
+- [major] (19) shop re-sorts after each buy: cards jump slots (Double Agent moved from row 2 to row 1); pointer memory breaks. shot 056
+- [polish] (8) toast "You took Open Door +1 red / +2 more": the "+2 more" hides what you got. shot 056
+- [major] (28d) Open Door choice: prompt at top centre, answer in the shop at x~1100, space at x~460: ~650 px eye travel. shot 048
+- [polish] (30) shop flips to text "details" mode during Open Door, then back; two looks of the same card. shot 048
+- [major] (2) Chorus face shows a live "+2" (was "+1" earlier) with no hint it counts other green minions; looked like the space changed. shot 063
+- [major] (5/3) buying 1 follower ends the turn instantly with no undo; rulebook says buys "as often as you like". shot 067
+- [major] (21/22) a placed minion sits on top of the space's own number (Chorus "+2" hidden under santa). shot 065
+- [polish] (30) log: "Shop's Agents", "P4 swapped P4's Busker". shot 060
+- [polish] (8) log repeats each gain twice: "P3 took Gather (+3 red...)" then "P3's Gather: +3 red". shot 060
+- [major] (28c/2) Round I summary credits me "+2 won" for the 2 followers Exchange turned out of a resource; I won no contest. shot 078
+- [polish] (15) Round summary contest rows print winners' emoji+names, then the same names again with counts ("P2 & P3 & P4 / P2: 1 P3: 1 P4: 1 You: 0"). shot 078
+- [polish] (30) white contest prize pill is white-on-cream, barely visible; others are colored. shot 078
+- [polish] (26) red scoring panel first shows 0/0/0/0 for players holding 4 red, then counts up; a still frame reads as wrong. shot 075
+- [polish] (17) shield glyph on P2's seat (Lie Low) has no label; hover TBD. shot 068
+- [polish] (28d) Exchange choice dialog sits centered on wheel (good), but Done/no recruit after it is ~580 px away bottom-right. shot 073
+- [major] (28g/28c) Crime Wave on P4 cost me 1 follower (P4's Snitch); neither the space hover, the "You'd get" line nor the steal picker warned; only my follower popover told me ("P4's Snitch -1"). shot 103
+- [major] (1/19) seats re-order every round by turn order and slide; mid-slide my seat vanished entirely (P2,P3,P4 only, an empty frame). shot 081
+- [polish] (22) a floating "Recruiter" card from P4's turn sits over P4's seat text "5 members". shot 083
+- [polish] (4) Reprise hover "CAN COPY Crime Wave (P1)": I'm "You" everywhere else. shot 112
+- [polish] (2) toast "A member: +1 magenta" for my Impressionist, which is an artifact, not a member. shot 114
+- [polish] (4) follower popover names the source "Exchange +2"; round summary calls the same 2 followers "won". shot 103/078
+- [major] (13) deck/pile (count 13-17) opens nothing on hover. shot 096
+- [major] (8) Shake Down hover: 4 sections, "WHY Recruit Bonus: depends on your pick · Shopkeeper: +2 white · Busker: +2 green" reads as noise; I couldn't tell whose members these are. shot 091
+- [polish] (2) prize hover "+1 followers" grammar. shot 079
+- [good] Crime Wave picker lights the rival resource chips on the seats too, and clicking the seat chip works (direct manipulation).
+- [blocker] (22) Promote picker: P4's member row is cut in half under the "For / Shop" row; you can't read or pick P4's members. shot 157
+- [major] (2) Promote hover "COULD SWAP 98 lit pairs": developer phrasing; also the hover says "Swap a member with a shop member" but the picker lists every rival's members too. shot 154/156
+- [major] (28a) speed ladder (load 16-17, noisy): own placement moving 380 ms Quick / 1287 Steady / 1468 Relaxed; Steady->Relaxed 1.14x, Relaxed doesn't read as clearly slower. Relaxed is the setup default.
+- [major] (4/7) buying 1 follower has no pay sheet and ends the turn at once; 5 followers opens a pay sheet. Same action, two flows. shot 067/148
+- [polish] (20) pay sheet: tapping a kept green swaps out a magenta I didn't choose; you can't pick which one leaves. shot 150
+- [polish] (22) P3 seat: floating "-2 white +3 followers" chips stack over the resource row. shot 120
+- [polish] (1) "two turns in a row" badge stays on my seat through the recruit step of the first turn. shot 134
+- [major] (2/14) Round II summary: P3 gets "+5 won" with no prize ("—"); "won" covers steals and Exchange, so it reads as contest prizes. My row omits P4's Snitch −1 and Cashier +1 (they cancel), so the line doesn't explain my round. shot 166
+- [polish] (27) round end at Relaxed ~18 s for 4 contests plus summary; readable, one contest at a time with a flying chip to the seat (good), but count-up starts at 0s that read as wrong values. shot 164
+- [major] (28c/28g) Grifter steal from P4 again cost me 1 follower (Snitch) silently: 16 -> 15 with no prompt; second time this game. shot 212
+- [major] (4/20) Grifter's steal has no picker panel (only "Click a lit stack on a rival's cult" in the header); Crime Wave and Help Yourself open a panel on the wheel. Two UIs for one verb. shot 209
+- [major] (30/22) after Pay on Grifter, the pay sheet stays up ~1 s showing "KEEPING -1" and a different card (Extra Hand) highlighted in Grifter's slot. shot 208
+- [polish] (28c) Front-runner sells in round III ("You go first every round") when there are no rounds left; hover doesn't say it does nothing now. shot 202
+- [polish] (4) "Front-runner" (hover) vs "FRONT-RUNNER"; "On Recruit" vs "When recruited" in the same Recruit Bonus text. shot 171/202
+- [polish] (13) round III "Since your last turn" shows "2 earlier", but my seat strip jumps to top; the order change at round start has no motion cue (seats re-sort). shot 169
+- [polish] (15) contest hover: "A bonus every round, not the final score:" plus "(+2/+4/+6 in rounds I/II/III; ties pay half each)" plus "Tied leaders all score." says ties twice. shot 178
+- [major] (21) Help Yourself picker says "Take 3" but after one click header is "2 LEFT" and button "Take all 2": the button takes 2 from where? Unclear what "all" means. shot 192
+- [good] Help Yourself: rival chips light on seats and in the panel; seat click works; "+3 followers" shown as "rivals -3 in all" in the hover beforehand.
+- [blocker] (E14 turn read) between my turns I lost 1 green and 1 follower; the board showed only toasts "P4 took Echo ... +4 more" and "P2 took Reprise". Only the log revealed P4's Echo -> Encore -> copied my Help Yourself and stole from me. Turn read 0/3. shot 214/218
+- [major] (3/1) the log covers all four seats while bots keep playing behind it; flying minions cross over the log text. shot 218
+- [polish] (8) log nests copies 3 deep ("P4 copies P3's Encore ... doing it again", "P4 copies your Help Yourself ... doing it again"): "doing it again" is filler.
+- [major] (6/5) pay sheet's suggested payment for 10 followers spends all 6 magenta, the color I lead going into round III scoring (+6); it never weighs contests. shot 230
+- [major] (4) Help Yourself copied by Greatest Hits uses the header-only "Click a lit stack" mode; the same space taken directly opened a panel. shot 224
+- [polish] (17) shield glyph appears on my seat after Lie Low with no word; same glyph P2 had in round I. shot 237
+- [major] (28d) Pass ("Done, no recruit") sits bottom-right, ~360 px from Lie Low space and ~560 px from Crime Wave; passed twice, both times a long trip. shot 237
+- [polish] (30) Lie Low face reads "Safe from steals this round" but toast/log call it "Lie Low". shot 237
+- [major] (12/30) results screen: a wheel space popover ("Redistribute, TAKEN P3") opens over the results table when the pointer rests where the wheel was. shot 265
+- [major] (14) results "During play" hover lumps P4 stealing from me into my own "Help Yourself +5" (I took +3 +3, P4's copy took 1). Name points to the wrong cause. shot 267
+- [polish] (24) results number hover: complete 1280 ms in 5 bursts.
+- [polish] (2) round III scoring card "4 OF 6" while there are 4 contests; the extra steps (end-game bonuses) aren't named until the summary. shot 261
+- [polish] (2) log line "P2 Exchange ... you +2 (Old Money)" mid-round: reads as if P2's Exchange paid me via Old Money (a game-end card). shot 261
+- [major] (4) Stunt Double's On Recruit re-runs Poach, but the header still says "Poach: take which member?" with no word that Stunt Double caused the second pick. shot 249
+- [major] (20/21) Poach picker lights members on seats at ~22 px with no names; you must hover each one to know what you're taking. shot 245/247
+- [polish] (22) my member row wraps to a second line overlapping the "8 members" baseline once I hold 8. shot 251
+- [good] Results: one table, clear winner sentence, every number opens its makeup.
+## Phone (390x664 touch)
+- [blocker] (2/5) phone, Churn ("Send which member to the bottom?"): tapping a card opens a sheet whose button says "Recruit"; pressing it sends the card to the bottom. The button names the opposite action. shot phone/039,041
+- [major] (1/21) phone: my own seat sits below the wheel and the shop; on my turn, with the wheel in view, I can't see my own resources or followers. shot phone/014,016
+- [major] (18/19) phone: shop row is a horizontal strip that opens on 3 follower cards; members are off-screen right with no scroll cue (no peek, no dots). shot phone/025,029
+- [major] (2) phone: the header clips "The dark inner rings open in rounds II and I..." and "Open Door: which of the cheapest me..." on my turn. shot phone/014,023
+- [major] (22) phone: inner ring labels at ~8 px ("Recruit 3 times", "Double your gold"); outer contest rim text ~7 px. shot phone/010
+- [major] (12) phone: toasts sit on top of my seat's follower number and the wheel's right sectors. shot phone/025,033
+- [polish] (4) phone: setup offers 6 seats ("P5, P6 Empty") while the laptop custom table showed 4; different tables per device; colors also differ (gold/blue appear only here). shot phone/003,009
+- [good] phone: tapping a space opens a bottom sheet with full text, "You'd get", and a "Place here" button; that's the right touch pattern.
+- [major] (22) phone: the 'You took Open Door' toast sits on top of the pay sheet, covering the card text and the PAYING row. shot phone/049
+- [major] (22) phone: flying member cards (Critic) and P4 seat text 'done this round' + '+3' collide; the member card lands over wheel spaces mid bot turn. shot phone/066,067
+## Abuse
+- [major] (24) keyboard: Tab walks the menu button, then whole contest sectors (dashed outline), then my seat; in 7 tabs it never reached the one open space; ArrowLeft spins the wheel (532 ms settle) but nothing says which space is focused. shot phone/087,090
+- [major] (21) at 800x700 my seat and the shop fall below the fold; the screen shows rivals' seats and the wheel only. shot phone/077
+- [polish] (3) phone: with a space sheet open, Tab focus goes to the menu, not the sheet's Close. shot phone/074
+- [polish] (25) drag-spin: first change 284 ms, wheel settle 1268 ms after release (load 3.3).
+- [good] reload mid-turn restores the exact state, my turn and toasts included. shot phone/094
+- [good] tapping a taken space shows "Taken by P4" at the space plus the sheet with "TAKEN P4, since your last turn".
+- [major] (24) hover complete: wheel space hovers measured 445-1253 ms to complete in 2-3 bursts (appear, then fill); shop card hovers 219-525 ms; seat follower popover 72-176 ms (1 burst). Box load 14-16 throughout: re-measure on a quiet box, but 2-3 bursts is the game, not the box.
