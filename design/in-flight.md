@@ -5,7 +5,7 @@ Nothing is running. Live: v0.8.62 (main:play/build.json, source 07ec995). Before
 Threads and where each stands
 - Member structure: v0.8.71 live (Headhunter, Fixer, Window Shopper, Restocker, Timekeepers, Old Money; Bulk Buyer, Appraiser, Makeover cut). Sort of every color into kinds: /mnt/project-files/member-structure/. Waiting on Cory's read after play; names and prices are Claude's.
 - Action text review: v0.8.60 to v0.8.62 shipped. Waiting on Cory's #12 (how the wheel shows "+1" on long spaces). Owner of /review-text.
-- Engine start and round I: artifacts are live (v0.8.72, draft panel v0.8.73). Round decks (round II and III members shuffled in at their round; a setup switch folds III into II) are a try build only: https://cojamz.github.io/patrons/try/round-decks/ (branch claude/project-thread-tmeqf2). Two shops are shelved. Waiting on Cory: round decks yes/no, and whether to keep the seat's artifact buttons beside the wheel's list.
+- Engine start and round I: artifacts live (draft list fix v0.8.83) and round decks live (v0.8.82). Waiting on Cory's next call. Shuffle-in animation is with the snappiness thread.
 - Tonight's playtest notes (Oct 22): everything decided is live. Waiting on #6 to #11.
 - Purple redesign: shipped v0.8.45, playtest fixes v0.8.57. Waiting on #5 (Sleep In +3).
 - Gold, Silver, Yellow redesigns: paused by Cory. Waiting on #20 (which color next).
@@ -13,6 +13,6 @@ Threads and where each stands
 
 Branches
 - claude/gifted-newton-3lcy3i: the game (PR #1). main: the old game plus play/, rules/ and the harness mirror.
-- claude/project-thread-tmeqf2: round decks try build (two shops reverted there), open.
+- claude/project-thread-tmeqf2: round decks try build, superseded by the live game.
 - Kept as they are: gh-pages (retired, Pages serves main), ux-work-may-1 (old, from May).
 - Every other claude/* branch is an old thread workspace (sweeps, benches, panels, member sims, five-six players) and stale: its work is merged into the game branch or recorded in design/eval/. The Oct 24 tidy-up couldn't archive them (pushing tags is refused from this box), so they stay until someone with GitHub access deletes them; none are needed.
