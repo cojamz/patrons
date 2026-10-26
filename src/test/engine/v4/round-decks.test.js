@@ -25,7 +25,7 @@ describe('round decks', () => {
     const s = start();
     for (const u of [...s.pile, ...s.shop]) expect(cost(s, u)).toBeLessThanOrEqual(3);
     expect(s.waiting[2].every(u => cost(s, u) === 4)).toBe(true);
-    expect(s.waiting[3].every(u => cost(s, u) >= 5 || cardDef(s, u).round === 3)).toBe(true);
+    expect(s.waiting[3].every(u => cost(s, u) >= 5 || memberRound(cardDef(s, u)) === 3)).toBe(true);
   });
   it('each round shuffles its members in, with a log line', () => {
     let s = playTo(start(), 2);

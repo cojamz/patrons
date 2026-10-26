@@ -30,7 +30,9 @@ export const DEFAULT_RULES = { release: false, guests: true, cull: true, artifac
 /** Round cutoffs by printed cost (Cory, 2026-10-25: "3 or less / 4 / 5 and up"): the most a round I, then round II,
  *  member costs; anything pricier joins in round III. */
 export const ROUND_CUTOFFS = [3, 4];
-export const memberRound = def => def.round ?? (def.s + def.w <= ROUND_CUTOFFS[0] ? 1 : def.s + def.w <= ROUND_CUTOFFS[1] ? 2 : 3);
+/** Members that join in another round than their cost says (Cory, 2026-10-25: Impostor and Doppelganger, round III). */
+export const ROUND_OF = { 'echo.impostor': 3, 'echo.doppel': 3 };
+export const memberRound = def => def.round ?? ROUND_OF[def.id] ?? (def.s + def.w <= ROUND_CUTOFFS[0] ? 1 : def.s + def.w <= ROUND_CUTOFFS[1] ? 2 : 3);
 /** The round a member joins the deck in this game (1 when it starts in the deck). */
 export const joinsRound = (state, def) => (!state.rules?.roundDecks ? 1 : Math.min(memberRound(def), state.rules.roundDecks));
 /** Artifacts (Cory, 2026-10-24): each color on the table has one, picked at game start with 1 of its color. Ability
