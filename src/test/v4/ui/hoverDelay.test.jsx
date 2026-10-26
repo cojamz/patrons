@@ -4,7 +4,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup, act, fireEvent } from '@testing-library/react';
 import { createGame } from '../../../engine/v4/index.js';
 import { createHover, HoverCardLayer } from '../../../v4/game/HoverCards.jsx';
-import { HOVER_DELAY_MS } from '../../../v4/game/hoverDelay.js';
+import { HOVER_DELAY_MS, HOVER_OPEN_MS } from '../../../v4/game/hoverDelay.js';
 import { MO } from '../../../v4/motion.js';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); });
@@ -15,13 +15,15 @@ describe('the hover delay', () => {
   // Cory, 2026-10-25: hovers open the moment you point; the wait moved to closing (MO.hoverClose)
   it('is one constant, 0ms: no wait to open', () => { expect(HOVER_DELAY_MS).toBe(0); });
 
-  it('opens a card the moment the pointer arrives, whole', () => {
+  it('opens a card the moment the pointer arrives (a frame to place it), whole', () => {
     vi.useFakeTimers();
     const s = createGame({ seats, seed: 7 });
     const hover = createHover();
     render(<HoverCardLayer hover={hover} state={s} me={0} />);
     const layer = document.querySelector('[data-hover-layer]');
     act(() => { hover.onPlaqueHover(s.quadrants[0], target()); });
+    expect(layer.hasAttribute('data-prep')).toBe(true); // drawn hidden this frame, placed
+    act(() => { vi.advanceTimersByTime(HOVER_OPEN_MS); });
     expect(hover.card && hover.card.qid).toBe(s.quadrants[0]);
     expect(layer.dataset.open).toBe('1');
     expect(layer.querySelector('.lt-note').textContent).toMatch(/at this round’s end/);
@@ -34,6 +36,7 @@ describe('the hover delay', () => {
     const hover = createHover();
     const el = target();
     hover.onPlaqueHover(s.quadrants[0], el);
+    vi.advanceTimersByTime(HOVER_OPEN_MS);
     hover.onPlaqueHover(s.quadrants[0], null);
     vi.advanceTimersByTime(MO.hoverClose - 1);
     expect(hover.card).not.toBeNull();
@@ -51,7 +54,7 @@ describe('the hover delay', () => {
     const s = createGame({ seats, seed: 7 });
     const hover = createHover();
     hover.onPlaqueHover(s.quadrants[0], target());
-    vi.advanceTimersByTime(HOVER_DELAY_MS);
+    vi.advanceTimersByTime(HOVER_OPEN_MS);
     expect(hover.card && hover.card.qid).toBe(s.quadrants[0]);
     hover.onPlaqueHover(s.quadrants[1], target());
     expect(hover.card.qid).toBe(s.quadrants[1]);

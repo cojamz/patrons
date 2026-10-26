@@ -18,7 +18,7 @@ import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
-import { HOVER_DELAY_MS } from './hoverDelay.js';
+import { HOVER_DELAY_MS, HOVER_OPEN_MS } from './hoverDelay.js';
 import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim, stillOn, pointer } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
@@ -74,15 +74,15 @@ export function createHover() {
   };
   // after the rest: the prepared card becomes the card (one notice: the layer reads the same object, already drawn)
   const later = (next, draw) => {
-    if (HOVER_DELAY_MS <= 0) { want = null; prep = null; set(next); return; } // no wait: open now, in this event
     want = next;
     if (draw) { prep = next; notify(); }
+    // no wait (Cory, 2026-10-25): it's drawn hidden this frame, placed, and shown the next, so it opens whole where it stays
     openT = setTimeout(() => {
       want = null;
       if (card && card.pinned) { unprep(); return; }
       prep = null;
       set(next);
-    }, HOVER_DELAY_MS);
+    }, HOVER_OPEN_MS);
   };
   // a seat's card has buttons and a list to scroll: it stays while the pointer is on it or on its way to it, and what
   // the pointer crosses on the way (the seat's own members, the next seat) doesn't take its place (hoverIntent.js)

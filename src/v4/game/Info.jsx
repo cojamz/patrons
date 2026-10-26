@@ -17,7 +17,7 @@ import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
-import { HOVER_DELAY_MS } from './hoverDelay.js';
+import { HOVER_DELAY_MS, HOVER_OPEN_MS } from './hoverDelay.js';
 import { MO } from '../motion.js';
 import { withRace } from './race.js';
 import { memberTimingWords } from './memberTiming.js';
@@ -70,10 +70,10 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
   }, [seeThrough]); // eslint-disable-line react-hooks/exhaustive-deps
   const opening = () => {
     clearTimeout(timer.current);
-    if (HOVER_DELAY_MS <= 0) { pending.current = false; setOpen(o => (!o ? { el: ref.current, pinned: false } : o.hidden ? { ...o, hidden: false } : o)); return; }
     pending.current = true;
     setOpen(o => o || { el: ref.current, pinned: false, hidden: true });
-    timer.current = setTimeout(() => { pending.current = false; setOpen(o => (!o ? { el: ref.current, pinned: false } : o.hidden ? { ...o, hidden: false } : o)); }, HOVER_DELAY_MS);
+    // no wait (Cory, 2026-10-25): drawn hidden and placed this frame, shown the next, so it opens whole where it stays
+    timer.current = setTimeout(() => { pending.current = false; setOpen(o => (!o ? { el: ref.current, pinned: false } : o.hidden ? { ...o, hidden: false } : o)); }, HOVER_OPEN_MS);
   };
   // crossing toward another open card: this one stays shut (it opens on the next move once the crossing is over)
   // (the short detour allowance doesn't hold back a neighbour: moving along the row opens the next member at once,
