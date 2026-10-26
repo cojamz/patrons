@@ -15,7 +15,8 @@ import { browserPath } from './lib/browser.mjs';
 //       step holds it at RIVAL (motion.js, 0.65: 421ms); a rival's recruit or follower buy keeps the full floor. The
 //       shortest hand-over is a plain step's, so the gate's floor is the scaled one (still over 400ms at Steady);
 //  (m5) laptop, the same seeded game at Steady and at Relaxed: a rival's whole turn (their placement showing → the next
-//       placement showing, bot to bot) takes at least 1.8× as long at Relaxed, at the median (Cory's play note, morning
+//       placement showing, bot to bot) takes at least 1.3× as long at Relaxed (1.8× until Cory, 2026-10-26, capped every
+//       step's hold at about 4s at every speed: long steps now land alike, so Relaxed reads 1.5×), at the median (Cory's play note, morning
 //       fixes: "Animations are too fast even on Relaxed": Relaxed is twice Steady, Steady a little slower than before).
 // Starts from a saved game (e2e/v4/lib/rich-save.mjs) where P1 holds 6 of every color and is about to place.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5184.
@@ -287,7 +288,7 @@ async function rivalTurns(speed) {
   const ratio = med(relaxed) / med(steady);
   console.log(`rival turns, round I: Steady p50 ${med(steady)}ms (${steady.length}: ${steady.join(' ')}); Relaxed p50 ${med(relaxed)}ms (${relaxed.length}: ${relaxed.join(' ')}); Relaxed/Steady ${ratio.toFixed(2)}`);
   if (steady.length < 4 || relaxed.length < 4) errors.push(`(m5) too few rival turns measured (Steady ${steady.length}, Relaxed ${relaxed.length})`);
-  else if (!(ratio >= 1.8)) errors.push(`(m5) a rival's turn at Relaxed is ${ratio.toFixed(2)}× Steady's (p50 ${med(relaxed)}ms vs ${med(steady)}ms; want ≥ 1.8×)`);
+  else if (!(ratio >= 1.3)) errors.push(`(m5) a rival's turn at Relaxed is ${ratio.toFixed(2)}× Steady's (p50 ${med(relaxed)}ms vs ${med(steady)}ms; want ≥ 1.3×)`);
 }
 
 await browser.close();
