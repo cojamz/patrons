@@ -163,7 +163,7 @@ export function promptFor(state, mine) {
     case 'choose': {
       if (!mine) return { who: p, text: `${name} is choosing` };
       // the question itself is in the note on the board; the headline names what's asking ("Kickback: choose below")
-      // a ransom ("Shake Down: pay P2 4 (2 red, 2 gold) to keep Magnate?") is your call, said as "P2 holds Magnate: keep it
+      // a ransom ("Shake Down: pay P2 4 (2 red, 2 gold) to keep Magnate?") is your call, said as "P2 is taking your Magnate: pay 4 to keep it?" (panel Oct 26: "P2 holds Magnate" read as if P2 owned it); was "P2 holds Magnate: keep it
       // for 4?" (RC1 round 3 #55), never "Shake Down: choose one"
       const ransom = String(pend.prompt || '').match(/^Shake Down: pay (.+?) (\d+(?: \([^)]+\))?) to keep (.+)\?$/);
       if (ransom) {
@@ -171,7 +171,7 @@ export function promptFor(state, mine) {
         // say so, rather than leave "Let Middleman go" as the only button with no reason
         const have = Object.values(p.res || {}).reduce((a, b) => a + b, 0);
         const can = pend.options.some(o => o.value === 'pay');
-        return { who: p, lead: 'Your call — ', text: `${ransom[1]} holds ${ransom[3]}: keep it for ${ransom[2]}?`, keepCase: true,
+        return { who: p, lead: 'Your call — ', text: `${ransom[1]} is taking your ${ransom[3]}: pay ${ransom[2]} to keep it?`, keepCase: true,
           ...(can ? {} : { sub: `You hold ${have}: not enough to pay ${ransom[2]}, so it goes` }) };
       }
       const asker = (String(pend.prompt || '').match(/^([^:]{2,28}):\s/) || [])[1];

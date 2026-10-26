@@ -136,6 +136,17 @@ describe('Blue actions', () => {
     expect(s.players[0].members).toHaveLength(2);
     expect(s.players[0].bonus).toBe(5);
   });
+
+  it('Spree: the prompt counts recruits left, and Done ends every recruit left (panel Oct 26)', () => {
+    let s = take(scene({ round: 3, res: [{ red: 10, gold: 8, green: 8 }], shop: CHEAP }), 'market.spree');
+    expect(s.pending.prompt).toMatch(/3 recruits left/);
+    s = move(s, card(s, 'red.intern'));
+    expect(s.pending.kind).toBe('buy');
+    expect(s.pending.prompt).toMatch(/2 recruits left/);
+    s = move(s, 'pass');
+    expect(s.pending?.kind).not.toBe('buy');
+    expect(s.players[0].members).toHaveLength(1);
+  });
 });
 
 describe('Blue members', () => {

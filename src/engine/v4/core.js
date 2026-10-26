@@ -442,6 +442,8 @@ function inputFor(state, task) {
       return { kind: 'place', prompt: `${p.name}: place a minion`, options: slots.length ? [...slots, ...useOptions(state, p)] : [], onEmpty: () => { p.left -= 1; log(state, `No open space: ${p.name}'s minion sits out.`); } };
     }
     case 'buy': {
+      // a run of recruits (Spree) says how many are left after this one
+      const more = buysAfter(state, p);
       // Buying ends the purchase allowance, not the player's ability to use a member this turn.
       if (task.afterPurchase) {
         const uses = useOptions(state, p).filter(o => !useIdle(state, p, o.uid));
@@ -472,7 +474,7 @@ function inputFor(state, task) {
       const real = opts.filter(o => o.kind === 'card' || o.kind === 'tier' || o.kind === 'use' || o.kind === 'release');
       if (!real.length) return { kind: 'buy', prompt: '', options: [], onEmpty: task.extra ? undefined : () => log(state, `${p.name} couldn't afford anything.`) };
       opts.push({ id: 'pass', label: 'Pass', kind: 'pass' });
-      return { kind: 'buy', extra: !!task.extra, prompt: task.extra ? `${p.name}: recruit again (Big Spender), or pass` : `${p.name}: recruit a member or followers, or pass`, options: opts };
+      return { kind: 'buy', extra: !!task.extra, prompt: task.extra ? `${p.name}: recruit again (Big Spender), or pass` : `${p.name}: recruit a member or followers${more ? ` (${more + 1} recruits left)` : ''}, or pass`, options: opts };
     }
     case 'choose': {
       // only the options whose cards are still where they were when the choice was queued (see liveOptions)
@@ -588,7 +590,7 @@ function resolveTask(state, task, optionId) {
       return;
     }
     case 'buy': {
-      if (optionId === 'pass') { log(state, `${p.name} passed.`); return; }
+      if (optionId === 'pass') { log(state, `${p.name} passed.`); dropBuys(state, p); return; }
       const [kind, rest] = optionId.split(':');
       if (kind === 'card') {
         // One way to buy: always the payment step (the suggestion preselected), unless there's nothing to pay.
@@ -1265,6 +1267,22 @@ function spendAllowance(state, p, flag) {
 }
 // Preserve purchase allowance and the activation-only window across member uses.
 const workerSourceOf = task => task.workerSource !== undefined ? { workerSource: task.workerSource, workerGrant: task.workerGrant, workerOrder: task.workerOrder } : {};
+/** This turn's queued recruits after the current one (Spree's), up to the player's end of turn. */
+function turnBuys(state, p, from) {
+  const out = [];
+  for (let k = from; k < state.queue.length; k++) {
+    const t = state.queue[k];
+    if (t.p === p.id && t.t === 'endTurn') break;
+    if (t.p === p.id && t.t === 'buy' && !t.extra && !t.afterPurchase) out.push(t);
+  }
+  return out;
+}
+const buysAfter = (state, p) => turnBuys(state, p, 1).length;
+/** Done, no recruit ends every recruit left this turn, not just one of Spree's three (panel Oct 26, skeptic). */
+function dropBuys(state, p) {
+  const gone = new Set(turnBuys(state, p, 0));
+  if (gone.size) state.queue = state.queue.filter(t => !gone.has(t));
+}
 const extraOf = task => ({ ...workerSourceOf(task), ...(task.extra ? { extra: true } : {}), ...(task.afterPurchase ? { afterPurchase: true } : {}) });
 // A real buy (member or followers) in a buy step. The second one spends a Big Spender.
 function boughtOnce(state, p, task) {

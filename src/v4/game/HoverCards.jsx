@@ -624,6 +624,15 @@ export function SeatCard({ state, pid, meId = null, optionFor = () => null, onPi
   );
 }
 
+/** The tap sheet's button says what the pick does: Churn and Bury send the card to the bottom, Peek stacks the pile
+ *  (panel Oct 26: Churn's button said "Recruit" and sent the card away). */
+export const cardVerb = pending => {
+  const q = (pending && pending.prompt) || '';
+  if (/to the bottom/i.test(q)) return 'Send to bottom';
+  if (/^Peek:/.test(q)) return /on top/.test(q) ? 'Put on top' : 'Put next';
+  return 'Recruit';
+};
+
 /** A shop card under the pointer: the card itself (its cost, clearly), and Recruit when it's pinned on touch.
  *  Cory (2026-10-15): nothing else about payment here: no "You pay", no "Leaves", no contest lines, no click hint. */
 export function ShopCardHover({ state, me = null, uid, optionFor = () => null, onPick, pinned = false }) {
@@ -631,7 +640,7 @@ export function ShopCardHover({ state, me = null, uid, optionFor = () => null, o
   return (
     <div className="lt-card-body" data-card-hover={uid}>
       <MemberCard state={state} uid={uid} me={me} onFace={state.shop.includes(uid)} />
-      {opt && onPick && pinned && <button type="button" className="lt-btn pri" data-recruit={uid} onClick={() => onPick(opt.id)}>Recruit</button>}
+      {opt && onPick && pinned && <button type="button" className="lt-btn pri" data-recruit={uid} onClick={() => onPick(opt.id)}>{cardVerb(state.pending)}</button>}
     </div>
   );
 }

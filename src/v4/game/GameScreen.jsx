@@ -1258,6 +1258,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // A plain question (Your Call's "+2 followers or +4 white") opens at the decision point: beside the space you just
   // took, below it in the wheel's top half and above it in the bottom half, never off the wheel's area.
   const [plainAt, setPlainAt] = useState(null);
+  const plainSeq = useRef(null);
   const plainKey = showChoice && (!picker || (gift && !shopRecruit && !wheelMove)) && pend.kind === 'choose' && !payChoice(pend) ? pend : null;
   useLayoutEffect(() => {
     const p = plainKey && state.players[pend.player];
@@ -1284,6 +1285,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       if (out >= 8 && out + C.width <= W.width - 8) { left = Math.round(out); top = clampY(sy - W.top - C.height / 2); }
       else { left = clampX(dx > 0 ? S.right - W.left - C.width : S.left - W.left); top = up ? below : above; }
     } else { left = clampX(sx - W.left - C.width / 2); top = up ? below : above; }
+    // the next pick of the same steal or swap keeps the card's top where it was, so the rows don't slide under the
+    // pointer when the card shrinks (panel Oct 26: Redistribute's card dropped ~60 px after the first pick and the
+    // second click took from the wrong rival); it moves only if it would now run off the wheel
+    const seq = `${pend.player}|${key}|${String(pend.prompt).split(':')[0]}`;
+    const was = plainSeq.current;
+    if (was && was.seq === seq && was.at.top + C.height <= W.height - 8) ({ left, top } = was.at);
+    plainSeq.current = { seq, at: { left, top } };
     setPlainAt(at => (at && at.left === left && at.top === top && at.up === up ? at : { left, top, up }));
   }, [plainKey, gift && gift.chosen]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickerRef = useRef(null);

@@ -5,7 +5,7 @@
 // When the face-up row refills, each new card comes off the deck: a short flip at the deck, then a slide into its slot.
 // Every number is the engine's: state.pile (top first; core.js refill() takes from the top, release() and
 // buryFromShop() push to the bottom).
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import DeckBrowser from './DeckBrowser.jsx';
 import { cardDef, quadrant } from '../../engine/v4/index.js';
@@ -37,12 +37,18 @@ export const deckEdges = n => (n >= 30 ? 3 : n >= 12 ? 2 : n >= 4 ? 1 : 0);
 
 export function MemberDeck({ state, deckRef = null }) {
   const [browsing, setBrowsing] = useState(false);
+  // a click that lands here just after the pay sheet closed fell through from what was there (panel Oct 26: spam-clicking
+  // Pay closed the pay sheet and the next clicks opened the catalog mid-turn): the deck opens on a fresh single click only
+  const changedAt = useRef(-1e9), wasPay = useRef(false);
+  const paying = state.pending?.kind === 'pay';
+  useEffect(() => { if (wasPay.current && !paying) changedAt.current = performance.now(); wasPay.current = paying; }, [paying]);
+  const open = e => { if (e.detail > 1 || performance.now() - changedAt.current < 600) return; setBrowsing(true); };
   const n = state.pile.length;
   const edges = deckEdges(n);
   const label = n ? `${n} member${n === 1 ? '' : 's'} left in the deck` : 'The deck is empty';
   return (
     <>
-    <button type="button" onClick={() => setBrowsing(true)}
+    <button type="button" onClick={open}
       ref={deckRef} data-deck="" data-left={n} aria-haspopup="dialog"
       className={`lt-deck${n === 0 ? ' empty' : n <= 3 ? ' low last' : n <= DECK_LOW ? ' low' : ''}`}
       aria-label={`Browse member deck: ${label}`}
