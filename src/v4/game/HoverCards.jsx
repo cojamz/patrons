@@ -74,6 +74,7 @@ export function createHover() {
   };
   // after the rest: the prepared card becomes the card (one notice: the layer reads the same object, already drawn)
   const later = (next, draw) => {
+    if (HOVER_DELAY_MS <= 0) { want = null; prep = null; set(next); return; } // no wait: open now, in this event
     want = next;
     if (draw) { prep = next; notify(); }
     openT = setTimeout(() => {

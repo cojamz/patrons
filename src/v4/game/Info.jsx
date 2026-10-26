@@ -18,6 +18,7 @@ import { Follower } from '../art/Follower.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { HOVER_DELAY_MS } from './hoverDelay.js';
+import { MO } from '../motion.js';
 import { withRace } from './race.js';
 import { memberTimingWords } from './memberTiming.js';
 
@@ -68,7 +69,9 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     return () => dropCard(find);
   }, [seeThrough]); // eslint-disable-line react-hooks/exhaustive-deps
   const opening = () => {
-    clearTimeout(timer.current); pending.current = true;
+    clearTimeout(timer.current);
+    if (HOVER_DELAY_MS <= 0) { pending.current = false; setOpen(o => (!o ? { el: ref.current, pinned: false } : o.hidden ? { ...o, hidden: false } : o)); return; }
+    pending.current = true;
     setOpen(o => o || { el: ref.current, pinned: false, hidden: true });
     timer.current = setTimeout(() => { pending.current = false; setOpen(o => (!o ? { el: ref.current, pinned: false } : o.hidden ? { ...o, hidden: false } : o)); }, HOVER_DELAY_MS);
   };
@@ -106,7 +109,10 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         onPointerLeave={e => {
           clearTimeout(timer.current); pending.current = false; onIt.current = false; clearTimeout(retry.current);
           if (e.pointerType !== 'mouse') return;
-          if (sticky && isOpen && !open.pinned && body.current) { aimAt(body.current.closest('.popover') || body.current); release(); } else letGo();
+          if (sticky && isOpen && !open.pinned && body.current) { aimAt(body.current.closest('.popover') || body.current); release(); }
+          // the hover's wait is on closing (Cory, 2026-10-25): an open tip stays a beat after the pointer leaves
+          else if (isOpen && !open.pinned && HOVER_DELAY_MS <= 0) timer.current = setTimeout(letGo, MO.hoverClose);
+          else letGo();
         }}
         onClick={pin}
         onKeyDown={e => { if (!nested && (e.key === 'Enter' || e.key === ' ')) pin(e); }}

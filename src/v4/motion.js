@@ -73,7 +73,7 @@ const BASE = {
   spin: 300,
   /** hover cards: open at once, close a beat after the pointer leaves (HoverCards.jsx) */
   hoverOpen: 0,
-  hoverClose: 150,
+  hoverClose: 200, // Cory 2026-10-25: the hover's wait moved here from opening (was 150)
   /** a keyword's tip (Info.jsx): a hair of intent, so sweeping across a sentence doesn't flash every term */
   tipOpen: 50,
   /** the chosen space lights before anything moves (the selection, made obvious) */

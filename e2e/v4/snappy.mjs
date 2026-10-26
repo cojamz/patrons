@@ -6,7 +6,7 @@ import { browserPath } from './lib/browser.mjs';
 //       pointer's arrival + HOVER_DELAY_MS): wheel spaces, shop cards, keyword tips, rivals' seats and the members in
 //       them; it opens complete: its words, its size and its place 400ms later are the ones it first painted (no "You'd get" or
 //       member list filling in after: testers saw cards fill in late, in bursts); and a quick sweep across several spaces
-//       (the pointer moving on within the delay) opens no card at all;
+//       (the pointer moving on within the delay) opens no card at all (while there is a delay: 0 since Cory, 2026-10-25);
 //  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 150ms;
 //  (s4) the animation speed setting changes a chain's length (Relaxed ≥ 1.8 × Quick);
 //  (s5) the gap between your turns at Steady (bots at Normal) is under 8s × Steady's speed (9.6s);
@@ -253,7 +253,8 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   // slowed (a step longer than the delay, timed in the page) proves nothing, so it's tried again
   const sweepOn = spaces.slice(0, 6);
   let swept = null;
-  for (let k = 0; k < 3 && sweepOn.length >= 3; k++) {
+  // (Cory, 2026-10-25: hovers open the moment you point, so a sweep opening cards is the design now: not judged)
+  for (let k = 0; k < 3 && sweepOn.length >= 3 && HOVER_DELAY_MS > 0; k++) {
     await page.mouse.move(4, 696);
     await page.waitForFunction(() => !window.__snap.hoverUp(), null, { timeout: 1500 }).catch(() => {});
     await page.waitForTimeout(300);
@@ -270,7 +271,7 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
     report.push(`sweep across ${sweepOn.length} spaces: longest step ${Math.round(swept.step)}ms, ${swept.opened ? `a card opened ("${swept.opened.slice(0, 60).replace(/\s+/g, ' ')}")` : 'no card opened'}`);
     if (swept.opened && swept.step < HOVER_DELAY_MS - 20) errors.push(`(s2) a quick sweep across ${sweepOn.length} spaces (each step under ${Math.round(swept.step)}ms, the delay is ${HOVER_DELAY_MS}ms) opened a card: "${swept.opened.slice(0, 80).replace(/\s+/g, ' ')}"`);
     if (swept.step >= HOVER_DELAY_MS - 20) report.push(`sweep: the box never managed a step under ${HOVER_DELAY_MS - 20}ms in 3 tries, not judged`);
-  } else errors.push('(s2) no sweep across the spaces could be made (fewer than 3 spaces on screen)');
+  } else if (HOVER_DELAY_MS > 0) errors.push('(s2) no sweep across the spaces could be made (fewer than 3 spaces on screen)');
   await page.mouse.move(4, 696);
   await page.waitForTimeout(300);
 }

@@ -1,1 +1,2 @@
-export const HOVER_DELAY_MS = 200; // Cory 2026-10-15: hovers wait this long before opening; one constant, tune here
+// Cory 2026-10-25: hovers open the moment you point; the wait moved to closing (MO.hoverClose). Was 200 (Cory 2026-10-15).
+export const HOVER_DELAY_MS = 0;
