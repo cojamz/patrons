@@ -2,6 +2,7 @@
 
 Last updated 2026-10-24 by the tidy-up thread. Before this: design/archive/handoff-2026-10-21-to-23.md.
 - Live: https://cojamz.github.io/patrons/play/ is v0.8.62 (source 07ec995, Oct 23 12:39pm Eastern). Branch claude/gifted-newton-3lcy3i (PR #1) is the game plus docs; every CHANGELOG.md section through v0.8.62 names its source and main commit.
+- Versions (Cory, Oct 26): the round I action rework ships as v0.9; all colors at 2.0 is v1.0. Round I rework thread owns the bump.
 - Nothing is running. Cory asked for a clean start on Oct 23, 9:04pm Eastern.
 - Every open question for Cory is in one numbered list: design/notes/waiting-on-cory-2026-10-24.md (copy in /mnt/project-files/tidy-up/). Build nothing from it until he answers by number.
 - Artifacts are live (v0.8.72-83): each color has one, picked at the start with 1 of its color, drawn on the player card; the draft is picked only from the wheel's list ("A boon for your cult. Comes with 1 resource."). Round decks are live (v0.8.82): members cost 3 or less start in the deck, cost 4 join at round II, 5 and up (plus Impostor, Doppelganger) at round III; setup switch folds III into II; deck screen greys members not joined. state.joined is the hook for the shuffle-in animation (snappiness thread owns it).
