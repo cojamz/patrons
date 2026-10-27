@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.96 — 2026-10-27 — unreleased
+
+- Bigger text across the game, a step up from 1400px-wide windows, and shop members keep their picture with details on
+
 ## v0.8.95 — 2026-10-27 — unreleased
 
 - The log under the player cards shows every turn since yours that fits, and no longer opens over the fourth player's card
