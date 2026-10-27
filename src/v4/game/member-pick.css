@@ -1,5 +1,9 @@
-/* Reading an ability uses the portrait's space, without rearranging the shop. */
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art{display:none}
+/* Reading an ability keeps the member's picture above it, in whatever room the rule leaves (Cory, 2026-10-27, from Mike's
+   "there seems to be space to also have their icons on the card too"), without rearranging the shop: the picture
+   shrinks first, and on a card with no room left it gives way to the rule. */
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art{flex:1 1 0;min-height:0;height:auto;overflow:hidden}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art > .sprite{width:auto;height:min(48px, calc(100% - 4px))}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art > .lt-corner-cost{display:none}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .nm{white-space:normal;height:auto;min-height:12px;flex:none;margin:4px 4px 2px;display:grid;align-content:center}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{display:block;flex:none;padding:2px 6px 2px;font-size:13px;line-height:14px;color:var(--pl-ink,#2b2018);font-weight:500;overflow-wrap:break-word;text-wrap:pretty}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability[data-fit="tight"]{font-size:12px;line-height:12px;padding:1px 5px;letter-spacing:-0.1px}

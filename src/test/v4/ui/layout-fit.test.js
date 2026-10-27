@@ -37,8 +37,8 @@ describe('laptop fits', () => {
 });
 
 describe('large screens', () => {
-  it('from 1600×880 the side columns, prompt, chairs, story, turn card and shop zoom by one step with the grid', () => {
-    const body = media('(min-width:1600px)', 'zoom');
+  it('from 1400×770 the side columns, prompt, chairs, story, turn card and shop zoom by one step with the grid', () => {
+    const body = media('(min-width:1400px)', 'zoom');
     for (const region of ['.lt-prompt', '.lt-snake', '.lt-seat', '.lt-since', '.lt-shop', '.turn-card']) expect(body).toContain(`.app.game.lt > ${region}`);
     expect(body).toMatch(/zoom:var\(--gz\)/);
     expect(body).toMatch(/--col-l:calc\(320px \* var\(--gz\)\)/);

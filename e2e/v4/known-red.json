@@ -1,3 +1,4 @@
 {
-  "_about": "Browser gates already red on the live build. The check still runs them and prints KNOWN RED, but they don't fail the run; when one passes again, the check says to remove it. Add an entry only after seeing it fail on the live commit. Owner fixes it; nobody weakens it."
+  "_about": "Browser gates already red on the live build. The check still runs them and prints KNOWN RED, but they don't fail the run; when one passes again, the check says to remove it. Add an entry only after seeing it fail on the live commit. Owner fixes it; nobody weakens it.",
+  "shop-sizing.mjs": "Red on live v0.8.95 (80b77ee, seen 2026-10-27): at 1270x700 turning details on resizes the follower buys (small 119 -> 109.5px). Owner: Mike readability thread."
 }
