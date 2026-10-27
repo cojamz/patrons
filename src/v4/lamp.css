@@ -315,7 +315,7 @@ h1,h2,h3{font-family:var(--serif)}
 /* not your turn: the open panels rest a step below lit paper, so the lamp means something when it comes */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--pl-paper,#f2e8d2))}
 /* the rim (plate 1b): light type on the quadrant's deep band; the color as its dot in a light ring; the prize a size up */
-.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule{fill:#f6deb0;stroke:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule{fill:#fff3dc;stroke:none;font-weight:800} /* plain case, a size up (Cory, 2026-10-27: "it feels ignorable") */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule .rim-prize{font-weight:800}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot{pointer-events:none}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot .rim-dot-ring{fill:#f6deb0}

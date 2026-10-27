@@ -40,15 +40,15 @@ import { MO, spinEase } from '../motion.js';
 const Space = memo(function WheelSpace({ el }) { return el; });
 
 // sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
-const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
+const RING_S = { 1: { r0: 128, r1: 176, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
 // panels: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45°, ring III: one 90°) on a dark
 // board with gutters between them; the hub is small so the rings get the room; r is where each
 // panel's print is centred (ring III's a little out from the middle of its wedge, where the wedge is wide)
-const RING_P = { 1: { r0: 119, r1: 179, r: 149, n: 3, span: 60 }, 2: { r0: 64, r1: 116, r: 90, n: 2, span: 45 }, 3: { r0: 16, r1: 61, r: 40, n: 1, span: 0 } };
+const RING_P = { 1: { r0: 116, r1: 176, r: 146.5, n: 3, span: 60 }, 2: { r0: 63, r1: 113, r: 88.5, n: 2, span: 45 }, 3: { r0: 16, r1: 61, r: 40, n: 1, span: 0 } };
 const ringsOf = look => (look === 'panels' ? RING_P : RING_S);
-const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
+const RIM = { r0: 177, r1: 200, r: 188.5 }; // the rim band: each quadrant's rule, engraved (thicker, and its words a size up and in plain case: Cory, 2026-10-27, "it feels ignorable")
 // the rim's hover/tap target: from just outside ring I's sockets to well past the paper's edge (it wins over any space)
-const RIM_HIT = { r0: 181, r1: 216 };
+const RIM_HIT = { r0: 178, r1: 216 };
 // the board's square: the disc (r 200) and a thin margin for its knurled edge (w2a E9: the old 26-unit margin left dead
 // wood around the wheel while the seats were cramped; the rim's leaders now sit inside the band)
 const CX = 200, CY = 200, VB0 = -8, VBS = 416;
@@ -784,8 +784,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // can't feed a re-render (a measure → setState → re-measure cycle crashed frozen builds with React #185). To fit
   // the arc, a long line first tightens its letter-spacing, then steps its size down (the tiebreak keeps
   // its words: one word, "ties: red", read as the red player). The full tiebreak sentence is in the rim's title and hover card.
-  const RIM_PX = 12.2;
-  const rimFont = Math.min(16, Math.max(11, RIM_PX / (scale || 1)));
+  const RIM_PX = 15;
+  const rimFont = Math.min(20, Math.max(13, RIM_PX / (scale || 1)));
   const arcHalf = 44; // the path the text runs on (wider than any label)
   const RIM_MARK = 1.25; // the follower mark's room after the prize, per unit of font size
   // a leader's emoji on the rim: its 8×8 pixel art at a whole number of screen pixels per art pixel, small and well
@@ -797,7 +797,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // the tiebreak's words on the rim name a count, never a lone color: "ties: red" was read as the red player (blind
   // testers, 2026-10-15), so it's "ties: red members" or "ties: most yellow", never cut to one word
   // the prize comes every round, not once at the game's end (Cory, 2026-10-15: "each round: most gold +4")
-  const EACH = 'each round: ';
+  const EACH = 'Each round: ';
   const tieWords = tb => (!tb ? null : / /.test(tb.unit) ? tb.unit : `most ${tb.unit}`);
   const rimLabel = (qid, q, leaders) => {
     const st = stdById[qid];
@@ -827,20 +827,20 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // panels: the rim says its rule in words (Cory, 2026-10-15: "a dot is no substitute for the word"), then the prize
   // a size up, the follower mark and whoever leads: "MOST BLUE · +2 👤 🐸", "MOST MEMBERS · ties: red · +2 👤". Each
   // run's width comes from the font (rimWidth), never from the page.
-  const RIM_LS = 0.08;
+  const RIM_LS = 0.02;
   const rimRuns = (qid, q, leaders) => {
     const st = stdById[qid];
     const sc = quadrant(qid).scoring;
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
     const tie = tieWords(tb);
-    const runs = [{ kind: 'text', text: `${EACH}${ruleWords(qid, st ? st.rule : shortLabel(sc.label))}`.toUpperCase(), tie }, { kind: 'text', text: '·' }, { kind: 'prize', text: `+${RING_VALUE[paying - 1]}` }];
+    const runs = [{ kind: 'text', text: `${EACH}${ruleWords(qid, st ? st.rule : shortLabel(sc.label)).replace(/^Most /, 'most ')}`, tie }, { kind: 'text', text: '·' }, { kind: 'prize', text: `+${RING_VALUE[paying - 1]}` }];
     // widths per unit of font size, and the gaps before each run
     for (const [k, r] of runs.entries()) {
       r.w = r.kind === 'dot' ? 1.1 : r.kind === 'prize' ? 1.3 * rimWidth(r.text, 800, 0) : rimWidth(r.text, 700, 0) + RIM_LS * r.text.length + (r.tie ? rimWidth(`  ·  ties: ${r.tie}`, 600, 0.04) : 0);
       r.gap = !k ? 0 : 0.45;
     }
     const top = Math.abs(norm(qCenter(q, nq) + rot)) < 90;
-    const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
+    const rr = top ? RIM.r - 3.8 : RIM.r + 3.8;
     const room = (2 * arcHalf * Math.PI / 180) * rr - 26 - leaders.length * EMOJI_ROOM;
     const lineK = runs.reduce((a, r) => a + r.gap + r.w, 0);
     const tailK = RIM_MARK + (leaders.length ? 0.45 : 0);
