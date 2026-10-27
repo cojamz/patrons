@@ -1,7 +1,7 @@
 /* "Since your last turn" (SinceStrip.jsx): a quiet list, one line per rival placement, each name opening its card.
    Self-contained: the layout (lamp.css) places the box; inside it nothing runs past its edges. */
 .lt-since{display:flex;flex-direction:column;gap:4px;box-sizing:border-box;min-width:0;max-width:100%;padding:2px 3px;overflow:hidden;font-family:var(--sans);color:var(--cream-2,#d9cbb0)}
-.lt-since .since-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:1px 2px 1px 0;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
+.lt-since .since-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:1px 2px 1px 0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
 .lt-since .since-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lt-since .since-log{flex:none;font:inherit;letter-spacing:.06em;text-transform:uppercase;color:var(--lamp-ink);background:none;border:0;border-radius:7px;padding:2px 8px;box-shadow:inset 0 0 0 1px rgba(var(--lamp),.45);cursor:pointer;min-height:22px}
 .lt-since .since-log:hover,.lt-since .since-log:focus-visible{background:rgba(var(--lamp),.12)}
@@ -21,7 +21,7 @@
 .lt-since .big{color:var(--cream-2,#d9cbb0)}
 .lt-since .since-row .pip{width:.95em;height:.95em;vertical-align:-.15em}
 .lt-since .since-row.hit{background:rgba(232,120,100,.1);box-shadow:inset 2px 0 0 rgba(232,120,100,.7)}
-.lt-since .since-more button{font:inherit;font-size:11px;color:var(--cream-3);background:none;border:0;padding:1px 7px;cursor:pointer;text-decoration:underline dotted}
+.lt-since .since-more button{font:inherit;font-size:12px;color:var(--cream-3);background:none;border:0;padding:1px 7px;cursor:pointer;text-decoration:underline dotted}
 /* the newest line in little room (SinceStrip level 1): without the space's board words, whole */
 .lt-since .since-row.brief .sp-words{display:none}
 /* nothing since your last turn: only the Log, at the head's right */
@@ -46,7 +46,7 @@ body[data-since-tip][data-since-tip] .lt-hover.popover{z-index:46}
 .since-card .sc-line.quiet{opacity:.7}
 
 /* the switch on a member that can be switched (Midas): its state, lit when on */
-.lt-cult-seat .cs-switch{font-size:11px;letter-spacing:.02em;white-space:nowrap}
+.lt-cult-seat .cs-switch{font-size:12px;letter-spacing:.02em;white-space:nowrap}
 .lt-cult-seat .lt-btn.mini.cs-switch{padding:3px 6px}
 .lt-cult-seat .lt-btn.mini.cs-switch.on{color:var(--paper-ink);background:var(--lamp-ink);border-color:transparent}
 .lt-cult-seat .cs-switch.idle{display:inline-block;padding:1px 5px;border-radius:7px;line-height:14px;color:var(--cream-3);box-shadow:inset 0 0 0 1px rgba(243,230,200,.2);cursor:help}
@@ -60,18 +60,7 @@ body[data-since-tip][data-since-tip] .lt-hover.popover{z-index:46}
 .hn-locate .base,[data-cell].hn-locate{box-shadow:0 0 0 3px rgba(var(--lamp),.95),0 0 16px 4px rgba(var(--lamp),.7) !important}
 path.hn-locate,rect.hn-locate,polygon.hn-locate{filter:drop-shadow(0 0 5px rgba(var(--lamp),.95))}
 
-/* the compact log under the chairs (SinceStrip `compact`, from 1200px; Cory, 2026-10-21: "doesn't need to take up too
-   much space just make it expandable"): the newest turn on one line under its heading, the earlier ones counted beside
-   the Log; a tap opens them in a card above it, over the chairs, and "Less" (or Esc) tucks them back. The strip's own box
-   stays the same size either way, so nothing under it (the turn card) moves. */
-.lt-since.compact{position:relative}
-.lt-since.compact.open{overflow:visible}
+/* the log under the chairs (SinceStrip `compact`, from 1200px): it fills the room the chairs leave, oldest turns folding
+   into "N earlier" (Cory, 2026-10-27: the one-line log opened over the fourth chair) */
 .lt-since.compact .since-head{gap:6px}
 .lt-since.compact .since-title{margin-right:auto}
-.lt-since .since-expand{display:inline-flex;align-items:center;gap:4px;flex:none;font:inherit;font-size:11px;letter-spacing:.06em;color:var(--cream-2,#d9cbb0);
-  background:none;border:0;border-radius:7px;padding:2px 6px;cursor:pointer;min-height:22px}
-.lt-since .since-expand:hover,.lt-since .since-expand:focus-visible{color:var(--cream);background:rgba(243,230,200,.07)}
-.lt-since .since-expand .since-chev{width:6px;height:6px;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:translateY(1px) rotate(-135deg)}
-.lt-since .since-expand.open .since-chev{transform:translateY(-2px) rotate(45deg)}
-.lt-since.compact.open .since-list{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:30;max-height:none;overflow:visible;padding:6px 4px;border-radius:8px;
-  background:var(--table-2,#2a2019);box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.14)),0 10px 24px rgba(0,0,0,.5)}
