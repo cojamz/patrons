@@ -6,7 +6,7 @@
 .lt-shop-cards .lt-deck{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .lt-shop-cards .lt-deck .pile{position:relative;flex:none;width:62px;height:84px}
 .lt-shop-cards .lt-deck .n{font-size:18px}
-.lt-shop-cards .lt-deck .cap{font-family:var(--sans);font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-cream-3,#7d6e5a)}
+.lt-shop-cards .lt-deck .cap{font-family:var(--sans);font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-cream-3,#7d6e5a)}
 .lt-shop-cards .lt-deck.empty .pile{width:56px;height:78px}
 
 /* A member's foot: the price on the left (a struck list price stands before the price you pay, never against the worth),
@@ -21,7 +21,7 @@
    wins): what you get is the tile's hero (18px, full ink), the price before the arrow steps down to 14px and a quieter ink.
    No rule and no layout change. */
 .lt-shop-cards .lt-rates .rt-trade{gap:3px}
-.lt-shop-cards .lt-rates .rt-trade b{font-size:14px;color:var(--pl-ink-2,#6e5c49)}
+.lt-shop-cards .lt-rates .rt-trade b{font-size:15px;color:var(--pl-ink-2,#6e5c49)}
 .lt-shop-cards .lt-rates .rt-trade b.get{font-size:18px;font-weight:800;color:var(--pl-ink,#2b2018)}
 .lt-shop-cards .lt-rates .rt-trade b.get + .follower-mark{width:16px;height:16px;color:var(--pl-ink,#2b2018)}
 
@@ -53,9 +53,9 @@
 /* One click anywhere switches the order; the active word moves within one tactile control. */
 .lt-shop-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
 .lt-shop-controls .lt-sort{display:inline-flex;gap:0;margin:0;min-height:32px;padding:2px;font:inherit;background:transparent;color:var(--cream-2);cursor:pointer}
-.lt-shop-controls .lt-sort span{padding:4px 6px;font-size:11px;line-height:16px;border-radius:16px}
+.lt-shop-controls .lt-sort span{padding:4px 6px;font-size:12px;line-height:16px;border-radius:16px}
 .lt-shop-controls .lt-sort span.on{background:var(--cream);color:var(--table,#191310)}
-.lt-view-btn{min-height:32px;padding:4px 6px;border:0;background:none;color:var(--cream-2);font:inherit;font-size:11px;cursor:pointer}
+.lt-view-btn{min-height:32px;padding:4px 6px;border:0;background:none;color:var(--cream-2);font:inherit;font-size:12px;cursor:pointer}
 .lt-view-btn[aria-pressed="true"]{color:var(--cream);text-decoration:underline;text-underline-offset:4px}
 .lt-view-btn:disabled{cursor:default;opacity:1}
 .lt-shop-controls button:focus-visible{outline:2px solid var(--cream);outline-offset:2px}
@@ -84,8 +84,8 @@
 .app.game.lt .lt-shop-cards .lt-rate .rt-trade .get{font:800 30px/1 var(--sans);color:var(--pl-ink,#2b2018)}
 .app.game.lt .lt-shop-cards .lt-rate .rt-trade .follower-mark{width:28px;height:28px;color:var(--pl-ink,#2b2018)}
 .app.game.lt .lt-shop-cards .lt-rate .ft{display:flex;align-items:center;justify-content:space-between;min-height:22px;height:22px;width:auto;margin:auto 6px 0}
-.app.game.lt .lt-shop-cards .lt-rate .rt-left{font-size:10px;margin:0}
-.app.game.lt .lt-shop-cards .lt-rates .lt-done{order:2;grid-column:1 / -1;width:100%;margin:2px 0 0;height:40px;min-height:40px;font-size:14px}
+.app.game.lt .lt-shop-cards .lt-rate .rt-left{font-size:11px;margin:0}
+.app.game.lt .lt-shop-cards .lt-rates .lt-done{order:2;grid-column:1 / -1;width:100%;margin:2px 0 0;height:40px;min-height:40px;font-size:15px}
 .app.game.lt .lt-shop-cards .lt-rates .lt-done.idle{display:none}
 /* Keep the whole market on the table. Both views use the same twelve slots; rules replace portraits. */
 @media (min-width:1200px) and (min-height:500px){
@@ -151,7 +151,7 @@
    ran into the worth on a 95px card at 1270x700 (Patriarch, Underdog, Tribute Band) and read as one number ("106") */
 .app.game.lt .lt-shop-cards .lt-card .ft[data-discount]{height:auto;align-items:flex-end}
 .app.game.lt .lt-shop-cards .lt-card .ft .cost-now{display:inline-grid;grid-template-columns:max-content;justify-items:start;row-gap:0}
-.app.game.lt .lt-shop-cards .lt-card .ft .cost-now .cost-was.num{font-size:11px;line-height:12px;font-weight:600;margin-top:2px}
+.app.game.lt .lt-shop-cards .lt-card .ft .cost-now .cost-was.num{font-size:12px;line-height:12px;font-weight:600;margin-top:2px}
 
 /* The "affordable" toggle (Cory, 2026-10-18): members you can't pay for right now fade, in every phase. A card the space
    under your pointer would unlock (data-after) or aims at (data-aim) comes back, so the hover's answer still reads. */

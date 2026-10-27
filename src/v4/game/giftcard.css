@@ -20,19 +20,19 @@
 }
 .gift-card .turn-of{margin:0}
 .gift-card .gc-head{display:flex;flex-direction:column;gap:0;margin:0}
-.gift-card .gc-title{font:700 11px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-title{font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-2,#5f4e3d)}
 .lt .lt-wheel > .prompt.choice.gift-card .gc-what,.gift-card .gc-what{margin:0;font:600 18px/24px var(--serif);color:var(--paper-ink,#2a1f17);white-space:nowrap}
 .gift-card .gc-what .num{font-family:var(--sans);font-weight:700;margin-left:.05em}
 .gift-card .gc-what .pip.glyph{width:.8em;height:.8em;vertical-align:-.06em;margin:0 .12em 0 .06em}
 
 .gift-card .gc-row{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:start;column-gap:12px;transition:opacity .15s ease-out}
-.gift-card .gc-lbl{padding-top:12px;font:500 14px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-lbl{padding-top:12px;font:500 15px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
 .gift-card .gc-row[data-live] .gc-lbl{font-weight:700;color:var(--paper-ink,#2a1f17)}
 .gift-card .gc-items{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px}
 
 /* every pick: a paper tile that lifts on hover and presses on click */
 .gift-card .gc-item{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:44px;min-height:44px;padding:4px 8px;margin:0;
-  border:0;border-radius:8px;background:rgba(255,255,255,.4);color:var(--paper-ink,#2a1f17);font:700 14px/20px var(--sans);cursor:pointer;
+  border:0;border-radius:8px;background:rgba(255,255,255,.4);color:var(--paper-ink,#2a1f17);font:700 15px/20px var(--sans);cursor:pointer;
   box-shadow:0 0 0 1px rgba(42,31,23,.18);transition:transform .1s ease-out,box-shadow .12s ease-out,background .12s ease-out,opacity .15s ease-out}
 .gift-card .gc-item:disabled{cursor:default}
 /* the row to act on: its picks wear the lamp ring (the one glow on screen) */
@@ -56,8 +56,8 @@
 .gift-card .gc-dot{min-width:44px;padding:4px 10px}
 /* a rival: their face over their name; what they hold of the color under it */
 .gift-card .gc-face{flex-direction:column;gap:0;min-width:56px;padding:4px 8px 2px}
-.gift-card .gc-face .gc-name{font:700 14px/18px var(--sans)}
-.gift-card .gc-has{display:inline-flex;align-items:center;gap:2px;font:500 11px/16px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-face .gc-name{font:700 15px/18px var(--sans)}
+.gift-card .gc-has{display:inline-flex;align-items:center;gap:2px;font:500 12px/16px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
 .gift-card .gc-item.chosen .gc-has{color:inherit}
 /* an amount: the number alone */
 .gift-card .gc-amt{min-width:56px;font-size:18px}
@@ -65,7 +65,7 @@
 .gift-card .gc-member{flex-direction:column;gap:0;width:80px;padding:4px 3px 2px}
 /* a long name ("Mentor & Protégé") breaks over two lines at its seam, as on the shop's cards, never cut with an ellipsis */
 .gift-card .gc-member{justify-content:flex-start}
-.gift-card .gc-member .gc-name{display:block;max-width:100%;font:700 11px/13px var(--sans);white-space:normal;text-align:center;text-wrap:balance;padding:1px 0}
+.gift-card .gc-member .gc-name{display:block;max-width:100%;font:700 12px/13px var(--sans);white-space:normal;text-align:center;text-wrap:balance;padding:1px 0}
 .gift-card .gc-row[data-row="1"] .gc-items,.gift-card .gc-group-items{align-items:stretch}
 /* a swap's "Theirs": one line per rival, their face first, their members wrapping under each other beside it (never
    one long row past the card's edge) */
@@ -79,26 +79,26 @@
 /* four players' rows show whole (panel Oct 26: P4's row was cut in half), and a row that scrolls fades at its edge (the mask rules above) */
 .gift-card[data-gift="trade"] .gc-row > .gc-items{max-height:min(252px,calc(100% + 6px));overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:3px;margin:-3px}
 .gift-card .gc-holder{flex-direction:column;justify-content:center;min-width:40px;max-width:64px;height:auto;min-height:44px;text-align:center;gap:2px}
-.gift-card .gc-holder .gc-who-name{font-size:11px;line-height:13px;overflow-wrap:anywhere}
+.gift-card .gc-holder .gc-who-name{font-size:12px;line-height:13px;overflow-wrap:anywhere}
 
 /* the way out ("Swap nothing", "Take all", "Recruit nothing") is its own footer under a hairline, so it never reads as
    part of the caption above it (Cory's todo: Trade Seeds' "Swap nothing") */
 .gift-card .gc-rest{display:flex;justify-content:flex-end;gap:8px;margin-top:4px;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12))}
-.gift-card .gc-lead{margin:0;font:500 12px/16px var(--sans);color:var(--ink-2,#5a4a3c)}
-.lt .lt-wheel > .prompt.choice.gift-card .gc-rest-btn{min-height:32px;padding:0 14px;border-radius:999px;font:500 14px/1 var(--sans)}
+.gift-card .gc-lead{margin:0;font:500 13px/16px var(--sans);color:var(--ink-2,#5a4a3c)}
+.lt .lt-wheel > .prompt.choice.gift-card .gc-rest-btn{min-height:32px;padding:0 14px;border-radius:999px;font:500 15px/1 var(--sans)}
 
 @media (prefers-reduced-motion:reduce){ .gift-card .gc-item{transition:none} .gift-card .gc-item:not(:disabled):hover{transform:none} }
 
 /* a color of yours (Goody Bags, Cheap Seats): one row, no label column; the line under the heading */
 .gift-card[data-gift="color"] .gc-row{grid-template-columns:auto}
-.gift-card .gc-sub{margin:0;font:500 14px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-sub{margin:0;font:500 15px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
 
 /* a member's picture with what it costs beside it, its name under them (live panel round 1: the swaps showed no cost) */
 .gift-card .gc-pic{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:28px}
-.gift-card .gc-cost{display:inline-flex;flex-direction:column;align-items:flex-start;gap:0;font:700 11px/12px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-cost{display:inline-flex;flex-direction:column;align-items:flex-start;gap:0;font:700 12px/12px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
 .gift-card .gc-cd{display:inline-flex;align-items:center;white-space:nowrap}
 .gift-card .gc-cd .pip.glyph,.gift-card .gc-cd .pip.wild{width:9px;height:9px;margin:0 0 0 1px;vertical-align:0}
-.gift-card .gc-free{font:500 11px/12px var(--sans)}
+.gift-card .gc-free{font:500 12px/12px var(--sans)}
 .gift-card .gc-item.chosen .gc-cost{color:inherit}
 /* a crowded swap (round III): closer tiles, a wider card, so every row shows whole */
 @media (min-width:861px) and (min-height:500px){
@@ -118,12 +118,12 @@
 /* the steal: one line per rival, their face and name, then the stacks you can take a coin from */
 .gift-card[data-gift="steal"] .gc-row,.gift-card[data-gift="recruit"] .gc-row,.gift-card[data-gift="move"] .gc-row{grid-template-columns:minmax(0,1fr)}
 .gift-card .gc-rival .gc-who{gap:4px;min-width:72px;height:44px}
-.gift-card .gc-who-name{font:700 14px/20px var(--sans);color:var(--paper-ink,#2a1f17)}
+.gift-card .gc-who-name{font:700 15px/20px var(--sans);color:var(--paper-ink,#2a1f17)}
 .gift-card .gc-rival[data-dim] .gc-who{opacity:.5}
-.gift-card .gc-why{align-self:center;font:500 11px/16px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-why{align-self:center;font:500 12px/16px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
 .gift-card .gc-stack{gap:4px;padding:4px 10px}
 /* what "Take all" would take from this stack, while it's pointed at */
-.gift-card .gc-plan{position:absolute;top:-8px;right:-6px;min-width:20px;padding:0 4px;border-radius:8px;background:var(--paper-ink,#2a1f17);color:var(--paper,#f4ebd7);font:700 11px/16px var(--sans);font-style:normal;text-align:center}
+.gift-card .gc-plan{position:absolute;top:-8px;right:-6px;min-width:20px;padding:0 4px;border-radius:8px;background:var(--paper-ink,#2a1f17);color:var(--paper,#f4ebd7);font:700 12px/16px var(--sans);font-style:normal;text-align:center}
 .gift-card .gc-all{font-weight:700}
 .gift-card .gc-all .num{margin-left:.25em}
 /* the minion's move: a few words and Stay put; the lit spaces on the wheel are the answer */
@@ -131,6 +131,6 @@
 .gift-card[data-gift="move"] .gc-what{white-space:normal}
 .gift-card .gc-space{gap:6px;padding:4px 12px}
 .gift-card .gc-space .pip.glyph{width:12px;height:12px;margin:0}
-.gift-card .gc-space .gc-name{font:700 14px/20px var(--sans);white-space:nowrap}
+.gift-card .gc-space .gc-name{font:700 15px/20px var(--sans);white-space:nowrap}
 .gift-card .gc-rival .gc-group-items{flex:1;align-items:center}
 .gift-card .gc-why{text-align:left}

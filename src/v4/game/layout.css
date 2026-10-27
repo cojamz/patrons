@@ -58,11 +58,14 @@
    the grid's tracks grow by the same step. Steps, not a smooth factor, so a resize never re-lays the shop's cards a pixel
    at a time. Hover cards and flights live on the page, outside the zoom, and place themselves from what they measure, so
    they land where things are drawn (lane 8, 2026-10-21). */
-@media (min-width:1600px) and (min-height:880px){
-  .app.game.lt{--gz:1.25;--col-l:calc(320px * var(--gz));--col-r:calc(340px * var(--gz));--col-gap:calc(16px * var(--gz));
+/* (from 1400×770, one small step up: bigger text on common laptop windows; Cory, 2026-10-27, from Mike's "text size is
+   small at 100%") */
+@media (min-width:1400px) and (min-height:770px){
+  .app.game.lt{--gz:1.1;--col-l:calc(320px * var(--gz));--col-r:calc(340px * var(--gz));--col-gap:calc(16px * var(--gz));
     grid-template-rows:calc(72px * var(--gz)) minmax(0,1fr);padding:calc(8px * var(--gz)) calc(18px * var(--gz))}
   .app.game.lt > .lt-prompt,.app.game.lt > .lt-snake,.app.game.lt > .lt-seat,.app.game.lt > .lt-since,.app.game.lt > .lt-shop,.app.game.lt > .turn-card{zoom:var(--gz)}
 }
+@media (min-width:1600px) and (min-height:880px){ .app.game.lt{--gz:1.25} }
 @media (min-width:1780px) and (min-height:980px){ .app.game.lt{--gz:1.4} }
 @media (min-width:2030px) and (min-height:1120px){ .app.game.lt{--gz:1.6} }
 @media (min-width:2540px) and (min-height:1400px){ .app.game.lt{--gz:2} }
@@ -79,7 +82,7 @@
    centre, where the eye lands, as one compact row: it covers only the inner rings, locked until rounds II and III, never a
    ring-I space you'll take nor a rim (layout gate l6). Sized from the wheel's region (container units), so it fits the
    inner rings at every laptop width. */
-.lt-prompt .setup-order{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%;font:500 11px/16px var(--sans);letter-spacing:0;text-transform:none;color:var(--cream-2)}
+.lt-prompt .setup-order{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%;font:500 12px/16px var(--sans);letter-spacing:0;text-transform:none;color:var(--cream-2)}
 .setup-order-row{display:flex;align-items:baseline;gap:8px;min-width:0}
 .setup-order-label{flex:none;width:76px;text-align:right;color:var(--cream-3)}
 .setup-order-names{display:flex;align-items:baseline;min-width:0;flex:1;gap:3px}
@@ -213,7 +216,7 @@
    down 66px after a game, and a click on Play's old spot reopened the results): it stands last, a quiet line beside "How
    to play", so Play and Resume keep their places whether or not a game was played before */
 .app.home .menu .last-results{order:10;align-self:center;min-height:0;padding:5px 16px;background:none;border-color:var(--rim);box-shadow:none;color:var(--muted);font-size:var(--fs-2)}
-.app.home .menu .last-results small{font-size:11px}
+.app.home .menu .last-results small{font-size:12px}
 .app.home .menu .rules-link{order:11}
 
 /* Results (laptop): the four cults stand in one row under the table, so the whole result fits the screen at 700px (the
@@ -345,7 +348,7 @@
 }
 
 /* the story's "N earlier" in its header, when the room holds only the newest line (SinceStrip `bare`) */
-.lt-since .since-head .since-more.in-head{margin-left:auto;font:inherit;font-size:11px;letter-spacing:.06em;color:var(--cream-3);background:none;border:0;padding:2px 4px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
+.lt-since .since-head .since-more.in-head{margin-left:auto;font:inherit;font-size:12px;letter-spacing:.06em;color:var(--cream-3);background:none;border:0;padding:2px 4px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
 
 
 /* a member with no sphere (a guest from no quadrant on the table) stands on no colored ground: its grey halo read as a
@@ -416,10 +419,10 @@
   .app.game.lt > .lt-seat.mine .lt-cult-seat.setup-pick > .cs-crowd,.app.game.lt > .lt-seat.mine .lt-cult-seat.setup-pick > .cs-build{display:none}
   .app.game.lt > .lt-seat.mine:has(> .lt-cult-seat.setup-pick){box-shadow:inset 0 0 0 2px rgba(var(--lamp),.85),0 0 22px 2px rgba(var(--lamp),.35)}
   .lt-cult-seat .cs-setup{display:flex;flex-direction:column;gap:4px;align-self:center;min-width:0}
-  .lt-cult-seat .cs-setup-say{font-size:14px;line-height:16px;font-weight:700;color:var(--lamp-ink,#ffd98c)}
+  .lt-cult-seat .cs-setup-say{font-size:15px;line-height:16px;font-weight:700;color:var(--lamp-ink,#ffd98c)}
   .lt-cult-seat .cs-setup-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .lt-cult-seat .cs-setup-token{min-width:0;display:inline-flex;flex-direction:row;flex-wrap:nowrap;row-gap:0;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 8px;
-    border-radius:8px;border:0;cursor:pointer;background:var(--paper,#f3e6c8);color:var(--paper-ink,#2b2018);font:600 14px/1 var(--sans);
+    border-radius:8px;border:0;cursor:pointer;background:var(--paper,#f3e6c8);color:var(--paper-ink,#2b2018);font:600 15px/1 var(--sans);
     box-shadow:0 0 0 1px rgba(var(--lamp),.9),0 0 12px 2px rgba(var(--lamp),.45);transition:transform .1s}
   .lt-cult-seat .cs-setup-token:hover{transform:translateY(-2px);background:#fff7e6}
   .lt-cult-seat .cs-setup-token:active{transform:translateY(1px)}

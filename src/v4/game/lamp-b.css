@@ -3,14 +3,14 @@
    for text on wood, --lamp, the resource colors (--gold…), --serif --sans. Sizes are fixed: nothing here changes size between phases. */
 
 .lt-h{font-family:var(--serif);font-weight:500;font-size:17px;color:var(--cream-2);display:flex;align-items:baseline;gap:8px;margin:0 0 6px}
-.lt-h small{font-family:var(--sans);font-size:11.5px;color:var(--cream-3);letter-spacing:.02em}
+.lt-h small{font-family:var(--sans);font-size:12px;color:var(--cream-3);letter-spacing:.02em}
 .lt-res{display:inline-flex;align-items:center;gap:2px;white-space:nowrap;margin-right:6px}
 .lt-res b{font-weight:700}
 .res-glyph,.fol-glyph{display:inline-block;vertical-align:middle;flex:none}
 .sprite{display:block;image-rendering:pixelated;flex:none}
-.lt-btn{font-family:var(--serif);font-size:14px;border-radius:20px;padding:6px 16px;border:1px solid var(--paper-ink-3);background:transparent;color:var(--paper-ink);cursor:pointer;min-height:36px}
+.lt-btn{font-family:var(--serif);font-size:15px;border-radius:20px;padding:6px 16px;border:1px solid var(--paper-ink-3);background:transparent;color:var(--paper-ink);cursor:pointer;min-height:36px}
 .lt-btn.pri{background:var(--paper-ink);color:var(--paper);border-color:var(--paper-ink);font-weight:700}
-.lt-btn.mini{position:relative;font-family:var(--sans);font-size:11px;line-height:1;padding:3px 8px;height:20px;min-height:0;flex:none;border-color:rgba(243,230,200,.3);color:var(--cream)}
+.lt-btn.mini{position:relative;font-family:var(--sans);font-size:12px;line-height:1;padding:3px 8px;height:20px;min-height:0;flex:none;border-color:rgba(243,230,200,.3);color:var(--cream)}
 .lt-rates .lt-rate{position:relative}
 .lt-btn > .hitbox,.lt-rate > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%)}
 .paper{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);
@@ -32,8 +32,8 @@
 .lt-card .band{display:none}
 .lt-card .art{position:relative;height:50px;margin:4px 4px 0;border-radius:4px;display:grid;place-items:center;flex:none;
   background:radial-gradient(circle at 50% 70%, color-mix(in srgb,var(--q) 30%,var(--paper)), color-mix(in srgb,var(--q) 12%,var(--paper-2)) 70%);box-shadow:inset 0 0 0 1px rgba(42,31,23,.18)}
-.lt-card .nm{font-family:var(--serif);font-weight:700;font-size:12px;line-height:1.1;margin:3px 4px 0;text-align:center;color:var(--paper-ink);display:block;overflow-wrap:anywhere;hyphens:auto}
-.lt-card .ft{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:2px;padding:3px 5px 4px;border-top:1px solid rgba(42,31,23,.16);font-size:13px;font-weight:700;color:var(--paper-ink)}
+.lt-card .nm{font-family:var(--serif);font-weight:700;font-size:13px;line-height:1.1;margin:3px 4px 0;text-align:center;color:var(--paper-ink);display:block;overflow-wrap:anywhere;hyphens:auto}
+.lt-card .ft{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:2px;padding:3px 5px 4px;border-top:1px solid rgba(42,31,23,.16);font-size:14px;font-weight:700;color:var(--paper-ink)}
 .lt-card .ft .res-glyph{width:14px;height:14px}
 .lt-card .ft .pip{width:12px;height:12px}
 .lt-card .ft .follower-mark{width:13px;height:13px}
@@ -42,14 +42,14 @@
 .lt-cost{display:inline-flex;gap:3px;align-items:center}
 .lt-card .lt-res{margin-right:0;gap:1px}
 .lt-card.dim{filter:brightness(.72) saturate(.75)}
-.lt-card .need{position:absolute;top:2px;right:2px;font-size:9px;font-weight:700;border-radius:6px;padding:0 4px;line-height:13px;white-space:nowrap;max-width:calc(100% - 4px);overflow:hidden;text-overflow:ellipsis}
+.lt-card .need{position:absolute;top:2px;right:2px;font-size:11px;font-weight:700;border-radius:6px;padding:0 4px;line-height:13px;white-space:nowrap;max-width:calc(100% - 4px);overflow:hidden;text-overflow:ellipsis}
 .lt-card .need{color:var(--paper-ink);background:rgba(244,235,215,.92);box-shadow:0 0 0 1px rgba(42,31,23,.2)}
 .lt-shop-head{display:flex;align-items:center;gap:14px;margin:0 0 5px;min-width:0}
 .lt-shop-head .lt-h{margin:0}
 /* the sort: two quiet words in the members' header line (Cory: "a little sort button") */
-.lt-sort{display:inline-flex;align-items:center;gap:2px;margin-left:auto;font-size:12px;color:var(--cream-3)}
+.lt-sort{display:inline-flex;align-items:center;gap:2px;margin-left:auto;font-size:13px;color:var(--cream-3)}
 .lt-sort .lbl{margin-right:3px;letter-spacing:.04em}
-.lt-sort-btn{position:relative;font:inherit;font-size:11px;color:var(--cream-3);background:none;border:0;border-radius:10px;padding:0 8px;min-height:20px;cursor:pointer}
+.lt-sort-btn{position:relative;font:inherit;font-size:12px;color:var(--cream-3);background:none;border:0;border-radius:10px;padding:0 8px;min-height:20px;cursor:pointer}
 .lt-sort-btn:hover{color:var(--cream-2)}
 .lt-sort-btn.on{color:var(--cream);box-shadow:inset 0 0 0 1px rgba(243,230,200,.28)}
 .lt-sort-btn:focus-visible{outline:2px solid rgba(var(--lamp,255,206,140),.7);outline-offset:1px}
@@ -58,7 +58,7 @@
 .lt-rates{flex:0 0 auto;display:flex;flex-direction:column;min-width:0;color:var(--cream-3)}
 .lt-rates-head{display:flex;align-items:baseline;gap:8px;height:20px;margin:0 0 5px;white-space:nowrap}
 .lt-rates-head .lbl{font-family:var(--serif);font-weight:500;font-size:17px;color:var(--cream-2)}
-.lt-rates-head small{font-size:11.5px;color:var(--cream-3);letter-spacing:.02em}
+.lt-rates-head small{font-size:12px;color:var(--cream-3);letter-spacing:.02em}
 .lt-rates-grid{display:grid;grid-template-columns:repeat(2,88px);grid-auto-rows:45px;gap:6px}
 .lt-rates .lt-rate{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 4px;border:0;border-radius:6px;font:inherit;cursor:pointer;opacity:1;text-align:center;min-width:0;
   background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);
@@ -71,7 +71,7 @@
 .lt-rates .rt-trade b{font-weight:700;font-size:17px;color:var(--paper-ink)}
 .lt-rates .rt-trade .pip.wild{width:12px;height:12px;margin:0 2px 0 1px}
 .lt-rates .rt-trade .follower-mark{width:13px;height:13px;color:var(--paper-ink);margin-left:1px}
-.lt-rates .rt-left{font-family:var(--sans);font-size:11px;font-weight:600;line-height:1;color:var(--paper-ink-3);letter-spacing:.02em}
+.lt-rates .rt-left{font-family:var(--sans);font-size:12px;font-weight:600;line-height:1;color:var(--paper-ink-3);letter-spacing:.02em}
 .lt-rates .lt-rate.lit{box-shadow:0 0 0 1px color-mix(in srgb,var(--paper-ink) 45%,transparent),inset 0 0 0 2px var(--paper),0 0 0 3px rgba(var(--lamp,255,206,140),.55),0 0 18px rgba(var(--lamp,255,206,140),.35)}
 .lt-rates .lt-rate.can:hover{background:linear-gradient(180deg,#fff7e6,var(--paper));transform:translateY(-2px)}
 .lt-rates .lt-rate.dim{filter:brightness(.72) saturate(.75)}
@@ -101,20 +101,20 @@
 /* ---------- seat rail ---------- */
 .lt-rail-seats{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;min-width:0}
 .lt-seat-wrap{display:inline-flex;align-items:center;gap:4px;min-width:0}
-.lt-seat-wrap .arrow{color:var(--cream-3);font-size:11px;opacity:.6}
+.lt-seat-wrap .arrow{color:var(--cream-3);font-size:12px;opacity:.6}
 .lt-rs{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;border-radius:30px;color:var(--cream);position:relative;cursor:pointer;min-height:44px}
 .lt-rs .who{font-family:var(--serif);font-size:15px;line-height:1;white-space:nowrap}
-.lt-rs .who small{display:flex;align-items:center;gap:3px;font-family:var(--sans);font-size:11px;color:var(--cream-3);margin-top:2px;letter-spacing:.02em}
+.lt-rs .who small{display:flex;align-items:center;gap:3px;font-family:var(--sans);font-size:12px;color:var(--cream-3);margin-top:2px;letter-spacing:.02em}
 .lt-rs .lt-pts{font-family:var(--serif);font-size:21px;font-weight:700;display:flex;align-items:center;gap:3px;color:var(--cream)}
 .lt-rs .lt-pts .follower-mark{color:var(--cream-2)}
 .lt-rs.now{background:rgba(var(--lamp,255,206,140),.12);box-shadow:0 0 0 1px rgba(var(--lamp,255,206,140),.4)}
-.lt-rs.now::after{content:"now";position:absolute;top:-8px;left:12px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#ffd99a;background:var(--walnut,#1d1611);padding:0 4px}
+.lt-rs.now::after{content:"now";position:absolute;top:-8px;left:12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#ffd99a;background:var(--walnut,#1d1611);padding:0 4px}
 .lt-rs .wk{display:flex;gap:1px}
 .lt-rs .wk span{width:4px;height:9px;border-radius:2px 2px 1px 1px;background:var(--cream-2)}
 .lt-rs .wk span.used{background:transparent;box-shadow:inset 0 0 0 1px rgba(203,184,148,.4)}
 .lt-rs .crowd{display:grid;grid-template-columns:repeat(5,5px);gap:1px;align-items:center}
 .lt-rs .crowd i{width:5px;height:6px;border-radius:2px 2px 1px 1px;box-shadow:0 0 0 .5px rgba(0,0,0,.5)}
-.lt-rs .crowd small{grid-column:1/-1;font-size:9px;color:var(--cream-3);line-height:1}
+.lt-rs .crowd small{grid-column:1/-1;font-size:11px;color:var(--cream-3);line-height:1}
 .seat-fig{position:relative;display:inline-block;flex:none}
 .seat-fig .sprite,.seat-fig .sig{position:absolute;inset:0}
 .seat-fig.dim{opacity:.32}
@@ -131,12 +131,12 @@
 .lt-stack.zero{opacity:.32}
 .lt-workers{display:flex;flex-direction:column;align-items:center;gap:4px}
 .lt-workers .figs{display:flex;gap:2px}
-.lt-workers small,.lt-cult-foot small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
+.lt-workers small,.lt-cult-foot small{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
 .lt-mycult{display:flex;flex-direction:column;gap:4px;min-width:0}
 .lt-mycult .crowd{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;max-width:420px}
 .lt-member{display:inline-flex;flex-direction:column;align-items:center;gap:2px;position:relative}
 .lt-member .fig{display:inline-block;position:relative;border-radius:4px}
-.lt-member .x{position:absolute;right:-4px;bottom:-2px;font-size:11px;color:var(--cream);background:var(--walnut,#1d1611);border-radius:6px;padding:0 3px}
+.lt-member .x{position:absolute;right:-4px;bottom:-2px;font-size:12px;color:var(--cream);background:var(--walnut,#1d1611);border-radius:6px;padding:0 3px}
 .lt-member.used .sprite{opacity:.45}
 .lt-cult-foot{display:flex;align-items:center;gap:10px}
 .fol-mark{display:inline-flex;align-items:center;gap:6px;color:var(--cream)}
@@ -152,20 +152,20 @@
 .lt-note .card-face small{color:var(--paper-ink-3)}
 .lt-card-body .t{display:flex;gap:10px;align-items:center}
 .lt-card-body h4{font-family:var(--serif);font-weight:700;font-size:20px;line-height:1;color:var(--paper-ink);margin:0}
-.lt-card-body h4 small{display:block;font-family:var(--sans);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-3);margin-top:4px}
-.lt-card-body p{font-size:14px;line-height:1.35;color:var(--paper-ink);margin:9px 0 0}
-.lt-yd{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(42,31,23,.28);font-size:13px;color:var(--paper-ink);display:flex;flex-direction:column;gap:5px}
+.lt-card-body h4 small{display:block;font-family:var(--sans);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-3);margin-top:4px}
+.lt-card-body p{font-size:15px;line-height:1.35;color:var(--paper-ink);margin:9px 0 0}
+.lt-yd{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(42,31,23,.28);font-size:14px;color:var(--paper-ink);display:flex;flex-direction:column;gap:5px}
 .lt-yd-row{display:flex;align-items:baseline;gap:6px}
-.lt-yd-row .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-3);width:66px;flex:none;line-height:1.5}
-.lt-yd-row .lt-swept-note{font-size:11px}
+.lt-yd-row .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-3);width:66px;flex:none;line-height:1.5}
+.lt-yd-row .lt-swept-note{font-size:12px}
 .lt-yd-row .v{min-width:0;flex:1}
 .lt-yd .youd-get{border:0;padding:0;margin:0;color:var(--paper-ink)}
 .lt-yd .youd-get b{display:none}
 /* hover cards keep the type scale (11/14/18): "You'd get" read 13px inside a 14px card, a glossary card 13px, its small print 11.7px */
 .lt-yd .youd-get{font-size:inherit}
-.popover .pop-card,.popover .pop-card.gloss span{font-size:14px;line-height:20px}
-.popover .pop-card small{font-size:14px;line-height:20px}
-.lt-why{display:block;font-size:11.5px;color:var(--paper-ink-3);margin-top:4px}
+.popover .pop-card,.popover .pop-card.gloss span{font-size:15px;line-height:20px}
+.popover .pop-card small{font-size:15px;line-height:20px}
+.lt-why{display:block;font-size:12px;color:var(--paper-ink-3);margin-top:4px}
 .lt-warn{color:#9b2c25;font-weight:700}
 .lt-good{color:#3e7a2c;font-weight:700}
 .lt-note .lt-btn.pri{margin-top:10px}
@@ -179,8 +179,8 @@
 .lt-drawer header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
 .lt-drawer h3{font-family:var(--serif);font-size:18px;margin:0;color:var(--paper-ink)}
 .lt-chron{overflow-y:auto;padding:0 16px 20px;overscroll-behavior:contain}
-.lt-chron h4{font-family:var(--serif);font-size:14px;color:var(--paper-ink-3);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
-.lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.35;color:var(--paper-ink)}
+.lt-chron h4{font-family:var(--serif);font-size:15px;color:var(--paper-ink-3);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
+.lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:15px;line-height:1.35;color:var(--paper-ink)}
 .lt-chron li{padding:3px 0}
 /* one turn, top-down: its first line, then what followed from it, set in a step (w3b #49); a rule between turns */
 .lt-chron li.sep{border-top:1px solid rgba(42,31,23,.1);padding-top:7px}
@@ -213,16 +213,16 @@
 .lt-cult-seat.now{background:rgba(var(--lamp,255,206,140),.08);box-shadow:0 0 0 1px rgba(var(--lamp,255,206,140),.35)}
 .lt-cult-seat .cs-head{display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:10px;min-height:44px}
 .lt-cult-seat .cs-who{display:flex;flex-direction:column;gap:2px;line-height:1.05;min-width:0}
-.lt-cult-seat .cs-who b{font-family:var(--serif);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lt-cult-seat .cs-who small{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--cream-3);white-space:nowrap}
+.lt-cult-seat .cs-who b{font-family:var(--serif);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lt-cult-seat .cs-who small{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--cream-3);white-space:nowrap}
 .lt-cult-seat .cs-total{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-family:var(--serif);font-size:18px;font-weight:700;white-space:nowrap}
 /* its members' colors at a glance: one dot per member, grouped by color */
 .lt-cult-seat .cs-colors{display:inline-flex;align-items:center;gap:3px;margin-right:2px;cursor:help}
 .lt-cult-seat .cs-colors i{display:block;height:7px;width:calc(var(--n) * 7px);background:radial-gradient(circle at 3.5px 3.5px,var(--c) 2.6px,transparent 3.1px) 0 0/7px 7px repeat-x}
 /* what its members make each round, beside what it holds now */
-.lt-cult-seat .cs-income{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font-size:12px;font-weight:700;color:var(--cream-2);white-space:nowrap;cursor:help}
+.lt-cult-seat .cs-income{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font-size:13px;font-weight:700;color:var(--cream-2);white-space:nowrap;cursor:help}
 .lt-cult-seat .cs-income > .hitbox{display:none} /* its own line only: a 44px box would cover the figures above it */
-.lt-cult-seat .cs-income small{font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--cream-3)}
+.lt-cult-seat .cs-income small{font-size:12px;font-weight:500;letter-spacing:.04em;color:var(--cream-3)}
 .lt-cult-seat .cs-inc{display:inline-flex;align-items:center;gap:1px}
 .lt-cult-seat .cs-inc .follower-mark{color:var(--cream-2)}
 .lt-cult-seat .cs-total .follower-mark{color:var(--cream-2)}
@@ -230,18 +230,18 @@
 /* yours: the same chair, ~1.15× (type and spacing; pixel figures keep whole-pixel sizes) */
 .lt-cult-seat.mine{padding:4px 7px 5px;gap:4px}
 .lt-cult-seat.mine .cs-who b{font-size:18px}
-.lt-cult-seat.mine .cs-who small{font-size:13px}
+.lt-cult-seat.mine .cs-who small{font-size:14px}
 .lt-cult-seat.mine .cs-crowd{gap:3px 4px}
 .lt-cult-seat .cs-crowd{display:flex;flex-wrap:wrap;gap:1px 2px;align-items:flex-end;min-height:24px}
 .lt-cult-seat .cs-member{display:inline-flex;flex-direction:column;align-items:center;gap:2px;position:relative}
 .lt-cult-seat .cs-member .fig{display:inline-block;position:relative}
-.lt-cult-seat .cs-member .x{position:absolute;right:-4px;bottom:-2px;font-size:9px;color:var(--cream);background:var(--walnut,#1d1611);border-radius:6px;padding:0 2px}
+.lt-cult-seat .cs-member .x{position:absolute;right:-4px;bottom:-2px;font-size:11px;color:var(--cream);background:var(--walnut,#1d1611);border-radius:6px;padding:0 2px}
 .lt-cult-seat .cs-member.used .sprite{opacity:.45}
-.lt-cult-seat .cs-more{font-size:11px;color:var(--cream-3);align-self:center}
+.lt-cult-seat .cs-more{font-size:12px;color:var(--cream-3);align-self:center}
 .lt-cult-seat .cs-foot{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0}
 .lt-cult-seat .cs-res{display:inline-flex;gap:6px;align-items:center}
-.lt-cult-seat .cs-stack{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:700}
-.lt-cult-seat.mine .cs-stack{font-size:14px}
+.lt-cult-seat .cs-stack{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700}
+.lt-cult-seat.mine .cs-stack{font-size:15px}
 .lt-cult-seat .cs-stack.zero{opacity:.35}
 
 /* ---------- living cults: idle loops (each figure on its own period and phase) and reactions ---------- */
@@ -293,26 +293,26 @@
 .lt-deck.low .n{color:#f2a654}
 .lt-deck.last .n{color:#ec7a4c}
 .lt-deck.empty .back{background:none;box-shadow:none;border:1.5px dashed rgba(243,230,200,.32);box-sizing:border-box}
-.lt-deck.empty .n{font-size:13px;font-weight:500;font-style:italic;color:var(--cream-3);text-shadow:none}
+.lt-deck.empty .n{font-size:14px;font-weight:500;font-style:italic;color:var(--cream-3);text-shadow:none}
 .lt-deck-card .lt-deck-mini{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:6px;background:linear-gradient(180deg,#4b2e41,#36202f);box-shadow:inset 0 0 0 1px rgba(217,166,58,.7);flex:none}
 .lt-deck-colors{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
-.lt-deck-colors li{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--paper-ink)}
+.lt-deck-colors li{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--paper-ink)}
 .lt-deck-colors li .k{flex:1}
 .lt-deck-colors li b{font-family:var(--serif);font-weight:700;font-size:15px}
 .lt-deck-colors li.none{color:var(--paper-ink-3)}
 .lt-colorless-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--colorless,#8d9693);box-shadow:0 0 0 1px var(--paper-ink,#2a1f17)}
-.lt-deck-card p{font-size:13px}
+.lt-deck-card p{font-size:14px}
 @media (max-width:860px){.lt-deck{flex-basis:56px}}
 
 /* ---------- who's winning: on each chair (no score row): its place beside its total, the leader lit ---------- */
-.lt-cult-seat .cs-rank{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--cream-3);margin-right:5px;align-self:center;cursor:help}
+.lt-cult-seat .cs-rank{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--cream-3);margin-right:5px;align-self:center;cursor:help}
 .lt-cult-seat .cs-total.lead .tv{color:var(--lamp-ink);text-shadow:0 0 12px rgba(var(--lamp,255,206,140),.55)}
 .lt-cult-seat .cs-total.lead .cs-rank{color:var(--paper-ink);background:var(--lamp-ink);border-radius:7px;padding:0 5px;line-height:15px}
 .lt-cult-seat .cs-crowd:empty{display:none}
 /* a seat's turn in plain words, under its name (Cory, 2026-10-16): "next" on the seat that places after this turn, and
    on yours "your turn in 3". Small and calm: the seat's small size, no chip; "next" and your own turn a step brighter */
-.cs-turn{align-self:flex-start;font-family:var(--sans);font-size:11px;font-weight:600;line-height:14px;letter-spacing:.01em;white-space:nowrap;color:var(--cream-3);cursor:help}
-.lt-cult-seat.mine .cs-turn{font-size:13px}
+.cs-turn{align-self:flex-start;font-family:var(--sans);font-size:12px;font-weight:600;line-height:14px;letter-spacing:.01em;white-space:nowrap;color:var(--cream-3);cursor:help}
+.lt-cult-seat.mine .cs-turn{font-size:14px}
 .cs-turn.next,.cs-turn.soon{color:var(--cream-2)}
 .cs-turn.now{color:var(--light, #fff3d4)}
 .cs-turn.done{opacity:.7}
@@ -321,9 +321,9 @@
 /* a member's figure at the table (the ×N count sits on its corner) */
 .cs-member .fig{position:relative}
 /* the round summary: no text under 12px (meta round 2: its small print measured 10.8–11px) */
-.roundend .re-head,.roundend .re-tb,.roundend small{font-size:12px}
+.roundend .re-head,.roundend .re-tb,.roundend small{font-size:13px}
 /* the last round's summary: the end-game bonuses lead (RoundEnd.jsx), lit like a prize line */
-.roundend .re-final{margin:0;padding:6px 10px;border-radius:10px;background:rgba(var(--lamp),.1);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35);font-size:13px;line-height:1.35;color:var(--ink)}
+.roundend .re-final{margin:0;padding:6px 10px;border-radius:10px;background:rgba(var(--lamp),.1);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35);font-size:14px;line-height:1.35;color:var(--ink)}
 .roundend .re-final > b:first-child{color:var(--lamp-ink)}
 /* a short laptop (≤760px tall): the whole summary fits without scrolling */
 @media (max-height:760px) and (min-width:861px){
@@ -338,11 +338,11 @@
   .dialog.roundend .re-foot .btn.pri{padding:7px 20px}
 }
 /* the pay dialog: each rule-changer bending this price, a line each (PayPicker.jsx, priceNotes.js) */
-.dialog.pay .pay-rules{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.3}
+.dialog.pay .pay-rules{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:1.3}
 .dialog.pay .pay-rules li{padding-left:10px;border-left:2px solid var(--lamp-ink);color:var(--cream)}
 .dialog.pay .pay-rules li[data-pay-rule="total"]{border-left-color:transparent;color:var(--lamp-ink);font-weight:700}
 /* a follower rate's hover card (ShopCards FollowerRates): the trade, what's left, when you can make it */
-.rate-card{display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.35}
+.rate-card{display:flex;flex-direction:column;gap:4px;font-size:15px;line-height:1.35}
 .rate-card small{color:var(--muted)}
 /* resource symbols in card text at hover size (RC1 strategist: Crowd-Pleaser's "+1 ●" read as +1 follower): the
    shapes read at a glance in every hover card, sheet and pinned card */
@@ -352,16 +352,16 @@
 /* the seat's hover: its build grouped by what each member does, a line each (name, then its effect) */
 .seat-card .seat-group .v{display:flex;flex-direction:column;gap:2px;min-width:0}
 .seat-card .seat-member{display:block;line-height:1.3;min-width:0}
-.seat-card .seat-effect{display:block;font-size:13px;color:var(--paper-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
-.seat-card .seat-rank{font-size:12px;color:var(--paper-ink-3)}
+.seat-card .seat-effect{display:block;font-size:14px;color:var(--paper-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+.seat-card .seat-rank{font-size:13px;color:var(--paper-ink-3)}
 /* the rim's standings card opens with what its prize pays, in words */
-.lt-prize-line{margin:0 0 6px;font-size:14px;line-height:1.35;font-weight:700}
+.lt-prize-line{margin:0 0 6px;font-size:15px;line-height:1.35;font-weight:700}
 
 /* a chair's build row (the plate's rival panel): what its members make each round, and what it just took */
 .lt-cult-seat .cs-build{display:flex;align-items:center;gap:14px;min-width:0;white-space:nowrap}
 .lt-cult-seat .cs-build .cs-income{margin-left:0}
-.lt-cult-seat .cs-build small{font-size:11px;font-weight:500;letter-spacing:0;color:var(--cream-3)}
-.lt-cult-seat .cs-build .cs-inc b{font-weight:800;font-size:14px;color:var(--cream)}
+.lt-cult-seat .cs-build small{font-size:12px;font-weight:500;letter-spacing:0;color:var(--cream-3)}
+.lt-cult-seat .cs-build .cs-inc b{font-weight:800;font-size:15px;color:var(--cream)}
 /* a part that hangs on a condition says it in small words after its dot ("+1● if fewest", f8) */
 .lt-cult-seat .cs-grp{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:0 5px}
 .lt-cult-seat .cs-grp > *{white-space:nowrap}
@@ -371,7 +371,7 @@
 .lt-cult-seat .cs-build .cs-grp .cs-cond{margin-left:-1px}
 .pop-card.gloss .cs-why{display:block;margin-top:4px;color:var(--muted)}
 .lt-cult-seat .cs-last{display:inline-flex;align-items:center;gap:5px;margin-left:auto;min-width:0;cursor:help}
-.lt-cult-seat .cs-last b{font-size:14px;font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis}
+.lt-cult-seat .cs-last b{font-size:15px;font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis}
 
 /* ======================= plate 1b (Cory, 2026-10-15; design/prototypes/language/plate1b.png) =======================
    The shop card, the member hover, the space hover and the follower tiles in the visual language: paper, one corner,
@@ -390,14 +390,14 @@
 .lt-card.card.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
 .lt-card.card.can:hover{background:var(--paper-lit,#fbf6ea);transform:translateY(-2px)}
 .lt-card .art{height:54px;margin:0;border-radius:0;box-shadow:none;background:color-mix(in srgb,var(--q) 24%,var(--pl-paper,#f2e8d2))}
-.lt-card .nm{font-family:var(--sans);font-size:11px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);margin:6px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
-.lt-card .ft{height:20px;margin:auto 6px 0;padding:0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-family:var(--sans);font-size:12px;font-weight:500;color:var(--pl-ink,#2b2018)}
+.lt-card .nm{font-family:var(--sans);font-size:12px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);margin:6px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
+.lt-card .ft{height:20px;margin:auto 6px 0;padding:0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-family:var(--sans);font-size:13px;font-weight:500;color:var(--pl-ink,#2b2018)}
 .lt-card .ft .num,.lt-card .val b{font-weight:800}
 /* the type scale (14 / 18 / 36, labels 11): a card's numbers are 14 (an old v4.css .card b made them 15) */
 .lt-card .ft b{font-size:var(--s)}
 /* a discount on you: the price you'd pay, then the list price small and struck (decisions.md, 2026-10-15) */
 .lt-card .ft .cost-now{display:inline-flex;align-items:center;gap:4px;min-width:0}
-.lt-card .ft .cost-was{font-size:11px;font-weight:600;color:var(--pl-ink-3,#a39078);text-decoration:line-through;text-decoration-thickness:1px}
+.lt-card .ft .cost-was{font-size:12px;font-weight:600;color:var(--pl-ink-3,#a39078);text-decoration:line-through;text-decoration-thickness:1px}
 .lt-card .ft .lt-cost.free{font-size:var(--s);font-weight:800;color:var(--pl-ink,#2b2018)}
 .lt-card .val{font-family:var(--sans);gap:1px}
 /* glyphs are .8em of the type they sit in; a number sits right on its glyph */
@@ -411,13 +411,13 @@
 /* what you can't afford dims quietly; "need" is small print, never a badge */
 .lt-card.dim{filter:none;opacity:.94}
 .lt-card.recede{filter:none;opacity:.9}
-.lt-card .need{top:2px;right:3px;background:none;box-shadow:none;padding:0;font-size:9px;line-height:11px;font-weight:700;color:var(--pl-ink-2,#6e5c49);opacity:.85}
+.lt-card .need{top:2px;right:3px;background:none;box-shadow:none;padding:0;font-size:11px;line-height:11px;font-weight:700;color:var(--pl-ink-2,#6e5c49);opacity:.85}
 .lt-card .need .nd{display:inline-flex;align-items:center;margin-left:2px}
 .lt-card .need b{font-weight:800}
 .lt-card .need .pip{width:.9em;height:.9em}
 /* the price at a glance (Cory, 2026-10-21): one faint number in the top right, the dots below stay the price itself */
-.lt-card .lt-corner-cost{position:absolute;top:5px;right:7px;font-size:14px;line-height:1;font-weight:800;color:var(--pl-ink,#2b2018);opacity:.45;pointer-events:none}
-.lt-card .need.from-pile{right:auto;left:6px;font-size:11px}
+.lt-card .lt-corner-cost{position:absolute;top:5px;right:7px;font-size:15px;line-height:1;font-weight:800;color:var(--pl-ink,#2b2018);opacity:.45;pointer-events:none}
+.lt-card .need.from-pile{right:auto;left:6px;font-size:12px}
 
 /* follower buys: the same paper and grammar ("2◐ → 1👤"), "8 left" quiet */
 .lt-rates .lt-rate{border-radius:var(--corner,8px);background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
@@ -428,7 +428,7 @@
 .lt-rates .rt-trade{font-family:var(--sans);font-size:var(--m);gap:0;color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-trade b{font-weight:800;font-size:var(--m);color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-trade .follower-mark{color:var(--pl-ink,#2b2018)}
-.lt-rates .rt-left{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--pl-ink-3,#a39078);margin-top:3px}
+.lt-rates .rt-left{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--pl-ink-3,#a39078);margin-top:3px}
 
 /* type on the table and its cards, one scale (design pod with the art director, 2026-10-15): 11 (small caps labels and
    keys) · 14 (sentences, lines, fine print: steps down by ink, not size) · 18 (a card's name, and the amount that leads)
@@ -444,18 +444,18 @@
 .popover:has(> .tip-body){background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);border:0;border-radius:var(--corner,8px);padding:14px 16px;
   box-shadow:0 0 0 1px rgba(43,32,24,.10),0 12px 32px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3);
   --ink:#2b2018;--muted:#6e5c49;--cream:#2b2018;--cream-2:#6e5c49;--cream-3:#a39078;--rim:rgba(43,32,24,.16)}
-.popover > .tip-body{font-family:var(--sans);font-size:14px;line-height:20px}
-.lt-note{color:var(--pl-ink,#2b2018);font-family:var(--sans);font-size:14px;line-height:20px}
-.lt-card-body p{font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);margin:4px 0 0;text-wrap:pretty}
+.popover > .tip-body{font-family:var(--sans);font-size:15px;line-height:20px}
+.lt-note{color:var(--pl-ink,#2b2018);font-family:var(--sans);font-size:15px;line-height:20px}
+.lt-card-body p{font-size:15px;line-height:20px;color:var(--pl-ink,#2b2018);margin:4px 0 0;text-wrap:pretty}
 .lt-card-body h4,.lt-card-body h4.sc-name{font-family:var(--sans);font-weight:800;font-size:18px;line-height:22px;color:var(--pl-ink,#2b2018);margin:0}
 .lt-card-body h4 small{font-family:var(--sans);color:var(--pl-ink-3,#a39078)}
-.lt-yd{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:19px;color:var(--pl-ink,#2b2018);gap:4px}
-.lt-yd-row .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);width:64px;line-height:19px}
+.lt-yd{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:15px;line-height:19px;color:var(--pl-ink,#2b2018);gap:4px}
+.lt-yd-row .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);width:64px;line-height:19px}
 /* "You'd get +3●": the line you came for, the amount heavy at the right */
 .lt-yd-row.youd{align-items:baseline;justify-content:space-between}
 .lt-yd-row.youd .v{text-align:right;font-size:18px;font-weight:800}
 .lt-yd-row.youd .youd-get{display:block}
-.lt-yd-row.youd .youd-get em,.lt-yd-row.youd .youd-others{display:block;font-size:14px;font-weight:500;font-style:normal;color:var(--pl-ink-2,#6e5c49)}
+.lt-yd-row.youd .youd-get em,.lt-yd-row.youd .youd-others{display:block;font-size:15px;font-weight:500;font-style:normal;color:var(--pl-ink-2,#6e5c49)}
 .lt-yd .youd-get .pip.glyph,.lt-yd .youd-get .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 0 0 .06em}
 
 /* the member card (hover and tap): picture, name and worth, "costs 2● 2◐", the sentence big, one quiet live line */
@@ -467,16 +467,16 @@
 .mc .mc-name{font-size:18px;line-height:22px;font-weight:800;color:var(--pl-ink,#2b2018)}
 .mc .mc-worth{font-size:18px;line-height:22px;white-space:nowrap;display:inline-flex;align-items:baseline}
 .mc .mc-worth .follower-mark{color:var(--pl-ink,#2b2018)}
-.mc small,.mc .mc-cost{display:block;font-size:14px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
+.mc small,.mc .mc-cost{display:block;font-size:15px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
 .mc .mc-cost .cost-dots{display:inline-flex;gap:6px;margin-left:3px;color:var(--pl-ink,#2b2018)}
 .mc .cost-dots .cd{display:inline-flex;align-items:baseline}
-.mc .mc-text{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);text-wrap:pretty}
+.mc .mc-text{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:15px;line-height:20px;color:var(--pl-ink,#2b2018);text-wrap:pretty}
 .mc .mc-text .pip.glyph,.mc .mc-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
 /* a member you use: a small caps "USE" before its rule (w3a #5) */
-.mc .mc-round-tag{display:inline-block;margin-right:6px;padding:0 5px;border-radius:3px;font-size:11px;line-height:16px;font-weight:800;vertical-align:1px;color:var(--pl-ink,#2b2018);border:1px solid currentColor;opacity:.8}
-.lt-card .lt-round-tag{position:absolute;top:5px;left:7px;font-size:11px;line-height:1;font-weight:800;color:var(--pl-ink,#2b2018);opacity:.6;pointer-events:none}
-.mc .mc-use-tag{display:inline-block;margin-right:6px;padding:0 5px;border-radius:3px;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:1px;color:var(--pl-paper,#f2e8d2);background:var(--pl-ink,#2b2018)}
-.mc .mc-live{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
+.mc .mc-round-tag{display:inline-block;margin-right:6px;padding:0 5px;border-radius:3px;font-size:12px;line-height:16px;font-weight:800;vertical-align:1px;color:var(--pl-ink,#2b2018);border:1px solid currentColor;opacity:.8}
+.lt-card .lt-round-tag{position:absolute;top:5px;left:7px;font-size:12px;line-height:1;font-weight:800;color:var(--pl-ink,#2b2018);opacity:.6;pointer-events:none}
+.mc .mc-use-tag{display:inline-block;margin-right:6px;padding:0 5px;border-radius:3px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:1px;color:var(--pl-paper,#f2e8d2);background:var(--pl-ink,#2b2018)}
+.mc .mc-live{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:15px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
 .mc .mc-live + .mc-live{margin-top:2px;padding-top:0;border-top:0}
 .mc .mc-live .cost-dots{display:inline-flex;gap:4px;color:var(--pl-ink,#2b2018)}
 .mc .owner i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pc);margin-right:5px;vertical-align:0}
@@ -484,14 +484,14 @@
 /* the deck and the follower tiles stand as tall as the cards; the strip's labels are the plate's quiet small caps */
 .lt-deck{height:104px}
 .lt-rates-grid{grid-auto-rows:49px}
-.lt-shop-head .lt-h,.lt-rates-head .lbl{font-family:var(--sans);font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-cream-2,#b9a98c)}
-.lt-shop-head .lt-h small,.lt-rates-head small{font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--pl-cream-3,#7d6e5a)}
+.lt-shop-head .lt-h,.lt-rates-head .lbl{font-family:var(--sans);font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-cream-2,#b9a98c)}
+.lt-shop-head .lt-h small,.lt-rates-head small{font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--pl-cream-3,#7d6e5a)}
 
 /* the plate's three sizes on the chairs (14 / 18 / 36): names and the rivals' totals 18, your total 36, the rest 14 */
 @media (min-width:861px) and (min-height:500px){
   .lt > .lt-seat .cs-total.lead{color:var(--light, #fff3d4)}
   .lt > .lt-seat .cs-total.lead .tv{color:inherit;text-shadow:none}
-  .lt > .lt-seat .cs-build small,.lt > .lt-seat .cs-build .cs-inc b,.lt > .lt-seat .cs-last b{font-size:14px}
+  .lt > .lt-seat .cs-build small,.lt > .lt-seat .cs-build .cs-inc b,.lt > .lt-seat .cs-last b{font-size:15px}
   .lt > .lt-seat .cs-build .cs-inc b{font-weight:800}
 }
 /* sentences on paper: a dot is .8em of its type (grammar.md), the same in every hover */
@@ -500,7 +500,7 @@
 /* keywords in a hover's sentence stay findable without shouting: a faint dotted line */
 .lt-note .term,.tip-body .mc .term{text-decoration-color:rgba(43,32,24,.22);border-bottom-color:rgba(43,32,24,.22)}
 /* the extra rows under "You'd get" (why, the race, what it unlocks) step down to small print */
-.lt-yd-row:not(.youd){font-size:14px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
+.lt-yd-row:not(.youd){font-size:15px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
 /* "you choose how" follows "You'd get" inline as " · …", or on its own small line under the amount */
 .youd-get em.yd-note::before{content:" · "}
 .lt-yd-row.youd .youd-get em.yd-note::before{content:none}
@@ -534,9 +534,9 @@
    totals) from the old dialog scale */
 .dialog.roundend{--fs-1:11px;--fs-2:14px;--fs-3:14px}
 .dialog.roundend h2{font-size:18px}
-.roundend .re-tb,.roundend small{font-size:14px}
-.roundend .re-head{font-size:11px}
-.roundend .re-final,.dialog.roundend .hint,.dialog.roundend .btn{font-size:14px}
+.roundend .re-tb,.roundend small{font-size:15px}
+.roundend .re-head{font-size:12px}
+.roundend .re-final,.dialog.roundend .hint,.dialog.roundend .btn{font-size:15px}
 .dialog.roundend .re-f{font-size:18px}
 /* a space's contest line: your part as a sentence, the rivals on the line under it in plain words (w3a #28) */
 .lt-race .race-you{display:block;color:var(--pl-ink,#2b2018)}
@@ -565,7 +565,7 @@
 .lt-cult-seat .cs-member.used[data-aim] .fig .sprite{opacity:1;filter:none}
 @media (prefers-reduced-motion:reduce){.lt-card.card{transition:none}}
 
-.lt-cult-seat .cs-release{margin-left:auto;padding:2px 0;border:0;border-bottom:1px solid var(--cream-2);background:none;color:var(--cream);font-family:var(--sans);font-size:14px;line-height:20px;cursor:pointer}
+.lt-cult-seat .cs-release{margin-left:auto;padding:2px 0;border:0;border-bottom:1px solid var(--cream-2);background:none;color:var(--cream);font-family:var(--sans);font-size:15px;line-height:20px;cursor:pointer}
 .lt-cult-seat .cs-release:hover,.lt-cult-seat .cs-release:focus-visible{color:#fff3d4;border-color:#fff3d4}
 /* While a move plays out (data-chain on the table), the idle life stops: bobbing minions, breathing leaders and sprites,
    blinks. Measured at 4× CPU over 25s of play: main-thread work 19.3s → 5.9s, long tasks 64 → 22, worst 415 → 133ms;

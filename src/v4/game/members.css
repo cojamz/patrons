@@ -5,7 +5,7 @@
 .lt-card-body.seat-card{display:flex;flex-direction:column;max-height:calc(100vh - 44px);min-height:0}
 .seat-card .mu-list{list-style:none;margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));
   display:flex;flex-direction:column;gap:7px;overflow-y:auto;min-height:0;overscroll-behavior:contain;scrollbar-width:thin}
-.mu-none{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:20px;color:var(--pl-ink-2,#6e5c49)}
+.mu-none{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:15px;line-height:20px;color:var(--pl-ink-2,#6e5c49)}
 
 /* a row: the picture, then the name (with its state on the right) and the sentence under it */
 .mu-row{display:grid;grid-template-columns:24px 1fr;column-gap:12px;align-items:start}
@@ -13,20 +13,20 @@
 .mu-art{width:24px;height:24px;margin-top:-2px;display:grid;place-items:center}
 .mu-body{min-width:0;display:flex;flex-direction:column;gap:1px}
 .mu-head{display:flex;align-items:baseline;justify-content:space-between;gap:4px 12px;min-width:0;flex-wrap:wrap}
-.mu-name{font-family:var(--sans);font-size:14px;line-height:18px;font-weight:800;color:var(--pl-ink,#2b2018);min-width:0}
-.mu-text{font-family:var(--sans);font-size:14px;line-height:19px;color:var(--pl-ink,#2b2018);text-wrap:pretty;overflow-wrap:anywhere}
+.mu-name{font-family:var(--sans);font-size:15px;line-height:18px;font-weight:800;color:var(--pl-ink,#2b2018);min-width:0}
+.mu-text{font-family:var(--sans);font-size:15px;line-height:19px;color:var(--pl-ink,#2b2018);text-wrap:pretty;overflow-wrap:anywhere}
 .mu-text .pip.glyph,.mu-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
 
 /* the quiet state: "pays at round start", "scores at game end", "not used yet"; "ready to use" is the one in full ink */
 /* the type scale (art director's rule): 14 text, buttons and small print, 18 names; 11 only for caps labels */
-.mu-tag{flex:none;font-family:var(--sans);font-size:14px;line-height:18px;font-weight:500;color:var(--pl-ink-3,#a39078);white-space:nowrap}
+.mu-tag{flex:none;font-family:var(--sans);font-size:15px;line-height:18px;font-weight:500;color:var(--pl-ink-3,#a39078);white-space:nowrap}
 .mu-tag.lit{color:var(--pl-ink,#2b2018);font-weight:700}
 .mu-tag.dim{color:var(--pl-ink-3,#a39078)}
 /* used: the row steps back, its words stay readable */
 .mu-row.s-used .mu-art,.mu-row.s-used .mu-name,.mu-row.s-used .mu-text{opacity:.5}
 
 /* "Use: +7 ●": dark ink on paper, the brightest thing in the card; it presses down */
-.mu-use{flex:none;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-size:14px;line-height:18px;font-weight:700;
+.mu-use{flex:none;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-size:15px;line-height:18px;font-weight:700;
   padding:2px 10px;min-height:20px;position:relative;border-radius:var(--corner,8px);border:0;background:var(--pl-ink,#2b2018);color:var(--paper-lit,#fbf6ea);cursor:pointer;
   box-shadow:0 1px 0 rgba(0,0,0,.25);transition:transform .08s ease-out,background .12s}
 .mu-use:hover{background:#3d2f23}
@@ -34,19 +34,19 @@
 .mu-use:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline-offset:2px}
 .mu-use .pip.glyph,.mu-use .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
 .mu-use .rich-f,.mu-use .follower-mark{color:inherit}
-.mu-use.big{width:100%;justify-content:center;margin:12px 0 0;min-height:36px;font-size:14px;line-height:20px;padding:6px 12px} /* the card's 14 (type scale 11/14/18) */
+.mu-use.big{width:100%;justify-content:center;margin:12px 0 0;min-height:36px;font-size:15px;line-height:20px;padding:6px 12px} /* the card's 14 (type scale 11/14/18) */
 /* the small one still takes a finger: a 44px hit area around it */
 .mu-use:not(.big)::after{content:"";position:absolute;left:50%;top:50%;width:max(44px,100%);height:44px;transform:translate(-50%,-50%)}
 
 /* a member's hover, under its card: the switch line, the button, or why it can't be used */
 .mu-actions{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));display:flex;flex-direction:column}
 .mu-actions .mu-use.big{margin-top:0}
-.mu-sw-line{display:flex;justify-content:space-between;align-items:center;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018)}
+.mu-sw-line{display:flex;justify-content:space-between;align-items:center;font-size:15px;line-height:20px;color:var(--pl-ink,#2b2018)}
 .mu-sw-line + .mu-use{margin-top:10px}
-.mu-why{font-size:14px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+.mu-why{font-size:15px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
 
 /* the switch: a small track and knob, its word beside it */
-.mu-switch{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:14px;line-height:18px;font-weight:700;color:var(--pl-ink-2,#6e5c49);
+.mu-switch{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:15px;line-height:18px;font-weight:700;color:var(--pl-ink-2,#6e5c49);
   background:none;border:0;padding:0;cursor:default}
 button.mu-switch{cursor:pointer}
 .mu-track{position:relative;width:24px;height:14px;border-radius:7px;background:rgba(43,32,24,.18);transition:background .15s}
@@ -100,7 +100,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .mu-use.idle:hover{background:rgba(43,32,24,.05)}
 .mu-why + .mu-use.big{margin-top:8px}
 /* a member asking you now (Big Spender's second buy, Straggler's move): what to do, then its quiet way out */
-.mu-ask{font-size:14px;line-height:18px;font-weight:700;color:var(--pl-ink,#2b2018)}
+.mu-ask{font-size:15px;line-height:18px;font-weight:700;color:var(--pl-ink,#2b2018)}
 .mu-ask + .mu-use.big{margin-top:8px}
 .mu-use.mu-skip{background:transparent;color:var(--pl-ink,#2b2018);box-shadow:inset 0 0 0 1px rgba(43,32,24,.3)}
 .mu-use.mu-skip:hover{background:rgba(43,32,24,.06)}
@@ -114,11 +114,11 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .lt-cult-seat .cs-safe{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;color:var(--cream-2,#b9a98c);align-self:center;margin-left:4px;cursor:help}
 .lt-cult-seat .cs-safe .cs-shield{display:block;width:12px;height:14px}
 .lt-cult-seat .cs-crowd > .cs-safe:first-child{margin-left:0}
-.seat-card .seat-safe{display:block;font-family:var(--sans);font-size:14px;color:var(--pl-ink-2,#6e5c49);font-weight:500;letter-spacing:0;text-transform:none}
+.seat-card .seat-safe{display:block;font-family:var(--sans);font-size:15px;color:var(--pl-ink-2,#6e5c49);font-weight:500;letter-spacing:0;text-transform:none}
 
 /* what a use just did, rising off the member for a moment ("+7 ●", or a quiet "+0") */
 .lt-cult-seat .cs-member .mu-result{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);z-index:4;pointer-events:none;white-space:nowrap;
-  font-family:var(--sans);font-size:14px;line-height:18px;font-weight:800;color:var(--light,#fff3d4);text-shadow:0 1px 2px rgba(0,0,0,.8);
+  font-family:var(--sans);font-size:15px;line-height:18px;font-weight:800;color:var(--light,#fff3d4);text-shadow:0 1px 2px rgba(0,0,0,.8);
   animation:mu-rise 1.8s ease-out both}
 .lt-cult-seat .cs-member .mu-result.zero{color:var(--cream-2,#b9a98c);font-weight:700}
 .lt-cult-seat .cs-member .mu-result .pip.glyph,.lt-cult-seat .cs-member .mu-result .pip.wild{width:.8em;height:.8em;vertical-align:-.1em}
@@ -126,13 +126,13 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 @media (prefers-reduced-motion:reduce){.lt-cult-seat .cs-member.ready .fig{transition:none}.lt-cult-seat .cs-member .mu-result{animation:none}}
 
 /* a rival's spending power, one quiet line under its name (w3b) */
-.seat-card .seat-spend{display:block;font-family:var(--sans);font-size:12px;line-height:17px;font-weight:500;color:var(--pl-ink-2,#6e5c49);letter-spacing:0;text-transform:none}
+.seat-card .seat-spend{display:block;font-family:var(--sans);font-size:13px;line-height:17px;font-weight:500;color:var(--pl-ink-2,#6e5c49);letter-spacing:0;text-transform:none}
 .seat-card .seat-spend .pip.glyph,.seat-card .seat-spend .pip.wild,.seat-card .seat-spend .rich-f{width:.8em;height:.8em;vertical-align:-.1em}
 /* where a seat's followers came from: the total, then one row per source adding up to it */
 .fol-card h4{display:flex;align-items:baseline;gap:6px}
 .fol-card h4 .num{margin-left:auto;font-size:16px;font-weight:800}
 .fol-card .fol-rows{list-style:none;margin:10px 0 0;padding:10px 0 0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));display:flex;flex-direction:column;gap:4px}
-.fol-card .fol-rows li{display:flex;justify-content:space-between;gap:12px;font-family:var(--sans);font-size:14px;line-height:19px;color:var(--pl-ink,#2b2018)}
+.fol-card .fol-rows li{display:flex;justify-content:space-between;gap:12px;font-family:var(--sans);font-size:15px;line-height:19px;color:var(--pl-ink,#2b2018)}
 .fol-card .fol-rows li span{color:var(--pl-ink-2,#6e5c49)}
 .fol-card .fol-rows li b{font-weight:800}
 
@@ -144,14 +144,14 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .seat-card .mu-row{padding:8px 0;column-gap:8px}
 .seat-card .mu-body{border-left:3px solid var(--member-color);padding-left:8px;display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
 .seat-card .mu-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:8px;flex-wrap:nowrap}
-.mu-price{display:inline-flex;align-items:baseline;justify-content:flex-end;gap:4px;font-size:14px;line-height:18px;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.mu-price{display:inline-flex;align-items:baseline;justify-content:flex-end;gap:4px;font-size:15px;line-height:18px;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
 .mu-status{grid-row:3;display:flex;align-items:center;justify-content:flex-end;gap:8px}
 .mu-status:empty{display:none}
 .mu-status .mu-tag{white-space:normal;text-align:right}
 .mu-status .mu-use{margin-left:0}
 
-.cs-member-count{flex:none;align-self:center;font-size:14px;line-height:18px;color:var(--cream-2);font-weight:700}
-.cs-member-count>span{font-size:11px;font-weight:500}
+.cs-member-count{flex:none;align-self:center;font-size:15px;line-height:18px;color:var(--cream-2);font-weight:700}
+.cs-member-count>span{font-size:12px;font-weight:500}
 
 /* A quiet, persistent reminder that Straggler still has its round-end move. */
 .lt-cult-seat .cs-member .round-pending-mark{position:absolute;right:-1px;top:0;width:5px;height:5px;border-radius:50%;background:var(--lamp-ink,#ffd99a);box-shadow:0 0 0 1px var(--board,#2b2119);pointer-events:none}

@@ -44,7 +44,7 @@
   /* the one accent: light = yours to act on */
   --light:#fff3d4;
   /* three type sizes and their lines (kit.css); a glyph is .8em of the type it sits in */
-  --s:14px; --m:18px; --l:36px; --lh-s:20px; --lh-m:24px; --lh-l:40px; --glyph:.8em;
+  --s:15px; --m:18px; --l:36px; --lh-s:20px; --lh-m:24px; --lh-l:40px; --glyph:.8em;
   /* one grid (4px): paddings 16/20, 24 between doors, 32 between cards and from the screen edge */
   --grid:4px; --pad:16px; --pad-2:20px; --gap-door:24px; --gap-card:32px; --edge:32px;
   /* one corner (containers 8, art boxes 4), one stroke (1/8 of a glyph) */
@@ -157,22 +157,22 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-prompt .status .say.nudge,.lt-prompt .status .say.info{font-size:18px;color:var(--lamp-ink)}
 .lt-prompt .undo-slot{display:flex;width:auto;flex:none}
 .lt-prompt .undo{border:1px solid rgba(243,230,200,.22);color:var(--cream-2);font-family:var(--sans);font-size:var(--s);min-height:26px;height:26px;padding:0 12px}
-.lt-prompt .steps-row{gap:16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
-.lt-prompt .round{font-family:var(--sans) !important;font-size:11px !important;color:var(--cream-3) !important;letter-spacing:.08em}
+.lt-prompt .steps-row{gap:16px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
+.lt-prompt .round{font-family:var(--sans) !important;font-size:12px !important;color:var(--cream-3) !important;letter-spacing:.08em}
 .lt header.bar.lt-prompt .round small{font-size:inherit;color:inherit} /* beats v4.css's header.bar .round small (13px) */
-.lt-prompt .steps{display:flex;gap:14px;font-size:14px;text-transform:none;letter-spacing:0}
+.lt-prompt .steps{display:flex;gap:14px;font-size:15px;text-transform:none;letter-spacing:0}
 /* the turn's two steps are words: the one you're on is bright, heavier and underlined (no dots: a dot only ever means a
    resource; no glow: nothing here is clickable). At 11px caps they read as ~9px, and only the underline told them
    apart (live panel r1): text size, the other step dim */
 .lt-prompt .steps span{padding-bottom:1px;border-bottom:2px solid transparent;color:var(--cream-3)}
 .lt-prompt .steps .on{color:var(--cream);font-weight:600;border-bottom-color:var(--lamp-ink)}
-.lt-prompt .steps-row .say-sub{text-transform:none;letter-spacing:0;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--cream-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lt-prompt .steps-row .say-sub{text-transform:none;letter-spacing:0;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--cream-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .lt-menu{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:30}
 .lt-menu .menu-glyph{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:none;color:var(--cream-3);border:1px solid rgba(243,230,200,.16);cursor:pointer}
 .lt-menu .menu-glyph i{width:14px;height:2px;background:currentColor;display:block;box-shadow:0 -5px 0 currentColor,0 5px 0 currentColor}
 .lt-menu .menu-glyph:hover,.lt-menu .menu-glyph[aria-expanded="true"]{color:var(--cream);border-color:rgba(243,230,200,.4)}
 .lt-menu .menu-list{position:absolute;right:0;top:50px;display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:12px;background:var(--walnut-2);box-shadow:0 0 0 1px rgba(243,230,200,.12),0 12px 30px rgba(0,0,0,.6);min-width:170px}
-.lt-menu .menu-list .btn{justify-content:flex-start;text-align:left;border:0;color:var(--cream);font-size:14px;min-height:44px;border-radius:8px;margin:0}
+.lt-menu .menu-list .btn{justify-content:flex-start;text-align:left;border:0;color:var(--cream);font-size:15px;min-height:44px;border-radius:8px;margin:0}
 .lt-menu .menu-list .btn:hover{background:rgba(243,230,200,.08)}
 
 /* ---------- the wheel: printed paper on the walnut ---------- */
@@ -198,7 +198,7 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage svg.wheel-paper .edge{stroke:#7a6244;stroke-width:1.5}
 .lt .stage svg.wheel-paper .hub{fill:#2a1f17;stroke:rgba(243,230,200,.18)}
 .lt .stage .hub-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;color:var(--cream);font-family:var(--serif);pointer-events:none;line-height:1}
-.lt .stage .hub-label small{font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfa984}
+.lt .stage .hub-label small{font-family:var(--sans);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#bfa984}
 .lt .stage .hub-label b{font-size:clamp(20px, calc(var(--wheel-px) * .05), 32px);font-weight:700;margin-top:1px}
 /* no pips: a dot only ever means a resource; the header says "Round I of 3" */
 .lt .stage .hub-label .pips{display:none}
@@ -216,14 +216,14 @@ h1,h2,h3{font-family:var(--serif)}
   box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 72%,#5a4630),inset 0 2px 4px rgba(60,40,15,.25),0 1px 0 rgba(255,255,255,.6)}
 /* not open yet: a hollow pressed into the paper, its round printed faintly (no dashes: those never mean "open") */
 .lt .stage .slot.locked .base{background:rgba(42,31,23,.05);box-shadow:inset 0 1px 3px rgba(42,31,23,.3),0 1px 0 rgba(255,250,238,.45);opacity:.85}
-.lt .stage .slot .seal{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:13px;letter-spacing:.06em;color:color-mix(in srgb,var(--c) 40%,#6e5a40);opacity:.6;pointer-events:none}
+.lt .stage .slot .seal{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:14px;letter-spacing:.06em;color:color-mix(in srgb,var(--c) 40%,#6e5a40);opacity:.6;pointer-events:none}
 .lt .stage .slot .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 2px;text-align:center;pointer-events:none;color:var(--paper-ink);transition:opacity var(--mo-fade)}
 .lt .stage .slot .face .ico{line-height:0;margin-top:-2px}
 .lt .stage .slot .face .ico svg{width:clamp(18px, calc(var(--wheel-px) * .046), 24px);height:auto;image-rendering:pixelated}
 .lt .stage .slot.r2 .face .ico svg,.lt .stage .slot.r3 .face .ico svg{width:clamp(14px, calc(var(--wheel-px) * .036), 20px)}
 /* every word on the wheel is at least 12px */
-.lt .stage .slot .face .nm{font-family:var(--serif);font-weight:700;font-size:12px;line-height:1;margin-top:1px;max-width:100%;color:var(--paper-ink-2)}
-.lt .stage .slot .face .yl{font-family:var(--sans);font-weight:700;font-size:12px;line-height:1.05;color:var(--paper-ink);display:block;max-width:140%;white-space:normal}
+.lt .stage .slot .face .nm{font-family:var(--serif);font-weight:700;font-size:13px;line-height:1;margin-top:1px;max-width:100%;color:var(--paper-ink-2)}
+.lt .stage .slot .face .yl{font-family:var(--sans);font-weight:700;font-size:13px;line-height:1.05;color:var(--paper-ink);display:block;max-width:140%;white-space:normal}
 .lt .stage .slot .face .yl .pip{width:.95em;height:.95em}
 /* lit: yours to take. A lamp-lit edge and a warm glow that breathes; the picture at full strength */
 .lt .stage .slot.can{cursor:pointer}
@@ -268,7 +268,7 @@ h1,h2,h3{font-family:var(--serif)}
 /* inside a face's HTML (FaceHtml), the marks and pips are 1em, not the stage's svg 100% */
 .lt .stage .face-svg .face-html svg{display:inline-block;width:1em;height:1em;vertical-align:-.15em;cursor:inherit}
 /* ...and why, at the pointer: "Taken by P3", "Opens in round II" */
-.deny-note{position:fixed;z-index:60;transform:translate(14px,-135%);padding:5px 10px;border-radius:8px;background:var(--walnut-2);color:var(--cream);font-family:var(--sans);font-size:14px;font-weight:600;white-space:nowrap;pointer-events:none;
+.deny-note{position:fixed;z-index:60;transform:translate(14px,-135%);padding:5px 10px;border-radius:8px;background:var(--walnut-2);color:var(--cream);font-family:var(--sans);font-size:15px;font-weight:600;white-space:nowrap;pointer-events:none;
   box-shadow:0 0 0 1px rgba(243,230,200,.24),0 8px 18px rgba(0,0,0,.5);animation:denyin .16s ease-out,denyout .3s ease-in 1.35s forwards}
 @keyframes denyin{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
 @keyframes denyout{to{opacity:0}}
@@ -347,12 +347,12 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage .slot .face .pip{width:.8em;height:.8em;margin:0 0 0 .08em;vertical-align:-.06em}
 .lt [data-spaces="panels"] .stage .slot .face svg.follower-mark{display:inline-block;width:.8em;height:.8em;vertical-align:-.06em;margin:0 0 0 .08em}
 /* 2. the effect in plain words */
-.lt [data-spaces="panels"] .stage .slot .face .second{display:block;max-width:100%;font-size:14px;line-height:15px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot .face .second{display:block;max-width:100%;font-size:15px;line-height:15px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
 .lt [data-spaces="panels"] .stage .slot.wrap .face .second{white-space:normal;text-wrap:balance}
 /* a narrow panel sets its effect a size down (the clarification's size, at the effect's weight) before it wraps thrice */
-.lt [data-spaces="panels"] .stage .slot.small .face .second{font-size:12px;line-height:13px}
+.lt [data-spaces="panels"] .stage .slot.small .face .second{font-size:13px;line-height:13px}
 /* 3. the clarification, small and quiet */
-.lt [data-spaces="panels"] .stage .slot .face .note{display:block;font-size:12px;line-height:13px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot .face .note{display:block;font-size:13px;line-height:13px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
 .lt [data-spaces="panels"] .stage .slot .face .note .dim{color:var(--pl-ink-3,#a39078);font-weight:500}
 .lt [data-spaces="panels"] .stage .slot .face .note .now{color:var(--pl-ink,#2b2018);font-weight:800}
 /* taken: the lines fade and the minion stands over them, at full strength (the panel never reflows) */
@@ -402,7 +402,7 @@ h1,h2,h3{font-family:var(--serif)}
     box-shadow:0 0 0 1px rgba(80,60,30,.25),0 14px 34px rgba(0,0,0,.6)}
   .lt .lt-wheel > .prompt.choice p,.lt .lt-wheel > .prompt.choice .hint{color:var(--paper-ink)}
   /* the note keeps the cards' scale (14 text, 11 small print): its question and answers were 15px */
-  .lt .lt-wheel > .prompt.choice p,.lt .lt-wheel > .prompt.choice .btn{font-size:14px;line-height:20px}
+  .lt .lt-wheel > .prompt.choice p,.lt .lt-wheel > .prompt.choice .btn{font-size:15px;line-height:20px}
   .lt .lt-wheel > .prompt.choice .btn{color:var(--paper-ink);border-color:rgba(42,31,23,.35);background:rgba(255,255,255,.35)}
   .lt .lt-wheel > .prompt.choice .btn:hover:not(:disabled){background:#fffaf0}
   .lt .lt-wheel > .prompt.choice .btn small,.lt .lt-wheel > .prompt.choice .rich-body small{color:var(--paper-ink-2)}
@@ -417,7 +417,7 @@ h1,h2,h3{font-family:var(--serif)}
   .lt header.bar.lt-prompt{position:sticky;top:0;z-index:16;margin:-10px -12px 0;padding:6px 56px 6px 12px;min-height:56px;background:color-mix(in srgb,var(--walnut) 94%,transparent);border-bottom:1px solid rgba(243,230,200,.08)}
   .lt-prompt .status .say{font-size:18px}
   .lt-prompt .status .say:not(.mine){font-size:16px}
-  .lt-prompt .steps-row{font-size:11px}
+  .lt-prompt .steps-row{font-size:12px}
   .lt-prompt .undo,.lt-prompt .pr-actions .pass,.lt-prompt .pr-actions .rel-toggle{min-height:44px}
   .lt-menu{right:6px}
   .lt .lt-wheel .stage{width:min(100%, 520px)}
@@ -433,7 +433,7 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt > .lt-since,.app.game.lt > .turn-card{grid-column:1 / -1}
   /* …and so do the final results (they fell into the same 117px column: "P3 wins / with 76 / followers") */
   .app.game.lt > .main.over{grid-column:1 / -1;min-width:0}
-  .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:12px}
+  .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:13px}
 
 }
 
@@ -450,7 +450,7 @@ h1,h2,h3{font-family:var(--serif)}
 
 /* the question's first letter keeps its overhang (the line clamp clips at the box edge) */
 .lt-prompt .status .say .say-text{padding-left:5px;padding-right:2px}
-.lt-menu .record-text{width:100%;min-height:110px;background:var(--walnut);color:var(--cream);border:1px solid rgba(243,230,200,.2);border-radius:8px;font:12px ui-monospace,monospace}
+.lt-menu .record-text{width:100%;min-height:110px;background:var(--walnut);color:var(--cream);border:1px solid rgba(243,230,200,.2);border-radius:8px;font:13px ui-monospace,monospace}
 /* a minion in flight: its own sprite, crisp, with a shadow that says it's in the air */
 .minion-flight svg{display:block;width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(0 8px 6px rgba(0,0,0,.45))}
 /* (a minion flying home carries the class `home`, which the title screen's .home also uses: its 8vh top padding squashed the minion to nothing) */
@@ -475,13 +475,13 @@ h1,h2,h3{font-family:var(--serif)}
 /* a seat's count stamps in, then ticks (the counting is the motion, #30); the leader's count hops once */
 .lt-reckon .reckon-count{animation:reckonstamp var(--mo-land) cubic-bezier(.3,1.5,.5,1) both}
 @keyframes reckonstamp{from{opacity:0;scale:1.25}to{opacity:1;scale:1}}
-.lt-reckon .reckon-head small{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-ink-3)}
+.lt-reckon .reckon-head small{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-ink-3)}
 .lt-reckon .reckon-head b{font-family:var(--serif);font-size:22px;line-height:1.15}
 /* the caption over the dimmed shop (clear of the wheel's plaques): what is scored, what it counts, then who wins */
 .lt-reckon .reckon-head{font-family:var(--sans)}
-.lt-reckon .reckon-head small{font-size:14px;letter-spacing:.08em}
+.lt-reckon .reckon-head small{font-size:15px;letter-spacing:.08em}
 .lt-reckon .reckon-head .reckon-rule{font-family:var(--sans);font-size:18px;font-weight:800;color:color-mix(in srgb,var(--c) 70%,var(--paper-ink))}
-.lt-reckon .reckon-head .reckon-counts{font-size:14px;line-height:20px;color:var(--paper-ink-2);max-width:520px}
+.lt-reckon .reckon-head .reckon-counts{font-size:15px;line-height:20px;color:var(--paper-ink-2);max-width:520px}
 .lt-reckon .reckon-head .reckon-verdict{font-family:var(--sans);font-size:18px;line-height:24px;min-height:24px;color:var(--paper-ink-3);font-weight:500;transition:color .25s}
 .lt-reckon .reckon-head .reckon-verdict.on{color:var(--paper-ink);font-weight:800;animation:rise calc(.3s * var(--mo-slow)) ease-out}
 .lt-reckon .reckon-head .reckon-verdict.none{color:var(--paper-ink-3);font-weight:500}
@@ -497,7 +497,7 @@ h1,h2,h3{font-family:var(--serif)}
 @keyframes reckonwin{50%{transform:translate(0,-50%) scale(1.18)}}
 .lt-reckon .reckon-skip{position:absolute;right:18px;bottom:18px;min-height:44px;padding:0 18px;color:var(--cream);border-color:rgba(243,230,200,.4);background:rgba(29,22,17,.7)}
 .token-flight{position:fixed;z-index:45;pointer-events:none;display:grid;place-items:center;will-change:transform}
-.token-flight .reckon-token{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--lamp-ink);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:14px;box-shadow:0 0 0 2px var(--pc),0 6px 14px rgba(0,0,0,.5)}
+.token-flight .reckon-token{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--lamp-ink);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:15px;box-shadow:0 0 0 2px var(--pc),0 6px 14px rgba(0,0,0,.5)}
 
 /* ---------- the rim: each quadrant's rule engraved along its arc, its leader beside it (Cory: elegant, typographic,
    part of the board) ---------- */
@@ -531,7 +531,7 @@ h1,h2,h3{font-family:var(--serif)}
 /* the end-game scoring (FinalScore.jsx, taste rule 11): a "+x" with the follower mark rises over the head it came from
    (the leader, then each member, then what a member grants), holds, and fades; the same face as a member's use result */
 .lt .over-seat .fs-pop{position:absolute;z-index:5;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;
-  font-family:var(--sans);font-size:14px;line-height:18px;font-weight:800;color:var(--light,#fff3d4);text-shadow:0 1px 2px rgba(0,0,0,.8);
+  font-family:var(--sans);font-size:15px;line-height:18px;font-weight:800;color:var(--light,#fff3d4);text-shadow:0 1px 2px rgba(0,0,0,.8);
   transform:translate(-50%,-100%);animation:fs-rise .9s ease-out both}
 .lt .over-seat .fs-pop.grants{color:var(--lamp-ink)}
 .lt .over-seat .fs-pop.down{color:var(--cream-3)}
@@ -561,7 +561,7 @@ h1,h2,h3{font-family:var(--serif)}
 /* Release is picked in your seat now; the list is the keyboard's way in only: hidden until a key brings focus into it */
 .lt-prompt .pr-actions .rel-list.keys:not(:focus-within){clip-path:inset(50%);width:1px;height:1px;padding:0;overflow:hidden;box-shadow:none}
 /* a sphere's own rule, under its standings in the rim's hover card ("Whatever you steal turns magenta…") */
-.lt-sphere-rule{margin:8px 0 0;padding-top:7px;border-top:1px solid rgba(42,31,23,.15);font-size:14px;line-height:1.35;color:var(--paper-ink-2);max-width:260px}
+.lt-sphere-rule{margin:8px 0 0;padding-top:7px;border-top:1px solid rgba(42,31,23,.15);font-size:15px;line-height:1.35;color:var(--paper-ink-2);max-width:260px}
 
 /* setup (RC1 panel: the starting-resource note covered the wheel's lower half, so a newcomer only found out by accident
    that it spins; Cory, 2026-10-15: "make way better use of the space"): the wheel keeps its full size and the picker
@@ -609,7 +609,7 @@ h1,h2,h3{font-family:var(--serif)}
   /* the results' seats on the table's type scale (design pod): name and total 18 (the table above says the total too),
      what they hold 11; they carried 16, 22, 25 and 12 */
   .app.game.lt > .main.over .over-seat .cs-who b,.app.game.lt > .main.over .over-seat .cs-total .tv{font-size:18px;line-height:22px}
-  .app.game.lt > .main.over .over-seat .cs-stack b{font-size:11px}
+  .app.game.lt > .main.over .over-seat .cs-stack b{font-size:12px}
 }
 .prompt.choice.setup .token .tk-label{white-space:nowrap}
 /* the Reckoning's scoreboard: every player's count side by side on the card; the winner's column cheers */
@@ -618,7 +618,7 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-reckon .reckon-board .rc.in{opacity:1;animation:reckonstampcol var(--mo-land) cubic-bezier(.3,1.5,.5,1) both}
 /* a column stamps in from where it rested (.25), never blinking out to nothing first (round-end smoothing) */
 @keyframes reckonstampcol{from{opacity:.25;scale:1.12}to{opacity:1;scale:1}}
-.lt-reckon .reckon-board .rc-who{display:flex;align-items:center;gap:5px;font:600 14px/1 var(--sans);color:var(--paper-ink-2);max-width:100%;white-space:nowrap;overflow:hidden}
+.lt-reckon .reckon-board .rc-who{display:flex;align-items:center;gap:5px;font:600 15px/1 var(--sans);color:var(--paper-ink-2);max-width:100%;white-space:nowrap;overflow:hidden}
 .lt-reckon .reckon-board .rc-who svg{flex:none}
 .lt-reckon .reckon-board .rc-n{font:800 36px/1 var(--sans)!important;color:var(--paper-ink)}
 .lt-reckon .reckon-board .rc.lost{opacity:.45}

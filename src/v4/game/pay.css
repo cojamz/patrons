@@ -10,7 +10,7 @@
 .dialog.pay.pay-card{width:400px;max-width:calc(100vw - 32px);padding:20px;gap:0;border:0;border-radius:var(--corner,8px);
   background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);font-family:var(--sans);
   box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 24px 60px rgba(0,0,0,.55);animation:pay-in .16s cubic-bezier(.25,.6,.3,1)}
-.pay-card .pay-id .ability{color:var(--pl-ink,#2b2018);font-size:14px;line-height:20px;margin:12px 0 0}
+.pay-card .pay-id .ability{color:var(--pl-ink,#2b2018);font-size:15px;line-height:20px;margin:12px 0 0}
 @keyframes pay-in{from{opacity:0;transform:translateY(6px) scale(.985)}}
 .pay-card .turn-of{margin:0 0 12px}
 
@@ -31,7 +31,7 @@
    one button (keep one of it); a kept stack is another (pay with one more of it). */
 .pay-rows{display:grid;grid-template-columns:76px 1fr;row-gap:12px;margin:12px 0 0;align-items:center}
 .pay-row{display:contents}
-.pr-lbl{font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49)}
+.pr-lbl{font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49)}
 .pay-row.paying .pr-items{display:flex;flex-wrap:wrap;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border-radius:var(--corner,8px);
   background:color-mix(in srgb,var(--pl-ink,#2b2018) 8%,transparent);box-shadow:inset 0 1px 2px rgba(43,32,24,.18)}
 .ps-out{display:inline-flex;align-items:center;gap:6px;padding:4px;margin:-4px;border:0;border-radius:16px;background:transparent;cursor:pointer;color:var(--pl-ink,#2b2018)}
@@ -41,7 +41,7 @@
 .po-coins{display:inline-flex}
 .po-coins > .ps-coin + .ps-coin{margin-left:var(--ov,-4px)}
 .ps-out:hover:not(:disabled) .ps-coin:last-child{transform:translateY(2px)}
-.po-n{font-size:14px;font-weight:700}
+.po-n{font-size:15px;font-weight:700}
 .ps-coin{display:block;width:24px;height:24px;border-radius:50%;transition:transform .12s ease-out}
 .ps-coin > svg{display:block;filter:drop-shadow(0 1.5px 0 rgba(43,32,24,.32))}
 
@@ -61,24 +61,24 @@
 .ps-socket{position:absolute;left:0;bottom:0;width:24px;height:24px;box-sizing:border-box;border-radius:50%;border:1.5px dashed var(--pl-ink-3,#a39078)}
 .ps-n{position:relative;z-index:1;pointer-events:none;font-size:18px;line-height:24px;font-weight:700;font-variant-numeric:tabular-nums lining-nums}
 .pay-stack.spent .ps-n{color:var(--pl-ink-3,#a39078)}
-.pay-card .pay-was{font-size:11px;font-weight:600;color:var(--pl-ink-3,#a39078);text-decoration:line-through;text-decoration-thickness:1px;margin-right:2px}
-.pay-legend{margin:12px 0 0;font-family:var(--sans);font-size:14px;line-height:20px;color:var(--pl-ink-2,#6e5c49);text-align:left;text-wrap:balance}
+.pay-card .pay-was{font-size:12px;font-weight:600;color:var(--pl-ink-3,#a39078);text-decoration:line-through;text-decoration-thickness:1px;margin-right:2px}
+.pay-legend{margin:12px 0 0;font-family:var(--sans);font-size:15px;line-height:20px;color:var(--pl-ink-2,#6e5c49);text-align:left;text-wrap:balance}
 
 /* Price rules belong beside the cost and ability, before you choose the coins. */
-.dialog.pay.pay-card .pay-rules{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:20px}
+.dialog.pay.pay-card .pay-rules{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:15px;line-height:20px}
 .dialog.pay.pay-card .pay-rules li{padding:0;border:0;color:var(--pl-ink-2,#6e5c49);font-weight:500}
-.pay-nudge{margin:8px 0 0;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);animation:pay-nudge .26s ease-out}
-.pay-lead{margin:0;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);font-weight:500}
+.pay-nudge{margin:8px 0 0;font-size:15px;line-height:20px;color:var(--pl-ink,#2b2018);animation:pay-nudge .26s ease-out}
+.pay-lead{margin:0;font-size:15px;line-height:20px;color:var(--pl-ink,#2b2018);font-weight:500}
 @keyframes pay-nudge{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 
 /* Cancel, and the one lit thing: Pay, with the coins it pays */
 /* Cancel holds the left edge and Pay the right, so a Pay that grows with its coins never moves Cancel (blind tester B) */
 .pay-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:16px 0 0}
-.pay-cancel{height:44px;padding:0 16px;border:0;border-radius:var(--corner,8px);background:transparent;color:var(--pl-ink-2,#6e5c49);font:500 14px/1 var(--sans);cursor:pointer}
+.pay-cancel{height:44px;padding:0 16px;border:0;border-radius:var(--corner,8px);background:transparent;color:var(--pl-ink-2,#6e5c49);font:500 15px/1 var(--sans);cursor:pointer}
 .pay-cancel:hover:not(:disabled){color:var(--pl-ink,#2b2018);background:color-mix(in srgb,var(--pl-ink,#2b2018) 6%,transparent)}
 .pay-foot .pay-go{margin-left:auto}
 .pay-go{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 20px;border:0;border-radius:var(--corner,8px);cursor:pointer;
-  background:var(--pl-ink,#2b2018);color:var(--pl-paper,#f2e8d2);font:700 14px/1 var(--sans);
+  background:var(--pl-ink,#2b2018);color:var(--pl-paper,#f2e8d2);font:700 15px/1 var(--sans);
   box-shadow:0 2px 0 rgba(0,0,0,.35);transition:transform .08s ease-out,box-shadow .08s ease-out}
 .pay-go:hover:not(:disabled){background:#3a2b20}
 .pay-go:active:not(:disabled){transform:translateY(2px);box-shadow:0 0 0 rgba(0,0,0,.35)}
@@ -96,7 +96,7 @@
 /* The receipt of a payment made at once (GameScreen: only one way to pay): "Paid 4● 4●", a small paper label over the
    foot of what you bought, there for a moment, then gone. It never takes a click (a refill may be sliding in under it). */
 .pay-receipt{position:fixed;z-index:30;translate:-50% calc(-100% - 6px);display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;
-  border-radius:var(--corner,8px);background:var(--pl-ink,#2b2018);color:var(--pl-paper,#f2e8d2);font:700 14px/1 var(--sans);white-space:nowrap;
+  border-radius:var(--corner,8px);background:var(--pl-ink,#2b2018);color:var(--pl-paper,#f2e8d2);font:700 15px/1 var(--sans);white-space:nowrap;
   box-shadow:0 4px 12px rgba(0,0,0,.45);pointer-events:none;animation:pay-receipt var(--life,1800ms) ease-out both}
 .pay-receipt .cost-dots{display:inline-flex;gap:6px}
 .pay-receipt .cost-dots .cd{display:inline-flex;align-items:center;gap:2px}
