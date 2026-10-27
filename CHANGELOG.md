@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.99 — 2026-10-27 — unreleased
+
+- Member cards print two clear keywords: 'On Recruit:' and 'Round Start:' (was 'Now and at round start' and 'When recruited')
+
 ## v0.8.98 — 2026-10-27 — unreleased
 
 - The round prize on each wheel rim reads bigger and bolder, in plain case, on a slightly thicker rim
