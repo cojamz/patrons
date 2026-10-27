@@ -309,7 +309,7 @@ function captionOf(state, pk) {
   // and the line under it says where to click, with the card's rule after it only when the whole line fits (w3a #14:
   // the rule clipped to "…per ro…" and nothing said to click one of your colors); the rule is on the asker's card
   if (asker && q.length > 30) {
-    const rest = asker.text.replace(/^When recruited[,:]\s*/i, '').replace(/^(?:you choose|pick) an? \w+\.\s*/i, '');
+    const rest = asker.text.replace(/^(?:When recruited|On Recruit)[,:]\s*/i, '').replace(/^(?:you choose|pick) an? \w+\.\s*/i, '');
     const how = `${pickHow(pk)}. ${rest[0].toUpperCase()}${rest.slice(1)}`;
     return { title: pk.title, what: [shortAsk(pk)], left: pk.count ? pk.count.left : null, how: how.length <= 64 ? how : pickHow(pk), rule: asker.text };
   }

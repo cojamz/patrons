@@ -78,7 +78,7 @@ export default {
     m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
     m('volunteer', 'Volunteer', 0, 0, 'Worth 1 follower.'),
     m('intern', 'Intern', 1, 0, 'Worth 1 follower.'),
-    m('mentor', 'Mentor & Protégé', 5, 3, 'When recruited: recruit the cheapest member in the shop.', { f: 2, // +1 follower (Cory, 2026-10-25)
+    m('mentor', 'Mentor & Protégé', 5, 3, 'On Recruit: recruit the cheapest member in the shop.', { f: 2, // +1 follower (Cory, 2026-10-25)
       // card: this Mentor, or a Doppelganger copying it (its free pick says so)
       onRecruited(ctx, owner, card) {
         const who = card && card.def && card.def.key === 'doppel' ? 'Doppelganger (as Mentor & Protégé)' : 'Mentor & Protégé';
@@ -104,7 +104,7 @@ export default {
         if (by === owner && ctx.state.current === owner.id && owner.turnRecruits >= 2 && owner.turnRecruits - ctx.memberWeight(recruited) < 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Pied Piper: +2 red.`); }
       },
     }),
-    m('host', 'Host', 2, 2, 'Now and at round start: +1 red per 2 members.', { now: true,
+    m('host', 'Host', 2, 2, 'On Recruit: +1 red per 2 members. Round Start: +1 red per 2 members.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'red', Math.floor(ctx.memberCount(owner) / 2)); },
     }),
     m('sponsor', 'Sponsor', 6, 4, 'Your members cost 2 less.', { costReduction: 2 }),
@@ -114,13 +114,13 @@ export default {
     m('patriarch', 'Patriarch', 3, 2, 'Game end: +1 follower per 2 members.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
-    m('recruitbonus', 'Recruit Bonus', 1, 1, 'Whenever one of your members’ "When recruited" happens, +1 of its color.', { f: 2,
+    m('recruitbonus', 'Recruit Bonus', 1, 1, 'Whenever one of your members’ "On Recruit" happens, +1 of its color.', { f: 2,
       onRecruitAbility(ctx, owner, card, recruited) { const r = ctx.quadrant(recruited.def.quadrant).resource; if (ctx.state.resources.includes(r)) ctx.gain(owner, r, 1); }, // a guest has no color: nothing
     }),
     m('movementpenalty', 'Movement Penalty', 1, 2, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
       onMoveMember(ctx, owner, card, info) { if (info.from !== owner && ctx.followers(info.from) > 0) info.from.bonus -= 1; },
     }),
-    m('panel', 'Panel', 4, 2, 'When recruited: Promote or Demote another member.', { f: 3, n: 3,
+    m('panel', 'Panel', 4, 2, 'On Recruit: Promote or Demote another member.', { f: 3, n: 3,
       onRecruited(ctx, owner, card) {
         const options = ['promote', 'demote'].filter(mode => swapPairs(ctx, owner, mode, card.uid).length).map(mode => ({
           id: mode, label: mode === 'promote' ? 'Promote' : 'Demote', kind: 'choice', value: mode,

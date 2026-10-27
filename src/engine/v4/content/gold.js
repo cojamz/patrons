@@ -83,7 +83,7 @@ export default {
       },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
-    m('banker', 'Banker', 4, 4, 'Now and at round start: +3 gold.', { now: true,
+    m('banker', 'Banker', 4, 4, 'On Recruit: +3 gold. Round Start: +3 gold.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'gold', 3); },
     }),
     m('prospector', 'Prospector', 2, 2, 'When an action gains you gold, +1 gold.', {
@@ -128,7 +128,7 @@ export default {
     m('tinker', 'Alchemist', 4, 2, 'Whenever an action gains you another color, +1 gold.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
-    m('investor', 'Investor', 4, 2, 'Round start: set aside any of your gold. Round end: gain double that.', {
+    m('investor', 'Investor', 4, 2, 'Round Start: set aside any of your gold. Round end: gain double that.', {
       onRoundStartLate(ctx, owner, card) {
         const g = owner.res.gold;
         if (!g) return;
@@ -170,11 +170,11 @@ export default {
     m('tycoon', 'Tycoon', 4, 2, 'Game end: +1 follower per 2 gold.', { // Cory, 2026-10-15: per 2, was per 3
       onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 2),
     }),
-    m('seed', 'Treasurer', 4, 0, 'When recruited: +1 gold per member you have, this one included.', {
+    m('seed', 'Treasurer', 4, 0, 'On Recruit: +1 gold per member you have, this one included.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
-    m('hustler', 'Hustler', 4, 0, 'When recruited: you choose a color. Whenever you take an action of that color, +1 gold in round I, +2 in round II, +3 in round III.', {
-      byRound: { lead: 'When recruited: you choose a color. Whenever you take an action of that color:', lines: ['+1 gold', '+2 gold', '+3 gold'] },
+    m('hustler', 'Hustler', 4, 0, 'On Recruit: you choose a color. Whenever you take an action of that color, +1 gold in round I, +2 in round II, +3 in round III.', {
+      byRound: { lead: 'On Recruit: you choose a color. Whenever you take an action of that color:', lines: ['+1 gold', '+2 gold', '+3 gold'] },
       onRecruited(ctx, owner, card) {
         ctx.choose(owner, 'Hustler: actions in which color give you extra gold?', ctx.state.quadrants.map(q => ({
           id: `color:${q}`, label: ctx.quadrant(q).name, kind: 'color', value: q, hint: q === 'gold' ? 1 : 0,

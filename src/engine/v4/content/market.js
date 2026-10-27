@@ -299,17 +299,17 @@ const market = {
     m('reseller', 'Reseller', 4, 2, 'Whenever you recruit, +1 of that member’s color.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && colorOf(ctx, rec)) ctx.gain(owner, colorOf(ctx, rec), 1); },
     }),
-    m('curator', 'Curator', 2, 2, 'Now and at round start, +1 blue per other blue member you have.', { now: true,
+    m('curator', 'Curator', 2, 2, 'On Recruit: +1 blue per other blue member you have. Round Start: +1 blue per other blue member you have.', { now: true,
       onRoundStart(ctx, owner, card) { ctx.gain(owner, B, ctx.countMembersOfColor(owner, Q) - (card && isBlue(card.def) ? ctx.memberWeight(card) : 0)); },
     }),
-    m('planner', 'Planner', 2, 2, 'Now and at round start, your next member costs 2 less per round number.', { now: true,
-      byRound: { lead: 'Now and at round start, your next member costs:', lines: ['2 less', '4 less', '6 less'] },
+    m('planner', 'Planner', 2, 2, 'On Recruit: your next member costs 2 less per round number. Round Start: your next member costs 2 less per round number.', { now: true,
+      byRound: { lead: 'On Recruit and Round Start: your next member costs:', lines: ['2 less', '4 less', '6 less'] },
       onRoundStart(ctx, owner) { ctx.discount(owner, 2 * ctx.state.round, 'Planner'); },
     }),
-    m('underbidder', 'Underbidder', 2, 0, 'Now and at round start, your next member costs 2 less per rival with more members than you.', { now: true,
+    m('underbidder', 'Underbidder', 2, 0, 'On Recruit: your next member costs 2 less per rival with more members than you. Round Start: your next member costs 2 less per rival with more members than you.', { now: true,
       onRoundStart(ctx, owner) { ctx.discount(owner, 2 * rivalsBigger(ctx, owner), 'Underbidder'); },
     }),
-    m('minimalist', 'Minimalist', 2, 0, 'Now and at round start, +1 blue per rival with more members than you.', { now: true,
+    m('minimalist', 'Minimalist', 2, 0, 'On Recruit: +1 blue per rival with more members than you. Round Start: +1 blue per rival with more members than you.', { now: true,
       onRoundStart(ctx, owner) { const k = rivalsBigger(ctx, owner); if (k) ctx.gain(owner, B, k); },
     }),
     // replaced (Claude under Cory's go-with-your-gut, from the dead-window audit): the old round-start trade-in never fired
@@ -355,7 +355,7 @@ const market = {
     // concepts, Oct 21, not approved (design/eval/member-concepts-2026-10-21.md): prices are sim starting points
     // Cory, 2026-10-24: Blue's round start ("Yeah I kinda like it") and Blue's once per game, the shop refresh that replaces
     // Makeover; names and prices Claude's fill-in
-    m('windowshopper', 'Window Shopper', 2, 2, 'Now and at round start: send 1 shop member to the bottom of the pile, gain 1 of its color.', { now: true,
+    m('windowshopper', 'Window Shopper', 2, 2, 'On Recruit: send 1 shop member to the bottom of the pile, gain 1 of its color. Round Start: send 1 shop member to the bottom of the pile, gain 1 of its color.', { now: true,
       onRoundStart(ctx, owner) {
         const shop = ctx.shopCards();
         if (!shop.length) return;
@@ -374,14 +374,14 @@ const market = {
       botActivate: (ctx, owner) => ctx.state.round >= 2 && !ctx.shopCards().some(c => ctx.payChoices(owner, c.uid, {}).length),
     }),
     m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true, f: 2 }),
-    m('windowdresser', 'Window Dresser', 2, 1, 'When recruited: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
+    m('windowdresser', 'Window Dresser', 2, 1, 'On Recruit: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx, owner) {
         ctx.log(`${owner.name}'s Window Dresser: send 3 shop members to the bottom of the pile.`);
         churnStep(ctx, owner, { left: Math.min(3, ctx.state.shop.length) });
         ctx.defer(owner, `${Q}.churnRefill`);
       },
     }),
-    m('plusone', 'Plus-One', 2, 1, 'When recruited: recruit again this turn.', { f: 2,
+    m('plusone', 'Plus-One', 2, 1, 'On Recruit: recruit again this turn.', { f: 2,
       onRecruited(ctx, owner) { extraBuys(ctx, owner, 1); ctx.log(`${owner.name}'s Plus-One: recruit again this turn.`); },
     }),
     // Cory, Oct 21: "any time a player recruits more than once in a turn", swaps and takes included (they all reach
@@ -398,7 +398,7 @@ const market = {
       },
     }),
     // Cory's, Oct 21: "one recruit, refresh the shop. all the members"; prices are sim starting points
-    m('makeover', 'Makeover', 2, 1, 'When recruited: send the whole shop to the bottom of the pile, then refill.', { f: 3,
+    m('makeover', 'Makeover', 2, 1, 'On Recruit: send the whole shop to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx) { sweepRow(ctx); },
     }),
     // Cory's, Oct 21: "when you buy followers +1 blue"; his Oct 21 definition makes buying followers a recruit

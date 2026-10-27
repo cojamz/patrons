@@ -189,7 +189,7 @@ const silver = {
     m('guest', 'Guest', 4, 4, 'Whenever a rival gives you something, +1 more of it.', {
       onGiven(ctx, owner, card, giver, color) { if (giver !== owner) ctx.gain(owner, color, 1); },
     }),
-    m('benefactor', 'Benefactor', 4, 2, 'Now and at round start: +3 silver, and +1 silver to a rival you choose.', { now: true,
+    m('benefactor', 'Benefactor', 4, 2, 'On Recruit: +3 silver, and +1 silver to a rival you choose. Round Start: +3 silver, and +1 silver to a rival you choose.', { now: true,
       onRoundStart(ctx, owner) {
         ctx.gain(owner, S, 3);
         const low = Math.min(...others(ctx, owner).map(o => ctx.followers(o)));
@@ -209,11 +209,11 @@ const silver = {
     m('silversmith', 'Silversmith', 4, 2, 'Whenever a rival takes a Silver space, +1 silver.', {
       afterRivalAction(ctx, owner, card, qid) { if (qid === S) ctx.gain(owner, S, 1); },
     }),
-    m('steward', 'Steward', 2, 2, 'Now and at round start: +1 silver per 3 silver you hold.', { now: true,
+    m('steward', 'Steward', 2, 2, 'On Recruit: +1 silver per 3 silver you hold. Round Start: +1 silver per 3 silver you hold.', { now: true,
       // counts after every other round-start income (Benefactor, Banker…), as a player reads it (Cory hit this, 2026-10-14)
       onRoundStartLate(ctx, owner) { ctx.gain(owner, S, Math.floor(owner.res[S] / 3)); },
     }),
-    m('retinue', 'Retinue', 1, 1, 'Worth 3 followers. When recruited: each rival +1 silver.', {
+    m('retinue', 'Retinue', 1, 1, 'Worth 3 followers. On Recruit: each rival +1 silver.', {
       f: 3,
       onRecruited(ctx, owner) { giveAll(ctx, owner, S, 1); },
     }),
@@ -221,12 +221,12 @@ const silver = {
     // 3 members (n: 3) everywhere members are counted. Same cost for now; the fair-price screen checks it.
     m('revelers', 'Revelers', 3, 1, 'Counts as 3 members.', { n: 3 }),
     // pays when recruited too (Claude under Cory's go-with-your-gut, from the dead-window audit): blank if recruited in round III
-    m('heir', 'Heir', 4, 2, 'Now and at the start of round III: +1 silver per member you have.', {
+    m('heir', 'Heir', 4, 2, 'On Recruit: +1 silver per member you have. Round III Start: +1 silver per member you have.', {
       onRecruited(ctx, owner) { ctx.gain(owner, S, ctx.memberCount(owner)); },
       onRoundStart(ctx, owner) { if (ctx.state.round === 3) ctx.gain(owner, S, ctx.memberCount(owner)); },
     }),
     // Cory, 2026-10-15 (balance pass 1, #2): half of it, Rising Tide's rule (both bots read the old card at 12+ for 6)
-    m('spoon', 'Upstart', 4, 2, 'When recruited: gain half the silver of the rival with the most, rounded up.', {
+    m('spoon', 'Upstart', 4, 2, 'On Recruit: gain half the silver of the rival with the most, rounded up.', {
       onRecruited(ctx, owner) { ctx.gain(owner, S, Math.ceil(Math.max(0, ...others(ctx, owner).map(o => o.res[S] || 0)) / 2)); },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 8 → 4

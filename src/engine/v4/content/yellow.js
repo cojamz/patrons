@@ -108,11 +108,11 @@ export default {
   },
 
   members: [
-    m('gardener', 'Gardener', 2, 0, 'Now and at round start: +1 of each color you have none of.', { now: true,
+    m('gardener', 'Gardener', 2, 0, 'On Recruit: +1 of each color you have none of. Round Start: +1 of each color you have none of.', { now: true,
       onRoundStart(ctx, owner) { for (const c of missing(ctx, owner)) ctx.gain(owner, c, 1); },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
-    m('peddler', 'Peddler', 4, 4, 'Now and at round start: +1 of each color.', { now: true,
+    m('peddler', 'Peddler', 4, 4, 'On Recruit: +1 of each color. Round Start: +1 of each color.', { now: true,
       onRoundStart(ctx, owner) { for (const c of colors(ctx)) ctx.gain(owner, c, 1); },
     }),
     m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2 or more of another color at once, +1 yellow.', {
@@ -133,14 +133,14 @@ export default {
     m('dyer', 'Dyer', 4, 2, 'Round end: +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
-    m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. Now and at round start: if no rival has fewer followers than you (not counting this card), +1 of each color.', { now: true, f: 2,
+    m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. On Recruit: if no rival has fewer followers than you (not counting this card), +1 of each color. Round Start: if no rival has fewer followers than you (not counting this card), +1 of each color.', { now: true, f: 2,
       onRoundStart(ctx, owner, card) {
         // Exclude this physical card, including its value when a Doppelganger copies it.
         const mine = ctx.followers(owner) - Math.max(2, card.def.f);
         if (ctx.rivals(owner).every(o => ctx.followers(o) >= mine)) eachColor(ctx, owner, 1);
       },
     }),
-    m('sower', 'Sower', 1, 1, 'Round start: plant any of your yellow. Round end: gain that many of each other color.', {
+    m('sower', 'Sower', 1, 1, 'Round Start: plant any of your yellow. Round end: gain that many of each other color.', {
       onRoundStartLate(ctx, owner, card) {
         const y = owner.res[Y];
         if (!y) return;
@@ -182,7 +182,7 @@ export default {
         return (ctx.state.round === 3 && gain >= 6) || (last && gain > 0);
       },
     }),
-    m('pilgrim', 'Pilgrim', 2, 2, 'When recruited: +1 of each color.', {
+    m('pilgrim', 'Pilgrim', 2, 2, 'On Recruit: +1 of each color.', {
       onRecruited(ctx, owner) { eachColor(ctx, owner, 1); },
     }),
     m('farmer', 'Farmer', 4, 2, 'Whenever an action gains you yellow, +1 yellow.', {

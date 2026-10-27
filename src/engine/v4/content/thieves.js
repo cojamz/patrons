@@ -320,18 +320,18 @@ const thieves = {
   },
 
   members: [
-    m('cutpurse', 'Cutpurse', 1, 1, 'Now and at round start: steal 1 resource from the rival with the most resources.', { now: true,
+    m('cutpurse', 'Cutpurse', 1, 1, 'On Recruit: steal 1 resource from the rival with the most resources. Round Start: steal 1 resource from the rival with the most resources.', { now: true,
       onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Cutpurse', 1 + stickyMore(ctx, owner), { fromAction: false, richest: true }); },
     }),
-    m('mole', 'Mole', 2, 2, 'Now and at round start: steal 1 resource from each rival with more followers than you.', { now: true,
+    m('mole', 'Mole', 2, 2, 'On Recruit: steal 1 resource from each rival with more followers than you. Round Start: steal 1 resource from each rival with more followers than you.', { now: true,
       onRoundStart(ctx, owner) {
         for (const o of ctx.rivals(owner)) if (ctx.followers(o) > ctx.followers(owner)) autoSteal(ctx, owner, o, 'Mole');
       },
     }),
-    m('accomplice', 'Accomplice', 4, 4, 'When recruited: steal 1 resource from each rival.', {
+    m('accomplice', 'Accomplice', 4, 4, 'On Recruit: steal 1 resource from each rival.', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('grifter', 'Grifter', 2, 1, 'When recruited: steal 1 resource per 2 members you have.', {
+    m('grifter', 'Grifter', 2, 1, 'On Recruit: steal 1 resource per 2 members you have.', {
       // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, like any steal
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
@@ -369,7 +369,7 @@ const thieves = {
       guardSteal: () => true,
     }),
     m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2 }),
-    m('doubleagent', 'Double Agent', 2, 1, 'When recruited: swap it for a rival’s member you choose.', {
+    m('doubleagent', 'Double Agent', 2, 1, 'On Recruit: swap it for a rival’s member you choose.', {
       onRecruited(ctx, owner, card) {
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid);
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });

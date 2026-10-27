@@ -7,6 +7,7 @@ import { ownPlan, skipWords, justTook, previousNow } from '../../engine/v4/conte
 // The card's timing, from how its text opens (the tag above the name).
 const TIMINGS = [
   [/^(?:now|recruit|on recruit|when recruited) (?:and|\/) (?:at )?round start\b/i, 'On recruit + at round start'],
+  [/^on recruit:.*\bround (?:i+ )?start:/i, 'On recruit + at round start'], // "On Recruit: X Round Start: X" (Cory, 2026-10-27)
   [/^(?:at )?round start\b/i, 'At round start'],
   [/^round end\b/i, 'Round end'],
   [/^(?:recruit|on recruit|when recruited|when it joins you)\b/i, 'On recruit'],

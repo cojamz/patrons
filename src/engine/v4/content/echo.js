@@ -391,7 +391,7 @@ const echoQ = {
   members: [
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
     m('evergreen', 'Busker', 1, 2, // Cory, 2026-10-25: cost 3 (was 4)
-      'Now and at round start: +2 green.', {
+      'On Recruit: +2 green. Round Start: +2 green.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', 2); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 2); },
     }),
@@ -399,7 +399,7 @@ const echoQ = {
     m('muse', 'Muse', 1, 2, 'Whenever a rival copies an action, +1 green.'),
     // Understudy and Ensemble replaced Choirmaster (green for a rival's copy: a gift for doing nothing, and Muse's
     // twin) and Fan (green when a rival takes the center: nothing to do with copying). Claude, 2026-10-14.
-    m('understudy', 'Understudy', 4, 2, 'When recruited: copy the previous action.', {
+    m('understudy', 'Understudy', 4, 2, 'On Recruit: copy the previous action.', {
       onRecruited(ctx, owner) {
         // Retired Understudy keeps its old before-this-turn behavior in saved games; current Echo uses previousNow.
         const L = ledger(ctx.state), skip = L.origin || (L.now[L.open]?.p === owner.id ? L.open : null);
@@ -421,21 +421,21 @@ const echoQ = {
     m('tuningfork', 'Impressionist', 1, 2, 'Whenever you copy an action, +1 of its color.'),
     m('wallflower', 'Wallflower', 2, 2, 'While no rival has fewer followers than you, double the resources you copy.'),
     // Keepsake ("When recruited: copy one of your spaces from this round") is cut: Reprise does the same on a space.
-    m('mirror', 'Mime', 4, 2, 'When recruited: gain green equal to the most green a rival holds.', {
+    m('mirror', 'Mime', 4, 2, 'On Recruit: gain green equal to the most green a rival holds.', {
       onRecruited(ctx, owner) {
         const g = Math.max(0, ...ctx.rivals(owner).map(o => o.res.green || 0));
         if (g) ctx.gain(owner, 'green', g);
         ctx.log(`${owner.name}'s Mime: +${g} green.`);
       },
     }),
-    m('afterimage', 'Sleepwalker', 4, 2, 'Now and at round start: copy one of your spaces from last round.', { now: true,
+    m('afterimage', 'Sleepwalker', 4, 2, 'On Recruit: copy one of your spaces from last round. Round Start: copy one of your spaces from last round.', { now: true,
       onRoundStart(ctx, owner) {
         const L = ledger(ctx.state);
         const list = Object.values(L.last).filter(e => copyable(e) && e.p === owner.id);
         offer(ctx, owner, list, 'Sleepwalker: copy which of your spaces from last round?', 'last', 'Sleepwalker');
       },
     }),
-    m('hourglass', 'Stunt Double', 2, 2, 'When recruited: copy the action you just took.', {
+    m('hourglass', 'Stunt Double', 2, 2, 'On Recruit: copy the action you just took.', {
       onRecruited(ctx, owner) {
         const e = justTook(ctx, owner);
         if (!e) {
@@ -457,7 +457,7 @@ const echoQ = {
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
     // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
-    m('doppel', 'Doppelganger', 2, 2, 'When recruited: it becomes a copy of one of your members.', { round: 3, // joins in round III (Cory, 2026-10-25)
+    m('doppel', 'Doppelganger', 2, 2, 'On Recruit: it becomes a copy of one of your members.', { round: 3, // joins in round III (Cory, 2026-10-25)
       onRecruited(ctx, owner, card) {
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && (c.copy || !['doppel', 'impostor'].includes(c.def.key)));
         if (!own.length) return;
@@ -467,7 +467,7 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('impostor', 'Impostor', 2, 2, 'When recruited: it becomes a copy of a rival’s member.', { round: 3, // joins in round III (Cory, 2026-10-25)
+    m('impostor', 'Impostor', 2, 2, 'On Recruit: it becomes a copy of a rival’s member.', { round: 3, // joins in round III (Cory, 2026-10-25)
       onRecruited(ctx, owner, card) {
         const rivals = ctx.rivals(owner).flatMap(p => ctx.membersOf(p)).filter(c => c.copy || !['doppel', 'impostor'].includes(c.def.key));
         if (!rivals.length) return;
@@ -477,7 +477,7 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('connector', 'Connector', 2, 2, 'Now and at round start: +1 green per non-green member you have.', {
+    m('connector', 'Connector', 2, 2, 'On Recruit: +1 green per non-green member you have. Round Start: +1 green per non-green member you have.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
     }),

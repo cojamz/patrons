@@ -60,7 +60,7 @@ const members = [
   m('extrahand', 'Extra Hand', 'purple', 5, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
   m('frontrunner', 'Front-runner', 'purple', 5, 0, 'You go first every round.', { pickFirst: true }), // Cory, Oct 21: 5
   // Cory's ideas, Oct 21, on this sim branch only. Launderer is simplified for the bots: one color, not any split.
-  m('launderer', 'Launderer', null, 0, 6, 'When recruited: turn all your resources into one color you choose.', {
+  m('launderer', 'Launderer', null, 0, 6, 'On Recruit: turn all your resources into one color you choose.', {
     onRecruited(ctx, owner) {
       const total = Object.values(owner.res).reduce((a, b) => a + b, 0);
       if (!total) return;

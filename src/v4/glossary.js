@@ -41,6 +41,7 @@ export const GLOSSARY = [
     def: 'Trade resources or members for followers with a White space or member (Exchange, Cash In, Farewell…). Recruiting followers in your recruit step is not turning.' },
   { key: 'now and at round start', word: 'Now and at round start', match: /\bnow and at (?:round start|the start of round)/i,
     def: 'Happens once when you recruit the member, then again each time a later round starts.' },
+  // Cory, 2026-10-27: cards print two keywords, "On Recruit: X Round Start: X"
   { key: 'copy', word: 'Copy', match: /\bcop(y|ies|ied)\b(?= (?:any|every|one|the|it|that|what|a)\b)|\bwhat you copy\b|\bcopy a space\b/,
     def: 'Copy an action: get its own printed gain (what its chip shows). Members’ bonuses on it and its gifts to others don’t repeat. Its taker keeps what they got. Copying a copy lets you choose again; never choose an action already in that chain. Each green action gives +1 green, including when copied. Agents blocks everyone from copying its owner’s actions. Echo copies the previous action, Encore an action with a rival minion, Reprise one with your minion, and Greatest Hits every action with your minion.' },
   { key: 'face-up', word: 'Face-up', match: /\bface-up\b/,

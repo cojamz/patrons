@@ -106,7 +106,7 @@ export function incomeTerms(state, p) {
     const cond = atStart(d) ? incomeCondition(d) : 'not always';
     const same = sources.find(x => x.name === d.name);
     if (same) same.n++;
-    else sources.push({ name: d.name, text: (d.text || '').replace(/^Now and at round start[,:]\s*/i, '').replace(/^(?:At round start|Round start)[,:]\s*/i, ''), cond, n: 1, hold: holdNote(state, p, d) });
+    else sources.push({ name: d.name, text: (d.text || '').replace(/^Now and at round start[,:]\s*/i, '').replace(/^On Recruit: (.*?) Round Start: \1$/i, '$1').replace(/^(?:At round start|Round start)[,:]\s*/i, ''), cond, n: 1, hold: holdNote(state, p, d) });
     if (!cond) continue;
     const touches = d.quadrant === 'thieves' ? ['magenta'] : ALL_COLORS.test(d.text || '') ? state.resources : state.resources.filter(r => new RegExp(`\\b${r}\\b`, 'i').test(d.text || ''));
     for (const r of touches) if (!condOf[r]) condOf[r] = cond;

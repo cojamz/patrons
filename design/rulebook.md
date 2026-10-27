@@ -42,7 +42,7 @@ You can use a member's ability any time during your own turn, as often as its ca
 ## Recruiting
 To **recruit** is to bring a member or followers into your cult by your own doing: recruit from the shop (paid or free), take a member from a rival, swap one in with your own Red action (Even Swap, Promote, Demote), or recruit followers (each purchase is one recruit). A member a rival moves into your cult is not your recruit.
 - "Whenever you recruit" happens on each of these.
-- A member's "On recruit" happens when it joins your cult by your own doing, not when a rival moves it to you.
+- A member's "On Recruit:" happens when it joins your cult by your own doing, not when a rival moves it to you. "Round Start:" happens each time a round begins, before anyone places. A card can have both.
 
 ## Copying and stealing
 - To **copy** an action is to get its own printed gain, the amount on its chip. The taker's member bonuses and gifts to others are not copied, and the taker keeps what they got. An action that took or traded something (a steal, a swap, a paid recruit) is done again by the copier. Copying a copy lets you choose again; never choose an action already in that chain.
@@ -71,6 +71,6 @@ After round III is scored, game-end member bonuses are added. Most followers win
 - Something looked wrong? Open the menu, tap **Copy game record**, and send it to Cory.
 
 ## Card rulings
-- Impostor and Doppelganger become copies when recruited; that does not also trigger the copied member's "On recruit". Their copied abilities and later round-start effects work normally.
-- Panel's "On recruit" promotes or demotes another member; Panel cannot move itself.
+- Impostor and Doppelganger become copies when recruited; that does not also trigger the copied member's "On Recruit". Their copied abilities and later round-start effects work normally.
+- Panel's "On Recruit" promotes or demotes another member; Panel cannot move itself.
 - Loyalists blocks swaps involving its owner's cult, including its owner's own swaps, but does not block theft.

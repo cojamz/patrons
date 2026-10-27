@@ -306,7 +306,7 @@ export default {
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
     }),
-    m('errand', 'Errand Runner', 4, 4, 'When recruited: take an extra turn after this one.', {
+    m('errand', 'Errand Runner', 4, 4, 'On Recruit: take an extra turn after this one.', {
       onRecruited(ctx, owner) { extraTurns(ctx, owner, 1, 'Errand Runner'); },
     }),
     m('taskmaster', 'Taskmaster', 4, 2, 'Once per round: pay 5 purple to take an extra turn after this one.', {
@@ -317,7 +317,7 @@ export default {
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
-    m('lateriser', 'Late Riser', 4, 2, 'Round start: if you have the fewest followers (ties count), take an extra turn before anyone places.', { from: 2,
+    m('lateriser', 'Late Riser', 4, 2, 'Round Start: if you have the fewest followers (ties count), take an extra turn before anyone places.', { from: 2,
       // the round's turns are queued after round-start hooks, so this one goes first
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
@@ -359,13 +359,13 @@ export default {
         ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
       },
     }),
-    m('clockmaker', 'Clockmaker', 1, 2, 'Now and at round start: +1 purple per 2 purple you have.', { now: true,
+    m('clockmaker', 'Clockmaker', 1, 2, 'On Recruit: +1 purple per 2 purple you have. Round Start: +1 purple per 2 purple you have.', { now: true,
       // round start, not end (Claude, 2026-10-14, after Cory: purple left at the end of round III is worth nothing)
       // counts after other round-start income (Lamplighter…), like Steward
       onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 12
-    m('lamplighter', 'Lamplighter', 6, 2,'Now and at round start: +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
+    m('lamplighter', 'Lamplighter', 6, 2,'On Recruit: +1 purple per minion you get this round (3 / 4 / 5). Round Start: +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       // Cory, 2026-10-15: every minion you get counts (Extra Hand's too)
       onRoundStart(ctx, owner) { ctx.gain(owner, P, owner.workers || [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
@@ -391,7 +391,7 @@ export default {
     }),
     // Cory's Purple members (2026-10-22); names are Claude's fill-ins; prices are the pricing thread's educated guesses
     m('earlybird', 'Early Bird', 2, 2, 'Your turns can’t be skipped.', { noSkip: true }),
-    m('bouncer', 'Bouncer', 1, 2, 'When recruited: the next two rivals’ turns are skipped.', {
+    m('bouncer', 'Bouncer', 1, 2, 'On Recruit: the next two rivals’ turns are skipped.', {
       // the next two turns that belong to rivals; your own turn between them still happens (Cory's yes)
       onRecruited(ctx, owner) {
         const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn'), close = q.findIndex(t => t.t === 'allPlaced');
@@ -417,7 +417,7 @@ export default {
     m('gossip', 'Gossip', 3, 2, 'Whenever a player’s turn is skipped, +1 follower.', {
       onSkip(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Gossip: +1 follower.`); },
     }),
-    m('extrashift', 'Extra Shift', 5, 3, 'When recruited: +1 minion this round.', { from: 2,
+    m('extrashift', 'Extra Shift', 5, 3, 'On Recruit: +1 minion this round.', { from: 2,
       // the snake carries on until every minion is placed, so the new one goes after everyone else's
       onRecruited(ctx, owner) {
         if (ctx.state.round === 1) { ctx.log(`No extra minions in round I: ${owner.name} gets no extra minion from Extra Shift.`); return; }

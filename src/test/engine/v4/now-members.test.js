@@ -26,10 +26,10 @@ describe('now and at round start', () => {
     expect(linesNaming(s.log, 'Steward').length).toBe(1);
   });
 
-  it('every card with the flag says "On recruit and at round start" and has a round-start effect', async () => {
+  it('every card with the flag says "On Recruit: … Round Start: …" and has a round-start effect', async () => {
     const { allQuadrantIds, quadrant } = await import('../../../engine/v4/content/index.js');
     for (const id of allQuadrantIds()) for (const d of quadrant(id).members) if (d.now) {
-      expect(memberTimingWords(d.text)).toMatch(/On recruit and at round start/);
+      expect(d.text).toMatch(/On Recruit: .* Round (?:I+ )?Start: /); // two keywords (Cory, 2026-10-27)
       expect(memberTimingWords(d.text)).not.toMatch(/\bNow\b/);
       expect(!!(d.onRoundStart || d.onRoundStartLate)).toBe(true);
     }

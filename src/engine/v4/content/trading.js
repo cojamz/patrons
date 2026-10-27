@@ -210,7 +210,7 @@ const trading = {
       onGameEnd: (ctx, owner) => 2 * ctx.rivals(owner).filter(o => ctx.memberCount(o) > ctx.memberCount(owner)).length,
     }),
     // Cory, 2026-10-25: cost 3 (was 4), so White has a cheap starter
-    m('shopkeeper', 'Shopkeeper', 2, 1, 'Now and at round start: +2 white.', { now: true,
+    m('shopkeeper', 'Shopkeeper', 2, 1, 'On Recruit: +2 white. Round Start: +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
     m('heiress', 'Heiress', 3, 2, 'Once per game: +1 white per member you have.', { f: 2,
@@ -246,7 +246,7 @@ const trading = {
       botActivate: (ctx, owner) => { const t = raidTarget(ctx, owner); return !!t && sellable(t) >= 3 && (owner.res[W] || 0) >= 2; },
     }),
     // new (Claude's names from here down)
-    m('cashier', 'Cashier', 3, 1, 'When recruited: turn all your white into followers.', {
+    m('cashier', 'Cashier', 3, 1, 'On Recruit: turn all your white into followers.', {
       onRecruited(ctx, owner) {
         const n = owner.res[W] || 0;
         if (!n) { ctx.log(`${owner.name}'s Cashier: no white to turn into followers.`); return; }
@@ -302,7 +302,7 @@ const trading = {
       },
       botActivate: (ctx, owner) => sellable(owner) > 0 && ctx.state.round < 3,
     }),
-    m('safetynet', 'Rich Uncle', 2, 0, 'Now and at round start: if you have no white, +3 white.', { now: true,
+    m('safetynet', 'Rich Uncle', 2, 0, 'On Recruit: if you have no white, +3 white. Round Start: if you have no white, +3 white.', { now: true,
       onRoundStart(ctx, owner) { if (!owner.res[W]) ctx.gain(owner, W, 3); },
     }),
     m('tipster', 'Tipster', 4, 2, 'Whenever a rival buys followers, +1 white.', {
