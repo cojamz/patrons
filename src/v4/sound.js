@@ -249,6 +249,23 @@ export function setSound(v) {
   for (const fn of subs) fn(v);
 }
 
+// how loud, 0 to 1, kept in this browser (Cory, 2026-10-27, from Mike's playtest: "turning down audio noises with a
+// slider"); off stays its own switch
+const VOL_KEY = 'patrons.v4.volume';
+let vol = (() => { try { const v = Number(globalThis.localStorage?.getItem(VOL_KEY)); return Number.isFinite(v) && globalThis.localStorage?.getItem(VOL_KEY) != null ? Math.min(1, Math.max(0, v)) : 1; } catch { return 1; } })();
+const volSubs = new Set();
+export const soundVolume = () => vol;
+export const onVolume = fn => { volSubs.add(fn); return () => volSubs.delete(fn); };
+export function setVolume(v) {
+  v = Math.min(1, Math.max(0, Number(v) || 0));
+  if (v === vol) return;
+  vol = v;
+  try { globalThis.localStorage?.setItem(VOL_KEY, String(v)); } catch { /* private window */ }
+  if (master) master.gain.value = MASTER * vol;
+  for (const fn of volSubs) fn(v);
+}
+const MASTER = 0.6;
+
 let ctx = null, master = null;
 function unlock() {
   try {
@@ -256,7 +273,7 @@ function unlock() {
       const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
       if (!AC) return;
       ctx = new AC({ latencyHint: 'interactive' });
-      master = ctx.createGain(); master.gain.value = 0.6;
+      master = ctx.createGain(); master.gain.value = MASTER * vol;
       // a gentle limiter, so a pile of coins never clips
       const lim = ctx.createDynamicsCompressor();
       lim.threshold.value = -10; lim.knee.value = 6; lim.ratio.value = 8; lim.attack.value = 0.002; lim.release.value = 0.12;

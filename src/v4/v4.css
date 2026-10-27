@@ -1522,3 +1522,7 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 .nowrap{white-space:nowrap}
 .rules-body .glossary-cards{color:var(--cream-3)}
 .rules-body dl.glossary .out{opacity:.55}
+/* the sound switch and its volume, one row in the ☰ menu (Cory, 2026-10-27) */
+.menu-sound{display:flex;align-items:center;gap:8px;padding-right:8px}
+.menu-sound .sound-vol{flex:1;min-width:90px;accent-color:var(--lamp-ink,#ffd99a);cursor:pointer}
+.menu-sound .sound-vol:disabled{opacity:.4;cursor:default}

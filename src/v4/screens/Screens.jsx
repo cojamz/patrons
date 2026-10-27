@@ -4,7 +4,8 @@ import { MAX_PLAYERS as MAX_SEATS } from '../../engine/v4/index.js';
 import { playerColor, lowColor } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
-import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
+import { quadrant, defById, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
+import { ARTIFACTS } from '../../engine/v4/core.js';
 import { CLASSIC, spheres, sphereName, sphereLine, sphereVersion, sphereVersionWords, tableProblem, randomTable, urlTable, fitTable, sphereCount } from '../tables.js';
 import { panelWords } from '../game/panelText.js';
 import { GAME_NAME, VERSION_LABEL } from '../version.js';
@@ -205,11 +206,15 @@ export function sphereHint(id) {
 // that paused, and nothing at all on touch)
 function TableChip({ id }) {
   const q = quadrant(id);
+  const art = ARTIFACTS[id] ? defById(ARTIFACTS[id]) : null;
   return (
     <Tip className="table-chip" style={{ '--c': `var(--${id})` }} label={`${sphereName(id)}: what it does`} content={() => (
       <div className="pop-card" data-chip-card={id}><b>{sphereName(id)}</b><span>{sphereLine(id)}</span><span>{lowColor(q.scoring.label)} at round end.</span>
         <span>Its round I spaces: {q.actions.filter(a => a.ring === 1).map(a => panelWords(id, a, 1).replace(/(^|[^\d])1 @f/g, '$11 follower').replace(/@f/g, 'followers')).join(' · ')}.</span></div>
-    )}><i className="dot" />{sphereName(id)}<small className="chip-line">{sphereLine(id)}</small></Tip>
+    )}><i className="dot" />{sphereName(id)}<small className="chip-line">{sphereLine(id)}</small>
+      {/* the legend under each color (Cory, 2026-10-27, from Mike: "maybe this spot can have an overall legend of all
+          the colors"): what its spaces do, then its artifact, in the room's empty column */}
+      {art && <small className="chip-line chip-legend" data-chip-artifact={id}>Artifact: {art.name}. {art.text}</small>}</Tip>
   );
 }
 

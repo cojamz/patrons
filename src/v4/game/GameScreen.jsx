@@ -37,7 +37,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
 import { playChain, planChain, holdAfter, holdCap, stepHoldCap, installChainSkip, skipChain, onChainSkip, onChainEnd, onChainLanded, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
-import { soundOn, onSound, setSound } from '../sound.js';
+import { soundOn, onSound, setSound, soundVolume, onVolume, setVolume } from '../sound.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale, slowed } from '../motion.js';
 import { PERF_ON } from '../perf.js';
 import { boardPicker, giftPick, seatPart, shopLookup, pickCaption } from './boardPick.js';
@@ -362,15 +362,21 @@ function SpeedSetting() {
   );
 }
 
-/** Sound on or off (sound.js), kept in this browser. */
+/** Sound on or off, and how loud (sound.js), kept in this browser. */
 function SoundSetting() {
   const [on, setOn] = useState(soundOn);
+  const [vol, setVol] = useState(soundVolume);
   useEffect(() => onSound(setOn), []);
+  useEffect(() => onVolume(setVol), []);
   return (
-    <button type="button" role="menuitemcheckbox" aria-checked={on} className="btn ghost sound-btn" data-sound={on ? 'on' : 'off'}
-      onClick={() => setSound(!on)} title="The click of a minion, coins landing, the winner's fanfare and the followers' chatter">
-      {on ? 'Sound on' : 'Sound off'}
-    </button>
+    <div className="menu-sound">
+      <button type="button" role="menuitemcheckbox" aria-checked={on} className="btn ghost sound-btn" data-sound={on ? 'on' : 'off'}
+        onClick={() => setSound(!on)} title="The click of a minion, coins landing, the winner's fanfare and the followers' chatter">
+        {on ? 'Sound on' : 'Sound off'}
+      </button>
+      <input type="range" className="sound-vol" data-sound-volume min="0" max="100" step="5" value={Math.round(vol * 100)} disabled={!on}
+        aria-label="Volume" title="Volume" onChange={e => setVolume(Number(e.target.value) / 100)} />
+    </div>
   );
 }
 
