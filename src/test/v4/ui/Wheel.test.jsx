@@ -49,9 +49,9 @@ describe('Wheel', () => {
     const { container } = render(<Wheel state={s} legal={new Map()} onPick={() => {}} flash={new Set()} facing={0} onFacing={() => {}} />);
     const rim = q => container.querySelector(`[data-plaque="${q}"]`).textContent;
     // Red's contest scores the red you hold at round end (Cory, 2026-10-18 resource-contest trial)
-    expect(rim('red')).toMatch(/MOST RED RESOURCES/);
-    expect(rim('red')).not.toMatch(/MEMBERS/);
-    expect(rim('yellow')).toMatch(/MOST FULL SETS/);
+    expect(rim('red')).toMatch(/most red resources/i);
+    expect(rim('red')).not.toMatch(/members/i);
+    expect(rim('yellow')).toMatch(/most full sets/i);
     for (const q of s.quadrants) {
       expect(rim(q)).toMatch(/\+2/);
       expect(rim(q)).not.toMatch(/ties:/i);

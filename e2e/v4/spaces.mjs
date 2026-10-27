@@ -180,7 +180,7 @@ const INSIDE = () => {
   const sb = stage.getBoundingClientRect();
   const vb = stage.querySelector('svg.wheel-paper').viewBox.baseVal; // the board's square: the disc's centre is (200, 200)
   const k = sb.width / vb.width, cx = sb.left + (200 - vb.x) * k, cy = sb.top + (200 - vb.y) * k;
-  const hub = Number(document.querySelector('.lt-wheel svg .hub').getAttribute('r')) * k, rim = 180 * k;
+  const hub = Number(document.querySelector('.lt-wheel svg .hub').getAttribute('r')) * k, rim = 177 * k;
   const all = [];
   for (const s of document.querySelectorAll('.lt-wheel .slot[data-slot]')) {
     const key = s.dataset.slot;
@@ -231,7 +231,7 @@ const RIM_EMOJI = () => {
   const vb = stage.querySelector('svg.wheel-paper').viewBox.baseVal;
   const sb = stage.getBoundingClientRect();
   const k = sb.width / vb.width, cx = sb.left + (200 - vb.x) * k, cy = sb.top + (200 - vb.y) * k;
-  const r0 = 180 * k, r1 = 200 * k; // the rim band (Wheel.jsx RIM)
+  const r0 = 177 * k, r1 = 200 * k; // the rim band (Wheel.jsx RIM)
   // every word on the wheel, as screen boxes: the rims' letters one by one (they run on an arc), their follower marks,
   // and each panel's lines of print
   const words = [];
@@ -261,7 +261,7 @@ const RIM_EMOJI = () => {
     if (Math.abs(b.width - b.height) > 1) out.push(`${who} isn't upright (its box is ${b.width.toFixed(1)}×${b.height.toFixed(1)}px)`);
     for (const [px, py] of [[b.left, b.top], [b.right, b.top], [b.left, b.bottom], [b.right, b.bottom]]) {
       const d = Math.hypot(px - cx, py - cy);
-      if (d < r0 - 0.5 || d > r1 + 0.5) { out.push(`${who} runs out of the rim band (a corner at ${(d / k).toFixed(1)} of 180–200)`); break; }
+      if (d < r0 - 0.5 || d > r1 + 0.5) { out.push(`${who} runs out of the rim band (a corner at ${(d / k).toFixed(1)} of 177–200)`); break; }
     }
     for (const w of words) {
       const ox = Math.min(b.right, w.x.right) - Math.max(b.left, w.x.left), oy = Math.min(b.bottom, w.x.bottom) - Math.max(b.top, w.x.top);
