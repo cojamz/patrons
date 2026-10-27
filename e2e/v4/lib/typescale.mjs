@@ -1,10 +1,10 @@
 // The table's type scale (design pod, 2026-10-15; art director's game-screen scale): every visible word is one of four
-// sizes, 11 (small print), 14 (text), 18 (titles, names, totals) or 36 (the big number or name). The wheel's panel
+// sizes (raised a step for readability, Cory 2026-10-27), 12 (small print), 15 (text), 18 (titles, names, totals) or 36 (the big number or name). The wheel's panel
 // faces fit their own sizes to each panel (Wheel.jsx panelLayout, gated by spaces.mjs s7) and are left out, as are
 // screen-reader-only words. Shop cards' printed costs and follower worth are left out too: Cory asked for them
 // larger (2026-10-19, 16px footers; the follower card's big printed number), and a picked card's ability fits its face, like the wheel's. Run in the page: page.evaluate(TYPE_SCALE) → ["15px div.menu-list>button "How to play"", …].
 export const TYPE_SCALE = () => {
-  const ALLOWED = [11, 14, 18, 36];
+  const ALLOWED = [12, 15, 18, 36];
   const vis = e => { for (let a = e; a && a !== document.body; a = a.parentElement) { const s = getComputedStyle(a); if (s.display === 'none' || s.visibility === 'hidden' || Number(s.opacity) < 0.05) return false; } const b = e.getBoundingClientRect(); return b.width > 1 && b.height > 1 && b.top < innerHeight && b.left < innerWidth && b.bottom > 0 && b.right > 0; };
   const cls = e => `${e.tagName.toLowerCase()}${e.getAttribute && e.getAttribute('class') ? '.' + e.getAttribute('class').trim().split(/\s+/).slice(0, 2).join('.') : ''}`;
   const path = e => { const out = []; for (let a = e; a && a !== document.body && out.length < 3; a = a.parentElement) out.unshift(cls(a)); return out.join('>'); };

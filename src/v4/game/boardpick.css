@@ -30,7 +30,7 @@
 .lt-cult-seat .cs-stack > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%)}
 /* what this steal has picked from the stack so far (it moves when the last pick is made) */
 .lt-cult-seat .cs-stack .cs-took{position:absolute;top:-9px;right:-8px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;font-style:normal;
-  font-size:11px;line-height:16px;text-align:center;color:#fffaf0;background:#8c2f39;box-shadow:0 1px 0 rgba(0,0,0,.4)}
+  font-size:12px;line-height:16px;text-align:center;color:#fffaf0;background:#8c2f39;box-shadow:0 1px 0 rgba(0,0,0,.4)}
 @keyframes pick-breathe{50%{box-shadow:0 0 0 2px rgba(var(--lamp),.95),0 0 18px 4px rgba(var(--lamp),.7),0 3px 0 rgba(0,0,0,.35)}}
 
 /* a choice that picks a player: the whole seat is the button */
@@ -49,7 +49,7 @@
 
 /* spaces a choice offers (Echo, Encore, Reprise, Straggler): lit by the wheel itself; hover says what you'd get */
 .lt-wheel .slot[data-pick-note]:hover::after{content:attr(data-pick-note);position:absolute;z-index:40;left:50%;top:calc(100% + 6px);transform:translateX(-50%);
-  width:max-content;max-width:220px;padding:6px 9px;border-radius:8px;font:600 13px/1.3 var(--sans,inherit);text-align:left;white-space:normal;
+  width:max-content;max-width:220px;padding:6px 9px;border-radius:8px;font:600 12px/1.3 var(--sans,inherit);text-align:left;white-space:normal;
   color:var(--paper-ink);background:var(--paper);box-shadow:0 0 0 1px rgba(42,31,23,.25),0 8px 20px rgba(0,0,0,.5);pointer-events:none}
 
 /* ---- the caption, docked in the prompt under the headline: it never covers the wheel or what you're picking ---- */
@@ -145,4 +145,4 @@
 
 /* The optional keyboard destination list gives the action itself, not only its name. */
 .pick-keys .pick-key:has(.pick-action-rule){display:flex;flex-direction:column;align-items:flex-start;text-align:left;white-space:normal;max-width:260px;padding:8px 12px;border-radius:8px}
-.pick-action-rule{font-size:13px;line-height:1.4;font-weight:400;margin-top:3px}
+.pick-action-rule{font-size:12px;line-height:1.4;font-weight:400;margin-top:3px}

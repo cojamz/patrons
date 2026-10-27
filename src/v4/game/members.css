@@ -126,7 +126,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 @media (prefers-reduced-motion:reduce){.lt-cult-seat .cs-member.ready .fig{transition:none}.lt-cult-seat .cs-member .mu-result{animation:none}}
 
 /* a rival's spending power, one quiet line under its name (w3b) */
-.seat-card .seat-spend{display:block;font-family:var(--sans);font-size:13px;line-height:17px;font-weight:500;color:var(--pl-ink-2,#6e5c49);letter-spacing:0;text-transform:none}
+.seat-card .seat-spend{display:block;font-family:var(--sans);font-size:12px;line-height:17px;font-weight:500;color:var(--pl-ink-2,#6e5c49);letter-spacing:0;text-transform:none}
 .seat-card .seat-spend .pip.glyph,.seat-card .seat-spend .pip.wild,.seat-card .seat-spend .rich-f{width:.8em;height:.8em;vertical-align:-.1em}
 /* where a seat's followers came from: the total, then one row per source adding up to it */
 .fol-card h4{display:flex;align-items:baseline;gap:6px}

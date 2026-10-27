@@ -11,7 +11,7 @@ import { friendlyError } from '../errors.js';
 const row = {
   pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '8px 8px 8px 14px',
   background: 'var(--table-2, #1d2928)', color: 'var(--ink, #ece6d6)', border: '1px solid var(--rim, #2d3b39)', borderRadius: 14,
-  boxShadow: '0 6px 24px rgba(0,0,0,.35)', fontSize: 'var(--fs-2, 14px)', lineHeight: 1.35,
+  boxShadow: '0 6px 24px rgba(0,0,0,.35)', fontSize: 'var(--fs-2, 15px)', lineHeight: 1.35,
 };
 const warn = { ...row, borderColor: 'var(--gold, #d9b24c)' };
 const quiet = { ...row, color: 'var(--muted, #97a49f)' };

@@ -110,7 +110,7 @@
   /* the starting pick: up to six colors in rows of three, under the prompt's own "draft 1 resource" */
   .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-setup .cs-setup-say{display:none}
   .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-setup .cs-setup-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 4px}
-  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-setup .cs-setup-token{height:21px;padding:0 4px;gap:4px;font-size:13px}
+  .app.game.lt:is([data-seats="5"],[data-seats="6"]) > .lt-seat .cs-setup .cs-setup-token{height:21px;padding:0 4px;gap:4px;font-size:12px}
 }
 /* from 1200px the story of the turns (a compact log) and the turn card stand under the chairs: their room comes first */
 /* (the story's heading and its newest line, or its heading over a turn card of a two-line head and "+N more", with a little to spare: 124px
