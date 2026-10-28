@@ -30,7 +30,7 @@ try{for(const[size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phon
   console.log(`${size}-draft-${n}: engine reverse draft/snake match, responsive names; real pick advances cue.`);await ctx.close();
  }
  const ctx=await browser.newContext(opts),p=await ctx.newPage();p.setDefaultTimeout(10000);let s=draft(4);s.pending=null;s.round=1;s.current=0;s.queue=[{t:'buy',p:0},{t:'turn',p:0}];
- s.players.forEach(x=>{x.res=Object.fromEntries(s.resources.map(r=>[r,0]));x.left=3;});s.players[0].res.silver=2;
+ s.players.forEach(x=>{x.res=Object.fromEntries(s.resources.map(r=>[r,0]));x.left=3;});s.players[0].res.silver=3;
  const u=[...s.shop,...s.pile].find(u=>s.cards[u].def==='silver.retinue');s.pile=s.pile.filter(x=>x!==u);s.shop=s.shop.filter(x=>x!==u);s.shop.push(u);while(s.shop.length>8)s.pile.push(s.shop.shift());s=resume(s);
  let expected=applyMove(s,{player:0,option:`card:${u}`});if(expected.pending?.kind==='pay'){const ways=expected.pending.options.filter(o=>o.id.startsWith('pay:'));if(ways.length!==1)throw Error('Retinue fixture needs unique pay');expected=applyMove(expected,{player:0,option:ways[0].id});}
  await seedSave(p,wrap(s));await p.goto(`${base}/?intro=0&speed=quick`);await p.locator('[data-home="resume"]').click();const hand=p.locator('[data-handoff]');if(await hand.isVisible())await hand.click();

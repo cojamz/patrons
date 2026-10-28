@@ -92,7 +92,7 @@ try {
   await receipt('f1', buySave({ def: null, res: { gold: 3, red: 0, blue: 2, green: 0 }, rivals: { gold: 6, blue: 6 } }).save, '.lt-rates [data-rate="mid"]');
   // (f2) Prospector at exactly its cost
   {
-    const { save, uid } = buySave({ def: 'gold.prospector', res: { gold: 4, red: 0, blue: 0, green: 0 }, rivals: { gold: 6 } });
+    const { save, uid } = buySave({ def: 'gold.prospector', res: { gold: 5, red: 0, blue: 0, green: 0 }, rivals: { gold: 6 } });
     await receipt('f2', save, `.lt-shop .lt-card[data-uid="${uid}"]`);
   }
   // (f3) 1 for 1 with four colors: several ways, the sheet beside the tile
