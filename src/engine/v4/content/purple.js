@@ -285,7 +285,8 @@ export default {
         let moved = 0;
         for (let i = 0; i < k; i++) if (skipNext(ctx, p, 'Last Call', p, true)) moved++;
         // the rest of the round too: a rival's turn that lands later still goes first (core lastCallLast)
-        if (moved) { p.lastCall = ctx.state.round; ctx.log(`${p.name}'s Last Call: ${p.name} skips their turns until everyone else is out of minions.`); }
+        // said plainly, here and on the seat (Cory, 2026-10-28: P4's Echo copied Last Call and its going last looked broken)
+        if (moved) { p.lastCall = ctx.state.round; ctx.log(`${p.name}'s Last Call: ${p.name} goes last this round.`); }
         else if (k) ctx.log(`${p.name}'s Early Bird: ${p.name}'s turns can't be skipped.`);
       },
     },

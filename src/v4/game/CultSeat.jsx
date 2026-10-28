@@ -161,6 +161,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             <b>{mine ? 'You' : p.name}</b>
             {turn && <Tip className={`cs-turn ${turn.kind}`} data-turn={turn.kind} data-turn-n={turn.n ?? undefined}
               label={turn.title} content={<div className="pop-card gloss"><b>Turn order</b><span>{turn.title}</span></div>}>{turn.say}</Tip>}
+            {/* Last Call (or a copy of it): this seat places the rest after everyone else (Cory, 2026-10-28) */}
+            {!turn && !outOf && p.lastCall === state.round && <small className="cs-done cs-last" data-last="1" title={`${p.name} goes last this round: their minions left place after everyone else is out`}>goes last</small>}
           </span>
           {/* under the name (mockup A, Cory 2026-10-21): the round's minions as a short row, the ones still to place
               standing (each bobs on its own slow phase; a placement flies from here) and the placed ones faded; a rival
