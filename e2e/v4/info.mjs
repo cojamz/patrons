@@ -39,9 +39,9 @@ import { browserPath } from './lib/browser.mjs';
 //      each rule-changer bending the price (Penny Pincher, a discount);
 //  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary keeps the type scale (caps labels 11, words 14 at least);
 //  (r) every hover card opened in (m) reads whole (lib/textclip.mjs) and keeps to the two marks (lib/legacy.mjs);
-//  (s) hovering Open Door ("Recruit the cheapest face-up member, free.") lights exactly the cheapest face-up members
-//      (two tied, both lit, nothing else), its hover card names them ("Could recruit: … (cheapest, N)"), and the
-//      light leaves with the hover without moving any card (Cory, 2026-10-16);
+//  (s) hovering Recruit a Member ("Recruit a member in the shop costing 8 or less.") in round III lights exactly the
+//      face-up members at 8 or less (two, both lit, the pricier ones not), its hover card names them ("Could recruit:
+//      A or B"), and the light leaves with the hover without moving any card (Cory, 2026-10-16; was Open Door, cut Oct 27);
 //  (a) also covers each chair's member count, its "+N" cell and its "each round" line (live panel r1, G4).
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
@@ -615,9 +615,9 @@ try {
     await pg.close();
   }
 
-  // (s) hovering Open Door lights exactly the cheapest face-up member(s), names them, and lets go with the hover
+  // (s) hovering Recruit a Member lights exactly the face-up members at 8 or less, names them, and lets go with the hover
   {
-    const { save, key, cheapest } = aimSave();
+    const { save, key, lit: aimed } = aimSave();
     const pg = await browser.newPage({ viewport: { width: 1270, height: 700 } });
     pg.on('pageerror', e => errors.push(`aim pageerror: ${e.message}`));
     await seedSave(pg, save); // before the app runs (lib/seed.mjs)
@@ -629,29 +629,30 @@ try {
     const before = await boxes();
     const spot = pg.locator(`[data-slot="${key}"] .base`).first();
     await ((await spot.count()) ? spot : pg.locator(`[data-slot="${key}"]`).first()).hover();
-    const want = cheapest.map(String).sort().join(',');
+    const want = aimed.map(String).sort().join(',');
     const lit = () => pg.$$eval('.lt-shop .card[data-uid][data-aim]', els => els.map(e => e.dataset.uid).sort().join(','));
     const ok = await pg.waitForFunction(w => [...document.querySelectorAll('.lt-shop .card[data-uid][data-aim]')].map(e => e.dataset.uid).sort().join(',') === w, want, { timeout: 6000 }).then(() => true, () => false);
-    if (!ok) fail(`(s) hovering Open Door lit [${await lit()}], not the cheapest face-up members [${want}]`, 'aim');
+    if (!ok) fail(`(s) hovering Recruit a Member lit [${await lit()}], not the face-up members at 8 or less [${want}]`, 'aim');
     // the lit card looks lit: the lamp's ring, not a near-invisible change
     await pg.waitForTimeout(300); // the light's quick fade-in, done
     // the unified shop's aim ring (shop.css): a 3px outline in the lamp's warm light, the same light ringing it inside
-    const glow = await pg.evaluate(u => { const c = document.querySelector(`.lt-shop .card[data-uid="${u}"]`); if (!c) return null; const cs = getComputedStyle(c); return { outline: `${cs.outlineStyle} ${cs.outlineWidth} ${cs.outlineColor}`, w: parseFloat(cs.outlineWidth) || 0, shadow: cs.boxShadow }; }, cheapest[0]);
-    if (!glow || glow.w < 2 || !/^solid/.test(glow.outline) || !/255, 224, 161/.test(glow.outline) || !/255, 224, 161[^)]*\) 0px 0px 0px 2px inset/.test(glow.shadow)) fail(`(s) a lit cheapest card carries no lamp ring (${JSON.stringify(glow)})`, 'aim');
+    const glow = await pg.evaluate(u => { const c = document.querySelector(`.lt-shop .card[data-uid="${u}"]`); if (!c) return null; const cs = getComputedStyle(c); return { outline: `${cs.outlineStyle} ${cs.outlineWidth} ${cs.outlineColor}`, w: parseFloat(cs.outlineWidth) || 0, shadow: cs.boxShadow }; }, aimed[0]);
+    if (!glow || glow.w < 2 || !/^solid/.test(glow.outline) || !/255, 224, 161/.test(glow.outline) || !/255, 224, 161[^)]*\) 0px 0px 0px 2px inset/.test(glow.shadow)) fail(`(s) a lit card carries no lamp ring (${JSON.stringify(glow)})`, 'aim');
     const line = await pg.waitForFunction(() => { const r = document.querySelector('[data-hover-layer][data-open="1"] [data-aims]'); return r ? { aims: r.getAttribute('data-aims'), text: r.closest('.lt-yd-row').innerText } : null; }, null, { timeout: 4000 }).then(h => h.jsonValue(), () => null);
-    const names = cheapest.map(u => defById(save.state.cards[u].def).name);
-    if (!line) fail('(s) the Open Door hover card has no line naming what it lights', 'aim');
+    const names = aimed.map(u => defById(save.state.cards[u].def).name);
+    if (!line) fail('(s) the Recruit a Member hover card has no line naming what it lights', 'aim');
     else {
-      if (line.aims.split(' ').sort().join(',') !== want) fail(`(s) the hover's line names [${line.aims}], the cheapest are [${want}]`, 'aim');
-      if (!/cheapest/i.test(line.text)) fail(`(s) the hover's line doesn't say why they're lit: ${JSON.stringify(line.text)}`, 'aim');
+      if (line.aims.split(' ').sort().join(',') !== want) fail(`(s) the hover's line names [${line.aims}], the ones at 8 or less are [${want}]`, 'aim');
+      // why they're lit: the line reads as recruits you could make (two lit, so "Could", never "Would")
+      if (!/^\s*Could recruit\b/.test(line.text)) fail(`(s) the hover's line doesn't say they're the members you could recruit: ${JSON.stringify(line.text)}`, 'aim');
       for (const n of names) if (!line.text.includes(n)) fail(`(s) the hover's line doesn't name ${n}: ${JSON.stringify(line.text)}`, 'aim');
-      console.log(`info.mjs: Open Door lights ${want}; its hover says ${JSON.stringify(line.text.replace(/\s+/g, ' '))}`);
+      console.log(`info.mjs: Recruit a Member lights ${want}; its hover says ${JSON.stringify(line.text.replace(/\s+/g, ' '))}`);
     }
-    await pg.screenshot({ path: `${SHOTS}/08-open-door-aim.png` });
-    if ((await boxes()) !== before) fail('(s) lighting the cheapest cards moved the shop row', 'aim');
+    await pg.screenshot({ path: `${SHOTS}/08-recruit-member-aim.png` });
+    if ((await boxes()) !== before) fail('(s) lighting the cards moved the shop row', 'aim');
     await pg.mouse.move(4, 690);
     const off = await pg.waitForFunction(() => !document.querySelector('.lt-shop .card[data-aim]'), null, { timeout: 2000 }).then(() => true, () => false);
-    if (!off) fail('(s) the cheapest cards stay lit after the pointer leaves Open Door', 'aim');
+    if (!off) fail('(s) the lit cards stay lit after the pointer leaves Recruit a Member', 'aim');
     await pg.close();
   }
 
