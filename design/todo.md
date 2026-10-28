@@ -6,7 +6,7 @@ Done items and the old lists: design/archive/todo-2026-10-20-to-23.md and design
 All open design and feel questions are numbered in design/notes/waiting-on-cory-2026-10-24.md, defaults in brackets. When he answers, log each call in design/decisions.md, tick it there, and build in this order: two shops (#1 to #4), card changes (#5 to #11), board (#12 to #14), members (#15 to #17).
 
 Redesign, brainstorm with Cory: Shake Down (feels too bad for the player who gets shaken down) and Late Bloomers (works against itself and counts itself). From his Oct 24 game.
-Broader rework, his to lead (Oct 28): Crowd In ("+2 purple. This round you can place on taken spaces.") too strong with Greatest Hits, and Green has one copy too many (Encore the one to change). Two Encore lists missed; see design/pitch-ledger.md. Nothing built.
+Broader rework, his to lead (Oct 28): one ordered list of actions and members, flagged first, in design/notes/rework-list-2026-10-28.md (Cory works down it by number). Covers Crowd In with Greatest Hits, Encore, Once per round, Shake Down, Extortionist, deck growth to about 16. Nothing built.
 Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 member cards at game end. Next pitches, one example first: a trio set bonus (three linked members, across or within colors, scaling as you collect); how the Saboteur (-3 followers when it joins your cult) enters a cult. Open asks: Host, Grifter, Heiress stay like Patriarch? [yes]; Extortionist rework so it stops taxing follower buys (his yes, no shape yet). Tabled: a follower-spending color.
 ## Ours, open (no call needed)
 0. Confirm two browsers in one online room see each other's table-talk bubbles on the live build (v0.9.2 shipped it).
