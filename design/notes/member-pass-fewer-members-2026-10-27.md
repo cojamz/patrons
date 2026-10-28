@@ -27,3 +27,6 @@ Muse, Doorman, Critic, Stylist, Snitch, Regular, Connoisseur. Each pays a little
 
 ## Already pointing the right way
 Martyr and Undertaker (pay you for a member leaving: fewer members), Tribute Band, Night Owl, Hot Streak, Desperado, Sticky Fingers, Courier, Exporter, Hoarder, Connector. Each is a piece you build turns around. More cards like these, fewer of the kinds above.
+
+## Table check (Cory, Oct 27, 8:48pm Eastern)
+"at a table it would be too hard to keep track of and remember what 22 of your members do". Every pitch above is checked against it: a player can hold their whole cult in their head. Bodies (Twins, Crew) add count but nothing to remember; the cards to thin are the ones with abilities.
