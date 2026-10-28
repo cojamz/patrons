@@ -19,7 +19,8 @@ function spriteUrl(icon, sphere, rects) {
   if (u) return u;
   const by = new Map();
   for (const r of rects) if (r.fill != null) by.set(r.fill, (by.get(r.fill) || '') + `M${r.x} ${r.y}h${r.w}v1h${-r.w}z`);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges">${[...by].map(([f, d]) => `<path fill="${f}" d="${d}"/>`).join('')}</svg>`;
+  const n = icon.px.length;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges">${[...by].map(([f, d]) => `<path fill="${f}" d="${d}"/>`).join('')}</svg>`;
   u = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   urls.set(k, u);
   return u;
@@ -28,6 +29,8 @@ function spriteUrl(icon, sphere, rects) {
 export const Sprite = memo(function Sprite({ id, sphere = 'colorless', size = 48, kind = 'member', title = null, className = '' }) {
   const { icon, drawn } = iconFor(id, kind);
   const src = spriteUrl(icon, sphere, rectsFor(icon, sphere));
+  // a portrait is 32 pixels: drawn a third bigger than the 24-pixel size asked for, whole pixels at 32/64/96
+  if (icon.portrait) size = size <= 40 ? 32 : size <= 72 ? 64 : 96;
   return (
     <img className={`sprite${drawn ? '' : ' template'}${className ? ` ${className}` : ''}`} src={src} width={size} height={size} draggable={false}
       alt={title || ''} title={title || undefined} aria-hidden={title ? undefined : 'true'} data-sprite={drawn ? icon.id : `template:${kind}`} decoding="sync" />
