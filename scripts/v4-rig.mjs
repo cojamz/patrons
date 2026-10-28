@@ -150,7 +150,10 @@ async function click(el, what, round) {
   await sleep(20);
   await page.mouse.click(c.x, c.y);
   const ms = await p.catch(() => null);
-  per(round).clicks.push({ what, ms });
+  const c0 = { what, ms };
+  // a click that changed nothing, or took over a second: what was on screen, so the cause is findable
+  if (ms == null || ms > 1000) c0.why = await page.evaluate(() => ({ prompt: (document.querySelector('[data-prompt]')?.textContent || '').slice(0, 120), phase: document.querySelector('.app.game')?.dataset.phase, place: !!document.querySelector('[data-place]'), pay: !!document.querySelector('.dialog.pay'), options: [...document.querySelectorAll('[data-option]')].map(x => x.getAttribute('data-option')).slice(0, 12), moves: document.querySelector('.app.game')?.dataset.moves })).catch(() => null);
+  per(round).clicks.push(c0);
   return ms != null;
 }
 async function hover(sel, round) {
@@ -213,7 +216,9 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
     const a = await answerChoice(page, { last: ['pass'] }).catch(() => null);
     if (!a) { await letGo(); await sleep(200); continue; } // nothing on screen to answer yet (a sheet still opening)
     const ms = await p.catch(() => null);
-    per(round).clicks.push({ what: a ? a.kind === 'option' ? g.phase || 'choose' : a.kind : 'none', ms });
+    const c1 = { what: a ? a.kind === 'option' ? g.phase || 'choose' : a.kind : 'none', ms };
+    if (ms == null || ms > 1000) c1.why = { answer: a, ...await page.evaluate(() => ({ prompt: (document.querySelector('[data-prompt]')?.textContent || '').slice(0, 120), phase: document.querySelector('.app.game')?.dataset.phase, moves: document.querySelector('.app.game')?.dataset.moves })).catch(() => ({})) };
+    per(round).clicks.push(c1);
   }
   const ok = per(round).clicks.length > before && per(round).clicks.at(-1).ms != null;
   dead = ok ? 0 : dead + 1;
@@ -299,6 +304,6 @@ for (const r of rounds) {
 if (F.big && F.big.length) L.push('', 'Frames over 2 s, with the screen at the time:', ...F.big.map(b => `- ${b.d} ms · ${b.phase} · prompt "${b.prompt}" · hover "${b.hover}" · options ${b.options.join(' ')}`));
 if (errors.length) L.push('', 'Errors:', ...errors.slice(0, 10).map(e => `- ${e}`));
 writeFileSync(`${OUT}/rig-${label}.md`, L.join('\n') + '\n');
-writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors }, null, 1));
+writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors, odd: Object.fromEntries(rounds.map(r => [r, R[r].clicks.filter(c => c.why)])) }, null, 1));
 console.log(L.slice(0, 12 + rounds.length + 3).join('\n'));
 process.exit(GATE && fails.length ? 1 : 0);
