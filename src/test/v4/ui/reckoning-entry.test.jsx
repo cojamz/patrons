@@ -8,6 +8,7 @@ const chain = vi.hoisted(() => ({ running: false, end: null }));
 vi.mock('../../../v4/game/director.js', () => ({
   chainRunning: () => chain.running,
   onChainEnd: cb => { chain.end = cb; return () => { chain.end = null; }; },
+  onChainLanded: cb => { chain.landed = cb; return () => { chain.landed = null; }; },
 }));
 vi.mock('../../../v4/game/flight.js', async importOriginal => ({ ...(await importOriginal()), motionOK: () => true }));
 vi.mock('../../../v4/format.js', async importOriginal => ({
@@ -41,6 +42,16 @@ describe('scoring enters directly', () => {
     act(() => { chain.running = false; chain.end(); });
     expect(container.querySelector('.waiting')).toBe(null);
     expect(container.textContent).toContain('Most gold');
+  });
+  it('starts at the last landing, and on a table gone quiet when a later show took over the end (v0.9.807 hang)', () => {
+    vi.useFakeTimers(); chain.running = true;
+    const a = render(<Reckoning info={info()} root={null} onDone={() => {}} />);
+    act(() => { chain.running = false; chain.landed(); });
+    expect(a.container.textContent).toContain('Most gold');
+    cleanup(); chain.running = true;
+    const b = render(<Reckoning info={info()} root={null} onDone={() => {}} />);
+    act(() => { chain.running = false; vi.advanceTimersByTime(600); }); // no end, no landing: the old show was adopted
+    expect(b.container.textContent).toContain('Most gold');
   });
   it('finishes when the final count roll completes, without a trailing 400ms hold or recounts', () => {
     vi.useFakeTimers(); const onDone = vi.fn();

@@ -97,11 +97,12 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     if (ready) return undefined;
     const start = () => setReady(true);
     // at the last landing, not only the chain's end: a chain that starts during the settle adopts it and the old end
-    // never fires, which left round end waiting forever on a slow laptop (v0.9.807); a safety net past that
+    // never fires, which left round end waiting forever on a slow laptop (v0.9.807); and a look every half second for
+    // a table gone quiet with no word (a running show is still never cut short)
     const offEnd = onChainEnd(start), offLanded = onChainLanded(start);
-    const net = setTimeout(start, 6000);
+    const net = setInterval(() => { if (!chainRunning()) start(); }, 500);
     if (!chainRunning()) start(); // close the subscription race
-    return () => { offEnd(); offLanded(); clearTimeout(net); };
+    return () => { offEnd(); offLanded(); clearInterval(net); };
   }, [ready]);
   useLayoutEffect(() => { if (ready) stageClear(); }, [ready]);
   const [spots, setSpots] = useState({}); // pid -> { left, top } of that player's chair, for the count chips
