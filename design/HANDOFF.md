@@ -6,6 +6,7 @@ Last updated 2026-10-24 by the tidy-up thread. Before this: design/archive/hando
 - Nothing is running. Cory asked for a clean start on Oct 23, 9:04pm Eastern.
 - Every open question for Cory is in one numbered list: design/notes/waiting-on-cory-2026-10-24.md (copy in /mnt/project-files/tidy-up/). Build nothing from it until he answers by number.
 - Artifacts are live (v0.8.72-83): each color has one, picked at the start with 1 of its color, drawn on the player card; the draft is picked only from the wheel's list ("A boon for your cult. Comes with 1 resource."). Round decks are live (v0.8.82): members cost 3 or less start in the deck, cost 4 join at round II, 5 and up (plus Impostor, Doppelganger) at round III; setup switch folds III into II; deck screen greys members not joined. state.joined is the hook for the shuffle-in animation (snappiness thread owns it).
+- Oct 27 night (v0.8.100, then v0.9.0 with round I): contest prizes +4/+6/+10, ties half rounded up (+2/+3/+5); every member costs 1 more any (content/index.js EXTRA_WILD; card files keep printed numbers, round decks read the cost before the +1). Bot read: /mnt/project-files/contest-prize-oct27/read.md (live game: about 8.5 members per cult, buy followers only 29%).
 - Our own open work, no call needed: design/todo.md ("Ours").
 - Ship freeze rule: while Cory says a game is running, push to the branch only; publish when he says it's over.
 
