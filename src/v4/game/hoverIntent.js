@@ -80,8 +80,18 @@ export function controlsRect(el) {
 /** Is the pointer over the card's buttons (with a little slack)? */
 export function overControls(el, p = pt) {
   const r = p && controlsRect(el);
-  return !!r && p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD;
+  if (r && p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD) return true;
+  // a long list being scrolled is a control too, right where it is: while the wheel turns on it, what lies under the
+  // card doesn't take its place (Cory, playtest Oct 28: "i cant scroll the list of members on the hover over when it
+  // gets long"); a pointer just resting there still opens what it rests on (m14)
+  const list = p && el && el.isConnected && el.querySelector('.mu-list');
+  return !!list && nowMs() - scrolledAt < SCROLL_HOLD_MS && list.scrollHeight > list.clientHeight && over(list, p);
 }
+const SCROLL_HOLD_MS = 1200;
+let scrolledAt = -Infinity;
+const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+/** A seat card's list was just scrolled (its card stays while the wheel keeps turning on it). */
+export function scrolledList() { scrolledAt = nowMs(); }
 
 /** Is the pointer (at p) over el's box? A see-through card (its surface lets clicks through) is still "under" it. */
 export function over(el, p = pt) {

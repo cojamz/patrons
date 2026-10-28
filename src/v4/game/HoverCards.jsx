@@ -19,7 +19,7 @@ import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
 import { HOVER_DELAY_MS, HOVER_OPEN_MS } from './hoverDelay.js';
-import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim, stillOn, pointer } from './hoverIntent.js';
+import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim, stillOn, pointer, scrolledList } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -278,17 +278,20 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   useEffect(() => {
     if (!live) return undefined;
     const down = e => { if (box.current && e.target instanceof Node && box.current.contains(e.target)) return; hover.close(); };
-    // its long list still scrolls under the wheel, though the pointer events go through the card
+    // its long list still scrolls under the wheel, though the pointer events go through the card, and from the seat
+    // itself too: hover a seat, roll the wheel, read on (Cory, playtest Oct 28)
     const wheel = e => {
       const list = box.current && box.current.querySelector('.mu-list');
-      if (!list || list.scrollHeight <= list.clientHeight || !over(list, { x: e.clientX, y: e.clientY })) return;
+      const p = { x: e.clientX, y: e.clientY };
+      if (!list || list.scrollHeight <= list.clientHeight || !(over(box.current, p) || (el && over(el.closest('.lt-seat') || el, p)))) return;
       e.preventDefault();
       list.scrollTop += e.deltaY;
+      scrolledList();
     };
     addEventListener('pointerdown', down, true);
     addEventListener('wheel', wheel, { capture: true, passive: false });
     return () => { removeEventListener('pointerdown', down, true); removeEventListener('wheel', wheel, { capture: true }); };
-  }, [live, hover]);
+  }, [live, hover, el]);
   useEffect(() => {
     if (!c || c.pinned) return undefined;
     const off = e => { if (box.current && e.target instanceof Node && box.current.contains(e.target)) return; hover.close(); };
