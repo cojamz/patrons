@@ -6,6 +6,7 @@ import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineR
 import { createLocalSession } from './session/local.js';
 import { loadLocal, saveLocalSoon, flushLocalSave, clearLocal, finishLocal, loadLast, clearLast, claimLocal, ownsLocal, onLocalLost, releaseLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
+import './session/archive.js'; // keeps the last few games on this device, for Past games
 import { friendlyError, OFFLINE } from './errors.js';
 import { oldBuildUrl } from './oldBuild.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';

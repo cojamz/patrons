@@ -203,7 +203,14 @@ export function replayRecord(input, { upTo = Infinity, onMove } = {}) {
 // The latest state any session showed, so the error screen can offer its record even after React has unmounted.
 let current = null;
 /** Sessions call this with every state they publish. */
-export const trackState = state => { if (state && Array.isArray(state.players)) current = state; };
+const tracked = new Set();
+export const trackState = state => {
+  if (!state || !Array.isArray(state.players)) return;
+  current = state;
+  for (const fn of tracked) { try { fn(state); } catch (err) { console.error('[v4] trackState listener failed:', err); } }
+};
+/** Called with every state trackState sees (session/archive.js keeps past games with it). Returns an unsubscribe. */
+export const onTrack = fn => { tracked.add(fn); return () => tracked.delete(fn); };
 export const trackedState = () => current;
 /** A record of the game on screen (or null): what "Copy game record" copies. */
 export const currentRecord = (extra = {}) => (current ? gameRecord(current, extra) : null);

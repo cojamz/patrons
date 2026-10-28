@@ -51,6 +51,7 @@ import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START, ownsLocal } from '../saved.js';
 import { restoredMoment } from '../session/moment.js';
 import { gameRecord, recordText } from '../session/record.js';
+import { saveGame } from '../session/archive.js';
 import { copyText } from '../Recovery.jsx';
 import './layout.css'; // the laptop composition from 1200px up (design pod)
 
@@ -412,6 +413,8 @@ function Menu({ onRules, onLog, onLeave, getState }) {
           <SoundSetting />
           <button type="button" role="menuitem" className="btn ghost record-btn" data-copy-record onClick={copyRecord}
             title="Copies this game, move by move, so a problem can be replayed exactly">{copied === 'copied' ? 'Copied' : 'Copy game record'}</button>
+          <button type="button" role="menuitem" className="btn ghost save-game-btn" data-save-game onClick={() => { const st = getState && getState(); if (st) saveGame(gameRecord(st)); }}
+            title="Downloads this game as text, every move in order, that replays it exactly">Save game</button>
           {copied && copied !== 'copied' && (
             <textarea className="record-text" readOnly value={copied} aria-label="Game record (copy it by hand)" onFocus={e => e.target.select()} autoFocus />
           )}

@@ -45,10 +45,10 @@ const joiner = (kind, i) => (kind === 'pay' ? ' (' : kind === 'buy' ? ' · ' : i
 
 const colorName = id => {
   const name = quadrant(id).name;
-  return allQuadrantIds().filter(q => quadrant(q).name === name).length === 1 ? name : id;
+  return allQuadrantIds().filter(q => quadrant(q).name === name).length === 1 ? name : `${name} (${id})`;
 };
 const colorId = s => {
-  const t = s.trim();
+  const t = s.trim().replace(/^.*\((\w+)\)$/, '$1');
   const hits = allQuadrantIds().filter(q => q === t || quadrant(q).name.toLowerCase() === t.toLowerCase());
   if (hits.includes(t)) return t;
   if (hits.length !== 1) throw new Error(`Unknown color "${t}".`);
@@ -120,7 +120,7 @@ export function toNotation(input) {
   if (state.over) {
     const ranked = state.players.map(p => ({ name: p.name, f: followers(state, p) })).sort((a, b) => b.f - a.f);
     out.splice(head, 0, tag('Result', ranked.map(r => `${r.name} ${r.f}`).join(', ')));
-  } else out.splice(head, 0, tag('Result', `unfinished, round ${roman(state.round)}`));
+  } else out.splice(head, 0, tag('Result', `unfinished, ${state.round ? `round ${roman(state.round)}` : 'artifacts'}`));
   out.splice(head + 1, 0, tag('Moves', rec.moves.length), tag('Content', rec.build?.content || '?'));
   return out.join('\n') + '\n';
 }

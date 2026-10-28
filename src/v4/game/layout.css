@@ -218,6 +218,9 @@
 .app.home .menu .last-results{order:10;align-self:center;min-height:0;padding:5px 16px;background:none;border-color:var(--rim);box-shadow:none;color:var(--muted);font-size:var(--fs-2)}
 .app.home .menu .last-results small{font-size:12px}
 .app.home .menu .rules-link{order:11}
+.app.home .menu .past-games{order:12;display:flex;flex-direction:column;align-items:center;gap:4px}
+.app.home .menu .past-game{min-height:0;padding:3px 12px;border:0;background:none;box-shadow:none;color:var(--muted);font-size:13px}
+.app.home .menu .past-game:hover{color:var(--cream)}
 
 /* Results (laptop): the four cults stand in one row under the table, so the whole result fits the screen at 700px (the
    second row of cards fell below the fold) */
@@ -444,3 +447,4 @@
 @keyframes brief-out{to{opacity:0;visibility:hidden}}
 @media (prefers-reduced-motion:reduce){.lt .say-sub[data-brief]{animation-duration:.01s}}
 .lt > .lt-seat > .seat-stolen[data-brief]{animation:brief-out .4s ease-out 6s forwards}
+.results .row-btns .save-note,.row-btns .save-note{flex-basis:100%;margin:2px 0 0;text-align:right}

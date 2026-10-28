@@ -1,8 +1,11 @@
 // Final results: ranking with the followers breakdown, then Play again.
+import { useState } from 'react';
 import { followers, memberCount, TIERS } from '../../engine/v4/index.js';
 import { breakdown, playerColor, winSentence, plural, contestLines, finalWinners } from '../format.js';
 import { Tip, NamedText, asYou } from './Info.jsx';
 import { Who } from './Glyphs.jsx';
+import { gameRecord } from '../session/record.js';
+import { saveGame } from '../session/archive.js';
 
 export default function Results({ state, onPlayAgain, onHome, meId = null }) {
   // you are "You" ("Your contests"), never your seat's name
@@ -100,7 +103,20 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
       <div className="row-btns">
         {onPlayAgain && <button type="button" className="btn pri" onClick={onPlayAgain} data-play-again>Play again</button>}
         {onHome && <button type="button" className="btn" onClick={onHome}>Home</button>}
+        <SaveThisGame state={state} />
       </div>
     </section>
+  );
+}
+
+/** The end screen's save: a plain button beside Play again, and a line saying where the file went. */
+function SaveThisGame({ state }) {
+  const [saved, setSaved] = useState(null); // null | true | false (the browser refused)
+  return (
+    <>
+      <button type="button" className="btn save-this-game" onClick={() => setSaved(saveGame(gameRecord(state)))} data-save-game
+        title="Downloads this game as text, every move in order, that replays it exactly">{saved ? 'Saved' : 'Save this game'}</button>
+      {saved !== null && <p className="hint save-note">{saved ? 'In your downloads: every move in order. Past games on the home screen keeps your last 12 too.' : 'Your browser blocked the download. Past games on the home screen keeps it.'}</p>}
+    </>
   );
 }

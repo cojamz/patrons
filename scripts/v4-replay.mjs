@@ -1,5 +1,5 @@
-// Replays a Patrons v4 game record ("Copy game record" in the app, or window.patronsRecord() in devtools) move by
-// move and reports the first illegal move or exception, with the state at that point.
+// Replays a Patrons v4 game record ("Copy game record" in the app, or window.patronsRecord() in devtools), or a saved
+// game's notation text ("Save game", session/notation.js), move by move and reports the first illegal move or exception, with the state at that point.
 //
 // Usage: node scripts/v4-replay.mjs <record.json | -> [--upto N] [--log N] [--state out.json] [--quiet]
 //   -            read the record from stdin
@@ -11,6 +11,7 @@
 import './v4-node-stamp.mjs'; // first: record.js must see the rules-source hash, as in the built app
 import { readFileSync, writeFileSync } from 'node:fs';
 import { replayRecord, parseRecord, CONTENT_HASH } from '../src/v4/session/record.js';
+import { fromNotation } from '../src/v4/session/notation.js';
 import { followers } from '../src/engine/v4/index.js';
 
 const args = process.argv.slice(2);
@@ -24,7 +25,8 @@ if (!src) { console.error('Usage: node scripts/v4-replay.mjs <record.json | -> [
 
 let rec;
 try {
-  rec = parseRecord(readFileSync(src === '-' ? 0 : src, 'utf8'));
+  const text = readFileSync(src === '-' ? 0 : src, 'utf8');
+  rec = /^\s*\[Game "Cults"\]/.test(text) ? fromNotation(text) : parseRecord(text);
 } catch (err) {
   console.error(`Can't read the record: ${err.message}`);
   process.exit(2);

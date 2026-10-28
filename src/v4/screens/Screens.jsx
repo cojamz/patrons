@@ -10,6 +10,7 @@ import { CLASSIC, spheres, sphereName, sphereLine, sphereVersion, sphereVersionW
 import { panelWords } from '../game/panelText.js';
 import { GAME_NAME, VERSION_LABEL } from '../version.js';
 import { copyText } from '../Recovery.jsx';
+import { pastGames, saveGame } from '../session/archive.js';
 import { Tip } from '../game/Info.jsx';
 import { EmojiButton, EmojiFace, emojiName } from './EmojiPicker.jsx';
 import { settleEmojis, takeEmoji, lastEmoji, rememberEmoji } from '../emojiPick.js';
@@ -85,11 +86,34 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, la
           {!onlineReady && <p className="hint">Online play is being wired up. Hot-seat works now.</p>}
         </div>
         <button type="button" className="btn ghost rules-link" onClick={() => setRules(true)}>How to play</button>
+        <PastGames />
       </div>
       {rules && <HowToPlay onClose={() => setRules(false)} />}
     </div>
   );
 }
+
+/** The last few games on this device, each one a click from a saved file (session/archive.js). */
+function PastGames() {
+  const [open, setOpen] = useState(false);
+  const [games, setGames] = useState(() => pastGames());
+  if (!games.length) return null;
+  return (
+    <div className="past-games">
+      <button type="button" className="btn ghost" aria-expanded={open} onClick={e => { const btn = e.currentTarget; setGames(pastGames()); setOpen(o => !o); setTimeout(() => btn.parentElement?.scrollIntoView?.({ block: 'nearest' }), 0); }} data-home="past">Past games</button>
+      {open && games.map(g => (
+        <button type="button" key={g.id} className="btn ghost past-game" onClick={() => saveGame(g.record, g.at)} data-past-game
+          title="Downloads this game as text, every move in order, that replays it exactly">
+          Save · {g.names.join(', ')} · {g.over ? 'final scores' : `round ${['I', 'II', 'III'][g.round - 1] || 'setup'}`} · {agoLine(g.at)}
+        </button>
+      ))}
+    </div>
+  );
+}
+const agoLine = at => {
+  const mins = Math.round((Date.now() - at) / 60000);
+  return mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago` : mins < 60 * 24 ? `${Math.round(mins / 60)} h ago` : new Date(at).toLocaleDateString();
+};
 
 function savedLine({ state, savedAt, fromRoundStart }) {
   const r = state.round ? `Round ${['I', 'II', 'III'][state.round - 1]}` : 'Setup';
