@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.803 — 2026-10-28
+
+- Smoother play: each move takes far less work to figure out, bots keep thinking off the page after one slow turn, and flying pieces, the wheel's dim and the seat-pick glow no longer make Firefox redraw by hand every frame
+
 ## v0.9.802 — 2026-10-28
 
 - Long rival turns play out instead of jumping to the end: they speed up a little to fit
