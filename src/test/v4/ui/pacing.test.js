@@ -17,7 +17,7 @@ function paceGame(seed, mine = [0]) {
   let s = createGame({ seats, seed });
   const rand = seededRandom(seed);
   const rivalTurns = [], waits = [], byRound = { 1: [], 2: [], 3: [] };
-  let turn = null, wait = null, between = 0;
+  let turn = null, wait = null, between = 0, extra = false;
   const states = [s];
   for (let k = 0; k < 800 && !s.over; k++) { s = applyMove(s, chooseBotMove(s, rand), { effects: true }); states.push(s); }
   s = states[0];
@@ -39,13 +39,13 @@ function paceGame(seed, mine = [0]) {
         if (turn != null && s.pending.kind === 'place') { rivalTurns.push(turn); byRound[s.round].push(turn); turn = null; if (wait != null) between++; }
         turn = (turn || 0) + hold;
         if (!sameNext) { rivalTurns.push(turn); byRound[s.round].push(turn); turn = null; if (wait != null) between++; }
-        if (wait != null) wait += hold;
+        if (wait != null) { wait += hold; if (s.pending.extra) extra = true; } // (a member's extra buy: Big Spender)
       } else if (!sameNext) {
         // your turn ends here (your own chain has played): the wait runs until your next turn starts
-        wait = 0; between = 0;
+        wait = 0; between = 0; extra = false;
       }
       // your next turn: after the rivals' turns, or at once (the snake hands it straight back: a wait of one breath)
-      if (next.pending && mine.includes(next.pending.player) && wait != null && (!mine.includes(actor) || (!sameNext && next.pending.kind === 'place'))) { waits.push({ ms: wait + (between ? 0 : hold), turns: between }); wait = null; }
+      if (next.pending && mine.includes(next.pending.player) && wait != null && (!mine.includes(actor) || (!sameNext && next.pending.kind === 'place'))) { waits.push({ ms: wait + (between ? 0 : hold), turns: between, extra }); wait = null; }
     }
     s = next;
   }
@@ -71,9 +71,10 @@ describe('the table\'s pace at Steady (H2, H3)', () => {
     // H2 judges the wait at p50 over every seat and every turn (the snake's gaps run 2/4 rival turns for a middle seat,
     // 6/0 for an end seat: three on average), and caps every wait (the snake's run of six) at 13s
     const usual = waits.map(w => w.ms);
-    // the long gap is the snake's run of up to six rival turns; members that give extra turns make longer runs, outside it
-    const h3p50 = pct(turns, 0.5), h3p95 = pct(turns, 0.95), h2p50 = pct(usual, 0.5), h2max = Math.max(...waits.filter(w => w.turns <= 6).map(w => w.ms));
-    const over = waits.filter(w => w.turns > 6).map(w => `${w.ms}ms/${w.turns} turns`);
+    // the long gap is the snake's run of up to six rival turns; members that give extra turns or extra buys (Big Spender)
+    // make longer runs, outside it (Claude, 2026-10-28: Launderer's new price put a Big Spender buy in seed 7's run of six)
+    const h3p50 = pct(turns, 0.5), h3p95 = pct(turns, 0.95), h2p50 = pct(usual, 0.5), h2max = Math.max(...waits.filter(w => w.turns <= 6 && !w.extra).map(w => w.ms));
+    const over = waits.filter(w => w.turns > 6 || w.extra).map(w => `${w.ms}ms/${w.turns} turns${w.extra ? ' + an extra buy' : ''}`);
     if (over.length) console.log(`[pacing] runs of more than six rival turns (extra turns): ${over.join(', ')}`);
     console.log(`[pacing] round I rival turn p50 ${pct(r1, 0.5)}ms p95 ${pct(r1, 0.95)}ms; round III p50 ${pct(r3, 0.5)}ms p95 ${pct(r3, 0.95)}ms`);
     console.log(`[pacing] rival turn p50 ${h3p50}ms p95 ${h3p95}ms (${turns.length} turns); the usual wait for your turn p50 ${h2p50}ms (${usual.length}), longest ${h2max}ms (${waits.length} waits)`);
