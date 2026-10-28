@@ -1,0 +1,4 @@
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .slice-outline{fill:none;stroke:#24160d;stroke-width:2.2}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open .wash{stroke:rgba(255,251,240,.6);stroke-width:6;stroke-linejoin:round}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim{stroke:#24160d;stroke-width:2.2}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-foot{opacity:.95}

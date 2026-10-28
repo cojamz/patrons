@@ -1,0 +1,10 @@
+from pix import *
+g = G(24)
+g.put(2, 7, ['      LLLLLLLL      ','   LLLPPPPPPPPLLL   ','  LLPPPPPPPPPPPPLM  ',' LLPPPPPPPPPPPPPPMN ',' LPPPPPPPPPPPPPPPPN ','LLPPPPPPPPPPPPPPPPMN','LMPPPPPPPPPPPPPPPpMN',' MMpPPPPPPPPPPPppMN ',' NMMppppppppppppMNN ','  NNMMMMMMMMMMMMNN  ','    NNNNNNNNNNNN    '])
+g.put(8, 9, [' 443 ','44332','33221',' 221 '])
+g.put(14, 10, ['43','21'])
+g.put(5, 12, [' 43','4321',' 21'])
+g.put(12, 14, ['432','221'])
+g.put(17, 2, [' w ','www',' w '])
+g.put(5, 4, ['w'])
+open('a_prospector.txt','w').write('\n'.join(g.rows()))
