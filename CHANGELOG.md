@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.3 — 2026-10-28 — unreleased
+
+- The shop fits on screen at narrower laptop widths (about 1100 wide): every card and "Done, no recruit" show at once, and Peek's top-of-the-pile row no longer covers Done.
+
 ## v0.9.2 — 2026-10-28 — unreleased
 
 - Say: quick lines or your own words to the table, shown beside your seat and in the log
