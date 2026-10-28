@@ -12,6 +12,8 @@
 //   moves/<key>:  { by, seat, move:{player, option}, n, mid } // guests (and the host) push; host consumes
 //   rejects/<playerId>/<key>: { mid, reason }                // host's answer to a refused move
 // Codes are 5 characters, so they can't collide with v3's 4-character rooms.
+// v3rooms/_index/<CODE>: when that room last showed life (server ms). The DB rules don't let anyone list v3rooms, so this
+// index is how a client finds rooms left idle for IDLE_MS and clears them (sweepIdleRooms, run when a room is made).
 import { isLegal, chooseBotMove, setBotLevels, BOT_LEVELS, MAX_PLAYERS } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { parseTable, fitTable, tableProblem } from '../tables.js';
@@ -41,6 +43,11 @@ export const BEAT_MS = 5000;
 /** A move sent again this long after the first try ("Try again") is re-pushed with the same mid. */
 export const RESEND_MS = 4000;
 export const STALE_MS = 15000;
+/** A room with no sign of life (no moves, no host heartbeat, nobody arriving) this long is deleted (Cory, Oct 27). */
+export const IDLE_MS = 2 * 60 * 60 * 1000;
+/** How often an open host tab refreshes its room's line in the index. */
+export const INDEX_EVERY_MS = 60000;
+export const INDEX_PATH = 'v3rooms/_index';
 // Test hooks on the page URL (?subAfter=ms), like ?botDelay: e2e can't wait 15 s per scenario.
 const urlNumber = key => { try { return Number(new URLSearchParams(globalThis.location?.search || '').get(key)) || 0; } catch { return 0; } };
 const defaultSubAfter = () => urlNumber('subAfter') || SUB_AFTER_MS;
@@ -57,6 +64,33 @@ const withBot = l => (BOT_LEVELS.includes(l) ? { bot: l } : {});
 export const newRoomCode = () => randomId(5, CODE_CHARS);
 export const newPlayerId = () => 'p' + randomId(11);
 const roomPath = code => `${ROOM_ROOT}/${code}`;
+const indexPath = code => `${INDEX_PATH}/${code}`;
+
+/** The room's latest sign of life, in ms: made, a move, a host heartbeat, or a player arriving or leaving. */
+export function lastActive(room) {
+  const times = [room?.createdAt, room?.hostBeat, room?.state?.at, ...Object.values(room?.players || {}).map(p => p?.lastSeen)];
+  return Math.max(0, ...times.filter(t => typeof t === 'number' && Number.isFinite(t)));
+}
+
+/**
+ * Deletes rooms idle for IDLE_MS, found through the index. Each room is read again first and kept if it shows life, so a
+ * stale index line never costs a live game. Best effort: anything refused or offline is left for the next sweep.
+ * @returns {Promise<string[]>} the codes it deleted
+ */
+export async function sweepIdleRooms(transport, { now = transport.serverNow?.() ?? Date.now(), max = 20 } = {}) {
+  const index = (await transport.get(INDEX_PATH)) || {};
+  const gone = [];
+  for (const [code, seen] of Object.entries(index)) {
+    if (gone.length >= max) break;
+    if (typeof seen === 'number' && now - seen < IDLE_MS) continue;
+    const room = await transport.get(roomPath(code));
+    if (room && now - lastActive(room) < IDLE_MS) { await transport.set(indexPath(code), lastActive(room)); continue; }
+    if (room) await transport.remove(roomPath(code));
+    await transport.remove(indexPath(code));
+    gone.push(code);
+  }
+  return gone;
+}
 const normCode = code => String(code || '').trim().toUpperCase();
 
 /** Seats as a sorted list: [{ seat, kind, name, id?, emoji?, bot?, sub? }]. */
@@ -143,6 +177,8 @@ export async function createRoom({ name, emoji, transport, playerId = newPlayerI
     // Creates only if the code is free. (A cold-cache null pass returns the room; RTDB retries with the real value.)
     const res = await transport.transaction(roomPath(code), cur => (cur === null || cur === undefined ? room : undefined));
     if (res.committed && res.value?.hostId === playerId && res.value?.createdAt === now) {
+      transport.set(indexPath(code), transport.serverTime()).catch(() => {});
+      sweepIdleRooms(transport).catch(() => {});
       const lobby = openLobby({ transport, code, playerId, botDelayMs, subAfterMs });
       await lobby.ready;
       return { code, playerId, lobby };
@@ -374,7 +410,12 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     if (room.hostId !== beatSeen.host || hb !== beatSeen.value) beatSeen = { host: room.hostId ?? null, value: hb, at: Date.now() };
     const hosting = room.hostId === playerId && !destroyed;
     if (hosting && !beatTimer) {
-      const beat = () => { if (!destroyed && up && room && room.hostId === playerId) transport.update(base, { hostBeat: transport.serverTime() }).catch(() => {}); };
+      let indexedAt = 0;
+      const beat = () => {
+        if (destroyed || !up || !room || room.hostId !== playerId) return;
+        transport.update(base, { hostBeat: transport.serverTime() }).catch(() => {});
+        if (Date.now() - indexedAt >= INDEX_EVERY_MS) { indexedAt = Date.now(); transport.set(indexPath(code), transport.serverTime()).catch(() => {}); }
+      };
       beat();
       beatTimer = setInterval(beat, BEAT_MS);
     } else if (!hosting && beatTimer) { clearInterval(beatTimer); beatTimer = null; }

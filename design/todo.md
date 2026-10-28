@@ -7,6 +7,7 @@ All open design and feel questions are numbered in design/notes/waiting-on-cory-
 
 Redesign, brainstorm with Cory: Shake Down (feels too bad for the player who gets shaken down) and Late Bloomers (works against itself and counts itself). From his Oct 24 game.
 ## Ours, open (no call needed)
+0. Publish "online rooms idle 2 hours are deleted" (on the branch, tested) once Cory says tonight's playtest is over; a publish mid-game interrupts it.
 1. Even Swap trading two shop members' places says nothing in "since your last turn"; say "swapped the shop's X and Y".
 2. Long shop member names fit their box (Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double): recheck on the 6/7/8 shop first.
 3. "Recruit" for members everywhere ("buy followers" stays): recheck buttons, prompts, toasts, log and rulebook since v0.8.31.
