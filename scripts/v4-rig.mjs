@@ -164,7 +164,7 @@ async function idleSample(round) {
 // --profile-clicks: a CPU profile from just before each click to its answer; self time by function, summed over clicks
 // slower than 150 ms (profiling itself slows every click, so read the shares, not the ms)
 const prof = new Map(), profTotal = new Map(), profNative = new Map(); let profN = 0, m0 = null; const rend = { style: 0, styleN: 0, layout: 0, layoutN: 0, script: 0, task: 0 };
-const trace = new Map(); let traceN = 0;
+const trace = new Map(); let traceN = 0; const slowest = []; // the slowest traced clicks, each as a timeline of tasks
 const TRACE_NAMES = ['UpdateLayoutTree', 'Layout', 'PrePaint', 'Paint', 'Layerize', 'Commit', 'UpdateLayer', 'HitTest', 'FunctionCall', 'EventDispatch', 'TimerFire', 'FireAnimationFrame', 'RunMicrotasks', 'V8.GC_SCAVENGER', 'MajorGC', 'MinorGC', 'ScheduleStyleRecalculation', 'RunTask'];
 const traceStart = async () => { if (!TRACE) return; await cdp.send('Tracing.start', { categories: 'devtools.timeline,disabled-by-default-devtools.timeline,v8', transferMode: 'ReturnAsStream' }); };
 const traceStop = async (what, ms) => {
@@ -177,6 +177,19 @@ const traceStop = async (what, ms) => {
   traceN++;
   const evs = JSON.parse(txt).traceEvents || JSON.parse(txt);
   const main = evs.find(e => e.name === 'thread_name' && e.args?.name === 'CrRendererMain');
+  if (main) {
+    // a timeline: each main-thread task over 4 ms, from the click, with what it spent its time on
+    const mine = evs.filter(e => e.ph === 'X' && e.pid === main.pid && e.tid === main.tid).sort((a, b) => a.ts - b.ts);
+    const down = mine.find(e => e.name === 'EventDispatch' && /pointerdown|mousedown/.test(e.args?.data?.type || ''));
+    const t0 = down ? down.ts : mine[0]?.ts || 0;
+    const tasks = mine.filter(e => e.name === 'RunTask' && e.dur > 4000 && e.ts >= t0 - 1000 && e.ts <= t0 + ms * 1000);
+    const lines = tasks.map(t => {
+      const kids = {}; for (const e of mine) if (e !== t && e.ts >= t.ts && e.ts + (e.dur || 0) <= t.ts + t.dur && TRACE_NAMES.includes(e.name) && e.name !== 'RunTask') kids[e.name] = (kids[e.name] || 0) + e.dur / 1000;
+      const fn = mine.find(e => e.name === 'FunctionCall' && e.ts >= t.ts && e.ts < t.ts + t.dur)?.args?.data;
+      return `+${Math.round((t.ts - t0) / 1000)} ms: ${Math.round(t.dur / 1000)} ms (${Object.entries(kids).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${Math.round(v)}`).join(', ')})${fn ? ` first call ${fn.functionName || '?'} ${(fn.url || '').split('/').pop()}:${fn.lineNumber ?? ''}` : ''}`;
+    });
+    slowest.push({ what, ms, lines }); slowest.sort((a, b) => b.ms - a.ms); slowest.length = Math.min(slowest.length, 6);
+  }
   for (const e of evs) {
     if (e.ph !== 'X' || !main || e.pid !== main.pid || e.tid !== main.tid || !TRACE_NAMES.includes(e.name)) continue;
     const t = trace.get(e.name) || { ms: 0, n: 0, kinds: new Set() };
@@ -393,6 +406,7 @@ writeFileSync(`${OUT}/rig-${label}.md`, L.join('\n') + '\n');
 if (TRACE) {
   const T = [`# Main thread in slow clicks: ${label}`, '', `${traceN} clicks over 150 ms, traced. Nested kinds overlap (a FunctionCall holds the style and layout it forces; RunTask holds everything).`, '', '| kind | ms | count | ms per click |', '|---|---|---|---|',
     ...[...trace].sort((a, b) => b[1].ms - a[1].ms).map(([k, t]) => `| ${k} | ${Math.round(t.ms)} | ${t.n} | ${Math.round(t.ms / (traceN || 1))} |`)];
+  for (const c of slowest) T.push('', `## ${c.what} ${c.ms} ms`, '', ...c.lines.map(l => `- ${l}`));
   writeFileSync(`${OUT}/rig-${label}-trace.md`, T.join('\n') + '\n');
 }
 if (PROFILE) {
