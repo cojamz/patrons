@@ -14,7 +14,7 @@ import { stageClear } from './stage.js';
 import { seatOrder } from './seats.js';
 import { playerAnchor, motionOK, flyToken, expectArrival, pulse, track } from './flight.js';
 import { MO, flightMs, slowed } from '../motion.js';
-import { chainRunning, onChainEnd } from './director.js';
+import { chainRunning, onChainEnd, onChainLanded } from './director.js';
 import Tick from './Tick.jsx';
 import { ruleWords } from '../shorts.js';
 import { play } from '../sound.js';
@@ -96,9 +96,12 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   useEffect(() => {
     if (ready) return undefined;
     const start = () => setReady(true);
-    const off = onChainEnd(start);
+    // at the last landing, not only the chain's end: a chain that starts during the settle adopts it and the old end
+    // never fires, which left round end waiting forever on a slow laptop (v0.9.807); a safety net past that
+    const offEnd = onChainEnd(start), offLanded = onChainLanded(start);
+    const net = setTimeout(start, 6000);
     if (!chainRunning()) start(); // close the subscription race
-    return off;
+    return () => { offEnd(); offLanded(); clearTimeout(net); };
   }, [ready]);
   useLayoutEffect(() => { if (ready) stageClear(); }, [ready]);
   const [spots, setSpots] = useState({}); // pid -> { left, top } of that player's chair, for the count chips

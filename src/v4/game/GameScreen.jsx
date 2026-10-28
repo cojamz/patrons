@@ -36,7 +36,7 @@ import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, holdCap, stepHoldCap, installChainSkip, noteBehind, skipChain, chainLeft, onChainSkip, onChainEnd, onChainLanded, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, stepHoldCap, installChainSkip, noteBehind, skipChain, chainLeft, onChainSkip, onChainEnd, onChainLanded, chainRunning, chainState, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
 import { soundOn, onSound, setSound, soundVolume, onVolume, setVolume } from '../sound.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale, slowed } from '../motion.js';
@@ -231,6 +231,8 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     }
   }, [show, session, rivalDwell]);
   pumpRef.current = pump;
+  // a stuck table's report, for the gates: what the table is waiting on
+  if (typeof window !== 'undefined') window.__tableWait = () => ({ waiting: waiting.current ? waiting.current.moves : null, timer: timer.current == null ? null : typeof timer.current === 'number' ? 'hold' : timer.current, queue: queue.current.length, held: held.current, chain: chainState() });
   const finishPresentation = useCallback((landed = false) => {
     const completed = waiting.current;
     if (!completed) return;
