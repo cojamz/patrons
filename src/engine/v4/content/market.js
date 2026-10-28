@@ -162,21 +162,18 @@ const market = {
   // +1 blue (the economy call). Names are working names. A copy (Echo) does the action itself: the doing is the value.
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Churn', text: 'Send 3 members in the shop to the bottom of the pile, then refill. +2 blue in round I, +3 in round II, +4 in round III.', copyDoesIt: true,
-      estimate: ctx => ctx.state.round + 1,
-      byRound: { lines: ['+2 blue', '+3 blue', '+4 blue'] },
-      resolve(ctx, p) {
-        ctx.gain(p, B, ctx.state.round + 1, { fromAction: true });
-        churnStep(ctx, p, { left: Math.min(3, ctx.state.shop.length) });
-        // runs after the last pick, even when a pick's cards were taken first and the choice fell away
-        ctx.defer(p, `${Q}.churnRefill`);
-      },
+      // every color's 3/4/5 (Cory, 2026-10-27); Churn's sweep goes (Claude's default: Out of Style keeps Blue's sweep).
+      // Name is Claude's fill-in.
+      key: 'bargain', ring: 1, name: 'Savings', text: '+3 blue in round I, +4 in round II, +5 in round III.',
+      estimate: ctx => ctx.state.round + 2,
+      byRound: { lines: ['+3 blue', '+4 blue', '+5 blue'] },
+      resolve(ctx, p) { ctx.gain(p, B, ctx.state.round + 2, { fromAction: true }); },
     },
     {
-      key: 'restock', ring: 1, name: 'Out of Style', text: 'Send every shop member of one color to the bottom of the pile, then refill. +1 blue per member sent. +1 blue.', copyDoesIt: true,
-      estimate: ctx => 1 + Math.max(0, ...shopColors(ctx).map(([, n]) => n)),
+      key: 'restock', ring: 1, name: 'Out of Style', text: 'Send every shop member of one color to the bottom of the pile, then refill. +2 blue.', copyDoesIt: true, // flat +2: Claude's default, 2026-10-27
+      estimate: ctx => 2 + (shopColors(ctx).length ? 1 : 0),
       resolve(ctx, p) {
-        ctx.gain(p, B, 1, { fromAction: true });
+        ctx.gain(p, B, 2, { fromAction: true });
         const colors = shopColors(ctx);
         if (!colors.length) return;
         ctx.choose(p, 'Out of Style: send which color to the bottom?', colors.map(([c, n]) => ({

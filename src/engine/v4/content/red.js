@@ -10,11 +10,16 @@ export default {
 
   actions: [
     {
-      key: 'evenswap', ring: 1, name: 'Even Swap', text: 'Swap any 2 members of equal cost. +2 red.', copyDoesIt: true, // +2 (Cory, 2026-10-24: Red weak early)
-      estimate: (ctx, p) => 2 + (swapPairs(ctx, p, 'even').length ? 1 : 0),
+      // Cory, 2026-10-27: replaces Even Swap ("nobody has members initially"). Name and the +2 are Claude's fill-ins.
+      key: 'evenswap', ring: 1, name: 'Tryout', text: 'Use the On Recruit effect of a shop member; it stays in the shop. +2 red.', copyDoesIt: true,
+      estimate: ctx => 2 + (borrowable(ctx).length ? 2 : 0),
       resolve(ctx, p) {
         ctx.gain(p, 'red', 2, { fromAction: true });
-        swap(ctx, p, 'even', 'Even Swap: choose two equal-cost members');
+        const list = borrowable(ctx);
+        if (!list.length) { ctx.log(`${p.name}: no shop member has an On Recruit effect.`); return; }
+        ctx.choose(p, 'Tryout: use which shop member’s On Recruit?', list.map(c => ({
+          id: `card:${c.uid}`, label: `${c.def.name}: ${c.def.text}`, kind: 'card', value: c.uid, hint: 2 + (c.def.f || 0),
+        })), 'red.borrow');
       },
     },
     {
@@ -27,9 +32,16 @@ export default {
       },
     },
     {
-      key: 'hire', ring: 1, name: 'Open Door', text: 'Recruit the cheapest member in the shop. +1 red.', copyDoesIt: true,
-      estimate: ctx => 1 + cheapValue(ctx),
-      resolve(ctx, p) { ctx.gain(p, 'red', 1, { fromAction: true }); hireCheapest(ctx, p, 'Open Door'); },
+      // Cory, 2026-10-27: "recruit the top member of the deck. each rival gets 1 red". Name and the +2 are Claude's fill-ins.
+      key: 'hire', ring: 1, name: 'Walk-In', text: 'Recruit the top member of the deck. Each rival +1 red. +2 red.', copyDoesIt: true,
+      estimate: ctx => 2 + (ctx.state.pile.length ? 3 : 0),
+      resolve(ctx, p) {
+        ctx.gain(p, 'red', 2, { fromAction: true });
+        const top = ctx.state.pile[0];
+        if (top === undefined) ctx.log(`${p.name}: the deck is empty.`);
+        else ctx.recruit(p, top, { free: true, top: true });
+        for (const o of ctx.rivals(p)) ctx.gain(o, 'red', 1);
+      },
     },
     {
       key: 'hireup', ring: 2, name: 'Promote', text: 'Swap a member with a shop member costing up to 2 more. +1 red.', copyDoesIt: true,
@@ -59,6 +71,11 @@ export default {
   ],
 
   handlers: {
+    borrow(ctx, p, uid) {
+      if (!ctx.state.shop.includes(uid)) { ctx.log(`${p.name}: that member left the shop.`); return; }
+      ctx.log(`${p.name} uses ${ctx.defOf(uid).name}’s On Recruit; it stays in the shop.`);
+      ctx.borrowOnRecruit(p, uid);
+    },
     takeFree(ctx, p, uid) { ctx.recruit(p, uid, { free: true }); },
     panelMode(ctx, p, mode, data) {
       if (mode === 'promote' || mode === 'demote') swap(ctx, p, mode, `Panel: ${mode} another member`, data?.excludeUid);
@@ -142,6 +159,11 @@ export default {
   ],
 };
 
+// Tryout's shop members: an On Recruit or round-start effect that doesn't act on the card itself ("swap it",
+// "it becomes"), which a member still in the shop can't do.
+function borrowable(ctx) {
+  return ctx.shopCards().filter(c => (c.def.onRecruited || (c.def.now && (c.def.onRoundStart || c.def.onRoundStartLate))) && !/\bit\b|\bcop(?:y|ies)\b/i.test(c.def.text.replace(/^[^:]*:/, '')));
+}
 function cheapValue(ctx) {
   const c = cheapest(ctx);
   return c ? c.def.f + cost(c) * 0.8 : 0;

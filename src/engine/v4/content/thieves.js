@@ -194,17 +194,20 @@ const thieves = {
 
   actions: [
     {
-      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 1 resource and 1 follower in round I, 2 and 2 in round II, 3 and 3 in round III. +1 magenta.',
-      byRound: { lines: ['Steal 1 resource and 1 follower.', 'Steal 2 resources and 2 followers.', 'Steal 3 resources and 3 followers.'], rest: '+1 magenta.' },
-      estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round)) + ctx.state.round * 1.5,
+      // Cory, 2026-10-27: "steal 3/4/5", split among rivals as you choose; the follower steal is gone
+      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 3 resources in round I, 4 in round II, 5 in round III, split among rivals as you choose. +1 magenta.',
+      byRound: { lines: ['Steal 3 resources.', 'Steal 4 resources.', 'Steal 5 resources.'], rest: 'Split among rivals as you choose. +1 magenta.' },
+      estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round + 2)),
       resolve(ctx, p) {
-        startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round, { say: true }), { stealFollowers: ctx.state.round });
+        startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round + 2, { say: true }));
       },
     },
     {
-      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Steal 1 resource per Magenta action that has a minion. +1 magenta.',
-      estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, magentaOccupied(ctx, p))),
-      resolve(ctx, p) { startSteal(ctx, p, 'Redistribute', ctx.stealCount(p, magentaOccupied(ctx, p), { say: true })); },
+      // every color's 3/4/5 (Cory, 2026-10-27), counting the +1 magenta every Magenta action gives; name Claude's fill-in
+      key: 'tipoff', ring: 1, name: 'Stash', text: '+3 magenta in round I, +4 in round II, +5 in round III.',
+      byRound: { lines: ['+3 magenta', '+4 magenta', '+5 magenta'] },
+      estimate: ctx => 2 + ctx.state.round,
+      resolve(ctx, p) { ctx.gain(p, 'magenta', ctx.state.round + 1, { fromAction: true }); },
     },
     {
       key: 'hideout', ring: 1, name: 'Lie Low', text: 'Rivals can’t steal from you this round. +1 magenta.', // no steal: the protection is the strength (Cory, 2026-10-22 playtest: "Lie Low probably shouldnt even steal")

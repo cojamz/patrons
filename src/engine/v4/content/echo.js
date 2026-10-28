@@ -229,6 +229,15 @@ export const previousNow = (ctx, p) => {
   const L = ledger(ctx.state);
   return targets(ctx, p, 'previous', L.path?.length ? L.origin : null);
 };
+/** Cover's targets: open actions with no minion on them, not already in this copy chain. */
+function emptyTargets(ctx) {
+  const st = ctx.state, path = pathNow(ctx), out = [];
+  st.quadrants.forEach((qid, q) => quadrant(qid).actions.forEach((a, i) => {
+    const key = `${q}-${i}`;
+    if (a.ring <= st.round && !(a.lastRound && st.round > a.lastRound) && st.slots[key] === undefined && !path.includes(key)) out.push({ key, a, qid });
+  }));
+  return out;
+}
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
 // by: the member making the copy (Understudy, Sleepwalker…), so the log names it. who: the card or space asking
 // (the prompt's own name), so a copied space's free member is titled with it ("Encore: take a face-up member…").
@@ -312,21 +321,26 @@ const echoQ = {
 
   actions: [
     {
-      key: 'hum', ring: 1, name: 'Chorus', text: '+1 green per other green action with a minion. +1 green.',
-      estimate: ctx => 1 + greenOccupied(ctx),
-      resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', greenOccupied(ctx), { fromAction: true }); },
-    },
-    {
-      key: 'chant', ring: 1, name: 'Build Up', text: '+2 green in round I, +3 in round II, +4 in round III.',
-      byRound: { lines: ['+2 green', '+3 green', '+4 green'] },
-      estimate: ctx => 1 + ctx.state.round,
-      resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', ctx.state.round, { fromAction: true }); },
+      key: 'chant', ring: 1, name: 'Build Up', text: '+3 green in round I, +4 in round II, +5 in round III.', // every color's 3/4/5 (Cory, 2026-10-27)
+      byRound: { lines: ['+3 green', '+4 green', '+5 green'] },
+      estimate: ctx => 2 + ctx.state.round,
+      resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', ctx.state.round + 1, { fromAction: true }); },
     },
     {
       // The previous placement can be your own on a snake double turn.
-      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy the previous action. +1 green.',
-      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'previous'), p),
-      resolve(ctx, p) { plus(ctx, p); offer(ctx, p, previousNow(ctx, p), 'Echo: copy the previous action?', 'now'); },
+      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy the previous action. +2 green.', // +2: Claude's default, 2026-10-27
+      estimate: (ctx, p) => VARIANT.plus + 1 + bestValue(ctx, targets(ctx, p, 'previous'), p),
+      resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', 1, { fromAction: true }); offer(ctx, p, previousNow(ctx, p), 'Echo: copy the previous action?', 'now'); },
+    },
+    {
+      // your own spaces are on the board in your color: no memory of last round needed (it replaced Recall)
+      key: 'refrain', ring: 1, name: 'Reprise', echo: true, text: 'Copy an action with your minion. +2 green.', // round I (Cory, 2026-10-27); +2 Claude's default
+      estimate: (ctx, p) => VARIANT.plus + 1 + bestValue(ctx, targets(ctx, p, 'own'), p),
+      resolve(ctx, p) {
+        plus(ctx, p);
+        ctx.gain(p, 'green', 1, { fromAction: true });
+        offer(ctx, p, targets(ctx, p, 'own'), 'Reprise: copy which of your spaces?', 'now');
+      },
     },
     {
       key: 'encore', ring: 2, name: 'Encore', echo: true, text: 'Copy an action with a rival minion. +1 green.',
@@ -334,12 +348,17 @@ const echoQ = {
       resolve(ctx, p) { plus(ctx, p); offer(ctx, p, targets(ctx, p, 'rival'), 'Encore: copy an action with a rival minion', 'now'); },
     },
     {
-      // your own spaces are on the board in your color: no memory of last round needed (it replaced Recall)
-      key: 'refrain', ring: 2, name: 'Reprise', echo: true, text: 'Copy an action with your minion. +1 green.',
-      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'own'), p),
+      // Cory, 2026-10-27: Chorus out; "Copy an action with no minion on it" takes Reprise's round II spot. Name is
+      // Claude's fill-in. A copy of an empty space does that action itself (nobody took it, so there's no chip).
+      key: 'hum', ring: 2, name: 'Cover', echo: true, text: 'Copy an action with no minion on it. +1 green.',
+      estimate: (ctx, p) => VARIANT.plus + (emptyTargets(ctx).length ? 2.5 : 0),
       resolve(ctx, p) {
         plus(ctx, p);
-        offer(ctx, p, targets(ctx, p, 'own'), 'Reprise: copy which of your spaces?', 'now');
+        const list = emptyTargets(ctx);
+        if (!list.length) { ctx.log(`${p.name} found no empty action to copy.`); return; }
+        ctx.choose(p, 'Cover: copy which empty action?', list.map(({ key, a }) => ({
+          id: `space:empty:${key}`, label: `${a.name}: ${a.text}`, kind: 'space', value: key, hint: 2,
+        })), 'echo.copyEmpty');
       },
     },
     {
@@ -353,6 +372,18 @@ const echoQ = {
   ],
 
   handlers: {
+    copyEmpty(ctx, p, key) {
+      const hit = emptyTargets(ctx).find(x => x.key === key);
+      if (!hit) { ctx.log(`${p.name}: that action has a minion now.`); return; }
+      withPath(ctx, [...pathNow(ctx), key], () => {
+        ctx.log(`${p.name} copies ${hit.a.name}: doing it.`);
+        const fork = has(ctx, p, 'tuningfork');
+        if (fork) ctx.asMember(p, 'Impressionist', () => ctx.gain(p, ctx.quadrant(hit.qid).resource, fork));
+        const choir = has(ctx, p, 'choir');
+        if (choir) ctx.asMember(p, 'Choir', () => ctx.gain(p, 'green', choir));
+        (hit.a.resolve.__orig || hit.a.resolve).call(hit.a, ctx, p);
+      });
+    },
     continueCopy(ctx, p, _, data) {
       const e = ledger(ctx.state).now[data.key];
       if (e) copy(ctx, p, e, { by: data.by, asker: data.who });

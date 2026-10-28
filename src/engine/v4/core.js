@@ -923,10 +923,11 @@ function refill(state) {
 function recruit(state, p, uid, opts) {
   return underCause(() => ({ kind: 'recruit', pid: p.id, uid, index: state.shop.indexOf(uid) }), () => recruitNow(state, p, uid, opts));
 }
-function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
+function recruitNow(state, p, uid, { free, spend: chosen, how = {}, top = false }) {
   const idx = state.shop.indexOf(uid);
   const fromPile = idx < 0 ? state.pile.indexOf(uid) : -1;
-  if (idx < 0 && (fromPile < 0 || fromPile >= pileReach(state, p))) throw new Error(`Card ${uid} is not in the shop`);
+  // top: Red's round I space takes the deck's top member (Cory, 2026-10-27)
+  if (idx < 0 && (fromPile < 0 || (fromPile >= pileReach(state, p) && !(top && fromPile === 0)))) throw new Error(`Card ${uid} is not in the shop`);
   let paid = 'free';
   if (!free) {
     const spend = chosen || paymentPlan(state, p, uid, how);
@@ -969,7 +970,7 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   refill(state);
   p.members.push(uid);
   const def = cardDef(state, uid);
-  log(state, `${p.name} recruited ${def.name}${idx < 0 ? (peeked ? ' from the pile with Peek' : ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}`) : ''} (${paid}).`);
+  log(state, `${p.name} recruited ${def.name}${idx < 0 ? (top && fromPile === 0 && !peeked ? ' from the top of the deck' : peeked ? ' from the pile with Peek' : ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}`) : ''} (${paid}).`);
   memberAcquired(state, p, uid);
 }
 /** A member recruit: p took it (shop, free, a steal) or swapped it in with their own red action (see recruited). */
@@ -1015,6 +1016,15 @@ function joinNow(state, p, w, defs) {
   for (const def of defs) if (def.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (def[hook]) {
     recruitAbility(state, p, w, def, () => def[hook](ctx, p, w));
   }
+}
+/** Red's round I space (Cory, 2026-10-27): p uses a shop member's On Recruit (or its round-start effect, for an
+ *  "On Recruit: X Round Start: X" card); the member stays in the shop and isn't p's, so p's own On Recruit
+ *  watchers don't fire. */
+function borrowOnRecruit(state, p, uid) {
+  const card = state.cards[uid], def = defById(card.def), ctx = ctxFor(state), w = wrap(state, card);
+  const run = fn => { const before = traceSnapshot(state); underCause({ kind: 'member', pid: p.id, uid, def: card.def }, fn); traceChanges(state, before, p, def); };
+  if (def.onRecruited) run(() => def.onRecruited(ctx, p, w));
+  if (def.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (def[hook]) run(() => def[hook](ctx, p, w));
 }
 /** Emit only when a Recruit ability actually runs; passive gains and ordinary round starts never enter here. */
 function recruitAbility(state, p, card, def, fn) {
@@ -1135,7 +1145,7 @@ function swapMembers(state, actor, aUid, bUid) {
   return true;
 }
 
-// White's round I space (Cory, 2026-10-22): "This turn, +1 follower for every 2 resources you spend on your recruit".
+// White's round I space: "This turn, if you recruit a member, +1 follower for every 2 resources you pay for it" (2026-10-27).
 // p.perSpend is set by the space and cleared at turn start; it pays once, on the turn's first paid recruit.
 // A White action giving followers, so Broker adds its +1.
 function spendBonus(state, p, spend) {
@@ -1155,7 +1165,7 @@ function buyFollowersNow(state, p, tier, chosen) {
   const spend = chosen || followerPlan(state, p, tier);
   if (!spend) throw new Error('Cannot afford');
   for (const r in spend) p.res[r] -= spend[r];
-  spendBonus(state, p, spend);
+  // Splurge pays on member recruits only (2026-10-27)
   p.bonus += tier.get;
   fBump(state, p, tier.get);
   p.bought = (p.bought || 0) + tier.get;
@@ -1414,6 +1424,7 @@ function ctxFor(state) {
     discount: grantDiscount,
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
     recruitAbility: (p, card, def, fn) => recruitAbility(state, p, card, def, fn),
+    borrowOnRecruit: (p, uid) => borrowOnRecruit(state, p, uid),
     grantWorkers: (p, def, uid) => workersNow(state, p, def, uid),
     /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
     price: (p, uid, how) => memberPrice(state, p, uid, how),
