@@ -249,7 +249,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
               {pendingRound && <span className="round-pending-mark" aria-hidden="true" />}
               <Tip className="fig" sticky={mine} {...(mine ? {} : { tabIndex: -1 })} label={`${d.name}: ${pendingRound ? 'pending this round, show the card' : readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={memberCardFn(latest, readyUid ?? g.uids[0])}>
-                <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
+                <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} look={g.card.used && !state.over ? null : readyUid != null ? 'ready' : loaded ? 'loaded' : null} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>
               {result && g.uids.includes(result.uid) && <UseResult result={result} />}

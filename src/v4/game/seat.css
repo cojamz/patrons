@@ -61,6 +61,8 @@
   .app.game.lt > .lt-seat .cs-figs .cs-member{display:inline-flex;vertical-align:top;height:24px;margin:0 0 1px}
   .app.game.lt > .lt-seat .cs-figs .cs-member + .cs-member{margin-left:1px}
   .app.game.lt > .lt-seat .cs-member .sprite{width:24px;height:24px}
+  .app.game.lt > .lt-seat .cs-member .sprite.halo-loaded{width:26px;height:26px}
+  .app.game.lt > .lt-seat .cs-member .sprite.halo-ready{width:30px;height:30px}
   .app.game.lt > .lt-seat .cs-figs .cs-more{display:inline-flex;vertical-align:top;align-items:center;justify-content:center;min-width:24px;height:24px;margin-left:6px;
     font-size:12px;line-height:24px;font-weight:700;color:var(--cream-2,#b9a98c)}
   /* at 24px a lit member's ring and a switch keep inside their own cell, so the rows never collide */

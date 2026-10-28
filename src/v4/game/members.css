@@ -64,7 +64,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .lt-cult-seat .cs-member.ready .fig::before{content:"";position:absolute;left:50%;top:50%;width:calc(100% + 8px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;z-index:-1;pointer-events:none;
   background:radial-gradient(closest-side,rgba(var(--lamp,255,206,140),.22),rgba(var(--lamp,255,206,140),.06) 70%,transparent);
   box-shadow:0 0 0 1.5px rgba(var(--lamp,255,206,140),.85),0 0 16px 5px rgba(var(--lamp,255,206,140),.4)}
-.lt-cult-seat .cs-member.ready .fig .sprite{filter:brightness(1.08) drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+/* (a ready figure's light and a loaded one's outline are drawn into the picture itself: Sprite.jsx look) */
 .lt-cult-seat .cs-member.used .fig .sprite{opacity:.4;filter:grayscale(.6)}
 .lt-cult-seat .cs-member.used .aura{opacity:.35}
 .lt-cult-seat .cs-member .mu-switch{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);gap:0;z-index:2}
@@ -109,7 +109,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .lt-cult-seat .cs-member.ready.pick-asker .fig{filter:none}
 .lt-cult-seat .cs-member.ready.pick-asker::after{display:none}
 /* a use still in hand, anyone's, on the table: the same light as "yours to use now", subdued (w2b #21: see threats coming) */
-.lt-cult-seat .cs-member.loaded:not(.ready) .fig .sprite{filter:drop-shadow(1px 0 0 rgba(255,243,212,.38)) drop-shadow(-1px 0 0 rgba(255,243,212,.38)) drop-shadow(0 1px 0 rgba(255,243,212,.38)) drop-shadow(0 -1px 0 rgba(255,243,212,.38))}
+
 /* a seat no one can steal resources from this round (Lie Low): said in words beside its resources */
 .lt-cult-seat .cs-safe{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;color:var(--cream-2,#b9a98c);align-self:center;margin-left:4px;cursor:help}
 .lt-cult-seat .cs-safe .cs-shield{display:block;width:12px;height:14px}
