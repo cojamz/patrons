@@ -1,0 +1,20 @@
+/* The members page (MembersPage.jsx): the in-game card faces, by color, laptop width. */
+html, body { background: var(--table, #141d1c); }
+body { overflow: auto; }
+.mp { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; color: var(--ink, #ece6d6); font-family: var(--sans, 'Alegreya Sans', system-ui, sans-serif); }
+.mp-head { position: sticky; top: 0; z-index: 2; padding: 12px 0 10px; background: var(--table, #141d1c); border-bottom: 1px solid rgba(236, 230, 214, .12); }
+.mp-head h1 { font-family: var(--serif, Alegreya, serif); font-size: 32px; margin: 0; }
+.mp-head p { margin: 4px 0 10px; font-size: 15px; opacity: .75; }
+.mp-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.mp-nav a { color: inherit; text-decoration: none; font-size: 15px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); }
+.mp-nav a small { opacity: .7; margin-left: 2px; }
+.mp-color { padding-top: 28px; scroll-margin-top: 120px; }
+.mp-color h2 { font-family: var(--serif, Alegreya, serif); font-size: 26px; margin: 0; color: var(--c); display: flex; align-items: baseline; gap: 12px; }
+.mp-color h2 small { font-family: var(--sans, sans-serif); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink, #ece6d6); opacity: .6; }
+.mp-line { margin: 2px 0 12px; font-size: 15px; opacity: .75; }
+.mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; align-items: start; }
+.mp-grid { align-items: stretch; }
+/* each card on the hover card's paper, with its color down the left edge */
+.mp-card { display: flex; flex-direction: column; border-radius: 9px; overflow: hidden; background: var(--paper-lit, #fbf6ea); box-shadow: inset 5px 0 0 var(--c), 0 10px 24px -14px rgba(0, 0, 0, .8); }
+.mp-card .card-face.mc { flex: 1; padding: 14px 16px 12px 20px; }
+.mp-meta { display: flex; gap: 12px; justify-content: space-between; padding: 7px 16px 8px 20px; font-size: 13px; color: var(--pl-ink-2, #6e5c49); border-top: 1px solid rgba(43, 32, 24, .1); background: rgba(43, 32, 24, .04); }

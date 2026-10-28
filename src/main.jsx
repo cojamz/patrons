@@ -29,6 +29,8 @@ if (v3) {
   else if (lab === 'intro') import('./v4/intro/IntroLab.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
   // ?lab=faces&face=<name>: one action-space face (src/v4/game/faces/) on every action, in each state, and on the live wheel
   else if (lab === 'faces') import('./v4/lab/FacesLab.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
+  // play/members/ (or ?lab=members): every member's card, by color, for member reviews
+  else if (lab === 'members' || /\/members\/?$/.test(location.pathname)) import('./v4/lab/MembersPage.jsx').then(({ default: Page }) => root.render(<Page />)).catch(offline)
   else import('./v4/App.jsx').then(({ default: App }) => root.render(<App />)).catch(offline)
   // Later chunk failures (e.g. the online code) reach their caller, which shows the same friendly message.
 }

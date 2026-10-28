@@ -53,6 +53,8 @@ import {pathToFileURL} from 'node:url';
 const {VERSION}=await import(pathToFileURL(process.argv[4]));
 writeFileSync(process.argv[2],JSON.stringify({version:VERSION,commit:process.argv[3],builtAt:new Date().toISOString()})+'\n');
 MANIFEST
+# The members page (https://cojamz.github.io/patrons/play/members/): the same app, one folder down (src/main.jsx picks it by path)
+mkdir -p "$TMP/play/members" && sed 's#"\./assets/#"../assets/#g' "$TMP/play/index.html" > "$TMP/play/members/index.html"
 
 git fetch -q origin '+main:refs/remotes/origin/main'
 git worktree add -q --detach "$WT" origin/main
