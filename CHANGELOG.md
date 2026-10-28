@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.0 — 2026-10-27 — unreleased
+
+- Round I spaces reworked: Red's Tryout (use a shop member's On Recruit) and Walk-In (recruit the deck's top member, each rival +1 red); Green's Build Up +3/+4/+5, Echo and Reprise +2, Reprise opens in round I, Cover copies an action with no minion on it; Magenta's Help Yourself steals 3/4/5 and Stash +3/+4/+5; Blue's Savings +3/+4/+5 and Out of Style +2; Splurge pays on member recruits only, Exchange +2
+
 ## v0.8.100 — 2026-10-27 — unreleased
 
 - Contest prizes are +4 / +6 / +10 by round (ties get half, rounded up: +2 / +3 / +5), and every member costs 1 more of any color
