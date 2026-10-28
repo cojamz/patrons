@@ -105,7 +105,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller', 'market.shopaholic', 'thieves.fence', 'echo.doppel',
       'market.onlooker', 'echo.groupie', // cut cards under 3 holds after the Oct 25 member deck changes; cards-market and cards-echo cover them
       'market.patroness', // under 3 holds when Extortionist at 6 (Oct 25) moved the games; cards-market (Patroness) covers it
-      'market.stylist', 'echo.ensemble', 'echo.dejavu', 'market.auctioneer', 'echo.wallflower']); // under 3 holds when +1 wild on every member and the round I rework (Oct 27-28) moved the games; cards-market and cards-echo cover them
+      'market.stylist', 'echo.ensemble', 'echo.dejavu', 'market.auctioneer', 'echo.wallflower', // under 3 holds when +1 wild on every member and the round I rework (Oct 27-28) moved the games; cards-market and cards-echo cover them
+      'market.sommelier']); // cut from the deck; under 3 holds when neutral in Out of Style (Oct 28) moved the games; cards-market covers it
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
