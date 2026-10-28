@@ -15,6 +15,12 @@ const ahead = live.commit ? sh(`git rev-list --count ${live.commit}..HEAD`) : '?
 out.push(`# Cults orientation (${src})`);
 out.push(`Branch ${branch} at ${head}. Live play link: ${live.version || '?'} from ${String(live.commit || '?').slice(0, 7)}; this branch is ${ahead} commits past it.`);
 
+// docs that a fresh thread trusts must name what's live (Oct 28: HANDOFF said v0.8.62 while v0.9.8 was live)
+if (live.version) for (const f of ['design/HANDOFF.md', 'design/in-flight.md']) {
+  if (existsSync(f) && !readFileSync(f, 'utf8').includes(live.version)) out.push(`${f} doesn't name the live ${live.version}: bring it up to date before relying on it.`);
+}
+if (!sh('ls -d /opt/pw-browsers/firefox-* 2>/dev/null')) out.push('Firefox is not installed (Cory plays Firefox): tar -xzf /mnt/project-files/harness/browsers/firefox-1509.tgz -C /opt/pw-browsers');
+
 const harnessDiff = sh('git diff --stat origin/main HEAD -- CLAUDE.md AGENTS.md .claude/settings.json .claude/hooks .claude/rules .claude/skills .claude/agents .claude/output-styles | tail -1');
 if (harnessDiff) out.push(`Harness on main differs from this branch (${harnessDiff}). New threads load main's copy: run bash scripts/harness-sync-main.sh after committing harness changes.`);
 
