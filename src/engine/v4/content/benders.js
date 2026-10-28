@@ -73,7 +73,7 @@ const members = [
     },
   }),
   m('tiebreaker', 'Tiebreaker', null, 0, 6, 'Ties you’re in go to you alone.', { tiebreak: true }),
-  m('straggler', 'Straggler', 'purple', 4, 1, 'Once per round, after the last minion is placed: you may move your last minion to an open space and take it.', {
+  m('straggler', 'Straggler', 'purple', 6, 1, /* Oct 27, Cory "too cheap": 8 with the +1 wild (Claude's price) */ 'Once per round, after the last minion is placed: you may move your last minion to an open space and take it.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;
       offerFrom(ctx, owner, card.uid);
