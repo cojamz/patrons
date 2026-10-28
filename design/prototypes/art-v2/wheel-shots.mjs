@@ -20,7 +20,7 @@ while (Date.now() - t0 < 120000) {
 await p.mouse.move(640, 3); await p.waitForTimeout(1500);
 const box = await p.$eval('.stage', e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
 await p.screenshot({ path: `${outDir}/wheel-now.png` });
-for (const d of ['a', 'b', 'c']) {
+for (const d of (process.argv[4] || 'a,b,c').split(',')) {
   await p.evaluate(([css, d]) => { document.getElementById('dir')?.remove(); const s = document.createElement('style'); s.id = 'dir'; s.textContent = css; document.head.appendChild(s); }, [readFileSync(`design/prototypes/art-v2/wheel-${d}.css`, 'utf8'), d]);
   await p.waitForTimeout(600);
   await p.screenshot({ path: `${outDir}/wheel-${d}.png` });
