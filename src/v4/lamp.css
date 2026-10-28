@@ -8,6 +8,8 @@
 @font-face{font-family:'Alegreya Sans';src:url(./fonts/as-500.woff2) format('woff2');font-weight:500;font-display:swap}
 @font-face{font-family:'Alegreya Sans';src:url(./fonts/as-700.woff2) format('woff2');font-weight:700;font-display:swap}
 @font-face{font-family:'Alegreya Sans';src:url(./fonts/as-800.woff2) format('woff2');font-weight:800;font-display:swap}
+/* the pixel face (Handjet, tamed: square-ish dots, a finer grid) for the wheel's ring and its spaces' big numbers (Cory, 2026-10-28) */
+@font-face{font-family:'Cults Pixel';src:url(./fonts/handjet.woff2) format('woff2');font-weight:100 900;font-display:swap}
 
 /* ---------- tokens: walnut, cream paper, muted inks, Alegreya ---------- */
 :root{
@@ -653,3 +655,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.squat.lit .wash{fill:color-mix(in srgb,#d2c0eb 18%,var(--paper-lit,#fbf6ea))}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.squat.lit .edge-lit{stroke:#d7baff}
 .lt .stage .slot.squat.lit .base{box-shadow:inset 0 0 0 2px #d7baff}
+
+/* the pixel face on the wheel (Cory, 2026-10-28: "number 3"): the ring's rule and prize, and a space's big numbers */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule,.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule .rim-prize,
+.lt [data-spaces="panels"] .stage .slot .face .main b.n{font-family:'Cults Pixel',var(--sans);font-weight:800;font-variation-settings:'ELSH' 12,'ELGR' 1.5}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule .rim-tie{font-family:var(--sans);font-variation-settings:normal}

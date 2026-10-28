@@ -135,23 +135,26 @@ const layCache = new Map();
 const roomCache = new Map();
 const ROOM_SHAPES_MAX = 512;
 const clearMeasures = () => { rimWidths.clear(); layCache.clear(); };
+// the rim's rule and prize and a space's big numbers are in the pixel face (Cory, 2026-10-28: "slightly pixelated,
+// still readable", then "number 3": the ring and the space numbers)
+export const PIXEL = '"Cults Pixel"';
 let rimCtx, rimEarly = false; // rimEarly: something was measured before the web font arrived
 // The faces the wheel measures its print in, asked for at once (a face loads only when something first uses it, after
 // the wheel had measured with the fallback: wave-4 B #32, panel text reflowed ~1s after setup loaded). Until they're in,
 // the wheel's print stays hidden; then it's laid out once, in its own font.
 let wheelFontsIn = typeof document === 'undefined' || !document.fonts || typeof document.fonts.load !== 'function';
-const wheelFonts = wheelFontsIn ? Promise.resolve() : Promise.all(['500', '700', '800'].map(w => document.fonts.load(`${w} 16px "Alegreya Sans"`).catch(() => null)))
+const wheelFonts = wheelFontsIn ? Promise.resolve() : Promise.all([...['500', '700', '800'].map(w => document.fonts.load(`${w} 16px "Alegreya Sans"`).catch(() => null)), document.fonts.load(`800 16px ${PIXEL}`).catch(() => null)])
   .then(() => { wheelFontsIn = true; if (rimEarly || rimWidths.size) { rimEarly = false; clearMeasures(); } });
-/** Width of `text` in the rim's face (Alegreya Sans at `weight`, letter-spacing `ls` em), per pixel of font size. */
-export function rimWidth(text, weight = 700, ls = 0) {
+/** Width of `text` in the rim's face (Alegreya Sans, or the pixel face, at `weight`, letter-spacing `ls` em), per pixel of font size. */
+export function rimWidth(text, weight = 700, ls = 0, face = '"Alegreya Sans"') {
   const t = collapse(text);
-  const k = `${weight}|${ls}|${t}`;
+  const k = `${face}|${weight}|${ls}|${t}`;
   if (rimWidths.has(k)) return rimWidths.get(k);
   let w = null;
   try {
     if (rimCtx === undefined) rimCtx = typeof document !== 'undefined' && !/jsdom/i.test(globalThis.navigator?.userAgent || '') ? document.createElement('canvas').getContext('2d') : null;
     if (rimCtx) {
-      rimCtx.font = `${weight} 100px "Alegreya Sans", system-ui, sans-serif`;
+      rimCtx.font = `${weight} 100px ${face}, system-ui, sans-serif`;
       w = rimCtx.measureText(t).width / 100;
       if (document.fonts && document.fonts.status !== 'loaded') rimEarly = true;
     }
@@ -870,7 +873,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     const runs = [{ kind: 'text', text: `${EACH}${ruleWords(qid, st ? st.rule : shortLabel(sc.label)).replace(/^Most /, 'most ')}`, tie }, { kind: 'text', text: '·' }, { kind: 'prize', text: `+${RING_VALUE[paying - 1]}` }];
     // widths per unit of font size, and the gaps before each run
     for (const [k, r] of runs.entries()) {
-      r.w = r.kind === 'dot' ? 1.1 : r.kind === 'prize' ? 1.3 * rimWidth(r.text, 800, 0) : rimWidth(r.text, 700, 0) + RIM_LS * r.text.length + (r.tie ? rimWidth(`  ·  ties: ${r.tie}`, 600, 0.04) : 0);
+      r.w = r.kind === 'dot' ? 1.1 : r.kind === 'prize' ? 1.3 * rimWidth(r.text, 800, 0, PIXEL) : rimWidth(r.text, 800, 0, PIXEL) + RIM_LS * r.text.length + (r.tie ? rimWidth(`  ·  ties: ${r.tie}`, 600, 0.04) : 0);
       r.gap = !k ? 0 : 0.45;
     }
     const top = Math.abs(norm(qCenter(q, nq) + rot)) < 90;
