@@ -35,9 +35,7 @@ export const BARS = {
   hitchPct: 5, // % of frames over 33 ms
   idleBusyPct: 10, // % of main thread on an idle table at 4x
   growth: 1.5, // round III over round I, for click p95 and idle busy
-  // unbroken game over a reload of the same turn. Raw node counts include one image document per sprite seen this game,
-  // and a warm page's compiled code alone is ~1.9x a fresh heap (e2e/v4/memory.mjs counts live game states instead)
-  leakNodes: 1.15, leakListeners: 1.1, leakHeap: 2.2,
+  leakNodes: 1.1, leakListeners: 1.1, leakHeap: 1.25, // unbroken game over a reload of the same turn
 };
 
 const RECORDER = () => {
