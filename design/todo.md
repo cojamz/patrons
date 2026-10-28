@@ -23,7 +23,7 @@ Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 mem
 ## Lag and motion (needs Cory's go for perf runs)
 - Snappy pair next (Claude's): bots off the main thread (worker), one animation clock + piece pool, acknowledgment/frame bars in the snappy gate, cult-hop filter. design/eval/snappy-pair/README.md.
 - React commits 80-130ms at 4x CPU; seat re-renders as cards land; hover "a tiny bit wonky"; linger motion starts late. Leftovers: design/eval/perf/lag-2026-10-21.md.
-- Smooth play, next (waits on Cory, Oct 28): tuning pass (structural sharing after applyMove, keep idle loops through shows instead of the data-chain rule, rect reads once per chain), then the staged show layer (design/notes/smooth-proposal.md). Measure each with scripts/v4-rig.mjs. Also: pacing.test.js H2 longest-wait budget red (21,178 vs 21,060).
+- Smooth play, next (waits on Cory, Oct 28): tuning pass (structural sharing after applyMove, keep idle loops through shows instead of the data-chain rule, rect reads once per chain), then the staged show layer (design/eval/perf/smooth-proposal.md). Measure each with scripts/v4-rig.mjs. Also: pacing.test.js H2 longest-wait budget red (21,178 vs 21,060).
 - Re-port minion-on-press and the compositor wheel spin (/mnt/project-files/handoff/speed/) onto today's wheel.
 - Round I resource draft animated, once the perf items are in.
 

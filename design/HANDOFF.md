@@ -19,6 +19,8 @@ Last updated 2026-10-24 by the tidy-up thread. Before this: design/archive/hando
 - Cory's playtest of Oct 22 drove v0.8.46 to v0.8.62: copies do the whole action, Red's swaps can be skipped, Help Yourself steals followers, Peek +2/+4/+6, Lie Low just blocks steals, Top Up's flat +1 with growing yellow, the glossary reads the cards, rejoin across versions (last 3 releases kept at play/v/<version>/).
 - Text review skill (/review-text): run after any card text change; it compares the card, hover, wheel panel, short face, prompts and log.
 
+- Smoothness (Oct 28 lag pod): three fixes in the Oct 28 update (idle loops, memory leak, engine speed + choose clicks); before/after in design/eval/perf/rig-before-v090.md and rig-after-all.md. Perf rig: scripts/v4-rig.mjs. Deeper fix one-pager: design/eval/perf/smooth-proposal.md (tuning pass running on its own branch; staged rebuild waits on Cory).
+
 ## Known not-green
 - Steady pacing check: the longest wait for your turn is 22.7s against a 21.06s cap on seeded bot games (round III recruit runs). Fix is a motion trim, a feel call (Cory's list, #13). Never raise the cap.
 - Known-red browser list (e2e/v4/known-red.json) is empty.

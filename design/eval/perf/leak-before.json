@@ -1,0 +1,1073 @@
+{
+ "label": "leak-before",
+ "cpu": 4,
+ "secs": 30,
+ "speed": "relaxed",
+ "phases": {
+  "late, unbroken game": {
+   "split": {
+    "script": 6222,
+    "style": 2467,
+    "layout": 1057,
+    "task": 21925,
+    "wall": 30000
+   },
+   "round": "III",
+   "errors": [],
+   "sum": {
+    "rows": [
+     {
+      "k": "(nothing animating)",
+      "n": 7,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.7,
+      "hitch": 0
+     },
+     {
+      "k": "(all frames)",
+      "n": 1384,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 166.7,
+      "hitch": 8
+     },
+     {
+      "k": "b.seat-delta.up:seatdelta",
+      "n": 1037,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 133.3,
+      "hitch": 9
+     },
+     {
+      "k": "span.tc-line:tcline",
+      "n": 445,
+      "p50": 16.7,
+      "p95": 66.7,
+      "max": 133.3,
+      "hitch": 16
+     },
+     {
+      "k": "span.dots:blink",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "span.lead:cult-scheme",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "svg.leader:cult-breathe",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "g.blink:cult-blink",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "i.cs-min:cs-bob-eager",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "img.sprite:cult-eager",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "i.cs-min:cs-bob",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "img.sprite:cult-shift",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "img.sprite:cult-breathe",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 166.7,
+      "hitch": 25
+     },
+     {
+      "k": "span.worker-fig:panelland-under",
+      "n": 129,
+      "p50": 16.7,
+      "p95": 66.7,
+      "max": 133.2,
+      "hitch": 24
+     },
+     {
+      "k": "path.wash:fill",
+      "n": 81,
+      "p50": 33.3,
+      "p95": 83.4,
+      "max": 166.7,
+      "hitch": 31
+     },
+     {
+      "k": "div.piece-flight.piece-res:js",
+      "n": 281,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 83.3,
+      "hitch": 7
+     },
+     {
+      "k": "div.path-inner:js",
+      "n": 323,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 83.3,
+      "hitch": 6
+     },
+     {
+      "k": "button.card.lt-card:js",
+      "n": 205,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 100.1,
+      "hitch": 8
+     },
+     {
+      "k": "span.tip.fig:cult-hop",
+      "n": 308,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 100,
+      "hitch": 5
+     },
+     {
+      "k": "span.cs-stack:js",
+      "n": 369,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 83.3,
+      "hitch": 4
+     },
+     {
+      "k": "span.worker:js",
+      "n": 188,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 99.9,
+      "hitch": 7
+     },
+     {
+      "k": "span.base:opacity",
+      "n": 64,
+      "p50": 33.3,
+      "p95": 66.6,
+      "max": 100,
+      "hitch": 20
+     },
+     {
+      "k": "span.tick.dip:bump",
+      "n": 180,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 100.1,
+      "hitch": 7
+     },
+     {
+      "k": "span.worker-fig:panelland",
+      "n": 156,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 99.9,
+      "hitch": 8
+     },
+     {
+      "k": "span.tick.num:bump",
+      "n": 104,
+      "p50": 16.7,
+      "p95": 66.7,
+      "max": 116.7,
+      "hitch": 11
+     },
+     {
+      "k": "div.flight.card-flight:js",
+      "n": 83,
+      "p50": 16.7,
+      "p95": 66.7,
+      "max": 100.1,
+      "hitch": 12
+     },
+     {
+      "k": "div.flight.card-ring:js",
+      "n": 83,
+      "p50": 16.7,
+      "p95": 66.7,
+      "max": 100.1,
+      "hitch": 12
+     },
+     {
+      "k": "b.bundle-n:js",
+      "n": 140,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 66.8,
+      "hitch": 6
+     },
+     {
+      "k": "div.as-card:js",
+      "n": 118,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 99.9,
+      "hitch": 7
+     },
+     {
+      "k": "span.cs-member:js",
+      "n": 40,
+      "p50": 16.7,
+      "p95": 100,
+      "max": 100.1,
+      "hitch": 20
+     },
+     {
+      "k": "section.lt-seat.lt-seat-2:background-color",
+      "n": 25,
+      "p50": 33.3,
+      "p95": 133.3,
+      "max": 133.3,
+      "hitch": 32
+     },
+     {
+      "k": "section.lt-seat.lt-seat-2:box-shadow",
+      "n": 25,
+      "p50": 33.3,
+      "p95": 133.3,
+      "max": 133.3,
+      "hitch": 32
+     },
+     {
+      "k": "div.flight.shop-out:js",
+      "n": 70,
+      "p50": 16.7,
+      "p95": 50.1,
+      "max": 83.3,
+      "hitch": 10
+     },
+     {
+      "k": "section.lt-seat.lt-seat-0:background-color",
+      "n": 16,
+      "p50": 33.4,
+      "p95": 166.7,
+      "max": 166.7,
+      "hitch": 38
+     },
+     {
+      "k": "section.lt-seat.lt-seat-0:box-shadow",
+      "n": 16,
+      "p50": 33.4,
+      "p95": 166.7,
+      "max": 166.7,
+      "hitch": 38
+     },
+     {
+      "k": "div.worker-flight.minion-flight:js",
+      "n": 87,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 50.1,
+      "hitch": 6
+     },
+     {
+      "k": "section.lt-seat.lt-seat-1:background-color",
+      "n": 23,
+      "p50": 33.2,
+      "p95": 116.7,
+      "max": 133.3,
+      "hitch": 22
+     },
+     {
+      "k": "section.lt-seat.lt-seat-1:box-shadow",
+      "n": 23,
+      "p50": 33.2,
+      "p95": 116.7,
+      "max": 133.3,
+      "hitch": 22
+     },
+     {
+      "k": "span.worker:land",
+      "n": 82,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 50.1,
+      "hitch": 6
+     },
+     {
+      "k": "section.lt-seat.lt-seat-0:transform",
+      "n": 18,
+      "p50": 16.7,
+      "p95": 166.7,
+      "max": 166.7,
+      "hitch": 17
+     },
+     {
+      "k": "section.lt-seat.lt-seat-1:transform",
+      "n": 18,
+      "p50": 16.7,
+      "p95": 166.7,
+      "max": 166.7,
+      "hitch": 17
+     },
+     {
+      "k": "section.lt-seat.lt-seat-2:transform",
+      "n": 18,
+      "p50": 16.7,
+      "p95": 166.7,
+      "max": 166.7,
+      "hitch": 17
+     },
+     {
+      "k": "section.lt-seat.lt-seat-3:transform",
+      "n": 18,
+      "p50": 16.7,
+      "p95": 166.7,
+      "max": 166.7,
+      "hitch": 17
+     },
+     {
+      "k": "span.base:js",
+      "n": 19,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 83.3,
+      "hitch": 16
+     },
+     {
+      "k": "span.cs-member.react-hop:js",
+      "n": 43,
+      "p50": 16.7,
+      "p95": 50.1,
+      "max": 100,
+      "hitch": 7
+     },
+     {
+      "k": "div.turn-card.live:rise",
+      "n": 6,
+      "p50": 49.9,
+      "p95": 99.9,
+      "max": 99.9,
+      "hitch": 50
+     },
+     {
+      "k": "div.flight.pulse-glow:js",
+      "n": 73,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 83.3,
+      "hitch": 4
+     },
+     {
+      "k": "div.as-member.bubble:js",
+      "n": 78,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 83.3,
+      "hitch": 3
+     },
+     {
+      "k": "span.cs-total:js",
+      "n": 44,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 66.7,
+      "hitch": 5
+     },
+     {
+      "k": "span.cs-stack.zero:js",
+      "n": 17,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 50,
+      "hitch": 12
+     },
+     {
+      "k": "section.lt-seat.lt-seat-3:background-color",
+      "n": 10,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 83.3,
+      "hitch": 20
+     },
+     {
+      "k": "section.lt-seat.lt-seat-3:box-shadow",
+      "n": 10,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 83.3,
+      "hitch": 20
+     },
+     {
+      "k": "span.cs-total.lead:js",
+      "n": 56,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 50,
+      "hitch": 2
+     },
+     {
+      "k": "span.n.num:color",
+      "n": 27,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 66.7,
+      "hitch": 4
+     },
+     {
+      "k": "div.piece-flight.piece-fol:js",
+      "n": 101,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 66.7,
+      "hitch": 1
+     },
+     {
+      "k": "div.as-reveal:js",
+      "n": 44,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 50.1,
+      "hitch": 2
+     },
+     {
+      "k": "i.cs-min:js",
+      "n": 5,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 33.4,
+      "hitch": 0
+     },
+     {
+      "k": "span.cs-member.on-stage:js",
+      "n": 218,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 66.6,
+      "hitch": 0
+     },
+     {
+      "k": "button.fb.lt-rate:js",
+      "n": 54,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 16.8,
+      "hitch": 0
+     }
+    ],
+    "nodes": {
+     "min": 1468,
+     "max": 1940
+    },
+    "loaf": [
+     {
+      "t": 64897,
+      "d": 154,
+      "block": 103,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 116,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 92028,
+      "d": 122,
+      "block": 60,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 100,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 70098,
+      "d": 121,
+      "block": 52,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 89,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 13,
+        "f": "Worker.onmessage",
+        "src": "App-CDtd1HKA.js:5288"
+       }
+      ]
+     },
+     {
+      "t": 84949,
+      "d": 117,
+      "block": 57,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 88,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 71216,
+      "d": 112,
+      "block": 61,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 102,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 70463,
+      "d": 110,
+      "block": 49,
+      "style": 8,
+      "scripts": [
+       {
+        "d": 85,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:17762"
+       }
+      ]
+     },
+     {
+      "t": 71000,
+      "d": 108,
+      "block": 57,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 105,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:17762"
+       }
+      ]
+     },
+     {
+      "t": 63897,
+      "d": 99,
+      "block": 0,
+      "style": 1,
+      "scripts": []
+     },
+     {
+      "t": 66563,
+      "d": 96,
+      "block": 17,
+      "style": 2,
+      "scripts": [
+       {
+        "d": 29,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 61,
+        "f": "Worker.onmessage",
+        "src": "App-CDtd1HKA.js:5288"
+       }
+      ]
+     },
+     {
+      "t": 80230,
+      "d": 91,
+      "block": 25,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 6,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:145008"
+       },
+       {
+        "d": 68,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 66905,
+      "d": 87,
+      "block": 32,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 5,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 73,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 93106,
+      "d": 85,
+      "block": 33,
+      "style": 2,
+      "scripts": [
+       {
+        "d": 73,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 5,
+        "f": "FrameRequestCallback",
+        "src": ":-1"
+       }
+      ]
+     }
+    ],
+    "loafTotal": 3937,
+    "loafCount": 54,
+    "topScripts": [
+     [
+      "hn",
+      2131
+     ],
+     [
+      "TimerHandler:setTimeout",
+      762
+     ],
+     [
+      "Worker.onmessage",
+      108
+     ],
+     [
+      "FrameRequestCallback",
+      11
+     ]
+    ]
+   }
+  },
+  "late, after a reload": {
+   "split": {
+    "script": 747,
+    "style": 614,
+    "layout": 232,
+    "task": 4351,
+    "wall": 30000
+   },
+   "round": "",
+   "errors": [],
+   "sum": {
+    "rows": [
+     {
+      "k": "(all frames)",
+      "n": 324,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 133.3,
+      "hitch": 2
+     },
+     {
+      "k": "svg.leader:cult-breathe",
+      "n": 324,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 133.3,
+      "hitch": 2
+     },
+     {
+      "k": "g.blink:cult-blink",
+      "n": 324,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 133.3,
+      "hitch": 2
+     },
+     {
+      "k": "img.sprite:cult-shift",
+      "n": 324,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 133.3,
+      "hitch": 2
+     },
+     {
+      "k": "img.sprite:cult-breathe",
+      "n": 324,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 133.3,
+      "hitch": 2
+     },
+     {
+      "k": "span.tip.fig:js",
+      "n": 313,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 116.7,
+      "hitch": 1
+     },
+     {
+      "k": "span.lead:js",
+      "n": 299,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 116.7,
+      "hitch": 1
+     },
+     {
+      "k": "b.reckon-verdict:color",
+      "n": 75,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 116.7,
+      "hitch": 3
+     },
+     {
+      "k": "span.tick.num:bump",
+      "n": 212,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 116.7,
+      "hitch": 1
+     },
+     {
+      "k": "path.rim.wait:fill-opacity",
+      "n": 22,
+      "p50": 16.7,
+      "p95": 33.5,
+      "max": 116.7,
+      "hitch": 9
+     },
+     {
+      "k": "path.rim.lit:fill-opacity",
+      "n": 22,
+      "p50": 16.7,
+      "p95": 33.5,
+      "max": 116.7,
+      "hitch": 9
+     },
+     {
+      "k": "span.rc.in:reckonstampcol",
+      "n": 64,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 116.7,
+      "hitch": 3
+     },
+     {
+      "k": "span.lead:cult-scheme",
+      "n": 8,
+      "p50": 16.7,
+      "p95": 133.3,
+      "max": 133.3,
+      "hitch": 13
+     },
+     {
+      "k": "img.sprite:cult-eager",
+      "n": 8,
+      "p50": 16.7,
+      "p95": 133.3,
+      "max": 133.3,
+      "hitch": 13
+     },
+     {
+      "k": "span.rc.in:background-color",
+      "n": 146,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "b.reckon-verdict.on:color",
+      "n": 116,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "span.rc.in:reckoncheer",
+      "n": 210,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 83.3,
+      "hitch": 0
+     },
+     {
+      "k": "b.reckon-verdict.on:rise",
+      "n": 137,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "g.rim-emoji.lit:js",
+      "n": 21,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.8,
+      "hitch": 0
+     },
+     {
+      "k": "div.token-flight.reckon:js",
+      "n": 69,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 33.4,
+      "hitch": 0
+     },
+     {
+      "k": "b.reckon-rule:fade",
+      "n": 52,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "span.reckon-counts:fade",
+      "n": 52,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "path.rim:fill-opacity",
+      "n": 19,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "g.rim-emoji:js",
+      "n": 33,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "div.dialog.roundend:settle",
+      "n": 7,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 33.3,
+      "hitch": 0
+     }
+    ],
+    "nodes": {
+     "min": 1553,
+     "max": 2713
+    },
+    "loaf": [
+     {
+      "t": 8650,
+      "d": 123,
+      "block": 73,
+      "style": 2,
+      "scripts": [
+       {
+        "d": 31,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 2951,
+      "d": 114,
+      "block": 0,
+      "style": 1,
+      "scripts": []
+     },
+     {
+      "t": 8100,
+      "d": 78,
+      "block": 19,
+      "style": 30,
+      "scripts": [
+       {
+        "d": 36,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     }
+    ],
+    "loafTotal": 315,
+    "loafCount": 3,
+    "topScripts": [
+     [
+      "hn",
+      67
+     ]
+    ]
+   }
+  }
+ },
+ "growth": [
+  {
+   "moves": 9,
+   "round": "I",
+   "anims": 4,
+   "nodes": 2244,
+   "listeners": 521,
+   "docs": 14,
+   "heapMB": 10.8
+  },
+  {
+   "moves": 20,
+   "round": "I",
+   "anims": 22,
+   "nodes": 2504,
+   "listeners": 570,
+   "docs": 20,
+   "heapMB": 11.6
+  },
+  {
+   "moves": 31,
+   "round": "I",
+   "anims": 9,
+   "nodes": 2549,
+   "listeners": 533,
+   "docs": 21,
+   "heapMB": 11.9
+  },
+  {
+   "moves": 43,
+   "round": "I",
+   "anims": 15,
+   "nodes": 2561,
+   "listeners": 531,
+   "docs": 21,
+   "heapMB": 12.2
+  },
+  {
+   "moves": 54,
+   "round": "II",
+   "anims": 10,
+   "nodes": 2869,
+   "listeners": 584,
+   "docs": 33,
+   "heapMB": 15
+  },
+  {
+   "moves": 64,
+   "round": "II",
+   "anims": 12,
+   "nodes": 2933,
+   "listeners": 608,
+   "docs": 36,
+   "heapMB": 15.2
+  },
+  {
+   "moves": 74,
+   "round": "II",
+   "anims": 12,
+   "nodes": 2865,
+   "listeners": 572,
+   "docs": 37,
+   "heapMB": 15.3
+  },
+  {
+   "moves": 85,
+   "round": "II",
+   "anims": 7,
+   "nodes": 2970,
+   "listeners": 591,
+   "docs": 41,
+   "heapMB": 15.4
+  },
+  {
+   "moves": 95,
+   "round": "II",
+   "anims": 6,
+   "nodes": 2973,
+   "listeners": 593,
+   "docs": 42,
+   "heapMB": 15.6
+  },
+  {
+   "moves": 105,
+   "round": "II",
+   "anims": 14,
+   "nodes": 2907,
+   "listeners": 567,
+   "docs": 44,
+   "heapMB": 15.6
+  },
+  {
+   "moves": 116,
+   "round": "II",
+   "anims": 13,
+   "nodes": 3018,
+   "listeners": 581,
+   "docs": 50,
+   "heapMB": 15.7
+  },
+  {
+   "moves": "RIII",
+   "anims": 58,
+   "nodes": 3874,
+   "listeners": 743,
+   "docs": 53,
+   "heapMB": 15.2
+  }
+ ],
+ "freshAfterReload": {
+  "nodes": 2586,
+  "listeners": 580,
+  "docs": 48,
+  "heapMB": 10.3
+ }
+}
