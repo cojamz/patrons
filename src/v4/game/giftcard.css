@@ -98,6 +98,17 @@
 .gift-card .gc-cost{display:inline-flex;flex-direction:column;align-items:flex-start;gap:0;font:700 12px/12px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
 .gift-card .gc-cd{display:inline-flex;align-items:center;white-space:nowrap}
 .gift-card .gc-cd .pip.glyph,.gift-card .gc-cd .pip.wild{width:9px;height:9px;margin:0 0 0 1px;vertical-align:0}
+/* a price part's dot, the resource glyph's look at 9px without its SVG (Glyphs.jsx ResourceGlyph: a disc 12.5/16 of the
+   box with a hairline ring at its edge; white a pearl; "any" the table's colors in wedges, split by a hairline cross) */
+.gift-card .gc-cd::after{content:'';flex:none;width:7px;height:7px;margin:0 1px 0 2px;border-radius:50%;background:var(--d,#999);box-shadow:inset 0 0 0 .6px rgba(30,18,8,.28)}
+.gift-card .gc-cd[data-res="white"]::after{background:radial-gradient(circle at 40% 35%,#fff,#cdc5b6 85%);box-shadow:inset 0 0 0 .6px rgba(30,18,8,.45)}
+.gift-card .gc-cd[data-res="silver"]::after{box-shadow:inset 0 0 0 .75px rgba(30,18,8,.55)}
+.gift-card .gc-cd[data-res="any"]::after{background:
+  linear-gradient(45deg,transparent calc(50% - .3px),rgba(30,18,8,.5) calc(50% - .3px) calc(50% + .3px),transparent calc(50% + .3px)),
+  linear-gradient(-45deg,transparent calc(50% - .3px),rgba(30,18,8,.5) calc(50% - .3px) calc(50% + .3px),transparent calc(50% + .3px)),
+  conic-gradient(from -45deg,var(--any-top) 0 25%,var(--any-right) 0 50%,var(--any-bottom) 0 75%,var(--any-left) 0)}
+.gift-card .gc-cd[data-any="3"]::after{background:conic-gradient(from 120deg,var(--any-q0) 0 33.333%,var(--any-q1) 0 66.667%,var(--any-q2) 0)}
+.gift-card .gc-cd[data-any="2"]::after{background:conic-gradient(from 90deg,var(--any-q0) 0 50%,var(--any-q1) 0)}
 .gift-card .gc-free{font:500 12px/12px var(--sans)}
 .gift-card .gc-item.chosen .gc-cost{color:inherit}
 /* a crowded swap (round III): closer tiles, a wider card, so every row shows whole */

@@ -23,6 +23,8 @@ const ANY_WEDGES = [
 // A table of 2 or 3 spheres (one per player, Cory 2026-10-15) splits the dot in halves or thirds, each where its
 // quadrant sits (quadrant k at 180 + k·360/n degrees, 0 = top, clockwise), filled by --any-q0… (useAnyDot)
 let anyCount = 4;
+/** How many parts the "any" dot has on this table (2, 3 or 4): for the CSS dots that draw it without an SVG (GiftCard). */
+export const anyParts = () => anyCount;
 const dotAt = a => { const t = (a * Math.PI) / 180; return `${(8 + 6.25 * Math.sin(t)).toFixed(2)} ${(8 - 6.25 * Math.cos(t)).toFixed(2)}`; };
 const anyWedges = n => Array.from({ length: n }, (_, k) => {
   const a0 = 180 + (k * 360) / n - 180 / n, a1 = a0 + 360 / n;

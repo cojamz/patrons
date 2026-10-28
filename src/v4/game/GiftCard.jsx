@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { cardDef, quadrant } from '../../engine/v4/index.js';
 import { costParts, playerColor, seatEmoji } from '../format.js';
-import { ResourceGlyph } from './Glyphs.jsx';
+import { ResourceGlyph, anyParts } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { Sprite } from '../art/Sprite.jsx';
@@ -135,7 +135,9 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
         <span className="gc-pic">
           <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={size} />
           <span className="gc-cost" data-cost={total} aria-label={parts.length ? `costs ${parts.map(c => `${c.n} ${c.color === 'any' ? 'any' : c.color}`).join(' + ')}` : 'free'}>
-            {parts.length ? parts.map((c, k) => <span key={k} className="gc-cd"><b className="num">{c.n}</b><Pip color={c.color} n={c.n} /></span>) : <span className="gc-free">free</span>}
+            {/* each part is one element, its dot drawn by CSS (giftcard.css): a late swap's card lists every member twice,
+                and an SVG dot per price part was ~1,000 of a picker's elements (perf pass, 2026-10-28) */}
+            {parts.length ? parts.map((c, k) => <span key={k} className="gc-cd num" data-res={c.color} data-any={c.color === 'any' ? anyParts() : undefined} style={c.color === 'any' ? undefined : { '--d': `var(--q-${c.color}, var(--${c.color}))` }}>{c.n}</span>) : <span className="gc-free">free</span>}
           </span>
         </span>
         <span className="gc-name">{d.name}</span>
