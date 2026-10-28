@@ -631,7 +631,12 @@ function SetupOrderCue({ state, me }) {
   return <div className="setup-order" data-setup-order>{row('draft', 'Draft', order.draft)}{row('place', 'Place · snake', order.place)}</div>;
 }
 
+// renders begun vs committed (the freeze probe, scripts/v4-freeze.mjs): a render React threw away to start over shows as
+// the gap between the two
+const renderCount = typeof window !== 'undefined' ? (window.__gsCount = { r: 0, c: 0 }) : { r: 0, c: 0 };
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
+  renderCount.r++;
+  useLayoutEffect(() => { renderCount.c++; });
   const beforeShow = useRef(null);
   const [live0, moment, dismissMoment, roundStart0, retimeTable, settled0, physical0, scoringMoment] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
   const physicalState = physical0;

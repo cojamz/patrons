@@ -15,6 +15,7 @@ const pump = () => {
     done.add(id);
     const [q, i] = job.key.split('-').map(Number);
     let pv = null;
+    self.postMessage({ alive: true }); // the page's watchdog: busy on a long one, not dead
     try {
       pv = previewSpace(state, job.pid, q, i);
       withRace(pv);

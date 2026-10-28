@@ -481,12 +481,18 @@ function computeHere(state, pid, q, i) {
   const pv = previewSpace(stripped(state), pid, q, i);
   return withRace(pv);
 }
+// spaces whose dry run took too long to work out inside a render on this device (a copy space late in the game): their
+// hover waits for the worker instead (freeze probe, 2026-10-28: a Greatest Hits hover froze the page 3 s at 4x)
+const slowHere = new Set();
+const SLOW_HERE_MS = 24;
 /** The preview for a space, computed now on this thread if it isn't cached (tests, tools). */
 export function cachedPreview(state, pid, q, i) {
   const m = mapFor(state), k = `${pid}|${q}-${i}`;
   if (!m.has(k)) {
     let pv = null;
+    const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
     try { pv = computeHere(state, pid, q, i); } catch { pv = null; }
+    if (t0 && performance.now() - t0 > SLOW_HERE_MS) slowHere.add(`${q}-${i}`);
     m.set(k, pv); // (no notify: this runs while a card renders; whoever else reads it re-reads the cache)
   }
   return m.get(k);
@@ -577,6 +583,8 @@ function getWorker() {
     worker = new Worker(new URL('./previewWorker.js', import.meta.url), { type: 'module' });
     worker.onmessage = e => {
       lastAnswer = Date.now();
+      // (a long dry run says it's working on it: a busy worker isn't a dead one)
+      if (e.data && e.data.alive) return;
       const { gen, pid, key, pv } = e.data;
       const st = pending.get(gen);
       if (!st) return;
@@ -635,7 +643,8 @@ export function usePreview(state, pid, q, i, { now = false } = {}) {
   }, [state, pid, q, i]);
   if (pid == null) return null;
   const pv = peekPreview(state, pid, q, i);
-  return pv === undefined && now ? cachedPreview(state, pid, q, i) : pv;
+  // (a space known to be slow here never runs in the render: the worker fills it in, asked for at the front above)
+  return pv === undefined && now && !(worker && slowHere.has(`${q}-${i}`)) ? cachedPreview(state, pid, q, i) : pv;
 }
 const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 const span = (r, unit, plural = unit + 's') => {

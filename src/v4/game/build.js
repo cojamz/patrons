@@ -4,13 +4,15 @@ import { cardDef, quadrant, roundStartIncome } from '../../engine/v4/index.js';
 import { onTable } from './Info.jsx';
 import { timingOf } from './cards.js';
 
-// one engine run per table state, shared by the four chairs
+// one engine run per table state, shared by the four chairs, keyed by the state's players (the table's merged view of a
+// step that's still playing shares them with the step itself, so the two don't each run it; the engine copies the
+// players on every move)
 const incomeCache = new WeakMap();
 /** { res: { color: n }, followers } this player's members would hand them at the next round start, or null. */
 export function incomeOf(state, pid) {
   if (!(state.round >= 1) || state.over) return null;
-  let all = incomeCache.get(state);
-  if (all === undefined) { all = roundStartIncome(state); incomeCache.set(state, all); }
+  let all = incomeCache.get(state.players);
+  if (all === undefined) { all = roundStartIncome(state); incomeCache.set(state.players, all); }
   return all ? all[pid] || null : null;
 }
 

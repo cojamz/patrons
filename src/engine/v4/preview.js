@@ -5,6 +5,10 @@
 import { applyMove, resume, followers, memberCount } from './core.js';
 
 const NODE_BUDGET = 36; // states explored per preview (a counted pick branches a lot; past the budget only the extremes are kept)
+// a hard stop: past the budget each choice still branched in two, so a long chain of choices (Greatest Hits copying a
+// round III board) doubled per choice: 600+ states, 7-9 s at 1x, 30 s frozen at 4x when a hover worked it out on the
+// page (freeze probe, 2026-10-28). Past this many states nothing more is explored; the preview says it's partial.
+const NODE_CAP = 2 * NODE_BUDGET;
 
 /**
  * previewSpace(state, pid, q, i) → null when it can't be run, else
@@ -65,6 +69,7 @@ export function previewSpace(state, pid, q, i) {
   };
   // returns { best, likely } leaves under s (see above), or null when no branch could be followed
   const walk = s => {
+    if (nodes >= NODE_CAP) { partial = true; return null; }
     nodes++;
     if (!s.pending || s.pending.kind !== 'choose') { leaves.push(s); return { best: s, likely: s, worst: s }; }
     (s.pending.player === pid ? asks : theirAsks).add(s.pending.prompt.replace(/\s*\(\d+ left\)/, ''));

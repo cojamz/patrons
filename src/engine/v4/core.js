@@ -286,6 +286,11 @@ const colorsCovered = (state, v) => {
   for (const c of state.resources) if (v[c] > 0) n += wild.includes(c) ? v[c] : 1;
   return n;
 };
+/** Can p buy this follower tier at all (followerChoices would list a way)? */
+function canBuyTier(state, p, tier) {
+  if (tierLeft(state, tier) <= 0) return false;
+  return vectors(p.res, state.resources, tier.cost, tier.cost).some(v => colorsCovered(state, v) >= tier.colors);
+}
 export function followerChoices(state, p, tier) {
   if (tierLeft(state, tier) <= 0) return [];
   const keys = state.resources;
@@ -482,12 +487,15 @@ function inputFor(state, task) {
       // a second buy (Big Spender) is offered only after a real first buy, while an unspent one is held
       if (task.extra && !(p.turnBuys > 0 && (allowance(state, p, 'extraBuy') || alwaysBuysTwice(state, p)))) return { kind: 'buy', prompt: '', options: [] };
       const opts = [];
-      for (const uid of state.shop) if (paymentChoices(state, p, uid).length)
+      // which members and tiers can be paid for at all: an existence check, not the ranked list of every way to pay
+      // (the list scores each way against the contests: most of a round III step's engine time, run for every shop card,
+      // in every bot step and every "You'd get" branch; freeze probe, 2026-10-28). The pay step still lists them all.
+      for (const uid of state.shop) if (memberPrice(state, p, uid).afford)
         opts.push({ id: `card:${uid}`, label: cardDef(state, uid).name, kind: 'card', uid });
       // the top of the pile, for a player who can reach it (Insider: flag pileReach)
-      for (const uid of state.pile.slice(0, pileReach(state, p))) if (paymentChoices(state, p, uid).length)
+      for (const uid of state.pile.slice(0, pileReach(state, p))) if (memberPrice(state, p, uid).afford)
         opts.push({ id: `card:${uid}`, label: `${cardDef(state, uid).name} (from the pile)`, kind: 'card', uid, fromPile: true });
-      TIERS.forEach(t => { if (followerChoices(state, p, t).length) opts.push({ id: `tier:${t.key}`, label: `+${t.get} followers`, kind: 'tier', tier: t.key }); });
+      TIERS.forEach(t => { if (canBuyTier(state, p, t)) opts.push({ id: `tier:${t.key}`, label: `+${t.get} followers`, kind: 'tier', tier: t.key }); });
       for (const uid of p.members) {
         const c = state.cards[uid], d = defById(c.def);
         // a Doppelganger offers what it copies too
