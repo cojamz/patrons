@@ -102,8 +102,9 @@ function churnStep(ctx, p, { left }) {
 /** Peek: the player sets the order of the top cards, top first; the last one falls in place. */
 function peekStep(ctx, p, { left, placed }) {
   if (left.length <= 1) {
-    const order = [...placed, ...left];
     const pile = ctx.state.pile;
+    // only cards still in the pile: a refill between the peek and the reorder (Trendsetter on a Peek recruit) may have drawn one
+    const order = [...placed, ...left].filter(u => pile.includes(u));
     const rest = pile.filter(u => !order.includes(u));
     pile.splice(0, pile.length, ...order, ...rest);
     if (order.length) ctx.log(`${p.name} puts the top ${order.length} of the pile back in a new order.`);
