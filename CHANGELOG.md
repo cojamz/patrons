@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.818 — 2026-10-28
+
+- Rivals' follower buys play at the same quicker pace as the rest of their turn
+
 ## v0.9.817 — 2026-10-28
 
 - A player on Last Call (or a copy of it) shows "goes last" on their seat for the rest of the round.
