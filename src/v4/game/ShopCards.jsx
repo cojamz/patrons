@@ -161,18 +161,14 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   useLayoutEffect(() => {
     const row = rowRef.current;
     if (!fitKey || !row) return undefined;
-    // every card is put back to its full size first, then all are measured (one layout), then the tight ones set: a
-    // write and a read per card forced one page layout per card (input pass 2026-10-28: up to 7 a step, ~100ms at 4x)
     const fit = () => {
-      const all = [];
       for (const a of row.querySelectorAll('.lt-pick-ability')) {
         const card = a.closest('.lt-card'), ft = card && card.querySelector('.ft');
         if (!ft) continue;
         a.removeAttribute('data-fit');
-        all.push({ a, card, ft });
+        const over = () => a.getBoundingClientRect().bottom > ft.getBoundingClientRect().top + 0.5 || ft.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom + 0.5;
+        if (over()) a.setAttribute('data-fit', 'tight');
       }
-      const over = ({ a, card, ft }) => a.getBoundingClientRect().bottom > ft.getBoundingClientRect().top + 0.5 || ft.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom + 0.5;
-      for (const x of all.filter(over)) x.a.setAttribute('data-fit', 'tight');
     };
     fit();
     const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;

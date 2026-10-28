@@ -609,8 +609,6 @@ export function requestPreviews(state, pid, keys, { front = false } = {}) {
   }
   onMainThread(state, pid, todo, { front });
 }
-/** A worker answers previews off this thread (not in tests or tools, nor once it has failed). */
-const hasWorker = () => !!getWorker();
 /** For tests: forget the worker (null: try again; false: there is none). */
 export const _setPreviewWorker = w => { clearFallback(); fallbackState = null; worker = w; lastAnswer = 0; inflight.clear(); if (w) { w.onerror = workerFailed; w.onmessageerror = workerFailed; } };
 /** A preview already computed for this state, or undefined (never computes: a hover must not wait). */
@@ -627,11 +625,6 @@ export function peekPreview(state, pid, q, i) {
  */
 export function usePreview(state, pid, q, i, { now = false } = {}) {
   const [, bump] = useState(0);
-  // the last preview this card showed: a card already open when the table moves on (a bot's step while the pointer rests
-  // on a space, your own placement under the pointer) keeps it until the worker answers for the new state, instead of a
-  // dry run on this thread in the middle of the table's render (input pass 2026-10-28: 150ms of a round III bot step at
-  // 4x CPU, every step, for a card that only changes when the worker answers a frame later anyway)
-  const shown = useRef(null);
   useEffect(() => {
     if (pid == null) return undefined;
     const key = `${q}-${i}`;
@@ -640,13 +633,9 @@ export function usePreview(state, pid, q, i, { now = false } = {}) {
     if (peekPreview(state, pid, q, i) === undefined) requestPreviews(state, pid, [key], { front: true });
     return () => { listeners.delete(fn); };
   }, [state, pid, q, i]);
-  if (pid == null) { shown.current = null; return null; }
-  let pv = peekPreview(state, pid, q, i);
-  const k = `${pid}|${q}-${i}`, was = shown.current;
-  // only a card that's opening (a space it didn't show a moment ago) is worked out here, so it lands complete
-  if (pv === undefined && now) pv = was && was.k === k && was.pv !== undefined && hasWorker() ? was.pv : cachedPreview(state, pid, q, i);
-  shown.current = { k, state, pv };
-  return pv;
+  if (pid == null) return null;
+  const pv = peekPreview(state, pid, q, i);
+  return pv === undefined && now ? cachedPreview(state, pid, q, i) : pv;
 }
 const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 const span = (r, unit, plural = unit + 's') => {

@@ -1171,10 +1171,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (!String(optionId).startsWith('slot:')) hover.close();
     busyNow.current = true;
     startTransition(() => setBusy(true));
-    // the shop as you see it right now (a row you may have scrolled, on a phone): a recruit flies from where you saw it.
-    // Not for a placement: the shop is untouched until its step is shown, and a card the space takes is measured then
-    // (beforeShow), so the click's own frame doesn't lay the page out for it (input pass 2026-10-28)
-    if (!/^(slot|squat):/.test(String(optionId))) { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
+    // the shop as you see it right now (a row you may have scrolled, on a phone): a recruit flies from where you saw it
+    { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
     setError('');
     const token = ++sendToken.current;
     let sent;
