@@ -44,8 +44,12 @@ export function portraitRuns(icon, sphere) {
   let out = cache.get(k);
   if (out) return out;
   const { p, dark } = portraitPalette(sphere, icon.id);
-  const px = icon.px, n = px.length;
+  // no doorway behind a member (Cory, 2026-10-28: "the backgrounds look like hair in too many cases"): a stepped glow
+  // in their color instead, three rings fading out past the outline
+  const member = icon.kind === 'member';
+  const px = member ? icon.px.map(r => r.replace(/[bc]/g, '.')) : icon.px, n = px.length;
   const at = (x, y) => (y >= 0 && y < n && x >= 0 && x < n ? px[y][x] : '.');
+  const glow = member ? auraOf(px, p[4]) : null;
   out = [];
   for (let y = 0; y < n; y++) {
     let x = 0;
@@ -61,8 +65,31 @@ export function portraitRuns(icon, sphere) {
     const ch = at(x, y);
     if (ch !== '.') return p[ch] || null;
     for (const [a, b] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) { const c = at(a, b); if (c !== '.') return dark[c] || '#141018'; }
-    return null;
+    return glow ? glow[y * n + x] : null;
   }
   cache.set(k, out);
+  return out;
+}
+
+const AURA = [[1.5, 'a6'], [2.5, '66'], [3.6, '2e']]; // distance past the shape, opacity
+function auraOf(px, color) {
+  const n = px.length, out = Array(n * n).fill(null), filled = [];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (px[y][x] !== '.') filled.push([x, y]);
+  const R = Math.ceil(AURA[AURA.length - 1][0]);
+  const near = new Float32Array(n * n).fill(99);
+  for (const [fx, fy] of filled) {
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+      const x = fx + dx, y = fy + dy;
+      if (x < 0 || y < 0 || x >= n || y >= n) continue;
+      const d = Math.hypot(dx, dy);
+      if (d < near[y * n + x]) near[y * n + x] = d;
+    }
+  }
+  for (let k = 0; k < n * n; k++) {
+    const d = near[k];
+    if (d <= 1) continue; // the shape or its outline
+    const ring = AURA.find(([r]) => d <= r);
+    if (ring) out[k] = color + ring[1];
+  }
   return out;
 }
