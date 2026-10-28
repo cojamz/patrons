@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E snappy gate (Cory, 2026-10-15: "it just doesn't feel snappy", "the wheel spins really slow"). Laptop, 1270×700.
 //  (s1) a wheel spin (an arrow key) starts within 100ms and has landed within 400ms;
 //  (s2) a hover card opens within 100ms of the end of the hover delay (Cory, 2026-10-15: hovers wait HOVER_DELAY_MS,
@@ -46,7 +46,7 @@ if (!base) {
 
 const errors = [];
 const report = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 const page = await ctx.newPage();
 // V4_CPU=4: the mid laptop (CDP CPU throttling), for checking the limits where the bar is set (off by default)

@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: every game-meaningful element explains itself (Cory, 2026-10-14: every UI element has a hover with more info,
 // long-press/tap on phone), and followers are never a star. Build-failing assertions, at several steps of a real
 // hot-seat game (1 person + 3 bots):
@@ -284,7 +284,7 @@ async function deckCheck(page) {
   return 'checked';
 }
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const errors = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });

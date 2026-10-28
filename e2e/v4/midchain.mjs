@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E mid-chain click gate (snappy pair, 2026-10-25; UX research: "never block input on animation"). Laptop, 1270×700.
 //  (c1) your turn has come while a rival's last step is still playing: a press on a space you can take skips the rest
 //       of the show and places your minion there, with no second click (it used to skip the show and drop the click).
@@ -11,7 +11,7 @@ import { seedSave } from './lib/seed.mjs';
 
 const base = process.env.V4_URL;
 if (!base) { console.error('midchain: set V4_URL'); process.exit(2); }
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const errors = [];
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 await ctx.addInitScript(() => { try { localStorage.setItem('patrons.v4.motionSpeed', 'steady'); } catch { /* private window */ } });

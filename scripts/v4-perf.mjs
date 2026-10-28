@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // Snappiness harness: plays a scripted, human-paced game with the ?trace=1 tracer on (src/v4/perf.js) and writes
 // design/eval/perf/<label>.md plus <label>.json.
 //   node scripts/v4-perf.mjs <url> <label> [--cpu=4] [--online] [--lag=MS] [--seed=N] [--think=MS] [--turns=N] [--query=a=b&c=d]
@@ -62,7 +62,7 @@ async function startEmulator() {
 }
 
 // ---------- the browser ----------
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const errors = [];
 async function openPerson(name, seed) {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });

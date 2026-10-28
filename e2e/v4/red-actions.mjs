@@ -1,7 +1,7 @@
 // Focused real clicks: Red swaps can involve two rivals or the shop; Green copying Promote asks afresh.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
@@ -91,7 +91,7 @@ if (process.argv.includes('--fixtures-only')) {
   tryoutScenario(); console.log('tryout: Banker offered, Stunt Double not; +2 red, +3 gold, Banker stays in the shop, no recruit.');
   process.exit(0);
 }
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 let currentPage, currentTag;
 try {
   for (const [tag, options] of [['desktop', { viewport: { width: 1270, height: 700 } }], ['phone', devices['iPhone 13']]]) {

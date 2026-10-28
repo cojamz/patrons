@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E motion gate: what you do yourself moves, at laptop size (1270×700) and on a phone (390×844, real touch).
 //  (m1) a +5 follower buy (the 5-for-5 tier) counts up: your follower number shows at least 3 values between old and new (sampled per
 //       painted frame; Tick.jsx steps one whole number per painted frame for small changes, so a loaded box that paints
@@ -52,7 +52,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const PROFILES = [
   { tag: 'laptop', ctx: { viewport: { width: 1270, height: 700 } }, fol: '.lt-seat.mine .tv' },
   // phone is out of scope for v0.2 (Cory, 2026-10-15: "don't worry about phone for now"): opt in with V4_PHONE=1, as touch.mjs

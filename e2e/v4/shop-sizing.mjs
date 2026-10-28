@@ -1,7 +1,7 @@
 // Shop layout regression: enlarge cards, retain their slots and readable rules through details toggles.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, cardDef, SHOP_SIZE, TIERS } from '../../src/engine/v4/index.js';
@@ -16,7 +16,7 @@ function fixture(quadrants){
  s.shop=pool.slice(0,SHOP_SIZE);s.pile=pool.slice(SHOP_SIZE);s=resume(s);s.build=buildStamp(); // the shop deals SHOP_SIZE (7 since v0.8.11)
  return {config:{seats,speed:'quick'},state:s,undo:null,savedAt:Date.now()};
 }
-const browser=await chromium.launch({executablePath:browserPath});
+const browser=await launchBrowser({executablePath:browserPath});
 // the phone pass runs only with V4_PHONE=1 (phone is out of scope, Cory 2026-10-20)
 try{for(const[tag,opts]of[['laptop',{viewport:{width:1270,height:700}}],['desktop',{viewport:{width:1600,height:900}}],['tablet',{viewport:{width:1100,height:700}}],...(process.env.V4_PHONE?[['phone',devices['iPhone 13']]]:[])]){
  for(const[group,quads]of[['core',['gold','red','purple','echo']],['others',['market','thieves','silver','yellow']]]){

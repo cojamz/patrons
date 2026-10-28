@@ -2,7 +2,7 @@
 // gets long"): a 14-member seat's card opens at 1270x700, and the mouse wheel scrolls its list from the seat itself and
 // from the list, the card staying open while it scrolls.
 import { chromium } from 'playwright';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove, chooseBotMove } from '../../src/engine/v4/index.js';
@@ -16,7 +16,7 @@ for (let n = 0; n < 4000 && !(s.pending && s.pending.player === 0 && s.pending.k
 while (s.players[1].members.length < 14 && s.pile.length) s.players[1].members.push(s.pile.shift());
 resume(s); s.build = buildStamp();
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 try {
   const page = await (await browser.newContext({ viewport: { width: 1270, height: 700 } })).newPage();
   page.on('pageerror', e => errors.push(e.message));

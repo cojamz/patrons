@@ -1,7 +1,8 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser, engine, cdpOk } from '../e2e/v4/lib/browser.mjs';
 // The freeze probe: where the page stops answering in a real played game, the way a person feels it.
 //   node scripts/v4-freeze.mjs <url> <label> [--cpu=4] [--speed=relaxed] [--seed=N] [--profile] [--out=design/eval/perf]
-//        [--poke=250] [--max-min=45] [--online-lag=0]
+//        [--poke=250] [--max-min=45] [--online-lag=0] [--no-gate]      V4_ENGINE=firefox runs it in Firefox
+// Exit 1 when a freeze bar fails (FREEZE_BARS below): this, not click speed, is the bar for Cory's "laggy".
 // Plays the rig's game (one person + 3 Normal bots, same seed = same game) and, the whole game long, rival turns and
 // animations included, presses a harmless key every --poke ms (Shift: nothing listens for it), so every stretch where
 // the page can't answer shows up as input waiting. It records:
@@ -24,7 +25,10 @@ if (!base || !label) { console.error('usage: node scripts/v4-freeze.mjs <url> <l
 const CPU = Number(flag('cpu', 4)), SPEED = String(flag('speed', 'relaxed')), SEED = Number(flag('seed', 20261028));
 const EAGER = !!flag('eager', false); // click as soon as your spaces light, mid-animation included (a person does)
 const PROFILE = !!flag('profile', false), POKE = Number(flag('poke', 250)), MAX_MIN = Number(flag('max-min', 45));
-const OUT = String(flag('out', 'design/eval/perf'));
+const OUT = String(flag('out', 'design/eval/perf')), GATE = !flag('no-gate', false);
+// The freeze bars (Cory, Oct 28: lag = "the page feels frozen often and you can't click"). Set from the Oct 28 probe at
+// 4x: before the copy-space fix the worst press waited 3,061 ms and 51 clicks did nothing; after it, 182 ms and none.
+export const FREEZE_BARS = { worstWait: 250, over100Pct: 1, deadClicks: 0 };
 mkdirSync(OUT, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -62,7 +66,7 @@ const RECORDER = () => {
   } catch { /* no LoAF */ }
 };
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 await ctx.addInitScript(RECORDER);
 await ctx.addInitScript(s => { let a = s >>> 0; Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }, SEED);
@@ -70,7 +74,9 @@ await ctx.addInitScript(s => { try { localStorage.setItem('patrons.v4.motionSpee
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', e => errors.push(e.message));
-const cdp = await ctx.newCDPSession(page);
+// Firefox (V4_ENGINE=firefox) has no CDP: no CPU throttle (it runs at this box's own speed), no main-thread metrics or
+// profile; the presses, Event Timing and dead clicks still read the same
+const cdp = cdpOk ? await ctx.newCDPSession(page) : { send: async m => (m === 'Performance.getMetrics' ? { metrics: [] } : m === 'Profiler.stop' ? { profile: null } : {}) };
 await cdp.send('Performance.enable');
 await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
 let held = [];
@@ -168,6 +174,7 @@ const F = await page.evaluate(() => window.__fz);
 const gsEnd = await page.evaluate(() => window.__gsCount || null).catch(() => null);
 let profile = null;
 if (PROFILE) profile = (await cdp.send('Profiler.stop')).profile;
+const ENGINE_NOTE = cdpOk ? `${CPU}x CPU` : `${engine}, own speed (no CPU throttle, no main-thread metrics)`;
 await browser.close();
 
 // ---------- the report ----------
@@ -175,7 +182,7 @@ const rounds = ['I', 'II', 'III'];
 const sum = xs => xs.reduce((a, b) => a + b, 0);
 const pct = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.min(s.length - 1, Math.floor(p * s.length))] : 0; };
 const busy = k => Math.round(((m1[k] || 0) - (m0[k] || 0)) * 1000);
-const L = [`# Freeze probe: ${label}`, '', `${new Date().toISOString()} · ${base} · ${CPU}x CPU · ${SPEED} · seed ${SEED} · ${Math.round(wall / 60000)} min · ${over ? 'game finished' : 'game NOT finished'} · ${pokes} presses every ${POKE} ms${PROFILE ? ' · CPU profile on' : ''}`, '',
+const L = [`# Freeze probe: ${label}`, '', `${new Date().toISOString()} · ${base} · ${ENGINE_NOTE} · ${SPEED} · seed ${SEED} · ${Math.round(wall / 60000)} min · ${over ? 'game finished' : 'game NOT finished'} · ${pokes} presses every ${POKE} ms${PROFILE ? ' · CPU profile on' : ''}`, '',
   `Main thread over the game: busy ${busy('TaskDuration')} ms of ${wall} (${Math.round(100 * busy('TaskDuration') / wall)}%), script ${busy('ScriptDuration')}, style ${busy('RecalcStyleDuration')}, layout ${busy('LayoutDuration')}.`, ''];
 // input: keydown/keyup are the probe's presses; pointer*/click/mouse* are the person's clicks and hovers
 if (gsEnd) L.push(`Table renders: ${gsEnd.r} begun, ${gsEnd.c} committed (${gsEnd.r - gsEnd.c} thrown away and started over).`, '');
@@ -249,7 +256,17 @@ if (profile) {
   for (const c of dead.slice(0, 15)) L.push(`- dead: round ${c.round} ${c.what}${c.anim ? ' (animating)' : ''}`);
   res.clicks = { timed: timed.length, dead: dead.length, deadAnim: dead.filter(c => c.anim).length };
 }
+// the bars: a press never waits over 250 ms, at most 1% wait over 100 ms, and no click made on a settled table is ignored
+const presses = inputs.filter(e => e.n === 'keydown' || e.n === 'pointerdown');
+const worst = presses.length ? Math.max(...presses.map(e => e.delay)) : 0, o100 = presses.length ? 100 * res.totals.over100 / presses.length : 0;
+const deadSettled = res.clicks.dead - res.clicks.deadAnim;
+const fails = [worst > FREEZE_BARS.worstWait && `worst press waited ${worst} ms (bar ${FREEZE_BARS.worstWait})`,
+  o100 > FREEZE_BARS.over100Pct && `${o100.toFixed(1)}% of presses waited over 100 ms (bar ${FREEZE_BARS.over100Pct}%)`,
+  deadSettled > FREEZE_BARS.deadClicks && `${deadSettled} clicks on a settled table changed nothing`, !over && 'the game did not finish'].filter(Boolean);
+res.gate = { worst, o100: +o100.toFixed(2), deadSettled, fails };
+L.splice(3, 0, fails.length ? `FREEZE BARS FAIL: ${fails.join('; ')}.` : `Freeze bars pass: worst press ${worst} ms, ${o100.toFixed(1)}% over 100 ms, no ignored clicks.`, '');
 if (errors.length) L.push('', '## Errors', '', ...errors.map(e => `- ${e}`));
 writeFileSync(`${OUT}/freeze-${label}.md`, L.join('\n') + '\n');
 writeFileSync(`${OUT}/freeze-${label}.json`, JSON.stringify({ label, base, CPU, SPEED, SEED, wall, over, clicks, res, ev: F.ev, loaf: F.loaf }, null, 0));
 console.log(L.slice(0, 40).join('\n'));
+if (GATE && fails.length) process.exit(1);

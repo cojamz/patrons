@@ -1,7 +1,7 @@
 // Spin during real resource/member flights and scoring, compared with idle. Use an immutable V4_URL.
 import { chromium } from 'playwright';
 import { mkdirSync,writeFileSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { lateSave } from './lib/late-save.mjs';
 import { freeCard } from './lib/deal.mjs';
@@ -23,7 +23,7 @@ function chainSave(){
  state.queue=[{t:'turn',p:0}];state=resume(state);state.build=buildStamp();
  return {state,config:{seats,speed:'steady'},undo:null,savedAt:Date.now()};
 }
-const browser=await chromium.launch({executablePath:browserPath});
+const browser=await launchBrowser({executablePath:browserPath});
 try{
  for(const rate of [1,4])for(const mode of (process.env.V4_MODES||'idle,chain,scoring').split(',')){
   const page=await browser.newPage({viewport:{width:1270,height:700}});

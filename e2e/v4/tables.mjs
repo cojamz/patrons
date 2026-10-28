@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: the table picker, and one hot-seat game on each of 6 tables that between them seat every newer sphere, two of
 // them with fewer players (2 and 3 seats play 2 and 3 spheres).
 // One person + 3 bots; the person clicks the first legal option each time. The four games run side by side.
@@ -44,7 +44,7 @@ const TABLES = [
 ];
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 async function play(t) {
   const err = m => errors.push(`[${t.tag}] ${m}`);

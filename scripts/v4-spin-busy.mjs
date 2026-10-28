@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // Wheel spin while the table is busy (Cory, 2026-10-25: "it's when other animations are happening… I want a super snappy
 // spinning wheel even if other things are going on"). A local game, you and three Normal bots at Steady, 1270×700, CPU
 // throttled (default 4×). On rivals' turns (their flights, the story, the shop sliding) it presses an arrow key every
@@ -18,7 +18,7 @@ const CPU = Number(flag('cpu', 4)), SPINS = Number(flag('spins', 12)), SHOTS = f
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const DPR = Number(flag('dpr', 1));
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 }, deviceScaleFactor: DPR });
 const page = await ctx.newPage();

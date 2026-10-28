@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E pay-flow gate (live panel round 1, G2), at laptop size (1270×700). Testers couldn't tell why some buys open the
 // pay sheet and some pay at once, read the sheet's faded coins backwards, saw two prices for one discounted card, and
 // took the deck for a member.
@@ -36,7 +36,7 @@ if (!base) {
   if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
 }
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 async function open(tag, save) {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });

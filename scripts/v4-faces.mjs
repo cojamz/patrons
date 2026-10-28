@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // The faces lab's eyes: screenshot one action-space face (src/v4/game/faces/<face>.jsx) at 1270×700.
 //   node scripts/v4-faces.mjs <face> <outDir>
 // Saves <outDir>/<face>-grid1.png (every action of the classic table, lit / taken / locked), <face>-grid2.png (the
@@ -31,7 +31,7 @@ if (!base) {
   console.log(`dev server: ${base}`);
 }
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const errors = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });

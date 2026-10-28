@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E step-hold gate (Mike, 2026-10-26: the game "locks up" a lot in late round II). At Relaxed, a late-game recruit set
 // off 4–6 members one after another (Doorman, Recruiter, Recruit Bonus, Host…) and the table waited for every one: bot
 // steps held 7–9s each and the screen fell minutes behind the game, sitting on "Bot 3 is choosing…". Now no step in a
@@ -30,7 +30,7 @@ function roundSave(seed, round) {
   return { config: { seats: seats.map(x => ({ kind: x.kind, name: x.name })) }, state: s, undo: null, savedAt: Date.now() };
 }
 const SEED = Number(process.env.V4_HOLD_SEED || 21), ROUND = Number(process.env.V4_HOLD_ROUND || 2);
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const errors = [];
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 await ctx.addInitScript(() => {

@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: the action spaces, at 1270×700: the panels (the default since 2026-10-15, plate 1b with Cory's three text lines),
 // on tables covering every sphere at rounds I, II and III, and the old sockets behind ?spaces=sockets.
 //  (s0) the Lamplit stylesheet is in force (walnut table), whatever order the bundler loads CSS chunks in;
@@ -64,7 +64,7 @@ function spaceSave(quadrants, round = 1) {
 const errors = [];
 const notes = []; // known and reported, not failing
 const fail = (m, tag) => { const msg = tag ? `${tag} ${m}` : m; if (!errors.includes(msg)) errors.push(msg); };
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 // in-page: every flying ghost's life (born → removed), and every class the spaces wear (to catch a shake)
 const WATCH = () => {

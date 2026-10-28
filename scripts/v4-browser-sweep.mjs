@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // Release crash sweep in the built game: full games in a frozen build, one person (this driver) and bots, hunting for
 // page errors, console errors and softlocks (the table stops moving with nothing for anyone to answer).
 //   node scripts/v4-browser-sweep.mjs <url> <games> [--pages=3] [--seats=4] [--out=design/eval/release-qa/browser]
@@ -22,7 +22,7 @@ const MAX_MIN = Number(flag('max-min', 12)), FIRST = Number(flag('first', 1)), S
 mkdirSync(OUT, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 async function play(k) {
   const seed = 1000 + k;

@@ -1,7 +1,7 @@
 // Actual Magenta resource tie through final placement and round summary, with member-rich nonleader.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
@@ -31,7 +31,7 @@ for(const [qid,winners] of [['thieves',[1,2]]]){
  const row=contests.results.find(r=>r.qid===qid);
  if(JSON.stringify(row.winners)!==JSON.stringify(winners))throw new Error(`${qid}: bad expected fixture`);
 }
-const browser=await chromium.launch({executablePath:browserPath});
+const browser=await launchBrowser({executablePath:browserPath});
 try{
  for(const [tag,options]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]]){
   const ctx=await browser.newContext(options),page=await ctx.newPage();page.setDefaultTimeout(15000);

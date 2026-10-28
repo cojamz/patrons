@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E travel gate (Cory, 2026-10-15: "whenever somebody does something it should be obvious … a steal moves from the
 // other player to them"; wave 3 found moves that changed numbers with nothing in the air). At laptop size (1270×700),
 // default speed (Steady), for each move P1 makes, a piece (or the member itself) must fly from where the rules take it
@@ -38,7 +38,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 // every flight ghost the page adds: its kind, when, where it starts and where its path ends (its animation's last frame)
 const INSTRUMENT = () => {

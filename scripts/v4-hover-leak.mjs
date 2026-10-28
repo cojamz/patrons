@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // Hover leak probe: does pointing at things leave nodes behind? A local game (you + 3 bots) to your first turn, then
 // rounds of hovers over the wheel's spaces, the shop's cards and the seats' members; after each round a forced GC and
 // Chrome's own DOM counters (all nodes, attached or not) beside the live document's count.
@@ -12,7 +12,7 @@ const base = (argv.find(a => !a.startsWith('--')) || 'http://localhost:5303').re
 const ROUNDS = Number(flag('rounds', 3)), SNAP = flag('snapshot', '');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 const page = await ctx.newPage();
 const errs = []; page.on('pageerror', e => errs.push(e.message));

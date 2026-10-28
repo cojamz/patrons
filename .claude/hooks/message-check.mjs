@@ -37,6 +37,13 @@ const last = (lines[lines.length - 1] || '').trim();
 if (lines.length >= 3 && numbered < 1 && !/\?\s*(\[[^\]]*\])?\s*$/.test(last) && !/nothing needed from you/i.test(text))
   hard.push('end with the numbered decision, a question for him, or "Nothing needed from you."');
 
+// Cory, Oct 21 ("you're waiting on me?") and Oct 28 ("why is it waiting on me?? just fucking fix it"): engineering is
+// never his call. A numbered call or question to him about how the code is built, tuned or measured bounces.
+const ENG = /\b(refactor\w*|rebuild\w*|rewrit\w+|tuning pass|perf (run|pass|work|fix)\w*|profil\w+|benchmark\w*|staged (rebuild|show layer)|re-?architect\w*|migrat\w+|engineering (pass|work|call)|rig run)\b/i;
+const asks = lines.filter(l => /^\s*\d+[.)] /.test(l) || /\?\s*(\[[^\]]*\])?\s*$/.test(l)).map(l => l.replace(/`[^`]*`/g, ''));
+const engAsk = asks.find(l => ENG.test(l));
+if (engAsk) hard.push(`engineering never waits on Cory ("${engAsk.match(ENG)[0]}" in a question to him): decide it, do it, report it; ask only what a player would see or feel differently`);
+
 const soft = [];
 const maxLines = numbered >= 2 ? Math.max(8, numbered + 3) : 8;
 if (lines.length > maxLines) soft.push(`${lines.length} lines (cap ${maxLines}); put the rest in a file and link it`);

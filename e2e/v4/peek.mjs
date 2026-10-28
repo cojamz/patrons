@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E Peek gate (Cory, 2026-10-23, live playtest: "with peek, player loses the ability to see the current shop" and
 // "player should still be able to see Peek card they can't afford when recruiting"), at laptop size (1270×700).
 //  (k1) Ordering Peek's 4: the whole shop stays on screen beside them; the 4 are lit and tagged "pile", the shop isn't lit.
@@ -28,7 +28,7 @@ if (!base) {
   if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
 }
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 async function open(tag, save, { fade = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });

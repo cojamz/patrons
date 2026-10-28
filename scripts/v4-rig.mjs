@@ -1,4 +1,6 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser, cdpOk } from '../e2e/v4/lib/browser.mjs';
+// Chrome only: it throttles the CPU and reads heap, listeners and busy time through CDP. Firefox freezes: scripts/v4-freeze.mjs.
+if (!cdpOk) { console.error('v4-rig needs Chromium (CDP); for Firefox run scripts/v4-freeze.mjs with V4_ENGINE=firefox'); process.exit(2); }
 // The perf rig: one full 4-player game on a frozen build at 4x CPU, measured round by round, with a pass/fail gate.
 //   node scripts/v4-rig.mjs <url> <label> [--cpu=4] [--speed=relaxed|steady|quick] [--seed=N] [--out=design/eval/perf]
 //        [--max-min=45] [--no-gate]
@@ -26,10 +28,12 @@ if (!base || !label) { console.error('usage: node scripts/v4-rig.mjs <url> <labe
 const CPU = Number(flag('cpu', 4)), SPEED = String(flag('speed', 'relaxed')), SEED = Number(flag('seed', 20261028));
 const TRACE = !!flag('trace-clicks', false); // a Chrome trace per click: main-thread time by kind (style, layout, paint, script…) in slow ones
 const PROFILE = !!flag('profile-clicks', false);
-// --no-frame-loop: no frame recorder (its own requestAnimationFrame every frame keeps the page doing a full main-thread frame
-// each frame, which hides any change to how often the game itself needs one); frame columns read empty
+// --profile-clicks: CPU-profile every click; where the time goes in slow ones (use an unminified build)
 const FLIGHTS = !!flag('flights', false); // every flight watched: any taken off screen before it arrived (e2e/v4/lib/flightwatch.mjs)
-const NO_FRAMES = !!flag('no-frame-loop', false); // CPU-profile every click; where the time goes in slow ones (use an unminified build)
+// --no-frame-loop: no frame recorder (its own requestAnimationFrame every frame keeps the page doing a full main-thread frame
+// each frame, which hid a fix to how often the game itself needs one, Oct 28); frame columns read empty. Judge any change
+// to frames, timers or idle work with it on, on round busy % and clicks; freezes are scripts/v4-freeze.mjs's bar.
+const NO_FRAMES = !!flag('no-frame-loop', false);
 const OUT = String(flag('out', 'design/eval/perf')), MAX_MIN = Number(flag('max-min', 45)), GATE = !flag('no-gate', false);
 mkdirSync(OUT, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -114,7 +118,7 @@ const RECORDER = () => {
   });
 };
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const [VW, VH] = String(flag('size', '1270x700')).split('x').map(Number); // --size=1100x700 for a smaller window
 const ctx = await browser.newContext({ viewport: { width: VW, height: VH } });
 if (NO_FRAMES) await ctx.addInitScript(() => { window.__rigNoFrames = true; });

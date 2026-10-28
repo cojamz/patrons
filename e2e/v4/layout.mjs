@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E layout gate (panel 7, laptop V): text you need is never cut off.
 //  (l1) while you place, every compact shop card shows its whole name and whole list cost (no ellipsis, no clip);
 //  (l2) every follower buy shows its whole label and price, while placing and while buying;
@@ -44,7 +44,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 // elements whose text must be whole: cut means it overflows its own box or its nearest clipping ancestor
 const CUT = sels => {

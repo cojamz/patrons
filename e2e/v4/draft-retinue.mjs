@@ -1,7 +1,7 @@
 // Focused actual opening draft/order UI and Retinue acquisition; no full-game sim.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove } from '../../src/engine/v4/index.js';
@@ -10,7 +10,7 @@ const base=process.env.V4_URL||'http://localhost:5335',out=process.env.V4_SHOTS|
 const names=['Alexandria','Christopher','Maximilian','Jean-Baptiste'];
 const wrap=s=>{s.build=buildStamp();return {config:{seats:s.players.map(p=>({name:p.name,kind:'human'})),speed:'quick'},state:s,undo:null,savedAt:Date.now()};};
 const draft=n=>createGame({seats:names.slice(0,n).map(name=>({name,kind:'human'})),quadrants:['silver','yellow','thieves','echo'].slice(0,n),seed:53});
-const browser=await chromium.launch({executablePath:browserPath});
+const browser=await launchBrowser({executablePath:browserPath});
 try{for(const[size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]]){
  for(const n of size==='desktop'?[2,3,4]:[4]){
   const ctx=await browser.newContext(opts),p=await ctx.newPage(),s=draft(n);p.setDefaultTimeout(10000);

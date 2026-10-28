@@ -10,7 +10,7 @@ const { buildStamp } = await load('e2e/v4/lib/stamp.mjs');
 const { sceneQ, spaceOf } = await load('src/test/engine/v4/cards-helpers.js');
 const { applyMove } = await load('src/engine/v4/index.js');
 const { seedSave } = await load('e2e/v4/lib/seed.mjs');
-const { browserPath } = await load('e2e/v4/lib/browser.mjs');
+const { browserPath, launchBrowser } = await load('e2e/v4/lib/browser.mjs');
 const shots = process.env.V4_SHOTS || '/tmp/patrons-motion-verify';
 mkdirSync(shots, { recursive: true });
 const move = (s, option) => applyMove(s, { player: s.pending.player, option }, { effects: true });
@@ -35,7 +35,7 @@ assert.deepEqual(takes.map(e => `${e.what.n} ${e.what.r}`).sort(), ['1 gold', '2
 const scenarios = [{ name: 'magenta', state: steal, option: 'take:1:silver', expected: stolen.players.map(p => p.res) }];
 if (process.env.V4_PREP_ONLY) { console.log('Prepared real-engine fixtures:', scenarios.map(s => ({ name: s.name, option: s.option }))); process.exit(0); }
 assert(process.env.V4_URL, 'V4_URL required for immutable built game');
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 try {
   // the 390px phone pass runs only with V4_PHONE=1 (phone is out of scope, Cory 2026-10-20)
   for (const scenario of scenarios) for (const width of (scenario.name === 'swap' && process.env.V4_PHONE ? [1270, 390] : [1270])) {

@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // Frame probe: how smooth the shows are, early and late in a game, at 4x CPU (a mid laptop).
 //   node scripts/v4-frames.mjs <url> <label> [--cpu=4] [--secs=40] [--late=III] [--speed=relaxed] [--out=design/eval/perf]
 // Four Normal bots play on this device (no one to wait for). "early" watches round I from the start; "late" fast-forwards
@@ -51,7 +51,7 @@ const RECORDER = () => {
   } catch { /* no LoAF */ }
 };
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const metrics = async cdp => Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]));
 
 async function startAllBots(page, q) {

@@ -1,6 +1,6 @@
 // Placement and its space hover must not darken the shop (Cory's screenshot regression).
 import { chromium } from 'playwright';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { mkdirSync } from 'node:fs';
 import { aimSave } from './lib/aim-save.mjs';
 import { seedSave } from './lib/seed.mjs';
@@ -8,7 +8,7 @@ const url = process.env.V4_URL;
 if (!url) throw new Error('V4_URL must name the built game to check');
 const shots = process.env.V4_SHOTS || '/tmp/patrons-shop-lighting';
 mkdirSync(shots, { recursive: true });
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 try {
   const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
   // round III, P1 to place, Recruit a Member open with two face-up members it lights (lib/aim-save.mjs): the space

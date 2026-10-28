@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // Swap picker probe: what opening a member swap costs late in a game (the old Even Swap's picker; Promote's today).
 //   node scripts/v4-swap-probe.mjs <url> [--cpu=4] [--members=10] [--runs=3] [--profile] [--diff] [--control] [--shot=<path prefix>]
 // --control places on Gather instead (no picker): the placement's own cost, to set beside Promote's.
@@ -44,7 +44,7 @@ const RECORD = () => {
   try { new PerformanceObserver(l => { if (window.__probe.on) for (const e of l.getEntries()) window.__probe.loaf.push(Math.round(e.duration)); }).observe({ type: 'long-animation-frame' }); } catch { /* none */ }
 };
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const rows = [];
 for (let run = 0; run < RUNS; run++) {
   const { save, pairs } = fixture();

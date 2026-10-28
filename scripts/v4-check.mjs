@@ -38,6 +38,8 @@ const HELP = `npm run check:v4 [-- options]
   --fast               Unit tests (seeded blocks on their fast slice) and the build; no e2e. CI runs this.
   --full               Every seeded block at its full count (V4_GAMES=full): the nightly / remote job. The verdict
                        plays each block's verdict slice, whose strength is stated beside it (src/test/engine/v4/budget.js).
+  --firefox            The browser gates in Firefox (V4_ENGINE=firefox) instead of Chromium; CDP-only gates are named
+                       and skipped. Run it for any screen, motion or perf change: Cory plays Firefox on a Mac.
   --help               This.
 
   V4_OUTDIR=.v4-build-<name>  build dir (default .v4-build; inside the export with --commit)
@@ -50,6 +52,8 @@ const HELP = `npm run check:v4 [-- options]
 
 const argv = process.argv.slice(2);
 if (argv.includes('--help') || argv.includes('-h')) { console.log(HELP); process.exit(0); }
+// --firefox: the browser gates run in Firefox instead (Cory plays Firefox on a Mac); gates that need CDP stay Chromium-only
+const ENGINE = argv.includes('--firefox') ? 'firefox' : (process.env.V4_ENGINE || 'chromium');
 const quick = argv.includes('--quick'), fast = argv.includes('--fast'), full = argv.includes('--full');
 if ([quick, fast, full].filter(Boolean).length > 1) { console.error('pick one of --quick, --fast, --full\n\n' + HELP); process.exit(2); }
 const ci = argv.indexOf('--commit');
@@ -63,7 +67,7 @@ const tests = ti >= 0 ? (argv[ti + 1] || '').split(',').map(f => f.trim()).filte
 if (ti >= 0 && (!tests.length || !(quick || fast) || related || tests.some(f => !/^src\/test\/[\w./-]+\.test\.[cm]?[jt]sx?$/.test(f) || f.includes('..') || !existsSync(f)))) {
   console.error('--tests needs existing src/test/*.test files with --quick/--fast, and cannot combine with --related.'); process.exit(2);
 }
-const known = new Set(['--quick', '--fast', '--full', '--commit', ref, '--related', ri >= 0 ? argv[ri + 1] : null, '--tests', ti >= 0 ? argv[ti + 1] : null].filter(Boolean));
+const known = new Set(['--firefox', '--quick', '--fast', '--full', '--commit', ref, '--related', ri >= 0 ? argv[ri + 1] : null, '--tests', ti >= 0 ? argv[ti + 1] : null].filter(Boolean));
 const unknown = argv.filter(a => !known.has(a));
 if (unknown.length) { console.error(`unknown option ${unknown.join(' ')}\n\n${HELP}`); process.exit(2); }
 
@@ -135,22 +139,30 @@ console.log(`${kind} run${games ? ` (V4_GAMES=${games})` : ''}; each stage's ful
 const results = [];
 // runs a stage with its output captured (and streamed to its log file, for tail -f), then prints it whole (or its
 // tail, for a long passing log) when it ends
-const run = async (name, args, { env = {}, nice = 0, tail = Infinity, cmd = process.execPath } = {}) => {
+// limitS: a stage still running after this long is stalled: its whole process group is killed and it FAILs as STALLED,
+// so one hung check can't hold a release (one stalled check held the v0.9 release overnight, Oct 28).
+// V4_STALL_SCALE multiplies every limit (a loaded box).
+const STALL_SCALE = Number(process.env.V4_STALL_SCALE) || 1;
+const run = async (name, args, { env = {}, nice = 0, tail = Infinity, cmd = process.execPath, limitS = 0 } = {}) => {
   const t0 = Date.now();
   const child = nice ? runChild('nice', ['-n', String(nice), cmd, ...args], { cwd: root, env, quiet: true }) : runChild(cmd, args, { cwd: root, env, quiet: true });
+  let stalled = false;
+  const guard = limitS ? setTimeout(() => { stalled = true; try { process.kill(-child.pid, 'SIGKILL'); } catch { /* gone */ } }, limitS * STALL_SCALE * 1000) : null;
   const file = join(logs, `${name.replace(/[^\w.-]+/g, '_')}.log`);
   const stream = createWriteStream(file);
   stream.on('error', () => {});
   child.stdout?.on('data', d => stream.write(d));
   child.stderr?.on('data', d => stream.write(d));
   const code = await exitOf(child);
+  clearTimeout(guard);
   stream.end();
   const s = (Date.now() - t0) / 1000;
-  const r = { name, ok: code === 0, s: +s.toFixed(1), start: +((t0 - started) / 1000).toFixed(1) };
+  const r = { name, ok: code === 0 && !stalled, stalled, s: +s.toFixed(1), start: +((t0 - started) / 1000).toFixed(1) };
+  if (stalled) child.output += `\nSTALLED: still running after ${Math.round(limitS * STALL_SCALE)}s, killed. Its log: ${file}. A stalled e2e: screenshot the stuck step before anyone bisects.`;
   results.push(r);
   const out = child.output.trimEnd();
   const shown = r.ok && out.length > tail ? `… (${file})\n${out.slice(-tail)}` : out;
-  console.log(`\n── ${r.ok ? 'PASS' : 'FAIL'} ${name} (${r.s}s, done at ${clock()}) ──\n${shown}`);
+  console.log(`\n── ${r.ok ? 'PASS' : stalled ? 'STALLED' : 'FAIL'} ${name} (${r.s}s, done at ${clock()}) ──\n${shown}`);
   return Object.assign(r, { output: child.output });
 };
 
@@ -163,9 +175,9 @@ if (tests) console.log(`SCOPED TEST SELECTION (${tests.length} files): ${tests.j
 const unitArgs = tests ? [VITEST, 'run', ...tests, `--maxWorkers=${workers}`] : related
   ? [VITEST, 'related', '--run', ...related, `--maxWorkers=${workers}`, '--passWithNoTests']
   : [VITEST, 'run', 'src/test/engine/v4', 'src/test/v4', `--maxWorkers=${workers}`, ...(quick ? QUICK_SKIP.flatMap(g => ['--exclude', g]) : [])];
-const unit = run('unit tests', unitArgs, { nice: 10, env: games ? { V4_GAMES: games } : {}, tail: 2500 });
+const unit = run('unit tests', unitArgs, { nice: 10, env: games ? { V4_GAMES: games } : {}, tail: 2500, limitS: full ? 7200 : 2400 });
 // 2. the build (COMMIT_REF stamps it with the exported commit (vite.config.js), not whatever HEAD the live tree has)
-const built = await run('production build', [VITE, 'build', '--outDir', outDir, '--emptyOutDir'], { env: sha ? { COMMIT_REF: sha } : {}, tail: 300 });
+const built = await run('production build', [VITE, 'build', '--outDir', outDir, '--emptyOutDir'], { env: sha ? { COMMIT_REF: sha } : {}, tail: 300, limitS: 900 });
 
 // 3. the e2e, the moment the build is served
 if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
@@ -182,6 +194,8 @@ if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
     const all = quick ? (process.env.V4_QUICK_E2E ? process.env.V4_QUICK_E2E.split(',').filter(f => f && f !== 'none') : ['hotseat.mjs']) : readdirSync(join(root, 'e2e/v4')).filter(f => f.endsWith('.mjs')).filter(f => !PHONE_ONLY.has(f) || process.env.V4_PHONE)
       // agents' scratch probes (qa-*, *probe*) are never gates, even if a checkpoint picks one up
       .filter(f => !/^qa-|probe/.test(f));
+    // in Firefox, gates that need CDP (CPU throttle, heap) can't run unless they fall back on cdpOk: named, not silently dropped
+    if (ENGINE === 'firefox') for (const f of [...all]) if (/newCDPSession/.test(readFileSync(join(root, 'e2e/v4', f), 'utf8')) && !/cdpOk/.test(readFileSync(join(root, 'e2e/v4', f), 'utf8'))) { all.splice(all.indexOf(f), 1); console.log(`[${f}] Chromium only (uses CDP): not run in Firefox`); }
     // timing-sensitive: hover p95 (info), count-ups and bot pacing (motion). They take every e2e token on the box.
     // memory.mjs is not: it reads the heap after a forced GC, which load doesn't change.
     const SOLO = new Set(['info.mjs', 'motion.mjs', 'snappy.mjs']); // snappy: spin, hover and click-to-minion budgets
@@ -190,7 +204,9 @@ if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
     const order = (a, b) => (LONG[b] || 30) - (LONG[a] || 30) || a.localeCompare(b);
     const one = async (f, weight) => {
       const tok = await acquire('e2e', { weight, what: `${what}: ${f}`, kind, quietMs: 60000, log: m => console.log(`[${f}] ${m}`) });
-      try { return await run(`e2e ${f}`, [`e2e/v4/${f}`], { env: { V4_URL: server.url, V4_SHOTS: `${shotsRoot}/${f.replace(/\.mjs$/, '')}` } }); } finally { tok.release(); }
+      // stalled past 5x its typical time (at least 6 min, counted from when it gets its token)
+      const limitS = Math.max(360, 5 * (LONG[f] || 30));
+      try { return await run(`e2e ${f}${ENGINE !== 'chromium' ? ` [${ENGINE}]` : ''}`, [`e2e/v4/${f}`], { env: { V4_URL: server.url, V4_SHOTS: `${shotsRoot}/${f.replace(/\.mjs$/, '')}`, V4_ENGINE: ENGINE }, limitS }); } finally { tok.release(); }
     };
     // the FIFO token queue runs them in this order: the parallel ones (one token each), then each solo one alone
     const par = all.filter(f => !SOLO.has(f)).sort(order), solo = all.filter(f => SOLO.has(f)).sort(order);
@@ -205,7 +221,7 @@ if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
 let knownRed = {};
 try { knownRed = JSON.parse(readFileSync(join(root, 'e2e/v4/known-red.json'), 'utf8')); } catch {}
 for (const r of results) {
-  const f = r.name.replace(/^e2e /, ''); const k = knownRed[f];
+  const f = r.name.replace(/^e2e /, '').replace(/ \[\w+\]$/, ''); const k = knownRed[f];
   if (!k || !r.name.startsWith('e2e ')) continue;
   if (r.ok) console.log(`\nNOW GREEN: ${f} passes; remove it from e2e/v4/known-red.json.`);
   else { r.ok = true; r.knownRed = true; console.log(`\nKNOWN RED: ${f} was already red on live ${k.live} (since ${k.since}; owner ${k.owner}: ${k.why}). Not your change; not counted.`); }
@@ -225,6 +241,6 @@ recordRun({
 });
 console.log(`\n── v4 check (${kind}) ──`);
 if (waitedMs > 1000) console.log(`waited ${(waitedMs / 1000).toFixed(0)}s for a check slot`);
-for (const r of results.slice().sort((a, b) => a.start - b.start)) console.log(`${r.knownRed ? 'KNOWN RED' : r.ok ? 'PASS' : 'FAIL'}  ${r.name}  (${r.s}s, from ${r.start}s)`);
+for (const r of results.slice().sort((a, b) => a.start - b.start)) console.log(`${r.knownRed ? 'KNOWN RED' : r.ok ? 'PASS' : r.stalled ? 'STALLED' : 'FAIL'}  ${r.name}  (${r.s}s, from ${r.start}s)`);
 console.log(`total ${totalS}s · ${kind}${games ? ` · V4_GAMES=${games}` : ''} · ${sha ? `verdict on commit ${sha.slice(0, 7)}` : LIVE_WARNING} · history ${RUNS}`);
 process.exit(ok ? 0 : 1);

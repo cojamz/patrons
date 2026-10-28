@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: page memory over a full hot-seat game (1 person + 3 bots, first-pick clicks; laptop viewport).
 // Reviewers' Chromium tabs crashed ("Target crashed") on a box near its RAM limit: this proves whether the page
 // itself grows. Every ~20 game moves (and at each round end, and the results) it forces a GC and reads Chrome's own
@@ -32,7 +32,7 @@ if (!base) {
 }
 
 const fails = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
 page.on('pageerror', e => fails.push(`pageerror: ${e.message}`));
 page.on('crash', () => fails.push('the page crashed (Target crashed)'));

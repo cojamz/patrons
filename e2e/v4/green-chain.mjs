@@ -2,7 +2,7 @@
 // The same pending nested choice resumes after reload; desktop and phone use actual clicks/taps.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
@@ -43,7 +43,7 @@ function fixture() {
   return { config: { seats, speed: 'fast' }, state: s, undo: null, savedAt: Date.now() };
 }
 
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 let currentPage, currentTag;
 try {
   // the phone pass runs only with V4_PHONE=1 (phone is out of scope, Cory 2026-10-20)

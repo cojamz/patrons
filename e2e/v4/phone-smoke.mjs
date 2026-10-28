@@ -1,14 +1,14 @@
 // SKIPPED (phone-only): phone is out of scope (Cory, 2026-10-20). scripts/v4-check.mjs runs it only with V4_PHONE=1.
 // Basic touch compatibility, not a mobile layout/polish verdict. Tests the built game supplied in V4_URL.
 import { chromium } from 'playwright';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { answerChoice } from './lib/answer.mjs';
 import { mkdirSync } from 'node:fs';
 const url = process.env.V4_URL;
 if (!url) throw new Error('V4_URL must name the built game to check');
 const shots = process.env.V4_SHOTS || '/tmp/patrons-phone-smoke';
 mkdirSync(shots, { recursive: true });
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 try {
   for (const width of [390, 412]) {
     const context = await browser.newContext({ viewport: { width, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });

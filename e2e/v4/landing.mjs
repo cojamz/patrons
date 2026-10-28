@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser, cdpOk } from './lib/browser.mjs';
 // E2E landing gate (Cory, Oct 28: "a lot of the animations dont seem to 'finish' like the follower or the money
 // disappears well before making it to its final destination"). Every flight that leaves must arrive: no coin, follower,
 // card or member is taken off the screen before its path has played, unless the player pressed to skip the show.
@@ -26,7 +26,7 @@ function roundSave(seed, round) {
   return { config: { seats: seats.map(x => ({ kind: x.kind, name: x.name })) }, state: s, undo: null, savedAt: Date.now() };
 }
 const SEED = Number(process.env.V4_LAND_SEED || 21), ROUND = Number(process.env.V4_LAND_ROUND || 2), CPU = Number(process.env.V4_LAND_CPU || 4);
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const errors = [];
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 await ctx.addInitScript(() => { try { localStorage.setItem('patrons.v4.motionSpeed', 'relaxed'); } catch { /* private window */ } });
@@ -41,7 +41,8 @@ const resume = await page.waitForSelector('[data-home="resume"]', { timeout: 800
 if (!resume) { console.error('landing: the saved game did not resume'); await browser.close(); process.exit(1); }
 await resume.click();
 await page.waitForSelector('.app.game', { timeout: 10000 });
-const cdp = await ctx.newCDPSession(page);
+// Firefox (V4_ENGINE=firefox) has no CDP: it plays at the box's own speed
+const cdp = cdpOk ? await ctx.newCDPSession(page) : { send: async () => ({}) };
 await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
 const t0 = Date.now();
 let done = false;
@@ -61,7 +62,7 @@ const w = await page.evaluate(() => window.__flightWatch.report());
 await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 }).catch(() => {});
 await browser.close();
 if (!done) errors.push(`round ${ROUND} never ended within 5 minutes`);
-console.log(`landing: ${w.flights} flights in round ${ROUND} at Relaxed, ${CPU}x CPU: ${w.landed} landed, ${w.skipped} skipped by a press, ${w.cut} cut short; ${w.missed} of ${w.aimed} aimed ended away from their place`);
+console.log(`landing: ${w.flights} flights in round ${ROUND} at Relaxed, ${cdpOk ? `${CPU}x CPU` : "Firefox, own speed"}: ${w.landed} landed, ${w.skipped} skipped by a press, ${w.cut} cut short; ${w.missed} of ${w.aimed} aimed ended away from their place`);
 for (const m of w.misses.slice(0, 8)) errors.push(`a ${m.kind} ended ${m.off}px from its place (${m.target}) at move ${m.moves}`);
 for (const c of w.samples.slice(0, 8)) errors.push(`a ${c.kind} left the screen ${c.share}% of the way (${c.at}/${c.end} ms, ${c.state}) at move ${c.moves}: ${c.stack}`);
 if (w.flights < 20) errors.push(`only ${w.flights} flights watched: the gate saw too little to judge`);

@@ -1,7 +1,7 @@
 // Focused real interactions: new Red recruits, rival movement, unified follower purchase.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
@@ -56,7 +56,7 @@ function scenario(name){
  return{save,initial,pair,expected};
 }
 if(process.argv.includes('--fixtures-only')){for(const n of ['panel','penalty','followers']){scenario(n);console.log(`${n}: fixture resolves`);}process.exit(0);}
-const browser=await chromium.launch({executablePath:browserPath});let page,tag;
+const browser=await launchBrowser({executablePath:browserPath});let page,tag;
 try{
  for(const [size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]])for(const name of ['panel','penalty','followers']){ // penalty: Poach now moves the rival's member (Even Swap went in the round I rework, Cory Oct 27)
   tag=`${size}-${name}`;const ctx=await browser.newContext(opts);page=await ctx.newPage();page.setDefaultTimeout(12000);

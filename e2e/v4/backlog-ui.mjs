@@ -1,7 +1,7 @@
 // Focused backlog checks: details choices, payment notes, and readable member-list prices.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
@@ -21,7 +21,7 @@ function fixture(kind){
  s.build=buildStamp();return {config:{seats,speed:'quick'},state:s,undo:null,savedAt:Date.now()};
 }
 const compare=s=>({res:s.players.map(p=>p.res),members:s.players.map(p=>p.members),shop:s.shop});
-const browser=await chromium.launch({executablePath:browserPath});
+const browser=await launchBrowser({executablePath:browserPath});
 try{for(const[size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]])for(const kind of ['choice','pay','hover']){
  const ctx=await browser.newContext(opts),p=await ctx.newPage(),errors=[];p.setDefaultTimeout(10000);p.on('pageerror',e=>errors.push(e.message));const save=fixture(kind);
  await seedSave(p,save);await p.goto(`${base}/?intro=0&speed=quick`);await p.locator('[data-home="resume"]').click();

@@ -2,13 +2,13 @@
 //   node e2e/v4/lib/peek-strip.mjs <url> <outDir> [WxH ...]
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './browser.mjs';
+import { browserPath, launchBrowser } from './browser.mjs';
 import { seedSave } from './seed.mjs';
 import { stripSave } from './strip-save.mjs';
 
 const [url, out, ...sizes] = process.argv.slice(2);
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 for (const size of sizes.length ? sizes : ['1270x700']) {
   const [width, height] = size.split('x').map(Number);
   const full = stripSave({ quadrants: ['gold', 'red', 'blue', 'green'] });

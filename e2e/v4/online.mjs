@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: a 3-person online game, with the things friends actually do.
 //   Hana hosts on a laptop. Gus joins by typing the code. Pia opens the invite link (a laptop; an iPhone 13 over
 //   Firebase with V4_PHONE=1).
@@ -76,7 +76,7 @@ if (!base) {
 
 const errors = [];
 const log = (...a) => console.log(`[online ${tag}]`, ...a);
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const laptop = { viewport: { width: 1270, height: 700 } };
 // BroadcastChannel/IndexedDB only reach tabs of one context; over Firebase every person gets their own context
 const shared = RTDB ? null : await browser.newContext(laptop);

@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: rule-bending members (and Release staying gone), played through the real UI at 1270×700.
 // From a saved round-I game where P1 (the only person) already holds Squatter, Insider, Straggler and a gold member:
 //  (b1) Squatter: every squat:<q>-<i> option the engine offers is a clickable, labelled space (wheel + panel), and
@@ -62,7 +62,7 @@ if (!save) { console.error('could not build a bender save'); process.exit(1); }
 
 const errors = [];
 const seen = new Set();
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));

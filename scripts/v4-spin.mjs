@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // The wheel spin as a person feels it: on your turn (round I, spaces lit), press → and count the frames the spin
 // actually paints. node scripts/v4-spin.mjs <url> [--cpu=4] [--spins=10] [--gpu] (software rendering unless --gpu)
 // --size=1512x945 --dpr=2: a 14-inch MacBook's window. Reports per spin: the key's wait to paint (Event Timing), frames painted while it turned and the longest gap.
@@ -9,7 +9,7 @@ const flag = (n, d) => { const a = argv.find(x => x === `--${n}` || x.startsWith
 const url = argv.find(a => !a.startsWith('--'));
 const CPU = Number(flag('cpu', 4)), SPINS = Number(flag('spins', 10));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const browser = await chromium.launch({ executablePath: browserPath, args: flag('gpu', false) ? [] : ['--disable-gpu', '--disable-gpu-compositing'] });
+const browser = await launchBrowser({ executablePath: browserPath, args: flag('gpu', false) ? [] : ['--disable-gpu', '--disable-gpu-compositing'] });
 const [VW, VH] = String(flag('size', '1270x700')).split('x').map(Number);
 const ctx = await browser.newContext({ viewport: { width: VW, height: VH }, deviceScaleFactor: Number(flag('dpr', 1)) });
 await ctx.addInitScript(() => {

@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: Squatter onto a rival's Greatest Hits copies every action with your minion (Cory's v0.9.1 playtest, Oct 27:
 // "using squatter on greatest hits didnt seem to work… players actions werent copied"). Round III, you took two
 // spaces, a rival took Greatest Hits; you join it with Squatter on the wheel and answer its "copy which next?".
@@ -37,7 +37,7 @@ function squatSave(stamp) {
 }
 
 const fails = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 try {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
   const page = await ctx.newPage();

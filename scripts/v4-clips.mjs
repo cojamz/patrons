@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // Clips of the table's motion, for watching the chain of animations at each speed (motion engineer, 2026-10-15).
 //   node scripts/v4-clips.mjs <base url> <tag> [speed=steady]   → design/eval/perf/<clip>-<tag>.mp4 (+ .gif)
 // Clips: your turn (a gain, then a +6 follower buy) · rivals' turns with a steal and a member trigger (seed 5, round II:
@@ -34,7 +34,7 @@ const p1Places = s => s.pending && s.pending.player === 0 && s.pending.kind === 
 async function clip(name, save, act) {
   const vdir = join(tmpdir(), `v4-clip-${name}-${tag}-${process.pid}`);
   rmSync(vdir, { recursive: true, force: true });
-  const b = await chromium.launch({ executablePath: browserPath });
+  const b = await launchBrowser({ executablePath: browserPath });
   const ctx = await b.newContext({ viewport: { width: 1270, height: 700 }, recordVideo: { dir: vdir, size: { width: 1270, height: 700 } } });
   const p = await ctx.newPage();
   await p.goto(`${base}/?intro=0&speed=${speed}`);

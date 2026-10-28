@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: the reload and two-tab edges a blind saboteur found in RC1 (design/eval/panel-rc1-saboteur.md #1, #3, #5).
 //  (t) one local game open in two pages of one browser: the newer page takes it over, the older one freezes behind
 //      "This game is open in another tab", nothing it does reaches the save, and "Play here" takes it back with no
@@ -31,7 +31,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const ctx = await browser.newContext({ viewport: DESKTOP });
 const watch = (page, tag) => {
   page.on('console', m => { if (m.type() === 'error') errors.push(`${tag} console: ${m.text()}`); });

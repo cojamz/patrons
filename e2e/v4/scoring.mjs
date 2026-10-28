@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // End-game bonuses must arrive during round III's Reckoning, named by member, after contests.
 // Results must immediately show those already-landed totals without a second recount.
 // A second run skips during a bonus and verifies every remaining bonus is settled.
@@ -42,7 +42,7 @@ if (!base) {
 }
 
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 // Observe actual rendered totals and source captions on every animation frame.
 const WATCH = () => {

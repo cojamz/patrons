@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // E2E: Greatest Hits ("Copy all your spaces / from this round") at 1270×700, from a real round III where you took a
 // mix of spaces, an Echo or Reprise among them. Cory's play (2026-10-16): "Copy all your spaces doesn't work quite
 // right": a copy space you took was skipped without a word. The revised rule includes copy actions, which offer a
@@ -60,7 +60,7 @@ function copyAllSave() {
 const fails = [];
 const fail = (m, tag) => fails.push(`[${tag}] ${m}`);
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 try {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
   const page = await ctx.newPage();

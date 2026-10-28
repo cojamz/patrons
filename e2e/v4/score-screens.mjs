@@ -1,4 +1,4 @@
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 // Probe: how fast the round-end card and the results appear, and what they look like, at 1270×700 (todo: "round-end
 // and end-game screens appear quickly"). From a saved game at P1's last placement of round III (lib/late-save.mjs):
 //  (s1) the Reckoning ends → the round card is readable (fully opaque): ms, and the longest task meanwhile;
@@ -16,7 +16,7 @@ mkdirSync(SHOTS, { recursive: true });
 const base = process.env.V4_URL;
 if (!base) { console.error('set V4_URL'); process.exit(1); }
 const errors = [];
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 
 // in-page: when a selector first shows up, and when it is first fully opaque (its own and every ancestor's opacity)
 const watcher = () => {

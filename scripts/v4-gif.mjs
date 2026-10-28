@@ -1,4 +1,4 @@
-import { browserPath } from '../e2e/v4/lib/browser.mjs';
+import { browserPath, launchBrowser } from '../e2e/v4/lib/browser.mjs';
 // Record a page as a crisp pixel-art GIF plus an MP4 (send Cory the MP4: the app plays video but shows a GIF as a still).
 //   [STEP=1] node scripts/v4-gif.mjs <url> <out.gif> [ms=8000] [width=960] [fps=15]  (use fps 30 for motion Cory judges)  (STEP=1: exact frame stepping, best for the intro)   (GIF_READY=<css selector> waits for it before the clock starts)
 // e.g. node scripts/v4-gif.mjs "http://localhost:5324/?lab=intro&beat=1" design/prototypes/vision/shots/intro2-beat1.gif 5000
@@ -22,7 +22,7 @@ mkdirSync(dirname(out), { recursive: true });
 if (process.env.STEP) {
   const fpsS = Number(fpsArg);
   const fdir = join(vdir, 'frames'); mkdirSync(fdir, { recursive: true });
-  const b = await chromium.launch({ executablePath: browserPath });
+  const b = await launchBrowser({ executablePath: browserPath });
   const pg = await b.newPage({ viewport: { width: 1270, height: 700 } });
   await pg.goto(url + (url.includes('at=') ? '' : (url.includes('?') ? '&' : '?') + 'at=0'), { waitUntil: 'load' });
   if (process.env.GIF_READY) await pg.waitForSelector(process.env.GIF_READY, { timeout: 20000 });
@@ -42,7 +42,7 @@ if (process.env.STEP) {
   console.log(`${out} ${(statSync(out).size / 1e6).toFixed(1)} MB (stepped, ${n} frames @ ${fpsS}fps); mp4: ${mp4s}`);
   process.exit(0);
 }
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 }, recordVideo: { dir: vdir, size: { width: 1270, height: 700 } } });
 const page = await ctx.newPage();
 const t0 = Date.now();

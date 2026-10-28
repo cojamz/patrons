@@ -1,12 +1,12 @@
 // Isolated wheel compositor audit: real frame gaps and browser paint/layout work, at 1x and 4x CPU.
 import { chromium } from 'playwright';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { mkdirSync } from 'node:fs';
 import { lateSave } from './lib/late-save.mjs';
 import { HOVER_DELAY_MS } from '../../src/v4/game/hoverDelay.js';
 import { richSave } from './lib/rich-save.mjs';
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 try {
   const page = await browser.newPage({viewport:{width:1440,height:900}});
   await seedSave(page, richSave());

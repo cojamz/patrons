@@ -70,12 +70,14 @@ if [[ "$PREV_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && [ "$PREV_VERSION" != "$
   done
 fi
 rm -rf "$TMP/old/$NEW_VERSION"
-ls "$TMP/old" | sort -V | head -n "-$KEEP_OLD" | while read -r old; do rm -rf "$TMP/old/$old"; done
+# oldest first by build time, not by number: sort -V would put v0.9.9 before v0.9.801 (sub-step versions, Oct 28)
+by_age() { for d in "$TMP/old"/*/; do d=${d%/}; printf '%s %s\n' "$(node -e 'try{process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1])).builtAt||"0")}catch{process.stdout.write("0")}' "$d/build.json")" "$(basename "$d")"; done | sort | cut -d' ' -f2; }
+[ -n "$(ls "$TMP/old")" ] && by_age | head -n "-$KEEP_OLD" | while read -r old; do rm -rf "$TMP/old/$old"; done
 # Replace only play/ (and rules/ below), including dotfiles, and preserve every other main path.
 rm -rf "$WT/play"
 mkdir "$WT/play"
 cp -R "$TMP/play/." "$WT/play/"
-if [ -n "$(ls "$TMP/old")" ]; then mkdir "$WT/play/v"; cp -R "$TMP/old/." "$WT/play/v/"; echo "Older releases kept for rejoins: $(ls "$TMP/old" | sort -V | tr '\n' ' ')"; fi
+if [ -n "$(ls "$TMP/old")" ]; then mkdir "$WT/play/v"; cp -R "$TMP/old/." "$WT/play/v/"; echo "Older releases kept for rejoins: $(by_age | tr '\n' ' ')"; fi
 # Pages serves main as plain files: skipping Jekyll makes each publish deploy faster.
 [ -f "$WT/.nojekyll" ] || { touch "$WT/.nojekyll"; git -C "$WT" add .nojekyll; }
 git -C "$WT" add --all -- play

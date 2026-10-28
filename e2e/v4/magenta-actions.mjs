@@ -1,7 +1,7 @@
 // Focused real desktop/phone actions. Hand-made saved scenes avoid playing whole games.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { browserPath } from './lib/browser.mjs';
+import { browserPath, launchBrowser } from './lib/browser.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { freeCard } from './lib/deal.mjs';
@@ -86,7 +86,7 @@ if (process.argv.includes('--fixtures-only')) {
   for (const name of names) { fixture(name); console.log(`${name}: independent transfer/bonus/protection assertions pass.`); }
   process.exit(0);
 }
-const browser = await chromium.launch({ executablePath: browserPath });
+const browser = await launchBrowser({ executablePath: browserPath });
 let page, tag;
 try {
   for (const [size, opts] of [['desktop', { viewport: { width: 1270, height: 700 } }], ['phone', devices['iPhone 13']]]) {
