@@ -10,11 +10,14 @@ export const browserPath = engine === 'firefox' ? undefined
   : process.env.V4_BROWSER || (existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : chromium.executablePath());
 const FIREFOX_MISSING = 'Firefox is not installed here. It needs cdn.playwright.dev and playwright.download.prss.microsoft.com '
   + 'allowed in the environment\'s network settings, then: npx playwright install firefox (the bootstrap hook tries it each session).';
+// Headless Firefox has no pointing device, so it answers (hover: none) and every hover card stays shut (snappy s2 opened
+// 0 of 23 in Firefox, Oct 28). Cory's Firefox on a Mac has a trackpad: tell it so (fine pointer that can hover: 2 | 4).
+export const DESK = { 'ui.primaryPointerCapabilities': 6, 'ui.allPointerCapabilities': 6 };
 export async function launchBrowser(opts = {}) {
   if (engine === 'chromium') return chromium.launch(opts);
   const path = process.env.V4_BROWSER || firefox.executablePath();
   if (!existsSync(path)) throw new Error(FIREFOX_MISSING);
   // Chrome-only switches (--disable-gpu, autoplay policy) mean nothing to Firefox
-  const { executablePath, args, ...rest } = opts;
-  return firefox.launch({ ...rest, executablePath: path });
+  const { executablePath, args, firefoxUserPrefs, ...rest } = opts;
+  return firefox.launch({ ...rest, executablePath: path, firefoxUserPrefs: { ...DESK, ...firefoxUserPrefs } });
 }
