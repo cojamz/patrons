@@ -239,7 +239,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
           <small>{row?.kind === 'bonus' ? 'End-game bonuses' : `Round ${info.result.round} scoring`} · {Math.min(step + 1, rows.length)} of {rows.length}</small>
           {/* (keyed by the rim: the next rim's words fade in rather than swap in one frame, round-end smoothing) */}
           {row && <b key={`r${step}`} className="reckon-rule">{row.rule}</b>}
-          {row && row.counts && <span key={`c${step}`} className="reckon-counts">{row.kind === 'bonus' ? '' : 'Counts '}{row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
+          {row && row.counts && <span key={`c${step}`} className="reckon-counts">{row.kind === 'bonus' ? '' : 'Counts '}{row.counts.replace(/\.\s*$/, '')}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
           {/* the four scores side by side (Cory, 2026-10-15: "show the 4 players' scores for the various competitions"):
               each player's count stamps in and ticks up under their minion; the winner's column jiggles */}
           {row && mid && step < rows.length && (
