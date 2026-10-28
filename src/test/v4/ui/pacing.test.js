@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
-import { planChain, holdAfter, foldBuys } from '../../../v4/game/director.js';
+import { planChain, holdAfter, foldBuys, stepHoldCap } from '../../../v4/game/director.js';
 import { MO, RIVAL, SPEEDS, motionSpeed, setMotionSpeed } from '../../../v4/motion.js';
 
 const pct = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * p))] : NaN; };
@@ -129,7 +129,8 @@ describe('a rival\'s step plays quicker than your own (RIVAL)', () => {
               const rc = rival.atoms.find(a => a.op === 'card'), oc = own.atoms.find(a => a.op === 'card');
               // a dense chain tightens to fit the turn's cap (director.js planChain), and a rival's chain, its other beats at
               // RIVAL, tightens less than the same step as yours: there its card is never quicker than yours; otherwise the same
-              const squeezed = Math.max(rival.total, own.total) >= Math.round(2400 * SPEEDS.steady); // a squeezed chain ends exactly at the cap
+              // (and, in a round, the table's hold cap less its margin, director.js FIT_MARGIN)
+              const squeezed = Math.max(rival.total, own.total) >= Math.min(Math.round(2400 * SPEEDS.steady), stepHoldCap() - 600) - 1; // a squeezed chain ends exactly at the cap
               if (rc && oc) { cards++; for (const f of ['lift', 'toHub', 'show', 'fromHub']) if (squeezed) expect(rc[f]).toBeGreaterThanOrEqual(oc[f] - 1); else expect(Math.abs(rc[f] - oc[f])).toBeLessThanOrEqual(1); }
             }
           }
