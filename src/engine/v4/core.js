@@ -473,6 +473,8 @@ function inputFor(state, task) {
       const more = buysAfter(state, p);
       // Buying ends the purchase allowance, not the player's ability to use a member this turn.
       if (task.afterPurchase) {
+        // recruits still to come this turn (Spree's): their step offers the same uses, and its Done would drop them
+        if (more) return { kind: 'buy', afterPurchase: true, prompt: '', options: [] };
         const uses = useOptions(state, p).filter(o => !useIdle(state, p, o.uid));
         return { kind: 'buy', afterPurchase: true, prompt: `${p.name}: use a member, or finish your turn`,
           options: uses.length ? [...uses, { id: 'pass', label: 'Done', kind: 'pass' }] : [] };
