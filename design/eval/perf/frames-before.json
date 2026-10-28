@@ -1,0 +1,1417 @@
+{
+ "label": "frames-before",
+ "cpu": 4,
+ "secs": 40,
+ "speed": "relaxed",
+ "phases": {
+  "early": {
+   "split": {
+    "script": 3059,
+    "style": 2053,
+    "layout": 449,
+    "task": 17490,
+    "wall": 40000
+   },
+   "round": "I",
+   "errors": [],
+   "sum": {
+    "rows": [
+     {
+      "k": "(all frames)",
+      "n": 2288,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 116.6,
+      "hitch": 1
+     },
+     {
+      "k": "span.dots:blink",
+      "n": 199,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 83.3,
+      "hitch": 9
+     },
+     {
+      "k": "svg.leader:cult-breathe",
+      "n": 199,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 83.3,
+      "hitch": 9
+     },
+     {
+      "k": "g.blink:cult-blink",
+      "n": 199,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 83.3,
+      "hitch": 9
+     },
+     {
+      "k": "span.tc-line:tcline",
+      "n": 880,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 116.6,
+      "hitch": 2
+     },
+     {
+      "k": "i.cs-min:cs-bob",
+      "n": 117,
+      "p50": 16.7,
+      "p95": 50.1,
+      "max": 83.3,
+      "hitch": 14
+     },
+     {
+      "k": "i.cs-min:cs-bob-eager",
+      "n": 117,
+      "p50": 16.7,
+      "p95": 50.1,
+      "max": 83.3,
+      "hitch": 14
+     },
+     {
+      "k": "img.sprite:cult-shift",
+      "n": 106,
+      "p50": 16.7,
+      "p95": 50.1,
+      "max": 83.3,
+      "hitch": 14
+     },
+     {
+      "k": "b.seat-delta.up:seatdelta",
+      "n": 1477,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 1
+     },
+     {
+      "k": "span.base:opacity",
+      "n": 466,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 83.4,
+      "hitch": 3
+     },
+     {
+      "k": "span.lead:cult-gesture",
+      "n": 54,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 83.3,
+      "hitch": 19
+     },
+     {
+      "k": "span.worker-fig:panelland-under",
+      "n": 240,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 83.4,
+      "hitch": 4
+     },
+     {
+      "k": "span.lead:cult-scheme",
+      "n": 145,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 66.7,
+      "hitch": 6
+     },
+     {
+      "k": "path.wash:fill",
+      "n": 64,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 83.3,
+      "hitch": 9
+     },
+     {
+      "k": "section.lt-seat.lt-seat-3:background-color",
+      "n": 270,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 50.1,
+      "hitch": 2
+     },
+     {
+      "k": "section.lt-seat.lt-seat-3:box-shadow",
+      "n": 270,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 50.1,
+      "hitch": 2
+     },
+     {
+      "k": "img.sprite:cult-eager",
+      "n": 50,
+      "p50": 16.7,
+      "p95": 50.1,
+      "max": 83.3,
+      "hitch": 10
+     },
+     {
+      "k": "span.tick.num:bump",
+      "n": 235,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 66.7,
+      "hitch": 2
+     },
+     {
+      "k": "span.tick.dip:bump",
+      "n": 351,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 116.6,
+      "hitch": 1
+     },
+     {
+      "k": "button.card.lt-card:js",
+      "n": 317,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 116.6,
+      "hitch": 1
+     },
+     {
+      "k": "section.lt-seat.lt-seat-1:background-color",
+      "n": 135,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 50.1,
+      "hitch": 2
+     },
+     {
+      "k": "section.lt-seat.lt-seat-1:box-shadow",
+      "n": 135,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 50.1,
+      "hitch": 2
+     },
+     {
+      "k": "section.lt-seat.lt-seat-0:background-color",
+      "n": 270,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 1
+     },
+     {
+      "k": "section.lt-seat.lt-seat-0:box-shadow",
+      "n": 270,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 1
+     },
+     {
+      "k": "div.flight.shop-out:js",
+      "n": 130,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 2
+     },
+     {
+      "k": "div.flight.pulse-glow:js",
+      "n": 248,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 50.1,
+      "hitch": 1
+     },
+     {
+      "k": "span.base.chain-point:js",
+      "n": 120,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 50.1,
+      "hitch": 2
+     },
+     {
+      "k": "img.sprite:cult-breathe",
+      "n": 18,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 50,
+      "hitch": 11
+     },
+     {
+      "k": "div.as-card:js",
+      "n": 194,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 66.6,
+      "hitch": 1
+     },
+     {
+      "k": "div.flight.card-flight:js",
+      "n": 145,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 116.6,
+      "hitch": 1
+     },
+     {
+      "k": "div.flight.card-ring:js",
+      "n": 145,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 116.6,
+      "hitch": 1
+     },
+     {
+      "k": "section.lt-seat.lt-seat-2:background-color",
+      "n": 135,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 100,
+      "hitch": 1
+     },
+     {
+      "k": "section.lt-seat.lt-seat-2:box-shadow",
+      "n": 135,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 100,
+      "hitch": 1
+     },
+     {
+      "k": "span.base:js",
+      "n": 128,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 49.9,
+      "hitch": 1
+     },
+     {
+      "k": "button.card.lt-card:transform",
+      "n": 14,
+      "p50": 16.7,
+      "p95": 116.6,
+      "max": 116.6,
+      "hitch": 7
+     },
+     {
+      "k": "span.cs-member:js",
+      "n": 83,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 116.6,
+      "hitch": 1
+     },
+     {
+      "k": "div.piece-flight.piece-res:js",
+      "n": 901,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 0
+     },
+     {
+      "k": "div.path-inner:js",
+      "n": 1081,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 0
+     },
+     {
+      "k": "span.cs-stack:js",
+      "n": 915,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 66.7,
+      "hitch": 0
+     },
+     {
+      "k": "span.worker-fig:panelland",
+      "n": 533,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 0
+     },
+     {
+      "k": "span.worker:land",
+      "n": 431,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 0
+     },
+     {
+      "k": "div.worker-flight.minion-flight:js",
+      "n": 325,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 0
+     },
+     {
+      "k": "span.worker:js",
+      "n": 642,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 0
+     },
+     {
+      "k": "span.tip.fig:cult-hop",
+      "n": 34,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 16.8,
+      "hitch": 0
+     },
+     {
+      "k": "div.turn-card.live:rise",
+      "n": 6,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "div.turn-card:rise",
+      "n": 41,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 33.4,
+      "hitch": 0
+     },
+     {
+      "k": "span.cs-member.on-stage:js",
+      "n": 166,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.8,
+      "hitch": 0
+     },
+     {
+      "k": "div.as-reveal:js",
+      "n": 55,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.8,
+      "hitch": 0
+     },
+     {
+      "k": "span.cs-stack.zero:js",
+      "n": 69,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.8,
+      "hitch": 0
+     }
+    ],
+    "nodes": {
+     "min": 1066,
+     "max": 1452
+    },
+    "loaf": [
+     {
+      "t": 37133,
+      "d": 125,
+      "block": 43,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 87,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 41544,
+      "d": 83,
+      "block": 14,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 55,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 33478,
+      "d": 82,
+      "block": 23,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 6,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:145008"
+       },
+       {
+        "d": 66,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 35145,
+      "d": 79,
+      "block": 27,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 59,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 12609,
+      "d": 71,
+      "block": 12,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 36,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 24301,
+      "d": 68,
+      "block": 18,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 59,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 19650,
+      "d": 65,
+      "block": 2,
+      "style": 3,
+      "scripts": [
+       {
+        "d": 7,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:145008"
+       },
+       {
+        "d": 44,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 26463,
+      "d": 63,
+      "block": 0,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 7,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:145008"
+       },
+       {
+        "d": 46,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 39314,
+      "d": 58,
+      "block": 0,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 8,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:145008"
+       },
+       {
+        "d": 44,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 4913,
+      "d": 57,
+      "block": 0,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 6,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 5,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 37,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 9429,
+      "d": 57,
+      "block": 0,
+      "style": 2,
+      "scripts": [
+       {
+        "d": 5,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 5,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 37,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 31144,
+      "d": 57,
+      "block": 0,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 39,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     }
+    ],
+    "loafTotal": 1021,
+    "loafCount": 15,
+    "topScripts": [
+     [
+      "hn",
+      716
+     ],
+     [
+      "TimerHandler:setTimeout",
+      60
+     ]
+    ]
+   }
+  },
+  "late": {
+   "split": {
+    "script": 3723,
+    "style": 3460,
+    "layout": 641,
+    "task": 21448,
+    "wall": 40000
+   },
+   "round": "III",
+   "errors": [],
+   "sum": {
+    "rows": [
+     {
+      "k": "(all frames)",
+      "n": 2197,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 250.1,
+      "hitch": 2
+     },
+     {
+      "k": "b.seat-delta.up:seatdelta",
+      "n": 540,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 233.2,
+      "hitch": 4
+     },
+     {
+      "k": "svg.leader:cult-breathe",
+      "n": 1180,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 233.2,
+      "hitch": 1
+     },
+     {
+      "k": "g.blink:cult-blink",
+      "n": 1180,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 233.2,
+      "hitch": 1
+     },
+     {
+      "k": "img.sprite:cult-shift",
+      "n": 1180,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 233.2,
+      "hitch": 1
+     },
+     {
+      "k": "img.sprite:cult-breathe",
+      "n": 1180,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 233.2,
+      "hitch": 1
+     },
+     {
+      "k": "span.dots:blink",
+      "n": 79,
+      "p50": 16.7,
+      "p95": 100,
+      "max": 233.2,
+      "hitch": 13
+     },
+     {
+      "k": "i.cs-min:cs-bob-eager",
+      "n": 79,
+      "p50": 16.7,
+      "p95": 100,
+      "max": 233.2,
+      "hitch": 13
+     },
+     {
+      "k": "img.sprite:cult-eager",
+      "n": 79,
+      "p50": 16.7,
+      "p95": 100,
+      "max": 233.2,
+      "hitch": 13
+     },
+     {
+      "k": "i.cs-min:cs-bob",
+      "n": 79,
+      "p50": 16.7,
+      "p95": 100,
+      "max": 233.2,
+      "hitch": 13
+     },
+     {
+      "k": "span.tc-line:tcline",
+      "n": 204,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 233.2,
+      "hitch": 5
+     },
+     {
+      "k": "span.lead:cult-scheme",
+      "n": 70,
+      "p50": 16.7,
+      "p95": 100,
+      "max": 233.2,
+      "hitch": 13
+     },
+     {
+      "k": "span.tick.num:bump",
+      "n": 811,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 233.2,
+      "hitch": 1
+     },
+     {
+      "k": "button.card.lt-card:js",
+      "n": 756,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 250.1,
+      "hitch": 1
+     },
+     {
+      "k": "div.worker-flight.minion-flight:js",
+      "n": 208,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 250.1,
+      "hitch": 3
+     },
+     {
+      "k": "span.tip.fig:js",
+      "n": 592,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 133.3,
+      "hitch": 1
+     },
+     {
+      "k": "div.path-inner:js",
+      "n": 296,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 116.7,
+      "hitch": 2
+     },
+     {
+      "k": "div.piece-flight.piece-res:js",
+      "n": 273,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 116.7,
+      "hitch": 2
+     },
+     {
+      "k": "section.lt-seat.lt-seat-0:background-color",
+      "n": 52,
+      "p50": 16.7,
+      "p95": 100.1,
+      "max": 166.7,
+      "hitch": 10
+     },
+     {
+      "k": "section.lt-seat.lt-seat-0:box-shadow",
+      "n": 52,
+      "p50": 16.7,
+      "p95": 100.1,
+      "max": 166.7,
+      "hitch": 10
+     },
+     {
+      "k": "span.tick.dip:bump",
+      "n": 253,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 250.1,
+      "hitch": 2
+     },
+     {
+      "k": "span.cs-member:js",
+      "n": 241,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 83.4,
+      "hitch": 2
+     },
+     {
+      "k": "div.flight.shop-out:js",
+      "n": 424,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 250.1,
+      "hitch": 1
+     },
+     {
+      "k": "span.worker:js",
+      "n": 82,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 83.3,
+      "hitch": 5
+     },
+     {
+      "k": "span.tip.fig:cult-hop",
+      "n": 64,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 250.1,
+      "hitch": 6
+     },
+     {
+      "k": "span.rc.in:reckonstampcol",
+      "n": 379,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 66.7,
+      "hitch": 1
+     },
+     {
+      "k": "span.rc.in:background-color",
+      "n": 325,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 66.7,
+      "hitch": 1
+     },
+     {
+      "k": "section.lt-shop:opacity",
+      "n": 44,
+      "p50": 16.7,
+      "p95": 49.9,
+      "max": 250.1,
+      "hitch": 7
+     },
+     {
+      "k": "i.cs-min:js",
+      "n": 153,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 250.1,
+      "hitch": 2
+     },
+     {
+      "k": "span.base:opacity",
+      "n": 60,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 83.3,
+      "hitch": 5
+     },
+     {
+      "k": "span.cs-member.on-stage:js",
+      "n": 148,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 133.3,
+      "hitch": 2
+     },
+     {
+      "k": "span.worker-fig:panelland",
+      "n": 71,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 83.3,
+      "hitch": 4
+     },
+     {
+      "k": "div.flight.card-flight:js",
+      "n": 142,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 100,
+      "hitch": 2
+     },
+     {
+      "k": "div.flight.card-ring:js",
+      "n": 142,
+      "p50": 16.7,
+      "p95": 33.2,
+      "max": 100,
+      "hitch": 2
+     },
+     {
+      "k": "section.lt-seat.lt-seat-0:transform",
+      "n": 70,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 166.7,
+      "hitch": 4
+     },
+     {
+      "k": "section.lt-seat.lt-seat-2:transform",
+      "n": 70,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 166.7,
+      "hitch": 4
+     },
+     {
+      "k": "section.lt-seat.lt-seat-3:transform",
+      "n": 70,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 166.7,
+      "hitch": 4
+     },
+     {
+      "k": "span.cs-stack:js",
+      "n": 273,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 1
+     },
+     {
+      "k": "b.reckon-rule:fade",
+      "n": 124,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 66.7,
+      "hitch": 2
+     },
+     {
+      "k": "span.reckon-counts:fade",
+      "n": 124,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 66.7,
+      "hitch": 2
+     },
+     {
+      "k": "path.rim.wait:fill-opacity",
+      "n": 53,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 66.7,
+      "hitch": 4
+     },
+     {
+      "k": "path.rim.lit:fill-opacity",
+      "n": 53,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 66.7,
+      "hitch": 4
+     },
+     {
+      "k": "b.reckon-verdict:color",
+      "n": 53,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 66.7,
+      "hitch": 4
+     },
+     {
+      "k": "div.turn-card.live:rise",
+      "n": 42,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 83.3,
+      "hitch": 5
+     },
+     {
+      "k": "section.lt-seat.lt-seat-1:background-color",
+      "n": 16,
+      "p50": 16.7,
+      "p95": 100.1,
+      "max": 100.1,
+      "hitch": 13
+     },
+     {
+      "k": "section.lt-seat.lt-seat-1:box-shadow",
+      "n": 16,
+      "p50": 16.7,
+      "p95": 100.1,
+      "max": 100.1,
+      "hitch": 13
+     },
+     {
+      "k": "div.as-card:js",
+      "n": 34,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 50,
+      "hitch": 6
+     },
+     {
+      "k": "span.cs-stack.zero:js",
+      "n": 68,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 100,
+      "hitch": 3
+     },
+     {
+      "k": "button.card.lt-card:transform",
+      "n": 9,
+      "p50": 16.7,
+      "p95": 150,
+      "max": 150,
+      "hitch": 22
+     },
+     {
+      "k": "path.wash:fill",
+      "n": 22,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 166.7,
+      "hitch": 9
+     },
+     {
+      "k": "span.cs-total:js",
+      "n": 39,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 83.3,
+      "hitch": 5
+     },
+     {
+      "k": "span.worker-fig:panelland-under",
+      "n": 62,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 83.3,
+      "hitch": 3
+     },
+     {
+      "k": "span.worker:land",
+      "n": 60,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 83.3,
+      "hitch": 3
+     },
+     {
+      "k": "div.as-reveal:js",
+      "n": 57,
+      "p50": 16.7,
+      "p95": 33.3,
+      "max": 100,
+      "hitch": 2
+     },
+     {
+      "k": "path.rim:fill-opacity",
+      "n": 18,
+      "p50": 16.7,
+      "p95": 66.6,
+      "max": 66.6,
+      "hitch": 6
+     },
+     {
+      "k": "span.base:js",
+      "n": 17,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 50,
+      "hitch": 6
+     },
+     {
+      "k": "div.flight.pulse-glow:js",
+      "n": 17,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 50,
+      "hitch": 6
+     },
+     {
+      "k": "span.lead:cult-gesture",
+      "n": 9,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 50,
+      "hitch": 11
+     },
+     {
+      "k": "div.dialog.roundend:settle",
+      "n": 14,
+      "p50": 16.7,
+      "p95": 66.6,
+      "max": 66.6,
+      "hitch": 7
+     },
+     {
+      "k": "span.rc.in:opacity",
+      "n": 88,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 50,
+      "hitch": 1
+     },
+     {
+      "k": "div.piece-flight.piece-member:js",
+      "n": 44,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 50.1,
+      "hitch": 2
+     },
+     {
+      "k": "b.reckon-verdict.on:color",
+      "n": 70,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 16.8,
+      "hitch": 0
+     },
+     {
+      "k": "span.rc.in:reckoncheer",
+      "n": 654,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 133.3,
+      "hitch": 0
+     },
+     {
+      "k": "b.reckon-verdict.on:rise",
+      "n": 276,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 33.4,
+      "hitch": 0
+     },
+     {
+      "k": "span.lead:js",
+      "n": 530,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 133.3,
+      "hitch": 0
+     },
+     {
+      "k": "g.rim-emoji.lit:js",
+      "n": 84,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.8,
+      "hitch": 0
+     },
+     {
+      "k": "div.token-flight.reckon:js",
+      "n": 221,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 133.3,
+      "hitch": 0
+     },
+     {
+      "k": "g.rim-emoji.wait:js",
+      "n": 42,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.8,
+      "hitch": 0
+     },
+     {
+      "k": "span.cs-member.react-hop:js",
+      "n": 40,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 16.8,
+      "hitch": 0
+     },
+     {
+      "k": "b.bundle-n:js",
+      "n": 42,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 33.3,
+      "hitch": 0
+     },
+     {
+      "k": "div.piece-flight.piece-fol:js",
+      "n": 27,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.8,
+      "hitch": 0
+     }
+    ],
+    "nodes": {
+     "min": 1408,
+     "max": 1993
+    },
+    "loaf": [
+     {
+      "t": 38745,
+      "d": 217,
+      "block": 149,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 15,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:145008"
+       },
+       {
+        "d": 179,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 22841,
+      "d": 174,
+      "block": 122,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 161,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 31312,
+      "d": 147,
+      "block": 97,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 124,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 22373,
+      "d": 144,
+      "block": 88,
+      "style": 8,
+      "scripts": [
+       {
+        "d": 50,
+        "f": "Pf",
+        "src": "index-D_ddH_rf.js:57177"
+       },
+       {
+        "d": 30,
+        "f": "VoidFunction",
+        "src": "index-D_ddH_rf.js:139553"
+       },
+       {
+        "d": 33,
+        "f": "Nf",
+        "src": "index-D_ddH_rf.js:57290"
+       }
+      ]
+     },
+     {
+      "t": 38413,
+      "d": 142,
+      "block": 90,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 135,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:17762"
+       }
+      ]
+     },
+     {
+      "t": 15458,
+      "d": 140,
+      "block": 0,
+      "style": 2,
+      "scripts": []
+     },
+     {
+      "t": 42090,
+      "d": 116,
+      "block": 63,
+      "style": 2,
+      "scripts": [
+       {
+        "d": 110,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:17762"
+       }
+      ]
+     },
+     {
+      "t": 33602,
+      "d": 98,
+      "block": 39,
+      "style": 2,
+      "scripts": [
+       {
+        "d": 85,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:17762"
+       }
+      ]
+     },
+     {
+      "t": 43463,
+      "d": 94,
+      "block": 8,
+      "style": 2,
+      "scripts": [
+       {
+        "d": 45,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       },
+       {
+        "d": 36,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:17762"
+       }
+      ]
+     },
+     {
+      "t": 43235,
+      "d": 92,
+      "block": 28,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 6,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:145008"
+       },
+       {
+        "d": 72,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 32001,
+      "d": 76,
+      "block": 24,
+      "style": 1,
+      "scripts": [
+       {
+        "d": 56,
+        "f": "hn",
+        "src": "index-D_ddH_rf.js:31051"
+       }
+      ]
+     },
+     {
+      "t": 40303,
+      "d": 73,
+      "block": 22,
+      "style": 0,
+      "scripts": [
+       {
+        "d": 72,
+        "f": "TimerHandler:setTimeout",
+        "src": "App-CDtd1HKA.js:17762"
+       }
+      ]
+     }
+    ],
+    "loafTotal": 2113,
+    "loafCount": 22,
+    "topScripts": [
+     [
+      "hn",
+      931
+     ],
+     [
+      "TimerHandler:setTimeout",
+      498
+     ],
+     [
+      "Pf",
+      50
+     ],
+     [
+      "Nf",
+      33
+     ],
+     [
+      "VoidFunction",
+      30
+     ]
+    ]
+   }
+  }
+ }
+}
