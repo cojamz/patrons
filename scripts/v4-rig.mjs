@@ -15,6 +15,7 @@ import { browserPath } from '../e2e/v4/lib/browser.mjs';
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { HOVER_DELAY_MS } from '../src/v4/game/hoverDelay.js';
+import { answerChoice } from '../e2e/v4/lib/answer.mjs';
 
 const argv = process.argv.slice(2);
 const pos = argv.filter(a => !a.startsWith('--'));
@@ -112,6 +113,12 @@ await cdp.send('Performance.enable');
 const throttle = r => cdp.send('Emulation.setCPUThrottlingRate', { rate: r });
 const metrics = async () => Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]));
 const memory = async () => { await cdp.send('HeapProfiler.collectGarbage'); const c = await cdp.send('Memory.getDOMCounters'); const h = await cdp.send('Runtime.getHeapUsage'); return { nodes: c.nodes, listeners: c.jsEventListeners, heapMB: Math.round(h.usedSize / 1e5) / 10 }; };
+// every element handle is let go each turn: a held handle pins its element, and a detached one its whole old tree
+// (memory.mjs read 27k nodes from that), which would read as the game's own leak
+let held = [];
+const $ = async sel => { const h = await page.$(sel); if (h) held.push(h); return h; };
+const $$ = async sel => { const hs = await page.$$(sel); held.push(...hs); return hs; };
+const letGo = async () => { const hs = held; held = []; await Promise.all(hs.map(h => h.dispose().catch(() => {}))); };
 const roundOf = () => page.evaluate(() => (document.querySelector('.hub-label b')?.textContent || '').trim()).catch(() => '');
 const center = async el => { const b = await el.boundingBox().catch(() => null); return b && b.width ? { x: b.x + b.width / 2, y: b.y + b.height / 2 } : null; };
 
@@ -142,7 +149,7 @@ async function click(el, what, round) {
   return ms != null;
 }
 async function hover(sel, round) {
-  const els = await page.$$(sel);
+  const els = await $$(sel);
   const el = els[Math.floor(els.length / 2)];
   const c = el && await center(el);
   if (!c) return;
@@ -165,10 +172,10 @@ await page.waitForSelector('.app.game');
 const t0 = Date.now();
 let turns = 0, lastRound = '', dead = 0, finalRound = '';
 while (Date.now() - t0 < MAX_MIN * 60000) {
-  if (await page.$('.results')) break;
-  const hand = await page.$('[data-handoff]'); if (hand) { await hand.click().catch(() => {}); continue; }
+  if (await $('.results')) break;
+  const hand = await $('[data-handoff]'); if (hand) { await hand.click().catch(() => {}); continue; }
   const round = await roundOf();
-  const next = await page.$('[data-next-round]');
+  const next = await $('[data-next-round]');
   if (next) { await sleep(900); await click(next, 'next-round', round || lastRound); continue; }
   const g = await page.evaluate(() => { const e = document.querySelector('.app.game'); return e ? { yours: e.dataset.yours === '1', phase: e.dataset.phase, anim: e.dataset.animating === 'true' } : null; }).catch(() => null);
   if (!g || !g.yours) { await sleep(60); continue; }
@@ -184,29 +191,32 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
     if (turns % 2 === 1) console.log(`round ${round} turn ${turns}: idle ${JSON.stringify(await idleSample(round))}`);
     await hover('.lt-wheel [data-slot][data-option]', round);
     await hover('.lt-shop .card[data-uid]', round);
-    const legal = await page.$$('.lt-wheel [data-slot][data-option]');
+    const legal = await $$('.lt-wheel [data-slot][data-option]');
     if (legal.length) await click(legal[(turns * 3) % legal.length], 'place', round);
     const confirm = await page.waitForSelector('[data-place]', { timeout: 500 }).catch(() => null);
     if (confirm) await click(confirm, 'place-confirm', round);
     finalRound = round;
   } else if (g.phase === 'buy') {
-    const card = await page.$('.lt-shop .card[data-option]');
-    const rates = await page.$$('.lt-rates [data-rate][data-option]');
-    const pick = card || rates[rates.length - 1] || await page.$('[data-option="pass"]');
+    const card = await $('.lt-shop .card[data-option]');
+    const rates = await $$('.lt-rates [data-rate][data-option]');
+    const pick = card || rates[rates.length - 1] || await $('[data-option="pass"]');
     if (pick) await click(pick, card ? 'recruit' : rates.length ? 'followers' : 'pass', round);
-  } else if (g.phase === 'pay') {
-    const pay = await page.$('.dialog.pay .btn.pri[data-option]:not([disabled])') || await page.$('.dialog.pay [data-option]:not([disabled]):not([data-option="back"])');
-    if (pay) await click(pay, 'pay', round);
   } else {
-    const ids = await page.$$eval('[data-option]:not([disabled])', els => els.map(e => e.getAttribute('data-option'))).catch(() => []);
-    const id = ids.find(i => !/^(back|undo|@unpick|pass)/.test(i)) || ids.find(i => i === 'pass');
-    if (id) await click(await page.$(`[data-option="${id}"]`), g.phase || 'choose', round);
+    // the pay sheet, a choice on the board, a gift: the e2e drivers' one way to answer (e2e/v4/lib/answer.mjs)
+    const p = page.evaluate(() => window.__rig.arm());
+    await sleep(20);
+    const a = await answerChoice(page, { last: ['pass'] }).catch(() => null);
+    const ms = a ? await p.catch(() => null) : null;
+    per(round).clicks.push({ what: a ? a.kind === 'option' ? g.phase || 'choose' : a.kind : 'none', ms });
   }
   const ok = per(round).clicks.length > before && per(round).clicks.at(-1).ms != null;
   dead = ok ? 0 : dead + 1;
+  if (dead === 3) errors.push(`harness: stuck in ${g.phase}, options ${(await page.$$eval('[data-option]', els => els.map(e => `${e.getAttribute('data-option')}${e.disabled ? '(off)' : ''}@${e.className.split(' ')[0]}`)).catch(() => [])).join(' ')}`);
   if (dead >= 8) { errors.push(`harness: 8 clicks in a row changed nothing at round ${round}`); await page.screenshot({ path: `${OUT}/rig-${label}-stuck.png` }); break; }
+  await letGo();
   await sleep(250);
 }
+await letGo();
 const over = !!(await page.$('.results'));
 
 // the leak control: a reload on the last round's turn (the game is saved locally), measured the same way
