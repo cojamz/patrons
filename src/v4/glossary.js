@@ -78,7 +78,7 @@ export const GLOSSARY = [
   { key: 'any', word: 'Any (cost)', link: false, match: /\bin any colors\b/,
     def: '“Any” in a cost or a gain: resources of any colors, your choice.' },
   { key: 'contest', word: 'Contest', match: /\bcontests?\b/,
-    def: `Each quadrant’s round-end rule. Whoever leads it when the round ends gains ${rings} followers in rounds I / II / III; tied leaders each gain half the prize. You need at least 1 of what it counts.` },
+    def: `Each quadrant’s round-end rule. Whoever leads it when the round ends gains ${rings} followers in rounds I / II / III; tied leaders each gain half the prize, rounded up. You need at least 1 of what it counts.` },
   { key: 'snake order', word: 'Snake order', match: /\bsnake order\b/,
     def: `Turns go first to last, then last to first, and so on, one minion each turn (${WORKERS.join(' / ')} minions in rounds I / II / III). Fewest followers picks first from round II.` },
   { key: 'effect', word: 'Effects', link: false, match: /\beffects?\b/,

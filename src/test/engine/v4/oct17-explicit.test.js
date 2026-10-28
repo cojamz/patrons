@@ -22,17 +22,17 @@ describe('October17 explicit rules',()=>{
   expect(s.pending.kind).toBe('place');expect(s.players.map(p=>p.res)).toEqual(before);
  });
  it('gives every tied leader half the round prize, including three-way ties',()=>{
-  for(const round of [1,2,3]){
+  for(const [round,half] of [[1,2],[2,3],[3,5]]){
    const s=sceneQ({quadrants:Q,n:3,round,res:[{gold:5},{gold:5},{gold:5}],queue:[{t:'endRound'}]});
    const c=contestTable(s).find(c=>c.qid==='gold');
-   expect(c.winners).toHaveLength(3);expect(c.prize).toBe(round);
-   expect(s.players.map(p=>p.contest)).toEqual([round,round,round]);
-   expect(s.contests[0].results.find(c=>c.qid==='gold').prize).toBe(round);
+   expect(c.winners).toHaveLength(3);expect(c.prize).toBe(half);
+   expect(s.players.map(p=>p.contest)).toEqual([half,half,half]);
+   expect(s.contests[0].results.find(c=>c.qid==='gold').prize).toBe(half);
   }
  });
  it('keeps the full award for a sole leader',()=>{
   const s=sceneQ({quadrants:Q,round:2,res:[{gold:5},{gold:3}],queue:[{t:'endRound'}]});
-  expect(s.players.map(p=>p.contest)).toEqual([4,0]);
+  expect(s.players.map(p=>p.contest)).toEqual([6,0]);
  });
  it('refreshes the complete market between rounds without losing cards',()=>{
   let s=sceneQ({quadrants:Q,queue:[{t:'turn',p:0}]});

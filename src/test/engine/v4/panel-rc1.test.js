@@ -87,21 +87,21 @@ describe('12 · one price rule for every recruit', () => {
   });
   it('memberPrice: the exact price after Intro Offer, and the shortfall by color', () => {
     const s = sceneQ({ quadrants: CLASSIC, res: [{ gold: 2 }], discount: [4] });
-    row(s, ['gold.jackpot']); // Lottery Winner: 6 gold + 4 any
+    row(s, ['gold.jackpot']); // Lottery Winner: 6 gold + 5 any (4 printed + the extra wild)
     const p = s.players[0], u = s.shop[0];
     const pr = memberPrice(s, p, u);
-    expect(pr).toMatchObject({ color: 'gold', colored: 2, total: 6, afford: false });
-    expect(pr.short).toMatchObject({ gold: 0, any: 4, total: 4 });
-    expect(pr.short.text).toBe('4 any');
+    expect(pr).toMatchObject({ color: 'gold', colored: 2, total: 7, afford: false });
+    expect(pr.short).toMatchObject({ gold: 0, any: 5, total: 5 });
+    expect(pr.short.text).toBe('5 any');
     // the old hover read "need 8 more": it ignored the discount
-    expect(payBreakdown(s, p, u).short.total).toBe(4);
+    expect(payBreakdown(s, p, u).short.total).toBe(5);
   });
   it('memberPrice: "need 1 green" names Busker’s new colored price; "2 gold, 1 any" splits it', () => {
     const s = sceneQ({ quadrants: CLASSIC, res: [{ gold: 15 }] });
     row(s, ['echo.evergreen', 'gold.jackpot']);
     const p = s.players[0];
     expect(memberPrice(s, p, s.shop[0]).short.text).toBe('1 green');
-    p.res = { gold: 4, red: 3, blue: 0, green: 0 };
+    p.res = { gold: 4, red: 4, blue: 0, green: 0 };
     expect(memberPrice(s, p, s.shop[1]).short.text).toBe('2 gold, 1 any');
   });
   it('the buy step, the pay choices and memberPrice agree on every face-up card, with every rule-changer', () => {

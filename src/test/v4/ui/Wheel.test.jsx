@@ -53,13 +53,13 @@ describe('Wheel', () => {
     expect(rim('red')).not.toMatch(/members/i);
     expect(rim('yellow')).toMatch(/most full sets/i);
     for (const q of s.quadrants) {
-      expect(rim(q)).toMatch(/\+2/);
+      expect(rim(q)).toMatch(/\+4/);
       expect(rim(q)).not.toMatch(/ties:/i);
       expect(container.querySelector(`[data-rim="${q}"]`).getAttribute('aria-label')).not.toMatch(/break ties/i);
     }
     // the full sentence is in the rim's label (and its hover card), no native <title>: that tooltip sat on top of the
     // hover card, saying it twice (design pod, 2026-10-15)
-    expect(container.querySelector('[data-rim="red"]').getAttribute('aria-label')).toMatch(/most red resources, \+2 followers/);
+    expect(container.querySelector('[data-rim="red"]').getAttribute('aria-label')).toMatch(/most red resources, \+4 followers/);
     expect(container.querySelector('[data-rim="red"] title')).toBeNull();
   });
 

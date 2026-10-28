@@ -83,7 +83,9 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // moved the games so it was only dealt, in 4. cards-echo (Doppelganger) covers its line.
   // Makeover ("When recruited" only) and Wallflower (doubles only while no rival has fewer followers), both cut from the
   // deck, went silent when the Oct 25 member deck changes moved the games; cards-market-concepts and cards-echo cover their lines.
-  const QUIET_RESTRICTIONS = new Set(['echo.agents', 'trading.cashier', 'echo.doppel', 'market.makeover', 'echo.wallflower']);
+  // (Translator, like Wallflower, names itself only when its owner copies resources; held 3 games without a copy after
+  // the +1 wild on every member, Oct 27, moved the games. cards-echo covers it.)
+  const QUIET_RESTRICTIONS = new Set(['echo.agents', 'trading.cashier', 'echo.doppel', 'market.makeover', 'echo.wallflower', 'echo.translator']);
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
     ['gold', 'market', 'trading', 'echo'], ['red', 'thieves', 'market', 'trading'],
@@ -102,7 +104,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     // Shopaholic, Fence and Doppelganger fell under 3 holds when Gather's +3 (Oct 25) moved the games; spheres/market (Shopaholic), interactions (Fence) and cards-echo (Doppelganger) cover them.
     const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller', 'market.shopaholic', 'thieves.fence', 'echo.doppel',
       'market.onlooker', 'echo.groupie', // cut cards under 3 holds after the Oct 25 member deck changes; cards-market and cards-echo cover them
-      'market.patroness']); // under 3 holds when Extortionist at 6 (Oct 25) moved the games; cards-market (Patroness) covers it
+      'market.patroness', // under 3 holds when Extortionist at 6 (Oct 25) moved the games; cards-market (Patroness) covers it
+      'market.stylist', 'echo.ensemble', 'echo.dejavu']); // under 3 holds when +1 wild on every member (Oct 27) moved the games; cards-market and cards-echo cover them
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);

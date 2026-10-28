@@ -27,7 +27,7 @@ describe('base rules', () => {
 describe('Yellow', () => {
   it('Late Bloomers on recruit: excludes itself when checking tied for fewest', () => {
     const Q = ['gold', 'red', 'yellow', 'trading'];
-    let s = table(Q, { res: [{ yellow: 4 }], shop: ['yellow.latebloomer', ...ROW] });
+    let s = table(Q, { res: [{ yellow: 5 }], shop: ['yellow.latebloomer', ...ROW] });
     s = take(s, 'yellow.harvest');
     expect(followers(s, s.players[0])).toBe(followers(s, s.players[1])); // 1 v 1: tied for fewest
     s = move(s, `card:${uidIn(s, 'yellow.latebloomer', 'shop')}`);

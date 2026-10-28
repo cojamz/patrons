@@ -67,7 +67,7 @@ describe('Yellow scoring: most full sets, ties all score', () => {
   });
   it('pays the ring value at round end to the leader', () => {
     let s = scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }, { gold: 5 }], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most full sets: P1 +2');
+    expect(s.log.at(-1)).toContain('Most full sets: P1 +4');
   });
 });
 
@@ -207,7 +207,7 @@ describe('Yellow members', () => {
     s.queue = [{ t: 'endRound' }];
     s = resume(s);
     expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
-    expect(s.log.at(-1)).toContain('Most full sets: P1 +4'); // planted colors come in before scoring
+    expect(s.log.at(-1)).toContain('Most full sets: P1 +6'); // planted colors come in before scoring
   });
 
   it('Harmonist: game end, +1 follower per full set', () => {

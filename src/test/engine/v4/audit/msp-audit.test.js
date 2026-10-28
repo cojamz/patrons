@@ -28,8 +28,9 @@ describe('audit', () => {
   });
 
   it('Bury: half of a 3-cost member rounds down to 1, plus its own +1', () => {
-    let s = take(sc(QM, { round: 2, shop: ['trading.shareholder'] }), 'market.pricecheck');
-    const u = s.shop.find(x => s.cards[x].def === 'trading.shareholder');
+    // Shift Crew: printed 1 purple + 1 any, 3 with the extra wild every member pays
+    let s = take(sc(QM, { round: 2, shop: ['purple.crew'] }), 'market.pricecheck');
+    const u = s.shop.find(x => s.cards[x].def === 'purple.crew');
     s = move(s, `card:${u}`);
     expect(s.players[0].res.blue).toBe(1 + 1);
   });

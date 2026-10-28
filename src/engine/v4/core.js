@@ -7,7 +7,7 @@ import { shuffleInPlace } from './rng.js';
 import { CUT, FULL_DECK } from './content/cull.js';
 import { startEffects, stopEffects, abandonEffects, underCause } from './effects.js';
 
-export const RING_VALUE = [2, 4, 6];
+export const RING_VALUE = [4, 6, 10];
 export const WORKERS = [3, 4, 5];
 export const SHOP_SIZE = 8;
 /** Face-up members by round: 6 in round I (and setup), 7 in round II, 8 in round III (Cory, 2026-10-22). SHOP_SIZE is the most. */
@@ -33,7 +33,9 @@ export const DEFAULT_RULES = { release: false, guests: true, cull: true, artifac
 export const ROUND_CUTOFFS = [3, 4];
 /** Members that join in another round than their cost says (Cory, 2026-10-25: Impostor and Doppelganger, round III). */
 export const ROUND_OF = { 'echo.impostor': 3, 'echo.doppel': 3 };
-export const memberRound = def => def.round ?? ROUND_OF[def.id] ?? (def.s + def.w <= ROUND_CUTOFFS[0] ? 1 : def.s + def.w <= ROUND_CUTOFFS[1] ? 2 : 3);
+// (by the cost before the +1 wild every member pays, content/index.js EXTRA_WILD, so no member changes round)
+const baseCost = def => def.s + def.w - (def.extraWild || 0);
+export const memberRound = def => def.round ?? ROUND_OF[def.id] ?? (baseCost(def) <= ROUND_CUTOFFS[0] ? 1 : baseCost(def) <= ROUND_CUTOFFS[1] ? 2 : 3);
 /** The round a member joins the deck in this game (1 when it starts in the deck). */
 export const joinsRound = (state, def) => (!state.rules?.roundDecks ? 1 : Math.min(memberRound(def), state.rules.roundDecks));
 /** Artifacts (Cory, 2026-10-24): each color on the table has one, picked at game start with 1 of its color. Ability
@@ -856,7 +858,7 @@ export function contestTable(state, ctx = ctxFor(state)) {
     }).sort((a, b) => b.score - a.score || a.player - b.player);
     return {
       qid, label: sc.label, rule: ruleOf(sc.label), counts: sc.counts || null, tiebreak: sc.tiebreak || null,
-      prize: winners.length > 1 ? prize / 2 : prize, fullPrize: prize, rows, winners,
+      prize: winners.length > 1 ? Math.ceil(prize / 2) : prize, fullPrize: prize, rows, winners,
     };
   });
 }

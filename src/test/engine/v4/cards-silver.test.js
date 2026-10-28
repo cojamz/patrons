@@ -143,7 +143,7 @@ describe('Silver members', () => {
 
   // pays when recruited too (dead-window audit, 2026-10-14): recruited in round III it used to give nothing
   it('Heir: when recruited, +1 silver per member you have (itself included), named', () => {
-    let s = sc({ round: 3, res: [{ silver: 6 }], members: [['red.intern', 'red.twins']], shop: ['silver.heir'], queue: [{ t: 'buy', p: 0 }] });
+    let s = sc({ round: 3, res: [{ silver: 7 }], members: [['red.intern', 'red.twins']], shop: ['silver.heir'], queue: [{ t: 'buy', p: 0 }] });
     s = buy(s, 'silver.heir');
     expect(S(s)).toBe(4); // Heir1 + Intern1 + Twins2.
     expect(named(s, 'Heir')).toEqual(["P1's Heir: +4 silver."]);

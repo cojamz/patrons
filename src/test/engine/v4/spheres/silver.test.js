@@ -52,9 +52,9 @@ const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.pr
 describe('Silver scoring: most silver', () => {
   it('the most silver at round end takes the ring; ties split the prize; none scores nothing', () => {
     let s = scene({ res: [{ silver: 3 }, { silver: 2 }, { gold: 9 }], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most silver: P1 +2');
+    expect(s.log.at(-1)).toContain('Most silver: P1 +4');
     s = scene({ res: [{ silver: 3 }, { silver: 3 }], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most silver: P1 & P2 +1');
+    expect(s.log.at(-1)).toContain('Most silver: P1 & P2 +2');
     s = scene({ res: [{ gold: 1 }], queue: [{ t: 'endRound' }] });
     expect(s.log.at(-1)).not.toContain('Most silver');
   });

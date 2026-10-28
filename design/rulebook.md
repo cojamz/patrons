@@ -53,7 +53,7 @@ To **recruit** is to bring a member or followers into your cult by your own doin
 ## Round end
 1. Members with round-end abilities act.
 2. Each sphere's contest is scored on what players hold right now. Its rim says what it counts, usually the most of its color held.
-3. The leader gains +2 followers in round I, +4 in round II and +6 in round III. Tied leaders each gain half: +1, +2 or +3, however many tie. You need at least 1 of what's counted to score.
+3. The leader gains +4 followers in round I, +6 in round II and +10 in round III. Tied leaders each gain half, rounded up: +2, +3 or +5, however many tie. You need at least 1 of what's counted to score.
 
 Then minions come home, the shop deals a fresh row and the next round's order is set.
 

@@ -605,7 +605,7 @@ export function StandingsCard({ state, qid, meId = null }) {
   // what the rim's prize pays, in words (Cory, 2026-10-15): "Round end: whoever has the most white gets 2 followers"
   return (
     <>
-      <p className="lt-prize-line" data-prize-line={qid}>A bonus every round, not the final score: at this round’s end, whoever has the {ruleWords(qid, st.rule).replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'} ({RING_VALUE.map(v => `+${v}`).join(' / ')} in rounds I / II / III; ties pay half each).</p>
+      <p className="lt-prize-line" data-prize-line={qid}>A bonus every round, not the final score: at this round’s end, whoever has the {ruleWords(qid, st.rule).replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'} ({RING_VALUE.map(v => `+${v}`).join(' / ')} in rounds I / II / III; ties pay half each, rounded up).</p>
       <ContestStandings state={state} st={st} meId={meId} brief />
     </>
   );

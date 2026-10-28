@@ -72,7 +72,7 @@ describe('Blue scoring: most blue held', () => {
   });
   it('pays the ring value at round end', () => {
     const s = scene({ res: [{ blue: 2 }, { blue: 1 }], members: [[], ['gold.midas', 'market.snob']], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most blue: P1 +2');
+    expect(s.log.at(-1)).toContain('Most blue: P1 +4');
   });
 });
 

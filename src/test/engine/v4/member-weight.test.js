@@ -65,7 +65,7 @@ describe('Printed followers count as members', () => {
     expect(s.players[0].turnRecruits).toBe(3);
     expect(s.recruits).toBe(3);
     expect(s.log.filter(l => l.includes('Pied Piper: +2 red'))).toHaveLength(1);
-    // Big Family cost4: +2 from Piper and +1 from Recruiter, not one hook per person.
-    expect(s.players[0].res.red).toBe(19);
+    // Big Family cost 5 (4 + the extra wild): +2 from Piper and +1 from Recruiter, not one hook per person.
+    expect(s.players[0].res.red).toBe(18);
   });
 });

@@ -14,6 +14,10 @@ import { install as installBenders } from './benders.js';
 const QUADRANTS = { gold, red, blue, green };
 
 // Member defs get a global id "<quadrant>.<key>" and know their quadrant.
+// Every member costs this many wild more than its card file says (Cory, Oct 27: "+1 wild cost to every member"),
+// added once here so the shop, the pay sheet and the bots all read the same price.
+export const EXTRA_WILD = 1;
+const addWild = def => { if (!def.extraWild) { def.w = (def.w || 0) + EXTRA_WILD; def.extraWild = EXTRA_WILD; } };
 const DEFS = {};
 const HANDLERS = {};
 /** Add a quadrant module to the registry (used by index below, and by new spheres while they're being designed). */
@@ -27,6 +31,7 @@ function index(q) {
     def.id = `${q.id}.${def.key}`;
     def.quadrant = q.id;
     def.copies = def.copies || 1;
+    addWild(def);
     DEFS[def.id] = def;
   }
   for (const a of q.actions) a.id = `${q.id}.${a.key}`;
@@ -78,6 +83,7 @@ export function registerGuests(group, defs, handlers = {}) {
     def.id = `${group}.${def.key}`;
     def.quadrant = 'guest';
     if (def.s) { def.w = (def.w || 0) + def.s; def.s = 0; }
+    addWild(def);
     def.copies = def.copies || 1;
     def.guest = group;
     DEFS[def.id] = def;

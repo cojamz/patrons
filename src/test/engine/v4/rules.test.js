@@ -250,22 +250,22 @@ describe('follower buys', () => {
 });
 
 describe('round-end contests', () => {
-  it('rings pay full +2/+4/+6 to a solo leader, half to every tied leader, and nothing for zero', () => {
-    for (const [round, v] of [[1, 2], [2, 4], [3, 6]]) {
+  it('rings pay full +4/+6/+10 to a solo leader, half rounded up to every tied leader, and nothing for zero', () => {
+    for (const [round, v] of [[1, 4], [2, 6], [3, 10]]) {
       const s = scene({ n: 3, round, members: [['blue.hand'], [], []], res: [{ gold: 5, blue: 1 }, { gold: 5 }, { gold: 3 }], queue: [{ t: 'endRound' }] });
-      expect(s.players.map(p => p.contest)).toEqual([v + v / 2, v / 2, 0]);
+      expect(s.players.map(p => p.contest)).toEqual([v + Math.ceil(v / 2), Math.ceil(v / 2), 0]);
     }
   });
 
   it('most held red resources wins Red; tied resource leaders each score half', () => {
     let s = scene({ n: 3, members: [['gold.banker', 'gold.midas'], ['red.intern', 'gold.tycoon'], ['red.volunteer', 'red.crowd']], res: [{ red: 4 }, { red: 1 }, {}], queue: [{ t: 'endRound' }] });
     // Red resources win even without a Red member.
-    expect(s.players.map(p => p.contest)).toEqual([2, 0, 0]);
+    expect(s.players.map(p => p.contest)).toEqual([4, 0, 0]);
     s = scene({ n: 3, members: [['red.intern', 'gold.midas'], ['red.mob', 'gold.tycoon'], ['gold.banker']], res: [{ red: 3 }, { red: 3 }, { red: 1 }], queue: [{ t: 'endRound' }] });
-    expect(s.players.map(p => p.contest)).toEqual([1, 1, 0]);
+    expect(s.players.map(p => p.contest)).toEqual([2, 2, 0]);
     // Printed groups do not substitute for resources in the contest.
     s = scene({ n: 2, members: [['gold.banker', 'gold.midas', 'gold.tycoon'], ['red.twins', 'red.bigfamily']], res: [{ red: 1 }, {}], queue: [{ t: 'endRound' }] });
-    expect(s.players.map(p => p.contest)).toEqual([2, 0]);
+    expect(s.players.map(p => p.contest)).toEqual([4, 0]);
   });
 });
 

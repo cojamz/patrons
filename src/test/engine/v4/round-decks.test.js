@@ -10,7 +10,8 @@ import { runGame } from './fuzz-runner.js';
 const TABLE = ['red', 'echo', 'market', 'purple'];
 const seats = n => Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' }));
 const start = (roundDecks = 3, seed = 5) => createGame({ seats: seats(4), seed, quadrants: TABLE, rules: { roundDecks } });
-const cost = (s, u) => cardDef(s, u).s + cardDef(s, u).w;
+// the printed cost, before the +1 wild every member pays (content/index.js EXTRA_WILD): the round cutoffs read that
+const cost = (s, u) => cardDef(s, u).s + cardDef(s, u).w - (cardDef(s, u).extraWild || 0);
 const playTo = (s, r, rand = seededRandom(1)) => { while (!s.over && s.round < r) s = applyMove(s, chooseBotMove(s, rand, { level: 'easy' })); return s; };
 
 describe('round decks', () => {

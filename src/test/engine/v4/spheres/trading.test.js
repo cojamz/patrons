@@ -60,9 +60,9 @@ describe('White scoring: most white held', () => {
   });
   it('pays the ring to whoever holds the most white; ties each get half', () => {
     const s = scene({ n: 3, res: [{ white: 4 }, { white: 1 }, {}], queue: [{ t: 'endRound' }] });
-    expect(s.log.join('\n')).toContain('Most white: P1 +2');
+    expect(s.log.join('\n')).toContain('Most white: P1 +4');
     const t = scene({ n: 3, res: [{ white: 3 }, { white: 3 }, {}], queue: [{ t: 'endRound' }] });
-    expect(t.log.join('\n')).toContain('Most white: P1 & P2 +1');
+    expect(t.log.join('\n')).toContain('Most white: P1 & P2 +2');
   });
 });
 

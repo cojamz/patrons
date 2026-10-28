@@ -71,9 +71,9 @@ const fullRoundI = (...free) => Object.fromEntries([0, 1, 2, 3].flatMap(q => [0,
 describe('Purple scoring: most purple held', () => {
   it('pays the ring for purple held; ties get half and zero scores nothing', () => {
     const s = scene({ res: [{ purple: 20 }, {}], members: [[], ['purple.foreman']], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most purple: P1 +2');
+    expect(s.log.at(-1)).toContain('Most purple: P1 +4');
     const t = scene({ res: [{ purple: 3 }, { purple: 3 }], queue: [{ t: 'endRound' }] });
-    expect(t.log.at(-1)).toContain('Most purple: P1 & P2 +1');
+    expect(t.log.at(-1)).toContain('Most purple: P1 & P2 +2');
     const u = scene({ members: [['purple.foreman'], []], queue: [{ t: 'endRound' }] });
     expect(u.log.at(-1)).not.toContain('Most purple');
   });

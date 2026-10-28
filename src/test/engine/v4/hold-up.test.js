@@ -12,10 +12,12 @@ import { take } from './helpers.js';
 
 const Q = ['gold', 'red', 'purple', 'echo'];
 /** A bot move that takes a space moving turns (Sleep In, Hold Up) only when it is the last one open: round I fills
- *  every space, and Sleep In on the round's last placement has no turn left to skip. */
+ *  every space, and Sleep In on the round's last placement has no turn left to skip. Recruits pass (see below). */
 function plain(s, rand) {
   const m = chooseBotMove(s, rand);
   const o = s.pending?.options?.find(x => x.id === m.option);
+  // and no member recruits: a member that skips turns (Bouncer) would move the order too
+  if (s.pending?.kind === 'buy' && o?.uid !== undefined && s.pending.options.some(x => x.id === 'pass')) return { player: m.player, option: 'pass' };
   const moves = x => x.kind === 'slot' && x.q !== undefined && ['skip', 'holdup', 'again', 'echo', 'refrain'].includes(actionAt(s, x.q, x.i).key);
   const alt = o && moves(o) && s.pending.options.find(x => x.kind === 'slot' && x.q !== undefined && !moves(x));
   return alt ? { player: m.player, option: alt.id } : m;

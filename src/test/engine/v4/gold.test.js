@@ -250,7 +250,7 @@ describe('Gold members', () => {
     // 4 + 6 = 10 beats 9, so P1 takes the round-I gold contest. Other spheres score independently.
     expect(R(s)[0].gold).toBe(10);
     expect(s.contests[0].results.find(c => c.qid === 'gold').winners).toEqual([0]);
-    expect(s.contests[0].prize).toBe(2);
+    expect(s.contests[0].prize).toBe(4);
     expect(s.cards[uidOf(s, 'gold.investor', 0)].invested).toBe(0);
   });
 

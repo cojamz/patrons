@@ -3,7 +3,7 @@
 // Echo copies, Doppelganger and Magenta theft.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, resume, followers, contextFor, cardDef, releaseRefund } from '../../../engine/v4/core.js';
-import { defById } from '../../../engine/v4/content/index.js';
+import { defById, EXTRA_WILD } from '../../../engine/v4/content/index.js';
 import { extraTurns, onBoard } from '../../../engine/v4/content/purple.js';
 import { move, uidOf, ids, hasOpt, actionName, pinCosts } from './helpers.js';
 import { SHOP_SIZE } from '../../../engine/v4/core.js';
@@ -54,7 +54,7 @@ describe('guest members join the deck', () => {
   it('a guest is colorless even when the sphere it leans to is on the table: no sphere counts it, and its whole cost is any colors', () => {
     // Front-runner leans Purple (printed 5 colored + 0 any): on a table with Purple, it's still nobody's color
     const Q = ['gold', 'red', 'purple', 'green'];
-    expect(defById('benders.frontrunner')).toMatchObject({ quadrant: 'guest', lean: 'purple', s: 0, w: 5 });
+    expect(defById('benders.frontrunner')).toMatchObject({ quadrant: 'guest', lean: 'purple', s: 0, w: 5 + EXTRA_WILD });
     const s = scene({ quadrants: Q, res: [{ red: 20 }], shop: ['benders.frontrunner'], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0;
     const u = uidOf(s, 'benders.frontrunner', 'shop');

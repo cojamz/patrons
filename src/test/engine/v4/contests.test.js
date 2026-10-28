@@ -40,15 +40,15 @@ describe('v4 contests: one function decides and describes them', () => {
       expect(contest.tiebreak).toBeNull();
       expect(contest.rows.every(r => r.tiebreak === undefined)).toBe(true);
     }
-    // Gold, Red and Yellow all tie; each winner gets three half prizes of 1 follower each.
-    expect(s.players.map(p => p.contest)).toEqual([3, 3, 0]);
+    // Gold, Red and Yellow all tie; each winner gets three half prizes of 2 followers each (half of 4).
+    expect(s.players.map(p => p.contest)).toEqual([6, 6, 0]);
   });
   it('a three-way tie pays half the prize to each winner, never one third', () => {
     const s = sceneQ({ quadrants: ['gold', 'red', 'yellow'], n: 3, round: 3,
       members: [['red.volunteer'], ['red.intern'], ['red.crowd']],
       res: Array.from({ length: 3 }, () => ({ gold: 1, red: 1, yellow: 1 })), queue: [{ t: 'endRound' }] });
-    expect(s.contests.at(-1).results.every(c => c.winners.length === 3 && c.prize === 3)).toBe(true);
-    expect(s.players.map(p => p.contest)).toEqual([9, 9, 9]);
+    expect(s.contests.at(-1).results.every(c => c.winners.length === 3 && c.prize === 5)).toBe(true);
+    expect(s.players.map(p => p.contest)).toEqual([15, 15, 15]);
   });
   it('Red and Yellow still award no prize when nobody has red resources or a full set', () => {
     const s = sceneQ({ quadrants: ['gold', 'red', 'yellow'], n: 3, res: [{ yellow: 9 }, {}, {}] });
@@ -71,8 +71,8 @@ describe('v4 contests: one function decides and describes them', () => {
         expect(record.prize).toBe(prize);
         // what was recorded is what was awarded: each player's contest followers grew by the prizes they won
         for (const p of after.players) {
-          const won = record.results.filter(c => c.winners.includes(p.id)).reduce((total, c) => total + prize / (c.winners.length > 1 ? 2 : 1), 0);
-          for (const c of record.results) expect(c.prize).toBe(prize / (c.winners.length > 1 ? 2 : 1));
+          const won = record.results.filter(c => c.winners.includes(p.id)).reduce((total, c) => total + (c.winners.length > 1 ? Math.ceil(prize / 2) : prize), 0);
+          for (const c of record.results) expect(c.prize).toBe(c.winners.length > 1 ? Math.ceil(prize / 2) : prize);
           expect(p.contest - before.players[p.id].contest, `game ${game}: ${p.name} contest delta`).toBe(won);
         }
         // and the record describes the table it was scored on (the oracle counts that table itself)
