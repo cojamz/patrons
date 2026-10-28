@@ -33,6 +33,9 @@ function spriteUrl(icon, sphere, rects, look) {
       ? `<filter id="r" x="-20%" y="-20%" width="140%" height="150%"><feComponentTransfer><feFuncR type="linear" slope="1.08"/><feFuncG type="linear" slope="1.08"/><feFuncB type="linear" slope="1.08"/></feComponentTransfer><feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#000" flood-opacity=".45"/></filter><g filter="url(#r)">${paths}</g>`
       : paths;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box}" shape-rendering="crispEdges">${body}</svg>`;
+  for (const r of rects) if (r.fill != null) by.set(r.fill, (by.get(r.fill) || '') + `M${r.x} ${r.y}h${r.w}v1h${-r.w}z`);
+  const n = icon.px.length;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges">${[...by].map(([f, d]) => `<path fill="${f}" d="${d}"/>`).join('')}</svg>`;
   u = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   urls.set(k, u);
   return u;
@@ -42,6 +45,9 @@ export const Sprite = memo(function Sprite({ id, sphere = 'colorless', size = 48
   const { icon, drawn } = iconFor(id, kind);
   const src = spriteUrl(icon, sphere, rectsFor(icon, sphere), look);
   const m = HALO[look] ? (HALO[look] * size) / 24 : 0;
+  const src = spriteUrl(icon, sphere, rectsFor(icon, sphere));
+  // a portrait is 32 pixels: drawn a third bigger than the 24-pixel size asked for, whole pixels at 32/64/96
+  if (icon.portrait) size = size <= 40 ? 32 : size <= 72 ? 64 : 96;
   return (
     <img className={`sprite${drawn ? '' : ' template'}${m ? ` halo-${look}` : ''}${className ? ` ${className}` : ''}`} src={src} width={size + 2 * m} height={size + 2 * m} draggable={false}
       style={m ? { margin: `${-m}px` } : undefined}

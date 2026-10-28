@@ -3,6 +3,8 @@
 // drawing batches (scripts/v4-art-import.mjs → ./icons/); anything not drawn yet falls back to a template.
 import { createElement } from 'react';
 import SETS from './icons/index.js';
+import PORTRAITS from './portraits/index.js';
+import { portraitRuns } from './portrait.js';
 
 const TABLE = '#101817';
 export const NEUTRALS = { k: '#0a0f0e', d: '#3c4946', m: '#8e9b96', l: '#ece6d6' };
@@ -126,17 +128,21 @@ for (const [id, name, source] of [
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */
 export const spriteId = name => String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 /** The icon for an id (or the first of several candidate ids), or the template for its kind. */
+// the portraits (Cory, 2026-10-28) win over the older 24×24 drawings wherever one is drawn
+const PORTRAIT = new Map(PORTRAITS.map(i => [i.id, { ...i, portrait: true }]));
 export function iconFor(id, kind = 'member') {
-  const hit = (Array.isArray(id) ? id : [id]).map(x => BY_ID.get(x)).find(Boolean);
+  const ids = Array.isArray(id) ? id : [id];
+  const hit = (kind !== 'action' && ids.map(x => PORTRAIT.get(x)).find(Boolean)) || ids.map(x => BY_ID.get(x)).find(Boolean);
   return hit ? { icon: hit, drawn: true } : { icon: TEMPLATES[kind] || TEMPLATES.member, drawn: false };
 }
-export const drawnIds = () => [...BY_ID.keys()];
+export const drawnIds = () => [...new Set([...PORTRAIT.keys(), ...BY_ID.keys()])];
 
 const rectCache = new Map();
 /** One <rect> per horizontal run of one color: [{ x, y, w, fill }]. */
 export function rectsFor(icon, sphere) {
   const k = `${icon.id}|${sphere}`;
   if (rectCache.has(k)) return rectCache.get(k);
+  if (icon.portrait) return portraitRuns(icon, sphere);
   const person = icon.kind === 'member' && !icon.palette;
   const pal = icon.palette ? { ...NEUTRALS, ...icon.palette } : { ...palette(sphere), ...(person ? personPalette(icon.id) : null) };
   const out = [];
