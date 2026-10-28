@@ -1,0 +1,57 @@
+--- /tmp/claude-0/-home-user-patrons/679b679e-2607-5f71-bbff-13a3c6e66c73/scratchpad/rig-e3e5-orig.mjs	2026-10-28 05:57:39.018740325 +0000
++++ /tmp/claude-0/-home-user-patrons/679b679e-2607-5f71-bbff-13a3c6e66c73/scratchpad/rig-prof-e3e5.mjs	2026-10-28 05:57:29.505684109 +0000
+@@ -117,6 +117,36 @@
+ page.on('load', () => { if (++loads > 2) errors.push(`the page reloaded itself (load ${loads})`); });
+ const cdp = await ctx.newCDPSession(page);
+ await cdp.send('Performance.enable');
++// profiling copy: CPU profile from round II on; a watchdog that, on any main-thread stall over 10 s, saves the profile,
++// a screenshot, the DOM and what is on screen (prompt, hover card, open sheet), during the stall where it can and right after
++let profiling = false, stallN = 0;
++const startProfile = async () => { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 2000 }); await cdp.send('Profiler.start'); profiling = true; };
++const within = (p, ms) => Promise.race([p, sleep(ms).then(() => 'TIMEOUT')]);
++const saveProfile = async name => { if (!profiling) return 'no profile'; const r = await within(cdp.send('Profiler.stop'), 8000); if (r === 'TIMEOUT') return 'profile stop timed out'; profiling = false; writeFileSync(`${OUT}/${name}.cpuprofile`, JSON.stringify(r.profile)); await startProfile(); return 'profile saved'; };
++const onScreen = () => page.evaluate(() => { const t = sel => [...document.querySelectorAll(sel)].map(e => e.innerText.replace(/\s+/g, ' ').trim().slice(0, 400)).filter(Boolean); const g = document.querySelector('.app.game'); return { phase: g?.dataset.phase, yours: g?.dataset.yours, animating: g?.dataset.animating, round: document.querySelector('.hub-label b')?.textContent, prompt: t('.prompt'), hover: t('.lt-hover'), sheet: t('.sheet-backdrop, .dialog'), pay: t('.pay-rows'), options: [...document.querySelectorAll('[data-option]')].length, anims: document.getAnimations().length }; });
++let wdBusy = false;
++setInterval(async () => {
++  if (wdBusy) return; wdBusy = true; const s = Date.now(); let stall = null;
++  const w = setTimeout(async () => {
++    stall = ++stallN; const tag = `stall-${stall}`;
++    console.log(`STALL ${stall} began ${new Date(s).toISOString()}`);
++    const shot = await within(page.screenshot({ path: `${OUT}/${tag}-during.png`, timeout: 6000 }).then(() => 'shot', e => 'shot failed'), 7000);
++    const prof = await saveProfile(`${tag}-during`);
++    console.log(`STALL ${stall} during: ${shot}, ${prof}`);
++  }, 10000);
++  await cdp.send('Runtime.evaluate', { expression: '1' }).catch(() => {});
++  clearTimeout(w);
++  if (stall) {
++    const tag = `stall-${stall}`;
++    console.log(`STALL ${stall} lasted ${Math.round((Date.now() - s) / 1000)} s`);
++    const what = await onScreen().catch(e => ({ error: e.message }));
++    writeFileSync(`${OUT}/${tag}-after.json`, JSON.stringify(what, null, 1));
++    writeFileSync(`${OUT}/${tag}-after.html`, await page.content().catch(() => ''));
++    await page.screenshot({ path: `${OUT}/${tag}-after.png` }).catch(() => {});
++    console.log(`STALL ${stall} after: ${await saveProfile(`${tag}-after`)}; on screen ${JSON.stringify(what).slice(0, 600)}`);
++  }
++  wdBusy = false;
++}, 2000).unref();
+ const throttle = r => cdp.send('Emulation.setCPUThrottlingRate', { rate: r });
+ const metrics = async () => Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]));
+ const memory = async () => { await cdp.send('HeapProfiler.collectGarbage'); const c = await cdp.send('Memory.getDOMCounters'); const h = await cdp.send('Runtime.getHeapUsage'); return { nodes: c.nodes, listeners: c.jsEventListeners, heapMB: Math.round(h.usedSize / 1e5) / 10 }; };
+@@ -188,6 +218,8 @@
+   if (!g || !g.yours) { await sleep(60); continue; }
+   if (round && round !== lastRound && g.phase === 'place') {
+     lastRound = round;
++    console.log(`ROUND ${round} ${new Date().toISOString()}`);
++    if (round !== 'I' && !profiling) await startProfile();
+     await sleep(1500);
+     per(round).memory = await memory();
+     console.log(`round ${round}: ${JSON.stringify(per(round).memory)}`);
+@@ -226,6 +258,8 @@
+ }
+ await letGo();
+ const over = !!(await page.$('.results'));
++console.log(`GAME ${over ? 'finished' : 'not finished'}, round ${finalRound}, ${stallN} stalls, ${Math.round((Date.now() - t0) / 60000)} min`);
++if (profiling) { const { profile } = await cdp.send('Profiler.stop'); profiling = false; writeFileSync(`${OUT}/rig-${label}.cpuprofile`, JSON.stringify(profile)); }
+ 
+ const F = await page.evaluate(() => ({ frames: window.__rig.frames, loaf: window.__rig.loaf })).catch(() => ({ frames: [], loaf: [] }));
+ // the leak control: a reload on the last round's turn (the game is saved locally), measured the same way
