@@ -146,8 +146,10 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     // so a hover or a click that lands while a bot's step is being drawn answers at once instead of waiting out one
     // 100–300ms task (4× CPU). (A bot's step was a plain update while every ticking number re-rendered once a frame and
     // restarted it, turn-wait.md; Tick now writes its digits straight to the DOM, so nothing restarts it each frame.)
-    void userMove;
-    const paint = startTransition;
+    // ...except your own move (smooth pass, 2026-10-28): sliced between the show's frames, ~170ms of drawing at 4x CPU
+    // stretched to ~400ms before your click answered. It draws in one go instead, a frame after the click, so the
+    // press itself paints first.
+    const paint = userMove ? f => requestAnimationFrame(() => setTimeout(f, 0)) : startTransition;
     if (end) {
       held.current = true;
       const start = roundStart.current;
