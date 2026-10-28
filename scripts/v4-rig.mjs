@@ -66,7 +66,7 @@ const RECORDER = () => {
   };
   F.resume = () => { F.pause = false; if (F.stopped) { F.stopped = false; requestAnimationFrame(tick); } };
   requestAnimationFrame(tick);
-  try { new PerformanceObserver(l => { for (const e of l.getEntries()) F.loaf.push({ round: F.round, d: Math.round(e.duration), scripts: (e.scripts || []).slice(0, 3).map(s => `${(s.sourceFunctionName || s.invoker || '?').slice(0, 40)} ${Math.round(s.duration)}`) }); }).observe({ type: 'long-animation-frame', buffered: false }); } catch { /* no LoAF */ }
+  try { new PerformanceObserver(l => { for (const e of l.getEntries()) { if (e.duration > 2000) F.big = (F.big || []).concat({ d: Math.round(e.duration), prompt: (document.querySelector('[data-prompt]')?.textContent || '').slice(0, 120), phase: document.querySelector('.app.game')?.dataset.phase, hover: (document.querySelector('.lt-hover')?.textContent || '').slice(0, 120), options: [...document.querySelectorAll('[data-option]')].map(x => x.getAttribute('data-option')).slice(0, 20) }); F.loaf.push({ round: F.round, d: Math.round(e.duration), scripts: (e.scripts || []).slice(0, 3).map(s => `${(s.sourceFunctionName || s.invoker || '?').slice(0, 40)} ${Math.round(s.duration)}${s.duration > 1000 ? ` [${s.invoker || ''} @ ${(s.sourceURL || '').split('/').pop()}:${s.sourceCharPosition}]` : ''}`) }); } }).observe({ type: 'long-animation-frame', buffered: false }); } catch { /* no LoAF */ }
   // click → answer painted: armed by the harness before each click
   F.arm = () => new Promise(resolve => {
     const look = () => {
@@ -227,7 +227,7 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
 await letGo();
 const over = !!(await page.$('.results'));
 
-const F = await page.evaluate(() => ({ frames: window.__rig.frames, loaf: window.__rig.loaf })).catch(() => ({ frames: [], loaf: [] }));
+const F = await page.evaluate(() => ({ frames: window.__rig.frames, loaf: window.__rig.loaf, big: window.__rig.big || [] })).catch(() => ({ frames: [], loaf: [] }));
 // the leak control: a reload on the last round's turn (the game is saved locally), measured the same way
 let unbroken = null, reloaded = null;
 if (finalRound && R[finalRound]) {
@@ -298,6 +298,7 @@ for (const r of rounds) {
   L.push('', '| animating | frames | p95 | worst | hitch % |', '|---|---|---|---|---|', ...s.anims.map(a => `| ${a.k} | ${a.n} | ${v(a.p95)} | ${v(a.worst)} | ${a.hitch} |`));
   if (s.loaf.top.length) L.push('', 'Longest frames: ' + s.loaf.top.map(l => `${l.d} ms (${l.scripts.join(', ') || 'style/layout/paint'})`).join(' · '));
 }
+if (F.big && F.big.length) L.push('', 'Frames over 2 s, with the screen at the time:', ...F.big.map(b => `- ${b.d} ms · ${b.phase} · prompt "${b.prompt}" · hover "${b.hover}" · options ${b.options.join(' ')}`));
 if (errors.length) L.push('', 'Errors:', ...errors.slice(0, 10).map(e => `- ${e}`));
 writeFileSync(`${OUT}/rig-${label}.md`, L.join('\n') + '\n');
 writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors }, null, 1));
