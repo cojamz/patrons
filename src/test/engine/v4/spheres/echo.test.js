@@ -38,7 +38,7 @@ describe('Green table action boundaries', () => {
     let s = scene({ turns: [1, 0, 0] });
     s = go(s, 'echo.chant'); s = go(s, 'gold.rush');
     s = go(s, 'echo.echo', target('gold.rush'));
-    expect(R(s)).toEqual({ ...Z, gold: 4, green: 2 });
+    expect(R(s)).toEqual({ ...Z, gold: 4, green: 1 });
   });
   it('Echo uses only the immediately previous action, including when that action is a copy', () => {
     let s = scene({ round: 2, turns: [1, 1, 0] });
@@ -48,12 +48,12 @@ describe('Green table action boundaries', () => {
     expect(s.pending.options).toHaveLength(1);
     expect(s.pending.options[0].label).toMatch(/^Reprise /);
     s = move(s, s.pending.options[0].id);
-    // A fresh Reprise by P1 has no prior own action to choose, and cannot revisit Echo. Echo +2, the copied Reprise +2.
+    // A fresh Reprise by P1 has no prior own action to choose, and cannot revisit Echo. Echo +1, the copied Reprise +1.
     expect(s.pending.kind).not.toBe('choose');
-    expect(R(s)).toEqual({ ...Z, green: 4 });
+    expect(R(s)).toEqual({ ...Z, green: 2 });
   });
-  // Echo and Reprise give +2 green (2026-10-27), Encore and Greatest Hits +1
-  it.each([['echo.echo', 2], ['echo.encore', 1], ['echo.refrain', 2], ['echo.eternity', 1]])('%s still gives inherent green with no copy target', (action, green) => {
+  // Echo and Reprise give +1 green (Cory, Oct 28), Encore and Greatest Hits +1
+  it.each([['echo.echo', 1], ['echo.encore', 1], ['echo.refrain', 1], ['echo.eternity', 1]])('%s still gives inherent green with no copy target', (action, green) => {
     const s = go(scene({ round: 3 }), action);
     expect(R(s)).toEqual({ ...Z, green });
   });
@@ -95,7 +95,7 @@ describe('Green table action boundaries', () => {
     s = take(s, 'echo.echo');
     expect(s.pending.options[0].label).toBe('Golden Years (P2): +2 gold');
     s = pass(move(s, s.pending.options[0].id));
-    expect(R(s)).toEqual({ ...Z, gold: 11, green: 2 });
+    expect(R(s)).toEqual({ ...Z, gold: 11, green: 1 });
   });
   it('copying Kickback copies the printed self-gain without giving a second gift', () => {
     let s = scene({ turns: [1, 0] });
@@ -126,7 +126,7 @@ describe('Green table action boundaries', () => {
     s = take(s, 'echo.refrain');
     expect(s.pending.options.map(o => o.label)).toEqual(['Golden Years (P1): +4 gold']);
     s = pass(chooseTarget(s, 'gold.rush'));
-    expect(R(s)).toEqual({ ...Z, gold: 8, green: 2 });
+    expect(R(s)).toEqual({ ...Z, gold: 8, green: 1 });
   });
   it('last round’s ledger survives the new round without leaking old targets into current choices', () => {
     let s = scene({ turns: [1] });
@@ -148,7 +148,7 @@ describe('Green table action boundaries', () => {
     expect(s.pending.options[0].label).toBe('Walk-In (P2): do Walk-In yourself');
     s = pass(move(s, s.pending.options[0].id));
     expect(s.players[0].members).toEqual([next]);
-    expect([R(s).red, R(s).green, R(s, 1).red]).toEqual([3, 2, 3]); // nothing spent on the recruit
+    expect([R(s).red, R(s).green, R(s, 1).red]).toEqual([2, 1, 2]); // nothing spent on the recruit
   });
   it('copying a discount grants its printed discount without spending the copier’s resources', () => {
     let s = scene({ round: 2, turns: [1, 1, 0], res: [{ gold: 1 }] });
@@ -177,7 +177,7 @@ describe('Green table member boundaries', () => {
   it('Muse never pays for its own owner’s copy', () => {
     let s = scene({ turns: [1, 0], members: [['echo.muse']] });
     s = go(s, 'gold.rush'); s = go(s, 'echo.echo', target('gold.rush'));
-    expect(R(s).green).toBe(2);
+    expect(R(s).green).toBe(1);
   });
   it('Stunt Double is a recruit trigger, never a reusable buy-phase option', () => {
     let s = scene({ members: [['echo.hourglass']], turns: [0, 0] });

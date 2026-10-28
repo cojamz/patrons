@@ -38,10 +38,10 @@ describe("You'd get", () => {
     expect(y.text).toBe('up to +4 blue');
     expect(y.note).toBe('your pick');
   });
-  it('Walk-In says its +2 red and the member it brings', () => {
+  it('Walk-In says its +1 red and the member it brings', () => {
     const s = sceneQ({ quadrants: ['red', 'silver', 'gold', 'market'] });
     const y = youdWords(pv(s, 'red.hire'), s, 'red');
-    expect(y.text).toMatch(/^\+2 red/);
+    expect(y.text).toMatch(/^\+1 red/);
     expect(y.text).toMatch(/\+1 member/);
   });
 });

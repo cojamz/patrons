@@ -43,13 +43,13 @@ describe('Gold members', () => {
     s.cards[uidOf(s, 'gold.midas', 0)].on = true;
     s = take(s, 'red.evenswap');
     expect(s.players[0].res.red).toBe(0);
-    expect(s.players[0].res.gold).toBe(2);
-    expect(named(s, 'Midas')[0]).toMatch(/P1's Midas: 2 red comes as 2 gold/);
+    expect(s.players[0].res.gold).toBe(1);
+    expect(named(s, 'Midas')[0]).toMatch(/P1's Midas: 1 red comes as 1 gold/);
   });
   it('Midas × Prospector × Tinker: the converted gain is gold, so Prospector adds 1 and Tinker stays quiet', () => {
     let s = sceneQ({ members: [['gold.tinker', 'gold.midas', 'gold.prospector']] });
     s = take(s, 'red.evenswap');
-    expect(s.players[0].res.gold).toBe(3);
+    expect(s.players[0].res.gold).toBe(2);
     expect(named(s, 'Prospector')).toHaveLength(1);
     expect(named(s, 'Tinker')).toHaveLength(0);
   });
@@ -155,7 +155,7 @@ describe('Gold members', () => {
 
   it('Alchemist: an action gaining another color gives +1 gold, named', () => {
     const s = take(sceneQ({ members: [['gold.tinker']] }), 'red.evenswap');
-    expect(s.players[0].res.red).toBe(2);
+    expect(s.players[0].res.red).toBe(1);
     expect(G(s)[0]).toBe(1);
     expect(named(s, 'Alchemist')[0]).toMatch(/P1's Alchemist: \+1 gold/);
   });

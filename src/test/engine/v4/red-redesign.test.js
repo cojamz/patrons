@@ -22,12 +22,12 @@ describe('locked Red action progression', () => {
     expect(s.players[0].res.red).toBe(round + 2);
   });
 
-  it('Walk-In recruits the top member of the deck free, leaves the shop alone, +2 red and each rival +1 red', () => {
+  it('Walk-In recruits the top member of the deck free, leaves the shop alone, +1 red and each rival +1 red', () => {
     let s = table(Q, { shop: ROW.slice(0, 6) });
     const pile = s.pile.length, top = s.pile[0], shop = [...s.shop];
     s = take(s, 'red.hire');
     expect(s.players[0].members).toEqual([top]);
-    expect(s.players[0].res.red).toBe(2);
+    expect(s.players[0].res.red).toBe(1);
     expect(s.players[1].res.red).toBe(1);
     expect(s.shop).toEqual(shop);
     expect(s.pile).toHaveLength(pile - 1);
@@ -68,7 +68,7 @@ describe('locked Red action progression', () => {
 
   it('Tryout uses a shop member’s On Recruit; the member stays in the shop and nobody recruits', () => {
     let s = take(table(Q, { shop: ROW.slice(0, 6) }), 'red.evenswap');
-    expect(s.players[0].res.red).toBe(2);
+    expect(s.players[0].res.red).toBe(1);
     const banker = uidIn(s, 'gold.banker', 'shop'), shop = [...s.shop], pile = [...s.pile];
     expect(s.pending.options.map(o => o.id)).toContain(`card:${banker}`);
     expect(s.pending.options.map(o => o.id)).not.toContain(`card:${uidIn(s, 'red.twins', 'shop')}`); // no On Recruit
@@ -82,7 +82,7 @@ describe('locked Red action progression', () => {
   it('Tryout with no On Recruit member in the shop gives its red and says so', () => {
     const s = take(table(Q, { shop: ['red.twins', 'red.intern', 'red.volunteer'] }), 'red.evenswap');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.players[0].res.red).toBe(2);
+    expect(s.players[0].res.red).toBe(1);
     expect(s.log.some(l => /no shop member has an On Recruit effect/.test(l))).toBe(true);
   });
 
@@ -148,7 +148,7 @@ describe('locked Red action progression', () => {
     const actorMember = uidIn(s, 'red.volunteer', 1), target = uidIn(s, 'gold.banker', 'shop');
     s = move(s, swapId(actorMember, target));
     expect(defs(s, 1)).toContain('gold.banker');
-    expect([s.players[1].res.green, s.players[1].res.red, s.players[1].res.gold]).toEqual([2, 1, 3]); // Echo +2
+    expect([s.players[1].res.green, s.players[1].res.red, s.players[1].res.gold]).toEqual([1, 1, 3]); // Echo +1
   });
 });
 

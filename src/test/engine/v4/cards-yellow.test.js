@@ -75,7 +75,7 @@ describe('Yellow members', () => {
     const restore = pinCosts({ 'red.volunteer': [0, 0] });
     let s = take(sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] }), 'red.hire');
     restore();
-    expect(R(s).red).toBe(2); // Open Door's own +1 red (v0.8.0), and Go-Between's +1 for the red recruit
+    expect(R(s).red).toBe(1); // Walk-In's own +1 red; the deck's top member here is green, so Go-Between's +1 is green
     expect(named(s, 'Go-Between')).toHaveLength(1);
     s = sc({ round: 3, members: [['yellow.gobetween']], shop: ['benders.squatter'] }); // a guest: colorless
     s = move(take(s, 'red.take'), `card:${uidOf(s, 'benders.squatter', 'shop')}`);

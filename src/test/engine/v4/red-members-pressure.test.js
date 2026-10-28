@@ -51,7 +51,7 @@ describe('Green exact action targets alongside Red recruitment', () => {
     expect(target).toBeTruthy();
     s = pass(move(saved(s), target.id));
     expect(s.players[0].res.gold).toBe(previousPlayer === 0 ? 4 : 2);
-    expect(s.players[0].res.green).toBe(2);
+    expect(s.players[0].res.green).toBe(1);
   });
 
   it('a protected most recent rival action does not fall back to an older own action', () => {
@@ -63,7 +63,7 @@ describe('Green exact action targets alongside Red recruitment', () => {
     expect(memberCopyTargets(s, 0, defById('echo.understudy'))).toEqual([]);
     s = go(s, 'echo.echo');
     expect(s.players[0].res.gold).toBe(2);
-    expect(s.players[0].res.green).toBe(2);
+    expect(s.players[0].res.green).toBe(1);
     expect(s.pending?.kind).not.toBe('choose');
   });
 
@@ -75,7 +75,7 @@ describe('Green exact action targets alongside Red recruitment', () => {
     s = take(s, 'echo.encore');
     s = pass(move(saved(s), copyChoice(s, 'echo.echo').id));
     expect(s.players[0].res.gold).toBe(4);
-    expect(s.players[0].res.green).toBe(3); // Echo +2, Encore +1
+    expect(s.players[0].res.green).toBe(2); // Echo +1, Encore +1
     expect(s.pending?.kind).not.toBe('choose');
   });
 });

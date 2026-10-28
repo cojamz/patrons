@@ -139,7 +139,7 @@ describe('Green copies the risky spaces', () => {
     let s = scene({ quads: S, turns: [1, 0], members: [['gold.midas'], []] });
     s = go(s, 'silver.toast');
     s = pass(move(take(s, 'echo.echo'), 'space:now:2-0'));
-    expect(R(s, 0)).toMatchObject({ gold: 5, silver: 1 }); // Echo's inherent +2 green also turns gold; the gift stays silver.
+    expect(R(s, 0)).toMatchObject({ gold: 4, silver: 1 }); // Echo's inherent +1 green also turns gold; the gift stays silver.
 
     let t = scene({ quads: S, turns: [1, 0], members: [[], ['gold.midas']] });
     t = go(t, 'echo.chant');
@@ -147,7 +147,7 @@ describe('Green copies the risky spaces', () => {
     t = take(t, 'echo.echo');
     expect(labels(t)).toEqual(['Build Up (P2): +3 green']);
     t = pass(move(t, t.pending.options[0].id));
-    expect(R(t, 0).green).toBe(5); // the copied +3, Echo's own +2
+    expect(R(t, 0).green).toBe(4); // the copied +3, Echo's own +1
   });
 
   it('Underdog doubles a copied gold gain (the copy is the copier’s own action)', () => {
@@ -178,7 +178,7 @@ describe('Doppelganger copying Purple, Green and Silver members', () => {
     let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['echo.choir', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'echo.choir' } } });
     s = go(s, 'gold.rush');
     s = pass(move(take(s, 'echo.echo'), 'space:now:0-1'));
-    expect(R(s, 0)).toMatchObject({ gold: 2, green: 4 }); // Two Choirs plus Echo's inherent +2 green.
+    expect(R(s, 0)).toMatchObject({ gold: 2, green: 3 }); // Two Choirs plus Echo's inherent +1 green.
   });
   it('copying Go-Getter gives a usable once-per-game extra turn of its own', () => {
     let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, turns: [0, 1], members: [['purple.secondwind', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'purple.secondwind' } } });

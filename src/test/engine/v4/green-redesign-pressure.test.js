@@ -40,7 +40,7 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
     const uninterrupted = pass(choose(s, 'gold.rush'));
     const reloaded = pass(choose(saved(s), 'gold.rush'));
     expect(reloaded).toEqual(uninterrupted);
-    expect(reloaded.players[0].res).toMatchObject({ gold: 8, green: 3 });
+    expect(reloaded.players[0].res).toMatchObject({ gold: 8, green: 2 });
   });
 
   it('Encore → Reprise → Echo cannot return to Reprise or itself, including after reload', () => {
@@ -53,7 +53,7 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
     expect(s.pending.options.some(o => o.label.startsWith(`${actionName('echo.encore')} (`))).toBe(false);
     s = pass(choose(saved(s), 'echo.echo'));
     expect(s.pending?.kind === 'choose' ? s.pending.options.map(o => o.label) : []).toEqual([]);
-    expect(s.players[0].res.green - before).toBe(5); // Encore +1, Reprise +2, Echo +2
+    expect(s.players[0].res.green - before).toBe(3); // Encore +1, Reprise +1, Echo +1
     expect(s.log.some(line => /nothing to copy|already.*chain|chain.*already/i.test(line))).toBe(true);
   });
 
@@ -62,7 +62,7 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
     s = go(s, 'gold.rush');
     expect(s.players[1].res.gold).toBe(3);
     s = pass(choose(take(s, 'echo.echo'), 'gold.rush'));
-    expect(s.players[0].res).toMatchObject({ gold: 3, green: 2 });
+    expect(s.players[0].res).toMatchObject({ gold: 3, green: 1 });
   });
 
   it('Greatest Hits keeps sibling paths independent while its Echo chooses a fresh Reprise chain', () => {
@@ -78,7 +78,7 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
     s = choose(saved(s), 'gold.rush');
     // The separate sibling Reprise is allowed to copy Golden Years again: only ancestors are excluded.
     s = pass(choose(saved(s), 'gold.rush'));
-    expect(s.players[0].res).toMatchObject({ gold: 30, green: 11 });
+    expect(s.players[0].res).toMatchObject({ gold: 30, green: 6 });
     expect(s.players[0].discount).toBe(4);
     expect(s.pending?.kind).not.toBe('choose');
   });
@@ -141,7 +141,7 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     s.cards[uidIn(s, 'echo.doppel', 2)].copy = muse;
     s = go(s, 'gold.rush');
     s = pass(choose(take(s, 'echo.echo'), 'gold.rush'));
-    expect(s.players.map(p => p.res.green)).toEqual([2, 1, 1]); // P1's Echo +2; each Muse +1
+    expect(s.players.map(p => p.res.green)).toEqual([1, 1, 1]); // P1's Echo +1; each Muse +1
   });
 
   it('Agents blocks its owner and rivals from copying its owner’s actions', () => {
@@ -149,9 +149,9 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     let s = table(Q, { round: 2, left: 6, members: [[agents]], queue: turns(0, 1, 0, 0) });
     s = go(s, 'gold.rush');
     s = go(s, 'echo.echo');
-    expect(s.players[1].res).toMatchObject({ gold: 0, green: 2 });
+    expect(s.players[1].res).toMatchObject({ gold: 0, green: 1 });
     s = go(s, 'echo.refrain');
-    expect(s.players[0].res).toMatchObject({ gold: 4, green: 2 });
+    expect(s.players[0].res).toMatchObject({ gold: 4, green: 1 });
     expect(memberCount(s, s.players[0])).toBe(2);
     expect(followers(s, s.players[0])).toBe(3);
   });

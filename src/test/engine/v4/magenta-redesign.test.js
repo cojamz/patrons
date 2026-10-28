@@ -37,7 +37,7 @@ describe('Magenta redesign edge cases', () => {
     expect(s.players[1].res.magenta).toBe(3);
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(o => o.kind === 'space' && o.label.startsWith(actionName('thieves.tipoff'))).id);
-    expect(s.players[0].res).toMatchObject({ green: 2, magenta: 3 });
+    expect(s.players[0].res).toMatchObject({ green: 1, magenta: 3 });
   });
   it('copying Help Yourself grants its resource once, with fresh rival choices and no followers', () => {
     let s = table(Q, { round: 2, n: 3, res: [{}, {}, { gold: 9, red: 9 }], bonus: [0, 0, 5], shop, queue: turns(1, 0) });
@@ -48,7 +48,7 @@ describe('Magenta redesign edge cases', () => {
     s = move(s, s.pending.options.find(o => o.kind === 'space' && o.label.startsWith(actionName('thieves.pickpocket'))).id);
     s = restored(s);
     for (let k = 0; k < 4; k++) s = move(s, 'take:2:red');
-    expect(s.players[0].res).toMatchObject({ green: 2, magenta: 1, red: 4, gold: 0 });
+    expect(s.players[0].res).toMatchObject({ green: 1, magenta: 1, red: 4, gold: 0 });
     expect(s.players[1].res).toMatchObject({ magenta: 1, gold: 4 });
     expect(s.players.map(p => p.bonus)).toEqual([0, 0, 5]);
   });

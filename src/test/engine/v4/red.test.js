@@ -20,10 +20,10 @@ describe('Red action progression', () => {
     const s = scene({ round }); s.recruits = 99;
     expect(R(take(s, 'red.turnout'))[0].red).toBe(round + 2);
   });
-  it('Walk-In recruits the top member of the deck free; each rival +1 red; +2 red', () => {
+  it('Walk-In recruits the top member of the deck free; each rival +1 red; +1 red', () => {
     const s = take(scene({ res: [{ gold: 9 }], shop: SHOP, pileFirst: ['red.volunteer'] }), 'red.hire');
     expect(defs(s, 0)).toEqual(['red.volunteer']);
-    expect(R(s)[0]).toMatchObject({ gold: 9, red: 2 });
+    expect(R(s)[0]).toMatchObject({ gold: 9, red: 1 });
     expect(R(s)[1].red).toBe(1);
     expect(s.shop.map(u => s.cards[u].def)).toEqual(SHOP);
     expect(s.log.some(l => /recruited Volunteer from the top of the deck \(free\)/.test(l))).toBe(true);
@@ -32,7 +32,7 @@ describe('Red action progression', () => {
     let s = scene({ shop: SHOP }); s.pile = [];
     s = take(s, 'red.hire');
     expect(defs(s, 0)).toEqual([]);
-    expect(R(s)[0].red).toBe(2);
+    expect(R(s)[0].red).toBe(1);
     expect(R(s)[1].red).toBe(1);
     expect(s.log.some(l => /the deck is empty/.test(l))).toBe(true);
   });
@@ -105,7 +105,7 @@ describe('Red members', () => {
   it('Recruiter: +1 red whenever you recruit (not for itself)', () => {
     let s = scene({ members: [['red.recruiter']], shop: SHOP, pileFirst: ['red.volunteer'] });
     s = take(s, 'red.hire');
-    expect(R(s)[0].red).toBe(3); // Walk-In's +2, Recruiter's +1
+    expect(R(s)[0].red).toBe(2); // Walk-In's +1, Recruiter's +1
     const t = scene({ members: [[], ['red.recruiter']], shop: SHOP, pileFirst: ['red.volunteer'] });
     expect(R(take(t, 'red.hire'))[1].red).toBe(1); // only Walk-In's rival +1
   });
@@ -113,16 +113,16 @@ describe('Red members', () => {
   it('Pied Piper: 2+ recruits in one turn gives +2 red at turn end', () => {
     let s = scene({ members: [['red.drive']], res: [{ red: 1 }], shop: ['red.intern', ...SHOP.slice(1)], pileFirst: ['red.volunteer'] });
     s = take(s, 'red.hire');
-    expect(R(s)[0].red).toBe(3);
+    expect(R(s)[0].red).toBe(2);
     s = move(s, `card:${uidOf(s, 'red.intern', 'shop')}`);
     expect(s.pending).toBe(null);
-    expect(R(s)[0].red).toBe(4);
+    expect(R(s)[0].red).toBe(3);
     let t = scene({ members: [['red.drive']], shop: SHOP, pileFirst: ['red.volunteer'] });
     t = take(t, 'red.hire'); // Walk-In's red can now buy one follower.
     expect(t.pending.kind).toBe('buy');
     t = move(t, 'pass');
     expect(t.pending).toBe(null);
-    expect(R(t)[0].red).toBe(2);
+    expect(R(t)[0].red).toBe(1);
   });
 
   it('Host: at round start +1 red per 2 members', () => {

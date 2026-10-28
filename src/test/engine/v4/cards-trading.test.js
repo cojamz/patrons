@@ -31,7 +31,7 @@ describe('White: the printed cards', () => {
     expect(W.actions.map(a => [a.key, a.ring])).toEqual([
       ['stipend', 1], ['splurge', 1], ['exchange', 1], ['farewell', 2], ['estatesale', 2], ['cashin', 3],
     ]);
-    expect(text('splurge')).toBe('This turn, if you recruit a member, +1 follower for every 2 resources you pay for it. +2 white.');
+    expect(text('splurge')).toBe('This turn, if you recruit a member, +1 follower for every 2 resources you pay for it. +1 white.');
     expect(text('farewell')).toBe('Cast out one of your members to the bottom of the pile, gain followers equal to its cost. +1 white.');
     expect(text('estatesale')).toBe('Cast out one of your members to the bottom of the pile, gain white equal to its cost. +1 white.');
     expect(text('cashin')).toBe('Turn all your white into followers. +1 white.');
@@ -61,7 +61,7 @@ describe('White actions', () => {
   it('Exchange: round III, three resources into 6 followers, each trade named', () => {
     let s = take(table(Q, { round: 3, left: 5, res: [{ red: 2, gold: 1 }], shop: ROW }), 'trading.exchange');
     s = move(move(move(s, 'color:red'), 'color:gold'), 'color:white');
-    expect([B(s), R(s).red, R(s).gold, R(s).white]).toEqual([6, 1, 0, 1]); // Exchange's +2 white, one traded
+    expect([B(s), R(s).red, R(s).gold, R(s).white]).toEqual([6, 1, 0, 0]); // Exchange's +1 white, traded
     expect(named(s, 'Exchange').filter(l => l.includes('became 2 followers'))).toHaveLength(3);
   });
 
