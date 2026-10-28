@@ -24,9 +24,10 @@ const LOG_MAX = 300;
 // Rule flags a table can toggle (sims flip them). release: once per round, on your turn, release one of your
 // members (it goes to the bottom of the pile) for its colored part in its own color (not one recruited this round). guests: rule-bending guest
 // members join the deck.
-export const DEFAULT_RULES = { release: false, guests: true, cull: true, artifacts: true, roundDecks: 3 };
+export const DEFAULT_RULES = { release: false, guests: true, cull: true, artifacts: true, roundDecks: 2 };
 /** Round decks (Cory, 2026-10-25): one deck, but round II and round III members wait out of it and are shuffled in
- *  when their round starts. A member's round is its `round`, else its printed cost (ROUND_CUTOFFS). rules.roundDecks: 3 batches, 2 folds round III into round II, 0 is off. */
+ *  when their round starts. A member's round is its `round`, else its printed cost (ROUND_CUTOFFS). rules.roundDecks: 3 batches, 2 folds round III into round II, 0 is off.
+ *  Default 2 (Cory, 2026-10-27: "round 1 deck one, round 2 and 3 all three decks"). */
 /** Round cutoffs by printed cost (Cory, 2026-10-25: "3 or less / 4 / 5 and up"): the most a round I, then round II,
  *  member costs; anything pricier joins in round III. */
 export const ROUND_CUTOFFS = [3, 4];

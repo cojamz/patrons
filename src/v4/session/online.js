@@ -106,7 +106,7 @@ function lobbyView(room, code, playerId, { awaySince = new Map(), subAfterMs = S
   return {
     code, hostId: room.hostId ?? null, hostName: list.find(s => s.id === room.hostId)?.name || '', status, seed: room.seed ?? null,
     table: parseTable(room.table) ? { mode: room.tableMode || 'custom', quadrants: parseTable(room.table) } : null,
-    roundDecks: room.roundDecks === 2 ? 2 : 3,
+    roundDecks: room.roundDecks === 3 ? 3 : 2,
     players, seats: players.length, maxSeats: MAX_SEATS,
     canStart: isHost && status === 'lobby' && players.length >= MIN_SEATS, startHint,
     me: { playerId, seat: mine ? mine.seat : null }, isHost, subAfterMs,
@@ -519,10 +519,10 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       if (!t.table) throw new Error('That table can’t be played.');
       await transport.update(base, t);
     },
-    /** Host: round III members arrive in round III (3) or with round II (2). */
+    /** Host: round III members arrive with round II (2, the default) or in round III (3). */
     async setRoundDecks(n) {
       await hostOnly('pick when round III members arrive');
-      await transport.update(base, { roundDecks: n === 2 ? 2 : 3 });
+      await transport.update(base, { roundDecks: n === 3 ? 3 : 2 });
     },
     async start() {
       await hostOnly('start');

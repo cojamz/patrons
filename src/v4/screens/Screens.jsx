@@ -124,8 +124,9 @@ const sameTable = (a, b) => a.length === b.length && a.every((x, i) => x === b[i
 
 /** Pick the spheres, one per player (`n`): Classic, random, or your own. `value` = { mode, quadrants }, already fitted
  *  to n (fitTable); a change hands back the whole pick. */
-// Round decks (Cory, 2026-10-25): whether round III members wait for round III or arrive with round II's
-const LATE_OPTS = [['3', 'Round III', 'Round III members are shuffled in when round III starts'], ['2', 'Round II', 'Round III members are shuffled in with round II members']];
+// Round decks (Cory, 2026-10-25): whether round III members wait for round III or arrive with round II's.
+// Round II is the default (Cory, 2026-10-27: "round 1 deck one, round 2 and 3 all three decks")
+const LATE_OPTS = [['2', 'Round II', 'Round III members are shuffled in with round II members'], ['3', 'Round III', 'Round III members are shuffled in when round III starts']];
 function LatePick({ value, onChange, readOnly }) {
   return <div className="seat" data-late-pick={value}><span>Round III members join in</span>
     {readOnly ? <span className="hint">{value === 2 ? 'Arrive in round II' : 'Arrive in round III'}</span>
@@ -238,7 +239,7 @@ export function LocalSetup({ initial, onStart, onBack }) {
   const [speed, setSpeed] = useState(motionSpeed);
   const [level, setLevel] = useState(initial?.level || DEFAULT_BOT_LEVEL);
   const [table, setTable] = useState(() => initialTable(initial?.table));
-  const [late, setLate] = useState(initial?.roundDecks === 2 ? 2 : 3);
+  const [late, setLate] = useState(initial?.roundDecks === 3 ? 3 : 2);
   const filled = seats.filter(s => s.kind !== 'empty');
   // one sphere per player (Cory, 2026-10-15): the table follows the seats as they're filled or emptied
   const nSph = sphereCount(filled.length);
@@ -365,7 +366,7 @@ export function Lobby({ lobby, myId, onLeave }) {
           </div>
         )}
         <TablePicker value={shownTable} n={nSph} onChange={pickTable} readOnly={!isHost || !lobby.setTable} />
-        <LatePick value={view.roundDecks === 2 ? 2 : 3} onChange={v => act(() => lobby.setRoundDecks(v))} readOnly={!isHost || !lobby.setRoundDecks} />
+        <LatePick value={view.roundDecks === 3 ? 3 : 2} onChange={v => act(() => lobby.setRoundDecks(v))} readOnly={!isHost || !lobby.setRoundDecks} />
         {err && <p className="error">{err}</p>}
         {!isHost && <p className="hint">Waiting for {view.hostName || 'the host'} to start…</p>}
         {isHost && view.startHint && <p className="hint" data-start-hint>{view.startHint}</p>}

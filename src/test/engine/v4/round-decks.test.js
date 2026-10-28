@@ -1,7 +1,7 @@
 // Round decks (Cory, 2026-10-25): one deck; round II and round III members wait out of it and are shuffled in when
 // their round starts. By printed cost unless a member says its round: 3 or less round I, 4 round II, 5+ round III (Cory, 2026-10-25).
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove, cardDef, memberRound } from '../../../engine/v4/core.js';
+import { createGame, applyMove, cardDef, memberRound, DEFAULT_RULES } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { defById } from '../../../engine/v4/content/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
@@ -40,6 +40,14 @@ describe('round decks', () => {
     const s = start(2);
     expect(Object.keys(s.waiting)).toEqual(['2']);
     expect(s.waiting[2].some(u => cost(s, u) >= 5)).toBe(true);
+  });
+  it('by default round II shuffles in round II and round III members together (Cory, 2026-10-27)', () => {
+    expect(DEFAULT_RULES.roundDecks).toBe(2); // tests turn round decks off (content/cull.js), so the game's default is read here
+    const s = start(DEFAULT_RULES.roundDecks);
+    expect(Object.keys(s.waiting)).toEqual(['2']);
+    const r2 = playTo(s, 2);
+    expect(Object.keys(r2.waiting)).toEqual([]);
+    expect([...r2.pile, ...r2.shop].some(u => cost(r2, u) >= 5)).toBe(true);
   });
   it('off: everything starts in the deck', () => {
     expect(Object.keys(start(0).waiting)).toEqual([]);
