@@ -92,19 +92,19 @@ const trading = {
       },
     },
     {
-      key: 'splurge', copyDoesIt: true, ring: 1, name: 'Splurge', text: 'This turn, if you recruit a member, +1 follower for every 2 resources you pay for it. +2 white.', // members only, +2: Claude's defaults, 2026-10-27
-      estimate: (ctx, p) => 2 + Math.floor(Math.min(totalRes(p) + 1, 7) / 2) * fv(ctx) * 0.8,
+      key: 'splurge', copyDoesIt: true, ring: 1, name: 'Splurge', text: 'This turn, if you recruit a member, +1 follower for every 2 resources you pay for it. +1 white.', // members only: Claude's default, 2026-10-27; +1 (Cory, Oct 28)
+      estimate: (ctx, p) => 1 + Math.floor(Math.min(totalRes(p) + 1, 7) / 2) * fv(ctx) * 0.8,
       resolve(ctx, p) {
-        ctx.gain(p, W, 2, { fromAction: true });
+        ctx.gain(p, W, 1, { fromAction: true });
         p.perSpend = true;
       },
     },
     {
-      key: 'exchange', copyDoesIt: true, ring: 1, name: 'Exchange', text: 'Turn up to 1 resource (2 in round II, 3 in round III) into 2 followers each. +2 white.', // +2: Claude's default, 2026-10-27 // Cory, 2026-10-23: "up to", you can stop early
+      key: 'exchange', copyDoesIt: true, ring: 1, name: 'Exchange', text: 'Turn up to 1 resource (2 in round II, 3 in round III) into 2 followers each. +1 white.', // Cory, 2026-10-23: "up to", you can stop early
       byRound: { lines: ['Turn up to 1 resource into 2 followers.', 'Turn up to 2 resources into 2 followers each.', 'Turn up to 3 resources into 2 followers each.'], rest: '+2 white.' },
-      estimate: (ctx, p) => 2 + Math.min(ctx.state.round, totalRes(p) + 1) * (2 * fv(ctx) - 1),
+      estimate: (ctx, p) => 1 + Math.min(ctx.state.round, totalRes(p) + 1) * (2 * fv(ctx) - 1),
       resolve(ctx, p) {
-        ctx.gain(p, W, 2, { fromAction: true });
+        ctx.gain(p, W, 1, { fromAction: true });
         exchangeStep(ctx, p, { left: ctx.state.round, done: 0 });
       },
     },

@@ -42,9 +42,9 @@ const P = {
   },
   red: {
     // the +2 red sat in line 3, which drops on the outer ring (round I review, Oct 25): it takes line 2, as Right Away's purple
-    evenswap: { verb: 'Use a shop member’s On Recruit', second: '+2 red', note: 'it stays in the shop' },
+    evenswap: { verb: 'Use a shop member’s On Recruit', second: '+1 red', note: 'it stays in the shop' },
     turnout: r => ({ main: `+${r + 2} red`, second: run(n => `+${n + 2}`) }),
-    hire: { verb: 'Recruit the top of the deck', second: '+2 red', note: 'each rival +1 red' },
+    hire: { verb: 'Recruit the top of the deck', second: '+1 red', note: 'each rival +1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
     trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
     take: { verb: 'Recruit a member', second: 'costing 8 or less, free', note: '+1 red' },
@@ -128,8 +128,8 @@ const P = {
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
     // White's Oct 22 spaces (Cory's set): they had no panel words, so the board cut each to its first four words
     stipend: r => ({ main: `+${r} @f +${r + 1} white`, second: null }), // two parts grow: the hover's round lines say which
-    splurge: { verb: '+1 @f per 2 you pay', second: 'for a member this turn', note: '+2 white' },
-    exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+2 white' }),
+    splurge: { verb: '+1 @f per 2 you pay', second: 'for a member this turn', note: '+1 white' },
+    exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+1 white' }),
     // the gain leads: on ring II only one line fits, and the two read the same as "Bury one of your members"
     farewell: { verb: 'Cast out a member for its cost in @f', note: '+1 white' },
     estatesale: { verb: 'Cast out a member for its cost in white', note: '+1 white' },
@@ -139,10 +139,10 @@ const P = {
     hum: { verb: 'Copy an action', second: 'with no minion on it', note: '+1 green' },
     chant: r => ({ main: `+${r + 2} green`, second: run(n => `+${n + 2}`) }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
-    echo: { verb: 'Copy previous action', note: '+2 green' },
+    echo: { verb: 'Copy previous action', note: '+1 green' },
     encore: { verb: 'Copy an action', second: 'with a rival minion', note: '+1 green' },
     // one word for it, the hover's (w3a #22: "redo" here, "copy" there)
-    refrain: { verb: 'Copy an action', second: 'with your minion', note: '+2 green' },
+    refrain: { verb: 'Copy an action', second: 'with your minion', note: '+1 green' },
     eternity: { verb: 'Copy every action', second: 'with your minions', note: '+1 green' },
   },
 };

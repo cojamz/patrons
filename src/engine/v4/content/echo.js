@@ -330,17 +330,16 @@ const echoQ = {
     },
     {
       // The previous placement can be your own on a snake double turn.
-      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy the previous action. +2 green.', // +2: Claude's default, 2026-10-27
-      estimate: (ctx, p) => VARIANT.plus + 1 + bestValue(ctx, targets(ctx, p, 'previous'), p),
-      resolve(ctx, p) { plus(ctx, p); ctx.gain(p, 'green', 1, { fromAction: true }); offer(ctx, p, previousNow(ctx, p), 'Echo: copy the previous action?', 'now'); },
+      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy the previous action. +1 green.', // back to +1 (Cory, Oct 28)
+      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'previous'), p),
+      resolve(ctx, p) { plus(ctx, p); offer(ctx, p, previousNow(ctx, p), 'Echo: copy the previous action?', 'now'); },
     },
     {
       // your own spaces are on the board in your color: no memory of last round needed (it replaced Recall)
-      key: 'refrain', ring: 1, name: 'Reprise', echo: true, text: 'Copy an action with your minion. +2 green.', // round I (Cory, 2026-10-27); +2 Claude's default
-      estimate: (ctx, p) => VARIANT.plus + 1 + bestValue(ctx, targets(ctx, p, 'own'), p),
+      key: 'refrain', ring: 1, name: 'Reprise', echo: true, text: 'Copy an action with your minion. +1 green.', // round I (Cory, 2026-10-27); +1 (Cory, Oct 28)
+      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'own'), p),
       resolve(ctx, p) {
         plus(ctx, p);
-        ctx.gain(p, 'green', 1, { fromAction: true });
         offer(ctx, p, targets(ctx, p, 'own'), 'Reprise: copy which of your spaces?', 'now');
       },
     },

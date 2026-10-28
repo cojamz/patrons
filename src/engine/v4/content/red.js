@@ -11,10 +11,10 @@ export default {
   actions: [
     {
       // Cory, 2026-10-27: replaces Even Swap ("nobody has members initially"). Name and the +2 are Claude's fill-ins.
-      key: 'evenswap', ring: 1, name: 'Tryout', text: 'Use the On Recruit effect of a shop member; it stays in the shop. +2 red.', copyDoesIt: true,
-      estimate: ctx => 2 + (borrowable(ctx).length ? 2 : 0),
+      key: 'evenswap', ring: 1, name: 'Tryout', text: 'Use the On Recruit effect of a shop member; it stays in the shop. +1 red.', copyDoesIt: true,
+      estimate: ctx => 1 + (borrowable(ctx).length ? 2 : 0),
       resolve(ctx, p) {
-        ctx.gain(p, 'red', 2, { fromAction: true });
+        ctx.gain(p, 'red', 1, { fromAction: true });
         const list = borrowable(ctx);
         if (!list.length) { ctx.log(`${p.name}: no shop member has an On Recruit effect.`); return; }
         ctx.choose(p, 'Tryout: use which shop member’s On Recruit?', list.map(c => ({
@@ -33,10 +33,10 @@ export default {
     },
     {
       // Cory, 2026-10-27: "recruit the top member of the deck. each rival gets 1 red". Name and the +2 are Claude's fill-ins.
-      key: 'hire', ring: 1, name: 'Walk-In', text: 'Recruit the top member of the deck. Each rival +1 red. +2 red.', copyDoesIt: true,
-      estimate: ctx => 2 + (ctx.state.pile.length ? 3 : 0),
+      key: 'hire', ring: 1, name: 'Walk-In', text: 'Recruit the top member of the deck. Each rival +1 red. +1 red.', copyDoesIt: true,
+      estimate: ctx => 1 + (ctx.state.pile.length ? 3 : 0),
       resolve(ctx, p) {
-        ctx.gain(p, 'red', 2, { fromAction: true });
+        ctx.gain(p, 'red', 1, { fromAction: true });
         const top = ctx.state.pile[0];
         if (top === undefined) ctx.log(`${p.name}: the deck is empty.`);
         else ctx.recruit(p, top, { free: true, top: true });
