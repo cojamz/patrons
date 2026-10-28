@@ -41,7 +41,10 @@ describe('who is winning, on the chairs (no score row, Cory 2026-10-15)', () => 
     // the leader's total is lit (no place pills: the totals say the rest, the margin is on hover)
     if (level) expect(shown.some(e => e.lead)).toBe(false); else { expect(shown[0].lead).toBe(true); expect(shown.filter(e => e.lead).map(e => e.id)).toEqual(rows.filter(r => ranks[r.id].lead).map(r => r.id)); }
     const top = rows[0], second = rows.find(r => r.f < top.f || r.m < top.m);
-    if (second && top.f > second.f) expect(shown[0].title).toContain(`by ${top.f - second.f}`);
+    const sharedTop = rows.filter(r => r.f === top.f && r.m === top.m);
+    // a sole leader's hover gives the margin; a shared lead names who shares it (seed 41 reaches one since Oct 27)
+    if (second && sharedTop.length > 1) expect(shown[0].title).toMatch(/share the lead/);
+    else if (second && top.f > second.f) expect(shown[0].title).toContain(`by ${top.f - second.f}`);
     for (const e of shown.slice(1)) if (!e.lead) expect(e.title).toMatch(/behind/);
     expect(shown.find(e => e.id === 0).who).toBe('You');
     expect(memberCount(s, s.players[0])).toBeGreaterThanOrEqual(0);
