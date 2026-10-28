@@ -2,6 +2,16 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.8.100 — 2026-10-27 — unreleased
+
+- Contest prizes are +4 / +6 / +10 by round (ties get half, rounded up: +2 / +3 / +5), and every member costs 1 more of any color
+- Rounds II and III draw from all three decks: round III members shuffle in with round II's
+- A recruited member shows whole at the wheel's middle, then flies to its buyer; the pay sheet closes once you've paid
+- Picks light up in the shop (Churn, Peek, buys), "Done, no recruit" is amber, the wheel is about 6% bigger
+- Hovering an artifact shows it; member pop-ups linger; the ring note fades
+- Late games run lighter, and the wheel no longer turns by itself
+- Trendsetter fires on member recruits only, and Peek never shows a card twice
+
 ## v0.8.99 — 2026-10-27 — unreleased
 
 - Member cards print two clear keywords: 'On Recruit:' and 'Round Start:' (was 'Now and at round start' and 'When recruited')
