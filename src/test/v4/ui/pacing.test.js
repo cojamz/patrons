@@ -129,7 +129,7 @@ describe('a rival\'s step plays quicker than your own (RIVAL)', () => {
               const rc = rival.atoms.find(a => a.op === 'card'), oc = own.atoms.find(a => a.op === 'card');
               // a dense chain tightens to fit the turn's cap (director.js planChain), and a rival's chain, its other beats at
               // RIVAL, tightens less than the same step as yours: there its card is never quicker than yours; otherwise the same
-              const squeezed = Math.max(rival.total, own.total) > Math.round(2400 * SPEEDS.steady);
+              const squeezed = Math.max(rival.total, own.total) >= Math.round(2400 * SPEEDS.steady); // a squeezed chain ends exactly at the cap
               if (rc && oc) { cards++; for (const f of ['lift', 'toHub', 'show', 'fromHub']) if (squeezed) expect(rc[f]).toBeGreaterThanOrEqual(oc[f] - 1); else expect(Math.abs(rc[f] - oc[f])).toBeLessThanOrEqual(1); }
             }
           }
