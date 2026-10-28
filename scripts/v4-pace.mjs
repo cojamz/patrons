@@ -31,14 +31,16 @@ function saveAt(seed, pick) {
 const save = saveAt(SEED, (s, n) => n >= 44 && s.pending && s.pending.player === 0 && s.pending.kind === 'place');
 
 const LOGGER = () => {
-  const L = (window.__pace = { ev: [], firstChange: null, armed: false });
+  const L = (window.__pace = { ev: [], firstChange: null, armed: false, chains: [] });
+  let cm = 0;
+  Object.defineProperty(window, '__patronsChainMs', { configurable: true, get: () => cm, set: v => { cm = v; L.chains.push({ t: performance.now(), ms: v }); } });
   const root = () => document.querySelector('.app.game');
   let last = '';
   const stamp = () => {
     const r = root(); if (!r) return;
     const d = r.dataset;
     const k = `${d.actor}|${d.phase}|${d.presentationMoves}|${d.chain ? 1 : 0}|${d.yours}`;
-    if (k !== last) { last = k; L.ev.push({ t: performance.now(), actor: d.actor, phase: d.phase, pm: Number(d.presentationMoves), chain: !!d.chain, yours: d.yours }); }
+    if (k !== last) { last = k; L.ev.push({ t: performance.now(), actor: d.actor, phase: d.phase, pm: Number(d.presentationMoves), chain: !!d.chain, yours: d.yours, plan: window.__patronsChainMs, chains: window.__patronsChains }); }
   };
   const mo = new MutationObserver(() => {
     stamp();
@@ -89,13 +91,16 @@ for (let turn = 0; turn < TURNS; turn++) {
   await p.waitForSelector(placeSel, { timeout: 120000 });
   const tBack = await now();
   const ev = await p.evaluate(([a, z]) => window.__pace.ev.filter(e => e.t >= a && e.t <= z), [tPass, tBack]);
+  const chains = await p.evaluate(([a, z]) => window.__pace.chains.filter(e => e.t >= a && e.t <= z), [tPass, tBack]);
   // per shown move: from its pm bump to the next one, and time with a show running
   const steps = [];
   for (let i = 0; i < ev.length; i++) {
     const e = ev[i];
-    if (i === 0 || e.pm !== ev[i - 1].pm) steps.push({ t: e.t, actor: e.actor, phase: e.phase, pm: e.pm, show: 0 });
+    if (i === 0 || e.pm !== ev[i - 1].pm) steps.push({ t: e.t, actor: e.actor, phase: e.phase, pm: e.pm, show: 0, plans: [] });
+
   }
   for (let i = 0; i < ev.length; i++) if (ev[i].chain) { const end = (ev[i + 1] || { t: tBack }).t; const s = [...steps].reverse().find(x => x.t <= ev[i].t); if (s) s.show += end - ev[i].t; }
+  for (const c of chains) { const st = [...steps].reverse().find(x => x.t <= c.t + 1); if (st) st.plans.push(`${Math.round(c.t - st.t)}:${c.ms}`); }
   steps.forEach((s, i) => { s.ms = Math.round(((steps[i + 1] || { t: tBack }).t) - s.t); s.show = Math.round(s.show); });
   loops.push({ own, turn, asked, ack: ack.paint ? Math.round(ack.paint - t0) : null, lit: Math.round(tLit - t0 - 40), rivals: Math.round(tBack - tPass), steps });
   await p.waitForTimeout(600);
@@ -106,7 +111,7 @@ const lines = [`# Pace: ${SPEED}, ${CPU}x CPU, seed ${SEED}`, '', `${new Date().
 for (const l of loops) {
   lines.push(`Turn ${l.turn + 1}: press to first paint ${l.ack} ms · press to your buy step ${l.lit} ms (${l.asked} questions) · rivals ${(l.rivals / 1000).toFixed(1)} s over ${l.steps.length} shown moves`);
   lines.push('  you: ' + l.own.join(' · '));
-  lines.push('  ' + l.steps.map(s => `P${Number(s.actor) + 1}:${s.phase} ${s.ms}${s.show ? `(show ${s.show})` : ''}`).join(' · '));
+  lines.push('  ' + l.steps.map(s => `P${Number(s.actor) + 1}:${s.phase} ${s.ms}${s.show ? `(show ${s.show}; chains at:len ${s.plans.join(' ')})` : ''}`).join(' · '));
 }
 const out = lines.join('\n');
 console.log(out);
