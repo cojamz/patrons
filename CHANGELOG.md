@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.7 — 2026-10-28 — unreleased
+
+- Coins, followers and members no longer vanish partway: every flight lands, even when the page is busy
+
 ## v0.9.6 — 2026-10-28 — unreleased
 
 - The wheel turns lighter in Firefox: its glows and shadows rest while it spins
