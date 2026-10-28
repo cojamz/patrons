@@ -35,7 +35,9 @@ export const BARS = {
   hitchPct: 5, // % of frames over 33 ms
   idleBusyPct: 10, // % of main thread on an idle table at 4x
   growth: 1.5, // round III over round I, for click p95 and idle busy
-  leakNodes: 1.1, leakListeners: 1.1, leakHeap: 1.25, // unbroken game over a reload of the same turn
+  // unbroken game over a reload of the same turn. Raw node counts include one image document per sprite seen this game,
+  // and a warm page's compiled code alone is ~1.9x a fresh heap (e2e/v4/memory.mjs counts live game states instead)
+  leakNodes: 1.15, leakListeners: 1.1, leakHeap: 2.2,
 };
 
 const RECORDER = () => {
@@ -58,8 +60,11 @@ const RECORDER = () => {
     // frames while the tab is idle-measured or hidden are skipped by the harness (F.pause)
     if (last && !F.pause && F.round) F.frames.push([F.round, Math.round((t - last) * 10) / 10, cur]);
     last = t;
+    // paused (the idle reading): no frame loop at all, or its own frames would restyle every running animation
+    if (F.pause) { F.stopped = true; last = 0; return; }
     requestAnimationFrame(tick);
   };
+  F.resume = () => { F.pause = false; if (F.stopped) { F.stopped = false; requestAnimationFrame(tick); } };
   requestAnimationFrame(tick);
   try { new PerformanceObserver(l => { for (const e of l.getEntries()) F.loaf.push({ round: F.round, d: Math.round(e.duration), scripts: (e.scripts || []).slice(0, 3).map(s => `${(s.sourceFunctionName || s.invoker || '?').slice(0, 40)} ${Math.round(s.duration)}`) }); }).observe({ type: 'long-animation-frame', buffered: false }); } catch { /* no LoAF */ }
   // click → answer painted: armed by the harness before each click
@@ -132,7 +137,7 @@ async function idleSample(round) {
   await sleep(1500);
   await page.evaluate(() => { window.__rig.pause = true; });
   const m0 = await metrics(); await sleep(3000); const m1 = await metrics();
-  await page.evaluate(() => { window.__rig.pause = false; });
+  await page.evaluate(() => window.__rig.resume());
   const d = k => Math.round(((m1[k] || 0) - (m0[k] || 0)) * 1000);
   const anims = await page.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
   const x = { busyPct: Math.round(d('TaskDuration') / 30), script: d('ScriptDuration'), style: d('RecalcStyleDuration'), layout: d('LayoutDuration'), anims };
