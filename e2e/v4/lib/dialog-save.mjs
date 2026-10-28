@@ -63,8 +63,9 @@ export function paySave({ def = 'gold.prospector', tier = null, res = { gold: 3,
   return wrap(t);
 }
 
-/** P1 choosing a swap: space 'evenswap' (ring I) or 'trade' (Swap Sides, ring II). */
-export function swapSave(space = 'evenswap') {
+/** P1 choosing a swap: space 'hireup' (Promote, ring II) or 'trade' (Demote, ring II), your member for a shop member.
+ *  (Even Swap, ring I, went in the round I rework, Cory Oct 27.) Either may be declined, so a pass rides along. */
+export function swapSave(space = 'hireup') {
   const q = DIALOG_TABLE.indexOf('red'), i = quadrant('red').actions.findIndex(a => a.key === space), ring = quadrant('red').actions[i].ring;
   // members everywhere: two of yours with equal-cost twins on two rivals (Even Swap), plus a dearer one (Swap Sides)
   const MINE = ['gold.prospector', 'red.volunteer'], THEIRS = [['gold.taxman', 'red.host'], ['red.twins', 'red.bigfamily'], ['gold.merchant']]; // (the cull took red.drive and gold.coinpurse out of the deck)
@@ -76,14 +77,14 @@ export function swapSave(space = 'evenswap') {
       THEIRS.forEach((ds, k) => ds.forEach(d => give(s, k + 1, d)));
     } catch { continue; }
     const t = applyMove(s, { player: 0, option: `slot:${q}-${i}` });
-    if (!(t.pending && t.pending.player === 0 && t.pending.kind === 'choose' && t.pending.options.every(o => o.kind === 'trade') && t.pending.options.length >= 3)) continue;
+    if (!(t.pending && t.pending.player === 0 && t.pending.kind === 'choose' && t.pending.options.every(o => o.kind === 'trade' || o.kind === 'pass') && t.pending.options.filter(o => o.kind === 'trade').length >= 3)) continue;
     return wrap(t);
   }
   throw new Error(`dialog-save: never reached P1 on ${space}`);
 }
 
-/** P1 on Swap Sides in round III with a crowd: every seat holds `extra` more members (blind panel: the rivals' row ran
- *  off the card over the shop). */
+/** P1 on Demote (Swap Sides until the Oct 27 rework) in round III with a crowd: every seat holds `extra` more members
+ *  (blind panel: the rivals' row ran off the card over the shop). Demote may be declined, so a pass rides along. */
 export function swapCrowdSave(extra = 7) {
   const q = DIALOG_TABLE.indexOf('red'), i = quadrant('red').actions.findIndex(a => a.key === 'trade');
   for (let seed = 1; seed < 300; seed++) {
@@ -92,7 +93,7 @@ export function swapCrowdSave(extra = 7) {
     const free = Object.values(s.cards).filter(c => s.pile.includes(c.uid));
     for (let p = 0; p < s.players.length; p++) for (const c of free.splice(0, extra)) give(s, p, c.def);
     const t = applyMove(s, { player: 0, option: `slot:${q}-${i}` });
-    if (!(t.pending && t.pending.player === 0 && t.pending.kind === 'choose' && t.pending.options.every(o => o.kind === 'trade') && t.pending.options.length >= 20)) continue;
+    if (!(t.pending && t.pending.player === 0 && t.pending.kind === 'choose' && t.pending.options.every(o => o.kind === 'trade' || o.kind === 'pass') && t.pending.options.filter(o => o.kind === 'trade').length >= 20)) continue;
     return wrap(t);
   }
   throw new Error('dialog-save: never reached P1 on a crowded round-III Swap Sides');
