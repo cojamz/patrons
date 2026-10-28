@@ -406,9 +406,10 @@ const market = {
       onBuyFollowers(ctx, owner, card, by) { if (by.id === owner.id && ctx.gain(owner, B, 1)) ctx.log(`${owner.name}'s Regular: +1 blue.`); },
     }),
     // Cory's pick for Blue's 12th, Oct 21 ("trendsetter is good!")
-    m('trendsetter', 'Trendsetter', 2, 1, 'Whenever you recruit, send 1 shop member to the bottom of the pile, then refill.', { f: 3,
+    m('trendsetter', 'Trendsetter', 2, 1, 'Whenever you recruit a member, send 1 shop member to the bottom of the pile, then refill.', { f: 3,
+      // members only, not follower buys (Cory, Oct 27: it was paying Bargain Bin and Patroness on every follower buy)
       onRecruit(ctx, owner, card, by, what) {
-        if (by !== owner || what.member?.uid === card.uid || !ctx.state.shop.length) return;
+        if (by !== owner || !what.member || what.member.uid === card.uid || !ctx.state.shop.length) return;
         churnStep(ctx, owner, { left: 1 });
         ctx.defer(owner, `${Q}.churnRefill`);
       },
