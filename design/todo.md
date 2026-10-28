@@ -9,7 +9,7 @@ Redesign, brainstorm with Cory: Shake Down (feels too bad for the player who get
 Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 member cards at game end. Next pitches, one example first: a trio set bonus (three linked members, across or within colors, scaling as you collect); how the Saboteur (-3 followers when it joins your cult) enters a cult. Open asks: Host, Grifter, Heiress stay like Patriarch? [yes]; Extortionist rework so it stops taxing follower buys (his yes, no shape yet). Tabled: a follower-spending color.
 ## Ours, open (no call needed)
 0. Confirm two browsers in one online room see each other's table-talk bubbles on the live build (v0.9.2 shipped it).
-0b. Known-red browser checks have no owner: shop-sizing.mjs (follower buys resize with details on), layout.mjs (setup waits, P1's count), hotseat.mjs (text cuts in "You" and the Even Swap picker). Fix, then empty e2e/v4/known-red.json.
+0b. Known-red browser checks have no owner: shop-sizing.mjs (follower buys resize with details on), layout.mjs (setup waits, P1's count), hotseat.mjs (text cuts in "You" and the Even Swap picker), info.mjs (deck count 3 vs pile 36 in (h); lamp ring check in (s) misses a 3px outline). All red before v0.9.8xx details-text change. Fix, then empty e2e/v4/known-red.json.
 1. Even Swap trading two shop members' places says nothing in "since your last turn"; say "swapped the shop's X and Y".
 2. Long shop member names fit their box (Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double): recheck on the 6/7/8 shop first.
 3. "Recruit" for members everywhere ("buy followers" stays): recheck buttons, prompts, toasts, log and rulebook since v0.8.31.
