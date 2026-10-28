@@ -46,7 +46,7 @@ async function open(tag, save, { fade = false } = {}) {
 }
 const cards = page => page.$$eval('.lt-shop .lt-card[data-uid]', els => els.map(e => {
   const r = e.getBoundingClientRect();
-  return { uid: e.dataset.uid, lit: e.classList.contains('lit'), recede: e.classList.contains('recede'), pile: !!e.querySelector('.from-pile'), bottom: r.bottom, opacity: Number(getComputedStyle(e).opacity) };
+  return { uid: e.dataset.uid, lit: e.classList.contains('lit'), recede: e.classList.contains('recede'), pile: !!e.closest('.lt-pile-row') || !!e.querySelector('.from-pile'), bottom: r.bottom, opacity: Number(getComputedStyle(e).opacity) };
 }));
 
 try {
@@ -64,7 +64,7 @@ try {
     for (const u of top4) {
       const c = shown.find(x => x.uid === u);
       if (!c) { errors.push(`(${tag}) peeked member ${u} is not on screen`); continue; }
-      if (!c.pile) errors.push(`(${tag}) peeked member ${u} has no "pile" tag`);
+      if (!c.pile) errors.push(`(${tag}) peeked member ${u} is neither in the "Top of the pile" row nor tagged "pile"`);
     }
     const lit = shown.filter(c => c.lit).map(c => c.uid).sort();
     if (stage === 'order') {
@@ -79,6 +79,19 @@ try {
       if (!cant.length) errors.push(`(k2 ${tag}) the save has no peeked member out of reach`);
       for (const u of cant) if (!shown.find(c => c.uid === u)?.recede) errors.push(`(k2 ${tag}) peeked member ${u} you can't pay for doesn't recede`);
       for (const u of can) if (!shown.find(c => c.uid === u)?.lit) errors.push(`(k2 ${tag}) peeked member ${u} you can pay for isn't lit`);
+    }
+    // (k5) the row (Cory, playtest Oct 28): a click numbers the card at once, "Keep this order" finishes the order,
+    // and the same 4 stay in the row, numbered 1-4, for the recruit
+    if (stage === 'order' && !extraShop) {
+      const t0 = Date.now();
+      await page.click('.lt-pile-row .lt-card.lit >> nth=1');
+      await page.waitForSelector('.lt-pile-row .pr-slot', { timeout: 2000 }).catch(() => errors.push(`(k5 ${tag}) a click in the row numbered nothing`));
+      const took = Date.now() - t0;
+      if (took > 600) errors.push(`(k5 ${tag}) the first number took ${took}ms`);
+      await page.click('.lt-pile-row .pr-keep');
+      await page.waitForSelector('.lt-pile-row[data-pile-row="recruit"]', { timeout: 3000 }).catch(() => errors.push(`(k5 ${tag}) "Keep this order" didn't finish the order`));
+      const n = await page.$$eval('.lt-pile-row .pr-slot', els => els.map(e => e.textContent).join(''));
+      if (n !== '1234') errors.push(`(k5 ${tag}) the row reads ${n || 'nothing'} after the order, want 1234`);
     }
     const low = shown.filter(c => c.bottom > 700);
     if (low.length) errors.push(`(k3 ${tag}) ${low.length} card(s) run off the bottom`);

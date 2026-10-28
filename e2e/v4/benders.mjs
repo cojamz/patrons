@@ -104,13 +104,13 @@ try {
     }
 
     if (await page.$('.lt[data-phase="buy"][data-yours="1"]')) {
-      // (b2) Insider: pile cards in the shop
+      // (b2) Insider: pile cards beside the shop (their own "Top of the pile" row since Oct 28)
       if (!seen.has('pile')) {
-        const pile = await page.$$('.lt-shop .card .from-pile');
+        const pile = await page.$$('.lt-shop .lt-pile-row .card, .lt-shop .card .from-pile');
         if (pile.length) {
           seen.add('pile');
           await shot('b2-pile-cards');
-          const card = await page.$('.lt-shop .card.can:has(.from-pile)');
+          const card = await page.$('.lt-shop .lt-pile-row .card.can, .lt-shop .card.can:has(.from-pile)');
           if (card) {
             const n0 = await page.$eval('.lt-seat[data-pid="0"]', e => e.textContent);
             await card.click();

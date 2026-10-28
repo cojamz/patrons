@@ -31,7 +31,8 @@ export function boardPicker(state, pend) {
     else if (t && Number.isInteger(t.uid)) key = state.shop.includes(t.uid) || state.pile.slice(0, 5).includes(t.uid) ? `shop:${t.uid}` : holder(t.uid) ? `member:${t.uid}` : null;
     else if (t && Number.isInteger(t.pid) && state.players[t.pid]) key = t.res ? `stack:${t.pid}:${t.res}` : `seat:${t.pid}`;
     else if (t && t.res) key = `stack:${pend.player}:${t.res}`;
-    if (!key) { rest.push(o); continue; }
+    // Peek's "Keep this order" lives on its own row in the shop (ShopCards' PileRow), not as a second button up here
+    if (!key) { if (o.kind !== 'keep') rest.push(o); continue; }
     if (where.has(key)) {
       // two copies of one space (its taker's and a Squatter's join): the board keeps the better one for you, the other
       // is a button by the caption; giving up here put a grid of chips over the wheel (w4 skeptic #3, Encore)
@@ -293,6 +294,11 @@ export function pickCaption(state, pk) {
 }
 function captionOf(state, pk) {
   if (pk.title === 'Straggler' && pk.kinds.has('space')) return { title: 'Straggler', what: ['move your minion'], how: 'Inspect a space, then move there.' };
+  // Peek (Cory, playtest Oct 28: "Peek UI is unintuitive"): what the row is for, and that you may recruit one after
+  if (pk.title === 'Peek' && pk.pend && pk.pend.show && pk.pend.show.peek) {
+    const n = pk.pend.show.peek.placed.length + pk.pend.show.peek.left.length;
+    return { title: 'Peek', what: [`set the order of the top ${n}`], how: 'Click them in the order they’ll be drawn. You may recruit one this turn.' };
+  }
   if (pk.kinds.has('stack') && !pk.give && pk.count && pk.title) {
     // the steal's limit, in the engine's words ("1 each from P3, P4"), leads the how line
     const limit = (String(pk.question).match(/\(\d+ left, ([^)]+)\)/) || [])[1];
@@ -427,6 +433,8 @@ export function seatPart(state, pk, pid, picked = {}) {
 
 /** The shop's lookup while a picker is up: a face-up member is a pick when the engine names its uid. */
 export const shopLookup = pk => id => {
+  // Peek's "Keep this order" is answered from the shop's pile row
+  if (id === 'keep') return pk.options.find(o => o.id === 'keep' && o.kind === 'keep') || null;
   const m = /^card:(\d+)$/.exec(id);
   return m ? pk.cards.get(Number(m[1])) || null : null;
 };

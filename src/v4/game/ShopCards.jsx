@@ -125,8 +125,13 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const rowKey = `${sort}|${state.round}|${(state.turns || []).length}`;
   const row = steadyOrder(steady.current, rowKey, sortShop(state, state.shop, sort));
   steady.current = { key: rowKey, uids: row };
-  const uids = tray || [...new Set([...row, ...pileTop, ...peekTop])];
-  const extra = !tray && (pileTop.length + peekTop.length) > 0;
+  // Peek's 4 (and what you may recruit off the pile after): their own row, "Top of the pile", numbered in the order
+  // they'll be drawn, never mixed into the shop (Cory, playtest Oct 28: "Peek UI is unintuitive"; his yes to the row)
+  const peekShow = peeking && pend.show && pend.show.peek ? pend.show.peek : null;
+  const pileRow = peekShow ? { uids: [...peekShow.placed, ...peekShow.left], placed: peekShow.placed.length, ordering: true }
+    : pileTop.length ? { uids: pileTop, placed: pileTop.length, ordering: false } : null;
+  const uids = tray || (pileRow ? row : [...new Set([...row, ...pileTop, ...peekTop])]);
+  const extra = !tray && !pileRow && (pileTop.length + peekTop.length) > 0;
   const memberPick = picking && uids.some(uid => optionFor(`card:${uid}`));
   // Show abilities for a first member choice, but a reader's explicit preference always wins, in every phase.
   const detailed = view === 'details' || (view === null && memberPick);
@@ -160,7 +165,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   live.current = { onPick, onDenied, hover, detailed };
   const built = useRef(new Map()); // uid → { sig, el }
   return (
-    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-pile-extra={extra || undefined} data-fade={viewer && fade ? 'on' : undefined} data-peek={peeking || undefined} data-choosing={choosing} aria-label="Shop">
+    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-pile-extra={extra || undefined} data-fade={viewer && fade ? 'on' : undefined} data-peek={peeking || undefined} data-choosing={choosing} data-pile-row={pileRow ? '' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
@@ -261,7 +266,50 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       </div>
       </div>
       <ShopTicks state={state} viewer={viewer} placing={placing} hover={hover} rowRef={rowRef} />
+      {pileRow && <PileRow state={state} viewer={viewer} row={pileRow} optionFor={optionFor} onPick={onPick} hover={hover} />}
     </section>
+  );
+}
+
+const NTH = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+/**
+ * The top of the pile as its own row over the shop: Peek's 4 while you order them (a click puts one next, its number
+ * under it; "Keep this order" leaves the rest as they lie) and, after, what you may recruit off the pile this turn.
+ * Snappy like the pay sheet: a click answers at once, nothing animates in between.
+ */
+function PileRow({ state, viewer, row, optionFor, onPick, hover }) {
+  const keep = row.ordering ? optionFor('keep') : null;
+  return (
+    <div className="lt-pile-row" data-pile-row={row.ordering ? 'order' : 'recruit'} role="group" aria-label="Top of the pile">
+      <div className="pr-head"><b>Top of the pile</b>
+        {keep ? <button type="button" className="btn pr-keep" data-option={keep.id} onClick={() => onPick(keep.id)}>Keep this order</button>
+          : <span>{row.ordering ? '' : 'Recruit one this turn'}</span>}
+      </div>
+      <div className="pr-cards">
+        {row.uids.map((uid, k) => {
+          const d = cardDef(state, uid);
+          const opt = optionFor(`card:${uid}`);
+          const parts = costParts(d, state.resources);
+          const paid = paidParts(state, viewer, uid, d);
+          const shown = paid || parts;
+          const set = k < row.placed;
+          return (
+            <button key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
+              className={`card lt-card paper${opt ? ' can lit' : ' recede'}`} style={{ '--q': cardColor(state, d) }} data-ground={cardGround(state, d)}
+              aria-label={`${d.name}, costs ${shown.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}${set ? `, ${NTH[k]} from the top` : ''}`}
+              onPointerEnter={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, e.currentTarget); }}
+              onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
+              onClick={() => { if (opt) { hover?.close?.(); onPick(opt.id); } }}>
+              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
+                <span className="lt-corner-cost num" aria-hidden="true">{shown.reduce((t, c) => t + c.n, 0)}</span>
+                {set && <span className="pr-slot num" aria-hidden="true">{k + 1}</span>}</span>
+              <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
+              <span className="ft"><CostShapes parts={shown} /></span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

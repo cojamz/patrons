@@ -77,6 +77,18 @@ describe('Blue actions', () => {
     // the reach is spent: no more pile cards on a later buy
     expect(s.players[0].peekReach).toBeUndefined();
   });
+  it('Peek: "Keep this order" puts the rest back as they lay, after any you placed; the screen sees the order so far', () => {
+    let s = table(Q, { res: [{ gold: 9, red: 9, blue: 9 }], shop: ROW5, pileFirst: ['market.stylist', 'gold.banker', 'market.curator', 'red.mentor', 'market.planner'] });
+    const top = s.pile.slice(0, 4), fifth = s.pile[4];
+    s = take(s, 'market.showroom');
+    expect(s.pending.show.peek).toEqual({ placed: [], left: top });
+    s = move(s, `card:${top[2]}`);
+    expect(s.pending.show.peek).toEqual({ placed: [top[2]], left: [top[0], top[1], top[3]] });
+    s = move(s, 'keep');
+    expect(s.pile.slice(0, 5)).toEqual([top[2], top[0], top[1], top[3], fifth]);
+    expect(s.pending.kind).toBe('buy');
+    for (const u of top) expect(ids(s)).toContain(`card:${u}`);
+  });
   it('Peek: the reach ends with the turn', () => {
     let s = table(Q, { res: [{ gold: 20, red: 20, blue: 20 }], shop: ROW5, pileFirst: ['market.stylist', 'gold.banker', 'market.curator', 'red.mentor'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 0 }] });
     s = take(s, 'market.showroom');

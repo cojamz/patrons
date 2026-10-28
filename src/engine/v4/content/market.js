@@ -111,11 +111,13 @@ function peekStep(ctx, p, { left, placed }) {
     if (order.length) ctx.log(`${p.name} puts the top ${order.length} of the pile back in a new order.`);
     return;
   }
-  ctx.choose(p, `Peek: which goes ${placed.length ? 'next' : 'on top'}?`, left.map(u => ctx.card(u)).map(c => ({
+  ctx.choose(p, `Peek: which goes ${placed.length ? 'next' : 'on top'}?`, [...left.map(u => ctx.card(u)).map(c => ({
     id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)})`, kind: 'card', value: c.uid,
     // bots put what they can buy on top
     hint: (ctx.payChoices(p, c.uid, {}).length ? 10 : 0) + botWorth(c),
-  })), `${Q}.peek`, { left, placed });
+  })),
+  // the rest stay as they lie, in one click (Cory, playtest Oct 28: the Peek row's "Keep this order")
+  { id: 'keep', label: 'Keep this order', kind: 'keep', value: 'keep', hint: -1 }], `${Q}.peek`, { left, placed }, { show: { peek: { placed, left } } });
 }
 /** Colors of the face-up members, with how many of each. */
 function shopColors(ctx) {
@@ -247,6 +249,7 @@ const market = {
       toBottom(ctx, out.length);
     },
     peek(ctx, p, uid, data) {
+      if (uid === 'keep') { peekStep(ctx, p, { left: [], placed: [...data.placed, ...data.left] }); return; }
       peekStep(ctx, p, { left: data.left.filter(u => u !== uid), placed: [...data.placed, uid] });
     },
     bury(ctx, p, uid) {

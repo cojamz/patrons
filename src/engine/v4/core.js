@@ -509,7 +509,8 @@ function inputFor(state, task) {
       // worked out when it's shown, so a space's payment warns like the pay sheet does (panel tester C #1)
       const options = withBreaks(state, p, liveOptions(state, task));
       // count: a counted pick's progress; blocked: { [player id]: why you can't pick them now } (a steal's limit)
-      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options, ...(task.count ? { count: task.count } : {}), ...(task.blocked ? { blocked: task.blocked } : {}) };
+      // show: what the screen needs to draw the choice that the options alone don't say (Peek: the order set so far)
+      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options, ...(task.count ? { count: task.count } : {}), ...(task.blocked ? { blocked: task.blocked } : {}), ...(task.show ? { show: task.show } : {}) };
       return {
         kind: 'choose', prompt: task.prompt, options: [],
         onEmpty: () => log(state, `${task.prompt.split(':')[0]}: nothing left to choose (${p.name}'s options were taken or moved first), so nothing happens.`),
@@ -1551,7 +1552,7 @@ function ctxFor(state) {
       if (!options.length) return;
       // follow-up choices queued during one resolution keep their call order
       const at = state.queue.findIndex(t => !t._fresh);
-      const task = { t: 'choose', p: p.id, prompt, options: withTargets(state, options).map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), ...(extra.blocked && Object.keys(extra.blocked).length ? { blocked: extra.blocked } : {}), _fresh: true };
+      const task = { t: 'choose', p: p.id, prompt, options: withTargets(state, options).map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), ...(extra.blocked && Object.keys(extra.blocked).length ? { blocked: extra.blocked } : {}), ...(extra.show ? { show: extra.show } : {}), _fresh: true };
       state.queue.splice(at < 0 ? state.queue.length : at, 0, task);
     },
     defer(p, handler, data = null, cause = null) {
