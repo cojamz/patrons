@@ -1,0 +1,37 @@
+# Prospector: the approved reference, copied as is (a gold pan of nuggets).
+ID = 'artifact.gold'
+PX = [
+ "................................",
+ "................................",
+ "................................",
+ "........................w.......",
+ ".......................www......",
+ "......................wwwww.....",
+ ".......................www......",
+ ".......w................w.......",
+ "......www.......................",
+ ".......w........................",
+ "..........................w.....",
+ ".........LLLLLLLL43LLLM.........",
+ ".......LLL4433NN4332DLMMM.......",
+ ".....LLLN443332N3221DDDDMMM.....",
+ "....LLNNN433221NN21DDDDDDDMM....",
+ "...LLNNNN332211NNNNDDDDDDDDMM...",
+ "...LLN43NN2211NNNNN443DDDDDMM...",
+ "...LLN321NNNNNNNNN43321DDDDMM...",
+ "...MMNN1NNNNN432NN32211DDDDMM...",
+ "...NNUUUUUNNN321NNN211UUUUUNN...",
+ "...NNNNUUUUUNNNNNNNDUUUUUNNNN...",
+ "....NNNNUUUUUUUUUUUUUUUUNNNN....",
+ ".....NNNNNNNUUUUUUUUNNNNNNN.....",
+ ".......NNNNNNNNNNNNNNNNNN.......",
+ ".........NNNNNNNNNNNNNN.........",
+ ".......NNNNNNNNNNNNNNNNNNNN.....",
+ ".........NNNNNNNNNNNNNNNN.......",
+ "...........NNNNNNNNNNNN.........",
+ "................................",
+ "................................",
+ "................................",
+ "................................"
+]
+def draw(): return list(PX)
