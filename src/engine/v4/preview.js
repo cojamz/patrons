@@ -5,10 +5,11 @@
 import { applyMove, resume, followers, memberCount } from './core.js';
 
 const NODE_BUDGET = 36; // states explored per preview (a counted pick branches a lot; past the budget only the extremes are kept)
-// a hard stop: past the budget each choice still branched in two, so a long chain of choices (Greatest Hits copying a
-// round III board) doubled per choice: 600+ states, 7-9 s at 1x, 30 s frozen at 4x when a hover worked it out on the
-// page (freeze probe, 2026-10-28). Past this many states nothing more is explored; the preview says it's partial.
-const NODE_CAP = 2 * NODE_BUDGET;
+// Past the budget a branch keeps to one side: the first option's branch takes the first option at every later choice and
+// the last's the last, so the extremes are still reached. (It used to split in two again at every choice: a long chain
+// of choices, Greatest Hits copying a round III board, became 600+ states, 8.7 s at 1x and a 3.1 s frozen page at 4x on
+// a hover; freeze probe, 2026-10-28.) NODE_CAP is a last stop: past it nothing more is explored, the preview is partial.
+const NODE_CAP = 120;
 
 /**
  * previewSpace(state, pid, q, i) → null when it can't be run, else
@@ -29,7 +30,9 @@ const earlyMoves = (s, pid) => {
   if (!e || e.round !== s.round) return 0;
   return e.moves.filter(m => m.p === pid).length;
 };
-export function previewSpace(state, pid, q, i) {
+/** opts.cap: explore at most this many states (a hover drawn on the page asks for a small one); the result says `capped`. */
+export function previewSpace(state, pid, q, i, { cap = NODE_CAP } = {}) {
+  let capped = false;
   const key = `${q}-${i}`;
   let base;
   try {
@@ -68,8 +71,9 @@ export function previewSpace(state, pid, q, i) {
     return (m[k] = v);
   };
   // returns { best, likely } leaves under s (see above), or null when no branch could be followed
-  const walk = s => {
-    if (nodes >= NODE_CAP) { partial = true; return null; }
+  // side: past the budget, which extreme this branch keeps to ('first' | 'last'), else null
+  const walk = (s, side = null) => {
+    if (nodes >= cap) { partial = true; capped = true; return null; }
     nodes++;
     if (!s.pending || s.pending.kind !== 'choose') { leaves.push(s); return { best: s, likely: s, worst: s }; }
     (s.pending.player === pid ? asks : theirAsks).add(s.pending.prompt.replace(/\s*\(\d+ left\)/, ''));
@@ -78,14 +82,16 @@ export function previewSpace(state, pid, q, i) {
     }
     if (s === base && s.pending.player === pid) first = s.pending.options;
     const opts = s.pending.options;
-    // out of budget: follow only the first and last option (the extremes a list is usually ordered by)
-    const list = nodes + opts.length > NODE_BUDGET ? (partial = true, [opts[0], opts[opts.length - 1]].filter((o, k, a) => a.indexOf(o) === k)) : opts;
+    const over = side != null || nodes + opts.length > NODE_BUDGET;
+    if (over) partial = true;
+    // out of budget: the first and last option (the extremes a list is usually ordered by), each kept to from here on
+    const list = side === 'first' ? [opts[0]] : side === 'last' ? [opts[opts.length - 1]] : over ? [opts[0], opts[opts.length - 1]].filter((o, k, a) => a.indexOf(o) === k) : opts;
     const chooser = s.pending.player;
     let best = null, likely = null, worst = null;
     for (const o of list) {
       let next;
       try { next = applyMove(s, { player: chooser, option: o.id }); } catch { partial = true; continue; }
-      const got = walk(next);
+      const got = walk(next, side || (over ? (o === opts[0] ? 'first' : 'last') : null));
       if (!got) continue;
       if (!best || worth(got.best, pid) > worth(best, pid)) best = got.best;
       if (!likely || worth(got.likely, chooser) > worth(likely, chooser)) likely = got.likely;
@@ -169,7 +175,7 @@ export function previewSpace(state, pid, q, i) {
   const keepLeaf = leaves.filter(spendsNothing).reduce((a, s) => (!a || worth(s, pid) > worth(a, pid) ? s : a), null);
   // every member some branch brings you (Open Door's tied cheapest: all four, not the best one's name)
   const joins = [...new Set(leaves.flatMap(s => s.players[pid].members.filter(u => !me0.members.includes(u))))];
-  return { exact, partial, leaves: leaves.length, keep: keepLeaf ? change(keepLeaf) : null, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0], samples: leaves.slice(0, 16),
+  return { exact, partial, capped, leaves: leaves.length, keep: keepLeaf ? change(keepLeaf) : null, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0], samples: leaves.slice(0, 16),
     best: change(top.best), likely: change(top.likely), worst: change(top.worst), tied, mix,
     joins, targets: spaceTargets(state, pid, first, joins, leaves) };
 }

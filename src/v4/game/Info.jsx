@@ -477,25 +477,35 @@ const previews = new WeakMap();
 const listeners = new Set();
 const mapFor = state => { let m = previews.get(state); if (!m) { m = new Map(); previews.set(state, m); } return m; };
 const stripped = state => ({ ...state, log: [] });
-function computeHere(state, pid, q, i) {
-  const pv = previewSpace(stripped(state), pid, q, i);
+function computeHere(state, pid, q, i, opts) {
+  const pv = previewSpace(stripped(state), pid, q, i, opts);
   return withRace(pv);
 }
-// spaces whose dry run took too long to work out inside a render on this device (a copy space late in the game): their
-// hover waits for the worker instead (freeze probe, 2026-10-28: a Greatest Hits hover froze the page 3 s at 4x)
-const slowHere = new Set();
-const SLOW_HERE_MS = 24;
-/** The preview for a space, computed now on this thread if it isn't cached (tests, tools). */
-export function cachedPreview(state, pid, q, i) {
+// A hover drawn on the page works a space out in the render only as far as a small budget (a few ms on a slow laptop):
+// a space that needs more (a copy space late in the game: Greatest Hits explored 600+ states, a 3.1 s frozen page at 4x;
+// freeze probe, 2026-10-28) shows what that found and the worker's full answer replaces it when it comes.
+const RENDER_CAP = 8;
+const provisional = new WeakMap(); // state → Map(key → a capped preview, shown until the worker's answer)
+/** The preview for a space, computed now on this thread if it isn't cached (tests, tools). `render`: inside a render,
+ *  within the small budget. */
+export function cachedPreview(state, pid, q, i, { render = false } = {}) {
   const m = mapFor(state), k = `${pid}|${q}-${i}`;
-  if (!m.has(k)) {
+  if (m.has(k)) return m.get(k);
+  if (render && worker) {
+    let pm = provisional.get(state);
+    if (!pm) { pm = new Map(); provisional.set(state, pm); }
+    if (pm.has(k)) return pm.get(k);
     let pv = null;
-    const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
-    try { pv = computeHere(state, pid, q, i); } catch { pv = null; }
-    if (t0 && performance.now() - t0 > SLOW_HERE_MS) slowHere.add(`${q}-${i}`);
-    m.set(k, pv); // (no notify: this runs while a card renders; whoever else reads it re-reads the cache)
+    try { pv = computeHere(state, pid, q, i, { cap: RENDER_CAP }); } catch { pv = null; }
+    if (!(pv && pv.capped)) { m.set(k, pv); return pv; }
+    pm.set(k, pv);
+    requestPreviews(state, pid, [`${q}-${i}`], { front: true });
+    return pv;
   }
-  return m.get(k);
+  let pv = null;
+  try { pv = computeHere(state, pid, q, i); } catch { pv = null; }
+  m.set(k, pv); // (no notify: this runs while a card renders; whoever else reads it re-reads the cache)
+  return pv;
 }
 let worker = null, workerGen = 0, workerState = null, lastAnswer = 0;
 const pending = new Map(); // gen → state
@@ -643,8 +653,7 @@ export function usePreview(state, pid, q, i, { now = false } = {}) {
   }, [state, pid, q, i]);
   if (pid == null) return null;
   const pv = peekPreview(state, pid, q, i);
-  // (a space known to be slow here never runs in the render: the worker fills it in, asked for at the front above)
-  return pv === undefined && now && !(worker && slowHere.has(`${q}-${i}`)) ? cachedPreview(state, pid, q, i) : pv;
+  return pv === undefined && now ? cachedPreview(state, pid, q, i, { render: true }) : pv;
 }
 const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 const span = (r, unit, plural = unit + 's') => {
