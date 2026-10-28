@@ -108,6 +108,8 @@ await ctx.addInitScript(s => { try { localStorage.setItem('patrons.v4.motionSpee
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', e => errors.push(e.message));
+let loads = 0;
+page.on('load', () => { if (++loads > 2) errors.push(`the page reloaded itself (load ${loads})`); });
 const cdp = await ctx.newCDPSession(page);
 await cdp.send('Performance.enable');
 const throttle = r => cdp.send('Emulation.setCPUThrottlingRate', { rate: r });
@@ -141,7 +143,7 @@ async function click(el, what, round) {
   const c = await center(el);
   if (!c) return false;
   await page.mouse.move(c.x, c.y, { steps: 2 });
-  const p = page.evaluate(() => window.__rig.arm());
+  const p = page.evaluate(() => window.__rig.arm()).catch(() => null);
   await sleep(20);
   await page.mouse.click(c.x, c.y);
   const ms = await p.catch(() => null);
@@ -155,7 +157,7 @@ async function hover(sel, round) {
   if (!c) return;
   await page.mouse.move(c.x, c.y - 120, { steps: 1 }); // off it first
   await sleep(250);
-  const p = page.evaluate(() => window.__rig.armHover());
+  const p = page.evaluate(() => window.__rig.armHover()).catch(() => null);
   await sleep(20);
   await page.mouse.move(c.x, c.y, { steps: 3 });
   const ms = await p.catch(() => null);
@@ -203,7 +205,7 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
     if (pick) await click(pick, card ? 'recruit' : rates.length ? 'followers' : 'pass', round);
   } else {
     // the pay sheet, a choice on the board, a gift: the e2e drivers' one way to answer (e2e/v4/lib/answer.mjs)
-    const p = page.evaluate(() => window.__rig.arm());
+    const p = page.evaluate(() => window.__rig.arm()).catch(() => null);
     await sleep(20);
     const a = await answerChoice(page, { last: ['pass'] }).catch(() => null);
     const ms = a ? await p.catch(() => null) : null;
