@@ -71,6 +71,25 @@ export function CostShapes({ parts }) {
   );
 }
 
+// A card's handlers, made here and not in the render: a kept card element lives on across many renders, and a handler
+// made inside one held that render's whole game state (leak pass, 2026-10-28). They read the latest props through refs.
+const cardHandlers = (refs, uid, name, optId) => {
+  const { live, pointer, waiting, arrived } = refs;
+  const fresh = () => performance.now() - (arrived.current.get(uid) ?? -1e9) < 500;
+  return {
+    onPointerDown: e => { pointer.current = e.pointerType || 'mouse'; },
+    onPointerEnter: e => { const { hover, detailed } = live.current; if (hover && !detailed && realHover(e)) { if (fresh()) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } },
+    onPointerMove: e => { const { hover, detailed } = live.current; if (waiting.current.has(uid) && hover && !detailed && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } },
+    onPointerLeave: e => { const { hover } = live.current; waiting.current.delete(uid); if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); },
+    onClick: e => {
+      const { hover, onPick, onDenied } = live.current;
+      if (fresh()) return; // just arrived under the pointer: not a deliberate click
+      // touch: a tap reads the card (a sheet with Recruit); it never recruits by itself
+      if (pointer.current === 'touch' && hover) { hover.onCardHover(uid, e.currentTarget, { pinned: true }); return; }
+      if (optId) onPick(optId); else if (onDenied) onDenied({ type: 'card', uid, name }, e.currentTarget);
+    },
+  };
+};
 // a card's element as last built: the same element, no render (ShopCards' built cache)
 const Kept = memo(function KeptCard({ el }) { return el; });
 
@@ -101,7 +120,6 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
     if (prev) for (const u of state.shop) if (!prev.has(u)) arrived.current.set(u, now);
     seenShop.current = new Set(state.shop);
   }, [state.shop]);
-  const fresh = uid => performance.now() - (arrived.current.get(uid) ?? -1e9) < 500;
   // the cards the space under the pointer would unlock brighten in ShopTicks (below): a hover never re-renders the shop
   // the top of the pile you can reach (Peek, Insider) joins the shop while you recruit, every card of it: one you can't
   // pay for recedes like a shop card, never hides (Cory, 2026-10-23: "should still be able to see Peek card they can't afford")
@@ -163,7 +181,11 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   // card in the row, 5-35ms at 4x CPU, for no change on screen); its handlers read the latest props through a ref
   const live = useRef({});
   live.current = { onPick, onDenied, hover, detailed };
+  const refs = { live, pointer, waiting, arrived };
   const built = useRef(new Map()); // uid → { sig, el }
+  // only the cards on show: a card that left the row would keep its last element (and, through its handlers, the game
+  // state it was drawn with) for the rest of the game (leak pass, 2026-10-28)
+  for (const uid of built.current.keys()) if (!uids.includes(uid)) built.current.delete(uid);
   return (
     <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-pile-extra={extra || undefined} data-fade={viewer && fade ? 'on' : undefined} data-peek={peeking || undefined} data-choosing={choosing} data-pile-row={pileRow ? '' : undefined} aria-label="Shop">
       <div className="lt-shop-main">
@@ -211,17 +233,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               style={{ '--q': color }} data-ground={ground} aria-disabled={!opt} data-unaffordable={short || undefined}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
-              onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
-              onPointerEnter={e => { const { hover, detailed } = live.current; if (hover && !detailed && realHover(e)) { if (fresh(uid)) waiting.current.add(uid); else hover.onCardHover(uid, e.currentTarget); } }}
-              onPointerMove={e => { const { hover, detailed } = live.current; if (waiting.current.has(uid) && hover && !detailed && realHover(e)) { waiting.current.delete(uid); hover.onCardHover(uid, e.currentTarget); } }}
-              onPointerLeave={e => { const { hover } = live.current; waiting.current.delete(uid); if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
-              onClick={e => {
-                const { hover, onPick, onDenied } = live.current;
-                if (fresh(uid)) return; // just arrived under the pointer: not a deliberate click
-                // touch: a tap reads the card (a sheet with Recruit); it never recruits by itself
-                if (pointer.current === 'touch' && hover) { hover.onCardHover(uid, e.currentTarget, { pinned: true }); return; }
-                if (optId) onPick(optId); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
-              }}
+              {...cardHandlers(refs, uid, d.name, optId)}
             >
               {/* identity and price (Cory, 2026-10-15: "members can't be translated to shorthand"): the picture on its
                   tinted field, the name, the cost in dots and the worth; what it does is the hover's one plain sentence */}

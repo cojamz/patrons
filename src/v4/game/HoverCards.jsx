@@ -222,18 +222,31 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   const live = !!(c && !c.pinned && c.kind === 'seat');
   const inside = useRef(false);
   const el = c ? anchorFor(c, live && inside.current) : null;
-  // a move closes the card only if what it explains is gone from under the pointer: a rival's step used to close the card
-  // you were reading, and it came back only after another move of the pointer and the hover delay (snappy pair Q1)
-  useEffect(() => { if (c && !c.pinned && !el) hover.close(); }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
   // what's drawn: the card that's up, else the one waiting out the delay (off screen until it opens)
   const drawn = c || (prep && !prep.pinned && prep.el && prep.el.isConnected ? prep : null);
   const drawEl = c ? el : drawn ? drawn.el : null;
+  // The target element is read through this ref, never captured by a closure made here (leak pass, 2026-10-28): the
+  // layer re-renders before a move's commit replaces the space or card under the pointer, so a closure (an effect's
+  // cleanup, a handler on the layer) that saw the target kept its whole removed tree alive, ~700 nodes in a late game.
+  const cur = useRef(null);
+  cur.current = { c, el, drawn, drawEl };
+  // after each commit: a target this render saw that the commit then replaced is found again (the card's own record of
+  // it too), so neither the card nor the ref holds a removed node
+  useLayoutEffect(() => {
+    const k = cur.current;
+    if (!k.c || !k.el || k.el.isConnected) return;
+    const again = anchorFor(k.c, true);
+    if (again) { k.c.el = again; cur.current = { ...k, el: again, drawEl: k.drawn === k.c ? again : k.drawEl }; } else cur.current = { ...k, el: null, drawEl: k.drawn === k.c ? null : k.drawEl };
+  });
+  // a move closes the card only if what it explains is gone from under the pointer: a rival's step used to close the card
+  // you were reading, and it came back only after another move of the pointer and the hover delay (snappy pair Q1)
+  useEffect(() => { const k = cur.current; if (k.c && !k.c.pinned && !k.el) hover.close(); }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
   // a pinned card whose target is gone for good closes, so it can't hold the layer shut against every later hover
-  useEffect(() => { if (c && c.pinned && !el) hover.close(); });
+  useEffect(() => { const k = cur.current; if (k.c && k.c.pinned && !k.el) hover.close(); });
   const placed = useRef(null); // { el, at, h }: what the last placement measured (opening a prepared card re-measures only if it moved)
   const place = (force = true) => {
-    const c = drawn, el = drawEl; // eslint-disable-line no-shadow
-    if (!c || c.pinned || !el || !box.current) { placed.current = null; setPos(null); return; }
+    const { drawn: c, drawEl: el } = cur.current; // eslint-disable-line no-shadow
+    if (!c || c.pinned || !el || !box.current) { placed.current = null; side.current = null; setPos(null); return; }
     const r0 = el.getBoundingClientRect(), at = `${r0.left},${r0.top},${r0.width},${r0.height}`, h0 = box.current.offsetHeight;
     if (!force && placed.current && placed.current.el === el && placed.current.at === at && placed.current.h === h0) return;
     placed.current = { el, at, h: h0 };
@@ -262,7 +275,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   // placed while it's drawn hidden; when it opens, only checked again (the target may have moved in the meantime)
   const shown = !!c;
   const prevDrawn = useRef(null);
-  useLayoutEffect(() => { const again = prevDrawn.current === drawn; prevDrawn.current = drawn; place(!again); }, [drawn, drawEl, shown]); // eslint-disable-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => { const d = cur.current.drawn; const again = prevDrawn.current === d; prevDrawn.current = d; place(!again); }, [drawn, drawEl, shown]); // eslint-disable-line react-hooks/exhaustive-deps
   // content that fills in a moment later (the dry run's "You'd get") re-fits the card on screen
   const placeNow = useRef(place);
   placeNow.current = place;
@@ -282,8 +295,8 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     // itself too: hover a seat, roll the wheel, read on (Cory, playtest Oct 28)
     const wheel = e => {
       const list = box.current && box.current.querySelector('.mu-list');
-      const p = { x: e.clientX, y: e.clientY };
-      if (!list || list.scrollHeight <= list.clientHeight || !(over(box.current, p) || (el && over(el.closest('.lt-seat') || el, p)))) return;
+      const p = { x: e.clientX, y: e.clientY }, t = cur.current.el;
+      if (!list || list.scrollHeight <= list.clientHeight || !(over(box.current, p) || (t && over(t.closest('.lt-seat') || t, p)))) return;
       e.preventDefault();
       list.scrollTop += e.deltaY;
       scrolledList();
@@ -292,23 +305,24 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     addEventListener('wheel', wheel, { capture: true, passive: false });
     return () => { removeEventListener('pointerdown', down, true); removeEventListener('wheel', wheel, { capture: true }); };
   }, [live, hover, el]);
+  const open = !!c && !c.pinned;
   useEffect(() => {
-    if (!c || c.pinned) return undefined;
+    if (!open) return undefined;
     const off = e => { if (box.current && e.target instanceof Node && box.current.contains(e.target)) return; hover.close(); };
     const key = e => { if (e.key === 'Escape') hover.close(); };
     addEventListener('scroll', off, true);
     addEventListener('keydown', key);
     return () => { removeEventListener('scroll', off, true); removeEventListener('keydown', key); };
-  }, [c, hover]);
+  }, [open, c, hover]);
   const onPickNow = useRef(onPick);
   onPickNow.current = onPick;
   // The controller closes on an accepted command. A guarded fast tap must keep its sheet open.
   const pickHere = useCallback(id => onPickNow.current(id), []);
   // the same element while nothing it reads has changed: opening a prepared card re-renders the layer, not the card
-  const drawnBody = useMemo(() => (drawn && drawEl ? cardBody(drawn, state, me, optionFor, pickHere) : null), [drawn, drawEl, state, me, optionFor, pickHere]);
+  const drawnBody = useMemo(() => { const k = cur.current; return k.drawn && k.drawEl ? cardBody(k.drawn, state, me, optionFor, pickHere) : null; }, [drawn, drawEl, state, me, optionFor, pickHere]); // eslint-disable-line react-hooks/exhaustive-deps
   const body = c && el ? drawnBody : null;
   if (c && c.pinned && body) {
-    return <Popover anchor={el} onClose={hover.close}><div className="lt-note pinned" data-hover-card={c.kind}>{body}</div></Popover>;
+    return <Popover anchor={cur.current.el} onClose={hover.close}><div className="lt-note pinned" data-hover-card={c.kind}>{body}</div></Popover>;
   }
   // always mounted: content swaps in place; hidden (not unmounted) between cards
   const layer = (
@@ -410,6 +424,8 @@ export function besideSeat(a, w, h) {
  * could copy light up on the wheel ("since your turn" targets), straight from the engine. Classes are toggled on the
  * board's [data-slot] elements, so the wheel never re-renders for it.
  */
+const weakly = els => (typeof WeakRef === 'function' ? els.map(e => new WeakRef(e)) : els);
+const unheld = held => held.map(r => (typeof WeakRef === 'function' && r instanceof WeakRef ? r.deref() : r)).filter(Boolean);
 function useCopyTargets(c, state, me) {
   const viewer = me != null ? me : state.pending ? state.pending.player : null;
   const space = c && c.kind === 'space' && !c.past ? c.key.split('-').map(Number) : null;
@@ -427,7 +443,9 @@ function useCopyTargets(c, state, me) {
     if (!sig) return undefined;
     const els = sig.split(',').flatMap(k => [...document.querySelectorAll(`[data-slot="${k}"]`)]);
     for (const el of els) el.classList.add('copy-target');
-    return () => { for (const el of els) el.classList.remove('copy-target'); };
+    // held weakly: a space re-drawn while lit is never kept alive by its cleanup (leak pass, 2026-10-28)
+    const held = weakly(els);
+    return () => { for (const el of unheld(held)) el.classList.remove('copy-target'); };
   }, [sig]);
   // the seat members the space acts on (Shake Down's and Poach's rival members, a swap's two sides) light with its
   // hover, as the shop's targets do (ShopCards ShopTicks): an attribute on the seat's member, nothing that moves
@@ -437,7 +455,8 @@ function useCopyTargets(c, state, me) {
     if (!seatSig) return undefined;
     const els = seatSig.split(',').flatMap(u => [...document.querySelectorAll(`.cs-member[data-uids~="${u}"]`)]);
     for (const el of els) el.setAttribute('data-aim', '');
-    return () => { for (const el of els) el.removeAttribute('data-aim'); };
+    const held = weakly(els);
+    return () => { for (const el of unheld(held)) el.removeAttribute('data-aim'); };
   }, [seatSig, state]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 /**

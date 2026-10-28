@@ -27,6 +27,16 @@ import './seat.css'; // the laptop chair, mockup A
 /** Which color's artifact a card is (state.artifacts maps color to card). */
 const artifactColor = (state, uid) => Object.keys(state.artifacts || {}).find(q => state.artifacts[q] === uid) || null;
 
+// A member figure's card, drawn when shown: made here, outside the chair's render, and reading the chair's latest props
+// through a ref (leak pass, 2026-10-28). React keeps a figure's old props on its element while nothing on the element
+// itself changes, and a card function made inside the render held that render's whole game state: a late game kept
+// one old state per member figure, ~40 of them.
+const memberCardFn = (latest, uid) => () => {
+  const { state, me, mine, optionFor, onPick } = latest.current;
+  if (!state.cards[uid]) return null;
+  return <><MemberCard state={state} uid={uid} me={me} />{mine && <MemberActions state={state} uid={uid} me={me} optionFor={optionFor} onPick={onPick} />}</>;
+};
+
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
 /**
@@ -38,6 +48,8 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
 export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {}, pick = null, total = null }) {
   const p = state.players[pid];
   const rootEl = useRef(null);
+  const latest = useRef(null);
+  latest.current = { state, me, mine, optionFor, onPick };
   const own = useCultReactions(state, pid, rootEl);
   const react = given || own;
   // (total: the count so far while the results' scoring runs (FinalScore.jsx); otherwise the engine's)
@@ -148,7 +160,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           <span className="cs-name">
             <b>{mine ? 'You' : p.name}</b>
             {turn && <Tip className={`cs-turn ${turn.kind}`} data-turn={turn.kind} data-turn-n={turn.n ?? undefined}
-              label={turn.title} content={() => <div className="pop-card gloss"><b>Turn order</b><span>{turn.title}</span></div>}>{turn.say}</Tip>}
+              label={turn.title} content={<div className="pop-card gloss"><b>Turn order</b><span>{turn.title}</span></div>}>{turn.say}</Tip>}
           </span>
           {/* under the name (mockup A, Cory 2026-10-21): the round's minions as a short row, the ones still to place
               standing (each bobs on its own slow phase; a placement flies from here) and the placed ones faded; a rival
@@ -236,7 +248,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
               {pendingRound && <span className="round-pending-mark" aria-hidden="true" />}
               <Tip className="fig" sticky={mine} {...(mine ? {} : { tabIndex: -1 })} label={`${d.name}: ${pendingRound ? 'pending this round, show the card' : readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
-                content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
+                content={memberCardFn(latest, readyUid ?? g.uids[0])}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>

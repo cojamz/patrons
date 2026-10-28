@@ -483,7 +483,9 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
 // ---------- the piece pool (eng-audit S3.2): a stream of 12 coins used to build 24 nodes and parse 12 copies of the same
 // SVG, then throw them away. A piece that has landed goes back to a small pool by its look (its classes and its markup)
 // and the next piece that looks the same reuses it: same path, timing and landing, no new nodes, no parse.
-export const PIECE_POOL_CAP = 48;
+// 16, not 48 (leak pass, 2026-10-28): each pooled piece carries its SVG, and 48 of them were ~570 nodes held off the
+// page all game; a stream of 12 coins still flies on reused pieces
+export const PIECE_POOL_CAP = 16;
 const pool = new Map(); // `${className}\n${html}` → detached outer nodes ready to fly again
 let pooled = 0;
 const inUse = new WeakMap(); // outer node in the air → its use (clearFlights hands it back)

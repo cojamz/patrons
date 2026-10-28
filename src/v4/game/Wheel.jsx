@@ -38,6 +38,21 @@ import { MO, spinEase } from '../motion.js';
 // One space on the board, drawn once per change of what it shows (perf, 2026-10-15): the wheel keeps each space's
 // element while its picture is the same, so a rival's step redraws only the spaces that changed, not all 24
 const Space = memo(function WheelSpace({ el }) { return el; });
+// A space's handlers, made here and not in the wheel's render: a space's element is kept across renders (built, Space),
+// and a handler made inside one held that render's whole game state, one per space (leak pass, 2026-10-28). They read
+// the wheel's latest through its live ref.
+const placeFn = (live, key, opt) => () => live.current.place(key, opt);
+function slotHandlers(live, touchTapped, s, key, opt, panels) {
+  const hot = (e, on) => { if (!panels) return; const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.toggle('hot', on); };
+  return {
+    onClick: e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); },
+    onKeyDown: e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.place(key, opt); } },
+    onPointerEnter: e => { const h = live.current.hover; hot(e, true); if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); },
+    onPointerLeave: e => { const h = live.current.hover; hot(e, false); if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); },
+    onFocus: e => { const h = live.current.hover; if (h && keyboardLed() && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); },
+    onBlur: () => { const h = live.current.hover; if (h) h.onSpaceHover(key, null); },
+  };
+}
 
 // sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
 const RING_S = { 1: { r0: 128, r1: 176, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
@@ -1152,7 +1167,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
         const crew = owner !== undefined ? [owner, ...joiners].map(id => ({ emoji: seatEmoji(state, id), pid: id, fresh: !!(fresh && fresh.pid === id), color: playerColor(id), name: state.players[id].name })) : [];
         face = (
           <FaceBox Face={Face} q={qid} action={a} ring={t} round={round} name={a.name} effect={pipEffect(qid, a, round)}
-            status={faceStatus({ legal: !!opt, owner: shadeOwner, open, fresh })} minions={crew} onPick={opt ? () => live.current.place(key, opt) : null}
+            status={faceStatus({ legal: !!opt, owner: shadeOwner, open, fresh })} minions={crew} onPick={opt ? placeFn(live, key, opt) : null}
             px={1 / (scale || 1)} color={`var(--${qid})`} angle={(norm(s.ang + rot) + 360) % 360} flash={flashV.has(key)} selected={selected} />
         );
       }
@@ -1162,12 +1177,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
         key={key} className={cls} data-slot={key} data-option={opt || undefined} data-pick-note={(opt && pickNotes && pickNotes.get(key)) || undefined} style={style}
         data-panel={lay ? `${lay.oneLines}.${lay.twoLines}.${lay.noteLines}${lay.tight ? ' tight' : ''}` : undefined}
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
-        onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); }}
-        onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.place(key, opt); } }}
-        onPointerEnter={e => { const h = live.current.hover; if (panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
-        onPointerLeave={e => { const h = live.current.hover; if (panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
-        onFocus={e => { const h = live.current.hover; if (h && keyboardLed() && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
-        onBlur={() => { const h = live.current.hover; if (h) h.onSpaceHover(key, null); }}
+        {...slotHandlers(live, touchTapped, s, key, opt, panels)}
       >
         <span className="hit" aria-hidden="true" />
         <span className="base" aria-hidden="true" />

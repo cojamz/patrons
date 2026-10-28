@@ -207,10 +207,19 @@ const tracked = new Set();
 export const trackState = state => {
   if (!state || !Array.isArray(state.players)) return;
   current = state;
+  // how many published states are still alive (leak pass, 2026-10-28): the page should hold the one on screen and a
+  // few it means to (undo, the round's start), never one per move. Counted as the garbage collector lets them go.
+  if (published && !published.has(state)) { published.add(state); alive++; gone.register(state, null); }
   for (const fn of tracked) { try { fn(state); } catch (err) { console.error('[v4] trackState listener failed:', err); } }
 };
 /** Called with every state trackState sees (session/archive.js keeps past games with it). Returns an unsubscribe. */
 export const onTrack = fn => { tracked.add(fn); return () => tracked.delete(fn); };
+const published = typeof WeakSet === 'function' && typeof FinalizationRegistry === 'function' ? new WeakSet() : null;
+let alive = 0;
+const gone = published ? new FinalizationRegistry(() => { alive--; }) : null;
+/** Published game states not yet collected (exact only after a GC and a turn of the event loop); null if unknown. */
+export const liveStates = () => (published ? alive : null);
+if (typeof window !== 'undefined') window.patronsLiveStates = liveStates;
 export const trackedState = () => current;
 /** A record of the game on screen (or null): what "Copy game record" copies. */
 export const currentRecord = (extra = {}) => (current ? gameRecord(current, extra) : null);

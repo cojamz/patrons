@@ -92,9 +92,15 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     const again = () => { if (!onIt.current) return; if (crossing()) { retry.current = setTimeout(again, 60); return; } opening(); };
     retry.current = setTimeout(again, 60);
   };
-  // built once per opening (and again only when what it reads changes): the reveal after the delay draws nothing new
+  // built once per opening (and again only when what it reads changes): the reveal after the delay draws nothing new.
+  // Kept in a ref, never read by a closure here: a closure made in this render (a mount effect's cleanup lives as long as
+  // the tip) would hold the content it saw, and a content function holds the whole game state it was drawn with, so a
+  // late game kept one old state alive per member chip (leak pass, 2026-10-28)
   const drawing = !!open;
-  const shownContent = useMemo(() => (drawing ? (typeof content === 'function' ? content() : content) : null), [drawing, content]);
+  const built = useRef(null);
+  if (!drawing) built.current = null;
+  else if (!built.current || built.current.content !== content) built.current = { content, node: typeof content === 'function' ? content() : content };
+  const shownContent = built.current ? built.current.node : null;
   const inControl = () => { const up = ref.current && ref.current.parentElement; return !!(up && up.closest(CONTROL)); };
   const pin = e => {
     // a keyword in an option's text never eats the option's click (a tap there picks the option)
