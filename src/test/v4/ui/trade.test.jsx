@@ -61,6 +61,9 @@ describe('trade picker', () => {
     for (const title of ['Promote', 'Demote']) {
       s.pending = { ...s.pending, prompt: `${title}: swap a member with one in the shop`, options: [{ kind: 'trade', id: `trade:${a}:${c}`, value: [a, c] }] };
       expect(giftPick(s, s.pending).head).toBe(`${title} a member`);
+      // Panel asks in its own name (release QA, Oct 28: its Demote read "Swap any two equal-cost members")
+      s.pending = { ...s.pending, prompt: `Panel: ${title.toLowerCase()} another member` };
+      expect(giftPick(s, s.pending).head).toBe(`${title} a member`);
     }
     expect(panelText('red', quadrant('red').actions.find(a => a.key === 'hireup')).second).toBe('shop cost up to 2 more');
     expect(panelText('red', quadrant('red').actions.find(a => a.key === 'trade')).second).toBe('shop cost at least 2 less');
