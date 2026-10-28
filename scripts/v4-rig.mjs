@@ -178,15 +178,20 @@ await page.waitForSelector('[data-start]');
 await page.click('[data-start]');
 await page.waitForSelector('.app.game');
 const t0 = Date.now();
-let turns = 0, lastRound = '', dead = 0, finalRound = '';
+let turns = 0, lastRound = '', dead = 0, finalRound = '', placeAt = -1;
+// the person's path: every pick keyed by the game's move count, so two runs can be checked for playing the same game
+const path = [];
 while (Date.now() - t0 < MAX_MIN * 60000) {
   if (await $('.results')) break;
   const hand = await $('[data-handoff]'); if (hand) { await hand.click().catch(() => {}); continue; }
   const round = await roundOf();
   const next = await $('[data-next-round]');
   if (next) { await sleep(900); await click(next, 'next-round', round || lastRound); continue; }
-  const g = await page.evaluate(() => { const e = document.querySelector('.app.game'); return e ? { yours: e.dataset.yours === '1', phase: e.dataset.phase, anim: e.dataset.animating === 'true' } : null; }).catch(() => null);
+  const g = await page.evaluate(() => { const e = document.querySelector('.app.game'); return e ? { yours: e.dataset.yours === '1', phase: e.dataset.phase, anim: e.dataset.animating === 'true', moves: Number(e.dataset.moves) } : null; }).catch(() => null);
   if (!g || !g.yours) { await sleep(60); continue; }
+  // the table still showing earlier moves: its phase and choices lag the game's, so acting now would follow the
+  // harness's timing (a click into the last phase) instead of the game, and two runs of one seed would part ways
+  if (g.anim) { await sleep(60); continue; }
   if (round && round !== lastRound && g.phase === 'place') {
     lastRound = round;
     await sleep(1500);
@@ -195,12 +200,15 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
   }
   const before = per(round).clicks.length;
   if (g.phase === 'place') {
-    turns++;
-    if (turns % 2 === 1) console.log(`round ${round} turn ${turns}: idle ${JSON.stringify(await idleSample(round))}`);
+    // a new turn only when the game moved on (a retried click is the same turn), so picks and idle readings
+    // follow the game, not the harness's timing, and the same seed plays the same game
+    const fresh = g.moves !== placeAt;
+    if (fresh) { placeAt = g.moves; turns++; }
+    if (fresh && turns % 2 === 1) console.log(`round ${round} turn ${turns}: idle ${JSON.stringify(await idleSample(round))}`);
     await hover('.lt-wheel [data-slot][data-option]', round);
     await hover('.lt-shop .card[data-uid]', round);
     const legal = await $$('.lt-wheel [data-slot][data-option]');
-    if (legal.length) await click(legal[(turns * 3) % legal.length], 'place', round);
+    if (legal.length) { const el = legal[(g.moves * 3) % legal.length]; path.push(`${g.moves} ${await el.getAttribute('data-option').catch(() => '?')}`); await click(el, 'place', round); }
     const confirm = await page.waitForSelector('[data-place]', { timeout: 500 }).catch(() => null);
     if (confirm) await click(confirm, 'place-confirm', round);
     finalRound = round;
@@ -208,13 +216,14 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
     const card = await $('.lt-shop .card[data-option]');
     const rates = await $$('.lt-rates [data-rate][data-option]');
     const pick = card || rates[rates.length - 1] || await $('[data-option="pass"]');
-    if (pick) await click(pick, card ? 'recruit' : rates.length ? 'followers' : 'pass', round);
+    if (pick) { path.push(`${g.moves} ${await pick.getAttribute('data-option').catch(() => '?')}`); await click(pick, card ? 'recruit' : rates.length ? 'followers' : 'pass', round); }
   } else {
     // the pay sheet, a choice on the board, a gift: the e2e drivers' one way to answer (e2e/v4/lib/answer.mjs)
     const p = page.evaluate(() => window.__rig.arm()).catch(() => null);
     await sleep(20);
     const a = await answerChoice(page, { last: ['pass'] }).catch(() => null);
     if (!a) { await letGo(); await sleep(200); continue; } // nothing on screen to answer yet (a sheet still opening)
+    path.push(`${g.moves} ${a.id || a.kind}`);
     const ms = await p.catch(() => null);
     const c1 = { what: a ? a.kind === 'option' ? g.phase || 'choose' : a.kind : 'none', ms };
     if (ms == null || ms > 1000) c1.why = { answer: a, ...await page.evaluate(() => ({ prompt: (document.querySelector('[data-prompt]')?.textContent || '').slice(0, 120), phase: document.querySelector('.app.game')?.dataset.phase, moves: document.querySelector('.app.game')?.dataset.moves })).catch(() => ({})) };
@@ -304,6 +313,6 @@ for (const r of rounds) {
 if (F.big && F.big.length) L.push('', 'Frames over 2 s, with the screen at the time:', ...F.big.map(b => `- ${b.d} ms · ${b.phase} · prompt "${b.prompt}" · hover "${b.hover}" · options ${b.options.join(' ')}`));
 if (errors.length) L.push('', 'Errors:', ...errors.slice(0, 10).map(e => `- ${e}`));
 writeFileSync(`${OUT}/rig-${label}.md`, L.join('\n') + '\n');
-writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors, odd: Object.fromEntries(rounds.map(r => [r, R[r].clicks.filter(c => c.why)])) }, null, 1));
+writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors, path, odd: Object.fromEntries(rounds.map(r => [r, R[r].clicks.filter(c => c.why)])) }, null, 1));
 console.log(L.slice(0, 12 + rounds.length + 3).join('\n'));
 process.exit(GATE && fails.length ? 1 : 0);
