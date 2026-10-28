@@ -208,7 +208,8 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
     const p = page.evaluate(() => window.__rig.arm()).catch(() => null);
     await sleep(20);
     const a = await answerChoice(page, { last: ['pass'] }).catch(() => null);
-    const ms = a ? await p.catch(() => null) : null;
+    if (!a) { await letGo(); await sleep(200); continue; } // nothing on screen to answer yet (a sheet still opening)
+    const ms = await p.catch(() => null);
     per(round).clicks.push({ what: a ? a.kind === 'option' ? g.phase || 'choose' : a.kind : 'none', ms });
   }
   const ok = per(round).clicks.length > before && per(round).clicks.at(-1).ms != null;
