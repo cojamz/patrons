@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.810 — 2026-10-28
+
+- A members page at play/members/: every member's card, by color
+
 ## v0.9.809 — 2026-10-28
 
 - Out of Style is back to +1 blue per member sent
