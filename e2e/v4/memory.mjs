@@ -7,7 +7,7 @@ import { browserPath } from './lib/browser.mjs';
 // round-I level (growth without limit). Prints the curve; writes it as JSON to $V4_SHOTS/memory.json.
 // The leak control (leak pass, 2026-10-28): on your first turn of round III it reloads the page on that same turn and
 // measures again (a reload drops anything leaked). Fails when the unbroken page has more than 10% more elements in it
-// or twice the heap of the reloaded one (a warm page's compiled code alone is ~1.7x), or when, after a GC on a settled
+// or 2.2x the heap of the reloaded one (a warm page's compiled code alone makes ~1.9x: JIT code is ~4 MB of it), or when, after a GC on a settled
 // table, more than LIVE_AT_CONTROL of the game states the session published are still alive (LIVE_MAX at any sample):
 // the page should hold the one on screen and a few it keeps on purpose (undo, the round's start, the last turn stories,
 // the shows still queued). Before the pass a round III table kept ~40, one per member figure, space and shop card.
@@ -21,7 +21,7 @@ import { answerChoice } from './lib/answer.mjs';
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/memory`;
 mkdirSync(SHOTS, { recursive: true });
 const HEAP_MAX_MB = 300, GROWTH = 3, EVERY = 20;
-const LEAK_ELEMENTS = 1.1, LEAK_HEAP = 2, LIVE_AT_CONTROL = 24, LIVE_MAX = 40;
+const LEAK_ELEMENTS = 1.1, LEAK_HEAP = 2.2, LIVE_AT_CONTROL = 24, LIVE_MAX = 40;
 
 let base = process.env.V4_URL, dev = null;
 if (!base) {
