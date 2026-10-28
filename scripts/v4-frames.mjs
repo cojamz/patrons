@@ -106,7 +106,9 @@ function summarise(F) {
 const report = { label, cpu: CPU, secs: SECS, speed: SPEED, phases: {} };
 for (const phase of PHASES) {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
-  await ctx.addInitScript(RECORDER);
+  // not on the idle phase: the recorder's rAF loop turns every frame into a main-thread frame, which restyles every
+  // running animation each frame, so an idle table would look busy only because it's being watched
+  if (phase !== 'idle') await ctx.addInitScript(RECORDER);
   await ctx.addInitScript(s => { try { localStorage.setItem('patrons.v4.motionSpeed', s); } catch { /* */ } }, SPEED);
   const page = await ctx.newPage();
   const errs = [];
