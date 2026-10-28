@@ -34,7 +34,7 @@ export function TalkBubble({ talk, pid }) {
     return () => clearTimeout(t);
   }, [fresh, last?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!fresh) return null;
-  return <div key={last.id} className="seat-say" role="status" data-say-seat={pid}>{last.text}</div>;
+  return <div key={last.id} className="seat-say" role="status" data-brief="" data-say-seat={pid}>{last.text}</div>;
 }
 
 /** The Say card: quick lines (one click says it) and a box to type in (focused, so Enter, type, Enter says it). */

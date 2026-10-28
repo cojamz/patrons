@@ -1,11 +1,11 @@
 /* Table talk (Talk.jsx): a paper bubble beside the seat that said it, and the Say card by the Log. */
 .lt > .lt-seat > .seat-say{position:absolute;left:calc(100% + 12px);top:16px;z-index:6;width:max-content;max-width:260px;padding:8px 14px;border-radius:8px;
   background:var(--paper);color:var(--paper-ink);font:600 var(--fs-2, 16px)/1.25 var(--sans);box-shadow:0 6px 18px rgba(0,0,0,.45);
-  pointer-events:none;animation:talk-in .16s ease-out, talk-out .3s ease-in 3.9s forwards}
+  pointer-events:none}
+.lt > .lt-seat > .seat-say[data-brief]{animation:brief-out .3s ease-in 3.9s forwards, talk-in .16s ease-out}
 .lt > .lt-seat > .seat-say::before{content:'';position:absolute;left:-7px;top:12px;border:7px solid transparent;border-left:0;border-right-color:var(--paper)}
 @keyframes talk-in{from{opacity:0;transform:translateX(-6px) scale(.96)}to{opacity:1;transform:none}}
-@keyframes talk-out{to{opacity:0}}
-@media (prefers-reduced-motion:reduce){.lt > .lt-seat > .seat-say{animation:none}}
+@media (prefers-reduced-motion:reduce){.lt > .lt-seat > .seat-say[data-brief]{animation:brief-out .01s 3.9s forwards}}
 
 .talk-card{position:fixed;z-index:60;width:300px;padding:10px;border-radius:8px;background:var(--table-2, #271d16);
   box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.12)),0 10px 28px rgba(0,0,0,.55);animation:talk-in .12s ease-out}
