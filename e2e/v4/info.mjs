@@ -15,7 +15,7 @@ import { browserPath } from './lib/browser.mjs';
 //  (e) a cult member hops when its own trace line appears in the log;
 //  (f) no seat sigil shapes anywhere (identity is the leader's emoji and the name);
 //  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere;
-//  (h) the member deck heads the members (below the follower buys, beside the first member card): after a refill its count is the engine's pile length (the saved game's
+//  (h) the member deck heads the shop's top row (left of the follower buys, level with them, every member below): after a refill its count is the engine's pile length (the saved game's
 //      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up);
 //  (i) while you place, the space under the pointer brightens the shop cards it would make affordable, with no
 //      badge over their portraits (w2a #37) and no "Can afford" row in its card (#42) (a saved scene where one does:
@@ -393,18 +393,22 @@ try {
           await page.waitForTimeout(300);
         }
         // (h) the deck heads the members and shows its count; it has no hover card (Cory, 2026-10-15: "the deck doesn't
-        //     need a hover"). One market since v0.8.2: the follower buys lead the grid, then the deck, beside the first
-        //     member card and level with it (it takes two rows: shop.css, Cory 2026-10-20 shop at 7)
+        //     need a hover"). One market since v0.8.2; since Oct 28 (Cory's yes to the clean grid) the deck and the
+        //     follower buys share the top row, the deck first and level with them, and every member card sits below it
         const deck = page.locator('[data-deck]');
         if (!(await deck.count())) fail('(h) no member deck at the head of the shop strip', step);
         else {
           const placed = await page.evaluate(() => {
-            const d = document.querySelector('[data-deck]').getBoundingClientRect(), c = document.querySelector('.lt-shop .lt-cards .card[data-uid]').getBoundingClientRect();
+            const d = document.querySelector('[data-deck]').getBoundingClientRect();
+            const members = [...document.querySelectorAll('.lt-shop .lt-cards .card[data-uid]')].map(e => e.getBoundingClientRect());
             const buys = [...document.querySelectorAll('.lt-shop .lt-cards .lt-rate')].map(e => e.getBoundingClientRect());
-            return { beside: d.right <= c.left + 1 && Math.abs(d.top - c.top) < 2, afterBuys: buys.length > 0 && buys.every(r => r.bottom <= d.top + 1) };
+            return {
+              topRow: buys.length > 0 && buys.every(r => Math.abs(r.top - d.top) < 2 && d.right <= r.left + 1),
+              above: members.length > 0 && members.every(m => m.top >= d.bottom - 1 && buys.every(r => m.top >= r.bottom - 1)),
+            };
           });
-          if (!placed.beside) fail('(h) the deck is not before the first member card, level with it', step);
-          if (!placed.afterBuys) fail('(h) the deck is not below the follower buys', step);
+          if (!placed.topRow) fail('(h) the deck is not first in the top row, level with the follower buys', step);
+          if (!placed.above) fail('(h) a member card is not below the deck and the follower buys', step);
           await deck.hover();
           await page.waitForTimeout(400);
           const dc = await page.evaluate(() => !!document.querySelector('[data-hover-layer] [data-hover-card="deck"]'));
