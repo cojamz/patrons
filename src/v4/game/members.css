@@ -155,3 +155,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 
 /* A quiet, persistent reminder that Straggler still has its round-end move. */
 .lt-cult-seat .cs-member .round-pending-mark{position:absolute;right:-1px;top:0;width:5px;height:5px;border-radius:50%;background:var(--lamp-ink,#ffd99a);box-shadow:0 0 0 1px var(--board,#2b2119);pointer-events:none}
+/* the artifact leads a seat's list (Cory, live, Oct 27), set apart from the members by a hairline */
+.mu-row.k-artifact + .mu-row{padding-top:8px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12))}
+.mu-kind{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--pl-ink-3,#a39078)}
+.mu-list + .mu-none{border-top:0;margin-top:0;padding-top:0}

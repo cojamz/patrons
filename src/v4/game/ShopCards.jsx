@@ -116,6 +116,10 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const peeking = picking && /^Peek: /.test(pend.prompt || '');
   const peekTop = peeking ? state.pile.slice(0, 4) : [];
   const tray = picking && !peeking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, 5).includes(o.value)) ? state.pile.slice(0, 5) : null;
+  // your pick (a buy or a choice): if the shop offers any of it, the lit ones lead and everything else steps well back;
+  // if it offers none, the whole shop steps back (Cory, live, Oct 27: "during churn and peek especially, things badly lit")
+  const offers = (buying || picking) && pend.options.some(o => o.kind === 'card' || o.kind === 'tier' || /^(card|tier):/.test(String(o.id)));
+  const choosing = buying || picking ? (offers ? 'shop' : 'elsewhere') : undefined;
   const steady = useRef(null);
   // a turn's own key: state.turns grows by one as each turn starts (the engine's record of this round's turns)
   const rowKey = `${sort}|${state.round}|${(state.turns || []).length}`;
@@ -156,7 +160,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   live.current = { onPick, onDenied, hover, detailed };
   const built = useRef(new Map()); // uid → { sig, el }
   return (
-    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-pile-extra={extra || undefined} data-fade={viewer && fade ? 'on' : undefined} data-peek={peeking || undefined} aria-label="Shop">
+    <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-member-pick={memberPick || undefined} data-view={detailed ? 'details' : 'compact'} data-tray={tray ? 'pile' : undefined} data-pile-extra={extra || undefined} data-fade={viewer && fade ? 'on' : undefined} data-peek={peeking || undefined} data-choosing={choosing} aria-label="Shop">
       <div className="lt-shop-main">
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
@@ -225,7 +229,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                     fading, not text). What you're short of is the hover's one quiet line. */}
                 {/* works from round II on (Cory, 2026-10-22: "a better way to denote round II/round III only"): a corner tag, not words */}
                 {d.from > 1 && <span className="lt-round-tag" data-round-tag="" title="Works from round II on">II+</span>}
-                {fromPile && !tray && <span className="need from-pile" title="From the top of the pile">pile</span>}
+                {fromPile && !tray && !detailed && <span className="need from-pile" title="From the top of the pile">pile</span>}
               </span>
               {/* details hides the picture, so its corner number sits on the card itself (Cory, 2026-10-22: "total cost added to corner of details view") */}
               {detailed && fromPile && !tray && <span className="need from-pile" title="From the top of the pile">pile</span>}

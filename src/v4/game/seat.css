@@ -123,3 +123,5 @@
 .app.game.lt > .lt-seat .cs-crowd > .cs-artifact { float: left; margin: -2px 8px 0 0; }
 .app.game.lt > .lt-seat .cs-setup .cs-setup-token.art { height: 34px; padding: 0 8px 0 3px; gap: 6px; justify-content: flex-start; }
 .app.game.lt > .lt-seat .cs-setup .cs-setup-token.art .tk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the member row's block box sat over the floated artifact and took its hover (Cory, live, Oct 27: artifacts had no hover) */
+.app.game.lt > .lt-seat .cs-crowd > .cs-artifact { position: relative; z-index: 1; }

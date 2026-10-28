@@ -207,7 +207,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {/* the artifact (Cory, 2026-10-25): its picture on a small plate in its color, first in the row; the hover names it */}
         {p.artifact !== undefined && (() => {
           const art = cardDef(state, p.artifact), q = artifactColor(state, p.artifact);
-          return <Tip className="cs-artifact" data-artifact={p.artifact} label={art.name} content={<p><Rich text={art.text} /></p>}><ArtifactTile q={q} res={q ? quadrant(q).resource : 'colorless'} title={`Artifact: ${art.name}`} /></Tip>;
+          return <Tip className="cs-artifact" data-artifact={p.artifact} label={art.name} content={<p><b>{art.name}</b><br /><Rich text={art.text} /></p>}><ArtifactTile q={q} res={q ? quadrant(q).resource : 'colorless'} title={`Artifact: ${art.name}`} /></Tip>;
         })()}
         <b className="cs-member-count num" data-members={nMembers} title="Members: each card counts its printed follower value, or its stated member count if higher">{nMembers}<span> member{nMembers === 1 ? '' : 's'}</span></b>
         {/* Lie Low and the like: no one can steal from this seat this round (w2b #21). A small shield under the member

@@ -433,3 +433,13 @@
   .lt-cult-seat .cs-setup-token .res-glyph{flex:none;width:16px;height:16px}
 }
 @media (max-width:860px), (max-height:499px){ .lt-cult-seat .cs-setup{display:none} }
+
+/* the wheel a touch bigger (Cory, live, Oct 27: "seems like the wheel has some space to be a touch bigger?"): its square
+   reaches into the column gaps, where only its margin lands; the paper disc still ends at the column's edges */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt .lt-wheel .stage{width:min(calc(100cqw + 2 * var(--col-gap, 16px)), calc(100cqh + 20px));margin-inline:calc(-1 * var(--col-gap, 16px));flex:none}
+}
+/* "The middle ring opened this round" says it, then goes (Cory, live, Oct 27: "doesn't need to linger") */
+.lt .say-sub[data-brief]{animation:brief-out .4s ease-out 3.5s forwards}
+@keyframes brief-out{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){.lt .say-sub[data-brief]{animation-duration:.01s}}

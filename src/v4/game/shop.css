@@ -161,3 +161,19 @@
    unclear what to click): everything but the 4 steps well back, toggle or not, and stays readable */
 .lt-shop .lt-shop-cards[data-peek] .lt-card.card.paper:not(.can){opacity:.4}
 @media (prefers-reduced-motion:reduce){.lt-shop .lt-shop-cards .lt-card.card.paper{transition:none}}
+
+/* Lit audit (Cory, live, Oct 27: "things are not well lit in general when they should be"; "during churn and peek
+   especially"). One rule for every pick in the shop: what you can click now carries the lamp (warm edge and halo), and
+   everything else steps well back. A card under your pointer or one a space would unlock still comes back to read. */
+.app.game.lt .lt-shop-cards[data-choosing] .lt-card.card.paper:not(.lit):not([data-aim]),
+.app.game.lt .lt-shop-cards[data-choosing] .lt-rates .lt-rate:not(.lit){opacity:.42;filter:none}
+.app.game.lt .lt-shop-cards[data-choosing="elsewhere"] .lt-deck{opacity:.42}
+.app.game.lt .lt-shop-cards[data-choosing] .lt-card.card.paper:not(.lit):hover{opacity:.8}
+.app.game.lt .lt-shop .lt-card.card.lit,.app.game.lt .lt-shop .lt-rates .lt-rate.lit{background:#fffaf0;
+  box-shadow:inset 0 0 0 2px #ffd58a,0 0 0 2px rgb(var(--lamp,255,206,140)),0 0 0 5px rgba(var(--lamp,255,206,140),.28),0 0 22px 2px rgba(var(--lamp,255,206,140),.55)}
+.app.game.lt .lt-shop .lt-card.card.lit:hover,.app.game.lt .lt-shop .lt-rates .lt-rate.lit:hover{transform:translateY(-2px);
+  box-shadow:inset 0 0 0 2px #ffe7b8,0 0 0 2px #fffaf0,0 0 0 6px rgba(var(--lamp,255,206,140),.45),0 0 28px 4px rgba(var(--lamp,255,206,140),.7)}
+/* "Done, no recruit": the one button that ends your buy, amber and haloed, never another cream card */
+.app.game.lt .lt-shop-cards .lt-rates .lt-done:not(.idle){background:#f4b860;border-color:#ffd58a;color:#24170c;
+  box-shadow:0 0 0 2px rgba(255,213,138,.55),0 0 18px 2px rgba(var(--lamp,255,206,140),.55),0 2px 6px rgba(0,0,0,.35)}
+.app.game.lt .lt-shop-cards .lt-rates .lt-done:not(.idle):hover{background:#ffcb7a}

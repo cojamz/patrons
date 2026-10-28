@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Sprite } from '../art/Sprite.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { spriteId } from '../art/index.js';
-import { quadrant, followers } from '../../engine/v4/index.js';
+import { quadrant, followers, cardDef } from '../../engine/v4/index.js';
+import { ArtifactTile } from './ArtifactDraft.jsx';
+import { memberTimingWords } from './memberTiming.js';
 import { breakdown, costParts } from '../format.js';
 import { CardName, onTable, Tip, CostDots, RuleText } from './Info.jsx';
 import { Rich, Pip } from './Rich.jsx';
@@ -70,9 +72,24 @@ const stateOf = row => (row.ask ? 'ready' : row.toggle ? (row.toggle.on ? 'on' :
  */
 export function SeatMembers({ state, pid, me = null, optionFor = () => null, onPick = null }) {
   const rows = memberRows(state, pid, me, optionFor);
-  if (!rows.length) return <p className="mu-none">No members yet.</p>;
+  // the artifact leads the list (Cory, live, Oct 27: "hovering over my artifact/player card doesn't show what it does")
+  const p = state.players[pid];
+  const artUid = p && p.artifact;
+  const art = artUid !== undefined && artUid !== null ? cardDef(state, artUid) : null;
+  const artQ = art ? Object.keys(state.artifacts || {}).find(q => state.artifacts[q] === artUid) : null;
+  const artRow = art && (
+    <li key="artifact" className="mu-row k-artifact" data-artifact-row={artUid}>
+      <span className="mu-art" aria-hidden="true"><ArtifactTile q={artQ} res={artQ ? quadrant(artQ).resource : 'colorless'} size={20} /></span>
+      <span className="mu-body" style={{ '--member-color': artQ ? `var(--q-${artQ}, var(--${artQ}))` : 'var(--pl-ink-3)' }}>
+        <span className="mu-head"><b className="mu-name">{art.name}</b><span className="mu-price mu-kind">Artifact</span></span>
+        <span className="mu-text" data-ability><Rich text={memberTimingWords(art.text)} /></span>
+      </span>
+    </li>
+  );
+  if (!rows.length) return artRow ? <><ul className="mu-list" data-member-list={pid}>{artRow}</ul><p className="mu-none quiet">No members yet.</p></> : <p className="mu-none">No members yet.</p>;
   return (
     <ul className="mu-list" data-member-list={pid}>
+      {artRow}
       {rows.map((row, k) => {
         const st = stateOf(row);
         const showTag = row.tag && !['pays at round start', 'scores at game end'].includes(row.tag.text);

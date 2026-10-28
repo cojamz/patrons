@@ -1522,7 +1522,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
           {picker && (!gift || shopRecruit || wheelMove) ? <span className="say-sub pick-how" data-prompt-sub title={!note ? pickCaption(state, picker).rule : undefined}>{note ? note.text : pickCaption(state, picker).how}</span>
             : pickDone ? <span className="say-sub seat-pick-done" aria-hidden="true"><span className="pick-cap">{pickDone.title}: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</span></span>
-              : mine && !needHandoff && !note && pr.sub ? <span className="say-sub" data-prompt-sub>{pr.sub}</span>
+              : mine && !needHandoff && !note && pr.sub ? <span className="say-sub" data-prompt-sub data-brief={pr.brief || undefined}>{pr.sub}</span>
                 : mine && !needHandoff && buyingNow ? null : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
               <span className={step === 'place' ? 'on' : ''}>Place</span>

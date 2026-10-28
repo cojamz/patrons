@@ -138,7 +138,7 @@ export function promptFor(state, mine) {
       // once a round, one short line, and a usable member's line wins the room
       const first = !Object.values(state.slots || {}).includes(p.id);
       const sub = use ? `…or use ${use} first` : first ? RING_NOTE[state.round] : null;
-      return { who: p, text: `Place a minion on a glowing space`, ...(sub ? { sub } : {}) };
+      return { who: p, text: `Place a minion on a glowing space`, ...(sub ? { sub } : {}), ...(sub && !use ? { brief: true } : {}) };
     }
     // the headline is a verb phrase that fits one line at 1270×700; the details go in the line under it (sub)
     case 'buy':
