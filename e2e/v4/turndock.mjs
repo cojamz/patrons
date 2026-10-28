@@ -4,7 +4,8 @@ import { browserPath } from './lib/browser.mjs';
 // The card docks at a foot that never depends on the story (layout.css --turn-dock), and the story leaves it room
 // (--turn-h). On that table, at 1270×700 and 1100×700:
 //  (d1) no page error, no console "Maximum update depth", no recovery screen;
-//  (d2) whenever a turn card is up, it never covers the since-strip (≤ 1px), and stays on screen.
+//  (d2) whenever a turn card is up, it never covers the since-strip (≤ 1px), and stays on screen;
+//  (d3) in each buy step, "Done, no recruit" and every shop card are on screen and inside the shop.
 // It plays until 52+ rival placements have happened (from the save's log) with 8+ distinct rival turn cards seen (the chain paces bot moves, so several share a card).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5186.
 import { chromium } from 'playwright';
@@ -96,7 +97,27 @@ async function run(size) {
         lastMoves = s.moves;
         if (s.yours === '1') {
           if (s.phase === 'place') { const sl = await page.$('.lt-wheel .slot.can .base'); const bb = sl && await sl.boundingBox().catch(() => null); if (bb) await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2); }
-          else if (s.phase === 'buy') await page.click('[data-option="pass"]', { timeout: 1500 }).catch(() => {});
+          else if (s.phase === 'buy') {
+            // (d3) the whole market is on screen in a buy step: "Done, no recruit" and every shop card sit inside the
+            // window and inside the shop (1100x700 ran the strip off the right edge in v0.9.2), and Done is pressed
+            // where it stands, never scrolled to
+            const m = await page.evaluate(() => {
+              const box = document.querySelector('.lt-shop-body')?.getBoundingClientRect();
+              const done = document.querySelector('[data-option="pass"]');
+              const inside = (r, b) => r.left >= b.left - 1 && r.right <= b.right + 1 && r.top >= b.top - 1 && r.bottom <= b.bottom + 1;
+              const win = { left: 0, top: 0, right: innerWidth, bottom: innerHeight };
+              const bad = [];
+              for (const e of document.querySelectorAll('.lt-shop-cards .lt-cards > .lt-card, .lt-shop-cards .lt-cards > .lt-deck, .lt-shop-cards .lt-rate, [data-option="pass"]')) {
+                const r = e.getBoundingClientRect();
+                if (!r.width) continue;
+                if (!inside(r, win) || (box && !inside(r, box))) bad.push(`${(e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 24)} at ${Math.round(r.left)}-${Math.round(r.right)}`);
+              }
+              const d = done && done.getBoundingClientRect();
+              return { bad, done: d && d.width ? { x: d.left + d.width / 2, y: d.top + d.height / 2 } : null };
+            }).catch(() => ({ bad: [], done: null }));
+            if (m.bad.length) errors.push(`[${tag}] (d3) off screen in the shop: ${m.bad.slice(0, 4).join('; ')}`);
+            if (m.done) await page.mouse.click(m.done.x, m.done.y);
+          }
           // a choice or a payment: any answer but undoing; if one doesn't move the game, try the next
           else await answerChoice(page, { avoid: ['release:', 'undo', 'back'], skip: Math.floor(still / 4), domFallback: still > 8, timeout: 1500 }).catch(() => {});
         }
