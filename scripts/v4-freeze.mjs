@@ -98,7 +98,13 @@ async function click(el, what, round) {
   // did the table answer? (a new move, new choices, a dialog) within 1.5 s; a click that changed nothing is a dead click
   let answered = null;
   while (Date.now() - t < 1500) { if ((await look()) !== before) { answered = Date.now() - t; break; } await sleep(30); }
-  clicks.push({ what, round, anim, answered });
+  // a dead click: what the table showed and waited on, and a picture
+  let why = null;
+  if (answered == null) {
+    why = { before, after: await look(), wait: await page.evaluate(() => window.__tableWait && window.__tableWait()).catch(() => null), target: await el.evaluate(e => `${e.className}`.slice(0, 50) + ` ${e.getAttribute('data-option') || ''}`).catch(() => '') };
+    await page.screenshot({ path: `${OUT}/freeze-${label}-dead-${clicks.length}.png` }).catch(() => {});
+  }
+  clicks.push({ what, round, anim, answered, why });
   return answered != null;
 }
 
@@ -264,7 +270,7 @@ if (profile) {
   const dead = timed.filter(c => c.answered == null);
   L.push('', `## The person's clicks`, '', `${timed.length} clicks timed; ${dead.length} changed nothing in 1.5 s (${dead.filter(c => c.anim).length} of them made while the table was still animating).`);
   for (const r of rounds) { const xs = timed.filter(c => c.round === r && c.answered != null).map(c => c.answered); if (xs.length) L.push(`- round ${r}: ${xs.length} answered, p50 ${pct(xs, 0.5)} ms, p95 ${pct(xs, 0.95)} ms, worst ${Math.max(...xs)} ms (as seen from outside the page, polling every 30 ms)`); }
-  for (const c of dead.slice(0, 15)) L.push(`- dead: round ${c.round} ${c.what}${c.anim ? ' (animating)' : ''}`);
+  for (const c of dead.slice(0, 15)) L.push(`- dead: round ${c.round} ${c.what}${c.anim ? ' (animating)' : ''}${c.why ? ` · ${JSON.stringify(c.why)}` : ''}`);
   res.clicks = { timed: timed.length, dead: dead.length, deadAnim: dead.filter(c => c.anim).length };
 }
 // the bars: a press never waits over 250 ms, at most 1% wait over 100 ms, and no click made on a settled table is ignored

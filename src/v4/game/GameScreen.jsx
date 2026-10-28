@@ -324,6 +324,10 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
       if (s === shownRef.current || queue.current.includes(s)) return;
       // Authoritative transport remains current; every client presents complete sequences in order.
       queue.current.push(s);
+      // your own move answers at once: a rival's step that has landed may still be holding its pause (the landing lights
+      // your choices before the hold ends), and your click waited out the rest of it (a click that did nothing, 1.5 s+)
+      const at = shownRef.current;
+      if (typeof timer.current === 'number' && !waiting.current && queue.current.length === 1 && at.pending && (session.mySeats || []).includes(at.pending.player)) { clearTimeout(timer.current); timer.current = null; timerAt.current = null; }
       pump();
     });
     // A pace change replaces pump and cancels the old timer. The latest state may already be queued,
