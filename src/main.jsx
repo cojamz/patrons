@@ -2,9 +2,12 @@
 import './v4/perf.js'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { muteIterationEvents } from './v4/quietIdle.js'
 
+// before React registers its root listeners: no 'animationiteration' listener, so idle CSS loops stay off the main thread
+muteIterationEvents(document.body)
 // v4 is the default. ?v=3 opens the old game (frozen), with its own Tailwind styles.
-const root = ReactDOM.createRoot(document.getElementById('root'))
+const root = ReactDOM.createRoot(muteIterationEvents(document.getElementById('root')))
 const v3 = new URLSearchParams(location.search).get('v') === '3'
 
 if (v3) {
