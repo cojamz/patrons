@@ -1,5 +1,5 @@
 // Home, local setup and the online lobby.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MAX_PLAYERS as MAX_SEATS } from '../../engine/v4/index.js';
 import { playerColor, lowColor } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
@@ -10,7 +10,8 @@ import { CLASSIC, spheres, sphereName, sphereLine, sphereVersion, sphereVersionW
 import { panelWords } from '../game/panelText.js';
 import { GAME_NAME, VERSION_LABEL } from '../version.js';
 import { copyText } from '../Recovery.jsx';
-import { pastGames, saveGame } from '../session/archive.js';
+import { pastGames, saveGame, gameFile } from '../session/archive.js';
+import { useDialog } from '../game/parts.jsx';
 import { Tip } from '../game/Info.jsx';
 import { EmojiButton, EmojiFace, emojiName } from './EmojiPicker.jsx';
 import { settleEmojis, takeEmoji, lastEmoji, rememberEmoji } from '../emojiPick.js';
@@ -93,20 +94,62 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, la
   );
 }
 
-/** The last few games on this device, each one a click from a saved file (session/archive.js). */
+/**
+ * Past games: a quiet link on the home screen that opens the last few games kept on this device (session/archive.js),
+ * each one to read move by move or to download.
+ */
 function PastGames() {
   const [open, setOpen] = useState(false);
-  const [games, setGames] = useState(() => pastGames());
+  const [games] = useState(() => pastGames());
   if (!games.length) return null;
   return (
-    <div className="past-games">
-      <button type="button" className="btn ghost" aria-expanded={open} onClick={e => { const btn = e.currentTarget; setGames(pastGames()); setOpen(o => !o); setTimeout(() => btn.parentElement?.scrollIntoView?.({ block: 'nearest' }), 0); }} data-home="past">Past games</button>
-      {open && games.map(g => (
-        <button type="button" key={g.id} className="btn ghost past-game" onClick={() => saveGame(g.record, g.at)} data-past-game
-          title="Downloads this game as text, every move in order, that replays it exactly">
-          Save · {g.names.join(', ')} · {g.over ? 'final scores' : `round ${['I', 'II', 'III'][g.round - 1] || 'setup'}`} · {agoLine(g.at)}
-        </button>
-      ))}
+    <>
+      <button type="button" className="btn ghost past-link" onClick={() => setOpen(true)} data-home="past">Past games</button>
+      {open && <PastGamesDialog games={games} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+// the names as the table showed them: on a device with one person at the table, that seat is "You"
+const shownNames = rec => {
+  const people = rec.seats.filter(s => s.kind === 'human').length;
+  return rec.seats.map(s => (people === 1 && s.kind === 'human' ? 'You' : s.name));
+};
+const gameLine = g => `${g.over ? 'Final scores' : g.round ? `Round ${['I', 'II', 'III'][g.round - 1]}` : 'Artifacts'} · ${agoLine(g.at)}`;
+
+function PastGamesDialog({ games, onClose }) {
+  const box = useDialog(onClose);
+  const [view, setView] = useState(null); // the game being read, or null for the list
+  const text = useMemo(() => (view ? gameFile(view.record, view.at).text : ''), [view]);
+  return (
+    <div className="overlay top" role="dialog" aria-modal="true" aria-label="Past games" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="dialog past-games" ref={box} data-past-games>
+        <div className="past-head">
+          <h2>{view ? shownNames(view.record).join(', ') : 'Past games'}</h2>
+          <button type="button" className="btn ghost" onClick={view ? () => setView(null) : onClose} data-autofocus>{view ? 'Back' : 'Close'}</button>
+        </div>
+        {view ? (
+          <>
+            <p className="hint">{gameLine(view)}. Every move in order; the saved file replays this exact game.</p>
+            <pre className="past-text" data-past-text tabIndex={0}>{text}</pre>
+            <div className="row-btns"><button type="button" className="btn pri" onClick={() => saveGame(view.record, view.at)} data-past-save>Save to downloads</button></div>
+          </>
+        ) : (
+          <>
+            <p className="hint">The last {games.length === 1 ? 'game' : `${games.length} games`} on this device. Open one to read it move by move, or save it to share.</p>
+            <ul className="past-list">
+              {games.map(g => (
+                <li key={g.id} className="past-row">
+                  <button type="button" className="past-open" onClick={() => setView(g)} data-past-game>
+                    <b>{shownNames(g.record).join(', ')}</b><small>{gameLine(g)}</small>
+                  </button>
+                  <button type="button" className="btn" onClick={() => saveGame(g.record, g.at)} data-past-save>Save</button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
     </div>
   );
 }

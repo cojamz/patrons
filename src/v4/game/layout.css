@@ -218,9 +218,16 @@
 .app.home .menu .last-results{order:10;align-self:center;min-height:0;padding:5px 16px;background:none;border-color:var(--rim);box-shadow:none;color:var(--muted);font-size:var(--fs-2)}
 .app.home .menu .last-results small{font-size:12px}
 .app.home .menu .rules-link{order:11}
-.app.home .menu .past-games{order:12;display:flex;flex-direction:column;align-items:center;gap:4px}
-.app.home .menu .past-game{min-height:0;padding:3px 12px;border:0;background:none;box-shadow:none;color:var(--muted);font-size:13px}
-.app.home .menu .past-game:hover{color:var(--cream)}
+.app.home .menu .past-link{order:12;align-self:center}
+.dialog.past-games{max-width:640px;max-height:calc(100dvh - 32px);overflow:hidden;gap:10px}
+.past-games .past-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.past-games .hint{margin:0}
+.past-games .past-list{list-style:none;margin:0;padding:0;overflow:auto;display:flex;flex-direction:column;gap:6px;min-height:0}
+.past-games .past-row{display:flex;align-items:center;gap:8px}
+.past-games .past-open{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 12px;border-radius:10px;border:1px solid var(--rim);background:none;color:var(--cream);cursor:pointer;font:inherit}
+.past-games .past-open:hover{background:rgba(243,230,200,.06)}
+.past-games .past-open small{color:var(--muted);font-size:13px}
+.past-games .past-text{margin:0;overflow:auto;min-height:0;flex:1;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.25);color:var(--cream);font-size:13px;line-height:1.45;white-space:pre-wrap}
 
 /* Results (laptop): the four cults stand in one row under the table, so the whole result fits the screen at 700px (the
    second row of cards fell below the fold) */
