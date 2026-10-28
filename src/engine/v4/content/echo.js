@@ -279,21 +279,23 @@ function copyResolved(ctx, p, e, { later, by, asker }) {
 // members that react to a copy
 function heard(ctx, p, e, taker) {
   // each runs as its member, so the log names it ("P1's Choir: +1 green.")
-  const fork = has(ctx, p, 'tuningfork');
-  if (fork) ctx.asMember(p, 'Impressionist', () => ctx.gain(p, ctx.quadrant(e.color).resource, fork));
-  const choir = has(ctx, p, 'choir');
-  if (choir) ctx.asMember(p, 'Choir', () => ctx.gain(p, 'green', choir));
-  for (const owner of ctx.rivals(p)) {
-    const muse = has(ctx, owner, 'muse');
-    if (muse) ctx.asMember(owner, 'Muse', () => ctx.gain(owner, 'green', muse));
-  }
-  const ensemble = taker === p ? has(ctx, p, 'ensemble') : 0;
-  if (ensemble) ctx.asMember(p, 'Ensemble', () => { p.bonus += ensemble; });
-  const bait = has(ctx, taker, 'bait');
-  if (bait) ctx.asMember(taker, 'Bait', () => {
-    p.bonus -= Math.min(bait, ctx.followers(p));
-    if (taker !== p) taker.bonus += bait;
+  each(ctx, p, 'tuningfork', 'Impressionist', () => ctx.gain(p, ctx.quadrant(e.color).resource, 1));
+  each(ctx, p, 'choir', 'Choir', () => ctx.gain(p, 'green', 1));
+  for (const owner of ctx.rivals(p)) each(ctx, owner, 'muse', 'Muse', () => ctx.gain(owner, 'green', 1));
+  if (taker === p) each(ctx, p, 'ensemble', 'Ensemble', () => { p.bonus += 1; });
+  each(ctx, taker, 'bait', 'Bait', () => {
+    p.bonus -= Math.min(1, ctx.followers(p));
+    if (taker !== p) taker.bonus += 1;
   });
+}
+// Run fn once per card of p's that is (or copies) the member `key`, each as its own source: a Doppelganger copying
+// Muse pays its +1 beside Muse's, named "Doppelganger (as Muse)" (Cory, Oct 28). An artifact has no uid among members.
+function each(ctx, p, key, name, fn) {
+  const cards = (key === 'tuningfork' ? ctx.abilitiesOf(p) : ctx.membersOf(p)).filter(c => c.def.id === `echo.${key}` || c.copy === `echo.${key}`);
+  for (const c of cards) {
+    const own = c.def.id === `echo.${key}`;
+    ctx.asMember(p, own ? name : `${c.def.name} (as ${name})`, fn, p.members.includes(c.uid) ? c.uid : null);
+  }
 }
 /** Copy several spaces; free members are picked one after another at the end. who: the card or space copying. */
 export function copyAll(ctx, p, list, by = null, who = by) {
@@ -377,10 +379,8 @@ const echoQ = {
       if (!hit) { ctx.log(`${p.name}: that action has a minion now.`); return; }
       withPath(ctx, [...pathNow(ctx), key], () => {
         ctx.log(`${p.name} copies ${hit.a.name}: doing it.`);
-        const fork = has(ctx, p, 'tuningfork');
-        if (fork) ctx.asMember(p, 'Impressionist', () => ctx.gain(p, ctx.quadrant(hit.qid).resource, fork));
-        const choir = has(ctx, p, 'choir');
-        if (choir) ctx.asMember(p, 'Choir', () => ctx.gain(p, 'green', choir));
+        each(ctx, p, 'tuningfork', 'Impressionist', () => ctx.gain(p, ctx.quadrant(hit.qid).resource, 1));
+        each(ctx, p, 'choir', 'Choir', () => ctx.gain(p, 'green', 1));
         (hit.a.resolve.__orig || hit.a.resolve).call(hit.a, ctx, p);
       });
     },

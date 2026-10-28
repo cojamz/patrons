@@ -2,7 +2,7 @@
 // Green's six actions and twelve current members, with legacy removed-card replay coverage retained.
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { contextFor, memberCount, resume } from '../../../engine/v4/core.js';
+import { applyMove, contextFor, memberCount, resume } from '../../../engine/v4/core.js';
 import { quadrant } from '../../../engine/v4/content/index.js';
 import { ledger, ownPlan } from '../../../engine/v4/content/echo.js';
 import { term } from '../../../v4/glossary.js';
@@ -153,6 +153,18 @@ describe('Green current members', () => {
     const s = buildThenEcho({ n: 3, members: [[], [], ['echo.muse']] });
     expect(R(s, 2).green).toBe(1);
     expect(named(s, 'Muse')).toEqual(["P3's Muse: +1 green."]);
+  });
+  // Cory, 2026-10-28: a Doppelganger copying Muse gives its own +1 beside Muse's, each its own source
+  it('Muse and a Doppelganger copying it each pay +1, each under its own card', () => {
+    let s = table(Q, { n: 3, shop: ROW, queue: turns(1, 0, 1, 0), members: [[], [], ['echo.muse', 'echo.doppel']] });
+    const dop = uidIn(s, 'echo.doppel', 2), muse = uidIn(s, 'echo.muse', 2);
+    s.cards[dop].copy = 'echo.muse';
+    s = take(go(s, 'echo.chant'), 'echo.echo');
+    s = applyMove(s, { player: s.pending.player, option: s.pending.options.find(sp('echo.chant')).id }, { effects: true });
+    expect(R(s, 2).green).toBe(2);
+    expect(s.log.filter(l => l.startsWith('P3'))).toEqual(["P3's Muse: +1 green.", "P3's Doppelganger (as Muse): +1 green."]);
+    const fx = (s.effects || []).filter(e => e && e.cause && e.cause.kind === 'member' && e.cause.pid === 2 && e.type === 'gain');
+    expect(fx.map(e => e.cause.uid).sort()).toEqual([dop, muse].sort());
   });
   it('Impressionist gains the copied action’s color, separately from inherent green', () => {
     let s = table(Q, { round: 2, shop: ROW, queue: turns(1, 0), members: [['echo.tuningfork']] });

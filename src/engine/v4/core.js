@@ -1467,9 +1467,10 @@ function ctxFor(state) {
     cardLeaves: (p, uid) => cardLeaves(state, p, uid),
     /** Run fn on behalf of owner's member `name` (a hook content code calls itself, e.g. Choir reacting to a copy):
      *  whatever it changes and doesn't log is logged under that name, like the engine's own member hooks. */
-    asMember(owner, name, fn) {
+    asMember(owner, name, fn, uid0 = null) {
       const before = traceSnapshot(state);
-      const uid = owner.members.find(u => { try { return cardDef(state, u).name === name; } catch { return false; } });
+      // uid0: the card itself, so a Doppelganger copying it is its own source beside the original (Cory, Oct 28)
+      const uid = uid0 ?? owner.members.find(u => { try { return cardDef(state, u).name === name; } catch { return false; } });
       const out = underCause({ kind: 'member', pid: owner.id, uid: uid ?? null, def: uid != null ? state.cards[uid].def : null }, fn);
       traceChanges(state, before, owner, { name });
       return out;
