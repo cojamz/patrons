@@ -671,7 +671,7 @@ export const onChainLanded = fn => { landSubs.add(fn); return () => landSubs.del
 export const chainLeft = () => (chain.queue.length ? Math.max(0, chain.queue[chain.queue.length - 1].at - chain.clock) : 0);
 export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0 || !!chain.draining;
 /** For a stuck-table report (gates): where the chain stands. */
-export const chainState = () => ({ queue: chain.queue.length, flying: chain.flying, draining: !!chain.draining, clock: Math.round(chain.clock || 0) });
+export const chainState = () => ({ queue: chain.queue.length, flying: chain.flying, draining: !!chain.draining, motion: motionPending(), stage: stageBusy(), items: stageItems().map(it => ({ id: it.id, kind: it.kind, recruit: !!it.recruit, leaving: !!it.leaving, lingering: !!it.lingering, chain: it.chain, out: it.out })), clock: Math.round(chain.clock || 0) });
 
 // The chain's clock wakes only when a step is due (a timer), never every frame (smooth pass, 2026-10-28): a frame loop
 // running through the whole show made the browser do a full main-thread frame ~140 times per click (style, layers,

@@ -41,7 +41,16 @@ it('does not end a chain when flights land but the actual destination settles ar
 it('waits through a staged member return until it actually leaves the stage',async()=>{
  const ended=vi.fn();off=onChainEnd(ended);stageShow({id:'homeward',chain:1,kind:'member'});start();await vi.advanceTimersByTimeAsync(5000);finishSettles();await Promise.resolve();
  expect(stageItems()[0].leaving).toBe(true);expect(chainRunning()).toBe(true);expect(ended).not.toHaveBeenCalled();
- stageGone('homeward');await Promise.resolve();expect(chainRunning()).toBe(false);expect(ended).toHaveBeenCalledOnce();
+ stageGone(stageItems()[0].uid);await Promise.resolve();expect(chainRunning()).toBe(false);expect(ended).toHaveBeenCalledOnce();
+});
+it('a member back on stage while its last bubble flies home is its own piece: each leaves on its own (v0.9.807 hang)',async()=>{
+ stageShow({id:'m',chain:1,kind:'member'});stageShow({id:'x',chain:2,kind:'space'});stageShow({id:'m',chain:2,kind:'member'});
+ const [a,,b]=stageItems();expect(a.leaving).toBe(true);expect(b.leaving).toBeFalsy();expect(a.uid).not.toBe(b.uid);
+ stageGone(a.uid);expect(stageItems().map(i=>i.uid)).toEqual([stageItems()[0].uid,b.uid]);expect(stageItems()).toContain(b);
+});
+it('a piece sent home leaves even if its flight never reports back',async()=>{
+ stageShow({id:'m',chain:1,kind:'member'});stageShow({id:'y',chain:2,kind:'space'});
+ expect(stageItems()[0].leaving).toBe(true);await vi.advanceTimersByTimeAsync(5000);expect(stageItems().map(i=>i.id)).toEqual(['y']);
 });
 it('waits for a real held resource roll, including its final release',async()=>{
  const stack=document.createElement('div');stack.innerHTML='<b class="num">5</b>';document.body.append(stack);

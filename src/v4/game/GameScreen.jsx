@@ -130,6 +130,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   const pace = useRef(null); // ?trace=1: this step's pacing record (perf.js summary().pace)
   const handedAt = useRef(null); // when the step now being drawn was handed to React
   const shownRef = useRef(first);
+  const committed = useRef(first); // the step on screen (shownRef runs ahead of it while a step is being drawn)
   const online = session.info?.mode === 'online';
   // read (and, if missing, written) once: as a plain useRef argument this ran on every render, re-saving the
   // round-start snapshot after the results had cleared it (a finished game kept a "Resume")
@@ -236,6 +237,9 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
   const finishPresentation = useCallback((landed = false) => {
     const completed = waiting.current;
     if (!completed) return;
+    // a step not yet on screen hasn't played: an earlier show's end (its settle finishing under this step, which your own
+    // move draws a frame late) is not this one's, and finishing it here left the table a step behind for good (v0.9.809)
+    if (committed.current !== completed) return;
     waiting.current = null;
     // Actual completion supersedes the estimated viewing timer; never wait twice for one sequence. (At the landing,
     // the step's hold still runs: a rival's step stays up its floor before the next one, motion.mjs m4)
@@ -244,6 +248,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     // The transport can be ahead; reveal its queued snapshots only after this sequence lands.
     if (!timer.current) startTransition(() => pumpRef.current());
   }, []);
+  useLayoutEffect(() => { committed.current = table.shown; }, [table.shown]);
   useEffect(() => onChainEnd(finishPresentation), [finishPresentation]);
   // as the last piece lands the table moves on: your choices light, or the next move starts (its own hold still paces
   // it), while the settle and the stage's cards going home finish under it (Cory, Oct 28, yes to: "the next move waits

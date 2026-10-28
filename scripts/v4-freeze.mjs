@@ -115,9 +115,20 @@ let poking = true, pokes = 0;
 const poker = (async () => { while (poking) { await page.keyboard.press('Shift').catch(() => {}); pokes++; await sleep(POKE); } })();
 
 const gsAt = {};
+let stallKey = '', stallAt = Date.now();
 let dead = 0, placeAt = -1, turns = 0, lastRound = '';
 while (Date.now() - t0 < MAX_MIN * 60000) {
   if (await $('.results')) break;
+  // a table that hasn't moved in 60 s with nobody owing a move is a hang (v0.9.807-809: round ends and steps that never
+  // finished showing): say what it waits on and stop
+  { const k = await page.evaluate(() => { const g = document.querySelector('.app.game'); return `${g?.dataset.moves}|${g?.dataset.presentationMoves}|${g?.dataset.phase}|${!!document.querySelector('[data-next-round]')}`; }).catch(() => '');
+    if (k !== stallKey) { stallKey = k; stallAt = Date.now(); }
+    else if (Date.now() - stallAt > 60000) {
+      const wait = await page.evaluate(() => window.__tableWait && window.__tableWait()).catch(() => null);
+      errors.push(`hang: the table sat 60 s at moves|shown|phase|next-round ${k}, waiting on ${JSON.stringify(wait)}`);
+      await page.screenshot({ path: `${OUT}/freeze-${label}-hang.png` }).catch(() => {});
+      break;
+    } }
   const hand = await $('[data-handoff]'); if (hand) { await hand.click().catch(() => {}); continue; }
   const round = await roundOf();
   const next = await $('[data-next-round]');

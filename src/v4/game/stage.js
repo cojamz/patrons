@@ -22,10 +22,14 @@ export const HUB_MEMBER = { w: 220, h: 248 };
 
 let items = [];
 let ver = 0;
+let uids = 0; // each piece's own key: a member back on stage while its last bubble still flies home shares its id
 const subs = new Set();
 const emit = () => { ver++; items = items.slice(); for (const fn of subs) fn(); };
 export const subscribeStage = fn => { subs.add(fn); return () => subs.delete(fn); };
 export const stageItems = () => items;
+// a piece sent home is gone by its flight's end and a little more, even if its flight never reports back (a piece
+// stuck on the stage held the show open, and the round's scoring behind it, for good: v0.9.807)
+const leave = (it, out) => { it.leaving = true; it.out = out; const uid = it.uid; setTimeout(() => stageGone(uid), out + 3000); };
 /** Includes the readable hold and the actual return flight, until ActionStage removes each item. */
 export const stageBusy = () => items.some(it => !it.lingering || it.leaving); // a lingering bubble holds nothing until it flies home
 export const stageVersion = () => ver;
@@ -96,17 +100,17 @@ const box = (left, top, width, height) => ({ left, top, width, height, right: le
  */
 export function stageShow(item) {
   // the last chain's pieces go home; a lingering bubble stays to be read unless this one takes its seat's spot
-  for (const it of items) if (it.chain !== item.chain && !it.leaving && (!it.lingering || (item.kind === 'member' && !item.recruit && item.pid === it.pid))) { it.leaving = true; it.out = Math.round(MO.stageOut * 0.7); }
+  for (const it of items) if (it.chain !== item.chain && !it.leaving && (!it.lingering || (item.kind === 'member' && !item.recruit && item.pid === it.pid))) leave(it, Math.round(MO.stageOut * 0.7));
   const had = items.find(it => it.id === item.id && !it.leaving);
   if (had) { had.again = (had.again || 0) + 1; emit(); return; }
-  items.push({ ...item, born: Date.now() });
+  items.push({ ...item, uid: ++uids, born: Date.now() });
   emit();
 }
 /** Send one item home now (a recruit leaving the hub for its buyer's crowd), taking `out` ms. */
 export function stageLeave(id, out = MO.stageOut) {
   const it = items.find(x => x.id === id && !x.leaving);
   if (!it) return;
-  it.leaving = true; it.out = out;
+  leave(it, out);
   emit();
 }
 let holdT = 0;
@@ -121,11 +125,11 @@ export function stageRelease(hold = MO.stageHold, chain = null) {
   const rest = these.filter(it => !bubbles.includes(it));
   const t = setTimeout(() => {
     releaseTimers.delete(t);
-    for (const it of rest) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; }
+    for (const it of rest) if (!it.leaving) leave(it, MO.stageOut);
     for (const it of bubbles) if (!it.leaving) it.lingering = true;
     emit();
     if (bubbles.length) {
-      const t2 = setTimeout(() => { releaseTimers.delete(t2); for (const it of bubbles) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; } emit(); }, MO.memberLinger);
+      const t2 = setTimeout(() => { releaseTimers.delete(t2); for (const it of bubbles) if (!it.leaving) leave(it, MO.stageOut); emit(); }, MO.memberLinger);
       releaseTimers.add(t2);
     }
   }, hold);
@@ -143,10 +147,10 @@ export function stageClear() {
   ver++;
   for (const fn of subs) fn();
 }
-/** A piece has finished leaving (ActionStage calls this when its flight home ends). */
-export function stageGone(id) {
+/** A piece has finished leaving (ActionStage calls this, with its uid, when its flight home ends). */
+export function stageGone(uid) {
   const n = items.length;
-  items = items.filter(it => !(it.id === id && it.leaving));
+  items = items.filter(it => !(it.uid === uid && it.leaving));
   if (!items.length) placed.clear();
   if (items.length !== n) { ver++; for (const fn of subs) fn(); }
 }

@@ -54,7 +54,7 @@ function StageItem({ it }) {
     if (!it.leaving || left.current) return;
     left.current = true;
     const home = live(it.homeEl) || it.from;
-    const done = () => { if (it.homeEl && it.homeEl.classList) it.homeEl.classList.remove('on-stage'); stageGone(it.id); };
+    const done = () => { if (it.homeEl && it.homeEl.classList) it.homeEl.classList.remove('on-stage'); stageGone(it.uid); };
     if (!e || !e.animate || !home) { done(); return; }
     const a = track(e.animate([{ transform: 'none', opacity: 1 }, { transform: over(it.at, size, home), opacity: 0.15 }], { duration: it.out || MO.stageOut, easing: EASE_HOME, fill: 'forwards' }));
     // a recruit lands in its buyer's crowd with its sound and the crowd's landing ring; a bubble goes back quietly
@@ -99,5 +99,5 @@ function StageItem({ it }) {
 export default function ActionStage() {
   const items = useSyncExternalStore(subscribeStage, stageItems, stageItems);
   if (!items.length || typeof document === 'undefined') return null;
-  return createPortal(<div className="action-stage" aria-hidden="true">{items.map(it => <StageItem key={it.id} it={it} />)}</div>, document.body);
+  return createPortal(<div className="action-stage" aria-hidden="true">{items.map(it => <StageItem key={it.uid} it={it} />)}</div>, document.body);
 }
