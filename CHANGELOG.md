@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.6 — 2026-10-28 — unreleased
+
+- The wheel turns lighter in Firefox: its glows and shadows rest while it spins
+
 ## v0.9.5 — 2026-10-28 — unreleased
 
 - Pointing at a copy space late in the game (Greatest Hits, Cover) no longer freezes the page for seconds, and every move does less work
