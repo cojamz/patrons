@@ -59,6 +59,16 @@ describe('Blue actions', () => {
     expect(s.pile.slice(-3)).toEqual(reds);
     expect(s.log).toContain('Out of Style: P1 sends 3 red members to the bottom.');
   });
+  it('Out of Style: neutral is a color you can send to the bottom (Cory, Oct 28)', () => {
+    let s = table(Q, { shop: ['gold.tycoon', 'red.twins', 'benders.bigspender', 'benders.insider', 'gold.taxman'] });
+    s = take(s, 'market.restock');
+    expect(s.pending.options.map(o => o.id).sort()).toEqual(['color:gold', 'color:neutral', 'color:red']);
+    const guests = s.shop.filter(u => s.cards[u].def.startsWith('benders.'));
+    s = move(s, 'color:neutral');
+    expect(s.shop.filter(u => guests.includes(u))).toEqual([]);
+    expect(s.pile.slice(-2)).toEqual(guests);
+    expect(s.log).toContain('Out of Style: P1 sends 2 neutral members to the bottom.');
+  });
 
   it('Peek: reorder the top 4 of the pile; this turn\'s buy may recruit one of them, and only one', () => {
     let s = table(Q, { res: [{ gold: 9, red: 9, blue: 9 }], shop: ROW5, pileFirst: ['market.stylist', 'gold.banker', 'market.curator', 'red.mentor', 'market.planner'] });

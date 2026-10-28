@@ -54,6 +54,9 @@
 
 /* a color: the plain dot (its count, when it's yours to give) */
 .gift-card .gc-dot{min-width:44px;padding:4px 10px}
+/* neutral has no dot of its own: a gray one, named */
+.gift-card .gc-neutral{gap:6px}
+.gift-card .gc-neutral .gc-word{font:600 14px/18px var(--sans)}
 /* a rival: their face over their name; what they hold of the color under it */
 .gift-card .gc-face{flex-direction:column;gap:0;min-width:56px;padding:4px 8px 2px}
 .gift-card .gc-face .gc-name{font:700 15px/18px var(--sans)}

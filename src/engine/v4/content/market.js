@@ -120,10 +120,13 @@ function peekStep(ctx, p, { left, placed }) {
   { id: 'keep', label: 'Keep this order', kind: 'keep', value: 'keep', hint: -1 }], `${Q}.peek`, { left, placed }, { show: { peek: { placed, left } } });
 }
 /** Colors of the face-up members, with how many of each. */
+// Out of Style's colors: neutral (colorless guests) is one of them (Cory, 2026-10-28: "you should be able to chose
+// neutral as a color you send to the bottom")
+const styleOf = (ctx, c) => colorOf(ctx, c) || 'neutral';
 function shopColors(ctx) {
   const n = {};
-  for (const c of ctx.shopCards()) { const col = colorOf(ctx, c); if (col) n[col] = (n[col] || 0) + 1; }
-  return Object.entries(n);
+  for (const c of ctx.shopCards()) { const col = styleOf(ctx, c); n[col] = (n[col] || 0) + 1; }
+  return Object.entries(n).sort(([a], [b]) => (a === 'neutral') - (b === 'neutral')); // neutral last
 }
 
 function sweepRow(ctx) {
@@ -242,7 +245,7 @@ const market = {
     },
     churnRefill(ctx) { ctx.refillShop(); toBottom(ctx, 1); },
     outOfStyle(ctx, p, color) {
-      const out = ctx.shopCards().filter(c => colorOf(ctx, c) === color);
+      const out = ctx.shopCards().filter(c => styleOf(ctx, c) === color);
       for (const c of out) { ctx.state.shop.splice(ctx.state.shop.indexOf(c.uid), 1); ctx.state.pile.push(c.uid); }
       ctx.refillShop();
       ctx.log(`Out of Style: ${p.name} sends ${out.length} ${color} member${out.length === 1 ? '' : 's'} to the bottom.`);

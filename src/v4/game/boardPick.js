@@ -111,9 +111,11 @@ export function giftPick(state, pend, first = null) {
   // a color of yours asked by a space just used (Goody Bags' color, Cheap Seats' "pay 1 for 1 follower"): one row of your
   // colors on the card by the space (Cory, 2026-10-15: choices come to where you act), never your seat's stacks ~500 px
   // away. Asks from a member or a release (no space behind them) stay on your stacks.
-  const own = pend.options.filter(o => o.target && o.target.res && o.target.pid == null && o.target.space == null && o.target.uid == null);
+  // neutral (Out of Style, Cory 2026-10-28) is a color with no stack of yours: a gray dot in the same row
+  const neutral = o => !o.target && o.kind === 'color' && o.value === 'neutral';
+  const own = pend.options.filter(o => (o.target && o.target.res && o.target.pid == null && o.target.space == null && o.target.uid == null) || neutral(o));
   const fromSpace = title && state.quadrants.some(q => quadrant(q).actions.some(a => a.name === title));
-  if (fromSpace && own.length >= 2 && own.length + pend.options.filter(o => !o.target).length === pend.options.length) {
+  if (fromSpace && own.length >= 2 && own.length + pend.options.filter(o => !o.target && !neutral(o)).length === pend.options.length) {
     const left = (question.match(/\((\d+) left\)/) || [])[1];
     const ask = question.replace(/\s*\(\d+ left\)\s*/, ' ').trim();
     // "pay which resource for 1 follower?" reads "Pay 1 for 1 follower"; any other question is its first sentence, the
@@ -123,7 +125,7 @@ export function giftPick(state, pend, first = null) {
     const head = payFor ? `Pay 1 for ${payFor[1]}` : `${q1[0].toUpperCase()}${q1.slice(1)}${more.length ? '?' : ''}`;
     const sub = payFor ? payFor[2] : more.join('?').trim();
     return { ...base, kind: 'color', n: null, color: null, chosen: null, pay: !!payFor, left: left == null ? null : Number(left),
-      head, sub, firsts: [], seconds: own.map(o => ({ o, b: o.target.res })), others: own.map(o => o.target.res), rest: pend.options.filter(o => !o.target) };
+      head, sub, firsts: [], seconds: own.map(o => ({ o, b: neutral(o) ? 'neutral' : o.target.res })), others: own.map(o => (neutral(o) ? 'neutral' : o.target.res)), rest: pend.options.filter(o => !o.target && !neutral(o)) };
   }
   const res = state.resources, pairs = [], rest = [];
   let kind = null;

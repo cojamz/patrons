@@ -185,6 +185,14 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
         </button>
       );
     }
+    if (g.kind === 'color' && b === 'neutral') {
+      return (
+        <button key={b} {...common} className={`${common.className} gc-dot gc-neutral`} data-res={b} aria-label="neutral" title="neutral">
+          <ResourceGlyph r="colorless" size={24} decorative />
+          <span className="gc-word">neutral</span>
+        </button>
+      );
+    }
     if (g.kind === 'color') {
       const n = me.res[b] || 0;
       return (
