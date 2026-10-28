@@ -37,22 +37,17 @@ function fixture(name) {
   };
   let action, picks, member;
   if (name === 'scaling-resume') {
-    action = 'pickpocket'; picks = ['take:1:gold', 'take:1:red', 'take:1:gold'];
-  } else if (name === 'occupied') {
-    action = 'tipoff'; picks = ['take:1:gold', 'take:1:gold', 'take:1:gold'];
-    s.slots = { [key('pickpocket')]: 1, [key('hideout')]: 2, [key('ransom')]: 1 };
-    // Three occupied actions, even with a second minion sharing one: never count workers or the new placement.
-    s.squats = { [key('hideout')]: [1] };
-  } else if (name === 'safe') {
-    action = 'hideout'; picks = ['take:1:gold', 'take:1:gold'];
+    // Help Yourself steals 3 / 4 / 5 by round, split as you choose (Cory, Oct 27); Cy lay low this round
+    action = 'pickpocket'; picks = ['take:1:gold', 'take:1:red', 'take:1:gold', 'take:1:gold', 'take:1:red'];
     s.players[2].hideout = round;
   } else if (name.startsWith('half-')) {
     action = 'rob'; picks = [name === 'half-small' ? 'take:1:red' : 'take:1:gold'];
     s.players[2].res.gold = 1;
     deal('thieves.watchdog', 3); s.players[3].res.gold = 40;
   } else if (name === 'ransom') {
-    action = 'ransom'; member = deal('red.patriarch', 1);
-    // Patriarch costs 5 (Loyalists did until the Oct 21 prices, now 3); the old <=4 ceiling would wrongly hide it.
+    action = 'ransom'; member = deal('red.host', 1);
+    // Host costs 5, the ceiling (Patriarch did until every member cost 1 more wild, Oct 27, now 6); the old <=4
+    // ceiling would wrongly hide it.
     s.players[1].res.red = 0;
     picks = [`card:${member}`, 'pay'];
   } else if (name === 'heist') {
@@ -67,12 +62,8 @@ function fixture(name) {
   assert(expected.players[0].res.magenta === 1, `${name}: each action gives exactly 1 inherent Magenta`);
   const own = expected.players[0], victim = expected.players[1];
   if (name === 'scaling-resume') {
-    assert(own.res.gold === 2 && own.res.red === 1 && own.bonus - initial.players[0].bonus === 3 && victim.res.gold === 7 && victim.res.red === 3, 'Round III must steal 3 original colors and grant 3 followers');
-  } else if (name === 'occupied') {
-    assert(own.res.gold === 3 && victim.res.gold === 6, 'Occupied Magenta actions must count once, excluding the new placement');
-  } else if (name === 'safe') {
-    assert(own.res.gold === 2 && own.hideout === round && expected.players[2].res.red === 6, 'Lie Low must steal round resources and protect the actor');
-    assert(!placed.pending.options.some(o => o.target?.pid === 2), 'Protected rival must not be offered');
+    assert(own.res.gold === 3 && own.res.red === 2 && own.bonus === initial.players[0].bonus && victim.res.gold === 6 && victim.res.red === 2, 'Round III must steal 5 in their original colors and no followers');
+    assert(expected.players[2].res.red === 6 && !placed.pending.options.some(o => /^take:2:/.test(o.id)), 'A rival who lay low must not be offered');
   } else if (name.startsWith('half-')) {
     const color = name === 'half-small' ? 'red' : 'gold', n = color === 'red' ? 2 : 4;
     assert(own.res[color] === n && victim.res[color] === initial.players[1].res[color] - n, 'Half-stack transfer must round down and keep its color');
@@ -86,7 +77,9 @@ function fixture(name) {
   }
   return { name, save: { config: { seats, speed: 'quick' }, state: initial, undo: null, savedAt: Date.now() }, action: `slot:${key(action)}`, picks, placed, expected };
 }
-const names = ['scaling-resume', 'occupied', 'safe', 'half-small', 'half-large', 'ransom', 'heist']
+// (occupied and safe went with Tip Off and Lie Low's steal: Stash and a steal-free Lie Low in the round I rework, Cory
+// Oct 27; scaling-resume now checks that a rival who lay low is never offered)
+const names = ['scaling-resume', 'half-small', 'half-large', 'ransom', 'heist']
   .filter(name => !process.env.V4_SCENES || process.env.V4_SCENES.split(',').includes(name));
 assert(names.length, 'V4_SCENES did not match a known scene');
 if (process.argv.includes('--fixtures-only')) {
