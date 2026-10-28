@@ -17,7 +17,6 @@
 import { createTalkLog, cleanTalk, TALK_GAP_MS } from './talk.js';
 import { isLegal, chooseBotMove, setBotLevels, BOT_LEVELS, MAX_PLAYERS } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
-import { share } from './share.js';
 import { parseTable, fitTable, tableProblem } from '../tables.js';
 import { randomFreeEmoji, settleEmojis } from '../emojiPick.js';
 import { createEmitter, randomId } from './emitter.js';
@@ -700,7 +699,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     if (typeof node.effectsJson === 'string') {
       try { Object.defineProperty(next, 'effects', { value: relinkCauses(JSON.parse(node.effectsJson)), enumerable: false, configurable: true, writable: true }); } catch { /* no chain: the table falls back to the diff */ }
     }
-    state = state ? share(state, next) : next; // unchanged parts keep their objects (session/share.js)
+    state = next;
     version = node.version;
     trackState(state);
     const done = new Set(String(node.recent || '').split(',').filter(Boolean));

@@ -8,9 +8,6 @@ import { lastSpace, seatTurns } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
 import { incomeOf } from './build.js';
 
-// (Tune pass, 2026-10-28: the sessions now share every unchanged part with the state before (session/share.js), so
-// the chair's player, its members' cards and the table's colors are compared by identity first; JSON only when they
-// are different objects, as on the scoring board's copies. Only the small derived words are still a string.)
 const cache = new WeakMap(); // state → Map(me → { places, ranks, sig: Map(pid → string) })
 function sigOf(state, pid, me) {
   let m = cache.get(state);
@@ -19,12 +16,13 @@ function sigOf(state, pid, me) {
   if (!v) { v = { places: seatTurns(state, me), ranks: seatRanks(state, me), sig: new Map() }; m.set(me, v); }
   let s = v.sig.get(pid);
   if (s === undefined) {
-    s = JSON.stringify([v.places[pid] || null, v.ranks[pid] || null, incomeOf(state, pid), lastSpace(state, pid), followers(state, state.players[pid])]);
+    const p = state.players[pid];
+    s = JSON.stringify([p, p.members.map(u => state.cards[u]), v.places[pid] || null, v.ranks[pid] || null, incomeOf(state, pid),
+      lastSpace(state, pid), followers(state, p), state.round, !!state.over, state.resources, state.quadrants]);
     v.sig.set(pid, s);
   }
   return s;
 }
-const samePart = (x, y) => x === y || JSON.stringify(x) === JSON.stringify(y);
 
 /** memo's comparator for CultSeat: true when the chair would draw the same thing. */
 export function sameSeat(a, b) {
@@ -34,10 +32,6 @@ export function sameSeat(a, b) {
   const sa = a.state, sb = b.state;
   if (!sa || !sb || sa.seed !== sb.seed || sa.players.length !== sb.players.length) return false;
   try {
-    if (sa.round !== sb.round || !!sa.over !== !!sb.over) return false;
-    const pa = sa.players[b.pid], pb = sb.players[b.pid];
-    if (!samePart(pa, pb) || !samePart(sa.resources, sb.resources) || !samePart(sa.quadrants, sb.quadrants)) return false;
-    for (const u of pb.members) if (!samePart(sa.cards[u], sb.cards[u])) return false;
     if (sigOf(sa, b.pid, b.me ?? null) !== sigOf(sb, b.pid, b.me ?? null)) return false;
     const name = sb.players[b.pid].name;
     return !newLogLines(sa, sb).some(l => l.includes(name));
