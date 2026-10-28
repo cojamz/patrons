@@ -50,6 +50,12 @@ try {
   await page.click('[data-home="local"]');
   await page.waitForSelector('[data-start]');
   await page.click('[data-start]');
+  // the setup draft (an artifact or a resource) can stop for the player before round I starts: take the first pick
+  for (const until = Date.now() + 15000; !(await page.locator('header .round').count()) && Date.now() < until;) {
+    if (await page.locator('[data-handoff]').count()) await page.locator('[data-handoff]').first().click().catch(() => {});
+    else await page.locator('[data-option]:not([disabled])').first().click({ timeout: 1000 }).catch(() => {});
+    await page.waitForTimeout(150);
+  }
   await page.waitForSelector('header .round', { timeout: 15000 });
   await sample('start');
   let next = EVERY, lastMoves = -1, movedAt = Date.now();

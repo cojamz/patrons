@@ -15,7 +15,7 @@ useCosts({ 'red.twins': [2, 0], 'red.mentor': [3, 2], 'red.panel': [3, 3] });
 
 // These are isolated rule checks, deliberately without seeded full-game simulations.
 describe('Magenta redesign edge cases', () => {
-  it.each(['pickpocket', 'tipoff', 'hideout', 'rob', 'ransom', 'heist'])('%s always grants one Magenta even when its effect has no target', key => {
+  it.each(['pickpocket', 'hideout', 'rob', 'ransom', 'heist'])('%s always grants one Magenta even when its effect has no target', key => {
     const s = take(table(Q, { round: 3, shop }), `thieves.${key}`);
     expect(s.players[0].res.magenta).toBe(1);
     expect(s.pending.kind).toBe('buy');
@@ -26,58 +26,50 @@ describe('Magenta redesign edge cases', () => {
     expect(s.players[0].bonus).toBe(0);
     expect(s.players[0].res.magenta).toBe(1);
   });
-  it('occupied actions are counted once, irrespective of minion count or whose they are', () => {
-    let s = table(Q, { round: 3, res: [{}, { gold: 20 }], shop });
-    s.slots[magentaSlot('pickpocket')] = 0;
-    s.squats[magentaSlot('pickpocket')] = [1, 1];
-    s.slots[magentaSlot('hideout')] = 1;
-    s.slots['0-0'] = 1; // occupied Gold never counts
-    s = take(s, 'thieves.tipoff');
-    expect(s.pending.count).toEqual({ of: 3, left: 3 }); // its own space counts too (Cory, Oct 22)
-    s = move(move(move(s, 'take:1:gold'), 'take:1:gold'), 'take:1:gold');
-    expect(s.players[0].res).toMatchObject({ magenta: 1, gold: 3 });
+  it('Stash: +5 magenta in round III, its own +1 included, with no target needed', () => {
+    const s = take(table(Q, { round: 3, shop }), 'thieves.tipoff');
+    expect(s.players[0].res.magenta).toBe(5);
+    expect(s.pending.kind).toBe('buy');
   });
-  it('copying occupied-action theft excludes no older Magenta placement', () => {
+  it('copying Stash gives its magenta for the current round', () => {
     let s = table(Q, { res: [{}, { gold: 8 }, { red: 8 }], n: 3, shop, queue: turns(1, 0) });
-    s = pass(move(take(s, 'thieves.tipoff'), 'take:2:red')); // only its own space: 1 to steal
-    expect(s.players[1].res.magenta).toBe(1);
+    s = pass(take(s, 'thieves.tipoff'));
+    expect(s.players[1].res.magenta).toBe(3);
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(o => o.kind === 'space' && o.label.startsWith(actionName('thieves.tipoff'))).id);
-    expect(s.pending.count).toEqual({ of: 1, left: 1 });
-    s = move(s, 'take:2:red');
-    expect(s.players[0].res).toMatchObject({ green: 1, magenta: 1, red: 1 });
+    expect(s.players[0].res).toMatchObject({ green: 2, magenta: 3 });
   });
-  it('copying Help Yourself grants its resource and followers once, with fresh rival choices', () => {
+  it('copying Help Yourself grants its resource once, with fresh rival choices and no followers', () => {
     let s = table(Q, { round: 2, n: 3, res: [{}, {}, { gold: 9, red: 9 }], bonus: [0, 0, 5], shop, queue: turns(1, 0) });
-    s = pass(move(move(take(s, 'thieves.pickpocket'), 'take:2:gold'), 'take:2:gold'));
+    s = take(s, 'thieves.pickpocket');
+    for (let k = 0; k < 4; k++) s = move(s, 'take:2:gold');
+    s = pass(s);
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(o => o.kind === 'space' && o.label.startsWith(actionName('thieves.pickpocket'))).id);
-    s = move(move(restored(s), 'take:2:red'), 'take:2:red');
-    expect(s.players[0].res).toMatchObject({ green: 1, magenta: 1, red: 2, gold: 0 });
-    expect(s.players[0].bonus).toBe(2);
-    expect(s.players[1].res).toMatchObject({ magenta: 1, gold: 2 });
-    expect(s.players[1].bonus).toBe(2);
-    expect(s.players[2].bonus).toBe(1);
+    s = restored(s);
+    for (let k = 0; k < 4; k++) s = move(s, 'take:2:red');
+    expect(s.players[0].res).toMatchObject({ green: 2, magenta: 1, red: 4, gold: 0 });
+    expect(s.players[1].res).toMatchObject({ magenta: 1, gold: 4 });
+    expect(s.players.map(p => p.bonus)).toEqual([0, 0, 5]);
   });
   it('JSON resume in a split theft neither repeats base grants nor loses the chosen colors', () => {
     let s = table(Q, { round: 3, n: 3, res: [{}, { gold: 7 }, { red: 7 }], bonus: [0, 5, 5], shop });
     s = move(take(s, 'thieves.pickpocket'), 'take:1:gold');
     const before = JSON.stringify(s);
-    const finish = x => move(move(x, 'take:2:red'), 'take:1:gold');
+    const finish = x => ['take:2:red', 'take:1:gold', 'take:2:red', 'take:1:gold'].reduce(move, x);
     const direct = finish(s), loaded = finish(restored(s));
     expect(JSON.stringify(s)).toBe(before);
     expect(loaded.players.map(p => p.res)).toEqual(direct.players.map(p => p.res));
-    expect(loaded.players[0].res).toMatchObject({ magenta: 1, gold: 2, red: 1 });
-    expect(loaded.players[0].bonus).toBe(3);
+    expect(loaded.players[0].res).toMatchObject({ magenta: 1, gold: 3, red: 2 });
+    expect(loaded.players[0].bonus).toBe(0);
   });
-  it('Help Yourself calculates doubling before its follower reward changes a fewest-followers tie', () => {
-    let s = table(Q, { round: 1, res: [{}, { gold: 4 }], members: [['thieves.desperado']], bonus: [0, 1], shop });
+  it('Desperado doubles Help Yourself\'s 3 while tied for fewest followers', () => {
+    let s = table(Q, { round: 1, res: [{}, { gold: 8 }], members: [['thieves.desperado']], bonus: [0, 1], shop });
     s = take(s, 'thieves.pickpocket');
-    expect(s.pending.count.left).toBe(2);
+    expect(s.pending.count.left).toBe(6);
+    for (let k = 0; k < 6; k++) s = move(s, 'take:1:gold');
     expect(s.players[0].bonus).toBe(0);
-    s = move(move(s, 'take:1:gold'), 'take:1:gold');
-    expect(s.players[0].bonus).toBe(1);
-    expect(s.players[0].res).toMatchObject({ gold: 2, magenta: 1 });
+    expect(s.players[0].res).toMatchObject({ gold: 6, magenta: 1 });
   });
   it('half-stack theft allows a smaller chosen color and excludes singletons and protected rivals', () => {
     let s = table(Q, { round: 2, n: 3, res: [{}, { gold: 9, red: 5 }, { gold: 12, red: 1 }], members: [[], [], ['thieves.watchdog']], shop });
@@ -118,8 +110,8 @@ describe('Magenta redesign edge cases', () => {
     let s = table(Q, { res: [{ gold: 4 }, {}], shop, queue: turns(0, 1) });
     s = pass(take(s, 'thieves.hideout'));
     s.round = 2;
-    s = move(take(s, 'thieves.pickpocket'), 'take:0:gold');
-    s = move(s, 'take:0:gold');
-    expect(s.players[1].res).toMatchObject({ magenta: 1, gold: 2 });
+    s = take(s, 'thieves.pickpocket');
+    for (let k = 0; k < 4; k++) s = move(s, 'take:0:gold');
+    expect(s.players[1].res).toMatchObject({ magenta: 1, gold: 4 });
   });
 });

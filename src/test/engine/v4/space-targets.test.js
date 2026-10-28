@@ -23,17 +23,10 @@ const targetsAt = (s, key, pid = 0) => { const [q, i] = spot(s, key); return pre
 const sorted = a => [...a].sort((x, y) => x - y);
 
 describe('space targets', () => {
-  it('Open Door with one cheapest: lights that one, surely', () => {
+  // Walk-In (2026-10-27) recruits the deck's top member, which isn't face-up, so no shop member lights
+  it('Walk-In: lights no shop member, since it takes the top of the deck', () => {
     const s = table(Q, { shop: ['gold.tycoon', 'red.bigfamily', 'red.intern', 'gold.taxman'] });
-    const t = targetsAt(s, 'hire');
-    expect(t.shop).toEqual([uidIn(s, 'red.intern', 'shop')]);
-    expect(t.sure).toBe(true);
-  });
-  it('Open Door with tied cheapest: lights every tied card, not surely one', () => {
-    const s = table(Q, { shop: ['gold.tycoon', 'red.intern', 'red.bigfamily', 'red.reserve'] });
-    const t = targetsAt(s, 'hire');
-    expect(sorted(t.shop)).toEqual(sorted([uidIn(s, 'red.intern', 'shop'), uidIn(s, 'red.reserve', 'shop')]));
-    expect(t.sure).toBe(false);
+    expect(targetsAt(s, 'hire')).toBe(null);
   });
   // Open House left with the Red redesign (v0.8.0); round II's hireup space is Promote
   it('Promote: the pairs of a member (yours or a rival\'s) for a shop member costing up to 2 more', () => {
@@ -56,13 +49,11 @@ describe('space targets', () => {
     expect(targetsAt(table(Q, { shop: defs }), 'bargain')).toBe(null);
     expect(targetsAt(table(Q, { round: 2, shop: defs }), 'pricecheck')).toBe(null);
   });
-  // any two members of equal cost, either way round (red-redesign-2026-10-18.md; red-redesign.test.js offers both)
-  it('Even Swap: the pairs of equal cost, in either orientation', () => {
+  // Tryout (2026-10-27) borrows a shop member's On Recruit; the member stays in the shop, so nothing joins and
+  // nothing lights (Even Swap's pairs left with it)
+  it('Tryout: no swap pairs and no member lit', () => {
     const s = table(Q, { members: [['gold.taxman'], ['red.intern', 'red.bigfamily']], shop: ['gold.tycoon'] });
-    const t = targetsAt(s, 'evenswap');
-    const a = uidIn(s, 'gold.taxman', 0), b = uidIn(s, 'red.bigfamily', 1);
-    expect(t.pairs).toEqual([[a, b], [b, a]]);
-    expect(t.shop).toEqual([]);
+    expect(targetsAt(s, 'evenswap')).toBe(null);
   });
   it('a space that touches no particular member lights nothing', () => {
     const s = table(Q, { shop: ['gold.tycoon', 'red.intern'] });

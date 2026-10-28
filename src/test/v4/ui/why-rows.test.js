@@ -1,11 +1,11 @@
 // The hover's "Why" and "You'd get" rows tell the real payout (blind testers B and C):
 // - Grand Host's doubling is named, the biggest part of a Silver space's payout (Toast, Good Deed);
 // - a member that fires more than once in one branch says its sum (Greatest Hits: Impressionist +1 per copy);
-// - a space whose gain is your pick (Out of Style: one color) says its best case as your pick.
+// - Out of Style's gain is flat (Oct 27), whichever color you send.
 import { describe, it, expect } from 'vitest';
 import { previewSpace } from '../../../engine/v4/index.js';
 import { sceneQ, spaceOf } from '../../engine/v4/cards-helpers.js';
-import { take, move, pinCosts } from '../../engine/v4/helpers.js';
+import { take, move } from '../../engine/v4/helpers.js';
 import { youdWords } from '../../../v4/game/Info.jsx';
 
 const pv = (s, name) => { const [q, i] = spaceOf(s, name).split('-').map(Number); return previewSpace(s, s.pending.player, q, i); };
@@ -30,34 +30,17 @@ describe('Why rows', () => {
 });
 
 describe("You'd get", () => {
-  it('Out of Style says its best color as your pick: +1 per member sent, plus its own +1', () => {
+  it('Out of Style says its flat +2, whichever color you send', () => {
     // 3 red and 2 gold face up: sending red is the best case
     const s = sceneQ({ quadrants: ['market', 'silver', 'gold', 'red'], shop: ['red.intern', 'red.twins', 'red.volunteer', 'gold.banker', 'gold.taxman'] });
     s.shop = s.shop.slice(0, 5);
     const y = youdWords(pv(s, 'market.restock'), s, 'blue');
-    expect(y.text).toBe('up to +4 blue');
-    expect(y.note).toBe('your pick');
+    expect(y.text).toBe('+2 blue');
   });
-  it('Open Door with tied cheapest members: "+1 member" once, naming each one you could get', () => {
-    // plain one-member cards tied at the cheapest cost (Mob stopped being plain in the Red rebuild: it counts as 5
-    // members, so a tie with it is the case below)
-    const restore = pinCosts({ 'red.intern': [1, 0], 'red.volunteer': [1, 0], 'red.reserve': [1, 0], 'red.twins': [5, 5], 'red.bigfamily': [5, 5], 'red.mentor': [5, 5] });
-    try {
-      const s = sceneQ({ quadrants: ['red', 'silver', 'gold', 'market'], shop: ['red.intern', 'red.volunteer', 'red.reserve', 'red.twins', 'red.bigfamily', 'red.mentor'] });
-      const y = youdWords(pv(s, 'red.hire'), s, 'red');
-      const text = [y.text, y.likely, y.best].filter(Boolean).join(' | ');
-      expect(text.match(/\+1 member/g)).toHaveLength(1);
-      for (const n of ['Intern', 'Volunteer', 'Benchwarmer']) expect(text).toContain(n);
-      for (const n of ['Twins', 'Big Family', 'Mentor']) expect(text).not.toContain(n);
-    } finally { restore(); }
-  });
-  it('Open Door tied with a card that counts as several members: says the best case and names it', () => {
-    const restore = pinCosts({ 'red.intern': [1, 0], 'red.mob': [1, 0], 'red.host': [1, 0], 'red.twins': [5, 5], 'red.bigfamily': [5, 5], 'red.mentor': [5, 5] });
-    try {
-      const s = sceneQ({ quadrants: ['red', 'silver', 'gold', 'market'], shop: ['red.intern', 'red.mob', 'red.host', 'red.twins', 'red.bigfamily', 'red.mentor'] });
-      const y = youdWords(pv(s, 'red.hire'), s, 'red');
-      expect(y.text).toMatch(/up to \+5 members \(Mob\)/);
-      expect(y.note).toBe('your pick');
-    } finally { restore(); }
+  it('Walk-In says its +2 red and the member it brings', () => {
+    const s = sceneQ({ quadrants: ['red', 'silver', 'gold', 'market'] });
+    const y = youdWords(pv(s, 'red.hire'), s, 'red');
+    expect(y.text).toMatch(/^\+2 red/);
+    expect(y.text).toMatch(/\+1 member/);
   });
 });

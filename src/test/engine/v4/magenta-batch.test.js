@@ -5,14 +5,13 @@ import { take, move, ids } from './helpers.js';
 const Q = ['gold', 'red', 'thieves', 'market'];
 const shop = ['red.volunteer', 'red.intern'];
 describe('Magenta corrections retained through the redesign', () => {
-  it('occupied-action theft can take from poorer and tied rivals', () => {
+  it('Help Yourself can take from poorer and tied rivals', () => {
     let s = table(Q, { n: 3, res: [{ gold: 6 }, { gold: 1 }, { red: 6 }], shop });
-    s.slots['2-0'] = 1;
-    s = take(s, 'thieves.tipoff');
+    s = take(s, 'thieves.pickpocket');
     expect(ids(s)).toContain('take:1:gold');
     expect(ids(s)).toContain('take:2:red');
-    s = move(move(s, 'take:1:gold'), 'take:2:red'); // 2: Help Yourself and Redistribute's own space
-    expect(s.players[0].res).toMatchObject({ gold: 7, red: 1, magenta: 1 });
+    s = move(move(move(s, 'take:1:gold'), 'take:2:red'), 'take:2:red'); // round I: steal 3
+    expect(s.players[0].res).toMatchObject({ gold: 7, red: 2, magenta: 1 });
   });
   it('Lie Low prevents member and resource theft', () => {
     let s = table(Q, { round: 3, left: 5, res: [{ gold: 4 }, { red: 3 }], members: [['red.intern']], shop, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
@@ -26,13 +25,13 @@ describe('Magenta corrections retained through the redesign', () => {
   it('doubles the base before Sticky Fingers once across a split theft', () => {
     let s = table(Q, { n: 3, res: [{}, { gold: 9 }, { red: 9 }], members: [['thieves.sticky', 'thieves.desperado']], bonus: [0, 5, 5], shop });
     s = take(s, 'thieves.pickpocket');
-    expect(s.pending.count.left).toBe(3);
+    expect(s.pending.count.left).toBe(7); // 3×2+1
     s = move(s, 'take:1:gold');
-    expect(s.pending.count.left).toBe(2);
-    s = move(move(s, 'take:2:red'), 'take:2:red');
-    expect(s.players[0].res).toMatchObject({ magenta: 1, gold: 1, red: 2 });
+    expect(s.pending.count.left).toBe(6);
+    for (let k = 0; k < 6; k++) s = move(s, 'take:2:red');
+    expect(s.players[0].res).toMatchObject({ magenta: 1, gold: 1, red: 6 });
     expect(s.players[1].res.gold).toBe(8);
-    expect(s.players[2].res.red).toBe(7);
+    expect(s.players[2].res.red).toBe(3);
   });
   it('Collect Debts still doubles a selected rival in one click', () => {
     let s = table(Q, { round: 2, left: 4, res: [{}, { gold: 9 }], members: [['thieves.desperado']], bonus: [0, 5], shop });
@@ -43,7 +42,7 @@ describe('Magenta corrections retained through the redesign', () => {
   });
   it('Grifter offers color choices and logs the colors actually transferred', () => {
     let s = table(Q, { res: [{ magenta: 10 }, { gold: 3, red: 3 }], members: [['red.intern']], shop: ['thieves.grifter', ...shop] });
-    s = move(take(s, 'thieves.tipoff'), 'take:1:gold'); // its own space counts: 1 to steal
+    s = take(s, 'thieves.tipoff'); // Stash: +3 magenta, no steal
     s = move(s, `card:${uidIn(s, 'thieves.grifter', 'shop')}`);
     expect(s.pending.prompt).toMatch(/Grifter/);
     expect(ids(s)).toEqual(['take:1:gold', 'take:1:red']);

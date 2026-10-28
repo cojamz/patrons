@@ -33,23 +33,22 @@ describe('11 · every choice names the card or space that asked', () => {
     expect(s.pending.kind).toBe('choose');
     expect(s.pending.prompt).toMatch(/^Mentor & Protégé: /);
   });
-  it('Open Door still says Open Door', () => {
+  it('Tryout says Tryout', () => {
     let s = sceneQ({ quadrants: CLASSIC });
-    row(s, ['red.intern', 'red.reserve', 'red.patriarch']);
-    s = take(s, 'red.hire');
-    expect(s.pending.prompt).toMatch(/^Open Door: /);
+    row(s, ['red.mentor', 'red.intern', 'red.reserve', 'red.patriarch']);
+    s = take(s, 'red.evenswap');
+    expect(s.pending.prompt).toMatch(/^Tryout: /);
   });
-  it('a copy of Open Door does Open Door itself: Encore recruits the cheapest member face up now', () => {
+  it('a copy of Walk-In does Walk-In itself: Encore recruits the top member of the deck', () => {
     let s = sceneQ({ quadrants: CLASSIC, n: 2, round: 2, queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }] });
-    row(s, ['red.intern', 'red.patriarch', 'red.mob'], ['red.sponsor', 'red.reserve']);
-    s = take(s, 'red.hire'); // P2 takes Open Door: Intern (1), free
+    const first = s.pile[0];
+    s = take(s, 'red.hire'); // P2 takes Walk-In: the deck's top member, free
+    expect(s.players[1].members).toEqual([first]);
     while (s.pending && s.pending.player === 1) s = move(s, 'pass');
     s = take(s, 'echo.encore');
-    const price = u => { const d = defById(s.cards[u].def); return d.s + d.w; };
-    const low = Math.min(...s.shop.map(price));
-    s = move(s, s.pending.options.find(o => o.label.startsWith('Open Door')).id);
-    if (s.pending?.kind === 'choose') expect(s.pending.prompt).toMatch(/^Open Door: /);
-    else expect(s.players[0].members.map(price)).toContain(low);
+    const second = s.pile[0];
+    s = move(s, s.pending.options.find(o => o.label.startsWith('Walk-In')).id);
+    expect(s.players[0].members).toContain(second);
   });
 });
 

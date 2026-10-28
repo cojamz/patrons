@@ -1,12 +1,10 @@
 // Live panel round 1 (cf23306), lane G1: a space's hover says what the space will really do, and why.
 import { describe, it, expect } from 'vitest';
-import { applyMove } from '../../../engine/v4/index.js';
 import { previewSpace } from '../../../engine/v4/preview.js';
 import { youdWords, cachedPreview } from '../../../v4/game/Info.jsx';
 import { raceAfter, whyLine } from '../../../v4/game/HoverCards.jsx';
 import { quadrant, defById } from '../../../engine/v4/content/index.js';
 import { sceneQ, spaceOf } from '../../engine/v4/cards-helpers.js';
-import { take } from '../../engine/v4/helpers.js';
 
 const T = ['gold', 'red', 'thieves', 'market'];
 const at = (s, name) => spaceOf(s, name).split('-').map(Number);
@@ -20,8 +18,9 @@ describe('hover honesty (live panel r1)', () => {
   it('Help Yourself doubled by Desperado: the Why names Desperado', () => {
     const s = sceneQ({ quadrants: T, round: 3, n: 3, res: [{}, { gold: 5, red: 4 }, { blue: 3 }], bonus: [0, 3, 3], members: [['thieves.desperado'], [], []] });
     const { pv, y } = words(s, 'Help Yourself');
-    expect(y.text).toBe('+1 magenta, +3 followers; steal 6 in colors you pick');
-    expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (3 → 6)');
+    // round III steals 5, doubled to 10: what the rivals hold reads as the gain, the rest as your pick
+    expect(y.text).toBe('+3 gold, +2 red, +1 blue, +1 magenta; steal 4 in colors you pick');
+    expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (5 → 10)');
   });
 
   it('Collect Debts with Sticky Fingers: the Why names it, and a rival it can rob reads now and after, never a gift', () => {
@@ -52,26 +51,7 @@ describe('hover honesty (live panel r1)', () => {
     }
   });
 
-  it('Redistribute doubles its occupied-action total once, with fresh rival choices', () => {
-    const s = sceneQ({ quadrants: T, round: 3, n: 3, res: [{}, { gold: 9 }, { red: 9 }], bonus: [0, 3, 3], members: [['thieves.desperado'], [], []] });
-    s.slots['2-0'] = 1; s.slots['2-2'] = 2; // and its own space: 3
-    const { pv, y } = words(s, 'Redistribute');
-    expect(y.text).toBe('+1 magenta; steal 6 in colors you pick');
-    expect(whyLine(pv.reasons)).toBe('Desperado: steal doubled (3 → 6)');
-  });
-
-  it('Redistribute can choose poorer rivals for its occupied-action total', () => {
-    const s = sceneQ({ quadrants: T, round: 1, n: 3, res: [{ gold: 5 }, { gold: 1 }, { red: 1 }], bonus: [5, 0, 0] });
-    s.slots['2-0'] = 1; s.slots['2-2'] = 2;
-    expect(words(s, 'Redistribute').y.text).toBe('+1 gold, +1 red, +1 magenta');
-    let t = take(s, 'thieves.tipoff');
-    for (let k = 0; k < 8 && t.pending?.kind === 'choose'; k++) {
-      const option = t.pending.options.find(o => o.kind === 'take');
-      if (!option) break;
-      t = applyMove(t, { player: t.pending.player, option: option.id });
-    }
-    expect(t.players[0].res.magenta - s.players[0].res.magenta).toBe(1);
-    expect(t.players[1].res.gold).toBe(0);
-    expect(t.players[2].res.red).toBe(0);
+  it('Stash says its round gain', () => {
+    for (const round of [1, 2, 3]) expect(words(sceneQ({ quadrants: T, round, n: 3 }), 'Stash').y.text).toBe(`+${round + 2} magenta`);
   });
 });

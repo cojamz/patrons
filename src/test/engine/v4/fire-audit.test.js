@@ -105,7 +105,7 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller', 'market.shopaholic', 'thieves.fence', 'echo.doppel',
       'market.onlooker', 'echo.groupie', // cut cards under 3 holds after the Oct 25 member deck changes; cards-market and cards-echo cover them
       'market.patroness', // under 3 holds when Extortionist at 6 (Oct 25) moved the games; cards-market (Patroness) covers it
-      'market.stylist', 'echo.ensemble', 'echo.dejavu']); // under 3 holds when +1 wild on every member (Oct 27) moved the games; cards-market and cards-echo cover them
+      'market.stylist', 'echo.ensemble', 'echo.dejavu', 'market.auctioneer', 'echo.wallflower']); // under 3 holds when +1 wild on every member and the round I rework (Oct 27-28) moved the games; cards-market and cards-echo cover them
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
@@ -122,6 +122,9 @@ const SPHERES = ['gold', 'red', 'purple', 'silver', 'yellow'];
 // Members that may stay unnamed on bot tables, with why (see design/eval/card-ledger-a.md).
 // Conditional cards that can go a whole bot game without their condition; each has a named test of its own.
 const ALLOW = {
+  // seeded games moved with +1 wild and the round I rework (Oct 27-28): recruited in 4-5 games without the trigger coming up
+  'silver.dowager': 'a plain worth-3 member the audit counts (cards-silver)',
+  'purple.courier': 'pays only on an extra turn (cards-purple: Courier)',
   // bots almost never buy it at 12 (Hard bot read, Oct 24); recruited once in the Oct 25 sample
   'silver.grandhost': 'doubles silver from Silver spaces, rarely bought (cards-silver: Grand Host)',
   'purple.lateriser': 'needs the fewest followers at a round start, bought before it (cards-purple: Late Riser)',

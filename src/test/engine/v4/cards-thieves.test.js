@@ -24,23 +24,23 @@ const sum = r => Object.values(r).reduce((a, b) => a + b, 0);
 const cardOpt = (s, def, who) => `card:${uidIn(s, def, who)}`;
 
 describe('Magenta actions', () => {
-  it.each([1, 2, 3])('Help Yourself steals round resources in original colors and takes round followers from them (round %i)', round => {
+  it.each([1, 2, 3])('Help Yourself steals 3 / 4 / 5 resources in original colors, no followers (round %i)', round => {
     let s = table(Q, { round, left: 5, res: [{}, { gold: 9 }], bonus: [0, 5], shop: ROW });
     s = take(s, 'thieves.pickpocket');
-    for (let k = 0; k < round; k++) s = move(s, 'take:1:gold');
-    expect(R(s)).toMatchObject({ magenta: 1, gold: round });
-    expect(R(s, 1).gold).toBe(9 - round);
-    expect(s.players[0].bonus).toBe(round);
-    expect(s.players[1].bonus).toBe(5 - round); // the followers come from whoever you took from (Cory, Oct 22)
+    for (let k = 0; k < round + 2; k++) s = move(s, 'take:1:gold');
+    expect(R(s)).toMatchObject({ magenta: 1, gold: round + 2 });
+    expect(R(s, 1).gold).toBe(9 - round - 2);
+    expect(s.players[0].bonus).toBe(0); // the follower steal is gone (Cory, 2026-10-27)
+    expect(s.players[1].bonus).toBe(5);
     expect(s.log.some(l => l.includes('now magenta'))).toBe(false);
   });
-  it('Sticky Fingers +1 and Desperado double base theft, separately from inherent grant and followers', () => {
+  it('Sticky Fingers +1 and Desperado double base theft, separately from the inherent grant: 3×2+1 = 7', () => {
     let s = table(Q, { res: [{}, { gold: 9 }], members: [['thieves.sticky', 'thieves.desperado']], bonus: [0, 9], shop: ROW });
     s = take(s, 'thieves.pickpocket');
     while (s.pending?.kind === 'choose') s = move(s, 'take:1:gold');
-    expect(R(s)).toMatchObject({ magenta: 1, gold: 3 });
-    expect(R(s, 1).gold).toBe(6);
-    expect(s.players[0].bonus).toBe(1);
+    expect(R(s)).toMatchObject({ magenta: 1, gold: 7 });
+    expect(R(s, 1).gold).toBe(2);
+    expect(s.players[0].bonus).toBe(0);
     expect(named(s, 'Sticky Fingers').length).toBe(1);
     expect(named(s, 'Desperado').length).toBe(1);
   });
@@ -54,13 +54,12 @@ describe('Magenta actions', () => {
     expect(named(s, 'Desperado').length).toBe(1);
   });
 
-  it('Redistribute counts occupied Magenta actions and respects Lie Low', () => {
-    let s = table(Q, { n: 3, res: [{}, { gold: 3 }, { red: 3 }], shop: ROW, queue: turns(1, 0) });
-    s = pass(take(s, 'thieves.hideout'));
+  it.each([1, 2, 3])('Stash: +3 / +4 / +5 magenta, inherent +1 included, no steal (round %i)', round => {
+    let s = table(Q, { n: 3, round, left: 5, res: [{}, { gold: 3 }, { red: 3 }], shop: ROW });
     s = take(s, 'thieves.tipoff');
-    expect(ids(s).every(id => id.startsWith('take:2:'))).toBe(true);
-    s = play(s, 'take:2:red', 'take:2:red'); // Lie Low and its own space
-    expect(R(s)).toMatchObject({ magenta: 1, red: 2 });
+    expect(s.pending?.kind).not.toBe('choose');
+    expect(R(s).magenta).toBe(round + 2);
+    expect([R(s, 1).gold, R(s, 2).red]).toEqual([3, 3]);
   });
   it('Lie Low: no steal (Cory, 2026-10-22); resources are safe this round', () => {
     let s = table(Q, { res: [{ gold: 4 }, { red: 1 }], shop: ROW, queue: turns(0, 1) });
@@ -178,10 +177,10 @@ describe('Magenta members', () => {
 
   it('Accomplice: when recruited, take 1 from each rival (named)', () => {
     let s = table(Q, { n: 3, res: [{ magenta: 8 }, { gold: 1 }, { red: 3 }], shop: ['thieves.accomplice', ...ROW] });
-    s = move(take(s, 'thieves.tipoff'), 'take:2:red'); // its own space: steal 1
+    s = take(s, 'thieves.tipoff'); // Stash: +3 magenta
     s = move(s, cardOpt(s, 'thieves.accomplice', 'shop'));
     s = s.pending?.kind === 'pay' ? move(s, s.pending.options[0].id) : s;
-    expect([R(s).magenta, R(s).gold, R(s).red, R(s, 1).gold, R(s, 2).red]).toEqual([2, 1, 1, 0, 1]); // the stolen red helped pay
+    expect([R(s).magenta, R(s).gold, R(s).red, R(s, 1).gold, R(s, 2).red]).toEqual([3, 1, 1, 0, 2]); // 8 + Stash's 3, paid 8
     expect(named(s, 'Accomplice')).toEqual(["P1's Accomplice: took 1 from P2.", "P1's Accomplice: took 1 from P3."]);
   });
   it('× Poach: actively taking Accomplice triggers its On Recruit', () => {
@@ -195,20 +194,20 @@ describe('Magenta members', () => {
 
   it('Grifter: when recruited, take 1 per 2 members you have, from any rivals you choose', () => {
     let s = table(Q, { n: 3, res: [{ magenta: 6 }, { gold: 4 }, { red: 2 }], members: [['red.twins', 'red.intern', 'red.volunteer']], shop: ['thieves.grifter', ...ROW] });
-    s = move(take(s, 'thieves.tipoff'), 'take:1:gold'); // its own space: steal 1
+    s = take(s, 'thieves.tipoff'); // Stash: +3 magenta
     s = move(s, cardOpt(s, 'thieves.grifter', 'shop'));
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     // 4 members: take 2, split freely among rivals (Cory, 2026-10-18: the "richest rival" sentence went)
-    expect(R(s).magenta).toBe(2); // the stolen gold helped pay
+    expect(R(s).magenta).toBe(3); // 6 + Stash's 3, paid 6
     expect(R(s).gold + R(s).red).toBe(2);
-    expect(R(s, 1).gold + R(s, 2).red).toBe(3);
+    expect(R(s, 1).gold + R(s, 2).red).toBe(4);
     expect(named(s, 'Grifter').length).toBe(1);
   });
 
   it('Robin Hood: whenever you steal from the player with the most followers, +1 follower (named)', () => {
     let s = table(Q, { n: 3, res: [{}, { gold: 3 }, { red: 3 }], bonus: [0, 3, 0], members: [['thieves.robinhood']], shop: ROW });
-    s = play(take(s, 'thieves.pickpocket'), 'take:1:gold');
-    expect(s.players[0].bonus).toBe(2);
+    s = play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold');
+    expect(s.players[0].bonus).toBe(1);
     expect(named(s, 'Robin Hood').length).toBe(1);
   });
   it('× Poach: taking a member from the leader counts, even when it leaves them behind', () => {
@@ -222,7 +221,7 @@ describe('Magenta members', () => {
 
   it('Lookout: stolen after it fired this round, it stays spent for the new owner', () => {
     let s = table(Q, { n: 3, round: 3, left: 5, res: [{}, { gold: 9 }, { red: 9 }], members: [[], [], ['thieves.lookout']], shop: ROW, queue: turns(0, 0, 0) });
-    s = pass(play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold'));
+    s = pass(play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold', 'take:1:gold', 'take:1:gold'));
     expect(named(s, 'Lookout').length).toBe(1);
     s = pass(move(take(s, 'thieves.heist'), cardOpt(s, 'thieves.lookout', 2)));
     expect(owns(s, 0, 'thieves.lookout')).toBe(true);
@@ -232,9 +231,9 @@ describe('Magenta members', () => {
 
   it('Light Fingers: whenever a rival recruits a member costing 8 or more, take 1 from them', () => {
     let s = table(Q, { res: [{ red: 10 }], members: [[], ['thieves.lightfingers']], shop: ROW });
-    s = move(take(s, 'thieves.tipoff'), cardOpt(s, 'red.bigfamily', 'shop'));
+    s = move(take(s, 'thieves.tipoff'), cardOpt(s, 'red.bigfamily', 'shop')); // Stash: +3 magenta
     s = s.pending?.kind === 'pay' ? move(s, s.pending.options[0].id) : s;
-    expect([R(s).red, R(s).magenta, R(s, 1).red]).toEqual([1, 1, 1]);
+    expect([R(s).red, R(s).magenta, R(s, 1).magenta]).toEqual([2, 2, 1]); // it took a magenta
     expect(named(s, 'Light Fingers').length).toBe(1);
     s = table(Q, { res: [{ red: 10 }], members: [[], ['thieves.lightfingers']], shop: ROW });
     s = move(take(s, 'thieves.tipoff'), cardOpt(s, 'red.twins', 'shop'));
@@ -247,7 +246,7 @@ describe('Magenta members', () => {
     s = move(take(s, 'thieves.tipoff'), 'tier:top');
     expect(s.players[0].bonus).toBe(10);
     expect(sum(R(s, 1))).toBe(2);
-    expect(sum(R(s))).toBe(1);
+    expect(sum(R(s))).toBe(3); // Stash's +3
     expect(named(s, 'Extortionist').length).toBe(1);
     s = table(Q, { res: [{ gold: 5, red: 2 }, {}], members: [[], ['thieves.extortionist']], shop: ROW });
     s = move(take(s, 'thieves.tipoff'), 'tier:mid');
@@ -269,7 +268,7 @@ describe('Magenta members', () => {
     s = take(s, 'thieves.tipoff');
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     s = move(s, `use:${uidIn(s, 'thieves.bigscore', 0)}`);
-    expect([R(s).magenta, R(s, 1).magenta, R(s, 2).magenta]).toEqual([5, 3, 3]); // Redistribute's own space steals 1 first
+    expect([R(s).magenta, R(s, 1).magenta, R(s, 2).magenta]).toEqual([6, 4, 3]); // Stash's +3 first, then half of 7
     expect(named(s, 'Safecracker').length).toBe(1);
     expect(ids(s)).not.toContain(`use:${uidIn(s, 'thieves.bigscore', 0)}`);
   });
@@ -280,7 +279,7 @@ describe('Magenta members', () => {
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     s = move(s, `use:${uidIn(s, 'thieves.bigscore', 0)}`);
     s = move(s, `use:${uidIn(s, 'echo.doppel', 0)}`);
-    expect([R(s).magenta, R(s, 1).magenta]).toEqual([7, 2]);
+    expect([R(s).magenta, R(s, 1).magenta]).toEqual([9, 2]); // Stash 3, +4 of 8, +2 of 4
   });
 
   it('Kingpin: game end, +1 follower per magenta member you have (itself included)', () => {

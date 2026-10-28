@@ -107,7 +107,7 @@ describe('Squatter: once per round, place on a space a rival already took', () =
     expect(R(s, 0).gold).toBe(2);
     // both workers on Golden Years leave a chip: the first taker's and the joiner's
     expect(Object.values(s.echo.now).filter(e => e.name === actionName('gold.rush')).map(e => e.p).sort()).toEqual([0, 1]);
-    s = move(s, 'slot:2-2'); // P2 takes Echo
+    s = move(s, 'slot:2-1'); // P2 takes Echo
     expect(s.pending.kind).toBe('choose');
     // Echo copies a rival's space taken since your last turn (Green rework, 2026-10-14): P1's joined Golden Years
     // is on offer; P2's own Golden Years isn't (that's Reprise's or Encore's job)

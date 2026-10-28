@@ -12,17 +12,18 @@ describe('Magenta action wording and one-stack theft', () => {
     for (const round of [1, 2, 3]) {
       const pick = panelText('thieves', { key: 'pickpocket' }, round);
       // the followers are stolen too, not gained from the bank (Cory, 2026-10-22)
-      expect(pick.verb).toBe(`Steal ${round} and ${round} @f`);
-      expect(pick.second).toBe('+1 magenta');
+      // round I rework (Cory, Oct 27): resources only, 3/4/5, split among rivals
+      expect(pick.verb).toBe(`Steal ${round + 2}`);
+      expect(pick.second).toBe('split among rivals');
       const safe = panelText('thieves', { key: 'hideout' }, round);
       expect(safe.verb).toBe('Safe from steals');
       expect(safe.second).toBe('this round');
       expect(safe.note).toBe('+1 magenta');
-      expect(shortEffect('thieves', { key: 'pickpocket' }, round)).toContain(`steal ${round}`);
+      expect(shortEffect('thieves', { key: 'pickpocket' }, round)).toContain(`steal ${round + 2}`);
     }
-    const occupied = panelText('thieves', { key: 'tipoff' });
-    expect(`${occupied.verb} ${occupied.second}`).toBe('Steal 1 per magenta action with a minion, this one too');
-    expect(occupied.note).toBe('+1 magenta');
+    const stash = panelText('thieves', { key: 'tipoff' }, 1);
+    expect(stash.main).toBe('+3 magenta');
+    expect(stash.second).toBe('I\u00a0+3\u00a0· II\u00a0+4\u00a0· III\u00a0+5');
     expect(panelText('thieves', { key: 'ransom' }, 2).second).toBe('costing 5 or less');
     expect(panelText('thieves', { key: 'rob' }, 2).second).toBe('one color, rounded down');
     expect(pipEffect('thieves', { key: 'rob' }, 2)).toBe('steal half a one-color pile');

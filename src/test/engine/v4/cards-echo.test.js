@@ -33,19 +33,25 @@ const buildThenEcho = (opts = {}) => {
 };
 
 describe('Green current actions', () => {
-  it.each([1, 2, 3])('Build Up in round %i: round + inherent green', round => {
-    expect(R(go(table(Q, { round, shop: ROW }), 'echo.chant')).green).toBe(round + 1);
+  it.each([1, 2, 3])('Build Up in round %i: +3 / +4 / +5 green', round => {
+    expect(R(go(table(Q, { round, shop: ROW }), 'echo.chant')).green).toBe(round + 2);
   });
-  it('Chorus counts other occupied Green actions, plus inherent green', () => {
-    let s = table(Q, { shop: ROW, queue: turns(1, 0) });
+  // Cover replaced Chorus (Cory, 2026-10-27): copy an action with no minion on it, +1 green
+  it('Cover copies only an action with no minion on it, plus inherent green', () => {
+    let s = table(Q, { round: 2, shop: ROW, queue: turns(1, 0) });
     s = go(s, 'echo.chant');
-    s = go(s, 'echo.hum');
-    expect([R(s).green, R(s, 1).green]).toEqual([2, 2]);
+    s = take(s, 'echo.hum');
+    expect(s.pending.prompt).toMatch(/^Cover:/);
+    const keys = s.pending.options.map(o => o.value);
+    expect(keys).not.toContain(`3-${quadrant('echo').actions.findIndex(a => a.key === 'chant')}`);
+    expect(keys).not.toContain(`3-${quadrant('echo').actions.findIndex(a => a.key === 'hum')}`);
+    s = pass(play(s, o => o.label.startsWith('Golden Years')));
+    expect(R(s)).toMatchObject({ gold: 4, green: 1 });
   });
   it('Echo copies the printed chip and also gains its own inherent green', () => {
     const s = buildThenEcho();
-    expect(R(s).green).toBe(3);
-    expect(s.log.some(l => l.includes('P1 copied Build Up') && l.includes('+2 green'))).toBe(true);
+    expect(R(s).green).toBe(5); // Echo's own +2 plus Build Up's +3
+    expect(s.log.some(l => l.includes('P1 copied Build Up') && l.includes('+3 green'))).toBe(true);
   });
   it('Encore offers rival actions and occupied centers, never your own', () => {
     let s = table(Q, { round: 3, left: 6, shop: ROW, res: [{}, { gold: 2 }], queue: turns(0, 1, 1, 0) });
@@ -55,20 +61,21 @@ describe('Green current actions', () => {
   });
   it('Reprise offers only your actions, excludes itself, and adds inherent green', () => {
     let s = table(Q, { round: 2, shop: ROW, queue: turns(0, 1, 0) });
-    s = go(s, 'echo.chant'); s = go(s, 'echo.hum');
+    s = go(s, 'echo.chant'); s = go(s, 'gold.rush');
     s = take(s, 'echo.refrain');
-    expect(s.pending.options.map(o => o.label)).toEqual(['Build Up (P1): +3 green']);
+    expect(s.pending.options.map(o => o.label)).toEqual(['Build Up (P1): +4 green']);
     s = pass(move(s, s.pending.options[0].id));
-    expect(R(s).green).toBe(7);
+    expect(R(s).green).toBe(10); // Build Up 4, Reprise's own +2, the copy 4
   });
   it('one shared copy rule explains fresh choices and forbids revisiting the chain', () => {
     expect(quadrant('echo').rule).toMatch(/Copying a copy lets you choose again/);
     expect(term('copy').def).toMatch(/choose again/);
     expect(readFileSync(new URL('../../../../design/rulebook.md', import.meta.url), 'utf8')).toMatch(/choose again/);
     expect(quadrant('echo').rule).toMatch(/already in its chain/);
-    // Build Up's +1 green sits inside its by-round run (+1 × round, +1: 2 / 3 / 4)
+    // Build Up's +1 green sits inside its by-round run (3 / 4 / 5); Echo and Reprise give +2 (2026-10-27)
     for (const d of quadrant('echo').actions) {
-      if (d.key === 'chant') expect(d.text).toBe('+2 green in round I, +3 in round II, +4 in round III.');
+      if (d.key === 'chant') expect(d.text).toBe('+3 green in round I, +4 in round II, +5 in round III.');
+      else if (d.key === 'echo' || d.key === 'refrain') expect(d.text).toContain('+2 green');
       else expect(d.text).toContain('+1 green');
     }
   });
@@ -76,7 +83,7 @@ describe('Green current actions', () => {
     let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(0, 0, 0) });
     s = go(s, 'gold.rush'); s = go(s, 'echo.chant');
     s = go(s, 'echo.eternity', sp('gold.rush'));
-    expect(R(s)).toMatchObject({ gold: 12, green: 9 });
+    expect(R(s)).toMatchObject({ gold: 12, green: 11 });
     expect(s.log.filter(l => /^P1 copied /.test(l)).map(l => l.split(':')[0])).toEqual(['P1 copied Golden Years', 'P1 copied Build Up']);
   });
   it('Greatest Hits includes prior copy actions and lets their target be chosen again', () => {
@@ -88,7 +95,7 @@ describe('Green current actions', () => {
     s = play(s, sp('echo.refrain'));
     expect(s.pending.prompt).toMatch(/Reprise/);
     s = pass(play(s, sp('gold.rush')));
-    expect(R(s)).toMatchObject({ gold: 24, green: 3 });
+    expect(R(s)).toMatchObject({ gold: 24, green: 5 });
   });
   it('an Agents-protected plan explains why its actions are skipped', () => {
     let s = table(Q, { round: 3, members: [['echo.agents']], queue: turns(0, 0) });
@@ -102,14 +109,14 @@ describe('Green current actions', () => {
   });
   it('Echo redoes stealing for its copier and still respects Lie Low', () => {
     let s = table(QT, { n: 3, shop: ROW, res: [{}, {}, { gold: 3, blue: 2 }], queue: turns(1, 0) });
-    s = go(s, 'thieves.pickpocket', 'take:2:gold'); // round I: steal 1
-    s = go(s, 'echo.echo', sp('thieves.pickpocket'), 'take:2:blue');
+    s = go(s, 'thieves.pickpocket', 'take:2:gold', 'take:2:gold', 'take:2:gold'); // round I: steal 3
+    s = go(s, 'echo.echo', sp('thieves.pickpocket'), 'take:2:blue', 'take:2:blue', 'take:1:gold');
     // the copier steals for itself (blue stays blue) and gets Help Yourself's own +1 magenta
-    expect([R(s).magenta, R(s).blue, R(s, 2).blue, R(s).green]).toEqual([1, 1, 1, 1]);
+    expect([R(s).magenta, R(s).blue, R(s).gold, R(s, 2).blue, R(s).green]).toEqual([1, 2, 1, 0, 2]);
     // Lie Low no longer steals (Cory, 2026-10-22): P3 hides, P2 steals from P1, P1's copy of that steal can't reach P3
     let t = table(QT, { n: 3, shop: ROW, res: [{ red: 3 }, { gold: 3 }, { blue: 3 }], queue: turns(2, 1, 0) });
     t = go(t, 'thieves.hideout');
-    t = go(t, 'thieves.pickpocket', 'take:0:red');
+    t = go(t, 'thieves.pickpocket', 'take:0:red', 'take:0:red', 'take:0:red');
     t = play(take(t, 'echo.echo'), sp('thieves.pickpocket'));
     expect(ids(t).length).toBeGreaterThan(0);
     expect(ids(t).every(id => id.startsWith('take:1:'))).toBe(true);
@@ -133,7 +140,7 @@ describe('Green current members', () => {
   it('Impressionist gains the copied action’s color, separately from inherent green', () => {
     let s = table(Q, { round: 2, shop: ROW, queue: turns(1, 0), members: [['echo.tuningfork']] });
     s = go(go(s, 'gold.rush'), 'echo.echo', sp('gold.rush'));
-    expect(R(s)).toMatchObject({ gold: 5, green: 1 });
+    expect(R(s)).toMatchObject({ gold: 5, green: 2 });
     expect(named(s, 'Impressionist')).toEqual(["P1's Impressionist: +1 gold."]);
   });
   it('Ensemble gives a loose follower for your own action, never a rival’s', () => {
@@ -177,7 +184,7 @@ describe('Green current members', () => {
     s = go(s, 'gold.rush'); s = take(s, 'echo.chant');
     const uid = uidIn(s, 'echo.dejavu', 0);
     s = move(s, 'use:' + uid);
-    expect(R(s)).toMatchObject({ gold: 8, green: 6 });
+    expect(R(s)).toMatchObject({ gold: 8, green: 8 });
     expect(s.cards[uid].used).toBe(true);
     expect(ids(s)).not.toContain('use:' + uid);
   });
@@ -222,7 +229,7 @@ describe('legacy Green members remain readable in old records', () => {
     let s = table(Q, { shop: ROW, queue: turns(1, 0), members: [['echo.choir', 'echo.doppel']] });
     s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'echo.choir';
     s = go(go(s, 'gold.rush'), 'echo.echo', sp('gold.rush'));
-    expect(R(s)).toMatchObject({ gold: 2, green: 3 });
+    expect(R(s)).toMatchObject({ gold: 2, green: 4 });
   });
   it('Understudy still copies the previous placement, not the current action', () => {
     let s = table(Q, { round: 2, shop: ['echo.understudy', ...ROW], res: [{ green: 4, red: 2 }], queue: turns(1, 0) });
@@ -242,18 +249,18 @@ describe('legacy Green members remain readable in old records', () => {
       let s = table(Q, { round: 2, shop: ROW, queue: turns(1, 0), members: [['echo.translator']] });
       s.cards[uidIn(s, 'echo.translator', 0)].on = on;
       s = go(go(s, 'gold.rush'), 'echo.echo', sp('gold.rush'));
-      expect([R(s).gold, R(s).green]).toEqual(on ? [0, 5] : [4, 1]);
+      expect([R(s).gold, R(s).green]).toEqual(on ? [0, 6] : [4, 2]);
     }
   });
   it('Midas converts action gains even when Translator would otherwise make the copy green', () => {
     let s = table(Q, { round: 2, shop: ROW, queue: turns(1, 0), members: [['echo.translator', 'gold.midas']] });
     s.cards[uidIn(s, 'echo.translator', 0)].on = true;
     s = go(go(s, 'gold.rush'), 'echo.echo', sp('gold.rush'));
-    expect(R(s)).toMatchObject({ gold: 5, green: 0 });
+    expect(R(s)).toMatchObject({ gold: 6, green: 0 });
     expect(named(s, 'Midas').length).toBeGreaterThan(0);
   });
   it('Wallflower doubles copied gains only while tied for fewest followers', () => {
-    for (const [extra, expected] of [[[], 5], [['red.twins'], 3]]) {
+    for (const [extra, expected] of [[[], 8], [['red.twins'], 5]]) {
       const s = buildThenEcho({ members: [['echo.wallflower', ...extra]], bonus: [0, 2] });
       expect(R(s).green).toBe(expected);
     }

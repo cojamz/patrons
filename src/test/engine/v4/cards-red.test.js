@@ -18,11 +18,12 @@ describe('Red action gains', () => {
     const s = sceneQ({ round }); s.recruits = 99;
     expect(R(take(s, 'red.turnout')).red).toBe(round + 2);
   });
-  it('Open Door and Recruit a Member give a free member plus inherent red', () => {
-    for (const [action, round] of [['red.hire', 1], ['red.take', 3]]) {
+  it('Walk-In and Recruit a Member give a free member plus their red (Walk-In: +2, each rival +1)', () => {
+    for (const [action, round, red, rival] of [['red.hire', 1, 2, 1], ['red.take', 3, 1, 0]]) {
       const s = settle(take(sceneQ({ round, shop: ['red.volunteer'] }), action));
       expect(s.players[0].members).toHaveLength(1);
-      expect(R(s).red).toBe(1);
+      expect(R(s).red).toBe(red);
+      expect(R(s, 1).red).toBe(rival);
     }
   });
 });
@@ -45,7 +46,7 @@ describe('Red members', () => {
     expect(named(s, 'Pied Piper')).toHaveLength(1);
   });
 
-  it('Proselytizer: +1 follower whenever you recruit (not itself), named; a free Open Door counts', () => {
+  it('Proselytizer: +1 follower whenever you recruit (not itself), named; a free Walk-In counts', () => {
     let s = sceneQ({ members: [['red.proselytizer']] });
     const f0 = followers(s, s.players[0]);
     s = settle(take(s, 'red.hire'));
@@ -64,7 +65,7 @@ describe('Red members', () => {
 
   it('Recruiter: +1 red whenever you recruit, named', () => {
     const s = settle(take(sceneQ({ members: [['red.recruiter']] }), 'red.hire'));
-    expect(R(s).red).toBe(2);
+    expect(R(s).red).toBe(3); // Walk-In's +2, Recruiter's +1
     expect(named(s, 'Recruiter')).toHaveLength(1);
   });
 

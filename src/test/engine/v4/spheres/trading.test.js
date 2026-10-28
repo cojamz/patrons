@@ -75,25 +75,22 @@ describe('White actions', () => {
     }
   });
 
-  it('Splurge: +1 white, then +1 follower per 2 resources spent on the turn\'s first paid recruit', () => {
+  it('Splurge: +2 white, then +1 follower per 2 resources paid for the turn\'s first recruited member', () => {
     let s = take(scene({ res: [{ gold: 4 }], shop: ['gold.midas'] }), 'trading.splurge');
-    expect(R(s).white).toBe(1);
+    expect(R(s).white).toBe(2);
     expect(s.players[0].perSpend).toBe(true);
-    s = move(s, pick(s, 'gold.midas', 'shop')); // Midas 3+2: spends 5 (4 gold + the white)
+    s = move(s, pick(s, 'gold.midas', 'shop')); // Midas 3+2: pays 5
     expect(has(s, 'gold.midas')).toBe(true);
     expect(B(s)).toBe(2); // floor(5 / 2)
     expect(s.players[0].perSpend).toBeUndefined();
     expect(s.log.join('\n')).toContain("P1's Splurge: +2 followers for spending.");
   });
 
-  it('Splurge pays once: a second paid recruit the same turn gets nothing, and an odd 1 gets nothing', () => {
+  it('Splurge pays on members only: buying followers gets nothing extra', () => {
     let s = take(scene({ res: [{ red: 6 }] }), 'trading.splurge');
-    s = move(s, 'tier:mid'); // spends 5 → +5 bought, +2 Splurge
-    expect(B(s)).toBe(7);
-    expect(s.players[0].perSpend).toBeUndefined();
-    let t = take(scene({ res: [{}] }), 'trading.splurge');
-    t = move(t, 'tier:small'); // spends the 1 white → floor(1/2) = 0
-    expect(B(t)).toBe(1);
+    s = move(s, 'tier:mid'); // spends 5 → +5 bought, no Splurge
+    expect(B(s)).toBe(5);
+    expect(s.log.join('\n')).not.toContain('for spending');
   });
 
   it('Splurge wears off at the next turn when nothing was recruited', () => {
@@ -104,24 +101,24 @@ describe('White actions', () => {
     expect(s.players[0].perSpend).toBeUndefined();
   });
 
-  it('Exchange round I: +1 white, then turn 1 resource into 2 followers', () => {
+  it('Exchange round I: +2 white, then turn 1 resource into 2 followers', () => {
     let s = take(scene({ res: [{ red: 2 }] }), 'trading.exchange');
     expect(ids(s)).toEqual(['color:red', 'color:white', 'done']);
     s = move(s, 'color:red');
-    expect([R(s).red, R(s).white, B(s)]).toEqual([1, 1, 2]);
+    expect([R(s).red, R(s).white, B(s)]).toEqual([1, 2, 2]);
     expect(s.pending.kind).toBe('buy'); // round I: one only
     const none = move(take(scene({ res: [{ red: 2 }] }), 'trading.exchange'), 'done');
-    expect([R(none).red, R(none).white, B(none)]).toEqual([2, 1, 0]);
+    expect([R(none).red, R(none).white, B(none)]).toEqual([2, 2, 0]);
   });
 
   it('Exchange rounds II and III: up to 2, then up to 3 resources, 2 followers each; you can stop early', () => {
     let s = take(scene({ round: 2, res: [{ red: 3 }] }), 'trading.exchange');
     s = move(move(s, 'color:red'), 'color:red');
-    expect([R(s).red, R(s).white, B(s)]).toEqual([1, 1, 4]);
+    expect([R(s).red, R(s).white, B(s)]).toEqual([1, 2, 4]);
     expect(s.pending.kind).toBe('buy');
     let t = take(scene({ round: 3, res: [{ red: 3, blue: 1 }] }), 'trading.exchange');
     t = move(move(move(t, 'color:red'), 'color:blue'), 'color:white');
-    expect([R(t).red, R(t).blue, R(t).white, B(t)]).toEqual([2, 0, 0, 6]);
+    expect([R(t).red, R(t).blue, R(t).white, B(t)]).toEqual([2, 0, 1, 6]);
     let u = take(scene({ round: 3, res: [{ red: 3 }] }), 'trading.exchange');
     u = move(move(u, 'color:red'), 'done');
     expect([R(u).red, B(u)]).toEqual([2, 2]);
@@ -202,7 +199,8 @@ describe('White members', () => {
     expect(B(take(scene({ round: 3, ...br }), 'trading.cashin'))).toBe(0); // nothing turned, no bonus
     let s = take(scene({ round: 2, members: [['trading.broker', 'red.twins']] }), 'trading.farewell');
     expect(B(move(s, `card:${uidOf(s, 'red.twins', 0)}`))).toBe(3);
-    expect(B(move(take(scene({ res: [{ red: 5 }], ...br }), 'trading.splurge'), 'tier:mid'))).toBe(5 + 2 + 1);
+    const sp = take(scene({ res: [{ gold: 4 }], shop: ['gold.midas'], ...br }), 'trading.splurge');
+    expect(B(move(sp, pick(sp, 'gold.midas', 'shop')))).toBe(2 + 1); // Midas paid 5: +2, Broker +1
     expect(B(move(scene({ res: [{ red: 1 }], ...br, ...buyTurn }), 'tier:small'))).toBe(1); // a buy isn't a White action
   });
 
@@ -273,7 +271,7 @@ describe('White members', () => {
     const bk = 'trading.changer';
     let s = take(scene({ round: 3, res: [{ red: 3 }], members: [[bk]] }), 'trading.exchange');
     s = move(move(move(s, 'color:red'), 'color:red'), 'color:red');
-    expect([B(s), R(s).white]).toEqual([6, 2]); // +1 space, +1 Money Changer once
+    expect([B(s), R(s).white]).toEqual([6, 3]); // +2 space, +1 Money Changer once
     s = take(scene({ round: 3, res: [{ white: 4 }], members: [[bk]] }), 'trading.cashin');
     expect([B(s), R(s).white]).toEqual([4, 2]);
     s = take(scene({ round: 2, members: [[bk, 'red.twins']] }), 'trading.farewell');

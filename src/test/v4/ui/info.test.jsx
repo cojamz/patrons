@@ -171,9 +171,9 @@ describe('"You\'d get" on a space (the engine\'s dry run)', () => {
     const { applyMove, chooseBotMove } = await import('../../../engine/v4/index.js');
     while (s.pending.kind !== 'place') s = applyMove(s, chooseBotMove(s, () => 0.3));
     const pid = s.pending.player;
-    const echo = s.quadrants.indexOf('echo'), hum = quadrant('echo').actions.findIndex(a => a.key === 'hum');
-    const one = render(<YoudGet state={s} pid={pid} q={echo} i={hum} />);
-    await waitFor(() => expect(one.container.querySelector('[data-youd-get]').dataset.youdGet).toBe('+1 green'));
+    const echo = s.quadrants.indexOf('echo'), chant = quadrant('echo').actions.findIndex(a => a.key === 'chant');
+    const one = render(<YoudGet state={s} pid={pid} q={echo} i={chant} />);
+    await waitFor(() => expect(one.container.querySelector('[data-youd-get]').dataset.youdGet).toBe('+3 green'));
     cleanup();
     const gold = s.quadrants.indexOf('gold'), jv = quadrant('gold').actions.findIndex(a => a.key === 'jv');
     const two = render(<YoudGet state={s} pid={pid} q={gold} i={jv} />);

@@ -14,7 +14,7 @@ it('automatically copies after placing on Echo, through the step input lock', as
   let current = table(['gold', 'red', 'market', 'echo'], {
     shop: ['red.volunteer'], queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }],
   });
-  current = move(take(current, 'echo.hum'), 'pass');
+  current = move(take(current, 'echo.chant'), 'pass');
   expect(current.pending.kind).toBe('place');
   expect(current.pending.player).toBe(0);
   const echo = current.pending.options.find(o => o.kind === 'slot' && o.label === 'Echo');
@@ -37,10 +37,9 @@ it('automatically copies after placing on Echo, through the step input lock', as
   const copyId = current.pending.options[0].id;
   await wait(700);
   expect(submit).toHaveBeenCalledWith({ player: 0, option: copyId });
-  // Echo's inherent +1, plus the copied Chorus yield: P2's Chorus paid only its inherent +1, since it excludes its own
-  // space (v0.8.2 clarification), and a copy repeats what the taker got
-  expect(current.players[0].res.green).toBe(2);
-  expect(current.players[1].res.green).toBe(1);
-  expect(current.log.at(-1)).toMatch(/copied Chorus \(P2's\): \+1 green/);
+  // Echo's own +2, plus the copied Build Up yield (round I: +3 green); a copy repeats what the taker got
+  expect(current.players[0].res.green).toBe(5);
+  expect(current.players[1].res.green).toBe(3);
+  expect(current.log.at(-1)).toMatch(/copied Build Up \(P2's\): \+3 green/);
   expect(current.pending.kind).toBe('buy');
 });

@@ -42,16 +42,16 @@ const P = {
   },
   red: {
     // the +2 red sat in line 3, which drops on the outer ring (round I review, Oct 25): it takes line 2, as Right Away's purple
-    evenswap: { verb: 'Swap 2 members of equal cost', second: '+2 red' },
+    evenswap: { verb: 'Use a shop member’s On Recruit', second: '+2 red', note: 'it stays in the shop' },
     turnout: r => ({ main: `+${r + 2} red`, second: run(n => `+${n + 2}`) }),
-    hire: { verb: 'Recruit the cheapest', second: 'in the shop, free', note: '+1 red' },
+    hire: { verb: 'Recruit the top of the deck', second: '+2 red', note: 'each rival +1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
     trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
     take: { verb: 'Recruit a member', second: 'costing 8 or less, free', note: '+1 red' },
   },
   market: {
-    bargain: r => ({ main: `+${r + 1} blue`, second: 'send 3 to the bottom', note: run(n => `+${n + 1}`, 'blue: ') }),
-    restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
+    bargain: r => ({ main: `+${r + 2} blue`, second: run(n => `+${n + 2}`) }),
+    restock: { verb: 'Send one color to the bottom', second: '+2 blue' },
     // line 2 was too long and dropped whole at the wheel's bottom, taking the blue with it (round I review, Oct 25)
     showroom: r => ({ main: `+${2 * r} blue`, second: 'peek at the top 4', note: run(n => `+${2 * n}`, 'blue: ') }),
     clearance: { verb: 'Recruit twice', second: 'this turn', note: '+1 blue' },
@@ -108,8 +108,8 @@ const P = {
     flourish: { verb: '+1 each other color, per full set' },
   },
   thieves: {
-    pickpocket: r => ({ verb: `Steal ${r} and ${r} @f`, second: '+1 magenta', note: run(n => `${n}`) }),
-    tipoff: { verb: 'Steal 1 per magenta action', second: 'with a minion, this one too', note: '+1 magenta' },
+    pickpocket: r => ({ verb: `Steal ${r + 2}`, second: 'split among rivals', note: run(n => `${n + 2}`) }),
+    tipoff: r => ({ main: `+${r + 2} magenta`, second: run(n => `+${n + 2}`) }),
     hideout: { verb: 'Safe from steals', second: 'this round', note: '+1 magenta' },
     rob: { verb: 'Steal half a rival’s pile', second: 'one color, rounded down', note: '+1 magenta' },
     ransom: { verb: 'Rival pays or loses a member', second: 'costing 5 or less', note: '+1 magenta' },
@@ -128,21 +128,21 @@ const P = {
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
     // White's Oct 22 spaces (Cory's set): they had no panel words, so the board cut each to its first four words
     stipend: r => ({ main: `+${r} @f +${r + 1} white`, second: null }), // two parts grow: the hover's round lines say which
-    splurge: { verb: '+1 @f per 2 you spend', second: 'on your recruit this turn', note: '+1 white' },
-    exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+1 white' }),
+    splurge: { verb: '+1 @f per 2 you pay', second: 'for a member this turn', note: '+2 white' },
+    exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+2 white' }),
     // the gain leads: on ring II only one line fits, and the two read the same as "Bury one of your members"
     farewell: { verb: 'Cast out a member for its cost in @f', note: '+1 white' },
     estatesale: { verb: 'Cast out a member for its cost in white', note: '+1 white' },
     cashin: { verb: 'Turn all your white into @f', note: '+1 white' },
   },
   echo: {
-    hum: (r, now) => ({ main: now == null ? '+1 green' : `+${now} green`, second: now == null ? '+1 more per other green action with a minion' : '1, +1 per other green action with a minion' }),
-    chant: r => ({ main: `+${r + 1} green`, second: run(n => `+${n + 1}`) }),
+    hum: { verb: 'Copy an action', second: 'with no minion on it', note: '+1 green' },
+    chant: r => ({ main: `+${r + 2} green`, second: run(n => `+${n + 2}`) }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
-    echo: { verb: 'Copy previous action', note: '+1 green' },
+    echo: { verb: 'Copy previous action', note: '+2 green' },
     encore: { verb: 'Copy an action', second: 'with a rival minion', note: '+1 green' },
     // one word for it, the hover's (w3a #22: "redo" here, "copy" there)
-    refrain: { verb: 'Copy an action', second: 'with your minion', note: '+1 green' },
+    refrain: { verb: 'Copy an action', second: 'with your minion', note: '+2 green' },
     eternity: { verb: 'Copy every action', second: 'with your minions', note: '+1 green' },
   },
 };
@@ -151,7 +151,7 @@ const P = {
 // own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
 // A space that pays per something shows this turn's gain big and its rate small (round 3 skeptic: Bandwagon's "+1●"
 // paid +5, Roll Call's +3), for `pid` (the viewer; else whoever's turn it is).
-const LIVE = new Set(['gold.windfall', 'red.turnout', 'purple.windup', 'yellow.harvest', 'trading.haggle', 'trading.dividend', 'echo.hum']);
+const LIVE = new Set(['gold.windfall', 'red.turnout', 'purple.windup', 'yellow.harvest', 'trading.haggle', 'trading.dividend']);
 function liveYield(qid, action, state, pid) {
   if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
   const p = state.players && state.players[pid ?? state.current ?? 0];

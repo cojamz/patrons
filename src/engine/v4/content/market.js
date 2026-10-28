@@ -244,8 +244,6 @@ const market = {
       ctx.refillShop();
       ctx.log(`Out of Style: ${p.name} sends ${out.length} ${color} member${out.length === 1 ? '' : 's'} to the bottom.`);
       toBottom(ctx, out.length);
-      const got = out.length ? ctx.gain(p, B, out.length, { fromAction: true }) : null;
-      if (got) ctx.log(`${p.name}'s Out of Style: +${got.n} ${got.color}.`);
     },
     peek(ctx, p, uid, data) {
       peekStep(ctx, p, { left: data.left.filter(u => u !== uid), placed: [...data.placed, uid] });

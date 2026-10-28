@@ -27,17 +27,16 @@ const entry = (s, name) => Object.values(s.echo.now).find(e => e.name === name);
 
 describe('Green: a space’s chip is what the space gave, closed at the buy step', () => {
   it('a member recruited in the buy step (Understudy) does not add its copy to the space the buyer just took', () => {
-    // P2 takes Golden Years. P1 takes Chorus (+1 green), then buys legacy Understudy and copies Golden Years.
+    // P2 takes Golden Years. P1 takes Build Up (+3 green in round I), then buys legacy Understudy and copies Golden Years.
     let s = scene({ turns: [1, 0, 1], res: [{ green: 10, gold: 4 }, {}], shop: ['echo.understudy', 'red.twins', 'red.bigfamily'] });
     s = pass(take(s, 'gold.rush'));
-    s = take(s, 'echo.hum');
+    s = take(s, 'echo.chant');
     s = buyCard(s, 'echo.understudy');
     expect(s.pending.prompt).toMatch(/^Understudy/);
     s = pass(move(s, s.pending.options[0].id));
-    const hum = entry(s, 'Chorus');
-    // Chorus counts only OTHER green actions with a minion (Cory, 2026-10-19: not the one placed on itself), so its
-    // taker got just the inherent +1, and nothing from Understudy's copy.
-    expect(hum.res).toEqual({ green: 1 });
+    const hum = entry(s, 'Build Up');
+    // Its taker got just Build Up's +3, and nothing from Understudy's copy.
+    expect(hum.res).toEqual({ green: 3 });
     expect(hum.redo).toBeFalsy();
     expect(hum.members).toEqual([]);
   });
@@ -81,7 +80,7 @@ describe('Red', () => {
     const restore = pinCosts({ 'red.volunteer': [0, 0] }); // free when this was found (2+2 since balance pass 3)
     try {
       let s = scene({ turns: [0], res: [{ red: 5 }, {}], members: [['red.sponsor'], []], shop: ['red.volunteer', 'red.twins'] });
-      s = take(s, 'echo.hum');
+      s = take(s, 'echo.chant');
       s = buyCard(s, 'red.volunteer');
       const line = s.log.find(l => l.includes('recruited Volunteer'));
       expect(line).not.toMatch(/Sponsor saves 2/);
@@ -90,7 +89,7 @@ describe('Red', () => {
 
   it('Doppelganger copying Big Family is worth 3 followers (text says "the effect")', () => {
     let s = scene({ turns: [0], res: [{ red: 10, gold: 10, green: 10 }, {}], members: [['red.bigfamily'], []], shop: ['echo.doppel'] });
-    s = take(s, 'echo.hum');
+    s = take(s, 'echo.chant');
     s = buyCard(s, 'echo.doppel');
     s = pass(move(s, s.pending.options[0].id));
     expect(followers(s, s.players[0])).toBe(1 + 3 + 3);

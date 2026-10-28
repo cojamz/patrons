@@ -31,14 +31,14 @@ const target = id => o => o.kind === 'space' && o.label.startsWith(actionName(id
 const chooseTarget = (s, id) => play(s, target(id));
 
 describe('Green table action boundaries', () => {
-  it.each([1, 2, 3])('Build Up pays %i plus one inherent green', round => {
-    expect(R(go(scene({ round }), 'echo.chant')).green).toBe(round + 1);
+  it.each([1, 2, 3])('Build Up in round %i pays 3 / 4 / 5 green', round => {
+    expect(R(go(scene({ round }), 'echo.chant')).green).toBe(round + 2);
   });
   it('Echo can copy your immediately previous action on a consecutive turn', () => {
     let s = scene({ turns: [1, 0, 0] });
     s = go(s, 'echo.chant'); s = go(s, 'gold.rush');
     s = go(s, 'echo.echo', target('gold.rush'));
-    expect(R(s)).toEqual({ ...Z, gold: 4, green: 1 });
+    expect(R(s)).toEqual({ ...Z, gold: 4, green: 2 });
   });
   it('Echo uses only the immediately previous action, including when that action is a copy', () => {
     let s = scene({ round: 2, turns: [1, 1, 0] });
@@ -48,13 +48,14 @@ describe('Green table action boundaries', () => {
     expect(s.pending.options).toHaveLength(1);
     expect(s.pending.options[0].label).toMatch(/^Reprise /);
     s = move(s, s.pending.options[0].id);
-    // A fresh Reprise by P1 has no prior own action to choose, and cannot revisit Echo.
+    // A fresh Reprise by P1 has no prior own action to choose, and cannot revisit Echo. Echo +2, the copied Reprise +2.
     expect(s.pending.kind).not.toBe('choose');
-    expect(R(s)).toEqual({ ...Z, green: 2 });
+    expect(R(s)).toEqual({ ...Z, green: 4 });
   });
-  it.each(['echo.echo', 'echo.encore', 'echo.refrain', 'echo.eternity'])('%s still gives inherent green with no copy target', action => {
+  // Echo and Reprise give +2 green (2026-10-27), Encore and Greatest Hits +1
+  it.each([['echo.echo', 2], ['echo.encore', 1], ['echo.refrain', 2], ['echo.eternity', 1]])('%s still gives inherent green with no copy target', (action, green) => {
     const s = go(scene({ round: 3 }), action);
-    expect(R(s)).toEqual({ ...Z, green: 1 });
+    expect(R(s)).toEqual({ ...Z, green });
   });
   it('Spree copied by Greatest Hits recruits after the whole chain, in the recruit step (Maxwell, Oct 26)', () => {
     let s = table(['gold', 'red', 'market', 'echo'], { round: 3, left: 8, shop: SHOP, queue: [0, 0, 0].map(p => ({ t: 'turn', p })) });
@@ -94,7 +95,7 @@ describe('Green table action boundaries', () => {
     s = take(s, 'echo.echo');
     expect(s.pending.options[0].label).toBe('Golden Years (P2): +2 gold');
     s = pass(move(s, s.pending.options[0].id));
-    expect(R(s)).toEqual({ ...Z, gold: 11, green: 1 });
+    expect(R(s)).toEqual({ ...Z, gold: 11, green: 2 });
   });
   it('copying Kickback copies the printed self-gain without giving a second gift', () => {
     let s = scene({ turns: [1, 0] });
@@ -117,7 +118,7 @@ describe('Green table action boundaries', () => {
     s = take(s, 'echo.encore');
     expect(s.pending.options.map(o => o.label).sort()).toEqual(['Double Down (P2): +9 gold', 'Tithe (P2): +4 gold']);
     s = pass(chooseTarget(s, 'gold.windfall'));
-    expect(R(s)).toEqual({ ...Z, gold: 4, green: 5 });
+    expect(R(s)).toEqual({ ...Z, gold: 4, green: 6 });
   });
   it('Reprise copies an own action and leaves a rival’s actions unavailable', () => {
     let s = scene({ round: 2, turns: [0, 1, 0] });
@@ -125,7 +126,7 @@ describe('Green table action boundaries', () => {
     s = take(s, 'echo.refrain');
     expect(s.pending.options.map(o => o.label)).toEqual(['Golden Years (P1): +4 gold']);
     s = pass(chooseTarget(s, 'gold.rush'));
-    expect(R(s)).toEqual({ ...Z, gold: 8, green: 1 });
+    expect(R(s)).toEqual({ ...Z, gold: 8, green: 2 });
   });
   it('last round’s ledger survives the new round without leaking old targets into current choices', () => {
     let s = scene({ turns: [1] });
@@ -133,32 +134,21 @@ describe('Green table action boundaries', () => {
     s.round = 2; s.slots = {}; s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
     s = go(s, 'gold.rush');
     expect(Object.keys(ledger(s).now)).toEqual(['0-1']);
-    expect(Object.values(ledger(s).last).map(e => [e.name, e.res])).toEqual([['Build Up', { green: 2 }]]);
+    expect(Object.values(ledger(s).last).map(e => [e.name, e.res])).toEqual([['Build Up', { green: 3 }]]);
   });
-  // Cory's playtest, 2026-10-22: a copy of Open Door recruits the cheapest member face up now, not one capped at
-  // what the first taker's cost (that left the copy with nothing once the cheap card was gone)
-  it.each([['red.volunteer', 'red.intern'], ['red.intern', 'gold.seed']])('a copied Open Door after %s goes recruits %s, the cheapest left', (first, next) => {
-    let s = scene({ turns: [1, 0], shop: [first, next, ...SHOP.slice(0, 5)], left: 0 });
+  // Walk-In (Cory, 2026-10-27): recruit the top member of the deck, each rival +1 red. A copy does it again: the
+  // copier recruits the deck's new top member, free, and the copy's rivals get their +1 red
+  it('a copied Walk-In recruits the next top member of the deck, free', () => {
+    let s = scene({ turns: [1, 0] });
+    const [first, next] = s.pile;
     s = go(s, 'red.hire');
-    expect(defs(s, 1)).toEqual([first]);
+    expect(s.players[1].members).toEqual([first]);
+    expect(R(s).red).toBe(1);
     s = take(s, 'echo.echo');
-    expect(s.pending.options[0].label).toBe('Open Door (P2): do Open Door yourself');
+    expect(s.pending.options[0].label).toBe('Walk-In (P2): do Walk-In yourself');
     s = pass(move(s, s.pending.options[0].id));
-    expect(defs(s, 0)).toEqual([next]);
-    expect([R(s).red, R(s).green]).toEqual([1, 1]); // Open Door's +1 red and Echo's +1 green, nothing spent
-  });
-  it('a copied free recruit offers only eligible face-up members and costs no resources', () => {
-    let s = scene({ turns: [1, 0], shop: ['gold.taxman', 'red.twins', 'gold.seed', ...SHOP.slice(0, 4)] });
-    s = take(s, 'red.hire');
-    s = pass(move(s, 'card:' + uidOf(s, 'gold.taxman', 'shop')));
-    s = chooseTarget(take(s, 'echo.echo'), 'red.hire');
-    const labels = s.pending.options.map(o => o.label);
-    expect(s.pending.prompt).toMatch(/^Open Door: which of the cheapest/);
-    expect(labels).toEqual(['Twins', 'Treasurer']);
-    s = pass(move(s, 'card:' + uidOf(s, 'red.twins', 'shop')));
-    expect(defs(s, 0)).toEqual(['red.twins']);
-    // the copied Open Door's +1 red (v0.8.0) and Echo's +1 green; nothing spent on the recruit
-    expect(R(s)).toEqual({ ...Z, red: 1, green: 1 });
+    expect(s.players[0].members).toEqual([next]);
+    expect([R(s).red, R(s).green, R(s, 1).red]).toEqual([3, 2, 3]); // nothing spent on the recruit
   });
   it('copying a discount grants its printed discount without spending the copier’s resources', () => {
     let s = scene({ round: 2, turns: [1, 1, 0], res: [{ gold: 1 }] });
@@ -187,7 +177,7 @@ describe('Green table member boundaries', () => {
   it('Muse never pays for its own owner’s copy', () => {
     let s = scene({ turns: [1, 0], members: [['echo.muse']] });
     s = go(s, 'gold.rush'); s = go(s, 'echo.echo', target('gold.rush'));
-    expect(R(s).green).toBe(1);
+    expect(R(s).green).toBe(2);
   });
   it('Stunt Double is a recruit trigger, never a reusable buy-phase option', () => {
     let s = scene({ members: [['echo.hourglass']], turns: [0, 0] });

@@ -199,7 +199,7 @@ describe('shop', () => {
     t.pile = [];
     t.queue = [{ t: 'turn', p: 0 }];
     resume(t);
-    expect(take(t, 'red.hire').shop).toHaveLength(1);
+    expect(take(t, 'red.hire').shop).toHaveLength(2); // Walk-In draws from the deck: an empty deck leaves the shop as is
   });
 });
 

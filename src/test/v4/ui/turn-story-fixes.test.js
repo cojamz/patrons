@@ -151,7 +151,7 @@ describe('a member used before the placement is told as its own, not as the spac
 describe('a steal is told once, in the colors it took', () => {
   // Magenta redesign (decisions.md 2026-10-19): stolen resources keep their colors and every Magenta action gives +1
   // magenta, so the "…, as magenta" line is gone. What stays: each rival's loss is told once, beside the thief's gain,
-  // and Help Yourself's followers are told once. A fresh table each time (sceneQ runs the queue it is given in place).
+  // and Help Yourself no longer steals followers (Oct 27). A fresh table each time (sceneQ runs the queue it is given in place).
   const opts = (round = 1) => ({ quadrants: ['gold', 'thieves', 'market', 'red'], n: 3, round, left: 2, res: [{}, { gold: 3 }, { red: 2 }],
     queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 2 }, { t: 'turn', p: 0 }] });
   const steal = (effects, round = 1, picks = []) => {
@@ -164,33 +164,30 @@ describe('a steal is told once, in the colors it took', () => {
   const once = st => {
     expect(st.text).not.toMatch(/as magenta/);
     expect(st.lines.filter(l => /\+1 magenta/.test(l))).toHaveLength(1); // the inherent +1, never the stolen coins
-    expect(st.lines.filter(l => /\+\d followers?/.test(l))).toHaveLength(1);
+    expect(st.lines.filter(l => /followers?/.test(l))).toHaveLength(0); // Help Yourself steals no followers (Oct 27)
   };
   it('from the effects: the gain in its own colors, and one line for what you lost', () => {
-    const st = steal(true);
+    const st = steal(true); // round I: steal 3, all of your gold
     expect(st.fx).toBe(true);
-    // Help Yourself's follower comes from the rival you took from (Cory, Oct 22)
-    expect(st.lines).toEqual(['+1 magenta +1 gold +1 follower', 'you −1 gold −1 follower']);
-    expect(st.hit).toBe('took 1 of your gold, 1 of your followers');
-    expect(st.short).toBe('took 1 of your gold, 1 of your followers · +1 magenta +1 gold +1 follower');
+    expect(st.lines).toEqual(['+1 magenta +3 gold', '3 gold from you']);
+    expect(st.hit).toBe('took 3 of your gold');
+    expect(st.short).toBe('took 3 of your gold · +1 magenta +3 gold');
     once(st);
   });
-  it('from the log (no effects recorded): the same steal, its followers told once', () => {
+  it('from the log (no effects recorded): the same steal', () => {
     const st = steal(false);
     expect(st.fx).toBeUndefined();
-    expect(st.lines).toEqual(['+1 gold +1 magenta', '1 gold from you', '+1 follower', 'you −1 follower']);
-    expect(st.hit).toBe('took 1 of your gold');
-    expect(st.short).toBe('+1 gold +1 magenta · 1 gold from you, you −1 follower');
+    expect(st.lines).toEqual(['+3 gold +1 magenta', '3 gold from you']);
+    expect(st.hit).toBe('took 3 of your gold');
+    expect(st.short).toBe('+3 gold +1 magenta · 3 gold from you');
     once(st);
   });
   it.each([true, false])('from both rivals (effects %s): each rival named once, in the color they lost', effects => {
-    const st = steal(effects, 2, ['take:1:gold', 'take:2:red']);
+    const st = steal(effects, 1, ['take:1:gold', 'take:2:red', 'take:2:red']);
     expect(st.lines.filter(l => /^you −1 gold|1 gold from you/.test(l))).toHaveLength(1);
-    expect(st.lines.filter(l => /^P3 −1 red|1 red from P3/.test(l))).toHaveLength(1);
-    expect(st.lines.filter(l => /^you −1 follower|^you .*−1 follower/.test(l))).toHaveLength(1);
-    expect(st.lines.filter(l => /^P3 .*−1 follower/.test(l))).toHaveLength(1);
+    expect(st.lines.filter(l => /^P3 −2 red|2 red from P3/.test(l))).toHaveLength(1);
     expect(st.lines[0]).toMatch(/\+1 gold/);
-    expect(st.lines[0]).toMatch(/\+1 red/);
+    expect(st.lines[0]).toMatch(/\+2 red/);
     expect(st.hit).toMatch(/^took 1 of your gold/);
     once(st);
   });

@@ -19,7 +19,7 @@ describe('panel words (w3)', () => {
   it('a gain that grows by round says so in rounds I and II, and not in III (w3a #54: "+2●" read as flat)', () => {
     // a space that does more than one thing says what grows (Cory, 2026-10-22)
     // the space's schedule by round, never "more each round" or "+4 next round" (Cory, Oct 24: both misread; /card-words)
-    for (const [qid, key, says] of [['silver', 'toast', 'I\u00a0+3\u00a0· II\u00a0+6\u00a0· III\u00a0+9'], ['thieves', 'pickpocket', 'I\u00a01\u00a0· II\u00a02\u00a0· III\u00a03'], ['trading', 'pawn', 'I\u00a0+1\u00a0· II\u00a0+2\u00a0· III\u00a0+3']]) {
+    for (const [qid, key, says] of [['silver', 'toast', 'I\u00a0+3\u00a0· II\u00a0+6\u00a0· III\u00a0+9'], ['thieves', 'pickpocket', 'I\u00a03\u00a0· II\u00a04\u00a0· III\u00a05'], ['trading', 'pawn', 'I\u00a0+1\u00a0· II\u00a0+2\u00a0· III\u00a0+3']]) {
       for (const r of [1, 2, 3]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain(says);
       expect(lines(panelText(qid, { key }, 2)).join(' ')).not.toMatch(/next round|each round/);
     }
@@ -33,7 +33,7 @@ describe('panel words (w3)', () => {
 
   it('Build Up includes the inherent green gain; Golden Years shows this round\'s number, like its rule', () => {
     for (const r of [1, 2, 3]) {
-      expect(panelText('echo', { key: 'chant' }, r).main).toBe(`+${r + 1} green`);
+      expect(panelText('echo', { key: 'chant' }, r).main).toBe(`+${r + 2} green`);
       const gold = panelText('gold', { key: 'rush' }, r);
       // "+2 gold × round" made a round III player do the math (text review, 2026-10-23)
       expect(gold.main).toBe(`+${2 * r} gold`);
@@ -59,10 +59,10 @@ describe('panel words (w3)', () => {
     const seeds = panelText('yellow', { key: 'transmute' });
     expect(seeds.main).toBe('+2 yellow');
     expect(seeds.second).toBe('then swap up to 3');
-    const churn = panelText('market', { key: 'bargain' }, 2);
-    expect(churn.main).toBe('+3 blue');
-    expect(churn.second).toBe('send 3 to the bottom');
-    expect(churn.note).toBe('blue: I\u00a0+2\u00a0· II\u00a0+3\u00a0· III\u00a0+4');
+    // Churn became Savings in the round I rework (Oct 27): no sweep, +3/+4/+5
+    const savings = panelText('market', { key: 'bargain' }, 2);
+    expect(savings.main).toBe('+4 blue');
+    expect(savings.second).toBe('I\u00a0+3\u00a0· II\u00a0+4\u00a0· III\u00a0+5');
     expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
 
@@ -108,23 +108,12 @@ describe('panel words (w3)', () => {
     expect(panelText('red', { key: 'turnout' }, 1).main).toBe('+3 red');
   });
 
-  // v0.8.2: Chorus excludes its own space, so its arriving minion never counts; only the other occupied Green spaces
-  it('Chorus counts the other occupied Green spaces, not its arriving minion, with a rate of one beside the total', () => {
+  // Build Up (Oct 27): every color's 3/4/5
+  it('Build Up prints its round gain', () => {
     const s = createGame({ seats: [{ name: 'A', kind: 'human' }, { name: 'B', kind: 'bot' }], seed: 5, quadrants: ['gold', 'echo'] });
-    const a = quadrant('echo').actions.find(x => x.key === 'hum');
-    const t = panelText('echo', a, 1, s, 0);
-    expect(t.main).toBe('+1 green');
-    expect(t.second).toBe('1, +1 per other green action with a minion');
-    // the flat +1 is in the total, said once (text review, 2026-10-23: "+1 green" printed twice)
-    expect(t.note).toBeNull();
-    // a rival on another Green space adds one; a minion on Chorus itself adds nothing
-    const q = s.quadrants.indexOf('echo'), chorus = quadrant('echo').actions.indexOf(a);
-    const other = quadrant('echo').actions.findIndex((x, i) => i !== chorus && x.ring === 1);
-    expect(panelText('echo', a, 1, { ...s, slots: { [`${q}-${other}`]: 1 } }, 0).main).toBe('+2 green');
-    expect(panelText('echo', a, 1, { ...s, slots: { [`${q}-${other}`]: 1, [`${q}-${chorus}`]: 1 } }, 0).main).toBe('+2 green');
-    // the printed rule, without a table
-    expect(panelText('echo', a, 1).main).toBe('+1 green');
-    expect(panelText('echo', a, 1).second).toBe('+1 more per other green action with a minion');
+    const a = quadrant('echo').actions.find(x => x.key === 'chant');
+    expect(panelText('echo', a, 1, s, 0).main).toBe('+3 green');
+    for (const r of [1, 2, 3]) expect(panelText('echo', a, r).main).toBe(`+${r + 2} green`);
   });
 
   it('Spree prints its blue and says it is 3 buys (Name Drop, the live-payout space, left with Blue\'s Oct 20 rework)', () => {

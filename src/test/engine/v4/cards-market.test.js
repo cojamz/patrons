@@ -28,46 +28,36 @@ const pickPay = (s, color = 'red') => (s.pending?.kind === 'choose' && s.pending
 
 describe('Blue actions', () => {
   const ROW5 = ROW.slice(0, 5);
-  it('Churn: +1 blue × round, +1 blue; send exactly 3 chosen members to the bottom, then the row refills once', () => {
-    let s = table(Q, { round: 2, shop: [...ROW5, 'red.volunteer', 'gold.seed'] });
-    const top = s.pile.slice(0, 3);
-    s = take(s, 'market.bargain');
-    expect(R(s).blue).toBe(3);
-    const sent = [];
-    for (let k = 3; k > 0; k--) {
-      expect(s.pending.prompt).toBe(`Churn: send which member to the bottom? (${k} to go)`);
-      const o = s.pending.options[0]; sent.push(o.value);
-      s = move(s, o.id);
-      // no refill until the last pick: a refilled card can't be churned
-      if (k > 1) expect(s.shop).toHaveLength(7 - (4 - k));
+  it('Savings: +3 blue in round I, +4 in round II, +5 in round III, and nothing else', () => {
+    for (const [round, n] of [[1, 3], [2, 4], [3, 5]]) {
+      let s = table(Q, { round, shop: ROW5 });
+      const shop = [...s.shop];
+      s = take(s, 'market.bargain');
+      expect(R(s).blue).toBe(n);
+      expect(s.shop).toEqual(shop);
+      expect(s.pending?.kind).toBe('buy');
     }
-    expect(s.pending?.kind).toBe('buy');
-    expect(s.shop).toHaveLength(7);
-    expect(s.shop.slice(-3)).toEqual(top);
-    expect(s.pile.slice(-3)).toEqual(sent);
-    expect(s.log.filter(l => /^Churn: P1 sends .* to the bottom of the pile\.$/.test(l))).toHaveLength(3);
   });
-  it('× Midas: Churn\'s blue comes as gold, and the log names Midas', () => {
+  it('× Midas: Savings\' blue comes as gold, and the log names Midas', () => {
     let s = table(Q, { shop: ROW5, members: [['gold.midas']] });
     s = take(s, 'market.bargain');
-    expect([R(s).blue, R(s).gold]).toEqual([0, 2]);
+    expect([R(s).blue, R(s).gold]).toEqual([0, 3]);
     expect(named(s, 'Midas').length).toBe(1);
   });
 
-  it('Out of Style: one color to the bottom, refill, +1 blue per member sent, plus the inherent +1', () => {
+  it('Out of Style: one color to the bottom, refill, +2 blue', () => {
     // ROW5: Tycoon, Big Family, Twins, Intern, Tax Man: 3 red, 2 gold
     let s = table(Q, { shop: ROW5 });
     s = take(s, 'market.restock');
-    expect(R(s).blue).toBe(1);
+    expect(R(s).blue).toBe(2);
     expect(s.pending.options.map(o => o.id).sort()).toEqual(['color:gold', 'color:red']);
     const reds = s.shop.filter(u => s.cards[u].def.startsWith('red.'));
     s = move(s, 'color:red');
-    expect(R(s).blue).toBe(1 + 3);
+    expect(R(s).blue).toBe(2);
     expect(s.shop).toHaveLength(6); // round I shows 6
     expect(s.shop.filter(u => reds.includes(u))).toEqual([]);
     expect(s.pile.slice(-3)).toEqual(reds);
     expect(s.log).toContain('Out of Style: P1 sends 3 red members to the bottom.');
-    expect(s.log).toContain("P1's Out of Style: +3 blue.");
   });
 
   it('Peek: reorder the top 4 of the pile; this turn\'s buy may recruit one of them, and only one', () => {
@@ -149,12 +139,12 @@ describe('Blue actions', () => {
 describe('Blue members', () => {
   const buyTurn = (members, res, def, opts = {}) => {
     let s = table(Q, { members, res, shop: ROW, ...opts });
-    s = take(s, 'thieves.tipoff'); // nobody holds more: Redistribute does nothing, so the buy is all that changes
+    s = take(s, 'thieves.hideout'); // Lie Low: +1 magenta, no steal, so the buy is all that changes
     return move(s, card(s, def));
   };
   it('Stylist: whenever anyone recruits a blue member, +1 blue (named)', () => {
     let s = table(Q, { members: [[], ['market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
-    s = move(take(s, 'thieves.tipoff'), card(s, 'market.curator'));
+    s = move(take(s, 'thieves.hideout'), card(s, 'market.curator'));
     expect(R(s, 1).blue).toBe(1);
     expect(named(s, 'Stylist').length).toBe(1);
   });
@@ -227,9 +217,9 @@ describe('Blue members', () => {
     expect(named(s0, 'Planner')).toEqual(["P1's Planner: next member costs 4 less."]);
     // at the doubled costs: Tycoon (8 gold + 4) for 8 gold, the 4 off the gold part first
     let s = table(Q, { round: 2, members: [['market.planner']], res: [{ gold: 8 }], shop: ROW, discount: [4] });
-    s = move(take(s, 'thieves.tipoff'), card(s, 'gold.tycoon'));
+    s = move(take(s, 'thieves.hideout'), card(s, 'gold.tycoon'));
     expect(owns(s, 0, 'gold.tycoon')).toBe(true);
-    // 12 − 4 = 8 paid from 8 gold and Redistribute's +1 magenta (v0.8.8): either way gives up one lead, so the
+    // 12 − 4 = 8 paid from 8 gold and Lie Low's +1 magenta (v0.8.8): either way gives up one lead, so the
     // default spends the magenta and keeps 1 gold (less gold first)
     expect(R(s).gold + R(s).magenta).toBe(1);
     expect(s.players[0].discount).toBe(0);
@@ -251,13 +241,13 @@ describe('Blue members', () => {
   // "now" (dead-window audit, 2026-10-14): recruited in round III, Planner and Underbidder used to give nothing
   it('Planner recruited in round III: 6 less right away, named', () => {
     let s = table(Q, { round: 3, res: [{ blue: 4 }], shop: ['market.planner', ...ROW.slice(1)] });
-    s = move(take(s, 'thieves.tipoff'), card(s, 'market.planner'));
+    s = move(take(s, 'thieves.hideout'), card(s, 'market.planner'));
     expect(s.players[0].discount).toBe(6);
     expect(named(s, 'Planner')).toEqual(["P1's Planner: next member costs 6 less."]);
   });
   it('Underbidder recruited: 2 less per rival with more members, right away, named', () => {
     let s = table(Q, { n: 3, round: 3, res: [{ blue: 2 }], members: [[], ['red.twins', 'red.intern'], ['red.volunteer', 'red.bigfamily']], shop: ['market.underbidder', ...ROW.slice(1)] });
-    s = move(take(s, 'thieves.tipoff'), card(s, 'market.underbidder'));
+    s = move(take(s, 'thieves.hideout'), card(s, 'market.underbidder'));
     expect(s.players[0].discount).toBe(4);
     expect(named(s, 'Underbidder')).toEqual(["P1's Underbidder: next member costs 4 less."]);
   });
@@ -317,10 +307,10 @@ describe('Blue members', () => {
     expect(owns(s, 0, 'market.recluse')).toBe(true);
     expect(s.players[0].discount).toBe(2);
   });
-  it('Patroness: +1 follower each time shop members go to the bottom (once per Churn, not per card); not the round refresh', () => {
+  it('Patroness: +1 follower each time shop members go to the bottom (once per Out of Style, not per card); not the round refresh', () => {
     let s = table(Q, { round: 2, members: [[], ['market.patroness']], shop: ROW });
-    s = take(s, 'market.bargain');
-    for (let k = 3; k > 0; k--) s = move(s, s.pending.options[0].id);
+    s = take(s, 'market.restock');
+    s = move(s, 'color:red');
     expect(s.players[1].bonus).toBe(1);
     expect(named(s, 'Patroness').length).toBe(1);
     s = table(Q, { round: 2, members: [['market.patroness']], shop: ROW });
@@ -332,14 +322,14 @@ describe('Blue members', () => {
   it('Talent Scout: once per game, recruit one of the top 5 of the pile at its cost', () => {
     // Lottery Winner (6 gold + 5) waits under the top of the pile
     let s = table(Q, { members: [['market.blackmarket']], res: [{ gold: 6, red: 5 }], shop: ROW, pileFirst: ['red.mentor', 'gold.jackpot'] });
-    s = take(s, 'thieves.tipoff');
+    s = take(s, 'thieves.hideout');
     const use = `use:${uidIn(s, 'market.blackmarket', 0)}`;
     s = move(s, use);
     // its question comes at once (gut call, 2026-10-15: a member used in the buy step resolves first), then the buy
     // step comes back ("also"), used, so no second use
     expect(s.pending.prompt).toMatch(/top 5/);
     s = move(s, `card:${uidIn(s, 'gold.jackpot', 'pile')}`);
-    // both ways to pay spend all the gold P1 leads with, and either the red or Redistribute's magenta (held-resource
+    // both ways to pay spend all the gold P1 leads with, and either the red or Lie Low's magenta (held-resource
     // contests since v0.8.1/v0.8.7): the pay sheet asks first (one pay rule, aminus r1 #1)
     expect(s.pending.options.filter(o => o.kind === 'pay').map(o => o.breaks)).toEqual([['gold', 'red'], ['gold', 'magenta']]);
     s = move(s, s.pending.options.find(o => o.kind === 'pay').id);

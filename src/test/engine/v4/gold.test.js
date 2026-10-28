@@ -52,8 +52,9 @@ describe('Gold actions', () => {
 
   it('Intro Offer is not used up by a free recruit', () => {
     let s = scene({ discount: [2], shop: ['red.volunteer', 'gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer'] });
-    s = take(s, 'red.hire');
-    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.volunteer']);
+    const top = s.pile[0];
+    s = take(s, 'red.hire'); // Walk-In: the deck's top member, free
+    expect(s.players[0].members).toEqual([top]);
     expect(s.players[0].discount).toBe(2);
   });
 

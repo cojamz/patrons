@@ -18,26 +18,25 @@ const pair = (a, b) => `trade:${a}:${b}`;
 const copyChoice = (s, action) => s.pending.options.find(o => o.kind === 'space' && o.label.startsWith(`${actionName(action)} (`));
 
 describe('Green exact action targets alongside Red recruitment', () => {
-  it('Chorus excludes its newly placed minion and its estimate matches the gain', () => {
-    const s = table(Q);
-    const ctx = contextFor(s), chorus = quadrant('echo').actions.find(a => a.key === 'hum');
-    expect(chorus.estimate(ctx, s.players[0])).toBe(1);
-    const after = take(s, 'echo.hum');
-    expect(after.players[0].res.green).toBe(1);
+  it.each([1, 2, 3])('Build Up in round %i gives +3/+4/+5 green and its estimate matches the gain', round => {
+    const s = table(Q, { round });
+    const ctx = contextFor(s), buildUp = quadrant('echo').actions.find(a => a.key === 'chant');
+    expect(buildUp.estimate(ctx, s.players[0])).toBe(round + 2);
+    const after = take(s, 'echo.chant');
+    expect(after.players[0].res.green).toBe(round + 2);
   });
 
-  it('Chorus counts each other occupied Green action once, regardless of minion owner', () => {
-    let s = table(Q, { round: 2, left: 5, queue: turns(1, 0, 1, 0) });
-    s = go(s, 'echo.chant');
+  it('Cover offers only actions with no minion on them and does the chosen one', () => {
+    let s = table(Q, { round: 2, left: 5, queue: turns(1, 0) });
     s = go(s, 'gold.rush');
-    s = go(s, 'echo.refrain');
-    // Reprise copies P2's Build Up and finishes in its buy step.
-    if (s.pending?.kind === 'choose') s = pass(move(s, copyChoice(s, 'echo.chant').id));
-    const before = s.players[0].res.green;
-    const chorus = quadrant('echo').actions.find(a => a.key === 'hum');
-    expect(chorus.estimate(contextFor(s), s.players[0])).toBe(3);
     s = take(s, 'echo.hum');
-    expect(s.players[0].res.green - before).toBe(3);
+    expect(s.pending.kind).toBe('choose');
+    const labels = s.pending.options.map(o => o.label);
+    expect(labels.some(l => l.startsWith(`${actionName('gold.rush')}:`))).toBe(false); // P2's minion is on it
+    expect(labels.some(l => l.startsWith('Cover:'))).toBe(false); // P1's minion is on it
+    const before = s.players[0].res.green;
+    s = pass(move(s, s.pending.options.find(o => o.label.startsWith('Build Up:')).id));
+    expect(s.players[0].res.green - before).toBe(4); // Build Up in round II
   });
 
   it.each([0, 1])('Echo copies the immediately preceding player %i, including your own snake turn', previousPlayer => {
@@ -52,7 +51,7 @@ describe('Green exact action targets alongside Red recruitment', () => {
     expect(target).toBeTruthy();
     s = pass(move(saved(s), target.id));
     expect(s.players[0].res.gold).toBe(previousPlayer === 0 ? 4 : 2);
-    expect(s.players[0].res.green).toBe(1);
+    expect(s.players[0].res.green).toBe(2);
   });
 
   it('a protected most recent rival action does not fall back to an older own action', () => {
@@ -64,7 +63,7 @@ describe('Green exact action targets alongside Red recruitment', () => {
     expect(memberCopyTargets(s, 0, defById('echo.understudy'))).toEqual([]);
     s = go(s, 'echo.echo');
     expect(s.players[0].res.gold).toBe(2);
-    expect(s.players[0].res.green).toBe(1);
+    expect(s.players[0].res.green).toBe(2);
     expect(s.pending?.kind).not.toBe('choose');
   });
 
@@ -76,7 +75,7 @@ describe('Green exact action targets alongside Red recruitment', () => {
     s = take(s, 'echo.encore');
     s = pass(move(saved(s), copyChoice(s, 'echo.echo').id));
     expect(s.players[0].res.gold).toBe(4);
-    expect(s.players[0].res.green).toBe(2);
+    expect(s.players[0].res.green).toBe(3); // Echo +2, Encore +1
     expect(s.pending?.kind).not.toBe('choose');
   });
 });

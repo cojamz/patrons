@@ -78,23 +78,24 @@ describe('Blue scoring: most blue held', () => {
 
 describe('Blue actions', () => {
   const S5 = SHOP.slice(0, 5);
-  it('Churn (ring I): +1 blue × round and +1; send exactly 3 members to the bottom; the row refills once, after', () => {
-    let s = take(scene({ shop: S5 }), 'market.bargain');
-    expect(R(s).blue).toBe(2);
-    const sent = [];
-    for (let k = 0; k < 3; k++) { sent.push(s.pending.options.at(-1).value); s = move(s, s.pending.options.at(-1).id); }
-    expect(s.pending.kind).toBe('buy');
-    expect(s.pile.slice(-3)).toEqual(sent);
-    expect(s.shop.filter(u => sent.includes(u))).toEqual([]);
-    expect(s.shop).toHaveLength(shopSize(s));
+  it('Savings (ring I): +3 blue in round I, +4 in round II, +5 in round III; the shop stays as it is', () => {
+    for (const [round, n] of [[1, 3], [2, 4], [3, 5]]) {
+      let s = scene({ round, shop: S5 });
+      const shop = [...s.shop];
+      s = take(s, 'market.bargain');
+      expect(R(s).blue).toBe(n);
+      expect(s.shop).toEqual(shop);
+      expect(s.pending.kind).toBe('buy');
+    }
   });
-  it('Out of Style (ring I): one color to the bottom, +1 blue per member sent, +1', () => {
+  it('Out of Style (ring I): one color to the bottom, +2 blue', () => {
     let s = take(scene({ shop: S5 }), 'market.restock'); // Midas, Jackpot, Tycoon gold; Mentor, Proselytizer red
     // the row fills to its size from the pile, so count the gold actually showing (the deck's order moves with it)
     const gold = s.shop.filter(u => s.cards[u].def.startsWith('gold.')).length;
     expect(gold).toBeGreaterThanOrEqual(3);
+    expect(R(s).blue).toBe(2);
     s = move(s, 'color:gold');
-    expect(R(s).blue).toBe(1 + gold);
+    expect(R(s).blue).toBe(2); // flat: nothing per member sent
     expect(s.shop.some(u => s.cards[u].def.startsWith('gold.'))).toBe(s.shop.slice(2).some(u => s.cards[u].def.startsWith('gold.')));
     expect(s.shop).toHaveLength(shopSize(s));
   });

@@ -65,19 +65,19 @@ describe('Green copies the risky spaces', () => {
   const Q = ['gold', 'red', 'thieves', 'echo'];
 
   it('copying a Magenta steal means stealing yourself, and never takes more than the victim holds', () => {
-    let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, {}, { gold: 3 }] });
-    s = go(s, 'thieves.pickpocket', 'take:2:gold', 'take:2:gold');
-    expect(R(s, 1)).toMatchObject({ gold: 2, magenta: 1 });
+    let s = scene({ quads: Q, n: 3, turns: [1, 0], res: [{}, {}, { gold: 4 }] });
+    s = go(s, 'thieves.pickpocket', 'take:2:gold', 'take:2:gold', 'take:2:gold'); // round I: steal 3
+    expect(R(s, 1)).toMatchObject({ gold: 3, magenta: 1 });
     s = take(s, 'echo.echo');
     expect(labels(s)).toEqual(['Help Yourself (P2): do Help Yourself yourself']);
     s = move(s, s.pending.options[0].id);
-    // P1 now steals 2: P2's gold and magenta and P3's last gold are on offer
+    // P1 now steals 3: P2's gold and magenta and P3's last gold are on offer
     expect(ids(s).sort()).toEqual(['take:1:gold', 'take:1:magenta', 'take:2:gold']);
     s = play(s, 'take:2:gold');
     expect(ids(s).sort()).toEqual(['take:1:gold', 'take:1:magenta']); // P3 is empty now
-    s = pass(play(s, 'take:1:magenta'));
+    s = pass(play(play(s, 'take:1:magenta'), 'take:1:gold'));
     // the copy gives its own +1 magenta, and the stolen gold stays gold
-    expect(R(s, 0)).toMatchObject({ gold: 1, magenta: 2 });
+    expect(R(s, 0)).toMatchObject({ gold: 2, magenta: 2 });
     expect(R(s, 1)).toMatchObject({ gold: 2, magenta: 0 });
     expect(R(s, 2).gold).toBe(0);
   });
@@ -87,7 +87,7 @@ describe('Green copies the risky spaces', () => {
     s = go(s, 'thieves.hideout'); // P3 hides
     s = take(s, 'thieves.pickpocket');
     expect(ids(s)).toEqual(['take:0:red']); // P2 can only rob P1
-    s = pass(move(s, 'take:0:red'));
+    s = pass(move(move(move(s, 'take:0:red'), 'take:0:red'), 'take:0:red')); // round I: steal 3
     s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(opt('Help Yourself')).id);
     expect(ids(s).length).toBeGreaterThan(0);
@@ -103,18 +103,16 @@ describe('Green copies the risky spaces', () => {
     expect(labels(s)).toEqual(['Exchange (P2): do Exchange yourself']);
   });
 
-  it('copying Blue’s Churn does Churn again for the copier', () => {
+  it('copying Blue’s Out of Style does Out of Style again for the copier', () => {
     const B = ['gold', 'red', 'market', 'echo'];
     let s = scene({ quads: B, turns: [1, 0] });
-    s = take(s, 'market.bargain');
-    for (let k = 0; k < 3; k++) s = move(s, s.pending.options[0].id);
-    s = pass(s);
-    expect(R(s, 1).blue).toBe(2);
+    s = take(s, 'market.restock');
+    s = pass(move(s, s.pending.options[0].id));
     s = take(s, 'echo.echo');
-    expect(labels(s)).toEqual(['Churn (P2): do Churn yourself']);
+    expect(labels(s)).toEqual(['Out of Style (P2): do Out of Style yourself']);
     s = move(s, s.pending.options[0].id);
     expect(R(s, 0).blue).toBe(2);
-    expect(s.pending.prompt).toMatch(/^Churn: send which member/);
+    expect(s.pending.prompt).toMatch(/^Out of Style: send which color/);
   });
 
   it('a Silver space’s chip shows its own gain, not the host’s Caterer or Grand Host', () => {
@@ -141,15 +139,15 @@ describe('Green copies the risky spaces', () => {
     let s = scene({ quads: S, turns: [1, 0], members: [['gold.midas'], []] });
     s = go(s, 'silver.toast');
     s = pass(move(take(s, 'echo.echo'), 'space:now:2-0'));
-    expect(R(s, 0)).toMatchObject({ gold: 4, silver: 1 }); // Echo's inherent green also turns gold; the gift stays silver.
+    expect(R(s, 0)).toMatchObject({ gold: 5, silver: 1 }); // Echo's inherent +2 green also turns gold; the gift stays silver.
 
     let t = scene({ quads: S, turns: [1, 0], members: [[], ['gold.midas']] });
-    t = go(t, 'echo.hum');
-    expect(R(t, 1)).toMatchObject({ gold: 1, green: 0 });
+    t = go(t, 'echo.chant');
+    expect(R(t, 1)).toMatchObject({ gold: 3, green: 0 });
     t = take(t, 'echo.echo');
-    expect(labels(t)).toEqual(['Chorus (P2): +1 green']);
+    expect(labels(t)).toEqual(['Build Up (P2): +3 green']);
     t = pass(move(t, t.pending.options[0].id));
-    expect(R(t, 0).green).toBe(2);
+    expect(R(t, 0).green).toBe(5); // the copied +3, Echo's own +2
   });
 
   it('Underdog doubles a copied gold gain (the copy is the copier’s own action)', () => {
@@ -180,7 +178,7 @@ describe('Doppelganger copying Purple, Green and Silver members', () => {
     let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['echo.choir', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'echo.choir' } } });
     s = go(s, 'gold.rush');
     s = pass(move(take(s, 'echo.echo'), 'space:now:0-1'));
-    expect(R(s, 0)).toMatchObject({ gold: 2, green: 3 }); // Two Choirs plus Echo's inherent green.
+    expect(R(s, 0)).toMatchObject({ gold: 2, green: 4 }); // Two Choirs plus Echo's inherent +2 green.
   });
   it('copying Go-Getter gives a usable once-per-game extra turn of its own', () => {
     let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, turns: [0, 1], members: [['purple.secondwind', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'purple.secondwind' } } });
@@ -408,9 +406,9 @@ describe('gain changers on stolen goods', () => {
     let s = scene({ quads: Q, res: [{}, { red: 3, gold: 5 }], members: [['gold.midas', 'gold.underdog'], []] });
     s = take(s, 'thieves.pickpocket');
     expect(ids(s)).toEqual(['take:1:gold', 'take:1:red']);
-    s = pass(move(s, 'take:1:red')); // round I: steal 1
-    expect(R(s, 1)).toMatchObject({ red: 2, gold: 5 }); // lost 1
-    expect(R(s, 0)).toMatchObject({ gold: 4, red: 0, magenta: 0 }); // +1 magenta → 1 gold → 2, 1 red → 1 gold → 2
+    s = pass(move(move(move(s, 'take:1:red'), 'take:1:red'), 'take:1:red')); // round I: steal 3
+    expect(R(s, 1)).toMatchObject({ red: 0, gold: 5 }); // lost 3
+    expect(R(s, 0)).toMatchObject({ gold: 8, red: 0, magenta: 0 }); // +1 magenta → 1 gold → 2, 3 red → 3 gold → 6
   });
 });
 

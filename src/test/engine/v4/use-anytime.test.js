@@ -65,24 +65,20 @@ describe('using a member any time on your turn', () => {
     expect(ids(s)).toContain(use); // P1's own turn now
   });
 
-  it('a choice it asks comes first, then the placement: Tribute Band copying your Open Door on your next turn', () => {
-    const price = d => d.s + d.w;
-    const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.dejavu' && price(d) > 0);
-    const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 3));
-    const tied = defs.filter(d => price(d) === low).slice(0, 3).map(d => d.id);
-    const dear = defs.filter(d => price(d) > low).slice(0, 3).map(d => d.id);
+  it('a choice it asks comes first, then the placement: Tribute Band copying your Tryout on your next turn', () => {
     // the snake's double turn: P1 places, buys nothing, and places again
-    let s = table(Q, { round: 2, members: [['echo.dejavu']], shop: [...tied, ...dear], queue: turns(0, 0) });
-    s = take(s, N('red', 'hire'));
-    if (s.pending.kind === 'choose') s = move(s, s.pending.options[0].id); // Open Door's tie: either cheapest
+    let s = table(Q, { round: 2, members: [['echo.dejavu']], shop: ['gold.banker', 'echo.evergreen', 'red.twins', 'red.intern'], queue: turns(0, 0) });
+    s = take(s, N('red', 'evenswap'));
+    s = move(s, `card:${s.shop[0]}`); // Tryout on Banker: +3 gold
     while (s.pending.kind === 'buy') s = move(s, 'pass');
     expect(s.pending.kind).toBe('place');
     const use = s.pending.options.find(o => o.kind === 'use');
     expect(use).toBeTruthy();
-    s = move(s, use.id); // copies the space P1 just took: Open Door again, on the shop as it is now
+    s = move(s, use.id); // copies the space P1 just took: Tryout again, on the shop as it is now
     expect(s.pending.kind).toBe('choose');
-    expect(s.pending.prompt).toMatch(/^Open Door: which of the cheapest/); // a copy does Open Door itself (Cory, 2026-10-22)
-    s = move(s, s.pending.options[0].id);
+    expect(s.pending.prompt).toMatch(/^Tryout: /); // a copy does Tryout itself
+    s = move(s, `card:${s.shop[1]}`); // Evergreen: +2 green
+    expect(R(s)).toMatchObject({ gold: 3, green: 2 });
     expect(s.pending.kind).toBe('place'); // then the placement, fresh
     expect(ids(s)).not.toContain(use.id);
   });

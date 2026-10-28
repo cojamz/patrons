@@ -28,7 +28,7 @@ describe('Green copy chains across saved choices', () => {
     const target = s.pending.options.find(o => o.value === (action === 'encore' ? keyOf('gold', 'rush') : keyOf('echo', 'chant')));
     expect(target).toBeTruthy();
     s = move(JSON.parse(JSON.stringify(s)), target.id);
-    expect(s.players[0].res[resource]).toBe(before + (action === 'encore' ? 6 : 5)); // Reprise's placement base was paid before this snapshot.
+    expect(s.players[0].res[resource]).toBe(before + 6); // Reprise's placement base was paid before this snapshot.
     expect(s.pending.kind).toBe('buy');
   });
 });

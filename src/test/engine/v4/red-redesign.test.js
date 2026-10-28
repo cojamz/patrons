@@ -22,13 +22,14 @@ describe('locked Red action progression', () => {
     expect(s.players[0].res.red).toBe(round + 2);
   });
 
-  it('cheapest recruitment is free, gives inherent red and refills only the removed member', () => {
+  it('Walk-In recruits the top member of the deck free, leaves the shop alone, +2 red and each rival +1 red', () => {
     let s = table(Q, { shop: ROW.slice(0, 6) });
-    const pile = s.pile.length;
+    const pile = s.pile.length, top = s.pile[0], shop = [...s.shop];
     s = take(s, 'red.hire');
-    expect(defs(s, 0)).toEqual(['red.intern']);
-    expect(s.players[0].res.red).toBe(1);
-    expect(s.shop).toHaveLength(shopSize(s));
+    expect(s.players[0].members).toEqual([top]);
+    expect(s.players[0].res.red).toBe(2);
+    expect(s.players[1].res.red).toBe(1);
+    expect(s.shop).toEqual(shop);
     expect(s.pile).toHaveLength(pile - 1);
   });
 
@@ -65,45 +66,38 @@ describe('locked Red action progression', () => {
     expect(s.recruits).toBe(0);
   });
 
-  it('Even Swap supports two rivals, either orientation and same-container positions without Recruit', () => {
-    let s = take(table(Q, { n: 3, members: [[], ['red.volunteer'], ['echo.evergreen']], shop: ROW }), 'red.evenswap');
-    const a = uidIn(s, 'red.volunteer', 1), b = uidIn(s, 'echo.evergreen', 2);
-    expect(s.pending.options.map(o => o.id)).toContain(swapId(a, b));
-    expect(s.pending.options.map(o => o.id)).toContain(swapId(b, a));
-    s = move(s, swapId(a, b));
-    expect(s.players[1].members).toEqual([b]); expect(s.players[2].members).toEqual([a]);
+  it('Tryout uses a shop member’s On Recruit; the member stays in the shop and nobody recruits', () => {
+    let s = take(table(Q, { shop: ROW.slice(0, 6) }), 'red.evenswap');
+    expect(s.players[0].res.red).toBe(2);
+    const banker = uidIn(s, 'gold.banker', 'shop'), shop = [...s.shop], pile = [...s.pile];
+    expect(s.pending.options.map(o => o.id)).toContain(`card:${banker}`);
+    expect(s.pending.options.map(o => o.id)).not.toContain(`card:${uidIn(s, 'red.twins', 'shop')}`); // no On Recruit
+    s = move(s, `card:${banker}`);
+    expect(s.players[0].res.gold).toBe(3);
+    expect(s.players[0].members).toEqual([]);
+    expect(s.shop).toEqual(shop); expect(s.pile).toEqual(pile);
     expect(s.recruits).toBe(0);
   });
 
-  it('two equal-cost shop cards can swap positions without hooks or extra refills', () => {
-    let s = take(table(Q, { shop: ROW }), 'red.evenswap');
-    const a = uidIn(s, 'gold.banker', 'shop'), b = uidIn(s, 'echo.evergreen', 'shop');
-    const ai = s.shop.indexOf(a), bi = s.shop.indexOf(b), pile = [...s.pile];
-    s = move(s, swapId(a, b));
-    expect(s.shop[ai]).toBe(b); expect(s.shop[bi]).toBe(a);
-    expect(s.pile).toEqual(pile); expect(s.recruits).toBe(0);
-  });
-
-  it('two cards in the same cult can swap positions without Recruit', () => {
-    let s = take(table(Q, { members: [['gold.banker', 'echo.evergreen']], shop: ROW }), 'red.evenswap');
-    const [a, b] = s.players[0].members;
-    s = move(s, swapId(a, b));
-    expect(s.players[0].members).toEqual([b, a]);
-    expect([s.players[0].res.gold, s.players[0].res.green, s.recruits]).toEqual([0, 0, 0]);
+  it('Tryout with no On Recruit member in the shop gives its red and says so', () => {
+    const s = take(table(Q, { shop: ['red.twins', 'red.intern', 'red.volunteer'] }), 'red.evenswap');
+    expect(s.pending?.kind).not.toBe('choose');
+    expect(s.players[0].res.red).toBe(2);
+    expect(s.log.some(l => /no shop member has an On Recruit effect/.test(l))).toBe(true);
   });
 
   it('shop/cult swaps are atomic, retain a full row and count only the actor acquisition', () => {
-    let s = take(table(Q, { members: [['red.volunteer', 'red.recruiter', 'red.proselytizer']], shop: ROW.map(d => d === 'red.volunteer' ? 'red.bigfamily' : d) }), 'red.evenswap');
+    let s = take(table(Q, { round: 2, members: [['red.volunteer', 'red.recruiter', 'red.proselytizer']], shop: ROW.map(d => d === 'red.volunteer' ? 'red.bigfamily' : d) }), 'red.hireup');
     const a = uidIn(s, 'red.volunteer', 0), b = uidIn(s, 'echo.evergreen', 'shop');
-    const before = remaining(s).sort((x, y) => x - y), pile = [...s.pile];
+    const before = remaining(s).sort((x, y) => x - y), pile = [...s.pile], row = s.shop.length;
     s = move(s, swapId(a, b));
-    expect(s.shop).toHaveLength(ROW.length);
+    expect(s.shop).toHaveLength(row);
     expect(s.pile).toEqual(pile);
     expect(remaining(s).sort((x, y) => x - y)).toEqual(before);
     expect(defs(s, 0)).toContain('echo.evergreen'); expect(s.shop).toContain(a);
     expect(s.recruits).toBe(1); expect(s.players[0].turnRecruits).toBe(1);
     expect(s.players[0].res.green).toBe(2);
-    expect(s.players[0].res.red).toBe(3); // action + Recruiter
+    expect(s.players[0].res.red).toBe(2); // Promote + Recruiter
     expect(s.players[0].bonus).toBe(1);
   });
 
@@ -116,7 +110,7 @@ describe('locked Red action progression', () => {
   });
 
   it('swapping into your own cult fires Now exactly once and excludes the outgoing member from hook counts', () => {
-    let s = take(table(Q, { members: [['echo.evergreen']], shop: ROW }), 'red.evenswap');
+    let s = take(table(Q, { round: 2, members: [['echo.evergreen']], shop: ROW }), 'red.hireup');
     const a = uidIn(s, 'echo.evergreen', 0), b = uidIn(s, 'gold.banker', 'shop');
     s = move(s, swapId(a, b));
     expect(s.players[0].res.gold).toBe(3);
@@ -134,7 +128,7 @@ describe('locked Red action progression', () => {
   });
 
   it('stale trade options disappear if either member changes location', () => {
-    const s = take(table(Q, { members: [['red.volunteer']], shop: ROW }), 'red.evenswap');
+    const s = take(table(Q, { round: 2, members: [['red.volunteer']], shop: ROW }), 'red.hireup');
     const a = uidIn(s, 'red.volunteer', 0), b = uidIn(s, 'gold.banker', 'shop');
     const task = s.queue.find(t => t.t === 'choose');
     s.shop.splice(s.shop.indexOf(b), 1); s.pile.push(b);
@@ -154,7 +148,7 @@ describe('locked Red action progression', () => {
     const actorMember = uidIn(s, 'red.volunteer', 1), target = uidIn(s, 'gold.banker', 'shop');
     s = move(s, swapId(actorMember, target));
     expect(defs(s, 1)).toContain('gold.banker');
-    expect([s.players[1].res.green, s.players[1].res.red, s.players[1].res.gold]).toEqual([1, 1, 3]);
+    expect([s.players[1].res.green, s.players[1].res.red, s.players[1].res.gold]).toEqual([2, 1, 3]); // Echo +2
   });
 });
 

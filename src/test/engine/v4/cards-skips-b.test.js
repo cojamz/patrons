@@ -1,7 +1,7 @@
 // @vitest-environment node
 // Gate: an action that skips a printed part says so in the log (Cory took Your Call in round I, couldn't sell, and the
 // table said nothing). For every action of Blue, Magenta, White and Green:
-//  A. in a barren position (only P2's opening Hum on the board) the action asks, changes a number, or leaves a log
+//  A. in a barren position (only P2's opening Build Up on the board) the action asks, changes a number, or leaves a log
 //     line after "took";
 //  B. if the action asks its taker a question in a rich position but not in the barren one, the barren run
 //     leaves a log line after "took" saying why the question was skipped.
@@ -17,13 +17,13 @@ const ROW = ['market.snob', 'market.stylist', 'thieves.kingpin', 'echo.evergreen
 const full = { blue: 6, magenta: 6, white: 6, green: 6 };
 const numbers = s => JSON.stringify(s.players.map(p => [p.res, p.bonus, p.discount, p.members]));
 
-/** P2 takes Hum first (so copy spaces have something to copy), then P1 takes `name`. */
+/** P2 takes Build Up first (so copy spaces have something to copy), then P1 takes `name`. */
 function run(name, rich) {
   let s = table(Q, {
     round: 3, left: 5, shop: ROW, queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }],
     res: rich ? [full, full] : [], bonus: rich ? [6, 8] : [], members: rich ? [['thieves.crew'], ['trading.shareholder']] : [],
   });
-  s = take(s, 'echo.hum');
+  s = take(s, 'echo.chant');
   if (s.pending?.kind === 'buy') s = move(s, 'pass');
   const before = numbers(s), len = s.log.length;
   s = take(s, name);
@@ -34,10 +34,10 @@ function run(name, rich) {
 
 describe('every Blue, Magenta, White and Green action says when it skips a printed part', () => {
   for (const q of Q) for (const a of quadrant(q).actions) {
-    if (a.key === 'hum') continue; // P2's opener in these positions; it has no conditional part
+    if (a.key === 'chant') continue; // P2's opener (Build Up) in these positions; it has no conditional part
     it(`${a.name} (${quadrant(q).name})`, () => {
       const barren = run(a.name, false), rich = run(a.name, true);
-      // asking a question is visible too (P2's Hum leaves something to steal or copy)
+      // asking a question is visible too (P2's Build Up leaves something to steal or copy)
       expect(barren.asked || barren.changed || barren.said.length > 0, `${a.name} did nothing and said nothing`).toBe(true);
       if (rich.asked && !barren.asked) expect(barren.said, `${a.name} skipped its question silently`).not.toEqual([]);
     });

@@ -52,12 +52,12 @@ describe('Magenta', () => {
     // P1 4+1(Robin Hood)=5 followers? Robin Hood is worth 1: P1 = 1+3+1 = 5. Make P2, P3 equal at 5.
     s.players[1].bonus = 4; s.players[2].bonus = 4;
     expect([0, 1, 2].map(i => followers(s, s.players[i]))).toEqual([5, 5, 5]);
-    // Help Yourself in round II steals 2, split among rivals (Lie Low no longer steals, 2026-10-22)
+    // Help Yourself in round II steals 4, split among rivals (no followers since 2026-10-27)
     s = take(s, 'thieves.pickpocket');
-    s = play(s, 'take:1:gold', 'take:2:gold');
+    s = play(s, 'take:1:gold', 'take:2:gold', 'take:1:gold', 'take:2:gold');
     expect(s.pending?.kind).not.toBe('choose');
     // P2 and P3 both had the most followers when the steal began: the card says +1 each time
-    expect(s.players[0].bonus - 3 - 2).toBe(2); // Help Yourself's own +2 followers, then Robin Hood +1 twice
+    expect(s.players[0].bonus - 3).toBe(2); // Robin Hood +1 twice
   });
 });
 

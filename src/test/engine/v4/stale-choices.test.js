@@ -58,28 +58,23 @@ describe('a queued choice never offers a card that moved', () => {
   });
 
   // The same, built from today's cards (the fixture above skips once the cards change under it): Tribute Band used in
-  // the buy step copies Open Door, and the copy's free-member choice comes before the buy step returns.
-  it('a member used in the buy step resolves its choice first: Tribute Band copying Open Door, then a fresh buy', () => {
+  // the buy step copies Tryout, and the copy's shop-member choice comes before the buy step returns.
+  it('a member used in the buy step resolves its choice first: Tribute Band copying Tryout, then a fresh buy', () => {
     const Q = ['gold', 'red', 'market', 'echo'];
-    const price = d => d.s + d.w;
-    const defs = Q.flatMap(q => quadrant(q).members).filter(d => d.id !== 'echo.dejavu' && price(d) > 0);
-    const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 3));
-    const tied = defs.filter(d => price(d) === low).slice(0, 3).map(d => d.id);
-    const dear = defs.filter(d => price(d) > low).slice(0, 3).map(d => d.id);
-    // 2 red to spend, so the buy step has something to offer after the copy (Open Door no longer gives +2 red)
-    let s = table(Q, { round: 2, members: [['echo.dejavu']], res: [{ red: 2 }], shop: [...tied, ...dear] });
-    s = take(s, N('red', 'hire'));
-    if (s.pending.kind === 'choose') s = move(s, s.pending.options[0].id); // Open Door's tie: either cheapest
+    let s = table(Q, { round: 2, members: [['echo.dejavu']], res: [{ red: 2 }], shop: ['gold.banker', 'echo.evergreen', 'red.twins', 'red.intern'] });
+    s = take(s, N('red', 'evenswap'));
+    expect(s.pending.kind).toBe('choose');
+    s = move(s, s.pending.options.find(o => cardOf(o) === s.shop[0]).id); // Banker: +3 gold
     expect(s.pending.kind).toBe('buy');
     const use = s.pending.options.find(o => o.kind === 'use');
     s = move(s, use.id);
     expect(s.pending.kind).toBe('choose'); // the copy's question now, not after the buy
-    expect(s.pending.prompt).toMatch(/^Open Door: which of the cheapest/); // a copy does Open Door itself (Cory, 2026-10-22)
-    const pick = cardOf(s.pending.options[0]);
+    expect(s.pending.prompt).toMatch(/^Tryout: /); // a copy does Tryout itself
+    const pick = s.shop[1]; // Evergreen: +2 green
     s = move(s, `card:${pick}`);
-    expect(where(s, pick)).toBe('p0');
+    expect(where(s, pick)).toBe('shop'); // it stays in the shop
+    expect(s.players[0].res).toMatchObject({ gold: 3, green: 2 });
     expect(s.pending.kind).toBe('buy'); // then the buy step, fresh
-    expect(s.pending.options.map(o => o.id)).not.toContain(`card:${pick}`);
     expect(s.pending.options.map(o => o.id)).not.toContain(use.id);
   });
 

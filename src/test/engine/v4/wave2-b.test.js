@@ -15,14 +15,12 @@ const takeFrom = (s, pid) => move(s, s.pending.options.find(o => o.value[0] === 
 
 // Magenta redesign (design/spheres/magenta-redesign-2026-10-19.md): Redistribute steals 1 per Magenta action that
 // has a minion (its own space too, Cory Oct 22), Crime Wave halves one rival's one-color stack, and general steals split freely among rivals.
-describe('#6 Redistribute: the count is the occupied Magenta actions, and a rival lying low is never offered', () => {
-  it('a rival lying low is not counted: 3 to take (its own space too), all may come from P2, never from P3', () => {
+describe('#6 Help Yourself: a rival lying low is never offered', () => {
+  it('round I: 3 to take, all may come from P2, never from P3', () => {
     let s = sceneQ({ quadrants: MAG, n: 4, res: [{ gold: 1 }, { gold: 3, red: 2 }, { gold: 4 }, { gold: 3 }] });
-    s.slots[spaceOf(s, 'thieves.pickpocket')] = 2;
-    s.slots[spaceOf(s, 'thieves.hideout')] = 3;
     s.players[2].hideout = s.round; // P3 lies low
-    s = take(s, 'thieves.tipoff');
-    expect(s.pending.count).toEqual({ of: 3, left: 3 }); // Help Yourself, Lie Low and its own space
+    s = take(s, 'thieves.pickpocket');
+    expect(s.pending.count).toEqual({ of: 3, left: 3 });
     expect(s.pending.options.some(o => o.value[0] === 2)).toBe(false);
     expect(s.pending.blocked[2]).toMatch(/P3 can’t be stolen from now/);
     s = takeFrom(s, 1);
@@ -66,10 +64,10 @@ describe('#38 a dim rival says the true reason', () => {
     expect(s.players[2].res.gold).toBe(2); // chosen piles move together once all picks are complete
     expect(s.pending.options.some(o => o.value[0] === 2)).toBe(true);
     expect(s.pending.options.some(o => o.value[0] === 1)).toBe(true);
-    s = takeFrom(s, 2);
+    s = takeFrom(takeFrom(takeFrom(s, 2), 1), 1); // round II: steal 4
     expect(s.players[2].res.gold).toBe(0);
-    expect(s.players[1].res.gold).toBe(5);
-    expect(s.players[0].res).toMatchObject({ gold: 4, magenta: 1 });
+    expect(s.players[1].res.gold).toBe(3);
+    expect(s.players[0].res).toMatchObject({ gold: 6, magenta: 1 });
   });
 });
 
