@@ -885,6 +885,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const lostText = myTurn ? '' : lossWords(story.lost.filter(x => x.n > lostSeen.current), state.players);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // what busy and error are now, so a set that changes nothing isn't a whole-table redraw (smoothness panel: the screen
+  // always has a table update pending, so React never skips an unchanged set by itself)
+  const busyOn = useRef(false), errorOn = useRef('');
+  errorOn.current = error;
   const prevState = useRef(physicalState); // the state the table last committed (the flight effect moves it on)
   // the spaces just taken (a new minion lands): worked out while rendering, kept until the next placement
   const lastFlash = useRef(NO_FLASH);
@@ -939,10 +943,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // an answer clears the nudge at once (it never lingers past the question it was about)
   const stepKey = state.pending ? `${state.moves}` : 'none';
   // any note (a nudge, "Placement undone") lasts only until the table moves on from the step it was about
-  useEffect(() => { setNote(n => { if (n && n.at !== (state.pending ? state.moves : null) && n.at !== state.moves) { clearTimeout(noteTimer.current); return null; } return n; }); }, [stepKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  // (read from the render's note: with no note up, nothing is set, so a step isn't one more whole-table redraw)
+  useEffect(() => { if (note && note.at !== (state.pending ? state.moves : null) && note.at !== state.moves) { clearTimeout(noteTimer.current); setNote(null); } }, [stepKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A fresh state means our move (or someone's) landed: the table is live again.
-  useEffect(() => { sendToken.current += 1; busyNow.current = false; setBusy(false); }, [interactionState]);
+  useEffect(() => { sendToken.current += 1; busyNow.current = false; if (busyOn.current) { busyOn.current = false; setBusy(false); } }, [interactionState]);
 
   // not yours: one shared empty map, so your chair's optionFor holds through rivals' steps
   const options = useMemo(() => (mine ? new Map(pend.options.map(o => [o.id, o])) : NO_OPTS), [mine, pend]);
@@ -1193,16 +1198,18 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // placement keeps the space's card, which shows what you just took
     if (!String(optionId).startsWith('slot:')) hover.close();
     busyNow.current = true;
-    startTransition(() => setBusy(true));
     // the shop as you see it right now (a row you may have scrolled, on a phone): a recruit flies from where you saw it
     { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
-    setError('');
+    if (errorOn.current) setError('');
     const token = ++sendToken.current;
     let sent;
     userMove = true; // the table's update for this move is a transition (useTable.show): the click's frame paints first
     try { sent = session.submit({ player: pend.player, option: optionId }); } catch (e) { sent = Promise.reject(e); } finally { userMove = false; }
+    // the table shows a move in flight only while it is (online, waiting on the host): a move the session took at once
+    // (a local game) skipped the busy redraw and its undo, two whole-table renders per click (smoothness panel, react #2)
+    if (session.getState() === physicalState) { busyOn.current = true; startTransition(() => setBusy(true)); }
     // Don't lock the table forever if an answer never comes (online): give up waiting after a while.
-    const timer = setTimeout(() => { if (sendToken.current === token) { busyNow.current = false; setBusy(false); setError('No answer yet. Try again.'); } }, 8000);
+    const timer = setTimeout(() => { if (sendToken.current === token) { busyNow.current = false; if (busyOn.current) { busyOn.current = false; setBusy(false); } setError('No answer yet. Try again.'); } }, 8000);
     Promise.resolve(sent)
       .catch(e => { if (sendToken.current === token) setError(friendlyError(e)); })
       // a move whose new state the table hasn't drawn yet stays in flight until it has (the [state] effect below): a
@@ -1212,7 +1219,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         if (sendToken.current !== token) return;
         if (session.getState() !== prevState.current) return;
         busyNow.current = false;
-        startTransition(() => setBusy(false));
+        if (busyOn.current) { busyOn.current = false; startTransition(() => setBusy(false)); }
       });
     // the table took it (the Wheel stands your minion on its space in this same frame, before the table redraws)
     return session.getState() !== physicalState;
