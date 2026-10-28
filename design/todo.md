@@ -8,8 +8,8 @@ All open design and feel questions are numbered in design/notes/waiting-on-cory-
 Redesign, brainstorm with Cory: Shake Down (feels too bad for the player who gets shaken down) and Late Bloomers (works against itself and counts itself). From his Oct 24 game.
 Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 member cards at game end. Next pitches, one example first: a trio set bonus (three linked members, across or within colors, scaling as you collect); how the Saboteur (-3 followers when it joins your cult) enters a cult. Open asks: Host, Grifter, Heiress stay like Patriarch? [yes]; Extortionist rework so it stops taxing follower buys (his yes, no shape yet). Tabled: a follower-spending color.
 ## Ours, open (no call needed)
-0. Publish "online rooms idle 2 hours are deleted" (on the branch, tested) once Cory says tonight's playtest is over; a publish mid-game interrupts it.
-0b. Table talk (e9efe6d) goes live with the same post-playtest publish; then confirm two browsers in one room see each other's bubbles on the live build.
+0. Confirm two browsers in one online room see each other's table-talk bubbles on the live build (v0.9.2 shipped it).
+0b. Known-red browser checks have no owner: shop-sizing.mjs (follower buys resize with details on), layout.mjs (setup waits, P1's count), hotseat.mjs (text cuts in "You" and the Even Swap picker). Fix, then empty e2e/v4/known-red.json.
 1. Even Swap trading two shop members' places says nothing in "since your last turn"; say "swapped the shop's X and Y".
 2. Long shop member names fit their box (Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double): recheck on the 6/7/8 shop first.
 3. "Recruit" for members everywhere ("buy followers" stays): recheck buttons, prompts, toasts, log and rulebook since v0.8.31.
@@ -20,10 +20,10 @@ Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 mem
 8. Bulletin cards gather in one spot before the log (left over from the Oct 18 clarity motion).
 9. Seat pass: minions, follower number, resources and rivals' engines readable at a glance. Show Cory 2 mockups first.
 
-## Lag and motion (needs Cory's go for perf runs)
+## Lag and motion (ours: engineering never waits on Cory; judge on the freeze probe in Chrome and Firefox)
 - Snappy pair next (Claude's): bots off the main thread (worker), one animation clock + piece pool, acknowledgment/frame bars in the snappy gate, cult-hop filter. design/eval/snappy-pair/README.md.
 - React commits 80-130ms at 4x CPU; seat re-renders as cards land; hover "a tiny bit wonky"; linger motion starts late. Leftovers: design/eval/perf/lag-2026-10-21.md.
-- Smooth play, next (waits on Cory, Oct 28): tuning pass (structural sharing after applyMove, keep idle loops through shows instead of the data-chain rule, rect reads once per chain), then the staged show layer (design/eval/perf/smooth-proposal.md). Measure each with scripts/v4-rig.mjs. Also: pacing.test.js H2 longest-wait budget red (21,178 vs 21,060).
+- Smooth play, next (ours, no call needed): tuning pass (structural sharing after applyMove, keep idle loops through shows instead of the data-chain rule, rect reads once per chain), then the staged show layer (design/eval/perf/smooth-proposal.md). Measure each with scripts/v4-rig.mjs.
 - Re-port minion-on-press and the compositor wheel spin (/mnt/project-files/handoff/speed/) onto today's wheel.
 - Round I resource draft animated, once the perf items are in.
 

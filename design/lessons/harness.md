@@ -6,3 +6,6 @@
 - 2026-10-20 · "v3"/"v4" meant nothing to Cory · internal labels never reach him · message check bounces them
 - 2026-10-20 · Cory called the harness report "total gibberish": numbered moves, file names and mechanisms · tell him what changes for him in everyday words; mechanisms only if he asks · working-with-cory.md "Talking to him"
 - 2026-10-26 · The corrections catcher logged nothing all week while ~17 corrections were folded into the rules by hand · test a catcher against the week's real quotes, and count the rules changelog as past corrections
+- 2026-10-28 · Rigs, gates and probes were Chrome-only; Cory plays Firefox, and the freeze he feels never showed · measure in the browser the player uses · Firefox in check:v4 --firefox, V4_ENGINE, bootstrap install
+- 2026-10-28 · Docs drifted four days behind live (HANDOFF said v0.8.62 at v0.9.8) · the orientation hook warns when HANDOFF or in-flight doesn't name the live version · .claude/hooks/orient.mjs
+- 2026-10-28 · Pod work waited on Cory for engineering calls, a repeat of Oct 21 · the message check bounces engineering questions to him · .claude/hooks/message-check.mjs

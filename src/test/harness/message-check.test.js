@@ -31,6 +31,12 @@ describe('message check hook (Cory voice gate)', () => {
     expect(check('Shipped the wheel fix.\nIt spins in 300ms now.\nNothing needed from you.')).toBeNull();
     expect(check('Shipped the wheel fix.\nIt spins in 300ms now.\nShip the shop next? [yes]')).toBeNull();
   });
+  it('bounces engineering questions to Cory (Oct 21, Oct 28: engineering never waits on him)', () => {
+    expect(check('1. Go ahead with the tuning pass and the staged rebuild? [yes]')).toMatch(/engineering never waits/);
+    expect(check('Should we refactor the director first?')).toMatch(/engineering never waits/);
+    expect(check('Shipped the tuning pass: rounds run lighter.\nNothing needed from you.')).toBeNull();
+    expect(check('1. Tiebreaker costs 5? [yes]\n2. Keep the 12 quick lines? [yes]')).toBeNull();
+  });
   it('ignores times and paths inside code and links', () => {
     expect(check('Log is `run-23:40.txt`, see https://x.io/a—b')).toBeNull();
   });

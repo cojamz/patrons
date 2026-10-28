@@ -14,5 +14,5 @@ const changelog=readFileSync('CHANGELOG.md','utf8'),heading='\n## ';
 const at=changelog.indexOf(heading);
 if(at<0)throw new Error('Expected release sections in CHANGELOG.md');
 writeFileSync(path,source.replace(match[0],`export const VERSION = '${version}';`));
-writeFileSync('CHANGELOG.md',changelog.slice(0,at)+`\n## ${version} — ${date} — unreleased\n\n- ${note}\n`+changelog.slice(at));
+writeFileSync('CHANGELOG.md',changelog.slice(0,at)+`\n## ${version} — ${date}\n\n- ${note}\n`+changelog.slice(at));
 console.log(`${match[0].match(/v[\d.]+/)[0]} → ${version}; update verification/release status after shipping.`);

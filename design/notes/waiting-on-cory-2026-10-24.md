@@ -1,5 +1,7 @@
 # Waiting on Cory (2026-10-24)
 
+Checked against live v0.9.801 on Oct 28: 2 and 4 are done (the round I rework gave every round I space +2 and replaced Even Swap and Lie Low), 8 is overtaken (Even Swap's spot is Tryout), 14 is overtaken by the freeze work (Cory: lag = freezes), 17 is done (Tiebreaker 5, his ask). The rest stand.
+
 Every open question from the last two days of threads, in one list. Answer by number ("1 yes, 4 no"). My default is in brackets. Live game: v0.8.62.
 
 Starting the game (from the engine-start talk)
