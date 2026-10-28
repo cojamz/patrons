@@ -1390,6 +1390,8 @@ function releaseNow(state, p, uid) {
   p.releasedRound = state.round;
   if (back.color) p.res[back.color] = (p.res[back.color] || 0) + back.n;
   log(state, `${p.name} released ${def.name} to the bottom of the pile, for ${back.label}.`);
+  // a shop short of its size (the pile ran out) takes it back up, as Farewell's send to the bottom does
+  refill(state);
   return back;
 }
 // A member leaves its owner (stolen, swapped, released, traded in): its onLeave hooks settle what it held for them

@@ -275,6 +275,17 @@ describe('Release (base rule): once per round, release a member for its colored 
     expect(s.pending.kind).toBe('buy');
     expect(ids(s).some(i => i.startsWith('release:'))).toBe(false);
   });
+  it('refills a shop left short by an empty pile with the released member, as Farewell does (Claude, Oct 28)', () => {
+    const id = 'red.bigfamily';
+    let s = scene({ members: [[id]], queue: [{ t: 'turn', p: 0 }] });
+    s = move(s, `slot:${RUSH}`);
+    const uid = uidOf(s, id, 0), size = s.shop.length;
+    s.pile = []; s.shop = s.shop.slice(0, size - 1);
+    s = move(s, `release:${uid}`);
+    expect(s.shop.length).toBe(size);
+    expect(s.shop.at(-1)).toBe(uid);
+    expect(s.pile).toEqual([]);
+  });
   // Members only enter a deck with their sphere, so a non-guest member is never off the table; a guest is colorless
   // with no colored part (Cory, 2026-10-18: "neutral cards stay neutral"), so Release gives nothing and isn't offered.
   it('a guest has no colored part: Release refunds nothing, so it is not offered', () => {
