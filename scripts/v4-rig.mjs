@@ -222,6 +222,7 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
 await letGo();
 const over = !!(await page.$('.results'));
 
+const F = await page.evaluate(() => ({ frames: window.__rig.frames, loaf: window.__rig.loaf })).catch(() => ({ frames: [], loaf: [] }));
 // the leak control: a reload on the last round's turn (the game is saved locally), measured the same way
 let unbroken = null, reloaded = null;
 if (finalRound && R[finalRound]) {
@@ -234,7 +235,6 @@ if (finalRound && R[finalRound]) {
   await sleep(2500);
   reloaded = await memory();
 }
-const F = await page.evaluate(() => ({ frames: window.__rig.frames, loaf: window.__rig.loaf })).catch(() => ({ frames: [], loaf: [] }));
 await browser.close();
 
 // ---------- the report ----------
