@@ -19,18 +19,12 @@ function saveOf(state) {
   state.players[0].kind = 'human'; state.players[1].kind = 'bot'; state.build = buildStamp();
   return { config: { seats: state.players.map(p => ({ name: p.name, kind: p.kind })), speed: 'normal', quadrants: state.quadrants }, state, undo: null, savedAt: Date.now() };
 }
-// Red's swap across two cults (since the 2026-10-18 Red rework: round I Even Swap, any two members of equal cost):
-// your Merchant for the rival's Panel (both 6)
-let swap = sceneQ({ quadrants: ['gold', 'red'], round: 1, members: [['red.twins', 'gold.merchant'], ['gold.banker', 'red.panel']] });
-swap = take(swap, 'Even Swap');
-const [host, panel] = [swap.players[0].members[1], swap.players[1].members[1]];
-const trade = swap.pending.options.find(o => o.id === `trade:${host}:${panel}`);
-assert(trade, 'fixture has the legal cross-cult swap');
-const swapped = move(swap, trade.id);
-const expectedSwap = swapped.players.map(p => p.members);
-// Help Yourself steals 1 × round (round III: 3); stolen resources keep their colors and the space adds its own +1
-// magenta (Cory, 2026-10-19)
-let steal = sceneQ({ quadrants: ['gold', 'silver', 'thieves'], round: 3, res: [{}, { gold: 1, silver: 2 }] });
+// Scenes deal from the whole deck, as the unit tests do (round decks, the cull and artifacts would hold cards back).
+// (The cross-cult swap scene went with Even Swap: Tryout took its space in the round I rework, Cory Oct 27.)
+const SCENE = { roundDecks: 0, cull: false, artifacts: false };
+// Help Yourself steals 3 / 4 / 5 by round (Cory, Oct 27; round I: 3); stolen resources keep their colors and the space
+// adds its own +1 magenta (Cory, 2026-10-19)
+let steal = sceneQ({ quadrants: ['gold', 'silver', 'thieves'], round: 1, res: [{}, { gold: 1, silver: 2 }], rules: SCENE });
 steal = take(steal, 'Help Yourself');
 steal = move(steal, 'take:1:gold');
 steal = move(steal, 'take:1:silver');
@@ -38,7 +32,7 @@ const stolen = move(steal, 'take:1:silver');
 assert.deepEqual(stolen.players[0].res, { gold: 1, silver: 2, magenta: 1 });
 const takes = stolen.effects.filter(e => e.type === 'transfer' && e.from.pid === 1 && e.to.pid === 0);
 assert.deepEqual(takes.map(e => `${e.what.n} ${e.what.r}`).sort(), ['1 gold', '2 silver']);
-const scenarios = [{ name: 'swap', state: swap, option: trade.id, expected: expectedSwap }, { name: 'magenta', state: steal, option: 'take:1:silver', expected: stolen.players.map(p => p.res) }];
+const scenarios = [{ name: 'magenta', state: steal, option: 'take:1:silver', expected: stolen.players.map(p => p.res) }];
 if (process.env.V4_PREP_ONLY) { console.log('Prepared real-engine fixtures:', scenarios.map(s => ({ name: s.name, option: s.option }))); process.exit(0); }
 assert(process.env.V4_URL, 'V4_URL required for immutable built game');
 const browser = await chromium.launch({ executablePath: browserPath });
