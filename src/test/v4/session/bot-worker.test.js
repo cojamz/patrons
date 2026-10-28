@@ -7,9 +7,10 @@ import { untilFake } from './helpers.js';
 
 // Bots think in a worker in the browser (botThink.js / botWorker.js). These stand-ins do what botWorker.js does,
 // answering a tick later, and the game must come out move for move the same as thinking on the main thread.
-const standIn = ({ answer = true, crash = false } = {}) => {
+const standIn = ({ answer = true, crash = false, ready = false, slowFirst = 0 } = {}) => {
   const w = { asked: 0, answered: 0, terminated: false, onmessage: null, onerror: null, onmessageerror: null };
   w.terminate = () => { w.terminated = true; };
+  if (ready) setTimeout(() => w.onmessage?.({ data: { ready: true } }), 0);
   w.postMessage = ({ id, state, rng }) => {
     w.asked += 1;
     const copy = structuredClone(state);
@@ -21,7 +22,7 @@ const standIn = ({ answer = true, crash = false } = {}) => {
       const move = chooseBotMove(copy, rand);
       w.answered += 1;
       w.onmessage?.({ data: { id, move, rng: rand.state } });
-    }, 1);
+    }, w.asked === 1 && slowFirst ? slowFirst : 1);
   };
   return w;
 };
@@ -65,6 +66,17 @@ describe('bots thinking in a worker', () => {
     _setBotWorker(w);
     const there = await playOut(5);
     expect(w.terminated).toBe(true); // never heard from: dropped after the first timeout
+    expect(there.history).toEqual(here.history);
+  });
+
+  it('one slow answer falls back once and keeps the worker for the rest of the game, same game', async () => {
+    _setBotWorker(false);
+    const here = await playOut(9);
+    const w = standIn({ ready: true, slowFirst: 4000 });
+    _setBotWorker(w);
+    const there = await playOut(9);
+    expect(w.terminated).toBe(false);
+    expect(w.answered).toBeGreaterThan(50);
     expect(there.history).toEqual(here.history);
   });
 

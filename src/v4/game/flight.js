@@ -634,7 +634,7 @@ export function pulse(el, ms, { press = false } = {}) {
     try { radius = getComputedStyle(el).borderRadius; } catch { /* no styles */ }
     Object.assign(glow.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, borderRadius: radius || '0px', overflow: 'visible', opacity: '0' },
       press ? { boxShadow: '0 0 0 3px rgba(255,222,160,.9), 0 0 16px 2px rgba(255,200,120,.55)' }
-        : { background: 'rgba(255,236,200,.32)', mixBlendMode: 'screen' });
+        : { background: 'rgba(255,236,200,.26)' }); // plain alpha: a blend mode on a page-fixed box made Firefox draw the page offscreen
     document.body.appendChild(glow);
   }
   const ride = (frames, opts) => {
@@ -643,7 +643,7 @@ export function pulse(el, ms, { press = false } = {}) {
     const done = () => glow.remove();
     anim.addEventListener('finish', done, { once: true });
     anim.addEventListener('cancel', done, { once: true });
-    setTimeout(done, (opts.duration || 0) + 400);
+    safetyNet(anim, (opts.duration || 0), 400, done);
   };
   // a press is a purchase taking hold (a follower rate as its coins land, H13: "a clear purchase signal"): it presses
   // in, pops back with a warm ring as its followers leave, and the ring lets go as they fly. Eased per keyframe: an

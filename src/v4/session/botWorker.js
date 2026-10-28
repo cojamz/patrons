@@ -4,6 +4,7 @@
 import { chooseBotMove } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 
+self.postMessage({ ready: true });
 self.onmessage = e => {
   const { id, state, rng } = e.data;
   const rand = seededRandom(rng);

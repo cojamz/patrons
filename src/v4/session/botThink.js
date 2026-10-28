@@ -8,7 +8,12 @@ export const BOT_THINK_TIMEOUT_MS = 1500;
 
 let worker = null; // null: not tried yet; false: none (or it failed); else the Worker
 let nextId = 1;
-let lastAnswer = 0;
+let ready = false; // the worker said it loaded
+let born = 0;
+/** How long a worker may take to load before it counts as dead. */
+const LOAD_GRACE_MS = 10000;
+/** A timer this late means the page itself was frozen, so nothing can be judged from it. */
+const LATE_MS = 250;
 const waiting = new Map(); // id -> { resolve, t }
 
 function settle(id, value) {
@@ -24,7 +29,8 @@ function workerFailed() {
 }
 function listen(w) {
   w.onmessage = e => {
-    lastAnswer = Date.now();
+    if (e.data && e.data.ready) { ready = true; return; }
+    ready = true;
     const { id, move, rng, error } = e.data || {};
     settle(id, error || !move ? null : { move, rng });
   };
@@ -36,6 +42,8 @@ function getWorker() {
   try {
     if (typeof Worker === 'undefined' || typeof window === 'undefined' || /jsdom/i.test(globalThis.navigator?.userAgent || '')) { worker = false; return null; }
     worker = new Worker(new URL('./botWorker.js', import.meta.url), { type: 'module' });
+    ready = false;
+    born = Date.now();
     listen(worker);
   } catch { worker = false; }
   return worker || null;
@@ -53,12 +61,21 @@ export function askBot(state, rng, { timeoutMs = BOT_THINK_TIMEOUT_MS } = {}) {
   const t = Date.now();
   const answer = new Promise(resolve => { waiting.set(id, { resolve, t }); });
   try { w.postMessage({ id, state, rng: rng >>> 0 }); } catch { settle(id, null); return answer; }
-  setTimeout(() => {
+  // One slow answer used to end the worker for the rest of the game ("nothing heard since asking" is also true of a
+  // worker busy thinking), and every later bot then thought on the page (smoothness panel, Oct 28). Now only a worker
+  // that never says it loaded is dead; a slow answer falls back once; a late timer (the page was frozen) waits again.
+  const check = due => {
     if (!waiting.has(id)) return;
-    // nothing at all heard since this was asked: the worker is dead (a 404'd chunk, a hung load), so stop using it
-    if (lastAnswer < t) workerFailed();
-    else settle(id, null);
-  }, timeoutMs);
+    const now = Date.now();
+    if (now - due > LATE_MS) { setTimeout(() => check(Date.now() + timeoutMs), timeoutMs); return; }
+    if (!ready) {
+      if (now - born < LOAD_GRACE_MS) { setTimeout(() => check(Date.now() + timeoutMs), timeoutMs); return; }
+      workerFailed();
+      return;
+    }
+    settle(id, null);
+  };
+  setTimeout(() => check(t + timeoutMs), timeoutMs);
   return answer;
 }
 
@@ -66,6 +83,7 @@ export function askBot(state, rng, { timeoutMs = BOT_THINK_TIMEOUT_MS } = {}) {
 export const _setBotWorker = w => {
   for (const id of [...waiting.keys()]) settle(id, null);
   worker = w;
-  lastAnswer = 0;
+  ready = false;
+  born = Date.now();
   if (w) listen(w);
 };

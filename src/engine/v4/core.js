@@ -1,4 +1,5 @@
 import { grantDiscount } from './discount.js';
+import { plainCopy } from './copy.js';
 // Patrons v4 engine. Pure and deterministic: state in, move in, state out.
 // Everything runs through a task queue. When a task needs a decision, the engine stops and publishes
 // state.pending = { player, kind, prompt, options:[{ id, label, kind, ... }] }. A move is { player, option }.
@@ -116,7 +117,7 @@ export function isLegal(state, move) {
 /** Returns a new state. Throws on an illegal move. */
 export function applyMove(prev, move, { effects = false } = {}) {
   if (!isLegal(prev, move)) throw new Error(`Illegal move: ${JSON.stringify(move)}`);
-  const state = structuredClone(prev);
+  const state = plainCopy(prev);
   const task = state.queue.shift();
   state.pending = null;
   state.moves += 1;
@@ -568,7 +569,7 @@ function useOptions(state, p, uids = p.members) {
  *  minion or shop changes anywhere, and nothing queued to decide or do. */
 export function useIdle(state, p, uid) {
   try {
-    const s = structuredClone({ ...state, log: [], pending: null, queue: [], notes: undefined });
+    const s = plainCopy({ ...state, log: [], pending: null, queue: [], notes: undefined });
     const look = x => JSON.stringify([x.players.map(o => [o.res, o.bonus, o.discount || 0, o.members, o.left]), x.shop, x.pile.length]);
     const before = look(s);
     useMember(s, s.players[p.id], uid, { t: 'idle-check' });
@@ -719,7 +720,7 @@ function runTask(state, task) {
         eachMember(state, (owner, card, def) => {
           if (owner === p && def.afterAction) def.afterAction(ctx, owner, card, qid);
           if (owner !== p && def.afterRivalAction) def.afterRivalAction(ctx, owner, card, qid, p);
-        });
+        }, ['afterAction', 'afterRivalAction']);
         a.resolve(ctx, p);
       });
       fCredit(state, mark, a.name);
@@ -736,20 +737,20 @@ function runTask(state, task) {
     }
     case 'endTurn': {
       const ctx = ctxFor(state);
-      eachMember(state, (owner, card, def) => { if (def.onTurnEnd) def.onTurnEnd(ctx, owner, card, p); });
+      eachMember(state, (owner, card, def) => { if (def.onTurnEnd) def.onTurnEnd(ctx, owner, card, p); }, ['onTurnEnd']);
       state.current = null;
       return;
     }
     case 'allPlaced': {
       // after the round's last placement, before its contests: members that act then (Straggler), in turn order
       const ctx = ctxFor(state);
-      for (const id of turnOrder(state)) eachMemberOf(state, state.players[id], (card, def) => { if (def.onAllPlaced) def.onAllPlaced(ctx, state.players[id], card); });
+      for (const id of turnOrder(state)) eachMemberOf(state, state.players[id], (card, def) => { if (def.onAllPlaced) def.onAllPlaced(ctx, state.players[id], card); }, ['onAllPlaced']);
       return;
     }
     case 'released': {
       // members that react to their owner releasing another member (Social Climber); task.def is the released member's def id
       const ctx = ctxFor(state);
-      eachMemberOf(state, p, (card, def) => { if (def.onRelease) def.onRelease(ctx, p, card, defById(task.def)); });
+      eachMemberOf(state, p, (card, def) => { if (def.onRelease) def.onRelease(ctx, p, card, defById(task.def)); }, ['onRelease']);
       return;
     }
     case 'endRound': return accounted(state, null, () => endRound(state));
@@ -792,9 +793,9 @@ function startRound(state, r) {
   const more = id => sumMemberFlag(state, state.players[id], 'extraWorkers', v => v[r - 1] || 0);
   for (const p of state.players) { p.left = n + more(p.id); p.workers = p.left; }
   const ctx = ctxFor(state);
-  eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); });
+  eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); }, ['onRoundStart']);
   // late hooks see everything the round-start income gave (Investor sets aside after Banker pays)
-  eachMember(state, (owner, card, def) => { if (def.onRoundStartLate) def.onRoundStartLate(ctx, owner, card); });
+  eachMember(state, (owner, card, def) => { if (def.onRoundStartLate) def.onRoundStartLate(ctx, owner, card); }, ['onRoundStartLate']);
   // Fewest followers picks first. Ties: whoever was later in last round's turn order.
   // The first pass of last round's snake is its turn order (the last pass is reversed in even rounds).
   const prev = state.order.length ? state.order.slice(0, state.players.length) : [...state.players.map(p => p.id)];
@@ -837,7 +838,7 @@ function startRound(state, r) {
 
 function endRound(state) {
   const ctx = ctxFor(state);
-  eachMember(state, (owner, card, def) => { if (def.onRoundEnd) def.onRoundEnd(ctx, owner, card); });
+  eachMember(state, (owner, card, def) => { if (def.onRoundEnd) def.onRoundEnd(ctx, owner, card); }, ['onRoundEnd']);
   const v = RING_VALUE[state.round - 1];
   const table = contestTable(state, ctx);
   const msg = [];
@@ -898,7 +899,7 @@ function finish(state) {
       owner.final.parts.push(`${def.name} ${got > 0 ? '+' : '−'}${Math.abs(got)}`);
       owner.final.cards.push({ uid: card.uid, name: def.name, n: got });
     } else owner.final.zero.push({ uid: card.uid, name: def.name });
-  });
+  }, ['onGameEnd']);
   const ranked = [...state.players].sort((a, b) => followers(state, b) - followers(state, a) || memberCount(state, b) - memberCount(state, a));
   state.ranking = ranked.map(p => p.id);
   state.over = true;
@@ -1024,7 +1025,7 @@ function recruited(state, p, what) {
   eachMember(state, (owner, c, d) => {
     if (what.member && d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, what.member);
     if (d.onRecruit) d.onRecruit(ctx, owner, c, p, what);
-  });
+  }, ['onAnyRecruit', 'onRecruit']);
 }
 /**
  * A member's "now" part, as it joins p: "Now and at round start" members (flag now) fire their round-start effect once
@@ -1050,7 +1051,7 @@ function borrowOnRecruit(state, p, uid) {
 /** Emit only when a Recruit ability actually runs; passive gains and ordinary round starts never enter here. */
 function recruitAbility(state, p, card, def, fn) {
   const ctx = ctxFor(state);
-  eachMemberOf(state, p, (held, d) => { if (d.onRecruitAbility) d.onRecruitAbility(ctx, p, held, card, def); });
+  eachMemberOf(state, p, (held, d) => { if (d.onRecruitAbility) d.onRecruitAbility(ctx, p, held, card, def); }, ['onRecruitAbility']);
   const before = traceSnapshot(state);
   const out = underCause({ kind: 'member', pid: p.id, uid: card.uid, def: card.def.id }, fn);
   traceChanges(state, before, p, def);
@@ -1193,7 +1194,7 @@ function buyFollowersNow(state, p, tier, chosen) {
   log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
   if (tier.limited) state.stock[tier.key] -= 1;
   const ctx = ctxFor(state);
-  eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });
+  eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); }, ['onBuyFollowers']);
   // buying followers is a recruit (Cory, 2026-10-21): "whenever you recruit" members fire once per purchase
   recruited(state, p, { followers: tier.get, tier });
 }
@@ -1217,10 +1218,10 @@ function gain(state, p, color, n, { fromAction = false, again = false } = {}) {
     log(state, `${p.name}'s ${def.name}: ${what}.`);
     note(state, p, def.name, what);
   };
-  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(card, def, c0, n0); } });
-  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(card, def, c0, n0); } });
+  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(card, def, c0, n0); } }, ['convertGain']);
+  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(card, def, c0, n0); } }, ['modifyGain']);
   p.res[g.color] = (p.res[g.color] || 0) + g.n;
-  eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); });
+  eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); }, ['afterGain']);
   return { color: g.color, n: g.n };
 }
 
@@ -1233,11 +1234,14 @@ function effectiveDefs(card) {
   const { onRecruited, ...hooks } = copied; void onRecruited;
   return [own, hooks];
 }
-function eachMemberOf(state, p, fn) {
+// keys: the hooks fn reads. A member with none of them is skipped before its accounting frame opens, which was
+// most of a move's cost late in the game (smoothness panel, Oct 28); without keys every member runs as before.
+function eachMemberOf(state, p, fn, keys) {
   // an artifact's ability works like a member's (it isn't one: no count, no worth, never moves)
   for (const uid of [...p.members, ...(p.artifact !== undefined ? [p.artifact] : [])]) {
     const card = state.cards[uid];
     for (const def of effectiveDefs(card)) {
+      if (keys && !keys.some(k => def[k] !== undefined)) continue;
       const before = traceSnapshot(state);
       accounted(state, null, () => { underCause({ kind: 'member', pid: p.id, uid, def: card.def }, () => fn(wrap(state, card), def)); traceChanges(state, before, p, def); });
     }
@@ -1274,8 +1278,8 @@ function traceChanges(state, before, owner, def) {
   if (fresh.some(l => l.includes(name))) return;
   for (const line of out) log(state, line);
 }
-function eachMember(state, fn) {
-  for (const owner of state.players) eachMemberOf(state, owner, (card, def) => fn(owner, card, def));
+function eachMember(state, fn, keys) {
+  for (const owner of state.players) eachMemberOf(state, owner, (card, def) => fn(owner, card, def), keys);
 }
 /** Name of p's member that carries a flag (a Doppelganger copying it reads as the copied card). */
 function flagName(state, p, flag) {
@@ -1518,7 +1522,7 @@ function ctxFor(state) {
       if (!victim || victim === thief) return false;
       for (const qid of state.quadrants) { const q = quadrant(qid); if (q.guardSteal && q.guardSteal(ctx, thief, victim, kind)) return false; }
       let blocked = false;
-      eachMemberOf(state, victim, (card, def) => { if (def.guardSteal && def.guardSteal(ctx, victim, card, thief, kind)) blocked = true; });
+      eachMemberOf(state, victim, (card, def) => { if (def.guardSteal && def.guardSteal(ctx, victim, card, thief, kind)) blocked = true; }, ['guardSteal']);
       return !blocked;
     },
     /** How many a steal of `base` takes for this thief (members: stealMore adds, stealDouble(ctx, owner) doubles). */
@@ -1528,7 +1532,7 @@ function ctxFor(state) {
       eachMemberOf(state, thief, (card, def) => {
         if (typeof def.stealMore === 'number') { extra += def.stealMore; if (def.stealMore) { who.push(`${thief.name}'s ${def.name}: +${def.stealMore}`); why.push([def.name, `+${def.stealMore} to steal`]); } }
         if (def.stealDouble && def.stealDouble(ctx, thief)) { double = true; who.push(`${thief.name}'s ${def.name}: doubled`); why.push([def.name, 'steal doubled']); }
-      });
+      }, ['stealMore', 'stealDouble']);
       const out = (double ? base * 2 : base) + extra;
       // say: a real steal (not an estimate) names the members that changed its size, in the log and in a hover's Why
       // (live panel r1: Help Yourself's face said +4 and its hover +8, and neither named Desperado)
@@ -1556,7 +1560,7 @@ function ctxFor(state) {
       if (what.give) what.give(n, took);
       const info = { thief, victim, took, uid: what.uid, n, reaction: !!what.reaction, ...(what.led !== undefined ? { led: !!what.led } : {}) };
       for (const qid of state.quadrants) { const q = quadrant(qid); if (q.onSteal) q.onSteal(ctx, info); }
-      eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });
+      eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); }, ['onSteal']);
       return n;
     },
     // Queue a decision for player p. It runs before anything else still queued. extra.blocked: why each player who

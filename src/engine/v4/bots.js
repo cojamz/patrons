@@ -16,6 +16,7 @@ import {
   paymentChoices, followerChoices, releaseRefund, liveOptions,
 } from './core.js';
 import { defById, quadrant, handlerById } from './content/index.js';
+import { plainCopy } from './copy.js';
 import { chooseThinkerMove } from './thinker.js';
 
 export const BOT_LEVELS = ['easy', 'normal', 'hard'];
@@ -280,13 +281,7 @@ export function surplus(state, me) {
 const FUTURE_CONTESTS = 0.4;
 // A copy of the game for trying a move: everything but the log, queue and pending decision (state is plain JSON,
 // and a hand copy is several times faster than structuredClone).
-const copy = v => {
-  if (v === null || typeof v !== 'object') return v;
-  if (Array.isArray(v)) return v.map(copy);
-  const o = {};
-  for (const k in v) o[k] = copy(v[k]);
-  return o;
-};
+const copy = plainCopy;
 const lightClone = s => {
   const c = {};
   for (const k in s) if (k !== 'log' && k !== 'queue' && k !== 'pending') c[k] = copy(s[k]);

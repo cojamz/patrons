@@ -3,6 +3,7 @@
 // from the rules. Choices the action asks for (yours or a rival's) are explored as branches and summarized as
 // ranges. Nothing hidden leaks: it reports the player's own changes and rivals' totals, never the refilled shop.
 import { applyMove, resume, followers, memberCount } from './core.js';
+import { plainCopy } from './copy.js';
 
 const NODE_BUDGET = 36; // states explored per preview (a counted pick branches a lot; past the budget only the extremes are kept)
 // Past the budget a branch keeps to one side: the first option's branch takes the first option at every later choice and
@@ -37,7 +38,7 @@ export function previewSpace(state, pid, q, i, { cap = NODE_CAP } = {}) {
   let base;
   try {
     // notes: the engine's preview-only reasons (a member that changed the result, or one that stayed off and why)
-    base = structuredClone({ ...state, log: [], pending: null, notes: [] });
+    base = plainCopy({ ...state, log: [], pending: null, notes: [] });
     const joined = base.slots[key] !== undefined; // a taken space, a rival's or (Crowd In) your own
     if (joined) (base.squats[key] = base.squats[key] || []).push(pid);
     else base.slots[key] = pid;
@@ -211,7 +212,7 @@ export function spaceTargets(state, pid, first, joins, leaves) {
 export function roundStartIncome(state, r = Math.min(3, Math.max(1, (state.round || 0) + 1))) {
   let s;
   try {
-    s = structuredClone({ ...state, log: [], pending: null, notes: [], over: false });
+    s = plainCopy({ ...state, log: [], pending: null, notes: [], over: false });
     s.queue = [{ t: 'round', r }];
     resume(s);
   } catch { return null; }

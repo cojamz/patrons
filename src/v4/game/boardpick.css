@@ -10,8 +10,11 @@
 .lt-cult-seat .cs-stack.pick-on,.lt-cult-seat .cs-stack.pick-off{position:relative;border-radius:999px;padding:3px 7px 3px 4px}
 .lt-cult-seat .cs-stack.pick-on{cursor:pointer;opacity:1;color:var(--paper-ink);background:var(--paper);
   box-shadow:0 0 0 2px rgba(var(--lamp),.95),0 0 12px 2px rgba(var(--lamp),.55),0 3px 0 rgba(0,0,0,.35);
-  transition:transform .12s ease-out,box-shadow .12s ease-out;animation:pick-breathe 1.8s ease-in-out infinite}
-.lt-cult-seat .cs-stack.pick-on:hover{transform:translateY(-2px) scale(1.08);box-shadow:0 0 0 2px #fffaf0,0 0 16px 4px rgba(var(--lamp),.8),0 5px 0 rgba(0,0,0,.35);animation:none}
+  transition:transform .12s ease-out,box-shadow .12s ease-out}
+/* the breath is a halo's opacity (compositor only); animating box-shadow repainted every lit stack each frame */
+.lt-cult-seat .cs-stack.pick-on::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 18px 4px rgba(var(--lamp),.7);opacity:0;pointer-events:none;animation:pick-breathe 1.8s ease-in-out infinite}
+.lt-cult-seat .cs-stack.pick-on:hover{transform:translateY(-2px) scale(1.08);box-shadow:0 0 0 2px #fffaf0,0 0 16px 4px rgba(var(--lamp),.8),0 5px 0 rgba(0,0,0,.35)}
+.lt-cult-seat .cs-stack.pick-on:hover::after{animation:none}
 .lt-cult-seat .cs-stack.pick-on:active{transform:translateY(0) scale(.97)}
 .lt-cult-seat .cs-stack.pick-off{opacity:.3;cursor:help}
 /* why a dim stack can't be taken, on hover (a tap says it in the prompt line) */
@@ -31,7 +34,7 @@
 /* what this steal has picked from the stack so far (it moves when the last pick is made) */
 .lt-cult-seat .cs-stack .cs-took{position:absolute;top:-9px;right:-8px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;font-style:normal;
   font-size:12px;line-height:16px;text-align:center;color:#fffaf0;background:#8c2f39;box-shadow:0 1px 0 rgba(0,0,0,.4)}
-@keyframes pick-breathe{50%{box-shadow:0 0 0 2px rgba(var(--lamp),.95),0 0 18px 4px rgba(var(--lamp),.7),0 3px 0 rgba(0,0,0,.35)}}
+@keyframes pick-breathe{50%{opacity:1}}
 
 /* a choice that picks a player: the whole seat is the button */
 .lt-cult-seat .cs-pick-seat{position:absolute;inset:0;z-index:3;border:0;border-radius:inherit;background:transparent;cursor:pointer;padding:0}

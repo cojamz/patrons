@@ -135,11 +135,12 @@ h1,h2,h3{font-family:var(--serif)}
 }
 
 /* the lamp: whichever region holds the decision is lit; the rest sit a little in shadow */
-.lt .lt-wheel{transition:opacity var(--mo-dim) ease}
+/* (the wheel's dim is an overlay, below) */
 .lt .lt-shop{transition:opacity var(--mo-dim) ease}
-/* Keep animated wheel layers composited while buys resolve: filtering this ancestor can force extra
-   rasterization of moving SVG descendants when flights and spins overlap. Opacity keeps the same focus cue. */
-.lt[data-yours="1"][data-phase="buy"] .lt-wheel,.lt[data-yours="1"][data-phase="pay"] .lt-wheel{opacity:.86}
+/* The wheel dims while you buy and pay: a veil of the table's colour over the board, not opacity on the wheel. Group
+   opacity (like a filter) drew the whole wheel offscreen on every frame anything inside it moved (smoothness panel, Oct 28) */
+.lt .lt-wheel .stage::after{content:'';position:absolute;inset:1.923%;border-radius:50%;background:var(--table);opacity:0;pointer-events:none;z-index:19;transition:opacity var(--mo-dim) ease}
+.lt[data-yours="1"][data-phase="buy"] .lt-wheel .stage::after,.lt[data-yours="1"][data-phase="pay"] .lt-wheel .stage::after{opacity:.14}
 .lt[data-yours="1"][data-phase="place"] .lt-shop{filter:none}
 
 /* ---------- prompt: one question, italic emphasis; Undo inline; one menu glyph ---------- */
