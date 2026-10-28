@@ -27,3 +27,11 @@ Claude's read, Oct 27, on Cory's playtest note: "it doesnt feel like you can rea
 6. Round III cashes in the engine, not the pile: its big spaces pay by what you built in rounds I and II.
 
 Set aside after his direction: holding a member for later, and changing the follower buy rate (an economy change, raise only if he wants it).
+
+## Calibration (Cory, Oct 27, 8:40pm Eastern)
+"we shouldnt overcorrect though. Its more of like a 30% adjustment than a 50% adjustment (but dont take that literally)". So these are nudges to today's game, not a rebuild. Revised list sent:
+1. Shift a few member-count cards (like Patriarch's "+1 follower per 2 members") to pay for what your members do.
+2. Give each color one or two bigger centerpiece members worth building around.
+3. Add a few members that grow the longer you keep them.
+4. One round III space per color pays for what you built, not for your pile.
+Dropped as too big a move: a rising cost per member, and growing artifacts.
