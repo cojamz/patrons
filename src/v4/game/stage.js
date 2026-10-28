@@ -13,8 +13,12 @@ export const CARD = { w: 184, h: 104 };
 // right side of the player card when they act, maybe with a speech bubble"): its portrait, its name, its rule in one
 // line and what it just did; a recruit shows the same card, bigger, at the hub on its way to its buyer
 // (two lines of rule, panel Oct 26: one line cut "Whenever a rival recruits more tha…")
-export const MEMBER = { w: 248, h: 64 };
-export const HUB_MEMBER = { w: 248, h: 62 };
+// (Cory, live, Oct 27: "whenever a member moves or is triggered, it should be clearer what they do"): the rule at the
+// sentence size, three lines, and the bubble stays a beat after its chain (stageRelease) without holding the next move
+export const MEMBER = { w: 280, h: 96 };
+// a recruit is revealed as its own card at the hub, big enough to read whole (Cory, live, Oct 27: "the card should fly
+// up, show what it does, then the member should fly down to the player card", Hearthstone's reveal)
+export const HUB_MEMBER = { w: 220, h: 248 };
 
 let items = [];
 let ver = 0;
@@ -23,7 +27,7 @@ const emit = () => { ver++; items = items.slice(); for (const fn of subs) fn(); 
 export const subscribeStage = fn => { subs.add(fn); return () => subs.delete(fn); };
 export const stageItems = () => items;
 /** Includes the readable hold and the actual return flight, until ActionStage removes each item. */
-export const stageBusy = () => items.length > 0;
+export const stageBusy = () => items.some(it => !it.lingering);
 export const stageVersion = () => ver;
 
 /** The stage's centre on screen: the wheel's hub (null off the board). */
@@ -91,7 +95,8 @@ const box = (left, top, width, height) => ({ left, top, width, height, right: le
  * home (an element to fly back to), dur, … what it shows }. Anything from an earlier chain leaves first.
  */
 export function stageShow(item) {
-  for (const it of items) if (it.chain !== item.chain && !it.leaving) { it.leaving = true; it.out = Math.round(MO.stageOut * 0.7); }
+  // the last chain's pieces go home; a lingering bubble stays to be read unless this one takes its seat's spot
+  for (const it of items) if (it.chain !== item.chain && !it.leaving && (!it.lingering || (item.kind === 'member' && !item.recruit && item.pid === it.pid))) { it.leaving = true; it.out = Math.round(MO.stageOut * 0.7); }
   const had = items.find(it => it.id === item.id && !it.leaving);
   if (had) { had.again = (had.again || 0) + 1; emit(); return; }
   items.push({ ...item, born: Date.now() });
@@ -111,7 +116,19 @@ export function stageRelease(hold = MO.stageHold, chain = null) {
   const these = items.filter(it => !it.leaving && (chain == null || it.chain === chain));
   if (!these.length) return;
   if (chain == null) clearTimeout(holdT);
-  const t = setTimeout(() => { releaseTimers.delete(t); for (const it of these) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; } emit(); }, hold);
+  // a member's bubble lingers to be read; it no longer counts as busy, so the next move doesn't wait on it
+  const bubbles = these.filter(it => it.kind === 'member' && !it.recruit);
+  const rest = these.filter(it => !bubbles.includes(it));
+  const t = setTimeout(() => {
+    releaseTimers.delete(t);
+    for (const it of rest) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; }
+    for (const it of bubbles) if (!it.leaving) it.lingering = true;
+    emit();
+    if (bubbles.length) {
+      const t2 = setTimeout(() => { releaseTimers.delete(t2); for (const it of bubbles) if (!it.leaving) { it.leaving = true; it.out = MO.stageOut; } emit(); }, MO.memberLinger);
+      releaseTimers.add(t2);
+    }
+  }, hold);
   releaseTimers.add(t);
   if (chain == null) holdT = t;
 }

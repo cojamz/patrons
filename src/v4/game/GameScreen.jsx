@@ -630,6 +630,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [live0, moment, dismissMoment, roundStart0, retimeTable, settled0, physical0, scoringMoment] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
   const physicalState = physical0;
   const interactionState = moment && moment.board ? moment.board : settled0;
+  // once you've paid, the pay sheet goes at once: it sat over the recruit's reveal while the chain played (Cory, live,
+  // Oct 27: "the animation for recruiting a member is awkward")
+  const paidAlready = physicalState !== interactionState && !!(interactionState && interactionState.pending && ['pay', 'buy'].includes(interactionState.pending.kind))
+    && !(physicalState.pending && physicalState.pending.kind === 'pay' && physicalState.pending.player === interactionState.pending.player && physicalState.pending.uid === interactionState.pending.uid);
   // Counters and flying targets use physical state; ownership/options/order share one settled boundary.
   const state = useMemo(() => tableView(physicalState, interactionState), [physicalState, interactionState]);
   // (for the mid-chain gate, e2e/v4/midchain.mjs: the spaces you can take in the newest state, while the table still shows an older one)
@@ -1602,7 +1606,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </Popover>
       )}
       {receipt && <PayReceipt key={receipt.key} receipt={receipt} onDone={() => setReceipt(r => (r && r.key === receipt.key ? null : r))} />}
-      {mine && !needHandoff && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)) && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+      {mine && !needHandoff && !paidAlready && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)) && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={rootEl} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && closedMoment !== moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={nextRound} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}

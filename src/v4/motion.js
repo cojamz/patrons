@@ -193,7 +193,10 @@ const TABLE = {
   stageHold:   [220,   180],
   stageOut:    [160,   240],
   // a recruit holds at the hub, its rule readable, before it flies on to its buyer (Cory, 2026-10-18)
-  recruitShow: [200,   300],
+  // (Cory, live, Oct 27: "the card should fly up, show what it does"): long enough to read the whole card
+  recruitShow: [600,   500],
+  // a member's bubble stays this long after its chain to be read, without holding the next move (Cory, live, Oct 27)
+  memberLinger:[600,   500],
 };
 /**
  * A rival's step plays quicker than your own (Cory, 2026-10-26: "Rival turns play quicker than yours, with beats

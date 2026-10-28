@@ -5,6 +5,7 @@ import { useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { subscribeStage, stageItems, stageGone, CARD, MEMBER } from './stage.js';
 import { Rich } from './Rich.jsx';
+import { memberTimingWords } from './memberTiming.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { MO } from '../motion.js';
@@ -70,12 +71,24 @@ function StageItem({ it }) {
       </div>
     );
   }
+  if (it.recruit) {
+    // the reveal: the member's own card, whole, at the hub; then it flies down into its buyer's crowd
+    return (
+      <div ref={el} className="as-reveal" style={style} data-stage="member" data-stage-uid={it.uid}>
+        <span className="as-band" aria-hidden="true" />
+        <span className="as-fig"><Sprite id={it.sprite} kind="member" sphere={it.sphere} size={64} /></span>
+        <span className="as-name">{it.name}</span>
+        {it.text && <span className="as-rule"><Rich text={memberTimingWords(it.text)} /></span>}
+        {it.who && <span className="as-who-buys">{it.who === 'You' ? 'You recruit' : `${it.who} recruits`}</span>}
+      </div>
+    );
+  }
   return (
     <div ref={el} className={`as-member${it.recruit ? ' at-hub' : ' bubble'}`} style={style} data-stage="member" data-stage-uid={it.uid}>
       <span className="as-fig"><Sprite id={it.sprite} kind="member" sphere={it.sphere} size={it.recruit ? 48 : 36} /></span>
       <span className="as-words">
         <span className="as-name">{it.name}</span>
-        {it.text && <span className="as-rule"><Rich text={it.text} /></span>}
+        {it.text && <span className="as-rule"><Rich text={memberTimingWords(it.text)} /></span>}
         {it.got && <span className="as-got"><Rich text={it.got} /></span>}
       </span>
     </div>

@@ -54,3 +54,18 @@
 .deck-join .cult-mark{display:block;flex:none}
 .deck-join-tag{position:fixed;transform:translate(-50%,-100%);z-index:62;pointer-events:none;padding:2px 7px;border-radius:5px;
   font:800 12px/1.25 var(--sans);color:var(--cream,#f4ebd7);background:var(--walnut-2,#271d16);box-shadow:0 0 0 1px rgba(217,166,58,.55),0 1px 3px rgba(0,0,0,.5);white-space:nowrap;opacity:0}
+/* a member acting (Cory, live, Oct 27: "it should be clearer what they do"): its rule at the sentence size, three lines */
+.as-member.bubble .as-rule{font-size:15px;line-height:18px;-webkit-line-clamp:3;color:color-mix(in srgb,var(--cream,#f3e6c8) 88%,transparent)}
+.as-member.bubble .as-got{font-size:15px}
+/* the recruit reveal (Cory, live, Oct 27, after Hearthstone): the member's card, whole, on lit paper at the hub */
+.as-reveal{display:flex;flex-direction:column;align-items:center;gap:6px;box-sizing:border-box;padding:18px 16px 14px;border-radius:12px;text-align:center;
+  background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);overflow:hidden;
+  box-shadow:0 0 0 2px rgb(var(--lamp,255,206,140)),0 0 28px 6px rgba(var(--lamp,255,206,140),.45),0 18px 40px rgba(0,0,0,.6)}
+.as-reveal .as-band{position:absolute;left:0;right:0;top:0;height:80px;background:color-mix(in srgb,var(--q) 22%,var(--paper-lit,#fbf6ea));z-index:-1}
+.as-reveal{isolation:isolate}
+.as-reveal .as-fig{line-height:0;image-rendering:pixelated;height:64px}
+.as-reveal .as-name{font:800 18px/1.1 var(--sans);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
+.as-reveal .as-rule{font:500 15px/19px var(--sans);color:var(--pl-ink,#2b2018);text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.as-reveal .as-rule .pip{width:.85em;height:.85em;vertical-align:-.08em}
+.as-reveal .as-rule .ability-timing{font-weight:800}
+.as-reveal .as-who-buys{margin-top:auto;font:600 12px/1 var(--sans);color:var(--pl-ink-2,#6e5c49)}

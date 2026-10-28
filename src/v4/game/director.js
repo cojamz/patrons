@@ -1242,7 +1242,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
             if (sk || (chain.epoch || 0) !== ep) return;
             const look = memberLook(ctx.state, a.uid);
             if (!look) return;
-            stageShow({ id, chain: chainId, kind: 'member', recruit: true, uid: a.uid, pid: a.to, size: HUB_MEMBER, at: hub, from: g.getBoundingClientRect(), homeEl: chip && !chip.rectOnly ? chip : null, dur: Math.round(a.toHub * 0.55), ...look, got: '',
+            stageShow({ id, chain: chainId, kind: 'member', recruit: true, uid: a.uid, pid: a.to, who: mine.length === 1 && mine[0] === a.to ? 'You' : (ctx.state.players[a.to] || {}).name, size: HUB_MEMBER, at: hub, from: g.getBoundingClientRect(), homeEl: chip && !chip.rectOnly ? chip : null, dur: Math.round(a.toHub * 0.55), ...look, got: '',
               onHome: () => { play('member'); if (chip && chip.animate && chip.isConnected && !region(chip)) relative(chip, [{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' }); } });
           });
           // read, then on to the buyer
