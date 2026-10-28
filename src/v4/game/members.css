@@ -61,10 +61,14 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
    a used one steps back, a switch sits small under its figure */
 .lt-cult-seat .cs-member.ready .fig{cursor:pointer}
 .lt-cult-seat .cs-member.ready .fig{transform:translateY(-2px);transition:transform .15s ease-out}
-.lt-cult-seat .cs-member.ready .fig::before{content:"";position:absolute;left:50%;top:50%;width:calc(100% + 8px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;z-index:-1;pointer-events:none;
-  background:radial-gradient(closest-side,rgba(var(--lamp,255,206,140),.22),rgba(var(--lamp,255,206,140),.06) 70%,transparent);
-  box-shadow:0 0 0 1.5px rgba(var(--lamp,255,206,140),.85),0 0 16px 5px rgba(var(--lamp,255,206,140),.4)}
-/* (a ready figure's light and a loaded one's outline are drawn into the picture itself: Sprite.jsx look) */
+.lt-cult-seat .cs-member.ready .fig::before{content:"";position:absolute;left:50%;top:50%;width:calc(100% + 14px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(var(--lamp,255,206,140),.75),rgba(var(--lamp,255,206,140),.28) 60%,transparent)}
+.lt-cult-seat .cs-member.ready .aura{display:none}
+.lt-cult-seat .cs-member .cs-use-tab{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);z-index:3;pointer-events:none;
+  padding:0 5px;border-radius:6px;font:700 10px/13px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--table,#191310);
+  background:rgb(var(--lamp,255,206,140));box-shadow:0 0 0 1px var(--board,#2b2119)}
+.lt-cult-seat .cs-member .cs-loaded-dot{position:absolute;right:0;top:1px;width:6px;height:6px;border-radius:50%;z-index:3;pointer-events:none;
+  background:rgb(var(--lamp,255,206,140));box-shadow:0 0 0 1.5px var(--board,#2b2119)}
 .lt-cult-seat .cs-member.used .fig .sprite{opacity:.4;filter:grayscale(.6)}
 .lt-cult-seat .cs-member.used .aura{opacity:.35}
 .lt-cult-seat .cs-member .mu-switch{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);gap:0;z-index:2}

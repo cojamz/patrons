@@ -247,9 +247,12 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             <span key={g.key} className={`cs-member${g.card.used && !state.over ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${pendingRound ? ' round-pending' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-round-pending={pendingRound || undefined} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used && !state.over ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
               {pendingRound && <span className="round-pending-mark" aria-hidden="true" />}
+              {/* ready: a small "use" tab under the lit figure; loaded (a use still in hand): a lamp dot at its shoulder */}
+              {readyUid != null && !(mine && d.toggle) && <span className="cs-use-tab" aria-hidden="true">use</span>}
+              {loaded && !pendingRound && <span className="cs-loaded-dot" aria-hidden="true" />}
               <Tip className="fig" sticky={mine} {...(mine ? {} : { tabIndex: -1 })} label={`${d.name}: ${pendingRound ? 'pending this round, show the card' : readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={memberCardFn(latest, readyUid ?? g.uids[0])}>
-                <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} look={g.card.used && !state.over ? null : readyUid != null ? 'ready' : loaded ? 'loaded' : null} />
+                <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>
               {result && g.uids.includes(result.uid) && <UseResult result={result} />}
