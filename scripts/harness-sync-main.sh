@@ -31,7 +31,7 @@ SHA=$(git rev-parse --verify "${1:-HEAD}^{commit}")
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/harness-sync.XXXXXX")
 trap 'git worktree remove --force "$TMP/main" >/dev/null 2>&1 || true; rm -rf "$TMP"' EXIT
 mkdir "$TMP/src"; git archive "$SHA" -- "${PARTS[@]}" | tar -x -C "$TMP/src"
-git fetch -q origin main:refs/remotes/origin/main
+git fetch -q origin '+main:refs/remotes/origin/main'  # forced: a diverged local copy refused a plain fetch (Oct 22)
 git worktree add -q --detach "$TMP/main" origin/main
 mirror "$TMP/src" "$TMP/main"
 if git -C "$TMP/main" diff --cached --quiet; then echo "main's harness already matches ${SHA:0:7}"; exit 0; fi
