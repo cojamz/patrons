@@ -233,10 +233,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     waiting.current = null;
     // Actual completion supersedes the estimated viewing timer; never wait twice for one sequence.
     if (timer.current !== 'commit') { clearTimeout(timer.current); timer.current = null; timerAt.current = null; }
-    // a transition (input pass 2026-10-28): this lands from the chain's frame loop, and as a plain update the whole table
-    // redrew in one unbroken task right as your choices lit (round III: seconds at 4x CPU, with your click waiting behind
-    // it). Sliced, a press that comes meanwhile is answered between slices.
-    startTransition(() => setTable(t => (t.shown === completed ? { ...t, interaction: completed } : t)));
+    setTable(t => t.shown === completed ? { ...t, interaction: completed } : t);
     // The transport can be ahead; reveal its queued snapshots only after this sequence lands.
     if (!timer.current) startTransition(() => pumpRef.current());
   }, []);
