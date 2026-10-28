@@ -1,6 +1,6 @@
 // Player release identity. Bump with npm run version:v4; see design/releasing.md.
 // Save/room compatibility is the rules-content hash, never this display version.
 export const GAME_NAME = 'Cults';
-export const VERSION = 'v0.9.814';
+export const VERSION = 'v0.9.815';
 export const BUILD_REF = typeof __V4_BUILD__ !== 'undefined' ? String(__V4_BUILD__).split('@')[0] : 'dev';
 export const VERSION_LABEL = `${VERSION} · ${BUILD_REF}`;
