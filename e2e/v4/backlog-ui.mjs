@@ -6,12 +6,13 @@ import { seedSave } from './lib/seed.mjs';
 import { buildStamp } from './lib/stamp.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
 import { resume } from '../../src/engine/v4/core.js';
+import { takeCard } from './lib/take.mjs';
 const base=process.env.V4_URL||'http://localhost:5334',out=process.env.V4_SHOTS||'/tmp/cults-backlog-ui';mkdirSync(out,{recursive:true});
 const seats=['You','Bo','Cy','Di'].map(name=>({name,kind:'human'}));
 function fixture(kind){
  let s=createGame({seats,seed:53,quadrants:['gold','red','market','echo']});
  s.pending=null;s.round=3;s.slots={};s.squats={};s.queue=[{t:kind==='choice'?'turn':'buy',p:0},{t:'turn',p:0}];s.players.forEach(p=>{p.left=3;p.res=Object.fromEntries(s.resources.map(r=>[r,6]));});
- const deal=(def,to)=>{const u=[...s.pile,...s.shop].find(u=>s.cards[u].def===def);if(!u)throw Error(`missing ${def}`);s.pile=s.pile.filter(x=>x!==u);s.shop=s.shop.filter(x=>x!==u);(to==='shop'?s.shop:s.players[to].members).push(u);return u;};
+ const deal=(def,to)=>{const u=takeCard(s,def);(to==='shop'?s.shop:s.players[to].members).push(u);return u;};
  deal('gold.thrift',0);deal('gold.prospector',0);deal('red.host',0);deal('red.recruiter',0);
  const target=deal('gold.taxman','shop');while(s.shop.length>8)s.pile.push(s.shop.shift());
  s=resume(s);

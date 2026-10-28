@@ -7,6 +7,7 @@ import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
 import { resume } from '../../src/engine/v4/core.js';
+import { takeCard } from './lib/take.mjs';
 
 const base = (process.env.V4_URL || 'http://localhost:5317').replace(/\/$/, '');
 const out = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/green-chain`;
@@ -29,9 +30,7 @@ function fixture() {
   s.pile = [...s.shop, ...s.pile]; s.shop = [];
   s.players.forEach(p => { p.res = Object.fromEntries(s.resources.map(r => [r, 0])); p.left = 5; });
   for (const [pid, id] of [[0, 'echo.ensemble'], [0, 'echo.tuningfork'], [1, 'echo.muse']]) {
-    const i = s.pile.findIndex(u => s.cards[u].def === id);
-    if (i < 0) throw new Error(`Missing deck member ${id}`);
-    s.players[pid].members.push(s.pile.splice(i, 1)[0]);
+    s.players[pid].members.push(takeCard(s, id));
   }
   s.shop = s.pile.splice(0, 8);
   s.queue = [1, 0, 0, 1, 0, 0].map(p => ({ t: 'turn', p }));

@@ -6,6 +6,7 @@ import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
 import { resume } from '../../src/engine/v4/core.js';
+import { takeCard } from './lib/take.mjs';
 
 const base = (process.env.V4_URL || 'http://localhost:5317').replace(/\/$/, '');
 const out = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/red-actions`;
@@ -28,9 +29,7 @@ function fixture() {
   s.pile = [...s.shop, ...s.pile]; s.shop = [];
   s.players.forEach(p => { p.res = Object.fromEntries(s.resources.map(r => [r, 0])); p.left = 5; });
   const deal = (def, where) => {
-    const i = s.pile.findIndex(u => s.cards[u].def === def);
-    if (i < 0) throw new Error(`Missing deck member ${def}`);
-    (where === 'shop' ? s.shop : s.players[where].members).push(s.pile.splice(i, 1)[0]);
+    (where === 'shop' ? s.shop : s.players[where].members).push(takeCard(s, def));
   };
   for (const [who, def] of [[0, 'red.recruiter'], [1, 'gold.prospector'], [2, 'echo.evergreen'], ['shop', 'red.host'], ['shop', 'red.twins'], ['shop', 'echo.muse'], ['shop', 'gold.banker']]) deal(def, who);
   return s;
@@ -39,7 +38,7 @@ function scenario(name) {
   let s = fixture();
   s.queue = (name === 'copy-promote' ? [1, 0, 0] : [0, 0]).map(p => ({ t: 'turn', p }));
   s = resume(s);
-  let action = name === 'rival-swap' ? 'evenswap' : 'hireup';
+  let action = 'hireup';
   if (name === 'copy-promote') {
     s = move(s, `slot:${slot('red', 'hireup')}`);
     s = pass(move(s, `trade:${uid(s, 'gold.prospector', 1)}:${uid(s, 'echo.muse', 'shop')}`));
@@ -54,8 +53,8 @@ function scenario(name) {
     if (!copy) throw new Error('Encore does not offer rival Promote');
     picks.push(copy.id); expected = move(expected, copy.id);
   }
-  const a = name === 'rival-swap' ? uid(expected, 'gold.prospector', 1) : uid(expected, 'red.recruiter', 0);
-  const b = name === 'rival-swap' ? uid(expected, 'echo.evergreen', 2) : uid(expected, 'red.host', 'shop');
+  const a = uid(expected, 'red.recruiter', 0);
+  const b = uid(expected, 'red.host', 'shop');
   const pair = `trade:${a}:${b}`;
   if (!expected.pending.options.some(o => o.id === pair)) throw new Error(`${name}: missing swap ${pair}`);
   expected = move(expected, pair);
@@ -64,14 +63,15 @@ function scenario(name) {
 }
 const comparable = s => ({ players: s.players.map(p => ({ members: p.members, res: p.res, bonus: p.bonus })), shop: s.shop, cards: s.cards });
 if (process.argv.includes('--fixtures-only')) {
-  for (const name of ['rival-swap', 'promote', 'copy-promote']) { scenario(name); console.log(`${name}: fixture resolves to buying.`); }
+  // (rival-swap went with Even Swap: Tryout took its space in the round I rework, Cory Oct 27)
+  for (const name of ['promote', 'copy-promote']) { scenario(name); console.log(`${name}: fixture resolves to buying.`); }
   process.exit(0);
 }
 const browser = await chromium.launch({ executablePath: browserPath });
 let currentPage, currentTag;
 try {
   for (const [tag, options] of [['desktop', { viewport: { width: 1270, height: 700 } }], ['phone', devices['iPhone 13']]]) {
-    for (const name of ['rival-swap', 'promote', 'copy-promote']) {
+    for (const name of ['promote', 'copy-promote']) {
       // A fresh context prevents the previous local game’s auto-resume flag from bypassing Home.
       const ctx = await browser.newContext(options);
       const page = await ctx.newPage(); currentPage = page; currentTag = `${tag}-${name}`;

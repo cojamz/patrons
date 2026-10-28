@@ -6,6 +6,7 @@ import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
 import { createGame, applyMove, quadrant } from '../../src/engine/v4/index.js';
 import { resume } from '../../src/engine/v4/core.js';
+import { takeCard } from './lib/take.mjs';
 const base=(process.env.V4_URL||'http://localhost:5325').replace(/\/$/,'');
 const out=`${process.env.V4_SHOTS||'/tmp/cults-red-members'}/red-members`;mkdirSync(out,{recursive:true});
 const seats=['You','Bo','Cy','Di'].map(name=>({name,kind:'human'}));
@@ -17,17 +18,13 @@ function scenario(name){
  Object.assign(s,{round:3,queue:[{t:'turn',p:0},{t:'turn',p:0}],pending:null,slots:{},squats:{},order:[0,0],log:[]});delete s.echo;
  s.pile=[...s.shop,...s.pile];s.shop=[];
  s.players.forEach(p=>{p.res=Object.fromEntries(s.resources.map(r=>[r,0]));p.left=5;});
- const deal=(def,who)=>{const i=s.pile.findIndex(u=>s.cards[u].def===def);if(i<0)throw Error(`Missing ${def}`);const u=s.pile.splice(i,1)[0];(who==='shop'?s.shop:s.players[who].members).push(u);return u;};
+ const deal=(def,who)=>{const u=takeCard(s,def);(who==='shop'?s.shop:s.players[who].members).push(u);return u;};
  const initial=[],picks=[];let pair;
  if(name==='panel'){
   deal('red.recruitbonus',0);deal('red.recruiter',0);const host=deal('gold.merchant',0); // 6, so Promote (up to 2 more) reaches Mentor's 8
   const panel=deal('red.panel','shop'),mentor=deal('red.mentor','shop');
   for(const d of ['red.volunteer','red.twins','red.loyalists','red.mob','red.movementpenalty','red.patriarch'])deal(d,'shop');
   initial.push(action('take'),`card:${panel}`,'promote');pair=`trade:${host}:${mentor}`;picks.push(pair);
- }else if(name==='penalty'){
-  deal('red.movementpenalty',0);const a=deal('red.panel',1),b=deal('red.proselytizer',2);
-  for(const d of ['red.volunteer','red.twins','red.host','red.mentor','red.recruitbonus','red.loyalists','red.mob','red.patriarch'])deal(d,'shop');
-  initial.push(action('evenswap'));pair=`trade:${a}:${b}`;picks.push(pair);
  }else{
   for(const d of ['red.panel','red.twins','red.host','red.mentor','red.recruitbonus','red.loyalists','red.mob','red.movementpenalty'])deal(d,'shop');
   s.players[0].res=Object.fromEntries(s.resources.map(r=>[r,r==='red'?12:0]));s.queue=[{t:'buy',p:0},{t:'endTurn',p:0},{t:'turn',p:0}];
@@ -48,10 +45,10 @@ function scenario(name){
  }
  return{save,initial,pair,expected};
 }
-if(process.argv.includes('--fixtures-only')){for(const n of ['panel','penalty','followers']){scenario(n);console.log(`${n}: fixture resolves`);}process.exit(0);}
+if(process.argv.includes('--fixtures-only')){for(const n of ['panel','followers']){scenario(n);console.log(`${n}: fixture resolves`);}process.exit(0);}
 const browser=await chromium.launch({executablePath:browserPath});let page,tag;
 try{
- for(const [size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]])for(const name of ['panel','penalty','followers']){
+ for(const [size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]])for(const name of ['panel','followers']){ // (penalty went with Even Swap, the space that moved a rival's member: round I rework, Cory Oct 27)
   tag=`${size}-${name}`;const ctx=await browser.newContext(opts);page=await ctx.newPage();page.setDefaultTimeout(12000);
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{window.__newRedFlights=[];addEventListener('DOMContentLoaded',()=>new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1&&n.classList.contains('ghost-layer'))window.__newRedFlights.push(n.className);}).observe(document.body,{childList:true,subtree:true}));});

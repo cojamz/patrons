@@ -43,7 +43,7 @@ try{
   if(await page.locator('[data-handoff]').isVisible())await page.locator('[data-handoff]').click();
   for(const qid of ['red','echo']){
    const rim=page.locator(`.rim-rule[data-plaque="${qid}"]`);
-   if(!/RESOURCES/.test(await rim.textContent())||/MEMBERS/.test(await rim.textContent()))throw new Error(`${tag}: ${qid} rim label incorrect`);
+   if(!/most \S+ resources/i.test(await rim.textContent())||/members/i.test(await rim.textContent()))/* plain case since Oct 27 ("Each round: most red resources · +4") */throw new Error(`${tag}: ${qid} rim label incorrect`);
   }
   const button=page.locator(`[data-option="${action}"]:not([disabled])`).first();
   if(tag==='phone')await button.tap();else await button.click();
