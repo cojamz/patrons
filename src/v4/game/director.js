@@ -1516,6 +1516,10 @@ export function installChainSkip() {
     const t = e && e.target;
     const app = t && t.closest && t.closest('.app.game');
     if (app && app.dataset.phase === 'choose' && t.closest('[data-option]')) return;
+    // everything has landed and only the settle is left (your choices light at the landing): a press on a choice is
+    // your move, not a skip; the settle finishes under it (smooth panel, animation.md #4: the skip's cleanup cost every
+    // first click of your turn a whole-table render before the move)
+    if (!chain.queue.length && !chain.flying && chain.draining && t && t.closest && t.closest('[data-option]')) return;
     skipChain();
   };
   const key = e => {
