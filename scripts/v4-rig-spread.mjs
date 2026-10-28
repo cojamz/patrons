@@ -34,11 +34,11 @@ const firstSplit = same ? null : (() => { const ps = runs.map(r => r.path || [])
 const L = [`# Rig spread: ${label}`, '', `${new Date().toISOString()} · ${url} · ${runs.length} runs, ${PAR} at a time · ${pass.join(' ') || 'rig defaults'}`, '',
   same ? `Every run played the same game (${runs[0]?.path?.length || 0} picks).` : `Runs played different games: first split at pick ${firstSplit.i + 1}: ${firstSplit.picks.join(' / ')}.`, '',
   'Median (min–max) across runs.', '',
-  '| round | clicks p95 ms | choose p95 ms | place p95 ms | dead clicks | hovers p95 ms | show frames p95 ms | hitch % | idle busy % |',
-  '|---|---|---|---|---|---|---|---|---|'];
+  '| round | clicks p95 ms | choose p95 ms | place p95 ms | dead clicks | hovers p95 ms | show frames p95 ms | hitch % | idle busy % | round busy % |',
+  '|---|---|---|---|---|---|---|---|---|---|'];
 for (const r of rounds) {
   const s = runs.map(x => x.sum[r]);
-  L.push(`| ${r} | ${span(s.map(x => x?.clicks.p95))} | ${span(s.map(x => kind(x, 'choose')))} | ${span(s.map(x => kind(x, 'place')))} | ${span(s.map(x => x?.clicks.dead))} | ${span(s.map(x => x?.hovers.p95))} | ${span(s.map(x => x?.frames.p95))} | ${span(s.map(x => x?.frames.hitch))} | ${span(s.map(x => x?.idle.busyPct))} |`);
+  L.push(`| ${r} | ${span(s.map(x => x?.clicks.p95))} | ${span(s.map(x => kind(x, 'choose')))} | ${span(s.map(x => kind(x, 'place')))} | ${span(s.map(x => x?.clicks.dead))} | ${span(s.map(x => x?.hovers.p95))} | ${span(s.map(x => x?.frames.p95))} | ${span(s.map(x => x?.frames.hitch))} | ${span(s.map(x => x?.idle.busyPct))} | ${span(s.map(x => x?.busy))} |`);
 }
 L.push('', `Leak control (unbroken vs reload): elements ${span(runs.map(x => x.unbroken?.nodes))} vs ${span(runs.map(x => x.reloaded?.nodes))}, heap MB ${span(runs.map(x => x.unbroken?.heapMB))} vs ${span(runs.map(x => x.reloaded?.heapMB))}.`);
 L.push('', `Per run: ${runs.map(x => `rig-${label}-${x.n}.md`).join(', ')}.`);

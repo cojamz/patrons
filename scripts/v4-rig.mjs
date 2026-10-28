@@ -24,7 +24,10 @@ const [base, label] = pos;
 if (!base || !label) { console.error('usage: node scripts/v4-rig.mjs <url> <label> [--cpu=4] [--speed=relaxed] [--seed=N]'); process.exit(2); }
 const CPU = Number(flag('cpu', 4)), SPEED = String(flag('speed', 'relaxed')), SEED = Number(flag('seed', 20261028));
 const TRACE = !!flag('trace-clicks', false); // a Chrome trace per click: main-thread time by kind (style, layout, paint, script…) in slow ones
-const PROFILE = !!flag('profile-clicks', false); // CPU-profile every click; where the time goes in slow ones (use an unminified build)
+const PROFILE = !!flag('profile-clicks', false);
+// --no-frame-loop: no frame recorder (its own requestAnimationFrame every frame keeps the page doing a full main-thread frame
+// each frame, which hides any change to how often the game itself needs one); frame columns read empty
+const NO_FRAMES = !!flag('no-frame-loop', false); // CPU-profile every click; where the time goes in slow ones (use an unminified build)
 const OUT = String(flag('out', 'design/eval/perf')), MAX_MIN = Number(flag('max-min', 45)), GATE = !flag('no-gate', false);
 mkdirSync(OUT, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -51,9 +54,11 @@ const RECORDER = () => {
   };
   let last = 0, lastSample = 0, cur = [];
   const tick = t => {
-    const r = (document.querySelector('.hub-label b')?.textContent || '').trim();
-    if (r) F.round = r;
-    if (t - lastSample > 100) {
+    // the recorder's own reads are kept rare and off a timed click: getAnimations() forces a style pass, and at 10 a
+    // second it was ~50 ms of every slow click (rig-*-clicks.md, 2026-10-28)
+    if (!F.armed && t - lastSample > 500) {
+      const r = (document.querySelector('.hub-label b')?.textContent || '').trim();
+      if (r) F.round = r;
       lastSample = t;
       try { cur = [...new Set(document.getAnimations().filter(a => a.playState === 'running').map(name))]; } catch { cur = []; }
     }
@@ -64,11 +69,13 @@ const RECORDER = () => {
     if (F.pause) { F.stopped = true; last = 0; return; }
     requestAnimationFrame(tick);
   };
-  F.resume = () => { F.pause = false; if (F.stopped) { F.stopped = false; requestAnimationFrame(tick); } };
-  requestAnimationFrame(tick);
+  F.resume = () => { F.pause = false; if (F.stopped && !window.__rigNoFrames) { F.stopped = false; requestAnimationFrame(tick); } };
+  if (!window.__rigNoFrames) requestAnimationFrame(tick);
   try { new PerformanceObserver(l => { for (const e of l.getEntries()) { if (e.duration > 2000) F.big = (F.big || []).concat({ d: Math.round(e.duration), prompt: (document.querySelector('[data-prompt]')?.textContent || '').slice(0, 120), phase: document.querySelector('.app.game')?.dataset.phase, hover: (document.querySelector('.lt-hover')?.textContent || '').slice(0, 120), options: [...document.querySelectorAll('[data-option]')].map(x => x.getAttribute('data-option')).slice(0, 20) }); F.loaf.push({ round: F.round, d: Math.round(e.duration), scripts: (e.scripts || []).slice(0, 3).map(s => `${(s.sourceFunctionName || s.invoker || '?').slice(0, 40)} ${Math.round(s.duration)}${s.duration > 1000 ? ` [${s.invoker || ''} @ ${(s.sourceURL || '').split('/').pop()}:${s.sourceCharPosition}]` : ''}`) }); } }).observe({ type: 'long-animation-frame', buffered: false }); } catch { /* no LoAF */ }
   // click → answer painted: armed by the harness before each click
-  F.arm = () => new Promise(resolve => {
+  F.arm = () => new Promise(done => {
+    F.armed = true;
+    const resolve = v => { F.armed = false; done(v); };
     const look = () => {
       const g = document.querySelector('.app.game');
       return [g?.dataset.moves, !!document.querySelector('[data-next-round]'), [...document.querySelectorAll('[data-option]')].map(e => e.getAttribute('data-option')).sort().join(' '), !!document.querySelector('[data-place], .dialog.pay')].join('|');
@@ -108,6 +115,7 @@ const RECORDER = () => {
 const browser = await chromium.launch({ executablePath: browserPath });
 const [VW, VH] = String(flag('size', '1270x700')).split('x').map(Number); // --size=1100x700 for a smaller window
 const ctx = await browser.newContext({ viewport: { width: VW, height: VH } });
+if (NO_FRAMES) await ctx.addInitScript(() => { window.__rigNoFrames = true; });
 await ctx.addInitScript(RECORDER);
 await ctx.addInitScript(s => { let a = s >>> 0; Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }, SEED);
 await ctx.addInitScript(s => { try { localStorage.setItem('patrons.v4.motionSpeed', s); } catch { /* */ } }, SPEED);
@@ -131,7 +139,15 @@ const roundOf = () => page.evaluate(() => (document.querySelector('.hub-label b'
 const center = async el => { const b = await el.boundingBox().catch(() => null); return b && b.width ? { x: b.x + b.width / 2, y: b.y + b.height / 2 } : null; };
 
 const R = {}; // round → { clicks: [{what, ms}], hovers: [], idle: [], memory }
-const per = r => (R[r] ||= { clicks: [], hovers: [], idle: [], memory: null });
+const per = r => (R[r] ||= { clicks: [], hovers: [], idle: [], memory: null, task: 0, wall: 0 });
+// main-thread busy over the whole round (CDP TaskDuration between this harness's turns, idle readings included)
+let busyAt = null;
+const busyMark = async round => {
+  const m = await metrics().catch(() => null); if (!m) return;
+  const now = { task: m.TaskDuration * 1000, t: Date.now(), round };
+  if (busyAt && busyAt.round) { per(busyAt.round).task += now.task - busyAt.task; per(busyAt.round).wall += now.t - busyAt.t; }
+  busyAt = now;
+};
 
 async function idleSample(round) {
   // the table settles, then 3 s of nothing: what the page costs on its own (the frame recorder pauses meanwhile)
@@ -147,7 +163,7 @@ async function idleSample(round) {
 }
 // --profile-clicks: a CPU profile from just before each click to its answer; self time by function, summed over clicks
 // slower than 150 ms (profiling itself slows every click, so read the shares, not the ms)
-const prof = new Map(), profTotal = new Map(); let profN = 0, m0 = null; const rend = { style: 0, styleN: 0, layout: 0, layoutN: 0, script: 0, task: 0 };
+const prof = new Map(), profTotal = new Map(), profNative = new Map(); let profN = 0, m0 = null; const rend = { style: 0, styleN: 0, layout: 0, layoutN: 0, script: 0, task: 0 };
 const trace = new Map(); let traceN = 0;
 const TRACE_NAMES = ['UpdateLayoutTree', 'Layout', 'PrePaint', 'Paint', 'Layerize', 'Commit', 'UpdateLayer', 'HitTest', 'FunctionCall', 'EventDispatch', 'TimerFire', 'FireAnimationFrame', 'RunMicrotasks', 'V8.GC_SCAVENGER', 'MajorGC', 'MinorGC', 'ScheduleStyleRecalculation', 'RunTask'];
 const traceStart = async () => { if (!TRACE) return; await cdp.send('Tracing.start', { categories: 'devtools.timeline,disabled-by-default-devtools.timeline,v8', transferMode: 'ReturnAsStream' }); };
@@ -186,6 +202,12 @@ const profStop = async (what, ms) => {
     const seen = new Set(); for (let n = id; n != null; n = parent.get(n)) { const f = byId.get(n).callFrame; if (f.url && !/node_modules|index-|chunk-/.test(f.url) && f.functionName) seen.add(keyOf(f)); }
     for (const k of seen) profTotal.set(k, (profTotal.get(k) || 0) + (profile.timeDeltas[i] || 0) / 1000);
     const f = byId.get(id).callFrame;
+    // a browser call (forced style or layout, a query): charged to the first script function above it
+    if (!f.url && f.functionName && !f.functionName.startsWith('(')) {
+      let c = parent.get(id); while (c != null && !byId.get(c).callFrame.url) c = parent.get(c);
+      const kk = `${f.functionName} ← ${c != null ? keyOf(byId.get(c).callFrame) : '?'}`;
+      profNative.set(kk, (profNative.get(kk) || 0) + (profile.timeDeltas[i] || 0) / 1000);
+    }
     const k = `${f.functionName || '(anon)'} ${(f.url || '').split('/').pop()}:${f.lineNumber + 1}`;
     const e = prof.get(k) || { ms: 0, kinds: new Set() };
     e.ms += (profile.timeDeltas[i] || 0) / 1000; e.kinds.add(what); prof.set(k, e);
@@ -254,7 +276,7 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
     // a new turn only when the game moved on (a retried click is the same turn), so picks and idle readings
     // follow the game, not the harness's timing, and the same seed plays the same game
     const fresh = g.moves !== placeAt;
-    if (fresh) { placeAt = g.moves; turns++; }
+    if (fresh) { placeAt = g.moves; turns++; await busyMark(round); }
     if (fresh && turns % 2 === 1) console.log(`round ${round} turn ${turns}: idle ${JSON.stringify(await idleSample(round))}`);
     await hover('.lt-wheel [data-slot][data-option]', round);
     await hover('.lt-shop .card[data-uid]', round);
@@ -292,6 +314,7 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
 await letGo();
 const over = !!(await page.$('.results'));
 
+const extra = await page.evaluate(() => window.__rigExtra || null).catch(() => null); // a probe build's own readings
 const F = await page.evaluate(() => ({ frames: window.__rig.frames, loaf: window.__rig.loaf, big: window.__rig.big || [] })).catch(() => ({ frames: [], loaf: [] }));
 // the leak control: a reload on the last round's turn (the game is saved locally), measured the same way
 let unbroken = null, reloaded = null;
@@ -323,6 +346,7 @@ for (const r of rounds) {
     anims: [...byAnim].map(([k, gs]) => ({ k, n: gs.length, p95: pct(gs, 0.95), worst: Math.max(...gs), hitch: Math.round(100 * gs.filter(g => g > 33.4).length / gs.length) })).sort((a, b) => b.hitch * b.n - a.hitch * a.n).slice(0, 12),
     clicks: { n: clicks.length, p50: pct(clicks, 0.5), p95: pct(clicks, 0.95), max: Math.max(0, ...clicks.filter(x => x != null)), dead: clicks.filter(x => x == null).length, byKind: Object.entries(R[r].clicks.reduce((m, c) => ((m[c.what] ||= []).push(c.ms), m), {})).map(([k, xs]) => ({ k, n: xs.length, p50: pct(xs, 0.5), p95: pct(xs, 0.95) })) },
     hovers: { n: hovers.length, p50: pct(hovers, 0.5), p95: pct(hovers, 0.95), missed: hovers.filter(x => x == null).length },
+    busy: R[r].wall ? Math.round(100 * R[r].task / R[r].wall) : null,
     idle: { busyPct: pct(R[r].idle.map(x => x.busyPct), 0.5), style: pct(R[r].idle.map(x => x.style), 0.5), script: pct(R[r].idle.map(x => x.script), 0.5), anims: pct(R[r].idle.map(x => x.anims), 0.5) },
     memory: R[r].memory,
     loaf: { n: F.loaf.filter(l => l.round === r).length, over100: F.loaf.filter(l => l.round === r && l.d > 100).length, top: F.loaf.filter(l => l.round === r).sort((a, b) => b.d - a.d).slice(0, 5) },
@@ -377,8 +401,10 @@ if (PROFILE) {
     ...[...prof].sort((a, b) => b[1].ms - a[1].ms).slice(0, 60).map(([k, e]) => `| ${(100 * e.ms / tot).toFixed(1)}% | ${Math.round(e.ms)} | ${k.replace(/\|/g, '/')} | ${[...e.kinds].join(' ')} |`)];
   P.push('', '## Total time (self plus what it calls), our code only', '', '| share | ms | function |', '|---|---|---|',
     ...[...profTotal].sort((a, b) => b[1] - a[1]).slice(0, 60).map(([k, ms]) => `| ${(100 * ms / tot).toFixed(1)}% | ${Math.round(ms)} | ${k.replace(/\|/g, '/')} |`));
+  P.push('', '## Browser calls by caller (forced style and layout show up here)', '', '| ms | call ← caller |', '|---|---|',
+    ...[...profNative].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([k, ms]) => `| ${Math.round(ms)} | ${k.replace(/\|/g, '/')} |`));
   writeFileSync(`${OUT}/rig-${label}-clicks.md`, P.join('\n') + '\n');
 }
-writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors, path, odd: Object.fromEntries(rounds.map(r => [r, R[r].clicks.filter(c => c.why)])) }, null, 1));
+writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors, path, extra, odd: Object.fromEntries(rounds.map(r => [r, R[r].clicks.filter(c => c.why)])) }, null, 1));
 console.log(L.slice(0, 12 + rounds.length + 3).join('\n'));
 process.exit(GATE && fails.length ? 1 : 0);
