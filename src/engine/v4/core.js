@@ -1468,6 +1468,8 @@ function ctxFor(state) {
       state.cards[uid] = { uid, def: state.cards[uid].def };
       state.pile.push(uid);
       log(state, `${p.name} sent ${def.name} to the bottom of the pile.`);
+      // a shop short of its size (the pile ran out) takes it back up, as every other way to the bottom does
+      refill(state);
       return c;
     },
     buryFromShop(uid) {

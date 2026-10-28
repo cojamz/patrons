@@ -1,7 +1,7 @@
 // @vitest-environment node
 // White (trading): every action and every member with exact numbers, plus 200 seeded bot games on a White table.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createGame, applyMove, resume, followers, contextFor } from '../../../../engine/v4/core.js';
+import { createGame, applyMove, resume, followers, contextFor, shopSize } from '../../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
 import trading, { install } from '../../../../engine/v4/content/trading.js';
@@ -137,6 +137,17 @@ describe('White actions', () => {
     expect([B(keep), has(keep, 'red.bigfamily')]).toEqual([0, true]);
     const none = take(scene({ round: 2 }), 'trading.farewell');
     expect([none.pending.kind, R(none).white]).toEqual(['buy', 1]);
+  });
+
+  it('Farewell refills a shop left short by an empty pile with the member it sent to the bottom (QA, Oct 28)', () => {
+    const s0 = scene({ round: 2, members: [['red.bigfamily']] });
+    s0.pile = []; s0.shop = s0.shop.slice(0, shopSize(s0) - 1);
+    let s = take(s0, 'trading.farewell');
+    const u = uidOf(s, 'red.bigfamily', 0);
+    s = move(s, `card:${u}`);
+    expect(s.shop.length).toBe(shopSize(s));
+    expect(s.shop.at(-1)).toBe(u);
+    expect(s.pile).toEqual([]);
   });
 
   it('Estate Sale (ring II): +1 white, send a member to the bottom of the pile, white equal to its cost', () => {
