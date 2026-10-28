@@ -231,22 +231,25 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     }
   }, [show, session, rivalDwell]);
   pumpRef.current = pump;
-  const finishPresentation = useCallback(() => {
+  const finishPresentation = useCallback((landed = false) => {
     const completed = waiting.current;
     if (!completed) return;
     waiting.current = null;
-    // Actual completion supersedes the estimated viewing timer; never wait twice for one sequence.
-    if (timer.current !== 'commit') { clearTimeout(timer.current); timer.current = null; timerAt.current = null; }
+    // Actual completion supersedes the estimated viewing timer; never wait twice for one sequence. (At the landing,
+    // the step's hold still runs: a rival's step stays up its floor before the next one, motion.mjs m4)
+    if (timer.current !== 'commit' && !(landed === true && typeof timer.current === 'number')) { clearTimeout(timer.current); timer.current = null; timerAt.current = null; }
     setTable(t => t.shown === completed ? { ...t, interaction: completed } : t);
     // The transport can be ahead; reveal its queued snapshots only after this sequence lands.
     if (!timer.current) startTransition(() => pumpRef.current());
   }, []);
   useEffect(() => onChainEnd(finishPresentation), [finishPresentation]);
-  // your turn: your choices light as the last piece lands; the settle and the stage's way home finish under them
+  // as the last piece lands the table moves on: your choices light, or the next move starts (its own hold still paces
+  // it), while the settle and the stage's cards going home finish under it (Cory, Oct 28, yes to: "the next move waits
+  // for the cards to slide back off the stage, about 1.5 s per rival turn at Relaxed")
   useEffect(() => onChainLanded(() => {
-    const w = waiting.current, mine = session.mySeats || [];
-    if (w && !w.over && w.pending && mine.includes(w.pending.player)) finishPresentation();
-  }), [finishPresentation, session]);
+    const w = waiting.current;
+    if (w && !w.over) finishPresentation(true);
+  }), [finishPresentation]);
   useLayoutEffect(() => {
     const w = capFor.current;
     if (!w || w !== table.shown) return;
