@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.808 — 2026-10-28
+
+- The starting pick's panel goes away once the first moves play, instead of staying up through bots' turns
+
 ## v0.9.807 — 2026-10-28
 
 - Seat figures' glow and outline are drawn into the picture, so Firefox stops redrawing them while they bob
