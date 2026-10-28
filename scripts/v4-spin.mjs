@@ -20,6 +20,8 @@ await ctx.addInitScript(() => {
   F.watch = ms => new Promise(done => { const fr = []; const t0 = performance.now(); let last = t0; const tick = t => { fr.push(t - last); last = t; if (t - t0 < ms) requestAnimationFrame(tick); else done(fr); }; requestAnimationFrame(tick); });
 });
 await ctx.addInitScript(() => { let a = 20261028; Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; });
+// --css="<rules>": add a stylesheet before the spins, to find which paint a spin is paying for
+const CSS = flag('css', '');
 const page = await ctx.newPage();
 const cdp = FF ? null : await ctx.newCDPSession(page);
 await page.goto(`${url.replace(/\/$/, '')}/?intro=0&sound=off`);
@@ -36,6 +38,7 @@ for (let i = 0; i < 400; i++) {
 }
 await sleep(1500);
 await page.mouse.move(5, 5);
+if (CSS) { await page.addStyleTag({ content: String(CSS) }); await sleep(500); }
 if (cdp) await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
 const out = [];
 for (let k = 0; k < SPINS; k++) {
@@ -44,6 +47,7 @@ for (let k = 0; k < SPINS; k++) {
   await page.keyboard.press(k % 2 ? 'ArrowLeft' : 'ArrowRight');
   const fr = await w;
   // frames during the spin's ~300 ms (after the key): the gaps between painted frames
+  if (flag("frames", false)) console.log(fr.map(Math.round).join(" "));
   out.push({ frames: fr.length, worst: Math.round(Math.max(...fr)), over50: fr.filter(x => x > 50).length });
   await sleep(500);
 }
