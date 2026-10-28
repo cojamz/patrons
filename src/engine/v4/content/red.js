@@ -145,7 +145,7 @@ export default {
         ctx.choose(owner, 'Panel: Promote or Demote?', options, 'red.panelMode', { excludeUid: card.uid });
       },
     }),
-    m('loyalists', 'Loyalists', 2, 3, /* Claude's fill-in price 5, was 3 (Cory, 2026-10-22: "too cheap") */ 'Your members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
+    m('loyalists', 'Loyalists', 2, 3, /* Claude's fill-in price 5, was 3 (Cory, 2026-10-22: "too cheap") */ 'Your other members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
     // Cory, 2026-10-24: Red's once per game, "swap a rivals with the shop" (equal or greater cost); name and price Claude's fill-in
     m('headhunter', 'Headhunter', 3, 2, 'Once per game: swap a rival’s member with a shop member of equal or greater cost.', {
       activate: 'game',
@@ -186,7 +186,7 @@ function hireCheapest(ctx, p, who) {
 }
 // A swap can rearrange any cult, but taking from a protected rival remains blocked.
 function swapPairs(ctx, p, mode, excludeUid = null) {
-  const cult = ctx.state.players.flatMap(owner => ctx.canSwapMembers(owner) && (owner === p ? mode !== 'rival' : ctx.canSteal(p, owner, 'member')) ? ctx.membersOf(owner) : []);
+  const cult = ctx.state.players.flatMap(owner => (owner === p ? mode !== 'rival' : ctx.canSteal(p, owner, 'member')) ? ctx.membersOf(owner).filter(c => ctx.canSwapMember(c.uid)) : []);
   const shop = ctx.shopCards();
   const out = [];
   const first = mode === 'even' ? [...cult, ...shop] : cult;

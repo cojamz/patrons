@@ -73,4 +73,4 @@ After round III is scored, game-end member bonuses are added. Most followers win
 ## Card rulings
 - Impostor and Doppelganger become copies when recruited; that does not also trigger the copied member's "On Recruit". Their copied abilities and later round-start effects work normally.
 - Panel's "On Recruit" promotes or demotes another member; Panel cannot move itself.
-- Loyalists blocks swaps involving its owner's cult, including its owner's own swaps, but does not block theft.
+- Loyalists protects its owner's other members from every swap, its owner's own swaps included, but not itself, and it does not block theft. Two Loyalists (a Doppelganger copy) don't protect each other.

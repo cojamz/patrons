@@ -1127,7 +1127,7 @@ function swapMembers(state, actor, aUid, bUid) {
   const a = locate(aUid), b = locate(bUid);
   if (!a || !b) return false;
   const ctx = ctxFor(state);
-  for (const loc of [a, b]) if (loc.owner && !ctx.canSwapMembers(loc.owner)) return false;
+  if ((a.owner && !ctx.canSwapMember(aUid)) || (b.owner && !ctx.canSwapMember(bUid))) return false;
   for (const loc of [a, b]) if (loc.owner && loc.owner !== actor && !ctx.canSteal(actor, loc.owner, 'member')) return false;
   // Any two includes two in the same shop/cult: change their positions, with no acquisition.
   if (a.list === b.list) {
@@ -1478,6 +1478,12 @@ function ctxFor(state) {
     },
     swapMembers: (actor, a, b) => swapMembers(state, actor, a, b),
     canSwapMembers: owner => !sumMemberFlag(state, owner, 'blockMemberSwaps'),
+    // Loyalists shields its owner's other members, never a Loyalists (a copy of it included): Cory, 2026-10-27.
+    canSwapMember: uid => {
+      const owner = state.players.find(pl => pl.members.includes(uid));
+      if (!owner || !sumMemberFlag(state, owner, 'blockMemberSwaps')) return true;
+      return effectiveDefs(state.cards[uid]).some(d => d.blockMemberSwaps);
+    },
     moveMember(uid, from, to, { recruit: activelyAcquired = false, actor = activelyAcquired ? to : from } = {}) {
       if (!from.members.includes(uid) || from === to) return false;
       const movedHooks = movementListeners(state, actor);

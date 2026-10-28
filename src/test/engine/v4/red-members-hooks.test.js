@@ -78,11 +78,12 @@ describe('new Red member hooks', () => {
     expect(c.followers(rival)).toBe(2); // both printed followers arrive in full
   });
 
-  it('Loyalists blocks both leaders’ swaps, including itself, while theft remains possible', () => {
+  it('Loyalists blocks swaps of its owner’s other members, not of itself, while theft remains possible (Cory, 2026-10-27)', () => {
     const s = fixture({ members: [['red.loyalists', 'red.twins'], ['gold.banker']], shop: ['red.volunteer'] });
     const c = contextFor(s), [p, rival] = s.players;
-    expect(c.swapMembers(p, p.members[0], s.shop[0])).toBe(false);
+    expect(c.swapMembers(p, p.members[1], s.shop[0])).toBe(false);
     expect(c.swapMembers(rival, p.members[1], rival.members[0])).toBe(false);
+    expect(c.swapMembers(rival, p.members[0], rival.members[0])).toBe(true);
     expect(c.steal(rival, p, { uid: uidIn(s, 'red.twins', 0) })).toBe(1);
   });
 

@@ -168,11 +168,22 @@ describe('Red members: bounded acquisition and body invariants', () => {
   it('Loyalists blocks both players from swapping its cult, but does not invent theft immunity', () => {
     const s = table(Q, { members: [['red.loyalists', 'red.twins'], ['red.volunteer']], shop: ['red.mentor'] });
     const ctx = contextFor(s), twins = uidIn(s, 'red.twins', 0), volunteer = uidIn(s, 'red.volunteer', 1);
-    expect(ctx.canSwapMembers(s.players[0])).toBe(false);
+    expect(ctx.canSwapMember(twins)).toBe(false);
+    expect(ctx.canSwapMember(uidIn(s, 'red.loyalists', 0))).toBe(true);
     expect(ctx.swapMembers(s.players[0], twins, s.shop[0])).toBe(false);
     expect(ctx.swapMembers(s.players[1], volunteer, twins)).toBe(false);
     expect(ctx.steal(s.players[1], s.players[0], { uid: twins })).toBe(1);
     expect(s.players[1].members).toContain(twins);
+  });
+
+  it('two Loyalists (a Doppelganger copy) do not shield each other; they still shield the rest', () => {
+    const s = table(Q, { members: [['red.loyalists', 'echo.doppel', 'red.twins'], ['red.volunteer']] });
+    const doppel = uidIn(s, 'echo.doppel', 0);
+    s.cards[doppel].copy = 'red.loyalists';
+    const ctx = contextFor(s);
+    expect(ctx.canSwapMember(uidIn(s, 'red.loyalists', 0))).toBe(true);
+    expect(ctx.canSwapMember(doppel)).toBe(true);
+    expect(ctx.canSwapMember(uidIn(s, 'red.twins', 0))).toBe(false);
   });
 
   it('a Doppelganger copying Panel adopts its body but does not start a second Recruit chain', () => {
