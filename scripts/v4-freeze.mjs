@@ -23,6 +23,10 @@ const flag = (n, d) => { const a = argv.find(x => x === `--${n}` || x.startsWith
 const [base, label] = pos;
 if (!base || !label) { console.error('usage: node scripts/v4-freeze.mjs <url> <label> [--profile]'); process.exit(2); }
 const CPU = Number(flag('cpu', 4)), SPEED = String(flag('speed', 'relaxed')), SEED = Number(flag('seed', 20261028));
+// --look: on each of your turns, point at every space on the wheel and every shop card for a moment, as a person
+// reading the table does (the copy spaces' "You'd get" is where a hover froze the page; Firefox runs had no hovers at all
+// until launchBrowser gave it a pointer, Oct 28)
+const LOOK = !!flag('look', false);
 const EAGER = !!flag('eager', false); // click as soon as your spaces light, mid-animation included (a person does)
 const PROFILE = !!flag('profile', false), POKE = Number(flag('poke', 250)), MAX_MIN = Number(flag('max-min', 45));
 const OUT = String(flag('out', 'design/eval/perf')), GATE = !flag('no-gate', false);
@@ -122,6 +126,7 @@ const poker = (async () => { while (poking) { await page.keyboard.press('Shift')
 
 const gsAt = {};
 let stallKey = '', stallAt = Date.now();
+const looks = { n: 0, open: 0 };
 let dead = 0, placeAt = -1, turns = 0, lastRound = '';
 while (Date.now() - t0 < MAX_MIN * 60000) {
   if (await $('.results')) break;
@@ -150,10 +155,15 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
   let acted = false;
   if (g.phase === 'place') {
     if (g.moves !== placeAt) { placeAt = g.moves; turns++; }
-    // a person looks before placing: one space and one shop card hovered
-    for (const sel of ['.lt-wheel [data-slot][data-option]', '.lt-shop .card[data-uid]']) {
-      const els = await $$(sel); const el = els[Math.floor(els.length / 2)]; const c = el && await center(el);
-      if (c) { await page.mouse.move(c.x, c.y, { steps: 3 }); await sleep(500); }
+    // a person looks before placing: one space and one shop card hovered (--look: every space and every card)
+    for (const sel of LOOK ? ['.lt-wheel [data-slot].open', '.lt-shop .card[data-uid]'] : ['.lt-wheel [data-slot][data-option]', '.lt-shop .card[data-uid]']) {
+      const els = await $$(sel);
+      for (const el of LOOK ? els : [els[Math.floor(els.length / 2)]]) {
+        const c = el && await center(el);
+        if (!c) continue;
+        await page.mouse.move(c.x, c.y, { steps: 3 }); await sleep(LOOK ? 450 : 500);
+        looks.n++; if (await page.$('[data-hover-layer][data-open="1"], .popover:not([data-hover-layer]):not([data-prep])')) looks.open++;
+      }
     }
     const legal = await $$('.lt-wheel [data-slot][data-option]');
     if (legal.length) acted = await click(legal[(g.moves * 3) % legal.length], 'place', round);
@@ -224,7 +234,7 @@ for (const r of rounds) for (const y of [1, 0]) {
   L.push(`| ${r} | ${y ? 'yours' : 'rivals'} | ${row.n} | ${row.block} | ${row.total} | ${row.sl} | ${row.o200} | ${row.worst} |`);
 }
 res.totals = { loafBlock: sum(lf.map(e => e.block)), loafTotal: sum(lf.map(e => e.d)), inputWait: sum(inputs.filter(e => e.n === 'keydown' || e.n === 'pointerdown').map(e => e.delay)), over100: inputs.filter(e => (e.n === 'keydown' || e.n === 'pointerdown') && e.delay > 100).length };
-L.push('', `Totals: long frames ${res.totals.loafTotal} ms (${res.totals.loafBlock} ms blocking), input waited ${res.totals.inputWait} ms, ${res.totals.over100} presses/clicks waited over 100 ms.`);
+L.push('', `Totals: long frames ${res.totals.loafTotal} ms (${res.totals.loafBlock} ms blocking), input waited ${res.totals.inputWait} ms, ${res.totals.over100} presses/clicks waited over 100 ms. Hovers: ${looks.n}, a card open after ${looks.open}.`);
 // scripts in long frames, grouped by who started them
 const byScript = new Map();
 for (const f of lf) for (const s of f.scripts) { const k = `${s.inv} → ${s.fn || '?'} @ ${s.src}`; const e = byScript.get(k) || { d: 0, n: 0, fsl: 0, max: 0 }; e.d += s.d; e.n++; e.fsl += s.fsl; e.max = Math.max(e.max, s.d); byScript.set(k, e); }
