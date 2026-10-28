@@ -126,9 +126,18 @@ export function applyMove(prev, move, { effects = false } = {}) {
     accounted(state, causeOf(state, task), () => resolveTask(state, task, move.option), task.p);
     clearFresh(state);
     advance(state);
+    wipeUnowned(state);
   } catch (err) { if (effects) abandonEffects(); throw err; }
   if (effects) Object.defineProperty(state, 'effects', { value: stopEffects(), enumerable: false, configurable: true, writable: true });
   return state;
+}
+// A card in the pile or the shop belongs to nobody, so it carries nothing from a member's life: every way back there
+// (release, bury, swaps, Tryout running a shop member's On Recruit in place) ends clean, checked once per move here.
+function wipeUnowned(state) {
+  for (const u of [...state.pile, ...state.shop]) {
+    const c = state.cards[u];
+    if (Object.keys(c).length > 2) state.cards[u] = { uid: c.uid, def: c.def };
+  }
 }
 function moveCause(state, task, move) {
   const o = String(move.option);
@@ -144,6 +153,7 @@ function moveCause(state, task, move) {
 export function resume(state) {
   state.pending = null;
   advance(state);
+  wipeUnowned(state);
   return state;
 }
 
