@@ -840,8 +840,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       touched: [...new Set(fresh.flatMap(st => st.touched))],
       // what rivals took from your seat since your last turn, the turn in play included (seatLoss, trail.js)
       lost: mySeats.length === 1 ? [
-        ...sinceYourTurn(t, mySeats).filter(st => st.lost).map(st => ({ actor: st.actor, lost: st.lost })),
-        ...(t.cur && t.last && t.cur.actor !== mySeats[0] && t.cur.round === live0.round ? [{ actor: t.cur.actor, lost: seatLoss(t.cur.start, t.last, mySeats[0]) }].filter(x => x.lost) : []),
+        ...sinceYourTurn(t, mySeats).filter(st => st.lost).map(st => ({ actor: st.actor, lost: st.lost, n: st.n })),
+        ...(t.cur && t.last && t.cur.actor !== mySeats[0] && t.cur.round === live0.round ? [{ actor: t.cur.actor, lost: seatLoss(t.cur.start, t.last, mySeats[0]), n: Infinity }].filter(x => x.lost) : []),
       ] : [],
     };
   }, [live0]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -850,7 +850,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const toldCard = !toldShown ? null : turnCard && turnCard.n === toldShown.n ? (turnCard.gone ? null : turnCard) : toldShown;
   const cardNow = story.live || toldCard;
   const since = story.since;
-  const lostText = lossWords(story.lost, state.players);
+  // the note clears once your turn comes, and stays cleared after it even when your turn told no story of its own
+  // (Cory, playtest Oct 28: "notification about swapping members wont go away")
+  const lostSeen = useRef(0);
+  const myTurn = !!(pend && mySeats.length === 1 && pend.player === mySeats[0]);
+  if (myTurn) lostSeen.current = trail.current.n;
+  const lostText = myTurn ? '' : lossWords(story.lost.filter(x => x.n > lostSeen.current), state.players);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const prevState = useRef(physicalState); // the state the table last committed (the flight effect moves it on)
@@ -1586,7 +1591,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               {pid == null ? null : (
                 <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={!!(pend && pend.player === pid && !state.over)} hover={hover} optionFor={pid === me ? live : undefined} onPick={shopPick} pick={pickParts[pid] || null} />
               )}
-              {pid != null && pid === me && lostText && <div className="seat-stolen" role="status" data-stolen={pid}><Rich text={lostText} /></div>}
+              {pid != null && pid === me && lostText && <div key={lostText} className="seat-stolen" role="status" data-stolen={pid} data-brief=""><Rich text={lostText} /></div>}
               {pid != null && !(pid === me && lostText) && stolen.filter(x => x.pid === pid).map(x => <div key={x.n} className="seat-stolen" role="status" data-stolen={pid}><Rich text={x.text} /></div>)}
             </section>
           ))}

@@ -443,3 +443,4 @@
 .lt .say-sub[data-brief]{animation:brief-out .4s ease-out 3.5s forwards}
 @keyframes brief-out{to{opacity:0;visibility:hidden}}
 @media (prefers-reduced-motion:reduce){.lt .say-sub[data-brief]{animation-duration:.01s}}
+.lt > .lt-seat > .seat-stolen[data-brief]{animation:brief-out .4s ease-out 6s forwards}
