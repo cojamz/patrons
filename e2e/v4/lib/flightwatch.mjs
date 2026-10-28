@@ -50,7 +50,7 @@ export const FLIGHT_WATCH = () => {
     const now = performance.now();
     if (now - W.lastInput < 150) { W.skipped++; return; }
     const r = el.getBoundingClientRect();
-    W.cut.push({ kind: f.kind, at, end: f.end, share: at == null ? null : Math.round(100 * Math.max(0, at) / (f.end || 1)), age: Math.round(now - f.born), state: f.anim.playState, how, round: (document.querySelector('.hub-label b')?.textContent || '').trim(), moves: document.querySelector('.app.game')?.dataset.moves, x: Math.round(r.left), y: Math.round(r.top), stack: (new Error().stack || '').split('\n').slice(2, 9).map(s => s.trim().replace(/\(?https?:\/\/[^/]+\/[^)]*\/([^/)]+)\)?/, '$1')).join(' < ') });
+    W.cut.push({ t: Math.round(now), born: Math.round(f.born), kind: f.kind, at, end: f.end, share: at == null ? null : Math.round(100 * Math.max(0, at) / (f.end || 1)), age: Math.round(now - f.born), state: f.anim.playState, how, round: (document.querySelector('.hub-label b')?.textContent || '').trim(), moves: document.querySelector('.app.game')?.dataset.moves, x: Math.round(r.left), y: Math.round(r.top), stack: (new Error().stack || '').split('\n').slice(2, 9).map(s => s.trim().replace(/\(?https?:\/\/[^/]+\/[^)]*\/([^/)]+)\)?/, '$1')).join(' < ') });
   };
   const remove = Element.prototype.remove;
   Element.prototype.remove = function () { if (live.has(this)) gone(this, 'remove'); return remove.call(this); };
