@@ -20,6 +20,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Decisions come as a numbered list he answers by number ("1 yes, 2 no"), one line each, your default in brackets. Only design and feel calls go to him.
 - Every message ends with either the decision itself (numbered questions, one line each, quoting the card text and what changes for a player, default in brackets) or the plain line "Nothing needed from you." Never "ok?" or a status that leaves him guessing what he's deciding (Cory, Oct 25).
 - Don't restate that a space gives +1 of its color; every space does, and it goes without saying (Cory, Oct 22).
+- Every pick names the real card or space, quotes it, and says what a player does differently. Never a pick on a category ("the member-count cards", "one round III space") without the cards. Check any claim about the game against the cards before sending it, and any example against "could a table track this?" (Cory, Oct 27).
 - Use his words. Never coin labels. Say "buy followers". Any card or space you name gets its text quoted in a few words and what changes for a player.
 - Show, don't describe: a play link, screenshot or GIF with a plain caption. Plain URLs. Send iterations as they happen, with screenshots, not just finished builds.
 - Times are his US Eastern clock, 12-hour ("7:43pm"). The container runs UTC.
@@ -69,3 +70,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-22: Cory, mid-playtest: "from now on * = player not but no action needed at the moment". Starred notes are logged only.
 - 2026-10-24: Cory, after a Hard bot batch on all nine colors: "you should only be testing on colors that are in 2.0". Bot batches default to the 2.0 colors; `ONLY=` on v4-hard-batch.mjs picks the pool.
 - 2026-10-25: Cory: "ok? what's my decision? … it's rarely clear from the threads what my decision is". Every message now ends with the numbered decision or "Nothing needed from you."
+- 2026-10-27: Cory, on picks like "rework the member-count cards toward the steal example's kind": "WHAT DOES THIS MEAN… WHAT DOES THIS FUCKING MEAN?" and on a claim about round III: "is that true?" (it wasn't). Picks name and quote real cards and say what changes; claims are checked against the cards first; examples pass the table-tracking test.
