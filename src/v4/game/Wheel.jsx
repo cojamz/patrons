@@ -650,6 +650,9 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   const onMove = e => {
     const dr = drag.current;
     if (!dr) return;
+    // a mouse with no button down isn't dragging: a click whose release never reached the board (the space it took
+    // re-rendered under it) left a drag behind, and the next pointer move turned the board by itself
+    if (e.pointerType === 'mouse' && !(e.buttons & 1) && !moved.current) { drag.current = null; return; }
     if (!moved.current) {
       const dx = Math.abs(e.clientX - dr.x), dy = Math.abs(e.clientY - dr.y);
       if (Math.max(dx, dy) < 6) return;

@@ -27,7 +27,7 @@ const emit = () => { ver++; items = items.slice(); for (const fn of subs) fn(); 
 export const subscribeStage = fn => { subs.add(fn); return () => subs.delete(fn); };
 export const stageItems = () => items;
 /** Includes the readable hold and the actual return flight, until ActionStage removes each item. */
-export const stageBusy = () => items.some(it => !it.lingering);
+export const stageBusy = () => items.some(it => !it.lingering || it.leaving); // a lingering bubble holds nothing until it flies home
 export const stageVersion = () => ver;
 
 /** The stage's centre on screen: the wheel's hub (null off the board). */
