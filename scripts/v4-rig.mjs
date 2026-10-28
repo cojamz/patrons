@@ -409,7 +409,7 @@ for (const r of rounds) {
   if (s.loaf.top.length) L.push('', 'Longest frames: ' + s.loaf.top.map(l => `${l.d} ms (${l.scripts.join(', ') || 'style/layout/paint'})`).join(' · '));
 }
 if (F.big && F.big.length) L.push('', 'Frames over 2 s, with the screen at the time:', ...F.big.map(b => `- ${b.d} ms · ${b.phase} · prompt "${b.prompt}" · hover "${b.hover}" · options ${b.options.join(' ')}`));
-if (flights) L.push('', `Flights: ${flights.flights} flew, ${flights.landed} landed, ${flights.skipped} cut by a press, ${flights.cut} cut short with no press; ${flights.missed} of ${flights.aimed} aimed ended away from their place.`, ...flights.misses.slice(0, 10).map(m => `- missed by ${m.off}px: ${m.kind} → ${m.target} (round ${m.round}, move ${m.moves})`), ...Object.entries(flights.by).sort((a, b) => b[1].n - a[1].n).map(([k, x]) => `- ${x.n}× ${k} (at ${x.shares.slice(0, 12).join(', ')}% of the way)`));
+if (flights) L.push('', `Flights: ${flights.flights} flew, ${flights.landed} landed, ${flights.skipped} cut by a press, ${flights.cut} cut short with no press, ${flights.jumps} shows jumped to their end; ${flights.missed} of ${flights.aimed} aimed ended away from their place.`, ...flights.misses.slice(0, 10).map(m => `- missed by ${m.off}px: ${m.kind} → ${m.target} (round ${m.round}, move ${m.moves})`), ...Object.entries(flights.by).sort((a, b) => b[1].n - a[1].n).map(([k, x]) => `- ${x.n}× ${k} (at ${x.shares.slice(0, 12).join(', ')}% of the way)`));
 if (errors.length) L.push('', 'Errors:', ...errors.slice(0, 10).map(e => `- ${e}`));
 writeFileSync(`${OUT}/rig-${label}.md`, L.join('\n') + '\n');
 if (TRACE) {

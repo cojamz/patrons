@@ -36,7 +36,7 @@ import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, holdCap, stepHoldCap, installChainSkip, skipChain, onChainSkip, onChainEnd, onChainLanded, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, stepHoldCap, installChainSkip, noteBehind, skipChain, chainLeft, onChainSkip, onChainEnd, onChainLanded, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
 import { soundOn, onSound, setSound, soundVolume, onVolume, setVolume } from '../sound.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale, slowed } from '../motion.js';
@@ -107,6 +107,7 @@ export function loadRoundStart(st, online = false) {
   return null;
 }
 
+const CAP_GRACE = 900; // (e2e/v4/step-hold.mjs allows the cap plus 1.2s)
 export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   const first = session.getState();
   // a local game reloaded while its round summary was up reopens it (session/moment.js; the session holds its bots)
@@ -200,6 +201,7 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
       // the same player's next step shows when this chain's last piece is two-thirds along (its handoff); a turn that
       // passes waits for the whole chain and a breath. A bot step with nothing to show doesn't wait, except a turn-ending
       // pass, which holds a moment (MO.passHold).
+      noteBehind(queue.current.length >= 3); // (the same reading stepHoldCap gets below, so the show fits the cap it gets)
       const plan = planChain(prev, next, { mine });
       waiting.current = motionOK() && plan.total > 0 ? next : null;
       clearTimeout(capTimer.current);
@@ -249,7 +251,18 @@ export function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null
     const w = capFor.current;
     if (!w || w !== table.shown) return;
     capFor.current = null;
-    capTimer.current = setTimeout(() => { if (waiting.current === w && chainRunning()) skipChain(); }, stepHoldCap(queue.current.length >= 3));
+    // at the cap, what's still playing gets one short grace to land (its last pieces, the stage going home) before the
+    // rest jumps to its end: a jump at the cap itself mostly cut the member card's way home and the last coins' flight
+    // (Cory, Oct 28: "often seems like half the animation is skipped")
+    // (a page that froze mid-show is behind its own clock: beats a moment from playing get that moment, once more)
+    let more = 1;
+    const jump = () => {
+      if (waiting.current !== w || !chainRunning()) return;
+      const left = chainLeft();
+      if (left > 0 && left < 1500 && more-- > 0) { capTimer.current = setTimeout(jump, left + 300); return; }
+      skipChain();
+    };
+    capTimer.current = setTimeout(() => { if (waiting.current === w && chainRunning()) capTimer.current = setTimeout(jump, CAP_GRACE); }, stepHoldCap(queue.current.length >= 3));
   }, [table.shown]);
   useEffect(() => () => clearTimeout(capTimer.current), []);
   useLayoutEffect(() => {

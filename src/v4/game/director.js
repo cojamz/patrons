@@ -500,14 +500,24 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   // Dense chains tighten proportionally, preserving cause order within the existing turn-wait budget.
   // a longer plan plays faster to fit, never faster than Quick (half)
   const cap = Math.round(2400 * speedScale());
+  // a step in a round also fits the table's hold cap (stepHoldCap, less a margin for its landing): past it the rest of
+  // the chain lands at once and its last pieces never fly (Cory, Oct 28: "often seems like half the animation is
+  // skipped"; at Relaxed a third of rivals' steps ran past it). It plays faster to fit instead, never faster than Steady
+  const fit = state.round >= 1 && state.round === before.round ? stepHoldCap(chainBehind) - FIT_MARGIN : Infinity;
+  const room = Math.min(cap, fit);
   // (a new round's opening isn't a turn: its beats keep their own pace, outside the turn's cap)
-  if (end > cap && !roundAdvance) {
-    const k = Math.max(0.5, cap / end);
+  if (end > room && !roundAdvance) {
+    const k = Math.max(room < cap ? Math.min(0.5, SPEEDS.steady / speedScale()) : 0.5, room / end);
     for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); for (const f of ['toHub', 'show', 'fromHub']) if (a[f]) a[f] = Math.round(a[f] * k); }
     end *= k; hand *= k; t *= k;
   }
   return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? Math.round(end + (turnPasses ? MO.breath * pace : 0)) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses, pace };
 }
+
+// the table is behind (3+ steps waiting, useTable): the hold cap halves, and a step's show fits the shorter one
+let chainBehind = false;
+export const noteBehind = b => { chainBehind = !!b; };
+const FIT_MARGIN = 600;
 
 /** A rival step's clock: time runs at RIVAL, except inside the kept spans (a recruit's or follower buy's beat), where it
  *  runs at full speed. Maps a time on the plan to its time on screen (whole ms, never out of order). */
@@ -657,6 +667,8 @@ export const onChainEnd = fn => { endSubs.add(fn); return () => endSubs.delete(f
 // choices can light now (Cory, 2026-10-25: "your next choices light up as the last piece lands, not after the bounce")
 const landSubs = new Set();
 export const onChainLanded = fn => { landSubs.add(fn); return () => landSubs.delete(fn); };
+/** How much of the chain's queue is still to play, on its own clock (0 when only landings and the settle are left). */
+export const chainLeft = () => (chain.queue.length ? Math.max(0, chain.queue[chain.queue.length - 1].at - chain.clock) : 0);
 export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0 || !!chain.draining;
 
 // The chain's clock wakes only when a step is due (a timer), never every frame (smooth pass, 2026-10-28): a frame loop
@@ -750,7 +762,8 @@ export function skipChain() {
   chain.handoffAt = 0;
   endChain(true);
   for (const fn of skipSubs) fn();
-  try { dispatchEvent(new Event('patrons:chain-skip')); } catch { /* no window */ }
+  // (detail.queued: beats that never played, for e2e/v4/landing.mjs; 0 when only the landing's settle was left)
+  try { dispatchEvent(new CustomEvent('patrons:chain-skip', { detail: { queued: q.length } })); } catch { /* no window */ }
   return true;
 }
 

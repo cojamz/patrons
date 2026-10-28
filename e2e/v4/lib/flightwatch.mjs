@@ -59,9 +59,12 @@ export const FLIGHT_WATCH = () => {
   const input = e => { if (e.isTrusted) W.lastInput = performance.now(); };
   addEventListener('pointerdown', input, true);
   addEventListener('keydown', input, true);
+  // a show jumped to its end with no press (the table's hold cap): what was still to fly never flies
+  W.jumps = [];
+  addEventListener('patrons:chain-skip', e => { if (performance.now() - W.lastInput < 150) return; if (!(e.detail && e.detail.queued > 0)) { W.settles = (W.settles || 0) + 1; return; } W.jumps.push({ queued: e.detail.queued, t: Math.round(performance.now()), moves: document.querySelector('.app.game')?.dataset.moves, stack: (new Error().stack || '').split('\n').slice(2, 8).map(x => x.trim().replace(/\(?https?:\/\/[^/]+\/[^)]*\/([^/)]+)\)?/, '$1')).join(' < ') }); });
   W.report = () => {
     const by = {};
     for (const c of W.cut) { const k = `${c.kind} · ${c.stack.split(' < ').slice(0, 3).join(' < ')}`; (by[k] ||= { n: 0, shares: [] }).n++; by[k].shares.push(c.share); }
-    return { flights: W.flights, landed: W.landed, skipped: W.skipped, cut: W.cut.length, by, samples: W.cut.slice(0, 40), aimed: W.aimed, missed: W.missed.length, misses: W.missed.slice(0, 40) };
+    return { flights: W.flights, landed: W.landed, skipped: W.skipped, cut: W.cut.length, jumps: W.jumps.length, settlesCut: W.settles || 0, jumpAt: W.jumps.slice(0, 20), by, samples: W.cut.slice(0, 40), aimed: W.aimed, missed: W.missed.length, misses: W.missed.slice(0, 40) };
   };
 };

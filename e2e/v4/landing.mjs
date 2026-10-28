@@ -59,12 +59,14 @@ while (!done && Date.now() - t0 < 300000) {
 }
 await page.waitForTimeout(2500); // the round's last flights land
 const w = await page.evaluate(() => window.__flightWatch.report());
+if (process.env.V4_DEBUG) console.log(JSON.stringify(await page.evaluate(() => window.__dbg || [])));
 await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 }).catch(() => {});
 await browser.close();
 if (!done) errors.push(`round ${ROUND} never ended within 5 minutes`);
-console.log(`landing: ${w.flights} flights in round ${ROUND} at Relaxed, ${cdpOk ? `${CPU}x CPU` : "Firefox, own speed"}: ${w.landed} landed, ${w.skipped} skipped by a press, ${w.cut} cut short; ${w.missed} of ${w.aimed} aimed ended away from their place`);
+console.log(`landing: ${w.flights} flights in round ${ROUND} at Relaxed, ${cdpOk ? `${CPU}x CPU` : 'Firefox, own speed'}: ${w.landed} landed, ${w.skipped} skipped by a press, ${w.cut} cut short, ${w.jumps} shows jumped past beats still to play (${w.settlesCut} cut only their settle); ${w.missed} of ${w.aimed} aimed ended away from their place`);
 for (const m of w.misses.slice(0, 8)) errors.push(`a ${m.kind} ended ${m.off}px from its place (${m.target}) at move ${m.moves}`);
 for (const c of w.samples.slice(0, 8)) errors.push(`a ${c.kind} left the screen ${c.share}% of the way (${c.at}/${c.end} ms, ${c.state}) at move ${c.moves}: ${c.stack}`);
+for (const j of w.jumpAt.slice(0, 4)) errors.push(`a show jumped to its end with nobody pressing, at move ${j.moves}: its last ${j.queued} beats never played (${j.stack})`);
 if (w.flights < 20) errors.push(`only ${w.flights} flights watched: the gate saw too little to judge`);
 if (errors.length) { console.error(errors.join('\n')); console.log('FAIL landing'); process.exit(1); }
 console.log('PASS landing');
