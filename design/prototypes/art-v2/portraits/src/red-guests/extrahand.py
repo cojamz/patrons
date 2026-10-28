@@ -1,0 +1,25 @@
+# Extra Hand: a hired farmhand in a straw hat and denim overalls, straw in his teeth, waving a work glove.
+from common import *
+def draw(g):
+    doorway(g); shoulders(g)
+    g.put(14, 22, ['ssss', ' tt '])
+    g.put(10, 24, ['UUUUUUUUUUUu', 'UUUUUUUUUUUu', 'UUUUGUUUUUuu', 'UUUUUUUUUUuu', 'UUUUUUUUUuuu', 'UUUUUUUUUuuu', 'UUUUUUUUUuuu', 'UUuuuUUUUuuu'])
+    g.put(10, 22, ['U', 'U']); g.put(21, 22, ['u', 'u'])
+    g.put(10, 24, ['G']); g.put(21, 24, ['G'])
+    g.put(13, 26, ['uuuuu'][0:0])
+    face(g, 8, 10, w=16, h=12)
+    g.put(9, 2, ['    YYYYYY    ', '  YYYYYYYYYg  ', ' YYYYYYYYYYYg ', ' YYYYYYYYYYYgg', 'RRRRRRRRRRRRRr'])
+    g.put(3, 7, ['  YYYYYYYYYYYYYYYYYYYYgg  ', 'YYYYYYYYYYYYYYYYYYYYYYYYgg', ' gggggggggggggggggggggggg '])
+    g.put(4, 7, ['Y', '', ''])
+    g.put(8, 10, ['ssssssssssssssst'])
+    g.put(7, 10, ['h', 'hH', 'H']); g.put(23, 10, [' H', 'hH', ' H'])
+    eyes(g, 10, 13)
+    g.c[15][15] = 't'; g.put(14, 16, ['tt'])
+    g.put(9, 16, ['aa']); g.put(20, 16, ['aa'])
+    g.put(12, 18, ['K      K', ' KKKKKK '])
+    g.put(18, 18, ['Y', ' Y', '  Y', '   Y'][0:0])
+    g.put(18, 17, ['   Y', '  Y ', 'YY  '][::1])
+    # the waving glove
+    g.put(25, 12, ['W W ', 'WVWV', 'WWWV', 'WWWWV', 'WWWV', ' VV', ' OO'])
+    g.put(25, 12, ['W W', 'WVWVW', 'WWWWV', 'WWWWV', ' WWV', ' VV ', ' OO '])
+    g.put(23, 11, ['  ', ' i', 'i '][0:0])
