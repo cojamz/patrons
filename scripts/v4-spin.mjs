@@ -24,7 +24,7 @@ await ctx.addInitScript(() => { let a = 20261028; Math.random = () => { a = (a +
 const CSS = flag('css', '');
 const page = await ctx.newPage();
 const cdp = FF ? null : await ctx.newCDPSession(page);
-await page.goto(`${url.replace(/\/$/, '')}/?intro=0&sound=off`);
+await page.goto(`${url.replace(/\/$/, '')}/?intro=0&sound=off${flag('q', '')}`);
 await page.click('[data-home="local"]');
 await page.waitForSelector('[data-start]');
 await page.click('[data-start]');
@@ -41,6 +41,17 @@ await page.mouse.move(5, 5);
 if (CSS) { await page.addStyleTag({ content: String(CSS) }); await sleep(500); }
 if (cdp) await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
 const out = [];
+// --every=ms: turn it round and round, a press every ms for the whole --spins, watched as one stretch (a person spinning to look)
+const EVERY = Number(flag('every', 0));
+if (EVERY) {
+  const w = page.evaluate(ms => window.__sp.watch(ms), SPINS * EVERY + 700);
+  await sleep(30);
+  for (let k = 0; k < SPINS; k++) { await page.keyboard.press(k % 4 < 2 ? 'ArrowRight' : 'ArrowLeft'); await sleep(EVERY); }
+  const fr = await w;
+  console.log(`${url} round and round, a press every ${EVERY} ms: ${fr.length} frames in ${Math.round(fr.reduce((a, b) => a + b, 0))} ms, worst gap ${Math.round(Math.max(...fr))} ms, gaps over 50 ms ${fr.filter(x => x > 50).length}`);
+  await browser.close();
+  process.exit(0);
+}
 for (let k = 0; k < SPINS; k++) {
   const w = page.evaluate(() => window.__sp.watch(700));
   await sleep(30);

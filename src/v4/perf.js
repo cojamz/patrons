@@ -446,15 +446,18 @@ function install() {
         const rec = { t, v, painted: null, settleMs: rs.settle, running: rs.running };
         E.yours.push(rec);
         afterPaint(p => { rec.painted = p; });
-      } else if (m.attributeName === 'transform' && el.classList && el.classList.contains('wheel')) {
-        const rot = Number((/rotate\(([-\d.e]+)/.exec(el.getAttribute('transform') || '') || [])[1]);
-        // one spin = changes less than 1s apart (a starved frame can take longer than the whole 300ms spin)
-        if (!spin || t - spin.end > 1000) { spin = { start: t, end: t, from: rot, to: rot, frames: [t] }; E.spins.push(spin); }
-        else { spin.end = t; spin.to = rot; spin.frames.push(t); }
+      } else if (m.attributeName === 'class' && el.classList && el.classList.contains('stage')) {
+        // a spin or drag runs while the stage is .turning (Wheel.jsx); count the frames the page painted meanwhile
+        const on = el.classList.contains('turning');
+        if (on && !spin) {
+          spin = { start: t, end: t, frames: [t] };
+          const tick = f => { if (!spin) return; spin.frames.push(f); requestAnimationFrame(tick); };
+          requestAnimationFrame(tick);
+        } else if (!on && spin) { spin.end = now(); E.spins.push(spin); spin = null; }
       }
     }
   });
-  const watch = () => mo.observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['data-moves', 'data-yours', 'transform'] });
+  const watch = () => mo.observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['data-moves', 'data-yours', 'class'] });
   if (document.documentElement) watch();
 
   window.__perf = {
@@ -470,14 +473,25 @@ function overlay() {
   const boot = () => {
     const el = document.createElement('div');
     el.setAttribute('data-perf-overlay', '');
-    el.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:2147483647;pointer-events:none;font:11px/1.35 ui-monospace,monospace;background:rgba(0,0,0,.72);color:#e8e2cf;padding:4px 7px;border-radius:5px;max-width:300px;white-space:pre';
+    el.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:2147483647;pointer-events:none;font:11px/1.35 ui-monospace,monospace;background:rgba(0,0,0,.72);color:#e8e2cf;padding:4px 7px;border-radius:5px;max-width:420px;white-space:pre-wrap';
     document.body.appendChild(el);
+    // what this screen is drawn with: browser, window, pixel ratio and the graphics card the browser reports
+    try {
+      const gl = document.createElement('canvas').getContext('webgl'), dbg = gl && gl.getExtension('WEBGL_debug_renderer_info');
+      const gpu = gl ? String(gl.getParameter(dbg ? dbg.UNMASKED_RENDERER_WEBGL : gl.RENDERER)) : 'no webgl';
+      const ua = (/(Firefox|Chrome|Safari)\/[\d.]+/.exec(navigator.userAgent) || [''])[0];
+      E.meta.env = `${ua} ${innerWidth}x${innerHeight}@${devicePixelRatio} ${gpu.slice(0, 48)}`;
+    } catch { /* */ }
     setInterval(() => {
       const xs = E.inputs.filter(x => x.type !== 'pointerover' && x.dur != null);
       const s = stats(xs.map(x => x.dur));
       const slow = [...xs].reverse().find(x => x.dur > 100);
       const hv = stats(E.hovers.map(h => h.domMs));
-      el.textContent = `in→paint p50 ${s.p50 ?? '–'} p95 ${s.p95 ?? '–'} ms (${s.n})\nhover p50 ${hv.p50 ?? '–'} p95 ${hv.p95 ?? '–'} · LoAF ${E.loaf.length}${slow ? `\nslow: ${slow.type} ${slow.kind} ${Math.round(slow.dur)}ms` : ''}`;
+      // the wheel's spins: frames a second while it turned and the longest wait between two frames (Cory, Oct 28: the
+      // spin "feels megga draggy" in Firefox on his Mac, which no machine here reproduces; a screenshot of this tells us)
+      const sp = E.spins.slice(-10).map(x => { const g = x.frames.slice(1).map((f, k) => f - x.frames[k]); const ms = Math.max(1, x.frames.at(-1) - x.frames[0]); return { fps: Math.round((1000 * (x.frames.length - 1)) / ms), gap: Math.round(Math.max(0, ...g)), ms: Math.round(x.end - x.start) }; });
+      const md = k => { const v = sp.map(x => x[k]).sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : '–'; };
+      el.textContent = `in→paint p50 ${s.p50 ?? '–'} p95 ${s.p95 ?? '–'} ms (${s.n})\nhover p50 ${hv.p50 ?? '–'} p95 ${hv.p95 ?? '–'} · LoAF ${E.loaf.length}${slow ? `\nslow: ${slow.type} ${slow.kind} ${Math.round(slow.dur)}ms` : ''}\nspins ${sp.length}: ${md('fps')} fps, worst gap ${md('gap')} ms, ${md('ms')} ms long${sp.length ? ` (last ${sp.at(-1).fps} fps, ${sp.at(-1).gap} ms)` : ''}\n${E.meta.env || ''}`;
     }, 500);
   };
   if (document.body) boot(); else addEventListener('DOMContentLoaded', boot, { once: true });

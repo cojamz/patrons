@@ -454,6 +454,21 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       onFacing(facingOf(r, nq));
     });
   }, [nq, onFacing]);
+  // ...and only once the board is still: React's re-lay of the landed angle (every space's words fitted to where it now
+  // sits, the rim's words turned upright) costs a frame of ~100ms in Firefox at a laptop's size, and committed at each
+  // landing it fell between the spins of anyone turning the board round and round, so the next key or drag waited on it
+  // (Cory, Oct 28: the spin "megga draggy"). A new spin or drag puts it off again; the painted board is right meanwhile.
+  const QUIET_MS = 350;
+  const commitT = useRef(0);
+  const commitWhenStill = useCallback(r => {
+    rotRef.current = r;
+    clearTimeout(commitT.current);
+    commitT.current = setTimeout(() => {
+      if (spin.current || drag.current) return; // the next landing asks again
+      applyRot(rotRef.current);
+    }, QUIET_MS);
+  }, [applyRot]);
+  useEffect(() => () => clearTimeout(commitT.current), []);
 
   // A spin or a drag paints straight onto the board, with no render per frame (a whole-wheel render each frame cost
   // whole frames under load, and the spin read as slow): the paper and the rim turn by their transform, each space
@@ -548,6 +563,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   };
   const animateTo = useCallback(to => {
     stop();
+    clearTimeout(commitT.current);
     const from = rotRef.current, dur = reduced() ? 1 : MO.spin;
     geo.current = null;
     const root = stage.current;
@@ -564,7 +580,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       for (const a of sp.anims) a.cancel();
       // A return to the same React angle has no commit to clean up its promoted layers.
       if (to === drawn.current && stage.current) stage.current.classList.remove('turning'); // (a drag that came back where it started commits nothing)
-      applyRot(to);
+      commitWhenStill(to);
     };
     spin.current = sp;
     if (!root || dur <= 1 || typeof root.animate !== 'function' || Math.abs(to - from) < 0.01) { sp.land(); return; }
@@ -572,7 +588,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     rotRef.current = to;
     spinAnims(sp);
     if (!sp.anims.length) sp.land();
-  }, [applyRot]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [commitWhenStill]); // eslint-disable-line react-hooks/exhaustive-deps
   const touched = useRef(onTouched);
   touched.current = onTouched;
   const nudge = useCallback(deg => { if (touched.current) touched.current(); animateTo(Math.round((rotRef.current + deg) / SEC) * SEC); }, [animateTo, SEC]);
@@ -720,7 +736,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
     // swipe right moves the facing quadrant right (the wheel turns counter-clockwise), and the other way round
     if (dr.swipe) { const dx = (e && e.type !== 'pointercancel' && e.clientX != null ? e.clientX : dr.lastX ?? dr.x) - dr.x; if (Math.abs(dx) > 24) nudge(dx > 0 ? -SEC : SEC); setTimeout(() => { moved.current = false; }, 0); return; }
     // a drag past the grab is already spinning to its quarter
-    if (dr.goal != null) { setTimeout(() => { moved.current = false; }, 0); return; }
+    if (dr.goal != null) { if (!spin.current) commitWhenStill(rotRef.current); setTimeout(() => { moved.current = false; }, 0); return; }
     // a fling (fast and recent) steps one quadrant in its direction; a slow drag settles on the nearest
     const home = Math.round(dr.start / SEC) * SEC;
     let target = Math.round(rotRef.current / SEC) * SEC;
@@ -946,7 +962,10 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
           onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, stage.current && stage.current.querySelector(`[data-slot="${s.key}"]`), { x: e.clientX, y: e.clientY }); }}
           onPointerEnter={e => { const h = live.current.hover; e.currentTarget.classList.add('hot'); if (h && realHover(e)) h.onSpaceHover(s.key, e.currentTarget.querySelector('.wash')); }}
           onPointerLeave={e => { const h = live.current.hover; e.currentTarget.classList.remove('hot'); if (h && e.pointerType === 'mouse') h.onSpaceHover(s.key, null); }}>
-          {lit && !quiet && <path className="glow" d={d} />}
+          {/* the lamp's glow as three soft strokes, not a blur filter: Firefox draws SVG filters on the CPU, and a lit panel
+              is on every space you can take while you turn the board (Cory, Oct 28: the spin "megga draggy") */}
+          {lit && !quiet && <g className="glow" aria-hidden="true"><path className="g3" d={d} /><path className="g2" d={d} /><path className="g1" d={d} /></g>}
+          {lit && <path className="lift" d={d} aria-hidden="true" />}
           <path className="wash" d={d} />
           <path className="slice-outline" d={d} aria-hidden="true" />
           {lit && <path className="edge-lit" d={d} />}
@@ -1018,6 +1037,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       const cap = F * 0.95;
       paper.push(
         <g key={`rf${q}`} className={`rim-mark${lit}`} data-rim-prize={qid} data-rim-res={quadrant(qid).resource} transform={`translate(${mx.toFixed(2)} ${my.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap / 2).toFixed(2)})`}>
+          <circle className="rim-halo" cx={(cap / 2).toFixed(2)} cy={(cap / 2).toFixed(2)} r={(cap * 0.66).toFixed(2)} fill="url(#ltHalo)" aria-hidden="true" />
           <Follower size={cap} title={`${RING_VALUE[paying - 1]} followers`} />
         </g>,
       );
@@ -1233,7 +1253,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
             {/* the contest rim's follower mark: a pearly sheen and a soft halo, so it reads as followers and not as one
                 more cream resource mark on the band (Claude, under Cory's go-with-your-gut, 2026-10-21) */}
             <linearGradient id="ltSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffffff" /><stop offset=".42" stopColor="#fff4dc" /><stop offset=".55" stopColor="#ffffff" /><stop offset=".72" stopColor="#ffe9bd" /><stop offset="1" stopColor="#e9c88a" /></linearGradient>
-            <filter id="ltSheenHalo" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="b" /><feFlood floodColor="#fff6e0" floodOpacity=".75" /><feComposite in2="b" operator="in" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+            <radialGradient id="ltHalo"><stop offset=".45" stopColor="#fff6e0" stopOpacity=".7" /><stop offset="1" stopColor="#fff6e0" stopOpacity="0" /></radialGradient>
             <pattern id="ltHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.2)" strokeWidth="1" /></pattern>
           </defs>
           <circle cx={CX} cy={CY} r="200" fill="url(#ltPaper)" className="disk" />

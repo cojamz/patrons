@@ -293,11 +293,19 @@ h1,h2,h3{font-family:var(--serif)}
    the one under your pointer lifts and glows brighter. Not your turn: nothing glows. Taken: clearly dim. Locked:
    darker still. A squint at the board shows the spaces you can take as the bright ones (design/eval/rollout/r2-lit-*) */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--paper-lit,#fbf6ea))}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:rgb(var(--lamp,255,206,140));stroke-width:7;filter:url(#ltGlow);opacity:.6;transition:opacity var(--mo-hover,.15s)}
+/* the glow is three soft strokes (was a 2.4 blur on one 7-wide stroke): no filter on a board that turns */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:rgb(var(--lamp,255,206,140));opacity:.6;transition:opacity var(--mo-hover,.15s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow .g1{stroke-width:7;stroke-opacity:.6}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow .g2{stroke-width:11;stroke-opacity:.3}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow .g3{stroke-width:15;stroke-opacity:.14}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .edge-lit{fill:none;stroke:var(--lamp-ink,#ffd99a);stroke-width:2;opacity:.9;transition:opacity var(--mo-hover,.15s)}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{transition:fill var(--mo-hover,.15s),filter var(--mo-quick,.12s)}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .wash,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .wash{filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:1;stroke-width:9}
+/* the one under your pointer lifts: a soft shadow drawn under it (was a drop-shadow filter on the panel) */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .lift{display:none;fill:rgba(0,0,0,.34);stroke:rgba(0,0,0,.16);stroke-width:5;transform:translateY(3px);pointer-events:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .lift,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .lift{display:inline}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:1}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow .g1,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow .g1{stroke-width:9}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow .g2,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow .g2{stroke-width:13}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow .g3,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow .g3{stroke-width:17}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1;stroke:#fffaf0;stroke-width:2.4}
 /* a space you can take that would give you nothing right now (its hover says so; blind testers, 2026-10-15: it glowed
    like a useful one): still placeable, but no glow, a fainter edge and its print stepped back. Pointing at it lights
@@ -325,13 +333,13 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-dot.wait{opacity:.5}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{color:#f6deb0}
 /* the follower mark on a contest rim wears a pearly sheen and a soft halo: followers, not one more resource mark */
-.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{filter:url(#ltSheenHalo)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark .follower-mark path{fill:url(#ltSheen)}
-/* while the board turns (a spin, a drag), nothing on it is filtered: Firefox draws SVG filters and filtered SVG shapes
-   (the lit panels' glow, the follower mark's halo, the rim's lit glow and emoji shadows, the minions' shadows) on the
-   CPU, again for every frame the board moves (Cory on Firefox, Oct 28: the spin "at like 0.5 frames per second").
-   They come back as it lands; at rest the board looks the same */
-.lt .stage.turning svg *,.lt .stage.turning .slot,.lt .stage.turning .slot *{filter:none!important}
+/* No SVG filter on the turning board: Firefox draws SVG filters and filtered SVG shapes on the CPU, again for every
+   frame the board moves (Cory on Firefox, Oct 28: the spin "at like 0.5 frames per second", then "megga draggy").
+   The lit panels' glow, the lifted panel's shadow and the follower mark's halo are drawn shapes; the few filters left
+   (the minions' shadows, a contest rim lit during the Reckoning) rest while it turns. Turning every filter on the
+   board off and on again re-drew the whole board as each spin started and landed */
+.lt .stage.turning .slot.sel,.lt .stage.turning .worker-fig,.lt .stage.turning .worker,.lt .stage.turning .rim.lit,.lt .stage.turning .rim-rule.lit{filter:none!important}
 .lt [data-spaces="panels"] .stage .hub-label small{display:none}
 /* a serif numeral: "II" in a heavy sans inside the dark disc read as a pause button */
 .lt [data-spaces="panels"] .stage .hub-label b{font-family:var(--serif);font-weight:700;font-size:18px}
@@ -557,7 +565,7 @@ h1,h2,h3{font-family:var(--serif)}
 @media (max-width:860px), (max-height:499px){ .turn-card{max-width:calc(100vw - 24px)} }
 
 /* the leader's emoji inline on the engraved rim line; lit with the label during the Reckoning */
-.lt .stage svg.wheel-paper .rim-emoji{pointer-events:none;filter:drop-shadow(0 .4px .4px rgba(42,31,23,.35))}
+.lt .stage svg.wheel-paper .rim-emoji{pointer-events:none}
 .lt .stage svg.wheel-paper .rim-emoji.wait{opacity:.5}
 .lt .stage svg.wheel-paper .rim-rule.lit{filter:drop-shadow(0 0 3px rgba(var(--lamp),.95))}
 .lt .stage svg.wheel-paper .rim.lit{fill-opacity:1;filter:drop-shadow(0 0 6px rgba(var(--lamp),.9))}

@@ -688,7 +688,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const mySeats = session.mySeats || NO_SEATS;
   const pend = state.pending;
   const mine = !!(pend && !state.over && !moment && mySeats.includes(pend.player));
-  const [facing, setFacing] = useState(0);
+  // which quarter the wheel faces: the wheel's own business, kept here only so a remounted wheel faces where it did.
+  // A ref, not state: as state every spin's landing re-rendered the whole table (Cory, Oct 28: the spin "megga draggy")
+  const facingRef = useRef(0);
+  const onFacing = useCallback(q => { facingRef.current = q; }, []);
 
   // nothing on screen reads these two any more (the chairs and the turn card tell gifts and thefts): refs, so setting
   // them never costs the table a second render per step (perf, 2026-10-15)
@@ -929,8 +932,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const askSeen = useRef(askLeave);
   useEffect(() => { if (askLeave !== askSeen.current) { askSeen.current = askLeave; setLeaving(true); } }, [askLeave]);
   const [note, setNote] = useState(null); // { text, tone, n } — a gentle answer in the status pill
-  const facingRef = useRef(facing);
-  facingRef.current = facing;
   const sendToken = useRef(0);
   const root = useRef(null);
   // the table element as state too, so children that need it (the turn card, the Reckoning) get it on the render after
@@ -1626,7 +1627,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           {/* (data-step: after you've placed, the wheel steps back so only your buys are bright; final panel S#27) */}
           <section className="lt-wheel" data-region="wheel" data-step={buyingNow ? 'buy' : undefined}>
-            <Wheel state={state} interactionState={interactionState} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} idle={pickSpaces ? null : idleSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={!wide} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            <Wheel state={state} interactionState={interactionState} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} idle={pickSpaces ? null : idleSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={!wide} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facingRef.current} onFacing={onFacing} />
             {showChoice && (!picker || (gift && !shopRecruit && !wheelMove)) && !payChoice(pend) && pend.kind !== 'setup' && (gift
               ? <GiftCard state={state} gift={gift} onFirst={onGiftFirst} onAnswer={gift.board === 'seats' ? onSeatPick : onGiftAnswer} onBack={canUndo ? undo : null} busy={busy} place={plainAt} hover={hover} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
               : <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />)}
