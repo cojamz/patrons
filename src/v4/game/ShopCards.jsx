@@ -229,10 +229,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                     fading, not text). What you're short of is the hover's one quiet line. */}
                 {/* works from round II on (Cory, 2026-10-22: "a better way to denote round II/round III only"): a corner tag, not words */}
                 {d.from > 1 && <span className="lt-round-tag" data-round-tag="" title="Works from round II on">II+</span>}
-                {fromPile && !tray && !detailed && <span className="need from-pile" title="From the top of the pile">pile</span>}
+                {fromPile && !tray && <span className="need from-pile" title="From the top of the pile">pile</span>}
               </span>
               {/* details hides the picture, so its corner number sits on the card itself (Cory, 2026-10-22: "total cost added to corner of details view") */}
-              {detailed && fromPile && !tray && <span className="need from-pile" title="From the top of the pile">pile</span>}
               {detailed && <span className="lt-corner-cost lt-corner-cost-detail num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>}
               {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>

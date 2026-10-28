@@ -2,7 +2,14 @@
    "there seems to be space to also have their icons on the card too"), without rearranging the shop: the picture
    shrinks first, and on a card with no room left it gives way to the rule. */
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art{flex:1 1 0;min-height:0;height:auto;overflow:hidden}
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art > .sprite{width:auto;height:min(48px, calc(100% - 4px))}
+/* one small picture on every card, whole: it shrinks only when a long rule needs the room, and never sits under the
+   name (Cory, 2026-10-28: "dont overlap the picture of the member, jsut make the member picture smaller") */
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card:not(.lt-rate) .art{max-height:32px;container-type:size}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art:has(> .from-pile){min-height:16px}
+@container (max-height:17px){.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art > .sprite{display:none}}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art > .sprite{position:absolute;inset:3px 0;margin:auto;width:auto;height:calc(100% - 6px)}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art > .need.from-pile{top:4px;left:6px}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art:has(> .from-pile) > .lt-round-tag{top:auto;bottom:3px}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .art > .lt-corner-cost{display:none}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .nm{white-space:normal;height:auto;min-height:12px;flex:none;margin:4px 4px 2px;display:grid;align-content:center}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{display:block;flex:none;padding:2px 6px 2px;font-size:13px;line-height:14px;color:var(--pl-ink,#2b2018);font-weight:500;overflow-wrap:break-word;text-wrap:pretty}
@@ -15,5 +22,4 @@
   .app.game.lt .lt-shop-cards .lt-deck{min-height:166px}
 }
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-card .lt-corner-cost-detail{top:4px;right:5px;font-size:12px;z-index:1}
-.app.game.lt .lt-shop-cards[data-view="details"] .lt-card > .need.from-pile{position:static;align-self:flex-start;margin:3px 6px -3px;flex:none}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-card .nm{padding:0 11px}
