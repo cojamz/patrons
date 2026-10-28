@@ -88,14 +88,14 @@ describe('Blue actions', () => {
       expect(s.pending.kind).toBe('buy');
     }
   });
-  it('Out of Style (ring I): one color to the bottom, +2 blue', () => {
+  it('Out of Style (ring I): one color to the bottom, +1 blue per member sent, +1', () => {
     let s = take(scene({ shop: S5 }), 'market.restock'); // Midas, Jackpot, Tycoon gold; Mentor, Proselytizer red
     // the row fills to its size from the pile, so count the gold actually showing (the deck's order moves with it)
     const gold = s.shop.filter(u => s.cards[u].def.startsWith('gold.')).length;
     expect(gold).toBeGreaterThanOrEqual(3);
-    expect(R(s).blue).toBe(2);
+    expect(R(s).blue).toBe(1);
     s = move(s, 'color:gold');
-    expect(R(s).blue).toBe(2); // flat: nothing per member sent
+    expect(R(s).blue).toBe(1 + gold); // per member sent (Cory, Oct 28)
     expect(s.shop.some(u => s.cards[u].def.startsWith('gold.'))).toBe(s.shop.slice(2).some(u => s.cards[u].def.startsWith('gold.')));
     expect(s.shop).toHaveLength(shopSize(s));
   });

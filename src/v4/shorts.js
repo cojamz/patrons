@@ -34,7 +34,7 @@ const S = {
     harvest: '+1 yellow per color', bloom: r => `+${r} yellow · +1 of your fewest`, transmute: '+2 yellow · then swap up to 3', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
   },
   market: {
-    bargain: r => `+${r + 2} blue`, restock: 'one color to the bottom; +2 blue', showroom: r => `peek at 4, may recruit one; +${2 * r} blue`, clearance: 'recruit twice; +1 blue', pricecheck: 'bury one, half its cost in blue; +1', spree: 'recruit 3 times; +3 blue',
+    bargain: r => `+${r + 2} blue`, restock: 'one color to the bottom; +1 blue each, +1', showroom: r => `peek at 4, may recruit one; +${2 * r} blue`, clearance: 'recruit twice; +1 blue', pricecheck: 'bury one, half its cost in blue; +1', spree: 'recruit 3 times; +3 blue',
   },
   thieves: {
     pickpocket: r => `steal ${r + 2}, split among rivals; +1 magenta`, tipoff: r => `+${r + 2} magenta`, hideout: 'safe from steals this round; +1 magenta', rob: 'steal half a rival’s one-color pile, round down; +1 magenta', ransom: 'rival pays member’s cost or loses it; cost 5 or less; +1 magenta', heist: 'take a rival’s member; +1 magenta',

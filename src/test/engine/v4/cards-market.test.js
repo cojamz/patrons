@@ -45,19 +45,20 @@ describe('Blue actions', () => {
     expect(named(s, 'Midas').length).toBe(1);
   });
 
-  it('Out of Style: one color to the bottom, refill, +2 blue', () => {
+  it('Out of Style: one color to the bottom, refill, +1 blue per member sent, plus the inherent +1', () => {
     // ROW5: Tycoon, Big Family, Twins, Intern, Tax Man: 3 red, 2 gold
     let s = table(Q, { shop: ROW5 });
     s = take(s, 'market.restock');
-    expect(R(s).blue).toBe(2);
+    expect(R(s).blue).toBe(1);
     expect(s.pending.options.map(o => o.id).sort()).toEqual(['color:gold', 'color:red']);
     const reds = s.shop.filter(u => s.cards[u].def.startsWith('red.'));
     s = move(s, 'color:red');
-    expect(R(s).blue).toBe(2);
+    expect(R(s).blue).toBe(1 + 3);
     expect(s.shop).toHaveLength(6); // round I shows 6
     expect(s.shop.filter(u => reds.includes(u))).toEqual([]);
     expect(s.pile.slice(-3)).toEqual(reds);
     expect(s.log).toContain('Out of Style: P1 sends 3 red members to the bottom.');
+    expect(s.log).toContain("P1's Out of Style: +3 blue.");
   });
   it('Out of Style: neutral is a color you can send to the bottom (Cory, Oct 28)', () => {
     let s = table(Q, { shop: ['gold.tycoon', 'red.twins', 'benders.bigspender', 'benders.insider', 'gold.taxman'] });

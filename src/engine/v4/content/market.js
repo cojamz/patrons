@@ -176,10 +176,10 @@ const market = {
       resolve(ctx, p) { ctx.gain(p, B, ctx.state.round + 2, { fromAction: true }); },
     },
     {
-      key: 'restock', ring: 1, name: 'Out of Style', text: 'Send every shop member of one color to the bottom of the pile, then refill. +2 blue.', copyDoesIt: true, // flat +2: Claude's default, 2026-10-27
-      estimate: ctx => 2 + (shopColors(ctx).length ? 1 : 0),
+      key: 'restock', ring: 1, name: 'Out of Style', text: 'Send every shop member of one color to the bottom of the pile, then refill. +1 blue per member sent. +1 blue.', copyDoesIt: true, // per member sent: Cory, Oct 28 ("it's actually rather good that way")
+      estimate: ctx => 1 + Math.max(0, ...shopColors(ctx).map(([, n]) => n)),
       resolve(ctx, p) {
-        ctx.gain(p, B, 2, { fromAction: true });
+        ctx.gain(p, B, 1, { fromAction: true });
         const colors = shopColors(ctx);
         if (!colors.length) return;
         ctx.choose(p, 'Out of Style: send which color to the bottom?', colors.map(([c, n]) => ({
@@ -250,6 +250,8 @@ const market = {
       ctx.refillShop();
       ctx.log(`Out of Style: ${p.name} sends ${out.length} ${color} member${out.length === 1 ? '' : 's'} to the bottom.`);
       toBottom(ctx, out.length);
+      const got = out.length ? ctx.gain(p, B, out.length, { fromAction: true }) : null;
+      if (got) ctx.log(`${p.name}'s Out of Style: +${got.n} ${got.color}.`);
     },
     peek(ctx, p, uid, data) {
       if (uid === 'keep') { peekStep(ctx, p, { left: [], placed: [...data.placed, ...data.left] }); return; }

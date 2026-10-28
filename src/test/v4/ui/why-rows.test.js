@@ -1,7 +1,7 @@
 // The hover's "Why" and "You'd get" rows tell the real payout (blind testers B and C):
 // - Grand Host's doubling is named, the biggest part of a Silver space's payout (Toast, Good Deed);
 // - a member that fires more than once in one branch says its sum (Greatest Hits: Impressionist +1 per copy);
-// - Out of Style's gain is flat (Oct 27), whichever color you send.
+// - a space whose gain is your pick (Out of Style: one color) says its best case as your pick.
 import { describe, it, expect } from 'vitest';
 import { previewSpace } from '../../../engine/v4/index.js';
 import { sceneQ, spaceOf } from '../../engine/v4/cards-helpers.js';
@@ -30,12 +30,13 @@ describe('Why rows', () => {
 });
 
 describe("You'd get", () => {
-  it('Out of Style says its flat +2, whichever color you send', () => {
+  it('Out of Style says its best color as your pick: +1 per member sent, plus its own +1', () => {
     // 3 red and 2 gold face up: sending red is the best case
     const s = sceneQ({ quadrants: ['market', 'silver', 'gold', 'red'], shop: ['red.intern', 'red.twins', 'red.volunteer', 'gold.banker', 'gold.taxman'] });
     s.shop = s.shop.slice(0, 5);
     const y = youdWords(pv(s, 'market.restock'), s, 'blue');
-    expect(y.text).toBe('+2 blue');
+    expect(y.text).toBe('up to +4 blue');
+    expect(y.note).toBe('your pick');
   });
   it('Walk-In says its +2 red and the member it brings', () => {
     const s = sceneQ({ quadrants: ['red', 'silver', 'gold', 'market'] });

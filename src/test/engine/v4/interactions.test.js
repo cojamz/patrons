@@ -111,7 +111,7 @@ describe('Green copies the risky spaces', () => {
     s = take(s, 'echo.echo');
     expect(labels(s)).toEqual(['Out of Style (P2): do Out of Style yourself']);
     s = move(s, s.pending.options[0].id);
-    expect(R(s, 0).blue).toBe(2);
+    expect(R(s, 0).blue).toBe(1); // its +1 now, +1 per member once the copier picks a color
     expect(s.pending.prompt).toMatch(/^Out of Style: send which color/);
   });
 
