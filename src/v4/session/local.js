@@ -4,6 +4,7 @@ import { isLegal, chooseBotMove, setBotLevels } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { createEmitter } from './emitter.js';
 import { newGame, step, trackState, botStep } from './record.js';
+import { share } from './share.js';
 import { askBot } from './botThink.js';
 import { settleEmojis } from '../emojiPick.js';
 
@@ -123,7 +124,8 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
   // `next` is passed when the move was already applied (a bot step); otherwise it's applied here.
   function apply(move, next = step(state, move)) {
     const before = state;
-    state = next;
+    // every part that didn't change is the very object it was, so the table's memo checks hold (session/share.js)
+    state = share(before, next);
     // Only a human's placement opens a checkpoint; every other move closes it. A round ending inside the
     // placement (or the game ending) leaves nothing to undo.
     const human = mySeats.includes(move.player);
