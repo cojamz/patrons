@@ -478,7 +478,9 @@ try {
     const want = st.pending.options.filter(o => o.kind === 'card').map(o => String(o.value)).sort();
     if (lit.join() !== want.join()) errors.push(`(t1) lit ${lit.join(' ')} ≠ the engine's ${want.join(' ')}`);
     if (await page.$$eval('.lt-shop .lt-card.recede[data-uid]', els => els.length) !== 5 - want.length) errors.push('(t1) the ones you can’t pay for don’t recede');
-    if (/magenta|any\b/.test(await page.$eval('.lt-shop .lt-cards', e => e.innerText))) errors.push('(t1) a cost is written in words');
+    // the costs, not a member's own words ("+1 per magenta member" since shop cards print their text)
+    const costText = await page.$$eval('.lt-shop .lt-cards .lt-cost, .lt-shop .lt-cards .lt-corner-cost, .lt-shop .lt-cards .cost-now', els => els.map(e => e.innerText).join(' '));
+    if (/magenta|any\b/.test(costText)) errors.push('(t1) a cost is written in words');
     await page.screenshot({ path: `${SHOTS}/t1-scout-tray.png` });
     await click(page, `.lt-shop .lt-card.lit[data-uid="${want[0]}"]`);
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(t1) clicking a lit card did nothing'));
