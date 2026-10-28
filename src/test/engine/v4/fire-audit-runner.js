@@ -9,7 +9,7 @@ import { seededRandom } from '../../../engine/v4/rng.js';
 import { makeTables } from './fuzz-tables-runner.js';
 import { namesCard } from './cards-helpers.js';
 
-const PLAIN_KEYS = new Set(['key', 'name', 's', 'w', 'text', 'f', 'n', 'copies', 'id', 'quadrant', 'vanilla', 'guest', 'lean', 'bends']);
+const PLAIN_KEYS = new Set(['key', 'name', 's', 'w', 'text', 'f', 'n', 'copies', 'id', 'quadrant', 'vanilla', 'guest', 'lean', 'bends', 'extraWild']); // extraWild: the +1 wild on every member's price (content/index.js), not an effect
 /** A member with an effect (a hook or a rule flag), not just "worth N followers". */
 export const hasEffect = def => Object.keys(def).some(k => !PLAIN_KEYS.has(k));
 
