@@ -16,6 +16,7 @@ import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { HOVER_DELAY_MS } from '../src/v4/game/hoverDelay.js';
 import { answerChoice } from '../e2e/v4/lib/answer.mjs';
+import { FLIGHT_WATCH } from '../e2e/v4/lib/flightwatch.mjs';
 
 const argv = process.argv.slice(2);
 const pos = argv.filter(a => !a.startsWith('--'));
@@ -27,6 +28,7 @@ const TRACE = !!flag('trace-clicks', false); // a Chrome trace per click: main-t
 const PROFILE = !!flag('profile-clicks', false);
 // --no-frame-loop: no frame recorder (its own requestAnimationFrame every frame keeps the page doing a full main-thread frame
 // each frame, which hides any change to how often the game itself needs one); frame columns read empty
+const FLIGHTS = !!flag('flights', false); // every flight watched: any taken off screen before it arrived (e2e/v4/lib/flightwatch.mjs)
 const NO_FRAMES = !!flag('no-frame-loop', false); // CPU-profile every click; where the time goes in slow ones (use an unminified build)
 const OUT = String(flag('out', 'design/eval/perf')), MAX_MIN = Number(flag('max-min', 45)), GATE = !flag('no-gate', false);
 mkdirSync(OUT, { recursive: true });
@@ -117,6 +119,7 @@ const [VW, VH] = String(flag('size', '1270x700')).split('x').map(Number); // --s
 const ctx = await browser.newContext({ viewport: { width: VW, height: VH } });
 if (NO_FRAMES) await ctx.addInitScript(() => { window.__rigNoFrames = true; });
 await ctx.addInitScript(RECORDER);
+if (FLIGHTS) await ctx.addInitScript(FLIGHT_WATCH);
 await ctx.addInitScript(s => { let a = s >>> 0; Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }, SEED);
 await ctx.addInitScript(s => { try { localStorage.setItem('patrons.v4.motionSpeed', s); } catch { /* */ } }, SPEED);
 const page = await ctx.newPage();
@@ -328,6 +331,7 @@ await letGo();
 const over = !!(await page.$('.results'));
 
 const extra = await page.evaluate(() => window.__rigExtra || null).catch(() => null); // a probe build's own readings
+const flights = FLIGHTS ? await page.evaluate(() => window.__flightWatch.report()).catch(() => null) : null;
 const F = await page.evaluate(() => ({ frames: window.__rig.frames, loaf: window.__rig.loaf, big: window.__rig.big || [] })).catch(() => ({ frames: [], loaf: [] }));
 // the leak control: a reload on the last round's turn (the game is saved locally), measured the same way
 let unbroken = null, reloaded = null;
@@ -401,6 +405,7 @@ for (const r of rounds) {
   if (s.loaf.top.length) L.push('', 'Longest frames: ' + s.loaf.top.map(l => `${l.d} ms (${l.scripts.join(', ') || 'style/layout/paint'})`).join(' · '));
 }
 if (F.big && F.big.length) L.push('', 'Frames over 2 s, with the screen at the time:', ...F.big.map(b => `- ${b.d} ms · ${b.phase} · prompt "${b.prompt}" · hover "${b.hover}" · options ${b.options.join(' ')}`));
+if (flights) L.push('', `Flights: ${flights.flights} flew, ${flights.landed} landed, ${flights.skipped} cut by a press, ${flights.cut} cut short with no press; ${flights.missed} of ${flights.aimed} aimed ended away from their place.`, ...flights.misses.slice(0, 10).map(m => `- missed by ${m.off}px: ${m.kind} → ${m.target} (round ${m.round}, move ${m.moves})`), ...Object.entries(flights.by).sort((a, b) => b[1].n - a[1].n).map(([k, x]) => `- ${x.n}× ${k} (at ${x.shares.slice(0, 12).join(', ')}% of the way)`));
 if (errors.length) L.push('', 'Errors:', ...errors.slice(0, 10).map(e => `- ${e}`));
 writeFileSync(`${OUT}/rig-${label}.md`, L.join('\n') + '\n');
 if (TRACE) {
@@ -419,6 +424,6 @@ if (PROFILE) {
     ...[...profNative].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([k, ms]) => `| ${Math.round(ms)} | ${k.replace(/\|/g, '/')} |`));
   writeFileSync(`${OUT}/rig-${label}-clicks.md`, P.join('\n') + '\n');
 }
-writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors, path, extra, odd: Object.fromEntries(rounds.map(r => [r, R[r].clicks.filter(c => c.why)])) }, null, 1));
+writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors, path, extra, flights, odd: Object.fromEntries(rounds.map(r => [r, R[r].clicks.filter(c => c.why)])) }, null, 1));
 console.log(L.slice(0, 12 + rounds.length + 3).join('\n'));
 process.exit(GATE && fails.length ? 1 : 0);

@@ -25,7 +25,7 @@ import { panelText } from './panelText.js';
 import { quadrant, defById } from '../../engine/v4/index.js';
 import { seatEmoji } from '../format.js';
 import { spriteId } from '../art/index.js';
-import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights, arcFrames, bezier, onScreenBow, relative, motionPending, onMotionChange } from './flight.js';
+import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights, aim, safetyNet, arcFrames, bezier, onScreenBow, relative, motionPending, onMotionChange } from './flight.js';
 
 const CARD_EASE = bezier(0.4, 0.1, 0.6, 1); // a recruited card's flight to its crowd (grammar M7); no long creep at the end (Cory, 22:48)
 
@@ -1022,7 +1022,7 @@ function playRewind(root, before, state, mine) {
         const done = () => g.remove();
         anim.addEventListener('finish', done);
         anim.addEventListener('cancel', done);
-        setTimeout(done, a.dur + 500);
+        safetyNet(anim, a.dur, 500, done);
         hideUntil(card, a.dur);
         return;
       }
@@ -1297,13 +1297,13 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
               setTimeout(() => {
                 g.remove();
                 if ((chain.epoch || 0) !== ep) return;
-                const two = flyPath(pic, 'piece-flight piece-member staged', big, square(rectOf(B), 52), { path: a.path === 'cross' ? 'cross' : 'arc', duration: leg2, fade: true });
+                const two = aim(flyPath(pic, 'piece-flight piece-member staged', big, square(rectOf(B), 52), { path: a.path === 'cross' ? 'cross' : 'arc', duration: leg2, fade: true }), B);
                 onFinish(two, () => { chain.flying = Math.max(0, chain.flying - 1); settle(B, MO.settle); });
               }, hold);
             });
             return;
           }
-          const anim = flyPath(pic, 'piece-flight piece-member', square(rectOf(A), 28), square(rectOf(B), 28), { path: a.path, duration: a.dur, fade: true });
+          const anim = aim(flyPath(pic, 'piece-flight piece-member', square(rectOf(A), 28), square(rectOf(B), 28), { path: a.path, duration: a.dur, fade: true }), B);
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); settle(B, MO.settle); });
           return;
         }
@@ -1325,8 +1325,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           const html = a.fol ? folHtml(root, pid) : dotHtml(root, a.r, a.owner ?? pid);
           chain.flying++;
           // (the places were measured before the commit, or on first use: never a layout read per piece)
-          const anim = flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'}${a.pay ? ' pay' : ''}`, square(rectOf(A), size), square(rectOf(B), size),
-            { path: a.pay ? 'drop' : a.take ? 'line' : 'arc', duration: a.dur, label: a.bundle ? `+${a.n}` : '', ...bundleTrail(a), turnTo: a.turn ? dotHtml(root, a.turn, pid) : null, fade: true });
+          const anim = aim(flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'}${a.pay ? ' pay' : ''}`, square(rectOf(A), size), square(rectOf(B), size),
+            { path: a.pay ? 'drop' : a.take ? 'line' : 'arc', duration: a.dur, label: a.bundle ? `+${a.n}` : '', ...bundleTrail(a), turnTo: a.turn ? dotHtml(root, a.turn, pid) : null, fade: true }), B);
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); land({ ...a, by: a.n }, B, false); });
           return;
         }

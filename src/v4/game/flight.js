@@ -101,6 +101,13 @@ export function arcFrames(dx, dy, h, { ease = TRAVEL, from = 0, to = 1, s0 = 1, 
   return out;
 }
 
+/** The safety net for a landing that never fires (`done` once the flight's `ms` and a margin have passed). A flight
+ *  that started late is let finish first (Cory, Oct 28: coins vanished partway): a busy page (a long frame, Firefox's
+ *  especially) starts an animation only at its next frame, and a net timed from the call took it off midway. */
+export function safetyNet(anim, ms, margin, done) {
+  const net = () => { if (anim && (anim.playState === 'running' || anim.pending) && (anim.currentTime == null || anim.currentTime < ms)) setTimeout(net, 250); else done(); };
+  setTimeout(net, ms + margin);
+}
 export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0, hold = false, delay = 0 }) {
   const ghost = document.createElement('div');
   ghost.className = className + ' ghost-layer';
@@ -123,7 +130,7 @@ export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0,
   const done = () => ghost.remove();
   anim.onfinish = done;
   anim.oncancel = done;
-  setTimeout(done, duration + delay + 400);
+  safetyNet(anim, duration + delay, 400, done);
   if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
   return track(anim);
 }
@@ -309,11 +316,32 @@ export function flyMinionsHome(root, snap, { flownAt = null } = {}) {
 }
 
 /** Remove flying ghosts: all of them (a modal opened), or those older than maxAge ms (they should be gone). */
+/** Tells a flight watcher (e2e/v4/lib/flightwatch.mjs, when one is on the page) where a flight is meant to land. */
+export function aim(anim, el) {
+  if (anim && el && !el.rectOnly && typeof window !== 'undefined' && window.__flightWatch && window.__flightWatch.aim) window.__flightWatch.aim(anim, el);
+  return anim;
+}
 export function clearFlights(maxAge = 0) {
   if (typeof document === 'undefined') return;
   const now = Date.now();
-  document.querySelectorAll('.ghost-layer').forEach(g => { if (!maxAge || now - Number(g.dataset.born || 0) > maxAge) { const use = inUse.get(g); if (use) use.release(); else g.remove(); } });
+  document.querySelectorAll('.ghost-layer').forEach(g => {
+    const age = now - Number(g.dataset.born || 0);
+    // a sweep takes only what's left over, never a piece still on its way (Cory, Oct 28: "the follower or the money
+    // disappears well before making it to its final destination"): at Relaxed one flight runs up to 1.65s, and the next
+    // step drew at two-thirds of it, so a 1.2s sweep took coins off at about three-quarters of their way
+    if (maxAge && (age <= maxAge || (age <= maxAge + 6000 && stillFlying(g)))) return;
+    const use = inUse.get(g); if (use) use.release(); else g.remove();
+  });
 }
+const stillFlying = g => {
+  try {
+    return g.getAnimations({ subtree: true }).some(a => {
+      if (a.playState !== 'running' && !a.pending) return false;
+      const end = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming().endTime : Infinity;
+      return Number.isFinite(end) && (a.currentTime == null || a.currentTime < end);
+    });
+  } catch { return false; }
+};
 
 /** The cards still in the shop slide from where they were to where they are now (no one-frame reflow). */
 export function slideShop(root, snap) {
@@ -579,7 +607,7 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
     const done = use.release;
     anim.addEventListener('finish', done);
     anim.addEventListener('cancel', done);
-    setTimeout(done, duration + delay + 500);
+    safetyNet(anim, duration + delay, 500, done);
     return anim;
   };
   const lead = one(0, 1, 1, 0);
