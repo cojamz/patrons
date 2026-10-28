@@ -35,6 +35,9 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - A playtest note ending in * is player feedback with no action needed yet: log it, don't fix or pitch it (Cory, Oct 22).
 - Voice notes ramble: pull out decisions, ideas and to-dos, log them, read back only what's ambiguous (the /note skill).
 
+## Versions
+- A small publish is a sub-step of the version: after v0.9.8 comes v0.9.801, v0.9.802 and so on (`npm run version:v4 -- patch`, which v4-ship-ui.sh runs). The next whole step (v0.9.9) is `point`, only for a release worth calling one (Cory, Oct 28).
+
 ## Never make him ask
 - Post on every state change (live, ready to look at, ETA slipped), with a screenshot when the screen changed and an ETA in his time; never ~30 minutes of work without a post. Ship each fix as it passes; never hold finished fixes for a batch (Cory, Oct 21, repeat).
 - He must be able to track every thread without asking "what's happening?". Keep this thread's line on the board current (node scripts/status.mjs set …), and post when state changes. A quiet thread says why.
@@ -76,3 +79,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-28: Cory, on the lag pod asking him to OK a tuning pass and a staged rebuild: "why is it waiting on me?? just fucking fix it". Engineering work and its order never wait on him; only player-facing changes do.
 - 2026-10-28: Cory, after a day of click-latency work: "you're fixing like responsiveness. the issue is really the whole game feeling sluggish and slow animations". Lag means pace: time per turn and per beat, judged on a clip.
 - 2026-10-28: Then, correcting the reading: "no i mean, it's stuff like, the page feels frozen often and you can't click, and you're waiting for it to sputter back to life. i feel like engineering pod didn't employ enough deep expertise". Lag means freezes that block input.
+- 2026-10-28: Cory: "you need to stop iterating the version number so quickly. go to 0.9.801 after this lol". Small publishes are now sub-steps (v0.9.801, v0.9.802…); scripts/v4-version.mjs does it.
