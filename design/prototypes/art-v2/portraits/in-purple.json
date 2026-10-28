@@ -1,0 +1,80 @@
+[
+ {
+  "id": "purple.secondwind",
+  "name": "Go-Getter",
+  "sphere": "purple",
+  "text": "Once per game: take an extra turn after this one."
+ },
+ {
+  "id": "purple.lateriser",
+  "name": "Late Riser",
+  "sphere": "purple",
+  "text": "Round Start: if you have the fewest followers (ties count), take an extra turn before anyone places."
+ },
+ {
+  "id": "purple.courier",
+  "name": "Courier",
+  "sphere": "purple",
+  "text": "Whenever you take an extra turn, +1 of each other color."
+ },
+ {
+  "id": "purple.clockmaker",
+  "name": "Clockmaker",
+  "sphere": "purple",
+  "text": "On Recruit: +1 purple per 2 purple you have. Round Start: +1 purple per 2 purple you have."
+ },
+ {
+  "id": "purple.nightowl",
+  "name": "Night Owl",
+  "sphere": "purple",
+  "text": "Once per round: after you place your last minion, take an extra turn."
+ },
+ {
+  "id": "purple.earlybird",
+  "name": "Early Bird",
+  "sphere": "purple",
+  "text": "Your turns can’t be skipped."
+ },
+ {
+  "id": "purple.bouncer",
+  "name": "Bouncer",
+  "sphere": "purple",
+  "text": "On Recruit: the next two rivals’ turns are skipped."
+ },
+ {
+  "id": "purple.gossip",
+  "name": "Gossip",
+  "sphere": "purple",
+  "text": "Whenever a player’s turn is skipped, +1 follower."
+ },
+ {
+  "id": "purple.extrashift",
+  "name": "Extra Shift",
+  "sphere": "purple",
+  "text": "On Recruit: +1 minion this round."
+ },
+ {
+  "id": "purple.timekeepers",
+  "name": "Timekeepers",
+  "sphere": "purple",
+  "text": "Game end: +1 follower per purple member you have."
+ },
+ {
+  "id": "purple.closer",
+  "name": "Closer",
+  "sphere": "purple",
+  "text": "When you place the last minion of the round: +4 purple."
+ },
+ {
+  "id": "purple.streak",
+  "name": "Hot Streak",
+  "sphere": "purple",
+  "text": "Once per round: +2 followers per turn in a row you’ve taken just before this one."
+ },
+ {
+  "id": "purple.crew",
+  "name": "Shift Crew",
+  "sphere": "purple",
+  "text": "Worth 2 followers."
+ }
+]

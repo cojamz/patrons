@@ -1,0 +1,80 @@
+[
+ {
+  "id": "thieves.cutpurse",
+  "name": "Cutpurse",
+  "sphere": "magenta",
+  "text": "On Recruit: steal 1 resource from the rival with the most resources. Round Start: steal 1 resource from the rival with the most resources."
+ },
+ {
+  "id": "thieves.grifter",
+  "name": "Grifter",
+  "sphere": "magenta",
+  "text": "On Recruit: steal 1 resource per 2 members you have."
+ },
+ {
+  "id": "thieves.sticky",
+  "name": "Sticky Fingers",
+  "sphere": "magenta",
+  "text": "Your steals take 1 more resource."
+ },
+ {
+  "id": "thieves.desperado",
+  "name": "Desperado",
+  "sphere": "magenta",
+  "text": "While you have the fewest followers (ties count), double what you steal from spaces, before other bonuses."
+ },
+ {
+  "id": "thieves.robinhood",
+  "name": "Robin Hood",
+  "sphere": "magenta",
+  "text": "Whenever you steal from the player with the most followers, +1 follower."
+ },
+ {
+  "id": "thieves.extortionist",
+  "name": "Extortionist",
+  "sphere": "magenta",
+  "text": "Whenever a rival buys 5 or more followers, steal 2 resources from that rival."
+ },
+ {
+  "id": "thieves.watchdog",
+  "name": "Bodyguard",
+  "sphere": "magenta",
+  "text": "Rivals can’t steal from you."
+ },
+ {
+  "id": "thieves.crew",
+  "name": "Crew",
+  "sphere": "magenta",
+  "text": "Worth 2 followers."
+ },
+ {
+  "id": "thieves.doubleagent",
+  "name": "Double Agent",
+  "sphere": "magenta",
+  "text": "On Recruit: swap it for a rival’s member you choose."
+ },
+ {
+  "id": "thieves.fixer",
+  "name": "Fixer",
+  "sphere": "magenta",
+  "text": "Once per game: spend magenta equal to a rival’s member’s cost to steal it."
+ },
+ {
+  "id": "thieves.kingpin",
+  "name": "Kingpin",
+  "sphere": "magenta",
+  "text": "Game end: +1 follower per magenta member you have."
+ },
+ {
+  "id": "thieves.snitch",
+  "name": "Snitch",
+  "sphere": "magenta",
+  "text": "Whenever a rival steals from you, they lose 1 follower."
+ },
+ {
+  "id": "thieves.shoplifter",
+  "name": "Shoplifter",
+  "sphere": "magenta",
+  "text": "Whenever you recruit, steal 1 resource."
+ }
+]

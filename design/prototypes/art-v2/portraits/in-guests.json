@@ -1,0 +1,38 @@
+[
+ {
+  "id": "benders.squatter",
+  "name": "Squatter",
+  "sphere": "colorless",
+  "text": "Once per round: place a minion on a space a rival already took."
+ },
+ {
+  "id": "benders.freelancer",
+  "name": "Freelancer",
+  "sphere": "colorless",
+  "text": "You may pay any member\u2019s colored part in any colors."
+ },
+ {
+  "id": "benders.extrahand",
+  "name": "Extra Hand",
+  "sphere": "colorless",
+  "text": "+1 minion in round III."
+ },
+ {
+  "id": "benders.frontrunner",
+  "name": "Front-runner",
+  "sphere": "colorless",
+  "text": "You go first every round."
+ },
+ {
+  "id": "benders.tiebreaker",
+  "name": "Tiebreaker",
+  "sphere": "colorless",
+  "text": "Ties you\u2019re in go to you alone."
+ },
+ {
+  "id": "benders.straggler",
+  "name": "Straggler",
+  "sphere": "colorless",
+  "text": "Once per round, after the last minion is placed: you may move your last minion to an open space and take it."
+ }
+]
