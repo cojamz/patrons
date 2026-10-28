@@ -197,3 +197,25 @@
 .lt-pile-row .pr-keep{flex:none;white-space:nowrap;font:700 13px/1 var(--sans);color:#2b2018;background:#f4b860;border:0;border-radius:999px;padding:6px 12px;box-shadow:0 0 0 1px #c98a3c;cursor:pointer}
 .lt-pile-row .pr-keep:hover{background:#ffc877}
 .lt-pile-row .pr-keep:active{transform:translateY(1px)}
+/* The shop as one clean grid (Cory, playtest Oct 28: "very weird looking shop"; his yes to the layout): the deck and the
+   three follower buys share one short top row, the same size and the same paper as the members; members fill full rows
+   of three under it, and a last row of one or two sits centered. The deck no longer stretches down beside them. */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards,
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n],
+  .app.game.lt .lt-shop-cards[data-pile-extra] .lt-shop-body > .lt-cards{grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:78px;grid-auto-rows:minmax(0,184px);align-content:start}
+  .app.game.lt .lt-shop-cards .lt-deck,
+  .app.game.lt .lt-shop-cards .lt-cards[data-n] .lt-deck{grid-column:span 3;grid-row:auto;order:-2;flex-direction:row;gap:8px}
+  .app.game.lt .lt-shop-cards .lt-deck .pile{width:40px;height:54px}
+  .app.game.lt .lt-shop-cards .lt-deck .n{font-size:15px}
+  .app.game.lt .lt-shop-cards .lt-rate{grid-column:span 3}
+  .app.game.lt .lt-shop-cards .lt-rate::before{display:none}
+  .app.game.lt .lt-shop-cards .lt-rate .art{background:color-mix(in srgb,var(--colorless,#8d9693) 22%,#fff8eb)}
+  .app.game.lt .lt-shop-cards .lt-rate .rt-trade .get{font-size:22px}
+  .app.game.lt .lt-shop-cards .lt-rate .rt-trade .follower-mark{width:20px;height:20px}
+  .app.game.lt .lt-shop-cards .lt-rate .nm,.app.game.lt .lt-shop-cards[data-view] .lt-rate.card .nm{display:none}
+  .app.game.lt .lt-shop-cards .lt-cards > .lt-card[data-uid]{grid-column:span 4}
+  .app.game.lt .lt-shop-cards .lt-cards > .lt-card[data-uid]:last-child:nth-child(3n){grid-column:5 / 9}
+  .app.game.lt .lt-shop-cards .lt-cards > .lt-card[data-uid]:last-child:nth-child(3n+1){grid-column:7 / 11}
+  .app.game.lt .lt-shop-cards .lt-cards > .lt-card[data-uid]:nth-last-child(2):nth-child(3n){grid-column:3 / 7}
+}
