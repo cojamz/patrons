@@ -5,7 +5,7 @@ import { createEmitter } from './emitter.js';
 export const TALK_MAX = 80; // a bubble, not a letter
 export const TALK_KEEP = 200; // what a table remembers for the log
 export const TALK_GAP_MS = 700; // one line at a time per player
-// (Claude's fill-ins, not yet approved: Cory asked for more than six)
+// (Claude's fill-ins, words and count, not yet approved by Cory)
 export const QUICK_LINES = [
   'Blessings', 'Thanks', 'Well played', 'Oops',
   'Heretic!', 'The end is near', 'Repent!', 'Mine now',

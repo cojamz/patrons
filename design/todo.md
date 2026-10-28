@@ -9,6 +9,7 @@ Redesign, brainstorm with Cory: Shake Down (feels too bad for the player who get
 Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 member cards at game end. Next pitches, one example first: a trio set bonus (three linked members, across or within colors, scaling as you collect); how the Saboteur (-3 followers when it joins your cult) enters a cult. Open asks: Host, Grifter, Heiress stay like Patriarch? [yes]; Extortionist rework so it stops taxing follower buys (his yes, no shape yet). Tabled: a follower-spending color.
 ## Ours, open (no call needed)
 0. Publish "online rooms idle 2 hours are deleted" (on the branch, tested) once Cory says tonight's playtest is over; a publish mid-game interrupts it.
+0b. Table talk (e9efe6d) goes live with the same post-playtest publish; then confirm two browsers in one room see each other's bubbles on the live build.
 1. Even Swap trading two shop members' places says nothing in "since your last turn"; say "swapped the shop's X and Y".
 2. Long shop member names fit their box (Lottery Winner, Sponsor, Patriarch, Speculator, Stunt Double): recheck on the 6/7/8 shop first.
 3. "Recruit" for members everywhere ("buy followers" stays): recheck buttons, prompts, toasts, log and rulebook since v0.8.31.
