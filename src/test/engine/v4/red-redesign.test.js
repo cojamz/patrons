@@ -177,13 +177,13 @@ describe('active acquisition versus gifts', () => {
     expect(new Set(remaining(s)).size).toBe(remaining(s).length);
   });
 
-  it('an acquired Doppelganger chooses its identity without firing the copied Recruit', () => {
+  it('an acquired Doppelganger chooses its identity and fires the copied Recruit (Cory, 2026-10-28)', () => {
     let s = take(table(Q, { round: 2, members: [['red.volunteer', 'echo.evergreen']], shop: ['echo.doppel', ...ROW] }), 'red.hireup');
     const a = uidIn(s, 'red.volunteer', 0), copy = uidIn(s, 'echo.doppel', 'shop'), target = uidIn(s, 'echo.evergreen', 0);
     s = move(s, swapId(a, copy));
     s = move(s, `card:${target}`);
     expect(s.cards[copy].copy).toBe('echo.evergreen');
-    expect(s.players[0].res.green).toBe(0);
+    expect(s.players[0].res.green).toBe(2); // Busker's On Recruit: +2 green
     expect(s.recruits).toBe(1);
   });
 });

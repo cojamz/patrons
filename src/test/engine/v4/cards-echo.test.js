@@ -86,6 +86,23 @@ describe('Green current actions', () => {
     expect(R(s)).toMatchObject({ gold: 12, green: 11 });
     expect(s.log.filter(l => /^P1 copied /.test(l)).map(l => l.split(':')[0])).toEqual(['P1 copied Golden Years', 'P1 copied Build Up']);
   });
+  // Cory's v0.9.1 playtest (Oct 27): "using squatter on greatest hits didnt seem to work… players actions werent copied"
+  it('Squatter joining a rival\'s Greatest Hits copies every action with your minion', () => {
+    const GH = `3-${quadrant('echo').actions.findIndex(a => a.key === 'eternity')}`;
+    let s = table(Q, { round: 3, left: 5, shop: ROW, members: [['benders.squatter']], queue: turns(0, 1, 0, 0) });
+    s = go(s, 'gold.rush'); s = go(s, 'echo.eternity'); s = go(s, 'echo.chant');
+    s = move(s, `squat:${GH}`);
+    expect(s.pending.prompt).toBe('Greatest Hits: copy which next?');
+    s = pass(play(s, sp('gold.rush')));
+    expect(R(s)).toMatchObject({ gold: 12, green: 11 });
+    expect(s.log.filter(l => /^P1 copied /.test(l)).map(l => l.split(':')[0])).toEqual(['P1 copied Golden Years', 'P1 copied Build Up']);
+    // and a space you joined with Squatter is one of yours for Greatest Hits
+    let t = table(Q, { round: 3, left: 5, shop: ROW, members: [['benders.squatter']], queue: turns(1, 0, 0) });
+    t = go(t, 'gold.rush');
+    t = pass(move(t, 'squat:0-1'));
+    t = go(t, 'echo.eternity');
+    expect(R(t)).toMatchObject({ gold: 12, green: 1 });
+  });
   it('Greatest Hits includes prior copy actions and lets their target be chosen again', () => {
     let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(0, 1, 0, 0) });
     s = go(s, 'gold.rush'); s = go(s, 'echo.chant');
@@ -188,14 +205,30 @@ describe('Green current members', () => {
     expect(s.cards[uid].used).toBe(true);
     expect(ids(s)).not.toContain('use:' + uid);
   });
-  it('Doppelganger becomes a copy without firing its copied Recruit, retaining future round-start hooks', () => {
+  // Cory, 2026-10-28: Doppelganger also does the copied member's On Recruit right then (was: never fired)
+  it('Doppelganger becomes a copy and does its On Recruit at once, keeping its round-start hooks', () => {
     let s = table(Q, { shop: ['echo.doppel', ...ROW], members: [['echo.evergreen']], res: [{ green: 5 }], queue: turns(0, 0) });
     s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.doppel'));
     s = move(s, cardOpt(s, 'echo.evergreen', 0));
     expect(s.cards[uidIn(s, 'echo.doppel', 0)].copy).toBe('echo.evergreen');
-    expect(R(s).green).toBe(1); // Default payment leaves one green; copying does not recruit Busker again.
+    expect(R(s).green).toBe(3); // default payment leaves one green, then the copied Busker's On Recruit: +2 green
     s.queue = [{ t: 'round', r: 2 }]; s = resume(s);
-    expect(R(s).green).toBe(5);
+    expect(R(s).green).toBe(7);
+  });
+  it('Doppelganger copying Connector pays Connector\'s On Recruit in round III', () => {
+    let s = table(Q, { round: 3, shop: ['echo.doppel', ...ROW], members: [['echo.connector', 'red.twins', 'gold.taxman']], res: [{ green: 3, gold: 2 }], queue: turns(0, 0) });
+    s = move(take(s, 'red.take'), cardOpt(s, 'echo.doppel'));
+    const before = R(s).green;
+    s = move(s, cardOpt(s, 'echo.connector', 0));
+    expect(s.cards[uidIn(s, 'echo.doppel', 0)].copy).toBe('echo.connector');
+    expect(R(s).green - before).toBe(3); // Twins (2 members) and Tax Man: 3 non-green members
+  });
+  it('Impostor still becomes a copy without firing its copied On Recruit', () => {
+    let s = table(Q, { round: 3, shop: ['echo.impostor', ...ROW], members: [[], ['echo.evergreen']], res: [{ green: 5 }], queue: turns(0, 0) });
+    s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.impostor'));
+    const before = R(s).green;
+    s = move(s, cardOpt(s, 'echo.evergreen', 1));
+    expect(R(s).green).toBe(before);
   });
   it('Impostor chooses only a rival’s members and adopts printed quantity', () => {
     let s = table(Q, { round: 3, shop: ['echo.impostor', ...ROW], members: [['echo.muse'], ['red.bigfamily']], queue: turns(0, 0) });

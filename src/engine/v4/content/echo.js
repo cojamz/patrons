@@ -412,9 +412,18 @@ const echoQ = {
       // a copied Hustler works the same color (until its own when-recruited pick below sets one)
       if (target.color !== undefined) self.color = target.color;
       ctx.log(`${p.name}'s ${self.def.name} becomes a copy of ${defById(self.copy).name}.`);
-      // Becoming a copy is this physical card's Recruit ability. Adopting the identity does not
-      // recruit that identity again: its ongoing hooks start now, and round-start hooks wait.
+      // Becoming a copy is this physical card's Recruit ability. An Impostor doesn't recruit that identity again:
+      // its ongoing hooks start now, and round-start hooks wait.
       const d = defById(self.copy);
+      // Doppelganger also does the copied member's On Recruit right then (Cory, 2026-10-28: a copied Connector
+      // did nothing, since Doppelganger only comes in round III and Connector's Round Start never came)
+      // Once per round per Doppelganger, so a Doppelganger swapped out and back in by Panel-style swaps can't loop
+      // (Claude, under Cory's go-with-your-gut).
+      if (self.def.key === 'doppel' && self.copiedRecruit !== ctx.state.round) {
+        self.copiedRecruit = ctx.state.round;
+        if (d.onRecruited) ctx.recruitAbility(p, self, d, () => d.onRecruited(ctx, p, self));
+        if (d.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (d[hook]) ctx.recruitAbility(p, self, d, () => d[hook](ctx, p, self));
+      }
       ctx.grantWorkers(p, d, self.uid);
     },
   },

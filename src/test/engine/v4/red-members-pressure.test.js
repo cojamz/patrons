@@ -133,13 +133,15 @@ describe('Red members: bounded acquisition and body invariants', () => {
     expect(s.pending.options.every(o => !o.value?.includes(panel))).toBe(true);
   });
 
-  it('Recruit Bonus rewards Doppelganger’s identity choice once, using its physical color', () => {
+  it('Recruit Bonus rewards Doppelganger’s identity choice and its copied On Recruit, in its physical color', () => {
     let s = table(Q, { round: 3, members: [['red.recruitbonus', 'red.host']], shop: ['echo.doppel'], queue: turns(0, 0) });
     s = move(take(s, 'red.take'), `card:${uidIn(s, 'echo.doppel', 'shop')}`);
     expect(s.players[0].res.green).toBe(1); // Doppelganger's choice is one Recruit ability.
     s = move(saved(s), `card:${uidIn(s, 'red.host', 0)}`);
-    expect(s.players[0].res.green).toBe(1); // Copying Host does not fire Host's Recruit/Now.
-    expect(s.players[0].res.red).toBe(1); // Red action only.
+    // Doppelganger also does the copied Host's On Recruit (Cory, 2026-10-28): +1 red per 2 members, and Recruit Bonus
+    // pays once more for it, in Doppelganger's own color
+    expect(s.players[0].res.green).toBe(2);
+    expect(s.players[0].res.red).toBe(1 + Math.floor(memberCount(s, s.players[0]) / 2));
   });
 
   it.each(['echo.evergreen', 'red.host', 'red.panel'])('Impostor adopts %s without firing its Recruit or Now ability', target => {
@@ -186,14 +188,15 @@ describe('Red members: bounded acquisition and body invariants', () => {
     expect(ctx.canSwapMember(uidIn(s, 'red.twins', 0))).toBe(false);
   });
 
-  it('a Doppelganger copying Panel adopts its body but does not start a second Recruit chain', () => {
+  // Cory, 2026-10-28: Doppelganger does the copied member's On Recruit, so a copied Panel promotes or demotes once
+  it('a Doppelganger copying Panel adopts its body and does Panel\'s Promote or Demote once', () => {
     let s = table(Q, { round: 3, members: [['red.panel']], shop: ['echo.doppel', 'red.mentor'], queue: turns(0, 0) });
     s = move(take(s, 'red.take'), `card:${uidIn(s, 'echo.doppel', 'shop')}`);
     s = move(saved(s), `card:${uidIn(s, 'red.panel', 0)}`);
-    expect(s.pending?.kind).not.toBe('choose');
+    expect(s.pending.prompt).toBe('Panel: Promote or Demote?');
+    expect(s.queue.find(t => t.t === 'choose')?.data?.excludeUid).toBe(uidIn(s, 'echo.doppel', 0));
     expect(s.cards[uidIn(s, 'echo.doppel', 0)].copy).toBe('red.panel');
     expect(memberCount(s, s.players[0])).toBe(6);
-    expect(saved(s).players[0].res.red).toBe(1);
   });
 
   it('Panel cannot swap itself after reload, while promoting another member into Doppelganger terminates normally', () => {
@@ -214,8 +217,13 @@ describe('Red members: bounded acquisition and body invariants', () => {
     expect(s.players[0].members).toContain(doppel);
     expect(s.players[0].members).toContain(panel);
     expect(s.shop).toContain(impostor);
+    // the copied Panel's Promote or Demote runs once (Cory, 2026-10-28), never on Doppelganger itself, and the chain ends
+    expect(s.pending.prompt).toBe('Panel: Promote or Demote?');
+    for (let k = 0; k < 8 && s.pending?.kind === 'choose'; k++) {
+      expect(s.pending.options.every(o => !(Array.isArray(o.value) && o.value.includes(doppel)))).toBe(true);
+      s = move(saved(s), s.pending.options[0].id);
+    }
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.players[0].res).toMatchObject({ red: 2, green: 1 }); // action + actual Panel ability + physical copy choice
     } finally { Object.assign(dop, was); }
   });
 });

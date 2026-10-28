@@ -42,7 +42,7 @@ describe('Printed followers count as members', () => {
     expect(followers(s, s.players[0])).toBe(4); // Leader plus Retinue’s three printed followers.
     expect(contextFor(s).quadrant('silver').scoring.score(contextFor(s), s.players[0])).toBe(7);
   });
-  it('recruiting Doppelganger copies Retinue’s three people, without repeating its gift', () => {
+  it('recruiting Doppelganger copies Retinue’s three people, repeating its gift (Cory, 2026-10-28: Doppelganger does the copied On Recruit)', () => {
     let s = table(['gold', 'red', 'silver', 'echo'], {
       round: 3, members: [['silver.retinue']], shop: ['echo.doppel'], queue: [{ t: 'turn', p: 0 }],
     });
@@ -56,7 +56,7 @@ describe('Printed followers count as members', () => {
     expect(countMembersOfColor(s, s.players[0], 'echo')).toBe(3);
     expect(countMembersOfColor(s, s.players[0], 'silver')).toBe(3);
     expect(followers(s, s.players[0])).toBe(7);
-    expect(s.players[1].res.silver).toBe(0); // Becoming a copy is its own Recruit effect.
+    expect(s.players[1].res.silver).toBe(1);
   });
   it('weighted recruit counters cross Pied Piper threshold once; recruit hooks fire once', () => {
     let s = table(Q, { res: [{ red: 20 }], members: [['red.drive', 'red.recruiter']], shop: ['red.bigfamily'] });
