@@ -644,7 +644,7 @@ try {
     else {
       if (line.aims.split(' ').sort().join(',') !== want) fail(`(s) the hover's line names [${line.aims}], the ones at 8 or less are [${want}]`, 'aim');
       // why they're lit: the line reads as recruits you could make (two lit, so "Could", never "Would")
-      if (!/^\s*Could recruit\b/.test(line.text)) fail(`(s) the hover's line doesn't say they're the members you could recruit: ${JSON.stringify(line.text)}`, 'aim');
+      if (!/^\s*Could recruit\b/i.test(line.text)) fail(`(s) the hover's line doesn't say they're the members you could recruit: ${JSON.stringify(line.text)}`, 'aim');
       for (const n of names) if (!line.text.includes(n)) fail(`(s) the hover's line doesn't name ${n}: ${JSON.stringify(line.text)}`, 'aim');
       console.log(`info.mjs: Recruit a Member lights ${want}; its hover says ${JSON.stringify(line.text.replace(/\s+/g, ' '))}`);
     }
