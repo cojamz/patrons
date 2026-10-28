@@ -30,3 +30,9 @@ Martyr and Undertaker (pay you for a member leaving: fewer members), Tribute Ban
 
 ## Table check (Cory, Oct 27, 8:48pm Eastern)
 "at a table it would be too hard to keep track of and remember what 22 of your members do". Every pitch above is checked against it: a player can hold their whole cult in their head. Bodies (Twins, Crew) add count but nothing to remember; the cards to thin are the ones with abilities.
+
+## Oct 27 night calls (logged in decisions.md)
+- Cult size target: 8 to 10 member cards at game end, 4-5 at the low end, 15 rare.
+- Patriarch stays for now. Extortionist gets reworked (no shape yet). Twins and Crew keep counting as 2. Muse stays.
+- Trio set bonuses: three linked members, across colors or within one, and the bonus can scale as you collect.
+- The Saboteur: a neutral member, -3 followers when it joins your cult. How it enters a cult is open.

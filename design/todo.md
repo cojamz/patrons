@@ -6,6 +6,7 @@ Done items and the old lists: design/archive/todo-2026-10-20-to-23.md and design
 All open design and feel questions are numbered in design/notes/waiting-on-cory-2026-10-24.md, defaults in brackets. When he answers, log each call in design/decisions.md, tick it there, and build in this order: two shops (#1 to #4), card changes (#5 to #11), board (#12 to #14), members (#15 to #17).
 
 Redesign, brainstorm with Cory: Shake Down (feels too bad for the player who gets shaken down) and Late Bloomers (works against itself and counts itself). From his Oct 24 game.
+Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 member cards at game end. Next pitches, one example first: a trio set bonus (three linked members, across or within colors, scaling as you collect); how the Saboteur (-3 followers when it joins your cult) enters a cult. Open asks: Host, Grifter, Heiress stay like Patriarch? [yes]; Extortionist rework so it stops taxing follower buys (his yes, no shape yet). Tabled: a follower-spending color.
 ## Ours, open (no call needed)
 0. Publish "online rooms idle 2 hours are deleted" (on the branch, tested) once Cory says tonight's playtest is over; a publish mid-game interrupts it.
 1. Even Swap trading two shop members' places says nothing in "since your last turn"; say "swapped the shop's X and Y".

@@ -11,6 +11,7 @@ Last updated 2026-10-24 by the tidy-up thread. Before this: design/archive/hando
 - Ship freeze rule: while Cory says a game is running, push to the branch only; publish when he says it's over.
 
 ## The game now
+- Oct 27 night playtest calls (design/notes/strategy-buildable-2026-10-27.md): Cory wants fewer member cards per cult (8-10 at game end) and more strategy, about a 30% nudge, not a rebuild. Built on the branch, unpublished: Front-runner 4, Launderer 5, Straggler 8, Tribute Band 12, Loyalists shields only your other members. Rule for any member idea: a table must be able to track it (no counting events through a round).
 - Redesigned and live (2.0 on the Custom table picker): Red, Green, Magenta, Purple, Blue, White. Not redesigned (1.0): Gold, Silver (High Tide is live in round III), Yellow. Their redesigns are paused by Cory; state in design/spheres/gold-redesign-2026-10-22.md, silver-redesign-2026-10-22.md and design/pitch-ledger.md (Yellow).
 - Core principle (Cory, Oct 22): the game is about synergy and engine building, not value in a vacuum. Strength baselines live in the /brainstorm skill.
 - Members: 12 per redesigned color (Magenta has 13; one to cut), 10 in the old colors, 9 colorless guests. Target: a member returns about 2x its cost in followers (Cory, Oct 22; was 1.5x). Live prices predate the 2x target. Pricing levers: total cost, colored vs any in the cost, followers printed (1 to 4, rarely 5).
