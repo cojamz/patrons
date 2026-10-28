@@ -2,6 +2,10 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.801 — 2026-10-28 — unreleased
+
+- Tiebreaker costs 5, down from 7.
+
 ## v0.9.8 — 2026-10-28 — unreleased
 
 - Out of Style can send neutral members to the bottom: pick the gray neutral dot.
