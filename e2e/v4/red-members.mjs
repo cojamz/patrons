@@ -25,6 +25,11 @@ function scenario(name){
   const panel=deal('red.panel','shop'),mentor=deal('red.mentor','shop');
   for(const d of ['red.volunteer','red.twins','red.loyalists','red.mob','red.movementpenalty','red.patriarch'])deal(d,'shop');
   initial.push(action('take'),`card:${panel}`,'promote');pair=`trade:${host}:${mentor}`;picks.push(pair);
+ }else if(name==='penalty'){
+  // Poach moves a rival's member out of their cult; the owner's Movement Penalty costs that rival 1 follower.
+  deal('red.movementpenalty',0);const target=deal('red.panel',1);deal('red.proselytizer',2);s.players[1].bonus=2;
+  for(const d of ['red.volunteer','red.twins','red.host','red.mentor','red.recruitbonus','red.loyalists','red.mob','red.patriarch'])deal(d,'shop');
+  initial.push(`slot:2-${quadrant('thieves').actions.findIndex(a=>a.key==='heist')}`,`card:${target}`);
  }else{
   for(const d of ['red.panel','red.twins','red.host','red.mentor','red.recruitbonus','red.loyalists','red.mob','red.movementpenalty'])deal(d,'shop');
   s.players[0].res=Object.fromEntries(s.resources.map(r=>[r,r==='red'?12:0]));s.queue=[{t:'buy',p:0},{t:'endTurn',p:0},{t:'turn',p:0}];
@@ -43,18 +48,23 @@ function scenario(name){
   if(pays.length!==1)throw Error('Follower fixture must have exactly one payment plan');
   expected=applyMove(expected,{player:expected.pending.player,option:pays[0].id});
  }
+ if(name==='penalty'){
+  const v=expected.players[1],u=s.players[1].members[0];
+  if(v.bonus!==s.players[1].bonus-1)throw Error(`penalty: rival bonus ${s.players[1].bonus} -> ${v.bonus}`);
+  if(v.members.includes(u)||!expected.players[0].members.includes(u))throw Error('penalty: member did not move');
+ }
  return{save,initial,pair,expected};
 }
-if(process.argv.includes('--fixtures-only')){for(const n of ['panel','followers']){scenario(n);console.log(`${n}: fixture resolves`);}process.exit(0);}
+if(process.argv.includes('--fixtures-only')){for(const n of ['panel','penalty','followers']){scenario(n);console.log(`${n}: fixture resolves`);}process.exit(0);}
 const browser=await chromium.launch({executablePath:browserPath});let page,tag;
 try{
- for(const [size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]])for(const name of ['panel','followers']){ // (penalty went with Even Swap, the space that moved a rival's member: round I rework, Cory Oct 27)
+ for(const [size,opts]of[['desktop',{viewport:{width:1270,height:700}}],['phone',devices['iPhone 13']]])for(const name of ['panel','penalty','followers']){ // penalty: Poach now moves the rival's member (Even Swap went in the round I rework, Cory Oct 27)
   tag=`${size}-${name}`;const ctx=await browser.newContext(opts);page=await ctx.newPage();page.setDefaultTimeout(12000);
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{window.__newRedFlights=[];addEventListener('DOMContentLoaded',()=>new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1&&n.classList.contains('ghost-layer'))window.__newRedFlights.push(n.className);}).observe(document.body,{childList:true,subtree:true}));});
   const t=scenario(name);await seedSave(page,t.save);await page.goto(`${base}/?intro=0&speed=quick`);await page.locator('[data-home="resume"]').click();
   if(await page.locator('[data-handoff]').isVisible())await page.locator('[data-handoff]').click();
-  const press=async id=>{await page.locator('.app.game:not([data-animating])').waitFor();if(size==='phone')await page.waitForTimeout(450);const el=page.locator(`[data-option=${JSON.stringify(id)}]:not([disabled]):not([aria-disabled="true"])`).first();await el.waitFor();if(size==='phone')await el.tap();else await el.click();const confirm=page.getByRole('button',{name:'Place here',exact:true});if(await confirm.isVisible())await confirm.click();if(size==='phone'&&id.startsWith('card:')){const recruit=page.getByRole('button',{name:'Recruit',exact:true});await recruit.waitFor();await recruit.click();}};
+  const press=async id=>{await page.locator('.app.game:not([data-animating])').waitFor();if(size==='phone')await page.waitForTimeout(450);const el=page.locator(`[data-option=${JSON.stringify(id)}]:not([disabled]):not([aria-disabled="true"])`).first();await el.waitFor();if(size==='phone')await el.tap();else await el.click();const confirm=page.getByRole('button',{name:'Place here',exact:true});if(await confirm.isVisible())await confirm.click();if(size==='phone'&&id.startsWith('card:')){const sheet=page.locator(`[data-recruit="${id.slice(5)}"]`);if(name==='penalty'){try{await sheet.waitFor({timeout:2500});}catch{return;}}await sheet.click();}};
   if(name==='followers'){
    const offers=page.locator('.lt-cards .lt-rate.lt-card');if(await offers.count()!==3)throw Error(`${tag}: follower cards not unified`);
    const footer=offers.nth(1).locator('.ft .lt-cost');if(await footer.getAttribute('aria-label')!=='5 any')throw Error(`${tag}: follower cost missing`);

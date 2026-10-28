@@ -634,6 +634,7 @@ export const cardVerb = pending => {
   const q = (pending && pending.prompt) || '';
   if (/to the bottom/i.test(q)) return 'Send to bottom';
   if (/^Peek:/.test(q)) return /on top/.test(q) ? 'Put on top' : 'Put next';
+  if (/^Tryout:/.test(q)) return 'Use On Recruit'; // Tryout borrows the effect; the card stays in the shop
   return 'Recruit';
 };
 
