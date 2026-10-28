@@ -21,6 +21,7 @@ Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 mem
 9. Seat pass: minions, follower number, resources and rivals' engines readable at a glance. Show Cory 2 mockups first.
 
 ## Lag and motion (ours: engineering never waits on Cory; judge on the freeze probe in Chrome and Firefox)
+- Smoothness panel leftovers (/mnt/project-files/smooth-panel/plan.md): the wheel's landing re-lay (lay out only panels whose upright side flips), scoringSnapshot cache, income line keyed by members, preview cap by time.
 - Snappy pair next (Claude's): bots off the main thread (worker), one animation clock + piece pool, acknowledgment/frame bars in the snappy gate, cult-hop filter. design/eval/snappy-pair/README.md.
 - React commits 80-130ms at 4x CPU; seat re-renders as cards land; hover "a tiny bit wonky"; linger motion starts late. Leftovers: design/eval/perf/lag-2026-10-21.md.
 - Smooth play, next (ours, no call needed): tuning pass (structural sharing after applyMove, keep idle loops through shows instead of the data-chain rule, rect reads once per chain), then the staged show layer (design/eval/perf/smooth-proposal.md). Measure each with scripts/v4-rig.mjs.
