@@ -1,0 +1,74 @@
+[
+ {
+  "id": "market.connoisseur",
+  "name": "Connoisseur",
+  "sphere": "blue",
+  "text": "Whenever you recruit a blue member, +1 blue."
+ },
+ {
+  "id": "market.patroness",
+  "name": "Patroness",
+  "sphere": "blue",
+  "text": "Whenever a shop member goes to the bottom of the pile, +1 follower."
+ },
+ {
+  "id": "market.snob",
+  "name": "Snob",
+  "sphere": "blue",
+  "text": "Game end: +1 follower per blue member you have."
+ },
+ {
+  "id": "market.windowshopper",
+  "name": "Window Shopper",
+  "sphere": "blue",
+  "text": "On Recruit: send 1 shop member to the bottom of the pile, gain 1 of its color. Round Start: send 1 shop member to the bottom of the pile, gain 1 of its color."
+ },
+ {
+  "id": "market.restocker",
+  "name": "Restocker",
+  "sphere": "blue",
+  "text": "Once per game: send the whole shop to the bottom of the pile, then refill."
+ },
+ {
+  "id": "market.shopaholic",
+  "name": "Shopaholic",
+  "sphere": "blue",
+  "text": "You can always recruit twice."
+ },
+ {
+  "id": "market.windowdresser",
+  "name": "Window Dresser",
+  "sphere": "blue",
+  "text": "On Recruit: send 3 shop members to the bottom of the pile, then refill."
+ },
+ {
+  "id": "market.plusone",
+  "name": "Plus-One",
+  "sphere": "blue",
+  "text": "On Recruit: recruit again this turn."
+ },
+ {
+  "id": "market.doorman",
+  "name": "Doorman",
+  "sphere": "blue",
+  "text": "Whenever a rival recruits more than once in a turn (swaps count), +1 blue."
+ },
+ {
+  "id": "market.regular",
+  "name": "Regular",
+  "sphere": "blue",
+  "text": "Whenever you buy followers, +1 blue."
+ },
+ {
+  "id": "market.trendsetter",
+  "name": "Trendsetter",
+  "sphere": "blue",
+  "text": "Whenever you recruit a member, send 1 shop member to the bottom of the pile, then refill."
+ },
+ {
+  "id": "market.critic",
+  "name": "Critic",
+  "sphere": "blue",
+  "text": "Whenever a rival recruits a blue member, +1 follower."
+ }
+]

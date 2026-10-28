@@ -1,0 +1,74 @@
+[
+ {
+  "id": "red.twins",
+  "name": "Twins",
+  "sphere": "red",
+  "text": "Worth 2 followers."
+ },
+ {
+  "id": "red.volunteer",
+  "name": "Volunteer",
+  "sphere": "red",
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "red.mentor",
+  "name": "Mentor & Protégé",
+  "sphere": "red",
+  "text": "On Recruit: recruit the cheapest member in the shop."
+ },
+ {
+  "id": "red.proselytizer",
+  "name": "Proselytizer",
+  "sphere": "red",
+  "text": "Whenever you recruit, +1 follower."
+ },
+ {
+  "id": "red.mob",
+  "name": "Mob",
+  "sphere": "red",
+  "text": "Game end: +1 follower per red member."
+ },
+ {
+  "id": "red.host",
+  "name": "Host",
+  "sphere": "red",
+  "text": "On Recruit: +1 red per 2 members. Round Start: +1 red per 2 members."
+ },
+ {
+  "id": "red.patriarch",
+  "name": "Patriarch",
+  "sphere": "red",
+  "text": "Game end: +1 follower per 2 members."
+ },
+ {
+  "id": "red.recruitbonus",
+  "name": "Recruit Bonus",
+  "sphere": "red",
+  "text": "Whenever one of your members’ \"On Recruit\" happens, +1 of its color."
+ },
+ {
+  "id": "red.movementpenalty",
+  "name": "Movement Penalty",
+  "sphere": "red",
+  "text": "When you move a rival’s member out of their cult, they lose 1 follower."
+ },
+ {
+  "id": "red.panel",
+  "name": "Panel",
+  "sphere": "red",
+  "text": "On Recruit: Promote or Demote another member."
+ },
+ {
+  "id": "red.loyalists",
+  "name": "Loyalists",
+  "sphere": "red",
+  "text": "Your other members can’t be swapped."
+ },
+ {
+  "id": "red.headhunter",
+  "name": "Headhunter",
+  "sphere": "red",
+  "text": "Once per game: swap a rival’s member with a shop member of equal or greater cost."
+ }
+]

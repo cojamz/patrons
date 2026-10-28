@@ -1,0 +1,56 @@
+[
+ {
+  "id": "gold.banker",
+  "name": "Banker",
+  "sphere": "gold",
+  "text": "On Recruit: +3 gold. Round Start: +3 gold."
+ },
+ {
+  "id": "gold.taxman",
+  "name": "Tax Collector",
+  "sphere": "gold",
+  "text": "Whenever a rival buys followers, +1 gold."
+ },
+ {
+  "id": "gold.merchant",
+  "name": "Merchant",
+  "sphere": "gold",
+  "text": "Whenever anyone recruits a gold member, +1 gold."
+ },
+ {
+  "id": "gold.thrift",
+  "name": "Penny Pincher",
+  "sphere": "gold",
+  "text": "Gold you spend on members counts double."
+ },
+ {
+  "id": "gold.underdog",
+  "name": "Underdog",
+  "sphere": "gold",
+  "text": "While a rival has more gold than you, double your gold gains."
+ },
+ {
+  "id": "gold.tinker",
+  "name": "Alchemist",
+  "sphere": "gold",
+  "text": "Whenever an action gains you another color, +1 gold."
+ },
+ {
+  "id": "gold.speculator",
+  "name": "Speculator",
+  "sphere": "gold",
+  "text": "Once per game: double your gold."
+ },
+ {
+  "id": "gold.tycoon",
+  "name": "Tycoon",
+  "sphere": "gold",
+  "text": "Game end: +1 follower per 2 gold."
+ },
+ {
+  "id": "gold.seed",
+  "name": "Treasurer",
+  "sphere": "gold",
+  "text": "On Recruit: +1 gold per member you have, this one included."
+ }
+]

@@ -1,0 +1,68 @@
+[
+ {
+  "id": "trading.recluse",
+  "name": "Recluse",
+  "sphere": "white",
+  "text": "Game end: +2 followers per rival with more members than you."
+ },
+ {
+  "id": "trading.shopkeeper",
+  "name": "Shopkeeper",
+  "sphere": "white",
+  "text": "On Recruit: +2 white. Round Start: +2 white."
+ },
+ {
+  "id": "trading.heiress",
+  "name": "Heiress",
+  "sphere": "white",
+  "text": "Once per game: +1 white per member you have."
+ },
+ {
+  "id": "trading.broker",
+  "name": "Broker",
+  "sphere": "white",
+  "text": "Whenever a White action gives you followers, +1 follower."
+ },
+ {
+  "id": "trading.exporter",
+  "name": "Exporter",
+  "sphere": "white",
+  "text": "Whenever you recruit a non-white member, +1 white."
+ },
+ {
+  "id": "trading.raider",
+  "name": "Raiders",
+  "sphere": "white",
+  "text": "Once per game: steal 4 followers from the leader. Pay them 2 white."
+ },
+ {
+  "id": "trading.cashier",
+  "name": "Cashier",
+  "sphere": "white",
+  "text": "On Recruit: turn all your white into followers."
+ },
+ {
+  "id": "trading.undertaker",
+  "name": "Undertaker",
+  "sphere": "white",
+  "text": "Whenever you cast out one of your members, +2 followers."
+ },
+ {
+  "id": "trading.martyr",
+  "name": "Martyr",
+  "sphere": "white",
+  "text": "When this member leaves your cult, gain followers equal to its cost."
+ },
+ {
+  "id": "trading.oldmoney",
+  "name": "Old Money",
+  "sphere": "white",
+  "text": "Game end: +1 follower per white member you have."
+ },
+ {
+  "id": "trading.hoarder",
+  "name": "Hoarder",
+  "sphere": "white",
+  "text": "Once per game: turn all your resources into white."
+ }
+]

@@ -1,0 +1,62 @@
+[
+ {
+  "id": "silver.guest",
+  "name": "Guest",
+  "sphere": "silver",
+  "text": "Whenever a rival gives you something, +1 more of it."
+ },
+ {
+  "id": "silver.benefactor",
+  "name": "Benefactor",
+  "sphere": "silver",
+  "text": "On Recruit: +3 silver, and +1 silver to a rival you choose. Round Start: +3 silver, and +1 silver to a rival you choose."
+ },
+ {
+  "id": "silver.majordomo",
+  "name": "Majordomo",
+  "sphere": "silver",
+  "text": "Whenever you take a Silver space, +2 silver."
+ },
+ {
+  "id": "silver.retinue",
+  "name": "Retinue",
+  "sphere": "silver",
+  "text": "Worth 3 followers. On Recruit: each rival +1 silver."
+ },
+ {
+  "id": "silver.revelers",
+  "name": "Revelers",
+  "sphere": "silver",
+  "text": "Counts as 3 members."
+ },
+ {
+  "id": "silver.heir",
+  "name": "Heir",
+  "sphere": "silver",
+  "text": "On Recruit: +1 silver per member you have. Round III Start: +1 silver per member you have."
+ },
+ {
+  "id": "silver.spoon",
+  "name": "Upstart",
+  "sphere": "silver",
+  "text": "On Recruit: gain half the silver of the rival with the most, rounded up."
+ },
+ {
+  "id": "silver.gala",
+  "name": "Debutante",
+  "sphere": "silver",
+  "text": "Once per game: double your silver. Each rival +2 silver."
+ },
+ {
+  "id": "silver.grandhost",
+  "name": "Grand Host",
+  "sphere": "silver",
+  "text": "Double the silver you gain from Silver spaces."
+ },
+ {
+  "id": "silver.saint",
+  "name": "Patron Saint",
+  "sphere": "silver",
+  "text": "Game end: +1 follower per 2 silver members, anyone’s."
+ }
+]
