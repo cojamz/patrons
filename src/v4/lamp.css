@@ -326,6 +326,11 @@ h1,h2,h3{font-family:var(--serif)}
 /* the follower mark on a contest rim wears a pearly sheen and a soft halo: followers, not one more resource mark */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark{filter:url(#ltSheenHalo)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark .follower-mark path{fill:url(#ltSheen)}
+/* while the board turns (a spin, a drag), nothing on it is filtered: Firefox draws SVG filters and filtered SVG shapes
+   (the lit panels' glow, the follower mark's halo, the rim's lit glow and emoji shadows, the minions' shadows) on the
+   CPU, again for every frame the board moves (Cory on Firefox, Oct 28: the spin "at like 0.5 frames per second").
+   They come back as it lands; at rest the board looks the same */
+.lt .stage.turning svg *,.lt .stage.turning .slot,.lt .stage.turning .slot *{filter:none!important}
 .lt [data-spaces="panels"] .stage .hub-label small{display:none}
 /* a serif numeral: "II" in a heavy sans inside the dark disc read as a pause button */
 .lt [data-spaces="panels"] .stage .hub-label b{font-family:var(--serif);font-weight:700;font-size:18px}
