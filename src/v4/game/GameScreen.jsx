@@ -352,7 +352,14 @@ function AfterChain({ value, hold, step = null, children }) {
   if (!hold) shown.current = value;
   // Physical commits do not advance a held caption; only completion does.
   latest.current = { value, step };
-  useEffect(() => onChainEnd(() => { if (shown.current !== latest.current.value) { shown.current = latest.current.value; bump(n => n + 1); } }), []);
+  // ...or the landing: since the next move starts at the last piece's landing (v0.9.804), a rival's chain rarely reaches
+  // its end before the next one adopts its settle, and a caption held for the end stayed up through two bots' turns
+  // (Cory, Oct 28: "a pick an artifact selector lingering by the time two bots took their turn")
+  useEffect(() => {
+    const advance = () => { if (shown.current !== latest.current.value) { shown.current = latest.current.value; bump(n => n + 1); } };
+    const offEnd = onChainEnd(advance), offLanded = onChainLanded(advance);
+    return () => { offEnd(); offLanded(); };
+  }, []);
   return children(shown.current);
 }
 
