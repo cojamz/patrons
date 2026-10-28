@@ -91,13 +91,14 @@ function bestRowValue(ctx, p, how) {
 }
 
 /** Churn: pick shop members one at a time; the row refills once, after the last (churnRefill, queued behind the picks). */
-function churnStep(ctx, p, { left }) {
+// who: the space or member doing it (Churn, or Trendsetter), named in the prompt and the log
+function churnStep(ctx, p, { left, who = 'Churn' }) {
   const shop = ctx.shopCards();
   if (left <= 0 || !shop.length) return;
-  ctx.choose(p, `Churn: send which member to the bottom? (${left} to go)`, shop.map(c => ({
+  ctx.choose(p, `${who}: send which member to the bottom? (${left} to go)`, shop.map(c => ({
     // bots send away the priciest (what a rival would buy next)
     id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)})`, kind: 'card', value: c.uid, hint: priceOf(c),
-  })), `${Q}.churn`, { left });
+  })), `${Q}.churn`, { left, who });
 }
 /** Peek: the player sets the order of the top cards, top first; the last one falls in place. */
 function peekStep(ctx, p, { left, placed }) {
@@ -233,9 +234,9 @@ const market = {
         const i = ctx.state.shop.indexOf(uid);
         ctx.state.shop.splice(i, 1);
         ctx.state.pile.push(uid);
-        ctx.log(`Churn: ${p.name} sends ${ctx.card(uid).def.name} to the bottom of the pile.`);
+        ctx.log(`${data.who === 'Churn' || !data.who ? 'Churn' : `${p.name}'s ${data.who}`}: ${p.name} sends ${ctx.card(uid).def.name} to the bottom of the pile.`);
       }
-      churnStep(ctx, p, { left: data.left - 1 });
+      churnStep(ctx, p, { left: data.left - 1, who: data.who });
     },
     churnRefill(ctx) { ctx.refillShop(); toBottom(ctx, 1); },
     outOfStyle(ctx, p, color) {
@@ -406,7 +407,7 @@ const market = {
       // members only, not follower buys (Cory, Oct 27: it was paying Bargain Bin and Patroness on every follower buy)
       onRecruit(ctx, owner, card, by, what) {
         if (by !== owner || !what.member || what.member.uid === card.uid || !ctx.state.shop.length) return;
-        churnStep(ctx, owner, { left: 1 });
+        churnStep(ctx, owner, { left: 1, who: 'Trendsetter' });
         ctx.defer(owner, `${Q}.churnRefill`);
       },
     }),
