@@ -284,7 +284,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   // "nothing travels from my buy to P4's seat")
   const mover = before.pending ? before.pending.player : null;
   // a rival's step in a round plays at RIVAL (motion.js), its beats overlapping; `keep` holds the spans of its recruit
-  // and follower-buy beats, which keep their full timing
+  // beats, which keep their full timing
   const rival = mover != null && !mine.includes(mover) && sameRound && before.round >= 1;
   const keep = [];
   let movePlace = null;
@@ -378,8 +378,10 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       m.pays.length = 0; m.fols.length = 0;
       next = ends(Math.max(next, o));
     }
+    // a recruit keeps full time on a rival's step; a follower buy plays at the rival's pace too (Cory, Oct 28) but
+    // still lands in full before anything else moves
     const kept = isRecruit || c.kind === 'buy';
-    if (rival && kept) keep.push([s, Math.max(next, end)]);
+    if (rival && isRecruit) keep.push([s, Math.max(next, end)]);
     // everything else in the beat, in order: what was paid, what was taken, given, gained, the cards, the followers
     let cur = Math.max(s, next === s ? s : next);
     // a release (M8): the member drops to the pile first; its refund leaves when the card is 40% along
@@ -483,7 +485,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     end = Math.max(end, refillAt + rowOutMs(outs) + shuffleInMs(joinedNow(before, state)) + MO.deal + (outs - 1) * MO.dealStagger);
     hand = end;
   }
-  // a rival's step: its timeline runs at RIVAL outside its recruit and follower-buy beats (rivalClock), and its closing
+  // a rival's step: its timeline runs at RIVAL outside its recruit beats (rivalClock), and its closing
   // breath too when it has neither
   const pace = rival && end ? (keep.length ? 1 : RIVAL) : 1;
   if (rival && end) {
@@ -519,7 +521,7 @@ let chainBehind = false;
 export const noteBehind = b => { chainBehind = !!b; };
 const FIT_MARGIN = 600;
 
-/** A rival step's clock: time runs at RIVAL, except inside the kept spans (a recruit's or follower buy's beat), where it
+/** A rival step's clock: time runs at RIVAL, except inside the kept spans (a recruit's beat), where it
  *  runs at full speed. Maps a time on the plan to its time on screen (whole ms, never out of order). */
 function rivalClock(keep) {
   const spans = [];
@@ -611,7 +613,7 @@ export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, ne
   const passes = plan.turnPasses && nextPlaces ? plan.total - MO.breath : plan.total;
   // the floor keeps a rival's visible step on screen before another player's step or the rival's next turn; never
   // between the same player's own sub-steps (a setup pick, the buy after a choice): those flow at their hand-off
-  // (a rival's quick step holds its floor at its own pace, RIVAL; a recruit or follower buy holds the full floor)
+  // (a rival's quick step holds its floor at its own pace, RIVAL; a recruit holds the full floor)
   const floored = rivalStep && (!sameNext || nextPlaces) ? Math.round(floor * (plan.pace ?? 1)) : 0;
   // a rival's placement hands on at its hand-off (its last piece two-thirds along), even when its turn ends there
   // the turn passing to another player (panel r1: rival turns overlapped your own coins still flying, and each other):

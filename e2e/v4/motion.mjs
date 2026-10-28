@@ -12,7 +12,7 @@ import { browserPath, launchBrowser } from './lib/browser.mjs';
 //       bot's next step shows at its chain's hand-off, and a step with nothing to show (a pass) holds no fixed time.
 //       The floor is MO.stepFloor at Steady (400ms × Steady's speed since the morning fixes: 648ms), and since Cory's
 //       2026-10-26 call ("Rival turns play quicker than yours ... and pause only on buys and recruits") a rival's plain
-//       step holds it at RIVAL (motion.js, 0.65: 421ms); a rival's recruit or follower buy keeps the full floor. The
+//       step holds it at RIVAL (motion.js, 0.65: 421ms); a rival's recruit keeps the full floor (follower buys at RIVAL too since Cory, 2026-10-28). The
 //       shortest hand-over is a plain step's, so the gate's floor is the scaled one (still over 400ms at Steady);
 //  (m5) laptop, the same seeded game at Steady and at Relaxed: a rival's whole turn (their placement showing → the next
 //       placement showing, bot to bot) takes at least 1.3× as long at Relaxed (1.8× until Cory, 2026-10-26, capped every
