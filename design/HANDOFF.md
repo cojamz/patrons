@@ -5,7 +5,7 @@ Last updated 2026-10-28 10:40am Eastern by the harness review thread. Before thi
 - Versions (Cory, Oct 28): small publishes are sub-steps, v0.9.801, v0.9.802… (`npm run version:v4 -- patch`); `point` makes the next whole step (v0.9.9) only for a release worth naming. All colors at 2.0 is v1.0.
 - Since Oct 24 the v0.9 line shipped: round I rework (v0.9.0), contest prizes +4/+6/+10 and +1 wild on every member (v0.8.100), table talk, saved games and Past games, the Peek row, Front-runner 4 / Launderer 5 / Straggler 8 / Tribute Band 12 / Loyalists (v0.9.2), narrow-laptop shop (v0.9.3), freeze and lag fixes (v0.9.4 to v0.9.7, flights always land), neutral in Out of Style (v0.9.8), Tiebreaker 5 (v0.9.801). CHANGELOG.md has each.
 - Running now: the freeze work (Cory: "laggy" = the page freezing, clicks ignored, then sputtering back; he plays Firefox on a Mac). Owners and next steps: design/in-flight.md.
-- Open questions for Cory: design/notes/waiting-on-cory-2026-10-24.md (some answered or overtaken; marked at its top), plus table talk's 12 quick lines (Claude's fill-ins) and Agents blocking your own copies (tester panel, Oct 26).
+- Open questions for Cory: design/notes/waiting-on-cory-2026-10-24.md (some answered or overtaken; marked at its top), plus table talk's 12 quick lines (Claude's fill-ins).
 - Our own open work, no call needed: design/todo.md ("Ours").
 - Ship freeze rule: while Cory says a game is running, push to the branch only; publish when he says it's over.
 - Firefox: every gate and the freeze probe run in it (`npm run check:v4 -- --firefox`, or V4_ENGINE=firefox); the bootstrap hook installs it from /mnt/project-files/harness/browsers/. The perf rig stays Chrome-only (CDP).
