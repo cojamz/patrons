@@ -4,13 +4,11 @@ import { browserPath } from './lib/browser.mjs';
 // from the space while the prompt sat top centre), and their targets stay lit on the board as well.
 //  (s1) Help Yourself: the card opens by the space, its stacks exactly the engine's options; exactly the same stacks
 //       light on the rival seats (own seat never), every other rival stack is dim and says why on hover; one pick on a
-//       seat and one on the card take them, the counter runs 1 → 0, a resource flies for each pick, and the right
-//       resources move (they keep their colors, plus the space's +1 magenta: Cory, 2026-10-19). Round II: it steals 1 × round.
+//       seat and two on the card take them, the counter runs 2 → 1 → 0, a resource flies for each pick, and the right
+//       resources move (they keep their colors, plus the space's +1 magenta: Cory, 2026-10-19). Round I: it steals 3.
 //  (s2) Collect Debts: only gold, on the seats and the card; "Take all 3" previews its picks on the card's stacks while
 //       pointed at, and one click takes all 3, biggest pile first (the engine's options, recorded one by one).
-//  (s3) Redistribute: 1 per Magenta action already holding a minion (2 here), split freely among rivals, so the rival
-//       holding less than you is offered too; "Take all 2" plans 2; picks land, the counter running 1 → 0.
-//       (s3b) A rival with nothing to take is dim on the seat and on the card, saying why.
+//  ((s3) Redistribute went in the round I rework, Cory Oct 27.)
 //  (e1) Escape on Kickback's card takes the placement back (the card closes, the minion comes home).
 //  (h1) Hand-pick: the offered members light in the shop (no duplicate card since #14), each with its printed cost;
 //       a click takes one.
@@ -109,9 +107,9 @@ const cardOptions = (page, sel) => page.$$eval(`.gift-card ${sel}[data-option]`,
 const moved = (page, m0) => page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, m0, { timeout: 8000 }).then(() => true, () => false);
 
 try {
-  // (s1) Help Yourself: take 2 (it steals 1 × round since the Magenta rework, so round II)
+  // (s1) Help Yourself: take 3 (it steals 3 / 4 / 5 by round since the round I rework, Cory Oct 27; round I here)
   {
-    const { ctx, page, save } = await open('help', '.lt-wheel .gift-card', { round: 2 });
+    const { ctx, page, save } = await open('help', '.lt-wheel .gift-card');
     const want = expectedLit(save);
     const got = await lit(page);
     if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`(s1) lit stacks ${got.join(' ')} ≠ the engine's options ${want.join(' ')}`);
@@ -131,33 +129,40 @@ try {
     const wantIds = save.state.pending.options.map(o => o.id).sort();
     if (onCard.join() !== wantIds.join()) errors.push(`(s1) the card's stacks answer ${onCard.join(' ')}, the engine offers ${wantIds.join(' ')}`);
     const cap = await page.$eval('.gift-card', e => `${e.querySelector('.gc-title').textContent}: ${e.querySelector('.gc-what').textContent}`.replace(/\s+/g, ' ').trim());
-    if (!/^Help Yourself: Take 2$/i.test(cap)) errors.push(`(s1) the card reads "${cap}"`);
+    if (!/^Help Yourself: Take 3$/i.test(cap)) errors.push(`(s1) the card reads "${cap}"`);
     const gap = await gapToSpace(page, save.state.players[0].lastSlot.key);
     if (gap == null || gap > 40) errors.push(`(s1) the card sits ${gap}px from the space you took (want ≤ 40)`);
     if (await page.$('.prompt.choice.seat-pick')) errors.push('(s1) the steal still asks in the header too');
     const green0 = await count(page, 1, 'green');
     await click(page, stack(1, 'green'));
-    await page.waitForSelector('.pick-left[data-left="1"]', { timeout: 8000 }).catch(() => errors.push('(s1) the counter never showed 1 left'));
+    await page.waitForSelector('.pick-left[data-left="2"]', { timeout: 8000 }).catch(() => errors.push('(s1) the counter never showed 2 left'));
     if (!(await page.$(`${stack(1, 'green')} .cs-took`))) errors.push("(s1) P2's green shows no −1 after the pick");
     // what's left, with the −1 beside it: never the old count and the change together (w3b #35)
     if ((await count(page, 1, 'green')) !== green0 - 1) errors.push(`(s1) P2's green reads ${await count(page, 1, 'green')} after a pick, not what's left (${green0 - 1})`);
     const cardGreen = await page.$eval('.gift-card .gc-stack[data-pid="1"][data-res="green"] .num', e => Number(e.textContent)).catch(() => NaN);
     if (cardGreen !== green0 - 1) errors.push(`(s1) the card's P2 green reads ${cardGreen} after a pick, not what's left (${green0 - 1})`);
     await page.screenshot({ path: `${SHOTS}/s1-one-picked.png` });
-    // the second pick on the card itself, coin by coin
+    // the other picks on the card itself, coin by coin
     await click(page, '.gift-card .gc-stack[data-pid="2"][data-res="gold"]');
+    await page.waitForSelector('.pick-left[data-left="1"]', { timeout: 8000 }).catch(() => errors.push('(s1) the counter never showed 1 left'));
+    await click(page, '.gift-card .gc-stack[data-pid="1"][data-res="blue"]');
     await page.waitForFunction(() => !document.querySelector('.gift-card'), null, { timeout: 8000 }).catch(() => errors.push('(s1) the steal never closed'));
-    // stolen resources keep their colors; the space's own +1 magenta comes on top (Cory, 2026-10-19)
-    const mine = PILES[0]; // what P1 held before taking the space
-    await expectCounts(page, 's1', { '1:green': 3, '2:gold': 4, '0:green': mine.green + 1, '0:gold': mine.gold + 1, '0:magenta': mine.magenta + 1 });
+    // stolen resources keep their colors; the space's own +1 magenta comes on top (Cory, 2026-10-19): what the engine
+    // makes of the same three picks (a member P1's bots recruited may add its own)
+    const PICKS = ['take:1:green', 'take:2:gold', 'take:1:blue'];
+    const after = PICKS.reduce((st, option) => applyMove(st, { player: 0, option }), save.state);
+    const counts = { '1:green': 3, '2:gold': 4, '1:blue': 1 };
+    for (const r of ['green', 'gold', 'blue', 'magenta']) counts[`0:${r}`] = after.players[0].res[r];
+    if (counts['0:magenta'] < PILES[0].magenta + 1 || counts['0:green'] < PILES[0].green + 1) errors.push(`(s1) the engine's own steal is off: ${JSON.stringify(counts)}`);
+    await expectCounts(page, 's1', counts);
     const left = await seenLeft(page);
     // from the first take on (never the count again at the start); the closing "0" can be missed on a loaded box
-    if (left[0] !== '1' || left.includes('2')) errors.push(`(s1) the counter ran ${left.join(' → ')}, not 1 → 0 (shown from the first take)`);
+    if (left[0] !== '2' || left.includes('3')) errors.push(`(s1) the counter ran ${left.join(' → ')}, not 2 → 1 → 0 (shown from the first take)`);
     const flights = await page.evaluate(() => window.__picks);
-    if (flights < 2) errors.push(`(s1) ${flights} resource flights for 2 picks`);
-    // the record (when this save keeps one) holds the two picks as option ids
-    const moves = await page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-2).map(m => m[1]); } catch { return []; } });
-    if (moves.length && JSON.stringify(moves) !== JSON.stringify(['take:1:green', 'take:2:gold'])) errors.push(`(s1) recorded picks ${JSON.stringify(moves)}`);
+    if (flights < 3) errors.push(`(s1) ${flights} resource flights for 3 picks`);
+    // the record (when this save keeps one) holds the three picks as option ids
+    const moves = await page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-3).map(m => m[1]); } catch { return []; } });
+    if (moves.length && JSON.stringify(moves) !== JSON.stringify(PICKS)) errors.push(`(s1) recorded picks ${JSON.stringify(moves)}`);
     await page.screenshot({ path: `${SHOTS}/s1-done.png` });
     await ctx.close();
   }
@@ -182,8 +187,10 @@ try {
       await page.evaluate(() => { window.__clicks = 0; addEventListener('click', () => { window.__clicks++; }, true); });
       await click(page, '.gift-card .gc-all');
       await page.waitForFunction(() => !document.querySelector('.gift-card'), null, { timeout: 10000 }).catch(() => errors.push('(s2) "Take all" never finished the steal'));
-      const g0 = save.state.players[0].res.gold;
-      await expectCounts(page, 's2', { '1:gold': 2, '2:gold': 3, '0:gold': g0 + 3 });
+      // P1's gold: 3 stolen, plus what the engine adds for the same picks (a member P1's bots recruited, like Prospector)
+      const after = ['player:2', 'player:2', 'player:1'].reduce((st, option) => applyMove(st, { player: 0, option }), save.state);
+      if (after.players[0].res.gold < save.state.players[0].res.gold + 3) errors.push('(s2) the engine stole less than 3 gold');
+      await expectCounts(page, 's2', { '1:gold': 2, '2:gold': 3, '0:gold': after.players[0].res.gold });
       if (await page.evaluate(() => window.__clicks) !== 1) errors.push('(s2) "Take all" took more than one click');
       const moves = await page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-3).map(m => m[1]); } catch { return []; } });
       if (moves.length && JSON.stringify(moves) !== JSON.stringify(['player:2', 'player:2', 'player:1'])) errors.push(`(s2) "Take all" recorded ${JSON.stringify(moves)}`);
@@ -192,52 +199,7 @@ try {
     }
     await ctx.close();
   }
-  // (s3) Redistribute steals 1 per Magenta action already holding a minion (Cory, 2026-10-19; was "1 from each rival"),
-  // split freely among rivals like every steal: with P2 on Help Yourself and P3 on Lie Low it takes 2. Every rival
-  // holding something is offered (P4, poorer than you, all the same); "Take all 2" previews a plan of 2 on offered
-  // stacks; picks count down 1 → 0 and land as the engine says (stolen colors kept, +1 magenta)
-  {
-    const occupy = { [`${STEAL_TABLE.indexOf('thieves')}-0`]: 1, [`${STEAL_TABLE.indexOf('thieves')}-2`]: 2 };
-    const { ctx, page, save } = await open('redistribute', '.lt-wheel .gift-card', { occupy });
-    const st = save.state;
-    if (st.pending.count?.of !== 2) errors.push(`(s3) the engine asks for ${st.pending.count?.of} steals with two Magenta actions taken, want 2`);
-    const owed = [...new Set(st.pending.options.map(o => o.target.pid))].sort();
-    if (owed.join() !== '1,2,3') errors.push(`(s3) the engine takes from P${owed.map(x => x + 1).join(' P')}, want every rival holding something`);
-    if (await page.$eval('.lt-seat[data-pid="3"] .lt-cult-seat', e => e.dataset.pick).catch(() => null) === 'off') errors.push('(s3) P4 (poorer than you, owed all the same) is dim');
-    if (await page.$('.gift-card .gc-rival[data-dim]')) errors.push('(s3) a rival on the card is dim though every rival holds something');
-    const cap = await page.$eval('.gift-card', e => `${e.querySelector('.gc-title').textContent}: ${e.querySelector('.gc-what').textContent}`.replace(/\s+/g, ' ').trim()).catch(() => '');
-    if (!/^Redistribute: Take 2$/i.test(cap)) errors.push(`(s3) the card reads "${cap}"`);
-    if (!(await page.$('.gift-card .gc-all[data-take-all="2"]'))) errors.push('(s3) no "Take all 2" on the card');
-    else {
-      await page.hover('.gift-card .gc-all');
-      await page.waitForTimeout(150);
-      const marks = await page.$$eval('.gift-card .gc-stack[data-plan]', els => els.map(e => [e.dataset.option, Number(e.dataset.plan)]));
-      const offered = new Set(st.pending.options.map(o => o.id));
-      if (marks.reduce((t, [, n]) => t + n, 0) !== 2 || marks.some(([id]) => !offered.has(id))) errors.push(`(s3) "Take all" previews ${JSON.stringify(marks)}, want 2 on offered stacks`);
-      await page.mouse.move(4, 690);
-    }
-    let after = st;
-    await click(page, stack(1, 'blue')); after = applyMove(after, { player: 0, option: 'take:1:blue' });
-    await page.waitForSelector('.pick-left[data-left="1"]', { timeout: 8000 }).catch(() => errors.push('(s3) the counter never showed 1 left'));
-    await click(page, stack(3, 'magenta')); after = applyMove(after, { player: 0, option: 'take:3:magenta' });
-    await page.waitForFunction(() => !document.querySelector('.gift-card'), null, { timeout: 8000 }).catch(() => errors.push('(s3) the steal never closed'));
-    const want = {};
-    for (const pid of [0, 1, 3]) for (const r of ['blue', 'magenta']) want[`${pid}:${r}`] = after.players[pid].res[r];
-    if (want['1:blue'] !== 1 || want['3:magenta'] !== 0) errors.push(`(s3) the engine's own steal is off: ${JSON.stringify(want)}`);
-    await expectCounts(page, 's3', want);
-    await ctx.close();
-  }
-  // (s3b) a rival with nothing to take is the one Redistribute leaves out: dim on the seat and on the card, saying why
-  {
-    const piles = [{ gold: 1, magenta: 0, blue: 1, green: 1 }, { gold: 3, magenta: 0, blue: 2, green: 4 }, { gold: 5, magenta: 2, blue: 0, green: 1 }, { gold: 0, magenta: 0, blue: 0, green: 0 }];
-    const { ctx, page, save } = await open('redistribute', '.lt-wheel .gift-card', { piles });
-    if (save.state.pending.options.some(o => o.target.pid === 3)) errors.push('(s3b) the engine offers a take from P4, who holds nothing');
-    if (await page.$eval('.lt-seat[data-pid="3"] .lt-cult-seat', e => e.dataset.pick).catch(() => null) !== 'off') errors.push('(s3b) P4 (nothing to take) is not dim');
-    const why4 = await page.$eval('.gift-card .gc-rival[data-pid="3"][data-dim] .gc-why', e => e.textContent).catch(() => '');
-    if (!/has nothing (left )?to take/.test(why4)) errors.push(`(s3b) P4 on the card says "${why4}", not why it can't be picked`);
-    await page.screenshot({ path: `${SHOTS}/s3b-nothing.png` });
-    await ctx.close();
-  }
+  // ((s3) and (s3b) went with Redistribute: Stash took its space in the round I rework, Cory Oct 27)
   // (s4) Kickback: pick a player by their face on the gift card, or by their lit seat
   {
     const { ctx, page, save } = await open('kickback', '.lt-wheel .gift-card');
@@ -392,4 +354,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`board-picker gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('board-picker gate: ok (Help Yourself, Collect Debts and Take all, Redistribute, Kickback and Escape, Encore, Bury, Hand-pick, Straggler, Shake Down)');
+console.log('board-picker gate: ok (Help Yourself, Collect Debts and Take all, Kickback and Escape, Encore, Bury, Hand-pick, Straggler, Shake Down)');
