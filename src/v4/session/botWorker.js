@@ -4,7 +4,8 @@
 import { chooseBotMove } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 
-self.postMessage({ ready: true });
+// it says it loaded (botThink.js: only a worker that never does counts as dead); not when a test loads it as a plain module
+if (typeof window === 'undefined') self.postMessage({ ready: true });
 self.onmessage = e => {
   const { id, state, rng } = e.data;
   const rand = seededRandom(rng);
