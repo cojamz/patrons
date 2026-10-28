@@ -226,6 +226,7 @@ const F = await page.evaluate(() => ({ frames: window.__rig.frames, loaf: window
 // the leak control: a reload on the last round's turn (the game is saved locally), measured the same way
 let unbroken = null, reloaded = null;
 if (finalRound && R[finalRound]) {
+  await page.evaluate(() => { window.__rig.frames = []; window.__rig.loaf = []; }).catch(() => {}); // the recorder's own data isn't the game's
   unbroken = await memory();
   await throttle(1);
   await page.reload();
