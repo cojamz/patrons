@@ -2,6 +2,18 @@
 
 Player-facing releases and exact source/build verification are recorded separately. Current public release: v0.8.62, published 2026-10-23. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.2 — 2026-10-28 — unreleased
+
+- Say: quick lines or your own words to the table, shown beside your seat and in the log
+- Every finished game is saved: Past games on the home screen reads any of your last 12 move by move, or saves it
+- Peek shows the top of the pile as a row: click to number the order, or Keep this order; the row stays lit to recruit from
+- Doppelganger does the copied member's On Recruit; Squatter on Greatest Hits is checked
+- Prices: Front-runner 4, Launderer 5, Straggler 8, Tribute Band 12; Loyalists: your other members can't be swapped
+- Spree keeps all three recruits when one of them is a member you can use (Speculator)
+- Panel's Promote or Demote picker is titled by what it does
+- Members sent back to the pile or shop keep nothing from before; Farewell and Release refill a short shop
+- Rounds run lighter: an idle table costs a fraction of before, and late-game clicks answer faster
+
 ## v0.9.1 — 2026-10-27 — unreleased
 
 - Out of Style gives a flat +2 blue; the wheel's words match the new round I spaces

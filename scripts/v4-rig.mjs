@@ -23,6 +23,8 @@ const flag = (n, d) => { const a = argv.find(x => x === `--${n}` || x.startsWith
 const [base, label] = pos;
 if (!base || !label) { console.error('usage: node scripts/v4-rig.mjs <url> <label> [--cpu=4] [--speed=relaxed] [--seed=N]'); process.exit(2); }
 const CPU = Number(flag('cpu', 4)), SPEED = String(flag('speed', 'relaxed')), SEED = Number(flag('seed', 20261028));
+const TRACE = !!flag('trace-clicks', false); // a Chrome trace per click: main-thread time by kind (style, layout, paint, script…) in slow ones
+const PROFILE = !!flag('profile-clicks', false); // CPU-profile every click; where the time goes in slow ones (use an unminified build)
 const OUT = String(flag('out', 'design/eval/perf')), MAX_MIN = Number(flag('max-min', 45)), GATE = !flag('no-gate', false);
 mkdirSync(OUT, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -104,7 +106,8 @@ const RECORDER = () => {
 };
 
 const browser = await chromium.launch({ executablePath: browserPath });
-const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
+const [VW, VH] = String(flag('size', '1270x700')).split('x').map(Number); // --size=1100x700 for a smaller window
+const ctx = await browser.newContext({ viewport: { width: VW, height: VH } });
 await ctx.addInitScript(RECORDER);
 await ctx.addInitScript(s => { let a = s >>> 0; Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }, SEED);
 await ctx.addInitScript(s => { try { localStorage.setItem('patrons.v4.motionSpeed', s); } catch { /* */ } }, SPEED);
@@ -142,14 +145,62 @@ async function idleSample(round) {
   per(round).idle.push(x);
   return x;
 }
+// --profile-clicks: a CPU profile from just before each click to its answer; self time by function, summed over clicks
+// slower than 150 ms (profiling itself slows every click, so read the shares, not the ms)
+const prof = new Map(), profTotal = new Map(); let profN = 0, m0 = null; const rend = { style: 0, styleN: 0, layout: 0, layoutN: 0, script: 0, task: 0 };
+const trace = new Map(); let traceN = 0;
+const TRACE_NAMES = ['UpdateLayoutTree', 'Layout', 'PrePaint', 'Paint', 'Layerize', 'Commit', 'UpdateLayer', 'HitTest', 'FunctionCall', 'EventDispatch', 'TimerFire', 'FireAnimationFrame', 'RunMicrotasks', 'V8.GC_SCAVENGER', 'MajorGC', 'MinorGC', 'ScheduleStyleRecalculation', 'RunTask'];
+const traceStart = async () => { if (!TRACE) return; await cdp.send('Tracing.start', { categories: 'devtools.timeline,disabled-by-default-devtools.timeline,v8', transferMode: 'ReturnAsStream' }); };
+const traceStop = async (what, ms) => {
+  if (!TRACE) return;
+  const done = new Promise(r => cdp.once('Tracing.tracingComplete', r));
+  await cdp.send('Tracing.end'); const { stream } = await done;
+  let txt = ''; for (;;) { const c = await cdp.send('IO.read', { handle: stream }); txt += c.base64Encoded ? Buffer.from(c.data, 'base64').toString() : c.data; if (c.eof) break; }
+  await cdp.send('IO.close', { handle: stream });
+  if (ms == null || ms < 150) return;
+  traceN++;
+  const evs = JSON.parse(txt).traceEvents || JSON.parse(txt);
+  const main = evs.find(e => e.name === 'thread_name' && e.args?.name === 'CrRendererMain');
+  for (const e of evs) {
+    if (e.ph !== 'X' || !main || e.pid !== main.pid || e.tid !== main.tid || !TRACE_NAMES.includes(e.name)) continue;
+    const t = trace.get(e.name) || { ms: 0, n: 0, kinds: new Set() };
+    t.ms += (e.dur || 0) / 1000; t.n++; t.kinds.add(what); trace.set(e.name, t);
+  }
+};
+const profStart = async () => { await traceStart(); if (!PROFILE) return; await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 250 }); await cdp.send('Profiler.start'); m0 = await metrics(); };
+const profStop = async (what, ms) => {
+  await traceStop(what, ms);
+  if (!PROFILE) return;
+  const { profile } = await cdp.send('Profiler.stop').catch(() => ({}));
+  const m1 = await metrics();
+  if (!profile || ms == null || ms < 150) return;
+  profN++;
+  rend.style += 1000 * (m1.RecalcStyleDuration - m0.RecalcStyleDuration); rend.styleN += m1.RecalcStyleCount - m0.RecalcStyleCount;
+  rend.layout += 1000 * (m1.LayoutDuration - m0.LayoutDuration); rend.layoutN += m1.LayoutCount - m0.LayoutCount;
+  rend.script += 1000 * (m1.ScriptDuration - m0.ScriptDuration); rend.task += 1000 * (m1.TaskDuration - m0.TaskDuration);
+  const byId = new Map(profile.nodes.map(n => [n.id, n]));
+  const parent = new Map(); for (const n of profile.nodes) for (const c of n.children || []) parent.set(c, n.id);
+  const keyOf = f => `${f.functionName || '(anon)'} ${(f.url || '').split('/').pop()}:${f.lineNumber + 1}`;
+  profile.samples.forEach((id, i) => {
+    // total time: every function on the sample's stack, once (our components and what they call)
+    const seen = new Set(); for (let n = id; n != null; n = parent.get(n)) { const f = byId.get(n).callFrame; if (f.url && !/node_modules|index-|chunk-/.test(f.url) && f.functionName) seen.add(keyOf(f)); }
+    for (const k of seen) profTotal.set(k, (profTotal.get(k) || 0) + (profile.timeDeltas[i] || 0) / 1000);
+    const f = byId.get(id).callFrame;
+    const k = `${f.functionName || '(anon)'} ${(f.url || '').split('/').pop()}:${f.lineNumber + 1}`;
+    const e = prof.get(k) || { ms: 0, kinds: new Set() };
+    e.ms += (profile.timeDeltas[i] || 0) / 1000; e.kinds.add(what); prof.set(k, e);
+  });
+};
 async function click(el, what, round) {
   const c = await center(el);
   if (!c) return false;
   await page.mouse.move(c.x, c.y, { steps: 2 });
+  await profStart();
   const p = page.evaluate(() => window.__rig.arm()).catch(() => null);
   await sleep(20);
   await page.mouse.click(c.x, c.y);
   const ms = await p.catch(() => null);
+  await profStop(what, ms);
   const c0 = { what, ms };
   // a click that changed nothing, or took over a second: what was on screen, so the cause is findable
   if (ms == null || ms > 1000) c0.why = await page.evaluate(() => ({ prompt: (document.querySelector('[data-prompt]')?.textContent || '').slice(0, 120), phase: document.querySelector('.app.game')?.dataset.phase, place: !!document.querySelector('[data-place]'), pay: !!document.querySelector('.dialog.pay'), options: [...document.querySelectorAll('[data-option]')].map(x => x.getAttribute('data-option')).slice(0, 12), moves: document.querySelector('.app.game')?.dataset.moves })).catch(() => null);
@@ -219,12 +270,14 @@ while (Date.now() - t0 < MAX_MIN * 60000) {
     if (pick) { path.push(`${g.moves} ${await pick.getAttribute('data-option').catch(() => '?')}`); await click(pick, card ? 'recruit' : rates.length ? 'followers' : 'pass', round); }
   } else {
     // the pay sheet, a choice on the board, a gift: the e2e drivers' one way to answer (e2e/v4/lib/answer.mjs)
+    await profStart();
     const p = page.evaluate(() => window.__rig.arm()).catch(() => null);
     await sleep(20);
     const a = await answerChoice(page, { last: ['pass'] }).catch(() => null);
-    if (!a) { await letGo(); await sleep(200); continue; } // nothing on screen to answer yet (a sheet still opening)
+    if (!a) { await profStop('none', null); await letGo(); await sleep(200); continue; } // nothing on screen to answer yet (a sheet still opening)
     path.push(`${g.moves} ${a.id || a.kind}`);
     const ms = await p.catch(() => null);
+    await profStop(a.kind === 'option' ? g.phase || 'choose' : a.kind, ms);
     const c1 = { what: a ? a.kind === 'option' ? g.phase || 'choose' : a.kind : 'none', ms };
     if (ms == null || ms > 1000) c1.why = { answer: a, ...await page.evaluate(() => ({ prompt: (document.querySelector('[data-prompt]')?.textContent || '').slice(0, 120), phase: document.querySelector('.app.game')?.dataset.phase, moves: document.querySelector('.app.game')?.dataset.moves })).catch(() => ({})) };
     per(round).clicks.push(c1);
@@ -313,6 +366,19 @@ for (const r of rounds) {
 if (F.big && F.big.length) L.push('', 'Frames over 2 s, with the screen at the time:', ...F.big.map(b => `- ${b.d} ms · ${b.phase} · prompt "${b.prompt}" · hover "${b.hover}" · options ${b.options.join(' ')}`));
 if (errors.length) L.push('', 'Errors:', ...errors.slice(0, 10).map(e => `- ${e}`));
 writeFileSync(`${OUT}/rig-${label}.md`, L.join('\n') + '\n');
+if (TRACE) {
+  const T = [`# Main thread in slow clicks: ${label}`, '', `${traceN} clicks over 150 ms, traced. Nested kinds overlap (a FunctionCall holds the style and layout it forces; RunTask holds everything).`, '', '| kind | ms | count | ms per click |', '|---|---|---|---|',
+    ...[...trace].sort((a, b) => b[1].ms - a[1].ms).map(([k, t]) => `| ${k} | ${Math.round(t.ms)} | ${t.n} | ${Math.round(t.ms / (traceN || 1))} |`)];
+  writeFileSync(`${OUT}/rig-${label}-trace.md`, T.join('\n') + '\n');
+}
+if (PROFILE) {
+  const tot = [...prof.values()].reduce((a, e) => a + e.ms, 0) || 1;
+  const P = [`# Where slow clicks spend their time: ${label}`, '', `${profN} clicks over 150 ms, CPU-profiled (self time, ${CPU}x CPU). Shares, not ms: profiling slows every click.`, '', `Main thread over those clicks: ${Math.round(rend.task)} ms busy; style ${Math.round(rend.style)} ms in ${rend.styleN} recalcs, layout ${Math.round(rend.layout)} ms in ${rend.layoutN}, script ${Math.round(rend.script)} ms.`, '', '| share | ms | function | clicks |', '|---|---|---|---|',
+    ...[...prof].sort((a, b) => b[1].ms - a[1].ms).slice(0, 60).map(([k, e]) => `| ${(100 * e.ms / tot).toFixed(1)}% | ${Math.round(e.ms)} | ${k.replace(/\|/g, '/')} | ${[...e.kinds].join(' ')} |`)];
+  P.push('', '## Total time (self plus what it calls), our code only', '', '| share | ms | function |', '|---|---|---|',
+    ...[...profTotal].sort((a, b) => b[1] - a[1]).slice(0, 60).map(([k, ms]) => `| ${(100 * ms / tot).toFixed(1)}% | ${Math.round(ms)} | ${k.replace(/\|/g, '/')} |`));
+  writeFileSync(`${OUT}/rig-${label}-clicks.md`, P.join('\n') + '\n');
+}
 writeFileSync(`${OUT}/rig-${label}.json`, JSON.stringify({ label, cpu: CPU, speed: SPEED, seed: SEED, bars: BARS, fails, sum, unbroken, reloaded, errors, path, odd: Object.fromEntries(rounds.map(r => [r, R[r].clicks.filter(c => c.why)])) }, null, 1));
 console.log(L.slice(0, 12 + rounds.length + 3).join('\n'));
 process.exit(GATE && fails.length ? 1 : 0);

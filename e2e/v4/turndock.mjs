@@ -117,7 +117,9 @@ async function run(size) {
   if (turns.size < CARDS) errors.push(`[${tag}] saw only ${turns.size} rival turn cards (want ${CARDS})`);
   console.log(`turndock [${tag}]: ${placed} rival placements, ${turns.size} rival turn cards, ${games} game(s), worst cover ${Math.round(worst)}px`);
 }
-await Promise.all([{ width: 1270, height: 700 }, { width: 1100, height: 700 }].map(run));
+// V4_DOCK_SIZES=1100x700 runs one size (bisecting a size-only failure)
+const SIZES = (process.env.V4_DOCK_SIZES || '1270x700,1100x700').split(',').map(x => { const [width, height] = x.split('x').map(Number); return { width, height }; });
+await Promise.all(SIZES.map(run));
 await browser.close();
 if (server) server.kill();
 if (errors.length) console.error([...new Set(errors)].join('\n'));
