@@ -1,12 +1,13 @@
 // When a chair may skip a render (perf, 2026-10-15). The engine clones the whole state on every step, so a chair's
 // memo never held: all four re-rendered on every bot step. A chair now re-renders only when something it shows changed:
-// its player, its members' cards, its turn words ("your turn in 3"), its rank, its income, its last space, the round, or a
+// its player, its members' cards, its turn words ("your turn in 3"), its rank, its last space, the round, or a
 // new log line naming it (its members' hops and its leader's gestures read the log). Every other prop must be the same.
+// (Its next round's income left the chair with the readable seats; it also left this signature, where it cost an engine
+// dry run of the round start on every step: up to ~100ms of a round III bot step at 4x CPU, input pass 2026-10-28.)
 import { followers } from '../../engine/v4/index.js';
 import { newLogLines } from '../format.js';
 import { lastSpace, seatTurns } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
-import { incomeOf } from './build.js';
 
 const cache = new WeakMap(); // state → Map(me → { places, ranks, sig: Map(pid → string) })
 function sigOf(state, pid, me) {
@@ -17,7 +18,7 @@ function sigOf(state, pid, me) {
   let s = v.sig.get(pid);
   if (s === undefined) {
     const p = state.players[pid];
-    s = JSON.stringify([p, p.members.map(u => state.cards[u]), v.places[pid] || null, v.ranks[pid] || null, incomeOf(state, pid),
+    s = JSON.stringify([p, p.members.map(u => state.cards[u]), v.places[pid] || null, v.ranks[pid] || null,
       lastSpace(state, pid), followers(state, p), state.round, !!state.over, state.resources, state.quadrants]);
     v.sig.set(pid, s);
   }

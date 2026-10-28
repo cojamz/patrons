@@ -50,6 +50,16 @@ function pop() {
   flush(f);
   if (rec.stack.length) top().snap = snap();
 }
+/**
+ * The edge a nested cause that changed nothing leaves in the stream: what the frame on top changed so far is written down
+ * now (an empty cause opening and closing does exactly this). core.js uses it for a member without the hook being run,
+ * so skipping it records the same effects, in the same pieces.
+ */
+export function effectsBoundary() {
+  if (!rec || !rec.stack.length) return;
+  flush(top());
+  top().snap = snap();
+}
 /** Run fn under a cause: what it changes is that cause's doing (nested causes inside it keep their own). */
 export function underCause(cause, fn) {
   if (!rec) return fn();

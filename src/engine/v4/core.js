@@ -5,7 +5,7 @@ import { grantDiscount } from './discount.js';
 import { quadrant, defById, handlerById, defaultQuadrants, guestMembers, MAX_PLAYERS } from './content/index.js';
 import { shuffleInPlace } from './rng.js';
 import { CUT, FULL_DECK } from './content/cull.js';
-import { startEffects, stopEffects, abandonEffects, underCause } from './effects.js';
+import { startEffects, stopEffects, abandonEffects, underCause, effectsBoundary } from './effects.js';
 
 export const RING_VALUE = [4, 6, 10];
 export const WORKERS = [3, 4, 5];
@@ -709,7 +709,7 @@ function runTask(state, task) {
         eachMember(state, (owner, card, def) => {
           if (owner === p && def.afterAction) def.afterAction(ctx, owner, card, qid);
           if (owner !== p && def.afterRivalAction) def.afterRivalAction(ctx, owner, card, qid, p);
-        });
+        }, ['afterAction', 'afterRivalAction']);
         a.resolve(ctx, p);
       });
       fCredit(state, mark, a.name);
@@ -726,20 +726,20 @@ function runTask(state, task) {
     }
     case 'endTurn': {
       const ctx = ctxFor(state);
-      eachMember(state, (owner, card, def) => { if (def.onTurnEnd) def.onTurnEnd(ctx, owner, card, p); });
+      eachMember(state, (owner, card, def) => { if (def.onTurnEnd) def.onTurnEnd(ctx, owner, card, p); }, 'onTurnEnd');
       state.current = null;
       return;
     }
     case 'allPlaced': {
       // after the round's last placement, before its contests: members that act then (Straggler), in turn order
       const ctx = ctxFor(state);
-      for (const id of turnOrder(state)) eachMemberOf(state, state.players[id], (card, def) => { if (def.onAllPlaced) def.onAllPlaced(ctx, state.players[id], card); });
+      for (const id of turnOrder(state)) eachMemberOf(state, state.players[id], (card, def) => { if (def.onAllPlaced) def.onAllPlaced(ctx, state.players[id], card); }, 'onAllPlaced');
       return;
     }
     case 'released': {
       // members that react to their owner releasing another member (Social Climber); task.def is the released member's def id
       const ctx = ctxFor(state);
-      eachMemberOf(state, p, (card, def) => { if (def.onRelease) def.onRelease(ctx, p, card, defById(task.def)); });
+      eachMemberOf(state, p, (card, def) => { if (def.onRelease) def.onRelease(ctx, p, card, defById(task.def)); }, 'onRelease');
       return;
     }
     case 'endRound': return accounted(state, null, () => endRound(state));
@@ -782,9 +782,9 @@ function startRound(state, r) {
   const more = id => sumMemberFlag(state, state.players[id], 'extraWorkers', v => v[r - 1] || 0);
   for (const p of state.players) { p.left = n + more(p.id); p.workers = p.left; }
   const ctx = ctxFor(state);
-  eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); });
+  eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); }, 'onRoundStart');
   // late hooks see everything the round-start income gave (Investor sets aside after Banker pays)
-  eachMember(state, (owner, card, def) => { if (def.onRoundStartLate) def.onRoundStartLate(ctx, owner, card); });
+  eachMember(state, (owner, card, def) => { if (def.onRoundStartLate) def.onRoundStartLate(ctx, owner, card); }, 'onRoundStartLate');
   // Fewest followers picks first. Ties: whoever was later in last round's turn order.
   // The first pass of last round's snake is its turn order (the last pass is reversed in even rounds).
   const prev = state.order.length ? state.order.slice(0, state.players.length) : [...state.players.map(p => p.id)];
@@ -827,7 +827,7 @@ function startRound(state, r) {
 
 function endRound(state) {
   const ctx = ctxFor(state);
-  eachMember(state, (owner, card, def) => { if (def.onRoundEnd) def.onRoundEnd(ctx, owner, card); });
+  eachMember(state, (owner, card, def) => { if (def.onRoundEnd) def.onRoundEnd(ctx, owner, card); }, 'onRoundEnd');
   const v = RING_VALUE[state.round - 1];
   const table = contestTable(state, ctx);
   const msg = [];
@@ -888,7 +888,7 @@ function finish(state) {
       owner.final.parts.push(`${def.name} ${got > 0 ? '+' : '−'}${Math.abs(got)}`);
       owner.final.cards.push({ uid: card.uid, name: def.name, n: got });
     } else owner.final.zero.push({ uid: card.uid, name: def.name });
-  });
+  }, 'onGameEnd');
   const ranked = [...state.players].sort((a, b) => followers(state, b) - followers(state, a) || memberCount(state, b) - memberCount(state, a));
   state.ranking = ranked.map(p => p.id);
   state.over = true;
@@ -1014,7 +1014,7 @@ function recruited(state, p, what) {
   eachMember(state, (owner, c, d) => {
     if (what.member && d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, what.member);
     if (d.onRecruit) d.onRecruit(ctx, owner, c, p, what);
-  });
+  }, ['onAnyRecruit', 'onRecruit']);
 }
 /**
  * A member's "now" part, as it joins p: "Now and at round start" members (flag now) fire their round-start effect once
@@ -1040,7 +1040,7 @@ function borrowOnRecruit(state, p, uid) {
 /** Emit only when a Recruit ability actually runs; passive gains and ordinary round starts never enter here. */
 function recruitAbility(state, p, card, def, fn) {
   const ctx = ctxFor(state);
-  eachMemberOf(state, p, (held, d) => { if (d.onRecruitAbility) d.onRecruitAbility(ctx, p, held, card, def); });
+  eachMemberOf(state, p, (held, d) => { if (d.onRecruitAbility) d.onRecruitAbility(ctx, p, held, card, def); }, 'onRecruitAbility');
   const before = traceSnapshot(state);
   const out = underCause({ kind: 'member', pid: p.id, uid: card.uid, def: card.def.id }, fn);
   traceChanges(state, before, p, def);
@@ -1183,7 +1183,7 @@ function buyFollowersNow(state, p, tier, chosen) {
   log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
   if (tier.limited) state.stock[tier.key] -= 1;
   const ctx = ctxFor(state);
-  eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });
+  eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); }, 'onBuyFollowers');
   // buying followers is a recruit (Cory, 2026-10-21): "whenever you recruit" members fire once per purchase
   recruited(state, p, { followers: tier.get, tier });
 }
@@ -1207,10 +1207,10 @@ function gain(state, p, color, n, { fromAction = false, again = false } = {}) {
     log(state, `${p.name}'s ${def.name}: ${what}.`);
     note(state, p, def.name, what);
   };
-  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(card, def, c0, n0); } });
-  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(card, def, c0, n0); } });
+  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(card, def, c0, n0); } }, 'convertGain');
+  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(card, def, c0, n0); } }, 'modifyGain');
   p.res[g.color] = (p.res[g.color] || 0) + g.n;
-  eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); });
+  eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); }, 'afterGain');
   return { color: g.color, n: g.n };
 }
 
@@ -1223,11 +1223,19 @@ function effectiveDefs(card) {
   const { onRecruited, ...hooks } = copied; void onRecruited;
   return [own, hooks];
 }
-function eachMemberOf(state, p, fn) {
+// `hook`: the def property (or properties) fn acts on (fn does nothing for a def without any). A member without it changes nothing, so
+// its trace, its accounting frame and its cause are skipped: exactly what they would have recorded for a change of
+// nothing (no line, no credit, no effect), except the edge its empty cause leaves in the effect stream, kept by
+// effectsBoundary (once per run of skipped members: nothing changes between them). Every gain asked every member
+// three times; with a full table late in the game that was most of an engine step (input pass 2026-10-28).
+function eachMemberOf(state, p, fn, hook = null) {
   // an artifact's ability works like a member's (it isn't one: no count, no worth, never moves)
+  let edged = false;
   for (const uid of [...p.members, ...(p.artifact !== undefined ? [p.artifact] : [])]) {
     const card = state.cards[uid];
     for (const def of effectiveDefs(card)) {
+      if (hook && !(typeof hook === 'string' ? def[hook] : hook.some(h => def[h]))) { if (!edged) { effectsBoundary(); edged = true; } continue; }
+      edged = false;
       const before = traceSnapshot(state);
       accounted(state, null, () => { underCause({ kind: 'member', pid: p.id, uid, def: card.def }, () => fn(wrap(state, card), def)); traceChanges(state, before, p, def); });
     }
@@ -1264,8 +1272,8 @@ function traceChanges(state, before, owner, def) {
   if (fresh.some(l => l.includes(name))) return;
   for (const line of out) log(state, line);
 }
-function eachMember(state, fn) {
-  for (const owner of state.players) eachMemberOf(state, owner, (card, def) => fn(owner, card, def));
+function eachMember(state, fn, hook = null) {
+  for (const owner of state.players) eachMemberOf(state, owner, (card, def) => fn(owner, card, def), hook);
 }
 /** Name of p's member that carries a flag (a Doppelganger copying it reads as the copied card). */
 function flagName(state, p, flag) {
@@ -1508,7 +1516,7 @@ function ctxFor(state) {
       if (!victim || victim === thief) return false;
       for (const qid of state.quadrants) { const q = quadrant(qid); if (q.guardSteal && q.guardSteal(ctx, thief, victim, kind)) return false; }
       let blocked = false;
-      eachMemberOf(state, victim, (card, def) => { if (def.guardSteal && def.guardSteal(ctx, victim, card, thief, kind)) blocked = true; });
+      eachMemberOf(state, victim, (card, def) => { if (def.guardSteal && def.guardSteal(ctx, victim, card, thief, kind)) blocked = true; }, 'guardSteal');
       return !blocked;
     },
     /** How many a steal of `base` takes for this thief (members: stealMore adds, stealDouble(ctx, owner) doubles). */
@@ -1546,7 +1554,7 @@ function ctxFor(state) {
       if (what.give) what.give(n, took);
       const info = { thief, victim, took, uid: what.uid, n, reaction: !!what.reaction, ...(what.led !== undefined ? { led: !!what.led } : {}) };
       for (const qid of state.quadrants) { const q = quadrant(qid); if (q.onSteal) q.onSteal(ctx, info); }
-      eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });
+      eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); }, 'onSteal');
       return n;
     },
     // Queue a decision for player p. It runs before anything else still queued. extra.blocked: why each player who

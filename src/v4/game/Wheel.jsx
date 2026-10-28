@@ -107,7 +107,20 @@ export function spacesLook() {
 }
 
 /** Where each space sits on the (unturned) wheel: its angle, the half-width of its cell, and its centre. */
+// the spaces' places depend only on the table's colors and the look: worked out once per table, not on every render of
+// the wheel (input pass 2026-10-28: a few ms of each click's frame at 4x CPU)
+const geometries = new Map();
 export function spaceGeometry(state, look = 'sockets') {
+  const gk = `${state.quadrants.join(',')}|${look}`;
+  let got = geometries.get(gk);
+  if (!got) {
+    if (geometries.size > 16) geometries.clear();
+    got = layGeometry(state, look);
+    geometries.set(gk, got);
+  }
+  return got;
+}
+function layGeometry(state, look) {
   const rings = ringsOf(look);
   const out = [];
   const nq = state.quadrants.length, k = sector(nq) / 90; // a ring's spans are drawn for a quarter; k scales them to the sector
@@ -893,6 +906,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
 
   // the printed paper wheel: quadrant inks, ring bands or cells, seams, the dark hub
   const live = useRef({});
+  const builtCells = useRef(new Map()); // space key → { sig, el }: each wedge's last element and what it showed
   const paper = [];
   state.quadrants.forEach((qid, q) => {
     const c = qCenter(q, nq), a0 = c - SEC / 2, a1 = c + SEC / 2;
@@ -941,7 +955,13 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       const a0 = s.ang - s.half, a1 = s.ang + s.half;
       const d = panelPath(a0, a1, R.r0, R.r1);
       const cls = ['pcell', open ? 'open' : 'locked', lit ? 'lit' : '', squat ? 'squat' : '', quiet ? 'idle' : '', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', (peek && peek.pinned && peek.key === s.key) || sent === s.key ? 'sel' : ''].filter(Boolean).join(' ');
-      paper.push(
+      // the same wedge, the same element (React skips it): a click or a step redraws only the wedges whose look changed
+      // (input pass 2026-10-28: all ~36 wedges, ~180 paths, were diffed on every render of the wheel, your placement's
+      // frame included). Its handlers read the latest closures through live.current.
+      const cellSig = `${cls}|${d}|${fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}:${state.players[fresh.pid].name}` : ''}`;
+      const hadCell = builtCells.current.get(s.key);
+      if (hadCell && hadCell.sig === cellSig) { paper.push(hadCell.el); continue; }
+      const cellEl = (
         <g key={`pc${s.key}`} className={cls} data-cell={s.key} style={{ '--c': `var(--${s.qid})` }}
           onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, stage.current && stage.current.querySelector(`[data-slot="${s.key}"]`), { x: e.clientX, y: e.clientY }); }}
           onPointerEnter={e => { const h = live.current.hover; e.currentTarget.classList.add('hot'); if (h && realHover(e)) h.onSpaceHover(s.key, e.currentTarget.querySelector('.wash')); }}
@@ -951,8 +971,10 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
           <path className="slice-outline" d={d} aria-hidden="true" />
           {lit && <path className="edge-lit" d={d} />}
           {fresh && <path className={`fresh${fresh.newest ? ' newest' : ''}`} d={panelPath(a0, a1, R.r0 + 2.2, R.r1 - 2.2, PANEL_GUT + 4.4, PANEL_RC - 1)} style={{ stroke: playerColor(fresh.pid) }}><title>{`${state.players[fresh.pid].name} took ${fresh.action}`}</title></path>}
-        </g>,
+        </g>
       );
+      builtCells.current.set(s.key, { sig: cellSig, el: cellEl });
+      paper.push(cellEl);
     }
   }
   const rimHits = [];

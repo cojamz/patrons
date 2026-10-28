@@ -175,7 +175,8 @@ async function takeTurn(p, tab) {
   await sleep(THINK);
   const phase = tab.phase;
   if (phase === 'setup' || phase === 'choose') {
-    const opt = await page.$('.prompt.choice [data-option]:not([disabled])');
+    // the starting pick is the artifact draft on the wheel's middle (2026-10-25), other choices a prompt
+    const opt = await page.$('.prompt.choice [data-option]:not([disabled])') || await page.$('[data-art-draft] button[data-option]');
     if (opt) await clickAndWait(p, opt, phase);
     return;
   }
