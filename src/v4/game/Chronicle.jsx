@@ -8,7 +8,7 @@ import { NamedText, asYou } from './Info.jsx';
 import { HoverNames } from './HoverNames.jsx';
 import './lamp-b.css';
 
-export default function Chronicle({ state, onClose, meId = null, hover = null }) {
+export default function Chronicle({ state, onClose, meId = null, hover = null, talk = [] }) {
   const box = useDialog(onClose);
   // body[data-drawer] while the log is open (since.css), in place of a body:has() that re-styled the whole page
   useLayoutEffect(() => holdFlag(document.body, 'drawer'), []);
@@ -24,6 +24,8 @@ export default function Chronicle({ state, onClose, meId = null, hover = null })
           {sections.slice().reverse().map(s => (
             <section key={s.title}>
               <h4>{s.title}</h4>
+              {/* what the table said this round, newest first like the moves (Talk.jsx) */}
+              {(said => said.length > 0 && <ol className="talk-said">{said.map(t => <li key={t.id}>{t.seat === meId ? 'You' : state.players[t.seat]?.name}: “{t.text}”</li>)}</ol>)(talk.filter(t => t.logAt >= s.start && t.logAt < s.start + s.lines.length + (s === sections[sections.length - 1] ? 1e9 : 0)).reverse())}
               {/* newest turn first, each turn top-down: cause, then effect (w3b #49) */}
               {/* …and a member's trigger that repeats is said once, with how many times (w4b #29) */}
               {/* …and one card's gains said back to back read as one line ("Ana's Last Call: +1 purple, +4 followers.") */}

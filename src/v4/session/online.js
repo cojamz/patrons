@@ -14,6 +14,7 @@
 // Codes are 5 characters, so they can't collide with v3's 4-character rooms.
 // v3rooms/_index/<CODE>: when that room last showed life (server ms). The DB rules don't let anyone list v3rooms, so this
 // index is how a client finds rooms left idle for IDLE_MS and clears them (sweepIdleRooms, run when a room is made).
+import { createTalkLog, cleanTalk, TALK_GAP_MS } from './talk.js';
 import { isLegal, chooseBotMove, setBotLevels, BOT_LEVELS, MAX_PLAYERS } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { parseTable, fitTable, tableProblem } from '../tables.js';
@@ -665,6 +666,17 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
   const inflight = new Map(); // signature -> { p, mid, rec, at } (same move twice = one submission; a late retry re-sends)
   let lastInfoKey = '';
   let seenNotice = getRoom()?.notice?.id ?? null; // a notice from before this session (a rejoin) isn't news
+  // table talk (talk.js): every client writes its own lines, everyone reads them; a line counts only from the person
+  // sitting in that seat
+  const talk = createTalkLog();
+  let talkAt = 0;
+  const offTalk = transport.onChildAdded(`${base}/talk`, (key, rec) => {
+    if (destroyed || !rec) return;
+    const s = getRoom()?.seats?.[`s${rec.seat}`];
+    const text = cleanTalk(rec.text);
+    if (!text || !s || s.kind !== 'human' || s.id !== rec.by) return;
+    talk.add({ id: key, seat: Number(rec.seat), text, at: typeof rec.at === 'number' ? rec.at : Date.now(), logAt: Number(rec.logAt) || 0 });
+  });
 
   const mySeats = () => seatList(getRoom()).filter(s => s.kind === 'human' && s.id === playerId).map(s => s.seat);
   // seats[i] lines up with state.players[i] (seats are compacted at start): who's here, who's gone, who a bot plays for
@@ -746,6 +758,17 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     get mySeats() { return mySeats(); },
     get info() { return info(); },
     get lobby() { return lobby; },
+    /** Table talk: say a quick line or a few typed words from one of your seats; everyone at the table sees it. */
+    say(seat, text) {
+      const t = cleanTalk(text);
+      const now = Date.now();
+      if (destroyed || !t || !mySeats().includes(seat) || now - talkAt < TALK_GAP_MS) return false;
+      talkAt = now;
+      transport.push(`${base}/talk`, { seat, by: playerId, text: t, at: transport.serverTime(), logAt: state?.log?.length ?? 0 }).catch(() => {});
+      return true;
+    },
+    get talk() { return talk.list; },
+    onTalk: fn => talk.on(fn),
     /** Host: a bot plays this seat until its player is back (see lobby.letBotPlay). */
     letBotPlay: seat => lobby.letBotPlay(seat),
     /** Tears down the whole online connection (lobby, host loop, listeners). */
@@ -765,6 +788,8 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
       destroyed = true;
       offState();
       offRejects();
+      offTalk();
+      talk.clear();
       for (const w of waiting.values()) w.reject(new Error('Session closed.'));
       waiting.clear();
       subs.clear();

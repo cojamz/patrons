@@ -1,4 +1,5 @@
 // Hot-seat session: the whole game runs on this device. Bots move on their own after a short delay.
+import { createTalkLog, cleanTalk, TALK_GAP_MS } from './talk.js';
 import { isLegal, chooseBotMove, setBotLevels } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { createEmitter } from './emitter.js';
@@ -96,6 +97,8 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
   let buyStart = null; // the buy-step state a purchase started from (undo-buy returns there)
   let checkpoint = saved && checkpointValid(savedUndo, saved) && saved.players[savedUndo.player]?.kind !== 'bot' ? savedUndo : null;
   const subs = createEmitter();
+  const talk = createTalkLog();
+  let talkN = 0, talkAt = 0;
   // Bot tie-breaks: seeded from the game seed, or (on resume) from the engine's current rng so it varies by position.
   const rand = seededRandom(((saved ? saved.rng ^ saved.seed : seed) ^ 0x9e3779b9) >>> 0);
   const mySeats = state.players.filter(p => p.kind !== 'bot').map(p => p.id);
@@ -230,6 +233,18 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     },
     get mySeats() { return [...mySeats]; },
     get info() { return info(); },
-    destroy() { destroyed = true; turn += 1; clearTimeout(timer); subs.clear(); },
+    /** Table talk (talk.js): a person at this screen says a quick line or a few typed words. */
+    say(seat, text) {
+      const t = cleanTalk(text);
+      const now = Date.now();
+      if (destroyed || !t || !mySeats.includes(seat) || now - talkAt < TALK_GAP_MS) return false;
+      talkAt = now;
+      talk.add({ id: `l${(talkN += 1)}`, seat, text: t, at: now, logAt: state.log.length });
+      return true;
+    },
+    /** Every line said so far, oldest first. */
+    get talk() { return talk.list; },
+    onTalk: fn => talk.on(fn),
+    destroy() { destroyed = true; turn += 1; clearTimeout(timer); subs.clear(); talk.clear(); },
   };
 }
