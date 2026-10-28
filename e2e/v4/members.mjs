@@ -32,7 +32,7 @@ import { browserPath } from './lib/browser.mjs';
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { membersSave, HAND } from './lib/members-save.mjs';
-import { cardDef } from '../../src/engine/v4/index.js';
+import { cardDef, memberCount } from '../../src/engine/v4/index.js';
 import { spendingPower } from '../../src/v4/game/memberUse.js';
 import { seedSave } from './lib/seed.mjs';
 import { HOVER_DELAY_MS } from '../../src/v4/game/hoverDelay.js';
@@ -236,7 +236,8 @@ try {
       await page.mouse.down(); await page.mouse.up();
       await page.waitForFunction(m => { try { return JSON.parse(localStorage.getItem('patrons.v4.local')).state.moves > m; } catch { return false; } }, s1.moves, { timeout: 4000 }).catch(() => {});
       const s2 = await saved();
-      const n = s1.players[0].members.length;
+      // members as the game counts them: a member worth 2 followers counts as 2 (Chefs, Twins, and Heiress herself)
+      const n = memberCount(s1, s1.players[0]);
       if (!s2.cards[uids['trading.heiress']].used || s2.players[0].res.white - s1.players[0].res.white !== n) fail(`Heiress from the seat card: used ${!!s2.cards[uids['trading.heiress']].used}, white +${s2.players[0].res.white - s1.players[0].res.white} (want +${n})`, 'm4');
     }
   }
