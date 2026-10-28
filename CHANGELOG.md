@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.814 — 2026-10-28
+
+- Your click answers at once right after a rival's turn
+
 ## v0.9.813 — 2026-10-28
 
 - A Doppelganger copying Muse now shows its own +1 green by your cult, beside Muse's
