@@ -207,6 +207,22 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     if (!beats.length || beats[beats.length - 1].key !== k) beats.push({ key: k, cause: e.cause, effects: [] });
     beats[beats.length - 1].effects.push(e);
   }
+  // an artifact taken in the starting pick (Cory, Oct 29: "there should be an animation of the artifact flying towards
+  // the players"): read from the players, so a step without a stream (an online guest) flies it too
+  const artPicks = new Map();
+  if (before.players && state.players) state.players.forEach((p, pid) => {
+    const was = before.players[pid];
+    if (!was || was.artifact !== undefined || p.artifact === undefined) return;
+    const qid = Object.keys(state.artifacts || {}).find(q => state.artifacts[q] === p.artifact);
+    if (qid) artPicks.set(pid, { qid, uid: p.artifact });
+  });
+  const flyArt = (time, pid) => {
+    const pk = artPicks.get(pid);
+    if (!pk) return;
+    artPicks.delete(pid);
+    at(time, { op: 'artifact', pid, qid: pk.qid, uid: pk.uid, dur: MO.cardFly });
+    ends(time + MO.cardFly);
+  };
   let hand = 0; // when the last piece is two-thirds along: the same player's next step may show then
   // the action stage (stage.js): a space or member out on the hub gives and takes from there
   const stagedKeys = new Map(); // a staged space's key → its slot: 'card', or 'card2' for the space it copies
@@ -334,6 +350,8 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       // a starting pick (wave 3: nobody saw what the bots picked): a rival's coin in the pick row lights (grammar S3, the
       // point at what they chose), and stays lit while its dot flies from it to their seat; your own pick answered your press
       setup = true;
+      // the artifact itself leaves the wheel's list for the picker's seat; its +1 follows as it lands
+      flyArt(s, c.pid);
       if (!mine.includes(c.pid)) {
         const g = m.gains[0], d = g ? fly(g.from, g.to) : 0;
         at(s, { op: 'point', place: { kind: 'quadrant', qid: c.qid }, dur: MO.choicePoint + d });
@@ -486,6 +504,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     // §5), except after a recruit or a follower buy, which lands in full before anything else moves.
     t = rival && !kept ? Math.max(t, cur) : Math.max(t, cur, end);
   }
+  for (const pid of [...artPicks.keys()]) { setup = true; flyArt(0, pid); }
   const turnPasses = !!(state.pending && before.pending && state.pending.player !== before.pending.player);
   // starting picks read one at a time: the next pick lights only when this one has landed, and a short rest between two
   // players' picks (the first placements follow the last one)
@@ -1080,7 +1099,7 @@ export const noteTable = root => { void root; };
  * `minionsBefore` the wheel's minions as they were (snapshotMinions), `mine` the viewer's seats. Returns the plan.
  * A chain may start while the last one's tail is still landing (the same player's next step shows at its handoff).
  */
-export function playChain(root, before, state, { snap = null, minionsBefore = null, homeFlownAt = null, mine = [], chips = null } = {}) {
+export function playChain(root, before, state, { snap = null, minionsBefore = null, homeFlownAt = null, mine = [], chips = null, arts = null } = {}) {
   // the new row's deal, noted by useDeal in this same commit (it lays out first): this chain says when it starts
   const deals = roundDeals.splice(0);
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
@@ -1152,6 +1171,16 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       pool.appendChild(i);
       a.held = i;
     }
+  }
+  // an artifact picked (planChain's artifact): it leaves its row in the wheel's list (measured before the row went,
+  // GameScreen's beforeShow), and the seat's tile waits, unseen, until it lands
+  for (const a of plan.atoms) {
+    if (a.op !== 'artifact') continue;
+    const seatEl = root.querySelector(`.lt-cult-seat[data-seat="${a.pid}"]`);
+    a.el = seatEl && shown(seatEl.querySelector(`[data-artifact="${a.uid}"] .art-tile`));
+    a.toRect = a.el ? rectOf(a.el) : seatEl ? rectOf(seatEl) : null;
+    a.from = arts && arts.get(a.qid);
+    if (a.el && a.el.animate && a.from) track(a.el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 }));
   }
   // every place a beat will use, found now with the other reads (a lookup at beat time laid the page out mid-chain);
   // a turn's chain (no round end: no re-sort, no going home, no fresh row) leaves seats and piles standing, so their
@@ -1246,6 +1275,18 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           chain.flying++;
           const anim = flyPath(html, 'worker-flight minion-flight spare-flight', square(F, size), square(T, size), { path: 'arc', duration: a.dur });
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); if (a.el) settle(a.el, MO.settle); play('place'); });
+          return;
+        }
+        case 'artifact': {
+          if (skip || !a.from || !a.toRect) return;
+          // the tile swells as it lifts out of the list and comes down to the seat's size as it lands (artifact-draft.css)
+          const F = a.from.rect, T = a.toRect;
+          chain.flying++;
+          const anim = flyPath(a.from.html, 'worker-flight artifact-flight', F, square(T, F.width), { path: 'arc', duration: a.dur });
+          const ghost = anim && anim.effect && anim.effect.target;
+          if (typeof window !== 'undefined') window.__artifactFlights = (window.__artifactFlights || 0) + 1;
+          if (ghost && ghost.style) ghost.style.setProperty('--af-dur', `${a.dur}ms`);
+          onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); if (a.el) settle(a.el, MO.settle, 1.3); play('place'); });
           return;
         }
         // (homeFlownAt: they already left when the round card's button was pressed; only their seats' columns wait here)

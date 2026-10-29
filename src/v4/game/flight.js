@@ -263,6 +263,18 @@ export function snapshotChips(root) {
   return out;
 }
 
+/** The artifacts in the wheel's list as they stand: color → { html (its tile), rect } (a picked one flies from here). */
+export function snapshotArtifacts(root) {
+  const out = new Map();
+  if (!root) return out;
+  root.querySelectorAll('[data-art-draft] [data-art-color] .art-tile').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (!r.width) return;
+    out.set(el.closest('[data-art-color]').dataset.artColor, { html: el.outerHTML, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+  });
+  return out;
+}
+
 /** Where every placed minion is right now (to send them home when the round clears the wheel). */
 export function snapshotMinions(root) {
   const snap = [];

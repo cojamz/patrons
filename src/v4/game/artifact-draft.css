@@ -26,3 +26,8 @@
 .art-draft li.open > button:hover .art-tile { box-shadow: inset 0 0 0 2px var(--c); }
 .art-draft .ad-sub { margin: 0 0 8px; font-size: 12px; line-height: 14px; color: var(--muted, #b09f82); }
 .art-draft.mine .ad-sub { color: #d6ccb6; }
+/* an artifact picked flies from the list to its picker's seat (director.js 'artifact'): it swells as it lifts and
+   settles to the seat's size as it lands */
+.artifact-flight .art-tile { animation: af-swell var(--af-dur, 400ms) ease-in-out both; box-shadow: inset 0 0 0 1px var(--c), 0 0 12px 2px color-mix(in srgb, var(--c) 55%, transparent); }
+@keyframes af-swell { 0% { scale: 1; } 40% { scale: 1.6; } 100% { scale: 1; } }
+@media (prefers-reduced-motion: reduce) { .artifact-flight .art-tile { animation: none; } }

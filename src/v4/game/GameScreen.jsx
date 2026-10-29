@@ -36,7 +36,7 @@ import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } fro
 import PayPicker, { payChoice, PayReceipt, receiptFor } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
-import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
+import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips, snapshotArtifacts } from './flight.js';
 import { playChain, planChain, holdAfter, holdCap, stepHoldCap, installChainSkip, noteBehind, skipChain, chainLeft, onChainSkip, onChainEnd, onChainLanded, chainRunning, chainState, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
 import { soundOn, onSound, setSound, soundVolume, onVolume, setVolume } from '../sound.js';
@@ -941,6 +941,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const rootRef = useCallback(el => { root.current = el; setRootEl(el); }, []);
   const shopSnap = useRef(new Map());
   const chipSnap = useRef(new Map()); // member chips as they stood before a member left its cult (snapshotChips)
+  const artSnap = useRef(new Map()); // the wheel's artifact list as it stood before a pick (snapshotArtifacts)
   const lastSetupMoves = useRef(null); // the last step of the starting picks (its row stays up until that pick has landed)
   const minionSnap = useRef([]);
   const noteTimer = useRef(null);
@@ -1006,6 +1007,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   beforeShow.current = (prev, next) => {
     // a member leaving a cult (released, swapped, taken) flies from where its chip stood: measured now, while it stands
     if (prev.players && next.players && prev.players.some((p, i) => p.members.some(u => !next.players[i].members.includes(u)))) chipSnap.current = snapshotChips(root.current);
+    // an artifact picked flies from its row in the wheel's list, which goes as it's taken: measured now
+    if (prev.pending?.kind === 'setup' && prev.artifacts && Object.keys(prev.artifacts).length) artSnap.current = snapshotArtifacts(root.current);
     if (prev.shop && next.shop && prev.shop.some(u => !next.shop.includes(u))) {
       const snap = snapshotShop(root.current);
       if (snap.size) shopSnap.current = snap;
@@ -1030,7 +1033,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const newRound = state.round !== before.round && before.round >= 1;
     const early = newRound && homeEarly.current && homeEarly.current.at != null ? homeEarly.current : null;
     if (newRound) homeEarly.current = null;
-    const played = playChain(root.current, before, animationState, { snap: shopSnap.current, minionsBefore: newRound ? (early ? early.snap : wasOnWheel) : null, homeFlownAt: early ? early.at : null, mine: mySeats, chips: chipSnap.current });
+    const played = playChain(root.current, before, animationState, { snap: shopSnap.current, minionsBefore: newRound ? (early ? early.snap : wasOnWheel) : null, homeFlownAt: early ? early.at : null, mine: mySeats, chips: chipSnap.current, arts: artSnap.current });
     retimeTable(played);
 
     const lines = newLogLines(before, state);

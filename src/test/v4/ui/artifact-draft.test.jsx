@@ -32,3 +32,16 @@ it('a taken artifact leaves the list, and the head says whose pick it is', () =>
   rerender(<ArtifactDraft state={s} onPick={() => {}} mine />);
   expect(container.querySelector('.art-draft.mine .ad-head').textContent).toMatch(/^Your pick/);
 });
+
+it('a picked artifact flies to its picker, a rival\'s and your own, and the chain waits for it to land', async () => {
+  const { planChain } = await import('../../../v4/game/director.js');
+  const { MO } = await import('../../../v4/motion.js');
+  const s = start(), pid = s.pending.player;
+  const next = applyMove(s, { player: pid, option: s.pending.options.find(o => o.value === 'purple').id });
+  for (const mine of [[], [pid]]) {
+    const plan = planChain(s, next, { mine });
+    const fly = plan.atoms.filter(a => a.op === 'artifact');
+    expect(fly).toEqual([expect.objectContaining({ pid, qid: 'purple', uid: s.artifacts.purple, dur: MO.cardFly })]);
+    expect(plan.total).toBeGreaterThanOrEqual(fly[0].at + fly[0].dur);
+  }
+});
