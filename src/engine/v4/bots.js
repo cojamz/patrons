@@ -144,6 +144,10 @@ function followUp(pend, rand, state) {
   if (state && trades.length && pend.options.every(o => o.kind === 'trade' || o.kind === 'pass')) {
     return move(trades.length === 1 ? trades[0] : chooseSwap(state, { ...pend, options: trades }));
   }
+  // a rival's member to take (Double Agent, Heist, Fixer…): rated on a copy, both sides, like a swap
+  if (state && pend.kind === 'choose' && pend.options.length > 1 && pend.options.every(o => o.kind === 'member')) {
+    return move(rateOnCopy(state, pend, pend.options).reduce((a, b) => (b.v > a.v ? b : a)).o);
+  }
   if (pend.kind === 'pay') return move(pend.options.find(o => o.default) || pend.options[0]);
   if (pend.kind === 'choose') {
     const opts = state && pend.options.length > 1 ? avoidUndo(state, pend) : pend.options;
@@ -218,34 +222,104 @@ function givenAway(state, me) {
 const UNDO_SWAP = 20;
 
 function chooseSwap(state, pend) {
+  return rateOnCopy(state, pend, pend.options).reduce((a, b) => (b.v > a.v ? b : a)).o;
+}
+
+// A swap or a member taken, played on a copy of the game and valued for everyone it touches: followers (Saboteur's −3
+// lands on whoever it joins), contests, member counts, and what each moved member still does for its new owner.
+// Until 2026-10-29 only the bot's own side of a swap counted, so bots handed rivals Agents or Loyalists for free,
+// never pushed a Saboteur into a leader's cult, and never swapped two members that weren't theirs (Cory: "the bots
+// clearly aren't using it to switch into somebody"). Returns [{ o, v }]; with `base`, also the value of not choosing.
+const RATE_CAP = 16; // options played out in full; the rest are ranked by tradeScore first (Anarchist can offer 100+)
+function rateOnCopy(state, pend, options, { base = false } = {}) {
   const me = pend.player;
   const given = givenAway(state, me);
   const { turns, roundLeft } = horizon(state);
   const lt = laterTurns(state);
-  const placesLeft = turns[me] + lt.turns;
+  const places = state.players.map((_, i) => turns[i] + lt.turns);
   const buys = state.players.map((_, i) => turns[i] + lt.turns + (i === me ? 1 : 0));
   const income = turns.map(t => (t * INCOME[Math.max(1, state.round) - 1] + lt.income) * INCOME_SCALE);
   // the queued choice carries its handler and data (Even Swap's mode, Swap Sides'); without them every trade threw and fell back to its hint
-  const task = state.queue.find(t => t.t === 'choose' && t.p === me);
-  const rated = pend.options.map(o => {
-    // either orientation, and swaps that move none of mine (two rivals', or a rival's and the shop's)
-    const side = swapSides(state, me, o.value);
+  const task = pend.task || state.queue.find(t => t.t === 'choose' && t.p === me);
+  const before = abilityTotals(state, places);
+  const quick = o => (o.kind === 'trade' ? tradeScore(state, me, o.value, places) : (o.hint || 0));
+  const pool = options.length > RATE_CAP ? [...options].sort((a, b) => quick(b) - quick(a)).slice(0, RATE_CAP) : options;
+  const valueOf = s => {
+    const after = abilityTotals(s, places);
+    const extra = Object.fromEntries(after.map((v, i) => [i, v - before[i]]));
+    return marginOf(evaluate(s, buys, income, roundLeft, extra), me);
+  };
+  const rated = pool.map(o => {
     let v;
     try {
       const s = lightClone(state);
       const ctx = contextFor(s);
       handlerById(task?.h || 'red.trade')(ctx, s.players[me], o.value, task?.data);
-      const ability = side.in === null ? 0 : abilityValue(cardDef(s, side.in), placesLeft) - abilityValue(cardDef(s, side.out), placesLeft);
-      v = marginOf(evaluate(s, buys, income, roundLeft, { [me]: ability }), me);
+      v = valueOf(s);
     } catch (e) { globalThis.__swapFail = (globalThis.__swapFail || 0) + 1; v = (o.hint || 0) - 100; }
-    if (side.in !== null && given.has(cardDef(state, side.in).name)) v -= 100;
+    // never take back a member you swapped away (see undoesSwap)
+    const side = o.kind === 'trade' ? swapSides(state, me, o.value) : { in: o.value };
+    if (side.in !== null && side.in !== undefined && state.cards[side.in] && given.has(cardDef(state, side.in).name)) v -= 100;
     return { o, v };
   });
-  return rated.reduce((a, b) => (b.v > a.v ? b : a)).o;
+  if (base) rated.base = valueOf(lightClone(state));
+  return rated;
+}
+
+/** What each player's members still do, in followers (abilityValue, read from the table they sit at). */
+function abilityTotals(s, places, k = K_ABILITY) {
+  return s.players.map(p => p.members.reduce((a, u) => a + abilityValue(cardDef(s, u), places[p.id], k), 0));
+}
+
+/** A quick read of a swap of cards a and b for `chooser` (no copy of the game): each side's gain in followers and
+ *  ability, and the rivals' gains counted against it (the leader's most). Used to
+ *  rank a long list before rating it in full, and inside move lookahead (settle), where a full rating is too slow. */
+export function tradeScore(state, chooser, [a, b], places = null) {
+  const owner = u => state.players.find(p => p.members.includes(u))?.id ?? null;
+  const left = places || state.players.map(() => 6);
+  const worth = (u, at) => {
+    const d = cardDef(state, u);
+    return (d.f || 0) + abilityValue(d, left[at] ?? 6);
+  };
+  const d = {};
+  const oa = owner(a), ob = owner(b);
+  if (oa === ob) return 0;
+  for (const [u, from, to] of [[a, oa, ob], [b, ob, oa]]) {
+    if (from !== null) d[from] = (d[from] || 0) - worth(u, from);
+    if (to !== null) d[to] = (d[to] || 0) + worth(u, to);
+  }
+  const fol = p => followers(state, p);
+  const rivals = state.players.filter(p => p.id !== chooser);
+  const lead = rivals.length ? rivals.reduce((x, y) => (fol(y) > fol(x) ? y : x)).id : null;
+  return (d[chooser] || 0) - rivals.reduce((acc, p) => acc + (d[p.id] || 0) * (p.id === lead ? SPITE : SPITE / 2), 0);
+}
+
+// An activation that ends in a swap (Anarchist, Headhunter, any to come) is played on a copy and used when its best
+// swap beats not swapping: by 1 follower for a once-per-round member, 2.5 for once a game (0.5 in the last round).
+// A card's own botActivate read only what a swap did for the bot's own cult, so a swap that hurt a rival never counted.
+const swapBar = (state, def) => (def.activate === 'round' ? 1 : state.round >= 3 ? 0.5 : 2.5);
+function swapUseGain(state, uid) {
+  const me = state.pending.player;
+  try {
+    const s = lightClone(state);
+    const ctx = contextFor(s);
+    const card = s.cards[uid];
+    card.used = true;
+    defById(card.def).onActivate(ctx, s.players[me], card);
+    const task = s.queue.find(t => t.t === 'choose' && t.p === me);
+    const trades = task?.options.filter(o => o.kind === 'trade') || [];
+    if (!trades.length) return null; // not a swap: the card's own botActivate decides
+    const rated = rateOnCopy(s, { player: me, task }, trades, { base: true });
+    return Math.max(...rated.map(r => r.v)) - rated.base;
+  } catch { return null; }
 }
 
 function useOption(state, pend, ctx, p) {
-  const canUse = c => [c.def, c.copy].some(id => id && defById(id).botActivate?.(ctx, p));
+  const canUse = c => {
+    const gain = swapUseGain(state, c.uid);
+    if (gain !== null) return gain >= swapBar(state, defById(c.def));
+    return [c.def, c.copy].some(id => id && defById(id).botActivate?.(ctx, p));
+  };
   return pend.options.find(o => o.kind === 'use' && canUse(state.cards[o.uid]));
 }
 
@@ -419,7 +493,11 @@ function settle(s, ctx, seen) {
     // the options still good (a card an option names may have moved since the choice was queued)
     const live = liveOptions(s, t);
     if (!live.length) continue;
-    const o = live.reduce((a, b) => ((b.hint || 0) > (a.hint || 0) ? b : a));
+    // a swap: its quick read for whoever chooses, rivals' side included (hints count only the chooser's own cult)
+    const trades = live.filter(o => o.kind === 'trade');
+    const score = trades.length && trades.length === live.filter(o => o.kind !== 'pass').length
+      ? o => (o.kind === 'trade' ? tradeScore(s, t.p, o.value) : -Infinity) : o => (o.hint || 0);
+    const o = live.reduce((a, b) => (score(b) > score(a) ? b : a));
     handlerById(t.h)(ctx, s.players[t.p], o.value, t.data);
   }
 }
