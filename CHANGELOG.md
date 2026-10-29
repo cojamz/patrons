@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.877 — 2026-10-29
+
+- The turn headline no longer clips its words in Firefox.
+
 ## v0.9.876 — 2026-10-29
 
 - Members page: a card's hover stays on screen, and each color's artifact shows as a small artifact beside its spaces, not as a member
