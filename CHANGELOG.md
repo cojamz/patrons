@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.833 — 2026-10-28
+
+- Cards that could be used once a game now say One Time Use.
+
 ## v0.9.832 — 2026-10-28
 
 - The members page shows each color's artifact up top and fits a whole color on one screen.
