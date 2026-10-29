@@ -9,7 +9,7 @@ import { spriteId } from '../art/index.js';
 import { quadrant, cardDef, memberCount, memberWeight, countMembersOfColor } from '../../engine/v4/index.js';
 import { projectedEndGame } from '../format.js';
 import { memberTimingWords } from './memberTiming.js';
-import { onTable } from './Info.jsx';
+import { onTable, CardName } from './Info.jsx';
 import { Rich } from './Rich.jsx';
 import { MemberGlyph } from './Glyphs.jsx';
 import { ArtifactTile } from './ArtifactDraft.jsx';
@@ -88,7 +88,7 @@ function Card({ state, r }) {
     <div className={`rc-card${use ? (r.loaded ? ' use-unused' : ' use-used') : ''}`} data-member-row={r.def.id} data-state={st || undefined} style={{ '--mc': tint(state, r.def) }}>
       <span className="rc-bar">
         <span className="rc-disc num" title={`Costs ${price(r)}`}>{price(r)}</span>
-        <span className="rc-bar-n">{r.name}{r.n > 1 ? ` ×${r.n}` : ''}</span>
+        <span className="rc-bar-n"><CardName state={state} uid={r.uid} />{r.n > 1 ? ` ×${r.n}` : ''}</span>
         {use ? <span className="rc-usetag">{r.loaded ? 'Not used yet' : 'Used'}</span> : r.used ? <span className="rc-usetag">Used this round</span> : null}
       </span>
       <span className="rc-body">
@@ -120,7 +120,7 @@ export function RivalCard({ state, pid, who }) {
                   {g.t === 'plain'
                     ? <div className="rc-chips">{g.rows.map(r => (
                       <span key={r.key} className="rc-chip" data-member-row={r.def.id} title={r.text}>
-                        <span className="rc-disc num">{price(r)}</span><Pic state={state} def={r.def} name={r.name} size={20} /><b className="rc-name">{r.name}{r.n > 1 ? ` ×${r.n}` : ''}</b>
+                        <span className="rc-disc num">{price(r)}</span><Pic state={state} def={r.def} name={r.name} size={20} /><b className="rc-name"><CardName state={state} uid={r.uid} />{r.n > 1 ? ` ×${r.n}` : ''}</b>
                         <span className="rc-hide" data-ability>{r.text}</span>
                       </span>
                     ))}</div>
