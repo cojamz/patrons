@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.880 — 2026-10-29
+
+- Double Agent costs 7 (was 4). New pictures: HR is four office staff at a desk, Fan Club three fans, Tribute Band a three-piece band.
+
 ## v0.9.879 — 2026-10-29
 
 - Bots now pick the best empty action when they take Cover, instead of a random one.
