@@ -23,8 +23,9 @@ import { finalGrants } from './finalScore.js';
 
 // The pace (the motion language's B6, grammar.md; Cory: "readable, one quadrant at a time", then Oct 29: "a bit
 // smoother, a bit quicker"): about 1.4s a rim at Steady, 0.55s Quick, 3.2s Relaxed, every step
-// moving. The rim lights; the counts stamp in seat by seat and tick up (no still "counting…"); the leader's count and its emoji on the rim hop; the prize arcs off the rim's engraving to the winner's count, which
-// rolls the moment it lands; a short rest; the next rim. A rim nobody scores pulses once, dim, and moves on.
+// moving. The rim lights; the counts stamp in seat by seat and tick up (no still "counting…"); the leader's count
+// and its emoji on the rim hop; the prize arcs off the rim's engraving to the winner's count, which rolls the moment
+// it lands; a short rest; the next rim. A rim nobody scores pulses once, dim, and moves on.
 // Every duration scales with the viewer's animation speed (src/v4/motion.js).
 
 /** The round's contests as scored: [{ qid, rule, prize, rows:[{ id, shown }], winners:[ids] }]. */
