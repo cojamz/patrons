@@ -81,7 +81,7 @@ function extraHooks(ctx, p) {
 
 /** One more minion for p this round, placed after everyone else's (the snake carries on until every minion is placed).
  *  Only while the board has a free space for it, so a round never hands out more extra minions than it has spare spaces. */
-function extraMinion(ctx, p, what) {
+export function extraMinion(ctx, p, what) {
   if (ctx.state.round === 1) { ctx.log(`No extra minions in round I: ${p.name} gets no extra minion from ${what}.`); return 0; }
   if (!spareSpace(ctx)) { ctx.log(`${p.name}'s ${what}: no free space this round, so no extra minion.`); return 0; }
   const q = ctx.state.queue, close = q.findIndex(t => t.t === 'allPlaced');

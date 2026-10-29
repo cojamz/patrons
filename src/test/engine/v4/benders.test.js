@@ -41,7 +41,7 @@ describe('guest members join the deck', () => {
     const has = s => Object.values(s.cards).some(c => c.def === 'benders.squatter');
     expect(has(on)).toBe(true);
     expect(has(off)).toBe(false);
-    expect(Object.keys(on.cards).length - Object.keys(off.cards).length).toBe(9); // 7 guests since Launderer and Tiebreaker (Oct 21)
+    expect(Object.keys(on.cards).length - Object.keys(off.cards).length).toBe(10); // the full test deck: 10 guests since Saboteur (Oct 28)
   });
   it('a bender whose color is not on the table is paid in any colors', () => {
     // Squatter leans Magenta; the default table has no magenta
@@ -54,7 +54,7 @@ describe('guest members join the deck', () => {
   it('a guest is colorless even when the sphere it leans to is on the table: no sphere counts it, and its whole cost is any colors', () => {
     // Front-runner leans Purple (printed 5 colored + 0 any): on a table with Purple, it's still nobody's color
     const Q = ['gold', 'red', 'purple', 'green'];
-    expect(defById('benders.frontrunner')).toMatchObject({ quadrant: 'guest', lean: 'purple', s: 0, w: 3 + EXTRA_WILD });
+    expect(defById('benders.frontrunner')).toMatchObject({ quadrant: 'guest', lean: 'purple', s: 0, w: 2 + EXTRA_WILD });
     const s = scene({ quadrants: Q, res: [{ red: 20 }], shop: ['benders.frontrunner'], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0;
     const u = uidOf(s, 'benders.frontrunner', 'shop');
@@ -68,9 +68,11 @@ describe('guest members join the deck', () => {
   });
 });
 
-describe('Squatter: once per round, place on a space a rival already took', () => {
-  it('offers rivals’ taken spaces, does the action, and only once per round', () => {
+describe('Party Crasher: One Time Use, the next minion may go on a space a rival already took', () => {
+  it('offers rivals’ taken spaces once used, does the action, and only for one minion', () => {
     let s = scene({ members: [['benders.squatter']], slots: { [JV]: 1, [RUSH]: 0 } });
+    expect(ids(s).some(id => id.startsWith('squat:'))).toBe(false);
+    s = move(s, `use:${uidOf(s, 'benders.squatter', 0)}`);
     expect(ids(s)).toContain(`squat:${JV}`);
     expect(ids(s)).not.toContain(`squat:${RUSH}`); // your own space: no
     s = move(s, `squat:${JV}`);
@@ -79,23 +81,34 @@ describe('Squatter: once per round, place on a space a rival already took', () =
     expect(s.slots[JV]).toBe(1);
     expect(s.squats[JV]).toEqual([0]);
     s = passBuys(s);
-    // next turn, same round: spent
     s.queue.unshift({ t: 'turn', p: 0 }); s = resume(s);
-    expect(ids(s).some(id => id.startsWith('squat:'))).toBe(false);
+    expect(ids(s).some(id => id.startsWith('squat:') || id.startsWith('use:'))).toBe(false);
+    // a new round: still spent
+    s.round = 2; s.slots = { [RUSH]: 1 }; s.squats = {}; s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
+    expect(ids(s).some(id => id.startsWith('squat:') || id.startsWith('use:'))).toBe(false);
   });
-  it('a joined space takes no third worker, and a new round gives a new use', () => {
+  it('used in the buy step, it waits for the next minion, next round too', () => {
+    let s = scene({ members: [['benders.squatter']], queue: [{ t: 'buy', p: 0 }] });
+    s.current = 0;
+    s = move(s, `use:${uidOf(s, 'benders.squatter', 0)}`);
+    expect(s.players[0].crashNext).toBe(true);
+    s.round = 2; s.slots = { [JV]: 1 }; s.squats = {}; s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
+    expect(ids(s)).toContain(`squat:${JV}`);
+  });
+  it('a joined space takes no third worker', () => {
     const s0 = scene({ n: 3, members: [['echo.doppel'], [], ['benders.squatter']], slots: { [JV]: 1 }, queue: [] });
     s0.cards[uidOf(s0, 'echo.doppel', 0)].copy = 'benders.squatter';
     s0.queue = [{ t: 'turn', p: 2 }];
-    let t = move(resume(s0), `squat:${JV}`); t = pickAny(t); t = passBuys(t);
+    let t = resume(s0);
+    t = move(t, `use:${uidOf(t, 'benders.squatter', 2)}`);
+    t = move(t, `squat:${JV}`); t = pickAny(t); t = passBuys(t);
     t.queue.unshift({ t: 'turn', p: 0 }); t = resume(t);
+    t = move(t, `use:${uidOf(t, 'echo.doppel', 0)}`);
     expect(ids(t)).not.toContain(`squat:${JV}`);
-    // a new round: the same card works again
-    t.round = 2; t.slots = { [RUSH]: 1 }; t.squats = {}; t.queue = [{ t: 'turn', p: 2 }]; t = resume(t);
-    expect(ids(t)).toContain(`squat:${RUSH}`);
   });
   it('the joined worker counts on the board for Purple', () => {
     let s = scene({ quadrants: ['gold', 'red', 'purple', 'green'], members: [['benders.squatter']], slots: { [JV]: 1 } });
+    s = move(s, `use:${uidOf(s, 'benders.squatter', 0)}`);
     s = move(s, `squat:${JV}`); s = pickAny(s);
     expect(onBoard(contextFor(s), s.players[0])).toBe(1);
   });
@@ -103,14 +116,12 @@ describe('Squatter: once per round, place on a space a rival already took', () =
     const Q = ['gold', 'red', 'echo', 'purple'];
     let s = scene({ quadrants: Q, members: [['benders.squatter']], queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
     s = move(s, `slot:${RUSH}`); s = passBuys(pickAny(s)); // P2 takes Golden Years (+2 gold)
+    s = move(s, `use:${uidOf(s, 'benders.squatter', 0)}`);
     s = move(s, `squat:${RUSH}`); s = passBuys(pickAny(s)); // P1 joins it
     expect(R(s, 0).gold).toBe(2);
-    // both workers on Golden Years leave a chip: the first taker's and the joiner's
     expect(Object.values(s.echo.now).filter(e => e.name === actionName('gold.rush')).map(e => e.p).sort()).toEqual([0, 1]);
     s = move(s, 'slot:2-1'); // P2 takes Echo
     expect(s.pending.kind).toBe('choose');
-    // Echo copies a rival's space taken since your last turn (Green rework, 2026-10-14): P1's joined Golden Years
-    // is on offer; P2's own Golden Years isn't (that's Reprise's or Encore's job)
     expect(s.pending.options.filter(o => o.label.startsWith(actionName('gold.rush'))).map(o => o.label)).toEqual(['Golden Years (P1): +2 gold']);
     s = choose(s, o => o.label.startsWith(actionName('gold.rush')));
     expect(R(s, 1).gold).toBe(4);
@@ -186,22 +197,16 @@ describe('Insider: also recruit from the top 3 of the pile', () => {
   });
 });
 
-describe('Extra Hand: +1 worker in round III', () => {
-  it('gives its holder one more turn in round III, after the snake; none in rounds I–II', () => {
-    let s = scene({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
-    expect(s.players[0].left).toBe(6);
-    expect(s.players[1].left).toBe(5);
-    expect(s.order.length).toBe(11);
-    expect(s.order.at(-1)).toBe(0);
-    const t = scene({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 2 }] });
-    expect(t.players[0].left).toBe(4);
-  });
-  it('a Doppelganger copy adds another worker', () => {
-    const s0 = scene({ members: [['benders.extrahand', 'echo.doppel']], queue: [] });
-    s0.cards[uidOf(s0, 'echo.doppel', 0)].copy = 'benders.extrahand';
-    s0.queue = [{ t: 'round', r: 3 }];
-    const s = resume(s0);
-    expect(s.players[0].left).toBe(7);
+describe('Extra Hand: One Time Use, +1 minion this round', () => {
+  it('adds a minion after everyone else’s turns, from round II only', () => {
+    let s = scene({ round: 3, members: [['benders.extrahand']] });
+    s = move(s, `use:${uidOf(s, 'benders.extrahand', 0)}`);
+    expect(s.players[0].left).toBe(4);
+    let t = scene({ round: 1, members: [['benders.extrahand']] });
+    const u = uidOf(t, 'benders.extrahand', 0);
+    t = move(t, `use:${u}`);
+    expect(t.players[0].left).toBe(3);
+    expect(t.cards[u].used).toBe(false);
   });
   it('a turn task with a ring limit only offers spaces of that ring or lower (the weaker version’s hook)', () => {
     const s = scene({ round: 3, queue: [{ t: 'turn', p: 0, ring: 1 }] });
@@ -414,11 +419,15 @@ describe('Release with once-per-game members, just-bought members and Echo copie
 });
 
 describe('Doppelganger and Magenta theft with once-per-round benders', () => {
-  it('a Doppelganger copying Squatter is a second squat in the round', () => {
+  it('a Doppelganger copying Party Crasher is a second use', () => {
     let s = scene({ members: [['benders.squatter', 'echo.doppel']], slots: { [JV]: 1, [RUSH]: 1 }, rules: { release: false } });
-    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'benders.squatter';
+    const d = uidOf(s, 'echo.doppel', 0);
+    s.cards[d].copy = 'benders.squatter';
+    s = move(s, `use:${uidOf(s, 'benders.squatter', 0)}`);
     s = move(s, `squat:${JV}`); s = passBuys(pickAny(s));
     s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
+    expect(ids(s)).not.toContain(`squat:${RUSH}`);
+    s = move(s, `use:${d}`);
     expect(ids(s)).toContain(`squat:${RUSH}`);
   });
   it('a stolen Big Spender that was used this round stays used for the thief; next round it works', () => {

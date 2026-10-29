@@ -2,7 +2,7 @@
 // Card-by-card: the guest members (rule-benders), through real moves, against the printed text, with a log line
 // naming the card whenever it bends a number (a worker, a buy, a cost, the turn order). Plus a cross-sphere case each.
 import { describe, it, expect } from 'vitest';
-import { resume } from '../../../engine/v4/core.js';
+import { resume, contextFor } from '../../../engine/v4/core.js';
 import { take, move, uidOf, pinCosts } from './helpers.js';
 import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 
@@ -10,21 +10,34 @@ const named = (s, name) => linesNaming(s.log, name);
 const rich = { gold: 30, red: 30, blue: 30, green: 30 };
 
 describe('Guest members (rule-benders)', () => {
-  it('Squatter: once per round, join a rival’s taken space and do it; named', () => {
+  it('Party Crasher: One Time Use, the next minion joins a rival’s taken space and does it; named', () => {
     let s = sceneQ({ members: [['benders.squatter']], slots: { '0-1': 1 } });
+    expect(s.pending.options.map(o => o.id)).not.toContain('squat:0-1');
+    s = move(s, `use:${uidOf(s, 'benders.squatter', 0)}`);
     expect(s.pending.options.map(o => o.id)).toContain('squat:0-1');
     s = move(s, 'squat:0-1');
     expect(s.players[0].res.gold).toBe(2);
-    expect(named(s, 'Squatter')).toHaveLength(1);
+    expect(s.players[0].crashNext).toBeUndefined();
+    expect(named(s, 'Party Crasher')).toHaveLength(1);
   });
-  it('Squatter × Hustler: a joined space of the Hustler’s color pays Hustler too', () => {
+  it('Party Crasher × Hustler: a joined space of the Hustler’s color pays Hustler too', () => {
     let s = sceneQ({ round: 2, members: [['benders.squatter', 'gold.hustler']], slots: { '0-1': 1 } });
     s.cards[uidOf(s, 'gold.hustler', 0)].color = 'gold';
-    s = move(s, 'squat:0-1');
+    s = move(move(s, `use:${uidOf(s, 'benders.squatter', 0)}`), 'squat:0-1');
     expect(s.players[0].res.gold).toBe(4 + 2);
     expect(named(s, 'Hustler')).toHaveLength(1);
   });
 
+  it('Saboteur: −3 followers to whoever it joins, recruited or swapped in; named', () => {
+    let s = sceneQ({ res: [rich], bonus: [5, 5], members: [[], ['gold.prospector']], shop: ['benders.saboteur'] });
+    s = buy(take(s, 'gold.rush'), 'benders.saboteur');
+    expect(s.players[0].bonus).toBe(2);
+    expect(named(s, 'Saboteur')).toHaveLength(1);
+    const u = uidOf(s, 'benders.saboteur', 0);
+    expect(contextFor(s).swapMembers(s.players[0], u, uidOf(s, 'gold.prospector', 1))).toBe(true);
+    expect(s.players[1].members).toContain(u);
+    expect(s.players[1].bonus).toBe(2);
+  });
   it('Big Spender: a second buy after a real first one, once per round; named', () => {
     let s = sceneQ({ res: [rich], members: [['benders.bigspender']] });
     s = take(s, 'gold.rush');
@@ -69,17 +82,18 @@ describe('Guest members (rule-benders)', () => {
     expect(named(s, 'Insider')[0]).toMatch(/from the pile with P1's Insider/);
   });
 
-  it('Extra Hand: +1 worker in round III, named in the round’s opening line; a Doppelganger copy adds another', () => {
-    let s = sceneQ({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
-    expect(s.players[0].left).toBe(6);
-    expect(named(s, 'Extra Hand')[0]).toMatch(/P1's Extra Hand: \+1 minion/);
-    s = sceneQ({ members: [['benders.extrahand', 'echo.doppel']], queue: [] });
-    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'benders.extrahand';
-    s.queue = [{ t: 'round', r: 3 }]; s = resume(s);
-    expect(s.players[0].left).toBe(7);
-    expect(named(s, 'Extra Hand')[0]).toMatch(/\+2 minions/);
-    s = sceneQ({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 2 }] });
-    expect(named(s, 'Extra Hand')).toHaveLength(0);
+  it('Extra Hand: One Time Use, +1 minion this round from round II, named; in round I it stays unused', () => {
+    let s = sceneQ({ round: 3, members: [['benders.extrahand']] });
+    const u = uidOf(s, 'benders.extrahand', 0), left = s.players[0].left;
+    s = move(s, `use:${u}`);
+    expect(s.players[0].left).toBe(left + 1);
+    expect(s.cards[u].used).toBe(true);
+    expect(named(s, 'Extra Hand')[0]).toMatch(/P1's Extra Hand: P1 gets 1 more minion/);
+    expect(s.pending.options.map(o => o.id)).not.toContain(`use:${u}`);
+    let t = sceneQ({ round: 1, members: [['benders.extrahand']] });
+    const v = uidOf(t, 'benders.extrahand', 0);
+    t = move(t, `use:${v}`);
+    expect(t.cards[v].used).toBe(false);
   });
 
   it('Front-runner: picks first even when ahead; the round’s opening line names it', () => {

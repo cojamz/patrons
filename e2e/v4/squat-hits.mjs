@@ -25,8 +25,9 @@ function squatSave(stamp) {
   delete s.echo;
   s.players.forEach(p => { p.res = Object.fromEntries(s.resources.map(r => [r, 0])); p.left = 3; p.members = []; });
   const uid = Math.max(...Object.keys(s.cards).map(Number)) + 1;
-  s.cards[uid] = { uid, def: 'benders.squatter' };
+  s.cards[uid] = { uid, def: 'benders.squatter', used: true };
   s.players[0].members.push(uid);
+  s.players[0].crashNext = true; // Party Crasher already used: the next minion may join (One Time Use since Oct 28)
   s.queue = [0, 1, 0, 0, 1].map(p => ({ t: 'turn', p }));
   s = resume(s);
   const mv = (p, option) => { s = applyMove(s, { player: p, option }); while (s.pending?.player === p && s.pending.kind === 'buy') s = applyMove(s, { player: p, option: 'pass' }); };
