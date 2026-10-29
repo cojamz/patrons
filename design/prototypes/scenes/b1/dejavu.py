@@ -34,19 +34,19 @@ def draw():
     def hair_top(f):                      # pompadour and sideburns
         f.ell(25, 4, 39, 12, 'H'); f.pts('h', [(29, 6), (30, 5), (31, 5), (32, 5), (33, 6), (35, 7)])
         f.rect(25, 16, 25, 20, 'H'); f.rect(38, 16, 38, 20, 'H')
-        f.poly([(22, 26), (27, 28), (27, 31), (22, 30)], 'j'); f.poly([(42, 26), (37, 28), (37, 31), (42, 30)], 'j')
+        f.poly([(23, 27), (27, 28), (27, 30), (23, 29)], 'e'); f.poly([(41, 27), (37, 28), (37, 30), (41, 29)], 'e')
         # the mic in hand, at the mouth
         mk = layer(); mk.rect(22, 21, 24, 24, 'M'); mk.px(22, 21, 'm')
         over(f, mk, {'a': 'A'})
-        hl = layer(); hand(hl, 21, 25, 'grip', 'a', 'A'); over(f, hl, {'1': '2', 'M': 'M'})
+        hl = layer(); hand(hl, 21, 26, 'grip', 'a', 'A'); over(f, hl, {'1': '2', 'M': 'M'})
 
     def stand(p):
         pole(p, 22, 29, 53, 'm', 'M'); p.hl(18, 27, 53, 'M')
 
     person(c, hx=25, hy=10, size=14, skin='a', shade='A', hs='crop', hk='H', hd='h', mouth='smirk', brows='soft',
            shirt='1', sdark='2', cx=32, sw=8, ww=7, th=14,
-           arms=[([(26, 28), (21, 33), (22, 28)], 4), ([(38, 28), (44, 31), (47, 26)], 4)],
-           hands=[(46, 22, 'fist', False)],
+           arms=[([(26, 28), (21, 33), (22, 28)], 4), ([(38, 28), (42, 33), (42, 38)], 4)],
+           hands=[(40, 38, 'fist', False)],
            lg=dict(pants='1', pdark='2', shoe='j', lh=10, stance=2),
            front=front, top=hair_top, props=stand)
     return c.rows(), pal

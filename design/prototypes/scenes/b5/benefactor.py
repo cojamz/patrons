@@ -4,8 +4,8 @@ from _kit2 import *
 
 def benefactor():
     c = C(N)
-    pal = base(DEEP, 'silver', b='#cfe0e6', p='#e4ddd0', P='#d4ccbe', f='#bfb7a8', F='#b0a898',
-               u='#4f9a94', U='#3b7a75', y='#f0c548', Y='#c08f22', t='#2f3a5a', q='#2f2a33', H='#1c1410', z='#3a2a22')
+    pal = base(COOL, 'silver', b='#cfe0e6', p='#e4ddd0', P='#d4ccbe', f='#bfb7a8', F='#b0a898',
+               u='#4f9a94', U='#3b7a75', y='#f0c548', Y='#c08f22', t='#2f3a5a', q='#2f2a33', H='#9a9a9e', z='#77777c')
     c.rect(0, 0, 63, 63, 'b')
 
     def building(l):                                # columns and steps of a grand building
@@ -22,7 +22,7 @@ def benefactor():
 
     def front(f):
         f.poly([(cx - 4.5, 34), (cx + 4.5, 34), (cx, 41)], 'w')
-        f.rect(cx - 1, 35, cx, 42, 't')
+        f.pts('t', [(cx - 1, 37), (cx, 37)])
         for (x, y) in ((cx - 5, 34), (cx - 5, 35), (cx - 4, 36), (cx - 4, 37), (cx - 3, 38), (cx - 3, 39), (cx - 2, 40)):
             f.px(x, y, '2'); f.px(2 * cx - x - 1, y, '2')
 
@@ -35,7 +35,7 @@ def benefactor():
         for (x, fl) in ((31, False), (44, True)):
             h_ = layer(); hand(h_, x, 42, 'grip', 's', 'S', fl); over(f, h_, DK)
 
-    person(c, cx, 17, hs='crop', hk='H', hdk='z', mouth='smile', brows='soft', brow='H',
+    person(c, cx, 17, hs='bun', side='R', hk='H', hdk='z', mouth='smile', brows='soft', brow='z',
            shirt='1', sdk='2', sw=8, ww=7, th=14, pants='1', pdk='2', shoe='q', lh=6, front=front, DK=DK,
            arms=[([(cx - 7, 37), (cx - 6, 43), (cx + 5, 44)], 4, '1'),
                  ([(cx + 7, 37), (cx + 10, 42), (cx + 18, 43)], 4, '1')],

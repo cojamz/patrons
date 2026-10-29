@@ -36,12 +36,13 @@ def draw():
     # A: deep, left, a finger to the earpiece
     def tA(f):
         shades(13, 14)(f)
-        f.pts('Q', [(11, 21), (11, 22)])
+        f.px(12, 22, 'i')
     person(c, hx=13, hy=14, size=14, skin='a', shade='A', hs='crop', hk='H', hd='z', mouth='flat', brows='stern',
            brow='H', glint=None, shirt='1', sdark='2', cx=20, sw=7, ww=6, th=12,
-           arms=[([(14, 32), (9, 35), (9, 27)], 4), ([(26, 32), (28, 38), (27, 43)], 4)],
-           hands=[(8, 22, 'fist', False), (26, 43, 'fist', False)],
-           lg=dict(pants='n', pdark='n', shoe='z', lh=8), front=suit_front(20), top=tA, DK={'n': 'n', 'x': 'x', 'q': 'q'})
+           arms=[([(14, 32), (12, 38), (13, 42)], 4), ([(26, 32), (28, 38), (27, 43)], 4)],
+           hands=[(11, 43, 'fist', False), (26, 43, 'fist', False)],
+           lg=dict(pants='n', pdark='n', shoe='z', lh=8), front=suit_front(20), top=tA, DK={'n': 'n', 'x': 'x', 'q': 'q'},
+           after=lambda f: f.pts('i', [(11, 23), (11, 24), (12, 25), (12, 26), (13, 27), (13, 28)]))
 
     # B: pale, right, briefcase at the side
     def bc(f):

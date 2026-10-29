@@ -22,11 +22,11 @@ def draw():
 
     def board(l):                        # cork board of candidate cards
         l.rect(44, 8, 62, 30, 'c')
-        for (x, y) in ((46, 10), (54, 11), (47, 19), (55, 20)):
+        for i, (x, y) in enumerate(((46, 10), (54, 11), (47, 19), (55, 20))):
             l.rect(x, y, x + 5, y + 6, 't')
-            l.hl(x + 1, x + 4, y + 4, 'C'); l.hl(x + 1, x + 3, y + 5, 'C')
+            l.rect(x + 2, y + 2, x + 3, y + 3, 'a' if i % 2 else 'A')       # a tiny head
+            l.hl(x + 1, x + 4, y + 5, 'G' if i % 2 else 'S'); l.hl(x + 2, x + 3, y + 4, 'G' if i % 2 else 'S')  # shoulders
             l.px(x + 2, y, '1')
-        l.rect(55, 20, 60, 26, 't'); l.px(57, 20, '2')
     bg(c, board, 'C')
 
     def plant(l):
@@ -41,9 +41,9 @@ def draw():
 
     def top(f):
         # folder held against the chest
-        fo = layer(); fo.rect(19, 39, 30, 44, 'c'); fo.hl(20, 23, 38, 'c'); fo.hl(19, 30, 44, 'C'); fo.vl(30, 39, 44, 'C')
+        fo = layer(); fo.rect(18, 41, 30, 43, 'c'); fo.hl(19, 22, 40, 'c'); fo.hl(18, 30, 43, 'C')
         over(f, fo, {'1': '2', 'a': 'A'})
-        hl = layer(); hand(hl, 27, 39, 'flat', 'a', 'A'); over(f, hl, {'c': 'C'})
+        hl = layer(); hand(hl, 26, 40, 'flat', 'a', 'A'); over(f, hl, {'c': 'C'})
         # magnifying glass up high
         mg = layer()
         mg.ell(42, 12, 52, 22, 'g'); mg.ell(44, 14, 50, 20, 'b'); mg.pts('w', [(45, 15), (46, 15), (45, 16)])

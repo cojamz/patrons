@@ -7,8 +7,8 @@ def dabblers():
     pal = {'k': INK, 'w': '#f4ede1', '1': GREY[0], '2': GREY[1],
            'p': '#d9cbb3', 'P': '#cbbca2', 'o': '#a8783f', 'O': '#7e5a2c',
            'r': '#d9534a', 'g': '#5aa05a', 'm': '#c2457f', 'v': '#7a4fa8', 'b': '#4f82c4', 'y': '#f0c548',
-           'u': MED[0], 'U': MED[1], 'c': LIGHT[0], 'C': LIGHT[1], 'H': '#2a1c14', 'h': '#c98a3a', 'j': '#9a6224',
-           'z': '#55504a', 'q': '#4a5262'}
+           'u': MED[0], 'U': MED[1], 'c': LIGHT[0], 'C': LIGHT[1], 'H': '#2a1c14', 'h': '#c98a3a',
+           'z': '#55504a', '3': '#c9a03a', '4': '#9a7424', 'q': '#4a5262'}
     c.rect(0, 0, 63, 63, 'p'); c.rect(0, 50, 63, 63, 'P')
 
     def easel(l):
@@ -24,7 +24,7 @@ def dabblers():
         for i, x in enumerate(range(42, 62, 5)):
             l.rect(x, 7, x + 2, 11, 'rgvm'[i])
     bg(c, shelf, None)
-    DK = {'1': '2', 'u': 'U', 'c': 'C', 'o': 'O', 'w': 'w'}
+    DK = {'3': '4', '1': '2', 'u': 'U', 'c': 'C', 'o': 'O', 'w': 'w'}
 
     # painter, mid-brown, palette full of every colour
     def palette(f):
@@ -43,10 +43,10 @@ def dabblers():
     def guitar(f):
         f.ell(42, 36, 53, 46, 'o'); f.ell(48, 38, 53, 46, 'O', only='o'); f.ell(46, 39, 48, 41, 'H')
         f.line(49, 37, 58, 26, 'O'); f.line(50, 37, 59, 26, 'O'); f.rect(58, 24, 61, 26, 'H')
-    person(c, DK, 43, 13, ('c', 'C'), 'long', 'h', 'j', mouth='grin', brows='soft', brow='j', cloth='1', cdark='2',
-           sw=7, ww=6, th=12, pants=('q', 'q'), shoe='z', lh=10, front=guitar,
-           arms=[([(56, 31), (59, 32), (58, 28)], 3, '1'), ([(44, 31), (42, 36), (45, 40)], 3, '1')],
-           hands=[(56, 27, 'grip', True), (44, 39, 'fist', False)])
+    person(c, DK, 43, 15, ('c', 'C'), 'long', 'h', 'O', mouth='grin', brows='soft', brow='O', cloth='3', cdark='4',
+           sw=7, ww=6, th=12, pants=('1', '2'), shoe='z', lh=8, front=guitar,
+           arms=[([(56, 33), (59, 33), (58, 29)], 3, '3'), ([(44, 33), (42, 37), (45, 41)], 3, '3')],
+           hands=[(56, 27, 'grip', True), (44, 40, 'fist', False)])
     return c.rows(), pal
 
 

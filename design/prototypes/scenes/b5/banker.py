@@ -6,7 +6,7 @@ def banker():
     c = C(N)
     pal = base(DEEP, 'gold', p='#c9b89a', P='#b9a888',      # wall, lower wall
                g='#9aa1a6', G='#767d83', o='#8a5434', O='#6a3d25', d='#a2683f',
-               Z='#f8e39a', y='#f2cf5a', Y='#c3962c', q='#3a3340', H='#1c1410', z='#3a2a22', t='#3d3a52',
+               Z='#f8e39a', y='#f2cf5a', Y='#c3962c', q='#3a3340', H='#a8a6a4', z='#7e7c7a', t='#3d3a52',
                m='#d8dde0', e='#5a6170')
     c.rect(0, 0, 63, 63, 'p'); c.rect(0, 30, 63, 63, 'P')
 

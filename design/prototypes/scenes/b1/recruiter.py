@@ -6,7 +6,7 @@ from _kit2 import *
 def draw():
     c = C(N)
     pal = base_pal(s='#cfe3e8', S='#bcd6dc', g='#9ccb7a', G='#86b866', o='#b98a58', O='#8a6238',
-                   m='#f2ecdc', M='#c9c0a8', x='#3a3644', n='#3a3644', z='#2a2220', H='#b0552c', h='#8a3e1e',
+                   m='#f2ecdc', M='#c9c0a8', x='#3a3644', n='#3a3644', z='#2a2220', H='#6a4630', h='#4a3022',
                    y='#f3cf5a', t='#6a8f9a')
     pal['1'], pal['2'] = RED
     pal['a'], pal['A'] = PALE

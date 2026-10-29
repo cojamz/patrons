@@ -18,8 +18,8 @@ def draw():
         l.ell(17, 10, 20, 13, 'e', only='s')
         l.rect(2, 6, 25, 6, 'Y'); l.vl(25, 6, 30, 'Y')
     bg(c, painting, 'Y')
-    c.rect(4, 34, 22, 35, 'P'); c.rect(46, 8, 61, 22, 'Y'); c.rect(48, 10, 59, 20, 'J')   # a second, smaller frame
-    c.ell(51, 12, 56, 18, 'j')
+    c.rect(4, 34, 22, 35, 'P'); c.rect(46, 8, 61, 22, 'Y'); c.rect(48, 10, 59, 20, 's')   # a second, smaller frame
+    c.ell(46, 15, 60, 26, 'G', only='s'); c.ell(54, 12, 57, 15, 'e')
 
     def front(f):                           # ascot and lapels
         f.poly([(31.5, 29), (38.5, 29), (35, 33)], 'e'); f.rect(34, 30, 35, 33, 'j')
@@ -39,6 +39,8 @@ def draw():
     gl.poly([(23, 29), (30, 29), (29, 31), (26, 33), (24, 31)], 'j')
     gl.vl(30, 27, 30, 'E')
     outline_once(gl); c.paste(gl)
+    c.pts('e', [(26, 35), (26, 36), (26, 37)]); c.pts('E', [(27, 35), (27, 36), (27, 37)])   # stem to the hand
+    c.pts('A', [(45, 46), (47, 46)])
     return c.rows(), pal
 
 

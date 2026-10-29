@@ -49,7 +49,7 @@ def draw():
     def stem(p):
         p.vl(20, 29, 30, 'G')
 
-    person(c, hx=24, hy=12, size=16, skin='a', shade='A', hs='crop', hk='H', hd='z', mouth='grin', brows='soft',
+    person(c, hx=24, hy=12, size=16, skin='a', shade='A', hs='side', hk='H', hd='z', mouth='smile', brows='soft',
            shirt='1', sdark='2', cx=32, ty=29, sw=8, ww=7, th=13,
            arms=[([(25, 33), (21, 39), (20, 34)], 4), ([(39, 33), (44, 39), (48, 40)], 4)],
            hands=[(48, 38, 'flat', False)],

@@ -25,7 +25,9 @@ def crasher():
     def table(l):                                   # cake table with a cake
         l.rect(44, 42, 63, 45, 'e'); l.rect(44, 46, 63, 52, 'E')
         l.rect(48, 34, 58, 41, 'a'); l.rect(48, 34, 58, 35, 'e'); l.rect(55, 36, 58, 41, 'A')
-        l.rect(53, 31, 53, 33, 'e'); l.px(53, 30, 'y')
+        l.rect(48, 34, 51, 41, '.')                 # a slice missing on his side
+        l.rect(52, 36, 53, 41, 'A'); l.hl(52, 53, 38, 'e')
+        l.rect(55, 31, 55, 33, 'e'); l.px(55, 30, 'y')
     bg(c, table, None)
 
     cx = 28
@@ -36,9 +38,9 @@ def crasher():
         f.pts('E', [(cx - 2, 34), (cx - 2, 35), (cx + 1, 34), (cx + 1, 35)])
 
     def party_hat(f):                               # a cone hat, worn crooked
-        f.poly([(cx - 1, 19), (cx + 7, 19), (cx + 6, 9)], 'u')
-        f.poly([(cx + 3, 19), (cx + 7, 19), (cx + 6, 9)], 'U')
-        f.pts('y', [(cx + 3, 16), (cx + 5, 13)]); f.rect(cx + 5, 7, cx + 7, 8, 'y')
+        f.poly([(cx - 1, 20), (cx + 7, 17), (cx + 9, 7)], 'u')
+        f.poly([(cx + 4, 18.5), (cx + 7, 17), (cx + 9, 7)], 'U')
+        f.pts('y', [(cx + 3, 17), (cx + 6, 13)]); f.rect(cx + 9, 5, cx + 11, 6, 'y')
 
     def plate(f):                                   # a plate of somebody else's cake
         p = layer(); p.hl(cx + 7, cx + 18, 38, 'e'); p.hl(cx + 8, cx + 17, 39, 'E')
@@ -46,8 +48,10 @@ def crasher():
         p.vl(cx + 16, 33, 37, 'A')
         over(f, p, DK)
         h_ = layer(); hand(h_, cx + 10, 39, 'flat', 's', 'S'); over(f, h_, DK)
+        for ex in (cx - 4, cx + 2):                 # side-glance toward the cake
+            f.pts('w', [(ex, 27), (ex, 28)])
 
-    person(c, cx, 20, hs='crop', hk='H', hdk='z', mouth='grin', brows='soft', brow='z',
+    person(c, cx, 20, hs='crop', hk='H', hdk='z', mouth='smirk', brows='soft', brow='z', glint=None,
            shirt='1', sdk='2', sw=8, ww=7, th=12, pants='q', pdk='q', shoe='o', lh=8, stance=1, front=front, hat=party_hat, DK=DK,
            arms=[([(cx - 7, 39), (cx - 9, 44), (cx - 7, 48)], 4, '1'),
                  ([(cx + 7, 39), (cx + 9, 43), (cx + 12, 41)], 4, '1')],

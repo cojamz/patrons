@@ -40,7 +40,11 @@ def draw():
     def rope(l):                            # velvet rope, unhooked behind them
         l.rect(58, 40, 60, 54, 'Y'); l.rect(57, 38, 61, 40, 'y'); l.rect(56, 54, 62, 55, 'Y')
     bg(c, rope)
-    c.pts('j', [(56, 44), (55, 45), (54, 47), (54, 48)])
+    for x in range(36, 58):                 # the velvet rope swag, behind them
+        y = round(41 + 6 * (1 - ((x - 47) / 11) ** 2))
+        for yy, k in ((y, 'j'), (y + 1, 'j'), (y + 2, 'J')):
+            if c.get(x, yy) in 'pf':
+                c.px(x, yy, k)
     return c.rows(), pal
 
 

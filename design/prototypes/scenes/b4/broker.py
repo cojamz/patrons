@@ -30,15 +30,13 @@ def broker():
         f.pts('T', [(33, 33), (33, 36), (32, 41)])
         f.hl(30, 33, 28, 'T')
 
-    def handset(f):
-        f.rect(21, 18, 23, 29, 'm'); f.rect(21, 18, 24, 20, 'm'); f.rect(21, 27, 24, 29, 'm'); f.vl(21, 21, 26, 'M')
-
-    def slip(f):
-        f.rect(42, 13, 47, 18, 'w'); f.vl(47, 13, 18, 'W'); f.hl(43, 46, 15, 'W')
+    def handset(f):                                  # earpiece, handle, mouthpiece
+        f.rect(19, 16, 23, 19, 'm'); f.rect(21, 20, 22, 27, 'm'); f.rect(19, 28, 23, 31, 'm')
+        f.hl(19, 23, 19, 'M'); f.hl(19, 23, 28, 'M'); f.vl(22, 20, 27, 'M')
     person(c, DK, 25, 12, ('e', 'E'), 'crop', 'H', 'z', mouth='grin', brows='soft', brow='H', cloth='w', cdark='W',
-           sw=8, ww=8, th=20, nolegs=True, front=tie, top=lambda f: (handset(f), slip(f)),
-           arms=[([(25, 31), (19, 35), (20, 27)], 3, 'w'), ([(39, 31), (45, 29), (44, 21)], 3, 'w')],
-           hands=[(18, 23, 'fist', False), (42, 18, 'fist', True)])
+           sw=8, ww=8, th=20, nolegs=True, front=tie, top=handset,
+           arms=[([(25, 31), (19, 35), (20, 27)], 3, 'w'), ([(39, 31), (46, 29), (48, 20)], 3, 'w')],
+           hands=[(18, 22, 'fist', False), (46, 16, POINT, False)])
 
     return c.rows(), pal
 

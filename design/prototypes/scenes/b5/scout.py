@@ -39,21 +39,23 @@ def scout():
         f.hl(cx - 9, cx + 8, 20, 'h'); f.hl(cx - 9, cx + 8, 21, 'j'); f.hl(cx - 6, cx + 5, 18, 'j')
 
     def binos(f):                                   # two round barrels poking forward, gap at the bridge
+        a = layer()
+        thick(a, [(cx - 7, 37), (cx - 11, 37), (cx - 8, 29)], 3, '1')
+        thick(a, [(cx + 7, 37), (cx + 11, 37), (cx + 7, 29)], 3, '1')
+        over(f, a, DK)
         p = layer()
-        B = ['.ee.', 'eqqe', 'eqqe', '.ee.']
-        p.stamp(cx - 5, 22, B); p.stamp(cx + 2, 22, B)
-        p.pts('n', [(cx - 1, 23), (cx + 1, 23)])
-        p.px(cx - 4, 23, 'w'); p.px(cx + 3, 23, 'w')
+        for x0 in (cx - 7, cx + 1):                 # two barrels, lenses facing us
+            p.rect(x0, 21, x0 + 5, 26, 'n'); p.pts('.', [(x0, 21), (x0 + 5, 21), (x0, 26), (x0 + 5, 26)])
+            p.ring(x0 + 1, 22, x0 + 4, 25, 'e'); p.rect(x0 + 2, 23, x0 + 3, 24, 'q'); p.px(x0 + 2, 23, 'w')
+        p.rect(cx - 1, 23, cx, 24, 'q')
         over(f, p, DK)
-        for (x, fl) in ((cx - 5, False), (cx + 2, True)):
-            h_ = layer(); hand(h_, x, 26, 'grip', 's', 'S', fl); over(f, h_, DK)
+        for (x, fl) in ((cx - 9, False), (cx + 5, True)):
+            h_ = layer(); hand(h_, x, 25, 'grip', 's', 'S', fl); over(f, h_, DK)
         f.recolor('S', 's', (cx - 1, 25, cx + 1, 27))
         f.hl(cx - 1, cx + 1, 29, 'k')
 
     person(c, cx, 17, hs='crop', hk='H', hdk='z', mouth='none', brows='none',
            shirt='1', sdk='2', sw=8, ww=7, th=13, pants='n', pdk='n', shoe='z', lh=8, front=front, hat=hat, DK=DK,
-           arms=[([(cx - 7, 36), (cx - 11, 37), (cx - 4, 29)], 4, '1'),
-                 ([(cx + 7, 36), (cx + 11, 37), (cx + 4, 29)], 4, '1')],
            top=binos)
     return c.rows(), pal
 

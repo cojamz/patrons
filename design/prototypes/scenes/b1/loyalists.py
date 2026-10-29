@@ -35,8 +35,9 @@ def draw():
 
     person(c, hx=14, hy=16, skin='a', shade='A', hs='crop', hk='H', hd='z', mouth='smile', brows='soft',
            shirt='1', sdark='2', cx=21, sw=6, ww=5, th=12,
-           arms=[([(15, 33), (11, 39), (9, 36)], 4), ([(27, 33), (29, 38), (30, 43)], 3, '2')],
-           hands=[(6, 33, 'grip', False), (29, 43, 'fist', False)],
+           arms=[([(15, 33), (11, 39), (9, 36)], 4), ([(27, 33), (29, 38), (30, 39)], 3, '2')],
+           hands=[(6, 33, 'grip', False)],
+           top=lambda f: (f.rect(29, 41, 31, 43, 'a'), f.pts('A', [(29, 43), (31, 43), (31, 42)])),
            lg=dict(pants='n', pdark='N', shoe='z', lh=8),
            props=poleA, DK={'n': 'N', 'N': 'N'})
     # banner on A's pole, flying right over the wall
@@ -47,12 +48,20 @@ def draw():
     c.paste(fl)
 
     # B: pale, right, linking hands with A
-    person(c, hx=35, hy=15, skin='b', shade='B', hs='long', hk='y', hd='Y', mouth='smile', brows='soft', brow='Y',
+    B = person(c, layer_out=True, hx=35, hy=15, skin='b', shade='B', hs='long', hk='y', hd='Y', mouth='smile', brows='soft', brow='Y',
            shirt='1', sdark='2', cx=42, sw=6, ww=5, th=13,
-           arms=[([(36, 33), (34, 38), (33, 43)], 3, '2'), ([(48, 33), (50, 38), (50, 44)], 3, '2')],
-           hands=[(31, 42, 'grip', True), (48, 44, 'fist', False)],
+           arms=[([(36, 33), (34, 38), (33, 39)], 3, '2'), ([(48, 33), (50, 38), (50, 44)], 3, '2')],
+           hands=[(48, 44, 'fist', False)],
+           top=lambda f: (f.rect(31, 41, 33, 42, 'b'), f.rect(32, 40, 33, 40, 'b'), f.px(33, 42, 'B')),
            lg=dict(pants='n', pdark='N', shoe='z', lh=8),
            DK={'n': 'N', 'N': 'N'})
+    # the clasp: fair fingers wrap over the deep hand; the seam is local shade, not ink
+    for y in range(41, 47):
+        for x in range(27, 32):
+            if B.get(x, y) == 'k' and c.get(x, y) in 'aA':
+                B.px(x, y, '.')
+    c.paste(B)
+    c.px(31, 41, 'B'); c.px(31, 42, 'B')
     return c.rows(), pal
 
 

@@ -20,7 +20,7 @@ def thrift():
 
     def piggy(l):
         l.ell(42, 32, 55, 41, 'g'); l.ell(54, 35, 57, 38, 'g'); l.rect(44, 40, 45, 42, 'G'); l.rect(51, 40, 52, 42, 'G')
-        l.poly([(46, 32), (47, 29), (49, 32)], 'g'); l.hl(47, 50, 32, 'G')
+        l.poly([(46, 32), (47, 29), (49, 32)], 'g'); l.hl(47, 50, 32, 'z')
         l.ell(44, 37, 54, 41, 'G', only='g'); l.px(51, 35, 'z')
     bg(c, piggy, 'G')
 
@@ -29,24 +29,31 @@ def thrift():
     bg(c, candle, None)
     c.pts('y', [(59, 33), (59, 34), (58, 34)]); c.px(59, 32, 'Z')
 
-    cx = 24
+    cx = 25
     DK = {'1': '2', 'q': 'Q', 'y': 'Y', 'e': 'e'}
 
     def front(f):                                   # cardigan open over a grey shirt
         f.rect(cx - 2, 34, cx + 1, 46, 'q')
         f.pts('Y', [(cx + 3, 38), (cx + 3, 42)])
 
-    def coin_up(f):                                 # one coin pinched up to the eye
-        p = layer(); p.ell(32, 21, 37, 26, 'y'); p.pts('Y', [(36, 23), (36, 24), (35, 25), (34, 26)]); p.px(33, 22, 'Z')
-        over(f, p, DK)
-        h_ = layer(); hand(h_, 32, 26, 'grip', 's', 'S', True); over(f, h_, DK)
-        f.ring(cx - 5, 25, cx - 1, 29, 'e'); f.ring(cx + 1, 25, cx + 5, 29, 'e'); f.px(cx, 26, 'e')
+    def bun(f):                                     # bun to one side
+        f.ell(cx - 11, 18, cx - 6, 23, 'H'); f.pts('z', [(cx - 7, 22), (cx - 8, 23)])
 
-    person(c, cx, 18, hs='bun', hk='H', hdk='z', mouth='flat', brows='stern', side='L',
+    def face(f):
+        f.ring(cx - 5, 24, cx - 1, 27, 'e'); f.ring(cx + 1, 24, cx + 5, 27, 'e'); f.px(cx, 25, 'e')
+        f.recolor('S', 's', (cx - 1, 26, cx + 1, 28))
+        f.hl(cx - 1, cx + 1, 30, 'k'); f.px(cx + 2, 29, 'k')
+
+    def drop(f):                                    # the coin going into the slot
+        p = layer(); p.rect(48, 27, 49, 31, 'y'); p.vl(49, 27, 31, 'Y'); p.px(48, 27, 'Z')
+        over(f, p, DK)
+        h_ = layer(); hand(h_, 44, 28, 'grip', 's', 'S'); over(f, h_, DK)
+
+    person(c, cx, 18, hs='short', hk='H', hdk='z', mouth='none', brows='stern',
            shirt='1', sdk='2', sw=7, ww=7, th=13, pants='Q', pdk='Q', shoe='z', lh=7, front=front, DK=DK,
            arms=[([(cx - 6, 37), (cx - 8, 42), (cx - 6, 46)], 4, '1'),
-                 ([(cx + 6, 37), (cx + 10, 40), (cx + 10, 31)], 4, '1')],
-           hands=[(cx - 9, 46, 'fist', False)], top=coin_up)
+                 ([(cx + 6, 37), (cx + 11, 40), (cx + 18, 31)], 4, '1')],
+           hands=[(cx - 9, 46, 'fist', False)], hat=bun, top=lambda f: (face(f), drop(f)))
     return c.rows(), pal
 
 

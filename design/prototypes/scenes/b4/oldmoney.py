@@ -25,7 +25,8 @@ def oldmoney():
         f.poly([(31, 26), (33, 26), (33, 30), (31, 30)], 'r')
         for (x, y) in ((27, 26), (27, 27), (28, 28), (28, 29), (29, 30), (29, 31)):
             f.px(x, y, 'W'); f.px(64 - x, y, 'W')
-        f.pts('y', [(36, 34), (37, 35), (38, 35)])            # watch chain
+        f.pts('y', [(32, 33), (33, 34), (34, 35), (35, 35), (36, 35), (37, 34)]); f.px(37, 33, 'Y')   # watch chain to the pocket
+        f.rect(41, 29, 47, 30, 'y'); f.px(47, 31, 'Y')                # cane knob, under the hand
 
     def brows(f):
         f.hl(27, 29, 16, 'h'); f.hl(34, 36, 16, 'h')
@@ -36,7 +37,6 @@ def oldmoney():
            sw=8, ww=7, th=15, pants=('w', 'W'), shoe='z', lh=9, front=vest, top=brows,
            arms=[([(25, 29), (22, 36), (27, 40)], 3, 'w'), ([(39, 29), (43, 33), (44, 32)], 3, 'w')],
            hands=[(26, 38, 'flat', False), (42, 31, 'grip', True)], props=cane)
-    c.rect(41, 29, 47, 30, 'y'); c.px(47, 31, 'Y')           # cane's gold knob over the hand
     return c.rows(), pal
 
 

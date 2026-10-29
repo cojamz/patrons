@@ -43,7 +43,10 @@ def draw():
     fl.poly([(10, 2), (24, 0), (25, 9), (12, 8), (16, 5)], 'o'); fl.poly([(16, 3), (24, 2), (24, 7), (17, 6)], 'y')
     fl.poly([(4, 10), (14, 9), (12, 12)], 'o')
     c.paste(fl)
-    return c.rows(), pal
+    rows = c.rows()
+    rows = [r for r in rows[:3]] + rows[:-3]          # everything down 3px so the ball has headroom
+    rows[:3] = ['p' * 52 + 'MMM' + 'p' * 9] * 3
+    return rows, pal
 
 
 PORTRAIT = ('purple.streak', draw)

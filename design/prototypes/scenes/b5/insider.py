@@ -26,11 +26,15 @@ def insider():
         f.rect(cx - 1, 35, cx, 40, 'q')
         f.line(cx - 4, 35, cx - 4, 39, 'u'); f.rect(cx - 6, 40, cx - 3, 44, 'e'); f.hl(cx - 5, cx - 4, 42, 'u')
 
-    def secret(f):                                  # envelope marked secret, held close
-        p = layer(); p.rect(cx + 2, 40, cx + 11, 46, 'm'); p.line(cx + 2, 40, cx + 6, 43, 'M'); p.line(cx + 11, 40, cx + 7, 43, 'M')
-        p.rect(cx + 8, 44, cx + 9, 45, 'R')
+    def secret(f):                                  # three files fanned, held to the chest
+        p = layer()
+        for i, (k, d) in enumerate((('M', 'm'), ('m', 'M'), ('m', 'M'))):   # three files fanned
+            x0, y0 = cx + 1 + i * 2, 37 + i * 2
+            p.rect(x0, y0, x0 + 8, y0 + 8, k); p.rect(x0 + 1, y0 - 1, x0 + 3, y0 - 1, k)
+            p.vl(x0 + 8, y0, y0 + 8, d)
+        p.rect(cx + 7, 46, cx + 9, 47, 'R')
         over(f, p, DK)
-        h_ = layer(); hand(h_, cx + 6, 45, 'grip', 's', 'S', True); over(f, h_, DK)
+        h_ = layer(); hand(h_, cx + 4, 43, 'grip', 's', 'S'); over(f, h_, DK)
 
     person(c, cx, 17, hs='side', hk='H', hdk='z', mouth='smirk', brows='stern',
            shirt='1', sdk='2', sw=8, ww=7, th=14, pants='q', pdk='q', shoe='z', lh=6, front=front, DK=DK,

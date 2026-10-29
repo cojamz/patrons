@@ -9,8 +9,8 @@ def trendsetter():
            '1': BLUE[0], '2': BLUE[1], 'e': DEEP[0], 'E': DEEP[1],
            'H': '#1f1714', 'z': '#5a4a3e', 'g': '#2b4a5e', 'n': '#ece5d6', 'N': '#c4bba9', 'r': '#7a2a2a'}
     c.rect(0, 0, 63, 63, 'p')
-    for x in range(0, 64, 8):
-        c.rect(x + 4, 0, x + 7, 40, 'P')          # curtain folds, close value
+    for x in (8, 30, 50):                          # a flat drape with three soft folds
+        c.poly([(x, 0), (x + 6, 0), (x + 7, 36), (x + 4, 40), (x + 1, 37)], 'P')
     c.poly([(20, 40), (44, 40), (64, 64), (0, 64)], 'F')
     c.poly([(22, 41), (42, 41), (60, 64), (4, 64)], 'f')
     for x in (6, 30, 54):                          # three small stage lights

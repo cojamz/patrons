@@ -20,7 +20,7 @@ def windowdresser():
         l.poly([(9, 19), (23, 19), (24, 22), (21, 30), (23, 39), (9, 39), (11, 30), (8, 22)], 'r')
         l.poly([(19, 19), (23, 19), (24, 22), (21, 30), (23, 39), (19, 39)], 'R')
         l.rect(15, 40, 16, 50, 'Y'); l.rect(11, 50, 20, 51, 'Y')
-        l.rect(22, 33, 25, 36, 'w'); l.px(22, 33, 'p')              # price tag
+        l.line(19, 22, 21, 31, 'D'); l.stamp(20, 32, ['www', 'wwW', 'wWW'])     # price tag on a string
     bg(c, form, None)
     for (x, y) in ((9, 19), (23, 19), (8, 22), (24, 22)):
         pass
@@ -43,7 +43,8 @@ def windowdresser():
            sw=7, ww=6, th=13, pants=('n', 'N'), shoe='z', lh=9, front=lambda f: (apron(f), tape(f)),
            arms=[([(37, 31), (32, 36), (28, 26)], 3, '1'), ([(50, 31), (52, 37), (51, 42)], 3, '1')],
            hands=[(24, 21, 'grip', False), (49, 42, 'fist', True)])
-    return c.rows(), pal
+    rows = [r[::-1] for r in c.rows()]           # mirrored: dresser on the left, inside the window
+    return rows, pal
 
 
 PORTRAIT = ('market.windowdresser', windowdresser)

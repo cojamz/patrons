@@ -49,13 +49,17 @@ def draw():
     w = layer()                             # pocket watch open on the bench, gold, outlined
     w.ell(27, 37, 36, 46, 'y'); w.ell(29, 39, 34, 44, 'e'); w.px(31, 41, 'q'); w.hl(32, 33, 41, 'q'); w.px(31, 40, 'q')
     w.rect(31, 35, 32, 36, 'Y')
+    w.pts('Y', [(30, 35), (29, 36), (28, 37), (27, 38), (26, 38), (25, 39), (24, 40), (23, 41), (22, 42)])   # chain to her hand
     w.pts('Y', [(36, 41), (36, 42), (35, 44), (35, 45), (34, 46)])
     outline_once(w); c.paste(w)
     g = layer()                             # a loose gear
-    g.ell(49, 39, 57, 47, 'm')
-    for (x, y) in ((53, 37), (53, 38), (59, 43), (58, 43), (53, 49), (53, 48), (47, 43), (48, 43), (50, 40), (56, 40), (50, 46), (56, 46)):
-        g.px(x, y, 'm')
-    g.ell(51, 41, 55, 45, 'M'); g.ell(52, 42, 54, 44, 'd')
+    import math
+    g.ell(48, 38, 58, 48, 'm')
+    for k in range(8):                       # eight square teeth round the rim
+        a = k * math.pi / 4
+        tx, ty = round(53 + 5.6 * math.cos(a)), round(43 + 5.6 * math.sin(a))
+        g.rect(tx - 1 if tx <= 53 else tx, ty - 1 if ty <= 43 else ty, tx if tx <= 53 else tx + 1, ty if ty <= 43 else ty + 1, 'm')
+    g.ell(51, 41, 55, 45, 'M'); g.rect(52, 42, 54, 44, 'd')
     outline_once(g); c.paste(g)
     return c.rows(), pal
 

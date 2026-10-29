@@ -19,7 +19,6 @@ def windowshopper():
         l.rect(4, 41, 32, 44, 'O')
         l.rect(16, 30, 17, 40, 'O'); l.rect(13, 40, 20, 41, 'O')    # hat stand
         l.ell(9, 26, 24, 31, 'y'); l.ell(12, 20, 21, 29, 'y'); l.hl(12, 21, 27, 'R'); l.hl(9, 24, 30, 'Y')
-        l.rect(25, 34, 29, 37, 'w'); l.px(25, 34, 's')              # price tag
     bg(c, window, 'O')
     DK = {'1': '2', 'u': 'U', 'w': 'W', 'n': 'n', 'r': 'R', 'y': 'Y'}
 
@@ -28,12 +27,16 @@ def windowshopper():
         f.vl(46, 30, 49, '2'); f.pts('w', [(45, 34), (45, 39), (45, 44)])
 
     def bag(f):
-        f.rect(53, 44, 59, 50, 'r'); f.rect(57, 44, 59, 50, 'R')
-        f.pts('R', [(54, 42), (54, 43), (58, 42), (58, 43), (55, 41), (56, 41), (57, 41)])
-    person(c, DK, 39, 13, ('u', 'U'), 'long', 'H', 'h', mouth='o', brows='soft', brow='H', cloth='1', cdark='2',
+        f.rect(54, 40, 60, 46, 'r'); f.rect(58, 40, 60, 46, 'R')                 # bag hung on the forearm
+        f.pts('R', [(55, 38), (55, 39), (59, 38), (59, 39), (56, 37), (57, 37), (58, 37)])
+
+    def gaze(f):                                     # eyes lifted toward the hat
+        for ex in (42, 48):
+            f.rect(ex, 21, ex + 1, 21, 'u'); f.rect(ex, 19, ex + 1, 20, 'k'); f.px(ex, 19, 'w')
+    person(c, DK, 39, 13, ('u', 'U'), 'long', 'H', 'h', mouth='smile', brows='soft', brow='H', cloth='1', cdark='2',
            sw=7, ww=6, th=13, pants=('n', 'n'), shoe='z', lh=4, front=coat,
-           arms=[([(40, 31), (35, 33), (31, 29)], 3, '1'), ([(53, 31), (55, 36), (55, 40)], 3, '1')],
-           hands=[(25, 27, POINT[::-1] and [r[::-1] for r in POINT], False), (53, 40, 'grip', True)], top=bag)
+           arms=[([(40, 31), (38, 36), (44, 37)], 3, '1'), ([(53, 31), (56, 36), (49, 37)], 3, '1')],
+           hands=[(43, 34, 'fist', False), (47, 34, 'fist', True)], top=lambda f: (bag(f), gaze(f)))
     return c.rows(), pal
 
 

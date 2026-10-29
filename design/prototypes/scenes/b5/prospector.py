@@ -4,10 +4,10 @@ from _kit2 import *
 
 def prospector():
     c = C(N)
-    pal = base(DEEP, 'gold', b='#b9d3dc', m='#9fb3a6', M='#8ea395', g='#a9b98a',
+    pal = base(OLIVE, 'gold', R='#b8473c', T='#8f3428', l='#f6e7a8', b='#b9d3dc', m='#9fb3a6', M='#8ea395', g='#a9b98a',
                u='#6f9fbf', U='#5d8cad', v='#a7cde0',
                h='#7a5532', j='#5e4026', q='#4b5a78', Q='#3d4a64',
-               e='#8d9296', E='#6b7075', y='#f2cf5a', Y='#c3962c', H='#1c1410', z='#3a2a22')
+               e='#8d9296', E='#6b7075', y='#f2cf5a', Y='#c3962c', H='#3a2a22', z='#24180f')
     c.rect(0, 0, 63, 63, 'b')
 
     def hills(l):
@@ -19,28 +19,39 @@ def prospector():
     c.pts('v', [(4, 46), (5, 46), (6, 46), (52, 44), (53, 44), (55, 58), (56, 58), (57, 58), (8, 58), (9, 58)])
 
     cx = 32
-    DK = {'q': 'Q', 'e': 'E', 'y': 'Y', 'h': 'j', '1': '2'}
+    DK = {'q': 'Q', 'e': 'E', 'y': 'Y', 'h': 'j', '1': '2', 'R': 'T'}
 
-    def front(f):                                       # overall bib over the gold shirt
-        f.rect(cx - 4, 37, cx + 3, 44, 'q')
-        f.vl(cx - 4, 31, 36, 'q'); f.vl(cx + 3, 31, 36, 'q')
+    def front(f):                                   # gold-and-red plaid shirt, open collar
+        pass
 
-    def hat(f):                                         # wide brown brim, rounded crown
-        f.rect(cx - 5, 9, cx + 4, 15, 'h'); f.hl(cx - 4, cx + 3, 8, 'h')
-        f.hl(cx - 5, cx + 4, 14, 'j')
-        f.hl(cx - 11, cx + 10, 16, 'h'); f.hl(cx - 10, cx + 9, 17, 'j')
-        f.recolor('s', 'S', (cx - 7, 18, cx + 6, 18))
+    def plaid(f):
+        for x in range(cx - 14, cx + 15):
+            for y in range(31, 48):
+                if f.get(x, y) in '12' and ((x - cx) % 5 == 0 or (y - 31) % 5 == 4):
+                    f.px(x, y, 'R' if f.get(x, y) == '1' else 'T')
+        f.poly([(cx - 3.5, 31), (cx + 3.5, 31), (cx, 35)], 's')
+        f.recolor('R', 'S', (cx - 3, 31, cx + 3, 35)) if False else None
+
+    def hat(f):                                     # miner's hard hat with a lamp
+        f.ell(cx - 7, 9, cx + 6, 21, 'y'); f.rect(cx - 7, 17, cx + 6, 21, '.')
+        f.ell(cx - 7, 9, cx + 6, 21, 'Y', only='') if False else None
+        f.rect(cx + 2, 11, cx + 6, 17, 'Y', ) if False else None
+        f.pts('Y', [(cx + 4, 12), (cx + 5, 13), (cx + 5, 14), (cx + 6, 15), (cx + 6, 16)])
+        f.hl(cx - 9, cx + 8, 17, 'y'); f.hl(cx - 9, cx + 8, 18, 'Y')
+        f.rect(cx - 2, 11, cx + 1, 14, 'e'); f.rect(cx - 1, 12, cx, 13, 'l')
+        f.recolor('s', 'S', (cx - 7, 19, cx + 6, 19))
 
     def pan(f):                                         # the gold pan, held in both hands
+        plaid(f); f.poly([(cx - 3.5, 31), (cx + 3.5, 31), (cx, 35)], 's')
         p = layer()
         p.ell(20, 38, 44, 49, 'E'); p.ell(22, 39, 42, 47, 'e'); p.ell(25, 43, 39, 47, 'U', only='e')
         p.rect(28, 43, 29, 44, 'y'); p.px(29, 44, 'Y'); p.rect(33, 44, 35, 45, 'y'); p.px(35, 45, 'Y')
         p.rect(31, 41, 32, 42, 'y')
         over(f, p, DK)
-        for (x, fl) in ((17, False), (43, True)):
-            h_ = layer(); hand(h_, x, 41, 'grip', 's', 'S', fl); over(f, h_, DK)
+        for (x, fl) in ((19, False), (41, True)):     # fingers over the rim
+            h_ = layer(); hand(h_, x, 38, 'grip', 's', 'S', fl); over(f, h_, DK)
 
-    person(c, cx, 17, hs='crop', hk='H', hdk='z', mouth='smile', brows='soft', brow='H',
+    person(c, cx, 17, hs='short', hk='H', hdk='z', mouth='smile', brows='soft', brow='H',
            shirt='1', sdk='2', sw=8, ww=7, th=13, pants='q', pdk='Q', shoe='z', lh=9,
            front=front, hat=hat, DK=DK,
            arms=[([(cx - 7, 35), (cx - 10, 39), (cx - 12, 41)], 4, '1'),

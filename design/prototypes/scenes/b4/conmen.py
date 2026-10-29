@@ -7,22 +7,22 @@ def conmen():
     pal = {'k': INK, 'w': '#f4ede1', '1': GREY[0], '2': GREY[1],
            'p': '#9fb0a8', 'f': '#a9a39a', 'F': '#958f86', 'o': '#c9a066', 'O': '#9e7840',
            'r': '#c9443c', 'R': '#9e342e', 'n': '#8fb877', 'N': '#5d8a50', 'x': '#3a3640', 'X': '#4b4652',
-           'a': PALE[0], 'A': PALE[1], 'u': MED[0], 'U': MED[1], 'H': '#5a3a26', 'h': '#3a2418', 'J': '#1f1714',
+           'a': PALE[0], 'A': PALE[1], 'u': OLIVE[0], 'U': OLIVE[1], 'H': '#5a3a26', 'h': '#3a2418', 'J': '#1f1714',
            'z': '#55504a', 'q': '#4a5262', 'Q': '#3a4150'}
     c.rect(0, 0, 63, 63, 'p'); c.rect(0, 48, 63, 63, 'f'); c.hl(0, 63, 48, 'F')
 
     DK = {'1': '2', 'a': 'A', 'u': 'U', 'x': 'X', 'n': 'N', 'q': 'Q'}
 
-    # the shill, mid-brown, a friendly equal: waving a bill like he just won
+    # the shill, olive, a friendly equal: tucking the winnings into his jacket
     def bill_up(f):
-        p = layer(); bill(p, 53, 4, 8, 5); over(f, p, {'n': 'N'})
+        p = layer(); bill(p, 36, 25, 6, 5); over(f, p, {'n': 'N'})
 
     def cap(f):
         f.rect(40, 9, 53, 13, 'q'); f.hl(41, 52, 8, 'q'); f.rect(36, 13, 46, 14, 'Q'); f.rect(48, 9, 53, 13, 'Q')
     person(c, DK, 40, 13, ('u', 'U'), 'crop', 'h', 'H', mouth='grin', brows='soft', brow='h', cloth='1', cdark='2',
            sw=7, ww=6, th=12, pants=('q', 'Q'), shoe='z', lh=10, top=lambda f: (cap(f), bill_up(f)),
-           arms=[([(53, 31), (58, 26), (57, 15)], 3, '1'), ([(41, 31), (39, 37), (40, 42)], 3, '1')],
-           hands=[(55, 9, 'fist', True), (38, 42, 'fist', False)])
+           arms=[([(53, 31), (52, 37), (44, 31)], 3, '1'), ([(41, 31), (39, 37), (40, 42)], 3, '1')],
+           hands=[(40, 28, 'fist', True), (38, 42, 'fist', False)])
 
     # the crate and the shell game
     def crate(l):

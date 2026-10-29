@@ -9,8 +9,7 @@ def cheerleader():
            'y': '#f0c548', 'Y': '#c08f22',
            'e': DEEP[0], 'E': DEEP[1], 'H': '#2a1c16', 'h': '#463026', 'z': '#55504a'}
     c.rect(0, 0, 63, 63, 'p')
-    for i, y in enumerate((16, 24, 32)):
-        c.rect(0, y, 63, y + 7, 'bB'[i % 2])
+    c.rect(0, 16, 63, 39, 'b'); c.rect(0, 28, 63, 39, 'B')
     c.rect(0, 40, 63, 63, 'g'); c.rect(0, 50, 63, 63, 'G')
     DK = {'1': '2', 'e': 'E', 'w': 'W', 'y': 'Y'}
 

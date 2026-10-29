@@ -39,12 +39,15 @@ def cashier():
     def tag(f):
         f.rect(20, 33, 24, 35, 'r'); f.vl(24, 33, 35, 'R')
 
+    def receipt(f):                                  # a receipt slid across the counter
+        f.rect(14, 43, 24, 46, 'w'); f.hl(16, 22, 44, 'W'); f.hl(16, 20, 45, 'W')
+
     def coins(f):
         f.stamp(29, 25, ['.yyyy.', 'yywyyY', 'yyyyyY', 'yyyyyY', 'yyyyYY', '.YYYY.'])
     person(c, DK, 10, 10, ('b', 'B'), 'bun', 'H', 'h', size=16, mouth='smile', brows='soft', brow='h', cloth='w', cdark='W',
-           sw=8, ww=8, th=18, nolegs=True, front=tag, top=coins, side='L',
-           arms=[([(11, 30), (8, 37), (10, 43)], 4, 'w'), ([(25, 30), (28, 37), (31, 34)], 4, 'w')],
-           hands=[(8, 43, 'flat', False), (29, 30, 'fist', False)])
+           sw=8, ww=8, th=18, nolegs=True, front=tag, top=receipt, side='L',
+           arms=[([(11, 30), (8, 37), (12, 42)], 4, 'w'), ([(25, 30), (31, 37), (37, 33)], 4, 'w')],
+           hands=[(11, 41, 'flat', False), (37, 30, 'flat', False)])
     return c.rows(), pal
 
 

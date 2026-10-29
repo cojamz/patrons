@@ -15,7 +15,7 @@ def draw():
 
     def timeclock(l):                       # the time clock with a rack of cards
         l.rect(40, 8, 56, 30, 'g'); l.rect(54, 8, 56, 30, 'G')
-        l.ell(43, 10, 51, 18, 'e'); l.vl(47, 12, 14, 'q'); l.hl(47, 49, 14, 'q')
+        l.ell(41, 9, 47, 15, 'e'); l.vl(44, 10, 12, 'q'); l.hl(44, 46, 12, 'q')
         l.rect(44, 22, 51, 23, 'q')
         l.rect(58, 6, 63, 32, 'G')
         for y in (8, 13, 18, 23, 28):
@@ -26,12 +26,12 @@ def draw():
     def legsA(f):
         pass
     # crew member A (cool deep brown): lunch pail, standing back-left
-    person(c, DK, hx=10, hy=17, skin='a', shade='A', mouth='smile', brows='soft', brow='h',
-           hs='crop', hk='h', hd='H', cx=17, sw=7, ww=7, th=13, cloth='1',
-           lg=dict(gap=2, lw=4, lh=7, pants='2', pdark='2', shoe='z'),
-           top=lambda f: hardhat(f, 10, 17, 14, 'y', 'Y'),
+    person(c, DK, hx=10, hy=19, skin='a', shade='A', mouth='smile', brows='soft', brow='h',
+           hs='crop', hk='h', hd='H', cx=17, sw=9, ww=8, th=12, cloth='1',
+           lg=dict(gap=2, lw=5, lh=6, pants='2', pdark='2', shoe='z'),
+           top=lambda f: hardhat(f, 10, 19, 14, 'y', 'Y'),
            face=lambda h: None,
-           arms=[([(10, 35), (8, 41), (9, 45)], 3, '1'), ([(24, 35), (26, 40), (25, 44)], 3, '1')],
+           arms=[([(9, 37), (7, 42), (8, 45)], 4, '1'), ([(25, 37), (27, 41), (26, 44)], 4, '1')],
            hands=[(7, 45, 'grip', False), (24, 44, 'fist', True)])
     pail = layer()
     pail.rect(4, 48, 13, 54, 'm'); pail.rect(4, 48, 13, 49, 'M'); pail.rect(11, 50, 13, 54, 'M')

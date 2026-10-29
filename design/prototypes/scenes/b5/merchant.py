@@ -21,6 +21,13 @@ def merchant():
     bg(c, awning, None)
     c.rect(1, 12, 2, 46, 'o'); c.rect(61, 12, 62, 46, 'o')
 
+    def fruit(l):                                      # crates of apples and oranges on the counter
+        for (x0, k, d) in ((2, 'R', 'T'), (44, 'e', 'E')):
+            for (dx, dy) in ((0, 4), (5, 4), (10, 4), (2, 0), (7, 0), (12, 4)):
+                l.ell(x0 + dx, 39 + dy, x0 + dx + 4, 43 + dy, k)
+                l.px(x0 + dx + 3, 42 + dy, d); l.px(x0 + dx + 3, 43 + dy, d); l.px(x0 + dx + 2, 43 + dy, d)
+                l.px(x0 + dx + 1, 40 + dy, 'w')
+    bg(c, fruit, None)
     cx = 29
     DK = {'1': '2', 'R': 'T', 'H': 'z'}
 
@@ -31,28 +38,21 @@ def merchant():
 
     def apple(f):
         p = layer()
-        p.ell(cx + 13, 18, cx + 18, 23, 'R'); p.pts('T', [(cx + 17, 21), (cx + 17, 22), (cx + 16, 23)])
-        p.px(cx + 14, 19, 'w'); p.px(cx + 15, 17, 'O'); p.px(cx + 16, 17, 'g')
+        p.ell(45, 34, 50, 39, 'R'); p.pts('T', [(49, 37), (49, 38), (48, 39)])
+        p.px(46, 35, 'w'); p.px(47, 33, 'O'); p.px(48, 33, 'g')
         over(f, p, DK)
-        h_ = layer(); hand(h_, cx + 13, 22, 'grip', 's', 'S', True); over(f, h_, DK)
+        h_ = layer(); hand(h_, 44, 39, 'flat', 's', 'S', True); over(f, h_, DK)
 
     person(c, cx, 13, size=16, hs='side', hk='H', hdk='z', mouth='grin', brows='soft',
            shirt='1', sdk='2', sw=11, ww=10, th=16, behind=True, front=front, DK=DK,
            arms=[([(cx - 9, 34), (cx - 12, 40), (cx - 9, 45)], 5, '1'),
-                 ([(cx + 9, 34), (cx + 14, 37), (cx + 15, 27)], 4, '1')],
+                 ([(cx + 9, 34), (cx + 11, 41), (cx + 15, 41)], 4, '1')],
            hands=[(cx - 12, 45, 'flat', False)], top=apple)
 
     def counter(l):
         l.rect(0, 47, 63, 49, 'd'); l.rect(0, 50, 63, 63, 'o'); l.hl(0, 63, 50, 'O')
     bg(c, counter, None)
 
-    def fruit(l):                                      # crates of apples and oranges on the counter
-        for (x0, k, d) in ((2, 'R', 'T'), (44, 'e', 'E')):
-            for (dx, dy) in ((0, 4), (5, 4), (10, 4), (2, 0), (7, 0), (12, 4)):
-                l.ell(x0 + dx, 39 + dy, x0 + dx + 4, 43 + dy, k)
-                l.px(x0 + dx + 3, 42 + dy, d); l.px(x0 + dx + 3, 43 + dy, d); l.px(x0 + dx + 2, 43 + dy, d)
-                l.px(x0 + dx + 1, 40 + dy, 'w')
-    bg(c, fruit, None)
     c.hl(0, 63, 50, 'O')
     h_ = layer(); hand(h_, cx - 12, 45, 'flat', 's', 'S'); c.paste(h_)
     return c.rows(), pal

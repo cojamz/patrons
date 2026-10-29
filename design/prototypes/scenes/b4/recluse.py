@@ -23,7 +23,7 @@ def recluse():
         f.poly([(27, 27), (45, 27), (43, 35), (36, 38), (29, 35)], 'n'); f.poly([(39, 27), (45, 27), (43, 35), (39, 37)], 'N')
 
     def holder(f):
-        f.rect(45, 37, 52, 38, 'Y'); f.rect(47, 31, 49, 36, 'w'); f.vl(49, 31, 36, 'W')
+        f.rect(45, 37, 52, 38, 'Y'); f.rect(47, 31, 49, 36, 'w'); f.vl(49, 31, 36, 'W'); f.pts('Y', [(53, 36), (54, 36), (55, 37), (54, 38), (53, 38)])   # holder with a ring handle
     person(c, DK, 29, 12, ('d', 'D'), 'long', 'H', 'h', mouth='flat', brows='stern', brow='H', cloth='w', cdark='W',
            sw=7, ww=7, th=14, pants=('w', 'W'), shoe='z', lh=8, front=shawl, top=holder,
            arms=[([(43, 30), (47, 35), (47, 38)], 3, 'w')],

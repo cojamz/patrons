@@ -21,7 +21,7 @@ def alchemist():
     DK = {'1': '2', 'e': 'E', 'q': 'q'}
 
     def front(f):                                   # robe sash
-        f.rect(cx - 7, 42, cx + 7, 43, 'q')
+        f.rect(cx - 4, 42, cx + 4, 43, 'q')
         f.poly([(cx - 3.5, 34), (cx + 3.5, 34), (cx, 38)], '2')
 
     def flask(f):                                   # held high: one flask, every colour in it
@@ -40,7 +40,7 @@ def alchemist():
     person(c, cx, 18, hs='side', hk='H', hdk='z', mouth='o', brows='soft',
            shirt='1', sdk='2', sw=8, ww=9, th=18, pants='q', pdk='q', shoe='z', lh=3, front=front, DK=DK,
            arms=[([(cx - 7, 37), (cx - 9, 43), (cx - 7, 47)], 5, '1'),
-                 ([(cx + 7, 37), (cx + 12, 36), (cx + 14, 25)], 4, '1')],
+                 ([(cx + 7, 37), (44, 34), (cx + 14, 25)], 4, '1')],
            hands=[(cx - 10, 48, 'fist', False)], top=flask)
     return c.rows(), pal
 

@@ -21,9 +21,16 @@ def changer():
 
     def counter(l):
         l.rect(0, 46, 63, 63, 'o'); l.hl(0, 63, 46, 'O'); l.hl(0, 63, 47, 'O')
-        for x, top, k, K in ((40, 36, 'y', 'Y'), (46, 33, 's', 'S'), (52, 38, 'y', 'Y')):   # solid coin stacks
-            l.rect(x, top, x + 4, 45, k); l.rect(x + 3, top + 1, x + 4, 45, K); l.hl(x, x + 4, top, K)
     bg(c, counter, None)
+
+    def scale(l):                                    # a small balance scale, a coin weighed in one pan
+        l.rect(44, 43, 51, 45, 'Y'); l.rect(47, 33, 48, 42, 'Y'); l.vl(47, 33, 42, 'y')
+        l.line(40, 35, 55, 33, 'Y'); l.line(40, 36, 55, 34, 'y')
+        l.vl(41, 36, 39, 'S'); l.vl(54, 34, 37, 'S')
+        l.hl(38, 44, 40, 'Y'); l.hl(39, 43, 41, 'Y')
+        l.hl(51, 57, 38, 'Y'); l.hl(52, 56, 39, 'Y')
+        l.stamp(52, 35, ['.yy.', 'yyyY', '.YY.'][:0] or ['.yyy.', 'yyyyY'])
+    bg(c, scale, None)
     DK = {'w': 'W', 'm': 'M', 'y': 'Y', 's': 'S', 'q': 'q'}
 
     def vest(f):
@@ -32,12 +39,17 @@ def changer():
     def glasses(f):
         f.ring(15, 19, 19, 23, 'S'); f.ring(21, 19, 25, 23, 'S'); f.px(20, 20, 'S')
 
-    def coin(f):
-        f.stamp(8, 17, ['.yyy.', 'yywyY', 'yyyyY', 'yyyyY', '.YYY.'])
+    def stack(f):                                    # the coin stack being counted, solid, no banding
+        f.rect(19, 38, 25, 45, 'y'); f.rect(23, 39, 25, 45, 'Y'); f.hl(19, 25, 38, 'Y')
     person(c, DK, 15, 13, ('m', 'M'), 'crop', 'H', 'h', mouth='smile', brows='soft', brow='h', cloth='w', cdark='W',
-           sw=8, ww=9, th=18, nolegs=True, front=vest, top=lambda f: (glasses(f), coin(f)),
-           arms=[([(15, 31), (9, 33), (10, 25)], 3, 'w'), ([(30, 31), (34, 38), (38, 40)], 3, 'w')],
-           hands=[(8, 21, 'fist', False), (36, 38, 'flat', False)])
+           sw=8, ww=9, th=18, nolegs=True, front=vest, top=glasses,
+           arms=[([(15, 31), (12, 37), (15, 41)], 3, 'w'), ([(30, 31), (32, 37), (29, 41)], 3, 'w')],
+           hands=[(14, 40, 'flat', False), (26, 40, 'flat', True)])
+    st = layer(); stack(st); outline_once(st)
+    for y in range(64):
+        for x in range(64):
+            if st.get(x, y) not in '.k':
+                c.px(x, y, st.get(x, y))
     return c.rows(), pal
 
 

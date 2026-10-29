@@ -12,10 +12,12 @@ def raider():
     c.rect(0, 0, 63, 63, 'p'); c.rect(0, 52, 63, 63, 'P')
 
     def vault(l):
-        l.ell(18, 2, 50, 34, 'G'); l.ell(21, 5, 47, 31, 'q')
-        l.ell(42, 4, 62, 34, 'g'); l.ell(46, 9, 58, 29, 'G'); l.ell(49, 13, 55, 25, 'g')
-        for x in (27, 33, 39):
-            l.rect(x, 18, x + 3, 30, 'Y'); l.hl(x, x + 3, 18, 'y')
+        l.ell(16, 0, 48, 32, 'G'); l.ell(18, 2, 46, 30, 'g')          # round vault door
+        l.ring(25, 9, 39, 23, 'G'); l.ring(26, 10, 38, 22, 'G')       # wheel handle, three spokes
+        l.line(32, 16, 32, 10, 'G'); l.line(32, 16, 27, 20, 'G'); l.line(32, 16, 37, 20, 'G')
+        l.ell(30, 14, 34, 18, 'G'); l.px(31, 15, 'g')
+        for (x, y) in ((20, 14), (44, 14), (32, 28)):
+            l.rect(x, y, x + 1, y + 1, 'G')
     bg(c, vault, None)
     DK = {'w': 'W', 'b': 'B', 'd': 'D', 's': 'S', 'n': 'n', 'm': 'm', 'y': 'Y'}
 
@@ -33,11 +35,18 @@ def raider():
             l.stamp(x0 + 3, y0 + 5, ['.yyy.', 'yyyyY', '.YYY.'])
         return f
     # second raider, behind, olive, a friendly equal
-    person(c, DK, 40, 13, ('d', 'D'), 'crop', 'J', 'j', mouth='grin', brows=None, cloth='w', cdark='W',
-           sw=6, ww=5, th=12, pants=('n', 'n'), shoe='z', lh=10, stance=2, front=None,
-           top=lambda l: (mask(40, 13)(l), sack(50, 22)(l)),
-           arms=[([(42, 30), (39, 35), (40, 39)], 3, 'w'), ([(52, 30), (55, 28), (55, 24)], 3, 'w')],
-           hands=[(38, 39, 'fist', False), (53, 20, 'fist', True)])
+    def stripes(l):                                  # striped burglar shirt
+        for y in (34, 38, 42):
+            l.rect(40, y, 54, y + 1, 'm')
+        l.recolor('m', '.', (0, 0, 39, 63))
+
+    def hug(l):                                      # crouched, sack hugged low in both arms
+        sack(40, 36)(l)
+    person(c, DK, 40, 18, ('d', 'D'), 'crop', 'J', 'j', mouth='grin', brows=None, cloth='w', cdark='W',
+           sw=7, ww=6, th=11, pants=('n', 'n'), shoe='z', lh=5, stance=2, front=None, post=lambda f: [f.recolor('wW', 'm', (34, y, 60, y)) for y in (34, 37, 40, 43)],
+           top=lambda l: (mask(40, 18)(l), hug(l)),
+           arms=[([(41, 35), (38, 40), (41, 44)], 3, 'w'), ([(54, 35), (57, 40), (53, 44)], 3, 'w')],
+           hands=[(39, 43, 'fist', False), (51, 43, 'fist', True)])
     # lead raider, light, running with a sack on the shoulder
     person(c, DK, 10, 16, ('b', 'B'), 'side', 'H', 'h', mouth='grin', brows=None, cloth='w', cdark='W',
            sw=7, ww=6, th=12, pants=('n', 'n'), shoe='z', lh=10, stance=3, front=None,

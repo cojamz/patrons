@@ -36,7 +36,7 @@ def coach():
         p.rect(cx - 12, 36, cx - 10, 38, 'g')
         p.pts('E', [(cx - 13, 41), (cx - 12, 41), (cx - 10, 42), (cx - 9, 42), (cx - 13, 44), (cx - 11, 44)])
         over(f, p, DK)
-        h_ = layer(); hand(h_, cx - 10, 44, 'grip', 's', 'S'); over(f, h_, DK)
+        h_ = layer(); hand(h_, cx - 10, 41, 'grip', 's', 'S', True); over(f, h_, DK)
 
     person(c, cx, 18, hs='short', hk='H', hdk='z', mouth='grin', brows='soft', brow='z',
            shirt='1', sdk='2', sw=8, ww=7, th=13, pants='1', pdk='2', shoe='q', lh=8, front=front, hat=cap, DK=DK,

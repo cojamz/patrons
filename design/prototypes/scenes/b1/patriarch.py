@@ -45,12 +45,16 @@ def draw():
         f.pts('m', [(24, 22), (24, 23), (25, 24), (39, 22), (39, 23), (38, 24)])
         f.pts('m', b)
         f.pts('M', [(36, 28), (37, 27), (35, 29), (34, 30)])
+        f.hl(27, 37, 26, 'm')                          # beard fills round the mouth
+        f.rect(29, 24, 35, 25, 'm'); f.pts('M', [(29, 25), (35, 25), (32, 25)])   # one moustache mass under the nose
+        f.hl(31, 33, 27, 'O')                          # mouth, a short warm row inside the beard
+        f.px(32, 23, 'A')
 
     def cane(p):
         pole(p, 43, 30, 54, 't', 'T')
         p.pts('t', [(43, 29), (42, 28), (41, 28), (40, 29)]); p.pts('T', [(44, 29), (44, 28)])
 
-    person(c, hx=24, hy=13, size=16, skin='a', shade='A', hs='crop', hk='m', hd='M', mouth='smile', brows='stern',
+    person(c, hx=24, hy=13, size=16, skin='a', shade='A', hs='crop', hk='m', hd='M', mouth=None, brows='stern',
            brow='M', shirt='1', sdark='2', cx=32, ty=30, sw=8, ww=7, th=13,
            arms=[([(25, 33), (23, 39), (27, 42)], 4), ([(39, 33), (41, 38), (42, 40)], 4)],
            hands=[(26, 41, 'flat', False), (41, 37, 'grip', False)],

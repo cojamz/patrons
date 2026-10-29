@@ -4,8 +4,8 @@ from _kit2 import *
 
 def tycoon():
     c = C(N)
-    pal = base(DEEP, 'gold', p='#3c3a52', P='#33314a', u='#7fa6c9', U='#6b93b8', i='#4d5f80', I='#43546f',
-               y='#f2cf5a', Y='#c3962c', Z='#f8e39a', H='#1c1410', z='#2e221c', q='#2f2a33', t='#7a2a2a',
+    pal = base(COOL, 'gold', p='#3c3a52', P='#33314a', u='#7fa6c9', U='#6b93b8', i='#4d5f80', I='#43546f',
+               g='#8a8a90', y='#f2cf5a', Y='#c3962c', Z='#f8e39a', H='#1c1410', z='#2e221c', q='#2f2a33', t='#7a2a2a',
                o='#7a4a2e', O='#5e3824')
     c.rect(0, 0, 63, 63, 'p'); c.rect(0, 52, 63, 63, 'P')
 
@@ -32,7 +32,7 @@ def tycoon():
             f.px(x, y, '2'); f.px(2 * cx - x - 1, y, '2')
         f.px(cx + 1, 44, 'Y'); f.px(cx + 1, 47, 'Y')
 
-    person(c, cx, 18, hs='short', hk='H', hdk='z', mouth='smile', brows='stern',
+    person(c, cx, 18, hs='side', hk='H', hdk='z', mouth='smile', brows='stern', hat=lambda f: f.pts('g', [(19, 22), (19, 23), (32, 22), (32, 23)]),
            shirt='1', sdk='2', sw=8, ww=7, th=13, pants='1', pdk='2', shoe='q', lh=8, front=front, DK=DK,
            arms=[([(cx - 7, 37), (cx - 9, 42), (cx - 8, 46)], 4, '1'),
                  ([(cx + 7, 37), (cx + 11, 41), (cx + 16, 39)], 4, '1')],

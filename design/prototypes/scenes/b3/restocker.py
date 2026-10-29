@@ -16,7 +16,7 @@ def draw():
         l.rect(0, 4, 63, 53, 's')
         for y in (16, 30, 44):
             l.rect(0, y, 63, y + 1, 'S')
-        cols = ['j', 'g', 'y', 'g']
+        cols = ['j', 'g', 'j', 'g']
         for row, y in enumerate((8, 22, 36)):
             for i, x in enumerate(range(2, 62, 5)):
                 if row == 1 and 40 <= x <= 52:

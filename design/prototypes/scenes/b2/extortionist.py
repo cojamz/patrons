@@ -12,7 +12,7 @@ def extortionist():
 
     def shop(l):
         l.rect(2, 6, 22, 30, 'O'); l.rect(4, 8, 20, 28, 'q'); l.poly([(4, 28), (4, 22), (12, 15), (14, 28)], 'Q')
-                l.rect(44, 18, 63, 22, 'O'); l.rect(44, 30, 63, 34, 'O')
+        l.rect(44, 18, 63, 22, 'O'); l.rect(44, 30, 63, 34, 'O')
         for x in (46, 51, 56, 60):
             l.rect(x, 13, x + 3, 17, 'r' if x % 2 else 'y'); l.rect(x, 25, x + 3, 29, 'y' if x % 2 else 'r')
     bg(c, shop)

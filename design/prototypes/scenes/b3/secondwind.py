@@ -14,9 +14,9 @@ def draw():
 
     def chart(l):                           # a board with a rising line
         l.rect(36, 6, 61, 30, 'e'); l.rect(36, 6, 61, 7, 'q')
-        for i, (x, y) in enumerate(((39, 26), (44, 23), (49, 24), (54, 16), (58, 11))):
+        for i, (x, y) in enumerate(((39, 28), (44, 27), (49, 27), (54, 21), (58, 16))):
             l.rect(x - 1, y, x, 28, 'q')
-        pts = [(39, 25), (44, 22), (49, 23), (54, 15), (58, 10)]
+        pts = [(39, 27), (44, 26), (49, 26), (54, 20), (58, 15)]
         for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
             l.line(x0, y0, x1, y1, 'G'); l.line(x0, y0 - 1, x1, y1 - 1, 'g')
     bg(c, chart, 'q')

@@ -44,9 +44,9 @@ def heiress():
         p.vl(43, 17, 22, 'c'); p.vl(44, 17, 22, 'Y'); p.vl(43, 23, 26, 's'); p.vl(44, 23, 26, 'S')
         p.hl(43, 44, 27, 's')
     person(c, DK, 25, 12, ('v', 'V'), 'long', 'H', 'h', mouth='smile', brows='soft', brow='h', eye='x',
-           cloth='w', cdark='W', sw=6, ww=6, th=12, nolegs=True, front=gown, top=lambda f: (tiara(f), lit(f)),
-           arms=[([(26, 31), (23, 36), (24, 41)], 3, 'v'), ([(38, 31), (42, 35), (43, 30)], 3, 'v')],
-           hands=[(22, 41, 'flat', False), (41, 27, 'grip', True)], props=flute)
+           cloth='w', cdark='W', sw=6, ww=6, th=12, nolegs=True, front=gown, top=tiara,
+           arms=[([(26, 31), (23, 36), (24, 41)], 3, 'v'), ([(38, 31), (43, 35), (40, 39)], 3, 'v')],
+           hands=[(22, 41, 'flat', False), (38, 38, 'fist', True)])
     return c.rows(), pal
 
 

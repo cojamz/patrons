@@ -23,7 +23,7 @@ def frontrunner():
            shirt='1', sdk='2', sw=7, ww=6, th=12, pants='q', pdk='Q', shoe='t', lh=9, stance=2, front=front, DK=DK,
            arms=[([(cx - 6, 34), (cx - 11, 30), (cx - 14, 20)], 3, 's'),
                  ([(cx + 6, 34), (cx + 11, 30), (cx + 14, 20)], 3, 's')],
-           hands=[(cx - 16, 16, 'fist', False), (cx + 13, 16, 'fist', True)])
+           top=lambda f: (fist5(f, cx - 16, 15), fist5(f, cx + 12, 15, flip=True)))
     # the finish tape, snapped at his chest and trailing
     for (x0, x1, y0, y1) in ((0, cx - 8, 41, 39), (cx + 8, 63, 39, 43)):
         c.line(x0, y0, x1, y1, 'w'); c.line(x0, y0 + 1, x1, y1 + 1, 'e')

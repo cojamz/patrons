@@ -34,7 +34,7 @@ def bigspender():
     person(c, DK, 25, 13, ('a', 'A'), 'side', 'H', 'h', mouth='grin', brows='soft', brow='H', cloth='1', cdark='2',
            sw=8, ww=7, th=13, pants=('1', '2'), shoe='z', lh=8, front=shirt, top=fan,
            arms=[([(39, 31), (45, 30), (44, 23)], 3, '1'), ([(25, 31), (21, 36), (21, 42)], 3, '1')],
-           hands=[(42, 19, 'fist', True), (19, 42, 'flat', False)])
+           hands=[(42, 19, 'fist', True), (19, 41, 'thumb', False)])
     for (x, y) in ((14, 8), (22, 4), (52, 6), (56, 12), (18, 13)):           # bills in the air
         b = layer(); bill(b, x, y, 6, 4); edged(b, 'N'); c.paste(b)
     return c.rows(), pal

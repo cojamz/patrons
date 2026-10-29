@@ -32,8 +32,7 @@ def draw():
            face=lambda h: None,
            arms=[([(22, 31), (17, 34), (17, 26)], 4, '1'), ([(42, 31), (46, 37), (44, 42)], 4, '1')],
            hands=[(15, 22, 'grip', False)],
-           props=lambda p: pole(p, 16, 25, 30, 'y', 'Y'),
-           post=lambda f: f.pts('y', [(36, 6), (37, 6), (37, 7)]))
+           props=lambda p: pole(p, 16, 25, 30, 'y', 'Y'))
     og = layer()                            # opera glasses on a gold handle
     og.ell(10, 17, 16, 23, 'y'); og.ell(17, 17, 23, 23, 'y')
     og.ell(11, 18, 15, 22, '3'); og.ell(18, 18, 22, 22, '3'); og.px(12, 19, 'e'); og.px(19, 19, 'e')
