@@ -39,3 +39,8 @@
 - A 2-4-2 diamond mouth reads as a plus. Open mouths are ovals.
 - Pearls or trim the same value as the cloth behind vanish at 1x: put them on skin, alternating light and dark.
 - Highlights are stepped planes, never hard rectangles.
+- "Darkest person in front" backfires on crowd cards with a loaded name (Mob): the lead face there is light or mid, the rest equal.
+- Veils on brown women under a religious-sounding name read as costume. Bare hair unless the card is the halo saint.
+- A bottle with sparks at the neck is a Molotov. Spray cans have a nozzle cap and mist, no sparks.
+- Gold eye pixels on a very deep face glow. Warm brown iris plus 1px off-white.
+- Watch for clusters across a color: three grey dark elders with clocks in one color reads as one face.
