@@ -30,3 +30,9 @@
 - Dandy costume (boater, pencil moustache) plus a swindler role never goes on brown or deep skin.
 - Comic-coward roles follow the service-role rule: cast light as often as dark, never an open lipped mouth on a deep face.
 - Mismatched eyes read as a wink. Both eyes one expression unless the card is about winking.
+- A back-person face copied across cards is the AI tell. Each back face gets its own eyes, brows, mouth and hair.
+- A dark-skinned man in a uniform with a top hat and grey moustache is the porter image whatever the role. Doormen, porters, bellhops cast light unless plainly modern security.
+- "Longing outside a shop" on a deep or brown face reads as poverty: make it delighted, or cast across tones.
+- A cheek highlight right under the eye reads as a bruise. Put it on the cheekbone, one pixel lower and outward.
+- Three pointed arms on a shaft read as a trident. Short, based, round arms.
+- Every handheld prop shows its hand; a prop at the ear with no hand reads as an antenna.
