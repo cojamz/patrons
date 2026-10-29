@@ -5,10 +5,8 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { useDialog } from './parts.jsx';
-import { cardColor, onTable, CostDots } from './Info.jsx';
-import { Rich } from './Rich.jsx';
-import { FollowerGlyph } from './Glyphs.jsx';
-import { memberTimingWords } from './memberTiming.js';
+import { cardColor, cardGround, onTable, MemberCard } from './Info.jsx';
+import { CostShapes, WorthTag, nameFit } from './ShopCards.jsx';
 import './deck-browser.css';
 
 // A reference to the game's card types, grouped independently of the hidden draw order.
@@ -61,21 +59,21 @@ export default function DeckBrowser({ state, onClose }) {
     <section className="dialog deck-browser" ref={dialog}>
       <header className="deck-browser-head"><div><h2>Members</h2><p>Every member type in this game · color down, price across · dimmed rows are colors not in this game{Object.keys(state.waiting || {}).length > 0 && ' · greyed members join the deck in a later round'}</p></div><button type="button" className="btn ghost" data-autofocus onClick={onClose} aria-label="Close member browser">Close</button></header>
       {selected && <article className={`db-selected${selected.out ? ' out' : ''}${selected.later ? ' later' : ''}`} data-deck-selected={selected.def.id} style={{ '--q': tint(selected.def) }}>
-        <div className="db-selected-art">{art(selected.def)}</div>
-        <div className="db-selected-words"><h3>{selected.def.name}{selected.out && <small className="db-out-note"> · not in this game</small>}{selected.later && <small className="db-out-note"> · joins the deck in round {roman(selected.later)}</small>}</h3><p><Rich text={memberTimingWords(selected.def.text)} /></p>
-          <footer><CostDots parts={selected.parts} /><span className="db-worth num">{selected.def.f}<FollowerGlyph size={13} /></span>{selected.copies > 1 && <small>{selected.copies} copies</small>}</footer>
-        </div>
+        {/* the same card as everywhere (Cory, Oct 29: "why are the member cards in mixed style") */}
+        <MemberCard state={state} def={selected.def} />
+        {(selected.out || selected.later || selected.copies > 1) && <p className="db-out-note">{selected.out ? 'Not in this game' : selected.later ? `Joins the deck in round ${roman(selected.later)}` : `${selected.copies} copies in the deck`}</p>}
       </article>}
       <div className="deck-browser-scroll" tabIndex={0} role="region" aria-label="Member cards by color and price">
-        <div className="deck-browser-grid" style={{ gridTemplateColumns: `90px repeat(${prices.length}, minmax(162px, 1fr))` }}>
+        <div className="deck-browser-grid" style={{ gridTemplateColumns: `90px repeat(${prices.length}, minmax(114px, 1fr))` }}>
           <div className="db-corner">Price</div>
           {prices.map(price => <div className="db-price num" key={price} data-price={price}>{price === 0 ? 'Free' : price}</div>)}
           {rows.map((row, i) => <Fragment key={row.key}>
             {row.out && !rows[i - 1]?.out && <div className="db-divider" style={{ gridColumn: '1 / -1' }}>Not in this game</div>}
             <h3 className={`db-color${row.out ? ' out' : ''}`} style={{ '--row-color': row.color }}>{row.name}</h3>
             {prices.map(price => <div className={`db-cell${row.out ? ' out' : ''}`} key={price} data-deck-color={row.key} data-deck-price={price} {...(row.out ? { 'data-deck-out': '' } : {})}>
-              {cards.filter(c => c.color === row.key && c.cost === price).map(({ def: d, later }) => <button type="button" className={`db-card${later ? ' later' : ''}`} key={d.id} {...(later ? { 'data-deck-later': later, title: `Joins the deck in round ${roman(later)}` } : {})} style={{ '--q': tint(d) }} data-deck-member={d.id} aria-pressed={selected?.def.id === d.id} onClick={() => select(d.id)}>
-                <span className="db-art">{art(d)}</span><span className="db-card-name">{d.name}</span>
+              {cards.filter(c => c.color === row.key && c.cost === price).map(({ def: d, later }) => <button type="button" className={`db-card card lt-card paper${later ? ' later' : ''}`} data-ground={outIds.has(d.id) ? undefined : cardGround(state, d)} key={d.id} {...(later ? { 'data-deck-later': later, title: `Joins the deck in round ${roman(later)}` } : {})} style={{ '--q': tint(d) }} data-deck-member={d.id} aria-pressed={selected?.def.id === d.id} onClick={() => select(d.id)}>
+                <span className="lt-hd"><span className="lt-corner-cost num" aria-hidden="true">{costParts(d, state.resources).reduce((t, c) => t + c.n, 0)}</span><WorthTag d={d} sphere={onTable(state, d) || outIds.has(d.id) ? quadrant(d.quadrant).resource : 'colorless'} /><span className="nm" {...nameFit(d.name)}>{d.name}</span></span>
+                <span className="art">{art(d)}</span><span className="ft"><CostShapes parts={costParts(d, state.resources)} /></span>
               </button>)}
             </div>)}
           </Fragment>)}

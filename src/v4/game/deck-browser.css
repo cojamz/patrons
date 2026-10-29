@@ -36,3 +36,17 @@
 .db-card.later{filter:grayscale(1);opacity:.5}
 .db-card.later:hover,.db-card.later:focus-visible{opacity:.85}
 .db-selected.later .db-selected-art{filter:grayscale(1);opacity:.6}
+/* The browser shows the game's own cards (Cory, Oct 29: "why are the member cards in mixed style"): the chosen member's
+   full card on the left, the small shop cards in the grid */
+.dialog.deck-browser{display:grid;grid-template-columns:216px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:16px}
+.dialog.deck-browser > .deck-browser-head{grid-column:1 / -1}
+.dialog.deck-browser > .db-selected{grid-column:1;grid-row:2;align-self:start;display:block;min-height:0;padding:0;background:none;border:0;border-radius:0}
+.dialog.deck-browser > .db-selected .card-face.mc{width:200px;min-height:300px;display:flex;flex-direction:column}
+.dialog.deck-browser > .db-selected .card-face.mc .mc-cost{margin-top:auto}
+.dialog.deck-browser > .db-selected .db-out-note{margin:8px 0 0;font-size:13px;color:var(--cream-2,#b9a98c)}
+.dialog.deck-browser > .deck-browser-scroll{grid-column:2;grid-row:2}
+.db-cell .db-card.card.lt-card{display:flex;flex-direction:column;align-items:stretch;gap:0;width:98px;height:150px;min-height:0;padding:0;border:0;text-align:left}
+.db-cell .db-card.card.lt-card .art{display:grid;place-items:center}
+.db-cell .db-card.card.lt-card[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--q),0 0 0 3px #e9ba66}
+.db-cell .db-card.card.lt-card:hover,.db-cell .db-card.card.lt-card:focus-visible{background:#f4ebd7;outline:2px solid #e9ba66;outline-offset:2px}
+.db-cell:has(.db-card.lt-card){display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
