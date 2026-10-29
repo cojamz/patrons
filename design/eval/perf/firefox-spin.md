@@ -10,3 +10,10 @@ Playwright Firefox 146, headless, this box's speed (no CPU throttle in Firefox).
 - Whole game with a press every 250 ms (freeze-ff-v093.md, freeze-ff-live.md): no press waited over 100 ms in either build; frame gaps over 50 ms add to about 125 s of a 9 minute game in both.
 
 Reading: headless Firefox on this box does not reproduce what Cory sees on his Mac. Next is a profile from his own Firefox.
+
+## Oct 29: the landing repaint (v0.9.831)
+- Firefox profile (MOZ_PROFILER_STARTUP in firefox.launch env) on slowed Firefox: the page's thread idle, the compositor's CONTENT_FULL_PAINT_TIME up to 1081 ms right after a landing. Hiding the paper drawing (--css) took the worst gap from 884 to 116 ms; hiding the spaces only to 466.
+- Cause: the landed angle was written into the SVG (rotate on its groups), so the whole board was re-rasterized. Fix: the layers keep the angle as a CSS rotate at rest; the drawings never carry it.
+- Slowed Firefox, a press every 1.2 s: worst gap 750-884 ms before, 117-249 ms after. Full speed: worst 500 before, ~170-200 after (one per game).
+- Left: one ~180 ms full paint the first time the rims' words flip upright (hiding the rim words removes it). The words on their own layer: no change (117/167 vs 117/167 ms), dropped. Glyphs at a new turn seem to be the cost.
+- Headless Firefox here renders WebRender in software, so the compositor costs overstate a Mac's GPU; the landing repaint was real on both (blob images raster on the CPU).
