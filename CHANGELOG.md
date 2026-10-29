@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.843 — 2026-10-29
+
+- Launderers lets you rearrange all your resources: one color for all of them in a click, or split them color by color.
+
 ## v0.9.842 — 2026-10-29
 
 - All 15 guests are in: new Dabblers, Cheerleader, Anarchist, Scout, Con Men, HR and Coach; Big Spender is back as Once per game; Freelancer is now Alchemist.
