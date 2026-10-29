@@ -4,7 +4,7 @@
 //   PRICE="cheerleader=0/5,echo.impostor=2/4" sets a member's price as colored/any (by key, id or name; prices only, never
 //   what a card does). A new price can move a card to another round's deck, as it would in the game (core.js memberRound).
 //   ONLY=red,echo,... sets the color pool (default: the 2.0 colors). MUST=thieves puts that color on every table.
-//   BUDGET=<n> trims Hard's lookahead (default: the game's). Every 5th game one seat only buys followers.
+//   BUDGET=<n> trims Hard's lookahead (default: the game's). FOLLOWER_SEAT=1 makes one seat only buy followers every 5th game (off by default: Cory, Oct 29).
 // Same game numbers with the same settings replay the same games, so a price run compares game for game with the base.
 import { appendFileSync } from 'node:fs';
 import { createGame, applyMove, followers, memberCount, allQuadrantIds, quadrant } from '../src/engine/v4/index.js';
@@ -36,7 +36,7 @@ for (let g = first; g < first + count; g++) {
   const pool = all.filter(q => !must.includes(q)), quads = [...must];
   while (quads.length < seats) quads.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
   let s = createGame({ seats: Array.from({ length: seats }, () => ({ kind: 'bot' })), seed: g, quadrants: quads });
-  const buyer = g % 5 === 0 ? g % seats : -1;
+  const buyer = process.env.FOLLOWER_SEAT === '1' && g % 5 === 0 ? g % seats : -1; // off unless asked (Cory, 2026-10-29: "we should stop having seats that only buy followers")
   const places = s.players.map(() => ({})), seen = {}, got = s.players.map(() => ({}));
   let moves = 0;
   while (!s.over && ++moves < 4000) {
