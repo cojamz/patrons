@@ -47,6 +47,7 @@ front_body(30, 51)
 neck(c, 1, 37, 42, 31, 35)
 face(c, 1, 33, 26, 14, 4, 6, view='l', eyes='smile', mouth='smile', jaw='oval', look='warm', dk=True, plane=True)
 cap(33, 1, 1)
+c.put(6, 29, ['SSSS', 'SzzS', '.RR.']); c.put(8, 32, ['RR'])                     # his small open cheer, up off the chin
 sides = changed(c, s1)
 # the pennant, held up by the olive man on the left
 c.fill(c.rect(0, 0, 0, 36), 'y'); c.fill(c.rect(1, 0, 1, 36), '1')               # a pale pole
@@ -57,8 +58,11 @@ hand(c, 0, 35, 2, 'grip')
 # ---- centre front (person 0): drawn last, the same size as the other two
 s0 = snap(c)
 front_body(13.5, 34.5)
-neck(c, 0, 21, 26, 31, 35)
-face(c, 0, 17, 26, 14, 4, 6, view='f', eyes='smile', mouth='open', jaw='oval', look='iris')
+neck(c, 0, 21, 26, 32, 35)
+face(c, 0, 17, 26, 14, 4, 7, view='f', eyes='smile', mouth='open', jaw='round', look='dot')
+for (x, y) in c.rect(15, 29, 32, 34): c.set(x, y, '.')
+c.put(17, 29, ['BCCCCAAAACCBBA', '.BCCAzzzzABBA.', '.BCCCAzzABBBA.', '..BCCCAACBBA..', '...BBCCCBBA...', '....BBBBBA....'])   # cheering
+neck(c, 0, 21, 26, 34, 35)
 for x, y in ((19, 28), (28, 28)):
     if c.get(x, y) in 'CD': c.set(x, y, 'B')                                       # freckles
 h = c.poly([(15.6, 30), (15.6, 22), (17.6, 19.2), (24, 17.8), (30.4, 19.2), (32.4, 22), (32.4, 30), (31.2, 29), (31, 23.4),

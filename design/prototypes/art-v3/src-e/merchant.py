@@ -43,13 +43,15 @@ c.fill(hair & c.poly([(17, 11), (20, 7.5), (25, 6.4), (23, 8.4), (19.5, 10.5)]),
 c.fill(hair & c.poly([(25, 9.6), (29, 7.6), (31.5, 9.5), (28, 10.4)]), 'H')
 c.fill(c.line(21, 10, 26, 8) & hair, 'F')
 c.put(16, 18, ['CD', 'BCC', 'ABC', 'BA', ])                       # the near ear
-# ---- the abacus held up at his chest: a light wood frame, round beads on three rods
-fr = c.rect(9, 36, 25, 46)
-c.fill(fr, 's'); c.fill(c.rect(10, 37, 24, 45), '1'); c.fill(c.rect(9, 46, 25, 46) | c.rect(25, 36, 25, 46), 'r')
-c.fill(c.rect(9, 36, 25, 36), 't')
-for y in (39, 42, 45): c.fill(c.rect(10, y - 1, 24, y - 1), 't')
-for y, xs in ((38, (11, 14, 21)), (41, (11, 14, 17)), (44, (15, 18, 21))):
-    for x in xs: c.put(x, y - 1, ['xw', 'vv'])
-c.put(5, 37, ['..CD', '.CCCC', 'BCCDC', 'ABCCC', '.ABBC', '..AA'])      # his hand on the frame
+# ---- the abacus held up at his chest (round 2): a clear wood frame outlined dark, three light rods, beads in
+# separated pairs with gaps of rod between them
+fr = c.rect(8, 35, 26, 47)
+c.fill(fr, 's'); c.fill(c.rect(8, 35, 26, 35), 't'); c.fill(c.rect(26, 35, 26, 47) | c.rect(8, 47, 26, 47), 'r')
+c.fill(c.rect(10, 37, 24, 45), '1')
+for y in (38, 41, 44): c.fill(c.rect(10, y, 24, y), 't')
+for y, xs in ((38, (10, 13, 21)), (41, (10, 17, 20)), (44, (10, 13, 16))):
+    for x in xs: c.put(x, y - 1, ['ww', 'vv'])
+c.edge(fr, 'q')
+c.put(4, 37, ['..CD', '.CCCC', 'BCCDC', 'ABCCC', '.ABBC', '..AA'])      # his hand on the frame
 PORTRAIT = {'id': 'gold.merchant', 'name': 'Merchant', 'kind': 'member', 'sphere': 'gold',
             'people': [{'skin': 'golden', 'hair': 'darkbrown'}], 'accent': 'red', 'px': c.rows()}

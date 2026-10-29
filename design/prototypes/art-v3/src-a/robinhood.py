@@ -33,6 +33,12 @@ for (x, y) in c.rect(22, 20, 25, 22):                                           
     if c.get(x, y) == 'C': c.set(x, y, 'D')
 for (x, y) in ((18, 15), (19, 15), (18, 16), (23, 20), (24, 20), (24, 21)):        # a small sheen on brow and cheekbone
     if c.get(x, y) == 'D': c.set(x, y, 'L')
+for (x, y) in c.rect(17, 23, 22, 27) | c.rect(19, 27, 25, 27):                       # final review: the lower face a clean
+    if c.get(x, y) == 'C': c.set(x, y, 'D')                                         # lit plane, so the grin reads at 1x
+for (x, y) in ((26, 23), (27, 23)): c.set(x, y, 'C')                                # no speckle beside the nose
+c.set(26, 23, 'B')
+for (x, y) in c.rect(26, 24, 29, 27):                                                # the jaw shadow one plain B plane
+    if c.get(x, y) in 'C': c.set(x, y, 'B')
 for x in range(23, 27):                                                             # a warm lower lip under the grin
     if c.get(x, 26) in 'BC': c.set(x, 26, 'K')
 PORTRAIT = portrait(c, 'thieves.robinhood', 'Robin Hood', 'magenta', [{'skin': 'verydeep', 'hair': 'black'},

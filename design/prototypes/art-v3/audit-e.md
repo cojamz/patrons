@@ -24,3 +24,8 @@ Checks:
 - No cultural costume: headwear is a newsboy cap, an official's peaked cap, a card-sharp's eyeshade.
 - Ages: 50s banker, middle-aged merchant, older treasurer, young speculator, 40s collector, old miser, adult
   alchemist, old tycoon, a kid. Genders mixed (4 women, 5 men).
+- Whole-set review (round 2, foreman's batch-g artist): Alchemist's very deep face relit so it reads at 1x: the lit half
+  of the face on the D step (forehead, cheekbone, nose bridge), warm brown irises, a closed smile with no light row under
+  it. Penny Pincher: a centred closed mouth (the old pursed dark pixel read as drool), the purse lit top-left and outlined
+  so it separates from the coat. Merchant: the abacus redrawn with a dark-outlined wood frame, three light rods and
+  beads in separated pairs (it read as a rug).
