@@ -18,3 +18,8 @@ table, every 5th game one buy-followers-only seat. Same seeds, old engine (4750d
 Owners' win rates per card are 1 to 5 wins out of 5 to 19 owners: too few games to read either way.
 Agents now protects its owner ("Your actions can't be copied"), so bots handing it to a rival would be a mistake;
 they don't, before or after.
+
+## Hard looks ahead on swaps and steals (v0.9.870)
+Hard now plays out its top few swaps and members-to-take like placements and buys. Head-to-head
+(`scripts/v4-hard-vs.mjs`, 40 Red tables, each played twice with the seats' bots swapped): the new Hard seat won 13,
+the previous Hard seat 6, with +7 followers of margin on average (22 games better, 18 worse). Raw: vs-lookahead-*.jsonl.

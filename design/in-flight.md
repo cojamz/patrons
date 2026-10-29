@@ -8,6 +8,8 @@ Running now
 - Balance round 2 (thread "Run balance tests and suggest 2.0 changes"): Cory answered the Oct 29 report. Logged: Accomplice 3, Tiebreaker 4, Impressionist and Greatest Hits stay; Last Call claim withdrawn. Shipping: Front-runner 2, Extra Hand 9, Agents "Your actions can't be copied", Crowd In +4 purple, Triplets worth 3. Next: whether bots handle skips and member swaps well.
 - Expert AI games (thread "Play expert AI board game sessions"): AI players play full games and write them up as stories with table talk; game 6 posted in three parts. Their shared suspects: Last Call, Echo and Greatest Hits copying steals or Last Call; Allowance plus Exchange with Money Changer; Help Yourself with Fence on turn one. The overnight try in another thread was blocked by a safety filter and is closed.
 
+- Bots (thread "Make the bots play better"): done Oct 29. Swaps and steals rated for every player (v0.9.857), Hard looks ahead on them (v0.9.870); write-up design/eval/bot-swaps/README.md. Cory: no card-by-card bot rules.
+
 Waiting on Cory (nothing built until he answers)
 - Members page review: https://cojamz.github.io/patrons/play/members/ is a color explorer (pick a color, see its deck, artifact and spaces by round; #red etc. in the link). He reviews color by color with the deck rework.
 - Table talk: keep or swap the 12 quick lines (Claude's fill-ins).
