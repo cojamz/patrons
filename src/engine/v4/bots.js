@@ -309,6 +309,26 @@ export function tradeScore(state, chooser, [a, b], places = null) {
 // swap beats not swapping: by 1 follower for a once-per-round member, 2.5 for once a game (0.5 in the last round).
 // A card's own botActivate read only what a swap did for the bot's own cult, so a swap that hurt a rival never counted.
 const swapBar = (state, def) => (def.activate === 'round' ? 1 : state.round >= 3 ? 0.5 : 2.5);
+/** What using member `uid` now is worth to the deciding player, in followers of margin (played on a copy, its
+ *  follow-up choices settled by their hints). */
+function activationGain(state, uid) {
+  const me = state.pending.player;
+  try {
+    const { turns, roundLeft } = horizon(state);
+    const lt = laterTurns(state);
+    const buys = state.players.map((_, i) => turns[i] + lt.turns + (i === me ? 1 : 0));
+    const income = turns.map(t => (t * INCOME[Math.max(1, state.round) - 1] + lt.income) * INCOME_SCALE);
+    const base = marginOf(evaluate(lightClone(state), buys, income, roundLeft), me);
+    const s = lightClone(state);
+    const ctx = contextFor(s);
+    const card = s.cards[uid];
+    card.used = true;
+    defById(card.def).onActivate(ctx, s.players[me], card);
+    settle(s, ctx);
+    return marginOf(evaluate(s, buys, income, roundLeft), me) - base;
+  } catch { return -Infinity; }
+}
+
 function swapUseGain(state, uid) {
   const me = state.pending.player;
   try {
@@ -329,7 +349,12 @@ function useOption(state, pend, ctx, p) {
   const canUse = c => {
     const gain = swapUseGain(state, c.uid);
     if (gain !== null) return gain >= swapBar(state, defById(c.def));
-    return [c.def, c.copy].some(id => id && defById(id).botActivate?.(ctx, p));
+    if ([c.def, c.copy].some(id => id && defById(id).botActivate?.(ctx, p))) return true;
+    // round III: a once-a-game member is used when using it now is worth 2 followers, or anything at all on the last
+    // two buys, measured on a copy (its botActivate waits for a big moment; Rainmaker sat unused through a +2.4)
+    if (state.round < 3 || defById(c.def).activate !== 'game') return false;
+    const g = activationGain(state, c.uid);
+    return g >= 2 || (p.left <= 1 && g > 0.05);
   };
   return pend.options.find(o => o.kind === 'use' && canUse(state.cards[o.uid]));
 }
