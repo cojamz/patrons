@@ -18,7 +18,8 @@ import { browserPath, launchBrowser } from './lib/browser.mjs';
 //  (m8) w2b #19, w4b #20: a use worth nothing now (Safecracker, no rival holds 2 magenta) is never lit or named in the
 //       prompt, and has no button anywhere: its row says "nothing to gain now", its hover says why;
 //  (m10) w2a #1, #44, #45, #16: a use's result shows at the member (even +0) and the prompt drops it at once; a usable
-//       member has a warm ring and a small lift; its card opens beside your seat; a 13-member seat card scrolls on screen.
+//       member has a warm glow, a USE tab and a small lift (decisions Oct 28: the glow and tab replaced the ring); its card
+//       opens beside your seat; a 13-member seat card scrolls on screen.
 //  (m11) a click always acts on what's under the pointer, at once: with your seat's or your member's card open, a
 //       click on a lit space (the one under the card, if any) reaches the space, the card is gone the next frame, and
 //       the minion lands.
@@ -26,7 +27,7 @@ import { browserPath, launchBrowser } from './lib/browser.mjs';
 //  (m13) w3b #39/#47, A30: the follower total opens a breakdown adding up to it; a seat's body and resources open its card;
 //       a rival's card says what it could buy now; one card on screen at a time.
 //  (m14) w4b #2: one move onto a seat, its body or its follower number, and no more, opens its card within 150ms.
-//  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Raider, subdued); a seat no one can
+//  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Raider, a lamp dot, decisions Oct 28); a seat no one can
 //       steal from this round shows the "safe this round" shield, named in its hover (P3 lies low), and says so in its card.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/members/).
 import { chromium } from 'playwright';
@@ -104,10 +105,10 @@ try {
   // (m2) the seat: lit, used, refused, switches
   const fig = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-cult="0"] .cs-member')].map(m => [m.dataset.member, {
     state: m.dataset.state || '', lit: m.classList.contains('ready'), sw: (m.querySelector('[data-switch]') || {}).dataset?.switch || '',
-    // w2a #44: a warm ring and a small lift, not a faint glow
-    ring: /rgba?\(/.test(getComputedStyle(m.querySelector('.fig'), '::before').boxShadow || ''), lift: getComputedStyle(m.querySelector('.fig')).transform,
+    // w2a #44: a warm light and a small lift, not a faint glow (Oct 28: a warm glow behind the figure and a USE tab under it)
+    ring: /gradient\(.*rgba?\(/.test(getComputedStyle(m.querySelector('.fig'), '::before').backgroundImage || ''), tab: !!m.querySelector('.cs-use-tab'), lift: getComputedStyle(m.querySelector('.fig')).transform,
   }])));
-  for (const id of ['gold.jackpot', 'trading.heiress']) if (fig[id] && (!fig[id].ring || !/matrix\(1, 0, 0, 1, 0, -\d/.test(fig[id].lift))) fail(`${id} is lit without its warm ring and lift: ${JSON.stringify(fig[id])}`, 'm2');
+  for (const id of ['gold.jackpot', 'trading.heiress']) if (fig[id] && (!fig[id].ring || !fig[id].tab || !/matrix\(1, 0, 0, 1, 0, -\d/.test(fig[id].lift))) fail(`${id} is lit without its warm glow, USE tab and lift: ${JSON.stringify(fig[id])}`, 'm2');
   for (const id of ['gold.jackpot', 'trading.heiress']) if (!fig[id] || !fig[id].lit || fig[id].state !== 'ready') fail(`${id} isn't lit in your seat though you can use it now: ${JSON.stringify(fig[id])}`, 'm2');
   // (the row shows as many figures as fit: a used member or a switch may be folded into "+N"; the seat card lists them)
   if (fig['gold.speculator'] && (fig['gold.speculator'].state !== 'used' || fig['gold.speculator'].lit)) fail(`Speculator (used) doesn't read used in your seat: ${JSON.stringify(fig['gold.speculator'])}`, 'm2');
@@ -115,11 +116,11 @@ try {
   if (fig['thieves.bigscore'] && fig['thieves.bigscore'].lit) fail('Safecracker is lit, but using it now gives 0', 'm8');
   // (m9) a rival's loaded use, subdued; the seat that lies low says so
   const marks = await page.evaluate(() => ({
-    stunt: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="trading.raider"]'); return m ? { loaded: m.classList.contains('loaded'), ready: m.classList.contains('ready'), filter: getComputedStyle(m.querySelector('.sprite')).filter } : null; })(),
+    stunt: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="trading.raider"]'); const dot = m && m.querySelector('.cs-loaded-dot'); return m ? { loaded: m.classList.contains('loaded'), ready: m.classList.contains('ready'), dot: !!dot && dot.getBoundingClientRect().width > 0 } : null; })(),
     pincher: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="gold.thrift"]'); return m ? m.classList.contains('loaded') : null; })(),
     safe: [0, 1, 2, 3].map(id => !!document.querySelector(`[data-cult="${id}"] [data-safe]`) && /safe this round/i.test(document.querySelector(`[data-cult="${id}"] [data-safe]`).getAttribute('aria-label') + ' ' + document.querySelector(`[data-cult="${id}"] [data-safe]`).title)),
   }));
-  if (!marks.stunt || !marks.stunt.loaded || marks.stunt.ready || !/drop-shadow/.test(marks.stunt.filter)) fail(`P2's Raider (a use in hand) isn't marked on P2's seat: ${JSON.stringify(marks.stunt)}`, 'm9');
+  if (!marks.stunt || !marks.stunt.loaded || marks.stunt.ready || !marks.stunt.dot) fail(`P2's Raider (a use in hand) isn't marked on P2's seat: ${JSON.stringify(marks.stunt)}`, 'm9');
   if (marks.pincher) fail('P2\'s Penny Pincher (no use) is marked as a use in hand', 'm9');
   if (JSON.stringify(marks.safe) !== JSON.stringify([false, false, true, false])) fail(`"safe this round" on seats ${JSON.stringify(marks.safe)} (want only P3's)`, 'm9');
   if (fig['gold.midas'] && fig['gold.midas'].sw !== 'on') fail(`Midas's switch in your seat: ${JSON.stringify(fig['gold.midas'])}`, 'm2');

@@ -108,6 +108,9 @@ const MINIONS = () => {
   const st = save && save.state;
   const root = document.querySelector('.lt');
   if (!st || !root || String(st.moves) !== root.dataset.moves) return null; // not settled on the same move yet
+  // the round's end: the board keeps the minions as they were scored (the round before the save's) until the round-end
+  // card is done (GameScreen useTable, scoringSnapshot)
+  if (root.dataset.round !== String(st.round)) return null;
   const out = [];
   let taken = 0;
   for (const s of document.querySelectorAll('.lt-wheel .slot[data-slot]')) {
