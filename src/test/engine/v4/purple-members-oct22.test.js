@@ -59,7 +59,7 @@ describe('Purple members, Oct 22', () => {
     const t = take(sc({ round: 2, left: 1, members: [['purple.closer']], queue: turns(0, 1) }), 'gold.rush');
     expect(t.players[0].res.purple || 0).toBe(0);
   });
-  it('Hot Streak: One Time Use, +3 followers per turn in a row just before this one; nothing to use with none', () => {
+  it('Hot Streak: Once per game, +3 followers per turn in a row just before this one; nothing to use with none', () => {
     let s = sc({ round: 2, members: [['purple.streak']], queue: turns(0, 0, 0, 1) });
     s.turns = [0, 0];
     s.current = 0;

@@ -319,7 +319,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 4, 2, 'One Time Use: take an extra turn after this one.', { from: 2,
+    m('secondwind', 'Go-Getter', 4, 2, 'Once per game: take an extra turn after this one.', { from: 2,
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -453,8 +453,8 @@ export default {
         ctx.gain(owner, P, 4);
       },
     }),
-    // Cory, 2026-10-28: One Time Use at +3 per turn in a row (was once per round at +2)
-    m('streak', 'Hot Streak', 2, 2, 'One Time Use: +3 followers per turn in a row you’ve taken just before this one.', {
+    // Cory, 2026-10-28: Once per game at +3 per turn in a row (was once per round at +2)
+    m('streak', 'Hot Streak', 2, 2, 'Once per game: +3 followers per turn in a row you’ve taken just before this one.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const k = inARow(ctx, owner);

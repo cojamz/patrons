@@ -50,7 +50,7 @@ export const GLOSSARY = [
     def: 'The face-down deck the shop refills from. Swept members go to its bottom; the market also refreshes between rounds.' },
   { key: 'once per round', word: 'Once per round', match: /\bonce per round\b/i,
     def: 'Usable one time each round; it comes back when the next round starts.' },
-  { key: 'once per game', word: 'One Time Use', match: /\b(?:once per game|one time use)\b/i,
+  { key: 'once per game', word: 'Once per game', match: /\b(?:once per game|one time use)\b/i,
     def: 'Usable one time in the whole game, at any point on your own turn.' },
   { key: 'round start', word: 'Round start', match: /\bround start\b/i,
     def: 'When a round begins, before anyone places a minion.' },

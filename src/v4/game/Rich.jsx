@@ -34,12 +34,12 @@ export function Pip({ color, n }) {
  * keywords), so "per blue | face-up | member" still reads "blue" as a word. "any" becomes the wild symbol only where a number counts it ("2 any");
  * "in any colors", "any face-up member" and "of anything" keep their words.
  */
-const KEYWORDS = { 'on recruit': 'On Recruit', 'round end': 'Round End', 'game end': 'Game End', 'one time use': 'One Time Use', 'once per game': 'One Time Use', 'once per round': 'Once per Round' };
+const KEYWORDS = { 'on recruit': 'On Recruit', 'round end': 'Round End', 'game end': 'Game End', 'one time use': 'Once per Game', 'once per game': 'Once per Game', 'once per round': 'Once per Round' };
 const KEYWORD = w => KEYWORDS[w.toLowerCase()] || 'Round Start';
 export function Rich({ text, after = '', timingDone = false }) {
   if (!text) return null;
   // Canonical timing labels are real emphasis everywhere, never visible Markdown.
-  // Cory, Oct 29: every card keyword is bold ("One Time Use… should be bolded if its a keyword. Same for Game End")
+  // Cory, Oct 29: every card keyword is bold ("Once per game… should be bolded if its a keyword. Same for Game End")
   const timing = /\b(On recruit|(?:At )?round start|round end|game end|one time use|once per game|once per round)\b(?!-)/ig;
   if (!timingDone && timing.test(text)) {
     timing.lastIndex = 0;

@@ -147,7 +147,7 @@ export default {
     }),
     m('loyalists', 'Loyalists', 2, 3, /* Claude's fill-in price 5, was 3 (Cory, 2026-10-22: "too cheap") */ 'Your other members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
     // Cory, 2026-10-24: Red's once per game, "swap a rivals with the shop" (equal or greater cost); name and price Claude's fill-in
-    m('headhunter', 'Headhunter', 3, 2, 'One Time Use: swap a rival’s member with a shop member of equal or greater cost.', {
+    m('headhunter', 'Headhunter', 3, 2, 'Once per game: swap a rival’s member with a shop member of equal or greater cost.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!swapPairs(ctx, owner, 'rival').length) { card.used = false; ctx.log(`${owner.name}'s Headhunter: no rival member to swap.`); return; }

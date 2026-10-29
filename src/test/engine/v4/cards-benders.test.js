@@ -10,7 +10,7 @@ const named = (s, name) => linesNaming(s.log, name);
 const rich = { gold: 30, red: 30, blue: 30, green: 30 };
 
 describe('Guest members (rule-benders)', () => {
-  it('Party Crasher: One Time Use, the next minion joins a rival’s taken space and does it; named', () => {
+  it('Party Crasher: Once per game, the next minion joins a rival’s taken space and does it; named', () => {
     let s = sceneQ({ members: [['benders.squatter']], slots: { '0-1': 1 } });
     expect(s.pending.options.map(o => o.id)).not.toContain('squat:0-1');
     s = move(s, `use:${uidOf(s, 'benders.squatter', 0)}`);
@@ -82,7 +82,7 @@ describe('Guest members (rule-benders)', () => {
     expect(named(s, 'Insider')[0]).toMatch(/from the pile with P1's Insider/);
   });
 
-  it('Extra Hand: One Time Use, +1 minion this round from round II, named; in round I it stays unused', () => {
+  it('Extra Hand: Once per game, +1 minion this round from round II, named; in round I it stays unused', () => {
     let s = sceneQ({ round: 3, members: [['benders.extrahand']] });
     const u = uidOf(s, 'benders.extrahand', 0), left = s.players[0].left;
     s = move(s, `use:${u}`);

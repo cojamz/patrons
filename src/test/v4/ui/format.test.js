@@ -392,7 +392,7 @@ describe('v4 format helpers', () => {
     for (let seed = 1; seed < 40 && !found; seed++) {
       let s = createGame({ seats, seed, quadrants: ['gold', 'purple', 'echo', 'silver'] });
       // seat 1 holds Go-Getter from the start: since Oct 25's +1 on Gather, Hold Up and Crunch Time, bots stopped buying it here
-      // and Extra Hand (One Time Use since Oct 28: the bot uses it in round III)
+      // and Extra Hand (Once per game since Oct 28: the bot uses it in round III)
       for (const id of ['purple.secondwind', 'benders.extrahand']) {
         const gg = Object.keys(s.cards).find(u => s.cards[u].def === id);
         if (gg !== undefined) { s.pile = s.pile.filter(u => u !== gg); s.shop = s.shop.filter(u => u !== gg); s.players[0].members.push(Number(gg)); }

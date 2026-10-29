@@ -80,6 +80,34 @@ export function useAnyDot(colors) {
 }
 
 /** A follower: the pixel person mark (art/Follower.jsx), never a star. */
+/**
+ * A member: a smooth head and shoulders (Cory, 2026-10-29: "a red head and shoulders symbol for red member, and make it a
+ * mix of the colors in the game (like the wildcard token is) of the same symbol for any member"). r: a resource color, or
+ * none for any member, split like the "any" dot in the table's colors: head halves and body halves, no line between
+ * (Cory: "head and body apart… you dont need that thick line"). Kept apart from the follower's dark pixel person.
+ */
+const BUST = 'M8 1.2a3.3 3.3 0 1 1 0 6.6a3.3 3.3 0 1 1 0-6.6ZM1.6 15.2C1.6 11.2 4.2 8.8 8 8.8S14.4 11.2 14.4 15.2Z';
+const BUST_PARTS = {
+  2: [['M0 0H8V16H0Z', '--any-q0'], ['M8 0H16V16H8Z', '--any-q1']],
+  3: [['M0 0H16V8.3H0Z', '--any-q0'], ['M0 8.3H8V16H0Z', '--any-q1'], ['M8 8.3H16V16H8Z', '--any-q2']],
+  4: [['M0 0H8V8.3H0Z', '--any-top'], ['M8 0H16V8.3H8Z', '--any-right'], ['M0 8.3H8V16H0Z', '--any-left'], ['M8 8.3H16V16H8Z', '--any-bottom']],
+};
+export function MemberGlyph({ r = null, size = 16, n = null, decorative = false }) {
+  const clip = `bust${useId().replace(/:/g, '')}`;
+  const name = r ? `${NAMES[r] || r} member` : 'member';
+  const label = n == null ? name : `${n} ${name}${n === 1 ? '' : 's'}`;
+  return (
+    <svg className={`member-glyph${r ? '' : ' any'}`} data-member-glyph={r || 'any'} viewBox="0 0 16 16" width={size} height={size} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : label} aria-hidden={decorative ? 'true' : undefined}>
+      {decorative ? null : <title>{label}</title>}
+      {r
+        ? <path d={BUST} fill={r === 'white' ? 'var(--white, #e6dcc6)' : `var(--q-${r}, var(--${r}))`} />
+        : <><defs><clipPath id={clip}><path d={BUST} /></clipPath></defs>
+          <g clipPath={`url(#${clip})`}>{BUST_PARTS[anyCount].map(([d, v]) => <path key={v} d={d} fill={`var(${v})`} />)}</g></>}
+      <path d={BUST} fill="none" stroke={r === 'white' || r === 'silver' ? 'rgba(30,18,8,.7)' : 'rgba(30,18,8,.55)'} strokeWidth="1.1" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function FollowerGlyph({ size = 12, title = 'followers' }) { return <Follower size={size} title={title} />; }
 
 /**
