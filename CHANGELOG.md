@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.828 — 2026-10-28
+
+- Demote now swaps for a shop member costing up to 2 less (a 5 for a 5, 4 or 3), and Promote and Demote give +2 red.
+
 ## v0.9.827 — 2026-10-28
 
 - The top half of the wheel's ring sits further from the spaces
