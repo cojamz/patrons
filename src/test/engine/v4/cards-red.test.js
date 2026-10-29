@@ -84,8 +84,8 @@ describe('Red members', () => {
 
   it('Host: at round start, +1 red per 2 members, named; a Doppelganger copy pays again', () => {
     let s = sceneQ({ members: [['red.host', 'red.intern', 'red.twins', 'red.volunteer']], queue: [{ t: 'round', r: 2 }] });
-    expect(R(s).red).toBe(2);
-    expect(named(s, 'Host')[0]).toMatch(/P1's Host: \+2 red/);
+    expect(R(s).red).toBe(3);
+    expect(named(s, 'Host')[0]).toMatch(/P1's Host: \+3 red/);
     s = sceneQ({ members: [['red.host', 'red.intern', 'echo.doppel']], queue: [] });
     s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'red.host';
     s.queue = [{ t: 'round', r: 2 }]; s = resume(s);
@@ -131,9 +131,9 @@ describe('Red members', () => {
     restore();
   });
 
-  it('Patriarch: game end +1 follower per 2 members (Twins counts as two)', () => {
+  it('Patriarch: game end +1 follower per 2 members (Triplets counts as three)', () => {
     const s = sceneQ({ members: [['red.patriarch', 'red.twins', 'red.intern']], queue: [{ t: 'finish' }] });
-    expect(memberCount(s, s.players[0])).toBe(4);
+    expect(memberCount(s, s.players[0])).toBe(5);
     expect(s.players[0].final.parts).toEqual(['Patriarch +2']);
   });
 });

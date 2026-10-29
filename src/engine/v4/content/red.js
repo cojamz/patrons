@@ -91,7 +91,7 @@ export default {
   },
 
   members: [
-    m('twins', 'Twins', 1, 1, 'Worth 2 followers.', { f: 2, n: 2 }),
+    m('twins', 'Triplets', 1, 1, 'Worth 3 followers.', { f: 3, n: 3 }), // was Twins, worth 2 (Cory, 2026-10-29: "make it triplets, 3 followers")
     m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
     m('volunteer', 'Volunteer', 0, 0, 'Worth 1 follower.'),
     m('intern', 'Intern', 1, 0, 'Worth 1 follower.'),

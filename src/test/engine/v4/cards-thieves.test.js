@@ -109,7 +109,7 @@ describe('Magenta actions', () => {
     let t = move(s, cardOpt(s, 'red.twins', 1));
     expect(t.pending?.player).not.toBe(1);
     expect(owns(t, 0, 'red.twins')).toBe(true);
-    expect(t.log).toContain("P2 couldn't pay 4 (held 3), so lost Twins to P1.");
+    expect(t.log).toContain("P2 couldn't pay 4 (held 3), so lost Triplets to P1.");
     // Intern (2): P2 pays 2 red; inherent Magenta stays separate
     t = move(move(s, cardOpt(s, 'red.intern', 1)), 'pay');
     expect([R(t).magenta, R(t).red, R(t, 1).red]).toEqual([1, 2, 1]);
@@ -199,10 +199,10 @@ describe('Magenta members', () => {
     s = take(s, 'thieves.tipoff'); // Stash: +3 magenta
     s = move(s, cardOpt(s, 'thieves.grifter', 'shop'));
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
-    // 4 members: take 2, split freely among rivals (Cory, 2026-10-18: the "richest rival" sentence went)
+    // 6 members (Triplets counts as three): take 3, split freely among rivals (Cory, 2026-10-18: the "richest rival" sentence went)
     expect(R(s).magenta).toBe(3); // 6 + Stash's 3, paid 6
-    expect(R(s).gold + R(s).red).toBe(2);
-    expect(R(s, 1).gold + R(s, 2).red).toBe(4);
+    expect(R(s).gold + R(s).red).toBe(3);
+    expect(R(s, 1).gold + R(s, 2).red).toBe(3);
     expect(named(s, 'Grifter').length).toBe(1);
   });
 
@@ -220,8 +220,8 @@ describe('Magenta members', () => {
     expect(named(s, 'Snitch').length).toBe(1);
   });
   it('× Poach: taking a member from the leader counts, even when it leaves them behind', () => {
-    // P2 leads 4 to 3 only through Big Family (3 followers)
-    let s = table(Q, { round: 3, left: 5, members: [['thieves.robinhood'], ['red.bigfamily'], ['red.twins']], n: 3, shop: ROW });
+    // P2 leads 4 to 2 only through Big Family (3 followers)
+    let s = table(Q, { round: 3, left: 5, members: [['thieves.robinhood'], ['red.bigfamily'], ['red.intern']], n: 3, shop: ROW });
     expect(followers(s, s.players[1])).toBeGreaterThan(followers(s, s.players[2]));
     s = move(take(s, 'thieves.heist'), cardOpt(s, 'red.bigfamily', 1));
     expect(owns(s, 0, 'red.bigfamily')).toBe(true);

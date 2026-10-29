@@ -6,14 +6,14 @@ import { take, move } from '../../engine/v4/helpers.js';
 import { memberCopyTargets, ownCopyPlan, copiesAll, copyAllPlan } from '../../../v4/game/cards.js';
 
 describe('Green hover targets follow the current rules', () => {
-  it('Stunt Double highlights the action just taken, but Agents blocks it', () => {
+  it('Stunt Double highlights the action just taken, Agents or not (Agents only stops rivals)', () => {
     const s = take(table(['gold', 'echo'], { shop: ['echo.agents'] }), 'gold.rush');
     const key = Object.keys(s.slots)[0];
     expect(memberCopyTargets(s, 0, defById('echo.hourglass'))).toEqual([key]);
     const agents = s.shop.find(u => s.cards[u].def === 'echo.agents');
     s.shop = s.shop.filter(u => u !== agents);
     s.players[0].members.push(agents);
-    expect(memberCopyTargets(s, 0, defById('echo.hourglass'))).toEqual([]);
+    expect(memberCopyTargets(s, 0, defById('echo.hourglass'))).toEqual([key]);
   });
 
   it('Greatest Hits and Tribute Band highlight owned copy actions too', () => {

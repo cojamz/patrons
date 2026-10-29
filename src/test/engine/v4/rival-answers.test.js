@@ -26,10 +26,10 @@ describe('Shake Down: the rival chooses, and the card says what they paid and wh
     const s0 = table(Q, { round: 2, res: [{}, { red: 3, gold: 2 }], members: [[], ['red.twins', 'red.intern']], shop: ROW });
     const asked = move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.twins', 1));
     expect(asked.pending.player).toBe(1);
-    expect(asked.pending.prompt).toBe('Shake Down: pay P1 4 (2 red, 2 gold) to keep Twins?');
-    expect(asked.pending.options.find(o => o.id === 'pay').label).toBe('Pay P1 4 (2 red, 2 gold) to keep Twins');
+    expect(asked.pending.prompt).toBe('Shake Down: pay P1 4 (2 red, 2 gold) to keep Triplets?');
+    expect(asked.pending.options.find(o => o.id === 'pay').label).toBe('Pay P1 4 (2 red, 2 gold) to keep Triplets');
     const paid = move(asked, 'pay');
-    expect(paid.log).toContain('P2 chose to pay P1 4 (2 red, 2 gold) to keep Twins: its cost is 4.');
+    expect(paid.log).toContain('P2 chose to pay P1 4 (2 red, 2 gold) to keep Triplets: its cost is 4.');
   });
   it('lets it go: "rather than pay", or "couldn’t pay" when they hold too little', () => {
     const s0 = table(Q, { round: 2, res: [{}, { red: 3 }], members: [[], ['red.twins', 'red.intern']], shop: ROW });
@@ -39,8 +39,8 @@ describe('Shake Down: the rival chooses, and the card says what they paid and wh
     // too little to pay: no question with one answer (skeptic r2), it just goes
     const cant = move(take(s0, 'thieves.ransom'), cardOpt(s0, 'red.twins', 1));
     expect(cant.pending?.player).not.toBe(1);
-    expect(cant.log).toContain('P2 couldn\'t pay 4 (held 3), so lost Twins to P1.');
-    expect(story(s0, cant)).toMatch(/P2 couldn’t pay 4, so lost Twins/);
+    expect(cant.log).toContain('P2 couldn\'t pay 4 (held 3), so lost Triplets to P1.');
+    expect(story(s0, cant)).toMatch(/P2 couldn’t pay 4, so lost Triplets/);
   });
 });
 

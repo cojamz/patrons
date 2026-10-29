@@ -136,7 +136,7 @@ const members = [
   // (Poach and swaps moving an unplaced grant, copies, a full board) keep it as their fixture
   m('extrahand3', 'Extra Hand', 'purple', 5, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1], retired: true }),
   // Cory, 2026-10-28: "probably needs to be a Use Once… it had to have some category, and On Recruit would be broken"
-  m('extrahand', 'Extra Hand', 'purple', 4, 3, 'Once per game: +1 minion this round.', { from: 2,
+  m('extrahand', 'Extra Hand', 'purple', 5, 3, 'Once per game: +1 minion this round.', { from: 2,
     activate: 'game',
     onActivate(ctx, owner, card) { if (!extraMinion(ctx, owner, 'Extra Hand')) card.used = false; },
     botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),

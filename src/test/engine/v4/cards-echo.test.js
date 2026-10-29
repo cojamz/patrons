@@ -118,15 +118,15 @@ describe('Green current actions', () => {
     s = pass(play(s, sp('gold.rush')));
     expect(R(s)).toMatchObject({ gold: 24, green: 3 });
   });
-  it('an Agents-protected plan explains why its actions are skipped', () => {
-    let s = table(Q, { round: 3, members: [['echo.agents']], queue: turns(0, 0) });
+  it('Agents: rivals can’t copy your actions, and you still can (Cory, 2026-10-29)', () => {
+    let s = table(Q, { round: 3, members: [['echo.agents']], queue: turns(0, 1) });
     s = go(s, 'gold.rush');
     const plan = ownPlan(contextFor(s), s.players[0]);
-    expect(plan.take).toEqual([]);
-    expect(plan.skip.map(x => x.why)).toEqual(['protected']);
-    s = go(s, 'echo.eternity');
-    expect(R(s)).toMatchObject({ gold: 6, green: 1 });
-    expect(s.log.some(l => l.includes('Agents prevents copying'))).toBe(true);
+    expect(plan.take.map(e => e.p)).toEqual([0]);
+    expect(plan.skip).toEqual([]);
+    s = go(s, 'echo.echo'); // P2's Echo can't copy P1's Gold Rush
+    expect(R(s, 1).gold || 0).toBe(0);
+    expect(R(s, 1).green).toBe(1);
   });
   it('Echo redoes stealing for its copier and still respects Lie Low', () => {
     let s = table(QT, { n: 3, shop: ROW, res: [{}, {}, { gold: 3, blue: 2 }], queue: turns(1, 0) });
@@ -267,7 +267,7 @@ describe('Green current members', () => {
     const before = R(s).green;
     s = move(s, cardOpt(s, 'echo.connector', 0));
     expect(s.cards[uidIn(s, 'echo.doppel', 0)].copy).toBe('echo.connector');
-    expect(R(s).green - before).toBe(3); // Twins (2 members) and Tax Man: 3 non-green members
+    expect(R(s).green - before).toBe(4); // Triplets (3 members) and Tax Man: 4 non-green members
   });
   it('Impostor still becomes a copy without firing its copied On Recruit', () => {
     let s = table(Q, { round: 3, shop: ['echo.impostor', ...ROW], members: [[], ['echo.evergreen']], res: [{ green: 5 }], queue: turns(0, 0) });
@@ -287,9 +287,9 @@ describe('Green current members', () => {
   it('Connector counts weighted non-green members, on recruit and at round start', () => {
     let s = table(Q, { round: 3, shop: ['echo.connector', ...ROW], members: [['red.twins', 'echo.muse']], queue: turns(0, 0) });
     s = move(take(s, 'red.take'), cardOpt(s, 'echo.connector'));
-    expect(R(s).green).toBe(2);
+    expect(R(s).green).toBe(3);
     s.queue = [{ t: 'round', r: 3 }]; s = resume(s);
-    expect(R(s).green).toBe(4);
+    expect(R(s).green).toBe(6);
   });
   it('Agents has two followers and two members; Bait loss/gain rules are explicit', () => {
     const agents = quadrant('echo').members.find(d => d.key === 'agents');

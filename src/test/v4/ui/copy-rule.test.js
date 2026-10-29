@@ -18,7 +18,7 @@ describe('the copy rule says what a copy gives', () => {
     expect(copy.def).not.toMatch(/as if you had taken it/);
     expect(copy.def).toMatch(/Copying a copy lets you choose again/);
     expect(copy.def).toMatch(/never choose an action already in that chain/);
-    expect(copy.def).toMatch(/Agents blocks everyone/);
+    expect(copy.def).toMatch(/Agents stops rivals/);
     expect(copy.def).not.toMatch(/never copy another copy/);
   });
 });

@@ -13,7 +13,7 @@ const acquire = (s, id) => contextFor(s).recruit(s.players[0], uidIn(s, id, 'sho
 describe('new Red member hooks', () => {
   it('deals exactly thirteen ordinary Red members, with the approved printed bodies and prices', () => {
     expect(quadrant('red').members.filter(d => !CUT.has(d.id))).toHaveLength(13);
-    for (const [id, s, w, f] of [['volunteer', 0, 0, 1], ['twins', 1, 1, 2], ['panel', 4, 2, 3], ['mob', 8, 4, 5], ['loyalists', 2, 3, 2]]) {
+    for (const [id, s, w, f] of [['volunteer', 0, 0, 1], ['twins', 1, 1, 3], ['panel', 4, 2, 3], ['mob', 8, 4, 5], ['loyalists', 2, 3, 2]]) {
       expect(defById(`red.${id}`)).toMatchObject({ s, w: w + EXTRA_WILD, f });
     }
     const s = fixture({ members: [['red.mob', 'red.panel']] });
@@ -75,7 +75,7 @@ describe('new Red member hooks', () => {
     expect(c.followers(rival)).toBe(0);
     expect(rival.bonus).toBe(-1); // no extra debt while already at zero
     c.recruit(rival, uidIn(s, 'red.twins', 'shop'), { free: true });
-    expect(c.followers(rival)).toBe(2); // both printed followers arrive in full
+    expect(c.followers(rival)).toBe(3); // both printed followers arrive in full
   });
 
   it('Loyalists blocks swaps of its owner’s other members, not of itself, while theft remains possible (Cory, 2026-10-27)', () => {

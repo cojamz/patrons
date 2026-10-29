@@ -145,14 +145,14 @@ describe('Silver members', () => {
   it('Heir: when recruited, +1 silver per member you have (itself included), named', () => {
     let s = sc({ round: 3, res: [{ silver: 7 }], members: [['red.intern', 'red.twins']], shop: ['silver.heir'], queue: [{ t: 'buy', p: 0 }] });
     s = buy(s, 'silver.heir');
-    expect(S(s)).toBe(4); // Heir1 + Intern1 + Twins2.
-    expect(named(s, 'Heir')).toEqual(["P1's Heir: +4 silver."]);
+    expect(S(s)).toBe(5); // Heir1 + Intern1 + Triplets 3.
+    expect(named(s, 'Heir')).toEqual(["P1's Heir: +5 silver."]);
   });
   it('Heir: at round start, only round III pays, +1 silver per member, named', () => {
     let s = sc({ members: [['silver.heir', 'red.intern', 'red.twins']], queue: [{ t: 'round', r: 2 }] });
     expect(S(s)).toBe(0);
     s = sc({ members: [['silver.heir', 'red.intern', 'red.twins']], queue: [{ t: 'round', r: 3 }] });
-    expect(S(s)).toBe(4); // Heir1 + Intern1 + Twins2.
+    expect(S(s)).toBe(5); // Heir1 + Intern1 + Triplets 3.
     expect(named(s, 'Heir')).toHaveLength(1);
   });
 

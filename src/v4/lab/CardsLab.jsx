@@ -17,7 +17,7 @@ const TABLE = {
   quadrants: allQuadrantIds(), resources: [...new Set(allQuadrantIds().map(id => quadrant(id).resource))],
   players: [], shop: [], cards: {}, round: 1, rules: {}, over: false,
 };
-const PICKS = ['Host', 'Busker', 'Headhunter', 'Patriarch', 'Bodyguard', 'Twins', 'Mob'];
+const PICKS = ['Host', 'Busker', 'Headhunter', 'Patriarch', 'Bodyguard', 'Triplets', 'Mob'];
 const everyone = () => [...allQuadrantIds().flatMap(id => quadrant(id).members), ...guestMembers()];
 const find = name => everyone().find(d => d.name === name);
 const sphereOf = d => (d.quadrant && TABLE.quadrants.includes(d.quadrant) ? quadrant(d.quadrant).resource : 'colorless');

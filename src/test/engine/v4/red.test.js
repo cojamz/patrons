@@ -62,10 +62,10 @@ describe('Stand-in actions are plain gains', () => {
 });
 
 describe('Red members', () => {
-  it('Twins is worth 2 followers and members; Big Family 3 of each', () => {
+  it('Triplets is worth 3 followers and members; Big Family 3 of each', () => {
     const s = scene({ members: [['red.twins', 'red.bigfamily', 'red.intern']] });
-    expect(memberCount(s, s.players[0])).toBe(6);
-    expect(fol(s, 0)).toBe(1 + 2 + 3 + 1);
+    expect(memberCount(s, s.players[0])).toBe(7);
+    expect(fol(s, 0)).toBe(1 + 3 + 3 + 1);
   });
 
   it('Volunteer is free to recruit', () => {
@@ -99,7 +99,7 @@ describe('Red members', () => {
 
   it('Mob: game end +1 follower per red member', () => {
     const s = scene({ members: [['red.mob', 'red.twins', 'red.intern', 'gold.banker']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(8);
+    expect(s.players[0].final.total).toBe(9);
   });
 
   it('Recruiter: +1 red whenever you recruit (not for itself)', () => {

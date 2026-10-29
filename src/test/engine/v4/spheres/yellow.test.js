@@ -128,9 +128,9 @@ describe('Yellow actions', () => {
     expect(R(take(scene({ round: 2, res: [{ yellow: 2 }] }), 'yellow.prism'))).toEqual({ ...Z, yellow: 2 });
   });
 
-  it('Potluck (ring II): each member brings 1 of its color (Twins counts as two)', () => {
+  it('Potluck (ring II): each member brings 1 of its color (Triplets counts as three)', () => {
     const s = take(scene({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern', 'yellow.farmer']] }), 'yellow.gather');
-    expect(R(s)).toEqual({ gold: 1, red: 3, yellow: 2, green: 0 }); // Farmer adds 1 to the yellow
+    expect(R(s)).toEqual({ gold: 1, red: 4, yellow: 2, green: 0 }); // Farmer adds 1 to the yellow
   });
 
   it('Bumper Crop (ring III): +1 of each other color per full set', () => {

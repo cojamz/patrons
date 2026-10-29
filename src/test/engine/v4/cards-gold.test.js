@@ -23,7 +23,7 @@ describe('Gold actions', () => {
   });
   it('Golden Years: 2 / 4 / 6 by round; Tithe: +1 per member; Double Down: doubles', () => {
     for (const r of [1, 2, 3]) expect(G(take(sceneQ({ round: r }), 'gold.rush'))[0]).toBe(2 * r);
-    expect(G(take(sceneQ({ round: 2, members: [['red.intern', 'red.twins']] }), 'gold.windfall'))[0]).toBe(3);
+    expect(G(take(sceneQ({ round: 2, members: [['red.intern', 'red.twins']] }), 'gold.windfall'))[0]).toBe(4);
     expect(G(take(sceneQ({ round: 3, res: [{ gold: 7 }] }), 'gold.strike'))[0]).toBe(14);
   });
   it('Collect Debts: up to 3 gold from rivals, split as you like, all through the shared steal', () => {

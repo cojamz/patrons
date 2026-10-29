@@ -419,7 +419,7 @@ describe('gain changers on stolen goods', () => {
 describe('member colors across spheres', () => {
   it('Yellow’s Potluck counts Green members', () => {
     const s = go(scene({ quads: ['gold', 'red', 'yellow', 'echo'], round: 2, members: [['echo.evergreen', 'echo.choir', 'red.twins']] }), 'yellow.gather');
-    expect(R(s, 0)).toMatchObject({ green: 2, red: 2 }); // Twins counts as two red members
+    expect(R(s, 0)).toMatchObject({ green: 2, red: 3 }); // Triplets counts as three red members
   });
   it('Green members pay their colored part in green', () => {
     let s = scene({ quads: ['gold', 'red', 'yellow', 'echo'], res: [{ green: 1, gold: 1 }], shop: ['echo.evergreen', ...SHOP.slice(1)] });

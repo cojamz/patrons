@@ -33,7 +33,7 @@ describe('Yellow actions', () => {
   });
   it('Branch Out: +1 of each other color per 3 yellow (yellow kept); Potluck: 1 per member of its color; Bumper Crop: per full set', () => {
     expect(R(take(sc({ round: 2, res: [{ yellow: 7 }] }), 'yellow.prism'))).toEqual({ gold: 2, red: 2, yellow: 7, green: 2 });
-    expect(R(take(sc({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern']] }), 'yellow.gather'))).toMatchObject({ gold: 1, red: 3 }); // Twins2 + Intern1.
+    expect(R(take(sc({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern']] }), 'yellow.gather'))).toMatchObject({ gold: 1, red: 4 }); // Triplets 3 + Intern 1.
     expect(R(take(sc({ round: 3, res: [{ gold: 2, red: 2, yellow: 3, green: 2 }] }), 'yellow.flourish'))).toEqual({ gold: 4, red: 4, yellow: 3, green: 4 });
   });
 });

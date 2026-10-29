@@ -331,7 +331,7 @@ describe('payment', () => {
 describe('followers and the end', () => {
   it('followers = 1 + bonus + members\' follower values', () => {
     const s = scene({ members: [['red.twins', 'red.bigfamily', 'gold.midas']], bonus: [4] });
-    expect(followers(s, s.players[0])).toBe(1 + 4 + 2 + 3 + 1);
+    expect(followers(s, s.players[0])).toBe(1 + 4 + 3 + 3 + 1);
     expect(followers(s, s.players[1])).toBe(1);
   });
 

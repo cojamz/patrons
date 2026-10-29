@@ -130,8 +130,9 @@ const copyable = e => e.echo || e.redo || spaceTotal(e) > 0 || e.discount > 0 ||
 const has = (ctx, p, key) => (key === 'tuningfork' ? ctx.abilitiesOf(p) : ctx.membersOf(p)).filter(c => c.def.id === `echo.${key}` || c.copy === `echo.${key}`).length;
 const actionKey = key => key.split('+')[0];
 const pathNow = ctx => ledger(ctx.state).path || [];
-const protectedAction = (ctx, e) => has(ctx, ctx.player(e.p), 'agents') > 0;
-const allowed = (ctx, e, path = pathNow(ctx)) => copyable(e) && !protectedAction(ctx, e) && !path.includes(actionKey(e.key));
+// Agents (Cory, 2026-10-29: "your actions can't be copied"): rivals can't copy its owner's actions; the owner still can
+const protectedAction = (ctx, e, by) => e.p !== by?.id && has(ctx, ctx.player(e.p), 'agents') > 0;
+const allowed = (ctx, e, by, path = pathNow(ctx)) => copyable(e) && !protectedAction(ctx, e, by) && !path.includes(actionKey(e.key));
 // The active context exists only while content resolves. Every queued choice/continuation gets its
 // own immutable path, so siblings don't poison each other's targets and save/load needs no closures.
 function withPath(ctx, path, fn, origin = ledger(ctx.state).origin) {
@@ -174,10 +175,10 @@ export function targets(ctx, p, which, skip = null) {
   const pool = Object.values(L.now);
   if (which === 'previous') {
     const previous = previousEntry(ctx, skip);
-    return previous && allowed(ctx, previous) ? [previous] : [];
+    return previous && allowed(ctx, previous, p) ? [previous] : [];
   }
   const since = which === 'since' ? Math.max(0, ...pool.filter(e => e.p === p.id && e.key !== skip).map(e => e.seq || 0)) : 0;
-  return pool.filter(e => e.key !== skip && allowed(ctx, e) && (which === 'since' ? e.p !== p.id && (e.seq || 0) > since : which === 'own' ? e.p === p.id : which === 'rival' ? e.p !== p.id : true));
+  return pool.filter(e => e.key !== skip && allowed(ctx, e, p) && (which === 'since' ? e.p !== p.id && (e.seq || 0) > since : which === 'own' ? e.p === p.id : which === 'rival' ? e.p !== p.id : true));
 }
 /**
  * Greatest Hits / Tribute Band replay occupied own actions in placement order. A branch can
@@ -186,8 +187,8 @@ export function targets(ctx, p, which, skip = null) {
 export function ownPlan(ctx, p, self = null) {
   const L = ledger(ctx.state);
   const mine = Object.values(L.now).filter(e => e.p === p.id && e.key !== self).sort((a, b) => (a.seq || 0) - (b.seq || 0));
-  const take = mine.filter(e => allowed(ctx, e));
-  const skip = mine.filter(e => !allowed(ctx, e)).map(e => ({ e, why: protectedAction(ctx, e) ? 'protected' : pathNow(ctx).includes(actionKey(e.key)) ? 'chain' : 'nothing' }));
+  const take = mine.filter(e => allowed(ctx, e, p));
+  const skip = mine.filter(e => !allowed(ctx, e, p)).map(e => ({ e, why: protectedAction(ctx, e, p) ? 'protected' : pathNow(ctx).includes(actionKey(e.key)) ? 'chain' : 'nothing' }));
   return { take, skip };
 }
 const SKIP_WHY = { protected: 'Agents prevents copying', chain: 'already in this chain', nothing: 'gave nothing' };
@@ -224,7 +225,7 @@ function copyLeader(ctx, p, leader) {
 /** Greatest Hits' next copy: one left goes straight on; more ask which, and the rest wait until that copy is done. */
 function orderStep(ctx, p, keys, who) {
   const L = ledger(ctx.state);
-  const left = keys.map(k => L.now[k]).filter(e => e && allowed(ctx, e));
+  const left = keys.map(k => L.now[k]).filter(e => e && allowed(ctx, e, p));
   if (left.length === 1) ctx.defer(p, 'echo.continueCopy', { key: left[0].key, by: null, who }, { kind: 'space', key: left[0].key, qid: left[0].color, pid: p.id });
   if (left.length < 2) return;
   ctx.choose(p, `${who}: copy which next?`, left.map(e => ({
@@ -262,7 +263,7 @@ function offer(ctx, p, list, prompt, from, by = null) {
 
 /** p copies entry e: same resources, same discount, and a free face-up member (cost ≤ theirs) per member. */
 export function copy(ctx, p, e, { later = null, by = null, asker = null } = {}) {
-  if (!allowed(ctx, e)) return;
+  if (!allowed(ctx, e, p)) return;
   return withPath(ctx, [...pathNow(ctx), actionKey(e.key)], () => copyResolved(ctx, p, e, { later, by, asker }));
 }
 function copyResolved(ctx, p, e, { later, by, asker }) {
@@ -526,8 +527,7 @@ const echoQ = {
       onRecruited(ctx, owner) {
         const e = justTook(ctx, owner);
         if (!e) {
-          const mine = Object.values(ledger(ctx.state).now).some(x => x.p === owner.id);
-          ctx.log(mine && has(ctx, owner, 'agents') ? `${owner.name}'s Stunt Double: Agents keeps your actions from being copied.` : `${owner.name}'s Stunt Double has nothing to copy.`);
+          ctx.log(`${owner.name}'s Stunt Double has nothing to copy.`);
           return;
         }
         // A recruited member begins its own chain, even when an action recruited it for free.
@@ -574,7 +574,7 @@ const echoQ = {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
     }),
-    m('agents', 'Agents', 1, 1, 'No one can copy your actions, you included.', { f: 2, n: 2 }),
+    m('agents', 'Agents', 1, 1, 'Your actions can’t be copied.', { f: 2, n: 2 }),
     m('bait', 'Bait', 1, 1, 'Whenever anyone copies your action, they −1 follower. If it’s a rival, +1 follower.'),
     m('chronicler', 'Chronicler', 1, 3, 'Game end: +1 follower per green member.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'echo'),
@@ -590,7 +590,7 @@ export function justTook(ctx, p) {
   // Read a settled copy so Stunt Double sees that action without mutating the ledger during UI previews.
   const e = last && { ...last };
   if (e?.before) settle(ctx.state, e);
-  return e && e.p === p.id && copyable(e) && !protectedAction(ctx, e) ? e : null;
+  return e && e.p === p.id && copyable(e) && !protectedAction(ctx, e, p) ? e : null;
 }
 
 const nonGreenMembers = (ctx, p) => ctx.membersOf(p).reduce((n, c) => n + (c.def.quadrant === 'echo' ? 0 : ctx.memberWeight(c)), 0);

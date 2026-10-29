@@ -8,17 +8,17 @@ describe('Printed followers count as members', () => {
   it('counts printed people in total and colored counts, independently of bonus followers', () => {
     const s = table(Q, { members: [['red.twins', 'red.bigfamily', 'yellow.latebloomer']], res: [{ red: 11 }], bonus: [37] });
     expect(s.players[0].members).toHaveLength(3);
-    expect(memberCount(s, s.players[0])).toBe(7);
-    expect(countMembersOfColor(s, s.players[0], 'red')).toBe(5);
+    expect(memberCount(s, s.players[0])).toBe(8);
+    expect(countMembersOfColor(s, s.players[0], 'red')).toBe(6);
     expect(countMembersOfColor(s, s.players[0], 'yellow')).toBe(2);
-    expect(followers(s, s.players[0])).toBe(45);
+    expect(followers(s, s.players[0])).toBe(46);
     // Printed groups still count as members; the Red contest independently counts resources.
     expect(contextFor(s).quadrant('red').scoring.score(contextFor(s), s.players[0])).toBe(11);
   });
   it('uses printed member weight for a per-member action', () => {
     let s = table(Q, { round: 2, members: [['red.twins', 'red.bigfamily']] });
     s = take(s, 'gold.windfall');
-    expect(s.players[0].res.gold).toBe(5);
+    expect(s.players[0].res.gold).toBe(6);
   });
   it('counts copies using the larger effective printed value', () => {
     const s = table(['gold', 'red', 'echo', 'yellow'], { members: [['echo.doppel', 'red.bigfamily']] });

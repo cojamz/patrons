@@ -92,9 +92,9 @@ describe('Red members: bounded acquisition and body invariants', () => {
   it('Panel and Mob printed followers also count as members, including Mob itself in its bonus', () => {
     const s = table(Q, { members: [['red.panel', 'red.mob', 'red.twins', 'red.volunteer']] });
     const ctx = contextFor(s), mob = ctx.membersOf(s.players[0]).find(c => c.def.id === 'red.mob');
-    expect(memberCount(s, s.players[0])).toBe(11);
-    expect(followers(s, s.players[0])).toBe(12); // leader + printed bodies
-    expect(mob.def.onGameEnd(ctx, s.players[0], mob)).toBe(11);
+    expect(memberCount(s, s.players[0])).toBe(12);
+    expect(followers(s, s.players[0])).toBe(13); // leader + printed bodies
+    expect(mob.def.onGameEnd(ctx, s.players[0], mob)).toBe(12);
   });
 
   it('Panel save/load retains mode and exact swap targets without inherent action red', () => {
@@ -154,7 +154,7 @@ describe('Red members: bounded acquisition and body invariants', () => {
     expect(s.pending?.kind).not.toBe('choose');
     if (target !== 'red.panel') {
       s.queue = [{ t: 'round', r: 3 }]; s = resume(s);
-      expect(s.players[0].res[target === 'red.host' ? 'red' : 'green']).toBe(3);
+      expect(s.players[0].res[target === 'red.host' ? 'red' : 'green']).toBe(target === 'red.host' ? 4 : 3);
     }
   });
 

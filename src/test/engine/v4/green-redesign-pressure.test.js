@@ -196,7 +196,7 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     expect(s.players[0].bonus).toBe(2);
   });
 
-  it('recruiting Agents midway through Greatest Hits prevents later sibling copies', () => {
+  it('recruiting Agents midway through Greatest Hits doesn’t stop its owner’s later copies (Agents only stops rivals)', () => {
     let s = table(Q, { round: 3, left: 6, shop: ['red.bigfamily', 'echo.agents'], queue: turns(0, 0, 0, 0) });
     s = pass(move(take(s, 'red.take'), memberOption(s, 'red.bigfamily')));
     s = go(s, 'gold.rush');
@@ -204,9 +204,8 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     s = choose(take(s, 'echo.eternity'), 'red.take');
     expect(s.pending.kind).toBe('choose');
     s = move(saved(s), memberOption(s, 'echo.agents'));
-    expect(s.players[0].res.gold).toBe(before);
+    expect(s.players[0].res.gold).toBe(2 * before); // the Gold Rush copy still lands
     expect(s.players[0].members).toContain(uidIn(s, 'echo.agents', 0));
-    expect(s.pending?.kind).not.toBe('choose');
   });
 
   it('losing a printed member after Bait losses cannot take the total below zero', () => {
