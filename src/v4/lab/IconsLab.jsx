@@ -9,7 +9,7 @@ import { allQuadrantIds, quadrant } from '../../engine/v4/index.js';
 import { guestMembers } from '../../engine/v4/content/index.js';
 import { useId } from 'react';
 import { cardColor, cardGround } from '../game/Info.jsx';
-import { anyDotVars } from '../game/Glyphs.jsx';
+import { anyDotVars, MemberGlyph } from '../game/Glyphs.jsx';
 import { Rich } from '../game/Rich.jsx';
 import { CostShapes } from '../game/ShopCards.jsx';
 import { FollowerGlyph } from '../game/Glyphs.jsx';
@@ -49,18 +49,7 @@ function HoodMark({ color = null, title }) {
 // bust (Cory, Oct 29: "a red head and shoulders symbol for red member… a mix of the colors in the game (like the wildcard
 // token is) of the same symbol for any member"): one smooth bust; a color fills it, "any member" is split like the wild dot
 const BUST = 'M8 1.2a3.3 3.3 0 1 1 0 6.6a3.3 3.3 0 1 1 0-6.6ZM1.6 15.2C1.6 11.2 4.2 8.8 8 8.8S14.4 11.2 14.4 15.2Z';
-function BustMark({ color = null, title }) {
-  const id = `bust${useId().replace(/:/g, '')}`;
-  return <svg className="il-mark bust" viewBox="0 0 16 16" role="img" aria-label={title}><title>{title}</title>
-    {color ? <path d={BUST} fill={`var(--${color})`} /> : <>
-      <defs><clipPath id={id}><path d={BUST} /></clipPath></defs>
-      <g clipPath={`url(#${id})`}>
-        <path d="M8 8.5L-4 -4H20Z" fill="var(--any-top)" /><path d="M8 8.5L20 -4V20Z" fill="var(--any-right)" />
-        <path d="M8 8.5L20 20H-4Z" fill="var(--any-bottom)" /><path d="M8 8.5L-4 20V-4Z" fill="var(--any-left)" />
-      </g></>}
-    <path d={BUST} fill="none" stroke="rgba(20,14,10,.5)" strokeWidth="1" strokeLinejoin="round" />
-  </svg>;
-}
+const BustMark = ({ color = null, title }) => <span className="il-mark bust" title={title}><MemberGlyph r={color} decorative /></span>;
 const MARKS = { card: CardMark, hood: HoodMark, bust: BustMark };
 
 // ---------- one rule, drawn under a treatment ----------
@@ -110,16 +99,18 @@ function Rule({ text, opts }) {
 
 // ---------- the Header card (?lab=cards look H), rule text swapped for a treatment ----------
 const Art = ({ d, size = 96 }) => <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(d)} size={size} />;
+const colorOf = d => (d.quadrant && TABLE.quadrants.includes(d.quadrant) ? quadrant(d.quadrant).resource : null);
+const Corner = ({ d }) => <span className="cl-worth il-corner"><b className="num">{d.n}</b><MemberGlyph r={colorOf(d)} size={18} />{d.f !== d.n ? <><b className="num il-f">{d.f}</b><FollowerGlyph size={16} /></> : null}</span>;
 const Worth = ({ d }) => <span className="cl-worth"><b className="num">{d.f}</b><FollowerGlyph size={16} title={`worth ${d.f}`} /></span>;
 function Card({ d, opts }) {
   const text = ability(d);
   const M = opts.mark && MARKS[opts.mark];
   return <article className={`cl-card cl-x cl-h${opts.big ? ' il-big' : ''}`} style={{ '--c': cardColor(TABLE, d) }} data-ground={cardGround(TABLE, d)}>
-    <header className="x-head"><span className="x-cost num">{total(d)}</span><b className="x-name">{d.name}</b><span className="x-worth"><Worth d={d} /></span></header>
+    <header className="x-head"><span className="x-cost num">{total(d)}</span><b className="x-name">{d.name}</b><span className="x-worth">{opts.corner ? <Corner d={d} /> : <Worth d={d} />}</span></header>
     <div className="x-art"><Art d={d} /></div>
     <div className="x-box">{text ? <Rule text={text} opts={opts} /> : <span className="cl-none">Worth {d.f}.</span>}</div>
     <footer className="x-foot"><CostShapes parts={costParts(d, TABLE.resources)} />
-      {d.n > 1 && (M ? <span className="il-count" title={`counts as ${d.n} members`}><b className="rich-n">{d.n}</b><M title={`counts as ${d.n} members`} /></span> : <span className="cl-n">counts as {d.n}</span>)}
+      {d.n > 1 && !opts.corner && (M ? <span className="il-count" title={`counts as ${d.n} members`}><b className="rich-n">{d.n}</b><M title={`counts as ${d.n} members`} /></span> : <span className="cl-n">counts as {d.n}</span>)}
     </footer>
   </article>;
 }
@@ -131,6 +122,7 @@ const ROWS = [
   ['3', 'Member mark: a hood', 'The same, drawn as a hooded cult member, like the portraits.', { bold: true, mark: 'hood' }],
   ['4', 'Once per game', '"One Time Use" renamed to pair with "Once per round"; by-round amounts read "I +1 · II +2 · III +3" as on the wheel.', { bold: true, mark: 'card', once: 'Once per game', rounds: true }],
   ['5', 'Activate', 'Cory\'s "Activate", same marks.', { bold: true, mark: 'card', once: 'Activate', rounds: true }],
+  ['10', 'Bust in the corner', 'The corner shows how many members the card counts as, as busts in its color; that number is its followers too. Cards whose followers differ show both.', { bold: true, mark: 'bust', once: 'Once per game', rounds: true, big: true, corner: true }],
   ['9', 'Head and shoulders', 'A red member is a red bust; any member is the same bust split in the table\'s colors, like the wild token.', { bold: true, mark: 'bust', once: 'Once per game', rounds: true, big: true }],
   ['7', 'Member words in a tag', 'The words stay; "red member" sits in a tag of its color, so it reads at a glance.', { bold: true, mark: 'pill', once: 'Once per game', rounds: true }],
   ['8', 'Hood, bigger', 'The hooded figure at full text height, colored like its member.', { bold: true, mark: 'hood', once: 'Once per game', rounds: true, big: true }],
