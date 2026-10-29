@@ -10,7 +10,7 @@
 .lt-card.card .lt-hd .val b{font-weight:800}
 .lt-card.card .lt-hd .val .follower-mark{width:15px;height:15px;margin:0}
 .lt-card.card .lt-hd .nm{grid-area:name;display:block;height:auto;min-height:0;margin:0;padding:1px 2px 1px;white-space:normal;text-align:center;
-  font:700 15px/16px var(--serif);letter-spacing:0;text-transform:none;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.28);overflow-wrap:normal;hyphens:manual}
+  font:800 15px/16px var(--sans);letter-spacing:0;text-transform:none;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.28);overflow-wrap:normal;hyphens:manual}
 .lt-card.card .lt-hd .nm[data-long]{letter-spacing:-.03em}
 /* the pale colors: dark words on a pale bar with an edge */
 .lt-card.card:is([data-ground="white"],[data-ground="silver"],[data-ground="colorless"]) .lt-hd .nm{color:#2b2018;text-shadow:none}
@@ -32,7 +32,7 @@
 /* the full card (hover, tap, Details on the members page): the same bar, a picture field, the rule big, the price's
    colors at the foot */
 .card-face.mc .mc-hd{display:flex;align-items:center;gap:8px;padding:6px;margin:0;border-radius:6px 6px 0 0;background:var(--c)}
-.card-face.mc .mc-hd .mc-name{flex:1;min-width:0;font:700 18px/22px var(--serif);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.28)}
+.card-face.mc .mc-hd .mc-name{flex:1;min-width:0;font:800 18px/22px var(--sans);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.28)}
 .card-face.mc .mc-hd .mc-price{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#2b2018;color:#fbf6ea;font:800 21px/1 var(--sans);box-shadow:0 0 0 2px rgba(251,246,234,.9)}
 .card-face.mc .mc-hd .mc-worth{flex:none;display:inline-flex;align-items:center;gap:1px;height:28px;padding:0 9px;border-radius:14px;background:#fbf6ea;color:#2b2018;font:800 18px/1 var(--sans)}
 .card-face.mc .mc-hd .mc-worth .follower-mark{width:16px;height:16px}
@@ -48,3 +48,15 @@
 .card-face.mc[data-long] .mc-text{font-size:15px;line-height:20px}
 /* Details keeps the bar's name as it is (the old face padded it to clear a corner number) */
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-cards .lt-card.card .lt-hd .nm{margin:0;padding:1px 2px}
+/* A short card (the 1100px table's 110px cards, both views): the bar folds to price · name, and the worth drops to the
+   foot's right end, so the rule keeps its room */
+@media (max-width:1199px){
+  .app.game.lt .lt-shop-cards .lt-cards .lt-card.card .lt-hd{grid-template-columns:auto 1fr;grid-template-areas:"cost name";padding:2px 3px;min-height:24px}
+  .app.game.lt .lt-shop-cards .lt-cards .lt-card.card .lt-hd .lt-corner-cost{width:20px;height:20px;font-size:13px}
+  .app.game.lt .lt-shop-cards .lt-cards .lt-card.card .lt-hd .nm{font-size:12px;line-height:12px;padding:0}
+  .app.game.lt .lt-shop-cards .lt-cards .lt-card.card .lt-hd .val{position:absolute;right:4px;bottom:-2px;transform:translateY(100%);height:auto;padding:0;background:none;font-size:15px}
+  .app.game.lt .lt-shop-cards .lt-cards .lt-card.card .lt-hd{position:static}
+  .app.game.lt .lt-shop-cards .lt-cards .lt-card.card .lt-hd .val{top:auto;bottom:4px;transform:none}
+  .app.game.lt .lt-shop-cards .lt-cards .lt-card.card .ft{justify-content:flex-start;padding-right:30px}
+  .app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability[data-fit="tight"]{font-size:11px;line-height:12px;padding:1px 4px}
+}
