@@ -78,7 +78,8 @@ offered = collections.Counter(); bought = collections.Counter(); roundgot = coll
 for r in rows:
     S = r['seats']; bf = [p['f'] for p in bots(r)]
     for d in r['offered']: offered[d] += 1
-    for d in set(m for p in bots(r) for m in p['got']): bought[d] += 1
+    for d in set(m for p in bots(r) for m in p['got']):
+        if d in r['offered']: bought[d] += 1
     for p in bots(r):
         e = expected(S, p['mc'])
         for d, rd in p['got'].items(): roundgot[d][rd] += 1
@@ -180,5 +181,21 @@ print(f'  games with a player skipped 3+ times in one round: {len(chain)} ({pct(
 vict = [(p['win'], 1 / r['seats']) for r in rows for p in bots(r) if max(p['skipped']) >= 3]
 if vict: print(f'  those players win {pct(np.mean([a for a,_ in vict]))} vs fair {pct(np.mean([b for _,b in vict]))} (n={len(vict)})')
 out['skips'] = {'avg': float(np.mean(tot)), 'max': dict(mx), 'cause': dict(cause)}
+
+# --- contests: who placed last, and colors only one player held
+C = [(r, c) for r in rows for c in r.get('contests', [])]
+if C:
+    lastw = [(c['won'][c['last']] / max(sum(c['won']), 1), 1 / r['seats']) for r, c in C if c.get('last') is not None]
+    print(f'\nContests ({len(C)} round-ends): the round\'s last placer takes {pct(np.mean([a for a,_ in lastw]))} of the prize followers (fair {pct(np.mean([b for _,b in lastw]))})')
+    for rd in (1, 2, 3):
+        lw = [(c['won'][c['last']] / max(sum(c['won']), 1), 1 / r['seats']) for r, c in C if c.get('last') is not None and c['round'] == rd]
+        if lw: print(f'  round {rd}: last placer {pct(np.mean([a for a,_ in lw]))} (fair {pct(np.mean([b for _,b in lw]))}, n={len(lw)})')
+    mono = collections.defaultdict(lambda: [0, 0])
+    for r, c in C:
+        for col in c['res'][0]:
+            holders = sum(1 for x in c['res'] if x.get(col, 0) > 0)
+            m = mono[col]; m[0] += 1; m[1] += holders == 1
+    print('  a color held by only one player at the round end: ' + ', '.join(f'{k} {pct(v[1]/v[0])}' for k, v in sorted(mono.items(), key=lambda kv: -kv[1][1]/kv[1][0])))
+    out['contests'] = {'last': float(np.mean([a for a,_ in lastw])), 'mono': {k: v[1]/v[0] for k, v in mono.items()}}
 
 if jout: json.dump(out, open(jout, 'w'), indent=1, default=float)

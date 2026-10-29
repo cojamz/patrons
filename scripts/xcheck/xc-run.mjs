@@ -45,6 +45,7 @@ for (let g = first; g < first + count; g++) {
   const buyer = g % 5 === 0 ? (g + 1) % seats : -1;
   const pol = s.players.map((_, i) => (i === buyer ? 'buyer' : seatPolicy(g, i)));
   const offered = {}, got = s.players.map(() => ({}));
+  const contests = [];
   const cw = s.players.map(() => [0, 0, 0, 0]);
   const placements = [], skips = s.players.map(() => [0, 0, 0, 0]), skipBy = {};
   let lastSpace = null, open = null, logLen = s.log.length, logTotal = 0;
@@ -67,9 +68,12 @@ for (let g = first; g < first + count; g++) {
       open = { p: pl, round: s.round, space: a.name, color: s.quadrants[q], left: p.left, prev: a.echo ? lastSpace : undefined, f0: followers(s, p), r0: resSum(p) };
       lastSpace = a.name;
     }
-    const round = s.round, c0 = s.players.map(p => p.contest || 0);
+    const round = s.round, c0 = s.players.map(p => p.contest || 0), res0 = s.players.map(p => ({ ...p.res }));
     s = applyMove(s, m);
-    s.players.forEach((p, i) => { const d = (p.contest || 0) - c0[i]; if (d) cw[i][round] += d; });
+    const dc = s.players.map((p, i) => (p.contest || 0) - c0[i]);
+    dc.forEach((d, i) => { if (d) cw[i][round] += d; });
+    // a round's contests: everyone's holdings as they were scored, who placed last that round, and who won what
+    if (dc.some(Boolean)) contests.push({ round, res: res0, won: dc, last: [...placements, ...(open ? [open] : [])].filter(x => x.round === round).at(-1)?.p });
     // log lines added by this move (the log is capped at 300, so count from the tail)
     const L = s.log.length, fresh = L >= logLen ? s.log.slice(logLen) : s.log.slice(-1);
     logLen = L;
@@ -93,7 +97,7 @@ for (let g = first; g < first + count; g++) {
       art: p.artifact !== undefined ? s.cards[p.artifact].def : null,
       ledger: (s.ledger && s.ledger[p.id]) || {}, skipped: skips[i], cw: cw[i], contest: p.contest || 0,
     })),
-    placements, skipBy,
+    placements, skipBy, contests,
   };
   appendFileSync(out, JSON.stringify(row) + '\n');
 }
