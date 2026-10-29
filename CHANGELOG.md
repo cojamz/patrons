@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.856 — 2026-10-29
+
+- Every member scores its member count: Revelers scores 3, Dabblers, Con Men and Ensemble 2. Cards show the member mark and count at the top; the price circle is smaller.
+
 ## v0.9.855 — 2026-10-29
 
 - Front-runner costs 2 and Extra Hand 9. Agents: your actions can't be copied (you can still copy them). Crowd In gives +4 purple. Twins are now Triplets, worth 3 followers.
