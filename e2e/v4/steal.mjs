@@ -22,11 +22,7 @@ import { browserPath, launchBrowser } from './lib/browser.mjs';
 //       what the copy gives, and clicking it copies (your resources match the engine's).
 //  (s6) Bury: exactly the offered face-up members light in the shop; no duplicate
 //       card by the space (feedback #14); clicking a lit shop card sends it.
-<<<<<<< Updated upstream
 //  (s7) Shake Down: the rivals' seats light; a member there opens its card when pointed at, and a click picks the seat.
-=======
-//  (s7) Shake Down: the offered rivals' seats answer; clicking one picks it.
->>>>>>> Stashed changes
 // Starts from saved games stopped on each choice (e2e/v4/lib/steal-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
 import { chromium } from 'playwright';
@@ -339,7 +335,6 @@ try {
     if (rec && rec !== o.id) errors.push(`(t1) recorded ${rec}, clicked ${o.id}`);
     await ctx.close();
   }
-<<<<<<< Updated upstream
   // (s7) Shake Down: choose a rival, on their seat; a member on a lit seat still opens its card when pointed at
   //      (Cory, Oct 29: "can't hover over members in shake down"), and clicking it picks that seat
   {
@@ -363,19 +358,6 @@ try {
       const rec = await page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-1)[0]?.[1]; } catch { return null; } });
       if (rec && rec !== id) errors.push(`(s7) recorded ${rec}, clicked a member on ${id}`);
     }
-=======
-  // (s7) Shake Down: pick a rival by their lit seat (the rival picks which member is at stake since Cory's Oct 28 call)
-  {
-    const { ctx, page, save } = await open('shakedown', '.prompt.choice.seat-pick');
-    const seats = await page.$$eval('.lt > .lt-seat[data-pid] .cs-pick-seat:not(.off)', els => els.map(e => e.dataset.option).sort());
-    const want = save.state.pending.options.map(o => o.id).sort();
-    if (seats.join() !== want.join()) errors.push(`(s7) the seats answer ${seats.join(' ')}, the engine offers ${want.join(' ')}`);
-    await page.screenshot({ path: `${SHOTS}/s7-shakedown.png` });
-    const pid = save.state.pending.options[0].target.pid;
-    const sb = await (await page.$(`.lt-seat[data-pid="${pid}"]`)).boundingBox();
-    await page.mouse.click(sb.x + sb.width * 0.35, sb.y + sb.height * 0.7);
-    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s7) clicking the lit seat did nothing'));
->>>>>>> Stashed changes
     await ctx.close();
   }
 } catch (e) {
