@@ -221,6 +221,17 @@ function givenAway(state, me) {
 // enough that it's never taken while any other space is open.
 const UNDO_SWAP = 20;
 
+/** A swap or a member to take (the choices rateOnCopy reads), ranked best first; null for any other decision.
+ *  Hard looks ahead from the top few (thinker.js). */
+export function rankRivalChoice(state) {
+  const pend = state.pending;
+  if (pend?.kind !== 'choose' || pend.options.length < 2) return null;
+  const trades = pend.options.filter(o => o.kind === 'trade');
+  const opts = trades.length && pend.options.every(o => o.kind === 'trade' || o.kind === 'pass') ? trades
+    : pend.options.every(o => o.kind === 'member') ? pend.options : null;
+  return opts && opts.length > 1 ? rateOnCopy(state, pend, opts).sort((a, b) => b.v - a.v) : null;
+}
+
 function chooseSwap(state, pend) {
   return rateOnCopy(state, pend, pend.options).reduce((a, b) => (b.v > a.v ? b : a)).o;
 }

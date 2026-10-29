@@ -1,9 +1,9 @@
-// Hard bot: normal's judgment plus lookahead. For its few best placements and buys it plays the game forward
+// Hard bot: normal's judgment plus lookahead. For its few best placements, buys, swaps and members to take it plays the game forward
 // with normal bots to the end of the round (to the end of the game in round III) and keeps the option with the
 // best average result. Work is counted in simulated moves, not wall time, so a seed always gives the same move;
 // chooseBotMove also caps a move at 250ms of wall time for the UI (see opts.maxMs).
 import { applyMove, followers } from './core.js';
-import { chooseNormalMove, chooseGreedyMove, scoreOptions, buyShortcut } from './bots.js';
+import { chooseNormalMove, chooseGreedyMove, scoreOptions, buyShortcut, rankRivalChoice } from './bots.js';
 import { seededRandom } from './rng.js';
 
 // rollouts play normal, a little noisier, comparing fewer ways to pay
@@ -23,12 +23,14 @@ const margin = (state, id) =>
 export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
   if (!pend) return null;
-  if (!['place', 'buy'].includes(pend.kind)) return chooseNormalMove(state, rand);
   const me = pend.player;
+  // a swap or a member to take is looked ahead like a placement: what the rival does next is the point of most of them
+  const rival = ['place', 'buy'].includes(pend.kind) ? null : rankRivalChoice(state);
+  if (!rival && !['place', 'buy'].includes(pend.kind)) return chooseNormalMove(state, rand);
   // an activation or a Release normal would take: nothing to think about
   const short = pend.kind === 'buy' ? buyShortcut(state) : null;
   if (short) return { player: me, option: short.id };
-  const ranked = scoreOptions(state, rand);
+  const ranked = rival || scoreOptions(state, rand);
   if (!ranked.length) return chooseNormalMove(state, rand);
   if (ranked.length === 1) return { player: me, option: ranked[0].o.id };
   const { candidates = 3, budget = 100, full = false, maxMs = Infinity } = opts;
