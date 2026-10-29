@@ -36,3 +36,6 @@
 - A cheek highlight right under the eye reads as a bruise. Put it on the cheekbone, one pixel lower and outward.
 - Three pointed arms on a shaft read as a trident. Short, based, round arms.
 - Every handheld prop shows its hand; a prop at the ear with no hand reads as an antenna.
+- A 2-4-2 diamond mouth reads as a plus. Open mouths are ovals.
+- Pearls or trim the same value as the cloth behind vanish at 1x: put them on skin, alternating light and dark.
+- Highlights are stepped planes, never hard rectangles.
