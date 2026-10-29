@@ -33,7 +33,6 @@ import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { membersSave, HAND } from './lib/members-save.mjs';
 import { cardDef, memberCount } from '../../src/engine/v4/index.js';
-import { spendingPower } from '../../src/v4/game/memberUse.js';
 import { seedSave } from './lib/seed.mjs';
 import { HOVER_DELAY_MS } from '../../src/v4/game/hoverDelay.js';
 
@@ -406,9 +405,10 @@ try {
     const sc2 = await seatCard(1);
     if (!sc2) fail(`hovering P2's ${part} opened no seat card`, 'm13');
     else if (part === '.cs-foot') {
-      const spend = await page.evaluate(() => document.querySelector('[data-hover-layer][data-open="1"] [data-spend]')?.textContent || '');
-      const want = spendingPower(s0, s0.players[1]);
-      if (!new RegExp(`Holding ${want.held}(?!\\d).*could recruit about ${want.get}(?!\\d)`).test(spend.replace(/\s+/g, ' '))) fail(`P2's spending line reads "${spend}" (want holding ${want.held}, about ${want.get})`, 'm13');
+      // a rival's card says the resources they hold (Cory, Oct 29: it replaced "Holding N · could recruit about N")
+      const res = await page.evaluate(() => document.querySelector('[data-hover-layer][data-open="1"] [data-rival-num="res"] .num')?.textContent || '');
+      const want = s0.resources.reduce((t, r) => t + (s0.players[1].res[r] || 0), 0);
+      if (Number(res) !== want) fail(`P2's card says resources "${res}" (want ${want})`, 'm13');
     }
   }
   await away();

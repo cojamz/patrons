@@ -21,6 +21,7 @@ Broader rework, his to lead (Oct 28): design/notes/rework-list-2026-10-28.md, wo
 8. Weakest artifacts: Money Changer and Impressionist are weakest with every bot, and artifacts are free, so a price can't fix them (Impressionist stays, Cory Oct 29).
 9. Portraits as little scenes for every member, through critic rounds (running); two cards are both named Alchemist (gold.tinker, benders.freelancer).
 10. Printed copy: the project's long-term aim. Nothing started; card faces from the members page are the likely starting point.
+11. Rival members hover, more polish later (Cory, Oct 29: "in the backlog, i think we could improve this more in the future"). Shipped as mockup 13: cards in columns by the card's keyword, priciest first, heading with artifact, Round Start, Game End now, resources, members by color.
 
 ## Ours, open (no call needed)
 - Portraits: wider skin-tone variation across the scene set (Cory, Oct 29: "maybe need wider variations in skin tones but these are good for now"). Kit has 6 tones; add in-between tones and spread them.

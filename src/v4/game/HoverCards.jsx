@@ -14,8 +14,8 @@ import { SeatFigure } from './Glyphs.jsx';
 import { Rich } from './Rich.jsx';
 import { memberCopyTargets, ownCopyPlan, copiesAll, copyAllPlan } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
-import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
-import { seatMock, SeatMockBody, MOCK_WIDTH } from './SeatMocks.jsx';
+import { SeatMembers, FollowersCard } from './MemberUse.jsx';
+import { RivalCard, RIVAL_CARD_WIDTH } from './RivalCard.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
@@ -264,7 +264,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
       const hb = holder.getBoundingClientRect(), nb = r0;
       a = { left: hb.left, right: hb.right, width: hb.width, top: nb.top, bottom: nb.bottom, height: nb.height };
     }
-    const w = cardWidth(c.kind);
+    const w = cardWidth(c, me);
     const h = h0 || 160;
     const p = (holder && besideSeat({ ...a, top: a.top - 12 }, w, h)) || ((c.kind === 'seat' || c.kind === 'followers') && besideSeat({ ...a, top: a.top - 12 }, w, h)) || placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
     // the nub points at the middle of what the card explains (for a seat, the part pointed at), clear of the corners
@@ -332,7 +332,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
       data-live={body && live ? '1' : undefined}
       onPointerEnter={() => { if (!live) return; inside.current = true; hover.hold(); }}
       onPointerLeave={e => { inside.current = false; if (live && e.pointerType === 'mouse') hover.letGo(); }}
-      style={body && pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: -9999, top: 0, width: pos ? pos.width : drawn ? cardWidth(drawn.kind) : 280 }}>
+      style={body && pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: -9999, top: 0, width: pos ? pos.width : drawn ? cardWidth(drawn, me) : 280 }}>
       {body && pos ? <span className={`lt-nub ${pos.side}`} aria-hidden="true" style={pos.side === 'right' || pos.side === 'left' ? { top: pos.nub } : { left: pos.nub }} /> : null}
       {drawnBody && <div className="lt-note" data-hover-card={body ? c.kind : undefined} role={body ? 'tooltip' : undefined}>{drawnBody}</div>}
     </div>
@@ -340,7 +340,8 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   return typeof document !== 'undefined' ? createPortal(layer, document.body) : layer;
 }
 
-const cardWidth = kind => Math.min(kind === 'seat' ? (MOCK_WIDTH[seatMock()] || 360) : kind === 'followers' ? 260 : 280, innerWidth - 16);
+// a rival's seat card is the wide one (RivalCard.jsx): their whole cult in columns
+const cardWidth = (c, me) => Math.min(c.kind === 'seat' ? (c.pid !== me ? RIVAL_CARD_WIDTH : 360) : c.kind === 'followers' ? 260 : 280, innerWidth - 16);
 
 // where the pointer last was: a hover card whose target was re-drawn re-links only while the pointer is still on it
 let lastPt = null;
@@ -645,15 +646,15 @@ export function StandingsCard({ state, qid, meId = null }) {
 export function SeatCard({ state, pid, meId = null, optionFor = () => null, onPick = null }) {
   const p = state.players[pid];
   const lvl = p.kind === 'bot' ? BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid)) : null; // Easy / Normal / Hard
-  const mock = pid !== meId ? seatMock() : null;
-  if (mock && Number(mock) >= 11) {
+  // a rival's: everything competitive about their cult (Cory, Oct 29; RivalCard.jsx)
+  if (pid !== meId) {
     const who = <><SeatFigure id={pid} state={state} size={32} face /><h4>{p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal members or resources from {p.name} this round.</small> : null}</h4></>;
-    return <div className="lt-card-body seat-card sm-full" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}><SeatMockBody state={state} pid={pid} mock={mock} who={who} /></div>;
+    return <div className="lt-card-body seat-card rival" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}><RivalCard state={state} pid={pid} who={who} /></div>;
   }
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
-      <div className="t"><SeatFigure id={pid} state={state} size={32} face={pid !== meId} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal members or resources from {pid === meId ? 'you' : p.name} this round.</small> : null}{pid !== meId ? <SpendingLine state={state} pid={pid} /> : null}</h4></div>
-      {pid !== meId && seatMock() ? <SeatMockBody state={state} pid={pid} mock={seatMock()} /> : <SeatMembers state={state} pid={pid} me={meId} optionFor={pid === meId ? optionFor : undefined} onPick={pid === meId ? onPick : null} />}
+      <div className="t"><SeatFigure id={pid} state={state} size={32} face={pid !== meId} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal members or resources from {pid === meId ? 'you' : p.name} this round.</small> : null}</h4></div>
+      <SeatMembers state={state} pid={pid} me={meId} optionFor={pid === meId ? optionFor : undefined} onPick={pid === meId ? onPick : null} />
     </div>
   );
 }
