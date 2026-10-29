@@ -14,7 +14,6 @@ import { CUT } from '../../engine/v4/content/cull.js';
 import { ARTIFACTS, DEFAULT_RULES } from '../../engine/v4/core.js';
 import { MemberCard, RuleText, cardColor, cardGround } from '../game/Info.jsx';
 import { CostShapes } from '../game/ShopCards.jsx';
-import { kindOf } from '../game/cards.js';
 import { FollowerGlyph } from '../game/Glyphs.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
@@ -64,7 +63,7 @@ function Tile({ def, copies, onOver, onOut, onPin, pinned }) {
   const total = parts.reduce((t, c) => t + c.n, 0);
   const sphere = def.quadrant && TABLE.quadrants.includes(def.quadrant) ? quadrant(def.quadrant).resource : 'colorless';
   return <button type="button" className={`card lt-card paper mp-tile${pinned ? ' pinned' : ''}`} data-member={def.id}
-    style={{ '--q': cardColor(TABLE, def) }} data-ground={cardGround(TABLE, def)} data-kind={kindOf(def).kind}
+    style={{ '--q': cardColor(TABLE, def) }} data-ground={cardGround(TABLE, def)}
     aria-label={`${def.name}, worth ${def.f}, costs ${total}`} aria-pressed={pinned}
     onPointerEnter={e => onOver(def, e.currentTarget)} onPointerLeave={onOut} onFocus={e => onOver(def, e.currentTarget)} onBlur={onOut}
     onClick={e => onPin(def, e.currentTarget)}>
@@ -73,7 +72,6 @@ function Tile({ def, copies, onOver, onOut, onPin, pinned }) {
       {def.from > 1 && <span className="lt-round-tag" title="Works from round II on">II+</span>}
       {copies > 1 && <span className="mp-copies" title={`${copies} copies in the deck`}>×{copies}</span>}
     </span>
-    {kindOf(def).word && <span className="lt-kind" data-kind-word="">{kindOf(def).word}</span>}
     <span className="nm">{def.name}</span>
     <span className="ft"><CostShapes parts={parts} />
       <span className="val" title={`Worth ${def.f} follower${def.f === 1 ? '' : 's'}`}><b className="num">{def.f}</b><FollowerGlyph size={11} title={`worth ${def.f}`} /></span>

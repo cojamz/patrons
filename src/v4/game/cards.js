@@ -26,22 +26,6 @@ export function timingOf(def) {
   return 'Always';
 }
 
-// The card's type at a glance (Cory, Oct 28: "the bottom halves or the borders of the cards styled… based on the type of
-// card"): one kind per family of timings, and the word the face prints for it. A member you use is "use" whatever its timing.
-const KINDS = {
-  'On recruit': 'recruit', 'On recruit + at round start': 'both', 'At round start': 'round', 'Round end': 'round',
-  'Game end': 'end', Whenever: 'always', Always: 'always', While: 'always', 'Once a round': 'always', 'Once a game': 'always',
-};
-const KIND_WORDS = { 'On recruit': 'On Recruit', 'On recruit + at round start': 'Recruit + Round', 'At round start': 'Round Start', 'Round end': 'Round End', 'Game end': 'Game End', Whenever: 'Whenever', Always: 'Always', While: 'Always', 'Once a round': 'Once a Round', 'Once a game': 'Once a Game' };
-// prototype: ?cardstyle=a|b|c picks a look to compare (Cory's call pending)
-if (typeof document !== 'undefined') document.documentElement.dataset.cardstyle = (location.search.match(/cardstyle=(\w)/) || [0, 'a'])[1];
-/** { kind: 'recruit'|'both'|'round'|'end'|'use'|'always'|'plain', word } for a member def. */
-export function kindOf(def) {
-  const t = timingOf(def);
-  if (def.activate) return { kind: 'use', word: /round/i.test(t) ? 'Once a Round' : 'Once a Game' };
-  return KINDS[t] ? { kind: KINDS[t], word: KIND_WORDS[t] } : { kind: 'plain', word: '' };
-}
-
 /**
  * What recruiting uid costs player p now: { spend, leaves, short } (short when unaffordable: what's missing, by the
  * engine's one price rule, discounts and Penny Pincher included: { color, colorN, any, total, text: "4 green" }).

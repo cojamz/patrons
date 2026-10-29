@@ -22,8 +22,6 @@ import { MO } from '../motion.js';
 import { withRace } from './race.js';
 import { memberTimingWords } from './memberTiming.js';
 import { poolNote } from './poolNote.js';
-import { kindOf } from './cards.js';
-import './card-kind.css';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -293,7 +291,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
   // a discount on you (the shop face shows the price, the list price struck beside it): its reason
   const paid = where === 'In the shop' && me != null && state.players[me] ? paidParts(state, state.players[me], uid, d) : null;
   return (
-    <div className="card-face mc" style={{ '--c': cardColor(state, d) }} data-card={d.id} data-kind={kindOf(copied || d).kind}>
+    <div className="card-face mc" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
       <div className="mc-head">
         <span className="mc-art" aria-hidden="true"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} /></span>
         <span className="mc-id">
