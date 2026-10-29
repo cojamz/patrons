@@ -1,176 +1,322 @@
-// Mockups of a rival's seat card (Cory, Oct 29: "the hover over to understand what other players members do needs to
-// be better organized… way easier to digest at a glance… try like 5 or 6 different mocks"). Shown only with
-// ?seatmock=A…F in the URL; the game's own card is untouched until he picks one. Each reads the same rows as the live
-// card (memberRows) so the picked one ports as is.
+// Mockups of a rival's seat card. Cory, Oct 29: "the hover over to understand what other players members do needs to
+// be better organized… way easier to digest at a glance"; round 2: "better distinct groupings based on type of card,
+// and cost… this hover over can take up a bit more space if needed, its an important one… a better one-stop shop for
+// all the competitive info about another players members… do 10 mocks this time, wider variety, elegant design".
+// Shown only with ?seatmock=1…10 in the URL; the game's own card is untouched until he picks one. Everything is read
+// off the engine (memberRows, roundStartIncome, contestTable, the end-game projection, card.made).
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
-import { quadrant, cardDef } from '../../engine/v4/index.js';
-import { cardGains } from '../format.js';
+import { quadrant, cardDef, contestTable } from '../../engine/v4/index.js';
+import { cardGains, projectedEndGame } from '../format.js';
 import { memberTimingWords } from './memberTiming.js';
 import { onTable } from './Info.jsx';
 import { Rich } from './Rich.jsx';
 import { ArtifactTile } from './ArtifactDraft.jsx';
-import { memberRows } from './memberUse.js';
+import { memberRows, spendingPower } from './memberUse.js';
+import { incomeOf } from './build.js';
 import './seat-mocks.css';
 
+export const MOCK_WIDTH = { 1: 480, 2: 480, 3: 900, 4: 520, 5: 520, 6: 780, 7: 760, 8: 760, 9: 900, 10: 560 };
 export const seatMock = () => {
-  try { const m = new URLSearchParams(window.location.search).get('seatmock'); return m && /^[A-F]$/.test(m) ? m : null; } catch { return null; }
+  try { const m = new URLSearchParams(window.location.search).get('seatmock'); return m && MOCK_WIDTH[m] ? m : null; } catch { return null; }
 };
 
+// ---------- the facts ----------
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
-const GROUP = { artifact: 'Artifact', use: 'Can use', income: 'Every round start', reacts: 'Whenever', always: 'Always', end: 'At game end', joined: 'When recruited' };
-const ORDER = ['artifact', 'use', 'income', 'reacts', 'always', 'end', 'joined'];
-// the ability without its timing words, when the group heading already says it
-const bare = t => String(t || '').replace(/^(Round Start|On Recruit|Game end|Whenever[^:]*|Once (a|per) (round|game)|Use)\s*:\s*/i, '');
-const made = (state, row) => {
-  const m = {};
-  for (const u of row.uids) for (const [k, n] of Object.entries((state.cards[u] && state.cards[u].made) || {})) m[k] = (m[k] || 0) + n;
-  const parts = [...state.resources.filter(r => m[r] > 0).map(r => `+${m[r]} ${r}`), ...(m.followers > 0 ? [`+${m.followers} follower${m.followers === 1 ? '' : 's'}`] : [])];
-  return parts.join(' ');
-};
 const artQ = (state, uid) => Object.keys(state.artifacts || {}).find(q => state.artifacts[q] === uid) || null;
-const Pic = ({ state, row, size = 24 }) => row.kind === 'artifact'
-  ? <ArtifactTile q={artQ(state, row.uid)} res={artQ(state, row.uid) ? quadrant(artQ(state, row.uid)).resource : 'colorless'} size={size} />
-  : <Sprite id={[row.def.id, spriteId(row.name)]} kind="member" sphere={sphereOf(state, row.def)} size={size} />;
-const color = (state, row) => { const q = row.kind === 'artifact' ? artQ(state, row.uid) : null; return q ? `var(--q-${quadrant(q).resource}, var(--${q}))` : `var(--q-${sphereOf(state, row.def)}, var(--pl-ink-3))`; };
-const Name = ({ row }) => <b className="sm-name">{row.name}{row.n > 1 ? <span className="num"> ×{row.n}</span> : null}</b>;
-const State = ({ row }) => (row.kind === 'use' ? <span className={`sm-state${row.loaded ? ' live' : ''}`}>{row.loaded ? 'not used yet' : 'used'}</span> : row.used ? <span className="sm-state">used this round</span> : null);
 
-function split(state, pid) {
-  const rows = memberRows(state, pid, null);
+// the card's own keywords, in the order a turn meets them
+const TYPES = [
+  ['artifact', 'Artifact'], ['once-game', 'Once per Game'], ['once-round', 'Once per Round'], ['round', 'Round Start'],
+  ['whenever', 'Whenever'], ['always', 'Always'], ['end', 'Game End'], ['recruit', 'On Recruit'], ['plain', 'No ability'],
+];
+const LABEL = Object.fromEntries(TYPES);
+const typeOf = r => (r.kind === 'artifact' ? 'artifact' : r.kind === 'use' ? (r.def.activate === 'round' ? 'once-round' : 'once-game')
+  : r.kind === 'income' ? 'round' : r.kind === 'reacts' ? 'whenever' : r.kind === 'end' ? 'end' : r.kind === 'joined' ? 'recruit'
+    : r.kind === 'worth' ? 'plain' : 'always');
+// the ability without the keyword its group already says ("Once per Round: swap…" under Once per Round)
+const bare = (t, type) => {
+  const s = String(t || '').trim();
+  const m = s.match(/^([^:]{2,40}):\s*/);
+  return m && LABEL[type] && m[1].toLowerCase() === LABEL[type].toLowerCase() ? s.slice(m[0].length) : s;
+};
+const price = r => (r.kind === 'artifact' ? -1 : (r.def.s || 0) + (r.def.w || 0));
+// it can reach you: it names rivals, steals or takes, or hits everyone
+const hitsYou = r => /rival|steal|\btake|from (each|another|a) player|everyone|each player|all players/i.test(r.text || '');
+const sumText = (state, m) => [...state.resources.filter(c => m[c] > 0).map(c => `+${m[c]} ${c}`), ...(m.followers > 0 ? [`+${m.followers} follower${m.followers === 1 ? '' : 's'}`] : [])].join(' ');
+const madeOf = (state, r) => {
+  const m = {};
+  for (const u of r.uids) for (const [k, n] of Object.entries((state.cards[u] && state.cards[u].made) || {})) m[k] = (m[k] || 0) + n;
+  return sumText(state, m);
+};
+
+function intel(state, pid) {
   const p = state.players[pid];
-  const art = p.artifact != null ? (() => { const d = cardDef(state, p.artifact); return { key: 'artifact', uids: [p.artifact], uid: p.artifact, def: d, name: d.name, n: 1, text: memberTimingWords(d.text || ''), kind: 'artifact' }; })() : null;
-  const plain = rows.filter(r => r.kind === 'worth');
-  const able = [...(art ? [art] : []), ...rows.filter(r => r.kind !== 'worth')];
-  const groups = ORDER.map(k => [k, able.filter(r => r.kind === k)]).filter(([, rs]) => rs.length);
-  return { rows, plain, able, groups };
+  const rows = memberRows(state, pid, null).map(r => ({ ...r, type: typeOf(r) }));
+  if (p.artifact != null) {
+    const d = cardDef(state, p.artifact);
+    rows.unshift({ key: 'artifact', uids: [p.artifact], uid: p.artifact, def: d, name: d.name, n: 1, text: memberTimingWords(d.text || ''), kind: 'artifact', type: 'artifact' });
+  }
+  rows.sort((a, b) => price(b) - price(a) || a.name.localeCompare(b.name));
+  for (const r of rows) {
+    r.made = madeOf(state, r);
+    r.end = r.kind === 'end' ? cardGains(state, r.uid).end : null;
+    r.threat = (r.type === 'once-game' || r.type === 'once-round') ? r.loaded && hitsYou(r) : (r.type === 'whenever' || r.type === 'always') && hitsYou(r);
+  }
+  const groups = TYPES.map(([t, label]) => ({ t, label, rows: rows.filter(r => r.type === t), n: rows.filter(r => r.type === t).reduce((s, r) => s + r.n, 0) })).filter(g => g.rows.length);
+  const inc = incomeOf(state, pid);
+  const income = inc ? sumText(state, { ...inc.res, followers: inc.followers }) : '';
+  let endNow = 0;
+  try { endNow = (projectedEndGame(state)[pid] || { total: 0 }).total; } catch { /* none */ }
+  const made = {};
+  for (const r of rows) for (const u of r.uids) for (const [k, n] of Object.entries((state.cards[u] && state.cards[u].made) || {})) made[k] = (made[k] || 0) + n;
+  let rims = [];
+  try {
+    rims = contestTable(state).map(c => {
+      const mine = (c.rows.find(x => x.player === pid) || { count: 0 }).count;
+      const best = Math.max(0, ...c.rows.filter(x => x.player !== pid).map(x => x.count));
+      const lead = c.winners.includes(pid);
+      return { qid: c.qid, label: c.label, res: quadrant(c.qid).resource, mine, best, lead, tie: lead && c.winners.length > 1, prize: c.prize };
+    });
+  } catch { /* unread */ }
+  let spend = null;
+  try { spend = spendingPower(state, p); } catch { /* none */ }
+  const members = rows.filter(r => r.kind !== 'artifact').reduce((s, r) => s + r.n, 0);
+  return { p, rows, groups, income, endNow, gained: sumText(state, made), rims, spend, members, uses: rows.filter(r => r.kind === 'use' && r.loaded), threats: rows.filter(r => r.threat) };
 }
-// the members with no ability: their pictures in a row, and what they're worth together
-function Plain({ state, plain, label = 'No ability' }) {
-  if (!plain.length) return null;
-  const n = plain.reduce((s, r) => s + r.n, 0);
+
+// ---------- pieces ----------
+const Pic = ({ state, row, size = 24 }) => (row.kind === 'artifact'
+  ? <ArtifactTile q={artQ(state, row.uid)} res={artQ(state, row.uid) ? quadrant(artQ(state, row.uid)).resource : 'colorless'} size={size} />
+  : <Sprite id={[row.def.id, spriteId(row.name)]} kind="member" sphere={sphereOf(state, row.def)} size={size} />);
+const tint = (state, r) => { const q = r.kind === 'artifact' ? artQ(state, r.uid) : null; return q ? `var(--q-${quadrant(q).resource}, var(--${q}))` : `var(--q-${sphereOf(state, r.def)}, var(--pl-ink-3))`; };
+const Disc = ({ r }) => (r.kind === 'artifact' ? <span className="sm-disc none" aria-hidden="true" /> : <span className="sm-disc num" title={`Costs ${price(r)}`}>{price(r)}</span>);
+const Name = ({ r }) => <b className="sm-name">{r.name}{r.n > 1 ? <span className="num"> ×{r.n}</span> : null}</b>;
+const State = ({ r }) => (r.kind === 'use' ? <span className={`sm-state${r.loaded ? ' live' : ''}`}>{r.loaded ? 'not used yet' : 'used'}</span> : r.used ? <span className="sm-state">used this round</span> : null);
+const Gain = ({ r, words = true }) => (r.made ? <span className="sm-gain"><Rich text={r.made} />{words ? <small> so far</small> : null}</span>
+  : r.end != null ? <span className="sm-gain"><Rich text={`+${r.end} followers`} />{words ? <small> at game end</small> : null}</span> : null);
+const Text = ({ r }) => (r.type === 'plain' ? null : <span className="sm-text"><Rich text={bare(r.text, r.type)} /></span>);
+const Chip = ({ state, r }) => <span className="sm-chip" title={r.text}><Disc r={r} /><Pic state={state} row={r} size={20} /><Name r={r} /></span>;
+const Kw = ({ t }) => <span className={`sm-kw t-${t}`}>{LABEL[t]}</span>;
+
+function Line({ state, r, kw = false, gain = true }) {
   return (
-    <div className="sm-plain">
-      <span className="sm-k">{label}</span>
-      <span className="sm-faces">{plain.map(r => <span key={r.key} className="sm-face" title={`${r.name}${r.n > 1 ? ` ×${r.n}` : ''}: ${r.text}`}><Pic state={state} row={r} size={20} />{r.n > 1 ? <i className="num">×{r.n}</i> : null}</span>)}</span>
-      <span className="sm-plain-n">{n} member{n === 1 ? '' : 's'}</span>
+    <div className={`sm-line${r.threat ? ' threat' : ''}${r.kind === 'use' && !r.loaded ? ' spent' : ''}`} style={{ '--mc': tint(state, r) }}>
+      <Disc r={r} />
+      <Pic state={state} row={r} />
+      <span className="sm-what"><span className="sm-top"><Name r={r} />{kw ? <Kw t={r.type} /> : null}<State r={r} /></span><Text r={r} /></span>
+      {gain ? <Gain r={r} /> : <span />}
     </div>
   );
 }
-
-// A: grouped under when it happens; one line each, no prices; plain members folded into a row of faces
-function MockA({ state, pid }) {
-  const { groups, plain } = split(state, pid);
+function Panel({ state, g, gain = true }) {
   return (
-    <div className="sm sm-a">
-      {groups.map(([k, rs]) => (
-        <section key={k}><h5>{GROUP[k]}</h5>
-          {rs.map(r => <div key={r.key} className="sm-row"><Pic state={state} row={r} /><span><Name row={r} /> <Rich text={bare(r.text)} /> <State row={r} /></span></div>)}
-        </section>
+    <section className={`sm-panel t-${g.t}`}>
+      <h5><span>{g.label}</span><span className="sm-count num">{g.n}</span></h5>
+      {g.t === 'plain'
+        ? <div className="sm-chips">{g.rows.map(r => <Chip key={r.key} state={state} r={r} />)}</div>
+        : g.rows.map(r => <Line key={r.key} state={state} r={r} gain={gain} />)}
+    </section>
+  );
+}
+// the four numbers a rival's members add up to
+function Stats({ state, I, vertical = false }) {
+  const cells = [
+    ['Next round start', I.income ? <Rich text={I.income} /> : <span className="sm-nil">nothing</span>],
+    ['Game End if it ended now', I.endNow ? <Rich text={`+${I.endNow} followers`} /> : <span className="sm-nil">nothing</span>],
+    ['Uses still in hand', I.uses.length ? <span className="num">{I.uses.length}</span> : <span className="sm-nil">none</span>],
+    ['Members gained this game', I.gained ? <Rich text={I.gained} /> : <span className="sm-nil">nothing yet</span>],
+  ];
+  return <div className={`sm-stats${vertical ? ' v' : ''}`}>{cells.map(([k, v]) => <div key={k} className="sm-stat"><span className="sm-k">{k}</span><span className="sm-v">{v}</span></div>)}</div>;
+}
+function Rims({ I, compact = false }) {
+  if (!I.rims.length) return null;
+  return (
+    <div className={`sm-rims${compact ? ' compact' : ''}`}>
+      {I.rims.map(r => (
+        <div key={r.qid} className={`sm-rim${r.lead ? ' lead' : ''}`} style={{ '--rc': `var(--${r.res})` }}>
+          <span className="sm-rim-l">{r.label}</span>
+          <span className="sm-rim-v num">{r.mine}</span>
+          <span className="sm-rim-s">{r.tie ? 'tied for the lead' : r.lead ? `leads by ${r.mine - r.best}` : r.best ? `${r.best - r.mine} behind` : '—'}</span>
+        </div>
       ))}
-      <Plain state={state} plain={plain} />
     </div>
   );
 }
-
-// B: a grid of tiles, two across: picture, name, the ability small; plain members as faces under it
-function MockB({ state, pid }) {
-  const { able, plain } = split(state, pid);
+function Watch({ state, I }) {
+  if (!I.threats.length) return <p className="sm-calm">Nothing here can reach you right now.</p>;
   return (
-    <div className="sm sm-b">
-      <div className="sm-grid">
-        {able.map(r => (
-          <div key={r.key} className={`sm-tile${r.kind === 'use' && !r.loaded ? ' dim' : ''}`} style={{ '--mc': color(state, r) }}>
-            <div className="sm-tile-h"><Pic state={state} row={r} size={32} /><Name row={r} /></div>
-            <div className="sm-tile-t"><Rich text={r.text} /></div>
-          </div>
-        ))}
-      </div>
-      <Plain state={state} plain={plain} />
-    </div>
+    <section className="sm-watch">
+      <h5><span>Can reach you</span><span className="sm-count num">{I.threats.length}</span></h5>
+      {I.threats.map(r => <Line key={r.key} state={state} r={r} kw gain={false} />)}
+    </section>
   );
 }
 
-// C: words only, dense: name and ability on one line, grouped by when; no pictures at all
-function MockC({ state, pid }) {
-  const { groups, plain } = split(state, pid);
-  return (
-    <div className="sm sm-c">
-      {groups.map(([k, rs]) => (
-        <section key={k}><h5>{GROUP[k]}</h5>
-          <ul>{rs.map(r => <li key={r.key} style={{ '--mc': color(state, r) }}><Name row={r} /><span className="sm-dash"> </span><Rich text={bare(r.text)} /> <State row={r} /></li>)}</ul>
-        </section>
-      ))}
-      {plain.length ? <p className="sm-c-plain"><span className="sm-k">No ability</span> {plain.map(r => `${r.name}${r.n > 1 ? ` ×${r.n}` : ''}`).join(', ')}</p> : null}
-    </div>
-  );
+// ---------- the ten ----------
+// 1 Dossier: the four numbers up top, then one panel per card type, priciest first
+function M1({ state, I }) {
+  return <div className="sm sm-1"><Stats state={state} I={I} />{I.groups.map(g => <Panel key={g.t} state={state} g={g} />)}</div>;
 }
-
-// D: the cult in one line on top (members by color, what its members have gained), then only the abilities
-function MockD({ state, pid }) {
-  const { able, plain, rows } = split(state, pid);
-  const byColor = {};
-  for (const r of rows) { const c = sphereOf(state, r.def); byColor[c] = (byColor[c] || 0) + r.n; }
-  const colors = Object.entries(byColor).filter(([c]) => c !== 'colorless').sort((a, b) => b[1] - a[1]);
-  const total = {};
-  for (const r of [...able, ...plain]) for (const u of r.uids) for (const [k, n] of Object.entries((state.cards[u] && state.cards[u].made) || {})) total[k] = (total[k] || 0) + n;
-  const got = [...state.resources.filter(r => total[r] > 0).map(r => `+${total[r]} ${r}`), ...(total.followers > 0 ? [`+${total.followers} followers`] : [])].join(' ');
+// 2 Threat first: what can reach you, then their engine, then what scores, then the rest
+function M2({ state, I }) {
+  const shelves = [
+    ['Their engine', ['artifact', 'round', 'whenever', 'once-game', 'once-round']],
+    ['How they score', ['end', 'always']],
+    ['Done or plain', ['recruit', 'plain']],
+  ];
   return (
-    <div className="sm sm-d">
-      <div className="sm-sum">
-        <span><Rich text={colors.map(([c, n]) => `${n} ${c} member${n === 1 ? '' : 's'}`).join(' ')} /></span>
-        {got ? <span className="sm-got"><span className="sm-k">Members gained</span> <Rich text={got} /></span> : null}
-      </div>
-      {able.map(r => <div key={r.key} className="sm-row"><Pic state={state} row={r} /><span><Name row={r} /> <State row={r} /><br /><Rich text={r.text} /></span></div>)}
-      {plain.length ? <p className="sm-quiet">and {plain.reduce((s, r) => s + r.n, 0)} with no ability</p> : null}
-    </div>
-  );
-}
-
-// E: small cards in the member's color, three across, the ability on the card; plain members as faces
-function MockE({ state, pid }) {
-  const { able, plain } = split(state, pid);
-  return (
-    <div className="sm sm-e">
-      <div className="sm-cards">
-        {able.map(r => (
-          <div key={r.key} className={`sm-card${r.kind === 'use' && !r.loaded ? ' dim' : ''}`} style={{ '--mc': color(state, r) }}>
-            <div className="sm-card-bar">{r.name}{r.n > 1 ? ` ×${r.n}` : ''}</div>
-            <div className="sm-card-pic"><Pic state={state} row={r} size={32} /></div>
-            <div className="sm-card-t"><Rich text={r.text} /></div>
-          </div>
-        ))}
-      </div>
-      <Plain state={state} plain={plain} />
-    </div>
-  );
-}
-
-// F: what's been working, first: each ability with what it has gained this game, biggest earners on top
-function MockF({ state, pid }) {
-  const { able, plain } = split(state, pid);
-  const worth = r => { let s = 0; for (const u of r.uids) for (const n of Object.values((state.cards[u] && state.cards[u].made) || {})) s += n; return s; };
-  const sorted = [...able].sort((a, b) => worth(b) - worth(a));
-  return (
-    <div className="sm sm-f">
-      {sorted.map(r => {
-        const m = made(state, r);
-        const end = r.kind === 'end' ? cardGains(state, r.uid).end : null;
-        return (
-          <div key={r.key} className="sm-row f">
-            <Pic state={state} row={r} />
-            <span><Name row={r} /> <State row={r} /><br /><Rich text={r.text} /></span>
-            <span className={`sm-made${m ? '' : ' none'}`}>{m ? <><Rich text={m} /><small>so far</small></> : end != null ? <><Rich text={`+${end} followers`} /><small>at game end</small></> : <small>nothing yet</small>}</span>
-          </div>
-        );
+    <div className="sm sm-2">
+      <Watch state={state} I={I} />
+      {shelves.map(([label, ts]) => {
+        const rs = I.rows.filter(r => ts.includes(r.type) && !r.threat);
+        if (!rs.length) return null;
+        return <section key={label} className="sm-panel"><h5><span>{label}</span><span className="sm-count num">{rs.reduce((s, r) => s + r.n, 0)}</span></h5>{rs.map(r => <Line key={r.key} state={state} r={r} kw />)}</section>;
       })}
-      <Plain state={state} plain={plain} />
+    </div>
+  );
+}
+// 3 Columns: one column per kind of card, side by side, wide and short
+function M3({ state, I }) {
+  const cols = [['Uses', ['artifact', 'once-game', 'once-round']], ['Every round', ['round', 'whenever']], ['Standing and scoring', ['always', 'end']], ['Done or plain', ['recruit', 'plain']]];
+  return (
+    <div className="sm sm-3">
+      <Stats state={state} I={I} />
+      <div className="sm-cols">
+        {cols.map(([label, ts]) => (
+          <div key={label} className="sm-col">
+            <h5><span>{label}</span></h5>
+            {I.groups.filter(g => ts.includes(g.t)).map(g => (
+              <div key={g.t} className="sm-sub"><span className="sm-subh">{g.label}</span>
+                {g.rows.map(r => <div key={r.key} className={`sm-card3${r.threat ? ' threat' : ''}`} style={{ '--mc': tint(state, r) }}><span className="sm-top"><Disc r={r} /><Pic state={state} row={r} size={20} /><Name r={r} /></span><Text r={r} /><span className="sm-foot"><State r={r} /><Gain r={r} /></span></div>)}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+// 4 Cost ladder: members on rungs by price, the card's keyword beside each, so the expensive core reads first
+function M4({ state, I }) {
+  const prices = [...new Set(I.rows.map(price))].sort((a, b) => b - a);
+  return (
+    <div className="sm sm-4">
+      <Stats state={state} I={I} />
+      <div className="sm-ladder">
+        {prices.map(c => (
+          <div key={c} className="sm-rung">
+            <span className="sm-rung-c">{c < 0 ? <span className="sm-k">Artifact</span> : <span className="sm-disc num big">{c}</span>}</span>
+            <div className="sm-rung-m">{I.rows.filter(r => price(r) === c).map(r => <div key={r.key} className={`sm-rl${r.threat ? ' threat' : ''}`}><span className="sm-top"><Pic state={state} row={r} size={20} /><Name r={r} /><Kw t={r.type} /><State r={r} /><Gain r={r} words={false} /></span><Text r={r} /></div>)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+// 5 The race: where they stand on each rim, then the members that matter for it, grouped by type
+function M5({ state, I }) {
+  return <div className="sm sm-5"><Rims I={I} />{I.groups.map(g => <Panel key={g.t} state={state} g={g} />)}</div>;
+}
+// 6 Ledger: one aligned row per member with columns, a header row per type, totals at the foot
+function M6({ state, I }) {
+  return (
+    <div className="sm sm-6">
+      <table>
+        <thead><tr><th className="c">Cost</th><th>Member</th><th>Does</th><th className="r">Gained</th></tr></thead>
+        {I.groups.map(g => (
+          <tbody key={g.t}>
+            <tr className="sm-trh"><th colSpan={4}>{g.label} <span className="num">{g.n}</span></th></tr>
+            {g.rows.map(r => (
+              <tr key={r.key} className={r.threat ? 'threat' : r.kind === 'use' && !r.loaded ? 'spent' : ''}>
+                <td className="c"><Disc r={r} /></td>
+                <td><span className="sm-top"><Pic state={state} row={r} size={20} /><Name r={r} /></span></td>
+                <td>{g.t === 'plain' ? <span className="sm-nil">nothing</span> : <><Rich text={bare(r.text, r.type)} /> <State r={r} /></>}</td>
+                <td className="r"><Gain r={r} words={false} /></td>
+              </tr>
+            ))}
+          </tbody>
+        ))}
+        <tfoot><tr><td colSpan={2}>Next round start <Rich text={I.income || 'nothing'} /></td><td>Game End now <Rich text={I.endNow ? `+${I.endNow} followers` : 'nothing'} /></td><td className="r"><Rich text={I.gained || ''} /></td></tr></tfoot>
+      </table>
+    </div>
+  );
+}
+// 7 Spread: a summary page on the left (numbers, rims, colors), the members by type on the right
+function M7({ state, I }) {
+  return (
+    <div className="sm sm-7">
+      <div className="sm-left"><Stats state={state} I={I} vertical /><Rims I={I} compact /></div>
+      <div className="sm-right">{I.groups.map(g => <Panel key={g.t} state={state} g={g} gain={false} />)}</div>
+    </div>
+  );
+}
+// 8 Shelves: small card faces on a shelf per type, priciest left; a use still in hand is lit, a spent one faded
+function M8({ state, I }) {
+  return (
+    <div className="sm sm-8">
+      {I.groups.map(g => (
+        <section key={g.t} className="sm-shelf">
+          <h5><span>{g.label}</span><span className="sm-count num">{g.n}</span></h5>
+          <div className="sm-faces8">
+            {g.rows.map(r => (
+              <div key={r.key} className={`sm-face8${r.kind === 'use' ? (r.loaded ? ' loaded' : ' spent') : ''}${r.threat ? ' threat' : ''}`} style={{ '--mc': tint(state, r) }}>
+                <span className="sm-f8-bar"><Disc r={r} /><span className="sm-f8-n">{r.name}{r.n > 1 ? ` ×${r.n}` : ''}</span></span>
+                <span className="sm-f8-pic"><Pic state={state} row={r} size={32} /></span>
+                {g.t !== 'plain' ? <span className="sm-f8-t"><Rich text={bare(r.text, r.type)} /></span> : null}
+                {r.made || r.end != null ? <span className="sm-f8-g"><Gain r={r} words={false} /></span> : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+// 9 A round in their hands: columns in the order things happen (round start, their turns, any time, game end)
+function M9({ state, I }) {
+  const stages = [
+    ['Round Start', 'at the start of each round', ['round']],
+    ['On their turn', 'when they choose', ['artifact', 'once-game', 'once-round']],
+    ['Any time', 'whenever it happens', ['whenever', 'always']],
+    ['Game End', `+${I.endNow} if it ended now`, ['end']],
+  ];
+  const rest = I.rows.filter(r => r.type === 'recruit' || r.type === 'plain');
+  return (
+    <div className="sm sm-9">
+      <div className="sm-stages">
+        {stages.map(([label, sub, ts], k) => (
+          <div key={label} className="sm-stage">
+            <h5><span>{label}</span>{k < stages.length - 1 ? <span className="sm-arrow" aria-hidden="true">›</span> : null}</h5>
+            <small className="sm-stage-sub">{label === 'Round Start' && I.income ? <Rich text={`${I.income} next round`} /> : sub}</small>
+            {I.rows.filter(r => ts.includes(r.type)).map(r => <div key={r.key} className={`sm-card3${r.threat ? ' threat' : ''}`} style={{ '--mc': tint(state, r) }}><span className="sm-top"><Disc r={r} /><Pic state={state} row={r} size={20} /><Name r={r} /></span><Text r={r} /><span className="sm-foot"><State r={r} /><Gain r={r} /></span></div>)}
+          </div>
+        ))}
+      </div>
+      {rest.length ? <div className="sm-rest"><span className="sm-k">No ability or done on recruit</span>{rest.map(r => <Chip key={r.key} state={state} r={r} />)}</div> : null}
+    </div>
+  );
+}
+// 10 Glance, then detail: every member's face bucketed by type with counts, then the abilities in the same order
+function M10({ state, I }) {
+  return (
+    <div className="sm sm-10">
+      <div className="sm-glance">
+        {I.groups.map(g => (
+          <div key={g.t} className="sm-gl">
+            <span className="sm-gl-h">{g.label}</span>
+            <span className="sm-gl-f">{g.rows.map(r => <span key={r.key} className={`sm-gl-p${r.threat ? ' threat' : ''}${r.kind === 'use' && !r.loaded ? ' spent' : ''}`} title={r.name}><Pic state={state} row={r} size={24} />{r.n > 1 ? <i className="num">×{r.n}</i> : null}</span>)}</span>
+          </div>
+        ))}
+      </div>
+      <Stats state={state} I={I} />
+      <div className="sm-detail">{I.groups.filter(g => g.t !== 'plain' && g.t !== 'recruit').map(g => <Panel key={g.t} state={state} g={g} />)}</div>
     </div>
   );
 }
 
-const MOCKS = { A: MockA, B: MockB, C: MockC, D: MockD, E: MockE, F: MockF };
+const MOCKS = { 1: M1, 2: M2, 3: M3, 4: M4, 5: M5, 6: M6, 7: M7, 8: M8, 9: M9, 10: M10 };
 export function SeatMockBody({ state, pid, mock }) {
   const M = MOCKS[mock];
-  return M ? <M state={state} pid={pid} /> : null;
+  return M ? <M state={state} I={intel(state, pid)} /> : null;
 }

@@ -15,7 +15,7 @@ import { Rich } from './Rich.jsx';
 import { memberCopyTargets, ownCopyPlan, copiesAll, copyAllPlan } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
-import { seatMock, SeatMockBody } from './SeatMocks.jsx';
+import { seatMock, SeatMockBody, MOCK_WIDTH } from './SeatMocks.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
@@ -340,7 +340,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   return typeof document !== 'undefined' ? createPortal(layer, document.body) : layer;
 }
 
-const cardWidth = kind => Math.min(kind === 'seat' ? ({ B: 560, E: 580, F: 430 }[seatMock()] || 360) : kind === 'followers' ? 260 : 280, innerWidth - 16);
+const cardWidth = kind => Math.min(kind === 'seat' ? (MOCK_WIDTH[seatMock()] || 360) : kind === 'followers' ? 260 : 280, innerWidth - 16);
 
 // where the pointer last was: a hover card whose target was re-drawn re-links only while the pointer is still on it
 let lastPt = null;
