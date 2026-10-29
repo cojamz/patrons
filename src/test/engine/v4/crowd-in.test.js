@@ -1,6 +1,6 @@
 // @vitest-environment node
-// Crowd In (Purple; Cory, 2026-10-22): "+1 purple, you can play on occupied spaces this round", +2 with the
-// inherent +1. Any taken space, for the rest of that round only. Round III since Cory's same-day "it's quite strong".
+// Crowd In (Purple, round III; Cory, 2026-10-28): "+5 purple and gain a minion this round". Replaces placing on taken
+// spaces, which copied too much with Greatest Hits. Extra minions stop when the round's spare spaces run out.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
@@ -8,26 +8,27 @@ import { seededRandom } from '../../../engine/v4/rng.js';
 import { quadrant } from '../../../engine/v4/index.js';
 
 describe('Crowd In', () => {
-  it('round III: +2 purple, then taken spaces are on offer for the rest of the round; not open before round III', () => {
+  it('round III: +5 purple and one more minion this round; no taken spaces on offer; not open before round III', () => {
     let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 5, quadrants: ['gold', 'red', 'purple', 'echo'] });
     const rand = seededRandom(5);
+    const q = s.quadrants.indexOf('purple'), i = quadrant('purple').actions.findIndex(a => a.key === 'crowdin');
     while (!(s.round === 2 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
-    expect(s.pending.options.some(o => o.id === `slot:${s.quadrants.indexOf('purple')}-${quadrant('purple').actions.findIndex(a => a.key === 'crowdin')}`)).toBe(false);
+    expect(s.pending.options.some(o => o.id === `slot:${q}-${i}`)).toBe(false);
     while (!(s.round === 3 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
-    const who = s.pending.player, q = s.quadrants.indexOf('purple');
-    const i = quadrant('purple').actions.findIndex(a => a.key === 'crowdin');
-    const before = s.players[who].res.purple || 0;
+    const who = s.pending.player;
+    const before = s.players[who].res.purple || 0, left = s.players[who].left;
     s = applyMove(s, { player: who, option: `slot:${q}-${i}` });
-    expect(s.players[who].res.purple).toBe(before + 2);
-    let joined = 0;
+    expect(s.players[who].res.purple).toBe(before + 5);
+    // the minion just placed is spent, the new one takes its place
+    expect(s.players[who].left).toBe(left);
+    // every minion left, the new one included, gets placed, on open spaces only
+    let placed = 0;
     while (s.round === 3 && !s.over) {
-      if (s.pending?.kind === 'place' && s.pending.player === who) {
-        const sq = s.pending.options.filter(o => o.squat);
-        expect(sq.length).toBeGreaterThan(0);
-        if (!joined) { s = applyMove(s, { player: who, option: sq[0].id }); joined++; continue; }
-      }
+      if (s.pending?.kind === 'place' && s.pending.player === who) expect(s.pending.options.some(o => o.squat)).toBe(false);
+      const had = s.players[who].left;
       s = applyMove(s, chooseBotMove(s, rand));
+      if (s.round === 3 && s.players[who].left < had) placed += had - s.players[who].left;
     }
-    expect(joined).toBe(1);
+    expect(placed).toBeGreaterThanOrEqual(left); // a later extra turn can add more
   });
 });

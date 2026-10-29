@@ -79,6 +79,19 @@ function extraHooks(ctx, p) {
   for (const o of ctx.rivals(p)) fire(ctx, o, 'onRivalExtraTurn', p);
 }
 
+/** One more minion for p this round, placed after everyone else's (the snake carries on until every minion is placed).
+ *  Only while the board has a free space for it, so a round never hands out more extra minions than it has spare spaces. */
+function extraMinion(ctx, p, what) {
+  if (ctx.state.round === 1) { ctx.log(`No extra minions in round I: ${p.name} gets no extra minion from ${what}.`); return 0; }
+  if (!spareSpace(ctx)) { ctx.log(`${p.name}'s ${what}: no free space this round, so no extra minion.`); return 0; }
+  const q = ctx.state.queue, close = q.findIndex(t => t.t === 'allPlaced');
+  q.splice(close < 0 ? q.length : close, 0, { t: 'turn', p: p.id });
+  p.left += 1;
+  ctx.log(`${p.name}'s ${what}: ${p.name} gets 1 more minion this round.`);
+  extraHooks(ctx, p);
+  return 1;
+}
+
 /** Give p up to n extra turns right after the current one. Returns how many it got. */
 export function extraTurns(ctx, p, n = 1, why = null) {
   // no extra minions in round I (Cory, 2026-10-15): every space there is already spoken for
@@ -268,9 +281,11 @@ export default {
     {
       // Cory, 2026-10-22: "+1 purple, you can play on occupied spaces this round" (+2 with the inherent +1; he may
       // raise it to +3 after play). Any taken space, yours or a rival's, for the rest of this round. Name is Claude's fill-in.
-      key: 'crowdin', copyDoesIt: true, ring: 3, name: 'Crowd In', text: '+2 purple. This round you can place on taken spaces.',
-      estimate: ctx => 2 + (ctx.state.round < 3 ? 1 : 0),
-      resolve(ctx, p) { ctx.gain(p, P, 2, { fromAction: true }); p.squatAll = ctx.state.round; ctx.log(`${p.name} can place on taken spaces for the rest of this round.`); },
+      // Cory, 2026-10-28 9:31pm Eastern: "It should just be like, +5 purple and gain a minion this round" (placing on
+      // taken spaces copied too much with Greatest Hits). Extra minions stop when the round's spare spaces run out.
+      key: 'crowdin', copyDoesIt: true, ring: 3, name: 'Crowd In', text: '+5 purple. +1 minion this round.',
+      estimate: ctx => 5 + (spareSpace(ctx) ? turnValue(ctx) : 0),
+      resolve(ctx, p) { ctx.gain(p, P, 5, { fromAction: true }); extraMinion(ctx, p, 'Crowd In'); },
     },
     {
       // Cory, 2026-10-22: a follower bonus for taking the rest of your turns last ("YES now you're cooking"), in his
@@ -421,13 +436,7 @@ export default {
     m('extrashift', 'Extra Shift', 5, 3, 'On Recruit: +1 minion this round.', { from: 2,
       // the snake carries on until every minion is placed, so the new one goes after everyone else's
       onRecruited(ctx, owner) {
-        if (ctx.state.round === 1) { ctx.log(`No extra minions in round I: ${owner.name} gets no extra minion from Extra Shift.`); return; }
-        if (!spareSpace(ctx)) { ctx.log(`${owner.name}'s Extra Shift: no free space this round, so no extra minion.`); return; }
-        const q = ctx.state.queue, close = q.findIndex(t => t.t === 'allPlaced');
-        q.splice(close < 0 ? q.length : close, 0, { t: 'turn', p: owner.id });
-        owner.left += 1;
-        ctx.log(`${owner.name}'s Extra Shift: ${owner.name} gets 1 more minion this round.`);
-        extraHooks(ctx, owner);
+        extraMinion(ctx, owner, 'Extra Shift');
       },
     }),
     // Cory, 2026-10-23: "its when you place THE last minion of the round. so it benefits folks going last"

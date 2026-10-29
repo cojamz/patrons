@@ -75,7 +75,8 @@ const P = {
     skip: { main: '+3 purple', second: 'skip your next turn' },
     holdup: r => ({ main: `+${r + 1} purple`, second: 'the next turn is skipped' }),
     // the center ring can drop line 2 (round III since Oct 22): line 1 says it whole
-    crowdin: { verb: 'Place on taken spaces', second: 'for the rest of this round', note: '+2 purple' },
+    // Cory, 2026-10-28: +5 purple and a minion this round
+    crowdin: { verb: '+1 minion this round', note: '+5 purple' },
     rally: { verb: 'Two turns after this one', note: '+2 purple' },
     again: r => ({ verb: 'Another turn after this one', note: `+${r} purple` }),
   },

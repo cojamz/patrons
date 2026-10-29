@@ -12,7 +12,7 @@ For 2 to 6 players. You lead a cult for three rounds. Send minions to the wheel,
 - The wheel has one sphere per player, each in its own color, with six spaces: three on the outer ring, two on the middle ring and one in the center. Each sphere's contest is printed on its rim.
 - The outer ring opens in round I, the middle ring in round II and the center in round III. Open rings stay open.
 - Pale spaces with gold edges are open now. Taken spaces dim. Dark spaces open in a later round.
-- A space holds one minion per round, unless a card lets you join a taken space (Crowd In). Every minion comes home at round end.
+- A space holds one minion per round, unless a card lets you join a taken space (Squatter). Every minion comes home at round end.
 
 ## Setup
 Round I's turn order is drawn at random. Then, starting with the player who goes last, each player picks an **artifact** from the list on the wheel: a boon for your cult all game, which comes with 1 resource of its color. Each sphere has one artifact, and a taken one leaves the list. The first player gets the one left over. This happens only before round I.
