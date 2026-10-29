@@ -67,6 +67,12 @@
 .amt > .rich-f,.amt > .follower-mark{margin-left:.06em !important;margin-right:0 !important}
 /* the follower in text: Cory's 10-pixel person at .8em, rounded to whole half-pixels so it stays crisp */
 .rich-f{width:round(nearest, var(--glyph), 5px);height:round(nearest, var(--glyph), 5px);vertical-align:-.12em;margin:0 .04em}
+/* the member symbol in running text (Rich MemberAmount): the bust at text height, the words kept for readers and copying */
+.amt.mem{white-space:nowrap}
+.mem-show::before{content:attr(data-pre)}
+.mem-show .member-glyph{width:1em;height:1em;vertical-align:-.16em;margin:0 .03em}
+.rich-n + .mem-show .member-glyph{margin-left:.02em}
+.mem-words{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 body{
   background:
     radial-gradient(ellipse 70% 80% at 28% 52%, rgba(var(--lamp),.13), rgba(var(--lamp),.03) 55%, transparent 75%),

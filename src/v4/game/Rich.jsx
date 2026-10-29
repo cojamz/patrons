@@ -1,7 +1,7 @@
 // Resources as colored symbols inside any rules text or cost (Cory, 2026-10-14): "+3 gold" reads as "+3 ●" in gold,
 // "2 any" as "2 ◍" (the wild token). Each symbol says what it is on hover (every element explains itself).
 import { Follower } from '../art/Follower.jsx';
-import { ResourceGlyph } from './Glyphs.jsx';
+import { ResourceGlyph, MemberGlyph } from './Glyphs.jsx';
 
 const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white'];
 // "follower(s)" after a number is the follower mark too (Cory: followers aren't a star); other uses stay words.
@@ -34,9 +34,27 @@ export function Pip({ color, n }) {
  * keywords), so "per blue | face-up | member" still reads "blue" as a word. "any" becomes the wild symbol only where a number counts it ("2 any");
  * "in any colors", "any face-up member" and "of anything" keep their words.
  */
+// The member symbol (Cory, 2026-10-29: "Per red member could be per SYMBOL", "a red head and shoulders symbol for red
+// member… a mix of the colors in the game (like the wildcard token is) of the same symbol for any member"): a member
+// of a color ("per red member", "a blue member", "non-gold member") and a counted member ("per 2 members", "per member
+// you have", "Counts as 3 members") are the bust, with its count tight against it. Other uses ("a rival's member", "shop
+// member") stay words. The words stay in the page, hidden, so it reads and copies the same.
+const MEMBER = new RegExp(`(?:(\\d+) )?(other )?(non-)?\\b(${COLORS.join('|')}) (?:face-up )?members?\\b|(?<=\\b(?:per|as) )(?:(\\d+) )?(other )?members?\\b`, 'g');
+function MemberAmount({ m }) {
+  const n = m[1] || m[5], other = m[2] || m[6] || '', non = m[3] || '', color = m[4] || null;
+  const words = m[0].slice(n ? n.length : 0);
+  return (
+    <span className="amt mem" data-member-amount={color || 'any'} title={m[0]}>
+      {n ? <span className="rich-n">{n}</span> : null}
+      <span className="mem-show" aria-hidden="true" data-pre={`${other}${non}`}><MemberGlyph r={color} decorative /></span>
+      <span className="mem-words">{words}</span>
+    </span>
+  );
+}
+
 const KEYWORDS = { 'on recruit': 'On Recruit', 'round end': 'Round End', 'game end': 'Game End', 'one time use': 'Once per Game', 'once per game': 'Once per Game', 'once per round': 'Once per Round' };
 const KEYWORD = w => KEYWORDS[w.toLowerCase()] || 'Round Start';
-export function Rich({ text, after = '', timingDone = false }) {
+export function Rich({ text, after = '', timingDone = false, memberDone = false }) {
   if (!text) return null;
   // Canonical timing labels are real emphasis everywhere, never visible Markdown.
   // Cory, Oct 29: every card keyword is bold ("Once per game… should be bolded if its a keyword. Same for Game End")
@@ -45,11 +63,23 @@ export function Rich({ text, after = '', timingDone = false }) {
     timing.lastIndex = 0;
     const pieces = []; let end = 0;
     for (const m of text.matchAll(timing)) {
-      if (m.index > end) pieces.push(<Rich key={`before${m.index}`} text={text.slice(end, m.index)} after={text.slice(m.index) + after} timingDone />);
+      if (m.index > end) pieces.push(<Rich key={`before${m.index}`} text={text.slice(end, m.index)} after={text.slice(m.index) + after} timingDone memberDone={memberDone} />);
       pieces.push(<strong key={`timing${m.index}`} className="ability-timing">{KEYWORD(m[0])}</strong>);
       end = m.index + m[0].length;
     }
-    if (end < text.length) pieces.push(<Rich key="tail" text={text.slice(end)} after={after} timingDone />);
+    if (end < text.length) pieces.push(<Rich key="tail" text={text.slice(end)} after={after} timingDone memberDone={memberDone} />);
+    return <>{pieces}</>;
+  }
+  MEMBER.lastIndex = 0;
+  if (!memberDone && MEMBER.test(text)) {
+    MEMBER.lastIndex = 0;
+    const pieces = []; let end = 0;
+    for (const m of text.matchAll(MEMBER)) {
+      if (m.index > end) pieces.push(<Rich key={`m${m.index}`} text={text.slice(end, m.index)} after={text.slice(m.index) + after} timingDone memberDone />);
+      pieces.push(<MemberAmount key={`mem${m.index}`} m={m} />);
+      end = m.index + m[0].length;
+    }
+    if (end < text.length) pieces.push(<Rich key="mtail" text={text.slice(end)} after={after} timingDone memberDone />);
     return <>{pieces}</>;
   }
   const out = [];

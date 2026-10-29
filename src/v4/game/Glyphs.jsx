@@ -92,6 +92,8 @@ const BUST_PARTS = {
   3: [['M0 0H16V8.3H0Z', '--any-q0'], ['M0 8.3H8V16H0Z', '--any-q1'], ['M8 8.3H16V16H8Z', '--any-q2']],
   4: [['M0 0H8V8.3H0Z', '--any-top'], ['M8 0H16V8.3H8Z', '--any-right'], ['M0 8.3H8V16H0Z', '--any-left'], ['M8 8.3H16V16H8Z', '--any-bottom']],
 };
+// off a table (the members page, the rules), a split of four 2.0 colors
+const BUST_FALLBACK = { '--any-top': 'var(--red)', '--any-right': 'var(--blue)', '--any-left': 'var(--green)', '--any-bottom': 'var(--purple)', '--any-q0': 'var(--red)', '--any-q1': 'var(--blue)', '--any-q2': 'var(--green)' };
 export function MemberGlyph({ r = null, size = 16, n = null, decorative = false }) {
   const clip = `bust${useId().replace(/:/g, '')}`;
   const name = r ? `${NAMES[r] || r} member` : 'member';
@@ -102,7 +104,7 @@ export function MemberGlyph({ r = null, size = 16, n = null, decorative = false 
       {r
         ? <path d={BUST} fill={r === 'white' ? 'var(--white, #e6dcc6)' : `var(--q-${r}, var(--${r}))`} />
         : <><defs><clipPath id={clip}><path d={BUST} /></clipPath></defs>
-          <g clipPath={`url(#${clip})`}>{BUST_PARTS[anyCount].map(([d, v]) => <path key={v} d={d} fill={`var(${v})`} />)}</g></>}
+          <g clipPath={`url(#${clip})`}>{BUST_PARTS[anyCount].map(([d, v]) => <path key={v} d={d} fill={`var(${v}, ${BUST_FALLBACK[v]})`} />)}</g></>}
       <path d={BUST} fill="none" stroke={r === 'white' || r === 'silver' ? 'rgba(30,18,8,.7)' : 'rgba(30,18,8,.55)'} strokeWidth="1.1" strokeLinejoin="round" />
     </svg>
   );
