@@ -28,4 +28,12 @@ brim = c.poly([(12.4, 13.8), (13, 10.8), (35.6, 10.8), (36, 13.8)])
 c.fill(brim, '2'); c.fill(brim & c.rect(0, 10, 47, 10), '4'); c.edge(brim, '1')
 fe = c.poly([(21, 6.4), (17, 2.0), (12, -1.4), (14.6, -2.0), (19.6, 0.8), (23, 5.4)])
 c.fill(fe, 'k'); c.fill(c.line(22, 5, 14, 0), 'i'); c.edge(fe, 'i')
-PORTRAIT = portrait(c, 'thieves.robinhood', 'Robin Hood', 'magenta', [{'skin': 'verydeep', 'hair': 'black'}])
+# light on the face one step past D: the next tone's D (same family, warmer) on the forehead and the cheekbone only
+for (x, y) in c.rect(22, 20, 25, 22):                                               # the cheekbone plane all lit
+    if c.get(x, y) == 'C': c.set(x, y, 'D')
+for (x, y) in ((18, 15), (19, 15), (18, 16), (23, 20), (24, 20), (24, 21)):        # a small sheen on brow and cheekbone
+    if c.get(x, y) == 'D': c.set(x, y, 'L')
+for x in range(23, 27):                                                             # a warm lower lip under the grin
+    if c.get(x, 26) in 'BC': c.set(x, 26, 'K')
+PORTRAIT = portrait(c, 'thieves.robinhood', 'Robin Hood', 'magenta', [{'skin': 'verydeep', 'hair': 'black'},
+                                                                      {'skin': 'deep', 'hair': 'black'}])

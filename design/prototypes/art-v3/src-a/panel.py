@@ -40,9 +40,12 @@ c.put(35, 33, ['.z..zz.', 'zz.z..z', '.z.z..z', '.z..zz.'])                 # "1
 c.edge(cd, 'z')
 arm = c.poly([(31, 48), (32, 43), (35, 41), (40, 41.4), (41, 48)])             # the arm up to the card
 c.fill(arm, '3'); c.rim(arm, '4', -1, -1, 1, only='3'); c.fill(c.rect(38, 44, 41, 48) & arm, '2'); c.edge(arm, '1')
-hand(c, 35, 38, 0, 'grip')
+c.put(34, 37, ['D.....', 'DDDDD.', 'DCDCDB', 'CCCCCB', '.CCCB.', '.BBBA.'])        # her hand on the card: knuckles, thumb up
 front = changed(c, s0)
 c.edge(front, None)
 c.fill(c.mask_of('K'), 'J'); c.fill(c.mask_of('S'), 'R')
+c.set(11, 22, 'I')                                                                  # no stray dark under the moustache
+for x in range(23, 26):                                                             # a warm lower lip under the smile
+    if c.get(x, 27) == 'C': c.set(x, 27, 'D')
 PORTRAIT = portrait(c, 'red.panel', 'Panel', 'red', [{'skin': 'verydeep', 'hair': 'black'}, {'skin': 'fair', 'hair': 'darkbrown'},
                                                   {'skin': 'tan', 'hair': 'darkbrown'}])

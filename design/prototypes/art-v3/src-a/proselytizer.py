@@ -13,13 +13,15 @@ hb = c.poly([(6.6, 19), (6.6, 14), (8.5, 11), (13, 10), (18, 10.6), (21, 13), (2
              (12, 15), (9, 15.6), (8, 19)])
 hair(c, hb, 1, 13, 12, 6, 3, lit=False)
 behind(c, 1)
-c.put(1, 37, ['kkkkk.', '.jkkkk', 'kkkkk.', '.jjjjj'])                  # his pamphlets, fanned a little
-c.edge(c.mask_of('jk') & c.rect(0, 36, 8, 41), 'i')
+st = c.rect(0, 35, 7, 41)                                                # his stack of pamphlets, a heart on the top one
+c.fill(st, 'k'); c.put(0, 35, ['kkkkkkkk', 'kk3k3kkk', 'kk333kkk', 'kkk3kkkk', 'jjjjjjjj', 'kkkkkkkk', 'jjjjjjjj'])
+c.edge(st, 'i')
+c.put(5, 37, ['.JJ', 'JJJI', 'IIJI', 'JJJI', 'IJI.'])                      # his hand round the front: knuckles, thumb on top
 # ---- in front (person 0), right
 s0 = snap(c)
 body(c, [(14, 48), (15, 41), (18, 37.5), (24, 35.5), (38, 35.5), (44, 37.5), (47, 41), (47, 48)])
 neck(c, 0, 27, 33, 29, 35)
-c.fill(c.poly([(26, 35.4), (34, 35.4), (30, 39)]), 'C')
+c.fill(c.poly([(26, 35.4), (34, 35.4), (30, 37.6)]), 'C')
 hr = c.ellipse(31, 16.5, 9.4, 7.6)
 hair(c, hr, 0, 29, 14, 8, 6, lit=False)
 face(c, 0, 23, 20, 16, 6, 8, view='l', eyes='calm', mouth='smile', jaw='oval', dk=True)
@@ -37,5 +39,8 @@ c.put(37, 22, ['.c.', 'c.c', 'c.c', '.c.'])                                     
 front = changed(c, s0)
 c.edge(front, None)
 c.fill(c.mask_of('K'), 'J')
+for y in range(30, 35):                                                  # one shadow row under the jaw, then a lit neck
+    for x in range(27, 34):
+        if c.get(x, y) in 'AB': c.set(x, y, 'C' if x < 31 else ('B' if x < 33 else 'A'))
 PORTRAIT = portrait(c, 'red.proselytizer', 'Proselytizer', 'red', [{'skin': 'deep', 'hair': 'black'}, {'skin': 'fair', 'hair': 'brown'}])
 PORTRAIT['mirror'] = True

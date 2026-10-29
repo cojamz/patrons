@@ -19,12 +19,12 @@ rows(c, 15, {
     12: "....CDDDDCCCCCB...",
     13: "..CDDDDDDCCCCCCBA.",
     14: ".BCDDDDDCCCCCCCCBA",
-    15: ".BCEEECCCCCCEEECBA",
-    16: ".BCBBBCCCCCCBBBCBA",
-    17: ".BCCCCCCCDCCCCCBBA",
-    18: ".BCzzzzCCDCzzzzBBA",
-    19: ".BCyzzyCCDCyzzyBBA",
-    20: ".BCyz!yCDDCyz!yBBA",
+    15: ".BCDDDCCCCCCCCCCBA",
+    16: ".BCEEEECCCCEEEECBA",
+    17: ".BCBBBBCCDCBBBBBBA",
+    18: ".BCBzzCCCDCBzzCBBA",
+    19: ".BCyz!yCCDCyz!yBBA",
+    20: ".BCByzBCDDCByzBBBA",
     21: ".BCCBBCCDDBCBBCBBA",
     22: ".BDDDCCCDDBCCCCBBA",
     23: ".BDDDCCCCCBCCCCBBA",
@@ -38,12 +38,13 @@ rows(c, 15, {
 c.put(14, 18, ['C', 'D', 'C', 'B'])                                     # the near ear
 # ---- dark hair: a smooth cap swept from a side part, a high ponytail swinging out behind her right
 cap = c.ellipse(24, 13, 10.2, 7.6) | c.rect(14, 13, 15, 21) | c.rect(32, 13, 33, 21)
-cap -= c.poly([(16, 22), (16, 16), (19, 13.2), (24, 14.6), (28, 13.4), (31.5, 15), (32, 22)])
+cap -= c.poly([(16, 22), (16, 15), (19, 12.6), (24, 13.6), (28, 12.6), (31.5, 14), (32, 22)])
 c.fill(cap, 'G'); c.outside(cap, 'F', 22, 10, 10, 6); c.outside(cap, 'E', 22, 10, 12.5, 9)
+cap_under = {(x, y + 1) for (x, y) in cap} - cap
 c.fill(cap & c.poly([(17, 9), (21, 6.6), (26, 6.4), (22, 8.4), (18.5, 11)]), 'G')
 c.fill(c.line(19, 12, 25, 8) & cap, 'F')
 tail = c.poly([(30, 6), (34, 4), (38, 5.6), (40, 10), (39.5, 17), (37.5, 23), (36.5, 17), (35, 12), (32, 9)])
-c.fill(tail, 'F'); c.fill(tail & c.poly([(32, 6), (35, 5), (37.5, 7.5), (37, 12), (35, 8)]), 'G'); c.edge(cap, 'E')
+c.fill(tail, 'F'); c.fill(tail & c.poly([(32, 6), (35, 5), (37.5, 7.5), (37, 12), (35, 8)]), 'G'); c.edge(cap, 'E'); c.fill(cap_under & c.rect(17, 13, 31, 15), 'D')
 c.put(30, 5, ['vv', 'vv'])                                              # the hair tie
 # ---- the clipboard held out: brown board, steel clip, the sheet with a red star and lines
 board = c.poly([(28, 36), (41, 34.6), (42.4, 47.6), (29, 48)])

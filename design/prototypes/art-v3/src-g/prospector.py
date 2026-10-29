@@ -12,23 +12,23 @@ c.put(22, 39, ['1']); c.put(22, 44, ['1'])                      # shirt buttons
 c.fill(c.rect(20, 27, 26, 33), 'B'); c.fill(c.rect(20, 27, 26, 28), 'A')
 kerch = c.poly([(17, 31.6), (24, 33.4), (31, 31.6), (31.6, 34.2), (26, 36.4), (24, 39.5), (22, 36.4), (16.5, 34.2)])
 c.fill(kerch, 'v'); c.fill(kerch & c.rect(25, 31, 33, 40), 'u'); c.edge(kerch, 'u')
-# ---- face, 3/4 to our right. Deep skin lit on D: forehead, cheekbone, nose bridge, lower lip.
+# ---- face, 3/4 to our right. Deep skin lit on D: forehead, cheekbone, nose bridge, chin; the row under the mouth stays dark.
 rows(c, 14, {
-    13: "...BCDDDDDDCCCCCBA..",
-    14: "...BCDDDDDDCCCCCCBA.",
-    15: "..BCDDDDDDCCCCCCCBA.",
+    13: "...BCDDDDDDDCCCCBA..",
+    14: "...BCDDDDDDDDCCCCBA.",
+    15: "..BCDDDDDDDDCCCCCBA.",
     16: "..BCDEEEEECCCEEEEBA.",
     17: "..BCDBBBBBCDCBBBBBA.",
-    18: "..BCDCCCCCCDCCCCCBA.",
+    18: "..BCCCCCCCCDCCCCCBA.",
     19: "..BCCCzzzCCDCCzzCBA.",
     20: "..BCCzCCCzCDCzCCzBA.",
-    21: "..BCDDCCCCCDBCCCCBA.",
-    22: "..BCDDDDCCCDDBCCCBA.",
-    23: "..BCDDDDCCAAAACCCBA.",
+    21: "..BCDDDDCCCDBCCCCBA.",
+    22: "..BCDDDDDCCDDBCCCBA.",
+    23: "..BCCDDCCCAAAACCCBA.",
     24: "..BCCCCCCCCCCCCCBBA.",
     25: "...BCCCCAzzzzACCBA..",
     26: "...BCCCCCBBBBCCCBA..",
-    27: "....BBCCCCCCCCCBA...",
+    27: "....BBCCCDDDCCCBA...",
     28: "......ABBBBBBBA.....",
 })
 c.put(15, 19, ['CD', 'BCC', 'ABC', 'BA'])                          # the near ear

@@ -42,10 +42,11 @@ hair(c, h, 1, 9, 12, 7, 3.4, lit=False)
 c.fill(c.poly([(2.4, 20), (4.2, 20), (4.6, 26.5), (2.6, 26)]), 'M')         # hair down past the ear
 arm = c.poly([(0, 30), (0, 13), (3.6, 12), (4.6, 20), (3.6, 30)])                  # her arm up, waving
 c.fill(arm, '2'); c.rim(arm, '3', -1, 0, 1, only='2'); c.edge(arm, '1')
-stamp(c, 0, 5, ['2.2.2', '22222', '22222', '12221', '.1221', '.112.', '.11..'], 1)   # an open hand, fingers up
+stamp(c, 0, 2, ['..3....', '3.3.3..', '2.2.2..', '2.2.2.3', '2.2.2.2', '212122.', '222221.', '122221.', '.1221..',
+                '.112...', '.11....'], 1)   # an open hand: three fingers apart, the thumb out to the side
 body(c, [(27, 48), (28, 30), (32, 28), (40, 27.5), (45, 28.5), (47, 31), (47, 48)], front=False)
 neck(c, 2, 35, 40, 23, 28)
-face(c, 2, 32, 18, 12, 4, 6, view='l', eyes='smile', mouth='smile', jaw='square', hp=0, look='dot')
+face(c, 2, 32, 18, 12, 4, 6, view='l', eyes='smile', mouth='o', jaw='square', hp=0, look='dot')
 h = c.poly([(31, 17), (31.2, 13), (33.4, 11), (38, 10.4), (42.6, 11.2), (44.8, 14), (44.8, 18), (43.6, 17), (43, 14.6),
             (38, 13.8), (33, 14), (32.2, 17)])
 hair(c, h, 2, 38, 12, 6, 2.6, lit=False, hp=0)
@@ -71,7 +72,9 @@ for (x, y) in c.rect(17, 24, 21, 29) | c.rect(20, 27, 29, 29):              # li
     elif c.get(x, y) == 'B' and x < 21: c.set(x, y, 'C')
 front = changed(c, s0)
 c.edge(front, None)
-c.fill(c.mask_of('K'), 'J'); c.fill(c.mask_of('T'), 'S')
+c.fill(c.mask_of('T'), 'S')
 c.fill(c.mask_of('S'), 'R')
+c.put(6, 22, ['JJJJIII', 'JIJJIJII', '.JIIJJII', '.JJJJII'])    # her lower face in two tones, the smile drawn in
+c.put(7, 19, ['KK']); c.set(12, 19, 'J')                     # a lit cheekbone
 PORTRAIT = portrait(c, 'red.mob', 'Mob', 'red', [{'skin': 'deep', 'hair': 'black'}, {'skin': 'freckled', 'hair': 'auburn'},
                                               {'skin': 'olive', 'hair': 'black'}])

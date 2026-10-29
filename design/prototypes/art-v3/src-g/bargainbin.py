@@ -45,12 +45,12 @@ c.fill(cuff, '3'); c.fill(cuff & c.rect(28, 12, 34, 14), '2')
 for x in range(15, 34, 2): c.set(x, 13, '2' if x < 28 else '1')
 c.rim(hat, '4', -1, -1, 1, only='3')
 # ---- the find, held up high: an old vinyl record, orange label, a white price sticker
-rec = c.ellipse(38.5, 23, 7.2, 7.2)
-c.fill(rec, 'n'); c.outside(rec, 'm', 37.5, 22, 6.6, 6.6)
-c.fill(rec & (c.ellipse(36, 20, 4.6, 4.6) - c.ellipse(36.6, 20.6, 3.8, 3.8)), 'o')      # a groove catching the light
-c.fill(rec & (c.ellipse(39, 23.5, 6.2, 6.2) - c.ellipse(39, 23.5, 5.4, 5.4)) & c.rect(38, 24, 47, 47), 'p')
-lab = c.ellipse(38.5, 23, 2.6, 2.6)
-c.fill(lab, 'w'); c.fill(lab & c.rect(39, 23, 41, 26), 'v'); c.set(38, 22, 'n')
-c.put(31, 16, ['kkk', 'kvk', 'kkk'])                                        # the price sticker
-c.put(34, 28, ['.DDCC', 'DCDCDB', 'CBCBCA', '.BBBA.'])                     # his fingers on the rim
+rec = c.ellipse(39.5, 22.5, 7.2, 7.2)
+c.fill(rec, 'n'); c.outside(rec, 'm', 38.5, 21.5, 6.6, 6.6)
+c.fill(rec & (c.ellipse(37, 19.5, 4.6, 4.6) - c.ellipse(37.6, 20.1, 3.8, 3.8)), 'o')      # a groove catching the light
+c.fill(rec & (c.ellipse(40, 23, 6.2, 6.2) - c.ellipse(40, 23, 5.4, 5.4)) & c.rect(39, 24, 47, 47), 'p')
+lab = c.ellipse(39.5, 22.5, 2.6, 2.6)
+c.fill(lab, 'w'); c.fill(lab & c.rect(40, 22, 42, 25), 'v'); c.set(39, 22, 'n')
+c.put(33, 15, ['kkk', 'kvk', 'kkk'])                                        # the price sticker
+c.put(35, 27, ['.DDCC', 'DCDCDB', 'CBCBCA', '.BBBA.'])                     # his fingers on the rim
 PORTRAIT = portrait('market.bargainbin', 'Bargain Bin', 'blue', c, [{'skin': 'olive', 'hair': 'black'}], 'orange')

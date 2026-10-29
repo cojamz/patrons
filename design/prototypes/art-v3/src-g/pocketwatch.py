@@ -16,7 +16,7 @@ c.fill(lapR, '2'); c.rim(lapR, '3', -1, 0, 1); c.edge(lapR, '1')
 # neck, chin shadow
 c.fill(c.rect(20, 28, 27, 33) - shirt, 'B'); c.fill(c.rect(20, 28, 27, 29), 'A'); c.fill(c.rect(26, 30, 27, 32), 'A')
 c.put(20, 33, ['kk', 'k.']); c.put(26, 33, ['kk', '.k'])
-# ---- face x14..33. Very deep skin lit by the light, not by the tone: forehead, cheekbone, nose bridge, lower lip on D.
+# ---- face x14..33. Very deep skin lit by the light, not by the tone: forehead, cheekbone, nose bridge on D; no light row near the mouth.
 rows(c, 14, {
     11: "....BDDDDDDCCCCB....",
     12: "...BDDDDDDDDCCCCB...",
@@ -32,8 +32,8 @@ rows(c, 14, {
     22: ".BCDDDDDCDDBCDCCBBA.",
     23: ".BCCDDDCAAABCCCCBBA.",
     24: "..BCCCCCCCCCCCCCBBA.",
-    25: "..BCCCCAzzzzACCCBA..",
-    26: "...BCCCCDDDDCCCBA...",
+    25: "..BCCCCBzzzzBCCCBA..",
+    26: "...BCCCCCCCCCCCBA...",
     27: "....BBCCDDDCCBBA....",
     28: "......ABBBBBBA......",
 })

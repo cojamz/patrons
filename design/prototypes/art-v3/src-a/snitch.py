@@ -16,12 +16,13 @@ face(c, 0, 15, 19, 18, 6, 9, view='l', eyes='worried', mouth='purse', jaw='oval'
 hr = c.poly([(14, 19), (14.4, 13), (17, 9.6), (22, 8.4), (27, 8.6), (31.6, 10.6), (33.8, 14), (33.6, 19), (32.4, 18),
              (31.6, 14.6), (27, 13.4), (21, 13.6), (16.6, 14.6), (15.6, 19)])
 hair(c, hr, 0, 22, 10.5, 9, 4)
-c.put(14, 15, ['y', 'y'])                                                         # a bead of sweat at his temple
+c.put(16, 15, ['y', 'y', 'B'])                                                    # a bead of sweat on his temple, shadowed under
 # the open hand at the side of his mouth, fingers up, palm to us: a whisper, not a fist
-sl = c.poly([(5, 48), (6, 38), (9, 31.6), (14, 31.6), (15, 38), (14, 48)])
-c.fill(sl, '3'); c.rim(sl, '4', -1, 0, 1, only='3'); c.fill(c.rect(13, 33, 15, 48) & sl, '2'); c.edge(sl, '1')
-c.put(9, 19, ['C.C.C.', 'CDCDCB', 'CDCDCB', 'CCCCCB', 'CCDCCB', 'BCCCBA', '.BCCB.', '.BCCB.', '.BCBA.', '.BBBA.', '..BA..', '..BA..'])
-c.put(8, 23, ['C', 'CC', 'BC'])                                                    # thumb
-c.edge(c.mask_of('CD') & c.rect(8, 19, 14, 31), 'A')
-c.fill(c.mask_of('D') & c.rect(8, 19, 14, 24), 'D')                                # lit fingertips
+sl = c.poly([(7, 48), (8, 41), (11, 35.6), (16, 35.6), (17, 41), (16, 48)])
+c.fill(sl, '3'); c.rim(sl, '4', -1, 0, 1, only='3'); c.fill(c.rect(15, 37, 17, 48) & sl, '2'); c.edge(sl, '1')
+c.put(11, 23, ['C.C.C.', 'CDCDCB', 'CDCDCB', 'CCCCCB', 'CCDCCB', 'BCCCBA', '.BCCB.', '.BCCB.', '.BCBA.', '.BBBA.', '..BA..', '..BA..'])
+c.put(10, 27, ['C', 'CC', 'BC'])                                                    # thumb
+c.edge(c.mask_of('CD') & c.rect(10, 23, 16, 35), 'A')
+c.fill(c.mask_of('D') & c.rect(10, 23, 16, 28), 'D')                                # lit fingertips
+c.put(21, 25, ['CAAC', 'CCCC'])                                                  # lips pursed, centred
 PORTRAIT = portrait(c, 'thieves.snitch', 'Snitch', 'magenta', [{'skin': 'freckled', 'hair': 'ginger'}])
