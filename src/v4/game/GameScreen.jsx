@@ -44,6 +44,7 @@ import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpee
 import { PERF_ON } from '../perf.js';
 import { boardPicker, giftPick, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import GiftCard from './GiftCard.jsx';
+import LaunderCard, { launderChoice } from './LaunderCard.jsx';
 import ArtifactDraft from './ArtifactDraft.jsx';
 import ActionStage from './ActionStage.jsx';
 import { stageClear, stageRelease } from './stage.js';
@@ -1320,7 +1321,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const shopPick = useCallback((...a) => handlers.current.onPick(...a), []);
   const shopDenied = useCallback((...a) => handlers.current.onDenied(...a), []);
   // A modal takes the stage: sweep any flying ghosts so nothing floats over it.
-  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay' && !onlyPay) || (mine && !needHandoff && payChoice(pend)));
+  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay' && !onlyPay) || (mine && !needHandoff && (payChoice(pend) || launderChoice(state, pend))));
   useEffect(() => { if (modalOpen) clearFlights(0); }, [modalOpen]);
   // and the page behind a modal doesn't scroll
   useEffect(() => {
@@ -1358,7 +1359,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   if (prevState.current !== state) chainActor.current = prevState.current.pending ? prevState.current.pending.player : null;
   const rivalPlaying = chainActor.current != null && !mySeats.includes(chainActor.current);
   const holdStory = !state.over && motionOK() && (chainRunning() || (prevState.current !== state && prevState.current.seed === state.seed && planChain(prevState.current, state, { mine: mySeats }).total > 0));
-  const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
+  // Launderers' rearranging is its own card (LaunderCard.jsx), never the plain question or the board
+  const laundering = mine && !needHandoff && launderChoice(state, pend);
+  const showChoice = mine && !needHandoff && !laundering && (pend.kind === 'choose' || pend.kind === 'setup');
   // the starting picks' row (and the step right after the last pick, while its chain lands): see the AfterChain below
   const setupNow = pend && pend.kind === 'setup' && !state.over ? state : null;
   if (setupNow) lastSetupMoves.current = state.moves;
@@ -1683,6 +1686,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </Popover>
       )}
       {receipt && <PayReceipt key={receipt.key} receipt={receipt} onDone={() => setReceipt(r => (r && r.key === receipt.key ? null : r))} />}
+      {laundering && <LaunderCard key={`${pend.player}|${state.round}`} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {mine && !needHandoff && !paidAlready && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)) && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={rootEl} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && closedMoment !== moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={nextRound} autoMs={someoneHere ? 0 : 4000} />}

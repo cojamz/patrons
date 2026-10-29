@@ -1,0 +1,18 @@
+/* Launderers (LaunderCard.jsx): the pay sheet's paper card (pay.css), centred. One row per color: its coin and name,
+   − count +, then All, and what it was when it changed. How many are still loose sits under the rows. */
+.launder-card .ld-title{margin:0;font:700 20px/26px var(--sans)}
+.launder-card .ld-sub{margin:4px 0 0;font-size:15px;line-height:20px;color:var(--pl-ink-2,#6e5c49)}
+.ld-rows{display:grid;grid-template-columns:24px 1fr 36px 32px 36px auto 56px;column-gap:8px;row-gap:8px;align-items:center;margin:16px 0 0}
+.ld-row{display:contents}
+.ld-name{font-size:15px;text-transform:capitalize}
+.ld-n{font-size:18px;text-align:center}
+.ld-step,.ld-all{height:36px;border:0;border-radius:var(--corner,8px);cursor:pointer;color:var(--pl-ink,#2b2018);
+  background:color-mix(in srgb,var(--pl-ink,#2b2018) 8%,transparent);font:700 18px/1 var(--sans)}
+.ld-all{padding:0 12px;font:600 13px/1 var(--sans);letter-spacing:.04em}
+.ld-step:hover:not(:disabled),.ld-all:hover:not(:disabled){background:color-mix(in srgb,var(--pl-ink,#2b2018) 14%,transparent)}
+.ld-step:active:not(:disabled),.ld-all:active:not(:disabled){transform:translateY(1px)}
+.ld-step:focus-visible,.ld-all:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:1px}
+.ld-step:disabled,.ld-all:disabled{opacity:.35;cursor:default}
+.ld-was{font-size:12px;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.ld-loose{min-height:20px;margin:12px 0 0;font-size:15px;line-height:20px}
+.ld-loose[data-loose="0"]{visibility:hidden}

@@ -176,6 +176,8 @@ export function promptFor(state, mine) {
       }
       const asker = (String(pend.prompt || '').match(/^([^:]{2,28}):\s/) || [])[1];
       const short = String(pend.prompt || '').length <= 36;
+      // Launderers' rearranging is its own card (LaunderCard.jsx)
+      if (asker === 'Launderers' && pend.options.some(o => o.id === 'split' || o.kind === 'amount')) return { who: p, text: 'Launderers: rearrange your resources', keepCase: true };
       if (asker && asker !== name) {
         // options that all point at seats are answered on the cults (the seat selector, game/seatPick.js)
         return { who: p, text: `${asker}: ${pend.options.some(o => o.target) ? 'pick on the board' : 'choose one'}`, keepCase: true };
