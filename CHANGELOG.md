@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.847 — 2026-10-29
+
+- Every member has a new, sharper portrait, with a wider range of skin tones, and cards that count as several members show that many people.
+
 ## v0.9.846 — 2026-10-29
 
 - Coach can't hand back a member used this same turn (it could loop forever with Tribute Band and Tryout).
