@@ -18,8 +18,10 @@ describe('v4 app', () => {
     expect(container.querySelectorAll('.lt-seat[data-pid]')).toHaveLength(2);
     expect(container.querySelector('[data-prompt]').textContent).toMatch(/draft.*resource/i);
     // Reverse order may let the bot draft first. Answer the human's one draft choice.
-    await waitFor(() => expect(container.querySelector('.app[data-yours="1"] [data-option^="color:"]')).not.toBeNull(), { timeout: 10000 });
-    fireEvent.click(container.querySelector('.app[data-yours="1"] [data-option^="color:"]'));
+    // With the bot first, the human's draft can be the last one left and take itself.
+    const drafting = () => /draft.*resource/i.test(container.querySelector('[data-prompt]').textContent);
+    await waitFor(() => expect(!drafting() || container.querySelector('.app[data-yours="1"] [data-option^="color:"]')).toBeTruthy(), { timeout: 10000 });
+    if (drafting()) fireEvent.click(container.querySelector('.app[data-yours="1"] [data-option^="color:"]'));
     await waitFor(() => expect(container.querySelector('[data-prompt]').textContent).not.toMatch(/draft.*resource/i), { timeout: 10000 });
   });
 

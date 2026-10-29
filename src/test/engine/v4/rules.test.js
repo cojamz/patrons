@@ -105,7 +105,7 @@ describe('turn order and workers', () => {
   it('round I, all tied: a seeded random order, snaking, 3 workers', () => {
     const s = scene({ n: 3, queue: [{ t: 'round', r: 1 }] });
     // random since 2026-10-14 (core.js startRound); pinned to this seed's draw
-    expect(s.order).toEqual([0, 2, 1, 1, 2, 0, 0, 2, 1]);
+    expect(s.order).toEqual([0, 1, 2, 2, 1, 0, 0, 1, 2]); // redrawn when Saboteur joined the deck (Oct 28)
     expect(s.order.slice(3, 6)).toEqual([...s.order.slice(0, 3)].reverse()); // the snake
     expect(s.pending.player).toBe(0);
     expect(s.players.map(p => p.left)).toEqual([3, 3, 3]);

@@ -63,7 +63,7 @@ export function createGame({ seats, seed = 1, quadrants, rules = {} }) {
   let uid = 0;
   const table = { ...DEFAULT_RULES, ...(FULL_DECK.tests ? { cull: false, artifacts: false, roundDecks: 0 } : {}), ...rules }; // tests: content/cull.js (artifacts too: a test asks for them)
   const artifactIds = new Set(table.artifacts ? quadrants.map(q => ARTIFACTS[q]).filter(Boolean) : []);
-  const dealt = def => !(table.cull && CUT.has(def.id)) && !artifactIds.has(def.id) && !def.artifact; // the cull (content/cull.js); artifacts (an artifact-only card is never dealt)
+  const dealt = def => !(table.cull && CUT.has(def.id)) && !artifactIds.has(def.id) && !def.artifact && !def.retired; // the cull (content/cull.js); artifacts (an artifact-only card is never dealt)
   for (const q of quadrants) for (const def of quadrant(q).members.filter(dealt))
     for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
   if (table.guests) for (const def of guestMembers().filter(dealt))
@@ -617,7 +617,9 @@ function resolveTask(state, task, optionId) {
       const [q, i] = optionId.slice(optionId.indexOf(':') + 1).split('-').map(Number);
       const key = `${q}-${i}`;
       if (squat) {
-        if (p.squatAll !== state.round) spendAllowance(state, p, 'squat');
+        // Party Crasher's one use is spent by the minion it lets in (Cory, 2026-10-28: "your next minion")
+        if (p.squatAll === state.round) { /* Crowd In's open board */ } else if (p.crashNext && state.slots[key] !== p.id) delete p.crashNext;
+        else spendAllowance(state, p, 'squat');
         (state.squats[key] = state.squats[key] || []).push(p.id);
       } else state.slots[key] = p.id;
       p.lastSlot = { key, joined: squat }; // the minion Straggler moves (Cory, 2026-10-15: it's always the last one)
@@ -994,6 +996,8 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {}, top = false 
   const def = cardDef(state, uid);
   log(state, `${p.name} recruited ${def.name}${idx < 0 ? (top && fromPile === 0 && !peeked ? ' from the top of the deck' : peeked ? ' from the pile with Peek' : ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}`) : ''} (${paid}).`);
   memberAcquired(state, p, uid);
+  // an arrival like any other (Saboteur: "whenever this joins your cult"); swaps and moves fire it in their own code
+  memberJoined(state, p, uid);
 }
 /** A member recruit: p took it (shop, free, a steal) or swapped it in with their own red action (see recruited). */
 function memberAcquired(state, p, uid, { stolen = false } = {}) {
@@ -1362,7 +1366,7 @@ export function pileReach(state, p) {
 export function squatSlots(state, p) {
   // Purple's round II space (Cory, 2026-10-22): "you can play on occupied spaces this round", any taken space, no limit
   const open = p.squatAll === state.round;
-  if (!open && !allowance(state, p, 'squat')) return [];
+  if (!open && !p.crashNext && !allowance(state, p, 'squat')) return [];
   const out = [];
   for (const [key, owner] of Object.entries(state.slots)) {
     if (!open && (owner === p.id || state.squats?.[key]?.length)) continue;

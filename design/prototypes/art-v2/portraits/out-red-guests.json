@@ -81,7 +81,7 @@
  },
  {
   "id": "red.mentor",
-  "name": "Mentor & Prot\u00e9g\u00e9",
+  "name": "Mentor & Protégé",
   "kind": "member",
   "sphere": "red",
   "px": [
@@ -481,7 +481,7 @@
  },
  {
   "id": "benders.squatter",
-  "name": "Squatter",
+  "name": "Party Crasher",
   "kind": "member",
   "sphere": "colorless",
   "px": [
@@ -682,6 +682,46 @@
  {
   "id": "benders.straggler",
   "name": "Straggler",
+  "kind": "member",
+  "sphere": "colorless",
+  "px": [
+   "................................",
+   ".............cbbbbc.............",
+   "..........WWUUUUUUWWbc..........",
+   "........cWWUUUUUUUWWuubc........",
+   ".......cWWWUUUUUUUWWWuUuc.......",
+   "......cWWWWUUUUUUUWWWuuuuc......",
+   ".....WWhbjhhbhhhbbhhhbhuuuc.....",
+   "....cWWhhjhhhhhhhhhhhhhhuWbc....",
+   "...cbbbHhhhhhhhhhhhhhhHWWWVbc...",
+   "...cbbbHhShhSSSSSSSShhHWWVVbc...",
+   "..cWWVbbSSSSSSSSSSSSSsstVVbbbc..",
+   "..cbWbbbSSSSSSSSSSSSSsstbbbbbc..",
+   "..cWWVbsSSttSSSSSSttSssttbbbbc..",
+   "..cbbbbsSSKKSSSSSSKKSssttbbbbc..",
+   "..cbbbbtSSSSSSStSSSSSssttbbbbc..",
+   "..cbbbbbSaaSSSKKKKSSaastbbbbbc..",
+   "..cbbbbbSSSSSKrrrrKSSsstbbbbbc..",
+   "..cbbbbbbSSSSKrqqrKSsstbbbbbbc..",
+   "..cbbbbbbSSSSKrqqrKSsstbbbbbbc..",
+   "..cbbbbbbbsSSSKKKKSSstbbbbbbbc..",
+   "..cbbbbbbbbsSSSSSSSstbbbbbbbbc..",
+   "..cbbbbbbbbbtsssssstbbbbbbbbbc..",
+   "..cbbbbbb4WWW3ssss3VWW1bbbbbbc..",
+   "..cbbb44333WWV3tt33VWW2221bbbc..",
+   "..cUUUUUUUUUUUUUUUUUUUUUUuuuuc..",
+   ".443333333333333333333333332221.",
+   ".443333333333333333333333332221.",
+   ".UUUUUUUUUUUUUUUUUUUUUUUUUUuuuu.",
+   ".443333333333333333333333332221.",
+   ".443333333333333333333333332221.",
+   ".UUUUUUUUUUUUUUUUUUUUUUUUUUuuuu.",
+   ".443333333333333333333333332221."
+  ]
+ },
+ {
+  "id": "benders.saboteur",
+  "name": "Saboteur",
   "kind": "member",
   "sphere": "colorless",
   "px": [

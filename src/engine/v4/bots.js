@@ -384,6 +384,8 @@ const PLAIN_TEXT = /^(Free\. )?((Worth \d+ followers?\.|No effect\.|Counts as \d
 /** A member's ability, in followers, for the turns left (its stars are counted separately). */
 export function abilityValue(def, placementsLeft, k = K_ABILITY) {
   if (def.vanilla || PLAIN_TEXT.test((def.text || '').trim())) return 0;
+  // a card whose whole effect the evaluation already sees when it joins (Saboteur's −3)
+  if (def.botValue !== undefined) return def.botValue;
   const keys = Object.keys(def).filter(x => !DATA_KEYS.has(x));
   // pays on recruit or at game end only: measured directly
   if (keys.length && keys.every(x => MEASURED.has(x))) return 0;

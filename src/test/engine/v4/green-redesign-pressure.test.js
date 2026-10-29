@@ -241,16 +241,16 @@ describe('Green redesign: copy observers and anti-copy members', () => {
 
   it.each(['echo.doppel', 'echo.impostor'])('%s grants a copied Extra Hand’s unplaced minion immediately in round III', copier => {
     const owner = copier === 'echo.doppel' ? 0 : 1;
-    const members = [[], []]; members[owner] = ['benders.extrahand'];
+    const members = [[], []]; members[owner] = ['benders.extrahand3'];
     let s = table(['gold', 'red', 'purple', 'echo'], {
       round: 3, left: 5, shop: [copier], members,
       queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }],
     });
     const before = { left: s.players[0].left, workers: roundWorkers(s, s.players[0]) };
     s = move(take(s, 'red.take'), memberOption(s, copier));
-    s = move(saved(s), `card:${uidIn(s, 'benders.extrahand', owner)}`);
+    s = move(saved(s), `card:${uidIn(s, 'benders.extrahand3', owner)}`);
     const uid = uidIn(s, copier, 0);
-    expect(s.cards[uid].copy).toBe('benders.extrahand');
+    expect(s.cards[uid].copy).toBe('benders.extrahand3');
     expect(s.players[0].left).toBe(before.left);
     expect(s.players[0].workers).toBe(before.workers + 1);
     expect(s.queue.filter(t => t.workerSource === uid && t.p === 0)).toHaveLength(1);

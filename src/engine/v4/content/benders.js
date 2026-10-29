@@ -12,6 +12,7 @@
 //   pickFirst: true        always first in a round's turn order
 // Straggler uses the onAllPlaced hook (after the round's last placement, before its contests).
 import { registerGuests } from './index.js';
+import { extraMinion, spareSpace } from './purple.js';
 
 // Prices: member-value sim (scripts/v4-member-value.mjs, 4 normal bots, Release off, handed over at round II),
 // priced so value ≈ cost + 1.5 at 1.5 per follower, rounded to the even cost grid. See design/rule-benders.md.
@@ -53,14 +54,31 @@ function offerFrom(ctx, owner, uid) {
 const stillMine = (ctx, p, w) => (w.joined ? (ctx.state.squats?.[w.key] || []).includes(p.id) : ctx.state.slots[w.key] === p.id);
 
 const members = [
-  m('squatter', 'Squatter', 'thieves', 3, 2, 'Once per round: place a minion on a space a rival already took.', { squat: true }),
+  // Party Crasher (was Squatter; id kept for old records): Cory, 2026-10-28, One Time Use, cheaper; 4 with the +1 wild
+  m('squatter', 'Party Crasher', 'thieves', 2, 1, 'One Time Use: your next minion can be placed on a space a rival already took.', {
+    activate: 'game',
+    onActivate(ctx, owner, card) {
+      if (owner.crashNext) { card.used = false; return; }
+      owner.crashNext = true;
+      ctx.log(`${owner.name}'s Party Crasher: the next minion may go on a space a rival took.`);
+    },
+    botActivate: (ctx, p) => ctx.state.round >= 2 && !p.crashNext,
+  }),
   m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per round: recruit twice in one turn.', { extraBuy: true }),
   m('freelancer', 'Freelancer', 'yellow', 2, 2, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
-  m('extrahand', 'Extra Hand', 'purple', 5, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
-  m('frontrunner', 'Front-runner', 'purple', 3, 0, 'You go first every round.', { pickFirst: true }), // Cory, Oct 21: 5; Oct 27 "should be cheaper": 3 (Claude's price)
+  // Extra Hand as it printed until Oct 28, never dealt (retired): the tests of extra minions a card grants by round
+  // (Poach and swaps moving an unplaced grant, copies, a full board) keep it as their fixture
+  m('extrahand3', 'Extra Hand', 'purple', 5, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1], retired: true }),
+  // Cory, 2026-10-28: "probably needs to be a Use Once… it had to have some category, and On Recruit would be broken"
+  m('extrahand', 'Extra Hand', 'purple', 5, 4, 'One Time Use: +1 minion this round.', { from: 2,
+    activate: 'game',
+    onActivate(ctx, owner, card) { if (!extraMinion(ctx, owner, 'Extra Hand')) card.used = false; },
+    botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
+  }),
+  m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You go first every round.', { pickFirst: true }), // Cory, Oct 21: 5; Oct 27: 4; Oct 28 "could probably be cheaper": 3 with the +1 wild (Claude's price, the floor)
   // Cory's ideas, Oct 21, on this sim branch only. Launderer is simplified for the bots: one color, not any split.
-  m('launderer', 'Launderer', null, 0, 4, /* Cory, Oct 27: "closer to 5" with the +1 wild */ 'On Recruit: turn all your resources into one color you choose.', {
+  m('launderer', 'Launderers', null, 0, 4, /* Cory, Oct 27: "closer to 5" with the +1 wild */ 'Worth 2 followers. On Recruit: turn all your resources into one color you choose.', { f: 2, // Cory, Oct 28: "Launderers, 2 Followers"
     onRecruited(ctx, owner) {
       const total = Object.values(owner.res).reduce((a, b) => a + b, 0);
       if (!total) return;
@@ -69,10 +87,18 @@ const members = [
         return { id: `color:${c}`, label: `All ${c}`, kind: 'color', value: c, hint: (total > best ? 3 : 0) - best * 0.1 };
       });
       opts.push({ id: 'keep', label: 'Keep your colors', kind: 'pass', value: null, hint: 0 });
-      ctx.choose(owner, 'Launderer: turn everything into which color?', opts, 'benders.launder');
+      ctx.choose(owner, 'Launderers: turn everything into which color?', opts, 'benders.launder');
     },
   }),
-  m('tiebreaker', 'Tiebreaker', null, 0, 4, /* Oct 28, Cory "should be cheaper": 5 with the +1 wild (Claude's price) */ 'Ties you’re in go to you alone.', { tiebreak: true }),
+  // Cory, 2026-10-28: "a 5 cost Saboteur… gives -3 Followers each time it enters somebody's cult (swapped in OR recruited etc)"
+  m('saboteur', 'Saboteur', null, 0, 4, 'Whenever this joins your cult, −3 followers.', {
+    botValue: 0,
+    onJoined(ctx, owner) {
+      owner.bonus -= 3;
+      ctx.log(`${owner.name}'s Saboteur: −3 followers.`);
+    },
+  }),
+  m('tiebreaker', 'Tiebreaker', null, 0, 3, /* Cory, Oct 28 night: "a little cheaper. 4?": 4 with the +1 wild */ 'Ties you’re in go to you alone.', { tiebreak: true }),
   m('straggler', 'Straggler', 'purple', 6, 1, /* Oct 27, Cory "too cheap": 8 with the +1 wild (Claude's price) */ 'Once per round, after the last minion is placed: you may move your last minion to an open space and take it.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;
@@ -115,7 +141,7 @@ export const handlers = {
     const total = Object.values(p.res).reduce((a, b) => a + b, 0);
     for (const c of Object.keys(p.res)) p.res[c] = 0;
     p.res[color] = total;
-    ctx.log(`${p.name}'s Launderer: everything becomes ${color} (${total}).`);
+    ctx.log(`${p.name}'s Launderers: everything becomes ${color} (${total}).`);
   },
 };
 
