@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.872 — 2026-10-29
+
+- Hover a rival's seat for their whole cult: members in columns by card type, priciest first, with their artifact, round-start income, game-end score, resources and members by color up top. Members they haven't used yet glow; used ones are turned face down.
+
 ## v0.9.871 — 2026-10-29
 
 - The shop's member cards fill the panel: two to a row at 6 members, taller at 7 and 8; Details shows each whole picture.
