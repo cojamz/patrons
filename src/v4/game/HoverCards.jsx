@@ -15,6 +15,7 @@ import { Rich } from './Rich.jsx';
 import { memberCopyTargets, ownCopyPlan, copiesAll, copyAllPlan } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
+import { seatMock, SeatMockBody } from './SeatMocks.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
@@ -339,7 +340,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   return typeof document !== 'undefined' ? createPortal(layer, document.body) : layer;
 }
 
-const cardWidth = kind => Math.min(kind === 'seat' ? 360 : kind === 'followers' ? 260 : 280, innerWidth - 16);
+const cardWidth = kind => Math.min(kind === 'seat' ? ({ B: 560, E: 580, F: 430 }[seatMock()] || 360) : kind === 'followers' ? 260 : 280, innerWidth - 16);
 
 // where the pointer last was: a hover card whose target was re-drawn re-links only while the pointer is still on it
 let lastPt = null;
@@ -647,7 +648,7 @@ export function SeatCard({ state, pid, meId = null, optionFor = () => null, onPi
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
       <div className="t"><SeatFigure id={pid} state={state} size={32} face={pid !== meId} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal members or resources from {pid === meId ? 'you' : p.name} this round.</small> : null}{pid !== meId ? <SpendingLine state={state} pid={pid} /> : null}</h4></div>
-      <SeatMembers state={state} pid={pid} me={meId} optionFor={pid === meId ? optionFor : undefined} onPick={pid === meId ? onPick : null} />
+      {pid !== meId && seatMock() ? <SeatMockBody state={state} pid={pid} mock={seatMock()} /> : <SeatMembers state={state} pid={pid} me={meId} optionFor={pid === meId ? optionFor : undefined} onPick={pid === meId ? onPick : null} />}
     </div>
   );
 }
