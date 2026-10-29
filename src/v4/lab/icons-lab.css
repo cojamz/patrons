@@ -1,0 +1,21 @@
+/* ?lab=icons: keyword and member-mark treatments on the Header card */
+.il .cl-look h2 small{display:block;margin-top:6px;font:400 13px/1.3 var(--sans);color:var(--cream-3,#7d6e5a)}
+.il .x-box{color:var(--ink)}
+.il-rule,.il-line{display:block}
+.il-line + .il-line{margin-top:2px}
+.il-key{font-weight:800}
+.il-mark{display:inline-block;width:.8em;height:1.06em;vertical-align:-.18em;margin:0 .05em;overflow:visible}
+.il-mark.hood{width:.84em}
+.il-amt{white-space:nowrap}
+.il-amt .rich-n + .il-mark{margin-left:.02em}
+.il-count{display:inline-flex;align-items:center;gap:1px;font:800 16px/1 var(--sans);color:var(--ink)}
+.il-count .il-mark{width:12px;height:16px;vertical-align:0}
+.il-count .il-mark.hood{width:14px}
+.il-band{display:block;margin:0 auto 2px;width:max-content;padding:1px 8px;border-radius:4px;background:color-mix(in srgb,var(--c) 18%,transparent);
+  font:800 11px/16px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.il-rounds{display:block}
+.il-r{white-space:nowrap;color:var(--ink3)}
+.il-r.now{color:var(--ink)}
+.il-rn{font-style:normal;font-weight:800;font-size:.8em;letter-spacing:.02em}
+.il-sep{font-style:normal;color:var(--ink3)}
+.il-rline,.il-rtail{display:block}

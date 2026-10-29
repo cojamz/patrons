@@ -31,6 +31,8 @@ if (v3) {
   else if (lab === 'faces') import('./v4/lab/FacesLab.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
   // ?lab=cards: member cards as trading cards, design stabs side by side
   else if (lab === 'cards') import('./v4/lab/CardsLab.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
+  // ?lab=icons: keyword and member-mark treatments on the Header card
+  else if (lab === 'icons') import('./v4/lab/IconsLab.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
   // play/members/ (or ?lab=members): every member's card, by color, for member reviews
   else if (lab === 'members' || /\/members\/?$/.test(location.pathname)) import('./v4/lab/MembersPage.jsx').then(({ default: Page }) => root.render(<Page />)).catch(offline)
   else import('./v4/App.jsx').then(({ default: App }) => root.render(<App />)).catch(offline)
