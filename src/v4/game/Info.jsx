@@ -317,7 +317,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {where === 'In the pile' && <small className="mc-live">{where}</small>}
       {/* the cost's dots say its colors; a member of no color here says so on its own line (w3a #23: "costs 4◐ · colorless") */}
       {onFace ? (weight > worth ? <small className="mc-cost"><Rich text={`Counts as ${weight} members`} /></small> : null)
-        : <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{weight > worth ? <> · <Rich text={`counts as ${weight} members`} /></> : ''}</small>}
+        : <small className="mc-cost"><span className="mc-sr">costs </span><CostDots parts={costParts(d, state.resources)} />{weight > worth ? <span className="mc-n"><span className="mc-sr"> · </span>counts as {weight}</span> : ''}</small>}
     </div>
   );
 }

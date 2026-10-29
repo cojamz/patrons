@@ -45,21 +45,23 @@
 /* the full card (hover, tap): the lab's Header card. The bar (price, name, worth), the picture field, the rule big, the
    price's colors at the foot. Beside a shop face (onFace) it's the bar and the rule only: the face shows the rest. */
 .card-face.mc{background:#f4ebd7;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 2px var(--c)}
-.card-face.mc .mc-hd{display:flex;align-items:center;gap:8px;padding:6px;margin:0;background:var(--c)}
-.card-face.mc .mc-hd .mc-name{flex:1;min-width:0;text-align:center;font:700 19px/22px var(--serif);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.28)}
-.card-face.mc .mc-hd .mc-price{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#2b2018;color:#fbf6ea;font:800 16px/1 var(--sans);box-shadow:0 0 0 2px rgba(251,246,234,.92)}
-.card-face.mc .mc-hd .mc-worth{flex:none;display:inline-flex;align-items:center;gap:1px;height:22px;padding:0 7px;border-radius:11px;background:#fbf6ea;color:#2b2018;font:700 15px/1 var(--sans)}
-.card-face.mc .mc-hd .mc-worth .follower-mark{width:13px;height:13px;vertical-align:0}
-.card-face.mc .mc-art{display:grid;place-items:center;width:auto;height:96px;margin:0 2px;border-radius:0;
-  background:radial-gradient(circle at 50% 78%,color-mix(in srgb,var(--c) 34%,#f4ebd7),color-mix(in srgb,var(--c) 14%,#eadfc4) 78%)}
-.card-face.mc .mc-text{margin:0;padding:10px 14px 4px;font-size:17px;line-height:23px;text-align:center;border-top:0;text-wrap:pretty}
-.card-face.mc[data-long] .mc-text{font-size:15.5px;line-height:21px}
-.card-face.mc .mc-live{display:block;padding:0 14px 4px;text-align:center}
-.card-face.mc .mc-cost{display:block;margin:6px 2px 2px;padding:7px 12px 6px;border-top:1px solid rgba(43,32,24,.14);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-align:center;color:#7a5a44}
-.card-face.mc .mc-cost .cost-dots{text-transform:none;letter-spacing:0}
-.card-face.mc .mc-cost .cost-dots{display:inline-flex;align-items:center;gap:8px;vertical-align:middle}
-.card-face.mc .mc-cost .cd{display:inline-flex;align-items:center;gap:1px;font-size:17px;color:#2b2018}
-.card-face.mc .mc-cost .cd .pip.glyph,.card-face.mc .mc-cost .cd .pip.wild{width:16px;height:16px;vertical-align:0;margin:0}
+/* the lab's Header card as Cory picked it (Oct 29, "this was close to perfect"): one bar with price, name and worth */
+.card-face.mc .mc-hd{display:flex;align-items:center;gap:6px;padding:6px;margin:0;background:var(--c)}
+.card-face.mc .mc-hd .mc-name{flex:1;min-width:0;text-align:center;font:700 17px/20px var(--serif);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.2)}
+.card-face.mc .mc-hd .mc-price{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#2b2018;color:#fbf6ea;font:800 19px/1 var(--sans);box-shadow:0 0 0 2px #f4ebd7}
+.card-face.mc .mc-hd .mc-worth{flex:none;display:inline-flex;align-items:center;gap:1px;height:28px;padding:0 9px;border-radius:14px;background:#f4ebd7;color:#2b2018;font:800 18px/1 var(--sans);box-shadow:0 0 0 1px rgba(42,31,23,.25)}
+.card-face.mc .mc-hd .mc-worth .follower-mark{width:16px;height:16px;vertical-align:0}
+.card-face.mc .mc-art{display:grid;place-items:center;width:auto;height:112px;margin:0 2px;border-radius:0;
+  background:radial-gradient(circle at 50% 75%,color-mix(in srgb,var(--c) 34%,#f4ebd7),color-mix(in srgb,var(--c) 14%,#eadfc4) 75%)}
+.card-face.mc .mc-text{margin:0;padding:6px 12px 2px;font-size:16px;line-height:21px;text-align:center;border-top:0;text-wrap:pretty;color:#2b2018}
+.card-face.mc[data-long] .mc-text{font-size:15px;line-height:20px}
+.card-face.mc .mc-live{display:block;padding:0 12px 4px;text-align:center}
+.card-face.mc .mc-cost{display:flex;justify-content:space-between;align-items:center;gap:4px;margin:6px 2px 2px;padding:7px 10px;border-top:1px solid rgba(42,31,23,.14);font-size:16px;color:#2b2018}
+.card-face.mc .mc-cost .cost-dots{display:inline-flex;align-items:center;gap:6px}
+.card-face.mc .mc-cost .cd{display:inline-flex;align-items:center;gap:1px;font-size:16px;font-weight:800;color:#2b2018}
+.card-face.mc .mc-cost .cd .pip.glyph,.card-face.mc .mc-cost .cd .pip.wild{width:14px;height:14px;vertical-align:0;margin:0}
+.card-face.mc .mc-cost .mc-n{font-size:14px;white-space:nowrap;color:#8a7760}
+.card-face.mc .mc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* the pale colors: dark words on a pale bar */
 .card-face.mc[data-pale] .mc-hd .mc-name{color:#2b2018;text-shadow:none}
 .card-face.mc[data-pale]{box-shadow:inset 0 0 0 2px #cfc3a8}
@@ -79,3 +81,7 @@
 /* a card's contents never stretch its row (the shop's rows share the height; Details must not move a slot) */
 .app.game.lt .lt-shop-cards .lt-cards > .lt-card.card:has(> .lt-hd){min-height:0}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{min-height:0;overflow:hidden}
+/* the members page's Details view: the lab's row of cards, each 200 wide, feet lined up */
+.mp .mp-grid:has(.card-face.mc){grid-template-columns:repeat(auto-fill,200px);gap:12px}
+.mp .mp-grid .mp-card > .card-face.mc{display:flex;flex-direction:column}
+.mp .mp-grid .mp-card > .card-face.mc .mc-cost{margin-top:auto}
