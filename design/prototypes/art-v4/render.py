@@ -92,15 +92,17 @@ def samples(styles, out):
 
 
 if __name__ == '__main__':
-    data = json.load(open(os.path.join(HERE, 'samples.json')))
+    import sys
+    SET = sys.argv[1] if len(sys.argv) > 1 else 'samples'
+    data = json.load(open(os.path.join(HERE, SET + '.json')))
     allrows = []
     for st in data['styles']:
         items = st['portraits']
-        d = os.path.join(HERE, 'samples', st['id'])
+        d = os.path.join(HERE, SET, st['id'])
         os.makedirs(d, exist_ok=True)
         style_sheet(st, items, os.path.join(d, 'sheet.png'))
         for p in items:
             zoom(p, os.path.join(d, p['id'] + '-8x.png'))
         allrows.append((st, items))
-    samples(allrows, os.path.join(HERE, 'samples.png'))
+    samples(allrows, os.path.join(HERE, SET + '.png'))
     print('ok')

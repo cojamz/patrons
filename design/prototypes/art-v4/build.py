@@ -3,10 +3,11 @@ import importlib.util, json, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-ORDER = ['flat', 'toy', 'print']
+SET = sys.argv[1] if len(sys.argv) > 1 else 'samples'
+ORDER = sys.argv[2:] or ['flat', 'toy', 'print']
 out = {'styles': []}
 for sid in ORDER:
-    path = os.path.join(HERE, 'samples', sid, 'art.py')
+    path = os.path.join(HERE, SET, sid, 'art.py')
     if not os.path.exists(path):
         continue
     spec = importlib.util.spec_from_file_location('art_' + sid, path)
@@ -19,5 +20,5 @@ for sid in ORDER:
         assert not missing, (sid, pid, missing)
         st['portraits'].append({'id': pid, 'name': name, 'grid': grid, 'pal': {k: v for k, v in pal.items() if k in used}})
     out['styles'].append(st)
-json.dump(out, open(os.path.join(HERE, 'samples.json'), 'w'), indent=1)
+json.dump(out, open(os.path.join(HERE, SET + '.json'), 'w'), indent=1)
 print('built', [len(s['portraits']) for s in out['styles']])
