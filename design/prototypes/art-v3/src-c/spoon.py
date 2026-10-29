@@ -2,7 +2,7 @@ import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
 
 # Upstart (silver, id silver.spoon): new money, eyeing whoever has most. A young man with slicked-back hair and a
-# scheming side-glance (brows down, a small closed smile), loud silver suit, a big silver spoon held up like a prize.
+# scheming side-glance (brows down, a small closed smile), loud silver suit, a big silver spoon held at his chest like a prize.
 # 3/4 to our right. Template: 1 person.
 c = Canvas()
 body = cloth(c, [(1, 48), (1, 40), (3, 36.5), (8, 34.5), (17, 33.5), (30, 33.5), (39, 34.5), (44, 36.5), (46, 40), (46, 48)])
@@ -16,9 +16,10 @@ h = c.poly([(13.5, 21), (13.5, 13), (16, 8.5), (22, 6.4), (30, 6.8), (34, 9.5), 
             (15.6, 21)])
 c.fill(h, 'F'); c.outside(h, 'E', 22, 9, 12, 4.8); c.rim(h, 'G', -1, -1, 1, only='F')
 for y in (9, 11): c.fill(c.line(18, y, 31, y - 1), 'G')                           # combed-back lines
-# the silver spoon held up beside his face at a slant, bowl up-right, his fist round the handle
-c.put(37, 2, ['...fggf', '..fhhggf', '.fhhgggf', 'fhhgggfe', 'fgggffe.', 'fgffee..', '.fee....', 'fe......'])
-for i in range(10): c.put(36 - i // 2, 10 + i, ['fe'])
-c.put(32, 19, ['.CCD', 'CCCC', 'BCCC', 'BBCB', '.BB.'])
+# the silver spoon held at his chest like a prize: his hand round the handle, the bowl up beside his shoulder
+bowl = c.ellipse(38, 30, 3.4, 4.4)
+c.fill(bowl, 'g'); c.outside(bowl, 'f', 37, 29, 2.6, 3.4); c.fill(bowl & c.ellipse(36.8, 28.4, 1.2, 1.6), 'h'); c.edge(bowl, 'e')
+for i in range(6): c.put(36 - i // 2, 34 + i, ['fe'])
+c.put(30, 38, ['..DC..', '.CDCDC', 'CCCCCB', 'BCCCBB', '.BBBB.', '.2222.'])          # his hand: thumb, knuckles, cuff
 PORTRAIT = {'id': 'silver.spoon', 'name': 'Upstart', 'kind': 'member', 'sphere': 'silver',
             'people': [{'skin': 'golden', 'hair': 'black'}], 'accent': 'violet', 'px': c.rows()}

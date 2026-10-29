@@ -24,5 +24,6 @@ c.put(22, 0, ['.44.', '4433', '3322', '.22.'])
 c.put(35, 30, ['.D.D.D', 'DCDCDC', 'DCCCCC', 'CCCCCB', 'CCCCCB', 'BCCCBB', '.BBBB.', '..44..', '.4433.'])
 # the glass: two long glare streaks, high left to low right
 c.fill(c.line(2, 4, 11, 13), '"'); c.fill(c.line(2, 8, 7, 13), '"')
+c.put(21, 23, ['A...A']); c.put(22, 24, ['AAA'])                             # a delighted closed smile, corners up
 PORTRAIT = {'id': 'market.windowshopper', 'name': 'Window Shopper', 'kind': 'member', 'sphere': 'blue',
             'people': [{'skin': 'coolbrown', 'hair': 'black'}], 'accent': 'red', 'px': c.rows()}

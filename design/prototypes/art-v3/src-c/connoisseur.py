@@ -25,13 +25,13 @@ c.put(18, 19, ['zzzz']); c.put(26, 19, ['zzz']); c.put(17, 19, ['z']); c.put(18,
 seg(c, {
     21: [(15, 'FG')],
     22: [(15, 'FGG')],
-    23: [(15, 'FG'), (17, 'GGGF'), (21, 'CCC'), (24, 'GGFE')],
-    24: [(15, 'FGGGC'), (21, 'BAAAB'), (26, 'CFFE')],
-    25: [(16, 'FGGGFFEEFFFFFFE')],
-    26: [(17, 'FGGFFFFFFFFFE')],
-    27: [(18, 'FGFFFFFFFFE')],
-    28: [(19, 'EFFFFFFFE')],
-    29: [(21, 'EEEEE')],
+    23: [(15, 'FGDDDDDDDDDDDDCCCB')],
+    24: [(15, 'FGDDGGGGFDGGFFECCB')],
+    25: [(15, 'FGDDDDCCCCCCDDCCCB')],
+    26: [(16, 'FGGGFFFFFFFFFFEB')],
+    27: [(17, 'AFGFFFFFFFFEBA')],
+    28: [(18, 'AEFFFFFFFEAA')],
+    29: [(20, 'AEEEEEBB')],
 })
 c.fill(c.rect(32, 21, 32, 25), 'A')
 # the glass held up by the stem: a tulip bowl of film, red wine, the stem, his fingers

@@ -94,7 +94,7 @@ c.fill(board, '1')
 paper = c.rect(30, 40, 37, 48)
 c.fill(paper, '4')
 for y in (42, 44, 46): c.fill(c.rect(31, y, 35 if y != 44 else 36, y), '2')
-c.put(32, 37, ['zzzz', '.zz.'])
+c.put(32, 37, ['zzz'])
 c.edge(board, 'z')
 c.put(27, 41, ['.CD', 'CCC', 'BCC'])
 PORTRAIT = {'id': 'benders.hr', 'name': 'HR', 'kind': 'member', 'sphere': 'colorless',

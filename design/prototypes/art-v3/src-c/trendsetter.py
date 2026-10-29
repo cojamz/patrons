@@ -34,6 +34,8 @@ h = c.poly([(15.5, 25), (15.5, 17), (17, 14), (31, 14), (32.5, 17), (32.5, 25), 
 c.fill(h, 'F'); c.outside(h, 'E', 21, 16, 8, 6)
 beret(14, 12, 17, 3)
 c.put(15, 16, ['F', 'F']); c.put(32, 16, ['E', 'E'])
+# one row of jaw shadow, then the neck in its own tones (no dark block under the chin); a lip tone under the mouth
+c.put(21, 29, ['CCCCCBB', 'CCCCCBB']); c.put(25, 27, ['CC'])
 c.g = [[{'M': 'N', 'U': 'V', '!': 'y'}.get(k, k) for k in r] for r in c.g]   # merge the tiny ramps steps
 PORTRAIT = {'id': 'market.trendsetter', 'name': 'Trendsetter', 'kind': 'member', 'sphere': 'blue',
             'people': [{'skin': 'deep', 'hair': 'black'}, {'skin': 'fair', 'hair': 'brown'}, {'skin': 'olive', 'hair': 'black'}],

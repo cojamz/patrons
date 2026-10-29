@@ -259,5 +259,5 @@ def hand(c, x, y, p=0, kind='fist', mirror=False):
     """A small hand in skin keys of person p."""
     H = {'fist': ['.2322.', '232221', '122210', '.1110.'],
          'flat': ['.23332', '222221', '.12210'],
-         'grip': ['.232.', '22221', '12210', '.110.']}[kind]
+         'grip': ['.3.3.', '23232', '22221', '31221', '.1110']}[kind]   # knuckle bumps, thumb on the left
     stamp(c, x, y, H, p, mirror=mirror)

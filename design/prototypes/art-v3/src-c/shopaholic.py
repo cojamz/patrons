@@ -46,7 +46,8 @@ def bag(x, y, w, h, k):
     lo, mid, hi = k
     m = c.poly([(x, y + h), (x + 0.5, y), (x + w - 0.5, y), (x + w, y + h)])
     c.fill(m, mid); c.fill(m & c.rect(x + w - 2, y, x + w, y + h), lo); c.fill(m & c.rect(x, y, x + w, y), hi)
-    c.put(x + 2, y - 4, ['.' + lo * (w - 6) + '.', lo + '.' * (w - 6) + lo, lo + '.' * (w - 6) + lo, lo + '.' * (w - 6) + lo])
+    n = w - 6                                                                       # a 2px arch handle in the bag's dark
+    c.put(x + 2, y - 4, ['.' + lo * n + '.', lo * 2 + '.' * (n - 2) + lo * 2, lo + '.' * n + lo, lo + '.' * n + lo])
     return m
 bag(1, 40, 8, 8, '234')
 bag(16, 38, 10, 10, 'uvw'); bag(35, 39, 10, 9, 'uvw')

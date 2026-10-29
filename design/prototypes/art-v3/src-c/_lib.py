@@ -80,7 +80,7 @@ def face(c, box, eye, p=0, view='front', jaw='round', eyes='round', look=0, brow
     # cheek plane
     if cheek and not back:
         # on the cheekbone, a row lower and a pixel outward from the eye (right under the eye reads as a bruise)
-        for i, (dx, dy) in enumerate(((-1, 2), (0, 2), (1, 2), (0, 3), (1, 3))):
+        for i, (dx, dy) in enumerate(((-2, 3), (-1, 3), (0, 3), (-1, 4), (0, 4))):
             if (L[0] + dx, eye + dy) in m and c.get(L[0] + dx, eye + dy) == C: c.set(L[0] + dx, eye + dy, D)
     # mouth
     my = eye + (mouth_dy if mouth_dy is not None else (5 if h >= 17 else 3))
@@ -247,10 +247,10 @@ def back_face(c, box, p, eye, look=1, eyes='open', brows='level', mouth='smile',
     c.set(cx - 1, eye + 1, I); c.set(cx - 1, eye + 2, I)                            # nose shadow
     my = eye + 4
     if mouth == 'smile':
-        c.put(cx - 2, my - 1, ['I..I']); c.put(cx - 1, my, ['zz'])
+        c.put(cx - 2, my - 1, [I + '..' + I]); c.put(cx - 1, my, [I + I])
     elif mouth == 'grin':
         c.put(cx - 2, my - 1, ['z..z']); c.put(cx - 1, my, ['zz'])
     elif mouth == 'flat':
-        c.put(cx - 1, my, ['zz'])
+        c.put(cx - 1, my, [I + I])
     elif mouth == 'o':
         c.put(cx - 1, my - 1, ['II']); c.put(cx - 1, my, ['zz'])

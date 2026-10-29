@@ -3,7 +3,7 @@ from _lib import *
 # Launderers (colorless, counts as 2): worth 2; On Recruit, turn all your resources into one color. Two partners at
 # the wash, mid-laugh. In front: a curly-haired man, sleeves rolled, a striped towel over his shoulder, forearms bare,
 # brows up, laughing at the bubble floating off. Behind (3px lower, a value darker): his partner in
-# teal hair curlers, eyes shut laughing. Soap bubbles drift up between them; a washed banknote is pegged to his towel (the money joke). Template: 2 people, front left.
+# pale pink hair rollers, eyes shut laughing. Soap bubbles drift up between them; a washed banknote is pegged to his towel (the money joke). Template: 2 people, front left.
 c = Canvas()
 # ---- behind (person 1), right
 bodyB = c.poly([(22, 48), (24, 32), (28, 27.5), (38, 27), (44, 29), (47, 33), (47, 48)])
@@ -27,9 +27,9 @@ blk(c, 26, 12, '''
 |....IJJJJJI....
 ''')
 c.put(40, 15, ['J', 'I', 'I'])                                                    # ear
-for x0 in (27, 32, 37):                                                            # three rounded rollers
-    c.put(x0, 6, ['www', 'uuu'])
 c.shift(c.mask_of('IJKL'), -1)
+for x0 in (29, 33, 37):                                                            # three pale pink rollers, a lit end cap each
+    c.put(x0, 9, ['kLL', 'kLL'])
 c.g = [['.'] * 48 for _ in range(6)] + c.g[:42]                                 # 3px lower again (critic, round 1)
 # ---- in front (person 0), left
 body = torso(c, [(0, 48), (0, 40), (3, 37), (9, 35), (24, 35), (30, 37), (33, 41), (34, 48)], 14, 40, rx=(17, 21), ry=(10, 13), lite=None)
@@ -43,16 +43,16 @@ c.fill(c.line(6, 41, 6, 47) | c.line(28, 41, 28, 47), '1')
 c.put(11, 33, ['22......22', '.22....22.'])                                       # collar points
 towel = c.poly([(3.5, 37), (6, 34.4), (10, 33.6), (13.4, 34.6), (12.6, 48), (7, 48), (7.4, 39), (5.5, 38.4)])
 c.fill(towel, 'k'); c.fill(towel & c.rect(11, 30, 13, 47), 'i')
-c.fill(towel & c.rect(0, 42, 47, 43), 'w'); c.fill(towel & c.rect(11, 42, 13, 43), 'u'); c.fill(towel & c.rect(0, 46, 47, 46), 'w')
+c.fill(towel & c.rect(0, 42, 47, 43), 'w'); c.fill(towel & c.rect(11, 42, 13, 43), 'v'); c.fill(towel & c.rect(0, 46, 47, 46), 'w')
 c.fill(c.line(6, 35, 8, 38), 'i')                                                    # where it folds over the shoulder
 c.edge(towel, 'i')
-c.put(4, 36, ['...EE..', 'wwwEwww', 'wkkkkkw', 'wkuwukw', 'wkkkkkw', 'wwwwwww'])        # a washed banknote pegged to the towel
+c.put(4, 36, ['...E...', 'wwwEwww', 'wwvvvww', 'wwvvvww', 'vvvvvvv'])                   # a washed green banknote, pegged to the towel
 # ---- face: 3/4 to our right (toward her), brows up, laughing. ruler x 8..25
 blk(c, 8, 16, '''
 |.ECCCCCCCCCCCCCBA.
 |.ECDEEEECCCEEEBBA.
 |.CCBBBBBCCBBBBBBA.
-|.CBCC!zBDCB!zBBBA.
+|.CBCCkzBDCBkzBBBA.
 |.CACCzzBDCBzzBBBA.
 |.CACCCCCDBCCCBBBA.
 |.CBDDDCCCDBCCBBBA.
@@ -72,4 +72,4 @@ for (x, y) in ((11, 9), (16, 7.5), (21, 8), (8.5, 13)): c.fill(c.ellipse(x, y, 1
 for (x, y, r) in ((23.5, 4.5, 3.6), (31, 2.5, 2.3), (44, 6, 2.6), (6, 4, 1.8)):
     bubble(c, x, y, r, 'k')
 PORTRAIT = portrait('benders.launderer', 'Launderers', c, [{'skin': 'tan', 'hair': 'darkbrown'}, {'skin': 'fair', 'hair': 'blonde'}],
-                    'teal')
+                    'green')

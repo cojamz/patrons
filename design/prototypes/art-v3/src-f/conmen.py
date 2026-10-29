@@ -36,7 +36,7 @@ c.fill(cap, 'w'); c.outside(cap, 'v', 35.5, 11.6, 8.5, 3); c.rim(cap, 'w', -1, -
 peak = c.poly([(24.4, 16.2), (27, 14), (35, 13.8), (36.6, 15.2), (35, 16.8), (26.6, 17)])
 c.fill(peak, 'v'); c.fill(peak & c.rect(0, 14, 47, 14), 'w'); c.fill(peak & c.rect(0, 16, 47, 17), 'u'); c.edge(cap | peak, 'u')
 # ---- lead crook (person 0), left
-body = torso(c, [(0, 48), (0, 40), (3, 37), (9, 35), (24, 35), (30, 37), (33, 41), (34, 48)], 14, 40, rx=(17, 21), ry=(10, 13))
+body = torso(c, [(0, 48), (0, 40), (3, 37), (9, 35), (24, 35), (30, 37), (33, 41), (34, 48)], 14, 40, rx=(17, 21), ry=(10, 13), lite=None)
 shirt = c.poly([(12.5, 35), (20.5, 35), (16.5, 45)])
 c.fill(shirt, 'n'); c.fill(shirt & c.rect(17, 34, 22, 47), 'm')
 lapL = c.poly([(7, 35.6), (12.6, 35), (16.6, 45.5), (13.6, 46), (8.6, 39.4)])
@@ -68,14 +68,12 @@ c.fill(dome & c.rect(0, 12, 47, 13), 'm')
 brim = c.poly([(6.4, 14), (8, 13), (27, 13), (28.6, 14), (27, 15.6), (8, 15.6)])
 c.fill(brim, 'n'); c.fill(brim & c.rect(0, 13, 47, 13), 'o'); c.fill(brim & c.rect(0, 15, 47, 15), 'm')
 # ---- three cards fanned in his hand: find the lady
-cards = [((3.2, 36), (8.6, 33.6), (11.6, 42), (6.4, 44.6), 'z'),                      # left card, tilted out, black pip
-         ((8.4, 33), (14, 33), (14, 43), (8.4, 43), None),                             # middle card, upright
-         ((13.4, 33.6), (18.8, 36), (15.6, 44.6), (10.4, 42), 'w')]                    # right card, tilted out, red pip
-for (p0, p1, p2, p3, pip) in cards:
+cards = [((0.6, 36.4), (6, 33.6), (9, 42), (3.6, 44.8), 'z', (2, 38)),               # left card, tilted out, black pip
+         ((6.6, 32.4), (12, 32.4), (12, 42.6), (6.6, 42.6), None, None),             # middle card, upright
+         ((11.6, 33.6), (17, 36), (14.2, 44.6), (8.8, 42), 'w', (13, 37))]           # right card, tilted out, red pip
+for (p0, p1, p2, p3, pip, at) in cards:
     card = c.poly([p0, p1, p2, p3]); c.fill(card, 'k'); c.edge(card, 'm')
-    if pip:
-        cx = round((p0[0] + p1[0] + p2[0] + p3[0]) / 4 - 1); cy = round((p0[1] + p1[1] + p2[1] + p3[1]) / 4 - 2)
-        c.put(cx, cy, [pip * 2, pip * 2])
+    if pip: c.put(at[0], at[1], [pip * 2, pip * 2])
 c.put(10, 42, ['..DDCCC',
                '.CBCBCB',
                'DCCCCCB',

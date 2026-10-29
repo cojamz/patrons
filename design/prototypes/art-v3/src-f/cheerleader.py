@@ -12,8 +12,6 @@ c.fill(c.poly([(18.6, 34), (19.8, 34), (24, 39), (28.2, 34), (29.4, 34), (24, 40
 chev = c.poly([(7, 42), (24, 46.2), (41, 42), (41.5, 44), (24, 48.2), (6.5, 44)])
 c.fill(chev & body, 'v'); c.fill(chev & body & c.rect(0, 0, 23, 44), 'w')
 # far arm hangs at her side (shadow side)
-armR = c.poly([(38, 37), (42, 38.5), (44.5, 48), (40.5, 48)])
-c.fill(armR, 'B'); c.rim(armR, 'C', -1, 0, 1); c.edge(armR, '1')
 # ---- neck
 c.fill(c.rect(20, 28, 27, 34), 'A'); c.fill(c.rect(20, 31, 21, 34), 'B')
 # ---- hair, pulled back, and a high ponytail swinging to the right
@@ -59,5 +57,6 @@ for i in range(28):                       # streamers radiating from the handle,
     k = ('x' if lit > 0.3 else 'w' if lit > -0.35 else 'v') if i % 2 else ('w' if lit > 0.3 else 'v' if lit > -0.35 else 'u')
     c.fill(ln, k); pom |= ln
 c.edge(pom, 'u')
-c.put(5, 21, ['.CDC.', 'CBCBC', 'CCCCB', '.BBB.'])                                 # her hand under the pom-pom
+for (x, y) in ((4, 13), (7, 11), (10, 13)): c.put(x, y, ['5', '.5'])               # pale streaks in the fringe
+c.put(5, 22, ['.CDC.', 'CBCBC', 'CCCCB', '.BBB.'])                                 # her hand under the pom-pom
 PORTRAIT = portrait('benders.cheerleader', 'Cheerleader', c, [{'skin': 'deep', 'hair': 'black'}], 'red')

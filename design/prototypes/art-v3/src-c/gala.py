@@ -6,7 +6,7 @@ from _lib import *
 # Front view. Template: 1 person.
 c = Canvas()
 body = c.poly([(2, 48), (3, 41), (7, 37), (14, 35), (34, 35), (41, 37), (45, 41), (46, 48)])
-c.fill(body, 'C'); c.outside(body, 'B', 20, 30, 26, 9)                            # bare shoulders
+c.fill(body, 'C'); c.fill(body & c.rect(36, 0, 47, 47), 'B')                       # bare shoulders, shadow side only
 gown = c.poly([(2, 48), (3, 41), (6, 37.5), (13, 36.6), (19, 38), (24, 39.5), (29, 38), (35, 36.6), (42, 37.5), (45, 41), (46, 48)])
 c.fill(gown, '3'); c.outside(gown, '2', 20, 41, 18, 8); c.outside(gown, '1', 18, 41, 24, 11); c.rim(gown, '4', 0, -1, 1, only='3')
 c.inner_edge(gown, lambda k: '1', sides=((0, -1),))                              # one silver-dark neckline
@@ -24,5 +24,6 @@ tiara = ['......d......', '.c...c3c...c.', 'cbc.cb4bc.cbc', 'bbbbbbbbbbbbb']
 c.put(18, 6, tiara)
 c.put(24, 7, ['3'])
 c.fill(c.line(10, 41, 13, 47) | c.line(35, 41, 33, 47), '2')                    # where the arms meet the gown
+c.put(21, 23, ['A...A']); c.put(22, 24, ['AAA'])                             # a delighted smile
 PORTRAIT = {'id': 'silver.gala', 'name': 'Debutante', 'kind': 'member', 'sphere': 'silver',
             'people': [{'skin': 'warmtan', 'hair': 'darkbrown'}], 'accent': 'navy', 'px': c.rows()}

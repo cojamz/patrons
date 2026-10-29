@@ -33,8 +33,8 @@ hair(c, [(31, 12), (34, 14), (34.5, 21), (32.6, 21), (32, 15)], 32, 13, 2, 3)
 purse = c.ellipse(9, 42.5, 5.8, 4.6)                                           # a drawstring pouch: round belly, cinched neck
 c.fill(purse, 'v'); c.outside(purse, 'u', 8, 41.5, 5, 3.8); c.fill(purse & c.ellipse(6.5, 41, 2, 1.3), 'w')
 c.put(5, 34, ['vv.vv.vv', '.vvvvvv.', '..uvvu..', '..cbbc..', '..vvvu..'])               # the ruffled top, the gold cord
-c.put(13, 33, ['.cc', 'cdc', 'bcb'])                                              # coins spilling out over the top
-c.put(15, 37, ['.cc', 'cdb', '.bb']); c.put(16, 30, ['cc', 'bb'])
+for (x, y) in ((5, 31), (9, 30), (12, 32)):                                      # three coins at the pouch's mouth
+    c.put(x, y, ['.bb.', 'bdcb', 'bccb', '.bb.'])
 c.put(13, 42, ['.CD.', 'CDCD', 'CCCB', 'BCBB', '.BB.'])                          # his hand under it: knuckles, thumb
 merge(c, {'4': '3', 'a': 'b', 'd': 'c', 'l': 'k', '!': 'y'})
 PORTRAIT = {'id': 'silver.benefactor', 'name': 'Benefactor', 'kind': 'member', 'sphere': 'silver',

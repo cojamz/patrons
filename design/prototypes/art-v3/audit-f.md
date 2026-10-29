@@ -10,8 +10,8 @@ Rule: no tone reads as the joke, the threat or a service trope; the darkest pers
 | benders.insider | Insider (sly) | office insider, ID badge | olive | solo | sly side-glance, small smile |
 | benders.extrahand | Extra Hand (helper) | volunteer, raised work glove | freckled | solo | eager, small open smile (no teeth) |
 | benders.frontrunner | Front-runner (athlete) | runner, plain terry sweatband (no knot tails), bib 1 | golden | solo | determined, round eyes |
-| benders.launderer | Launderers (washers, money joke) | man, rolled sleeves, striped towel with a pegged banknote | tan | front | laughing, brows up |
-| | | partner in three rollers | fair | behind, 6px lower | laughing, eyes shut |
+| benders.launderer | Launderers (washers, money joke) | man, rolled sleeves, green-striped towel with a pegged green banknote | tan | front | laughing, brows up |
+| | | partner in three pale pink rollers | fair | behind, 6px lower | laughing, eyes shut |
 | benders.saboteur | Saboteur (shady) | watch cap, monkey wrench | palepink | solo | brows down, set mouth |
 | benders.dabblers | Dabblers (hobbyists) | painter, beret, palette | coolbrown | front (mirrored, right) | pleased upturned smile |
 | | | friend in a soft floppy-brimmed hat | golden | behind, 6px lower | polite smile |
@@ -24,7 +24,7 @@ Rule: no tone reads as the joke, the threat or a service trope; the darkest pers
 | | | redhead in tie | freckled | behind left | polite |
 | | | grey bun, turtleneck | golden | behind right | smiling, eyes shut |
 | benders.secondwind | Coach | ball cap, steel whistle | fair | solo | brows down, cheeks puffed |
-| benders.tiebreaker | Tiebreaker (referee) | high-contrast ref's stripes, thumb-up hand, one gold coin with one spin arc | verydeep | solo | sure small smile, eyes on the coin |
+| benders.tiebreaker | Tiebreaker (referee) | high-contrast ref's stripes, thumb-up hand, one round gold coin with a pale glint and a pale grey spin arc | verydeep | solo | sure small smile, eyes on the coin |
 
 Checks:
 - Shady roles span palepink (Saboteur), porcelain (Con Men lead crook), olive (Insider), warmtan (Party Crasher), brown (Con Men partner, level and friendly) and deep (Anarchist, cheerful punk).
@@ -36,3 +36,5 @@ Checks:
 - Eyes vary; the lid bar is on 5 of 16 (Coach, Insider, Saboteur, Tiebreaker, Dabblers behind). Round eyes with a glint: Party Crasher, Extra Hand, Front-runner, Scout, Alchemist, Launderers front. Closed laughing arcs: Big Spender, Launderers behind, HR right. Glasses: HR front. 1px white with an iris: Cheerleader, Con Men, Dabblers front, Tiebreaker.
 - Deep faces (Cheerleader, Anarchist, Tiebreaker) use the new bright D on the forehead, cheekbone and nose bridge; closed mouths, no light row on the mouth line, no lipstick tones.
 - No freckles in this batch (Extra Hand's were removed); no cheek speckle.
+
+Round 2 (critic): Tiebreaker coin, arc, thumb and forehead plane; Con Men hand and three separate outlined cards (black pip, red pip); Launderers pink rollers and money-green banknote (accent now green). Optional: Cheerleader pom-pom streaks, knuckles, stray arm block removed; Extra Hand glove thumb; HR 3px clip.

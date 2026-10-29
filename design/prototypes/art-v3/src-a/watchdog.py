@@ -21,12 +21,12 @@ c.fill(c.poly([(12, 35.2), (21, 35.2), (16.5, 42)]), 'n')
 lapL = c.poly([(9, 36), (12, 35.2), (16.5, 43), (14, 43.4)]); c.fill(lapL, '4'); c.edge(lapL, '2')
 lapR = c.poly([(21, 35.2), (24, 36), (19, 43.4), (16.5, 43)]); c.fill(lapR, '2'); c.edge(lapR, '1')
 neck(c, 0, 14, 19, 29, 35)
-face(c, 0, 9, 20, 16, 6, 8, view='f', eyes='calm', mouth='calm', jaw='oval', dk=True)
+face(c, 0, 9, 20, 16, 6, 8, view='f', eyes='calm', mouth='smirk', jaw='oval', dk=True)
 c.put(10, 18, ['zzzzz..zzzzz', 'z!zzzzzz!zzz', '.zzzz..zzzz.'])                    # dark glasses
 hr = c.poly([(8, 20), (8.2, 15), (10, 12), (14, 10.4), (19, 10.4), (23, 12), (25, 15), (24.8, 20), (24, 19.4), (23.6, 16),
              (20, 14.6), (13, 14.6), (9.6, 16), (9, 20)])
 hair(c, hr, 0, 16, 12, 8, 3.4)
-c.put(25, 21, ['k', 'kk', '.k', 'kk', '.k', 'kk', '.k', '.k'])                  # the earpiece's curly cord
+c.put(25, 20, ['k', 'k', '.k', '.k', '.k', '.k', '.k', '..k', '..k'])        # the earpiece cord: one line off the face, down behind the collar
 front = changed(c, s0)
 c.edge(front, None)
 c.fill(c.mask_of('K'), 'J')

@@ -2,7 +2,7 @@ import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
 
 # Window Dresser (blue, counts as 3): the team that redoes the shop window. In front: the head dresser, a man with a
-# neat high-top fade and a yellow tape measure pulled out in his hands, pleased with the new display (a closed smile). Behind
+# neat high-top fade and a yellow tape measure held up, its ribbon hanging, pleased with the new display (a closed smile). Behind
 # left and right, lower and darker: two assistants, one in a ponytail, one with short hair, both looking at the window
 # (us) and judging it. Template: 3 people.
 c = Canvas()
@@ -23,16 +23,14 @@ c.fill(fade, 'F'); c.outside(fade, 'E', 23, 11, 8, 4); c.rim(fade, 'G', -1, -1, 
 c.fill(c.rect(17, 15, 17, 19) | c.rect(31, 15, 31, 17), 'E')
 # warm cheekbone on the lit side
 c.put(18, 24, ['DD', 'D'])
-# the tape measure in his hand: the round case at the left, one yellow ribbon pulled out at an angle, tick marks
-for i in range(19):
-    x, y = 13 + i, 45 - round(i * 0.45)
-    c.set(x, y, 'c'); c.set(x, y + 1, 'b')
-    if i % 3 == 1: c.set(x, y + 1, 'z')
-case = c.ellipse(11, 44, 3.6, 3.6)
-c.fill(case, '1'); c.fill(case & c.ellipse(10.2, 43.2, 2, 2), '2'); c.put(10, 43, ['cc', 'cc'])
-c.put(7, 41, ['.CD', 'CDC', 'CCB', 'BB.'][0:0])
-c.put(30, 34, ['.CD.', 'CDCD', 'CCCB', 'BCBB', '.BB.'])                            # the other hand pinching the tape's end
-c.put(31, 39, ['33'])
+# the tape measure held up in his hand: the round case, its yellow ribbon hanging straight down with tick marks
+for y in range(39, 48):
+    x = 33 + (1 if 42 <= y <= 44 else 0)
+    c.set(x, y, 'c'); c.set(x + 1, y, 'b')
+    if y % 2: c.set(x + 1, y, 'z')
+case = c.ellipse(33.5, 36, 3.2, 3.2)
+c.fill(case, '1'); c.fill(case & c.ellipse(32.6, 35.2, 1.8, 1.8), '2'); c.put(33, 35, ['cc'])
+c.put(28, 33, ['.CD.', 'CDCD', 'CCCB', 'BCBB', '.BB.', '.33.'])                    # his hand round the case: knuckles, thumb, cuff
 merge(c, {'M': 'N', 'U': 'V', 'G': 'F', '4': '3', '!': 'y', 'k': 'y', 'b': 'c', 'w': 'v'})
 PORTRAIT = {'id': 'market.windowdresser', 'name': 'Window Dresser', 'kind': 'member', 'sphere': 'blue',
             'people': [{'skin': 'coolbrown', 'hair': 'black'}, {'skin': 'golden', 'hair': 'brown'}, {'skin': 'palepink', 'hair': 'auburn'}],

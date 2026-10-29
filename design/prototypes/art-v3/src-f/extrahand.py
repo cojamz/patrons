@@ -32,6 +32,7 @@ c.put(34, 6, ['..ts..ts......',
               '...rrrrrrrrrr...',
               '...qrrrrrrrrq...',
               '...qqqqqqqqqq...'])
+c.put(34, 13, ['ts', 'ts', 'ts', 'rs'])                                            # glove thumb
 # ---- face, frontal, brows up, freckles. ruler x 14..33
 blk(c, 14, 14, '''
 |...BCCCCCCCCCCCB....

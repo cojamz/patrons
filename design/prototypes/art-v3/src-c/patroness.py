@@ -13,14 +13,10 @@ c.fill(c.rect(20, 30, 22, 33), 'D')
 f = face(c, (15, 10, 32, 28), 19, view='l', jaw='narrow', mouth='smile', brows='arch', eyes='round', look=0)
 # a little rose on the lips, kept small
 m = f['mouth']
-c.put(m[0] - 1, m[1], ['vvv']); c.set(19, 23, 'B'); c.set(24, 23, 'B'); c.put(m[0] - 1, m[1] + 1, ['DD'])
+c.put(m[0] - 1, m[1], ['vvv']); c.set(19, 23, 'A'); c.set(24, 23, 'A'); c.put(m[0] - 1, m[1] + 1, ['DD'])
 c.put(16, 20, ['DDD', 'DD.'])                                                  # cheek plane
-# light on the deep skin: forehead, nose bridge, cheekbone, so the face never goes black
-# (verydeep's steps sit close together, so the whole face rides one step up: D lit, C shadow, B deep shadow)
-face_px = f['m'] - c.mask_of('zy!vEFGH')
-for x, y in face_px:
-    k = c.get(x, y)
-    if k in 'ABC': c.set(x, y, {'C': 'D', 'B': 'C', 'A': 'B'}[k])
+# light on the deep skin (the ramp's tall warm top step): forehead, nose bridge, cheekbone, so features read at 1x
+c.put(17, 13, ['DDDD', 'DDDDD', '.DDD']); c.put(20, 19, ['D', 'D', 'D'])
 c.fill(c.rect(32, 13, 32, 26) & f['m'], 'A'); c.fill(c.rect(16, 28, 31, 28) & f['m'], 'A')
 # hair: a soft rounded updo of curls, wider than tall, each curl a lit cluster with its own shadow
 base = c.poly([(13, 21), (12.5, 13), (14.5, 8.6), (19, 6.4), (29, 6.4), (33.5, 8.6), (35.5, 13), (34.5, 20), (32.5, 15), (16, 14.5), (15, 21)])

@@ -27,6 +27,12 @@ c.fill(c.rect(36, 30, 38, 32), 'c'); c.fill(c.rect(36, 39, 40, 43) & bottle, 'k'
 c.put(31, 41, ['DC', 'CC', 'BB'])
 c.fill(c.line(39, 29, 42, 27) | c.line(42, 27, 47, 26), 'y')                         # the spray, out to the right, clear of the faces
 c.put(44, 28, ['yy']); c.put(46, 24, ['yy'])                                             # droplets, in pairs
+# front face by hand: closed-happy arcs (not x marks), a clean laughing mouth, no chin dots
+for x in range(18, 29):
+    for y in (20, 21):
+        if c.get(x, y) == 'z': c.set(x, y, 'C')
+c.put(19, 20, ['zz....zz']); c.put(18, 21, ['z..z..z..z'])
+c.put(20, 25, ['A.....A']); c.put(21, 26, ['AAAAA']); c.put(21, 27, ['CCCCC']); c.put(19, 28, ['AACCCBBAA'])
 merge(c, {'M': 'N', 'U': 'V', 'G': 'F', '4': '3', '!': 'y', 'k': 'y', 'b': 'c', 'w': 'v', 'D': 'C'})
 PORTRAIT = {'id': 'silver.revelers', 'name': 'Revelers', 'kind': 'member', 'sphere': 'silver',
             'people': [{'skin': 'tan', 'hair': 'brown'}, {'skin': 'palepink', 'hair': 'blonde'}, {'skin': 'golden', 'hair': 'black'}],
