@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.850 — 2026-10-29
+
+- Connoisseur back to 4.
+
 ## v0.9.849 — 2026-10-29
 
 - Twelve member prices from overnight bot balance runs: Heiress 8, Exporter 7, Grifter 5, Accomplice 3, Bodyguard 8, Night Owl 8, Extra Hand 8, Launderers 4, Agents 3, Bait 3, Connoisseur 3, Scout 3.
