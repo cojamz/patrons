@@ -16,8 +16,8 @@ for (const [action, round] of [['red.hire', 1], ['red.hireup', 2], ['red.take', 
     }
     s = settle(s);
     expect(s.players[0].members.some(u => s.cards[u].def === 'red.volunteer')).toBe(true);
-    // the space's red (+1; Walk-In back to +1, Cory Oct 28) + Go-Between's recruited color
-    expect(s.players[0].res.red).toBe(1 + 1);
+    // the space's red (Walk-In +1, Cory Oct 28; Promote +2, Cory Oct 28) + Go-Between's recruited color
+    expect(s.players[0].res.red).toBe((action === 'red.hire' ? 1 : 2) + 1);
     expect(s.players[0].res.white).toBe(1); // Exporter: white on a non-white recruit
     for (const name of ['Go-Between', 'Exporter']) expect(s.log.some(l => l.includes(name))).toBe(true);
   });
