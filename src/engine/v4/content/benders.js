@@ -108,7 +108,7 @@ function launderStep(ctx, p, data) {
 
 const members = [
   // Party Crasher (was Squatter; id kept for old records): Cory, 2026-10-28, Once per game, cheaper; 4 with the +1 wild
-  m('squatter', 'Party Crasher', 'thieves', 2, 1, 'Once per game: your next minion can be placed on a space a rival already took.', {
+  m('squatter', 'Party Crasher', 'thieves', 2, 1, 'On Use, once per game: your next minion can be placed on a space a rival already took.', {
     activate: 'game',
     onActivate(ctx, owner, card) {
       if (owner.crashNext) { card.used = false; return; }
@@ -120,7 +120,7 @@ const members = [
   // Big Spender as it printed until Oct 28, never dealt: the fixture for the engine's once-per-round second buy
   m('bigspender1', 'Big Spender', 'gold', 1, 1, 'Once per round: recruit twice in one turn.', { extraBuy: true, retired: true }),
   // Cory, 2026-10-28: back in the deck (it stands in for Blue's recruits), One Time Use, 3
-  m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per game: recruit twice this turn.', {
+  m('bigspender', 'Big Spender', 'gold', 1, 1, 'On Use, once per game: recruit twice this turn.', {
     activate: 'game',
     onActivate(ctx, owner, card) {
       if (owner.buyTwiceNow) { card.used = false; return; }
@@ -130,13 +130,13 @@ const members = [
     onTurnEnd(ctx, owner, card, p) { if (p === owner) delete owner.buyTwiceNow; },
     botActivate: (ctx, p) => !p.buyTwiceNow && ctx.state.round >= 2 && p.turnBuys === 0 && Object.values(p.res).reduce((a, b) => a + b, 0) >= 10,
   }),
-  m('freelancer', 'Alchemist', 'yellow', 2, 2, /* Freelancer until Cory renamed it, Oct 28 */ 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
+  m('freelancer', 'Alchemist', 'yellow', 2, 2, /* Freelancer until Cory renamed it, Oct 28 */ 'All your resources count as any when you recruit a member.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
   // Extra Hand as it printed until Oct 28, never dealt (retired): the tests of extra minions a card grants by round
   // (Poach and swaps moving an unplaced grant, copies, a full board) keep it as their fixture
   m('extrahand3', 'Extra Hand', 'purple', 5, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1], retired: true }),
   // Cory, 2026-10-28: "probably needs to be a Use Once… it had to have some category, and On Recruit would be broken"
-  m('extrahand', 'Extra Hand', 'purple', 5, 3, 'Once per game: +1 minion this round.', { from: 2,
+  m('extrahand', 'Extra Hand', 'purple', 5, 3, 'On Use, once per game: +1 minion this round.', { from: 2,
     activate: 'game',
     onActivate(ctx, owner, card) { if (!extraMinion(ctx, owner, 'Extra Hand')) card.used = false; },
     botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -173,7 +173,7 @@ const members = [
     onContestWin(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Cheerleader: +1 follower.`); },
   }),
   // Cory, 2026-10-28: Anarchist, 7, once per round (it stands in for Red's swaps)
-  m('anarchist', 'Anarchist', null, 0, 6, 'Once per round: swap any two members within 2 cost.', {
+  m('anarchist', 'Anarchist', null, 0, 6, 'On Use, once per round: swap any two members within 2 cost.', {
     activate: 'round',
     onRoundStart(ctx, owner, card) { card.used = false; },
     onActivate(ctx, owner, card) {
@@ -189,7 +189,7 @@ const members = [
     botActivate: (ctx, p) => anarchyPairs(ctx, p).some(([a, b]) => gainFor(ctx, p, a, b) >= 2),
   }),
   // Cory, 2026-10-28: Scout, 4, once per round (it stands in for Blue's shop work)
-  m('scout', 'Scout', null, 0, 2, 'Once per round: send any shop members to the bottom of the pile, then refill.', {
+  m('scout', 'Scout', null, 0, 2, 'On Use, once per round: send any shop members to the bottom of the pile, then refill.', {
     activate: 'round',
     onRoundStart(ctx, owner, card) { card.used = false; },
     onActivate(ctx, owner, card) {
@@ -209,16 +209,16 @@ const members = [
   // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"), named Coach (Cory, Oct 29); now any member's
   // Once per game or Once per round ability, as a free extra use (Cory, Oct 29: "activate the On Use effect of one of
   // your members (could be a once per round)")
-  m('secondwind', 'Coach', null, 0, 7, 'On Recruit: use the ability of one of your Once per game or Once per round members as a free extra use.', {
+  m('secondwind', 'Coach', null, 0, 7, 'On Recruit: activate one of your members’ On Use ability as a free extra use.', {
     onRecruited(ctx, owner) {
       const list = coachable(ctx, owner);
-      if (!list.length) { ctx.log(`${owner.name}'s Coach: no Once per game or Once per round member to use.`); return; }
-      ctx.choose(owner, 'Coach: which member’s ability do you use?', list.map(c => ({
+      if (!list.length) { ctx.log(`${owner.name}'s Coach: no member with an On Use ability.`); return; }
+      ctx.choose(owner, 'Coach: which member’s On Use ability do you activate?', list.map(c => ({
         id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: cost(c),
       })), 'benders.rewind');
     },
   }),
-  m('tiebreaker', 'Tiebreaker', null, 0, 3, /* Cory, Oct 28 night: "a little cheaper. 4?": 4 with the +1 wild */ 'Ties you’re in go to you alone.', { tiebreak: true }),
+  m('tiebreaker', 'Tiebreaker', null, 0, 3, /* Cory, Oct 28 night: "a little cheaper. 4?": 4 with the +1 wild */ 'You win every contest tie you’re in.', { tiebreak: true }),
   m('straggler', 'Straggler', 'purple', 6, 1, /* Oct 27, Cory "too cheap": 8 with the +1 wild (Claude's price) */ 'Once per round, after the last minion is placed: you may move your last minion to an open space and take it.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;

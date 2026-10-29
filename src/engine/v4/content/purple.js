@@ -319,7 +319,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 4, 2, 'Once per game: take an extra turn after this one.', { from: 2,
+    m('secondwind', 'Go-Getter', 4, 2, 'On Use, once per game: take an extra turn after this one.', { from: 2,
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -327,7 +327,7 @@ export default {
     m('errand', 'Errand Runner', 4, 4, 'On Recruit: take an extra turn after this one.', {
       onRecruited(ctx, owner) { extraTurns(ctx, owner, 1, 'Errand Runner'); },
     }),
-    m('taskmaster', 'Taskmaster', 4, 2, 'Once per round: pay 5 purple to take an extra turn after this one.', {
+    m('taskmaster', 'Taskmaster', 4, 2, 'On Use, once per round: pay 5 purple to take an extra turn after this one.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -454,7 +454,7 @@ export default {
       },
     }),
     // Cory, 2026-10-28: Once per game at +3 per turn in a row (was once per round at +2)
-    m('streak', 'Hot Streak', 2, 2, 'Once per game: +3 followers per turn in a row you’ve taken just before this one.', {
+    m('streak', 'Hot Streak', 2, 2, 'On Use, once per game: +3 followers per turn in a row you’ve taken just before this one.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const k = inARow(ctx, owner);

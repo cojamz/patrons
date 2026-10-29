@@ -369,7 +369,7 @@ const market = {
         })), `${Q}.windowShop`);
       },
     }),
-    m('restocker', 'Restocker', 2, 1, 'Once per game: send the whole shop to the bottom of the pile, then refill.', {
+    m('restocker', 'Restocker', 2, 1, 'On Use, once per game: send the whole shop to the bottom of the pile, then refill.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!ctx.state.shop.length) { card.used = false; ctx.log(`${owner.name}'s Restocker: the shop is empty.`); return; }

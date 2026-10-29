@@ -213,7 +213,7 @@ const trading = {
     m('shopkeeper', 'Shopkeeper', 2, 1, 'On Recruit: +2 white. Round Start: +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
-    m('heiress', 'Heiress', 4, 3, 'Once per game: +1 white per member you have.', { f: 2,
+    m('heiress', 'Heiress', 4, 3, 'On Use, once per game: +1 white per member you have.', { f: 2,
       activate: 'game',
       onActivate(ctx, owner) {
         const n = ctx.memberCount(owner);
@@ -233,7 +233,7 @@ const trading = {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },
     }),
-    m('raider', 'Raiders', 2, 2, /* Claude's fill-in price 4, was 5 (Cory, 2026-10-22: "probably too expensive") */ 'Once per game: steal 4 followers from the leader. Pay them 2 white.', {
+    m('raider', 'Raiders', 2, 2, /* Claude's fill-in price 4, was 5 (Cory, 2026-10-22: "probably too expensive") */ 'On Use, once per game: steal 4 followers from the leader. Pay them 2 white.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const t = raidTarget(ctx, owner);
@@ -256,7 +256,7 @@ const trading = {
       },
     }),
     m('undertaker', 'Undertaker', 2, 2, 'Whenever you cast out one of your members, +2 followers.', { onGotRidOf: 2 }),
-    m('appraiser', 'Appraiser', 3, 2, 'Once per game: cast out one of your members, gain followers or white equal to its cost.', {
+    m('appraiser', 'Appraiser', 3, 2, 'On Use, once per game: cast out one of your members, gain followers or white equal to its cost.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const list = ctx.membersOf(owner).filter(c => c.uid !== card.uid);
@@ -278,7 +278,7 @@ const trading = {
     m('oldmoney', 'Old Money', 1, 3, 'Game end: +1 follower per white member you have.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'trading'),
     }),
-    m('hoarder', 'Hoarder', 4, 3, 'Once per game: turn all your resources into white.', {
+    m('hoarder', 'Hoarder', 4, 3, 'On Use, once per game: turn all your resources into white.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         let n = 0;
@@ -293,7 +293,7 @@ const trading = {
     m('dealer', 'Dealer', 2, 0, 'Whenever you sell followers, +1 white per follower sold.', {
       onSell(ctx, owner, card, k) { ctx.gain(owner, W, k); },
     }),
-    m('pawnbroker', 'Pawnbroker', 2, 2, 'Once per round: sell 1 follower you bought or won, for 3 white.', {
+    m('pawnbroker', 'Pawnbroker', 2, 2, 'On Use, once per round: sell 1 follower you bought or won, for 3 white.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -317,7 +317,7 @@ const trading = {
       onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 3),
     }),
     m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),
-    m('liquidator', 'Liquidator', 2, 1, `Once per game: sell up to ${LIQUIDATE.most} followers you bought or won, for ${LIQUIDATE.each} white each.`, {
+    m('liquidator', 'Liquidator', 2, 1, `On Use, once per game: sell up to ${LIQUIDATE.most} followers you bought or won, for ${LIQUIDATE.each} white each.`, {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name}'s Liquidator: ${NOTHING_TO_SELL}.`); return; }

@@ -397,7 +397,7 @@ const thieves = {
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });
       },
     }),
-    m('bigscore', 'Safecracker', 2, 2, 'Once per game: steal half the magenta of the rival with the most, rounded down.', {
+    m('bigscore', 'Safecracker', 2, 2, 'On Use, once per game: steal half the magenta of the rival with the most, rounded down.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const list = ctx.rivals(owner).filter(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 2);
@@ -409,7 +409,7 @@ const thieves = {
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 4),
     }),
     // Cory, 2026-10-24: Magenta's once per game (spend the magenta, not pay the rival: Claude's, his "ok"); name and price Claude's fill-in
-    m('fixer', 'Fixer', 3, 2, 'Once per game: spend magenta equal to a rival’s member’s cost to steal it.', {
+    m('fixer', 'Fixer', 3, 2, 'On Use, once per game: spend magenta equal to a rival’s member’s cost to steal it.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const list = takeable(ctx, owner, owner.res.magenta || 0);

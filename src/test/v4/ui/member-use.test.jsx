@@ -102,7 +102,7 @@ describe('the seat card list', () => {
     // a rival's card: their states, never a button
     const r = render(<SeatMembers state={s} pid={1} me={0} />);
     expect(r.container.querySelector('[data-use]')).toBeNull();
-    expect(r.container.querySelector('[data-member-row="echo.dejavu"]').textContent).toContain('Once per Game:');
+    expect(r.container.querySelector('[data-member-row="echo.dejavu"]').textContent).toMatch(/On Use, once per game:/i);
   });
   it('the member\'s own hover: the big Use button, or why not', () => {
     const s = scene();

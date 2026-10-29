@@ -13,8 +13,8 @@ const TIMINGS = [
   [/^(?:recruit|on recruit|when recruited|when it joins you)\b/i, 'On recruit'],
   [/^(?:whenever|when you|when another player)\b/i, 'Whenever'],
   [/^game end\b/i, 'Game end'],
-  [/^once per round\b/i, 'Once a round'],
-  [/^(?:once per game|one time use)\b/i, 'Once per game'],
+  [/^(?:on use, )?once per round\b/i, 'Once a round'],
+  [/^(?:on use, )?(?:once per game|one time use)\b/i, 'Once per game'],
   [/^while\b/i, 'While'],
 ];
 /** "Round start", "On recruit", "Worth 2"… for a member def. */
@@ -115,7 +115,7 @@ export function ownCopyPlan(state, pid) {
   } catch { return null; }
 }
 /** Is this the copy-all card (Greatest Hits as a space, Tribute Band as a member)? */
-export const copiesAll = text => /^(?:(?:once per game|one time use): )?(?:copy|do) every (?:action (?:where you have a minion|with your minion|you took this round|(?:the leader|a rival you choose) has a minion on)|space you took this round)/i.test(text || '');
+export const copiesAll = text => /^(?:(?:on use, )?(?:once per game|one time use): )?(?:copy|do) every (?:action (?:where you have a minion|with your minion|you took this round|(?:the leader|a rival you choose) has a minion on)|space you took this round)/i.test(text || '');
 /** The copy-all plan a card would play for pid: its own actions, or every rival's it could pick (Tribute Band, Cory 2026-10-28). */
 export function copyAllPlan(state, pid, text) {
   if (!/\ba rival you choose\b/i.test(text || '')) return ownCopyPlan(state, pid);

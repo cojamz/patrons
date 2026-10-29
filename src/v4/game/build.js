@@ -102,7 +102,7 @@ export function incomeTerms(state, p) {
   const defs = [];
   for (const uid of p.members) { try { defs.push(cardDef(state, uid)); } catch { /* gone */ } }
   const atStart = d => /round start/i.test(timingOf(d)) || /\bstart of round\b/i.test(d.text || '');
-  const reacts = d => timingOf(d) === 'Whenever' || /^once per round[,:] when(?:ever)?\b/i.test(d.text || '');
+  const reacts = d => timingOf(d) === 'Whenever' || /^(?:on use, )?once per round[,:] when(?:ever)?\b/i.test(d.text || '');
   const paying = defs.some(atStart) ? defs.filter(atStart) : defs.filter(reacts);
   for (const d of paying) {
     const cond = atStart(d) ? incomeCondition(d) : 'not always';

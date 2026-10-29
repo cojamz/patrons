@@ -56,13 +56,13 @@ function MemberAmount({ m }) {
   );
 }
 
-const KEYWORDS = { passive: 'Passive', 'on recruit': 'On Recruit', 'round end': 'Round End', 'game end': 'Game End', 'one time use': 'Once per Game', 'once per game': 'Once per Game', 'once per round': 'Once per Round' };
+const KEYWORDS = { passive: 'Passive', 'on use, once per game': 'On Use, Once per Game', 'on use, once per round': 'On Use, Once per Round', 'on use': 'On Use', 'on recruit': 'On Recruit', 'round end': 'Round End', 'game end': 'Game End', 'one time use': 'Once per Game', 'once per game': 'Once per Game', 'once per round': 'Once per Round' };
 const KEYWORD = w => KEYWORDS[w.toLowerCase()] || 'Round Start';
 export function Rich({ text, after = '', timingDone = false, memberDone = false }) {
   if (!text) return null;
   // Canonical timing labels are real emphasis everywhere, never visible Markdown.
   // Cory, Oct 29: every card keyword is bold ("Once per game… should be bolded if its a keyword. Same for Game End")
-  const timing = /\b(Passive(?=:)|On recruit|(?:At )?round start|round end|game end|one time use|once per game|once per round)\b(?!-)/ig;
+  const timing = /\b(Passive(?=:)|On use, once per (?:game|round)|On use|On recruit|(?:At )?round start|round end|game end|one time use|once per game|once per round)\b(?!-)/ig;
   if (!timingDone && timing.test(text)) {
     timing.lastIndex = 0;
     const pieces = []; let end = 0;
@@ -111,7 +111,8 @@ export function Rich({ text, after = '', timingDone = false, memberDone = false 
       const before = text.slice(Math.max(0, at - 6), at), after = text.slice(at + 3, at + 12);
       // only a counted amount is the dot ("2 any" → "2◍"); "any" as a plain word stays a word ("+2 of any color you
       // choose", "pay in any colors"): a dot there read "+2 of ◍ color you choose" (design pod, 2026-10-15)
-      const meansResources = /\d\s$/.test(before);
+      // "count as any" is the wild too (Alchemist, Cory Oct 29: "all your resources count as WILDSYMBOL")
+      const meansResources = /\d\s$/.test(before) || /\bas\s$/.test(before);
       if (!meansResources) continue;
     }
     // a color that describes a member is a word, like the rim's "MOST BLUE" (Cory: "a dot is no substitute for the
