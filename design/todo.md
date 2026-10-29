@@ -45,7 +45,7 @@ Broader rework, his to lead (Oct 28): design/notes/rework-list-2026-10-28.md, wo
 
 ## Later
 - Engineering: structured events instead of log parsing; shared verbs for copies; online auth rules; type checking.
-- Cory's 11 balance calls from Oct 29 (https://claude.ai/artifact/VAMVg3DAPWoFabU8AFSWs8): answered Oct 29, being built in the balance thread.
+- Balance follow-ups (Cory, Oct 29 morning; report https://claude.ai/artifact/VAMVg3DAPWoFabU8AFSWs8): ideas for Recruiter and Money Changer (they read alike), Green's Cover (maybe "copy an action with a rival's minion on it") and Agents (maybe something else), Bait's wording; buy-followers-only seat on Hard bots should win ~10-15% (now 7-9%), so a stronger follower shop. Bots can't value handing Agents/Saboteur to rivals or Loyalists' shield: bot-quality job asked of the coordinator; re-read those cards after it and after the member-count scoring fix.
 - Low priority (Cory, Oct 21): balance-test Crunch Time at 3 turns against 2.
 
 ## Parked
