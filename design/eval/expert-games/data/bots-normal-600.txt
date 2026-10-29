@@ -1,0 +1,153 @@
+normal bots. 600 games, 4 seats, random tables of 4 colors. Buy-followers-only seat: 120 games, won 31%.
+
+Win share by members owned at game end (Hard seats; 8 = 8+; even share 25%):
+  0: 22% of 38 seats
+  1: 17% of 63 seats
+  2: 15% of 93 seats
+  3: 18% of 134 seats
+  4: 19% of 155 seats
+  5: 19% of 190 seats
+  6: 19% of 181 seats
+  7: 22% of 178 seats
+  8: 29% of 1248 seats
+
+Artifacts (owner win share):
+  Recruiter (red): 39% of 358
+  Pocket Watch (purple): 27% of 396
+  Fence (thieves): 27% of 391
+  Bargain Bin (market): 26% of 376
+  Impressionist (echo): 17% of 378
+  Money Changer (trading): 13% of 381
+
+Colors (members of that color, winner vs other Hard seats, on tables with it):
+  echo: on 402 tables, winner 2.21 vs others 1.74
+  thieves: on 409 tables, winner 1.84 vs others 1.37
+  red: on 384 tables, winner 1.94 vs others 1.51
+  purple: on 414 tables, winner 1.13 vs others 0.83
+  trading: on 398 tables, winner 1.00 vs others 0.81
+  market: on 393 tables, winner 1.75 vs others 1.60
+
+Members (owned at game end by a Hard seat; owner win share; bought / times seen in shop), min 6 owners:
+  Shoplifter (thieves): wins 61%, owned 28 times / in shop 312 games, gave 1.0 followers for cost 6 (0.2x), 28 games
+  Extra Shift (purple): wins 58%, owned 26 times / in shop 309 games, gave 1.0 followers for cost 9 (0.1x), 26 games
+  Shopaholic (market): wins 50%, owned 26 times / in shop 354 games, gave 2.0 followers for cost 9 (0.2x), 26 games
+  Extra Hand (benders): wins 50%, owned 19 times / in shop 484 games, gave 1.0 followers for cost ?, 19 games
+  Bodyguard (thieves): wins 48%, owned 21 times / in shop 293 games, gave 2.0 followers for cost 9 (0.2x), 21 games
+  Mob (red): wins 46%, owned 123 times / in shop 278 games, gave 5.0 followers for cost 13 (0.4x), 123 games
+  Headhunter (red): wins 44%, owned 73 times / in shop 327 games, gave 1.0 followers for cost 6 (0.2x), 73 games
+  Night Owl (purple): wins 43%, owned 35 times / in shop 328 games, gave 2.0 followers for cost 9 (0.2x), 35 games
+  Late Riser (purple): wins 42%, owned 46 times / in shop 331 games, gave 1.0 followers for cost 7 (0.1x), 46 games
+  Hot Streak (purple): wins 40%, owned 91 times / in shop 320 games, gave 3.3 followers for cost 5 (0.7x), 91 games
+  Raiders (trading): wins 38%, owned 42 times / in shop 309 games, gave 3.8 followers for cost 5 (0.8x), 42 games
+  Saboteur (benders): wins 37%, owned 111 times / in shop 500 games, gave -2.2 followers for cost ?, 111 games
+  Tiebreaker (benders): wins 37%, owned 330 times / in shop 552 games, gave 1.0 followers for cost ?, 330 games
+  Heiress (trading): wins 37%, owned 90 times / in shop 301 games, gave 2.0 followers for cost 6 (0.3x), 90 games
+  Closer (purple): wins 36%, owned 74 times / in shop 326 games, gave 1.0 followers for cost 5 (0.2x), 74 games
+  Go-Getter (purple): wins 36%, owned 44 times / in shop 346 games, gave 1.0 followers for cost 7 (0.1x), 44 games
+  Extortionist (thieves): wins 35%, owned 124 times / in shop 296 games, gave 1.0 followers for cost 7 (0.1x), 124 games
+  Exporter (trading): wins 35%, owned 93 times / in shop 303 games, gave 2.0 followers for cost 6 (0.3x), 93 games
+  Accomplice (thieves): wins 35%, owned 338 times / in shop 293 games, gave 1.0 followers for cost 2 (0.5x), 338 games
+  Muse (echo): wins 34%, owned 179 times / in shop 361 games, gave 1.0 followers for cost 4 (0.3x), 179 games
+  Panel (red): wins 34%, owned 205 times / in shop 277 games, gave 3.0 followers for cost 7 (0.4x), 205 games
+  Doppelganger (echo): wins 34%, owned 195 times / in shop 308 games, gave 1.3 followers for cost 5 (0.3x), 195 games
+  Cashier (trading): wins 34%, owned 67 times / in shop 315 games, gave 4.1 followers for cost 5 (0.8x), 67 games
+  Proselytizer (red): wins 34%, owned 140 times / in shop 326 games, gave 8.0 followers for cost 7 (1.1x), 140 games
+  Impostor (echo): wins 33%, owned 142 times / in shop 321 games, gave 3.0 followers for cost 6 (0.5x), 142 games
+  Undertaker (trading): wins 33%, owned 69 times / in shop 316 games, gave 1.0 followers for cost 5 (0.2x), 69 games
+  Cutpurse (thieves): wins 33%, owned 331 times / in shop 324 games, gave 1.0 followers for cost 3 (0.3x), 331 games
+  Patroness (market): wins 32%, owned 28 times / in shop 365 games, gave 1.0 followers for cost 8 (0.1x), 28 games
+  Grifter (thieves): wins 32%, owned 269 times / in shop 325 games, gave 1.0 followers for cost 4 (0.3x), 269 games
+  Sticky Fingers (thieves): wins 32%, owned 130 times / in shop 350 games, gave 1.0 followers for cost 4 (0.3x), 130 games
+  Courier (purple): wins 32%, owned 73 times / in shop 331 games, gave 1.0 followers for cost 5 (0.2x), 73 games
+  Recruit Bonus (red): wins 31%, owned 335 times / in shop 323 games, gave 2.0 followers for cost 3 (0.7x), 335 games
+  Doorman (market): wins 31%, owned 191 times / in shop 373 games, gave 1.0 followers for cost 4 (0.3x), 191 games
+  Gossip (purple): wins 31%, owned 42 times / in shop 338 games, gave 5.0 followers for cost 6 (0.8x), 42 games
+  Stunt Double (echo): wins 31%, owned 229 times / in shop 295 games, gave 1.1 followers for cost 5 (0.2x), 229 games
+  Busker (echo): wins 31%, owned 328 times / in shop 336 games, gave 1.0 followers for cost 4 (0.3x), 328 games
+  Loyalists (red): wins 31%, owned 163 times / in shop 326 games, gave 2.0 followers for cost 6 (0.3x), 163 games
+  Fan Club (echo): wins 30%, owned 358 times / in shop 324 games, gave 1.0 followers for cost 3 (0.3x), 358 games
+  Ensemble (echo): wins 30%, owned 102 times / in shop 337 games, gave 1.8 followers for cost 5 (0.4x), 102 games
+  Desperado (thieves): wins 30%, owned 51 times / in shop 302 games, gave 1.0 followers for cost 5 (0.2x), 51 games
+  Bouncer (purple): wins 30%, owned 214 times / in shop 364 games, gave 1.0 followers for cost 4 (0.3x), 214 games
+  Host (red): wins 30%, owned 246 times / in shop 286 games, gave 1.0 followers for cost 5 (0.2x), 246 games
+  Patriarch (red): wins 30%, owned 205 times / in shop 301 games, gave 1.0 followers for cost 6 (0.2x), 205 games
+  Kingpin (thieves): wins 30%, owned 277 times / in shop 350 games, gave 1.0 followers for cost 4 (0.3x), 277 games
+  Understudy (echo): wins 30%, owned 289 times / in shop 348 games, gave 1.1 followers for cost 4 (0.3x), 289 games
+  Freelancer (benders): wins 29%, owned 160 times / in shop 489 games, gave 1.0 followers for cost ?, 160 games
+  Movement Penalty (red): wins 29%, owned 220 times / in shop 345 games, gave 1.0 followers for cost 4 (0.3x), 220 games
+  Regular (market): wins 29%, owned 299 times / in shop 370 games, gave 1.0 followers for cost 3 (0.3x), 299 games
+  Party Crasher (benders): wins 28%, owned 312 times / in shop 545 games, gave 1.0 followers for cost ?, 312 games
+  Shopkeeper (trading): wins 28%, owned 294 times / in shop 322 games, gave 1.0 followers for cost 4 (0.3x), 294 games
+  Clockmaker (purple): wins 28%, owned 300 times / in shop 352 games, gave 1.0 followers for cost 4 (0.3x), 300 games
+  Chronicler (echo): wins 28%, owned 237 times / in shop 306 games, gave 1.0 followers for cost 5 (0.2x), 237 games
+  Shift Crew (purple): wins 28%, owned 196 times / in shop 374 games, gave 2.0 followers for cost 3 (0.7x), 196 games
+  Roadie (echo): wins 28%, owned 277 times / in shop 361 games, gave 1.0 followers for cost 3 (0.3x), 277 games
+  Martyr (trading): wins 28%, owned 90 times / in shop 352 games, gave 2.6 followers for cost 4 (0.7x), 90 games
+  Crew (thieves): wins 28%, owned 187 times / in shop 369 games, gave 2.0 followers for cost 3 (0.7x), 187 games
+  Robin Hood (thieves): wins 27%, owned 118 times / in shop 362 games, gave 1.9 followers for cost 4 (0.5x), 118 games
+  Snitch (thieves): wins 27%, owned 118 times / in shop 361 games, gave 1.0 followers for cost 4 (0.3x), 118 games
+  Trendsetter (market): wins 27%, owned 325 times / in shop 356 games, gave 3.0 followers for cost 4 (0.8x), 325 games
+  Timekeepers (purple): wins 27%, owned 215 times / in shop 337 games, gave 1.0 followers for cost 5 (0.2x), 215 games
+  Window Shopper (market): wins 27%, owned 214 times / in shop 339 games, gave 1.0 followers for cost 5 (0.2x), 214 games
+  Launderers (benders): wins 27%, owned 266 times / in shop 493 games, gave 2.0 followers for cost ?, 266 games
+  Broker (trading): wins 26%, owned 158 times / in shop 300 games, gave 2.0 followers for cost 5 (0.4x), 158 games
+  Old Money (trading): wins 26%, owned 185 times / in shop 297 games, gave 1.0 followers for cost 5 (0.2x), 185 games
+  Window Dresser (market): wins 25%, owned 331 times / in shop 353 games, gave 3.0 followers for cost 4 (0.8x), 331 games
+  Plus-One (market): wins 25%, owned 304 times / in shop 366 games, gave 2.0 followers for cost 4 (0.5x), 304 games
+  Snob (market): wins 25%, owned 198 times / in shop 358 games, gave 1.0 followers for cost 6 (0.2x), 198 games
+  Early Bird (purple): wins 25%, owned 71 times / in shop 341 games, gave 1.0 followers for cost 5 (0.2x), 71 games
+  Twins (red): wins 24%, owned 250 times / in shop 356 games, gave 2.0 followers for cost 3 (0.7x), 250 games
+  Critic (market): wins 24%, owned 183 times / in shop 373 games, gave 3.4 followers for cost 4 (0.8x), 183 games
+  Double Agent (thieves): wins 24%, owned 269 times / in shop 343 games, gave 1.0 followers for cost 4 (0.3x), 269 games
+  Bait (echo): wins 23%, owned 174 times / in shop 355 games, gave 0.7 followers for cost 4 (0.2x), 174 games
+  Recluse (trading): wins 23%, owned 180 times / in shop 297 games, gave 1.0 followers for cost 5 (0.2x), 180 games
+  Fixer (thieves): wins 22%, owned 36 times / in shop 315 games, gave 1.0 followers for cost 6 (0.2x), 36 games
+  Volunteer (red): wins 22%, owned 344 times / in shop 335 games, gave 1.0 followers for cost 1 (1.0x), 344 games
+  Mentor & Protégé (red): wins 22%, owned 79 times / in shop 294 games, gave 2.0 followers for cost 9 (0.2x), 79 games
+  Connoisseur (market): wins 21%, owned 175 times / in shop 373 games, gave 1.0 followers for cost 4 (0.3x), 175 games
+  Agents (echo): wins 21%, owned 306 times / in shop 350 games, gave 2.0 followers for cost 4 (0.5x), 306 games
+  Front-runner (benders): wins 21%, owned 500 times / in shop 539 games, gave 1.0 followers for cost ?, 500 games
+  Restocker (market): wins 20%, owned 171 times / in shop 372 games, gave 1.0 followers for cost 4 (0.3x), 171 games
+  Hoarder (trading): wins 17%, owned 24 times / in shop 315 games, gave 1.0 followers for cost 8 (0.1x), 24 games
+
+Most and least bought when in the shop (seen in 8+ games):
+  top: Accomplice (thieves) 115%, Fan Club (echo) 110%, Recruit Bonus (red) 104%, Volunteer (red) 103%, Cutpurse (thieves) 102%, Busker (echo) 98%, Window Dresser (market) 94%, Front-runner (benders) 93%
+  bottom: Extra Shift (purple) 8%, Patroness (market) 8%, Hoarder (trading) 8%, Shopaholic (market) 7%, Bodyguard (thieves) 7%, Extra Hand (benders) 4%, Wallflower (echo) 4%, Tribute Band (echo) 3%
+
+Spaces (uses per game; winner vs other seats, uses per seat):
+  echo: Greatest Hits: 0.3/game, winner 0.69 vs others 0.11
+  red: Walk-In: 1.9/game, winner 1.01 vs others 0.70
+  purple: Last Call: 0.7/game, winner 0.45 vs others 0.27
+  purple: Crowd In: 0.7/game, winner 0.40 vs others 0.23
+  echo: Reprise: 1.9/game, winner 0.86 vs others 0.73
+  red: Tryout: 1.2/game, winner 0.58 vs others 0.48
+  thieves: Shake Down: 1.3/game, winner 0.59 vs others 0.48
+  trading: Allowance: 1.9/game, winner 0.81 vs others 0.73
+  purple: Crunch Time: 0.7/game, winner 0.40 vs others 0.33
+  red: Promote: 1.2/game, winner 0.55 vs others 0.48
+  red: Recruit a Member: 0.6/game, winner 0.30 vs others 0.25
+  thieves: Crime Wave: 1.3/game, winner 0.55 vs others 0.50
+  red: Demote: 1.0/game, winner 0.46 vs others 0.43
+  trading: Cash In: 0.3/game, winner 0.28 vs others 0.25
+  market: Peek: 1.8/game, winner 0.75 vs others 0.72
+  trading: Splurge: 1.0/game, winner 0.43 vs others 0.41
+  thieves: Poach: 0.7/game, winner 0.28 vs others 0.27
+  echo: Encore: 1.0/game, winner 0.43 vs others 0.42
+  echo: Echo: 1.9/game, winner 0.77 vs others 0.76
+  echo: Build Up: 1.9/game, winner 0.76 vs others 0.76
+  thieves: Lie Low: 1.2/game, winner 0.46 vs others 0.46
+  market: Out of Style: 1.7/game, winner 0.69 vs others 0.69
+  purple: Hold Up: 1.9/game, winner 0.72 vs others 0.73
+  market: Savings: 1.8/game, winner 0.69 vs others 0.72
+  market: Spree: 0.6/game, winner 0.24 vs others 0.27
+  thieves: Stash: 1.9/game, winner 0.72 vs others 0.76
+  trading: Estate Sale: 1.3/game, winner 0.50 vs others 0.54
+  thieves: Help Yourself: 2.1/game, winner 0.76 vs others 0.82
+  trading: Farewell: 1.2/game, winner 0.44 vs others 0.51
+  market: Recruit Twice: 0.6/game, winner 0.22 vs others 0.32
+  market: Bury: 1.2/game, winner 0.41 vs others 0.51
+  red: Gather: 1.8/game, winner 0.65 vs others 0.76
+  purple: Right Away: 1.5/game, winner 0.48 vs others 0.59
+  trading: Exchange: 1.4/game, winner 0.46 vs others 0.58
+  purple: Sleep In: 2.0/game, winner 0.62 vs others 0.80
+  echo: Cover: 1.3/game, winner 0.34 vs others 0.56
