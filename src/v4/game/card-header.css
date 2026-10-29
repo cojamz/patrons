@@ -1,46 +1,38 @@
-/* Member cards as trading cards, the Header look (Cory, Oct 29: "Header is good"; "costs are too small. some of the card
-   body text is too small"): a bar in the member's color across the top with the price in a dark disc at its left and the
-   worth on a paper tab at its right, the name on the bar under them, the picture, the price's colors along the foot.
-   Shop, top of the pile and the members page; .mc below is the full card (hover, tap). Names set in the embedded sans:
-   the serif isn't bundled and Firefox's wider fallback broke names mid-word. */
-.lt-card.card:has(> .lt-hd){box-shadow:inset 0 0 0 2px var(--q),0 0 0 1px rgba(20,14,10,.35),0 6px 14px -6px rgba(0,0,0,.7)}
+/* Member cards: the lab's H · Header card, value for value (src/v4/lab/cards-lab.css .cl-x/.cl-h, the image Cory picked
+   Oct 29: "the designs should literally match the image i sent, just with bigger text on the cost on the bottom, and
+   slightly bigger text for the card body"). Shop and top of the pile take the small card, .mc below is the big one. */
+.lt-shop .lt-card.card.paper:has(> .lt-hd),.lt-card.card.paper:has(> .lt-hd){background:#f4ebd7;border-radius:6px;box-shadow:inset 0 0 0 2px var(--q),0 8px 18px -8px rgba(0,0,0,.8)}
+.lt-shop .lt-card.card.paper.lit:has(> .lt-hd){background:#f4ebd7;box-shadow:inset 0 0 0 2px var(--q),0 0 0 2px #ffe0a1,0 8px 18px -8px rgba(0,0,0,.8)}
 .lt-card.card .lt-hd{flex:none;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"cost . worth" "name name name";
-  align-items:center;gap:3px 4px;padding:5px 5px 4px;background:var(--q);position:relative}
+  align-items:center;gap:2px;padding:3px;background:var(--q);color:#fff;position:relative}
 .lt-card.card .lt-hd .lt-corner-cost{grid-area:cost;position:static;opacity:1;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
-  background:#2b2018;color:#fbf6ea;font:800 15px/1 var(--sans);box-shadow:0 0 0 1px rgba(251,246,234,.92)}
-.lt-card.card .lt-hd .val{grid-area:worth;display:inline-flex;align-items:center;gap:1px;height:17px;padding:0 5px;margin:0;border-radius:9px;
-  background:#fbf6ea;color:#2b2018;font:700 13px/1 var(--sans)}
-.lt-card.card .lt-hd .val b{font-weight:700}
+  background:#2a1f17;color:#f4ebd7;font:800 15px/1 var(--sans);box-shadow:0 0 0 1.5px #f4ebd7}
+.lt-card.card .lt-hd .val{grid-area:worth;display:inline-flex;align-items:center;gap:1px;height:21px;padding:0 5px;margin:0;border-radius:11px;
+  background:#f4ebd7;color:#2a1f17;font:800 14px/1 var(--sans);box-shadow:0 0 0 1px rgba(42,31,23,.25)}
+.lt-card.card .lt-hd .val b{font-weight:800}
 .lt-card.card .lt-hd .val .follower-mark{width:12px;height:12px;margin:0 0 0 1px;vertical-align:0}
-.lt-card.card .lt-hd .nm{grid-area:name;display:block;height:auto;min-height:0;margin:0;padding:0 1px;white-space:nowrap;overflow:hidden;text-align:center;
-  font:700 14px/16px var(--serif);letter-spacing:0;text-transform:none;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35);overflow-wrap:normal;hyphens:manual}
+.lt-card.card .lt-hd .nm{grid-area:name;display:block;height:auto;min-height:0;margin:0;padding:0;white-space:nowrap;overflow:hidden;text-align:center;
+  font:700 13px/15px var(--serif);letter-spacing:0;text-transform:none;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.2);overflow-wrap:normal;hyphens:manual}
 .lt-card.card .lt-hd .nm[data-long]{font-size:12px;letter-spacing:-.02em}
 .lt-card.card .lt-hd .nm[data-wide]{white-space:normal;font-size:12px;line-height:13px;letter-spacing:-.01em}
-/* the pale colors: dark words on a pale bar with an edge */
-.lt-card.card:is([data-ground="white"],[data-ground="silver"],[data-ground="colorless"]) .lt-hd .nm{color:#2b2018;text-shadow:none}
-.lt-card.card[data-ground="white"] .lt-hd{background:#e9e1cd;box-shadow:inset 0 -1px 0 rgba(42,31,23,.18)}
-.lt-card.card[data-ground="white"]:has(> .lt-hd){box-shadow:inset 0 0 0 2px #cfc3a8,0 0 0 1px rgba(20,14,10,.35),0 6px 14px -6px rgba(0,0,0,.7)}
-/* the picture: its own tinted field, lit from below like the lab's */
-.lt-card.card .lt-hd + .art{margin:0 2px;border-radius:0;flex:1 1 auto;min-height:0;height:auto;
-  background:radial-gradient(circle at 50% 78%,color-mix(in srgb,var(--q) 34%,#f4ebd7),color-mix(in srgb,var(--q) 14%,#eadfc4) 78%)}
-.lt-card.card[data-ground="colorless"] .lt-hd + .art{background:color-mix(in srgb,var(--colorless,#8d9693) 26%,#f1ede4)}
-/* the foot: the price's colors, big and centered */
-.lt-card.card:has(> .lt-hd) .ft{justify-content:center;height:auto;margin:0 2px 2px;padding:6px 4px 5px;border-top:1px solid rgba(60,35,20,.18)}
-.lt-card.card:has(> .lt-hd) .ft .lt-cost{gap:7px}
-.lt-card.card:has(> .lt-hd) .ft .lt-res{font-size:18px;gap:2px}
-.lt-card.card:has(> .lt-hd) .ft .num{font-size:18px;font-weight:800}
-.lt-card.card:has(> .lt-hd) .ft .lt-res .pip,.lt-card.card:has(> .lt-hd) .ft .res-glyph{width:16px;height:16px}
+/* the pale colors: dark words on the bar */
+.lt-card.card:is([data-ground="white"],[data-ground="silver"]) .lt-hd .nm{color:#2a1f17;text-shadow:none}
+/* the picture: the lab's tinted field, lit from below */
+.lt-shop .lt-card.card .lt-hd + .art,.lt-card.card .lt-hd + .art{margin:0 2px;border-radius:0;flex:1 1 0;min-height:0;height:auto;box-shadow:none;
+  background:radial-gradient(circle at 50% 75%,color-mix(in srgb,var(--q) 34%,#f4ebd7),color-mix(in srgb,var(--q) 14%,#eadfc4) 75%)}
+.lt-shop .lt-card.card[data-ground="colorless"] .lt-hd + .art,.lt-card.card[data-ground="colorless"] .lt-hd + .art{background:color-mix(in srgb,var(--colorless,#8d9693) 30%,#f1ede4)}
+/* the foot: the lab's, the numbers a size up (Cory: "bigger text on the cost on the bottom") */
+.lt-card.card:has(> .lt-hd) .ft{justify-content:center;height:auto;margin:0 2px 2px;padding:4px 5px;border-top:1px solid rgba(42,31,23,.14)}
+.lt-card.card:has(> .lt-hd) .ft .lt-cost{gap:6px}
+.lt-card.card:has(> .lt-hd) .ft .lt-res{font-size:17px;gap:1px;font-weight:800}
+.lt-card.card:has(> .lt-hd) .ft .num{font-size:17px;font-weight:800}
+.lt-card.card:has(> .lt-hd) .ft .lt-res .pip,.lt-card.card:has(> .lt-hd) .ft .res-glyph{width:14px;height:14px}
 /* reading abilities (Details): the picture gives way to the rule, which stays readable */
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:17px;padding:4px 6px;text-align:center}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability[data-fit="tight"]{font-size:12.5px;line-height:15px}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-cards .lt-card.card .lt-hd .nm{margin:0;padding:0 1px}
-/* top of the pile: a smaller card, same anatomy */
+/* top of the pile: the same small card */
 .app.game.lt .lt-pile-row .lt-card.card{height:132px}
-.app.game.lt .lt-pile-row .lt-card.card .lt-hd{padding:3px}
-.app.game.lt .lt-pile-row .lt-card.card .lt-hd .lt-corner-cost{width:20px;height:20px;font-size:12px}
-.app.game.lt .lt-pile-row .lt-card.card .lt-hd .val{height:15px;padding:0 4px;font-size:11px}
-.app.game.lt .lt-pile-row .lt-card.card .lt-hd .val .follower-mark{width:10px;height:10px}
-.app.game.lt .lt-pile-row .lt-card.card .lt-hd .nm{font-size:11px;line-height:13px}
 
 /* the full card (hover, tap): the lab's Header card. The bar (price, name, worth), the picture field, the rule big, the
    price's colors at the foot. Beside a shop face (onFace) it's the bar and the rule only: the face shows the rest. */
@@ -53,13 +45,13 @@
 .card-face.mc .mc-hd .mc-worth .follower-mark{width:16px;height:16px;vertical-align:0}
 .card-face.mc .mc-art{display:grid;place-items:center;width:auto;height:112px;margin:0 2px;border-radius:0;
   background:radial-gradient(circle at 50% 75%,color-mix(in srgb,var(--c) 34%,#f4ebd7),color-mix(in srgb,var(--c) 14%,#eadfc4) 75%)}
-.card-face.mc .mc-text{margin:0;padding:6px 12px 2px;font-size:16px;line-height:21px;text-align:center;border-top:0;text-wrap:pretty;color:#2b2018}
-.card-face.mc[data-long] .mc-text{font-size:15px;line-height:20px}
+.card-face.mc .mc-text{margin:0;padding:6px 12px 2px;font-size:17px;line-height:22px;text-align:center;border-top:0;text-wrap:pretty;color:#2b2018}
+.card-face.mc[data-long] .mc-text{font-size:16px;line-height:21px}
 .card-face.mc .mc-live{display:block;padding:0 12px 4px;text-align:center}
 .card-face.mc .mc-cost{display:flex;justify-content:space-between;align-items:center;gap:4px;margin:6px 2px 2px;padding:7px 10px;border-top:1px solid rgba(42,31,23,.14);font-size:16px;color:#2b2018}
 .card-face.mc .mc-cost .cost-dots{display:inline-flex;align-items:center;gap:6px}
-.card-face.mc .mc-cost .cd{display:inline-flex;align-items:center;gap:1px;font-size:16px;font-weight:800;color:#2b2018}
-.card-face.mc .mc-cost .cd .pip.glyph,.card-face.mc .mc-cost .cd .pip.wild{width:14px;height:14px;vertical-align:0;margin:0}
+.card-face.mc .mc-cost .cd{display:inline-flex;align-items:center;gap:1px;font-size:18px;font-weight:800;color:#2b2018}
+.card-face.mc .mc-cost .cd .pip.glyph,.card-face.mc .mc-cost .cd .pip.wild{width:16px;height:16px;vertical-align:0;margin:0}
 .card-face.mc .mc-cost .mc-n{font-size:14px;white-space:nowrap;color:#8a7760}
 .card-face.mc .mc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* the pale colors: dark words on a pale bar */
@@ -85,3 +77,7 @@
 .mp .mp-grid:has(.card-face.mc){grid-template-columns:repeat(auto-fill,200px);gap:12px}
 .mp .mp-grid .mp-card > .card-face.mc{display:flex;flex-direction:column}
 .mp .mp-grid .mp-card > .card-face.mc .mc-cost{margin-top:auto}
+.card-face.mc.mc{gap:0}
+/* recruitable: the lab card keeps its own edge, the lamp ring sits outside it */
+.app.game.lt .lt-shop .lt-card.card.lit:has(> .lt-hd){background:#f4ebd7;box-shadow:inset 0 0 0 2px var(--q),0 0 0 2px rgb(var(--lamp,255,206,140)),0 0 14px 1px rgba(var(--lamp,255,206,140),.45)}
+.app.game.lt .lt-shop .lt-card.card.lit:has(> .lt-hd):hover{box-shadow:inset 0 0 0 2px var(--q),0 0 0 2px #fffaf0,0 0 20px 3px rgba(var(--lamp,255,206,140),.6)}

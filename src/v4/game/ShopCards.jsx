@@ -252,7 +252,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
                 <span className="nm" {...nameFit(d.name)}>{d.name}</span>
               </span>
-              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={72} />
+              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} />
                 {/* no "need N" on the face (Cory: "the shouting 'need N' goes"): what you can't afford is the card fading */}
                 {/* works from round II on (Cory, 2026-10-22: "a better way to denote round II/round III only"): a corner tag, not words */}
                 {d.from > 1 && <span className="lt-round-tag" data-round-tag="" title="Works from round II on">II+</span>}
