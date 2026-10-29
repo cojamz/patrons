@@ -7,6 +7,7 @@ import PORTRAITS from './portraits/index.js';
 import { portraitRuns } from './portrait.js';
 import PORTRAITS3 from './portraits3/index.js';
 import { portrait3Runs } from './portrait3.js';
+import PORTRAITS4 from './portraits4/index.js';
 
 const TABLE = '#101817';
 export const NEUTRALS = { k: '#0a0f0e', d: '#3c4946', m: '#8e9b96', l: '#ece6d6' };
@@ -135,6 +136,8 @@ export const spriteId = name => String(name).normalize('NFD').replace(/[̀-ͯ]/g
 const PORTRAIT = new Map(PORTRAITS.map(i => [i.id, { ...i, portrait: true }]));
 // the 48×48 portraits (Cory, 2026-10-29) win over the 32×32 ones wherever one is drawn
 for (const i of PORTRAITS3) PORTRAIT.set(i.id, { ...i, portrait: true, v3: true });
+// the little scenes (Cory, 2026-10-29: "definitely little scenes is the way to go") win over those: own colours, any size
+for (const i of PORTRAITS4) PORTRAIT.set(i.id, { ...i, portrait: true, scene: true });
 export function iconFor(id, kind = 'member') {
   const ids = Array.isArray(id) ? id : [id];
   const hit = (kind !== 'action' && ids.map(x => PORTRAIT.get(x)).find(Boolean)) || ids.map(x => BY_ID.get(x)).find(Boolean);
@@ -143,10 +146,16 @@ export function iconFor(id, kind = 'member') {
 export const drawnIds = () => [...new Set([...PORTRAIT.keys(), ...BY_ID.keys()])];
 
 const rectCache = new Map();
+const runsOf = (px, pal) => {
+  const out = [];
+  px.forEach((r, y) => { let x = 0; while (x < r.length) { const ch = r[x]; let w = 1; while (r[x + w] === ch) w++; if (ch !== '.') out.push({ x, y, w, fill: pal[ch] }); x += w; } });
+  return out;
+};
 /** One <rect> per horizontal run of one color: [{ x, y, w, fill }]. */
 export function rectsFor(icon, sphere) {
   const k = `${icon.id}|${sphere}`;
   if (rectCache.has(k)) return rectCache.get(k);
+  if (icon.scene) { const out = runsOf(icon.px, icon.pal); rectCache.set(k, out); return out; }
   if (icon.v3) return portrait3Runs(icon, sphere);
   if (icon.portrait) return portraitRuns(icon, sphere);
   const person = icon.kind === 'member' && !icon.palette;
