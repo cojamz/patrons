@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.823 — 2026-10-28
+
+- Restocker has its Use button again (it was hidden because it gives no resources).
+
 ## v0.9.822 — 2026-10-28
 
 - Walk-In's recruit now flies off the deck, opens in the middle and lands in your seat, like a shop recruit.
