@@ -17,3 +17,5 @@
 - A pale moustache, pearl strand or any light row right under a deep-skin nose reads as a tooth row (minstrel risk). Keep light rows off the mouth line on deep faces; moustaches split into two wedges.
 - A shopkeeper or clerk with a moustache in brown skin reads as a known cartoon stereotype. Cast service roles across tones and keep the props doing the job.
 - Hoods stay rounded, never peaked.
+- A held mask, doll or photo with its own hair or eyes counts as a person at 32px. Give it no hair, empty eye holes and a visible handle.
+- A beard that wraps a dark mouth on all sides reads as a hole. Keep a skin row above the mouth and start the beard on the chin.
