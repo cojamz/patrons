@@ -250,6 +250,14 @@ function emptyTargets(ctx) {
   return out;
 }
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
+// What doing an empty action would give p: its own estimate. Cover never rates itself (it would ask itself forever),
+// and a throw rates 0. Bots used to see every empty action as worth 2, so they took Cover rarely and copied blind.
+let rating = false;
+function emptyValue(ctx, a, p) {
+  if (rating || a.key === 'hum' || !a.estimate) return 0;
+  rating = true;
+  try { return Math.max(0, a.estimate(ctx, p) || 0); } catch { return 0; } finally { rating = false; }
+}
 // by: the member making the copy (Understudy, Sleepwalker…), so the log names it. who: the card or space asking
 // (the prompt's own name), so a copied space's free member is titled with it ("Encore: take a face-up member…").
 function offer(ctx, p, list, prompt, from, by = null) {
@@ -381,13 +389,13 @@ const echoQ = {
       // Cory, 2026-10-27: Chorus out; "Copy an action with no minion on it" takes Reprise's round II spot. Name is
       // Claude's fill-in. A copy of an empty space does that action itself (nobody took it, so there's no chip).
       key: 'hum', ring: 2, name: 'Cover', echo: true, text: 'Copy an action with no minion on it. +1 green.',
-      estimate: (ctx, p) => VARIANT.plus + (emptyTargets(ctx).length ? 2.5 : 0),
+      estimate: (ctx, p) => VARIANT.plus + Math.max(0, ...emptyTargets(ctx).map(({ a }) => emptyValue(ctx, a, p))),
       resolve(ctx, p) {
         plus(ctx, p);
         const list = emptyTargets(ctx);
         if (!list.length) { ctx.log(`${p.name} found no empty action to copy.`); return; }
         ctx.choose(p, 'Cover: copy which empty action?', list.map(({ key, a }) => ({
-          id: `space:empty:${key}`, label: `${a.name}: ${a.text}`, kind: 'space', value: key, hint: 2,
+          id: `space:empty:${key}`, label: `${a.name}: ${a.text}`, kind: 'space', value: key, hint: emptyValue(ctx, a, p),
         })), 'echo.copyEmpty');
       },
     },

@@ -48,6 +48,13 @@ describe('Green current actions', () => {
     s = pass(play(s, o => o.label.startsWith('Golden Years')));
     expect(R(s)).toMatchObject({ gold: 4, green: 1 });
   });
+  // bots copied blind when every empty action was rated 2 (Claude, under Cory's go-with-your-gut, Oct 29)
+  it('Cover rates each empty action by what it would give, so bots copy the best one', () => {
+    const s = take(table(Q, { round: 2, shop: ROW, queue: turns(1, 0) }), 'echo.hum');
+    const hint = name => s.pending.options.find(o => o.label.startsWith(name)).hint;
+    expect(hint('Build Up')).toBeGreaterThan(hint('Echo'));
+    expect(new Set(s.pending.options.map(o => o.hint)).size).toBeGreaterThan(1);
+  });
   it('Echo copies the printed chip and also gains its own inherent green', () => {
     const s = buildThenEcho();
     expect(R(s).green).toBe(4); // Echo's own +1 plus Build Up's +3
