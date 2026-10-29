@@ -7,7 +7,9 @@ import './cards-lab.css';
 import './icons-lab.css';
 import { allQuadrantIds, quadrant } from '../../engine/v4/index.js';
 import { guestMembers } from '../../engine/v4/content/index.js';
+import { useId } from 'react';
 import { cardColor, cardGround } from '../game/Info.jsx';
+import { anyDotVars } from '../game/Glyphs.jsx';
 import { Rich } from '../game/Rich.jsx';
 import { CostShapes } from '../game/ShopCards.jsx';
 import { FollowerGlyph } from '../game/Glyphs.jsx';
@@ -44,7 +46,22 @@ function HoodMark({ color = null, title }) {
     <ellipse cx="7" cy="8" rx="2.3" ry="2.7" fill={color ? 'rgba(20,14,10,.75)' : 'var(--pp)'} />
   </svg>;
 }
-const MARKS = { card: CardMark, hood: HoodMark };
+// bust (Cory, Oct 29: "a red head and shoulders symbol for red member… a mix of the colors in the game (like the wildcard
+// token is) of the same symbol for any member"): one smooth bust; a color fills it, "any member" is split like the wild dot
+const BUST = 'M8 1.2a3.3 3.3 0 1 1 0 6.6a3.3 3.3 0 1 1 0-6.6ZM1.6 15.2C1.6 11.2 4.2 8.8 8 8.8S14.4 11.2 14.4 15.2Z';
+function BustMark({ color = null, title }) {
+  const id = `bust${useId().replace(/:/g, '')}`;
+  return <svg className="il-mark bust" viewBox="0 0 16 16" role="img" aria-label={title}><title>{title}</title>
+    {color ? <path d={BUST} fill={`var(--${color})`} /> : <>
+      <defs><clipPath id={id}><path d={BUST} /></clipPath></defs>
+      <g clipPath={`url(#${id})`}>
+        <path d="M8 8.5L-4 -4H20Z" fill="var(--any-top)" /><path d="M8 8.5L20 -4V20Z" fill="var(--any-right)" />
+        <path d="M8 8.5L20 20H-4Z" fill="var(--any-bottom)" /><path d="M8 8.5L-4 20V-4Z" fill="var(--any-left)" />
+      </g></>}
+    <path d={BUST} fill="none" stroke="rgba(20,14,10,.5)" strokeWidth="1" strokeLinejoin="round" />
+  </svg>;
+}
+const MARKS = { card: CardMark, hood: HoodMark, bust: BustMark };
 
 // ---------- one rule, drawn under a treatment ----------
 // opts: bold (keywords bold), mark ('card' | 'hood' | null), once (One Time Use's new name), band (keyword on its own line
@@ -53,7 +70,7 @@ const KEY = /\b(On Recruit|Round III Start|Round Start|Round [Ee]nd|Game [Ee]nd|
 const fixCase = k => k.replace(/end$/, 'End');
 function memberBits(text, mark) {
   if (!mark) return [text];
-  const M = MARKS[mark];
+  const M = MARKS[mark] || null;
   const out = []; let last = 0;
   // "per red member", "per other blue member", "per 2 members", "per member", "a blue member", "Counts as 3 members"
   const re = new RegExp(`\\b(?:(\\d+) )?(?:(other) )?(?:(${COLORS.join('|')}) )?members?\\b`, 'g');
@@ -61,6 +78,7 @@ function memberBits(text, mark) {
     if (m.index > last) out.push(text.slice(last, m.index));
     const [, n, other, color] = m;
     const title = `${n ? `${n} ` : ''}${other ? 'other ' : ''}${color ? `${color} ` : ''}member${n > 1 ? 's' : ''}`;
+    if (mark === 'pill') { out.push(<span key={m.index} className="il-pill" style={{ '--pc': color ? `var(--${color})` : 'var(--ink3)' }}>{m[0]}</span>); last = m.index + m[0].length; continue; }
     out.push(<span key={m.index} className="il-amt">{other ? 'other ' : ''}{n ? <b className="rich-n">{n}</b> : null}<M color={color} title={title} /></span>);
     last = m.index + m[0].length;
   }
@@ -96,7 +114,7 @@ const Worth = ({ d }) => <span className="cl-worth"><b className="num">{d.f}</b>
 function Card({ d, opts }) {
   const text = ability(d);
   const M = opts.mark && MARKS[opts.mark];
-  return <article className="cl-card cl-x cl-h" style={{ '--c': cardColor(TABLE, d) }} data-ground={cardGround(TABLE, d)}>
+  return <article className={`cl-card cl-x cl-h${opts.big ? ' il-big' : ''}`} style={{ '--c': cardColor(TABLE, d) }} data-ground={cardGround(TABLE, d)}>
     <header className="x-head"><span className="x-cost num">{total(d)}</span><b className="x-name">{d.name}</b><span className="x-worth"><Worth d={d} /></span></header>
     <div className="x-art"><Art d={d} /></div>
     <div className="x-box">{text ? <Rule text={text} opts={opts} /> : <span className="cl-none">Worth {d.f}.</span>}</div>
@@ -113,6 +131,9 @@ const ROWS = [
   ['3', 'Member mark: a hood', 'The same, drawn as a hooded cult member, like the portraits.', { bold: true, mark: 'hood' }],
   ['4', 'Once per game', '"One Time Use" renamed to pair with "Once per round"; by-round amounts read "I +1 · II +2 · III +3" as on the wheel.', { bold: true, mark: 'card', once: 'Once per game', rounds: true }],
   ['5', 'Activate', 'Cory\'s "Activate", same marks.', { bold: true, mark: 'card', once: 'Activate', rounds: true }],
+  ['9', 'Head and shoulders', 'A red member is a red bust; any member is the same bust split in the table\'s colors, like the wild token.', { bold: true, mark: 'bust', once: 'Once per game', rounds: true, big: true }],
+  ['7', 'Member words in a tag', 'The words stay; "red member" sits in a tag of its color, so it reads at a glance.', { bold: true, mark: 'pill', once: 'Once per game', rounds: true }],
+  ['8', 'Hood, bigger', 'The hooded figure at full text height, colored like its member.', { bold: true, mark: 'hood', once: 'Once per game', rounds: true, big: true }],
   ['6', 'Keyword band', 'The keyword sits on its own small line above what it does, like a trading card\'s trigger.', { band: true, mark: 'card', once: 'Once per game', rounds: true }],
 ];
 
@@ -121,7 +142,7 @@ export default function IconsLab() {
   const only = q.get('rows');
   const picks = (q.get('names') || '').split(',').filter(Boolean);
   const defs = (picks.length ? picks : PICKS).map(find).filter(Boolean);
-  return <main className="cl il">
+  return <main className="cl il" style={anyDotVars(['red', 'purple', 'blue', 'green'])}>
     {ROWS.filter(([k]) => !only || only.split(',').includes(k)).map(([k, name, say, opts]) => <section key={k} className="cl-look" data-row={k}>
       <h2><b>{k}</b> {name} <small>{say}</small></h2>
       <div className="cl-row">{defs.map(d => <Card key={d.id} d={d} opts={opts} />)}</div>
