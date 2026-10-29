@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.885 — 2026-10-29
+
+- Fence pays its +1 magenta once per turn, not on every steal. Con Men steals 5 when you choose to use it, not the moment you recruit it.
+
 ## v0.9.884 — 2026-10-29
 
 - Choosing a rival (Shake Down and the like): point at their members to see their cards.
