@@ -90,6 +90,6 @@
    cropped to the window's shape; whole pixels stay crisp */
 .card .art:has(> img.sprite.scene){position:relative;overflow:hidden}
 .card .art > img.sprite.scene{position:absolute;inset:0;width:100% !important;height:100% !important;max-height:none !important;object-fit:cover;image-rendering:pixelated;margin:0}
-/* the full card's window is much wider than tall: the scene stands full height in its middle */
-.card-face .mc-art:has(> img.sprite.scene){display:flex;align-items:stretch;justify-content:center;overflow:hidden}
-.card-face .mc-art > img.sprite.scene{height:100% !important;width:auto !important;max-height:none !important;aspect-ratio:1;image-rendering:pixelated}
+/* the full card's window: for a scene it grows to 4:3 and the scene fills it (Cory, Oct 29: the square in the middle of a wide strip "looks a bit awkward") */
+.card-face.mc .mc-art:has(> img.sprite.scene){position:relative;overflow:hidden;width:calc(100% - 4px);height:auto;aspect-ratio:4/3;max-height:220px}
+.card-face .mc-art > img.sprite.scene{position:absolute;inset:0;width:100% !important;height:100% !important;max-height:none !important;object-fit:cover;object-position:50% 45%;image-rendering:pixelated}
