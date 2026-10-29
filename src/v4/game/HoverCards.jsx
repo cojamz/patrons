@@ -645,6 +645,11 @@ export function StandingsCard({ state, qid, meId = null }) {
 export function SeatCard({ state, pid, meId = null, optionFor = () => null, onPick = null }) {
   const p = state.players[pid];
   const lvl = p.kind === 'bot' ? BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid)) : null; // Easy / Normal / Hard
+  const mock = pid !== meId ? seatMock() : null;
+  if (mock && Number(mock) >= 11) {
+    const who = <><SeatFigure id={pid} state={state} size={32} face /><h4>{p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal members or resources from {p.name} this round.</small> : null}</h4></>;
+    return <div className="lt-card-body seat-card sm-full" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}><SeatMockBody state={state} pid={pid} mock={mock} who={who} /></div>;
+  }
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
       <div className="t"><SeatFigure id={pid} state={state} size={32} face={pid !== meId} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal members or resources from {pid === meId ? 'you' : p.name} this round.</small> : null}{pid !== meId ? <SpendingLine state={state} pid={pid} /> : null}</h4></div>

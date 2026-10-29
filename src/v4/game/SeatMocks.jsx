@@ -6,7 +6,7 @@
 // off the engine (memberRows, roundStartIncome, contestTable, the end-game projection, card.made).
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
-import { quadrant, cardDef, contestTable } from '../../engine/v4/index.js';
+import { quadrant, cardDef, contestTable, memberCount } from '../../engine/v4/index.js';
 import { cardGains, projectedEndGame } from '../format.js';
 import { memberTimingWords } from './memberTiming.js';
 import { onTable } from './Info.jsx';
@@ -16,7 +16,7 @@ import { memberRows, spendingPower } from './memberUse.js';
 import { incomeOf } from './build.js';
 import './seat-mocks.css';
 
-export const MOCK_WIDTH = { 1: 480, 2: 480, 3: 900, 4: 520, 5: 520, 6: 780, 7: 760, 8: 760, 9: 900, 10: 560 };
+export const MOCK_WIDTH = { 11: 920, 12: 920, 13: 920, 14: 920, 15: 920, 1: 480, 2: 480, 3: 900, 4: 520, 5: 520, 6: 780, 7: 760, 8: 760, 9: 900, 10: 560 };
 export const seatMock = () => {
   try { const m = new URLSearchParams(window.location.search).get('seatmock'); return m && MOCK_WIDTH[m] ? m : null; } catch { return null; }
 };
@@ -89,7 +89,7 @@ function intel(state, pid) {
 const Pic = ({ state, row, size = 24 }) => (row.kind === 'artifact'
   ? <ArtifactTile q={artQ(state, row.uid)} res={artQ(state, row.uid) ? quadrant(artQ(state, row.uid)).resource : 'colorless'} size={size} />
   : <Sprite id={[row.def.id, spriteId(row.name)]} kind="member" sphere={sphereOf(state, row.def)} size={size} />);
-const tint = (state, r) => { const q = r.kind === 'artifact' ? artQ(state, r.uid) : null; return q ? `var(--q-${quadrant(q).resource}, var(--${q}))` : `var(--q-${sphereOf(state, r.def)}, var(--pl-ink-3))`; };
+const tint = (state, r) => { const q = r.kind === 'artifact' ? artQ(state, r.uid) : onTable(state, r.def) ? r.def.quadrant : null; return q ? `var(--${q})` : 'var(--colorless, #8a7f72)'; };
 const Disc = ({ r }) => (r.kind === 'artifact' ? <span className="sm-disc none" aria-hidden="true" /> : <span className="sm-disc num" title={`Costs ${price(r)}`}>{price(r)}</span>);
 const Name = ({ r }) => <b className="sm-name">{r.name}{r.n > 1 ? <span className="num"> ×{r.n}</span> : null}</b>;
 const State = ({ r }) => (r.kind === 'use' ? <span className={`sm-state${r.loaded ? ' live' : ''}`}>{r.loaded ? 'not used yet' : 'used'}</span> : r.used ? <span className="sm-state">used this round</span> : null);
@@ -315,8 +315,104 @@ function M10({ state, I }) {
   );
 }
 
-const MOCKS = { 1: M1, 2: M2, 3: M3, 4: M4, 5: M5, 6: M6, 7: M7, 8: M8, 9: M9, 10: M10 };
-export function SeatMockBody({ state, pid, mock }) {
+// ---------- #3, polished (Cory, Oct 29: "#3 is best… give me 5 more versions with the polish applied") ----------
+// The heading carries who it is, their artifact and four numbers (next Round Start, Game End if it ended now, the
+// resources they hold, how many members); the body is #3's columns without the artifact. A use member not yet used
+// and a used one each look plainly different (each version tries a different way).
+const COLS = [['Uses', ['once-game', 'once-round']], ['Every round', ['round', 'whenever']], ['Standing and scoring', ['always', 'end']], ['Done or plain', ['recruit', 'plain']]];
+const useClass = r => (r.kind === 'use' ? (r.loaded ? ' use-ready' : ' use-spent') : '');
+const UseTag = ({ r, ready = 'Not used yet', spent = 'Used' }) => (r.kind === 'use' ? <span className={`sm-usetag ${r.loaded ? 'ready' : 'spent'}`}>{r.loaded ? ready : spent}</span> : null);
+function held(state, p) {
+  const parts = state.resources.filter(c => (p.res[c] || 0) > 0).map(c => [c, p.res[c]]);
+  return { total: parts.reduce((t, [, n]) => t + n, 0), text: parts.map(([c, n]) => `${n} ${c}`).join(' ') };
+}
+function Head({ state, I, who, layout = 'grid' }) {
+  const art = I.rows.find(r => r.kind === 'artifact');
+  const h = held(state, I.p);
+  const n = memberCount(state, I.p);
+  const stats = [
+    ['Next Round Start', I.income ? <Rich text={I.income} /> : <span className="sm-nil">nothing</span>],
+    ['Game End, if it ended now', I.endNow ? <Rich text={`+${I.endNow} followers`} /> : <span className="sm-nil">nothing</span>],
+    ['Resources', <><span className="num">{h.total}</span>{h.text ? <span className="sm-held"><Rich text={h.text} /></span> : null}</>],
+    ['Members', <span className="num">{n}</span>],
+  ];
+  return (
+    <header className={`sm-head l-${layout}`}>
+      <div className="sm-who"><div className="t">{who}</div>
+        {art ? <div className="sm-art" style={{ '--mc': tint(state, art) }}><Pic state={state} row={art} size={28} /><span><span className="sm-top"><span className="sm-k">Artifact</span><Name r={art} /></span><span className="sm-text"><Rich text={art.text} /></span>{art.made ? <span className="sm-gain"><Rich text={art.made} /><small> so far</small></span> : null}</span></div> : null}
+      </div>
+      <div className="sm-nums">{stats.map(([k, v]) => <div key={k} className="sm-num"><span className="sm-k">{k}</span><span className="sm-v">{v}</span></div>)}</div>
+    </header>
+  );
+}
+function Card3({ state, r, face = 'tile' }) {
+  if (face === 'bar') {
+    return (
+      <div className={`sm-c3 bar${useClass(r)}${r.threat ? ' threat' : ''}`} style={{ '--mc': tint(state, r) }}>
+        <span className="sm-c3-bar"><span className="sm-disc num">{price(r)}</span><span className="sm-c3-n">{r.name}{r.n > 1 ? ` ×${r.n}` : ''}</span><UseTag r={r} ready="Ready" /></span>
+        <span className="sm-c3-body"><Pic state={state} row={r} size={28} /><span><Text r={r} /><Gain r={r} /></span></span>
+      </div>
+    );
+  }
+  if (face === 'row') {
+    return (
+      <div className={`sm-c3 row${useClass(r)}${r.threat ? ' threat' : ''}`} style={{ '--mc': tint(state, r) }}>
+        <span className="sm-c3-pic"><Pic state={state} row={r} size={32} />{r.kind === 'use' && !r.loaded ? <span className="sm-check" aria-hidden="true">✓</span> : null}</span>
+        <span className="sm-c3-main"><span className="sm-top"><Disc r={r} /><Name r={r} /><UseTag r={r} ready="Ready" /></span><Text r={r} /><Gain r={r} /></span>
+      </div>
+    );
+  }
+  return (
+    <div className={`sm-c3${useClass(r)}${r.threat ? ' threat' : ''}`} style={{ '--mc': tint(state, r) }}>
+      <span className="sm-top"><Disc r={r} /><Pic state={state} row={r} size={24} /><Name r={r} /></span>
+      <Text r={r} />
+      <span className="sm-foot"><UseTag r={r} /><Gain r={r} /></span>
+    </div>
+  );
+}
+function Columns({ state, I, face, splitUses = false }) {
+  return (
+    <div className="sm-cols">
+      {COLS.map(([label, ts]) => (
+        <div key={label} className="sm-col">
+          <h5><span>{label}</span></h5>
+          {I.groups.filter(g => ts.includes(g.t)).map(g => {
+            if (splitUses && (g.t === 'once-game' || g.t === 'once-round')) {
+              const ready = g.rows.filter(r => r.loaded), spent = g.rows.filter(r => !r.loaded);
+              return (
+                <div key={g.t} className="sm-sub"><span className="sm-subh">{g.label}</span>
+                  {ready.length ? <><span className="sm-subk ready">Not used yet</span>{ready.map(r => <Card3 key={r.key} state={state} r={r} face={face} />)}</> : null}
+                  {spent.length ? <><span className="sm-subk">Used</span><div className="sm-spentchips">{spent.map(r => <span key={r.key} className="sm-spentchip"><span className="sm-check" aria-hidden="true">✓</span><Pic state={state} row={r} size={20} /><Name r={r} /></span>)}</div></> : null}
+                </div>
+              );
+            }
+            return (
+              <div key={g.t} className="sm-sub"><span className="sm-subh">{g.label}</span>
+                {g.t === 'plain' ? <div className="sm-chips">{g.rows.map(r => <Chip key={r.key} state={state} r={r} />)}</div> : g.rows.map(r => <Card3 key={r.key} state={state} r={r} face={face} />)}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+const P3 = ({ state, I, who, v, layout, face, splitUses }) => (
+  <div className={`sm sm-3 sm-p v${v}`}><Head state={state} I={I} who={who} layout={layout} /><Columns state={state} I={I} face={face} splitUses={splitUses} /></div>
+);
+// 11 Glow: heading as identity and artifact beside a 2×2 of numbers; a use not yet used glows in its color, a used one is dashed and faded
+const M11 = p => <P3 {...p} v={11} layout="grid" face="tile" />;
+// 12 Scoreboard: the four numbers big in one row under the name; ready uses lit like a lamp, used ones greyed with a "Used" stamp
+const M12 = p => <P3 {...p} v={12} layout="board" face="tile" />;
+// 13 Cards: each member a small card with its color bar (as in the shop); ready ones framed in their color, used ones turned face down
+const M13 = p => <P3 {...p} v={13} layout="grid" face="bar" />;
+// 14 Ready and used apart: inside Uses, "Not used yet" cards on top with a ring, used ones shrunk to ticked chips below
+const M14 = p => <P3 {...p} v={14} layout="line" face="tile" splitUses />;
+// 15 Portraits: a bigger picture leads each card; a ready one has a lit ring and "Ready", a used one a big tick over its picture
+const M15 = p => <P3 {...p} v={15} layout="grid" face="row" />;
+
+const MOCKS = { 11: M11, 12: M12, 13: M13, 14: M14, 15: M15, 1: M1, 2: M2, 3: M3, 4: M4, 5: M5, 6: M6, 7: M7, 8: M8, 9: M9, 10: M10 };
+export function SeatMockBody({ state, pid, mock, who = null }) {
   const M = MOCKS[mock];
-  return M ? <M state={state} I={intel(state, pid)} /> : null;
+  return M ? <M state={state} I={intel(state, pid)} who={who} /> : null;
 }
