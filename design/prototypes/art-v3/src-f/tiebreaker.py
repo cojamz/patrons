@@ -11,23 +11,21 @@ col = c.poly([(17, 31.5), (21, 34), (24, 36), (27, 34), (31, 31.5), (32, 35), (2
 c.fill(col, 'n'); c.fill(col & c.rect(0, 0, 21, 47), 'o'); c.fill(col & c.rect(28, 0, 47, 47), 'm'); c.edge(col, 'm')
 c.fill(c.rect(20, 28, 27, 32), 'A'); c.fill(c.rect(20, 30, 21, 32), 'B')
 # ---- the raised hand, thumb up, and the coin spinning above it
-arm = c.poly([(4, 40), (6, 36), (9.6, 30), (13.6, 31), (11.6, 37), (9, 41)])
+arm = c.poly([(4, 40), (6, 36), (9.2, 28.6), (13.6, 29), (11.6, 37), (9, 41)])
 c.fill(arm, '3'); c.rim(arm, '4', -1, -1, 1); c.fill(c.line(12, 33, 10, 38), '2'); c.edge(arm, '1')
-c.put(8, 23, ['..DD...',
+c.put(8, 22, ['..D....',
               '..DC...',
-              '..CB...',
-              '.DDCCC.',
-              'DCCCCCB',
-              'CBCBCBB',
+              '.DDCCCA',
+              'CBCBCBA',
               'CCCCCBA',
               '.BBBBA.',
-              '.33333.'])                                                          # hand, thumb up: knuckles, cuff
-c.put(8, 14, ['.dc.', 'dccb', 'cccb', '.bb.'])                                      # the coin
-c.put(5, 13, ['.d', 'd.', 'd.', '.d'])                                              # one spin arc
+              '.33333.'])                                                          # hand, thumb up: lit tip, knuckle row, cuff
+c.put(8, 12, ['ydc.', 'dccb', 'ccbb', '.bb.'])                                      # the coin: one gold disc, one glint
+c.put(6, 11, ['.4', '4.', '4.'])                                                    # one pale spin arc
 # ---- face, 3/4 to our left, eyes up to the coin. ruler x 14..33
 blk(c, 14, 14, '''
-|.DDDDDDDDDDCCCCBBFE.
-|.DDDDDDDDDCCCCCBBFE.
+|.CCCCCCCCCCCCCCBBFE.
+|.CCDDDDDCCCCCCCBBFE.
 |.GGDDDDGGGGCCBBBBFE.
 |.CBBCDCBBBBCCBBBBFA.
 |.BzzBDBzzzBCCBBBBBA.

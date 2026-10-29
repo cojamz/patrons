@@ -25,6 +25,7 @@ c.fill(tie, 'w'); c.fill(tie & c.rect(18, 40, 20, 48), 'v')                     
 c.fill(c.line(9, 36, 11, 47), '2'); c.fill(c.line(24, 36, 22, 47), '2')
 neck(c, 13, 20, 28, 34)
 face(c, 'f16', 9, 20, eyes='open', brows='raised', mouth='smile', glow=True, iris='a')
+c.fill(c.rect(9, 13, 21, 18) & c.mask_of('D'), 'C'); c.put(11, 15, ['DDD', 'DD.'])   # one small stepped forehead plane
 ear(c, 7, 19, 'L')
 hair(c, [(8, 18), (8, 12), (10, 8.5), (16, 7), (22, 7.5), (25, 10.5), (25, 18), (24, 18), (23.4, 14), (10, 14), (9, 18)], 0, 15, 10, 8, 4.5)
 c.put(13, 25, ['B....B', '.ArrA.'])                                                # small closed smile, warm lips
@@ -32,7 +33,11 @@ c.put(13, 25, ['B....B', '.ArrA.'])                                             
 doc = c.poly([(23, 36), (33, 35), (34, 47.5), (24, 48)])
 c.fill(doc, 'k'); c.fill(doc & c.rect(31, 35, 35, 48), 'j'); c.edge(doc, 'i')
 for y in (38, 40, 42): c.fill(c.line(25, y, 31, y), 'i')
-c.put(28, 42, ['.cc.', 'cccb', 'ccbb', '.bb.', 'b..b'])                           # round gold seal, two ribbon tails
-c.put(20, 38, ['.CCC', 'DCDCB', 'CCCCB', 'BDDCB', 'BBBB.'])                           # his hand: knuckles, thumb across
-c.edge(c.rect(20, 38, 24, 42) & c.mask_of('BCD'), 'A')
-PORTRAIT = portrait('trading.broker', 'Broker', 'white', [{'skin': 'deep', 'hair': 'black'}, {'skin': 'porcelain', 'hair': 'brown'}], c, accent='navy', merge={'H': 'G', 'F': 'G', 'e': 'm', 'p': 'o', 'M': 'N', 'j': 'k'})
+c.put(28, 42, ['cccc', 'ckcc', 'cccb', 'cbbb'])                                    # a solid gold wax disc, one highlight
+c.put(28, 46, ['b..b']); c.put(27, 47, ['b....b'])                                  # two ribbon tails in a V
+c.put(21, 38, ['DC.DC.DC.DC'])                                                     # four fingertips over the contract's top edge
+c.put(21, 39, ['CCBCCBCCBCB'])                                                     # knuckle row
+c.put(21, 40, ['CCCCB', 'BCCB.'])
+c.put(20, 40, ['D', 'C'])                                                          # thumb
+c.put(19, 39, ['22', '12', '12', '11'])                                             # shirt cuff
+PORTRAIT = portrait('trading.broker', 'Broker', 'white', [{'skin': 'deep', 'hair': 'black'}, {'skin': 'porcelain', 'hair': 'brown'}], c, accent='navy', merge={'H': 'G', 'F': 'G', 'e': 'm', 'p': 'o', 'M': 'N', 'j': 'k', 'K': 'J', 'O': 'N', 'v': 'w', 'a': 'b', '4': '3'}, minn=2)

@@ -68,14 +68,18 @@ c.fill(dome & c.rect(0, 12, 47, 13), 'm')
 brim = c.poly([(6.4, 14), (8, 13), (27, 13), (28.6, 14), (27, 15.6), (8, 15.6)])
 c.fill(brim, 'n'); c.fill(brim & c.rect(0, 13, 47, 13), 'o'); c.fill(brim & c.rect(0, 15, 47, 15), 'm')
 # ---- three cards fanned in his hand: find the lady
-px, py = 13, 51
-for i, ang in enumerate((-30, 0, 30)):
-    a = math.radians(ang); ux, uy = math.sin(a), -math.cos(a); vx, vy = math.cos(a), math.sin(a)
-    pts = [(px + ux * 4 + vx * s * 3.6, py + uy * 4 + vy * s * 3.6) for s in (-1, 1)] + \
-          [(px + ux * 15 + vx * s * 3.6, py + uy * 15 + vy * s * 3.6) for s in (1, -1)]
-    card = c.poly(pts); c.fill(card, 'k'); c.edge(card, 'm')
-    mx, my = px + ux * 11.5, py + uy * 11.5
-    if i == 1: c.fill(c.ellipse(mx, my, 1.3, 1.5) & card, 'w')
-    else: c.fill(c.line(round(mx - .5), round(my - 1.5), round(mx - .5), round(my - .5)) & card, 'z')
-fist(c, 10, 43, cuff='2')
+cards = [((3.2, 36), (8.6, 33.6), (11.6, 42), (6.4, 44.6), 'z'),                      # left card, tilted out, black pip
+         ((8.4, 33), (14, 33), (14, 43), (8.4, 43), None),                             # middle card, upright
+         ((13.4, 33.6), (18.8, 36), (15.6, 44.6), (10.4, 42), 'w')]                    # right card, tilted out, red pip
+for (p0, p1, p2, p3, pip) in cards:
+    card = c.poly([p0, p1, p2, p3]); c.fill(card, 'k'); c.edge(card, 'm')
+    if pip:
+        cx = round((p0[0] + p1[0] + p2[0] + p3[0]) / 4 - 1); cy = round((p0[1] + p1[1] + p2[1] + p3[1]) / 4 - 2)
+        c.put(cx, cy, [pip * 2, pip * 2])
+c.put(10, 42, ['..DDCCC',
+               '.CBCBCB',
+               'DCCCCCB',
+               'DCCCCBA',
+               '.BBBBA.',
+               '.11111.'])                                                          # his hand: knuckle row, thumb, cuff step
 PORTRAIT = portrait('benders.conmen', 'Con Men', c, [{'skin': 'porcelain', 'hair': 'black'}, {'skin': 'brown', 'hair': 'black'}], 'red')
