@@ -52,9 +52,10 @@ export function StoryCard({ story, color, state, hover }) {
 
 /**
  * props: state, entries (stories, oldest first: { actor, head, space, spaceKey, short, lines, uids, hit, n }), me (your
- * id or null), yours (it's your move now), hover (the board's hover layer), onLog (opens the full log).
+ * id or null), yours (it's your move now), hover (the board's hover layer), onLog (opens the full log),
+ * pool (the spare minions, MinionPool, from round II: they sit beside the Log, and the strip's title drops to its own line).
  */
-export default function SinceStrip({ state, entries, me, yours, hover = null, onLog }) {
+export default function SinceStrip({ state, entries, me, yours, hover = null, onLog, pool = null }) {
   // whole lines only (design pod): when the strip's room can't hold every line, the oldest go into "N earlier…" instead
   // of showing part of a line at the top. The fold is worked out in one step from where the lines stand (the list stacks
   // from its foot, so dropping the oldest leaves the rest where they are), and lines that won't stay are hidden before the
@@ -182,14 +183,17 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   const empty = !entries.length;
   return (
     <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}${empty ? ' empty' : ''}${compact ? ' compact' : ''}`} data-since data-empty={empty || undefined} data-folded={cut || undefined} aria-label="Since your last turn">
-      <header className="since-head">
-        {!empty && <span className="since-title">Since your last turn</span>}
+      <header className={`since-head${pool ? ' with-pool' : ''}`}>
+        {/* the spare minions beside the Log (Cory, Oct 29, his pick of three spots) */}
+        {pool}
+        {!empty && !pool && <span className="since-title">Since your last turn</span>}
         {/* the newest line alone: the earlier ones are counted up here, beside the Log, taking no line of their own */}
         {(bare || lvl >= 2) && more + (lvl >= 2 ? shown.length : 0) > 0 && (
           <button type="button" className="since-more in-head" onClick={onLog} title="Open the log">{lvl >= 2 ? `${more + shown.length} ${more + shown.length === 1 ? 'move' : 'moves'}` : `${more} earlier`}</button>
         )}
         <button type="button" className="since-log" data-open-log onClick={onLog} title="The whole game, move by move">Log</button>
       </header>
+      {!empty && pool && <span className="since-title own-line">Since your last turn</span>}
       {shown.length ? (
         <ol className="since-list" ref={listRef}>
           {more > 0 && !bare && <li className="since-more"><button type="button" onClick={onLog}>{more} earlier… open the log</button></li>}

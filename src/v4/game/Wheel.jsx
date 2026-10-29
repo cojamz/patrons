@@ -1042,7 +1042,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       const cap = F * 0.95;
       paper.push(
         <g key={`rf${q}`} className={`rim-mark${lit}`} data-rim-prize={qid} data-rim-res={quadrant(qid).resource} transform={`translate(${mx.toFixed(2)} ${my.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap / 2).toFixed(2)})`}>
-          <circle className="rim-halo" cx={(cap / 2).toFixed(2)} cy={(cap / 2).toFixed(2)} r={(cap * 0.66).toFixed(2)} fill="url(#ltHalo)" aria-hidden="true" />
+          <circle className="rim-halo" cx={(cap / 2).toFixed(2)} cy={(cap / 2).toFixed(2)} r={(cap * 0.58).toFixed(2)} fill="url(#ltHalo)" aria-hidden="true" />
           <Follower size={cap} title={`${RING_VALUE[paying - 1]} followers`} />
         </g>,
       );
@@ -1256,9 +1256,10 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
             <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%" gradientTransform={panels ? undefined : `rotate(${-rot} .5 .5)`}><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
             <filter id="ltGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" /></filter>
             {/* the contest rim's follower mark: a pearly sheen and a soft halo, so it reads as followers and not as one
-                more cream resource mark on the band (Claude, under Cory's go-with-your-gut, 2026-10-21) */}
+                more cream resource mark on the band (Claude, under Cory's go-with-your-gut, 2026-10-21); the halo much fainter (Cory,
+                Oct 29: "the followers on the circle rim glow too much") */}
             <linearGradient id="ltSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffffff" /><stop offset=".42" stopColor="#fff4dc" /><stop offset=".55" stopColor="#ffffff" /><stop offset=".72" stopColor="#ffe9bd" /><stop offset="1" stopColor="#e9c88a" /></linearGradient>
-            <radialGradient id="ltHalo"><stop offset=".45" stopColor="#fff6e0" stopOpacity=".7" /><stop offset="1" stopColor="#fff6e0" stopOpacity="0" /></radialGradient>
+            <radialGradient id="ltHalo"><stop offset=".45" stopColor="#fff6e0" stopOpacity=".22" /><stop offset="1" stopColor="#fff6e0" stopOpacity="0" /></radialGradient>
             <pattern id="ltHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.2)" strokeWidth="1" /></pattern>
           </defs>
           <circle cx={CX} cy={CY} r="200" fill="url(#ltPaper)" className="disk" />

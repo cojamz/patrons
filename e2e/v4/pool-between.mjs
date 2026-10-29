@@ -48,6 +48,7 @@ await page.click('[data-next-round]');
 await page.waitForFunction(() => document.querySelector('.app.game')?.dataset.round === '2' && document.querySelector('.lt-pool'), null, { timeout: 15000 });
 await page.waitForTimeout(3000);
 const most = await page.evaluate(() => window.__poolMax);
+if (process.env.V4_SHOTS) { const { mkdirSync } = await import('node:fs'); mkdirSync(process.env.V4_SHOTS, { recursive: true }); await page.screenshot({ path: `${process.env.V4_SHOTS}/round2.png` }); }
 const now = await page.evaluate(() => Number(document.querySelector('.lt-pool')?.dataset.pool));
 await browser.close();
 console.log(`pool-between: round II spare minions ${now}, the most drawn through the round change ${most}`);

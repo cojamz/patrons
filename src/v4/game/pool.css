@@ -1,10 +1,13 @@
-/* The spare minions (MinionPool.jsx): a short row on the wood at the wheel's upper left, across from the menu, with a small label under it,
-   set like the round line. They stand still (only the seat's own minions bob). */
-.lt .lt-wheel > .lt-pool{position:absolute;left:4px;top:4px;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:4px 6px;border-radius:6px;cursor:default}
+/* The spare minions (MinionPool.jsx): a short row in the head of the story under the cults, beside the Log (Cory, Oct 29,
+   his pick of three spots), the figures then a small label set like the Log's. They stand still (only the seat's own minions bob). */
+.lt-since .since-head > .lt-pool{display:flex;flex-direction:row;align-items:center;gap:8px;min-width:0;margin-right:auto;padding:0;cursor:default}
 .lt-pool .pool-men{display:flex;gap:3px;height:18px;align-items:flex-end}
 .lt-pool .pool-min{display:block;line-height:0}
 .lt-pool .pool-min svg{display:block;image-rendering:pixelated}
-.lt-pool .pool-cap{font-family:var(--sans);font-size:12px;color:var(--cream-3);letter-spacing:.08em;text-transform:uppercase;line-height:1}
+.lt-pool .pool-cap{font-family:var(--sans);font-size:12px;color:var(--cream-3);letter-spacing:.08em;text-transform:uppercase;line-height:1;white-space:nowrap}
 .lt-pool[data-pool="0"] .pool-cap{opacity:.7}
 .pool-tip{margin:0;max-width:240px}
 .lt-pool .pool-src{display:none}
+/* with the spare minions in the head, the strip's title takes its own line under it */
+.lt-since .since-title.own-line{display:block;padding:4px 2px 2px 0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
+.lt-since.empty .since-head.with-pool{justify-content:space-between}
