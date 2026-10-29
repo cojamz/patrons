@@ -24,7 +24,7 @@ Threads and where each stands
 - Purple redesign: shipped v0.8.45, playtest fixes v0.8.57. Waiting on #5 (Sleep In +3).
 - Gold, Silver, Yellow redesigns: paused by Cory. Waiting on #20 (which color next).
 - Harness review (Oct 28): Firefox in every gate and the freeze probe, freeze bars, a stalled check is stopped and named instead of holding a release, versions sorted by build time on publish, engineering questions to Cory bounce. The Oct 26 harness thread's three tester calls are closed: Help Yourself no longer steals followers (round I rework), Agents says "you included" on the card, and the rounds I-II brainstorm folds into the fewer-members work.
-- Finished: White redesign (spaces, 12 members, prices v0.8.52), Member balance (v0.8.35 prices; the 2x repass is #15), Member design, Rules rewrite (glossary reads the cards, v0.8.53), Bigger shop 6/7/8 (v0.8.59), Wheel spin lag (v0.8.50; #14 asks if it still lags), Hard bot balance runs, Brainstorming skill, Where we are this week.
+- Finished: White redesign (spaces, 12 members, prices v0.8.52), Member balance (v0.8.35 prices; the 2x repass is #15), Member design, Rules rewrite (glossary reads the cards, v0.8.53), Bigger shop 6/7/8 (v0.8.59), Wheel spin lag (v0.8.50; #14 asks if it still lags), Hard bot balance runs, Overnight balance Oct 29 (v0.9.850; 11 calls wait on Cory in the report doc), Brainstorming skill, Where we are this week.
 
 Branches
 - claude/gifted-newton-3lcy3i: the game (PR #1). main: the old game plus play/, rules/ and the harness mirror.

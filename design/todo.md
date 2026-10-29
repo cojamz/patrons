@@ -32,6 +32,7 @@ Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 mem
 
 ## Later
 - Engineering: structured events instead of log parsing; shared verbs for copies; online auth rules; type checking.
+- Cory's 11 balance calls from Oct 29 (Recruiter, Money Changer, Impressionist, Greatest Hits, Last Call copies, Agents, Accomplice, Saboteur, Front-runner, Gather/Spree/Recruit Twice, Tiebreaker): https://claude.ai/artifact/VAMVg3DAPWoFabU8AFSWs8. Build each yes as he answers.
 - Low priority (Cory, Oct 21): balance-test Crunch Time at 3 turns against 2.
 
 ## Parked
