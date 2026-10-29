@@ -48,6 +48,7 @@ if (EVERY) {
   await sleep(30);
   for (let k = 0; k < SPINS; k++) { await page.keyboard.press(k % 4 < 2 ? 'ArrowRight' : 'ArrowLeft'); await sleep(EVERY); }
   const fr = await w;
+  if (flag('frames', false)) { let t = 0; console.log(fr.map(x => { t += x; return x > 34 ? `${Math.round(x)}@${Math.round(t)}` : null; }).filter(Boolean).join(' ')); }
   console.log(`${url} round and round, a press every ${EVERY} ms: ${fr.length} frames in ${Math.round(fr.reduce((a, b) => a + b, 0))} ms, worst gap ${Math.round(Math.max(...fr))} ms, gaps over 50 ms ${fr.filter(x => x > 50).length}`);
   await browser.close();
   process.exit(0);

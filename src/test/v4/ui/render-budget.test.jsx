@@ -156,16 +156,19 @@ describe('render budget', () => {
       expect(spaces.length).toBe(container.querySelectorAll('.stage > [data-slot]').length);
       expect(angles.size).toBeGreaterThan(2); // it turns through several angles
       expect(turning.Wheel + turning.GameScreen).toBe(0); // the key itself renders nothing
-      const g = container.querySelector('.stage svg g[transform]').getAttribute('transform');
+      const turnOf = () => container.querySelector('.stage > .turn-layer').style.transform;
+      const g = turnOf();
       await act(async () => { layers[0].onfinish(); });
       await act(() => new Promise(r => setTimeout(r, 50)));
       // landed on screen, but React re-fits the board only once it has been still a moment (a next spin puts it off)
-      expect(container.querySelector('.stage svg g[transform]').getAttribute('transform')).toBe(g);
+      expect(R.n('Wheel')).toBe(0);
       expect(R.n('Wheel')).toBe(0);
       await act(() => new Promise(r => setTimeout(r, 400)));
       const report = { commits: R.commits, Wheel: R.n('Wheel'), GameScreen: R.n('GameScreen'), anims: anims.length };
       console.log('[render-budget] one spin:', JSON.stringify(report));
-      expect(container.querySelector('.stage svg g[transform]').getAttribute('transform')).not.toBe(g); // landed
+      expect(turnOf()).not.toBe(g); // landed: the layer carries the angle
+      // and the drawings never carry it themselves, so a landing leaves their paint alone (Firefox, Oct 29)
+      expect(container.querySelectorAll('.stage > .turn-layer > svg > g[transform]')).toHaveLength(0);
       expect(anims.every(a => a.cancelled)).toBe(true); // and let go of its animations
       expect(report.Wheel).toBeLessThanOrEqual(1);
       expect(report.GameScreen).toBe(0); // the table doesn't redraw for a spin (which way the wheel faces is the wheel's own)

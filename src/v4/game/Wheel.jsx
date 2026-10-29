@@ -478,7 +478,10 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   // slides round by `translate`. React takes the angle once, when it lands, and the layout effect below hands the board
   // back to React's own positions (motion budget: MO.spin, src/v4/motion.js).
   const drawn = useRef(rot); // the angle React last drew
-  const painted = useRef(rot); // the angle the board's groups carry now (React's, or a spin frame's)
+  // The drawings never carry the angle themselves: their layers do, as a CSS turn, at rest as well as in a spin. A landing
+  // then leaves the board's paint alone (Firefox repainted the whole board for a turn written into the SVG, ~1s on a slow
+  // laptop with the screen frozen, Oct 29); only the words that turn upright change.
+  const painted = useRef(0); // the angle the drawings carry inside their layers: none
   const geo = useRef(null); // the stage's size and each space's place, read once per turn (no layout read per frame)
   // Spin and drag share the compositor path. Rewriting SVG group transforms every frame re-rasterized
   // the paper, panel glows and lettering; rotate their already-painted layers until the landing commit.
@@ -500,13 +503,12 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
   };
   useLayoutEffect(() => {
     drawn.current = rot;
-    painted.current = rot;
     geo.current = null;
     const root = stage.current;
     if (!root) return;
     root.classList.remove('turning');
-    for (const sv of root.querySelectorAll(':scope > .turn-layer')) if (sv.style.transform) sv.style.transform = '';
-    for (const g of root.querySelectorAll(':scope > .turn-layer > svg > g[transform]')) g.setAttribute('transform', `rotate(${rot} ${CX} ${CY})`);
+    const t = rot ? `rotate(${rot.toFixed(2)}deg)` : '';
+    for (const sv of root.querySelectorAll(':scope > .turn-layer')) if (sv.style.transform !== t) sv.style.transform = t;
     for (const el of root.querySelectorAll(':scope > [data-slot]')) if (el.style.translate) el.style.translate = '';
     // a spin still turning when an earlier landing commits (its re-lay runs as a transition): its frames were drawn from
     // the old angle, so they're drawn again from this one, on the same clock
@@ -1251,7 +1253,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
             every frame of a drag (and of a spin), where turning a layer around it redraws nothing (2026-10-23) */}
         <div className="turn-layer paper-layer"><svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} role="group" aria-label="Board" className={`wheel-paper${late ? ' late' : ''}`}>
           <defs>
-            <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
+            <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%" gradientTransform={panels ? undefined : `rotate(${-rot} .5 .5)`}><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
             <filter id="ltGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" /></filter>
             {/* the contest rim's follower mark: a pearly sheen and a soft halo, so it reads as followers and not as one
                 more cream resource mark on the band (Claude, under Cory's go-with-your-gut, 2026-10-21) */}
@@ -1262,8 +1264,8 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
           <circle cx={CX} cy={CY} r="200" fill="url(#ltPaper)" className="disk" />
           {/* a knurled edge, like a dial's: fine ticks just outside the rim that turn with the board, so it reads as
               something you can turn (w2a #42: "nothing says the wheel can spin") */}
-          <g transform={`rotate(${rot} ${CX} ${CY})`} className="knurl" aria-hidden="true"><circle cx={CX} cy={CY} r="203" fill="none" /></g>
-          <g transform={`rotate(${rot} ${CX} ${CY})`} className="wheel">{paper}</g>
+          <g className="knurl" aria-hidden="true"><circle cx={CX} cy={CY} r="203" fill="none" /></g>
+          <g className="wheel">{paper}</g>
           <circle cx={CX} cy={CY} r="199.5" fill="none" className="edge" />
           <circle cx={CX} cy={CY} r={hubR} className="hub" />
         </svg></div>
@@ -1273,7 +1275,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
         </div>
         {sockets}
         <div className="turn-layer rim-turn"><svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} className="rim-layer" role="group" aria-label="Contest standings">
-          <g transform={`rotate(${rot} ${CX} ${CY})`}>{rimHits}</g>
+          <g>{rimHits}</g>
         </svg></div>
         {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}
       </div>
