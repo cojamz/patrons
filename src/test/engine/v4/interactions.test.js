@@ -340,15 +340,16 @@ describe('White sells followers that contests and bonuses counted', () => {
     const s = scene({ quads: Q, bonus: [1], members: [['trading.lender']], queue: [{ t: 'finish' }] });
     expect(s.players[0].bonus).toBe(0);
   });
-  it('Weaver and Extortionist fire on the 10-follower buy too (5 or more)', () => {
+  // Extortionist left this test when it became a bigger Cutpurse (Cory, 2026-10-28)
+  it('Weaver fires on the 10-follower buy too (5 or more)', () => {
     const Y = ['gold', 'red', 'thieves', 'yellow'];
-    let s = scene({ quads: Y, turns: [1, 0], res: [{}, { gold: 4, red: 2, magenta: 2, yellow: 2 }], members: [['thieves.extortionist'], ['yellow.weaver']] });
+    let s = scene({ quads: Y, turns: [1, 0], res: [{}, { gold: 4, red: 2, magenta: 2, yellow: 2 }], members: [[], ['yellow.weaver']] });
     s = take(s, 'gold.rush');
+    const held = Object.values(R(s, 1)).reduce((a, b) => a + b, 0);
     s = move(s, 'tier:top');
     expect(s.players[1].bonus).toBe(10);
-    expect(R(s, 0)).toMatchObject({ gold: 1, red: 1, magenta: 0 }); // Extortionist took the 2 left, colors kept
-    // 10 held after Golden Years's +2, 10 spent, Extortionist takes the 2 left, then Weaver's +1 of each color
-    expect(R(s, 1)).toMatchObject({ gold: 1, red: 1, magenta: 1, yellow: 1 });
+    // 10 spent, then Weaver's +1 of each color on the table
+    expect(Object.values(R(s, 1)).reduce((a, b) => a + b, 0)).toBe(held - 10 + 4);
   });
 });
 
@@ -368,7 +369,9 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }], members: [[], ['red.twins'], ['red.bigfamily']] });
     s = go(s, 'thieves.hideout');
     s = take(s, 'thieves.ransom');
-    expect(ids(s)).toEqual([`card:${uidOf(s, 'red.bigfamily', 2)}`]);
+    // only P3 can be shaken down, with one member at stake: straight to their answer
+    expect(s.pending.player).toBe(2);
+    expect(s.pending.prompt).toMatch(/to keep Big Family\?$/);
     expect(defs(s, 1)).toEqual(['red.twins']);
   });
   it('Gold’s Collect Debts sets off Magenta’s reactions (Lookout)', () => {

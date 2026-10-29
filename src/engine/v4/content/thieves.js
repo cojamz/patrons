@@ -155,6 +155,12 @@ export function magentaOccupied(ctx, p) {
 // Sticky Fingers on a member's steal (spaces get it through ctx.stealCount, with Desperado's double)
 const stickyMore = (ctx, p) => ctx.membersOf(p).reduce((n, c) => n + (typeof c.def.stealMore === 'number' ? c.def.stealMore : 0), 0);
 const memberHint = c => c.def.f * 1.5 + cost(c) + (c.def.vanilla || c.used ? 0 : 1);
+// Shake Down: each rival's members it can put at stake (costing 5 or less, and more than 0), by rival id.
+function atStake(ctx, p) {
+  const by = new Map();
+  for (const [o, c] of takeable(ctx, p, 5).filter(([, c]) => cost(c) > 0)) by.set(o.id, [...(by.get(o.id) || []), c]);
+  return by;
+}
 // What a ransom costs its holder: n from their biggest piles, one at a time ({ color: count }). The prompt names it
 // before they answer (card audit #23: the payment was taken without saying which colors, and could cost a lead).
 function ransomTake(res, n) {
@@ -230,18 +236,22 @@ const thieves = {
       },
     },
     {
-      key: 'ransom', ring: 2, name: 'Shake Down', text: 'You choose a rival’s member costing 5 or less. That rival pays you its cost, or you steal it. +1 magenta.',
+      // Cory, 2026-10-28: the rival picks which of their members is at stake ("yes good idea"; wording Claude's)
+      key: 'ransom', ring: 2, name: 'Shake Down', text: 'Choose a rival. They choose one of their members costing 5 or less, then pay you its cost or you steal it. +1 magenta.',
       estimate: (ctx, p) => {
-        const l = takeable(ctx, p, 5).filter(([, c]) => cost(c) > 0);
-        return l.length ? Math.max(...l.map(([, c]) => cost(c) * 1.33 + 0.5)) : 0;
+        // the rival gives up their cheapest: what the worst of each rival's list is worth, best rival
+        const by = atStake(ctx, p);
+        return by.size ? Math.max(...[...by.values()].map(l => Math.min(...l.map(c => cost(c) * 1.33 + 0.5)))) : 0;
       },
       resolve(ctx, p) {
-        const list = takeable(ctx, p, 5).filter(([, c]) => cost(c) > 0);
-        if (!list.length) { ctx.log(`${p.name} found no one to hold to ransom.`); return; }
-        ctx.choose(p, 'Shake Down: choose a member.', list.map(([o, c]) => ({
-          id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid,
-          hint: memberHint(c) + (total(o) < cost(c) ? 2 : 0),
-        })), 'thieves.ransomPick');
+        const by = atStake(ctx, p);
+        if (!by.size) { ctx.log(`${p.name} found no one to hold to ransom.`); return; }
+        if (by.size === 1) { thieves.handlers.ransomRival(ctx, p, [...by.keys()][0]); return; }
+        ctx.choose(p, 'Shake Down: choose a rival.', [...by].map(([vid, l]) => {
+          const o = ctx.player(vid);
+          return { id: `player:${vid}`, label: `${o.name} (${l.map(c => c.def.name).join(', ')})`, kind: 'player', value: vid,
+            hint: Math.min(...l.map(c => memberHint(c) + (total(o) < cost(c) ? 2 : 0))) };
+        }), 'thieves.ransomRival');
       },
     },
     {
@@ -271,6 +281,16 @@ const thieves = {
       mine[pile] = (mine[pile] || 0) + n;
       stealStep(ctx, p, { ...data, left: data.left - n, each: data.each.filter(id => id !== vid), picked: { ...data.picked, [vid]: mine } });
     },
+    ransomRival(ctx, p, vid) {
+      const v = ctx.player(vid), list = atStake(ctx, p).get(vid) || [];
+      if (!list.length) { ctx.log(`${p.name} found no one to hold to ransom.`); return; }
+      if (list.length === 1) { thieves.handlers.ransomPick(ctx, p, list[0].uid); return; }
+      // the holder's call: they put up the member they'd miss least
+      ctx.choose(v, `Shake Down: ${p.name} is shaking you down. Which member is at stake?`, list.map(c => ({
+        id: `card:${c.uid}`, label: `${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid, hint: -memberHint(c),
+      })), 'thieves.ransomOffer', { thief: p.id });
+    },
+    ransomOffer(ctx, v, uid, data) { thieves.handlers.ransomPick(ctx, ctx.player(data.thief), uid); },
     ransomPick(ctx, p, uid) {
       const v = ctx.ownerOf(uid), c = ctx.card(uid), n = cost(c);
       const can = total(v) >= n, colors = can ? ` (${takeWords(ransomTake(v.res, n))})` : '';
@@ -363,11 +383,9 @@ const thieves = {
         if (by !== owner && cost(recruited) >= 8) autoSteal(ctx, owner, by, 'Light Fingers');
       },
     }),
-    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 10
-    m('extortionist', 'Extortionist', 4, 2, 'Whenever a rival buys 5 or more followers, steal 2 resources from that rival.', {
-      onBuyFollowers(ctx, owner, card, buyer, tier) {
-        if (buyer !== owner && tier && tier.get >= 5) autoSteal(ctx, owner, buyer, 'Extortionist', 2);
-      },
+    // Cory, 2026-10-28: "lets just make it a bigger cutpurse for now" (was: a steal when a rival buys 5+ followers)
+    m('extortionist', 'Extortionist', 4, 2, 'On Recruit: steal 2 resources from the rival with the most resources. Round Start: steal 2 resources from the rival with the most resources.', { now: true,
+      onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Extortionist', 2 + stickyMore(ctx, owner), { fromAction: false, richest: true }); },
     }),
     m('watchdog', 'Bodyguard', 5, 3, 'Rivals can’t steal from you.', { f: 2, // +1 follower (Cory, 2026-10-25)
       guardSteal: () => true,

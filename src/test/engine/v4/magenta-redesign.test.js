@@ -98,9 +98,9 @@ describe('Magenta redesign edge cases', () => {
   it('ransom includes total cost five, excludes six, and resumes for the victim without repeating the grant', () => {
     let s = table(Q, { round: 2, res: [{}, { gold: 3, red: 2 }], members: [[], ['red.mentor', 'red.panel']], shop });
     s = take(s, 'thieves.ransom');
-    expect(ids(s)).toEqual([`card:${uidIn(s, 'red.mentor', 1)}`]);
-    s = move(s, ids(s)[0]);
+    // one rival, one member at 5 or less: no picks, straight to the holder's answer
     expect(s.pending.player).toBe(1);
+    expect(ids(s)).toEqual(['pay', 'let']);
     s = move(restored(s), 'pay');
     expect(owns(s, 1, 'red.mentor')).toBe(true);
     expect(s.players[0].res).toMatchObject({ magenta: 1, gold: 3, red: 2 });

@@ -144,8 +144,9 @@ describe('panel words (w3)', () => {
       }
     }
     // a rival decides (pay, or lose the member): the likely case and the best case, both in numbers, and not the same
-    // ...the amount hangs on your own pick of member too, so it's "up to" (aminus r1 #3: "+4" read as promised, paid +2)
-    expect(seen.ransom.likely).toMatch(/^up to \+\d+ (magenta|member)/);
+    // ..."up to" only when you pick among rivals (aminus r1 #3: "+4" read as promised, paid +2); since Oct 28 the rival
+    // picks the member, so a lone rival's ransom reads as what they'd pay, in their colors
+    expect(seen.ransom.likely).toMatch(/^(?:up to )?\+\d+ \w+/);
     expect(seen.ransom.best).toMatch(/^\+\d+ (magenta|member)/);
     expect(seen.ransom.best).not.toBe(seen.ransom.likely);
     // one color of your choosing

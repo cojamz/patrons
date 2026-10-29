@@ -18,7 +18,7 @@ describe('October 17 reported choices', () => {
     const restore = pinCosts({ 'red.twins': [2, 3], 'red.intern': [4, 2] });
     try {
       const s = take(sceneQ({ quadrants: ['gold', 'red', 'thieves', 'green'], round: 2,
-        members: [[], ['red.twins', 'red.intern']] }), 'thieves.ransom');
+        members: [[], ['red.twins', 'red.intern', 'red.bigfamily']] }), 'thieves.ransom');
       const action = quadrant('thieves').actions.find(a => a.key === 'ransom');
       const printed = Number(stripFor('thieves', action).flat().find(x => x.startsWith('tag:≤')).slice(5));
       const legal = s.pending.options.map(o => o.value);
@@ -91,21 +91,6 @@ describe('October 17 reported choices', () => {
     expect(s.pending).toBe(null);
     expect(s.cards[uidOf(s, 'purple.secondwind', 0)].used).not.toBe(true);
     expect(s.players[0].left).toBe(0);
-  });
-
-  it('Extortionist triggers for a purchase of 5 followers, never 4 or the owner’s own purchase', () => {
-    const s = sceneQ({ quadrants: ['gold', 'red', 'thieves', 'green'],
-      res: [{ magenta: 8 }, {}], members: [[], ['thieves.extortionist']] });
-    const ctx = contextFor(s), owner = s.players[1], buyer = s.players[0];
-    const def = quadrant('thieves').members.find(m => m.key === 'extortionist');
-    def.onBuyFollowers(ctx, owner, null, buyer, { get: 4 });
-    expect(owner.res.magenta).toBe(0);
-    def.onBuyFollowers(ctx, owner, null, owner, { get: 5 });
-    expect(owner.res.magenta).toBe(0);
-    def.onBuyFollowers(ctx, owner, null, buyer, { get: 5 });
-    expect(owner.res.magenta).toBe(2);
-    expect(buyer.res.magenta).toBe(6);
-    expect(def.text).toContain('buys 5 or more followers');
   });
 
   it('Cutpurse offers every held color of the richest eligible rival and steals the chosen one', () => {

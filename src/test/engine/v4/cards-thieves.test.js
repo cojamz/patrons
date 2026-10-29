@@ -243,16 +243,12 @@ describe('Magenta members', () => {
     expect(R(s, 1).magenta).toBe(0); // Twins costs 4
   });
 
-  it('Extortionist: whenever a rival buys 5 or more followers, take 2 from them (named)', () => {
-    let s = table(Q, { res: [{ gold: 6, red: 3, magenta: 3 }], members: [[], ['thieves.extortionist']], shop: ROW });
-    s = move(take(s, 'thieves.tipoff'), 'tier:top');
-    expect(s.players[0].bonus).toBe(10);
-    expect(sum(R(s, 1))).toBe(2);
-    expect(sum(R(s))).toBe(3); // Stash's +3
+  // Cory, 2026-10-28: a bigger Cutpurse
+  it('Extortionist: at round start, take 2 from the rival holding the most (named)', () => {
+    let s = roundStart({ n: 3, res: [{}, { gold: 2 }, { red: 4 }], members: [['thieves.extortionist']] });
+    s = move(move(s, 'take:2:red'), 'take:2:red');
+    expect([R(s).red, R(s, 1).gold, R(s, 2).red]).toEqual([2, 2, 2]);
     expect(named(s, 'Extortionist').length).toBe(1);
-    s = table(Q, { res: [{ gold: 5, red: 2 }, {}], members: [[], ['thieves.extortionist']], shop: ROW });
-    s = move(take(s, 'thieves.tipoff'), 'tier:mid');
-    expect(sum(R(s, 1))).toBe(2);
   });
 
   it('Double Agent: when recruited, swap it for any rival\'s member (named)', () => {
