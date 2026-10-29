@@ -115,4 +115,14 @@ export function ownCopyPlan(state, pid) {
   } catch { return null; }
 }
 /** Is this the copy-all card (Greatest Hits as a space, Tribute Band as a member)? */
-export const copiesAll = text => /^(?:(?:once per game|one time use): )?(?:copy|do) every (?:action (?:where you have a minion|with your minion|you took this round)|space you took this round)/i.test(text || '');
+export const copiesAll = text => /^(?:(?:once per game|one time use): )?(?:copy|do) every (?:action (?:where you have a minion|with your minion|you took this round|the leader has a minion on)|space you took this round)/i.test(text || '');
+/** The copy-all plan a card would play for pid: its own actions, or the leaders' (Tribute Band, Cory 2026-10-28). */
+export function copyAllPlan(state, pid, text) {
+  if (!/\bthe leader\b/i.test(text || '')) return ownCopyPlan(state, pid);
+  try {
+    const ctx = contextFor(state);
+    const best = Math.max(...state.players.map(o => ctx.followers(o)));
+    const plans = state.players.filter(o => ctx.followers(o) === best).map(o => ownCopyPlan(state, o.id)).filter(Boolean);
+    return plans.length ? { keys: [...new Set(plans.flatMap(x => x.keys))], names: plans.flatMap(x => x.names), skips: plans[0].skips } : null;
+  } catch { return null; }
+}

@@ -331,8 +331,9 @@ const thieves = {
         for (const o of ctx.rivals(owner)) if (ctx.followers(o) > ctx.followers(owner)) autoSteal(ctx, owner, o, 'Mole');
       },
     }),
-    m('accomplice', 'Accomplice', 4, 4, 'On Recruit: steal 1 resource from each rival.', {
-      onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
+    // Cory, 2026-10-28: back as "On Recruit: steal 3 resources", "maybe a 2 cost?" (1 magenta + the +1 wild)
+    m('accomplice', 'Accomplice', 1, 0, 'On Recruit: steal 3 resources.', {
+      onRecruited(ctx, owner) { startSteal(ctx, owner, 'Accomplice', 3 + stickyMore(ctx, owner), { fromAction: false }); },
     }),
     m('grifter', 'Grifter', 2, 1, 'On Recruit: steal 1 resource per 2 members you have.', {
       // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, like any steal

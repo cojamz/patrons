@@ -14,9 +14,9 @@ const QT = ['gold', 'thieves', 'market', 'echo'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.taxman': [2, 2], 'gold.midas': [4, 4], 'red.bigfamily': [4, 4], 'red.twins': [2, 2],
   'red.intern': [2, 0], 'red.volunteer': [0, 0], 'echo.doppel': [3, 2],
-  'echo.evergreen': [1, 3], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.understudy': [4, 2], 'echo.ensemble': [3, 3],
-  'echo.groupie': [4, 4], 'echo.translator': [4, 2], 'echo.tuningfork': [2, 2], 'echo.wallflower': [2, 2],
-  'echo.mirror': [4, 2], 'echo.afterimage': [4, 2], 'echo.hourglass': [2, 2], 'echo.dejavu': [8, 2],
+  'echo.evergreen': [1, 3], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.understudy': [2, 1], 'echo.ensemble': [3, 3],
+  'echo.groupie': [4, 4], 'echo.translator': [4, 2], 'echo.tuningfork': [2, 2], 'echo.wallflower': [6, 3],
+  'echo.mirror': [1, 1], 'echo.roadie': [1, 1], 'echo.afterimage': [4, 2], 'echo.hourglass': [2, 2], 'echo.dejavu': [8, 3],
   'echo.chronicler': [2, 3], 'thieves.watchdog': [4, 2],
 });
 const ROW = ['gold.tycoon', 'red.bigfamily', 'red.twins', 'red.intern', 'gold.taxman', 'red.volunteer'];
@@ -145,6 +145,24 @@ describe('Green current actions', () => {
 });
 
 describe('Green current members', () => {
+  // Cory, 2026-10-28: Green grows to 16 (Wallflower at 10, Fan Club, Roadie)
+  it('Wallflower doubles what every copy gives you, whatever your followers', () => {
+    for (const extra of [[], ['red.twins']]) {
+      const s = buildThenEcho({ members: [['echo.wallflower', ...extra]], bonus: [0, 2] });
+      expect(R(s).green).toBe(7); // Echo's own +1, Build Up's +3 doubled
+    }
+  });
+  it('Fan Club: +1 green per Green space with a minion when recruited', () => {
+    let s = table(Q, { n: 3, shop: ['echo.mirror', ...ROW], res: [{ green: 1, red: 2 }], queue: turns(1, 2, 0) });
+    s = go(s, 'echo.chant'); s = go(s, 'echo.echo', sp('echo.chant'));
+    s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.mirror'));
+    expect(s.players[0].members).toContain(uidIn(s, 'echo.mirror', 0));
+    expect(R(s).green).toBe(2);
+  });
+  it('Roadie: round start, +1 green per Green member you have', () => {
+    const start = members => { let s = table(Q, { members: [members] }); s.queue = [{ t: 'round', r: 2 }]; return R(resume(s)).green || 0; };
+    expect(start(['echo.roadie', 'echo.muse', 'echo.ensemble', 'red.twins']) - start(['echo.muse', 'echo.ensemble', 'red.twins'])).toBe(3);
+  });
   it('Busker gives two green on recruit and at round start, naming the source', () => {
     let s = table(Q, { shop: ['echo.evergreen', ...ROW], res: [{ green: 4 }], queue: turns(0) });
     s = move(take(s, 'red.turnout'), cardOpt(s, 'echo.evergreen'));
@@ -212,14 +230,26 @@ describe('Green current members', () => {
     expect(named(s, 'Stunt Double').length).toBe(1);
     expect(s.recruits).toBe(3); // Stunt Double plus Crew's printed member quantity.
   });
-  it('Tribute Band copies all this round’s actions once per game', () => {
-    let s = table(Q, { round: 2, shop: ROW, members: [['echo.dejavu']], queue: turns(0, 0) });
-    s = go(s, 'gold.rush'); s = take(s, 'echo.chant');
-    const uid = uidIn(s, 'echo.dejavu', 0);
+  // Cory, 2026-10-28: Tribute Band plays the leader's actions (was: your own)
+  it('Tribute Band does every action the leader has a minion on, once per game', () => {
+    let s = table(Q, { round: 2, shop: ROW, members: [['echo.dejavu']], bonus: [0, 9], queue: turns(1, 1, 0) });
+    s = go(s, 'gold.rush'); s = go(s, 'echo.chant');
+    const uid = uidIn(s, 'echo.dejavu', 0), before = R(s).green, gold = R(s).gold || 0;
     s = move(s, 'use:' + uid);
-    expect(R(s)).toMatchObject({ gold: 8, green: 8 });
+    expect(R(s).gold - gold).toBe(4); // P2's Golden Years
+    expect(R(s).green - before).toBe(4); // P2's Build Up
     expect(s.cards[uid].used).toBe(true);
     expect(ids(s)).not.toContain('use:' + uid);
+  });
+  it('Tribute Band asks whose actions when the leaders are tied', () => {
+    let s = table(Q, { round: 2, n: 3, shop: ROW, members: [['echo.dejavu'], [], []], bonus: [0, 9, 9], queue: turns(1, 2, 0) });
+    s = go(s, 'gold.rush'); s = go(s, 'echo.chant');
+    const before = R(s).green;
+    s = move(s, 'use:' + uidIn(s, 'echo.dejavu', 0));
+    expect(s.pending.prompt).toMatch(/^Tribute Band: whose actions/);
+    expect(s.pending.options.map(o => o.label)).toEqual(['P2', 'P3']);
+    s = move(s, 'player:2');
+    expect(R(s).green - before).toBe(4); // P3's Build Up
   });
   // Cory, 2026-10-28: Doppelganger also does the copied member's On Recruit right then (was: never fired)
   it('Doppelganger becomes a copy and does its On Recruit at once, keeping its round-start hooks', () => {
@@ -307,17 +337,6 @@ describe('legacy Green members remain readable in old records', () => {
     s = go(go(s, 'gold.rush'), 'echo.echo', sp('gold.rush'));
     expect(R(s)).toMatchObject({ gold: 5, green: 0 });
     expect(named(s, 'Midas').length).toBeGreaterThan(0);
-  });
-  it('Wallflower doubles copied gains only while tied for fewest followers', () => {
-    for (const [extra, expected] of [[[], 7], [['red.twins'], 4]]) {
-      const s = buildThenEcho({ members: [['echo.wallflower', ...extra]], bonus: [0, 2] });
-      expect(R(s).green).toBe(expected);
-    }
-  });
-  it('Mime recruits with green equal to the richest rival', () => {
-    let s = table(Q, { n: 3, shop: ['echo.mirror', ...ROW], res: [{ green: 4, red: 2 }, { green: 5 }, { green: 2 }] });
-    s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.mirror'));
-    expect(R(s).green).toBe(5);
   });
   it('Sleepwalker can copy the prior round’s printed chip on recruitment and round start', () => {
     for (const recruit of [true, false]) {

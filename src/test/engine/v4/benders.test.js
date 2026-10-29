@@ -368,7 +368,7 @@ describe('Release with once-per-game members, just-bought members and Echo copie
     s.current = 0; s = resume(s);
     const u = uidOf(s, 'echo.mirror', 'shop');
     s = payFirst(move(s, `card:${u}`));
-    expect(R(s).green).toBe(10 - cost('echo.mirror') + 5); // Mime: as much green as the rival with the most
+    expect(R(s).green).toBe(10 - cost('echo.mirror')); // Fan Club: no minion on a Green space yet
     expect(s.pending.extra).toBe(true);
     expect(ids(s)).not.toContain(`release:${u}`);
     expect(s.cards[u]).toMatchObject({ recruitedRound: 1, recruitedBy: 0 });

@@ -151,6 +151,8 @@ export default {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!swapPairs(ctx, owner, 'rival').length) { card.used = false; ctx.log(`${owner.name}'s Headhunter: no rival member to swap.`); return; }
+        // its swap line doesn't name it, so say the use (the turn card leads with "used Headhunter")
+        ctx.log(`${owner.name} uses Headhunter.`);
         swap(ctx, owner, 'rival', 'Headhunter: choose a rival’s member and its shop replacement');
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && swapPairs(ctx, owner, 'rival').some(([a]) => cost(a) >= 5),

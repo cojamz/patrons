@@ -140,7 +140,8 @@ describe('Green table action boundaries', () => {
   // Walk-In (Cory, 2026-10-27): recruit the top member of the deck, each rival +1 red. A copy does it again: the
   // copier recruits the deck's new top member, free, and the copy's rivals get their +1 red
   it('a copied Walk-In recruits the next top member of the deck, free', () => {
-    let s = scene({ turns: [1, 0] });
+    // two plain members on top: a copier drawn here would do its own On Recruit (Understudy, Oct 28)
+    let s = scene({ turns: [1, 0], pileFirst: ['red.twins', 'gold.taxman'] });
     const [first, next] = s.pile;
     s = go(s, 'red.hire');
     expect(s.players[1].members).toEqual([first]);
