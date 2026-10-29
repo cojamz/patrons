@@ -4,7 +4,7 @@
 const SPHERES = { gold: '#e2962c', red: '#e0645a', magenta: '#d4508f', green: '#5fb37c', silver: '#a3b3c2',
   white: '#eef3f8', purple: '#9a62e6', yellow: '#d3dd48', blue: '#6aa6dc', colorless: '#8d9693' };
 const SKINS = { palepink: '#f3d2c8', porcelain: '#f0d8c2', freckled: '#eec4a2', fair: '#e6b994', golden: '#d9aa6c', olive: '#c39c74',
-  warmtan: '#c4834f', tan: '#a87452', coolbrown: '#8c5e4e', brown: '#80522f', deep: '#5e3a28', verydeep: '#402822' };
+  warmtan: '#c4834f', tan: '#a87452', coolbrown: '#8c5e4e', brown: '#80522f', deep: '#5e3a28', verydeep: '#4a2a1d' };
 const HAIRS = { black: '#2e2630', darkbrown: '#4a3226', brown: '#6e4a30', auburn: '#8a3e26', ginger: '#c06a30',
   blonde: '#d8b060', ash: '#9a8e80', grey: '#a8a4a4', white: '#e4e0dc', blueblack: '#22263a' };
 const MATERIALS = { gold: '#e0a83a', metal: '#a8acb4', linen: '#e2d8c4', charcoal: '#4a4650', wood: '#8a5a36' };
@@ -68,7 +68,7 @@ function sphereRamp(base) {
 // light skin gets deeper shadows (so a brim's shadow reads), deep skin shallower (so faces never go black)
 function skinRamp(base) {
   const L0 = toOklch(base)[0];
-  if (L0 < 0.42) return ramp(base, [-0.08, -0.04, 0, L0 < 0.34 ? 0.21 : 0.17], 2, 10, 6, 1.1, 1.3, SKIN_SHADOW_HUE);
+  if (L0 < 0.42) return ramp(base, [-0.08, -0.04, 0, L0 < 0.34 ? 0.21 : 0.17], 2, 10, 6, 1.1, L0 < 0.34 ? 1.5 : 1.3, SKIN_SHADOW_HUE);
   const dl = L0 > 0.78 ? [-0.33, -0.14, 0, 0.05] : L0 > 0.6 ? [-0.19, -0.09, 0, 0.065] : [-0.12, -0.06, 0, 0.12];
   return ramp(base, dl, 2, 10, 6, 1.1, 0.88, SKIN_SHADOW_HUE);
 }

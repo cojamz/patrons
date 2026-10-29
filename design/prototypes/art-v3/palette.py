@@ -30,7 +30,7 @@ SKINS = {  # light to very deep; undertone in the name where it matters (Cory, O
     'coolbrown': '#8c5e4e',  # deep, cool (red-violet) undertone
     'brown': '#80522f',      # deep, warm
     'deep': '#5e3a28',       # very deep, warm
-    'verydeep': '#402822',   # darkest, neutral
+    'verydeep': '#4a2a1d',   # darkest, warm (was #402822, too ashy to read small; Oct 29)
 }
 # hair: base tone (the G step)
 HAIRS = {'black': '#2e2630', 'darkbrown': '#4a3226', 'brown': '#6e4a30', 'auburn': '#8a3e26', 'ginger': '#c06a30',
@@ -114,7 +114,7 @@ def skin_ramp(base):
     """4 steps. Light skin gets deeper shadows (so a brim's shadow reads), deep skin shallower (so faces never go black)."""
     L0 = to_oklch(base)[0]
     if L0 < 0.42:  # deep and very deep: a short dark side and a tall warm light, so faces read at 1x (critic, Oct 29)
-        return ramp(base, [-0.08, -0.04, 0, 0.21 if L0 < 0.34 else 0.17], 2, dark_shift=10, light_shift=6, dark_chroma=1.1, light_chroma=1.3, shadow_hue=SKIN_SHADOW_HUE)
+        return ramp(base, [-0.08, -0.04, 0, 0.21 if L0 < 0.34 else 0.17], 2, dark_shift=10, light_shift=6, dark_chroma=1.1, light_chroma=1.5 if L0 < 0.34 else 1.3, shadow_hue=SKIN_SHADOW_HUE)
     dl = [-0.33, -0.14, 0, 0.05] if L0 > 0.78 else ([-0.19, -0.09, 0, 0.065] if L0 > 0.6 else [-0.12, -0.06, 0, 0.12])
     return ramp(base, dl, 2, dark_shift=10, light_shift=6, dark_chroma=1.1, light_chroma=0.88, shadow_hue=SKIN_SHADOW_HUE)
 def hair_ramp(base):
