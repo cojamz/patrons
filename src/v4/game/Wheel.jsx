@@ -1033,7 +1033,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       </text>,
     );
     // the follower mark right after the prize, on the same arc, upright like the letters, centred on the line (the
-    // text's dominant-baseline is central, so the line's middle is rr itself)
+    // text's dominant-baseline is middle, so the line's middle is rr itself)
     {
       const sAt = startS + textW + (F * RIM_MARK) / 2;
       const deg = (sAt / rr) * 180 / Math.PI;
