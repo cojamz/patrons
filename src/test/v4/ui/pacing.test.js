@@ -83,7 +83,9 @@ describe('the table\'s pace at Steady (H2, H3)', () => {
     expect(h3p50).toBeLessThanOrEqual(2000 * K);
     expect(h3p95).toBeLessThanOrEqual(3000 * K);
     expect(h2p50).toBeLessThanOrEqual(6500 * K);
-    expect(h2max).toBeLessThanOrEqual(13000 * K);
+    // 13.5s (was 13s; Claude, 2026-10-29): HR at 4 members moved seed 2's bots into a run of six turns holding a Walk-In
+    // free recruit, a Con Men steal of 5, an Anarchist swap and three recruits (21.2s vs 21.1s); content, not slower motion
+    expect(h2max).toBeLessThanOrEqual(13500 * K);
   });
   it('Relaxed plays a rival\'s turn about twice as long as Steady, and Steady a little slower than the first table', () => {
     const steady = rivalTurnsAt('steady'), relaxed = rivalTurnsAt('relaxed'), quick = rivalTurnsAt('quick');
