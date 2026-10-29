@@ -115,7 +115,7 @@ describe('colorless members', () => {
   it('a member you use says so first, and in the shop how (w3a #5)', () => {
     const s = createGame({ seats, seed: 5 });
     const use = render(<MemberCard state={s} def={defById('gold.speculator')} />);
-    expect(use.container.querySelector('.mc-text').textContent).toMatch(/^UseOnce per game/);
+    expect(use.container.querySelector('.mc-text').textContent).toMatch(/^UseOne Time Use/);
     cleanup();
     const plain = render(<MemberCard state={s} def={defById('gold.banker')} />);
     expect(plain.container.querySelector('[data-use-tag]')).toBeNull();

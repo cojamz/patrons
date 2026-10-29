@@ -2,6 +2,22 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.835 — 2026-10-28
+
+- Extortionist steals 2 from the richest rival when recruited and at each round start. Shake Down: the rival picks which of their members is at stake.
+
+## v0.9.834 — 2026-10-28
+
+- Green has 16 members: Understudy, Wallflower, Fan Club and Roadie join, and Tribute Band plays the leader's actions. Accomplice is back at 2: steal 3 resources.
+
+## v0.9.833 — 2026-10-28
+
+- Cards that could be used once a game now say One Time Use.
+
+## v0.9.832 — 2026-10-28
+
+- The members page shows each color's artifact up top and fits a whole color on one screen.
+
 ## v0.9.831 — 2026-10-28
 
 - The wheel no longer freezes for a moment after it stops turning

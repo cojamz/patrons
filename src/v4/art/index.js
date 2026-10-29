@@ -85,6 +85,7 @@ const BY_ID = new Map(SETS.filter(i => i.kind === 'member' || i.kind === 'action
 for (const [key, name, source] of [
   ['impostor', 'Impostor', 'mirror'], ['connector', 'Connector', 'groupie'],
   ['agents', 'Agents', 'choir'], ['bait', 'Bait', 'understudy'],
+  ['roadie', 'Roadie', 'translator'], // Oct 28: Green's 16th borrows the cut Translator's drawing
 ]) {
   const art = BY_ID.get(`echo.${source}`);
   if (art) BY_ID.set(`echo.${key}`, { ...art, id: `echo.${key}`, name });

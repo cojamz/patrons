@@ -29,7 +29,7 @@ Round I's turn order is drawn at random. Then, starting with the player who goes
    - **A member** from the shop, paying its cost.
    - Or **followers** with any resources: 1 resource for 1 follower, 5 for 5, or 10 for 10, as often as you like.
 
-You can use a member's ability any time during your own turn, as often as its card allows ("once per round", "once per game"). A space that recruits a member for you (Open Door) doesn't use up your recruit. Recruit Twice and Spree let you recruit more than once this turn.
+You can use a member's ability any time during your own turn, as often as its card allows ("Once per round", "One Time Use"). A space that recruits a member for you (Open Door) doesn't use up your recruit. Recruit Twice and Spree let you recruit more than once this turn.
 
 ## The shop
 - 6 members are face up in round I, 7 in round II and 8 in round III. When one leaves, the top of the face-down pile refills the row. The pile shows how many are left.

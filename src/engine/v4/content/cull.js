@@ -4,7 +4,8 @@
 export const CUT = new Set([
   'gold.midas', 'gold.investor', 'gold.hustler', 'gold.jackpot', 'gold.coinpurse',
   'red.intern', 'red.reserve', 'red.drive', 'red.crowd', 'red.bigfamily', 'red.sponsor',
-  'echo.afterimage', 'echo.translator', 'echo.wallflower', 'echo.groupie', 'echo.choir', 'echo.understudy', 'echo.mirror',
+  'echo.afterimage', 'echo.translator', 'echo.groupie', 'echo.choir',
+  'echo.connector', // Cory, 2026-10-28: "I think connector can go" (Green at 15)
   'market.reseller', 'market.onlooker', 'market.auctioneer', 'market.curator', 'market.blackmarket',
   'market.climber', // Cory, 2026-10-18: cut (dead while Release is off); its fill-in is his call
   'market.planner', 'market.underbidder', 'market.sommelier', // concept branch: cost cuts out (Cory, 2026-10-18)
@@ -14,7 +15,7 @@ export const CUT = new Set([
   'purple.bookkeeper', 'purple.lamplighter', 'purple.patience', // Cory, 2026-10-22: his Purple set of 12
   'silver.silversmith', 'silver.toastmaster', 'silver.caterer', 'silver.dowager', 'silver.steward',
   'yellow.harmonist', 'yellow.sower', 'yellow.farmer', 'yellow.gardener', 'yellow.gleaner',
-  'thieves.accomplice', 'thieves.mole', 'thieves.lightfingers', 'thieves.bigscore', 'thieves.lookout',
+  'thieves.mole', 'thieves.lightfingers', 'thieves.bigscore', 'thieves.lookout',
   'trading.lender', 'trading.tipster', 'trading.dealer', 'trading.pawnbroker', 'trading.liquidator',
   'trading.safetynet', 'trading.magnate', 'trading.shareholder', 'trading.reinvestor', // Cory, 2026-10-22: his White set of 12
   'benders.bigspender', 'benders.insider',

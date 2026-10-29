@@ -12,7 +12,7 @@ import { Popover } from './parts.jsx';
 import { CardText, RuleText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews, cancelPreviewFallback } from './Info.jsx';
 import { SeatFigure } from './Glyphs.jsx';
 import { Rich } from './Rich.jsx';
-import { memberCopyTargets, ownCopyPlan, copiesAll } from './cards.js';
+import { memberCopyTargets, ownCopyPlan, copiesAll, copyAllPlan } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
@@ -436,8 +436,8 @@ function useCopyTargets(c, state, me) {
   // Greatest Hits / Tribute Band: every space of yours it would copy lights up
   // A copy-all preview may already be asking a nested copy's first question.
   // Its root hover still highlights the whole replay plan, not just that question's targets.
-  const all = viewer != null && (space ? copiesAll(quadrant(state.quadrants[space[0]]).actions[space[1]].text) : c && c.kind === 'card' && state.cards[c.uid] && copiesAll(cardDef(state, c.uid).text));
-  if (all) { const plan = ownCopyPlan(state, viewer); if (plan) keys = plan.keys; }
+  const allText = space ? quadrant(state.quadrants[space[0]]).actions[space[1]].text : c && c.kind === 'card' && state.cards[c.uid] ? cardDef(state, c.uid).text : '';
+  if (viewer != null && copiesAll(allText)) { const plan = copyAllPlan(state, viewer, allText); if (plan) keys = plan.keys; }
   const sig = keys ? keys.join(',') : '';
   // lit in the same frame the card opens (a layout effect), not a frame after it
   useLayoutEffect(() => {

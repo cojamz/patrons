@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { defById } from '../../../engine/v4/index.js';
 import { table } from '../../engine/v4/cards-helpers-b.js';
 import { take, move } from '../../engine/v4/helpers.js';
-import { memberCopyTargets, ownCopyPlan, copiesAll } from '../../../v4/game/cards.js';
+import { memberCopyTargets, ownCopyPlan, copiesAll, copyAllPlan } from '../../../v4/game/cards.js';
 
 describe('Green hover targets follow the current rules', () => {
   it('Stunt Double highlights the action just taken, but Agents blocks it', () => {
@@ -25,5 +25,8 @@ describe('Green hover targets follow the current rules', () => {
     expect(ownCopyPlan(s, 1).keys).toContain(echoKey);
     expect(ownCopyPlan(s, 1).skips).not.toMatch(/never copy a copy/);
     expect(copiesAll(defById('echo.dejavu').text)).toBe(true);
+    // Tribute Band lights every rival's actions it could pick (Cory, 2026-10-28), not the viewer's
+    s.players[1].bonus = 5;
+    expect(copyAllPlan(s, 0, defById('echo.dejavu').text).keys).toEqual(ownCopyPlan(s, 1).keys);
   });
 });

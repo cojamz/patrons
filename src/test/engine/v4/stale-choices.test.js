@@ -61,10 +61,12 @@ describe('a queued choice never offers a card that moved', () => {
   // the buy step copies Tryout, and the copy's shop-member choice comes before the buy step returns.
   it('a member used in the buy step resolves its choice first: Tribute Band copying Tryout, then a fresh buy', () => {
     const Q = ['gold', 'red', 'market', 'echo'];
-    let s = table(Q, { round: 2, members: [['echo.dejavu']], res: [{ red: 2 }], shop: ['gold.banker', 'echo.evergreen', 'red.twins', 'red.intern'] });
+    // P2 takes Tryout first: Tribute Band plays a rival's actions (Cory, 2026-10-28)
+    let s = table(Q, { round: 2, members: [['echo.dejavu']], res: [{ red: 2 }, { red: 2 }], shop: ['gold.banker', 'echo.evergreen', 'red.twins', 'red.intern'], queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }] });
     s = take(s, N('red', 'evenswap'));
-    expect(s.pending.kind).toBe('choose');
-    s = move(s, s.pending.options.find(o => cardOf(o) === s.shop[0]).id); // Banker: +3 gold
+    s = move(s, s.pending.options.find(o => cardOf(o) === s.shop[0]).id); // P2's Tryout on Banker
+    while (s.pending.kind === 'buy') s = move(s, 'pass');
+    s = take(s, 'gold.rush');
     expect(s.pending.kind).toBe('buy');
     const use = s.pending.options.find(o => o.kind === 'use');
     s = move(s, use.id);
@@ -73,7 +75,7 @@ describe('a queued choice never offers a card that moved', () => {
     const pick = s.shop[1]; // Evergreen: +2 green
     s = move(s, `card:${pick}`);
     expect(where(s, pick)).toBe('shop'); // it stays in the shop
-    expect(s.players[0].res).toMatchObject({ gold: 3, green: 2 });
+    expect(s.players[0].res).toMatchObject({ green: 2 });
     expect(s.pending.kind).toBe('buy'); // then the buy step, fresh
     expect(s.pending.options.map(o => o.id)).not.toContain(use.id);
   });

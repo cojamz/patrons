@@ -166,7 +166,7 @@ export default {
     m('harmonist', 'Harmonist', 4, 0,'Game end: +1 follower per full set you hold.', {
       onGameEnd: (ctx, owner) => setsOf(ctx, owner),
     }),
-    m('rainmaker', 'Rainmaker', 3, 1, 'Once per game: raise each of your colors to match your yellow.', {
+    m('rainmaker', 'Rainmaker', 3, 1, 'One Time Use: raise each of your colors to match your yellow.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const top = owner.res[Y];
@@ -197,9 +197,9 @@ export default {
       afterAction(ctx, owner, card, qid) { if (qid !== 'yellow') ctx.gain(owner, Y, 1); },
     }),
     // was Feastmaker 6+4 (Cory, 2026-10-18): Chefs, a little cheaper, counts as 2 members (worth 2 followers, as Twins)
-    m('chefs', 'Chefs', 6, 3, 'Worth 2 followers. Once per game: +1 of each color in round I, +2 in round II, +3 in round III.', {
+    m('chefs', 'Chefs', 6, 3, 'Worth 2 followers. One Time Use: +1 of each color in round I, +2 in round II, +3 in round III.', {
       f: 2,
-      byRound: { lead: 'Worth 2 followers. Once per game:', lines: ['+1 of each color', '+2 of each color', '+3 of each color'] },
+      byRound: { lead: 'Worth 2 followers. One Time Use:', lines: ['+1 of each color', '+2 of each color', '+3 of each color'] },
       activate: 'game',
       onActivate(ctx, owner) {
         const r = ctx.state.round;

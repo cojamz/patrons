@@ -66,19 +66,19 @@ describe('using a member any time on your turn', () => {
   });
 
   it('a choice it asks comes first, then the placement: Tribute Band copying your Tryout on your next turn', () => {
-    // the snake's double turn: P1 places, buys nothing, and places again
-    let s = table(Q, { round: 2, members: [['echo.dejavu']], shop: ['gold.banker', 'echo.evergreen', 'red.twins', 'red.intern'], queue: turns(0, 0) });
+    // P2 takes Tryout, then P1 uses Tribute Band before placing (it plays a rival's actions, Cory 2026-10-28)
+    let s = table(Q, { round: 2, members: [['echo.dejavu']], shop: ['gold.banker', 'echo.evergreen', 'red.twins', 'red.intern'], queue: turns(1, 0) });
     s = take(s, N('red', 'evenswap'));
-    s = move(s, `card:${s.shop[0]}`); // Tryout on Banker: +3 gold
+    s = move(s, `card:${s.shop[0]}`); // P2's Tryout on Banker
     while (s.pending.kind === 'buy') s = move(s, 'pass');
     expect(s.pending.kind).toBe('place');
     const use = s.pending.options.find(o => o.kind === 'use');
     expect(use).toBeTruthy();
-    s = move(s, use.id); // copies the space P1 just took: Tryout again, on the shop as it is now
+    s = move(s, use.id); // copies P2's Tryout, on the shop as it is now
     expect(s.pending.kind).toBe('choose');
     expect(s.pending.prompt).toMatch(/^Tryout: /); // a copy does Tryout itself
     s = move(s, `card:${s.shop[1]}`); // Evergreen: +2 green
-    expect(R(s)).toMatchObject({ gold: 3, green: 2 });
+    expect(R(s)).toMatchObject({ green: 2 });
     expect(s.pending.kind).toBe('place'); // then the placement, fresh
     expect(ids(s)).not.toContain(use.id);
   });

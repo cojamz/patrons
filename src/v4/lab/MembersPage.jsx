@@ -85,7 +85,7 @@ function Full({ def, artifact = false }) {
     <MemberCard state={TABLE} def={def} />
     {/* the round it joins is the heading it sits under; only what the face doesn't say */}
     {(artifact || def.copies > 1) && <footer className="mp-meta">
-      {artifact ? <span>Picked at the start, worth no followers</span> : <span>{def.copies} copies in the deck</span>}
+      {artifact ? <span>Each player picks one at the start</span> : <span>{def.copies} copies in the deck</span>}
     </footer>}
   </article>;
 }
@@ -148,20 +148,16 @@ export default function MembersPage() {
     <div className={`mp-body${g.guest ? ' no-spaces' : ''}`}>
       {!g.guest && <aside className="mp-side" aria-label={`${g.name} spaces`}>
         <h2>{g.name}{!g.redone && <small>Not redesigned yet</small>}</h2>
-        {g.line && <p className="mp-line">{g.line}</p>}
+        {g.line && <p className="mp-line">{g.line}{g.rim && <> · <span className="mp-rim-inline">Rim: {g.rim}</span></>}</p>}
         {[1, 2, 3].map(r => { const acts = g.actions.filter(a => a.ring === r); return acts.length ? <section key={r} className="mp-ring">
           <h3>Round {roman(r)}{r > 1 ? ' on' : ''}</h3>
           <ul>{acts.map(a => <Space key={a.id} qid={g.id} action={a} />)}</ul>
         </section> : null; })}
-        {g.rim && <p className="mp-rim"><b>Rim</b> {g.rim}</p>}
-        {g.artifact && <section className="mp-ring mp-art">
-          <h3>Artifact</h3>
-          <Full def={g.artifact} artifact />
-        </section>}
       </aside>}
       <section className="mp-deck" ref={scroller} aria-label={`${g.name} members`} data-view={view}>
         <h2 className="mp-deck-head">{g.guest ? g.name : 'Members'}<small>{g.members.length} members{deckSize !== g.members.length ? `, ${deckSize} cards` : ''}, cheapest first</small></h2>
         {g.guest && <p className="mp-line">{g.line}</p>}
+        {g.artifact && <div className="mp-round mp-art"><h3>Artifact</h3><Full def={g.artifact} artifact /></div>}
         {byRound.map(({ r, members }) => <div key={r} className="mp-round">
           {!g.guest && <h3>Joins in round {roman(r)}</h3>}
           <div className={view === 'details' ? 'mp-grid' : 'mp-row'}>
