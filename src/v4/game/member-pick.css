@@ -23,3 +23,8 @@
 }
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-cards .lt-card .lt-corner-cost-detail{top:4px;right:5px;font-size:12px;z-index:1}
 .app.game.lt .lt-shop-cards[data-view="details"] .lt-cards .lt-card .nm{padding:0 11px}
+/* Details shows the whole picture, never a cropped strip of it (Cory, Oct 29: heads cut off): the window grows with the
+   card up to the scene's own 4:3, and when the rule needs the room the scene shrinks whole inside it. */
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-cards .lt-card.card:not(.lt-rate){container-type:inline-size}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-cards .lt-card.card:not(.lt-rate) .art:has(> img.sprite.scene){max-height:75cqw}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-cards .lt-card.card .art > img.sprite.scene{object-fit:contain}
