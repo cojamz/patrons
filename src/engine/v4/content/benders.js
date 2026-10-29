@@ -99,7 +99,7 @@ const members = [
   // Big Spender as it printed until Oct 28, never dealt: the fixture for the engine's once-per-round second buy
   m('bigspender1', 'Big Spender', 'gold', 1, 1, 'Once per round: recruit twice in one turn.', { extraBuy: true, retired: true }),
   // Cory, 2026-10-28: back in the deck (it stands in for Blue's recruits), One Time Use, 3
-  m('bigspender', 'Big Spender', 'gold', 1, 1, 'One Time Use: recruit twice this turn.', {
+  m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per game: recruit twice this turn.', {
     activate: 'game',
     onActivate(ctx, owner, card) {
       if (owner.buyTwiceNow) { card.used = false; return; }
@@ -183,11 +183,11 @@ const members = [
     onGameEnd: (ctx, owner) => 3 * ctx.state.quadrants.filter(q => ctx.countMembersOfColor(owner, q) >= 3).length,
   }),
   // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"), named Coach (Cory, Oct 29)
-  m('secondwind', 'Coach', null, 0, 7, 'On Recruit: use one of your used One Time Use members again.', {
+  m('secondwind', 'Coach', null, 0, 7, 'On Recruit: use one of your used Once per game members again.', {
     onRecruited(ctx, owner) {
       const spent = ctx.membersOf(owner).filter(c => c.used && [c.def, c.copy && ctx.defOf(c.copy)].some(d => d?.activate === 'game'));
-      if (!spent.length) { ctx.log(`${owner.name}'s Coach: no used One Time Use member.`); return; }
-      ctx.choose(owner, 'Coach: which One Time Use member can be used again?', spent.map(c => ({
+      if (!spent.length) { ctx.log(`${owner.name}'s Coach: no used Once per game member.`); return; }
+      ctx.choose(owner, 'Coach: which Once per game member can be used again?', spent.map(c => ({
         id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: cost(c),
       })), 'benders.rewind');
     },
