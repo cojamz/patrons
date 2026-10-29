@@ -9,7 +9,7 @@ import { spriteId } from '../art/index.js';
 import { quadrant, followers, cardDef } from '../../engine/v4/index.js';
 import { ArtifactTile } from './ArtifactDraft.jsx';
 import { memberTimingWords } from './memberTiming.js';
-import { breakdown, costParts } from '../format.js';
+import { breakdown, costParts, cardGains } from '../format.js';
 import { CardName, onTable, Tip, CostDots, RuleText } from './Info.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { memberRows, useNow, spendingPower, memberAsks } from './memberUse.js';
@@ -116,6 +116,22 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * Under a member's or artifact's hover, anyone's (Cory, Oct 29): what it has gained its owner this game, and for one
+ * that scores at game end, what it would score if the game ended now. Nothing before it has done anything.
+ */
+export function MemberGains({ state, uid }) {
+  const { made, end } = cardGains(state, uid);
+  const owned = state.players.some(p => p.members.includes(uid) || p.artifact === uid);
+  if (!owned || (!made && end == null)) return null;
+  return (
+    <div className="mu-gains" data-member-gains={uid}>
+      {made ? <span><span className="k">This game</span> <Rich text={made} /></span> : null}
+      {end != null ? <span><span className="k">If the game ended now</span> <Rich text={`${end >= 0 ? '+' : '−'}${Math.abs(end)} follower${Math.abs(end) === 1 ? '' : 's'}`} /></span> : null}
+    </div>
   );
 }
 

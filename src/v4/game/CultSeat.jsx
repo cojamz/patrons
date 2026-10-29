@@ -11,7 +11,7 @@ import { spriteId, sphereShare } from '../art/index.js';
 import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
-import { MemberActions, MemberSwitch, useUseResult, UseResult } from './MemberUse.jsx';
+import { MemberActions, MemberGains, MemberSwitch, useUseResult, UseResult } from './MemberUse.jsx';
 import { usableNow, loadedUse, safeThisRound, memberAsks } from './memberUse.js';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
@@ -34,7 +34,7 @@ const artifactColor = (state, uid) => Object.keys(state.artifacts || {}).find(q 
 const memberCardFn = (latest, uid) => () => {
   const { state, me, mine, optionFor, onPick } = latest.current;
   if (!state.cards[uid]) return null;
-  return <><MemberCard state={state} uid={uid} me={me} />{mine && <MemberActions state={state} uid={uid} me={me} optionFor={optionFor} onPick={onPick} />}</>;
+  return <><MemberCard state={state} uid={uid} me={me} /><MemberGains state={state} uid={uid} />{mine && <MemberActions state={state} uid={uid} me={me} optionFor={optionFor} onPick={onPick} />}</>;
 };
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
@@ -221,7 +221,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {/* the artifact (Cory, 2026-10-25): its picture on a small plate in its color, first in the row; the hover names it */}
         {p.artifact !== undefined && (() => {
           const art = cardDef(state, p.artifact), q = artifactColor(state, p.artifact);
-          return <Tip className="cs-artifact" data-artifact={p.artifact} label={art.name} content={<p><b>{art.name}</b><br /><Rich text={art.text} /></p>}><ArtifactTile q={q} res={q ? quadrant(q).resource : 'colorless'} title={`Artifact: ${art.name}`} /></Tip>;
+          return <Tip className="cs-artifact" data-artifact={p.artifact} label={art.name} content={<><p><b>{art.name}</b><br /><Rich text={art.text} /></p><MemberGains state={state} uid={p.artifact} /></>}><ArtifactTile q={q} res={q ? quadrant(q).resource : 'colorless'} title={`Artifact: ${art.name}`} /></Tip>;
         })()}
         <b className="cs-member-count num" data-members={nMembers} title="Members: each card counts its printed follower value, or its stated member count if higher">{nMembers}<span> member{nMembers === 1 ? '' : 's'}</span></b>
         {/* Lie Low and the like: no one can steal from this seat this round (w2b #21). A small shield under the member

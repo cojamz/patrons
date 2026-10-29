@@ -842,6 +842,30 @@ export function projectedEndGame(state) {
 }
 
 /**
+ * What one member or artifact has gained its owner this game, and (for one that scores at game end) what it would
+ * score if the game ended now (Cory, Oct 29). { made: '+7 red, +2 followers' | null, end: n | null }. Display only:
+ * the end-game score runs on a copy.
+ */
+export function cardGains(state, uid) {
+  const card = state.cards[uid];
+  if (!card) return { made: null, end: null };
+  const m = card.made || {};
+  const parts = [...state.resources.filter(r => m[r] > 0).map(r => `+${m[r]} ${r}`),
+    ...Object.keys(m).filter(k => k !== 'followers' && !state.resources.includes(k) && m[k] > 0).map(k => `+${m[k]} ${k}`),
+    ...(m.followers > 0 ? [`+${m.followers} follower${m.followers === 1 ? '' : 's'}`] : [])];
+  let end = null;
+  const owner = state.players.find(p => p.members.includes(uid));
+  const defs = [defById(card.def), ...(card.copy ? [defById(card.copy)] : [])].filter(d => d && d.onGameEnd);
+  if (owner && defs.length && !state.over) {
+    try {
+      const copy = structuredClone(state), ctx = contextFor(copy), p = copy.players[owner.id];
+      end = defs.reduce((s, d) => s + (d.onGameEnd(ctx, p, ctx.card(uid)) || 0), 0);
+    } catch { end = null; }
+  }
+  return { made: parts.length ? parts.join(', ') : null, end };
+}
+
+/**
  * A member's trace line, parsed: "Di's Tax Collector: +1 gold." (the owner's own change) or "Bo +1 silver (Ana's
  * Retinue)." (another player's) → { owner, target, card, res: { color: n }, followers, discount }, else null.
  */

@@ -163,3 +163,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .mu-row.k-artifact + .mu-row{padding-top:8px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12))}
 .mu-kind{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--pl-ink-3,#a39078)}
 .mu-list + .mu-none{border-top:0;margin-top:0;padding-top:0}
+
+/* what a member or artifact has gained this game (its hover, Cory Oct 29) */
+.mu-gains{margin-top:10px;padding-top:8px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:18px;color:var(--pl-ink,#2b2018)}
+.mu-gains .k{color:var(--pl-ink-3,#7a6a5a);font-weight:600;margin-right:4px}

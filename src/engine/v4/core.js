@@ -592,7 +592,7 @@ function useMember(state, p, uid, resume) {
   const before = traceSnapshot(state);
   // used beside the spaces: this turn's minion is still to land, so a space must stay free for it (spareSpace, purple.js)
   if (resume.t === 'place') state.unplaced = 1;
-  try { act.onActivate(ctxFor(state), p, wrap(state, c)); } finally { delete state.unplaced; }
+  try { tallied(state, p, uid, () => act.onActivate(ctxFor(state), p, wrap(state, c))); } finally { delete state.unplaced; }
   traceChanges(state, before, p, act);
   const at = state.queue.findIndex(t => !t._fresh);
   state.queue.splice(at < 0 ? state.queue.length : at, 0, resume);
@@ -1079,7 +1079,7 @@ function recruitAbility(state, p, card, def, fn) {
   const ctx = ctxFor(state);
   eachMemberOf(state, p, (held, d) => { if (d.onRecruitAbility) d.onRecruitAbility(ctx, p, held, card, def); }, ['onRecruitAbility']);
   const before = traceSnapshot(state);
-  const out = underCause({ kind: 'member', pid: p.id, uid: card.uid, def: card.def.id }, fn);
+  const out = underCause({ kind: 'member', pid: p.id, uid: card.uid, def: card.def.id }, () => tallied(state, p, card.uid, fn));
   traceChanges(state, before, p, def);
   return out;
 }
@@ -1089,14 +1089,14 @@ function memberMoved(state, actor, uid, from, to, listeners) {
   const ctx = ctxFor(state);
   for (const { uid: held, def } of listeners) {
     const before = traceSnapshot(state);
-    underCause({ kind: 'member', pid: actor.id, uid: held, def: state.cards[held].def }, () => def.onMoveMember(ctx, actor, wrap(state, state.cards[held]), { actor, uid, from, to }));
+    underCause({ kind: 'member', pid: actor.id, uid: held, def: state.cards[held].def }, () => tallied(state, actor, held, () => def.onMoveMember(ctx, actor, wrap(state, state.cards[held]), { actor, uid, from, to })));
     traceChanges(state, before, actor, def);
   }
 }
 /** Distinct arrival hooks retain their printed semantics even when a recipient did not Recruit. */
 function memberJoined(state, p, uid) {
   const card = state.cards[uid], w = wrap(state, card), defs = effectiveDefs(card), ctx = ctxFor(state);
-  for (const def of defs) if (def.onJoined) { const before = traceSnapshot(state); def.onJoined(ctx, p, w); traceChanges(state, before, p, def); }
+  for (const def of defs) if (def.onJoined) { const before = traceSnapshot(state); tallied(state, p, uid, () => def.onJoined(ctx, p, w)); traceChanges(state, before, p, def); }
 }
 /**
  * A member that adds minions in this round (Extra Hand: "+1 minion in round III"), recruited during it, adds them at
@@ -1272,7 +1272,33 @@ function eachMemberOf(state, p, fn, keys) {
     for (const def of effectiveDefs(card)) {
       if (keys && !keys.some(k => def[k] !== undefined)) continue;
       const before = traceSnapshot(state);
-      accounted(state, null, () => { underCause({ kind: 'member', pid: p.id, uid, def: card.def }, () => fn(wrap(state, card), def)); traceChanges(state, before, p, def); });
+      accounted(state, null, () => { underCause({ kind: 'member', pid: p.id, uid, def: card.def }, () => tallied(state, p, uid, () => fn(wrap(state, card), def))); traceChanges(state, before, p, def); });
+    }
+  }
+}
+
+// What each member and artifact has gained its owner this game (Cory, Oct 29: the hover shows "how much they've gained
+// this game"): card.made = { [color]: n, followers: n }. Each hook's own change to its owner, net per color, with what
+// a member hook inside it did credited to that inner member instead. Rides on the state, so a reload or a rival's
+// screen reads the same numbers.
+const tallies = [];
+function tallied(state, owner, uid, fn) {
+  const card = uid == null ? null : state.cards[uid];
+  if (!card || !owner || !(owner.members.includes(uid) || owner.artifact === uid)) return fn();
+  const f = { pid: owner.id, res: { ...owner.res }, bonus: owner.bonus || 0, inner: {} };
+  tallies.push(f);
+  let ok = false;
+  try { const out = fn(); ok = true; return out; } finally {
+    tallies.pop();
+    if (ok) {
+      const parent = tallies[tallies.length - 1];
+      const d = { followers: (owner.bonus || 0) - f.bonus };
+      for (const r of Object.keys({ ...f.res, ...owner.res })) d[r] = (owner.res[r] || 0) - (f.res[r] || 0);
+      for (const k of Object.keys(d)) {
+        const own = d[k] - (f.inner[k] || 0);
+        if (own > 0) { card.made = card.made || {}; card.made[k] = (card.made[k] || 0) + own; }
+        if (parent && parent.pid === f.pid) parent.inner[k] = (parent.inner[k] || 0) + d[k];
+      }
     }
   }
 }
@@ -1516,7 +1542,7 @@ function ctxFor(state) {
       const before = traceSnapshot(state);
       // uid0: the card itself, so a Doppelganger copying it is its own source beside the original (Cory, Oct 28)
       const uid = uid0 ?? owner.members.find(u => { try { return cardDef(state, u).name === name; } catch { return false; } });
-      const out = underCause({ kind: 'member', pid: owner.id, uid: uid ?? null, def: uid != null ? state.cards[uid].def : null }, fn);
+      const out = underCause({ kind: 'member', pid: owner.id, uid: uid ?? null, def: uid != null ? state.cards[uid].def : null }, () => tallied(state, owner, uid, fn));
       traceChanges(state, before, owner, { name });
       return out;
     },
