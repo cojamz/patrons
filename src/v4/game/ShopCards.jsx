@@ -28,7 +28,7 @@ export const nameFit = name => (name.length > 15 && name.includes(' ') ? { 'data
 export const membersOf = d => Math.max(d.n ?? 1, d.f || 0);
 // the top right: the members a card counts as, in its color's bust (every member is a follower, so it's also its score)
 export const WorthTag = ({ d, sphere }) => <>
-  <span className="val" data-worth={d.f} title={`Counts as ${membersOf(d)} member${membersOf(d) === 1 ? '' : 's'}`}><b className="num">{membersOf(d)}</b><MemberGlyph r={sphere && sphere !== 'colorless' && !d.everyColor ? sphere : null} size={14} decorative /></span>
+  <span className="val" data-worth={d.f} title={`Counts as ${membersOf(d)} member${membersOf(d) === 1 ? '' : 's'}`}><b className="num">{membersOf(d)}</b><MemberGlyph r={d.everyColor ? null : sphere || 'colorless'} size={14} decorative /></span>
 </>;
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 

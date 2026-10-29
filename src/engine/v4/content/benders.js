@@ -167,7 +167,7 @@ const members = [
     },
   }),
   // Cory, 2026-10-28: Dabblers (Turncoat, then Groupies), 3, "give 2 members, and count as every color"
-  m('dabblers', 'Dabblers', null, 0, 2, 'Counts as 2 members of every color.', { n: 2, everyColor: true }),
+  m('dabblers', 'Dabblers', null, 0, 2, 'Counts as 2 wild members.', { n: 2, everyColor: true }),
   // Cory, 2026-10-28: Cheerleader (Champion), 4
   m('cheerleader', 'Cheerleader', null, 0, 3, 'Whenever you win a contest, +1 follower.', {
     onContestWin(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Cheerleader: +1 follower.`); },

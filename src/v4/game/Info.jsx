@@ -192,7 +192,14 @@ function Lines({ text, Text, className = 'fx-line' }) {
   const parts = effectLines(text);
   return <>{parts.map((t, k) => <Fragment key={k}>{k ? ' ' : null}<span className={className} data-effect-line=""><Text text={t} /></span></Fragment>)}</>;
 }
-export function RuleText({ def, text = def && def.text, round = 1, plain = false, compact = false, lines = false }) {
+// a member's ongoing benefit opens with a bold Passive (Cory, Oct 29: "For those that are a passive benefit, add Passive as
+// a bold keyword"): any rule that doesn't open with a timing, a use or what the card counts as
+const OPENS = /^(?:on recruit|(?:at )?round start|round end|game end|once per (?:game|round)|one time use|use\b|counts as|worth \d|no (?:ability|effect)|passive|free\b)/i;
+// a member's "Worth N followers." never prints: the number at the card's top right says it (Cory, Oct 29)
+const unworth = (def, text) => (def && def.f != null && text ? String(text).replace(/^\s*Worth \d+ followers?\.\s*/i, '') : text);
+export const passiveText = (def, given) => { const text = unworth(def, given); return def && def.f != null && text && !OPENS.test(String(text).trim()) ? `Passive: ${String(text).trim()}` : text; };
+export function RuleText({ def, text: given = def && def.text, round = 1, plain = false, compact = false, lines = false }) {
+  const text = passiveText(def, given);
   const by = def && def.byRound;
   const Text = plain ? PlainText : CardText;
   if (!by || !by.lines || by.lines.length !== 3) return lines ? <span className="fx-lines"><Lines text={text} Text={Text} /></span> : <Text text={text} />;
@@ -298,7 +305,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       <div className="mc-head mc-hd">
         {!onFace && <span className="mc-price num" aria-hidden="true">{(paid || costParts(d, state.resources)).reduce((t, c) => t + c.n, 0)}</span>}
         <b className="mc-name">{d.name}</b>
-        {!onFace && <span className="mc-worth" title={`Counts as ${weight} member${weight === 1 ? '' : 's'}`}><b className="n">{weight}</b><MemberGlyph r={sphere !== 'colorless' && !d.everyColor ? sphere : null} size={16} decorative /></span>}
+        {!onFace && <span className="mc-worth" title={`Counts as ${weight} member${weight === 1 ? '' : 's'}`}><b className="n">{weight}</b><MemberGlyph r={d.everyColor ? null : sphere} size={16} decorative /></span>}
       </div>
       {!onFace && <span className="mc-art" aria-hidden="true"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={72} /></span>}
       {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}

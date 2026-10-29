@@ -39,9 +39,13 @@ export function Pip({ color, n }) {
 // of a color ("per red member", "a blue member", "non-gold member") and a counted member ("per 2 members", "per member
 // you have", "Counts as 3 members") are the bust, with its count tight against it. Other uses ("a rival's member", "shop
 // member") stay words. The words stay in the page, hidden, so it reads and copies the same.
-const MEMBER = new RegExp(`(?:(\\d+) )?(other )?(non-)?\\b(${COLORS.join('|')}) (?:face-up )?members?\\b|(?<=\\b(?:per|as) )(?:(\\d+) )?(other )?members?\\b`, 'g');
+// "wild member" is the wild bust (Dabblers: "Counts as 2 wild members"); a card's "Counts as N members" is members of no
+// color, a plain bust (Cory, Oct 29: "con men should count as two members - not of any color")
+const MEMBER = new RegExp(`(?:(\\d+) )?(other )?(non-)?\\b(${[...COLORS, 'wild'].join('|')}) (?:face-up )?members?\\b|(?<=\\b(?:per|as) )(?:(\\d+) )?(other )?members?\\b`, 'g');
 function MemberAmount({ m }) {
-  const n = m[1] || m[5], other = m[2] || m[6] || '', non = m[3] || '', color = m[4] || null;
+  const n = m[1] || m[5], other = m[2] || m[6] || '', non = m[3] || '', named = m[4] || null;
+  const counts = !named && /^Counts as/i.test(m.input.slice(Math.max(0, m.index - 10), m.index) + m[0]) ;
+  const color = named === 'wild' ? null : named || (counts ? 'colorless' : null);
   const words = m[0].slice(n ? n.length : 0);
   return (
     <span className="amt mem" data-member-amount={color || 'any'} title={m[0]}>
@@ -52,13 +56,13 @@ function MemberAmount({ m }) {
   );
 }
 
-const KEYWORDS = { 'on recruit': 'On Recruit', 'round end': 'Round End', 'game end': 'Game End', 'one time use': 'Once per Game', 'once per game': 'Once per Game', 'once per round': 'Once per Round' };
+const KEYWORDS = { passive: 'Passive', 'on recruit': 'On Recruit', 'round end': 'Round End', 'game end': 'Game End', 'one time use': 'Once per Game', 'once per game': 'Once per Game', 'once per round': 'Once per Round' };
 const KEYWORD = w => KEYWORDS[w.toLowerCase()] || 'Round Start';
 export function Rich({ text, after = '', timingDone = false, memberDone = false }) {
   if (!text) return null;
   // Canonical timing labels are real emphasis everywhere, never visible Markdown.
   // Cory, Oct 29: every card keyword is bold ("Once per game… should be bolded if its a keyword. Same for Game End")
-  const timing = /\b(On recruit|(?:At )?round start|round end|game end|one time use|once per game|once per round)\b(?!-)/ig;
+  const timing = /\b(Passive(?=:)|On recruit|(?:At )?round start|round end|game end|one time use|once per game|once per round)\b(?!-)/ig;
   if (!timingDone && timing.test(text)) {
     timing.lastIndex = 0;
     const pieces = []; let end = 0;

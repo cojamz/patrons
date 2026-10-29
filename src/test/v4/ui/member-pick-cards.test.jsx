@@ -20,7 +20,9 @@ describe('member choice readability', () => {
     expect(container.querySelectorAll('.lt-pick-ability')).toHaveLength(state.shop.length);
     for (const uid of state.shop) {
       const el = container.querySelector(`[data-uid="${uid}"]`);
-      expect(el.querySelector('.lt-pick-ability').textContent.length).toBeGreaterThan(0);
+      // a member that only counts says nothing more: the number at its top right is its worth (Cory, Oct 29)
+      const only = /^Worth \d+ followers?\.?$/i.test(cardDef(state, uid).text.trim());
+      expect(el.querySelector('.lt-pick-ability').textContent.length > 0).toBe(!only);
       expect(el.getAttribute('data-hint')).toContain(cardDef(state, uid).text);
     }
     fireEvent.click(container.querySelector(`[data-option="${options[0].id}"]`));
