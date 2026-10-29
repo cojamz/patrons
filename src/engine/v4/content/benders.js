@@ -151,7 +151,7 @@ const members = [
       });
       opts.push({ id: 'split', label: 'Split them yourself', kind: 'choice', value: 'split', hint: -1 });
       opts.push({ id: 'keep', label: 'Keep your colors', kind: 'pass', value: null, hint: 0 });
-      ctx.choose(owner, `Launderers: rearrange your ${total} resources`, opts, 'benders.launder');
+      ctx.choose(owner, `Launderers: pick a color for all ${total}, or split them`, opts, 'benders.launder');
     },
   }),
   // Cory, 2026-10-28: "a 5 cost Saboteur… gives -3 Followers each time it enters somebody's cult (swapped in OR recruited etc)"
