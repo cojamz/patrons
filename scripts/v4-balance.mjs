@@ -38,7 +38,8 @@ for (let g = first; g < first + count; g++) {
   let s = createGame({ seats: Array.from({ length: seats }, () => ({ kind: 'bot' })), seed: g, quadrants: quads });
   const buyer = g % 5 === 0 ? g % seats : -1;
   const places = s.players.map(() => ({})), seen = {}, got = s.players.map(() => ({}));
-  while (!s.over) {
+  let moves = 0;
+  while (!s.over && ++moves < 4000) {
     for (const uid of s.shop) seen[s.cards[uid].def] ??= s.round;
     const before = s.players.map(p => new Set(p.members));
     const pl = s.pending.player;
@@ -53,6 +54,8 @@ for (let g = first; g < first + count; g++) {
     s = applyMove(s, m);
     s.players.forEach((p, i) => { for (const u of p.members) if (!before[i].has(u)) got[i][name(s.cards[u].def)] ??= round; });
   }
+  // a game that never ends (a rules loop) is logged as stuck and left out of the report
+  if (!s.over) { appendFileSync(out, JSON.stringify({ game: g, level, seats, table: quads, stuck: true, round: s.round }) + '\n'); continue; }
   const top = Math.max(...s.players.map(p => followers(s, p)));
   const row = {
     game: g, level, seats, table: quads, buyer, prices,

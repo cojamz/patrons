@@ -8,7 +8,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const flags = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
 const files = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const MIN = Number(flags.min || 20);
-const rows = files.flatMap(f => readFileSync(f, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse));
+const all = files.flatMap(f => readFileSync(f, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse));
+const rows = all.filter(r => !r.stuck), stuck = all.length - rows.length;
 const share = (r, p) => (p.win ? 1 / r.players.filter(x => x.win).length : 0);
 const pct = x => `${Math.round(x * 100)}%`, pts = x => `${x >= 0 ? '+' : ''}${Math.round(x * 100)}`;
 const bucket = c => Math.min(c, 20);
@@ -59,7 +60,7 @@ for (const r of rows) {
 
 const lvl = [...new Set(rows.map(r => r.level))].join('+');
 const priced = [...new Set(rows.flatMap(r => Object.entries(r.prices || {}).map(([k, v]) => `${k} ${v.from}→${v.to}`)))];
-console.log(`${lvl} bots, ${rows.length} games, random tables of the 2.0 colors.${priced.length ? ` Prices changed: ${priced.join(', ')}.` : ''}`);
+console.log(`${lvl} bots, ${rows.length} games${stuck ? ` (+${stuck} stuck in a rules loop, left out)` : ''}, random tables of the 2.0 colors.${priced.length ? ` Prices changed: ${priced.join(', ')}.` : ''}`);
 for (const [n, S] of Object.entries(out.bySeats)) console.log(`  ${n} seats: ${S.games} games; buy-followers-only seat won ${pct(S.buyer.w / (S.buyer.n || 1))} of ${S.buyer.n} (even ${pct(1 / n)}); avg followers ${(S.followers / S.seatsN).toFixed(1)}, winner ${(S.top / S.games).toFixed(1)}, margin ${(S.margin / S.games).toFixed(1)}; avg members ${(S.members / S.seatsN).toFixed(1)}`);
 console.log('\nSeat order (win share vs even):');
 for (const [k, v] of Object.entries(out.seatOrder).sort()) console.log(`  ${k}: ${pct(v.w / v.n)} vs ${pct(v.e / v.n)} (${v.n})`);
