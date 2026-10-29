@@ -68,7 +68,7 @@ describe('guest members join the deck', () => {
   });
 });
 
-describe('Party Crasher: One Time Use, the next minion may go on a space a rival already took', () => {
+describe('Party Crasher: Once per game, the next minion may go on a space a rival already took', () => {
   it('offers rivals’ taken spaces once used, does the action, and only for one minion', () => {
     let s = scene({ members: [['benders.squatter']], slots: { [JV]: 1, [RUSH]: 0 } });
     expect(ids(s).some(id => id.startsWith('squat:'))).toBe(false);
@@ -197,7 +197,7 @@ describe('Insider: also recruit from the top 3 of the pile', () => {
   });
 });
 
-describe('Extra Hand: One Time Use, +1 minion this round', () => {
+describe('Extra Hand: Once per game, +1 minion this round', () => {
   it('adds a minion after everyone else’s turns, from round II only', () => {
     let s = scene({ round: 3, members: [['benders.extrahand']] });
     s = move(s, `use:${uidOf(s, 'benders.extrahand', 0)}`);

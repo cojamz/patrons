@@ -147,7 +147,7 @@ export default {
         if (x) { owner.res.gold += x; card.invested = 0; ctx.log(`${owner.name}'s Investor leaves: ${x} gold set aside comes back.`); }
       },
     }),
-    m('jackpot', 'Lottery Winner', 6, 4, 'One Time Use: gain gold equal to the most gold a rival holds.', {
+    m('jackpot', 'Lottery Winner', 6, 4, 'Once per game: gain gold equal to the most gold a rival holds.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const r = Math.max(0, ...ctx.rivals(owner).map(o => o.res.gold));
@@ -155,7 +155,7 @@ export default {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => o.res.gold >= 4),
     }),
-    m('speculator', 'Speculator', 4, 4, 'One Time Use: double your gold.', {
+    m('speculator', 'Speculator', 4, 4, 'Once per game: double your gold.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const had = owner.res.gold;

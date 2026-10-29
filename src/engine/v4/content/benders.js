@@ -54,8 +54,8 @@ function offerFrom(ctx, owner, uid) {
 const stillMine = (ctx, p, w) => (w.joined ? (ctx.state.squats?.[w.key] || []).includes(p.id) : ctx.state.slots[w.key] === p.id);
 
 const members = [
-  // Party Crasher (was Squatter; id kept for old records): Cory, 2026-10-28, One Time Use, cheaper; 4 with the +1 wild
-  m('squatter', 'Party Crasher', 'thieves', 2, 1, 'One Time Use: your next minion can be placed on a space a rival already took.', {
+  // Party Crasher (was Squatter; id kept for old records): Cory, 2026-10-28, Once per game, cheaper; 4 with the +1 wild
+  m('squatter', 'Party Crasher', 'thieves', 2, 1, 'Once per game: your next minion can be placed on a space a rival already took.', {
     activate: 'game',
     onActivate(ctx, owner, card) {
       if (owner.crashNext) { card.used = false; return; }
@@ -71,7 +71,7 @@ const members = [
   // (Poach and swaps moving an unplaced grant, copies, a full board) keep it as their fixture
   m('extrahand3', 'Extra Hand', 'purple', 5, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1], retired: true }),
   // Cory, 2026-10-28: "probably needs to be a Use Once… it had to have some category, and On Recruit would be broken"
-  m('extrahand', 'Extra Hand', 'purple', 5, 4, 'One Time Use: +1 minion this round.', { from: 2,
+  m('extrahand', 'Extra Hand', 'purple', 5, 4, 'Once per game: +1 minion this round.', { from: 2,
     activate: 'game',
     onActivate(ctx, owner, card) { if (!extraMinion(ctx, owner, 'Extra Hand')) card.used = false; },
     botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),

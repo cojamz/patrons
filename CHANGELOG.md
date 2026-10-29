@@ -2,6 +2,22 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.840 — 2026-10-29
+
+- One Time Use is now called Once per game, on every card and in the rules.
+
+## v0.9.839 — 2026-10-29
+
+- Member cards are back to their earlier look while the new card design is reworked.
+
+## v0.9.838 — 2026-10-29
+
+- Every member's picture redrawn with more detail; members that count as 2 or more show that many people; new guests have pictures
+
+## v0.9.837 — 2026-10-29
+
+- Member cards look like trading cards: the name on a bar in its color, the price in a dark circle and the worth beside it, bigger text, and card keywords like One Time Use and Game End in bold.
+
 ## v0.9.836 — 2026-10-28
 
 - Guests: Party Crasher (was Squatter) and Extra Hand are One Time Use; new Saboteur (−3 followers whenever it joins a cult); Launderers worth 2; Front-runner and Tiebreaker cheaper; Straggler is out.

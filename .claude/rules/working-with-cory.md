@@ -12,6 +12,8 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Fixes: go with your gut, and log each gut call in design/decisions.md as "(Claude, under Cory's go-with-your-gut)" with the why.
 - "X should be cheaper/pricier" notes are Claude's to price: educated guess, direction checked, logged as a gut call.
 
+- Visual work (art, card looks) is iterated with a very picky, anti-AI-slop design critic agent reviewing each round before Cory sees it, and the best version ships overnight for every piece, not a sample (Cory, Oct 29).
+
 ## Talking to him
 - Extremely brief, smart brevity. A few lines is normal and eight the most, unless he asks for more (he found five too aggressive, Oct 20). Longer things go in a file or picture, linked. The message check hook bounces anything longer, plus tables, headers, bold labels, em dashes, UTC times and AI tics.
 - Every reply is plain, concise and reader-friendly, in the game's precise card language (Cory, Oct 22; phrasings in /brainstorm's wording.md). That rule is for writing only: brainstorm freely, never limited by the game's current wording.
@@ -83,3 +85,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-28: Cory: "you need to stop iterating the version number so quickly. go to 0.9.801 after this lol". Small publishes are now sub-steps (v0.9.801, v0.9.802…); scripts/v4-version.mjs does it.
 - 2026-10-28: "Waiting on me" for engineering came twice (Oct 21, Oct 28). Now a gate: the message check bounces a question to Cory about refactors, rebuilds, tuning or perf passes, profiling or migrations.
 - 2026-10-28: Cory to the harness thread, after it asked him balance questions from the tester panel: "why are you doing balance changes, you're the harness rework agent". Threads stay in their lane; out-of-lane design questions go to the coordinator.
+- 2026-10-29: Cory, after the portrait redraw: "these pixel arts still look pretty bad" and "use a design critique agent, a very picky and very anti AI slop, to critique and help you iterate… ship the best version… fully updated for every member". Visual work now runs through a picky critic each round.

@@ -14,7 +14,7 @@ const TIMINGS = [
   [/^(?:whenever|when you|when another player)\b/i, 'Whenever'],
   [/^game end\b/i, 'Game end'],
   [/^once per round\b/i, 'Once a round'],
-  [/^(?:once per game|one time use)\b/i, 'One Time Use'],
+  [/^(?:once per game|one time use)\b/i, 'Once per game'],
   [/^while\b/i, 'While'],
 ];
 /** "Round start", "On recruit", "Worth 2"… for a member def. */

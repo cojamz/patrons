@@ -53,7 +53,7 @@ function benderSave(seed) {
   };
   for (const def of ['benders.squatter', 'benders.insider', 'benders.straggler']) if (!take(def)) return null;
   for (const r of s.resources) s.players[0].res[r] = 8;
-  s.players[0].crashNext = true; // Party Crasher's One Time Use, as if used (Oct 28)
+  s.players[0].crashNext = true; // Party Crasher's Once per game, as if used (Oct 28)
   return { config: { seats, speed: 'normal' }, state: s, undo: null, savedAt: Date.now() };
 }
 
