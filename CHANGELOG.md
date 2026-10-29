@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.868 — 2026-10-29
+
+- The words on the wheel's rim sit in the middle of the band.
+
 ## v0.9.867 — 2026-10-29
 
 - The full member card shows its picture big, filling the window
