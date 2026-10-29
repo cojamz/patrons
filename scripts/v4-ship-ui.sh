@@ -19,6 +19,7 @@ V4_QUICK_E2E=none V4_OUTDIR=.v4-build-ship V4_PORT=${V4_PORT:-5299} npm run -s c
 t "version"; npm run -s version:v4 -- patch "$NOTE"
 git add src/v4/version.js CHANGELOG.md
 git commit -qm "Release $(node -p "require('fs').readFileSync('src/v4/version.js','utf8').match(/v[\d.]+/)[0]"): $NOTE"
-t "push"; git push -q origin "HEAD:$BRANCH"
+# other threads push during the ~4 min check: take their work again before pushing (a version clash stops here)
+t "push"; git pull -q --rebase origin "$BRANCH" && git push -q origin "HEAD:$BRANCH"
 t "publish"; V4_PAGES_POLL=${V4_PAGES_POLL:-5} bash scripts/v4-play.sh HEAD
 t "live"
