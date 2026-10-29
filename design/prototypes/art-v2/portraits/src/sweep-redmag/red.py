@@ -159,7 +159,12 @@ def movement():  # the referee: flat-top, stern brows, a whistle in his teeth, s
     g.put(10, 12, ['wK', 'KK']); g.put(19, 12, ['wK', 'KK'])
     g.put(9, 16, ['aa']); g.put(21, 16, ['aa'])
     g.put(13, 17, ['LLLLMN', 'MMMMNN', ' NNN']); g.put(18, 17, ['N']); g.put(19, 18, ['N', ' N', ' N', '  N', '  N'])
-    g.put(24, 1, ['qRRRR', 'RRRRr', 'RRRRr', 'RRRRr', 'RRRRr', 'RRRrr', 'rrrrr', ' SSs', 'SSSst', 'SSSst', ' Ssst', ' 32 ', ' 321', ' 321', ' 321', ' 321', '3321', '3321', '3221'])
+    def arm(f):  # his raised arm: striped sleeve, a fist, and the red card gripped in it
+        f.put(24, 0, ['wqqqR', 'qRRRr', 'qRRRr', 'qRRRr', 'qRRRr', 'RRRRr', 'RRRrr'])
+        f.put(23, 7, [' SSSSs', 'SStStst', 'SSSSSst', ' SSSsst', '  ssst'])
+        for j, y in enumerate(range(12, 22)):
+            f.put(23 + (j // 4), y, ['KKKKK' if (y // 2) % 2 else '43321'])
+    layer(g, arm)
     return g
 
 def panel():  # three judges at a table holding up score cards: bun and glasses, bald with a moustache, a tall pompadour

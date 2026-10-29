@@ -112,44 +112,35 @@ def d_trendsetter():
 
 
 def _mannequin(g, x, y, hat):
-    """A shop-window dummy: smooth cream head, painted eyes and red lips, a hat from the display."""
-    at(g, x, y, [' WWWWWV ', 'WWWWWWVV', 'WVVWVVVV', 'WwKWwKVV', 'WWWWWWVV', 'aWWWaWVV', 'WWRRWVVV', ' WWWVVV ', '  VVVV  ',
-                 '   WV   ', '   WV   '])
-    at(g, x - 1, y - 3, hat)
+    """A plain shop-window dummy: a smooth cream oval, two painted dot eyes, a neck post."""
+    at(g, x, y, [' ' + hat * 4 + ' ', hat * 5 + hat.lower() if hat != 'U' else 'UUUUUu', 'WWWWVV', 'WKWWKV', 'qWWWqV', 'WWRRVV', ' WVVV ', '  WV', '  WV'])
 
 
 def d_windowdresser():
-    # Window Dresser (counts 3): dresses the shop window. In front: a sharp bob with a blunt fringe, pins between the
-    # lips, one eye squinting to judge the display, a tape measure round the neck, scissors in the pocket. Behind: two
-    # dressed mannequins in the window, painted faces, display hats.
+    # Window Dresser (counts 3): dresses the shop window. Leading, front and center and big: a sharp bob with a blunt
+    # fringe, pins between the lips, one eye squinting to judge the display, a tape measure round the neck, scissors in
+    # the pocket. Set back at the edges: two plain mannequins on dress forms.
     g = new()
-    for y in range(3, 22):
-        for x in range(2, 30):
-            if g.c[y][x] == 'b' and (x <= 10 or x >= 21): g.c[y][x] = 'i'
-    for y in range(3, 22):
-        for x in (2, 10, 21, 29):
-            if g.c[y][x] == 'i': g.c[y][x] = 'b'
-    body(g, top=20, cx=6, start=3, grow=2, maxhalf=5, keys='qRrr')
-    body(g, top=20, cx=26, start=3, grow=2, maxhalf=5, keys='yUuu')
-    _mannequin(g, 2, 9, ['  RRRRR  ', ' qRRRRRr ', 'RRRRRRRrr'])
-    _mannequin(g, 22, 9, ['   UUU   ', ' yUUUUUu ', 'UUUUUUUUuu'])
-    at(g, 4, 20, ['GgGg']); at(g, 25, 20, ['WVWV'])
-    # the dresser, front and center
-    body(g, top=21, cx=16, start=5, grow=3, maxhalf=8)
-    face(g, 11, 8, w=11, h=13, ear_row=4, ears=False)
-    at(g, 10, 4, ['  HhhhhhhH  ', ' HhjjhhhhhH ', 'Hhjjhhhhhhhh', 'hjhhhhhhhhhH', 'hhhhhhhhhhhH', 'hhhhhhhhhhhH',
-                  'hh        hH', 'hh        HH', 'hh        HH', 'hh        HH', 'hh        HH', 'hhH      HHH', 'hHH      HHH'])
-    at(g, 13, 11, ['wK']); at(g, 13, 12, ['KK'])
-    at(g, 18, 11, ['tt']); at(g, 18, 12, ['KK'])
-    at(g, 16, 13, ['t', 'st'])
-    at(g, 12, 14, ['a']); at(g, 19, 14, ['a'])
-    at(g, 14, 16, ['tKKt'])
-    at(g, 17, 15, ['  LK', 'LLLK', '  LK'][:0]); at(g, 17, 16, ['LLLK']); at(g, 17, 15, [' LLK'])
-    at(g, 12, 21, ['Y', 'YK', 'Y', 'YK', 'Y', 'YK', 'Y', 'Y', 'Y'])
-    at(g, 19, 21, ['Y', 'KY', 'Y', 'KY', 'Y', 'KY'])
-    at(g, 13, 21, ['nn']); at(g, 17, 21, ['nn'])
-    at(g, 20, 27, ['L L', ' L ', 'N N', 'N N'])
-    at(g, 19, 29, ['22222'])
+    for cx, keys in ((5, 'qRrr'), (27, 'yUuu')):
+        body(g, top=19, cx=cx, start=2, grow=1, maxhalf=4, keys=keys)
+    _mannequin(g, 2, 10, 'R'); _mannequin(g, 24, 10, 'U')
+    # the dresser
+    body(g, top=21, cx=16, start=6, grow=3, maxhalf=11)
+    face(g, 9, 8, w=14, h=13, ear_row=4, ears=False)
+    at(g, 8, 3, ['   HhhhhhhhhH   ', '  HhjjhhhhhhhH  ', ' Hhjjhhhhhhhhhh ', 'Hhjhhhhhhhhhhhhh', 'hjhhhhhhhhhhhhhH', 'hhhhhhhhhhhhhhhH',
+                 'hh            HH', 'hh            HH', 'hh            HH', 'hh            HH', 'hh            HH', 'hhH          HHH',
+                 'hHH          HHH'])
+    at(g, 11, 11, ['tt   tttt'])
+    at(g, 11, 12, ['wK'], ); at(g, 11, 13, ['KK'])
+    at(g, 18, 13, ['KK'])
+    at(g, 15, 14, ['t', 'st'])
+    at(g, 10, 15, ['aa']); at(g, 20, 15, ['aa'])
+    at(g, 13, 17, ['tKKt']); at(g, 17, 16, ['  LK']); at(g, 17, 17, ['LLLK'])
+    at(g, 11, 21, ['Y', 'YK', 'Y', 'YK', 'Y', 'YK', 'Y', 'Y', 'Y', 'Y'])
+    at(g, 20, 21, ['Y', 'KY', 'Y', 'KY', 'Y', 'KY', 'Y'])
+    at(g, 12, 21, ['nn']); at(g, 18, 21, ['nn'])
+    at(g, 22, 27, ['L L', ' L ', 'N N', 'N N'])
+    at(g, 21, 29, ['22222'])
     return g
 
 
@@ -289,11 +280,9 @@ def d_regular():
 
 def d_restocker():
     # Restocker: clears the shelves and refills them. A ball cap, pencil behind the ear, determined grin, a brown work
-    # apron with a box cutter, a name tag, and a stack of boxes in the doorway behind.
+    # apron with a box cutter and a name tag, a small taped stack of boxes low in the doorway beside the shoulder.
     g = new()
-    at(g, 2, 9, ['oOOOOOo', 'OWOOOOO', 'OOOOOOo', 'OOOOOOo', 'ooooooo', 'OOOOOOo', 'OOWWOOo', 'OOOOOOo', 'OOOOOOo', 'ooooooo',
-                 'OOOOOOo', 'OOOOOOo'])
-    at(g, 24, 13, ['OOOOOo', 'OWOOOo', 'OOOOOo', 'oooooo', 'OOOOOo', 'OOOOOo'])
+    at(g, 2, 14, ['OOOo', 'OWWo', 'oooo', 'OOOo', 'OOOo', 'OWWo', 'oooo'])
     body(g)
     at(g, 9, 24, ['OOOOOOOOOOOOOO', 'OOOOOOOOOOOOOo', 'OOOOOOOOOOOOOo', 'OOOOOOOOOOOOOo', 'OOOOOOOOOOOOOo',
                   'OOOOOOOOOOOOoo', 'OOOOOOOOOOOOoo', 'OOOOOOOOOOOOoo'])
@@ -304,13 +293,11 @@ def d_restocker():
     at(g, 7, 2, ['    22222222      ', '  2343333333321   ', ' 234333333333321  ', ' 2333333W33333221 ',
                  ' 233333WWW3333221 ', '2333333333333332211', '1111111111111111111', '        1222222221111',
                  'hh              Hh'])
-    at(g, 7, 2, ['        '])
     at(g, 8, 9, ['hSSSSSSSSSSSSSH'])
     at(g, 10, 11, ['ttt', 'wK', 'KK']); at(g, 18, 11, ['ttt', 'wK', 'KK'])
     at(g, 15, 14, ['t', 'st'])
     at(g, 9, 15, ['aa']); at(g, 21, 15, ['aa'])
     at(g, 13, 17, ['KKKKKK', 'KWWWWK', ' KKKK'])
-    at(g, 13, 17, ['K    K'])
     at(g, 24, 9, ['  Y', ' Yg', 'Yg', 'K'])
     return g
 

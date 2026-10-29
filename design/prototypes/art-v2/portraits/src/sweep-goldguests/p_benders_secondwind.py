@@ -1,5 +1,5 @@
 # Second Wind: worn out a moment ago, now catching a fresh gust: hair streaming back, towel round the neck,
-# a big refreshed grin, wind swirls blowing in from the left.
+# a big refreshed grin, a gust with tumbling leaves blowing in from the left.
 from lib import *
 def draw():
     g = new()
@@ -34,20 +34,16 @@ WWWWW    WWWWV
     P(g, 15, 14, ['s', 'tt'])
     P(g, 9, 16, ['aa']); P(g, 20, 16, ['aa'])
     P(g, 12, 17, ['KKKKKKKK', 'KwwwwwwK', ' KrqqrK', '  KKKK'])
-    # wind swirls blowing in from the left
-    P(g, 1, 5, """
-  LLLL
- L    L
-     LL
-LLLLL
-""")
-    P(g, 2, 12, """
- LLL
-L   L
-  LL
-LLL
-""")
-    P(g, 3, 18, ['LLLL'])
+    # a gust from the left: bold streaks and two leaves tumbling in it
+    P(g, 2, 7, ['WWWWWW'])
+    P(g, 3, 8, ['VVVV'])
+    P(g, 1, 12, ['WWWWWWW'])
+    P(g, 2, 13, ['VVVVV'])
+    P(g, 3, 18, ['WWWWW'])
+    P(g, 4, 19, ['VVV'])
+    P(g, 4, 3, [' E', 'Ee', 'e'])
+    P(g, 2, 15, ['EE', ' Ee'])
+    P(g, 26, 4, [' E', 'Ee'])
     at(g, 25, 14, 'y')    # a last bead of sweat flying off
     at(g, 26, 13, 'y')
     return g

@@ -238,37 +238,25 @@ def shoplifter():  # the shoplifter: backwards cap, a bubble-gum bubble, puffy j
     g.put(15, 17, ['KK'])
     return g
 
-def snitch():  # the snitch: comb-over, worried brows, eyes sliding sideways, a sweat drop, a hand cupped to his mouth to tell
+def snitch():  # the snitch: comb-over, sweat drop, eyes and a pointing finger aimed at whoever did it, mouth open to tell
     g = base()
     g.put(12, 22, ['WWW  VVV', ' WWWWVV', '  WWVV'])
-    g.put(15, 23, ['D', 'D', 'u', 'D'][0:0])
-    skull(g, 8, 3, 16, 19, ears=9)
-    g.put(9, 2, ['  HHHHHHH     ', ' HhhhjjhhhH   ', 'Hhjhhhhhhhhh  ', ' hhhhhh  hhh  ', '       hhh hh ', '            hH'])
-    g.put(8, 8, ['H', 'H', 'H']); g.put(23, 7, ['H', 'H', 'H', 'H'])
-    g.put(9, 10, ['  t      t'][0:0])
-    g.put(10, 10, ['  K     K', ' K     K', 'K     K'][0:0])
-    g.put(10, 10, ['  tt    tt'][0:0])
-    g.put(9, 10, ['   K    K', ' KK      KK'][0:0])
-    g.put(10, 10, ['  K    K', 'KK      KK'][0:0])
-    g.put(9, 10, ['  KK    KK', 'KK        KK'][0:0])
-    g.put(10, 10, ['  K    K', 'KK      KK'][0:0])
-    g.put(10, 10, [' tt      tt'][0:0])
-    g.put(9, 10, ['   t    t', ' tt      tt'][0:0])
-    g.put(10, 10, ['  t    t  ', 'tt      tt'][0:0])
-    g.put(10, 10, ['  t     t', 'tt     tt'][0:0])
-    g.put(9, 10, ['   t    t', ' tt    tt'])
-    g.put(10, 12, ['Kw      Kw', 'KK      KK'][0:0])
-    g.put(10, 12, ['WKK     WKK', 'VKK     VKK'][0:0])
-    g.put(10, 12, ['KKw    KKw', 'KKV    KKV'])
-    g.c[14][15] = 't'; g.put(14, 15, ['tt'])
-    g.put(17, 17, [' KK', 'KrrK', ' KK'])
-    g.put(5, 7, [' U', 'UiU', 'UUu', ' u'])
-    g.put(9, 16, ['aa'])
-    def hand(f):
-        f.put(22, 12, ['  ss', ' sssa', 'tttss', ' ssss', 'tttss', ' ssst', 'tttst', ' tst', '  12', '  12', '  32', ' 432', ' 4321'])
-    layer(g, hand)
-    g.put(27, 11, ['  W', ' W', '', 'WWW', '', ' W', '  W'][0:0])
-    g.put(28, 10, ['W', ' W'][0:0]); g.put(27, 11, [' W', 'W']); g.put(28, 14, ['WW']); g.put(27, 16, ['W', ' W'])
+    skull(g, 6, 3, 16, 19, ears=9)
+    g.put(7, 2, ['  HHHHHHH     ', ' HhhhjjhhhH   ', 'Hhjhhhhhhhhh  ', ' hhhhhh  hhh  ', '       hhh hh ', '            hH'])
+    g.put(6, 8, ['H', 'H', 'H']); g.put(21, 7, ['H', 'H', 'H', 'H'])
+    g.put(7, 10, ['   t    t', ' tt    tt'][0:0]); g.put(8, 10, ['tt  ', '    '][0:1]); g.put(16, 9, ['  tt', 'tt'][0:0])
+    g.put(8, 10, ['ttt     ttt'])
+    g.put(8, 12, ['KKw    KKw'][0:0]); g.put(9, 12, ['Kw     Kw'][0:0])
+    g.put(9, 12, ['wwK    wwK', 'wKK    wKK'][0:0])
+    g.put(8, 12, ['WWKK   WWKK', 'VVKK   VVKK'][0:0])
+    g.put(9, 12, ['WKK    WKK', 'VKK    VKK'])
+    g.c[14][14] = 't'; g.put(13, 15, ['tt'])
+    g.put(12, 17, [' KKK', 'KrqrK', ' KKK'])
+    g.put(7, 16, ['aa']); g.put(19, 16, ['aa'])
+    g.put(3, 6, [' U', 'UiU', 'UUu', ' u'])
+    def arm(f):  # pointing: a fist at his shoulder and one long finger aimed out of the doorway
+        f.put(21, 15, ['     SSSSSS', '  SSSSSSSSst', ' SSSSssttt', ' SSSSst', ' SStSst', ' SSSSst', '  ssst', '  4321', ' 43321', ' 43321', '433321', '433321', '433321', '43321', '43321', '4321', '4321'][0:17])
+    layer(g, arm)
     return g
 
 def sticky():  # the cat burglar: knit beanie, black domino mask, striped shirt, a string of stolen pearls stuck to one gloved hand
@@ -280,12 +268,12 @@ def sticky():  # the cat burglar: knit beanie, black domino mask, striped shirt,
     g.put(7, 0, ['     444333       ', '   44333333332    ', '  4433333333332   ', ' 443333333333332  ', ' 43333333333333221', ' 4333333333333322 ',
                  ' 2323232323232321 ', ' 3232323232323212 '][0:8])
     g.put(14, 0, ['44', '']); 
-    g.put(8, 10, ['KKKKKKKKKKKKKKKK', 'KKK  KKKKKK  KKK', 'KK    KKKK    KK', 'KKK  KKKKKK  KKK', ' KKKKK    KKKKK '])
-    g.put(10, 11, ['wK']); g.put(19, 11, ['wK']); g.put(10, 12, ['KK']); g.put(19, 12, ['KK'])
+    g.put(7, 10, ['NNNNNNNNNNNNNNNNNN', 'DDDWWWWDDDDWWWWDDD', 'DDWWWKKWDDWWWKKWDD', ' DDWWKKWDDWWWKKWD ', '   DDDD    DDDD'][0:4])
+    g.put(7, 9, ['K', ' ', ' '][0:0])
     g.put(10, 11, ['  '][0:0])
     g.c[15][15] = 't'
     g.put(12, 17, ['KKKKKK', ' KwwK '][0:2]); g.put(13, 17, ['KwwK'][0:0])
-    g.put(12, 17, ['K    K', ' KKKK '])
+    g.put(11, 17, ['K      K', 'KKKKKKKK', ' KwwwwK '])
     def hand(f):
         f.put(22, 19, [' N N N', ' DND D', 'DDDDDD', 'DNDDDD', 'DDDDDN', ' DDDN', '  12', ' 321', '4321', '4321', '4321', '4321', '4321'])
         f.put(23, 18, ['GG']); f.put(23, 17, ['Gw'])

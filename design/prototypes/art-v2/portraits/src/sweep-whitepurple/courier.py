@@ -1,4 +1,4 @@
-# Courier: a bike messenger in a vented helmet, earbuds, a leather satchel strap across the chest; the satchel
+# Courier: a bike messenger in a vented helmet with little messenger wings, earbuds, a leather satchel strap across the chest; the satchel
 # flap at his side shows a red, a blue and a green token (+1 of each other color). Speed lines in the doorway.
 from lib import *
 def draw():
@@ -9,8 +9,8 @@ def draw():
     for k in range(10):  # satchel strap from his right shoulder down across to the left hip
         x = 21 - k * 2; y = 22 + k
         if y < 32: at(g, x - 1, y, ['ooO'])
-    at(g, 2, 26, ['OOOOOOOo', 'OoooooOo', 'OOxOyOzo', 'OOOOOOOo', 'OOOOOOoo', 'oooooooo'])  # satchel with tokens
-    at(g, 4, 28, ['x y z'])
+    at(g, 1, 24, ['OOOOOOOOOo', 'OoooooooOo', 'OOOOOOOOOo', 'OOxOOyOOzo', 'OOOOOOOOoo', 'OOOOOOOOoo', 'oooooooooo', 'OOOOOOOOoo'])  # satchel with tokens
+    at(g, 3, 27, ['x  y  z'])
     head(g, 7, 2, [
         '      444333      ',
         '    4443b33b322   ',
@@ -21,6 +21,9 @@ def draw():
         '  1111111111111111',
     ])
     at(g, 8, 8, ['HhhhhhhhhhhhhhhH'])
+    sticker(g, 2, 3, ['  WW', ' WWV', 'WWWV', 'WWVV', ' WV ', 'WWV '][::1], sides='lt')  # wings on the helmet
+    sticker(g, 26, 3, ['WW  ', 'VWW ', 'VWWW', 'VVWW', ' VW ', ' VWW'], sides='rt')
+    at(g, 6, 6, ['VV']); at(g, 24, 6, ['VV'])
     face(g, y=9, mouth='grin', rows={0: 'HSSSSSSSSSSSSssH'})
     at(g, 7, 13, ['K', 'K']); at(g, 24, 13, ['K', 'K', 'K', 'K', ' K', ' K'])  # earbuds and wire
     return g

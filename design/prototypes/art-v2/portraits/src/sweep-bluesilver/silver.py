@@ -112,27 +112,38 @@ def d_guest():
 
 
 def d_heir():
-    # Heir: born to it. A floppy golden fringe, bored half-lidded eyes, a pout, a ruffled cravat, a red sash across the
-    # chest with a gold medal, a signet-gold button row.
+    # Heir: born to it. A floppy golden fringe under a small gold coronet with a red jewel, bored half-lidded eyes, a
+    # smug little pout, a high ruffled jabot, a red velvet cape with white fur trim on the shoulders, a blue sash with a
+    # gold medal.
     g = new()
     body(g)
+    # cape on the shoulders, fur-trimmed
     for y in range(22, 32):
-        x = 8 + (y - 22) * 2
-        for dx in range(3):
-            if 0 <= x + dx < 32 and g.c[y][x + dx] != '.': g.c[y][x + dx] = 'R' if dx < 2 else 'r'
+        for x in range(0, 32):
+            if g.c[y][x] != '.' and (x < 9 - (y - 22) // 3 or x > 22 + (y - 22) // 3):
+                g.c[y][x] = 'q' if x < 4 else ('r' if x > 27 else 'R')
+    for y in range(22, 32):
+        for x in (9 - (y - 22) // 3, 22 + (y - 22) // 3):
+            if 0 <= x < 32 and g.c[y][x] != '.': g.c[y][x] = 'W' if (x + y) % 3 else 'K'
+    for y in range(23, 32):
+        x = 11 + (y - 23) * 1
+        for dx in range(2):
+            if g.c[y][x + dx] in '4321': g.c[y][x + dx] = 'U' if dx == 0 else 'u'
     at(g, 13, 21, ['WWWWWW', 'WVWWVW', ' WVVW', '  WV'])
-    at(g, 22, 24, ['GGG', 'GRG', 'ggg', ' R', ' r'])
+    at(g, 18, 25, ['GGG', 'GxG', 'ggg'])
     face(g, 8, 9, h=13)
     at(g, 6, 3, ['     YYYYYYYY      ', '   YYGGYYYYYYYg    ', '  YGGYYYYYYYYYYgg  ', ' YGYYYYYYYYYYYYYYgg ', 'YGYYYGYYYYYYYYYYYgg',
                  'YYYYGYYYYYYYYYYYYgg', 'YYGYYYYYYYYSSSYYYgg', 'YYYYYYSSSSSSSSSSYgg', 'YY YYS          Ygg', 'Yg  Y            gg',
                  'Yg               g', ' g'])
-    at(g, 10, 11, ['tt'][:0])
-    at(g, 10, 12, ['KKK     KKK', 'wKK     wKK'][:1]); at(g, 10, 13, ['tKK     tKK'])
+    at(g, 10, 0, ['  G  x  G', ' GwG GG GwG', 'GGGGGGGGGGG', 'gggggggggggg'][:0])
+    at(g, 10, 1, ['G   G   G', 'GG GxG GG', 'GGGGGGGGGg', 'gggggggggg'])
+    at(g, 10, 1, ['w'])
     at(g, 10, 12, ['ttt']); at(g, 18, 12, ['ttt'])
     at(g, 10, 13, ['KK']); at(g, 18, 13, ['KK']); dot(g, [(10, 13), (18, 13)], 'w')
     at(g, 15, 14, ['t', 'st'])
     at(g, 9, 15, ['a']); at(g, 22, 15, ['a'])
-    at(g, 13, 17, ['  ttt', ' qRRRq', '  rr'][1:])
+    at(g, 13, 17, [' qRRr', '  rr'])
+    at(g, 18, 17, ['t'])
     return g
 
 

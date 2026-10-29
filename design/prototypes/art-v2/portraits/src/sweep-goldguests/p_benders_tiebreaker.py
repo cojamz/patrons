@@ -25,14 +25,16 @@ Hh            hH
     P(g, 10, 10, ['KKK']); P(g, 18, 10, ['KKK'])
     P(g, 15, 14, ['s', 'tt'])
     P(g, 9, 16, ['aa'])
-    # whistle clamped in his lips, red cord down to the shirt
-    P(g, 12, 18, [' KKKK', 'K'])
+    # a black referee whistle clamped in his lips, cheeks puffed, red cord down to the shirt
+    P(g, 9, 16, ['aaa']); P(g, 20, 16, ['aaa'])
+    P(g, 13, 18, ['KKK'])
     P(g, 15, 17, """
- LLLLM
-LwLLLMN
- NMMMN
+    DD
+NDDDDwD
+DDDDDDD
+    DD
 """)
-    P(g, 21, 19, ['x', 'x', ' x', ' x', ' x'])
+    P(g, 21, 19, ['x', ' x', ' x', ' x', '  x'])
     # the coin, mid-flip, and its arc
     P(g, 23, 1, """
   GGG

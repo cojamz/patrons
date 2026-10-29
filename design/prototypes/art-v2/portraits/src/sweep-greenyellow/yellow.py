@@ -124,16 +124,13 @@ def pilgrim():  # the pilgrim: a wide-brimmed pilgrim's hat pinned with a scallo
     g = doorway()
     g.put(26, 4, [' oo', 'oOOo', 'oOOo', ' oo', ' OO'] + [' Oo'] * 23)
     body(g, half0=8); neck(g)
-    g.put(8, 22, ['1111111111111111'][:0] or [])
-    for y in range(22, 32):  # the cape's edge and its clasp
-        g.c[y][15] = '1'; g.c[y][16] = '2'
+    for y in range(22, 32): g.c[y][15] = '1'; g.c[y][16] = '2'
     g.put(14, 22, ['GGGG', ' gg'])
-    head(g, eyes='dot', brows='raised', mouth='smile', crown=False)
-    g.put(8, 7, ['hhhhhhhhhhhhhhhH', 'hh  hh    hh  hH', 'h              H'])
-    g.put(9, 1, ['    44333333    ', '  4433333333322 ', ' 43333333333332 ', ' 43333333333322 '])
-    g.put(3, 5, ['44443333333333333332211', ' 222222222222222222111'])
-    g.put(13, 2, [' WWWV', 'WVWVW', 'WVWVW', ' WWV'])
-    shade_under(g, '12')
+    head(g, eyes='right', brows='raised', mouth='grin', crown=True)
+    g.put(7, 8, ['hh', 'hh', 'h', 'h']); g.put(23, 8, ['hH', 'HH', ' H', ' H'])
+    g.put(9, 0, ['    44333333    ', '  4433333333322 ', ' 43333333333332 ', ' 43333333333322 '])
+    g.put(3, 4, ['44443333333333333332211', ' 444333333333333332211'])
+    g.put(13, 1, [' WWWV', 'WVWVW', 'WVWVW'])
     return g
 
 def rainmaker():  # the rainmaker: a sou'wester, collar buttoned up, a little cloud at her shoulder raining every color
@@ -143,11 +140,13 @@ def rainmaker():  # the rainmaker: a sou'wester, collar buttoned up, a little cl
     for y in (24, 27, 30): g.put(15, y, ['WV'])
     head(g, eyes='dot', brows='raised', mouth='smile', crown=False)
     g.put(8, 9, ['hhhhhhhhhhhhhhhH', 'hh            hH', 'h              H'])
-    g.put(7, 3, ['    44333332   ', '  44333333332  ', ' 4333333333322 ', ' 4333333333322 '])
-    g.put(3, 7, ['4443333333333333322', '  122222222222222211'])
-    g.put(19, 0, ['   LLLL   ', ' LLLLLLLL ', 'LLLLLLLLLM', 'LMMMMMMMMN', ' NNNNNNNN '])
-    for (x, y, k) in [(21, 6, 'y'), (24, 6, 'x'), (27, 6, 'z'), (26, 9, 'n'), (28, 10, 'y'), (25, 12, 'x'), (27, 15, 'z'), (25, 17, 'n')]:
-        g.put(x, y, [k, k])
+    g.put(5, 4, ['    44333332   ', '  44333333332  ', ' 4333333333322 ', ' 4333333333322 '])
+    g.put(2, 8, ['4443333333333333322', '  122222222222222211'])
+    def cloud(f):
+        f.put(17, 0, ['    WWW  WW   ', '  WWwWWWWWWWW ', ' WWWWWWWWWWWWL', 'WWWWWWWWWWWWLL', 'LLLLLLLLLLLLLM', ' MMMMMMMMMMMM '])
+    layer(g, cloud)
+    for (x, y, k) in [(19, 7, 'y'), (22, 7, 'x'), (25, 7, 'z'), (28, 7, 'n'), (26, 11, 'y'), (28, 12, 'x'), (25, 15, 'z'), (27, 16, 'n')]:
+        g.put(x, y, [k, k, k] if y > 8 else [k, k])
     shade_under(g, '12h')
     return g
 

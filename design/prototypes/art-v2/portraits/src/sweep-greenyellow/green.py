@@ -139,11 +139,11 @@ def impostor():  # the worst disguise: fedora pulled low, collar up, groucho gla
     g.put(5, 17, ['44            21', '433          221', '4333        2221', '43333      22221', '433333    222221'])
     g.put(13, 22, ['1111', ' 11'])
     head(g, eyes='dot', brows='flat', mouth='flat', cheeks=False)
-    g.put(8, 9, ['SSSSSSSSSSSSSsst', 'SKKKKSSSSKKKKsst', 'SKKKKKSSKKKKKsst', 'SKwKSKKKKwKSKsst', 'SKKKSKSSKKKSKsst',
-                 'SKKKKKSSKKKKKsst', 'SSSSSqqqqRSSSsst', 'SSSSqqqqqRRSSsst', ' SKKKKRRRKKKKst ', ' KKKKKKKKKKKKst ',
-                 '  SSSSSKKSSSst  ', '   sSSSSSSSst   ', '    tsssssst    '])
-    g.put(19, 19, ['OOOOMx'[:0] or 'OOOOM', 'oooo'][:1]); g.put(19, 20, [' oooo'])
-    g.put(25, 17, ['M', ' N', 'M'])
+    g.put(8, 9, ['SKKKKSSSSKKKKsst', 'SSSSSSSSSSSSSsst', 'SKKKKKSSKKKKKsst', 'SKWKWKKKKWKWKsst', 'SKWWWKSSKWWWKsst',
+                 'SKKKKKSSKKKKKsst', 'SSSSSqqqqRSSSsst', 'SSSSqqqqqRRSSsst', ' SSKKKRRRKKKSst ', ' SKKKKKKKKKKSst ',
+                 '  SSSSSSSSSSst  ', '   sSSSSSSSst   ', '    tsssssst    '])
+    g.put(19, 18, ['OOOOx', ' oooo'])
+    g.put(25, 16, ['M', ' N', 'M'])
     g.put(5, 1, ['       222222       ', '     2333333332     ', '    233333333332    ', '    233333333322    ',
                  '    1111111111111   ', '  4333333333333332211', '22222222222222222211'])
     shade_under(g, '1234')
