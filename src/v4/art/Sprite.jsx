@@ -47,7 +47,7 @@ export const Sprite = memo(function Sprite({ id, sphere = 'colorless', size = 48
   else if (icon.portrait) size = size <= 40 ? 32 : size <= 72 ? 64 : 96;
   const m = HALO[look] ? (HALO[look] * size) / icon.px.length : 0;
   return (
-    <img className={`sprite${drawn ? '' : ' template'}${m ? ` halo-${look}` : ''}${className ? ` ${className}` : ''}`} src={src} width={size + 2 * m} height={size + 2 * m} draggable={false}
+    <img className={`sprite${icon.scene ? ' scene' : ''}${drawn ? '' : ' template'}${m ? ` halo-${look}` : ''}${className ? ` ${className}` : ''}`} src={src} width={size + 2 * m} height={size + 2 * m} draggable={false}
       style={m ? { margin: `${-m}px` } : undefined}
       alt={title || ''} title={title || undefined} aria-hidden={title ? undefined : 'true'} data-sprite={drawn ? icon.id : `template:${kind}`} decoding="sync" />
   );

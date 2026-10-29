@@ -86,3 +86,10 @@
 .card-face.mc .mc-hd .mc-worth .member-glyph{width:12px;height:12px;margin-left:1px}
 /* the price sits dead center in its circle: lining figures, no line box above or below them */
 .lt-card.card .lt-hd .lt-corner-cost,.card-face.mc .mc-hd .mc-price{font-variant-numeric:lining-nums tabular-nums;line-height:0;letter-spacing:0;text-indent:0;padding:0}
+/* a scene portrait fills the card's whole picture window (Cory, Oct 29: "why would the image not take up the full center portion"),
+   cropped to the window's shape; whole pixels stay crisp */
+.card .art:has(> img.sprite.scene){position:relative;overflow:hidden}
+.card .art > img.sprite.scene{position:absolute;inset:0;width:100% !important;height:100% !important;max-height:none !important;object-fit:cover;image-rendering:pixelated;margin:0}
+/* the full card's window is much wider than tall: the scene stands full height in its middle */
+.card-face .mc-art:has(> img.sprite.scene){display:flex;align-items:stretch;justify-content:center;overflow:hidden}
+.card-face .mc-art > img.sprite.scene{height:100% !important;width:auto !important;max-height:none !important;aspect-ratio:1;image-rendering:pixelated}
