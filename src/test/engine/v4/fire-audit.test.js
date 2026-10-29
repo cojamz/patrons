@@ -154,6 +154,8 @@ const ALLOW = {
   'red.movementpenalty': 'pays only when you move a rival’s member out of their cult (red-members-hooks: Movement Penalty)',
   // cut from the deck since 2026-10-18 (tests still deal it); the Oct 24 member structure moved the seeded games off its moment
   'purple.overseer': 'pays only when a rival takes an extra turn; cut from the deck (cards-purple: Overseer)',
+  // Saboteur joining the deck (Oct 28) moved the seeded games: recruited in one game without a 2-at-once gain after
+  'yellow.gleaner': 'pays only on an action giving 2+ of another color at once; cut from the deck (cards-yellow: Gleaner)',
 };
 
 describe('namesCard: what counts as a line naming a card', () => {

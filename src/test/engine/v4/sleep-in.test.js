@@ -11,8 +11,8 @@ import { quadrant } from '../../../engine/v4/index.js';
 // seed 2 since Sleep In grew to +4 / +5 / +6 (Oct 28): other seeds' bots pile skips onto A
 describe('Sleep In', () => {
   it("Cory's round I example: A A-skipped, A places all 3, the last one after everyone", () => {
-    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 3, quadrants: ['gold', 'red', 'purple', 'echo'] }); // seed 3 since Saboteur joined the deck (Oct 28)
-    const rand = seededRandom(3);
+    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 4, quadrants: ['gold', 'red', 'purple', 'echo'] }); // reseeded when the deck changes (Oct 28)
+    const rand = seededRandom(4);
     while (!(s.round === 1 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
     const base = s.order.slice(0, 4);
     const A = s.pending.player, q = s.quadrants.indexOf('purple');
