@@ -45,8 +45,8 @@ const P = {
     evenswap: { verb: 'Use a shop member’s On Recruit', second: '+1 red', note: 'it stays in the shop' },
     turnout: r => ({ main: `+${r + 2} red`, second: run(n => `+${n + 2}`) }),
     hire: { verb: 'Recruit the top of the deck', second: '+1 red', note: 'each rival +1 red' },
-    hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+1 red' },
-    trade: { verb: 'Demote a member', second: 'shop cost at least 2 less', note: '+1 red' },
+    hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+2 red' },
+    trade: { verb: 'Demote a member', second: 'shop cost up to 2 less', note: '+2 red' },
     take: { verb: 'Recruit a member', second: 'costing 8 or less, free', note: '+1 red' },
   },
   market: {

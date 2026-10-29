@@ -47,16 +47,16 @@ describe('locked Red action progression', () => {
     expect(incoming).toContain('gold.banker'); // 2 -> 4, exact boundary
     expect(incoming).toContain('red.intern');
     expect(incoming).not.toContain('echo.chronicler'); // 5
-    expect(s.players[0].res.red).toBe(1);
+    expect(s.players[0].res.red).toBe(2);
   });
 
-  it('Demote permits a rival member and anything at least 2 cheaper', () => {
+  it('Demote permits a rival member and anything costing the same down to 2 cheaper', () => {
     let s = take(table(Q, { round: 2, members: [[], ['gold.tycoon']], shop: ROW }), 'red.trade');
     const a = uidIn(s, 'gold.tycoon', 1), b = uidIn(s, 'gold.banker', 'shop');
     const incoming = s.pending.options.filter(o => o.value?.[0] === a).map(o => s.cards[o.value[1]].def);
     expect(incoming).toContain('gold.banker'); // 6 -> 4
-    expect(incoming).toContain('red.intern'); // 6 -> 1, not a narrow -2 limit
-    expect(incoming).not.toContain('echo.chronicler'); // 6 -> 5
+    expect(incoming).not.toContain('red.intern'); // 6 -> 1: more than 2 cheaper
+    expect(incoming).toEqual(['gold.banker', 'red.volunteer', 'echo.evergreen', 'echo.muse']); // 6 -> 4..6 only
     const row = s.shop.length, pile = s.pile.length;
     s = move(s, swapId(a, b));
     expect(defs(s, 1)).toEqual(['gold.banker']);
@@ -97,7 +97,7 @@ describe('locked Red action progression', () => {
     expect(defs(s, 0)).toContain('echo.evergreen'); expect(s.shop).toContain(a);
     expect(s.recruits).toBe(1); expect(s.players[0].turnRecruits).toBe(1);
     expect(s.players[0].res.green).toBe(2);
-    expect(s.players[0].res.red).toBe(2); // Promote + Recruiter
+    expect(s.players[0].res.red).toBe(3); // Promote +2, Recruiter +1
     expect(s.players[0].bonus).toBe(1);
   });
 
@@ -148,7 +148,7 @@ describe('locked Red action progression', () => {
     const actorMember = uidIn(s, 'red.volunteer', 1), target = uidIn(s, 'gold.banker', 'shop');
     s = move(s, swapId(actorMember, target));
     expect(defs(s, 1)).toContain('gold.banker');
-    expect([s.players[1].res.green, s.players[1].res.red, s.players[1].res.gold]).toEqual([1, 1, 3]); // Echo +1
+    expect([s.players[1].res.green, s.players[1].res.red, s.players[1].res.gold]).toEqual([1, 2, 3]); // Echo +1
   });
 });
 

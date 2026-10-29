@@ -66,7 +66,7 @@ describe('trade picker', () => {
       expect(giftPick(s, s.pending).head).toBe(`${title} a member`);
     }
     expect(panelText('red', quadrant('red').actions.find(a => a.key === 'hireup')).second).toBe('shop cost up to 2 more');
-    expect(panelText('red', quadrant('red').actions.find(a => a.key === 'trade')).second).toBe('shop cost at least 2 less');
+    expect(panelText('red', quadrant('red').actions.find(a => a.key === 'trade')).second).toBe('shop cost up to 2 less');
     expect([1, 2, 3].map(r => panelText('red', { key: 'turnout' }, r).main)).toEqual(['+3 red', '+4 red', '+5 red']);
   });
 });

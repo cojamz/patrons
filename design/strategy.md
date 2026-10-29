@@ -128,7 +128,7 @@ Placement accounting first (Claude, after Cory's Oct 22 "do you understand this 
 
 ### Red — moves and recruits members (reworked, v0.8.0 actions, v0.8.2 deck)
 - Identity: members are the currency; get them free and move them around.
-- I: Even Swap ("Swap any two members of equal cost"), Gather (+2 / +3 / +4 red total by round), Open Door ("Recruit the cheapest shop member"). II: Promote ("Swap a member with a shop member costing up to 2 more"), Demote ("…costing at least 2 less"). III: Recruit a Member (any shop member, free). Every action +1 red except Gather, whose total includes it.
+- I: Even Swap ("Swap any two members of equal cost"), Gather (+2 / +3 / +4 red total by round), Open Door ("Recruit the cheapest shop member"). II: Promote ("Swap a member with a shop member costing up to 2 more"), Demote ("…costing up to 2 less"), both +2 red. III: Recruit a Member (any shop member, free). Every action +1 red except Gather, whose total includes it.
 - Contest: most red held (since v0.8.1, Cory 2026-10-18: so member commitment doesn't also win the arc automatically).
 - Deck (12): Volunteer 0, Twins 2+0 (worth 2), Recruiter 3+1, Recruit Bonus 2+2, Patriarch 3+2, Movement Penalty 3+2, Loyalists 2+3 (worth 2, your members can't be swapped), Host 4+2, Proselytizer 4+2, Panel 4+2 (worth 3, promote or demote another member), Mentor & Protégé 5+3, Mob 6+4 (worth 5, +1 per red member at game end). Recruit Bonus and Movement Penalty are stand-in names.
 - How it wins: free members dodge the one-buy limit; Mob + Patriarch + Proselytizer turn bodies into followers.

@@ -44,17 +44,17 @@ export default {
       },
     },
     {
-      key: 'hireup', ring: 2, name: 'Promote', text: 'Swap a member with a shop member costing up to 2 more. +1 red.', copyDoesIt: true,
-      estimate: (ctx, p) => 1 + (swapPairs(ctx, p, 'promote').length ? 2 : 0),
+      key: 'hireup', ring: 2, name: 'Promote', text: 'Swap a member with a shop member costing up to 2 more. +2 red.', copyDoesIt: true,
+      estimate: (ctx, p) => 2 + (swapPairs(ctx, p, 'promote').length ? 2 : 0),
       resolve(ctx, p) {
-        ctx.gain(p, 'red', 1, { fromAction: true });
+        ctx.gain(p, 'red', 2, { fromAction: true });
         swap(ctx, p, 'promote', 'Promote: choose a member and its shop replacement');
       },
     },
     {
-      key: 'trade', ring: 2, name: 'Demote', text: 'Swap a member with a shop member costing at least 2 less. +1 red.', copyDoesIt: true,
-      estimate: (ctx, p) => 1 + (swapPairs(ctx, p, 'demote').length ? 2 : 0),
-      resolve(ctx, p) { ctx.gain(p, 'red', 1, { fromAction: true }); swap(ctx, p, 'demote', 'Demote: choose a member and its shop replacement'); },
+      key: 'trade', ring: 2, name: 'Demote', text: 'Swap a member with a shop member costing up to 2 less. +2 red.', copyDoesIt: true,
+      estimate: (ctx, p) => 2 + (swapPairs(ctx, p, 'demote').length ? 2 : 0),
+      resolve(ctx, p) { ctx.gain(p, 'red', 2, { fromAction: true }); swap(ctx, p, 'demote', 'Demote: choose a member and its shop replacement'); },
     },
     {
       key: 'take', ring: 3, name: 'Recruit a Member', text: 'Recruit a member in the shop costing 8 or less. +1 red.', // the cap (Cory, 2026-10-24: "8 or less")
@@ -192,7 +192,7 @@ function swapPairs(ctx, p, mode, excludeUid = null) {
   const first = mode === 'even' ? [...cult, ...shop] : cult;
   const second = mode === 'even' ? first : shop;
   for (const a of first) for (const b of second) if (a.uid !== b.uid && a.uid !== excludeUid && b.uid !== excludeUid && (mode === 'even' ? cost(a) === cost(b)
-    : mode === 'promote' ? cost(b) <= cost(a) + 2 : mode === 'rival' ? cost(b) >= cost(a) : cost(b) <= cost(a) - 2)) out.push([a, b]);
+    : mode === 'promote' ? cost(b) <= cost(a) + 2 : mode === 'rival' ? cost(b) >= cost(a) : cost(b) <= cost(a) && cost(b) >= cost(a) - 2)) out.push([a, b]);
   return out;
 }
 function swap(ctx, p, mode, prompt, excludeUid = null) {
