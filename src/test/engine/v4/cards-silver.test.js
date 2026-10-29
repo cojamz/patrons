@@ -115,12 +115,12 @@ describe('Silver members', () => {
     expect(named(s, 'Steward')).toHaveLength(1);
   });
 
-  it('Retinue: worth 3 followers and members; when recruited everyone else +1 silver, named; a rival’s Guest gets 1 more', () => {
+  it('Retinue: worth 3 followers, 1 member; when recruited everyone else +1 silver, named; a rival’s Guest gets 1 more', () => {
     let s = sc({ n: 3, res: [rich], members: [[], [], ['silver.guest']], shop: ['silver.retinue'] });
     const f0 = followers(s, s.players[0]);
     s = take(s, 'gold.rush'); s = buy(s, 'silver.retinue');
     expect(followers(s, s.players[0])).toBe(f0 + 3);
-    expect(memberCount(s, s.players[0])).toBe(3);
+    expect(memberCount(s, s.players[0])).toBe(1);
     expect([S(s, 1), S(s, 2)]).toEqual([1, 2]);
     expect(named(s, 'Retinue').length).toBeGreaterThanOrEqual(1);
   });
@@ -196,7 +196,7 @@ describe('Silver members', () => {
 
   it('Patron Saint: game end +1 follower per 2 silver members in play, anyone’s', () => {
     const s = sc({ members: [['silver.saint', 'silver.dowager'], ['silver.guest', 'silver.heir']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.parts).toEqual(['Patron Saint +3']);
+    expect(s.players[0].final.parts).toEqual(['Patron Saint +2']);
     void resume;
   });
 });

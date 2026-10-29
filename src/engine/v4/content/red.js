@@ -92,10 +92,11 @@ export default {
 
   members: [
     m('twins', 'Triplets', 1, 1, 'Worth 3 followers.', { f: 3, n: 3 }), // was Twins, worth 2 (Cory, 2026-10-29: "make it triplets, 3 followers")
-    m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
+    m('bigfamily', 'Big Family', 2, 3, 'Worth 4 followers.', { f: 4, n: 4 }), // 4 members (Cory, Oct 29: "maybe make it 4 members"); 5 to 6, Claude's price
     m('volunteer', 'Volunteer', 0, 0, 'Worth 1 follower.'),
     m('intern', 'Intern', 1, 0, 'Worth 1 follower.'),
-    m('mentor', 'Mentor & Protégé', 5, 3, 'On Recruit: recruit the cheapest member in the shop.', { f: 2, // +1 follower (Cory, 2026-10-25)
+    m('mentor', 'Mentor & Protégé', 5, 3, 'On Recruit: recruit the cheapest member in the shop.', { f: 2, n: 2, // 2 members, two people (Cory, Oct 29)
+      // +1 follower (Cory, 2026-10-25)
       // card: this Mentor, or a Doppelganger copying it (its free pick says so)
       onRecruited(ctx, owner, card) {
         const who = card && card.def && card.def.key === 'doppel' ? 'Doppelganger (as Mentor & Protégé)' : 'Mentor & Protégé';

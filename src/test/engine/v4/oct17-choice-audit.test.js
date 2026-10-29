@@ -15,7 +15,7 @@ useRetiredRollCall(); // Roll Call, a plain purple space, kept for these tests (
 const rich = { gold: 30, red: 30, purple: 30, green: 30 };
 describe('October 17 reported choices', () => {
   it('Shake Down artwork and real member targets agree at the 5-cost limit', () => {
-    const restore = pinCosts({ 'red.twins': [2, 3], 'red.intern': [4, 2] });
+    const restore = pinCosts({ 'red.twins': [2, 3], 'red.intern': [4, 2], 'red.bigfamily': [2, 2] });
     try {
       const s = take(sceneQ({ quadrants: ['gold', 'red', 'thieves', 'green'], round: 2,
         members: [[], ['red.twins', 'red.intern', 'red.bigfamily']] }), 'thieves.ransom');

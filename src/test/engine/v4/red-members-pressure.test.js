@@ -154,7 +154,7 @@ describe('Red members: bounded acquisition and body invariants', () => {
     expect(s.pending?.kind).not.toBe('choose');
     if (target !== 'red.panel') {
       s.queue = [{ t: 'round', r: 3 }]; s = resume(s);
-      expect(s.players[0].res[target === 'red.host' ? 'red' : 'green']).toBe(target === 'red.host' ? 4 : 3);
+      expect(s.players[0].res[target === 'red.host' ? 'red' : 'green']).toBe(3);
     }
   });
 

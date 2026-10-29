@@ -138,7 +138,7 @@ describe('White members', () => {
   it('Raiders: steals 4 from the leader\'s bought or won followers and pays them 2 white (named)', () => {
     const s = use(table(Q, { n: 3, res: [{ white: 2 }], bonus: [0, 5, 2], members: [['trading.raider']], shop: ROW, ...buy }), 'trading.raider');
     expect([B(s, 0), B(s, 1), R(s, 0).white, R(s, 1).white]).toEqual([4, 1, 0, 2]);
-    expect(followers(s, s.players[0])).toBe(1 + 1 + 4);
+    expect(followers(s, s.players[0])).toBe(1 + 2 + 4);
     expect(named(s, 'Raiders')).toEqual(["P1's Raiders stole 4 followers from P2 and paid 2 white."]);
   });
 

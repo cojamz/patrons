@@ -390,7 +390,7 @@ const thieves = {
     m('watchdog', 'Bodyguard', 5, 2, 'Rivals can’t steal from you.', { f: 2, // +1 follower (Cory, 2026-10-25)
       guardSteal: () => true,
     }),
-    m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2 }),
+    m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2, n: 2 }), // 2 members (Cory, Oct 29)
     m('doubleagent', 'Double Agent', 2, 1, 'On Recruit: swap this member for a rival’s member you choose.', {
       onRecruited(ctx, owner, card) {
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid);

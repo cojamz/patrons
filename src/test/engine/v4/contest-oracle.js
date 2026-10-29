@@ -6,7 +6,8 @@ import { seededRandom } from '../../../engine/v4/rng.js';
 import { makeTables } from './fuzz-tables-runner.js';
 
 // Count printed groups independently of the engine's memberCount helpers.
-const printed = def => Math.max(def.f || 0, def.n ?? 1);
+// a member counts as its printed member count only, never its followers (Cory, 2026-10-29)
+const printed = def => def.n ?? 1;
 const members = (state, p, color = null) => p.members.reduce((n, uid) => {
   const card = state.cards[uid], def = defById(card.def);
   // Dabblers counts as every color on the table (Cory, 2026-10-28), itself or as a copy

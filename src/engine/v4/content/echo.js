@@ -474,7 +474,7 @@ const echoQ = {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', 2); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 2); },
     }),
-    m('choir', 'Choir', 4, 2, 'Whenever you copy a space, +1 green.'),
+    m('choir', 'Choir', 4, 2, 'Whenever you copy a space, +1 green.', { n: 2 }), // 2 members (Cory, Oct 29: "choir and raiders can be more"; 2 is Claude's start)
     m('muse', 'Muse', 1, 2, 'Whenever a rival copies an action, +1 green.'),
     // Understudy and Ensemble replaced Choirmaster (green for a rival's copy: a gift for doing nothing, and Muse's
     // twin) and Fan (green when a rival takes the center: nothing to do with copying). Claude, 2026-10-14.
@@ -503,7 +503,7 @@ const echoQ = {
     m('wallflower', 'Wallflower', 6, 3, 'Whenever you copy an action, double the resources it gives you.'),
     // Keepsake ("When recruited: copy one of your spaces from this round") is cut: Reprise does the same on a space.
     // Cory, 2026-10-28: Mime returns renamed ("yes but needs a different name"); text and cost 3 are Claude's
-    m('mirror', 'Fan Club', 1, 1, 'On Recruit: +1 green per Green space with anyone’s minion.', {
+    m('mirror', 'Fan Club', 2, 3, 'On Recruit: +1 green per Green space with anyone’s minion.', { n: 3, // 3 members, 3 to 6 (Cory, Oct 29: yes to "counts as 3 members, price 3 to 6")
       onRecruited(ctx, owner) {
         const q = ctx.state.quadrants.indexOf('echo');
         const g = q < 0 ? 0 : Object.keys(ctx.state.slots).filter(k => Number(k.split('-')[0]) === q).length;
@@ -537,7 +537,7 @@ const echoQ = {
       },
     }),
     // Cory, 2026-10-28: "lets shift tribute band into this", then "should maybe get to pick the rival they copy"
-    m('dejavu', 'Tribute Band', 8, 3, /* Cory, Oct 27: "tribute band at 12" (with the +1 wild) */ 'On Use, once per game: choose a rival. Do every action they have a minion on this round.', {
+    m('dejavu', 'Tribute Band', 8, 3, /* Cory, Oct 27: "tribute band at 12" (with the +1 wild) */ 'On Use, once per game: choose a rival. Do every action they have a minion on this round.', { n: 3, // 3 members, still 12 (Cory, Oct 29: "Tribute Band at least 3. its cost should still be 12")
       activate: 'game',
       onActivate(ctx, owner, card) {
         const list = ctx.rivals(owner).filter(o => ownPlan(ctx, o).take.length);

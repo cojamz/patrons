@@ -282,7 +282,7 @@ describe('Green current members', () => {
     expect(s.pending.options.map(o => o.id)).toEqual([cardOpt(s, 'red.bigfamily', 1)]);
     s = move(s, s.pending.options[0].id);
     expect(s.cards[uidIn(s, 'echo.impostor', 0)].copy).toBe('red.bigfamily');
-    expect(memberCount(s, s.players[0])).toBe(4);
+    expect(memberCount(s, s.players[0])).toBe(5);
   });
   it('Connector counts weighted non-green members, on recruit and at round start', () => {
     let s = table(Q, { round: 3, shop: ['echo.connector', ...ROW], members: [['red.twins', 'echo.muse']], queue: turns(0, 0) });

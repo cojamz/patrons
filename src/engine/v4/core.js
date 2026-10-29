@@ -166,7 +166,8 @@ const valueOf = card => (card.copy ? Math.max(defById(card.def).f, defById(card.
 export const followers = (state, p) => Math.max(0, 1 + p.bonus + p.members.reduce((s, u) => s + valueOf(state.cards[u]), 0));
 // Printed followers also count as members; explicit member counts (Revelers) still apply.
 // Bonus followers never enter this value, and a copied card counts its effective printed value.
-const printedMembers = def => Math.max(def.f || 0, def.n ?? 1);
+// a member counts as its printed member count only (Cory, 2026-10-29: "every member is a follower. Not every follower is a member")
+const printedMembers = def => def.n ?? 1;
 const countOf = card => Math.max(printedMembers(defById(card.def)), card.copy ? printedMembers(defById(card.copy)) : 0);
 export const memberWeight = (state, uid) => countOf(state.cards[uid]);
 export const memberCount = (state, p) => p.members.reduce((s, u) => s + countOf(state.cards[u]), 0);

@@ -172,10 +172,10 @@ describe('Silver members', () => {
     expect(R(s).silver).toBe(9);
   });
 
-  it('Retinue: worth 3 followers and 3 members; when recruited, everyone else +1 silver', () => {
+  it('Retinue: worth 3 followers, 1 member; when recruited, everyone else +1 silver', () => {
     let s = scene({ res: [{ silver: 1, gold: 1 }], shop: ['silver.retinue'], queue: [{ t: 'buy', p: 0 }] });
     s = move(s, `card:${uidOf(s, 'silver.retinue', 'shop')}`);
-    expect(memberCount(s, s.players[0])).toBe(3);
+    expect(memberCount(s, s.players[0])).toBe(1);
     expect(followers(s, s.players[0])).toBe(4);
     expect(R(s, 1).silver).toBe(1);
     expect(R(s, 2).silver).toBe(1);
@@ -191,7 +191,7 @@ describe('Silver members', () => {
 
   it('Heir: at the start of round III, +1 silver per member (nothing in round II)', () => {
     let s = scene({ members: [['silver.heir', 'silver.retinue', 'gold.banker']], queue: [{ t: 'round', r: 3 }] });
-    expect(R(s).silver).toBe(5); // Heir1 + Retinue3 + Banker1.
+    expect(R(s).silver).toBe(3); // Heir1 + Retinue1 + Banker1: worth isn't members.
     s = scene({ members: [['silver.heir']], queue: [{ t: 'round', r: 2 }] });
     expect(R(s).silver).toBe(0);
   });
@@ -218,10 +218,10 @@ describe('Silver members', () => {
     expect(ids(s)).not.toContain(`use:${u}`);
   });
 
-  it('Dowager: worth 3 followers and 3 members', () => {
+  it('Dowager: worth 3 followers, 1 member', () => {
     const s = scene({ members: [['silver.dowager']] });
     expect(followers(s, s.players[0])).toBe(4);
-    expect(memberCount(s, s.players[0])).toBe(3);
+    expect(memberCount(s, s.players[0])).toBe(1);
   });
 
   it('Grand Host: silver from Silver spaces is doubled; gifts and other spaces are not', () => {

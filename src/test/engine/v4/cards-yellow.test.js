@@ -205,11 +205,11 @@ describe('Yellow members', () => {
     expect(named(s, 'Chefs')).toHaveLength(1);
   });
   // Cory, 2026-10-18: Feastmaker became Chefs, a little cheaper (6+4 → 6+3) and counting as 2 members
-  it('Chefs: costs 6 yellow + 3 any, worth 2 followers, and counts as 2 members', () => {
+  it('Chefs: costs 6 yellow + 3 any, worth 2 followers, 1 member', () => {
     const s = sc({ members: [['yellow.chefs']] });
     const d = cardDef(s, uidOf(s, 'yellow.chefs', 0));
     expect([d.s, d.w, d.f]).toEqual([6, 3 + EXTRA_WILD, 2]);
-    expect(memberCount(s, s.players[0])).toBe(2);
+    expect(memberCount(s, s.players[0])).toBe(1);
     expect(followers(s, s.players[0]) - followers(sc({}), sc({}).players[0])).toBe(2);
   });
   it('Top Up: +1 of each fewest color and +1 yellow × round (Cory, 2026-10-22), named', () => {

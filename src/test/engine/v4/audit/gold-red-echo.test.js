@@ -87,12 +87,12 @@ describe('Red', () => {
     } finally { restore(); }
   });
 
-  it('Doppelganger copying Big Family is worth 3 followers (text says "the effect")', () => {
+  it('Doppelganger copying Big Family is worth 4 followers (text says "the effect")', () => {
     let s = scene({ turns: [0], res: [{ red: 10, gold: 10, green: 10 }, {}], members: [['red.bigfamily'], []], shop: ['echo.doppel'] });
     s = take(s, 'echo.chant');
     s = buyCard(s, 'echo.doppel');
     s = pass(move(s, s.pending.options[0].id));
-    expect(followers(s, s.players[0])).toBe(1 + 3 + 3);
+    expect(followers(s, s.players[0])).toBe(1 + 4 + 4);
   });
 });
 

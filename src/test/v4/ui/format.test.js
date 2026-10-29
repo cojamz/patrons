@@ -400,7 +400,7 @@ describe('v4 format helpers', () => {
       }
       for (let n = 0; n < 3000 && !s.over && !found; n++) {
         const t = s.pending && s.pending.kind === 'place' && currentTurn(s);
-        if (t && t.again && t.kind === 'extra') found = { t, pr: promptFor(s, true), name: s.players[s.pending.player].name };
+        if (t && t.again && t.kind === 'extra' && t.why) found = { t, pr: promptFor(s, true), name: s.players[s.pending.player].name };
         s = applyMove(s, chooseBotMove(s, () => 0.4));
       }
     }
