@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.861 — 2026-10-29
+
+- Spare minions now sit under the cults beside Log; the followers on the wheel's rim glow less.
+
 ## v0.9.860 — 2026-10-29
 
 - The spare minions count no longer jumps huge between rounds.
