@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.834 — 2026-10-28
+
+- Green has 16 members: Understudy, Wallflower, Fan Club and Roadie join, and Tribute Band plays the leader's actions. Accomplice is back at 2: steal 3 resources.
+
 ## v0.9.833 — 2026-10-28
 
 - Cards that could be used once a game now say One Time Use.
