@@ -244,3 +244,7 @@
   /* two to a row, the rule has the width for a bigger size */
   .app.game.lt .lt-shop-cards[data-view="details"]:not([data-pile-extra]) .lt-cards:is([data-n="4"],[data-n="5"],[data-n="6"]) .lt-pick-ability:not([data-fit]){font-size:14px;line-height:16px;padding:3px 8px}
 }
+/* Peek's 4 while you order them: drag to set the order, click to number or un-number (Cory, Oct 29) */
+.lt-pile-row .lt-card[data-orderable]{cursor:grab;touch-action:none;transition:transform 140ms ease-out}
+.lt-pile-row[data-dragging] .lt-card[data-orderable]{cursor:grabbing}
+.lt-pile-row .lt-card[data-drag]{position:relative;cursor:grabbing;box-shadow:0 10px 22px rgba(0,0,0,.55),0 0 0 2px #f4b860}

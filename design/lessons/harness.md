@@ -9,3 +9,4 @@
 - 2026-10-28 · Rigs, gates and probes were Chrome-only; Cory plays Firefox, and the freeze he feels never showed · measure in the browser the player uses · Firefox in check:v4 --firefox, V4_ENGINE, bootstrap install
 - 2026-10-28 · Docs drifted four days behind live (HANDOFF said v0.8.62 at v0.9.8) · the orientation hook warns when HANDOFF or in-flight doesn't name the live version · .claude/hooks/orient.mjs
 - 2026-10-28 · Pod work waited on Cory for engineering calls, a repeat of Oct 21 · the message check bounces engineering questions to him · .claude/hooks/message-check.mjs
+- 2026-10-29: e2e/v4/peek.mjs starting its own vite hung twice here (>6 min, no output), while the same gate against a vite started by hand passed in about a minute. Fix for now: start vite yourself and pass V4_URL=http://localhost:<port>.

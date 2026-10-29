@@ -155,7 +155,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   // Peek's 4 (and what you may recruit off the pile after): their own row, "Top of the pile", numbered in the order
   // they'll be drawn, never mixed into the shop (Cory, playtest Oct 28: "Peek UI is unintuitive"; his yes to the row)
   const peekShow = peeking && pend.show && pend.show.peek ? pend.show.peek : null;
-  const pileRow = peekShow ? { uids: [...peekShow.placed, ...peekShow.left], placed: peekShow.placed.length, ordering: true }
+  const pileRow = peekShow ? { uids: [...peekShow.placed, ...peekShow.left], placed: peekShow.placed.length, ordering: true, peek: peekShow }
     : pileTop.length ? { uids: pileTop, placed: pileTop.length, ordering: false } : null;
   const uids = tray || (pileRow ? row : [...new Set([...row, ...pileTop, ...peekTop])]);
   const extra = !tray && !pileRow && (pileTop.length + peekTop.length) > 0;
@@ -201,7 +201,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       {/* one header line: the members' title and the sort; the follower buys stand beside the cards, as findable */}
       <div className="lt-shop-head">
         {/* a discount is said once, here, beside the struck prices (w4 A#23: its sentence was on all ten hovers) */}
-        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : peeking ? 'Pick the next pile card on top' : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} members affordable` : `${state.shop.length} members`}</small></h3>
+        <h3 className="lt-h">{tray ? 'Top of the pile' : 'Shop'}<small>{tray ? `${tray.filter(u => optionFor(`card:${u}`)).length} you can pay for` : peeking ? 'Put the top of the pile in order' : discount > 0 ? <Tip label="Discount sources" content={<p>{discountWhy(state, viewer)}.</p>}><span data-shop-discount>{viewer.discount ? 'your next one' : 'your members'} {discount} less</span></Tip> : buying && affordable ? `${affordable} members affordable` : `${state.shop.length} members`}</small></h3>
         <span className="lt-shop-controls">
           {viewer && <button type="button" className="lt-view-btn" aria-label="Fade members you can't afford" title="Fade members you can't afford right now" aria-pressed={fade} onClick={toggleFade}>affordable</button>}
           <button type="button" className="lt-view-btn" aria-label="Show member abilities" aria-pressed={detailed} onClick={toggleView}>details</button>
@@ -286,34 +286,118 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
 }
 
 const NTH = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+/** The draft order after a click: an unnumbered card takes the next number; a numbered one gives its number back. */
+export function clickOrder({ order, fixed }, uid) {
+  const i = order.indexOf(uid), rest = order.filter(u => u !== uid);
+  if (i < fixed) { rest.splice(fixed - 1, 0, uid); return { order: rest, fixed: fixed - 1 }; }
+  rest.splice(fixed, 0, uid);
+  return { order: rest, fixed: fixed + 1 };
+}
+/** The draft order after a drag from slot i to slot j: what you see is the order, every card numbered. */
+export function dragOrder({ order }, i, j) {
+  const next = order.slice(), [uid] = next.splice(i, 1);
+  next.splice(j, 0, uid);
+  return { order: next, fixed: next.length };
+}
+/** Peek's next move toward a finished order: the rest as they lie in one go, else the next card. */
+export function peekMove(want, { placed, left }) {
+  const rest = want.slice(placed.length);
+  return rest.join() === left.join() ? 'keep' : `card:${rest[0]}`;
+}
 /**
- * The top of the pile as its own row over the shop: Peek's 4 while you order them (a click puts one next, its number
- * under it; "Keep this order" leaves the rest as they lie) and, after, what you may recruit off the pile this turn.
+ * The top of the pile as its own row over the shop: Peek's 4 while you order them and, after, what you may recruit
+ * off the pile this turn. Ordering is yours until Done (Cory, Oct 29: "peek interaction should include drag to
+ * reshuffle", "click again during peek to unassign"): a click numbers a card next, a click on a numbered card takes
+ * its number back, a drag sets the order as it lies. Done sends it, a card at a time, then the rest as they lie.
  * Snappy like the pay sheet: a click answers at once, nothing animates in between.
  */
 function PileRow({ state, viewer, row, optionFor, onPick, hover }) {
   const keep = row.ordering ? optionFor('keep') : null;
+  const key = row.ordering ? [...row.uids].sort().join() : '';
+  const [draft, setDraft] = useState(null);
+  // a draft lasts one ordering: a later Peek of the same 4 starts fresh
+  useEffect(() => { if (!row.ordering) setDraft(null); }, [row.ordering]);
+  const cur = row.ordering && draft && draft.key === key ? draft : { key, order: row.uids, fixed: row.placed, sent: false };
+  const { order, fixed } = cur;
+  const changed = cur.fixed > 0 || cur.order.join() !== row.uids.join();
+  // Done: the engine takes the order a card at a time; each new step sends the next (a dropped send retries)
+  const peek = row.peek;
+  useEffect(() => {
+    if (!cur.sent || !peek || !row.ordering) return undefined;
+    const id = peekMove(cur.order, peek);
+    const send = () => { if (optionFor(id)) onPick(id, 'automatic'); };
+    send();
+    const t = setInterval(send, 700);
+    return () => clearInterval(t);
+  }, [cur.sent, peek]); // eslint-disable-line react-hooks/exhaustive-deps
+  const cardsRef = useRef(null), drag = useRef(null), skipClick = useRef(false);
+  const [dragging, setDragging] = useState(null); // { uid, from, to, dx, step }
+  const down = (e, uid) => {
+    if (!keep || cur.sent || e.button !== 0) return;
+    const els = [...cardsRef.current.querySelectorAll('.lt-card')];
+    const rects = els.map(el => el.getBoundingClientRect());
+    drag.current = { uid, from: order.indexOf(uid), x0: e.clientX, y0: e.clientY, rects, live: false };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const move = e => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.x0;
+    if (!d.live && Math.hypot(dx, e.clientY - d.y0) < 6) return;
+    if (!d.live) { d.live = true; hover?.close?.(); }
+    const centers = d.rects.map(r => (r.left + r.right) / 2);
+    const at = d.rects[d.from].left + d.rects[d.from].width / 2 + dx;
+    // the slot whose center the dragged card's center is nearest
+    const to = centers.reduce((b, c, k) => (Math.abs(c - at) < Math.abs(centers[b] - at) ? k : b), 0);
+    const step = d.rects.length > 1 ? d.rects[1].left - d.rects[0].left : 0;
+    d.to = to;
+    setDragging({ uid: d.uid, from: d.from, to, dx, step });
+  };
+  const up = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || !d.live) return;
+    skipClick.current = true;
+    setDragging(null);
+    setDraft({ ...dragOrder(cur, d.from, d.to ?? d.from), key, sent: false });
+  };
+  const shift = k => {
+    if (!dragging) return undefined;
+    const { from, to, dx, step } = dragging;
+    if (k === from) return { transform: `translateX(${dx}px)`, zIndex: 2, transition: 'none' };
+    if (from < to && k > from && k <= to) return { transform: `translateX(${-step}px)` };
+    if (from > to && k >= to && k < from) return { transform: `translateX(${step}px)` };
+    return undefined;
+  };
   return (
-    <div className="lt-pile-row" data-pile-row={row.ordering ? 'order' : 'recruit'} role="group" aria-label="Top of the pile">
+    <div className="lt-pile-row" data-pile-row={row.ordering ? 'order' : 'recruit'} data-dragging={dragging ? '' : undefined} role="group" aria-label="Top of the pile">
       <div className="pr-head"><b>Top of the pile</b>
-        {keep ? <button type="button" className="btn pr-keep" data-option={keep.id} onClick={() => onPick(keep.id)}>Keep this order</button>
+        {keep ? <button type="button" className="btn pr-keep" data-option={keep.id} disabled={cur.sent}
+          onClick={() => setDraft({ ...cur, sent: true })}>{changed ? 'Done' : 'Keep this order'}</button>
           : <span>{row.ordering ? '' : 'Recruit one this turn'}</span>}
       </div>
-      <div className="pr-cards">
-        {row.uids.map((uid, k) => {
+      <div className="pr-cards" ref={cardsRef}>
+        {order.map((uid, k) => {
           const d = cardDef(state, uid);
           const opt = optionFor(`card:${uid}`);
           const parts = costParts(d, state.resources);
           const paid = paidParts(state, viewer, uid, d);
           const shown = paid || parts;
-          const set = k < row.placed;
+          const set = k < fixed;
+          const ordering = !!keep && !cur.sent;
           return (
             <button key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
-              className={`card lt-card paper${opt ? ' can lit' : ' recede'}`} style={{ '--q': cardColor(state, d) }} data-ground={cardGround(state, d)}
+              className={`card lt-card paper${opt || ordering ? ' can lit' : ' recede'}`} style={{ '--q': cardColor(state, d), ...shift(k) }} data-ground={cardGround(state, d)}
+              data-drag={dragging && dragging.uid === uid ? '' : undefined} data-orderable={ordering || undefined}
               aria-label={`${d.name}, costs ${shown.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}${set ? `, ${NTH[k]} from the top` : ''}`}
-              onPointerEnter={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, e.currentTarget); }}
+              onPointerEnter={e => { if (hover && e.pointerType === 'mouse' && !drag.current?.live) hover.onCardHover(uid, e.currentTarget); }}
               onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
-              onClick={() => { if (opt) { hover?.close?.(); onPick(opt.id); } }}>
+              onPointerDown={e => down(e, uid)} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+              onClick={() => {
+                if (skipClick.current) { skipClick.current = false; return; }
+                if (ordering) { setDraft({ ...clickOrder(cur, uid), key, sent: false }); return; }
+                if (opt && !row.ordering) { hover?.close?.(); onPick(opt.id); }
+              }}>
               <span className="lt-hd">
                 <span className="lt-corner-cost num" aria-hidden="true">{shown.reduce((t, c) => t + c.n, 0)}</span>
                 <WorthTag d={d} sphere={sphereOf(state, d)} />

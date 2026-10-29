@@ -5,6 +5,7 @@ import { browserPath, launchBrowser } from './lib/browser.mjs';
 //  (k2) Recruiting after Peek: all 4 stay beside the shop; the ones you can pay for are lit, the others recede.
 //  (k3) Nothing runs off the bottom of the window.
 //  (k4) Ordering Peek's 4, with or without the "affordable" toggle: every shop member steps well back (Mike's playtest, 2026-10-26).
+//  (k5-k7) A click numbers a card, a second click un-numbers it, a drag sets the order, Done sends it (Cory, Oct 29).
 // Saves: e2e/v4/lib/peek-save.mjs. Server: $V4_URL if set, else its own `npx vite` on a free port from 5405.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -88,10 +89,27 @@ try {
       await page.waitForSelector('.lt-pile-row .pr-slot', { timeout: 2000 }).catch(() => errors.push(`(k5 ${tag}) a click in the row numbered nothing`));
       const took = Date.now() - t0;
       if (took > 600) errors.push(`(k5 ${tag}) the first number took ${took}ms`);
+      // (k6) a click on a numbered card takes its number back (Cory, Oct 29: "click again during peek to unassign")
+      await page.click('.lt-pile-row .lt-card.lit >> nth=0');
+      if (await page.$$eval('.lt-pile-row .pr-slot', els => els.length)) errors.push(`(k6 ${tag}) a second click on a numbered card kept its number`);
+      // (k7) a drag sets the order (Cory, Oct 29: "peek interaction should include drag to reshuffle"): the 4th to the top
+      const rowUids = () => page.$$eval('.lt-pile-row .lt-card', els => els.map(e => e.dataset.uid));
+      const before = await rowUids();
+      const box = i => page.locator('.lt-pile-row .lt-card').nth(i).boundingBox();
+      const [b3, b0] = [await box(3), await box(0)];
+      await page.mouse.move(b3.x + b3.width / 2, b3.y + b3.height / 2);
+      await page.mouse.down();
+      for (let k = 1; k <= 8; k++) await page.mouse.move(b3.x + b3.width / 2 + (b0.x - b3.x) * k / 8, b3.y + b3.height / 2);
+      await page.mouse.up();
+      const want = [before[3], ...before.slice(0, 3)];
+      const after = await rowUids();
+      if (after.join() !== want.join()) errors.push(`(k7 ${tag}) after dragging the 4th to the top the row reads ${after.join(' ')}, want ${want.join(' ')}`);
       await page.click('.lt-pile-row .pr-keep');
-      await page.waitForSelector('.lt-pile-row[data-pile-row="recruit"]', { timeout: 3000 }).catch(() => errors.push(`(k5 ${tag}) "Keep this order" didn't finish the order`));
+      await page.waitForSelector('.lt-pile-row[data-pile-row="recruit"]', { timeout: 4000 }).catch(() => errors.push(`(k5 ${tag}) Done didn't finish the order`));
       const n = await page.$$eval('.lt-pile-row .pr-slot', els => els.map(e => e.textContent).join(''));
       if (n !== '1234') errors.push(`(k5 ${tag}) the row reads ${n || 'nothing'} after the order, want 1234`);
+      const final = await rowUids();
+      if (final.join() !== want.join()) errors.push(`(k7 ${tag}) the pile came back ${final.join(' ')}, want the dragged order ${want.join(' ')}`);
     }
     const low = shown.filter(c => c.bottom > 700);
     if (low.length) errors.push(`(k3 ${tag}) ${low.length} card(s) run off the bottom`);

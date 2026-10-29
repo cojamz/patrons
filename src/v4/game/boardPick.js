@@ -301,7 +301,7 @@ function captionOf(state, pk) {
   // Peek (Cory, playtest Oct 28: "Peek UI is unintuitive"): what the row is for, and that you may recruit one after
   if (pk.title === 'Peek' && pk.pend && pk.pend.show && pk.pend.show.peek) {
     const n = pk.pend.show.peek.placed.length + pk.pend.show.peek.left.length;
-    return { title: 'Peek', what: [`set the order of the top ${n}`], how: 'Click them in the order they’ll be drawn. You may recruit one this turn.' };
+    return { title: 'Peek', what: [`set the order of the top ${n}`], how: 'Click or drag them into the order they’ll be drawn, then Done. You may recruit one this turn.' };
   }
   if (pk.kinds.has('stack') && !pk.give && pk.count && pk.title) {
     // the steal's limit, in the engine's words ("1 each from P3, P4"), leads the how line
