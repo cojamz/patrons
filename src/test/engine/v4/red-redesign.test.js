@@ -109,6 +109,16 @@ describe('locked Red action progression', () => {
     expect([s.players[1].res.green, s.players[1].res.red, s.players[1].bonus, s.recruits]).toEqual([0, 0, 0, 0]);
   });
 
+  it('Demote swaps your member with a rival\'s, unless Loyalists keeps theirs (Cory, 2026-10-29)', () => {
+    let s = take(table(Q, { round: 2, members: [['red.volunteer'], ['red.twins']], shop: ROW }), 'red.trade');
+    const mine = uidIn(s, 'red.volunteer', 0), theirs = uidIn(s, 'red.twins', 1);
+    expect(s.pending.options.some(o => o.id === swapId(mine, theirs))).toBe(true);
+    s = move(s, swapId(mine, theirs));
+    expect([defs(s, 0), defs(s, 1)]).toEqual([['red.twins'], ['red.volunteer']]);
+    const t = take(table(Q, { round: 2, members: [['red.volunteer'], ['red.twins', 'red.loyalists']], shop: ROW }), 'red.trade');
+    expect(t.pending?.options?.some(o => o.id === swapId(uidIn(t, 'red.volunteer', 0), uidIn(t, 'red.twins', 1))) || false).toBe(false);
+  });
+
   it('swapping into your own cult fires Now exactly once and excludes the outgoing member from hook counts', () => {
     let s = take(table(Q, { round: 2, members: [['echo.evergreen']], shop: ROW }), 'red.hireup');
     const a = uidIn(s, 'echo.evergreen', 0), b = uidIn(s, 'gold.banker', 'shop');

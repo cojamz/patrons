@@ -39,8 +39,8 @@ describe('a full board', () => {
 
 describe('Late Riser on a full board', () => {
   it('2 players, 2 spheres, round III: Extra Hand twice fills all 12 spaces, so Late Riser gives no turn', () => {
-    // seed 2 since the Oct 28 round I and Demote changes: on seed 7 P1 Demoted its own Late Riser away in round II
-    let s = createGame({ seats: [{ kind: 'bot' }, { kind: 'bot' }], seed: 2, quadrants: ['purple', 'red'], rules: { release: false } });
+    // seed 3 since Promote and Demote reach rivals (Oct 29): on seed 2 P1 swapped its Loyalists to P2, then Late Riser away
+    let s = createGame({ seats: [{ kind: 'bot' }, { kind: 'bot' }], seed: 3, quadrants: ['purple', 'red'], rules: { release: false } });
     const give = id => {
       const uid = Object.values(s.cards).find(c => c.def === id).uid;
       s.pile = s.pile.filter(u => u !== uid); s.shop = s.shop.filter(u => u !== uid);
