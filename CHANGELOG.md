@@ -5,6 +5,7 @@ Player-facing releases, newest first. What's live is main's play/build.json: a s
 ## v0.9.836 — 2026-10-28
 
 - Guests: Party Crasher (was Squatter) and Extra Hand are One Time Use; new Saboteur (−3 followers whenever it joins a cult); Launderers worth 2; Front-runner and Tiebreaker cheaper; Straggler is out.
+- Green has 15 members (Connector is out). Ensemble counts as 2 members, Impostor costs 6, Tribute Band plays the actions of a rival you choose, Understudy copies the action taken the previous turn, and Hot Streak is One Time Use at +3 followers per turn in a row.
 
 ## v0.9.835 — 2026-10-28
 
