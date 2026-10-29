@@ -6,6 +6,7 @@ Done items and the old lists: design/archive/todo-2026-10-20-to-23.md and design
 All open design and feel questions are numbered in design/notes/waiting-on-cory-2026-10-24.md, defaults in brackets. When he answers, log each call in design/decisions.md, tick it there, and build in this order: two shops (#1 to #4), card changes (#5 to #11), board (#12 to #14), members (#15 to #17).
 
 Redesign, brainstorm with Cory: Late Bloomers (works against itself and counts itself). From his Oct 24 game. (Shake Down is done: the rival picks which member is at stake, v0.9.835.)
+The wheel rim's words are a little hard to read (Cory, Oct 29: "not important for now"); look at size, weight and contrast later.
 Rework the title section at the top (turn caption, "Round II of 3", Place/Recruit): Cory, Oct 29, "we need to rework that title section". Pitch a few looks with screenshots.
 Broader rework, his to lead (Oct 28): design/notes/rework-list-2026-10-28.md, worked down by number. Decided and live: Crowd In, Encore, Once per game wording, Shake Down, Extortionist. Open steps are in Backlog initiatives below.
 
