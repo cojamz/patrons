@@ -141,7 +141,7 @@ const members = [
     onActivate(ctx, owner, card) { if (!extraMinion(ctx, owner, 'Extra Hand')) card.used = false; },
     botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
   }),
-  m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You go first every round.', { pickFirst: true }), // Cory, Oct 21: 5; Oct 27: 4; Oct 28 "could probably be cheaper": 3 with the +1 wild (Claude's price, the floor)
+  m('frontrunner', 'Front-runner', 'purple', 1, 0, 'You go first every round.', { pickFirst: true }), // Cory, Oct 21: 5; Oct 27: 4; Oct 28 "could probably be cheaper": 3 with the +1 wild (Claude's price, the floor); Oct 29 "I'm okay with front runners at 2": 2
   // Cory's ideas, Oct 21, on this sim branch only. Launderer is simplified for the bots: one color, not any split.
   // Cory, Oct 28: "Launderers, 2 Followers" and "it should let you completely redo all your money… converting a lot at
   // once and being flexible across colors": all into one color in one click, or split color by color
