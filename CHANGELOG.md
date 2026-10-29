@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.878 — 2026-10-29
+
+- Peek: drag the top 4 into any order, click a numbered card to take its number back, then Done.
+
 ## v0.9.877 — 2026-10-29
 
 - The turn headline no longer clips its words in Firefox.
