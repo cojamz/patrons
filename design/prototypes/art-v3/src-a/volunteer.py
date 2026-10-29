@@ -21,9 +21,14 @@ for cx, cy in ((13.6, 11), (34.4, 11)):                             # two round 
     c.fill(c.rect(int(cx) - 1, int(cy) + 4, int(cx) + 1, int(cy) + 4), '3')
 # the sign-up clipboard held against her chest, a pen clipped on (round 2: no raised hand; at 48px it read as a fist)
 bd = c.poly([(30, 48), (31, 38), (40, 37.4), (41, 48)])
-c.fill(bd, 'r'); c.fill(bd & c.rect(39, 35, 41, 48), 'q'); c.edge(bd, 'q')
+c.fill(bd, 'r'); c.fill(bd & c.rect(39, 35, 41, 48), 'q'); c.edge(bd, 'z')
 c.fill(c.rect(32, 40, 39, 48), 'k'); c.fill(c.rect(38, 41, 39, 48), 'j')
 for y in (43, 45, 47): c.fill(c.rect(33, y, 36, y), 'j')
-c.put(34, 37, ['zzzz', '.zz.'])                                               # the clip
-hand(c, 39, 42, 0, 'grip', mirror=True)
+c.put(33, 36, ['.zzzz.', 'zllllz', '.zkkz.'])                                 # the clip, bright metal-light
+c.put(37, 40, ['....D.', '.DDDCB', 'ABBBCB', '.DDDCB', 'ABBBCB', '.DDCCB', '..BCBA'])   # her fingers round the board's edge, thumb up
+c.edge(c.mask_of('BCD') & c.rect(37, 39, 44, 47), 'A')
+for (x, y) in c.rect(17, 20, 27, 21):                                          # the cheek light: off the eye, out on the cheekbone
+    if c.get(x, y) == 'D': c.set(x, y, 'C')
+for (x, y) in ((19, 21), (20, 21), (21, 21), (18, 22), (19, 22), (26, 21)): c.set(x, y, 'D')
+c.set(20, 22, 'D'); c.set(22, 21, 'C')
 PORTRAIT = portrait(c, 'red.volunteer', 'Volunteer', 'red', [{'skin': 'deep', 'hair': 'black'}])
