@@ -42,7 +42,9 @@ export const Sprite = memo(function Sprite({ id, sphere = 'colorless', size = 48
   const { icon, drawn } = iconFor(id, kind);
   const src = spriteUrl(icon, sphere, rectsFor(icon, sphere), look);
   // a portrait is 32 pixels: drawn a third bigger than the 24-pixel size asked for, whole pixels at 32/64/96
-  if (icon.portrait) size = size <= 40 ? 32 : size <= 72 ? 64 : 96;
+  // a scene is 64 pixels: whole pixels only at 32/64/128
+  if (icon.scene) size = size <= 40 ? 32 : size <= 100 ? 64 : 128;
+  else if (icon.portrait) size = size <= 40 ? 32 : size <= 72 ? 64 : 96;
   const m = HALO[look] ? (HALO[look] * size) / icon.px.length : 0;
   return (
     <img className={`sprite${drawn ? '' : ' template'}${m ? ` halo-${look}` : ''}${className ? ` ${className}` : ''}`} src={src} width={size + 2 * m} height={size + 2 * m} draggable={false}
