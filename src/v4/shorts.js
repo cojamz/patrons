@@ -37,7 +37,7 @@ const S = {
     bargain: r => `+${r + 2} blue`, restock: 'one color to the bottom; +1 blue each, +1', showroom: r => `peek at 4, may recruit one; +${2 * r} blue`, clearance: 'recruit twice; +1 blue', pricecheck: 'bury one, half its cost in blue; +1', spree: 'recruit 3 times; +3 blue',
   },
   thieves: {
-    pickpocket: r => `steal ${r + 2}, split among rivals; +1 magenta`, tipoff: r => `+${r + 2} magenta`, hideout: 'safe from steals this round; +1 magenta', rob: 'steal half a rival’s one-color pile, round down; +1 magenta', ransom: 'a rival picks a member costing 5 or less, then pays its cost or loses it; +1 magenta', heist: 'take a rival’s member; +1 magenta',
+    pickpocket: r => `steal ${r + 2}, split among rivals`, tipoff: r => `+${r + 2} magenta`, hideout: 'safe from steals this round; +1 magenta', rob: 'steal half a rival’s one-color pile, round down; +1 magenta', ransom: 'a rival picks a member costing 5 or less, then pays its cost or loses it; +1 magenta', heist: 'take a rival’s member; +1 magenta',
   },
   trading: {
     stipend: r => `+${r} followers +${r + 1} white`, splurge: '+1 follower per 2 paid for a member this turn; +1 white', exchange: r => `turn ${r} into ${2 * r} followers; +1 white`, farewell: 'cast out a member for its cost in followers; +1 white', estatesale: 'cast out a member for its cost in white; +1 white', cashin: 'all your white into followers; +1 white',

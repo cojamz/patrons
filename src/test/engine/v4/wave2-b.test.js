@@ -28,7 +28,7 @@ describe('#6 Help Yourself: a rival lying low is never offered', () => {
     expect(s.pending.options.some(o => o.value[0] === 2)).toBe(false);
     s = takeFrom(takeFrom(s, 1), 1);
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.players[0].res).toMatchObject({ gold: 4, magenta: 1 });
+    expect(s.players[0].res).toMatchObject({ gold: 4, magenta: 0 });
     expect(s.players[1].res.gold).toBe(0);
     expect(s.players[2].res.gold).toBe(4);
   });
@@ -67,7 +67,7 @@ describe('#38 a dim rival says the true reason', () => {
     s = takeFrom(takeFrom(takeFrom(s, 2), 1), 1); // round II: steal 4
     expect(s.players[2].res.gold).toBe(0);
     expect(s.players[1].res.gold).toBe(3);
-    expect(s.players[0].res).toMatchObject({ gold: 6, magenta: 1 });
+    expect(s.players[0].res).toMatchObject({ gold: 6, magenta: 0 });
   });
 });
 

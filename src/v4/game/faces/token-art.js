@@ -186,7 +186,7 @@ const S = {
     spree: [['×3', 'tag:']],
   },
   thieves: {
-    pickpocket: r => [['rr', '→', `${r}`, 'any'], [`${r}`, 'f'], ['1', 'magenta']],
+    pickpocket: r => [['rr', '→', `${r}`, 'any'], [`${r}`, 'f']],
     tipoff: [['rr', '→', '1', 'any', '/', 'minion'], ['1', 'magenta']],
     hideout: r => [['rr', '→', `${r}`, 'any'], ['shield'], ['1', 'magenta']],
     rob: [['rr', '→', '½', 'any'], ['1', 'magenta']],

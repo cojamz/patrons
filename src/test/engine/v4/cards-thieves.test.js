@@ -28,7 +28,7 @@ describe('Magenta actions', () => {
     let s = table(Q, { round, left: 5, res: [{}, { gold: 9 }], bonus: [0, 5], shop: ROW });
     s = take(s, 'thieves.pickpocket');
     for (let k = 0; k < round + 2; k++) s = move(s, 'take:1:gold');
-    expect(R(s)).toMatchObject({ magenta: 1, gold: round + 2 });
+    expect(R(s)).toMatchObject({ magenta: 0, gold: round + 2 });
     expect(R(s, 1).gold).toBe(9 - round - 2);
     expect(s.players[0].bonus).toBe(0); // the follower steal is gone (Cory, 2026-10-27)
     expect(s.players[1].bonus).toBe(5);
@@ -38,7 +38,7 @@ describe('Magenta actions', () => {
     let s = table(Q, { res: [{}, { gold: 9 }], members: [['thieves.sticky', 'thieves.desperado']], bonus: [0, 9], shop: ROW });
     s = take(s, 'thieves.pickpocket');
     while (s.pending?.kind === 'choose') s = move(s, 'take:1:gold');
-    expect(R(s)).toMatchObject({ magenta: 1, gold: 7 });
+    expect(R(s)).toMatchObject({ magenta: 0, gold: 7 });
     expect(R(s, 1).gold).toBe(2);
     expect(s.players[0].bonus).toBe(0);
     expect(named(s, 'Sticky Fingers').length).toBe(1);

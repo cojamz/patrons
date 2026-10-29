@@ -3,15 +3,15 @@
  "schema": 1,
  "build": {
   "schema": 1,
-  "content": "z4chhw2e1e.f10e1ea488",
+  "content": "1ziyplplv78.c5c69c3968",
   "id": "dev",
-  "version": "v0.9.865"
+  "version": "v0.9.873"
  },
  "made": {
   "schema": 1,
-  "content": "z4chhw2e1e.f10e1ea488",
+  "content": "1ziyplplv78.c5c69c3968",
   "id": "dev",
-  "version": "v0.9.865"
+  "version": "v0.9.873"
  },
  "seed": 20261014,
  "quadrants": [
@@ -552,7 +552,7 @@
   ],
   [
    0,
-   "pay:1-5-3-0"
+   "pay:2-4-4-0"
   ],
   [
    0,
@@ -560,7 +560,27 @@
   ],
   [
    0,
+   "card:14"
+  ],
+  [
+   0,
+   "card:22"
+  ],
+  [
+   0,
+   "card:61"
+  ],
+  [
+   0,
    "card:23"
+  ],
+  [
+   0,
+   "card:55"
+  ],
+  [
+   0,
+   "card:3"
   ],
   [
    0,
@@ -572,31 +592,15 @@
   ],
   [
    0,
-   "done"
+   "slot:2-1"
   ],
   [
    0,
-   "slot:3-3"
+   "card:35"
   ],
   [
    0,
-   "card:59"
-  ],
-  [
-   0,
-   "pass"
-  ],
-  [
-   2,
-   "slot:2-2"
-  ],
-  [
-   2,
-   "tier:top"
-  ],
-  [
-   2,
-   "pay:0-7-1-2"
+   "pay:0-0-3-0"
   ],
   [
    1,
@@ -620,51 +624,83 @@
   ],
   [
    1,
-   "pay:4-0-0-1"
+   "pay:2-2-0-1"
   ],
   [
    1,
-   "slot:2-1"
+   "slot:2-2"
   ],
   [
    1,
-   "card:35"
+   "card:58"
   ],
   [
    1,
-   "pay:0-1-2-0"
+   "pay:6-0-1-0"
+  ],
+  [
+   1,
+   "take:2:magenta"
+  ],
+  [
+   1,
+   "take:2:gold"
+  ],
+  [
+   1,
+   "take:2:magenta"
+  ],
+  [
+   1,
+   "take:2:gold"
+  ],
+  [
+   1,
+   "take:2:magenta"
   ],
   [
    0,
+   "slot:1-5"
+  ],
+  [
+   0,
+   "card:20"
+  ],
+  [
+   0,
+   "tier:small"
+  ],
+  [
+   0,
+   "pay:0-0-1-0"
+  ],
+  [
+   2,
    "slot:2-5"
   ],
   [
-   0,
-   "card:61"
-  ],
-  [
-   0,
-   "pay:1-1-0-2"
+   2,
+   "pass"
   ]
  ],
  "at": {
   "round": 3,
-  "moves": 151,
+  "moves": 160,
   "over": true
  },
  "note": "Sample: a whole 3-player game on a mixed table, played by bots. Replaces nothing; shows the format.",
  "expect": {
   "over": true,
-  "moves": 151,
+  "moves": 160,
   "followers": [
-   60,
-   51,
+   55,
+   49,
    49
   ]
  },
  "refreshed": {
-  "from": "2gam7i8rstf.7abbc47535",
-  "kept": 0,
-  "of": 155
+  "from": "z4chhw2e1e.f10e1ea488",
+  "kept": 127,
+  "of": 151
  }
 }

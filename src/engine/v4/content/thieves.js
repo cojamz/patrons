@@ -201,8 +201,8 @@ const thieves = {
   actions: [
     {
       // Cory, 2026-10-27: "steal 3/4/5", split among rivals as you choose; the follower steal is gone
-      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 3 resources in round I, 4 in round II, 5 in round III, split among rivals as you choose. +1 magenta.',
-      byRound: { lines: ['Steal 3 resources.', 'Steal 4 resources.', 'Steal 5 resources.'], rest: 'Split among rivals as you choose. +1 magenta.' },
+      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Steal 3 resources in round I, 4 in round II, 5 in round III, split among rivals as you choose.', noMagenta: true, // no +1 magenta (Cory, 2026-10-29: "Help Yourself shouldnt give a magenta")
+      byRound: { lines: ['Steal 3 resources.', 'Steal 4 resources.', 'Steal 5 resources.'], rest: 'Split among rivals as you choose.' },
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round + 2)),
       resolve(ctx, p) {
         startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round + 2, { say: true }));
@@ -447,6 +447,7 @@ const thieves = {
 for (const action of thieves.actions) {
   const resolve = action.resolve, estimate = action.estimate;
   action.copyDoesIt = true;
+  if (action.noMagenta) continue;
   action.resolve = (ctx, p) => { ctx.gain(p, 'magenta', 1, { fromAction: true }); return resolve(ctx, p); };
   action.estimate = (ctx, p) => 1 + estimate(ctx, p);
 }

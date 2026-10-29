@@ -11,7 +11,7 @@ describe('Magenta corrections retained through the redesign', () => {
     expect(ids(s)).toContain('take:1:gold');
     expect(ids(s)).toContain('take:2:red');
     s = move(move(move(s, 'take:1:gold'), 'take:2:red'), 'take:2:red'); // round I: steal 3
-    expect(s.players[0].res).toMatchObject({ gold: 7, red: 2, magenta: 1 });
+    expect(s.players[0].res).toMatchObject({ gold: 7, red: 2, magenta: 0 });
   });
   it('Lie Low prevents member and resource theft', () => {
     let s = table(Q, { round: 3, left: 5, res: [{ gold: 4 }, { red: 3 }], members: [['red.intern']], shop, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
@@ -29,7 +29,7 @@ describe('Magenta corrections retained through the redesign', () => {
     s = move(s, 'take:1:gold');
     expect(s.pending.count.left).toBe(6);
     for (let k = 0; k < 6; k++) s = move(s, 'take:2:red');
-    expect(s.players[0].res).toMatchObject({ magenta: 1, gold: 1, red: 6 });
+    expect(s.players[0].res).toMatchObject({ magenta: 0, gold: 1, red: 6 });
     expect(s.players[1].res.gold).toBe(8);
     expect(s.players[2].res.red).toBe(3);
   });

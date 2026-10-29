@@ -162,23 +162,23 @@ describe('a steal is told once, in the colors it took', () => {
   };
   const once = st => {
     expect(st.text).not.toMatch(/as magenta/);
-    expect(st.lines.filter(l => /\+1 magenta/.test(l))).toHaveLength(1); // the inherent +1, never the stolen coins
+    expect(st.lines.filter(l => /\+1 magenta/.test(l))).toHaveLength(0); // no +1 magenta on Help Yourself (Oct 29), never the stolen coins
     expect(st.lines.filter(l => /followers?/.test(l))).toHaveLength(0); // Help Yourself steals no followers (Oct 27)
   };
   it('from the effects: the gain in its own colors, and one line for what you lost', () => {
     const st = steal(true); // round I: steal 3, all of your gold
     expect(st.fx).toBe(true);
-    expect(st.lines).toEqual(['+1 magenta +3 gold', '3 gold from you']);
+    expect(st.lines).toEqual(['+3 gold', '3 gold from you']);
     expect(st.hit).toBe('took 3 of your gold');
-    expect(st.short).toBe('took 3 of your gold · +1 magenta +3 gold');
+    expect(st.short).toBe('took 3 of your gold · +3 gold');
     once(st);
   });
   it('from the log (no effects recorded): the same steal', () => {
     const st = steal(false);
     expect(st.fx).toBeUndefined();
-    expect(st.lines).toEqual(['+3 gold +1 magenta', '3 gold from you']);
+    expect(st.lines).toEqual(['+3 gold', '3 gold from you']);
     expect(st.hit).toBe('took 3 of your gold');
-    expect(st.short).toBe('+3 gold +1 magenta · 3 gold from you');
+    expect(st.short).toBe('+3 gold · 3 gold from you');
     once(st);
   });
   it.each([true, false])('from both rivals (effects %s): each rival named once, in the color they lost', effects => {

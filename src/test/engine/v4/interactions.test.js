@@ -67,18 +67,18 @@ describe('Green copies the risky spaces', () => {
   it('copying a Magenta steal means stealing yourself, and never takes more than the victim holds', () => {
     let s = scene({ quads: Q, n: 3, turns: [1, 0], res: [{}, {}, { gold: 4 }] });
     s = go(s, 'thieves.pickpocket', 'take:2:gold', 'take:2:gold', 'take:2:gold'); // round I: steal 3
-    expect(R(s, 1)).toMatchObject({ gold: 3, magenta: 1 });
+    expect(R(s, 1)).toMatchObject({ gold: 3, magenta: 0 });
     s = take(s, 'echo.echo');
     expect(labels(s)).toEqual(['Help Yourself (P2): do Help Yourself yourself']);
     s = move(s, s.pending.options[0].id);
-    // P1 now steals 3: P2's gold and magenta and P3's last gold are on offer
-    expect(ids(s).sort()).toEqual(['take:1:gold', 'take:1:magenta', 'take:2:gold']);
+    // P1 now steals 3: P2's gold and P3's last gold are on offer (Help Yourself gives no magenta since Oct 29)
+    expect(ids(s).sort()).toEqual(['take:1:gold', 'take:2:gold']);
     s = play(s, 'take:2:gold');
-    expect(ids(s).sort()).toEqual(['take:1:gold', 'take:1:magenta']); // P3 is empty now
-    s = pass(play(play(s, 'take:1:magenta'), 'take:1:gold'));
-    // the copy gives its own +1 magenta, and the stolen gold stays gold
-    expect(R(s, 0)).toMatchObject({ gold: 2, magenta: 2 });
-    expect(R(s, 1)).toMatchObject({ gold: 2, magenta: 0 });
+    expect(ids(s).sort()).toEqual(['take:1:gold']); // P3 is empty now
+    s = pass(play(play(s, 'take:1:gold'), 'take:1:gold'));
+    // the stolen gold stays gold
+    expect(R(s, 0)).toMatchObject({ gold: 3, magenta: 0 });
+    expect(R(s, 1)).toMatchObject({ gold: 1, magenta: 0 });
     expect(R(s, 2).gold).toBe(0);
   });
 
@@ -420,7 +420,7 @@ describe('gain changers on stolen goods', () => {
     expect(ids(s)).toEqual(['take:1:gold', 'take:1:red']);
     s = pass(move(move(move(s, 'take:1:red'), 'take:1:red'), 'take:1:red')); // round I: steal 3
     expect(R(s, 1)).toMatchObject({ red: 0, gold: 5 }); // lost 3
-    expect(R(s, 0)).toMatchObject({ gold: 8, red: 0, magenta: 0 }); // +1 magenta → 1 gold → 2, 3 red → 3 gold → 6
+    expect(R(s, 0)).toMatchObject({ gold: 6, red: 0, magenta: 0 }); // 3 red → 3 gold → 6 (no +1 magenta on Help Yourself since Oct 29)
   });
 });
 
