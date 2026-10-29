@@ -176,14 +176,14 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     expect(followers(s, s.players[0])).toBe(3);
   });
 
-  it('Bait makes a rival lose the follower and pays the owner; self-copy only loses', () => {
+  it('Bait makes a rival lose the follower and pays the owner; self-copy is even', () => {
     const bait = member('Bait');
     let s = table(Q, { round: 2, left: 6, members: [[bait]], bonus: [3, 3], queue: turns(0, 1, 0, 0) });
     s = go(s, 'gold.rush');
     s = pass(choose(take(s, 'echo.echo'), 'gold.rush'));
     expect(bonus(s)).toEqual([4, 2]);
     s = pass(choose(take(s, 'echo.refrain'), 'gold.rush'));
-    expect(bonus(s)).toEqual([3, 2]);
+    expect(bonus(s)).toEqual([4, 2]);
   });
 
   it('Bait takes printed/base followers too, floors the copier at zero, and still pays its owner', () => {

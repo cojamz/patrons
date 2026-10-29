@@ -588,7 +588,6 @@ export function useIdle(state, p, uid) {
 function useMember(state, p, uid, resume) {
   const c = state.cards[uid];
   c.used = true;
-  c.usedTurn = turnKey(state); // Coach can't hand back a use spent this turn (it looped with Tribute Band and Tryout)
   const act = effectiveDefs(c).find(e => e.onActivate);
   const before = traceSnapshot(state);
   // used beside the spaces: this turn's minion is still to land, so a space must stay free for it (spareSpace, purple.js)
@@ -599,6 +598,22 @@ function useMember(state, p, uid, resume) {
   state.queue.splice(at < 0 ? state.queue.length : at, 0, resume);
 }
 
+/**
+ * Coach's free use (Cory, Oct 29): run a member's Once per game or Once per round ability now, leaving the member used
+ * or unused as it was (an ability that refunds itself on a miss would otherwise un-use a spent member). Each member at
+ * most once per turn this way, so a Coach copied back through Tribute Band and Tryout can't loop.
+ */
+function freeUse(state, p, uid) {
+  const c = state.cards[uid];
+  const act = effectiveDefs(c).find(e => e.onActivate);
+  if (!act) return false;
+  const was = c.used;
+  c.freeTurn = turnKey(state);
+  const before = traceSnapshot(state);
+  try { act.onActivate(ctxFor(state), p, wrap(state, c)); } finally { c.used = was; }
+  traceChanges(state, before, p, act);
+  return true;
+}
 /** This turn, as a key: the round and how many turns it has started. */
 export const turnKey = state => `${state.round}:${(state.turns || []).length}`;
 function resolveTask(state, task, optionId) {
@@ -1547,6 +1562,8 @@ function ctxFor(state) {
       return true;
     },
     turnKey: () => turnKey(state),
+    /** Coach: use one of p's members' abilities as a free extra use (freeUse). */
+    freeUse: (p, uid) => freeUse(state, p, uid),
     // ---- stealing: one shared verb, so protections and reactions apply to every sphere's steals ----
     /** May `thief` steal from `victim`? kind is 'res' (resources, piles) or 'member'. Quadrants and the
      *  victim's members can refuse (guardSteal returns true). */

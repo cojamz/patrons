@@ -86,10 +86,10 @@ function scoutDone(ctx, p, data) {
 }
 
 // Launderers' split: one color at a time, how many of what's left; the last color takes the rest
-// Coach's picks: used Once per game members, but not one used this turn (Tribute Band copying a Tryout that borrowed
-// Coach looped forever; Claude, under Cory's go-with-your-gut, Oct 29)
-const coachable = (ctx, p) => ctx.membersOf(p).filter(c => c.used && c.usedTurn !== ctx.turnKey()
-  && [c.def, c.copy && ctx.defOf(c.copy)].some(d => d?.activate === 'game'));
+// Coach's picks: your members with a Once per game or Once per round ability, used or not, but not one Coach already
+// used this turn (Tribute Band copying a Tryout that borrowed Coach looped forever; Claude, under Cory's go-with-your-gut)
+const coachable = (ctx, p) => ctx.membersOf(p).filter(c => c.freeTurn !== ctx.turnKey()
+  && [c.def, c.copy && ctx.defOf(c.copy)].some(d => d?.activate && d.onActivate));
 function launderStep(ctx, p, data) {
   const colors = ctx.state.resources, c = colors[data.i];
   if (data.i >= colors.length - 1 || !data.left) {
@@ -206,12 +206,14 @@ const members = [
   m('hr', 'HR', null, 0, 8, 'Worth 3 followers. Game End: +3 followers per color you have 3 members of.', { f: 3,
     onGameEnd: (ctx, owner) => 3 * ctx.state.quadrants.filter(q => ctx.countMembersOfColor(owner, q) >= 3).length,
   }),
-  // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"), named Coach (Cory, Oct 29)
-  m('secondwind', 'Coach', null, 0, 7, 'On Recruit: use one of your used Once per game members again.', {
+  // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"), named Coach (Cory, Oct 29); now any member's
+  // Once per game or Once per round ability, as a free extra use (Cory, Oct 29: "activate the On Use effect of one of
+  // your members (could be a once per round)")
+  m('secondwind', 'Coach', null, 0, 7, 'On Recruit: use the ability of one of your Once per game or Once per round members as a free extra use.', {
     onRecruited(ctx, owner) {
-      const spent = coachable(ctx, owner);
-      if (!spent.length) { ctx.log(`${owner.name}'s Coach: no used Once per game member.`); return; }
-      ctx.choose(owner, 'Coach: which Once per game member can be used again?', spent.map(c => ({
+      const list = coachable(ctx, owner);
+      if (!list.length) { ctx.log(`${owner.name}'s Coach: no Once per game or Once per round member to use.`); return; }
+      ctx.choose(owner, 'Coach: which member’s ability do you use?', list.map(c => ({
         id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: cost(c),
       })), 'benders.rewind');
     },
@@ -242,10 +244,9 @@ export const handlers = {
     scoutStep(ctx, p, { ...data, sent: [...data.sent, ctx.card(uid).def.name] });
   },
   rewind(ctx, p, uid) {
-    const c = ctx.card(uid);
     if (!coachable(ctx, p).some(x => x.uid === uid)) return;
-    c.used = false;
-    ctx.log(`${p.name}'s Coach: ${c.def.name} can be used again.`);
+    ctx.log(`${p.name}'s Coach: uses ${ctx.card(uid).def.name}.`);
+    ctx.freeUse(p, uid);
   },
 
   stragglerFrom(ctx, p, from, data) {

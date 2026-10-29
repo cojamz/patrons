@@ -295,7 +295,7 @@ describe('Green current members', () => {
     const agents = quadrant('echo').members.find(d => d.key === 'agents');
     expect([agents.f, agents.n]).toEqual([2, 2]);
     const bait = quadrant('echo').members.find(d => d.key === 'bait');
-    expect(bait.text).toMatch(/they −1 follower\. If it’s a rival, \+1 follower\./);
+    expect(bait.text).toMatch(/they −1 follower and you \+1 follower\./);
   });
   it('Chronicler scores weighted green members, ignoring held green', () => {
     const s = table(Q, { res: [{ green: 50 }], members: [['echo.chronicler', 'echo.agents', 'red.twins']], queue: [{ t: 'finish' }] });

@@ -293,9 +293,11 @@ function heard(ctx, p, e, taker) {
   each(ctx, p, 'choir', 'Choir', () => ctx.gain(p, 'green', 1));
   for (const owner of ctx.rivals(p)) each(ctx, owner, 'muse', 'Muse', () => ctx.gain(owner, 'green', 1));
   if (taker === p) each(ctx, p, 'ensemble', 'Ensemble', () => { p.bonus += 1; });
-  each(ctx, taker, 'bait', 'Bait', () => {
+  // −1 for the copier, +1 for Bait's owner, so copying your own is even (Cory, Oct 29: "clearly neutral for the
+  // player who has it (+1 -1). the +1 shouldnt be limited to rivals only")
+  if (taker !== p) each(ctx, taker, 'bait', 'Bait', () => {
     p.bonus -= Math.min(1, ctx.followers(p));
-    if (taker !== p) taker.bonus += 1;
+    taker.bonus += 1;
   });
 }
 // Run fn once per card of p's that is (or copies) the member `key`, each as its own source: a Doppelganger copying
@@ -575,7 +577,7 @@ const echoQ = {
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
     }),
     m('agents', 'Agents', 1, 1, 'Your actions can’t be copied.', { f: 2, n: 2 }),
-    m('bait', 'Bait', 1, 1, 'Whenever anyone copies your action, they −1 follower. If it’s a rival, +1 follower.'),
+    m('bait', 'Bait', 1, 1, 'Whenever anyone copies one of your actions, they −1 follower and you +1 follower.'),
     m('chronicler', 'Chronicler', 1, 3, 'Game end: +1 follower per green member.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'echo'),
     }),
