@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.826 — 2026-10-28
+
+- A small pool of spare minions stands by the wheel from round II. Each extra minion or extra turn flies from it to the player, and cards that give one warn when it's empty.
+
 ## v0.9.825 — 2026-10-28
 
 - The wheel's ring words sit centered in the ring
