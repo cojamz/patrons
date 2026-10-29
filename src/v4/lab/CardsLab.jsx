@@ -79,7 +79,26 @@ function FullArt({ d, small }) {
   </article>;
 }
 
-const LOOKS = [['A', 'Classic', Classic], ['B', 'Corners', Corners], ['C', 'Tarot', Tarot], ['D', 'Full art', FullArt]];
+// The next five keep B's reading (price top left, worth top right, name, rule, price colors along the foot) in other dress
+const Base = ({ d, small, k, children }) => <article className={`cl-card cl-x cl-${k}${small ? ' sm' : ''}`} style={{ '--c': cardColor(TABLE, d) }} data-ground={cardGround(TABLE, d)}>{children}</article>;
+const Price = ({ d }) => <span className="x-cost num">{total(d)}</span>;
+const Gain = ({ d, small }) => <span className="x-worth"><Worth d={d} size={small ? 12 : 16} /></span>;
+const Foot = ({ d, small }) => <footer className="x-foot"><CostShapes parts={costParts(d, TABLE.resources)} />{!small && <Members d={d} />}</footer>;
+const Rule = ({ d, small }) => (small ? null : <div className="x-box"><Text d={d} /></div>);
+
+// E · Night: dark card, cream words, the color only in the picture and a rule under the name
+const Night = ({ d, small }) => <Base d={d} small={small} k="e"><div className="x-art"><Art d={d} size={small ? 48 : 96} /></div><Price d={d} /><Gain d={d} small={small} /><b className="x-name">{d.name}</b><Rule d={d} small={small} /><Foot d={d} small={small} /></Base>;
+// F · Gilded: a thick frame in the color, the price a coin on the frame, the worth a tab hanging off the foot
+const Gilded = ({ d, small }) => <Base d={d} small={small} k="f"><div className="x-in"><div className="x-art"><Art d={d} size={small ? 48 : 96} /></div><b className="x-name">{d.name}</b><Rule d={d} small={small} /><Foot d={d} small={small} /></div><Price d={d} /><Gain d={d} small={small} /></Base>;
+// G · Pixel: square corners, a stepped pixel border and the pixel font for name and numbers, to match the portraits
+const Pixel = ({ d, small }) => <Base d={d} small={small} k="g"><div className="x-art"><Art d={d} size={small ? 48 : 96} /></div><Price d={d} /><Gain d={d} small={small} /><b className="x-name">{d.name}</b><Rule d={d} small={small} /><Foot d={d} small={small} /></Base>;
+// H · Header: the name on a bar in the color across the top, price and worth at its two ends, the picture under it
+const Header = ({ d, small }) => <Base d={d} small={small} k="h"><header className="x-head"><Price d={d} /><b className="x-name">{d.name}</b><Gain d={d} small={small} /></header><div className="x-art"><Art d={d} size={small ? 48 : 96} /></div><Rule d={d} small={small} /><Foot d={d} small={small} /></Base>;
+// I · Medallion: the portrait in a round frame of the color, price and worth as two gems, name and rule centered
+const Medallion = ({ d, small }) => <Base d={d} small={small} k="i"><div className="x-art"><Art d={d} size={small ? 48 : 96} /></div><Price d={d} /><Gain d={d} small={small} /><b className="x-name">{d.name}</b><Rule d={d} small={small} /><Foot d={d} small={small} /></Base>;
+
+const LOOKS = [['A', 'Classic', Classic], ['B', 'Corners', Corners], ['C', 'Tarot', Tarot], ['D', 'Full art', FullArt],
+  ['E', 'Night', Night], ['F', 'Gilded', Gilded], ['G', 'Pixel', Pixel], ['H', 'Header', Header], ['I', 'Medallion', Medallion]];
 
 export default function CardsLab() {
   const only = new URLSearchParams(location.search).get('look');

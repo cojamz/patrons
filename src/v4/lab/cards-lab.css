@@ -105,3 +105,116 @@
 .cl-b .cl-n{white-space:nowrap}
 .cl-b.sm .b-name{font-size:10.5px;line-height:12px;padding:2px 2px;letter-spacing:-.01em}
 .cl-b.sm[data-ground="white"]{box-shadow:inset 0 0 0 1px #8a7760,inset 0 0 0 2px #e4dccb,0 6px 14px -6px rgba(0,0,0,.8)}
+
+/* B, bigger type (Cory, Oct 29: "all the text is too small"): the rule at 16, the name 18, numbers 16+; the card grows to 200×280 and 104×146 */
+.cl-b{width:200px;height:280px}
+.cl-b .b-art{height:124px}
+.cl-b .b-name{font-size:18px;padding:5px 6px;margin-top:-14px}
+.cl-b .b-box{font-size:16px;line-height:21px;padding:10px 12px 0}
+.cl-b .b-cost{width:36px;height:36px;font-size:21px}
+.cl-b .b-worth{height:30px;padding:0 9px}
+.cl-b .b-worth .cl-worth{font-size:18px}
+.cl-b .b-foot{font-size:16px;padding:7px 10px}
+.cl-b .b-foot .lt-res .pip{width:14px;height:14px}
+.cl-b .cl-n{font-size:14px}
+.cl-b.sm{width:104px;height:146px}
+.cl-b.sm .b-name{font-size:13px;line-height:15px;padding:3px 2px;margin:-9px 4px 0}
+.cl-b.sm .b-cost{width:24px;height:24px;font-size:15px}
+.cl-b.sm .b-worth{height:21px;padding:0 5px}
+.cl-b.sm .b-worth .cl-worth{font-size:14px}
+.cl-b.sm .b-foot{font-size:15px;padding:4px 5px}
+.cl-b.sm .b-foot .lt-res .pip{width:12px;height:12px}
+
+/* E-I: B's reading in other dress, all at B's bigger type */
+.cl-x{width:200px;height:280px;display:flex;flex-direction:column;background:var(--pp)}
+.cl-x.sm{width:104px;height:146px}
+.cl-x .x-art{height:124px;flex:none}
+.cl-x.sm .x-art{flex:1;height:auto}
+.cl-x .x-name{display:block;text-align:center;font:700 18px/1.1 var(--serif);padding:6px 8px 0}
+.cl-x.sm .x-name{font-size:13px;line-height:15px;padding:3px 3px 0}
+.cl-x .x-box{flex:1;padding:6px 12px 0;text-align:center;font-size:16px;line-height:21px;text-wrap:pretty}
+.cl-x .x-box .pip{width:.85em;height:.85em;vertical-align:-.1em}
+.cl-x .x-foot{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:7px 10px;font-size:16px;border-top:1px solid rgba(42,31,23,.14)}
+.cl-x.sm .x-foot{justify-content:center;padding:4px 5px;font-size:15px}
+.cl-x .x-foot .lt-res .pip{width:14px;height:14px}
+.cl-x.sm .x-foot .lt-res .pip{width:12px;height:12px}
+.cl-x .cl-n{font-size:14px;white-space:nowrap}
+.cl-x .x-cost{position:absolute;left:8px;top:8px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--pp);font:800 21px/1 var(--sans);box-shadow:0 0 0 2px var(--pp)}
+.cl-x .x-worth{position:absolute;right:8px;top:8px;height:30px;padding:0 9px;border-radius:15px;display:grid;place-items:center;background:var(--pp);box-shadow:0 0 0 1px rgba(42,31,23,.25)}
+.cl-x .x-worth .cl-worth{font-size:18px}
+.cl-x.sm .x-cost{left:4px;top:4px;width:24px;height:24px;font-size:15px;box-shadow:0 0 0 1.5px var(--pp)}
+.cl-x.sm .x-worth{right:4px;top:4px;height:21px;padding:0 5px}
+.cl-x.sm .x-worth .cl-worth{font-size:14px}
+
+/* E · Night */
+.cl-e{--pp:#2b2119;--ink:#f2e8d2;--ink3:#b9a98c;background:#2b2119;color:#f2e8d2;box-shadow:inset 0 0 0 1px rgba(242,232,210,.12),0 8px 18px -8px rgba(0,0,0,.9)}
+.cl-e .x-art{margin:6px 6px 0;border-radius:6px}
+.cl-e .x-name{padding-top:8px}
+.cl-e .x-name::after{content:"";display:block;width:40px;height:2px;margin:6px auto 0;background:var(--c);border-radius:1px}
+.cl-e.sm .x-name::after{width:24px;margin-top:3px}
+.cl-e.sm .x-art{margin:3px 3px 0;border-radius:4px}
+.cl-e .x-cost{background:#f2e8d2;color:#2b2018;box-shadow:0 0 0 2px #2b2119}
+.cl-e .x-worth{background:#2b2119;color:#f2e8d2;box-shadow:0 0 0 1px rgba(242,232,210,.3)}
+.cl-e .x-foot{border-top-color:rgba(242,232,210,.12)}
+.cl-e .x-box :is(.term,a){color:inherit}
+
+/* F · Gilded */
+.cl-f{background:var(--c);padding:8px;overflow:visible}
+.cl-f.sm{padding:4px}
+.cl-f .x-in{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--pp);border-radius:4px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.cl-f .x-art{height:112px}
+.cl-f .x-cost{left:-6px;top:-6px;width:40px;height:40px;background:linear-gradient(160deg,#f4d58a,#c8962f);color:#2b2018;box-shadow:0 0 0 2px #2b2018,0 2px 4px rgba(0,0,0,.4)}
+.cl-f.sm .x-cost{left:-4px;top:-4px;width:24px;height:24px;box-shadow:0 0 0 1.5px #2b2018}
+.cl-f .x-worth{top:auto;right:auto;left:50%;bottom:-10px;transform:translateX(-50%);background:#2b2018;color:var(--pp);box-shadow:0 0 0 2px var(--c)}
+.cl-f.sm .x-worth{bottom:-7px}
+.cl-f .x-foot{padding-bottom:14px}
+.cl-f.sm .x-foot{padding-bottom:9px}
+.cl-f[data-ground="white"]{background:#cfc2a6}
+
+/* G · Pixel */
+.cl-g{border-radius:0;overflow:visible;background:var(--pp);
+  box-shadow:0 -4px 0 0 #2b2018,0 4px 0 0 #2b2018,-4px 0 0 0 #2b2018,4px 0 0 0 #2b2018,inset 0 0 0 4px var(--c),0 12px 0 -4px rgba(0,0,0,.5)}
+.cl-g.sm{box-shadow:0 -2px 0 0 #2b2018,0 2px 0 0 #2b2018,-2px 0 0 0 #2b2018,2px 0 0 0 #2b2018,inset 0 0 0 2px var(--c),0 6px 0 -2px rgba(0,0,0,.5)}
+.cl-g .x-art{margin:4px 4px 0;border-bottom:4px solid #2b2018}
+.cl-g.sm .x-art{margin:2px 2px 0;border-bottom-width:2px}
+.cl-g .x-name{font:400 26px/1 'Cults Pixel',var(--sans);letter-spacing:.02em;padding-top:6px}
+.cl-g.sm .x-name{font-size:16px;line-height:15px}
+.cl-g .x-cost{border-radius:0;font:400 28px/1 'Cults Pixel';box-shadow:0 0 0 2px var(--pp)}
+.cl-g.sm .x-cost{font-size:19px}
+.cl-g .x-worth{border-radius:0}
+.cl-g .x-foot{margin:0 4px 4px;font-family:'Cults Pixel';font-size:22px;font-weight:400}
+.cl-g.sm .x-foot{margin:0 2px 2px;font-size:18px}
+.cl-g .x-foot .lt-res b,.cl-g .x-worth b{font-family:'Cults Pixel';font-weight:400;font-size:1.3em}
+
+/* H · Header */
+.cl-h{box-shadow:inset 0 0 0 2px var(--c),0 8px 18px -8px rgba(0,0,0,.8)}
+.cl-h .x-head{display:flex;align-items:center;gap:6px;padding:6px;background:var(--c);color:#fff}
+.cl-h[data-ground="white"] .x-head,.cl-h[data-ground="silver"] .x-head{color:var(--ink)}
+.cl-h .x-head .x-name{flex:1;padding:0;font-size:17px;text-shadow:0 1px 0 rgba(0,0,0,.2)}
+.cl-h .x-cost,.cl-h .x-worth{position:static;flex:none}
+.cl-h .x-cost{width:32px;height:32px;font-size:19px}
+.cl-h .x-worth{height:28px;color:var(--ink)}
+.cl-h .x-art{height:112px;margin:0 2px}
+.cl-h.sm .x-head{flex-wrap:wrap;justify-content:space-between;gap:2px;padding:3px}
+.cl-h.sm .x-head .x-name{order:3;flex-basis:100%;font-size:12.5px;line-height:14px}
+.cl-h.sm .x-cost{width:22px;height:22px;font-size:14px}
+.cl-h.sm .x-worth{height:20px}
+
+/* I · Medallion */
+.cl-i{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 70%,#000),0 8px 18px -8px rgba(0,0,0,.8);align-items:center}
+.cl-i .x-art{width:116px;height:116px;margin-top:14px;border-radius:50%;box-shadow:0 0 0 4px var(--c),0 0 0 6px var(--pp),0 0 0 7px color-mix(in srgb,var(--c) 50%,transparent)}
+.cl-i.sm .x-art{flex:none;width:62px;height:62px;margin-top:10px;box-shadow:0 0 0 2px var(--c),0 0 0 3px var(--pp)}
+.cl-i .x-name{padding-top:12px}
+.cl-i.sm .x-name{padding-top:6px}
+.cl-i .x-cost{border-radius:8px}
+.cl-i.sm .x-cost{border-radius:5px}
+.cl-i .x-foot{align-self:stretch;margin-top:auto}
+.cl-i.sm .x-foot{margin-top:auto}
+.cl-x .x-art{display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 75%,color-mix(in srgb,var(--c) 34%,#f4ebd7),color-mix(in srgb,var(--c) 14%,#eadfc4) 75%)}
+.cl-x[data-ground="colorless"] .x-art{background:color-mix(in srgb,var(--colorless,#8d9693) 30%,#f1ede4)}
+.cl-x:not(.sm){height:300px}
+.cl-x:not(.sm) .x-art{height:112px}
+.cl-f:not(.sm) .x-art{height:104px}
+.cl-i:not(.sm) .x-art{width:108px;height:108px}
+.cl-i.sm .x-art{width:56px;height:56px;margin-top:8px}
+.cl-i.sm .x-name{padding-top:5px}
