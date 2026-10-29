@@ -132,7 +132,7 @@ export default {
     m('patriarch', 'Patriarch', 3, 2, 'Game End: +1 follower per 2 members you have.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
-    m('recruitbonus', 'Recruit Bonus', 1, 1, 'Whenever one of your members’ On Recruit happens, +1 of its color.', { f: 2,
+    m('recruitbonus', 'Recruit Bonus', 1, 1, 'Your On Recruits also give +1 of that member’s color.', { f: 2,
       onRecruitAbility(ctx, owner, card, recruited) { const r = ctx.quadrant(recruited.def.quadrant).resource; if (ctx.state.resources.includes(r)) ctx.gain(owner, r, 1); }, // a guest has no color: nothing
     }),
     m('movementpenalty', 'Movement Penalty', 1, 2, 'Whenever you take a rival’s member out of their cult, they lose 1 follower.', {
