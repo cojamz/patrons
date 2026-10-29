@@ -26,3 +26,7 @@ An independent re-check of the balance thread's runs ("Run balance tests and sug
 
 ## Price rounds (Normal 4p, paired on the same seeds; adjusted lift before → after)
 See the thread report for the per-round numbers. Summary: Accomplice 1/2 drops ~6 points every time (still +6 to +12). Agents at 1/2 reads −3 to −8 (1/1 reads −3), so its ability is the problem. Bait 1/2 fixes 2 of 4 runs. Heiress 4/4 is bought half as often, and lift doesn't move. Bodyguard 5/3 and Night Owl 6/2 are bought 3x as often. Exporter 2/5 and Scout 0/3 are small and harmless. Spread of member lifts 4.84 → 4.43.
+
+## Sign-off (4am Eastern)
+Signed: Heiress 4/4, Accomplice 1/2, Agents 1/2, Grifter 2/3, Bait 1/2, Connoisseur 1/2, Launderers 0/4 (newer card, balance thread's read), Bodyguard 5/3, Night Owl 6/2, Extra Hand 0/8, Exporter 2/5, Scout 0/3. Hard 4p final (200 games, paired): Agents −18 → −8.5, Bait −11 → −6, Accomplice +5 → +8, buyer 7.5 → 8.8%. Normal 4p round 4 (paired): spread 4.84 → 4.43, buyer 28.2 → 27.0.
+Not signed (Cory's notes): Tiebreaker stays 4 (Normal quirk); Saboteur (seat-count flip); anything under the 3 floor; artifacts and spaces (no price lever).
