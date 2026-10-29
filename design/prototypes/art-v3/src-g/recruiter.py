@@ -54,5 +54,5 @@ c.fill(sheet, 'k')
 c.put(32, 38, ['..v..', 'vvvvv', '.vvv.', '.v.v.'])
 for y in (43, 45): c.fill(c.line(31, y, 39, y - 1), 'f')
 c.put(33, 33, ['.fff.', 'fffff'])
-c.put(25, 39, ['..DDC', '.DCCCB', 'DCDCDC', 'CBCBCB', 'CCCCBA', '.BBBA.']); c.put(31, 40, ['D', 'C'])     # her hand on the board's edge
+c.put(25, 39, ['..DDC.', '.DDCCCB', 'DCCCCBA', 'CCCCCBA', 'BCCCBA.', '.BBBA..']); c.put(31, 40, ['D', 'C'])     # her hand on the board's edge
 PORTRAIT = portrait('red.recruiter', 'Recruiter', 'red', c, [{'skin': 'palepink', 'hair': 'darkbrown'}], 'navy')

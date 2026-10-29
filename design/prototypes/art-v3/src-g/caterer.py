@@ -3,7 +3,7 @@ from _kit import Canvas, rows, jacket, portrait
 
 # Caterer (silver), round 1. The owner-chef of a catering house, proud of the spread he's sending your way: a tall
 # pleated toque, level confident eyes, a pleased closed smile, a double-breasted silver chef's jacket.
-# Prop: a brass tray of canapes balanced high on his flat palm. Frontal. Template: 1 person.
+# Prop: a silver tray of canapes balanced high on his flat palm. Frontal. Template: 1 person.
 c = Canvas()
 body = jacket(c, top=33.6, l=2, r=45)
 # double-breasted front: an overlap edge and two rows of buttons
@@ -45,10 +45,12 @@ for x in (20, 24, 28): c.fill(c.line(x, 3, x, 10) & puff, 'j')
 band = c.rect(15, 10, 33, 13)
 c.fill(band, 'k'); c.fill(band & c.rect(15, 10, 33, 10), 'l'); c.fill(band & c.rect(29, 10, 33, 13), 'j')
 c.edge(band, 'j')
-# ---- the tray of canapes on his flat palm
+# ---- the tray of canapes on his flat palm: a pale silver tray, four separate bites with gaps between
 tray = c.poly([(30, 26), (46, 26), (45, 28), (31, 28)])
-c.fill(tray, 'c'); c.fill(tray & c.rect(0, 28, 47, 28), 'b')
-for x, top in ((31, 'kv'), (35, 'vk'), (39, 'kv'), (43, 'vk')): c.put(x, 24, ['.' + top[0] + top[0], top[1] * 3, 'bbb'])
-c.edge(tray, 'b')
-c.put(36, 29, ['BCCCCB', '.BCCB.'])                                     # the palm under it
+c.fill(tray, 'g'); c.fill(tray & c.rect(0, 26, 47, 26), 'h'); c.fill(tray & c.rect(0, 28, 47, 28), 'f')
+for x, top in ((31, 'v'), (35, 'k'), (39, 'v'), (43, 'k')):
+    c.put(x, 23, [top + top, top + ('v' if top == 'k' else top), 'ss'])
+c.edge(tray, 'e')
+c.put(35, 29, ['DCCB', 'BCBA'])                                         # his fingertips under the rim
+c.put(34, 29, ['C'])
 PORTRAIT = portrait('silver.caterer', 'Caterer', 'silver', c, [{'skin': 'coolbrown', 'hair': 'black'}], 'red')

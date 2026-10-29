@@ -27,15 +27,15 @@ rows(c, 14, {
     17: ".BCBBBBBCDCBBBBBCBA.",
     18: ".BCBzzzzCDBzzzzBCBA.",
     19: "CBCByzyyCDByzyyBBBAB",
-    20: "DBCDDCCCCDBCCCCCBBAB",
+    20: "DBCDDDDCCDBCCCCCBBAB",
     21: "CBCDDDDDCDBCDDCCBBAA",
     22: ".BCDDDDDCDDBCDCCBBA.",
     23: ".BCCDDDCAAABCCCCBBA.",
     24: "..BCCCCCCCCCCCCCBBA.",
-    25: "..BCCCCBzzzzBCCCBA..",
-    26: "...BCCCCCCCCCCCBA...",
-    27: "....BBCCDDDCCBBA....",
-    28: "......ABBBBBBA......",
+    25: "..BCCCCCCCCCCCCCBA..",
+    26: "..BCCCCBzzzBCCCCBA..",
+    27: "..ABCCCCCCCCCCCBBA..",
+    28: "...AABBBBBBBBBBAA...",
 })
 # close-cropped grey hair, lit top-left, short at the temples
 rows(c, 14, {
@@ -58,7 +58,12 @@ c.fill(dial, 'l'); c.outside(dial, 'k', 12, 40, 3, 3)
 c.put(12, 38, ['z', 'z', 'zz']); c.set(10, 39, '!')
 c.edge(case, 'a')
 c.put(11, 34, ['.bb.', 'b..b', '.cc.'])                         # the bow
-c.put(16, 43, ['b', '.c', '..b', '...cbcb'])         # chain to the waistcoat
-c.put(7, 43, ['..DDC', '.DDDCB', 'DCDCDB', 'CBCBCA', '.BBBA.'])                # his fingers under the case
+c.put(16, 44, ['bc', '..cb', '....bc', '......cb'])     # chain to the waistcoat, in 2px runs
+c.put(6, 42, ['.D........',
+              'DD........',
+              'DC........',
+              'CDDC......',
+              'BCCDDDDCC.',
+              '.BBCCCCCBA'])                                   # his palm cradling the case, fingers up its side
 c.put(17, 39, ['D', 'D', 'C'])                                   # thumb on the rim
 PORTRAIT = portrait('purple.pocketwatch', 'Pocket Watch', 'purple', c, [{'skin': 'verydeep', 'hair': 'grey'}], 'violet')

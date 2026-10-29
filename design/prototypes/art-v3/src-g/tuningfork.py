@@ -2,7 +2,8 @@ import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _kit import Canvas, rows, jacket, portrait
 
 # Impressionist (green, id echo.tuningfork), round 1. A stage mimic mid-impression: a ginger bob, brows hoisted high
-# in mock gravity, a big black handlebar moustache on a stick held up over her own mouth. Green stage jacket over a
+# in mock gravity, a big black handlebar moustache on a stick held up beside
+# her face, her own mouth a small round 'o' mid-voice. Green stage jacket over a
 # turtleneck. True 3/4 to our right. Template: 1 person.
 c = Canvas()
 body = jacket(c, top=34, l=2, r=45)
@@ -40,11 +41,19 @@ c.fill(bob & c.ellipse(19, 7.6, 5, 2.2), 'H')
 c.fill(c.line(21, 10, 21, 13) | c.line(26, 9, 27, 13), 'F')
 c.fill(c.rect(13, 25, 16, 26) & bob, 'E'); c.fill(c.rect(32, 24, 35, 25) & bob, 'E')
 c.edge(bob, 'E')
-# ---- the moustache on a stick, held up over her mouth: a big black handlebar, ends curled up
-c.fill(c.line(24, 27, 24, 33), 'g')
-c.put(18, 23, ['n.........n',
-               'n..nnnnn..n',
-               '.nnnnoonnn.',
-               '..nnnm.nnm.'])
-c.put(22, 31, ['.DDC', 'DCDCB', 'CBCBA', '.BBA.'])                 # her fingers round the stick
+# her own mouth: a small round "o", mid-voice
+c.put(23, 25, ['zz', 'AA'])
+# ---- the fake moustache on a stick, held up beside her face, off the lip and tilted: a black handlebar, ends curled
+c.fill(c.line(33, 30, 34, 31), 'g')
+c.put(28, 26, ['n..........n',
+               'nn...nn...nn',
+               '.nnnnoonnnn.',
+               '..nnnnnnnn..'])
+# her hand round the stick, knuckles toward us, thumb over the top, a green cuff
+c.put(32, 32, ['.DDC.',
+               'DDCCB',
+               'CCCBA',
+               '.BBA.',
+               '.442.'])
+c.put(31, 33, ['D', 'C'])
 PORTRAIT = portrait('echo.tuningfork', 'Impressionist', 'green', c, [{'skin': 'freckled', 'hair': 'ginger'}], 'red')

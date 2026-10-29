@@ -50,5 +50,5 @@ for (x, y) in ((28, 34), (33, 33), (38, 34), (42, 35)):
     c.put(x, y, ['.vw.', 'vvwv', 'uvvv', '.uu.'])
 c.put(34, 32, ['q']); c.put(39, 33, ['q'])                          # stalks
 c.edge(bask, 'q')
-c.put(25, 39, ['.DDC', 'DCDCB', 'CBCBA', '.BBA.'])                   # her hand on the rim
+c.put(24, 38, ['..DDC.', '.DDCCCB', 'DCCCCBA', 'CCBCCBA', '.BBBBA.']); c.put(23, 39, ['D', 'C'])                   # her hand on the rim
 PORTRAIT = portrait('yellow.farmer', 'Farmer', 'yellow', c, [{'skin': 'warmtan', 'hair': 'grey'}], 'red')

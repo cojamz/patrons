@@ -4,15 +4,15 @@ Hard rule (ROLLOUT-NOTES, audit.md): no tone reads as the joke, the threat or a 
 
 | id | role | person | tone | place | expression |
 |---|---|---|---|---|---|
-| echo.tuningfork (Impressionist) | stage mimic, moustache on a stick (comic) | young woman, ginger bob | freckled | solo, 3/4 | brows hoisted, round eyes, mouth hidden by the prop |
-| gold.prospector | prospector who struck gold (hero) | woman, felt hat | deep | solo, 3/4 | delighted, eyes creased shut, closed smile |
+| echo.tuningfork (Impressionist) | stage mimic about to put on a fake moustache (comic) | young woman, ginger bob | freckled | solo, 3/4 | brows hoisted, round eyes, small round 'o' mouth mid-voice |
+| gold.prospector | prospector holding up the nugget she just found (hero) | woman, tan felt hat | deep | solo, 3/4 | delighted, eyes creased shut, small closed smile set toward the far cheek |
 | market.bargainbin | thrift digger holding up a record (everyday) | young man, beanie | olive | solo, frontal | delighted, eyes creased shut, small open smile (no teeth) |
 | purple.pocketwatch | gentleman checking the time (neutral) | older man, grey crop | verydeep | solo, frontal | calm, level, closed mouth |
 | red.recruiter | keen recruiter with a clipboard (mildly pushy) | young woman, ponytail | palepink | solo, frontal | eager, bright open eyes, warm closed smile |
 | silver.caterer | owner-chef with a tray of canapes (craftsman) | man, toque | coolbrown | solo, frontal | proud, pleased closed smile |
-| thieves.fence | fence opening a coat of goods (shady) | middle-aged man, flat cap | fair | solo, 3/4 | sly side-glance, small closed smile |
+| thieves.fence | fence opening a coat hung with a watch, a ring and pearls (shady) | lean middle-aged man, flat cap | fair | solo, 3/4 | sly side-glance, short closed mouth |
 | trading.changer (Money Changer) | money changer at her counter (authority) | woman, green eyeshade | brown | front | polite closed smile, round eyes |
-| | her customer with a banknote | man, side part | golden | behind | cheerful, eyes creased shut, closed smile |
+| | her customer holding up a green banknote | man, black side part | golden | behind, 2 rows lower | cheerful, eyes creased shut, closed smile |
 | yellow.farmer | farmer with a basket of apples (hero) | woman in her sixties, grey bun | warmtan | solo, frontal | warm, round eyes, closed smile |
 
 Checks:
@@ -22,7 +22,12 @@ Checks:
 - Money Changer: the darker person (brown) is in front, working and smiling; the lighter customer stands behind.
 - Caterer is cast as the chef-owner (toque, proud, tray held high like a showpiece), not a waiter; no moustache on brown skin.
 - Farmer: no straw hat and no head-wrap (a first draft had a kerchief; swapped for a bun, washerwoman-trope risk).
-- Deep faces: lit on the D step at forehead, cheekbone, nose bridge; no light row near the mouth, no open mouths.
+- Deep faces: lit on the D step at forehead, cheekbone, nose bridge; no light row next to the mouth, no open mouths.
+- No serving cluster on darker tones (critic, round 2): the Prospector no longer holds a pan out like a plate; she holds
+  one nugget up by her face. The Caterer (coolbrown) is the only one presenting a tray, and he is the chef-owner.
+- Faces vary below the nose (critic, round 2): Pocket Watch a long square jaw, 3px mouth, 8-wide neck; Prospector a round
+  jaw, 3px smile offset to the far cheek, 5-wide neck; Fence a lean pointed chin, short mouth offset in 3/4, 5-wide neck;
+  Changer a broad round jaw, 4px curved smile, 6-wide neck. Every hand is drawn for its pose (no shared stamp).
 - Eyes: lid-bar on Pocket Watch, Caterer, Fence (3 of 9); round on Recruiter, Impressionist, Changer, Farmer;
   creased-shut on Prospector, Bargain Bin, the customer.
 - Ages and genders: 5 women, 5 men; young, middle-aged and two elders.
