@@ -110,6 +110,7 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
       'market.sommelier', // cut from the deck; under 3 holds when neutral in Out of Style (Oct 28) moved the games; cards-market covers it
       'market.connoisseur', // under 3 holds when Tiebreaker at 5 (Oct 28) moved the games; cards-market (Connoisseur) covers it
       'market.restocker', // under 3 holds when Encore's On Recruit copy and Sleep In's growth (Oct 28) moved the games; cards-member-structure covers it
+      'market.doorman', // under 3 holds when Cory's 15 guests (Oct 28) moved the games; cards-market (Doorman) covers it
       'thieves.shoplifter', 'echo.translator']); // under 3 holds when Green grew to 16 (Oct 28) moved the games; recruit-definition (Shoplifter) and cards-echo (Translator, cut) cover them
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);

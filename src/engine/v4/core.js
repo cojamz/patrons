@@ -170,8 +170,10 @@ const printedMembers = def => Math.max(def.f || 0, def.n ?? 1);
 const countOf = card => Math.max(printedMembers(defById(card.def)), card.copy ? printedMembers(defById(card.copy)) : 0);
 export const memberWeight = (state, uid) => countOf(state.cards[uid]);
 export const memberCount = (state, p) => p.members.reduce((s, u) => s + countOf(state.cards[u]), 0);
+// Dabblers (everyColor) counts for every color on the table (Cory, 2026-10-28)
 export const countMembersOfColor = (state, p, q) => p.members.reduce((s, u) => {
-  const c = state.cards[u]; return s + (defById(c.def).quadrant === q ? countOf(c) : 0);
+  const c = state.cards[u], every = effectiveDefs(c).some(d => d.everyColor) && q !== 'guest' && state.quadrants.includes(q);
+  return s + (defById(c.def).quadrant === q || every ? countOf(c) : 0);
 }, 0);
 export const cardDef = (state, uid) => defById(state.cards[uid].def);
 export function actionAt(state, q, i) { return quadrant(state.quadrants[q]).actions[i]; }
@@ -486,7 +488,7 @@ function inputFor(state, task) {
           options: uses.length ? [...uses, { id: 'pass', label: 'Done', kind: 'pass' }] : [] };
       }
       // a second buy (Big Spender) is offered only after a real first buy, while an unspent one is held
-      if (task.extra && !(p.turnBuys > 0 && (allowance(state, p, 'extraBuy') || alwaysBuysTwice(state, p)))) return { kind: 'buy', prompt: '', options: [] };
+      if (task.extra && !(p.turnBuys > 0 && (allowance(state, p, 'extraBuy') || alwaysBuysTwice(state, p) || p.buyTwiceNow))) return { kind: 'buy', prompt: '', options: [] };
       const opts = [];
       // which members and tiers can be paid for at all: an existence check, not the ranked list of every way to pay
       // (the list scores each way against the contests: most of a round III step's engine time, run for every shop card,
@@ -848,6 +850,8 @@ function endRound(state) {
     if (!c.winners.length) continue;
     const winners = c.winners.map(id => state.players[id]);
     underCause({ kind: 'contest', qid: c.qid, round: state.round }, () => { for (const w of winners) { w.bonus += c.prize; w.contest += c.prize; fBump(state, w, c.prize); } });
+    // members that answer a contest won (Cheerleader)
+    for (const w of winners) eachMemberOf(state, w, (card, def) => { if (def.onContestWin) def.onContestWin(ctx, w, card, c); }, ['onContestWin']);
     msg.push(`${c.label}: ${winners.map(w => w.name).join(' & ')} +${c.prize}`);
   }
   // the round's scoring, kept as decided: the round-end card and the results read it back (never re-derived)
@@ -1349,6 +1353,7 @@ function boughtOnce(state, p, task) {
     // Shopaholic's second buy is named like any other member's use (the fire audit wants every effect in the log)
     const always = p.members.find(uid => effectiveDefs(state.cards[uid]).some(d => d.buyTwice));
     if (always !== undefined) log(state, `${p.name} uses ${defById(state.cards[always].def).name}.`);
+    else if (p.buyTwiceNow) delete p.buyTwiceNow; // Big Spender, used this turn (One Time Use since Oct 28)
     else spendAllowance(state, p, 'extraBuy');
   }
 

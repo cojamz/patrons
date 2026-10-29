@@ -13,6 +13,7 @@
 // Straggler uses the onAllPlaced hook (after the round's last placement, before its contests).
 import { registerGuests } from './index.js';
 import { extraMinion, spareSpace } from './purple.js';
+import { startSteal } from './thieves.js';
 
 // Prices: member-value sim (scripts/v4-member-value.mjs, 4 normal bots, Release off, handed over at round II),
 // priced so value ≈ cost + 1.5 at 1.5 per follower, rounded to the even cost grid. See design/rule-benders.md.
@@ -53,6 +54,37 @@ function offerFrom(ctx, owner, uid) {
 }
 const stillMine = (ctx, p, w) => (w.joined ? (ctx.state.squats?.[w.key] || []).includes(p.id) : ctx.state.slots[w.key] === p.id);
 
+const cost = c => c.def.s + c.def.w;
+// Anarchist's swaps: any two members, in any cult or the shop, costing within 2 of each other; a rival's member only
+// where it may be taken (Bodyguard), and never a member that can't be swapped (Loyalists)
+function anarchyPairs(ctx, p) {
+  const all = [...ctx.state.players.flatMap(o => (o === p || ctx.canSteal(p, o, 'member')) ? ctx.membersOf(o).filter(c => ctx.canSwapMember(c.uid)) : []), ...ctx.shopCards()];
+  const out = [];
+  for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+    const a = all[i], b = all[j], oa = ctx.ownerOf(a.uid), ob = ctx.ownerOf(b.uid);
+    if (oa === ob) continue; // two in the same cult or both in the shop: nothing moves
+    if (Math.abs(cost(a) - cost(b)) <= 2) out.push([a, b]);
+  }
+  return out;
+}
+const worth = c => c.def.f + cost(c);
+function gainFor(ctx, p, a, b) {
+  const oa = ctx.ownerOf(a.uid), ob = ctx.ownerOf(b.uid);
+  return oa === p ? worth(b) - worth(a) : ob === p ? worth(a) - worth(b) : 0;
+}
+function scoutStep(ctx, p, data) {
+  const left = ctx.shopCards().filter(c => data.start.includes(c.uid));
+  if (!left.length) return scoutDone(ctx, p, data);
+  ctx.choose(p, data.sent.length ? 'Scout: send another to the bottom of the pile, or done' : 'Scout: send which shop members to the bottom of the pile?', [
+    ...left.map(c => ({ id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: cost(c) > Object.values(p.res).reduce((x, y) => x + y, 0) ? 1 : -1 })),
+    { id: 'done', label: 'Done', kind: 'pass', value: null, hint: 0 },
+  ], 'benders.scoutPick', data);
+}
+function scoutDone(ctx, p, data) {
+  if (data.sent.length) ctx.log(`${p.name}'s Scout: sent ${data.sent.join(', ')} to the bottom of the pile.`);
+  ctx.refillShop();
+}
+
 const members = [
   // Party Crasher (was Squatter; id kept for old records): Cory, 2026-10-28, Once per game, cheaper; 4 with the +1 wild
   m('squatter', 'Party Crasher', 'thieves', 2, 1, 'Once per game: your next minion can be placed on a space a rival already took.', {
@@ -64,8 +96,20 @@ const members = [
     },
     botActivate: (ctx, p) => ctx.state.round >= 2 && !p.crashNext,
   }),
-  m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per round: recruit twice in one turn.', { extraBuy: true }),
-  m('freelancer', 'Freelancer', 'yellow', 2, 2, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
+  // Big Spender as it printed until Oct 28, never dealt: the fixture for the engine's once-per-round second buy
+  m('bigspender1', 'Big Spender', 'gold', 1, 1, 'Once per round: recruit twice in one turn.', { extraBuy: true, retired: true }),
+  // Cory, 2026-10-28: back in the deck (it stands in for Blue's recruits), One Time Use, 3
+  m('bigspender', 'Big Spender', 'gold', 1, 1, 'One Time Use: recruit twice this turn.', {
+    activate: 'game',
+    onActivate(ctx, owner, card) {
+      if (owner.buyTwiceNow) { card.used = false; return; }
+      owner.buyTwiceNow = true;
+      ctx.log(`${owner.name}'s Big Spender: recruit twice this turn.`);
+    },
+    onTurnEnd(ctx, owner, card, p) { if (p === owner) delete owner.buyTwiceNow; },
+    botActivate: (ctx, p) => !p.buyTwiceNow && ctx.state.round >= 2 && p.turnBuys === 0 && Object.values(p.res).reduce((a, b) => a + b, 0) >= 10,
+  }),
+  m('freelancer', 'Alchemist', 'yellow', 2, 2, /* Freelancer until Cory renamed it, Oct 28 */ 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
   // Extra Hand as it printed until Oct 28, never dealt (retired): the tests of extra minions a card grants by round
   // (Poach and swaps moving an unplaced grant, copies, a full board) keep it as their fixture
@@ -98,6 +142,56 @@ const members = [
       ctx.log(`${owner.name}'s Saboteur: −3 followers.`);
     },
   }),
+  // Cory, 2026-10-28: Dabblers (Turncoat, then Groupies), 3, "give 2 members, and count as every color"
+  m('dabblers', 'Dabblers', null, 0, 2, 'Counts as 2 members of every color.', { n: 2, everyColor: true }),
+  // Cory, 2026-10-28: Cheerleader (Champion), 4
+  m('cheerleader', 'Cheerleader', null, 0, 3, 'Whenever you win a contest, +1 follower.', {
+    onContestWin(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Cheerleader: +1 follower.`); },
+  }),
+  // Cory, 2026-10-28: Anarchist, 7, once per round (it stands in for Red's swaps)
+  m('anarchist', 'Anarchist', null, 0, 6, 'Once per round: swap any two members within 2 cost.', {
+    activate: 'round',
+    onRoundStart(ctx, owner, card) { card.used = false; },
+    onActivate(ctx, owner, card) {
+      const pairs = anarchyPairs(ctx, owner);
+      if (!pairs.length) { card.used = false; ctx.log(`${owner.name}'s Anarchist: no two members within 2 cost to swap.`); return; }
+      ctx.log(`${owner.name} uses Anarchist.`);
+      const where = c => ctx.ownerOf(c.uid)?.name || 'Shop';
+      ctx.choose(owner, 'Anarchist: choose two members within 2 cost to swap', pairs.map(([a, b]) => ({
+        id: `trade:${a.uid}:${b.uid}`, label: `${where(a)}: ${a.def.name} ↔ ${where(b)}: ${b.def.name}`, kind: 'trade', value: [a.uid, b.uid],
+        hint: gainFor(ctx, owner, a, b),
+      })).concat({ id: 'none', label: 'Don’t swap', kind: 'pass', value: null, hint: -99 }), 'benders.anarchy', { uid: card.uid });
+    },
+    botActivate: (ctx, p) => anarchyPairs(ctx, p).some(([a, b]) => gainFor(ctx, p, a, b) >= 2),
+  }),
+  // Cory, 2026-10-28: Scout, 4, once per round (it stands in for Blue's shop work)
+  m('scout', 'Scout', null, 0, 3, 'Once per round: send any shop members to the bottom of the pile, then refill.', {
+    activate: 'round',
+    onRoundStart(ctx, owner, card) { card.used = false; },
+    onActivate(ctx, owner, card) {
+      if (!ctx.state.shop.length) { card.used = false; return; }
+      scoutStep(ctx, owner, { start: [...ctx.state.shop], sent: [] });
+    },
+    botActivate: (ctx, p) => ctx.state.round >= 2 && ctx.shopCards().filter(c => cost(c) > Object.values(p.res).reduce((a, b) => a + b, 0)).length >= 3,
+  }),
+  // Cory, 2026-10-28: Con Men, 6, counts as 2 members; On Recruit (was One Time Use), split among rivals like Help Yourself
+  m('conmen', 'Con Men', null, 0, 5, 'Counts as 2 members. On Recruit: steal 5 resources.', { n: 2,
+    onRecruited(ctx, owner) { startSteal(ctx, owner, 'Con Men', 5, { fromAction: false }); },
+  }),
+  // Cory, 2026-10-28: HR (Archivist), 9, worth 3 (so it counts as 3 members)
+  m('hr', 'HR', null, 0, 8, 'Worth 3 followers. Game End: +3 followers per color you have 3 members of.', { f: 3,
+    onGameEnd: (ctx, owner) => 3 * ctx.state.quadrants.filter(q => ctx.countMembersOfColor(owner, q) >= 3).length,
+  }),
+  // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"); Second Wind is Claude's name
+  m('secondwind', 'Second Wind', null, 0, 7, 'On Recruit: use one of your used One Time Use members again.', {
+    onRecruited(ctx, owner) {
+      const spent = ctx.membersOf(owner).filter(c => c.used && [c.def, c.copy && ctx.defOf(c.copy)].some(d => d?.activate === 'game'));
+      if (!spent.length) { ctx.log(`${owner.name}'s Second Wind: no used One Time Use member.`); return; }
+      ctx.choose(owner, 'Second Wind: which One Time Use member can be used again?', spent.map(c => ({
+        id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: cost(c),
+      })), 'benders.rewind');
+    },
+  }),
   m('tiebreaker', 'Tiebreaker', null, 0, 3, /* Cory, Oct 28 night: "a little cheaper. 4?": 4 with the +1 wild */ 'Ties you’re in go to you alone.', { tiebreak: true }),
   m('straggler', 'Straggler', 'purple', 6, 1, /* Oct 27, Cory "too cheap": 8 with the +1 wild (Claude's price) */ 'Once per round, after the last minion is placed: you may move your last minion to an open space and take it.', {
     onAllPlaced(ctx, owner, card) {
@@ -108,6 +202,28 @@ const members = [
 ];
 
 export const handlers = {
+  anarchy(ctx, p, value) {
+    if (!Array.isArray(value)) { ctx.log(`${p.name} chose not to swap.`); return; }
+    const [a, b] = value;
+    if (!anarchyPairs(ctx, p).some(([x, y]) => (x.uid === a && y.uid === b) || (x.uid === b && y.uid === a))) return;
+    const names = [a, b].map(uid => `${ctx.ownerOf(uid)?.name || 'Shop'}'s ${ctx.card(uid).def.name}`);
+    if (ctx.swapMembers(p, a, b)) ctx.log(`${p.name}'s Anarchist swapped ${names[0]} and ${names[1]}.`);
+  },
+  scoutPick(ctx, p, uid, data) {
+    if (uid === null || uid === undefined) return scoutDone(ctx, p, data);
+    if (!ctx.state.shop.includes(uid)) return scoutStep(ctx, p, data);
+    const i = ctx.state.shop.indexOf(uid);
+    ctx.state.shop.splice(i, 1);
+    ctx.state.pile.push(uid);
+    scoutStep(ctx, p, { ...data, sent: [...data.sent, ctx.card(uid).def.name] });
+  },
+  rewind(ctx, p, uid) {
+    const c = ctx.card(uid);
+    if (!p.members.includes(uid) || !c.used) return;
+    c.used = false;
+    ctx.log(`${p.name}'s Second Wind: ${c.def.name} can be used again.`);
+  },
+
   stragglerFrom(ctx, p, from, data) {
     if (!from) return;
     if (!stillMine(ctx, p, from)) { offerFrom(ctx, p, data.uid); return; }

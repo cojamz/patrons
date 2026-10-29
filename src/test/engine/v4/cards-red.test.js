@@ -71,7 +71,7 @@ describe('Red members', () => {
 
   it('Pied Piper: the second recruit in one turn pays +2 red at once, named; Big Spender makes it two buys', () => {
     const restore = pinCosts({ 'red.intern': [0, 0], 'red.volunteer': [0, 0] });
-    let s = sceneQ({ res: [rich], members: [['red.drive', 'benders.bigspender']], shop: ['red.intern', 'red.volunteer'] });
+    let s = sceneQ({ res: [rich], members: [['red.drive', 'benders.bigspender1']], shop: ['red.intern', 'red.volunteer'] });
     s = take(s, 'gold.rush');
     const r0 = R(s).red;
     s = buy(s, 'red.volunteer'); // free

@@ -16,7 +16,7 @@ useCosts({
   'market.curator': [2, 2], 'market.planner': [2, 2], 'market.underbidder': [2, 0], 'market.minimalist': [2, 0],
   'market.climber': [2, 0], 'market.auctioneer': [4, 2], 'market.sommelier': [2, 2], 'market.patroness': [4, 4],
   'market.blackmarket': [2, 2], 'market.snob': [6, 4], 'market.recluse': [2, 2],
-  'thieves.watchdog': [4, 2], 'thieves.crew': [2, 2], 'benders.bigspender': [2, 2], 'benders.insider': [4, 2],
+  'thieves.watchdog': [4, 2], 'thieves.crew': [2, 2], 'benders.bigspender1': [2, 2], 'benders.insider': [4, 2],
 });
 const ROW = ['gold.tycoon', 'red.bigfamily', 'red.twins', 'red.intern', 'gold.taxman', 'red.volunteer'];
 const R = (s, i = 0) => s.players[i].res;
@@ -61,7 +61,7 @@ describe('Blue actions', () => {
     expect(s.log).toContain("P1's Out of Style: +3 blue.");
   });
   it('Out of Style: neutral is a color you can send to the bottom (Cory, Oct 28)', () => {
-    let s = table(Q, { shop: ['gold.tycoon', 'red.twins', 'benders.bigspender', 'benders.insider', 'gold.taxman'] });
+    let s = table(Q, { shop: ['gold.tycoon', 'red.twins', 'benders.bigspender1', 'benders.insider', 'gold.taxman'] });
     s = take(s, 'market.restock');
     expect(s.pending.options.map(o => o.id).sort()).toEqual(['color:gold', 'color:neutral', 'color:red']);
     const guests = s.shop.filter(u => s.cards[u].def.startsWith('benders.'));
@@ -151,7 +151,7 @@ describe('Blue actions', () => {
     expect(s.pending?.kind).not.toBe('buy');
   });
   it('× Big Spender: Spree plus Big Spender is 4 buys', () => {
-    let s = table(Q, { round: 3, res: [{ gold: 4, red: 4 }], shop: ROW, left: 5, members: [['benders.bigspender']] });
+    let s = table(Q, { round: 3, res: [{ gold: 4, red: 4 }], shop: ROW, left: 5, members: [['benders.bigspender1']] });
     s = take(s, 'market.spree');
     for (let k = 0; k < 4; k++) { expect(s.pending.kind).toBe('buy'); s = move(s, 'tier:small'); }
     expect(s.players[0].bonus).toBe(4);

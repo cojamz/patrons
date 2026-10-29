@@ -41,7 +41,7 @@ describe('guest members join the deck', () => {
     const has = s => Object.values(s.cards).some(c => c.def === 'benders.squatter');
     expect(has(on)).toBe(true);
     expect(has(off)).toBe(false);
-    expect(Object.keys(on.cards).length - Object.keys(off.cards).length).toBe(10); // the full test deck: 10 guests since Saboteur (Oct 28)
+    expect(Object.keys(on.cards).length - Object.keys(off.cards).length).toBe(17); // the full test deck: Cory's 15 guests plus the cut Insider and Straggler (Oct 28)
   });
   it('a bender whose color is not on the table is paid in any colors', () => {
     // Squatter leans Magenta; the default table has no magenta
@@ -130,7 +130,7 @@ describe('Party Crasher: Once per game, the next minion may go on a space a riva
 
 describe('Big Spender: once per round, buy twice in one turn', () => {
   it('a second buy follows a real first buy, once per round', () => {
-    let s = scene({ members: [['benders.bigspender']], res: [{ gold: 4, red: 4, blue: 4, green: 4 }], queue: [{ t: 'buy', p: 0 }, { t: 'buy', p: 0, extra: true }, { t: 'endTurn', p: 0 }] });
+    let s = scene({ members: [['benders.bigspender1']], res: [{ gold: 4, red: 4, blue: 4, green: 4 }], queue: [{ t: 'buy', p: 0 }, { t: 'buy', p: 0, extra: true }, { t: 'endTurn', p: 0 }] });
     s.current = 0;
     s = move(s, 'tier:mid');
     expect(s.pending.kind).toBe('buy');
@@ -138,7 +138,7 @@ describe('Big Spender: once per round, buy twice in one turn', () => {
     s = move(s, 'tier:mid');
     expect(s.players[0].bonus).toBe(10);
     expect(s.pending).toBe(null);
-    expect(s.cards[uidOf(s, 'benders.bigspender', 0)].spent.extraBuy).toBe(1);
+    expect(s.cards[uidOf(s, 'benders.bigspender1', 0)].spent.extraBuy).toBe(1);
     // another turn this round: one buy only
     s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
     s = move(s, s.pending.options[0].id); s = pickAny(s);
@@ -146,13 +146,13 @@ describe('Big Spender: once per round, buy twice in one turn', () => {
     expect(s.pending?.kind).not.toBe('buy');
   });
   it('passing the first buy gives no second one', () => {
-    let s = scene({ members: [['benders.bigspender']], res: [{ gold: 4, red: 4 }], rules: { release: false }, queue: [{ t: 'buy', p: 0 }, { t: 'buy', p: 0, extra: true }, { t: 'endTurn', p: 0 }] });
+    let s = scene({ members: [['benders.bigspender1']], res: [{ gold: 4, red: 4 }], rules: { release: false }, queue: [{ t: 'buy', p: 0 }, { t: 'buy', p: 0, extra: true }, { t: 'endTurn', p: 0 }] });
     s = move(s, 'pass');
     expect(s.pending).toBe(null);
-    expect(s.cards[uidOf(s, 'benders.bigspender', 0)].spent).toBeUndefined();
+    expect(s.cards[uidOf(s, 'benders.bigspender1', 0)].spent).toBeUndefined();
   });
   it('with a Purple extra turn: the extra turn has its own buy, and Big Spender is still once per round', () => {
-    let s = scene({ round: 2, quadrants: ['gold', 'red', 'purple', 'green'], members: [['benders.bigspender']], res: [{ gold: 9, red: 9, purple: 2, green: 9 }], rules: { release: false } }); // no extra minions in round I
+    let s = scene({ round: 2, quadrants: ['gold', 'red', 'purple', 'green'], members: [['benders.bigspender1']], res: [{ gold: 9, red: 9, purple: 2, green: 9 }], rules: { release: false } }); // no extra minions in round I
     extraTurns(contextFor(s), s.players[0], 1);
     s = move(s, `slot:${RUSH}`);
     s = move(s, 'tier:mid'); s = move(s, 'tier:mid'); // the double buy
@@ -369,7 +369,7 @@ describe('Release with once-per-game members, just-bought members and Echo copie
   // just-bought member released in the same turn (Big Spender's second buy) or the same round (a later buy step).
   it('a just-bought member can’t be released in a Big Spender second buy step; next round it can', () => {
     const Q = ['gold', 'red', 'echo', 'purple'];
-    let s = scene({ quadrants: Q, members: [['benders.bigspender']], shop: ['echo.mirror'], res: [{ green: 10 }, { green: 5 }], queue: [{ t: 'buy', p: 0 }, { t: 'buy', p: 0, extra: true }, { t: 'endTurn', p: 0 }] });
+    let s = scene({ quadrants: Q, members: [['benders.bigspender1']], shop: ['echo.mirror'], res: [{ green: 10 }, { green: 5 }], queue: [{ t: 'buy', p: 0 }, { t: 'buy', p: 0, extra: true }, { t: 'endTurn', p: 0 }] });
     s.current = 0; s = resume(s);
     const u = uidOf(s, 'echo.mirror', 'shop');
     s = payFirst(move(s, `card:${u}`));
@@ -432,8 +432,8 @@ describe('Doppelganger and Magenta theft with once-per-round benders', () => {
   });
   it('a stolen Big Spender that was used this round stays used for the thief; next round it works', () => {
     const Q = ['gold', 'red', 'thieves', 'green'];
-    let s = scene({ quadrants: Q, members: [[], ['benders.bigspender']], res: [{ gold: 9, red: 9, green: 9, magenta: 9 }], rules: { release: false }, queue: [] });
-    const u = uidOf(s, 'benders.bigspender', 1);
+    let s = scene({ quadrants: Q, members: [[], ['benders.bigspender1']], res: [{ gold: 9, red: 9, green: 9, magenta: 9 }], rules: { release: false }, queue: [] });
+    const u = uidOf(s, 'benders.bigspender1', 1);
     s.cards[u].spent = { extraBuy: 1 };
     contextFor(s).steal(s.players[0], s.players[1], { uid: u });
     expect(s.players[0].members).toContain(u);

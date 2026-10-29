@@ -27,7 +27,7 @@ describe('the curated member decks', () => {
   // Oct 25: Recluse moves to White, Stylist cut
   // Green grows to 16 (Cory, 2026-10-29: Understudy, Wallflower, Fan Club, Roadie), then 15 (Connector cut)
   const DEALT = { echo: 15, red: 13, thieves: 15, purple: 13, market: 12, trading: 12 };
-  it('Green deals 15, Blue 12, Red and Purple 13, Magenta 15, White 12, other spheres 10, guests 7; no cut card is dealt', () => {
+  it('Green deals 15, Blue 12, Red and Purple 13, Magenta 15, White 12, other spheres 10, guests 15; no cut card is dealt', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });
       // artifacts are picked, never dealt (Cory, 2026-10-24): their cards don't count here
@@ -37,7 +37,7 @@ describe('the curated member decks', () => {
       const fromDeck = ARTIFACTS[q] && !CUT.has(ARTIFACTS[q]) && !defById(ARTIFACTS[q]).artifact ? 1 : 0;
       expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe((DEALT[q] ?? 10) - fromDeck);
       expect(dealt.filter(d => CUT.has(d))).toEqual([]);
-      expect(dealt.filter(d => d.startsWith('benders.')).length).toBe(7);
+      expect(dealt.filter(d => d.startsWith('benders.')).length).toBe(15); // Cory's 15 guests (Oct 28)
     }
   });
 

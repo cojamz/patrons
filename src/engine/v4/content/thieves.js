@@ -127,7 +127,7 @@ function stealStep(ctx, p, data) {
     }
   }
 }
-const startSteal = (ctx, p, name, n, extra = {}) => stealStep(ctx, p, { name, left: n, each: [], picked: {}, unit: 1, ...extra });
+export const startSteal = (ctx, p, name, n, extra = {}) => stealStep(ctx, p, { name, left: n, each: [], picked: {}, unit: 1, ...extra });
 const estimateSteal = (ctx, p, n, who = ctx.rivals(p)) => Math.min(n, who.reduce((s, o) => s + stealable(ctx, p, o), 0)) * 1.33;
 
 // Members a thief may take.

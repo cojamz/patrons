@@ -38,8 +38,21 @@ describe('Guest members (rule-benders)', () => {
     expect(s.players[1].members).toContain(u);
     expect(s.players[1].bonus).toBe(2);
   });
-  it('Big Spender: a second buy after a real first one, once per round; named', () => {
+  it('Big Spender: One Time Use, a second recruit this turn; named; spent after', () => {
     let s = sceneQ({ res: [rich], members: [['benders.bigspender']] });
+    const u = uidOf(s, 'benders.bigspender', 0);
+    s = move(s, `use:${u}`);
+    expect(named(s, 'Big Spender')).toHaveLength(1);
+    s = take(s, 'gold.rush');
+    s = move(s, 'tier:small');
+    expect(s.pending.extra).toBe(true);
+    s = move(s, 'tier:small');
+    expect(s.players[0].bonus).toBe(2);
+    expect(s.players[0].buyTwiceNow).toBeUndefined();
+    expect(s.cards[u].used).toBe(true);
+  });
+  it('Big Spender: a second buy after a real first one, once per round; named', () => {
+    let s = sceneQ({ res: [rich], members: [['benders.bigspender1']] });
     s = take(s, 'gold.rush');
     s = move(s, 'tier:small');
     expect(s.pending.extra).toBe(true);
@@ -48,28 +61,28 @@ describe('Guest members (rule-benders)', () => {
     expect(named(s, 'Big Spender')).toHaveLength(1);
   });
   it('Big Spender × Crowd-Pleaser: two follower buys, two payouts', () => {
-    let s = sceneQ({ res: [rich], members: [['benders.bigspender', 'red.crowd']] });
+    let s = sceneQ({ res: [rich], members: [['benders.bigspender1', 'red.crowd']] });
     s = move(move(take(s, 'gold.rush'), 'tier:small'), 'tier:small');
     expect(named(s, 'Crowd-Pleaser')).toHaveLength(2);
   });
 
-  it('Freelancer: a member’s colored part paid in other colors, and the recruit line names Freelancer', () => {
+  it('Alchemist: a member’s colored part paid in other colors, and the recruit line names Alchemist', () => {
     const restore = pinCosts({ 'gold.banker': [2, 0] });
     try {
       let s = sceneQ({ res: [{ red: 4 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
       s = take(s, 'red.turnout'); // current Gather adds2 red in roundI
       s = buy(s, 'gold.banker');
       expect(s.players[0].res.red).toBe(5);
-      expect(named(s, 'Freelancer')).toHaveLength(1);
+      expect(named(s, 'Alchemist')).toHaveLength(1);
     } finally { restore(); }
   });
-  it('Freelancer is not named when the colored part was paid in its own color', () => {
+  it('Alchemist is not named when the colored part was paid in its own color', () => {
     const restore = pinCosts({ 'gold.prospector': [2, 0] });
     try {
       let s = sceneQ({ res: [{ gold: 2 }], members: [['benders.freelancer']], shop: ['gold.prospector'] });
       s = buy(move(take(s, 'gold.jv'), 'player:1'), 'gold.prospector');
       expect(s.players[0].res.gold).toBe(3);
-      expect(named(s, 'Freelancer')).toHaveLength(0);
+      expect(named(s, 'Alchemist')).toHaveLength(0);
     } finally { restore(); }
   });
 

@@ -10,6 +10,8 @@ const named = (s, name) => linesNaming(s.log, name);
 const G = s => s.players.map(p => p.res.gold);
 const rich = { gold: 30, red: 30, blue: 30, green: 30 };
 
+const topOfPile = (s, pred) => { const k = s.pile.findIndex(u => pred(s.cards[u].def)); s.pile.unshift(...s.pile.splice(k, 1)); };
+
 describe('Gold actions', () => {
   it('Kickback: +3 gold to you, +1 gold to the player you pick', () => {
     let s = sceneQ({ n: 3 });
@@ -132,6 +134,7 @@ describe('Gold members', () => {
   it('Middleman: +1 gold when you recruit a non-gold member, named; a free Open Door counts too', () => {
     // a full row with Intern the one cheapest, so Open Door never asks which (the row's refill shifts with the deck)
     let s = sceneQ({ members: [['gold.coinpurse']], shop: ['red.intern', 'gold.banker', 'gold.tycoon', 'red.mob', 'red.panel', 'red.mentor'] });
+    topOfPile(s, d => d.startsWith('red.')); // Walk-In takes the deck's top member: a red one, so not gold
     s = take(s, 'red.hire');
     expect(s.players[0].members.length).toBe(2);
     expect(G(s)[0]).toBe(1);

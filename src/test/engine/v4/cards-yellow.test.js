@@ -73,7 +73,9 @@ describe('Yellow members', () => {
   });
   it('Go-Between: your non-yellow recruit gives +1 of its color, named; a guest (colorless) gives nothing', () => {
     const restore = pinCosts({ 'red.volunteer': [0, 0] });
-    let s = take(sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] }), 'red.hire');
+    let s = sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] });
+    { const k = s.pile.findIndex(u => s.cards[u].def.startsWith('echo.')); s.pile.unshift(...s.pile.splice(k, 1)); } // a green member on top
+    s = take(s, 'red.hire');
     restore();
     expect(R(s).red).toBe(1); // Walk-In's own +1 red; the deck's top member here is green, so Go-Between's +1 is green
     expect(named(s, 'Go-Between')).toHaveLength(1);
