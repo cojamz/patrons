@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.863 — 2026-10-29
+
+- Con Men cost 7.
+
 ## v0.9.862 — 2026-10-29
 
 - Every member's picture is now a little scene: the person in a place that says what they do
