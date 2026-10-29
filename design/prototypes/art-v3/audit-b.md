@@ -8,7 +8,7 @@
 | purple.courier | bike courier | young man, backwards cap | warmtan | solo | delighted, small open smile |
 | purple.crew | shift workers | woman in hard hat, lunch pail | coolbrown | front | warm smile |
 | | | man in flat cap, moustache | fair | behind | polite smile |
-| purple.earlybird | early riser | older man, grey hair, moustache in two wedges | verydeep | solo | beaming closed smile, ringing alarm clock |
+| purple.earlybird | early riser | middle-aged man, short dark hair, clean-shaven | verydeep | solo | delighted closed smile, ringing alarm clock |
 | purple.extrashift | nurse on a double | woman, blonde ponytail, stethoscope | palepink | solo | tired eyes, small proud smile |
 | purple.gossip | neighbour gossip | woman in rollers, hand cupped | olive | solo | side glance, one-corner smile |
 | purple.lateriser | late sleeper | ginger bedhead, sleep mask up | freckled (no freckles drawn) | solo | eyes shut, yawning |
@@ -16,7 +16,7 @@
 | | | redhead in nightcap | palepink | behind (slumped, asleep) | asleep, yawning |
 | purple.secondwind | Go-Getter | woman, sweatband, ponytail, fist up | tan | solo | determined brows, closed smile |
 | purple.streak | lucky player | dark quiff, waistcoat, dice | warmtan | solo | delighted, small open smile |
-| purple.timekeepers | keeper of the town's time | old man, grey fringe, glasses, hourglass | brown | solo | serene, eyes closed |
+| purple.timekeepers | keeper of the town's time | old man, bald crown, grey fringe, bushy brows, square glasses, clean-shaven, hourglass | brown | solo | serene, eyes closed |
 | trading.broker | stockbrokers | man on a cream phone, loosened tie | deep | front | pleased, closed smile |
 | | | colleague, hair in a bun | porcelain | behind | smiling, side glance |
 | trading.cashier | teller | young man, green eyeshade, coin stack | golden | solo | polite closed smile |
@@ -25,8 +25,8 @@
 | trading.heiress | heiress and grand-aunt | heiress, updo, tiara, pearls | verydeep | front | proud closed smile |
 | | | grand-aunt in a white hat | olive | behind | content, eyes closed |
 | trading.hoarder | hoarder (comic) | wiry old man, wild grey hair, sack | palepink | solo | worried, side glance |
-| trading.martyr | devotees | woman in white hood, candle | coolbrown | front | serene, eyes closed |
-| | | young man in white hood | golden | behind | serene, eyes closed |
+| trading.martyr | devotees | woman, bare shoulder-length black hair, plain white robe, candle | coolbrown | front | serene, eyes closed |
+| | | young man, short cropped curls, plain white robe | golden | behind | serene, eyes closed |
 | trading.oldmoney | old aristocrat | old man, monocle, handlebar moustache | fair | solo | proud, level |
 | trading.raider | corporate raider (shady) | woman, red bob, dark glasses, briefcase | freckled | solo | one-corner smile, eyes hidden |
 | trading.recluse | recluse | long dark hair parted in the middle, round glasses, book | olive | solo | wary side glance, pursed |
@@ -43,3 +43,4 @@ Checks:
 - Allowed expressions only: no tooth pixels, no winks, no half-lid smirks; the one-corner smiles (Gossip, Raiders, Undertaker) keep both eyes level.
 - No crucifix shapes: ties on Hot Streak and Broker are a knot plus a slanted taper; the Hoarder's candlestick is tilted.
 - Round 2 (critic b.md): no light row under any deep-skin nose (Early Bird's moustache is two wedges with a gap; Heiress's pearls sit low on the neckline at y37-39); deep faces closed-mouthed with small warm lips, warm gold irises, lit foreheads and nose bridges. Martyr hoods stay rounded.
+- Final review: Martyr has no veils or hoods (veils under the word "Martyr" read as nun/hijab costume): bare hair in two styles, plain robes. Early Bird is a middle-aged, clean-shaven man with dark hair, so Purple no longer has a trio of grey elders with clocks (Clockmaker and Timekeepers remain, and Timekeepers is bald with square glasses and bushy brows, no moustache). No pale moustache sits on any deep face. Deep-skin irises are warm brown with a 1px off-white beside them, never gold. Old Money's lapel flower is a round carnation with an angled stem, not a red slash or a cross.

@@ -1,8 +1,8 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _kit import Canvas, rows, jacket, portrait
 
-# Prospector (gold), round 1. A prospector who just struck it: a battered felt hat pushed back, eyes creased shut in
-# delight, a small closed smile, short black hair at the temples, a red neckerchief, a gold work shirt.
+# Prospector (gold), round 1. A prospector who just struck it: a battered felt hat pushed well back off a lit forehead,
+# warm brown eyes wide with delight, a closed smile, short black hair at the temples, a red neckerchief, a gold work shirt.
 # Prop: one fat gold nugget held up by her face between thumb and fingers, a glint on it. True 3/4 to our right. Template: 1 person.
 c = Canvas()
 body = jacket(c, top=34, l=2, r=45)
@@ -20,12 +20,12 @@ rows(c, 14, {
     16: "..BCDEEEEECCCEEEEBA.",
     17: "..BCDBBBBBCDCBBBBBA.",
     18: "..BCCCCCCCCDCCCCCBA.",
-    19: "..BDDDzzzDDDCCzzCBA.",
-    20: "..BDDzDDDzDDCzCCzBA.",
+    19: "..BDDzzzzDDDCzzzCBA.",
+    20: "..BDDyszyDDDCyszCBA.",
     21: "..BCDDDDCCCDBCCCCBA.",
     22: "..BCDDDDDCCDDBCCCBA.",
-    23: "..BCCDDCCCAAAACCCBA.",
-    24: "..BCCCCCCCCACCCACBA.",
+    23: "..BCCDDCCCCAAACCCBA.",
+    24: "..BCCCCCCCzCCCzCBBA.",
     25: "...BCCCCCCCzzzCCBA..",
     26: "...ABCCCCCCCCCCBA...",
     27: "....ABCCDDDCCCBA....",
@@ -34,11 +34,11 @@ rows(c, 14, {
 c.put(15, 19, ['CD', 'BCC', 'ABC', 'BA'])                          # the near ear
 c.put(15, 16, ['EE', 'EE', 'E']); c.put(32, 16, ['E', 'E', 'E'])  # short black hair at the temples
 # ---- battered felt hat, pushed back: a dented crown and a soft brim, a gold-cord band
-crown = c.poly([(17, 13), (17.6, 7), (20, 4.4), (24, 4.8), (25.5, 5.8), (27, 4.8), (30.5, 4.4), (32.4, 7), (33, 13)])
-c.fill(crown, 't'); c.outside(crown, 's', 22, 7, 9.5, 5.4)
-c.fill(crown & c.rect(0, 10, 47, 11), '2'); c.fill(crown & c.rect(29, 10, 47, 11), '1')
-brim = c.poly([(10, 14.6), (13, 12.2), (36, 12.2), (39.5, 13.2), (38, 15), (31, 14.6), (18, 14.6)])
-c.fill(brim, 's'); c.fill(brim & c.rect(0, 12, 47, 12), 't'); c.fill(brim & c.rect(31, 14, 47, 15), 'r')
+crown = c.poly([(17, 11), (17.8, 5.4), (20.6, 3.2), (24, 3.4), (25.5, 4.4), (27, 3.4), (30, 3.2), (32.2, 5.4), (33, 11)])
+c.fill(crown, 't'); c.outside(crown, 's', 22, 5, 9.5, 5.4)
+c.fill(crown & c.rect(0, 8, 47, 9), '2'); c.fill(crown & c.rect(29, 8, 47, 9), '1')
+brim = c.poly([(12, 12.4), (14, 10.2), (35, 10.2), (37.5, 11.2), (36, 12.8), (31, 12.6), (18, 12.6)])
+c.fill(brim, 's'); c.fill(brim & c.rect(0, 10, 47, 10), 't')
 # ---- her arm comes up from below: the nugget held up by her face, pinched between thumb and fingers
 arm = c.poly([(31, 48), (40, 48), (38.6, 38), (36.6, 33.4), (30.6, 33.4), (31.4, 38)])
 c.fill(arm, '3'); c.fill(arm & c.poly([(35, 48), (40, 48), (38.6, 38), (36.6, 33.4), (34.6, 33.4)]), '2'); c.edge(arm, '1')

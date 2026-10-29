@@ -1,7 +1,7 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
 # Tiebreaker (colorless): ties you're in go to you alone. The referee who settles it: striped ref's shirt with a
-# black collar, close-cropped grey hair, brows up and a small sure smile, eyes following the gold coin (one disc, one spin arc) he has just
+# black collar, close-cropped grey hair, brows up and a small sure smile, warm brown eyes following the gold coin (one disc, one spin arc) he has just
 # flipped off his thumb (the prop). True 3/4 to our left; very deep skin lit from the top-left. Template: 1 person.
 c = Canvas()
 body = torso(c, [(1, 48), (2, 41), (6, 36.5), (15, 34), (32, 34), (40, 36.5), (44, 40), (46, 48)], 19, 40, mid='4', dark='3', deep='2', lite=None)
@@ -25,22 +25,21 @@ c.put(6, 11, ['.4', '4.', '4.'])                                                
 # ---- face, 3/4 to our left, eyes up to the coin. ruler x 14..33
 blk(c, 14, 14, '''
 |.CCCCCCCCCCCCCCBBFE.
-|.CCDDDDDCCCCCCCBBFE.
+|.CDDDDDDCCCCCCCBBFE.
 |.GGDDDDGGGGCCBBBBFE.
 |.CBBCDCBBBBCCBBBBFA.
 |.BzzBDBzzzBCCBBBBBA.
-|.DyzBDByqzBCCBBBBCA.
-|.DDDDDBCCCCCCBBBBCA.
-|.DDDDDBDDDDCCBBBBBA.
-|.DDDDDACCDDCCBBBBBA.
-|.CDDDCBCCCCCBBBBBBA.
-|.CCAAAABCCCCBBBBBBA.
-|.CCCDDDCCCCBBBBBBA..
+|.CyrBDByrzBCCBBBBCA.
+|.DDDCDBCCCCCCBBBBCA.
+|.DDDDDBCDDDCCBBBBBA.
+|.CDDDDACCDDCCBBBBBA.
+|.CACCCCACCCCBBBBBBA.
+|.CCAAAACCCCCBBBBBBA.
+|.CCCrrCCCCCBBBBBBA..
 |..BCDDDCCCCBBBBBA...
 |...BCCCCCCBBBBBA....
 |....ABBBBBBBBBA.....
 ''')
-c.set(21, 23, 'A')
 c.put(31, 18, ['C', 'D', 'C', 'B'])                                                 # ear
 hair = c.poly([(14.6, 15), (14.6, 10.6), (17, 8), (22, 6.8), (28, 7), (31.6, 9), (33.4, 13), (33.2, 18), (31.2, 17), (30.6, 13.4),
                (22, 13.4), (16, 14.2)])

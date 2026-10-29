@@ -1,12 +1,10 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
 
-# Mob (red, counts as 5): a cheering home crowd, not an angry one (round 2: cream pennant with a star, a waving open
-# hand, closed-happy eyes on two faces). Front and centre a young man beaming, mouth closed
-# (the darkest tone, the friendliest face, the biggest head); either side a freckled woman smiling and a man cheering
-# with a red pennant; two more faces peek over their shoulders. Three tones across five people, no torches, no fists.
-# Template: 3 people for the front three; the back two sit higher, smaller and two steps darker, eyes clear of the
-# heads in front. The two at the back reuse the side people's skin ramps (only three skin slots).
+# Mob (red, counts as 5): a cheering home crowd, not an angry one. Final review: no one face leads the card. The front
+# row is three equal heads side by side: a freckled woman in the centre cheering (open mouth), an olive man on the left
+# holding up a cream pennant with a star, a deep-skinned man on the right laughing, eyes creased. Two more faces peek
+# over their shoulders. Three tones across five people, no torches, no fists, no scowls.
 c = Canvas()
 
 def darker(mask, keys, d):
@@ -14,67 +12,61 @@ def darker(mask, keys, d):
         k = c.get(x, y)
         if k in keys: c.set(x, y, step(k, d))
 
-# ---- the back two (high, small, darkest clothes)
+# ---- the back two, peeking between the front heads (reuse the olive and freckled ramps, a step darker)
 s = snap(c)
-body(c, [(5, 30), (6, 21), (10, 17.5), (15, 17), (20, 18.5), (23, 22), (23, 30)], front=False)
-neck(c, 2, 13, 17, 14, 18)
-face(c, 2, 11, 10, 10, 3, 4, view='r', eyes='smile', mouth='smile', jaw='round', hp=0, ears=False, cheek=False)
-h = c.poly([(10, 11), (10.4, 7.4), (12.5, 5.2), (16.5, 4.8), (20, 6), (21.4, 9), (21.2, 11), (20.4, 9), (17, 7.8), (12.4, 8),
-            (11, 11)])
-hair(c, h, 2, 15, 6, 5, 2.4, lit=False, hp=0)
-body(c, [(24, 30), (25, 22), (28, 18.5), (33, 17), (38, 17.5), (42, 21), (43, 30)], front=False)
-neck(c, 1, 30, 34, 14, 18)
-face(c, 1, 27, 10, 10, 3, 4, view='l', eyes='laugh', mouth='smile', jaw='oval', ears=False, cheek=False)
-h = c.poly([(26, 12), (26, 7.6), (28, 5.4), (32, 4.6), (35.6, 5.6), (37.6, 8), (37.6, 13), (36.4, 12), (36, 9), (33, 7.8),
-            (28.6, 8), (27.2, 9.4), (27.2, 12)])
-hair(c, h, 1, 31, 6, 5, 2.4, lit=False)
+body(c, [(5, 30), (6, 23), (9, 20.5), (14, 20), (19, 21), (22, 24), (22, 30)], front=False)
+neck(c, 2, 11, 15, 17, 21)
+face(c, 2, 8, 13, 10, 3, 4, view='r', eyes='smile', mouth='smile', jaw='round', hp=1, ears=False, cheek=False)
+h = c.poly([(7, 14), (7.4, 9.4), (9.5, 7.2), (13.5, 6.8), (17, 8), (18.4, 11), (18.2, 13), (17.4, 11), (14, 9.8), (9.4, 10),
+            (8, 14)])
+hair(c, h, 2, 12, 8, 5, 2.4, lit=False, hp=1)
+body(c, [(26, 30), (27, 24), (30, 21), (34, 20), (39, 20.5), (42, 23), (43, 30)], front=False)
+neck(c, 0, 32, 36, 17, 21)
+face(c, 0, 29, 13, 10, 3, 4, view='l', eyes='laugh', mouth='smile', jaw='oval', ears=False, cheek=False)
+h = c.poly([(28, 15), (28, 9.6), (30, 7.4), (34, 6.6), (37.6, 7.6), (39.6, 10), (39.6, 15), (38.4, 14), (38, 11), (35, 9.8),
+            (30.6, 10), (29.2, 11.4), (29.2, 15)])
+hair(c, h, 0, 33, 8, 5, 2.4, lit=False)
 back = changed(c, s)
-darker(back, 'IJKLQRST', -2); darker(back, '12345', -1)
-# ---- the two at the sides (person 1 left, person 2 right)
-s = snap(c)
-body(c, [(0, 48), (0, 31), (3, 28.5), (8, 27.5), (14, 28), (18, 30), (20, 48)], front=False)
-neck(c, 1, 7, 12, 23, 28)
-face(c, 1, 4, 18, 12, 4, 6, view='r', eyes='laugh', mouth='smile', jaw='oval')
-for x, y in ((6, 20), (12, 20)): c.set(x, y, 'J')                    # freckles
-h = c.poly([(2.6, 22), (2.6, 15), (4.4, 11.6), (9, 10), (14, 10.8), (16.6, 13.6), (16.8, 20), (15.6, 19), (15.4, 15.4),
-            (11, 14.4), (7, 14.2), (4.2, 16), (4, 22)])
-hair(c, h, 1, 9, 12, 7, 3.4, lit=False)
-c.fill(c.poly([(2.4, 20), (4.2, 20), (4.6, 26.5), (2.6, 26)]), 'M')         # hair down past the ear
-arm = c.poly([(0, 30), (0, 13), (3.6, 12), (4.6, 20), (3.6, 30)])                  # her arm up, waving
-c.fill(arm, '2'); c.rim(arm, '3', -1, 0, 1, only='2'); c.edge(arm, '1')
-stamp(c, 0, 2, ['..3....', '3.3.3..', '2.2.2..', '2.2.2.3', '2.2.2.2', '212122.', '222221.', '122221.', '.1221..',
-                '.112...', '.11....'], 1)   # an open hand: three fingers apart, the thumb out to the side
-body(c, [(27, 48), (28, 30), (32, 28), (40, 27.5), (45, 28.5), (47, 31), (47, 48)], front=False)
-neck(c, 2, 35, 40, 23, 28)
-face(c, 2, 32, 18, 12, 4, 6, view='l', eyes='smile', mouth='o', jaw='square', hp=0, look='dot')
-h = c.poly([(31, 17), (31.2, 13), (33.4, 11), (38, 10.4), (42.6, 11.2), (44.8, 14), (44.8, 18), (43.6, 17), (43, 14.6),
-            (38, 13.8), (33, 14), (32.2, 17)])
-hair(c, h, 2, 38, 12, 6, 2.6, lit=False, hp=0)
-sides = changed(c, s)
-darker(sides, 'IJKLQRST', -1)
-# the pennant, held up by the man on the right
-c.fill(c.rect(44, 1, 44, 29), 'y'); c.fill(c.rect(45, 1, 45, 29), '1')          # a pale pole
-pn = c.poly([(43.6, 0.6), (43.6, 9.4), (31, 5)])                                     # a cream pennant flying sideways
+darker(back, 'ABCDQRST', -1); darker(back, '12345', -1)
+
+# ---- front row, three equal heads (w 14, eye row 26): left olive (person 2), right deep (person 1), centre freckled (0)
+def front_body(x0, x1):
+    body(c, [(x0, 48), (x0 + 0.5, 38), (x0 + 3, 35.4), ((x0 + x1) / 2, 34.6), (x1 - 3, 35.4), (x1 - 0.5, 38), (x1, 48)])
+
+def cap(x0, p, hp, cy=19.4, lit=False):                       # short hair over a w-14 head at x0
+    m = c.poly([(x0 - 1, 25), (x0 - 0.8, 21.4), (x0 + 1.4, 19), (x0 + 7, 17.8), (x0 + 12.6, 19), (x0 + 14.8, 21.4), (x0 + 14.8, 25),
+                (x0 + 13.6, 24), (x0 + 13, 22.4), (x0 + 7, 21.6), (x0 + 1, 22.4), (x0 + 0.2, 25)])
+    hair(c, m, p, x0 + 7, cy, 6.5, 2.8, lit=lit, hp=hp)
+
+s1 = snap(c)
+front_body(-3, 18)
+neck(c, 2, 5, 10, 31, 35)
+face(c, 2, 1, 26, 14, 4, 6, view='r', eyes='smile', mouth='o', jaw='square', hp=1, look='dot')
+cap(1, 2, 1)
+front_body(30, 51)
+neck(c, 1, 37, 42, 31, 35)
+face(c, 1, 33, 26, 14, 4, 6, view='l', eyes='smile', mouth='smile', jaw='oval', look='warm', dk=True, plane=True)
+cap(33, 1, 1)
+sides = changed(c, s1)
+# the pennant, held up by the olive man on the left
+c.fill(c.rect(0, 0, 0, 36), 'y'); c.fill(c.rect(1, 0, 1, 36), '1')               # a pale pole
+pn = c.poly([(1.6, 0.4), (1.6, 8.4), (14, 4.4)])                                 # a cream pennant flying sideways
 c.fill(pn, 'y'); c.edge(pn, 'z')
-c.put(36, 2, ['..3..', '33333', '.333.', '.3.3.'])                                    # a red five-point star
-hand(c, 42, 27, 2, 'grip')
-# ---- in front (person 0), centre: laughing
+c.put(3, 2, ['..3..', '33333', '.333.', '.3.3.'])                                 # a red five-point star
+hand(c, 0, 35, 2, 'grip')
+# ---- centre front (person 0): drawn last, the same size as the other two
 s0 = snap(c)
-body(c, [(8, 48), (9, 41), (13, 37.5), (19, 36), (30, 36), (36, 37.5), (39, 41), (40, 48)])
-c.fill(c.poly([(20, 36), (29, 36), (24.5, 40)]), 'C')
-neck(c, 0, 21, 27, 30, 36)
-face(c, 0, 17, 21, 15, 5, 8, view='f', eyes='smile', mouth='smile', jaw='oval', dk=True)
-hr = c.poly([(15.8, 21), (15.6, 15.6), (17.4, 12.4), (21, 10.4), (24.5, 9.6), (28, 10.4), (31.6, 12.4), (33.4, 15.6), (33.2, 21),
-             (32, 20), (31.6, 17), (28, 15.4), (21, 15.4), (17.4, 17), (17, 21)])
-hair(c, hr, 0, 24, 12.5, 8.5, 4.5, lit=False)
-for (x, y) in c.rect(17, 24, 21, 29) | c.rect(20, 27, 29, 29):              # lift the jaw ring so it never reads as a beard
-    if c.get(x, y) == 'A': c.set(x, y, 'B')
-    elif c.get(x, y) == 'B' and x < 21: c.set(x, y, 'C')
+front_body(13.5, 34.5)
+neck(c, 0, 21, 26, 31, 35)
+face(c, 0, 17, 26, 14, 4, 6, view='f', eyes='smile', mouth='open', jaw='oval', look='iris')
+for x, y in ((19, 28), (28, 28)):
+    if c.get(x, y) in 'CD': c.set(x, y, 'B')                                       # freckles
+h = c.poly([(15.6, 30), (15.6, 22), (17.6, 19.2), (24, 17.8), (30.4, 19.2), (32.4, 22), (32.4, 30), (31.2, 29), (31, 23.4),
+            (28, 21.6), (20, 21.6), (17, 23.4), (16.8, 30)])
+hair(c, h, 0, 24, 19, 7, 3)
 front = changed(c, s0)
 c.edge(front, None)
-c.fill(c.mask_of('T'), 'S')
-c.fill(c.mask_of('S'), 'R')
-c.put(6, 22, ['JJJJIII', 'JIJJIJII', '.JIIJJII', '.JJJJII'])    # her lower face in two tones, the smile drawn in
-c.put(7, 19, ['KK']); c.set(12, 19, 'J')                     # a lit cheekbone
-PORTRAIT = portrait(c, 'red.mob', 'Mob', 'red', [{'skin': 'deep', 'hair': 'black'}, {'skin': 'freckled', 'hair': 'auburn'},
+for a, b in (('D', 'C'), ('T', 'S'), ('G', 'F')): c.fill(c.mask_of(a), b)   # stay inside the color cap
+if c.get(39, 21) == '2': c.set(39, 21, 'N')
+PORTRAIT = portrait(c, 'red.mob', 'Mob', 'red', [{'skin': 'freckled', 'hair': 'auburn'}, {'skin': 'deep', 'hair': 'black'},
                                               {'skin': 'olive', 'hair': 'black'}])

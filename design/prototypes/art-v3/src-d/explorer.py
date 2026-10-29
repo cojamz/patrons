@@ -20,13 +20,13 @@ c.edge(cap, 'q')
 gog = [(15, 10), (24, 10)]
 c.fill(c.rect(14, 11, 33, 12) & cap, 'q')
 for x, y in gog:
-    c.put(x, y, ['.ee.', 'eggf', 'egff', '.ff.'])
+    c.put(x, y, ['.ee.', 'e!ff', 'efff', '.ff.'])
 c.put(19, 11, ['eeeee'])
 # brass spyglass, held up on our right
 sp = c.poly([(33.5, 47.5), (35.5, 40), (37.5, 40.4), (36.5, 47.8)]) | c.poly([(36, 40), (39, 33), (41, 33.6), (38, 40.6)]) | c.poly([(39.5, 33), (42, 27.5), (43.6, 28.2), (41.4, 33.8)])
 c.fill(sp, 'c'); c.rim(sp, 'd', -1, 0, 1); c.rim(sp, 'b', 1, 0, 1)
-for x, y in ((35, 40), (38, 33)): c.put(x, y, ['aaa'])
-c.put(41, 26, ['zz', 'zzz'], keep='.')
+for x, y in ((35, 40), (38, 33)): c.put(x, y, ['aaa', 'aaa'])
+c.put(40, 26, ['.aaa', 'a!za', 'azza', '.aa.'], keep='.')                                  # lens rim, glass, glint
 c.edge(sp, 'a')
 c.put(36, 38, ['.CCD', 'CCCC', 'BCCB', '.BB.'])
 c.fill(c.mask_of('2'), '1')

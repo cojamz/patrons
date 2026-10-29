@@ -6,7 +6,7 @@ Rule: no tone reads as the joke, the threat or a service trope; the darkest pers
 |---|---|---|---|---|---|
 | benders.squatter | Party Crasher (cheeky) | gatecrasher, party hat, blower | warmtan | solo | delighted, brows up, round eyes |
 | benders.bigspender | Big Spender (rich) | bald old charmer, banknote fan | porcelain | solo | laughing, eyes shut |
-| benders.freelancer | Alchemist (elder, maker) | white-haired woman, goggles, flask | brown | solo | delighted, small round mouth |
+| benders.freelancer | Alchemist (elder, maker) | white-haired woman, goggles, flask | freckled (light; recast so the two Alchemist cards differ) | solo | delighted, closed smile |
 | benders.insider | Insider (sly) | office insider, ID badge | olive | solo | sly side-glance, small smile |
 | benders.extrahand | Extra Hand (helper) | volunteer, raised work glove | freckled | solo | eager, small open smile (no teeth) |
 | benders.frontrunner | Front-runner (athlete) | runner, plain terry sweatband (no knot tails), bib 1 | golden | solo | determined, round eyes |
@@ -38,3 +38,5 @@ Checks:
 - No freckles in this batch (Extra Hand's were removed); no cheek speckle.
 
 Round 2 (critic): Tiebreaker coin, arc, thumb and forehead plane; Con Men hand and three separate outlined cards (black pip, red pip); Launderers pink rollers and money-green banknote (accent now green). Optional: Cheerleader pom-pom streaks, knuckles, stray arm block removed; Extra Hand glove thumb; HR 3px clip.
+
+Final review: Anarchist's prop redrawn as an unmistakable spray can (straight cylinder, domed cap, grey mist puff off to the side, nothing at the neck); Tiebreaker relit (D forehead and cheekbone planes, lit nose bridge, warm iris on both eyes, closed smile with a warm lower lip); Alchemist recast light (freckled) so it doesn't echo the other Alchemist card.

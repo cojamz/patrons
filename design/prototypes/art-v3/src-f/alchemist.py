@@ -19,19 +19,19 @@ c.fill(hair, 'G'); c.outside(hair, 'F', 22, 9, 15, 10); c.rim(hair, 'H', -1, -1,
 for (x, y) in ((11, 15), (17, 5), (27, 4), (34, 8)): c.put(x, y, ['FF', '.FF'])     # locks
 # ---- face, 3/4 to our right, brows up, small round mouth. ruler x 14..33
 blk(c, 14, 15, '''
-|.DDDDDDDDDDDDDDCCBA.
-|.DDDGGGGDDDDCGGGBBA.
-|.DDBBBBBBDDCBBBBBBA.
-|.DBCDD!zBDCBC!zBBBA.
-|.DADDDzzBDCBCzzBBBA.
-|.DADDDDDDDDBCCCBBBA.
-|.DBDDDDDDCDBCCCBBBA.
-|..BDDDDCCCDDABCBBBA.
-|..BCDDCCCCCBBBCBBBA.
-|..BCDDCACCCACCCBBA..
+|.CCDDDDCCCCCCCCCBBA.
+|.CCCFFFFCCCCCFFFBBA.
+|.CCBBBBBBCCCBBBBBBA.
+|.CBCCC!zBDCBC!zBBBA.
+|.CACCCzzBDCBCzzBBBA.
+|.CACCCCCCCDBCCCBBBA.
+|.CBDDDCCCCDBCCCBBBA.
+|..BCDDCCCCDDABCBBBA.
+|..BCCCCCCCCBBBCBBBA.
+|..BCCCCACCCACCCBBA..
 |..BCCCCCCAAACCBBBA..
-|...BCCDDCCCCCBBBA...
-|....BBCCDDCCBBBA....
+|...BCCCDDCCCCBBBA...
+|....BBCCCCCCBBBA....
 |.....ABBBBBBBBA.....
 ''')
 c.put(13, 19, ['C', 'D', 'C'])
@@ -55,4 +55,5 @@ wall = {(x, y) for (x, y) in glass if any((x + a, y + b) not in glass for a, b i
 c.fill(wall - c.rect(0, 21, 47, 22), '4'); c.fill((wall & c.rect(40, 23, 47, 47)) - c.rect(0, 21, 47, 22), '2')
 hand = c.poly([(33, 40), (36, 37.5), (43, 37.5), (45.5, 40), (43, 43), (35, 43)])
 c.fill(hand, 'C'); c.rim(hand, 'D', 0, -1, 1); c.fill(hand & c.rect(42, 35, 47, 47), 'B'); c.edge(hand, 'A')
-PORTRAIT = portrait('benders.freelancer', 'Alchemist', c, [{'skin': 'brown', 'hair': 'white'}], 'teal')
+c.put(35, 38, ['DCBCBCB'])                                                        # knuckles round the flask
+PORTRAIT = portrait('benders.freelancer', 'Alchemist', c, [{'skin': 'freckled', 'hair': 'white'}], 'teal')

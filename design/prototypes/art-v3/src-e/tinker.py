@@ -1,7 +1,7 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _kit import Canvas, rows, jacket
 
-# Alchemist (gold.tinker), round 1. A delighted inventor eyeing the flask she just turned to gold: a big crown of
+# Alchemist (gold.tinker), round 2. A delighted inventor eyeing the flask she just turned to gold: a big crown of
 # curls, a pleased closed smile, eyes on her work (calm, not wide: see audit.md). Gold work robe with a high collar. Prop: a round-bottomed flask held up at her
 # shoulder, glowing gold inside. True 3/4 to our right. Template: 1 person.
 c = Canvas()
@@ -11,26 +11,26 @@ c.fill(col, '4'); c.fill(col & c.rect(26, 31, 33, 37), '2'); c.edge(col, '1')
 c.fill(c.line(24, 37, 23, 47), '2')
 c.fill(c.rect(20, 27, 26, 31) - col, 'B'); c.fill(c.rect(20, 27, 26, 28), 'A')
 # ---- face, 3/4 to our right
-# Very deep skin keeps its tone; the face reads by light: warm highlights (her hair's lit step, two steps above the
-# skin's lightest) on the top-left forehead, the cheekbone, the nose bridge and tip and the lower lip, and a glow from the
-# flask on her far jaw. Eyes: a 1px white, a warm iris, a pupil.
+# Very deep skin keeps its tone; the face reads by light (whole-set review, round 2): D planes on the top-left forehead,
+# the cheekbone and the nose bridge, warm brown irises (her hair's mid step), a closed smile with no light row under it,
+# and a glow from the flask on her far jaw.
 rows(c, 14, {
-    12: "....BCDDDDCCCCCB....",
-    13: "...BCDHHDDCCCCCB....",
-    14: "...BCDHHDDCCCCCBA...",
-    15: "...BCDDDDCCCCCCCBA..",
+    12: "....BDDDDDCCCCCB....",
+    13: "...BDDDDDDDCCCCB....",
+    14: "...BDDDDDDDCCCCBA...",
+    15: "...BCDDDDDCCCCCCBA..",
     16: "...BCEEEECCCCCEEECBA",
-    17: "..BBCBBBBBBCCBBBBBA.",
-    18: "..BCCBzzzzBCDBzzzBA.",
-    19: "..BCCByHzyCCHCHzyBA.",
-    20: "..BCCCBBBBCCHBBBBBA.",
-    21: "..ABCDDHHDCCDBBCCCDA",
-    22: "..ABCDDHDCCCDDBBCCDA",
-    23: "...ABCDDCCCCCDHABCDA",
-    24: "...ABCCCCCCCDAAABCDA",
-    25: "....ABCCCzCCCCCzCDA.",
-    26: "....ABCCCCzzzzzCCDA.",
-    27: ".....ABBCCCDHHDCDA..",
+    17: "..BBCBBBBBCCCBBBBBA.",
+    18: "..BCCBzzzzCCDCzzzBA.",
+    19: "..BCCByGzyCCDCyGzBA.",
+    20: "..BCDDCCCCCCDCCCCBA.",
+    21: "..ABCDDDDDCCDCCCCCDA",
+    22: "..ABCDDDDCCCDDBCCCDA",
+    23: "...ABCDDCCCCCDDABCDA",
+    24: "...ABCCCCCCCCAACBCDA",
+    25: "....ABCCCzCCCzCCCDA.",
+    26: "....ABCCCCzzzCCCCDA.",
+    27: ".....ABBCCCCCCCCDA..",
     28: ".......AABBBBBBAA...",
 })
 c.put(15, 18, ['CD', 'BCC', 'ABC', 'BA'])                         # the near ear

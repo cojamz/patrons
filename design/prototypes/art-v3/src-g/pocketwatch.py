@@ -1,8 +1,8 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _kit import Canvas, rows, jacket, portrait
 
-# Pocket Watch (purple), round 1. An older gentleman checking the time: close-cropped grey hair, eyes on the
-# watch, a calm closed mouth. Purple jacket, white shirt, a slim angled tie.
+# Pocket Watch (purple), round 3 (recast after the whole-set review: purple had three grey elders). A punctual
+# man in his thirties checking the time: short dark-brown hair, warm brown eyes, a pleased closed smile. Purple jacket, white shirt, a slim angled tie.
 # Prop: an open gold pocket watch in his raised hand, its chain looping back to the waistcoat. Frontal. Template: 1 person.
 c = Canvas()
 body = jacket(c, top=33.4, l=1, r=46)
@@ -16,28 +16,28 @@ c.fill(lapR, '2'); c.rim(lapR, '3', -1, 0, 1); c.edge(lapR, '1')
 # neck, chin shadow
 c.fill(c.rect(20, 28, 27, 33) - shirt, 'B'); c.fill(c.rect(20, 28, 27, 29), 'A'); c.fill(c.rect(26, 30, 27, 32), 'A')
 c.put(20, 33, ['kk', 'k.']); c.put(26, 33, ['kk', '.k'])
-# ---- face x14..33. Very deep skin lit by the light, not by the tone: forehead, cheekbone, nose bridge on D; no light row near the mouth.
+# ---- face x14..33, golden skin: forehead, cheekbone, nose bridge on D; irises on the hair's mid step (warm brown).
 rows(c, 14, {
     11: "....BDDDDDDCCCCB....",
     12: "...BDDDDDDDDCCCCB...",
     13: "..BDDDDDDDDCCCCCCB..",
     14: ".BCDDDDDDDDDCCCCCBA.",
     15: ".BCDDDDDDDDCCCCCCBA.",
-    16: ".BCCEEEECCCCEEEECBA.",
+    16: ".BCCFFFFCCCFFFFCCBA.",
     17: ".BCBBBBBCDCBBBBBCBA.",
-    18: ".BCBzzzzCDBzzzzBCBA.",
-    19: "CBCByzyyCDByzyyBBBAB",
+    18: ".BCCzzzzCDCzzzzCBBA.",
+    19: "CBCCyFzyCDCyFzyCBBAB",
     20: "DBCDDDDCCDBCCCCCBBAB",
     21: "CBCDDDDDCDBCDDCCBBAA",
-    22: ".BCDDDDDCDDBCDCCBBA.",
+    22: ".BCDDDDDCDDBCCCCBBA.",
     23: ".BCCDDDCAAABCCCCBBA.",
-    24: "..BCCCCCCCCCCCCCBBA.",
-    25: "..BCCCCCCCCCCCCCBA..",
-    26: "..BCCCCBzzzBCCCCBA..",
+    24: ".BCCCCCCCCCCCCCCBBA.",
+    25: "..BCCCCBCCCBCCCCBA..",
+    26: "..BCCCCCAAACCCCCBA..",
     27: "..ABCCCCCCCCCCCBBA..",
     28: "...AABBBBBBBBBBAA...",
 })
-# close-cropped grey hair, lit top-left, short at the temples
+# short dark-brown hair, lit top-left, short at the temples
 rows(c, 14, {
     8:  ".......FGGGGGF......",
     9:  ".....FGHHGGGGGGF....",
@@ -66,4 +66,4 @@ c.put(6, 42, ['.D........',
               'BCCDDDDCC.',
               '.BBCCCCCBA'])                                   # his palm cradling the case, fingers up its side
 c.put(17, 39, ['D', 'D', 'C'])                                   # thumb on the rim
-PORTRAIT = portrait('purple.pocketwatch', 'Pocket Watch', 'purple', c, [{'skin': 'verydeep', 'hair': 'grey'}], 'violet')
+PORTRAIT = portrait('purple.pocketwatch', 'Pocket Watch', 'purple', c, [{'skin': 'golden', 'hair': 'darkbrown'}], 'violet')

@@ -14,7 +14,7 @@ porcelain, warmtan, coolbrown + palepink, fair. In every group card the darker-s
 | echo.ensemble | stage company singers | woman, crown of curls, ruff | brown | front | singing, eyes shut with joy |
 | | | man, ginger fringe, ruff | porcelain | behind | singing |
 | echo.evergreen | street guitarist | man, ginger beard, beanie | freckled | solo | eyes shut, warm smile |
-| echo.hourglass | stuntwoman with red helmet | woman, cropped hair, cheek plaster | verydeep | solo | proud, small closed smile |
+| echo.hourglass | stuntwoman with red helmet | woman, cropped hair | verydeep | solo | proud, closed smile |
 | echo.impostor | joke-shop disguise | blond man in nose-glasses | porcelain | solo | worried, bead of sweat |
 | echo.mirror | fan club president, pennant | girl, two hair puffs | brown | solo | delighted, open laugh |
 | echo.muse | muse, laurel of leaves | woman, high cloud of hair | verydeep | solo | dreamy, small smile |
@@ -44,3 +44,7 @@ Round 4 (critic): deep and very deep tones moved onto everyday roles (Stunt Doub
 recast olive with a closed mouth and the beard clear of the lips; Fan Club pennant has a star, not a plus.
 Round 5 (critic): Pilgrim recast golden so the deep elder with a white beard is not repeated (Chronicler keeps deep);
 deep tones now: Chronicler, Admirer, Weaver (deep), Muse, Stunt Double (very deep).
+Round 6 (whole-set critic): Chronicler's quill is a short feather in a fist, beard on chin and jaw only from y27 with
+skin above a warm 2px lip; Stunt Double's cheek patch removed, lit forehead, cheekbone and nose bridge, a visible closed
+smile; Muse's shadow side narrowed with stepped highlights and a warm lip; Explorer's spyglass has two bands and a
+glinting lens.

@@ -1,8 +1,8 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _kit import *
 
-# Timekeepers (purple, one person): the keeper of the town's time, an old man with white hair round a bald crown, white
-# moustache and spectacles, a purple robe with a gold chain of office, holding a big hourglass. Serene. 3/4 to our
+# Timekeepers (purple, one person): the keeper of the town's time, an old man with white hair round a bald crown, grey
+# bushy brows and square spectacles, clean-shaven, a purple robe with a gold chain of office, holding a big hourglass. Serene. 3/4 to our
 # left. Template: 1 person.
 c = new()
 b = body(c, [(3, 48), (4, 40), (9, 35.5), (17, 33.5), (30, 33.5), (38, 35.5), (43, 40), (44, 48)], 20, 38, 19, 11)
@@ -15,7 +15,7 @@ dome = c.ellipse(24, 14, 9, 6.5) & c.rect(0, 0, 47, 13)
 c.fill(dome, 'C'); c.outside(dome, 'B', 22.5, 12.5, 8.5, 6); c.fill(dome & c.ellipse(20, 10.5, 2.6, 1.4), 'D')
 fr = c.poly([(30.5, 9.5), (33.5, 11.5), (35, 16), (34.6, 21), (33, 24), (31.4, 23), (32, 16), (31, 12)]); c.fill(fr, 'G'); c.outside(fr, 'F', 32, 13, 2.6, 6)
 fl = c.poly([(17.5, 9.5), (15, 12), (14, 16), (14.6, 21), (16, 22), (16.4, 15), (18, 12)]); c.fill(fl, 'G'); c.outside(fl, 'F', 16, 13, 2.4, 6)   # white fringe round the crown
-c.put(15, 22, ['.FFE..EFF', 'FE......EF'][:1]); c.put(15, 23, ['E']); c.put(23, 23, ['E'])     # moustache: two dark wedges
+c.put(16, 15, ['FFF...FFFF', 'EE....EEEE'])                                         # bushy grey brows
 c.put(16, 17, ['.ee....eeee.', 'e..eeee....e', 'e..e..e....e', '.ee....eeee.'])          # two framed lenses and a bridge
 # the hourglass, held at our right
 c.fill(c.rect(34, 30, 44, 31), 'r'); c.fill(c.rect(34, 46, 44, 47), 'q'); c.fill(c.rect(34, 30, 44, 30), 's')

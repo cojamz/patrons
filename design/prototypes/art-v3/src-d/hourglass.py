@@ -1,7 +1,7 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _kit import *
 
-# Stunt Double (green): a stuntwoman between takes. Cropped hair, a plaster on her cheekbone, racing
+# Stunt Double (green): a stuntwoman between takes. Cropped hair, racing
 # jumpsuit zipped to the throat, her red crash helmet with a white stripe under her arm. Chin up, proud, a small closed smile.
 # 3/4 to our right. Template: 1 person.
 c = Canvas()
@@ -12,7 +12,8 @@ c.fill(c.poly([(3, 40), (12, 36), (14, 48), (2, 48)]), '4'); c.fill(c.line(4, 41
 neck(c, 20, 26, 28, 30, keys='BC')
 face(c, 15, 31, 13, 28, 19, 25, [(18, 'i4c'), (27, 'i3c')], (22, ['A...A', '.AAA.']), jaw='square', hair='F',
      brows=[(18, -2, ['FFFF']), (27, -2, ['FFF'])], ear=(13, 'L'), mouth_y=24, lit=3, iris='m')
-c.put(28, 19, ['sss', 'sss'])                                                                  # plaster
+c.put(16, 14, ['DDDDDD', 'DDDD'], keep='.'); c.put(16, 20, ['DDD', 'DDD'], keep='.'); c.put(25, 19, ['D', 'D', 'D'])   # lit forehead, cheekbone, nose bridge
+c.put(21, 24, ['z...z', '.zzz.', '.DDD.'])                                                    # closed smile, lit lower lip
 hair = c.poly([(14, 17), (13.5, 12), (15.5, 8.6), (20, 6.8), (26, 6.8), (30.5, 8.6), (32.6, 12), (32.5, 18), (31, 15.5),
                (27, 13.6), (22, 14.2), (17, 13.4), (15.4, 16.5)])
 c.fill(hair, 'F'); c.outside(hair, 'E', 21, 10, 10, 4.4); c.rim(hair, 'G', -1, -1, 1, only='F')

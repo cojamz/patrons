@@ -2,7 +2,7 @@ import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
 # Anarchist (colorless): once per round, swap any two members within 2 cost. A cheerful punk: rose mohawk in four spikes, shaved
 # sides, a stud in one ear, brows up and a cheeky closed smile. Studded jacket with wide lapels. Prop: a can of
-# rose spray paint held up, mid-tag. Frontal. Template: 1 person.
+# rose spray paint held up (straight cylinder, domed cap, a grey mist puff off to the side). Frontal. Template: 1 person.
 c = Canvas()
 body = torso(c, [(1, 48), (2, 41), (6, 36.5), (15, 34), (32, 34), (40, 36.5), (44, 40), (46, 48)], 19, 40)
 tee = c.poly([(19, 34), (29, 34), (27, 48), (21, 48)])
@@ -43,11 +43,13 @@ for x0, top in ((19, 2), (21.6, 0), (24.4, 1), (27, 3)):                        
 c.fill(mo, 'w'); c.outside(mo, 'v', 22.5, 7, 4.5, 7); c.rim(mo, 'x', -1, 0, 1, only='w'); c.edge(mo, 'u')
 c.fill(mo & c.rect(0, 12, 47, 13), 'v')
 # ---- the spray can, held up
-can = c.rect(37, 21, 42, 33)
-c.fill(can, 'f'); c.fill(c.rect(37, 21, 38, 33), 'g'); c.fill(c.rect(37, 21, 37, 33), 'g'); c.fill(c.rect(42, 21, 42, 33), 'e')
-c.fill(c.rect(37, 26, 42, 28), 'w'); c.fill(c.rect(37, 26, 38, 28), 'x'); c.fill(c.rect(42, 26, 42, 28), 'v')     # label band
-c.put(38, 18, ['.vv.', 'wwwv', 'gggf']); c.put(37, 18, ['u'])                       # cap and nozzle
-c.put(32, 15, ['.x...', 'xwx.x', '.x.w.'])                                          # a puff of paint
+can = c.rect(37, 19, 42, 33)                                                       # a straight steel cylinder
+c.fill(can, 'f'); c.fill(c.rect(37, 19, 38, 33), 'g'); c.fill(c.rect(42, 19, 42, 33), 'e')
+c.fill(c.rect(37, 19, 42, 19), 'g')                                                 # rolled top rim
+c.fill(c.rect(37, 24, 42, 28), 'w'); c.fill(c.rect(37, 24, 38, 28), 'x'); c.fill(c.rect(42, 24, 42, 28), 'v')     # rose label
+c.put(37, 15, ['.wwww.', 'xwwwwv', 'xwwwwv', 'vvvvvv'])                              # domed cap, as wide as the can
+c.put(39, 14, ['gg'])                                                              # nozzle button on top
+c.put(43, 10, ['.44.', '4444', '.44.'])                                              # a soft grey mist puff, off to the side
 hand = c.poly([(35, 31), (37.4, 29.6), (43, 30), (44, 34.4), (41, 36.4), (36, 36)])
 c.fill(hand, 'C'); c.rim(hand, 'D', 0, -1, 1, only='C'); c.fill(hand & c.rect(41, 28, 47, 40), 'B'); c.edge(hand, 'A')
 c.put(37, 32, ['BB.B'])

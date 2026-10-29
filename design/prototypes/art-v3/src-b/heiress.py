@@ -19,8 +19,8 @@ c.fill(bodyA, "3"); c.outside(bodyA, "2", 14, 40, 17, 11); c.outside(bodyA, "1",
 c.rim(bodyA, "4", 0, -1, 1, only="3"); c.edge(bodyA, "1")
 gown = c.poly([(9, 35), (24, 35), (21, 40), (12, 40)]); c.fill(gown, 'C'); c.fill(gown & c.rect(19, 35, 25, 40), 'B')
 neck(c, 13, 20, 28, 34)
-face(c, 'f16', 9, 20, eyes='open', brows='arched', mouth=None, glow=True, iris='a')
-c.put(13, 25, ['B....B', '.AuuA.'])                                                # closed smile, warm lips
+face(c, 'f16', 9, 20, eyes='dark', brows='arched', mouth=None, glow=True, iris='r')
+c.put(13, 25, ['B....B', '.ArrA.'])                                                # closed smile, warm lips
 c.put(10, 21, ['DDDC', 'DDC.', 'DC..'])                                            # cheekbone, chamfered
 ear(c, 24, 19)
 c.put(24, 23, ['k', 'j'])

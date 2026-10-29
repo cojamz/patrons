@@ -31,5 +31,12 @@ for (y0, sag, x0, x1) in ((33, 2, 19, 28), (36, 3, 17, 30)):
         y = y0 + round(sag * (1 - (2 * t - 1) ** 2))
         c.set(x, y, 'l' if x % 2 else 'k'); c.set(x, y + 1, 'j' if x % 2 else 'k')
 c.put(33, 21, ['lk', 'kj'])
+# eyes for the very deep face: warm brown irises with a 1px off-white each, a lid line, a clear brow row in the grey
+for x in range(16, 28):
+    if c.get(x, 16) in 'FE': c.set(x, 16, 'C')
+    if c.get(x, 17) in 'FE': c.set(x, 17, 'C')
+c.put(17, 16, ['EEEE...EEEE'])
+c.put(17, 18, ['Bzz....Bzz.', 'yrqC...Cqry'])
+c.put(18, 18, ['zz']); c.put(24, 18, ['zz'])
 PORTRAIT = {'id': 'market.patroness', 'name': 'Patroness', 'kind': 'member', 'sphere': 'blue',
             'people': [{'skin': 'verydeep', 'hair': 'grey'}], 'accent': 'rose', 'px': c.rows()}

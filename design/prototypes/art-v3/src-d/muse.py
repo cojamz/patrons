@@ -11,9 +11,9 @@ for x0 in (9, 13): c.fill(c.line(x0, 37, x0 + 4, 47), '2')                      
 c.fill(c.line(32, 38, 35, 47), '1')
 c.put(9, 33, ['.bb.', 'bccb', 'bcdb', '.bb.'])                                                      # clasp
 neck(c, 20, 26, 28, 33, keys='BC')
-face(c, 15, 32, 13, 28, 19, 19, [(15, 'i3l'), (21, 'i4l')], (17, ['A..A', '.AA.', '.DD.']), jaw='pointed', hair='F',
-     brows=[(15, -3, ['FF']), (21, -3, ['.FFF'])], socket=False, plane=5, cheek=False, ear=(30, 'R'), mouth_y=24, lit=3)
-c.put(20, 17, ['D'], keep='.'); c.put(20, 18, ['D']); c.put(21, 20, ['DDD', 'DDD', '.DD'])
+face(c, 15, 32, 13, 28, 19, 19, [(15, 'i3l'), (21, 'i4l')], (17, ['A..A', '.uu.']), jaw='pointed', hair='F',
+     brows=[(15, -3, ['FF']), (21, -3, ['.FFF'])], socket=False, plane=2, cheek=False, ear=(30, 'R'), mouth_y=24, lit=3)
+c.put(16, 14, ['DDDDD', 'DDDD', 'DD'], keep='.'); c.put(25, 21, ['DD', 'DDD'], keep='.'); c.put(20, 17, ['D'], keep='.'); c.put(20, 18, ['D']); c.put(21, 20, ['DDD', 'DDD', '.DD'])
 hair = c.ellipse(24.5, 8.5, 11.5, 7.5) | c.ellipse(32, 17, 4.4, 7.5)
 hair -= c.poly([(14, 17), (14.5, 13.6), (29, 13.6), (29.5, 26), (14, 26)])
 c.fill(hair, 'F'); c.outside(hair, 'E', 22, 7, 11, 7); c.rim(hair, 'G', -1, -1, 1, only='F')
