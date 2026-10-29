@@ -24,7 +24,7 @@ const expected = (seats, c) => {
   return n ? w / n : 1 / seats;
 };
 
-const out = { games: rows.length, bySeats: {}, members: {}, colors: {}, artifacts: {}, spaces: {}, seatOrder: {} };
+const out = { games: rows.length, bySeats: {}, members: {}, colors: {}, artifacts: {}, spaces: {}, spaceUse: {}, seatOrder: {}, membersBySeats: {} };
 const add = (o, k, w, e) => { (o[k] ??= { n: 0, w: 0, e: 0 }); o[k].n++; o[k].w += w; o[k].e += e; };
 const offered = {}, bought = {}, fol = {}, gotR = {};
 for (const r of rows) {
@@ -40,7 +40,7 @@ for (const r of rows) {
     const e = expected(r.seats, p.memberCount);
     add(out.seatOrder, `${r.seats}p seat ${p.seat + 1}`, w, 1 / r.seats);
     for (const m of new Set(p.members)) {
-      add(out.members, m, w, e);
+      add(out.members, m, w, e); add(out.membersBySeats[r.seats] ??= {}, m, w, e);
       if (p.gotRound?.[m] !== undefined) { (gotR[m] ??= [0, 0, 0, 0]); gotR[m][p.gotRound[m]]++; }
     }
     if (p.artifact) add(out.artifacts, p.artifact, w, 1 / r.seats);
@@ -50,7 +50,7 @@ for (const r of rows) {
     for (const m of p.members) { const q = m.match(/\((\w+)\)$/)?.[1]; if (q && q !== 'benders') by[q] = (by[q] || 0) + 1; }
     const main = Object.entries(by).sort((a, b) => b[1] - a[1])[0];
     if (main && main[1] >= 3) add(out.colors, main[0], w, 1 / r.seats);
-    for (const [k, c] of Object.entries(p.places)) { (out.spaces[k] ??= { uses: 0, win: 0, lose: 0, nw: 0, nl: 0, tables: 0 }); out.spaces[k].uses += c; }
+    for (const [k, c] of Object.entries(p.places)) { (out.spaces[k] ??= { uses: 0, win: 0, lose: 0, nw: 0, nl: 0, tables: 0 }); out.spaces[k].uses += c; add(out.spaceUse, k, w, e); }
   }
   for (const m of new Set(bots(r).flatMap(p => p.members))) bought[m] = (bought[m] || 0) + 1;
   const keys = new Set(bots(r).flatMap(p => Object.keys(p.places)));
@@ -77,7 +77,8 @@ console.log(`\nMembers by lift (owner win share minus expected for their member 
 for (const m of ml) console.log(`  ${m.k}: ${pts(m.lift)} ±${Math.round(m.err * 100)}${Math.abs(m.z) >= 2 ? (m.z > 0 ? ' STRONG' : ' WEAK') : ''} | wins ${pct(m.win)} vs ${pct(m.exp)} | owned ${m.n}, a bot owned it in ${pct(m.buyRate)} of the ${m.offered} games it showed | ${m.followers?.toFixed(1)} followers for ${m.cost?.toFixed(0)}`);
 const thin = Object.entries(offered).filter(([k]) => (out.members[k]?.n || 0) < MIN).map(([k, o]) => `${k} ${out.members[k]?.n || 0}/${o}`);
 if (thin.length) console.log(`\nToo few owners to read (owned/in shop): ${thin.join(', ')}`);
-console.log('\nSpaces (uses per table it sits on; winner vs other seats, uses per seat):');
-const sl = Object.entries(out.spaces).map(([k, v]) => [k, v.uses / (v.tables || 1), v.win / (v.nw || 1), v.lose / (v.nl || 1)]).sort((a, b) => (b[2] - b[3]) - (a[2] - a[3]));
-for (const [k, u, w, l] of sl) console.log(`  ${k}: ${u.toFixed(1)}/game, winner ${w.toFixed(2)} vs others ${l.toFixed(2)}`);
+console.log('\nSpaces by lift (seats that took it at least once: win share minus expected for their member count). Uses per game it sits on; winner vs other seats, uses per seat:');
+const sl = Object.entries(out.spaces).map(([k, v]) => { const u = out.spaceUse[k]; return { k, per: v.uses / (v.tables || 1), w: v.win / (v.nw || 1), l: v.lose / (v.nl || 1), n: u.n, lift: (u.w - u.e) / u.n, err: se(u.w / u.n, u.n), takers: u.n / (v.tables || 1) }; }).sort((a, b) => b.lift - a.lift);
+out.spaceTable = sl;
+for (const x of sl) console.log(`  ${x.k}: ${pts(x.lift)} ±${Math.round(x.err * 100)}${Math.abs(x.lift) >= 2 * x.err ? (x.lift > 0 ? ' STRONG' : ' WEAK') : ''} | ${x.per.toFixed(1)}/game, ${x.takers.toFixed(1)} seats take it | winner ${x.w.toFixed(2)} vs others ${x.l.toFixed(2)}`);
 if (flags.json) writeFileSync(flags.json, JSON.stringify(out, null, 1));
