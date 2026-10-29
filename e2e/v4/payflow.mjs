@@ -143,9 +143,8 @@ try {
     const { ctx, page } = await open('f4', save);
     // member cards only: the follower buys share the shop and its card size since v0.8.2 but print no worth
     const cards = await page.$$eval('.lt-shop .lt-card[data-uid]', els => els.map(e => {
-      const now = e.querySelector('.cost-now'), was = e.querySelector('.cost-was'), cost = e.querySelector('.ft .lt-cost'), val = e.querySelector('.val');
-      // the worth sits on the name bar since the trading-card face (Cory, Oct 29: "Header is good"): it must clear the price disc
-      const right = e.querySelector('.lt-corner-cost').getBoundingClientRect().right;
+      const now = e.querySelector('.cost-now'), was = e.querySelector('.cost-was'), cost = e.querySelector('.ft .lt-cost'), val = e.querySelector('.ft .val');
+      const right = Math.max(...[...e.querySelectorAll('.ft .lt-cost .lt-res, .ft .lt-cost, .ft .cost-was')].map(x => x.getBoundingClientRect().right));
       return { uid: e.dataset.uid, wasFirst: !!(now && was && was.compareDocumentPosition(cost) & Node.DOCUMENT_POSITION_FOLLOWING), discounted: !!now, gap: val.getBoundingClientRect().left - right };
     }));
     for (const c of cards) {
