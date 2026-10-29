@@ -19,3 +19,7 @@
 - Hoods stay rounded, never peaked.
 - A held mask, doll or photo with its own hair or eyes counts as a person at 32px. Give it no hair, empty eye holes and a visible handle.
 - A beard that wraps a dark mouth on all sides reads as a hole. Keep a skin row above the mouth and start the beard on the chin.
+- On shady group cards the lead-crook costume goes on a light or mid tone, with the darker person a friendly equal beside, not the lone crook in front.
+- Hands: knuckle row, thumb, wrist cuff step. Never a box.
+- Costume signifiers (headbands with knot tails, pith helmets) get the same sensitivity glance as cultural dress.
+- The lid-bar eye on at most a third of a batch.
