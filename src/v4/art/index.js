@@ -5,6 +5,8 @@ import { createElement } from 'react';
 import SETS from './icons/index.js';
 import PORTRAITS from './portraits/index.js';
 import { portraitRuns } from './portrait.js';
+import PORTRAITS3 from './portraits3/index.js';
+import { portrait3Runs } from './portrait3.js';
 
 const TABLE = '#101817';
 export const NEUTRALS = { k: '#0a0f0e', d: '#3c4946', m: '#8e9b96', l: '#ece6d6' };
@@ -131,6 +133,8 @@ export const spriteId = name => String(name).normalize('NFD').replace(/[̀-ͯ]/g
 /** The icon for an id (or the first of several candidate ids), or the template for its kind. */
 // the portraits (Cory, 2026-10-28) win over the older 24×24 drawings wherever one is drawn
 const PORTRAIT = new Map(PORTRAITS.map(i => [i.id, { ...i, portrait: true }]));
+// the 48×48 portraits (Cory, 2026-10-29) win over the 32×32 ones wherever one is drawn
+for (const i of PORTRAITS3) PORTRAIT.set(i.id, { ...i, portrait: true, v3: true });
 export function iconFor(id, kind = 'member') {
   const ids = Array.isArray(id) ? id : [id];
   const hit = (kind !== 'action' && ids.map(x => PORTRAIT.get(x)).find(Boolean)) || ids.map(x => BY_ID.get(x)).find(Boolean);
@@ -143,6 +147,7 @@ const rectCache = new Map();
 export function rectsFor(icon, sphere) {
   const k = `${icon.id}|${sphere}`;
   if (rectCache.has(k)) return rectCache.get(k);
+  if (icon.v3) return portrait3Runs(icon, sphere);
   if (icon.portrait) return portraitRuns(icon, sphere);
   const person = icon.kind === 'member' && !icon.palette;
   const pal = icon.palette ? { ...NEUTRALS, ...icon.palette } : { ...palette(sphere), ...(person ? personPalette(icon.id) : null) };
