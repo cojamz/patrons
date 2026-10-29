@@ -48,5 +48,13 @@ for (x, y) in lit:
     if c.get(x, y) in 'BC': c.set(x, y, 'D')
 for y in range(21, 26):
     if c.get(31, y) == 'B': c.set(31, y, 'C')
+# Critic round: one stepped highlight on the scalp, top-left; the rest of the scalp on the base tone.
+SCALP = {9: (18, 21), 10: (17, 21), 11: (15, 20), 12: (16, 20), 13: (18, 20), 14: (18, 19)}
+for y in range(8, 15):
+    for x in range(14, 31):
+        k = c.get(x, y)
+        lo, hi = SCALP.get(y, (99, 0))
+        if lo <= x <= hi and k in 'BCD': c.set(x, y, 'D')
+        elif k == 'D' or (22 <= x <= 26 and 11 <= y <= 14 and k == 'B'): c.set(x, y, 'C')
 PORTRAIT = {'id': 'echo.chronicler', 'name': 'Chronicler', 'kind': 'member', 'sphere': 'green',
             'people': [{'skin': 'deep', 'hair': 'white'}], 'accent': 'red', 'px': c.rows()}

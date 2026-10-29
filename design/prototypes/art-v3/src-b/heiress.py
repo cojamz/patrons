@@ -49,4 +49,9 @@ c.put(4, 14, [
     '.......DDCArrACCBBA.....JJJ',
     '........CCCCCCCBBA......IJJ',
 ])
+# Critic round: the ring round the mouth and the chin lifted to the midtone (goatee read), shadow kept on the right
+# jaw only; one midtone step on the nose seam.
+for (x, y, k) in ((16, 25, 'D'), (17, 25, 'D'), (13, 26, 'r'), (18, 26, 'r'), (13, 27, 'r'), (14, 27, 'r'), (15, 27, 'r'),
+                  (16, 27, 'r'), (17, 27, 'r'), (16, 21, 'r')):
+    c.set(x, y, k)
 PORTRAIT = portrait('trading.heiress', 'Heiress', 'white', [{'skin': 'verydeep', 'hair': 'black'}, {'skin': 'olive', 'hair': 'grey'}], c, accent='orange', merge={'H': 'G', 'K': 'J', 'N': 'M', 'd': 'c'}, minn=5)

@@ -55,5 +55,6 @@ c.put(10, 15, [
     '.......DDCDDCCCCCBBrA........',
     '........CCCCCCCBBBBA.........',
 ])
+c.set(20, 21, 'r'); c.set(21, 22, 'r')                                             # critic: one midtone step on the seam
 PORTRAIT = {'id': 'market.patroness', 'name': 'Patroness', 'kind': 'member', 'sphere': 'blue',
             'people': [{'skin': 'verydeep', 'hair': 'grey'}], 'accent': 'rose', 'px': c.rows()}

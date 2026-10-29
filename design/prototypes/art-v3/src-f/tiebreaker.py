@@ -54,4 +54,5 @@ for y in range(16, 26):
     for x in (27, 28):
         if c.get(x, y) == 'B': c.set(x, y, 'C')
 c.set(20, 26, 'C')
+c.set(17, 21, 'C'); c.set(18, 21, 'C')                                            # critic: no light right under the eye
 PORTRAIT = portrait('benders.tiebreaker', 'Tiebreaker', c, [{'skin': 'verydeep', 'hair': 'grey'}], 'red')

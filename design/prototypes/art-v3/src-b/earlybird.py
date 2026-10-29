@@ -48,4 +48,5 @@ c.put(12, 12, [
     '....DDDDCCCCCCCBBBrA.....',
     '.....CCCCDDCCCBBBAA......',
 ])
+c.set(23, 17, 'r'); c.set(22, 20, 'r'); c.set(22, 22, 'r')                         # critic: one midtone step on the seam
 PORTRAIT = portrait('purple.earlybird', 'Early Bird', 'purple', [{'skin': 'verydeep', 'hair': 'black'}], c, accent='orange', merge={'f': 'j'})
