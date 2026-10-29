@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.854 — 2026-10-29
+
+- Member cards: the price circle at the top is a bit smaller.
+
 ## v0.9.853 — 2026-10-29
 
 - Member cards now match the card design you picked, with bigger costs and slightly bigger rule text.
