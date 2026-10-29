@@ -14,7 +14,7 @@ const TIMINGS = [
   [/^(?:whenever|when you|when another player)\b/i, 'Whenever'],
   [/^game end\b/i, 'Game end'],
   [/^once per round\b/i, 'Once a round'],
-  [/^once per game\b/i, 'Once a game'],
+  [/^(?:once per game|one time use)\b/i, 'One Time Use'],
   [/^while\b/i, 'While'],
 ];
 /** "Round start", "On recruit", "Worth 2"… for a member def. */
@@ -115,4 +115,4 @@ export function ownCopyPlan(state, pid) {
   } catch { return null; }
 }
 /** Is this the copy-all card (Greatest Hits as a space, Tribute Band as a member)? */
-export const copiesAll = text => /^(?:once per game: )?copy every (?:action (?:where you have a minion|with your minion|you took this round)|space you took this round)/i.test(text || '');
+export const copiesAll = text => /^(?:(?:once per game|one time use): )?(?:copy|do) every (?:action (?:where you have a minion|with your minion|you took this round)|space you took this round)/i.test(text || '');

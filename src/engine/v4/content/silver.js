@@ -233,7 +233,7 @@ const silver = {
     m('toastmaster', 'Toastmaster', 2, 2, 'Whenever you take a Silver space, +1 follower.', {
       afterAction(ctx, owner, card, qid) { if (qid === S) owner.bonus += 1; },
     }),
-    m('gala', 'Debutante', 4, 4, 'Once per game: double your silver. Each rival +2 silver.', {
+    m('gala', 'Debutante', 4, 4, 'One Time Use: double your silver. Each rival +2 silver.', {
       activate: 'game',
       onActivate(ctx, owner) {
         ctx.gain(owner, S, owner.res[S]);

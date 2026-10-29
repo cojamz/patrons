@@ -319,7 +319,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 4, 2, 'Once per game: take an extra turn after this one.', { from: 2,
+    m('secondwind', 'Go-Getter', 4, 2, 'One Time Use: take an extra turn after this one.', { from: 2,
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
