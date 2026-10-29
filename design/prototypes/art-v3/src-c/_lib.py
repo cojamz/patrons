@@ -79,8 +79,9 @@ def face(c, box, eye, p=0, view='front', jaw='round', eyes='round', look=0, brow
             c.set(ex + 1, eye + 1, B); c.set(ex + 1, eye + 2, A); c.set(ex, eye + 2, B)
     # cheek plane
     if cheek and not back:
-        cxl = L[0] - (0 if view != 'l' else 0)
-        c.put(cxl, eye + 1, [D * 3, D * 2])
+        # on the cheekbone, a row lower and a pixel outward from the eye (right under the eye reads as a bruise)
+        for i, (dx, dy) in enumerate(((-1, 2), (0, 2), (1, 2), (0, 3), (1, 3))):
+            if (L[0] + dx, eye + dy) in m and c.get(L[0] + dx, eye + dy) == C: c.set(L[0] + dx, eye + dy, D)
     # mouth
     my = eye + (mouth_dy if mouth_dy is not None else (5 if h >= 17 else 3))
     mx = ex + (1 if view == 'r' else 0)
@@ -95,6 +96,7 @@ def face(c, box, eye, p=0, view='front', jaw='round', eyes='round', look=0, brow
     return anchors
 
 def _eye(c, x, eye, n, style, look, side, A, B, C, back):
+    if style == 'none': return
     if style == 'closed':      # serene: lid line curving down at the ends
         c.put(x, eye - 1, [B * n]); c.put(x, eye, ['z' * n])
         return
@@ -204,7 +206,8 @@ def merge(c, m):
     """Fold small ramp steps into their neighbours to keep a portrait under the color cap: merge(c, {'a': 'b'})."""
     c.g = [[m.get(k, k) for k in r] for r in c.g]
 
-def behind3(c, p, side, eyes='round', look=0, mouth='smile', brows='level', hair_pts=None, hair_lo='M', hair_hi='N', collar=None):
+def behind3(c, p, side, eyes='open', look=None, mouth='smile', brows='level', hair_pts=None, hair_lo='M', hair_hi='N', collar=None, jaw='narrow', dx=0):
+    if look is None: look = 1 if side == 'L' else -1
     """A person behind in a 3-person card: side 'L' (box 4..15) or 'R' (box 32..43), eye 18, shoulders 29.
     Body on sphere steps 1-2, skin a step darker, small face. Returns the head box."""
     box = (4, 11, 15, 24) if side == 'L' else (32, 11, 43, 24)
@@ -213,8 +216,41 @@ def behind3(c, p, side, eyes='round', look=0, mouth='smile', brows='level', hair
     b = c.poly(pts); c.fill(b, '2'); c.outside(b, '1', box[0] + 4, box[3] + 9, 9, 7)
     nx = 8 if side == 'L' else 36
     neck(c, nx, nx + 4, box[3], box[3] + 5, p=p, back=True)
-    face(c, box, 18, p=p, back=True, view='front', jaw='narrow', eyes=eyes, look=look, mouth=mouth, mouth_dy=3,
-         brows=brows, ear=False)
+    face(c, box, 18, p=p, back=True, view='front', jaw=jaw, eyes='none', mouth='none', mouth_dy=3,
+         brows='none', ear=False, nose=False, socket=False)
+    back_face(c, box, p, 18, look=look, eyes=eyes, brows=brows, mouth=mouth, dx=dx)
     if hair_pts:
         h = c.poly(hair_pts); c.fill(h, hair_hi); c.outside(h, hair_lo, box[0] + 5, box[1] + 3, 7, 5)
     return box
+
+def back_face(c, box, p, eye, look=1, eyes='open', brows='level', mouth='smile', dx=0):
+    """Features for a small face behind (12-13 wide): eyes of a 1px iris and a 1px white under a soft lid, a brow row in
+    the hair's dark, a nose shadow and a 2px mouth. Every back face sets its own look, eyes, brows and mouth."""
+    I, J = PEOPLE[p][0][0], PEOPLE[p][0][1]
+    H = PEOPLE[p][1][1]
+    x0, y0, x1, y1 = box
+    cx = x0 + (x1 - x0 + 1) // 2 + dx
+    for ex in (cx - 4, cx + 1):                      # each eye is 2 wide: ex, ex+1
+        if eyes == 'open':
+            iris, white = (ex + 1, ex) if look > 0 else (ex, ex + 1)
+            c.set(iris, eye - 1, 'z'); c.set(white, eye - 1, I)
+            c.set(iris, eye, 'z'); c.set(white, eye, 'y')
+        elif eyes == 'laugh':                         # a 3px arc
+            c.set(ex, eye, 'z'); c.set(ex + 1, eye - 1, 'z'); c.set(ex + 2, eye, 'z')
+        elif eyes == 'closed':
+            c.put(ex, eye, ['zz'])
+        by = eye - 3 if brows == 'raised' else eye - 2
+        if brows == 'worried':
+            c.put(ex, eye - 2, [H + H]); c.set(ex + 1 if ex < cx else ex, eye - 3, H)
+        elif brows != 'none':
+            c.put(ex, by, [H + H]); c.set(ex - 1 if ex < cx else ex + 2, by + (0 if brows == 'raised' else 1), H)
+    c.set(cx - 1, eye + 1, I); c.set(cx - 1, eye + 2, I)                            # nose shadow
+    my = eye + 4
+    if mouth == 'smile':
+        c.put(cx - 2, my - 1, ['I..I']); c.put(cx - 1, my, ['zz'])
+    elif mouth == 'grin':
+        c.put(cx - 2, my - 1, ['z..z']); c.put(cx - 1, my, ['zz'])
+    elif mouth == 'flat':
+        c.put(cx - 1, my, ['zz'])
+    elif mouth == 'o':
+        c.put(cx - 1, my - 1, ['II']); c.put(cx - 1, my, ['zz'])

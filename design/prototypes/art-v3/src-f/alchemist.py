@@ -1,7 +1,7 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
 # Alchemist (colorless; card id freelancer): pay any member's colored part in any colors. An old alchemist with a
-# cloud of white hair, brass goggles pushed up on her forehead, brows up in delight at the round flask of teal brew
+# cloud of white hair, brass goggles pushed up on her forehead, brows up in delight (round bright eyes, closed mouth) at the round flask of teal brew
 # she holds up to the light (bubbles in the neck). High-collared lab coat. True 3/4 to our right. Template: 1 person.
 c = Canvas()
 body = torso(c, [(1, 48), (2, 41), (6, 36.5), (15, 34), (31, 34), (39, 36), (44, 40), (46, 48)], 18, 40)
@@ -22,15 +22,15 @@ blk(c, 14, 15, '''
 |.DDDDDDDDDDDDDDCCBA.
 |.DDDGGGGDDDDCGGGBBA.
 |.DDBBBBBBDDCBBBBBBA.
-|.DBCzzzzBDCBzzzBBBA.
-|.DADByzzBDCByzzBBBA.
+|.DBCDD!zBDCBC!zBBBA.
+|.DADDDzzBDCBCzzBBBA.
 |.DADDDDDDDDBCCCBBBA.
 |.DBDDDDDDCDBCCCBBBA.
 |..BDDDDCCCDDABCBBBA.
 |..BCDDCCCCCBBBCBBBA.
-|..BCDDCCCAAACCCBBA..
-|..BCCCCCCAzACCBBBA..
-|...BCCDDCAACCBBBA...
+|..BCDDCACCCACCCBBA..
+|..BCCCCCCAAACCBBBA..
+|...BCCDDCCCCCBBBA...
 |....BBCCDDCCBBBA....
 |.....ABBBBBBBBA.....
 ''')

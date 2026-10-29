@@ -32,13 +32,15 @@ neck(c, 0, 21, 27, 30, 36)
 hr = c.poly([(16, 22), (15.6, 16), (17.5, 12.4), (22, 10.6), (27, 10.6), (31.4, 12.6), (33, 16), (32.8, 22), (31.6, 21),
              (31.4, 17.4), (28, 15.4), (21, 15.6), (17.6, 17.4), (17.4, 22)])
 hair(c, hr, 0, 24, 13, 8, 4, lit=False)
-face(c, 0, 17, 21, 15, 5, 8, view='f', eyes='smile', mouth='smile', jaw='oval', dk=True)
+face(c, 0, 17, 21, 15, 5, 8, view='f', eyes='smile', mouth='smile', jaw='oval', dk=True, look='iris', plane=True)
 # the score card, held up in front of her shoulder
 cd = c.rect(33, 31, 42, 39)
 c.fill(cd, 'y')
 c.put(35, 33, ['.z..zz.', 'zz.z..z', '.z.z..z', '.z..zz.'])                 # "10"
 c.edge(cd, 'z')
-hand(c, 35, 39, 0, 'grip')
+arm = c.poly([(31, 48), (32, 43), (35, 41), (40, 41.4), (41, 48)])             # the arm up to the card
+c.fill(arm, '3'); c.rim(arm, '4', -1, -1, 1, only='3'); c.fill(c.rect(38, 44, 41, 48) & arm, '2'); c.edge(arm, '1')
+hand(c, 35, 38, 0, 'grip')
 front = changed(c, s0)
 c.edge(front, None)
 c.fill(c.mask_of('K'), 'J'); c.fill(c.mask_of('S'), 'R')

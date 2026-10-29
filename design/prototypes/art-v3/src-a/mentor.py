@@ -24,10 +24,11 @@ hr = c.poly([(7.5, 21), (7.4, 15), (9, 11), (13, 9), (19, 8.6), (23.5, 10), (26,
 hair(c, hr, 0, 16, 11, 9, 4.5)
 c.fill(c.rect(11, 14, 22, 14) & hr, 'G')
 # a short grey beard along the jaw, the smile kept clear
-bd = c.poly([(8.8, 22), (9.5, 26), (12, 29.6), (17, 31), (22, 29.6), (24.4, 26), (25.2, 22), (24, 25.2), (21.5, 26.6),
-             (21, 24.8), (13, 24.8), (12.5, 26.6), (10, 25.2)])
+bd = c.poly([(8.8, 22), (9.5, 26), (12, 29.6), (17, 31), (22, 29.6), (24.4, 26), (25.2, 22), (24, 25.2), (21.5, 27.4),
+             (12.5, 27.4), (10, 25.2)])                                       # beard starts on the chin, a skin row over the mouth
 hair(c, bd, 0, 15, 24, 8, 6)
 c.fill(c.rect(9, 29, 25, 31) & bd, 'E')
+c.put(13, 23, ['FFG...GFF'][0:0]); c.put(13, 23, ['.FFG.GFF.'])            # moustache in two wedges
 # round gold spectacles
 c.put(11, 18, ['.AAA...AAA.', 'A...AAA...A', 'A...A.A...A', '.AAA...AAA.'])
 c.put(12, 18, ['D'])

@@ -36,6 +36,7 @@ blk(c, 14, 14, '''
 |...ABBBBBBBBBBBBA...
 ''')
 c.put(21, 25, ['BBB']); c.put(14, 22, ['B']); c.put(14, 25, ['B'])   # the puffed cheeks' undersides
+c.put(13, 22, ['.C', 'DD', 'DC', '.C'])                                              # the far cheek puffed out, lit
 # ---- steel whistle at the lips, its red cord hanging down to the collar
 c.put(9, 22, ['.ggg',
               'fggfgggg',

@@ -15,7 +15,7 @@ dome = c.ellipse(24, 14, 9, 6.5) & c.rect(0, 0, 47, 13)
 c.fill(dome, 'C'); c.outside(dome, 'B', 22.5, 12.5, 8.5, 6); c.fill(dome & c.ellipse(20, 10.5, 2.6, 1.4), 'D')
 fr = c.poly([(30.5, 9.5), (33.5, 11.5), (35, 16), (34.6, 21), (33, 24), (31.4, 23), (32, 16), (31, 12)]); c.fill(fr, 'G'); c.outside(fr, 'F', 32, 13, 2.6, 6)
 fl = c.poly([(17.5, 9.5), (15, 12), (14, 16), (14.6, 21), (16, 22), (16.4, 15), (18, 12)]); c.fill(fl, 'G'); c.outside(fl, 'F', 16, 13, 2.4, 6)   # white fringe round the crown
-c.put(17, 22, ['GGGG..GGG', 'FGGFFFGGF', 'F.......F'])                          # moustache
+c.put(15, 22, ['.FFE..EFF', 'FE......EF'][:1]); c.put(15, 23, ['E']); c.put(23, 23, ['E'])     # moustache: two dark wedges
 c.put(16, 17, ['.ee....eeee.', 'e..eeee....e', 'e..e..e....e', '.ee....eeee.'])          # two framed lenses and a bridge
 # the hourglass, held at our right
 c.fill(c.rect(34, 30, 44, 31), 'r'); c.fill(c.rect(34, 46, 44, 47), 'q'); c.fill(c.rect(34, 30, 44, 30), 's')

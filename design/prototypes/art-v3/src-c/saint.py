@@ -17,7 +17,6 @@ c.rim(veil, '5', -1, -1, 1, only='4')
 c.put(16, 15, ['3', '3']); c.put(31, 15, ['2', '2'])
 c.put(18, 16, ['F.F' * 0])
 # hands together in prayer at the chest
-c.put(21, 37, ['..DC..', '.DCCB.', '.DCCB.', 'DCCCCB', 'CCCCBB', '.BBBB.'][0:6])
-c.fill(c.line(23, 37, 23, 41), 'B')
+c.put(21, 36, ['.DB.BA.', '.DCBCA.', 'DDCBCBA', 'DCCBCBA', 'CCCBBBA', '.4433..', '.4433..'][0:7])   # two palms together, a centre split, silver cuffs
 PORTRAIT = {'id': 'silver.saint', 'name': 'Patron Saint', 'kind': 'member', 'sphere': 'silver',
             'people': [{'skin': 'warmtan', 'hair': 'brown'}], 'accent': 'red', 'px': c.rows()}

@@ -3,7 +3,7 @@ from _lib import *
 # Launderers (colorless, counts as 2): worth 2; On Recruit, turn all your resources into one color. Two partners at
 # the wash, mid-laugh. In front: a curly-haired man, sleeves rolled, a striped towel over his shoulder, forearms bare,
 # brows up, laughing at the bubble floating off. Behind (3px lower, a value darker): his partner in
-# teal hair curlers, eyes shut laughing. Soap bubbles drift up between them. Template: 2 people, front left.
+# teal hair curlers, eyes shut laughing. Soap bubbles drift up between them; a washed banknote is pegged to his towel (the money joke). Template: 2 people, front left.
 c = Canvas()
 # ---- behind (person 1), right
 bodyB = c.poly([(22, 48), (24, 32), (28, 27.5), (38, 27), (44, 29), (47, 33), (47, 48)])
@@ -27,10 +27,10 @@ blk(c, 26, 12, '''
 |....IJJJJJI....
 ''')
 c.put(40, 15, ['J', 'I', 'I'])                                                    # ear
-for x0 in (27, 32, 37):                                                            # curlers
-    c.put(x0, 5, ['.ww.', 'wwwu', 'uuuu'])
+for x0 in (27, 32, 37):                                                            # three rounded rollers
+    c.put(x0, 6, ['www', 'uuu'])
 c.shift(c.mask_of('IJKL'), -1)
-c.g = [['.'] * 48 for _ in range(3)] + c.g[:45]
+c.g = [['.'] * 48 for _ in range(6)] + c.g[:42]                                 # 3px lower again (critic, round 1)
 # ---- in front (person 0), left
 body = torso(c, [(0, 48), (0, 40), (3, 37), (9, 35), (24, 35), (30, 37), (33, 41), (34, 48)], 14, 40, rx=(17, 21), ry=(10, 13), lite=None)
 c.fill(c.rect(13, 29, 20, 35), 'A'); c.fill(c.rect(13, 32, 14, 35), 'B')
@@ -46,13 +46,14 @@ c.fill(towel, 'k'); c.fill(towel & c.rect(11, 30, 13, 47), 'i')
 c.fill(towel & c.rect(0, 42, 47, 43), 'w'); c.fill(towel & c.rect(11, 42, 13, 43), 'u'); c.fill(towel & c.rect(0, 46, 47, 46), 'w')
 c.fill(c.line(6, 35, 8, 38), 'i')                                                    # where it folds over the shoulder
 c.edge(towel, 'i')
+c.put(4, 36, ['...EE..', 'wwwEwww', 'wkkkkkw', 'wkuwukw', 'wkkkkkw', 'wwwwwww'])        # a washed banknote pegged to the towel
 # ---- face: 3/4 to our right (toward her), brows up, laughing. ruler x 8..25
 blk(c, 8, 16, '''
 |.ECCCCCCCCCCCCCBA.
 |.ECDEEEECCCEEEBBA.
 |.CCBBBBBCCBBBBBBA.
-|.CBCzzzBDCBzzBBBA.
-|.CACyzyBDCByzBBBA.
+|.CBCC!zBDCB!zBBBA.
+|.CACCzzBDCBzzBBBA.
 |.CACCCCCDBCCCBBBA.
 |.CBDDDCCCDBCCBBBA.
 |..BCDDCCCDDABCBBA.

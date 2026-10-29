@@ -12,7 +12,7 @@ c.fill(c.line(16, 37, 19, 33) | c.line(31, 37, 28, 33), '1')                   #
 pocket = c.rect(19, 42, 28, 46); c.fill(pocket, '1'); c.fill(c.rect(19, 42, 28, 42), '3')
 c.put(21, 33, ['y.....y', 'yy...yy'])                                           # white shirt collar
 neck(c, 20, 27, 28, 33)
-f = face(c, (15, 10, 32, 28), 19, view='l', jaw='round', eyes='laugh', mouth='open', brows='raised')
+f = face(c, (15, 10, 32, 28), 19, view='l', jaw='round', eyes='laugh', mouth='grin', brows='raised')
 
 # ginger hair, short and tufty
 h = c.poly([(13.5, 19), (13, 13), (15, 9), (19, 6.5), (25, 6), (30, 7), (33.5, 10), (34.5, 15), (33.5, 19), (32, 14.5),

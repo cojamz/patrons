@@ -17,7 +17,7 @@ c.fill(bodyA, "3"); c.outside(bodyA, "2", 14, 40, 17, 11); c.outside(bodyA, "1",
 c.rim(bodyA, "4", 0, -1, 1, only="3"); c.edge(bodyA, "1")
 neck(c, 13, 20, 28, 34)
 face(c, 'f16', 9, 20, eyes='closed', brows='level', mouth='smile', glow=True)
-c.put(10, 16, ['DD']); c.put(10, 21, ['DDD'])
+
 hood = c.poly([(5, 36), (5, 18), (7, 10), (12, 6), (19, 5.6), (24.5, 8), (27, 13), (28, 20), (28, 36), (25, 36), (25, 15), (8.5, 15), (8, 36)])
 c.fill(hood, '3'); c.fill(hood & c.ellipse(11, 9, 5, 2.6), '4'); c.outside(hood, '2', 15, 13, 12, 14)
 c.inner_edge(hood & c.rect(8, 14, 25, 36), lambda k: '1', sides=((1, 0), (0, 1), (-1, 0)))

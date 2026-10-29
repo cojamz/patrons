@@ -18,6 +18,7 @@ bun = c.ellipse(30.5, 6.2, 3.6, 3.2)
 c.fill(bun, 'G'); c.outside(bun, 'F', 29.5, 5.5, 3.2, 2.6); c.fill(bun & c.ellipse(29.5, 4.8, 1.4, 1), 'H'); c.edge(bun, 'E')
 c.fill(c.line(20, 8, 24, 12), 'F'); c.fill(c.line(26, 8, 29, 11), 'F')         # combed strands
 
+c.put(18, 19, ['CzzC']); c.put(25, 19, ['Czz'])                                 # 2px pupils, looking down
 c.put(17, 19, ['b....b.bb...b', '.bbbb....bbb'])                                    # gold half-moon reading glasses
 # the open pocket watch in her hand, lower right
 w = c.ellipse(36.5, 39.5, 5.2, 5.2)

@@ -27,7 +27,7 @@ c.edge(cap, 'q')
 # the crate on his shoulder (our right), stamped
 cr = c.poly([(1, 39), (17, 37.5), (18, 48), (1, 48)])
 c.fill(cr, 'r'); c.fill(cr & c.rect(0, 37, 18, 39), 's'); c.fill(cr & c.rect(15, 37, 18, 48), 'q')
-c.fill(c.line(1, 43, 15, 43), 'q'); c.fill(c.line(8, 40, 8, 47), 'q')
+c.fill(c.line(1, 43, 15, 43), 'q'); c.fill(c.line(5, 40, 5, 47) | c.line(11, 40, 11, 47), 'q')
 c.put(10, 44, ['uuu', 'u.u', 'uuu'])                                         # the export stamp
 c.edge(cr, 'q')
 c.put(17, 39, ['.CCC', 'CCCB', 'BCCB', '.BB.'])

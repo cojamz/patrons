@@ -1,7 +1,7 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
-# Anarchist (colorless): once per round, swap any two members within 2 cost. A cheerful punk: rose mohawk, shaved
-# sides, a safety pin in one ear, brows up and a cheeky closed smile. Studded jacket with wide lapels. Prop: a can of
+# Anarchist (colorless): once per round, swap any two members within 2 cost. A cheerful punk: rose mohawk in four spikes, shaved
+# sides, a stud in one ear, brows up and a cheeky closed smile. Studded jacket with wide lapels. Prop: a can of
 # rose spray paint held up, mid-tag. Frontal. Template: 1 person.
 c = Canvas()
 body = torso(c, [(1, 48), (2, 41), (6, 36.5), (15, 34), (32, 34), (40, 36.5), (44, 40), (46, 48)], 19, 40)
@@ -27,19 +27,21 @@ blk(c, 14, 13, '''
 |..CCDCCCDDABCCCCBBA.
 |..BCCCBCCCCCCBCCBBA.
 |..BCCCCAAAAAACCCBBA.
-|..BCCCCCuuuuCCCCBA..
+|..BCCCCCBBBBCCCCBA..
 |...BCCCCDDCCCCCBA...
 |....BCCCCCCCCBBA....
 |.....ABBBBBBBBA.....
 ''')
 c.put(15, 18, ['D', 'D', 'C', 'B']); c.put(33, 18, ['A', 'B', 'A'])               # ears
-c.put(15, 21, ['g', 'f'])                                                          # safety pin
+c.put(15, 21, ['g'])                                                               # ear stud
 # ---- shaved sides with a little stubble shadow, and the mohawk
 dome = c.ellipse(23.5, 14.5, 9.2, 6.4) & c.rect(0, 0, 47, 13)
 c.fill(dome, 'B'); c.fill(dome & c.ellipse(21, 13, 6, 4), 'C'); c.fill(dome & c.rect(29, 0, 47, 13), 'A')
-mo = c.poly([(20.5, 14), (20, 9), (18.6, 4.6), (21.4, 6), (21.6, 1.2), (24, 5), (25.6, 0.2), (26.6, 5.4), (29, 3), (28, 8),
-             (27.6, 14)])
-c.fill(mo, 'w'); c.outside(mo, 'v', 23, 7, 4, 7); c.rim(mo, 'x', -1, -1, 1, only='w'); c.edge(mo, 'u')
+mo = c.rect(20, 9, 27, 13)
+for x0, top in ((19, 2), (21.6, 0), (24.4, 1), (27, 3)):                           # four spikes, gaps between the tips
+    mo |= c.poly([(x0, 10), (x0 + 1.1, top), (x0 + 2.6, 10)])
+c.fill(mo, 'w'); c.outside(mo, 'v', 22.5, 7, 4.5, 7); c.rim(mo, 'x', -1, 0, 1, only='w'); c.edge(mo, 'u')
+c.fill(mo & c.rect(0, 12, 47, 13), 'v')
 # ---- the spray can, held up
 can = c.rect(37, 21, 42, 33)
 c.fill(can, 'f'); c.fill(c.rect(37, 21, 38, 33), 'g'); c.fill(c.rect(37, 21, 37, 33), 'g'); c.fill(c.rect(42, 21, 42, 33), 'e')

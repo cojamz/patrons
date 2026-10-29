@@ -17,7 +17,7 @@ for t in range(0, 41):
 bw = {(x, y) for (x, y) in bw if 0 <= x < 48 and 0 <= y < 48}
 c.fill(bw | {(x + 1, y) for (x, y) in bw}, 'r'); c.fill(bw, 's')
 c.fill(c.line(39, 15, 39, 44), 'k')
-face(c, 0, 15, 19, 18, 6, 9, view='r', eyes='smile', mouth='smile', jaw='oval', dk=True)
+face(c, 0, 15, 19, 18, 6, 9, view='r', eyes='smile', mouth='smile', jaw='oval', dk=True, look='iris', plane=True)
 hr = c.poly([(14, 18.4), (14, 12.4), (34, 12.4), (34, 18.4), (32.6, 17.4), (32.4, 14.4), (16, 14.4), (15.6, 18.4)])
 hair(c, hr, 0, 22, 15, 9, 3, lit=False)
 c.fill(c.rect(14, 14, 15, 21) & hr, 'F')
@@ -28,6 +28,4 @@ brim = c.poly([(12.4, 13.8), (13, 10.8), (35.6, 10.8), (36, 13.8)])
 c.fill(brim, '2'); c.fill(brim & c.rect(0, 10, 47, 10), '4'); c.edge(brim, '1')
 fe = c.poly([(21, 6.4), (17, 2.0), (12, -1.4), (14.6, -2.0), (19.6, 0.8), (23, 5.4)])
 c.fill(fe, 'k'); c.fill(c.line(22, 5, 14, 0), 'i'); c.edge(fe, 'i')
-for (x, y) in c.rect(15, 25, 33, 29):
-    if c.get(x, y) == 'A': c.set(x, y, 'B')                                       # keep the jaw from reading as a beard
 PORTRAIT = portrait(c, 'thieves.robinhood', 'Robin Hood', 'magenta', [{'skin': 'verydeep', 'hair': 'black'}])

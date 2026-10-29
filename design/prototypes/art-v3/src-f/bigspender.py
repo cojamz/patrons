@@ -50,6 +50,5 @@ for ang in (-26, -7, 12, 31):
     c.fill(note, 'x'); c.rim(note, 'w', 1, 1, 1); c.edge(note, 'u')
     mx, my = px + ux * 8.5, py + uy * 8.5
     c.fill(c.ellipse(mx, my, 1.4, 1.6) & note, 'w')
-hand = c.poly([(34, 36), (37, 32.5), (41, 32.5), (42.5, 36), (40, 39), (35, 39)])
-c.fill(hand, 'C'); c.fill(hand & c.rect(38, 30, 47, 47), 'B'); c.rim(hand, 'D', 0, -1, 1, only='C'); c.edge(hand, 'A')
+fist(c, 35, 34, cuff='4')
 PORTRAIT = portrait('benders.bigspender', 'Big Spender', c, [{'skin': 'porcelain', 'hair': 'white'}], 'green')

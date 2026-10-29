@@ -13,7 +13,8 @@ c.fill(c.rect(20, 30, 22, 33), 'D')
 f = face(c, (15, 10, 32, 28), 19, view='l', jaw='narrow', mouth='smile', brows='arch', eyes='round', look=0)
 # a little rose on the lips, kept small
 m = f['mouth']
-c.put(m[0] - 1, m[1], ['vvv']); c.set(m[0] - 2, m[1] - 1, 'A'); c.set(m[0] + 2, m[1] - 1, 'A'); c.put(m[0] - 1, m[1] + 1, ['DD'])
+c.put(m[0] - 1, m[1], ['vvv']); c.set(19, 23, 'B'); c.set(24, 23, 'B'); c.put(m[0] - 1, m[1] + 1, ['DD'])
+c.put(16, 20, ['DDD', 'DD.'])                                                  # cheek plane
 # light on the deep skin: forehead, nose bridge, cheekbone, so the face never goes black
 # (verydeep's steps sit close together, so the whole face rides one step up: D lit, C shadow, B deep shadow)
 face_px = f['m'] - c.mask_of('zy!vEFGH')

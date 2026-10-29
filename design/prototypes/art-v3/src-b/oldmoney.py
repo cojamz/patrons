@@ -11,7 +11,7 @@ lapL = c.poly([(14.5, 34), (19.5, 33.5), (23.4, 45), (20.6, 45), (16, 38.5), (12
 lapR = c.poly([(28.5, 33.5), (33.5, 34), (35.5, 36), (32, 38.5), (27.4, 45), (24.6, 45)])
 c.fill(lapL, '3'); c.edge(lapL, '1'); c.fill(lapR, '2'); c.edge(lapR, '1')
 c.put(21, 34, ['nn.nn', 'nonnn', 'nn.nn'])                                       # bow tie
-c.put(9, 39, ['.uu', 'uvvu', 'uvu', '.u.'])                                       # a red carnation
+c.put(9, 39, ['.vu', 'vvu', 'uu.']); c.put(8, 42, ['u']); c.put(7, 43, ['u'])      # a red rosette, stem angled
 neck(c, 19, 27, 28, 33)
 face(c, 'q34', 15, 19, eyes='open', brows='level', mouth='flat')
 ear(c, 30, 18)

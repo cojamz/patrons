@@ -22,6 +22,7 @@ c.fill(dome, 'g'); c.outside(dome, 'f', 37, 23.5, 5.6, 4.6); c.fill(dome & c.ell
 c.edge(dome, 'e')
 c.put(38, 19, ['ff', 'ee'])                                                          # the knob
 c.put(30, 27, ['hgggggggggggggggggf', '.eeeeeeeeeeeeeeee.'])                       # the tray
-c.put(36, 29, ['yyyk', 'ykkkj', '.kkjj', '..jj.'])                                   # gloved hand under it
+c.put(35, 29, ['y.y.yk', 'ykykkj', 'kkkkjj', '.kkjj.', '..33..'])                     # gloved hand under the tray, fingers spread, cuff
+merge(c, {'m': 'z', '!': 'y'})
 PORTRAIT = {'id': 'silver.majordomo', 'name': 'Majordomo', 'kind': 'member', 'sphere': 'silver',
             'people': [{'skin': 'palepink', 'hair': 'grey'}], 'accent': 'red', 'px': c.rows()}

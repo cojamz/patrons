@@ -30,11 +30,12 @@ c.put(16, 11, ['DDDD', 'DDD.'])
 hair(c, [(13.5, 21), (13.5, 14), (16, 12), (17, 15), (15.5, 21)], 14, 14, 2, 3)
 hair(c, [(31, 12), (34, 14), (34.5, 21), (32.6, 21), (32, 15)], 32, 13, 2, 3)
 # the coin purse held out in his hand, a gold coin on top
-purse = c.ellipse(9.5, 42.5, 7, 4.8)
-c.fill(purse, 'v'); c.outside(purse, 'u', 8.5, 41.5, 6.2, 3.9); c.fill(purse & c.ellipse(6.5, 41, 2.4, 1.4), 'w')
-c.put(3, 36, ['..cddcccdc..', '.cdccbcdccb.', 'ccbbcbbcbbcb', 'uvvuvvvuvvvu'])  # the open mouth, full of gold coins
-c.put(4, 31, ['.cc.', 'cddc', 'cdcb', '.bb.'])                                   # one coin held up
-c.put(13, 41, ['CCD.', 'BCCC', 'BBCC', '.BBB'])                                  # his hand under it
+purse = c.ellipse(9, 42.5, 5.8, 4.6)                                           # a drawstring pouch: round belly, cinched neck
+c.fill(purse, 'v'); c.outside(purse, 'u', 8, 41.5, 5, 3.8); c.fill(purse & c.ellipse(6.5, 41, 2, 1.3), 'w')
+c.put(5, 34, ['vv.vv.vv', '.vvvvvv.', '..uvvu..', '..cbbc..', '..vvvu..'])               # the ruffled top, the gold cord
+c.put(13, 33, ['.cc', 'cdc', 'bcb'])                                              # coins spilling out over the top
+c.put(15, 37, ['.cc', 'cdb', '.bb']); c.put(16, 30, ['cc', 'bb'])
+c.put(13, 42, ['.CD.', 'CDCD', 'CCCB', 'BCBB', '.BB.'])                          # his hand under it: knuckles, thumb
 merge(c, {'4': '3', 'a': 'b', 'd': 'c', 'l': 'k', '!': 'y'})
 PORTRAIT = {'id': 'silver.benefactor', 'name': 'Benefactor', 'kind': 'member', 'sphere': 'silver',
             'people': [{'skin': 'coolbrown', 'hair': 'darkbrown'}], 'accent': 'red', 'px': c.rows()}

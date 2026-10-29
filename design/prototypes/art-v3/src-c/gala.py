@@ -6,10 +6,10 @@ from _lib import *
 # Front view. Template: 1 person.
 c = Canvas()
 body = c.poly([(2, 48), (3, 41), (7, 37), (14, 35), (34, 35), (41, 37), (45, 41), (46, 48)])
-c.fill(body, 'C'); c.outside(body, 'B', 20, 39, 20, 10)                           # bare shoulders
+c.fill(body, 'C'); c.outside(body, 'B', 20, 30, 26, 9)                            # bare shoulders
 gown = c.poly([(2, 48), (3, 41), (6, 37.5), (13, 36.6), (19, 38), (24, 39.5), (29, 38), (35, 36.6), (42, 37.5), (45, 41), (46, 48)])
 c.fill(gown, '3'); c.outside(gown, '2', 20, 41, 18, 8); c.outside(gown, '1', 18, 41, 24, 11); c.rim(gown, '4', 0, -1, 1, only='3')
-c.fill(c.line(17, 37, 24, 40) | c.line(24, 40, 31, 37), '5')
+c.inner_edge(gown, lambda k: '1', sides=((0, -1),))                              # one silver-dark neckline
 neck(c, 20, 27, 28, 35)
 c.fill(c.rect(21, 30, 22, 34), 'D')
 f = face(c, (16, 10, 31, 28), 19, view='front', jaw='narrow', eyes='round', look=0, mouth='smile', brows='raised', ear=False)

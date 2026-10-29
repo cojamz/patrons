@@ -10,7 +10,8 @@ c.fill(c.poly([(20, 33), (28, 33), (24, 39)]), 'B')
 cl = c.poly([(14, 33.5), (20, 33), (24, 39.5), (19, 39), (15, 36.5)]); cr = c.poly([(28, 33), (34, 33.5), (33, 36.5), (29, 39), (24, 39.5)])
 c.fill(cl, '5'); c.fill(cr, '4'); c.edge(cl | cr, '1')                                  # pyjama collar points
 neck(c, 19, 28, 28, 34)
-face(c, 'oval', 15, 19, eyes='closed', brows='worried', mouth='yawn')
+face(c, 'oval', 15, 19, eyes='closed', brows='worried', mouth=None)
+c.put(22, 24, ['AA', 'zu', 'AA'])                                                 # yawn: a small oval, dark-red centre
 ear(c, 32, 18); ear(c, 13, 18, 'L')
 hair(c, [(14, 18), (13.5, 11), (15, 7.5), (12, 4), (17.5, 5.6), (21, 4.4), (25, 6), (27, 1.6), (29.5, 6.4), (33, 7.4), (36.5, 10.5), (33.6, 12),
          (34, 18), (32.8, 18), (32, 15), (16, 15), (15.2, 18)], 0, 23, 10, 8, 5)                # one cowlick, flattened on the pillow side

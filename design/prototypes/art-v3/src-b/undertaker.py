@@ -23,6 +23,6 @@ c.fill(tape, 'c'); c.fill(c.rect(9, 41, 38, 41), 'b'); c.fill(c.rect(9, 39, 38, 
 for x in range(10, 38, 2): c.set(x, 39, 'z')
 for x in range(14, 38, 6): c.set(x, 40, 'z')
 c.edge(tape, 'a')
-c.put(4, 37, ['.CCD.', 'CCCCC', 'CCCCB', 'BCCCB', '.BBB.', '..11.'])                    # his hands, pinching the ends
-c.put(38, 37, ['.CCC.', 'CCCCB', 'CCCCB', 'BCCBB', '.BBB.', '.11..'])
+c.put(4, 37, ['.DCD.', 'CBCBC', 'CCCCB', 'BCCCB', '.BBB.', '..11.'])                    # his hands, pinching the ends
+c.put(38, 37, ['.DCC.', 'CBCBB', 'CCCCB', 'BCCBB', '.BBB.', '.11..'])
 PORTRAIT = portrait('trading.undertaker', 'Undertaker', 'white', [{'skin': 'porcelain', 'hair': 'black'}], c)

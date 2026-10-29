@@ -5,10 +5,10 @@ from _lib import *
 # popping a bottle of fizz that sprays up and over. Behind left and right, lower and darker: two friends laughing along.
 # Bits of gold confetti in the air. Template: 3 people.
 c = Canvas()
-behind3(c, 1, 'L', eyes='laugh', mouth='smile', brows='raised',
+behind3(c, 1, 'L', eyes='laugh', mouth='grin', brows='raised', jaw='round',
         hair_pts=[(3, 22), (3, 14), (5, 10.4), (10, 9.4), (15, 10.6), (16.5, 14), (16.4, 22), (15, 15), (6, 14.6), (4.5, 22)])
-behind3(c, 2, 'R', eyes='laugh', mouth='smile', brows='raised',
-        hair_pts=[(31, 17), (31.5, 13), (34, 10.4), (40, 10), (43.5, 12), (44.5, 17), (43, 14.6), (33, 14.6), (32.5, 17)],
+behind3(c, 2, 'R', eyes='closed', mouth='o', brows='level', jaw='square', dx=-1,
+        hair_pts=[(32, 14), (33, 11), (37, 9.8), (41, 10.4), (43.4, 12.4), (43.6, 14.6), (38, 13.4)],
         hair_lo='U', hair_hi='V')
 # ---- in front (person 0)
 body = c.poly([(9, 48), (10, 40), (14, 37), (20, 35.5), (28, 35.5), (34, 37), (38, 40), (39, 48)])
@@ -25,8 +25,8 @@ bottle = c.poly([(33, 47), (33, 38), (35, 35), (36, 30), (38, 30), (39, 35), (41
 c.fill(bottle, 'v'); c.fill(bottle & c.rect(39, 30, 41, 47), 'u'); c.fill(c.line(34, 39, 34, 46), 'w')
 c.fill(c.rect(36, 30, 38, 32), 'c'); c.fill(c.rect(36, 39, 40, 43) & bottle, 'k')       # foil, label
 c.put(31, 41, ['DC', 'CC', 'BB'])
-for (x, y) in ((37, 28), (36, 26), (38, 25), (35, 23), (39, 23), (37, 21), (34, 20), (40, 20)): c.put(x, y, ['y'])
-c.put(35, 24, ['y'])
+c.fill(c.line(39, 29, 42, 27) | c.line(42, 27, 47, 26), 'y')                         # the spray, out to the right, clear of the faces
+c.put(44, 28, ['yy']); c.put(46, 24, ['yy'])                                             # droplets, in pairs
 merge(c, {'M': 'N', 'U': 'V', 'G': 'F', '4': '3', '!': 'y', 'k': 'y', 'b': 'c', 'w': 'v', 'D': 'C'})
 PORTRAIT = {'id': 'silver.revelers', 'name': 'Revelers', 'kind': 'member', 'sphere': 'silver',
             'people': [{'skin': 'tan', 'hair': 'brown'}, {'skin': 'palepink', 'hair': 'blonde'}, {'skin': 'golden', 'hair': 'black'}],

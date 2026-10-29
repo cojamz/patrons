@@ -1,7 +1,8 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
 
-# Grifter (magenta): a con man who never stops smiling. Straw boater with a magenta band, a pencil moustache, eyes
+# Grifter (magenta): a con man who never stops smiling. (Round 2: recast olive; the dandy-swindler costume never goes
+# on brown or deep skin. Swapped tones with Patriarch.) Straw boater with a magenta band, a pencil moustache, eyes
 # slid to our left, a smooth closed smile, fanning three playing cards (pick one). 3/4 to our left. Template: 1 person.
 c = Canvas()
 body(c, [(1, 48), (2, 40), (7, 35.5), (16, 33.5), (31, 33.5), (40, 35.5), (45, 40), (46, 48)])
@@ -28,4 +29,4 @@ for (pts, fill) in (([(32, 33), (37, 30), (41, 38), (36, 41)], 'k'), ([(35, 30),
     m = c.poly(pts); c.fill(m, fill); c.edge(m, 'i')
 c.put(39, 32, ['x.x', 'xxx', '.x.']); c.put(36, 33, ['x']); c.put(38, 31, ['u'][0:0])
 hand(c, 33, 38, 0, 'grip')
-PORTRAIT = portrait(c, 'thieves.grifter', 'Grifter', 'magenta', [{'skin': 'tan', 'hair': 'darkbrown'}])
+PORTRAIT = portrait(c, 'thieves.grifter', 'Grifter', 'magenta', [{'skin': 'olive', 'hair': 'darkbrown'}])

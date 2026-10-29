@@ -5,23 +5,18 @@ from _lib import *
 # in a red beret at a tilt, a cool closed smile, a blue scarf. Behind left and right, lower and darker: two
 # followers in the very same red beret, side-eyeing her to get it right. Template: 3 people.
 c = Canvas()
-def behind(p, box, body_pts, look, neckx, hairkeys, hair_pts):
-    b = c.poly(body_pts); c.fill(b, '2'); c.outside(b, '1', box[0] + 5, box[3] + 9, 9, 7)
-    neck(c, neckx, neckx + 4, box[3], box[3] + 5, p=p, back=True)
-    face(c, box, 18, p=p, back=True, view='front', jaw='narrow', eyes='round', look=look, mouth='smile', mouth_dy=3,
-         brows='level', ear=False)
-    h = c.poly(hair_pts); c.fill(h, hairkeys[1]); c.outside(h, hairkeys[0], box[0] + 5, box[1] + 3, 7, 5)
-# behind left (person 1): fair, brown hair; behind right (person 2): olive, black hair
-behind(1, (4, 11, 15, 24), [(0, 48), (0, 31), (3, 29), (14, 29), (18, 32), (19, 48)], 1, 8, 'MN',
-       [(3, 20), (3, 14), (5, 11), (14, 11), (16, 14), (16, 20), (15, 15), (5, 15)])
-behind(2, (32, 11, 43, 24), [(28, 48), (29, 32), (33, 29), (44, 29), (47, 31), (47, 48)], -1, 36, 'UV',
-       [(31, 22), (31, 14), (33, 11), (42, 11), (44, 14), (44, 22), (42.5, 15), (32.5, 15)])
+# behind left (person 1): fair, side-swept brown hair, admiring (brows up, a little "oh")
+behind3(c, 1, 'L', look=1, brows='raised', mouth='o',
+        hair_pts=[(3, 21), (3, 14), (5, 11), (14, 11), (16.4, 13), (16, 17), (13, 14.6), (8, 15.6), (5, 15), (4.6, 21)])
+# behind right (person 2): olive, straight chin-length black hair, studying her (brows knit, mouth flat)
+behind3(c, 2, 'R', look=-1, brows='worried', mouth='flat', jaw='square', hair_lo='U', hair_hi='V',
+        hair_pts=[(31, 25), (31, 14), (33, 11), (42, 11), (44.5, 14), (44.5, 25), (43, 25), (42.6, 15), (33, 15), (32.6, 25)])
 def beret(x, y, w, tilt):
     m = c.poly([(x, y + 3), (x + 1, y + 1), (x + w * .3, y - .4), (x + w * .75, y - .6), (x + w + tilt, y + 1.4), (x + w + tilt - .5, y + 3.4)])
     c.fill(m, 'v'); c.outside(m, 'u', x + w * .4, y + .4, w * .55, 2.6); c.rim(m, 'w', -1, -1, 1, only='v')
     c.put(round(x + w * .5), y - 2, ['u', 'u'])
     return m
-beret(3, 9, 12, 2); beret(31, 9, 12, 2)
+beret(2, 9, 12, 3); beret(32, 8, 12, -1)                                    # the copies, at their own tilts
 # ---- in front (person 0)
 body = c.poly([(9, 48), (10, 40), (14, 37), (20, 35.5), (28, 35.5), (34, 37), (38, 40), (39, 48)])
 c.fill(body, '3'); c.outside(body, '2', 22, 41, 14, 9); c.rim(body, '4', 0, -1, 1, only='3')

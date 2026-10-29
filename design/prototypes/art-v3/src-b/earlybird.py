@@ -13,7 +13,7 @@ neck(c, 19, 28, 28, 34)
 c.fill(c.poly([(21, 33), (27, 33), (24.5, 39)]), 'k')
 face(c, 'round', 15, 19, eyes='dark', brows='raised', mouth=None, glow=True, iris='a')
 ear(c, 33, 18); ear(c, 13, 18, 'L')
-c.put(18, 23, ['.GGGG..GGGG.', 'FGFF....FFGF', 'F..........F'])                     # moustache: two wedges, a gap under the nose
+c.put(18, 23, ['.GGF...FGG.', 'GFE.....EFG', 'F.........F'])                        # moustache: two tapering wedges, 3px gap
 c.put(21, 25, ['A....A', '.AuuA.'])                                      # closed smile, warm lips
 hair(c, [(14, 18), (14, 12), (16, 8.5), (21, 6.5), (27, 6.5), (31.5, 8.5), (34, 12), (34, 18), (32.8, 18), (32, 13.5), (26, 12),
          (21, 12.5), (16, 13.6), (15.2, 18)], 0, 23, 9.5, 9, 4)

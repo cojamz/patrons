@@ -89,7 +89,7 @@ MOUTHS = {  # (rows, row offset from the mouth row)
 
 
 def face(c, p, x0, eye, w, above, below, view='f', eyes='calm', mouth='calm', jaw='oval', ears=True, hp=None,
-         brow=True, cheek=True, nose=True, chin_hi=False, shift=None, dk=False, look=None, hi=None, lip=None):
+         brow=True, cheek=True, nose=True, chin_hi=False, shift=None, dk=False, look=None, hi=None, lip=None, plane=False):
     """Draw a face for person p. x0: left column of the skin; w: width; eye: the eyes' lower-lid row; above/below:
     rows of skin above/below the eye row. view 'f' front, 'r' 3/4 to our right, 'l' 3/4 to our left.
     Returns the face mask (without ears)."""
@@ -116,16 +116,19 @@ def face(c, p, x0, eye, w, above, below, view='f', eyes='calm', mouth='calm', ja
     rows = {}
     for x, y in mask: rows.setdefault(y, []).append(x)
     band0 = max(2, round(w * (0.19 if view == 'f' else 0.23)))
+    if dk: band0 = max(2, band0 - 1)   # deep skin: a narrower shadow side, so the jaw never reads as a beard
     for y, xs in rows.items():
         lo, hx = min(xs), max(xs)
         extra = 0 if y < eye + 3 else (1 if y < chin - 1 else 2)
+        if dk: extra = min(extra, 0 if y < chin else 1)
+        if plane and y > eye + 2: extra = -band0 + 2
         if y <= top + 1: extra = -1
         b = band0 + extra
         for x in xs:
             if x > hx - b: c.set(x, y, S[1])
         c.set(hx, y, S[0] if y > top else S[1])
         if c.get(lo, y) == S[2]: c.set(lo, y, S[1])
-    for x in rows[chin]: c.set(x, chin, S[0] if x > min(rows[chin]) + 1 else S[1])
+    for x in rows[chin]: c.set(x, chin, S[0] if (x > min(rows[chin]) + 1 and not plane) or x == max(rows[chin]) else S[1])
     if chin - 1 in rows:
         xs = rows[chin - 1]
         for x in xs:
@@ -174,6 +177,10 @@ def face(c, p, x0, eye, w, above, below, view='f', eyes='calm', mouth='calm', ja
         my = eye + {'L': 6, 'M': 5, 'S': 3}[size] + off
         mx = int(round(cx - len(rows_m[0]) / 2.0))
         stamp(c, mx, my, rows_m, p)
+    if plane:  # very deep skin: the lit upper-left of the face is one plane on the warm D step
+        pe = c.ellipse(x0 + w * 0.34, eye - 0.5, w * 0.3, (chin - top) * 0.36)
+        for (x, y) in mask & pe:
+            if c.get(x, y) in (S[2], S[1]) and y not in (eye - 1, eye) and x < cx - 1 - (y - eye) * 0.5: c.set(x, y, S[3])
     if dk or hi:  # deep skin (palette has a tall warm D): light the face, not the tone. One forehead cluster, one
         # cheekbone plane joined to the nose bridge, so nothing reads as specks.
         D = S[3]

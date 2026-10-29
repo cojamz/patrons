@@ -131,9 +131,9 @@ T['round'] = dict(top=-7, rows=[
     'CCCCCCCCCCCCCCCBBA',
     'CBBBBBCCBBBBBCCBBA',
     'CCCCCCCCCCCCCCBBBA',
-    'CDDDDCCCCCCCCDBBBA',
-    'CDDDDCCDCCCCCBBBBA',
-    'CDDDCCCDBCCCCBBBBA',
+    'CDDDDCCCCCCCCCBBBA',
+    'CDDDCCCDCCCCCBBBBA',
+    'CDDCCCCDBCCCCBBBBA',
     'CCCCCCCAABCCCBBBBA',
     'CCCCCCCCCCCCCBBBBA',
     '.CCCCCCCCCCCCBBBA.',
@@ -221,8 +221,14 @@ def face(c, tpl, x0, eye, n=0, eyes='open', brows='level', mouth='smile', near=N
     if glow:
         D = 'D'.translate(TR[n]); C = 'C'.translate(TR[n])
         ne = t['eyes'][0]; ns = t['nose']
-        zone = (c.ellipse(x0 + ne + 2.5, y0 + 3, 4.2, 1.8) | c.ellipse(x0 + ne + 1.5, eye + 2, 2.6, 1.6)
-                | c.rect(x0 + ns, eye, x0 + ns, eye + 2))
+        # stepped like the Kingpin's planes, never rectangles: a forehead band falling to the lower left, a cheekbone
+        # wedge under the near eye, a 2px nose bridge
+        zone = set()
+        for j, (a, b) in enumerate(((1, 4), (0, 3), (0, 1))):       # forehead rows: (start, length) from the near eye
+            zone |= c.rect(x0 + ne + a, y0 + 2 + j, x0 + ne + a + b - 1, y0 + 2 + j)
+        for j, b in enumerate((3, 2, 1)):                           # cheekbone wedge
+            zone |= c.rect(x0 + ne, eye + 1 + j, x0 + ne + b - 1, eye + 1 + j)
+        zone |= c.rect(x0 + ns, eye, x0 + ns, eye + 1)
         c.fill(zone, D, only=C)
     ne, fe = t['eyes']
     small = t['w'] <= 13

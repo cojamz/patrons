@@ -25,8 +25,8 @@ c.put(18, 19, ['zzzz']); c.put(26, 19, ['zzz']); c.put(17, 19, ['z']); c.put(18,
 seg(c, {
     21: [(15, 'FG')],
     22: [(15, 'FGG')],
-    23: [(15, 'FGGC'), (21, 'GGGGFFE')],
-    24: [(15, 'FGGGC'), (21, 'BAAAAB'), (27, 'FFE')],
+    23: [(15, 'FG'), (17, 'GGGF'), (21, 'CCC'), (24, 'GGFE')],
+    24: [(15, 'FGGGC'), (21, 'BAAAB'), (26, 'CFFE')],
     25: [(16, 'FGGGFFEEFFFFFFE')],
     26: [(17, 'FGGFFFFFFFFFE')],
     27: [(18, 'FGFFFFFFFFE')],
@@ -45,6 +45,6 @@ seg(c, {
     25: [(34, '^^^^')],
 })
 c.fill(c.rect(35, 26, 35, 33), '"'); c.fill(c.rect(36, 26, 36, 33), '^')
-c.put(33, 31, ['.CDC.', 'CCCCB', 'BCCBB', '.BBB.'])
+c.put(33, 30, ['.D...', 'CDCDC', 'CCCCB', 'BCCBB', '.BBB.', '.222.'])   # fingers round the stem: thumb, knuckles, cuff
 PORTRAIT = {'id': 'market.connoisseur', 'name': 'Connoisseur', 'kind': 'member', 'sphere': 'blue',
             'people': [{'skin': 'deep', 'hair': 'grey'}], 'accent': 'red', 'px': c.rows()}

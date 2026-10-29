@@ -5,10 +5,11 @@ from _lib import *
 # close-cropped hair carrying a red velvet cushion with a small gold crown on it, proud. Behind left and right, lower and
 # darker: two attendants, attentive, one with a braid, one with a bob. Template: 3 people.
 c = Canvas()
-behind3(c, 1, 'L', look=1, hair_pts=[(3, 20), (3, 14), (5, 10.6), (10, 9.6), (15, 11), (16.5, 15), (16.5, 20), (15, 14.6), (5, 14.6), (4.5, 20)])
-behind3(c, 2, 'R', look=-1, hair_pts=[(31, 23), (31.5, 13), (34, 10.4), (40, 10), (43.5, 12), (44.5, 23), (43, 23), (42.6, 15), (33, 15), (32.6, 23)],
+behind3(c, 1, 'L', look=1, brows='level', mouth='smile', jaw='round',
+        hair_pts=[(3.5, 17), (4, 12.6), (7, 10.4), (10, 10.6), (13, 10.4), (15.6, 12.6), (16, 17), (14.6, 14), (10, 13.2), (5, 14)])
+behind3(c, 2, 'R', look=-1, brows='raised', mouth='flat', hair_pts=[(31, 23), (31.5, 13), (34, 10.4), (40, 10), (43.5, 12), (44.5, 23), (43, 23), (42.6, 15), (33, 15), (32.6, 23)],
         hair_lo='U', hair_hi='V')
-c.put(2, 18, ['M', 'N', 'M', 'N'])
+c.put(2, 16, ['.N', 'NM', 'MN', 'NM', 'MN', '.M'])                                     # the braid
 # ---- in front (person 0)
 body = c.poly([(9, 48), (10, 40), (14, 37), (20, 35.5), (28, 35.5), (34, 37), (38, 40), (39, 48)])
 c.fill(body, '3'); c.outside(body, '2', 22, 41, 14, 9); c.rim(body, '4', 0, -1, 1, only='3')

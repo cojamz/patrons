@@ -1,7 +1,7 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
-# Cheerleader (colorless): +1 follower whenever you win a contest. Mid-cheer, eyes squeezed shut with delight and
-# a small open-mouthed whoop (no teeth), black hair in a high ponytail with a red bow, one red pom-pom thrown up to
+# Cheerleader (colorless): +1 follower whenever you win a contest. Mid-cheer, eyes bright and
+# a wide closed smile, black hair in a high ponytail with a red bow, one red pom-pom thrown up to
 # the light. Sleeveless uniform with a red chevron and V trim. Frontal. Template: 1 person.
 c = Canvas()
 # ---- body: sleeveless shell top
@@ -28,17 +28,17 @@ c.put(29, 4, ['.ww..ww', 'wxvwvwv', 'vvuuvvu', '.uu..u.'])                      
 # ---- face. ruler x 14..33
 blk(c, 14, 14, '''
 |....BCCCCCCCCCCB....
-|...BCDDDCCCCCCCCB...
+|...BDDDDDCCCCCCCB...
 |..BCDEECCCCCEECCBA..
 |..CCEBBCCCCCBBECBA..
-|..CCzzzCCCCCzzzCBBA.
-|..CCz!yCCDCCz!yBBBA.
-|..CDDDCCCDCCCCCCBBA.
+|..CCBzzCCCCCBzzCBBA.
+|..CCyzzCCDCCyzzBBBA.
+|..DDDDCCCDCCCCCCBBA.
 |..CDDDCCCDBCCDDCBBA.
 |..CCDCCCDDABCCCCBBA.
-|..BCCCBCCCCCCBCCBBA.
-|..BCCCCAzzzzACCCBBA.
-|..BCCCCCAAAACCCCBA..
+|..BCCCACCCCCCACCBBA.
+|..BCCCCAAAAAACCCBBA.
+|..BCCCCCBBBBCCCCBA..
 |...BCCCCDDCCCCCBA...
 |....BCCCCCCCCBBA....
 |.....ABBBBBBBBA.....
@@ -59,4 +59,5 @@ for i in range(28):                       # streamers radiating from the handle,
     k = ('x' if lit > 0.3 else 'w' if lit > -0.35 else 'v') if i % 2 else ('w' if lit > 0.3 else 'v' if lit > -0.35 else 'u')
     c.fill(ln, k); pom |= ln
 c.edge(pom, 'u')
+c.put(5, 21, ['.CDC.', 'CBCBC', 'CCCCB', '.BBB.'])                                 # her hand under the pom-pom
 PORTRAIT = portrait('benders.cheerleader', 'Cheerleader', c, [{'skin': 'deep', 'hair': 'black'}], 'red')

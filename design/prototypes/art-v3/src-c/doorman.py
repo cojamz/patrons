@@ -42,9 +42,9 @@ seg(c, {
     20: [(15, 'CCCCDCBCCCCCBBBBBA')],
     21: [(15, 'CDDDBCCCCCCCBBBBAA')],
     22: [(15, 'CDDBACCCCCCCBBBBBA')],
-    23: [(15, 'FGGGGGGFFCCCBBBBBA')],
-    24: [(14, 'FGGGGGGFFFCCBBBBA')],
-    25: [(14, 'FF'), (16, 'ABBBAFFCCBBBBA')],
+    23: [(15, 'FGGGCGGFFCCCBBBBBA')],
+    24: [(14, 'FGGGFCFGGFCCBBBBA')],
+    25: [(14, 'F.'), (16, 'ABBBAFFCCBBBBA')],
     26: [(15, 'BCCCDDCCCCCBBBA')],
     27: [(16, 'BBCCCCCCCBBBA')],
     28: [(17, 'ABBBBBBBBAA')],
@@ -58,4 +58,4 @@ brim = c.poly([(11.5, 11), (14, 12), (35, 12), (37.5, 11), (36.5, 13.6), (12.5, 
 c.fill(brim, 'n'); c.fill(brim & c.rect(0, 11, 47, 12), 'o'); c.fill(brim & c.rect(30, 12, 47, 13), 'm')
 c.g = [[('m' if k == 'z' else k) for k in r] for r in c.g]       # ink shares the hat's darkest step
 PORTRAIT = {'id': 'market.doorman', 'name': 'Doorman', 'kind': 'member', 'sphere': 'blue',
-            'people': [{'skin': 'tan', 'hair': 'grey'}], 'accent': 'red', 'px': c.rows()}
+            'people': [{'skin': 'fair', 'hair': 'grey'}], 'accent': 'red', 'px': c.rows()}

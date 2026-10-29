@@ -28,4 +28,4 @@ c.fill(loaf, 'c'); c.rim(loaf, 'd', -1, 0, 1); c.fill(loaf & c.rect(12, 29, 14, 
 c.put(10, 31, ['bb']); c.put(11, 34, ['bb']); c.edge(loaf, 'q')
 c.put(13, 41, ['CCD', 'BCC', '.BB'])                                         # his hand round the bag
 PORTRAIT = {'id': 'market.regular', 'name': 'Regular', 'kind': 'member', 'sphere': 'blue',
-            'people': [{'skin': 'fair', 'hair': 'brown'}], 'accent': 'red', 'px': c.rows()}
+            'people': [{'skin': 'tan', 'hair': 'brown'}], 'accent': 'red', 'px': c.rows()}

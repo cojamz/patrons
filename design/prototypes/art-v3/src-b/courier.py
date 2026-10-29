@@ -24,6 +24,6 @@ c.fill(bill, 'v'); c.fill(bill & c.rect(30, 12, 47, 13), 'u'); c.edge(bill, 'u')
 box = c.poly([(30, 37), (44, 35.5), (45, 47.5), (31, 48)])
 c.fill(box, 'r'); c.fill(box & c.poly([(30, 37), (44, 35.5), (44.5, 38), (30.5, 39.5)]), 's')
 c.fill(box & c.rect(41, 36, 47, 48), 'q')
-c.fill(c.line(36, 37, 37, 47), 'l'); c.fill(c.line(31, 43, 44, 42), 'l'); c.edge(box, 'q')
+c.fill(c.line(36, 37, 38, 47), 'l'); c.edge(box, 'q')                              # one twine, angled
 c.put(39, 44, ['.333', '3334', '2333', '.22.'])                                   # his sleeve over it
 PORTRAIT = portrait('purple.courier', 'Courier', 'purple', [{'skin': 'warmtan', 'hair': 'black'}], c, accent='orange')

@@ -52,10 +52,10 @@ hair(c, h, 2, 38, 12, 6, 2.6, lit=False, hp=0)
 sides = changed(c, s)
 darker(sides, 'IJKLQRST', -1)
 # the pennant, held up by the man on the right
-c.fill(c.rect(44, 1, 44, 29), 'c'); c.fill(c.rect(45, 1, 45, 29), 'b')          # a pale gold pole
+c.fill(c.rect(44, 1, 44, 29), 'y'); c.fill(c.rect(45, 1, 45, 29), '1')          # a pale pole
 pn = c.poly([(43.6, 0.6), (43.6, 9.4), (31, 5)])                                     # a cream pennant flying sideways
-c.fill(pn, 'k'); c.fill(c.poly([(43.6, 5), (43.6, 9.4), (31, 5)]), 'j'); c.edge(pn, 'i')
-c.put(38, 3, ['.3.', '333', '3.3'])                                                  # a red star
+c.fill(pn, 'y'); c.edge(pn, 'z')
+c.put(36, 2, ['..3..', '33333', '.333.', '.3.3.'])                                    # a red five-point star
 hand(c, 42, 27, 2, 'grip')
 # ---- in front (person 0), centre: laughing
 s0 = snap(c)
@@ -66,9 +66,12 @@ face(c, 0, 17, 21, 15, 5, 8, view='f', eyes='smile', mouth='smile', jaw='oval', 
 hr = c.poly([(15.8, 21), (15.6, 15.6), (17.4, 12.4), (21, 10.4), (24.5, 9.6), (28, 10.4), (31.6, 12.4), (33.4, 15.6), (33.2, 21),
              (32, 20), (31.6, 17), (28, 15.4), (21, 15.4), (17.4, 17), (17, 21)])
 hair(c, hr, 0, 24, 12.5, 8.5, 4.5, lit=False)
+for (x, y) in c.rect(17, 24, 21, 29) | c.rect(20, 27, 29, 29):              # lift the jaw ring so it never reads as a beard
+    if c.get(x, y) == 'A': c.set(x, y, 'B')
+    elif c.get(x, y) == 'B' and x < 21: c.set(x, y, 'C')
 front = changed(c, s0)
 c.edge(front, None)
 c.fill(c.mask_of('K'), 'J'); c.fill(c.mask_of('T'), 'S')
-c.fill(c.mask_of('s'), 't')
+c.fill(c.mask_of('S'), 'R')
 PORTRAIT = portrait(c, 'red.mob', 'Mob', 'red', [{'skin': 'deep', 'hair': 'black'}, {'skin': 'freckled', 'hair': 'auburn'},
                                               {'skin': 'olive', 'hair': 'black'}])

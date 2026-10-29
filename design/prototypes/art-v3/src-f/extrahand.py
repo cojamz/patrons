@@ -1,6 +1,6 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
-# Extra Hand (colorless): once per game, +1 minion this round. An eager young farmhand-turned-volunteer, freckled,
+# Extra Hand (colorless): once per game, +1 minion this round. An eager young volunteer,
 # ginger tufts, brows up and a small open "me!" smile, one big leather work glove shot up in the air (the prop).
 # Overalls over a work shirt with a rolled sleeve, an orange neckerchief. Frontal. Template: 1 person.
 c = Canvas()
@@ -14,6 +14,7 @@ c.put(18, 32, ['.wwwwwwwvv.', 'wwwwwwwwvvu', '.vwwwwwvvu.', '...vwwv....', '....
 # ---- the raised arm and the big glove
 arm = c.poly([(34, 36.5), (39, 35), (40, 29), (39.6, 22.5), (36, 22.5), (35.6, 29)])
 c.fill(arm, 'C'); c.rim(arm, 'D', -1, 0, 1); c.rim(arm, 'B', 1, 0, 1); c.edge(arm, 'A')
+c.fill(arm & c.rect(0, 22, 47, 23), 'B'); c.fill(arm & c.rect(0, 22, 47, 22), 'A')   # wrist step under the cuff
 c.fill(c.poly([(34.4, 29.5), (40.6, 29.5), (41, 32), (34, 32)]), '4'); c.fill(c.rect(34, 31, 41, 32), '2')  # rolled sleeve
 c.put(34, 6, ['..ts..ts......',
               '..tsr.tsr.ts..',
@@ -37,10 +38,10 @@ blk(c, 14, 14, '''
 |..BCDDDCCCCCCCCBA...
 |..BCDEEECCCCEEECBA..
 |..CCBBBBCCCCBBBBBA..
-|..CCzzzCCCCCzzzCBBA.
-|..CCy!zCCDCCy!zBBBA.
+|..CCC!zCCCCCC!zCBBA.
+|..CCCzzCCDCCCzzBBBA.
 |..CDDDCCCDCCCCCCBBA.
-|..CBBDCCCDBCBBCCBBA.
+|..CDDDCCCDBCCCCCBBA.
 |..CDDCCCDDABCCCCBBA.
 |..BCCBCCCCCCBCCCBBA.
 |..BCCCAzzzzACCCCBBA.

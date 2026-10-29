@@ -17,10 +17,11 @@ hair(c, [(14.5, 18), (12, 13), (13, 8), (11, 5), (16, 6), (18, 2.5), (22, 5.4), 
 # the sack, hugged to his chest, lower left
 sack = c.poly([(5, 47.5), (4, 41), (7, 36.5), (12, 35), (18, 35.5), (22, 40), (22, 47.5)])
 c.fill(sack, 's'); c.outside(sack, 'r', 12, 39, 8, 6); c.fill(sack & c.ellipse(9, 37.5, 3, 2), 't')
-c.fill(c.line(10, 40, 14, 47), 'r'); c.edge(sack, 'q')
+c.edge(sack, 'q'); c.put(10, 42, ['r', '.r'])                                     # two fold pixels
 # the sack's neck, gathered and tied with cord
-nk = c.poly([(12, 35.5), (13, 32), (12, 29.6), (15, 30.6), (18, 29.6), (17.5, 32), (18.5, 35.5)])
-c.fill(nk, 's'); c.fill(nk & c.rect(16, 29, 19, 36), 'r'); c.fill(c.rect(12, 33, 18, 33) & nk, 'q'); c.edge(nk, 'q')
+nk = c.poly([(12, 35.5), (14, 32), (14.6, 30), (16.4, 30), (17, 32), (18.5, 35.5)]) | c.poly([(12.5, 27), (15.5, 28.6), (18.5, 27), (17.5, 30), (13.5, 30)])
+c.fill(nk, 's'); c.fill(nk & c.rect(16, 27, 19, 36), 'r'); c.edge(nk, 'q')
+c.put(14, 31, ['kkk', '...k', '...k'])                                             # pale rope tie, a knot tail
 # a gold candlestick leaning out of the sack: base, stem, cup, a lit candle (tilted, never upright)
 c.put(4, 18, ['......dd.', '......dc.', '.....kj..', '.....kj..', '....kj...', '...bccb..', '....cb...', '....cb...', '...cb....', '..bcccb..', '.abbbba..'])
 c.edge(c.mask_of('bcd') & c.rect(4, 18, 13, 29), 'a')

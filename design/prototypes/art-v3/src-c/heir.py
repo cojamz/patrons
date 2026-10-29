@@ -24,7 +24,7 @@ scroll = c.poly([(2, 41), (4, 37.5), (18, 34.5), (20, 37.5), (18, 40.6), (4, 43.
 c.fill(scroll, 'k'); c.rim(scroll, 'l', 0, -1, 1, only='k'); c.fill(scroll & c.line(3, 43, 19, 40), 'j')
 c.put(17, 35, ['jk', 'jjk', 'jj', 'j'][0:0])
 c.put(17, 35, ['.jj', 'jkj', 'jjj', '.j.'])                                        # the roll's end
-c.put(9, 40, ['.vv.', 'vwvv', 'vvvu', '.uu.']); c.put(10, 44, ['u.', 'uu', '.u'])     # seal and ribbon tail
+c.put(8, 44, ['v...v', 'v...v', '.v.v.']); c.put(8, 39, ['.vvv.', 'vwvvv', 'vvwvu', 'vvvvu', '.uuu.'])   # a round wax seal, two ribbon tails
 c.put(18, 41, ['CCD', 'BCC', 'BB.'])                                               # his hand
 PORTRAIT = {'id': 'silver.heir', 'name': 'Heir', 'kind': 'member', 'sphere': 'silver',
             'people': [{'skin': 'deep', 'hair': 'darkbrown'}], 'accent': 'red', 'px': c.rows()}

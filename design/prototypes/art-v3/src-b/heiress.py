@@ -21,14 +21,13 @@ gown = c.poly([(9, 35), (24, 35), (21, 40), (12, 40)]); c.fill(gown, 'C'); c.fil
 neck(c, 13, 20, 28, 34)
 face(c, 'f16', 9, 20, eyes='open', brows='arched', mouth=None, glow=True, iris='a')
 c.put(13, 25, ['B....B', '.AuuA.'])                                                # closed smile, warm lips
-c.put(15, 20, ['D', 'D', 'D'])                                                     # nose bridge
-c.put(10, 21, ['DDD', 'DD.'])
+c.put(10, 21, ['DDDC', 'DDC.', 'DC..'])                                            # cheekbone, chamfered
 ear(c, 24, 19)
 c.put(24, 23, ['k', 'j'])
 hair(c, [(8, 19), (7.6, 13), (9.5, 9), (14, 6.6), (20, 6.6), (24, 9), (25.6, 13), (25.4, 19), (24.4, 19), (24, 15), (18, 13.6), (11, 14), (9.4, 15.6), (9, 19)], 0, 15, 9, 9, 5)
 up = c.ellipse(17, 5, 5, 3.2); c.fill(up, 'G'); c.outside(up, 'F', 16, 4.4, 4.4, 2.6); c.fill(up & c.ellipse(15, 3.6, 1.6, 0.9), 'H')
-c.put(12, 14, ['DDDDD', '.DDD.'])                                                  # forehead highlight
 c.put(11, 7, ['..d...d...d..', '.cdc.cdc.cdc.', 'bcccccccccccb'])                  # tiara, three raised points
 # pearls: one continuous two-tone loop low on the neckline, well off the mouth
-c.put(9, 37, ['kl..........lk', '.kl........lk.', '..lklklklklk..'])
-PORTRAIT = portrait('trading.heiress', 'Heiress', 'white', [{'skin': 'verydeep', 'hair': 'black'}, {'skin': 'olive', 'hair': 'grey'}], c, accent='orange')
+c.put(10, 35, ['kikikikikik'])                                                     # pearls across the skin, pearl / grey-brown
+c.put(9, 34, ['k...........'][:0])
+PORTRAIT = portrait('trading.heiress', 'Heiress', 'white', [{'skin': 'verydeep', 'hair': 'black'}, {'skin': 'olive', 'hair': 'grey'}], c, accent='orange', merge={'H': 'G', 'K': 'J', 'N': 'M', 'd': 'c'}, minn=5)

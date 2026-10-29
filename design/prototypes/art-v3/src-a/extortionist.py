@@ -2,7 +2,7 @@ import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _lib import *
 
 # Extortionist (magenta): the collector. Bald, round wire glasses, a thin moustache, stern and patient, a pinstriped
-# suit, holding up his black ledger with your name in it. Front. Template: 1 person.
+# suit, holding up his black ledger, gold coins on the cover. Front. Template: 1 person.
 c = Canvas()
 body(c, [(1, 48), (2, 40), (7, 35.5), (16, 33.5), (31, 33.5), (40, 35.5), (45, 40), (46, 48)])
 for x in range(5, 44, 4): c.fill(c.rect(x, 36, x, 48) & c.mask_of('34'), '2')          # pinstripes
@@ -19,13 +19,17 @@ face(c, 0, 15, 19, 18, 6, 9, view='f', eyes='level', mouth='stern', jaw='oval')
 c.fill(c.rect(14, 15, 15, 20), 'F'); c.fill(c.rect(32, 15, 33, 20), 'E')             # what's left of the hair
 c.put(19, 22, ['FFFF.FFFF'][0:0]); c.put(20, 23, ['EFFFFFE'])                          # thin moustache
 c.put(16, 16, ['.zzzz..zzzz.', 'z....zz....z', 'z....z.....z', '.zzzz..zzzz.'][0:0])
-c.put(17, 16, ['.AAA...AAA.', 'A...AzA...A', 'A...A.A...A', '.AAA...AAA.'])           # round wire glasses
-c.put(18, 17, ['!']); c.put(25, 17, ['!']); c.fill(c.mask_of('y') & c.rect(17, 16, 27, 19), 'C')
+for y in range(15, 20):                                                     # clear the eye band, then draw it once by hand
+    for x in range(16, 31):
+        if c.get(x, y) not in '.EF': c.set(x, y, 'C' if x < 28 else 'B')
+c.put(19, 15, ['EEE....EEE'])                                                 # level brows, both the same
+c.put(16, 16, ['.AAA...AAA.', 'A.zz.A.A.zz.A'[0:0], 'A...A.A...A'][0:1])
+c.put(18, 16, ['.AAAA.AAAA.', 'A!zzAAA!zzA', 'A.zzA.A.zzA', '.AAAA.AAAA.'])   # round wire glasses, one glint per lens, eyes alike
 # the ledger, held up to show you
 lg = c.poly([(31, 30), (41, 28.6), (43, 41), (33, 42.4)])
 c.fill(lg, 'n'); c.outside(lg, 'm', 36, 34, 6, 7); c.rim(lg, 'o', -1, -1, 1, only='n')
 c.fill(c.line(32, 41, 42, 40) | c.line(42, 40, 43, 41), 'k')               # page edges
-c.fill(c.poly([(35, 32), (39, 31.4), (39.6, 35), (35.6, 35.6)]), '3')        # a magenta label
+c.put(35, 32, ['.cc.', 'cddc', 'bccb', '.bb.']); c.put(37, 36, ['.cc.', 'cddc', 'bccb', '.bb.'])   # gold coins on the cover
 c.edge(lg, 'm')
 hand(c, 30, 37, 0, 'grip')
 PORTRAIT = portrait(c, 'thieves.extortionist', 'Extortionist', 'magenta', [{'skin': 'porcelain', 'hair': 'ash'}])

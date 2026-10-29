@@ -8,7 +8,7 @@ c = Canvas()
 # ---- behind (person 1), right
 body(c, [(24, 48), (25, 34), (29, 31), (36, 30), (43, 31), (47, 34), (47, 48)], front=False)
 neck(c, 1, 31, 36, 26, 30)
-face(c, 1, 27, 20, 13, 4, 5, view='l', eyes='laugh', mouth='smile', jaw='round', hp=1)
+face(c, 1, 27, 20, 13, 4, 5, view='l', eyes='smile', mouth='smile', jaw='round', hp=1, look='dot')
 hb = c.poly([(26, 19), (26, 14), (28, 11.5), (33, 10.5), (38, 11.4), (40.5, 14), (40.6, 20), (39.4, 20), (39, 16), (36, 14.8),
              (30, 15), (27.6, 16.4), (27.4, 19)])
 hair(c, hb, 1, 32, 12, 7, 3, lit=False)

@@ -58,9 +58,7 @@ c.put(36, 9, ['.ggh....',
               '..eggf..',
               '..fghf..'])
 c.edge(c.mask_of('efgh') & c.rect(36, 0, 47, 30), 'e')
-hand = c.poly([(34, 29), (37, 27.4), (42, 28), (43, 31.6), (40, 33.4), (35, 33)])
-c.fill(hand, 'C'); c.rim(hand, 'D', 0, -1, 1, only='C'); c.fill(hand & c.rect(40, 26, 47, 40), 'B'); c.edge(hand, 'A')
-c.put(37, 30, ['BB.B'])                                                            # knuckles
+fist(c, 35, 27, cuff='3')
 arm = c.poly([(33, 34), (36, 32), (41, 33), (40.5, 37), (35, 37.5)])
 c.fill(arm, '3'); c.fill(arm & c.rect(38, 30, 47, 40), '2'); c.edge(arm, '1')
 PORTRAIT = portrait('benders.saboteur', 'Saboteur', c, [{'skin': 'palepink', 'hair': 'blonde'}], 'red')

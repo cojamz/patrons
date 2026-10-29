@@ -12,7 +12,7 @@ neck(c, 20, 27, 28, 31)
 tn = c.poly([(18.5, 29.5), (29.5, 29.5), (30.5, 35), (24, 36), (17.5, 35)])               # rolled turtleneck
 c.fill(tn, '3'); c.rim(tn, '4', 0, -1, 1); c.fill(tn & c.rect(27, 29, 31, 36), '2'); c.edge(tn, '1')
 c.fill(c.line(18, 33, 30, 33), '2')
-f = face(c, (16, 9, 31, 28), 19, view='front', jaw='narrow', mouth='flat', brows='level', ear=False)
+f = face(c, (16, 9, 31, 28), 19, view='front', jaw='narrow', mouth='flat', brows='level', ear=False, eyes='none', socket=False)
 # blunt bangs and the bob's front, framing the face
 bangs = c.poly([(14.5, 16.5), (15, 11), (19, 8.4), (27, 8), (32, 10), (33.5, 16.5)])
 c.fill(bangs, 'F'); c.outside(bangs, 'E', 21, 10.5, 10, 4.6); c.rim(bangs, 'G', -1, -1, 1, only='F')
@@ -20,7 +20,7 @@ c.fill(c.line(16, 15, 32, 15) & bangs, 'E')
 side = c.poly([(13, 29), (13.5, 16), (16.5, 16), (16.5, 29)]) | c.poly([(31.5, 29), (31.5, 16), (35, 16), (35, 29)])
 c.fill(side, 'F'); c.fill(side & c.rect(32, 0, 47, 47), 'E'); c.rim(side, 'G', -1, 0, 1, only='F')
 # round glasses
-c.put(17, 17, ['.zzzz..zzzz.', 'z!CCCzzz!CCz', 'zCzzCz.zCzzz', '.zzzz...zzz.'])
+c.put(16, 17, ['.111.....111.', '1!DD11111!DD1', '1Czz1...1Czz1', '.111.....111.'])   # two navy-rimmed lenses, a 1px bridge row, a glint each
 c.put(29, 18, ['B'])
 # pencil and notepad
 pad = c.rect(32, 37, 41, 47)
@@ -29,6 +29,6 @@ for y in (40, 42, 44): c.fill(c.rect(33, y, 38, y), 'j')
 c.edge(pad, '1')
 pencil = c.line(26, 47, 34, 39) | c.line(27, 47, 35, 39)
 c.fill(pencil, 'c'); c.fill(c.line(27, 47, 35, 39), 'b'); c.put(35, 38, ['z'])
-c.put(24, 43, ['.CCD', 'CCCC', 'BCCB', '.BB.'])                              # her hand on the pencil
+c.put(23, 42, ['..D..', '.CDCD', 'CCCCB', 'BCCBB', '.BBB.'])                         # her hand on the pencil: thumb, knuckles
 PORTRAIT = {'id': 'market.critic', 'name': 'Critic', 'kind': 'member', 'sphere': 'blue',
             'people': [{'skin': 'golden', 'hair': 'black'}], 'accent': 'red', 'px': c.rows()}
