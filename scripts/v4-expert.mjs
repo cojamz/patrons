@@ -27,15 +27,15 @@ let DIR = '';
 
 // Light personalities: how they play and a touch of how they talk. Rotated between games.
 const STYLES = [[
-  'a patient engine-builder. You like cheap members that pay every round and you dislike buying followers early. Dry and understated; when you talk it is short and a little deadpan.',
-  'a contest hunter and blocker. You like taking the space a rival needs and winning color contests by a hair. Friendly and a bit teasing at the table.',
-  'a numbers person who counts what every resource and recruit is worth. You lean toward the safe, efficient line and distrust fancy combos. Quiet; you mutter about math now and then.',
-  'an opportunist who hunts for odd combinations and swings late. Upbeat and a little chatty, and you enjoy a good steal.',
+  'a patient engine-builder. You like cheap members that pay every round and you distrust buying followers early.',
+  'a contest hunter and blocker. You like taking the space a rival needs and winning color contests by a hair.',
+  'a numbers person who counts what every resource and recruit is worth. You lean toward the efficient line and distrust fancy combos.',
+  'an opportunist who hunts for odd combinations and swings late.',
 ], [
-  'a numbers person who counts what every resource and recruit is worth. Quiet, efficient, never flustered.',
-  'an opportunist who hunts for odd combinations and swings late. Upbeat, chatty, easily delighted.',
-  'a patient engine-builder who waits for the right members and refuses to waste a recruit. Dry and brief.',
-  'a contest hunter and blocker who likes to deny rivals their favorite space. Friendly, needling, competitive.',
+  'a numbers person who counts what every resource and recruit is worth and plays the efficient line.',
+  'an opportunist who hunts for odd combinations and swings late.',
+  'a patient engine-builder who waits for the right members and refuses to waste a recruit.',
+  'a contest hunter and blocker who likes to deny rivals their favorite space.',
 ]];
 
 // ---------- files, lock ----------
