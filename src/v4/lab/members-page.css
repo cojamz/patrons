@@ -69,5 +69,12 @@ body { overflow: hidden; }
   background:linear-gradient(155deg,color-mix(in srgb,var(--silver) 34%,#f7f9fb) 0%,color-mix(in srgb,var(--silver) 10%,#fbfcfd) 46%,color-mix(in srgb,var(--silver) 42%,#eef1f4) 100%)}
 .mp .mp-tile.lt-card.card[data-ground="white"] .art{background:#fffefa;box-shadow:inset 0 -1px 0 rgba(43,32,24,.10)}
 .mp .mp-tile.lt-card.card[data-ground="colorless"] .art{background:color-mix(in srgb,var(--colorless,#8d9693) 30%,#f1ede4)}
-.mp-art .mp-card { max-width: 420px; }
+/* the artifact: the starting pick's row (artifact-draft.css), not a member's card */
+.mp-art-row { display: flex; align-items: center; gap: 12px; max-width: 360px; padding: 8px 12px; border-radius: 8px; background: rgba(236, 230, 214, .06); box-shadow: inset 0 0 0 1px rgba(236, 230, 214, .1); }
+.mp-art-row .art-tile { width: 40px; height: 40px; }
+.mp-art-words { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; line-height: 1.25; }
+.mp-art-words b { font-size: 16px; }
+.mp-art-words span { color: #d6ccb6; }
+.mp-art-plus { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 12px; opacity: .7; }
+.mp-art-note { display: block; margin-top: 4px; font-size: 12px; opacity: .6; }
 .mp-side .mp-head-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }

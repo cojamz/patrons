@@ -4,7 +4,7 @@
 // and its artifact on the left, its member deck by the round it joins on the right, as the shop's cards (hover for the
 // full card, click to keep it open) or as full cards (Details). Served at play/members/ (scripts/v4-play.sh copies the
 // page there); read straight from the card files with the game's own faces, so a rework shows up on its next ship.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import '../app.css';
 import '../game/lamp-b.css'; // the shop card (.lt-card) and the hover card's look (.mc)
 import './members-page.css';
@@ -15,7 +15,9 @@ import { CUT } from '../../engine/v4/content/cull.js';
 import { ARTIFACTS, DEFAULT_RULES } from '../../engine/v4/core.js';
 import { MemberCard, RuleText, cardColor, cardGround } from '../game/Info.jsx';
 import { CostShapes, nameFit, WorthTag } from '../game/ShopCards.jsx';
-import { FollowerGlyph } from '../game/Glyphs.jsx';
+import { FollowerGlyph, ResourceGlyph } from '../game/Glyphs.jsx';
+import { ArtifactTile } from '../game/ArtifactDraft.jsx';
+import { Rich } from '../game/Rich.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { costParts } from '../format.js';
@@ -82,14 +84,28 @@ function Tile({ def, copies, onOver, onOut, onPin, pinned }) {
 }
 
 /** The full card, on the hover card's paper, with where it sits in the deck. */
-function Full({ def, artifact = false }) {
+function Full({ def }) {
   return <article className="mp-card" data-card-full={def.id} style={{ '--c': cardColor(TABLE, def) }}>
     <MemberCard state={TABLE} def={def} />
     {/* the round it joins is the heading it sits under; only what the face doesn't say */}
-    {(artifact || def.copies > 1) && <footer className="mp-meta">
-      {artifact ? <span>Each player picks one at the start</span> : <span>{def.copies} copies in the deck</span>}
-    </footer>}
+    {def.copies > 1 && <footer className="mp-meta"><span>{def.copies} copies in the deck</span></footer>}
   </article>;
+}
+
+/** The color's artifact as the starting pick shows it (ArtifactDraft.jsx): its plate, name and what it does. Not a
+ *  member (Cory, Oct 29: "no reason for artifact to be so big, or to have a cult member picture"), so it sits with
+ *  the spaces, out of the deck and its count. */
+function Artifact({ qid, def }) {
+  const res = quadrant(qid).resource;
+  return <section className="mp-ring mp-art" data-artifact={def.id}>
+    <h3>Artifact</h3>
+    <div className="mp-art-row" style={{ '--c': `var(--${qid})` }}>
+      <ArtifactTile q={qid} res={res} size={32} />
+      <span className="mp-art-words"><b>{def.name}</b><span><Rich text={def.text} /></span></span>
+      <span className="mp-art-plus num">+1<ResourceGlyph r={res} size={12} decorative /></span>
+    </div>
+    <small className="mp-art-note">Each player picks one at the start</small>
+  </section>;
 }
 
 function Space({ qid, action }) {
@@ -104,7 +120,19 @@ const POP_W = 300;
 function place(el) {
   const r = el.getBoundingClientRect();
   const right = r.right + 8 + POP_W <= window.innerWidth;
-  return { left: right ? r.right + 8 : Math.max(8, r.left - 8 - POP_W), top: Math.max(8, Math.min(r.top - 6, window.innerHeight - 240)) };
+  return { left: right ? r.right + 8 : Math.max(8, r.left - 8 - POP_W), top: Math.max(8, r.top - 6) };
+}
+
+/** The hover card beside its tile, lifted as far as it must to stay on the screen (Cory, Oct 29: a low card's hover
+ *  ran off the bottom). */
+function Pop({ hover }) {
+  const ref = useRef(null);
+  const [top, setTop] = useState(hover.at.top);
+  useLayoutEffect(() => {
+    const h = ref.current ? ref.current.offsetHeight : 0;
+    setTop(Math.max(8, Math.min(hover.at.top, window.innerHeight - h - 8)));
+  }, [hover]);
+  return <div ref={ref} className="mp-pop" role="dialog" aria-label={hover.def.name} style={{ left: hover.at.left, top, width: POP_W }}><Full def={hover.def} /></div>;
 }
 
 export default function MembersPage() {
@@ -155,11 +183,11 @@ export default function MembersPage() {
           <h3>Round {roman(r)}{r > 1 ? ' on' : ''}</h3>
           <ul>{acts.map(a => <Space key={a.id} qid={g.id} action={a} />)}</ul>
         </section> : null; })}
+        {g.artifact && <Artifact qid={g.id} def={g.artifact} />}
       </aside>}
       <section className="mp-deck" ref={scroller} aria-label={`${g.name} members`} data-view={view}>
         <h2 className="mp-deck-head">{g.guest ? g.name : 'Members'}<small>{g.members.length} members{deckSize !== g.members.length ? `, ${deckSize} cards` : ''}, cheapest first</small></h2>
         {g.guest && <p className="mp-line">{g.line}</p>}
-        {g.artifact && <div className="mp-round mp-art"><h3>Artifact</h3><Full def={g.artifact} artifact /></div>}
         {byRound.map(({ r, members }) => <div key={r} className="mp-round">
           {!g.guest && <h3>Joins in round {roman(r)}</h3>}
           <div className={view === 'details' ? 'mp-grid' : 'mp-row'}>
@@ -169,6 +197,6 @@ export default function MembersPage() {
         </div>)}
       </section>
     </div>
-    {hover && view === 'cards' && <div className="mp-pop" role="dialog" aria-label={hover.def.name} style={{ left: hover.at.left, top: hover.at.top, width: POP_W }}><Full def={hover.def} /></div>}
+    {hover && view === 'cards' && <Pop hover={hover} />}
   </main>;
 }
