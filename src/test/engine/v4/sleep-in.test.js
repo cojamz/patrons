@@ -8,18 +8,18 @@ import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { quadrant } from '../../../engine/v4/index.js';
 
-// seed 7 since the round I spaces went back to +1 (Oct 28): with seed 5 the others' Hold Ups skipped A twice
+// seed 2 since Sleep In grew to +4 / +5 / +6 (Oct 28): other seeds' bots pile skips onto A
 describe('Sleep In', () => {
   it("Cory's round I example: A A-skipped, A places all 3, the last one after everyone", () => {
-    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 7, quadrants: ['gold', 'red', 'purple', 'echo'] });
-    const rand = seededRandom(7);
+    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 2, quadrants: ['gold', 'red', 'purple', 'echo'] });
+    const rand = seededRandom(2);
     while (!(s.round === 1 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
     const base = s.order.slice(0, 4);
     const A = s.pending.player, q = s.quadrants.indexOf('purple');
     const i = quadrant('purple').actions.findIndex(a => a.key === 'skip');
     const before = s.players[A].res.purple || 0;
     s = applyMove(s, { player: A, option: `slot:${q}-${i}` });
-    expect(s.players[A].res.purple).toBe(before + 3);
+    expect(s.players[A].res.purple).toBe(before + 4); // round I (+4 / +5 / +6, Oct 28)
     const placed = [A];
     // (the others leave turn-moving spaces and copies of them alone while anything else is open)
     const moves = x => x.kind === 'slot' && x.q !== undefined && ['skip', 'holdup', 'again', 'echo', 'refrain'].includes(actionAt(s, x.q, x.i).key);

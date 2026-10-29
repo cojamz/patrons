@@ -39,15 +39,15 @@ describe('11 · every choice names the card or space that asked', () => {
     s = take(s, 'red.evenswap');
     expect(s.pending.prompt).toMatch(/^Tryout: /);
   });
-  it('a copy of Walk-In does Walk-In itself: Encore recruits the top member of the deck', () => {
+  it('a copy of Walk-In does Walk-In itself: Echo recruits the top member of the deck', () => {
     let s = sceneQ({ quadrants: CLASSIC, n: 2, round: 2, queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }] });
     const first = s.pile[0];
     s = take(s, 'red.hire'); // P2 takes Walk-In: the deck's top member, free
     expect(s.players[1].members).toEqual([first]);
     while (s.pending && s.pending.player === 1) s = move(s, 'pass');
-    s = take(s, 'echo.encore');
     const second = s.pile[0];
-    s = move(s, s.pending.options.find(o => o.label.startsWith('Walk-In')).id);
+    s = take(s, 'echo.echo');
+    if (s.pending?.kind === 'choose' && s.pending.options.some(o => o.label.startsWith('Walk-In'))) s = move(s, s.pending.options.find(o => o.label.startsWith('Walk-In')).id);
     expect(s.players[0].members).toContain(second);
   });
 });

@@ -72,7 +72,7 @@ const P = {
     // the center drops line 2, so it's whole in line 1. Your own next turns, moved up, not extra ones (Cory, 2026-10-15)
     // Cory, 2026-10-22: place on taken spaces for the rest of the round
     // Cory, 2026-10-22: the old game's "Gain 4 purple, skip next turn"
-    skip: { main: '+3 purple', second: 'skip your next turn' },
+    skip: r => ({ main: `+${r + 3} purple`, second: 'skip your next turn' }),
     holdup: r => ({ main: `+${r + 1} purple`, second: 'the next turn is skipped' }),
     // the center ring can drop line 2 (round III since Oct 22): line 1 says it whole
     // Cory, 2026-10-28: +5 purple and a minion this round
@@ -141,7 +141,8 @@ const P = {
     chant: r => ({ main: `+${r + 2} green`, second: run(n => `+${n + 2}`) }),
     // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
     echo: { verb: 'Copy previous action', note: '+1 green' },
-    encore: { verb: 'Copy an action', second: 'with a rival minion', note: '+1 green' },
+    // Cory, 2026-10-28: a rival member's On Recruit, not a space
+    encore: { verb: 'Copy an On Recruit', second: 'of a rival’s member', note: '+1 green' },
     // one word for it, the hover's (w3a #22: "redo" here, "copy" there)
     refrain: { verb: 'Copy an action', second: 'with your minion', note: '+1 green' },
     eternity: { verb: 'Copy every action', second: 'with your minions', note: '+1 green' },

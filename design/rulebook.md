@@ -46,7 +46,7 @@ To **recruit** is to bring a member or followers into your cult by your own doin
 
 ## Copying and stealing
 - To **copy** an action is to get its own printed gain, the amount on its chip. The taker's member bonuses and gifts to others are not copied, and the taker keeps what they got. An action that took or traded something (a steal, a swap, a paid recruit) is done again by the copier. Copying a copy lets you choose again; never choose an action already in that chain.
-- Green's copies: Echo copies the previous action, including your own on a snake double turn. Encore copies an action with a rival's minion, Reprise one with your own, and Greatest Hits every action with your minion, one at a time in the order you pick. Every Green action gives +1 green, copied or not. Agents stops everyone, its owner too, from copying its owner's actions.
+- Green's copies: Echo copies the previous action, including your own on a snake double turn. Cover copies an action with no minion on it, Reprise one with your own minion, and Greatest Hits every action with your minion, one at a time in the order you pick. Every Green action gives +1 green, copied or not. Encore isn't a copy of an action: it does the On Recruit of a rival's member for you, and the rival keeps the member. Agents stops everyone, its owner too, from copying its owner's actions.
 - To **steal** is to take from a rival. Stolen resources keep their colors. Unless the card names one rival, a steal can be split among rivals, and a bonus that doubles or adds to a steal applies once to the total. Crime Wave takes half of one rival's pile of one color, rounded down. Nothing drops below 0.
 - Rounding is always down unless a card says otherwise.
 

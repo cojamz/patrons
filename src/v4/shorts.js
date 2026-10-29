@@ -25,7 +25,7 @@ const S = {
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },
   purple: {
-    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival who placed more', windup: '+1 purple per minion you placed', planahead: '+1 purple per minion left', overtime: '1 extra turn', lastcall: '+2 followers per minion left, rest go last; +1 purple', skip: '+3 purple, skip your next turn', holdup: r => `+${r + 1} purple, the next turn is skipped`, crowdin: '+5 purple, +1 minion this round', rally: '+2 purple, two turns after this one', again: r => `+${r} purple, another turn after this one`,
+    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival who placed more', windup: '+1 purple per minion you placed', planahead: '+1 purple per minion left', overtime: '1 extra turn', lastcall: '+2 followers per minion left, rest go last; +1 purple', skip: r => `+${r + 3} purple, skip your next turn`, holdup: r => `+${r + 1} purple, the next turn is skipped`, crowdin: '+5 purple, +1 minion this round', rally: '+2 purple, two turns after this one', again: r => `+${r} purple, another turn after this one`,
   },
   silver: {
     toast: r => `+${3 * r} silver · others +${r} silver`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the top rival’s', jubilee: 'followers from the top rival’s silver',
@@ -43,7 +43,7 @@ const S = {
     stipend: r => `+${r} followers +${r + 1} white`, splurge: '+1 follower per 2 paid for a member this turn; +1 white', exchange: r => `turn ${r} into ${2 * r} followers; +1 white`, farewell: 'cast out a member for its cost in followers; +1 white', estatesale: 'cast out a member for its cost in white; +1 white', cashin: 'all your white into followers; +1 white',
     haggle: '+2 white, +1 per leader', buylow: '+1 follower per 3 white', pawn: r => `${r} follower · may take 2 white each instead`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower bought or won', boom: 'all for followers',
   },
-  echo: { hum: 'copy an action with no minion on it; +1 green', chant: r => `+${r + 2} green`, echo: 'copy previous; +1 green', encore: 'copy a rival’s action; +1 green', refrain: 'copy your action; +1 green', eternity: 'copy all your actions; +1 green' },
+  echo: { hum: 'copy an action with no minion on it; +1 green', chant: r => `+${r + 2} green`, echo: 'copy previous; +1 green', encore: 'copy a rival member’s On Recruit; +1 green', refrain: 'copy your action; +1 green', eternity: 'copy all your actions; +1 green' },
 };
 
 // The shortest form, for the inner rings. Two symbols only (Cory, 2026-10-15: "just simplify visual language

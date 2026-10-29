@@ -313,6 +313,14 @@ function freeStep(ctx, p, data) {
   })), 'echo.free', { cost: c, left: data.left.slice(1), who: data.who || 'Copy' });
 }
 
+// Encore's rival members: an On Recruit (or a now-and-round-start effect) that doesn't act on the card itself ("swap
+// it", "it becomes a copy"), which a card held by someone else can't do for you. Same test as Red's Tryout.
+function rivalRecruits(ctx, p) {
+  return ctx.rivals(p).flatMap(o => ctx.membersOf(o).map(c => ({ c, o })))
+    .filter(({ c }) => !c.def.artifact && (c.def.onRecruited || (c.def.now && (c.def.onRoundStart || c.def.onRoundStartLate)))
+      && !/\bit\b|\bcop(?:y|ies)\b/i.test(c.def.text.replace(/^[^:]*:/, '')));
+}
+
 // ---------- the quadrant ----------
 const echoQ = {
   id: 'echo',
@@ -344,9 +352,18 @@ const echoQ = {
       },
     },
     {
-      key: 'encore', ring: 2, name: 'Encore', echo: true, text: 'Copy an action with a rival minion. +1 green.',
-      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'rival'), p),
-      resolve(ctx, p) { plus(ctx, p); offer(ctx, p, targets(ctx, p, 'rival'), 'Encore: copy an action with a rival minion', 'now'); },
+      // Cory, 2026-10-28: Green had one copy too many, so Encore stops copying a space; "maybe copy an On Recruit"
+      // (the rival's member, Claude's read of his yes). Like Red's Tryout, but on a rival's member, not the shop's.
+      key: 'encore', ring: 2, name: 'Encore', text: 'Copy the On Recruit of a rival’s member. +1 green.', copyDoesIt: true,
+      estimate: (ctx, p) => VARIANT.plus + (rivalRecruits(ctx, p).length ? 3 : 0),
+      resolve(ctx, p) {
+        plus(ctx, p);
+        const list = rivalRecruits(ctx, p);
+        if (!list.length) { ctx.log(`${p.name}: no rival's member has an On Recruit to copy.`); return; }
+        ctx.choose(p, 'Encore: copy which rival member’s On Recruit?', list.map(({ c, o }) => ({
+          id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name}: ${c.def.text}`, kind: 'card', value: c.uid, hint: 2 + (c.def.f || 0),
+        })), 'echo.encoreCopy');
+      },
     },
     {
       // Cory, 2026-10-27: Chorus out; "Copy an action with no minion on it" takes Reprise's round II spot. Name is
@@ -373,6 +390,12 @@ const echoQ = {
   ],
 
   handlers: {
+    encoreCopy(ctx, p, uid) {
+      const o = ctx.ownerOf(uid);
+      if (!o || o.id === p.id) { ctx.log(`${p.name}: that member left the rival's cult.`); return; }
+      ctx.log(`${p.name} copies ${o.name}'s ${ctx.defOf(uid).name}: its On Recruit.`);
+      ctx.borrowOnRecruit(p, uid);
+    },
     copyEmpty(ctx, p, key) {
       const hit = emptyTargets(ctx).find(x => x.key === key);
       if (!hit) { ctx.log(`${p.name}: that action has a minion now.`); return; }

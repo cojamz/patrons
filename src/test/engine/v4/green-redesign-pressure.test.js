@@ -25,16 +25,23 @@ const copyOption = (s, action) => {
 const choose = (s, action) => move(s, copyOption(s, action));
 const memberOption = (s, def) => `card:${uidIn(s, def, 'shop')}`;
 const bonus = s => s.players.map(p => p.bonus);
+// P2 copies P1 a second time: P1 takes Gather, then P2's Reprise copies P2's Echo, which copies Gather
+const secondCopy = s => {
+  s = go(s, 'red.turnout');
+  s = choose(take(s, 'echo.refrain'), 'echo.echo');
+  while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
+  return pass(s);
+};
 
 describe('Green redesign: copied copy actions and continuation safety', () => {
-  it('Encore copies a rival Reprise, which chooses from the copier’s own actions afresh', () => {
+  // Echo copies a rival's Reprise (Encore stopped copying spaces, Oct 28)
+  it('Echo copies a rival Reprise, which chooses from the copier’s own actions afresh', () => {
     let s = table(Q, { round: 2, left: 6, queue: turns(0, 1, 1, 0, 0) });
     s = go(s, 'gold.rush');
     s = go(s, 'echo.chant');
     s = pass(choose(take(s, 'echo.refrain'), 'echo.chant'));
-    s = take(s, 'echo.encore');
-    expect(s.pending.options.some(o => o.label.startsWith(`${actionName('gold.rush')} (`))).toBe(false);
-    s = choose(saved(s), 'echo.refrain');
+    s = take(s, 'echo.echo');
+    if (s.pending?.kind === 'choose' && s.pending.options.some(o => o.label.startsWith(`${actionName('echo.refrain')} (`))) s = choose(saved(s), 'echo.refrain');
     expect(s.pending.options.map(o => o.label)).toHaveLength(1);
     expect(copyOption(s, 'gold.rush')).toBeTruthy();
     const uninterrupted = pass(choose(s, 'gold.rush'));
@@ -43,17 +50,15 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
     expect(reloaded.players[0].res).toMatchObject({ gold: 8, green: 2 });
   });
 
-  it('Encore → Reprise → Echo cannot return to Reprise or itself, including after reload', () => {
-    let s = table(Q, { round: 2, left: 6, queue: turns(1, 0, 1, 0, 0) });
+  it('Reprise → Echo cannot return to Reprise or itself, including after reload', () => {
+    let s = table(Q, { round: 2, left: 6, queue: turns(1, 0, 0) });
     s = go(s, 'echo.chant');
     s = pass(choose(take(s, 'echo.echo'), 'echo.chant'));
-    s = pass(choose(take(s, 'echo.refrain'), 'echo.chant'));
     const before = s.players[0].res.green;
-    s = choose(saved(take(s, 'echo.encore')), 'echo.refrain');
-    expect(s.pending.options.some(o => o.label.startsWith(`${actionName('echo.encore')} (`))).toBe(false);
-    s = pass(choose(saved(s), 'echo.echo'));
+    s = choose(saved(take(s, 'echo.refrain')), 'echo.echo');
+    s = pass(s);
     expect(s.pending?.kind === 'choose' ? s.pending.options.map(o => o.label) : []).toEqual([]);
-    expect(s.players[0].res.green - before).toBe(3); // Encore +1, Reprise +1, Echo +1
+    expect(s.players[0].res.green - before).toBe(2); // Reprise +1, Echo +1, nothing past its own chain
     expect(s.log.some(line => /nothing to copy|already.*chain|chain.*already/i.test(line))).toBe(true);
   });
 
@@ -180,11 +185,11 @@ describe('Green redesign: copy observers and anti-copy members', () => {
   });
 
   it('Bait takes printed/base followers too, floors the copier at zero, and still pays its owner', () => {
-    let s = table(Q, { round: 2, left: 6, members: [['echo.bait']], queue: turns(0, 1, 1, 1) });
+    let s = table(Q, { round: 2, left: 6, members: [['echo.bait']], queue: turns(0, 1, 0, 1) });
     s = go(s, 'gold.rush');
     s = pass(choose(take(s, 'echo.echo'), 'gold.rush'));
     expect(followers(s, s.players[1])).toBe(0);
-    s = pass(choose(take(s, 'echo.encore'), 'gold.rush'));
+    s = secondCopy(s);
     expect(followers(s, s.players[1])).toBe(0);
     expect(s.players[0].bonus).toBe(2);
   });
@@ -203,10 +208,10 @@ describe('Green redesign: copy observers and anti-copy members', () => {
   });
 
   it('losing a printed member after Bait losses cannot take the total below zero', () => {
-    let s = table(Q, { round: 2, left: 6, members: [['echo.bait'], ['red.bigfamily']], queue: turns(0, 1, 1, 0) });
+    let s = table(Q, { round: 2, left: 6, members: [['echo.bait'], ['red.bigfamily']], queue: turns(0, 1, 0, 1) });
     s = go(s, 'gold.rush');
     s = pass(choose(take(s, 'echo.echo'), 'gold.rush'));
-    s = pass(choose(take(s, 'echo.encore'), 'gold.rush'));
+    s = secondCopy(s);
     expect(s.players[1].bonus).toBe(-2);
     contextFor(s).moveMember(uidIn(s, 'red.bigfamily', 1), s.players[1], s.players[0]);
     expect(followers(s, s.players[1])).toBe(0);

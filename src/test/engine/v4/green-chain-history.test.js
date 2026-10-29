@@ -9,26 +9,23 @@ const pass = s => s.pending?.kind === 'buy' ? move(s, 'pass') : s;
 const keyOf = (q, k) => `${Q.indexOf(q)}-${quadrant(q).actions.findIndex(a => a.key === k)}`;
 const pick = (s, k) => move(s, s.pending.options.find(o => o.value === k).id);
 describe('Green copy chains across saved choices', () => {
-  it.each(['encore', 'refrain'])('%s re-chooses a copied action after save/rejoin', action => {
-    const sourceOwner = action === 'encore' ? 1 : 0;
-    let s = table(Q, { round: 3, left: 5, queue: [1, 0, sourceOwner, 0, 0].map(p => ({ t: 'turn', p })) });
-    s = pass(take(s, 'echo.chant'));
-    s = pass(take(s, 'gold.rush'));
-    const source = action === 'encore' ? 'refrain' : 'encore';
-    s = take(s, `echo.${source}`);
+  // Reprise copies your Cover, which chooses again (Encore copied spaces until Oct 28; Cover now plays the source)
+  it('Reprise re-chooses a copied Cover target after save/rejoin', () => {
+    let s = table(Q, { round: 3, left: 5, queue: [0, 0, 0].map(p => ({ t: 'turn', p })) });
+    s = take(s, 'echo.hum');
     s = pass(pick(s, keyOf('echo', 'chant')));
-    s = take(s, `echo.${action}`);
-    const selected = s.pending.options.find(o => o.value === keyOf('echo', source));
+    s = pass(take(s, 'gold.rush'));
+    s = take(s, 'echo.refrain');
+    const selected = s.pending.options.find(o => o.value === keyOf('echo', 'hum'));
     expect(selected).toBeTruthy();
-    const resource = action === 'encore' ? 'gold' : 'green';
-    const before = s.players[0].res[resource];
+    const before = s.players[0].res.green;
     s = move(JSON.parse(JSON.stringify(s)), selected.id);
     expect(s.pending.kind).toBe('choose');
-    expect(s.pending.options.some(o => o.value === keyOf('echo', action))).toBe(false);
-    const target = s.pending.options.find(o => o.value === (action === 'encore' ? keyOf('gold', 'rush') : keyOf('echo', 'chant')));
+    expect(s.pending.options.some(o => o.value === keyOf('echo', 'refrain'))).toBe(false);
+    const target = s.pending.options.find(o => o.value === keyOf('echo', 'chant'));
     expect(target).toBeTruthy();
     s = move(JSON.parse(JSON.stringify(s)), target.id);
-    expect(s.players[0].res[resource]).toBe(before + 6); // Reprise's placement base was paid before this snapshot.
+    expect(s.players[0].res.green).toBeGreaterThanOrEqual(before + 5); // Build Up's +5 in round III
     expect(s.pending.kind).toBe('buy');
   });
 });

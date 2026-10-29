@@ -12,9 +12,9 @@ const rich = { gold: 30, red: 30, purple: 30, green: 30 };
 const upcoming = s => s.queue.filter(t => t.t === 'turn').map(t => t.p);
 
 describe('Purple members, Oct 22', () => {
-  it('Early Bird: your turns can’t be skipped; Sleep In still gives its +3', () => {
+  it('Early Bird: your turns can’t be skipped; Sleep In still gives its +5 in round II', () => {
     const s = take(sc({ round: 2, members: [['purple.earlybird']], queue: turns(0, 1, 0, 1) }), 'purple.skip');
-    expect(s.players[0].res.purple).toBe(3);
+    expect(s.players[0].res.purple).toBe(5);
     expect(upcoming(s)).toEqual([1, 0, 1]);
     expect(s.log).toContain("P1's Early Bird: P1's turn can't be skipped.");
   });

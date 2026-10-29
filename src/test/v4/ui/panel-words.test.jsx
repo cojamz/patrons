@@ -49,7 +49,7 @@ describe('panel words (w3)', () => {
     expect(allOwn.verb).toBe('Copy every action');
     expect(allOwn.second).toBe('with your minions');
     // Rival and own minions are distinct, as are the previous action and your own last action.
-    expect(panelText('echo', { key: 'encore' }).second).toBe('with a rival minion');
+    expect(panelText('echo', { key: 'encore' }).second).toBe('of a rival’s member'); // Encore copies an On Recruit (Oct 28)
     expect(panelText('echo', { key: 'echo' }).verb).toBe('Copy previous action');
     // The purple gain counts only your minions, not every piece on the wheel.
     expect(panelText('purple', { key: 'windup' }).second).toBe('per minion you placed');

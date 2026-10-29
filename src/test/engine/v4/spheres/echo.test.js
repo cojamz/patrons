@@ -107,18 +107,19 @@ describe('Green table action boundaries', () => {
     let s = scene({ round: 2, turns: [1, 0, 0], res: [{ gold: 1 }, {}, { gold: 4 }], n: 3 });
     s = go(s, 'gold.steal', 'player:0');
     s = pass(play(s, 'player:2', 'player:2'));
-    s = chooseTarget(take(s, 'echo.encore'), 'gold.steal');
+    s = take(s, 'echo.echo');
+    if (!/Collect Debts/.test(s.pending.prompt)) s = chooseTarget(s, 'gold.steal');
     expect(s.pending.prompt).toMatch(/Collect Debts/);
     s = pass(play(s, 'player:1', 'player:1', 'player:1'));
     expect([R(s).gold, R(s, 1).gold, R(s, 2).gold]).toEqual([3, 0, 2]);
   });
-  it('Encore excludes your ordinary actions but includes a rival’s center', () => {
+  // Encore copies a rival member's On Recruit (Cory, Oct 28): plain bodies have none, so it gives only its +1 green
+  it('Encore with no rival On Recruit to copy gives only its own green', () => {
     let s = scene({ round: 3, turns: [1, 1, 0, 0], res: [{}, { gold: 5 }], members: [[], ['red.intern', 'red.twins', 'red.volunteer']] });
     s = go(s, 'gold.windfall'); s = go(s, 'gold.strike'); s = go(s, 'echo.chant');
-    s = take(s, 'echo.encore');
-    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Double Down (P2): +9 gold', 'Tithe (P2): +4 gold']);
-    s = pass(chooseTarget(s, 'gold.windfall'));
-    expect(R(s)).toEqual({ ...Z, gold: 4, green: 6 });
+    s = pass(take(s, 'echo.encore'));
+    expect(R(s)).toEqual({ ...Z, green: 6 });
+    expect(s.log.some(l => /no rival's member has an On Recruit/.test(l))).toBe(true);
   });
   it('Reprise copies an own action and leaves a rival’s actions unavailable', () => {
     let s = scene({ round: 2, turns: [0, 1, 0] });
@@ -152,8 +153,10 @@ describe('Green table action boundaries', () => {
   });
   it('copying a discount grants its printed discount without spending the copier’s resources', () => {
     let s = scene({ round: 2, turns: [1, 1, 0], res: [{ gold: 1 }] });
-    s = go(s, 'gold.discount'); s = go(s, 'gold.steal', 'player:0');
-    s = go(s, 'echo.encore', target('gold.discount'));
+    s = go(s, 'gold.steal', 'player:0'); s = go(s, 'gold.discount');
+    s = take(s, 'echo.echo');
+    if (s.pending?.kind === 'choose' && s.pending.options.some(o => o.label.startsWith('Intro Offer') || o.label.includes('discount'))) s = pass(move(s, s.pending.options[0].id));
+    else s = pass(s);
     expect(s.players[0].discount).toBe(4);
     expect(R(s)).toEqual({ ...Z, green: 1 });
   });

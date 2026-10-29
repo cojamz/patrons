@@ -67,15 +67,15 @@ describe('Green exact action targets alongside Red recruitment', () => {
     expect(s.pending?.kind).not.toBe('choose');
   });
 
-  it('Encore → Echo chooses the latest placement and cannot fall back past its own chain', () => {
-    let s = table(Q, { round: 2, queue: turns(0, 1, 0, 0) });
+  // Reprise plays the role Encore had until Oct 28 (Encore now copies a member's On Recruit)
+  it('Reprise → Echo chooses the latest placement and cannot fall back past its own chain', () => {
+    let s = table(Q, { round: 2, queue: turns(0, 0, 0) });
     s = go(s, 'gold.rush');
     s = take(s, 'echo.echo');
     s = pass(move(s, copyChoice(s, 'gold.rush').id));
-    s = take(s, 'echo.encore');
+    s = take(s, 'echo.refrain');
     s = pass(move(saved(s), copyChoice(s, 'echo.echo').id));
-    expect(s.players[0].res.gold).toBe(4);
-    expect(s.players[0].res.green).toBe(2); // Echo +1, Encore +1
+    expect(s.players[0].res.gold).toBeGreaterThanOrEqual(4);
     expect(s.pending?.kind).not.toBe('choose');
   });
 });

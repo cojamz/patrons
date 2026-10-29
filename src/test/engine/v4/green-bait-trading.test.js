@@ -13,10 +13,15 @@ const copyGold = s => pass(move(s, s.pending.options.find(o => o.label.startsWit
 describe('Bait follower losses preserve White’s loose-follower limits', () => {
   it('a Lender reduced to zero by Bait gains no followers at game end', () => {
     let s = table(Q, { round: 2, left: 5, members: [['echo.bait'], ['trading.lender']],
-      queue: [0, 1, 1, 0].map(p => ({ t: 'turn', p })) });
+      queue: [0, 1, 0, 1].map(p => ({ t: 'turn', p })) });
     s = pass(take(s, 'gold.rush'));
     s = copyGold(take(s, 'echo.echo'));
-    s = copyGold(take(s, 'echo.encore'));
+    s = pass(take(s, 'red.turnout'));
+    // Reprise copies P2's own Echo, which copies the previous action: P1's Gather (Encore no longer copies, Oct 28)
+    s = take(s, 'echo.refrain');
+    s = move(s, s.pending.options.find(o => o.label.startsWith(`${actionName('echo.echo')} (`)).id);
+    while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
+    s = pass(s);
     expect(s.players[1].bonus).toBe(-2);
     expect(followers(s, s.players[1])).toBe(0);
     s.pending = null; s.queue = [{ t: 'finish' }];

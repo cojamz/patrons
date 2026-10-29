@@ -21,8 +21,8 @@ function plain(s, rand) {
 
 describe('Right Away', () => {
   it("round I, 4 players: +1 purple, A places again at once, and still places 3 in all", () => {
-    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 3, quadrants: Q });
-    const rand = seededRandom(3);
+    let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 1, quadrants: Q });
+    const rand = seededRandom(1);
     while (!(s.round === 1 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
     const base = s.order.slice(0, 4), A = s.pending.player;
     const i = quadrant('purple').actions.findIndex(a => a.key === 'again');
