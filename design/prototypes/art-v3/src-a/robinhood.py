@@ -41,5 +41,12 @@ for (x, y) in c.rect(26, 24, 29, 27):                                           
     if c.get(x, y) in 'C': c.set(x, y, 'B')
 for x in range(23, 27):                                                             # a warm lower lip under the grin
     if c.get(x, 26) in 'BC': c.set(x, 26, 'K')
+# Lighting pass for 1x: the temple beside the near eye and the bridge between the eyes lit, so the eye row is no
+# longer a dark band across the face; a warm bounce (wood r) inside the shadow-side jaw.
+for (x, y) in ((16, 18), (17, 18), (18, 18), (16, 19), (17, 19), (18, 19), (24, 18), (25, 18), (24, 19)):
+    if c.get(x, y) == 'C': c.set(x, y, 'D')
+for (x, y) in ((23, 23), (24, 23), (23, 24), (24, 24)): c.set(x, y, 'D')                 # upper lip lit: no moustache read
+for (x, y) in ((30, 21), (30, 22), (29, 23)):
+    if c.get(x, y) == 'B': c.set(x, y, 'r')
 PORTRAIT = portrait(c, 'thieves.robinhood', 'Robin Hood', 'magenta', [{'skin': 'verydeep', 'hair': 'black'},
                                                                       {'skin': 'deep', 'hair': 'black'}])

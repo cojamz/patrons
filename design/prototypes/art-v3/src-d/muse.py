@@ -22,5 +22,9 @@ c.edge(hair, 'E'); c.fill(hair & c.rect(0, 0, 47, 47) - c.ellipse(24.5, 8.5, 11.
 # laurel: pairs of green leaves along the hairline, tips pointing back
 for i, (x, y) in enumerate(((13, 13), (16, 11), (19, 10), (22, 9), (25, 9), (28, 10), (31, 11))):
     c.put(x, y, ['44.', '343', '.2.'] if i % 2 == 0 else ['.4.', '343', '.22'])
+# Lighting pass for 1x (very deep skin): a D rim on the lit contour, so the near cheek parts from the card. (Stepping
+# the planes through wood r was tried and read as smudges on this face; the clean two-plane split stays.)
+for y in range(15, 24):
+    if c.get(15, y) == 'C': c.set(15, y, 'D')
 PORTRAIT = {'id': 'echo.muse', 'name': 'Muse', 'kind': 'member', 'sphere': 'green',
             'people': [{'skin': 'verydeep', 'hair': 'black'}], 'accent': 'red', 'px': c.rows()}

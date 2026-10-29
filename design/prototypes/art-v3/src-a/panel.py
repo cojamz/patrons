@@ -47,5 +47,26 @@ c.fill(c.mask_of('K'), 'J'); c.fill(c.mask_of('S'), 'R')
 c.set(11, 22, 'I')                                                                  # no stray dark under the moustache
 for x in range(23, 26):                                                             # a warm lower lip under the smile
     if c.get(x, 27) == 'C': c.set(x, 27, 'D')
+# Lighting pass for 1x (very deep skin): a lit top edge on the hair, a D rim down the lit contour, the forehead and
+# cheekbone planes joined to the nose bridge, a warm bounce (wood r) inside the shadow-side jaw, a short warm lip.
+c.put(14, 11, [
+    '......GGGGGGGGG....V',
+    'I..GGGFFFFFFFFFFF.VV',
+    'JI.GFFFFFFFFFFFFFFEV',
+    '....................',
+    '....................',
+    'IEEEEDDDDDDDCCCBEEEE',
+    'IEEEDDDDDDDDDCCCAEEE',
+    'IEEDDDEEDDDDCEECBAEE',
+    'IEEDDDDDDDDCBBBBBAEE',
+    'I.DCDCzzzCDCzzzCBABA',
+    'I.DCDCAz!DDC!zACBAB.',
+    '..CDDDDDDDDDCCCCBAB.',
+    '..BCDDDDDCDBCCCCrAA.',
+    '...DDDDDCDABCCCCrA..',
+    '....DDDCACCCACCrA...',
+    '.....DDCCAAACCrA....',
+    '......DCCDDCCrA.....',
+])
 PORTRAIT = portrait(c, 'red.panel', 'Panel', 'red', [{'skin': 'verydeep', 'hair': 'black'}, {'skin': 'fair', 'hair': 'darkbrown'},
                                                   {'skin': 'tan', 'hair': 'darkbrown'}])

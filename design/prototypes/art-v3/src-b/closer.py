@@ -27,4 +27,24 @@ c.put(34, 45, ['zzz.zzz'])                                              # the si
 c.edge(doc, 'i')
 c.fill(c.line(41, 39, 46, 30), 'c'); c.fill(c.line(42, 39, 47, 30), 'b'); c.put(40, 40, ['z'])
 c.put(30, 41, ['.CCD', 'CCCC', 'BCCC', '.BB.'])                                  # her hand on it
-PORTRAIT = portrait('purple.closer', 'Closer', 'purple', [{'skin': 'deep', 'hair': 'black'}], c, merge={'H': 'G'})
+# Lighting pass for 1x (deep skin): a D rim down the lit front contour, a bigger forehead plane, the bridge lit from
+# the brows to the eyes, the cheek beside the smile lit, warm brown irises (wood r) for the gold
+# ones (gold eye pixels glow on deep skin), a warm bounce (r) inside the shadow-side jaw.
+c.put(16, 12, [
+    '...DDDDDD',
+    '..DDDDDDD',
+    '.DDDDDDDDD',
+    '.DDDDDDDD',
+    '.D...DD',
+    '.....DD',
+    'D....D',
+    'D.r..D.r',
+    'D',
+    'D',
+    'D',
+    '.....DDD',
+    '.....DD',
+], keep='.')
+for (x, y) in ((31, 20), (30, 21), (30, 22), (30, 23), (29, 24)):
+    if c.get(x, y) == 'B': c.set(x, y, 'r')
+PORTRAIT = portrait('purple.closer', 'Closer', 'purple', [{'skin': 'deep', 'hair': 'black'}], c, merge={'H': 'G', 'u': 'r'})  # u->r: the warm lip shares the iris step (color cap)

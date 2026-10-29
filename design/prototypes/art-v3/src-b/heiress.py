@@ -30,4 +30,23 @@ c.put(11, 7, ['..d...d...d..', '.cdc.cdc.cdc.', 'bcccccccccccb'])               
 # pearls: one continuous two-tone loop low on the neckline, well off the mouth
 c.put(10, 35, ['kikikikikik'])                                                     # pearls across the skin, pearl / grey-brown
 c.put(9, 34, ['k...........'][:0])
+# Lighting pass for 1x (very deep skin): one lit plane (forehead, near cheek, nose bridge, upper lip) with a single
+# clean terminator down the far side of the nose, so the face parts from the black hair; the far side in C with B in
+# the core; a warm bounce (wood r) inside the shadow-side jaw.
+c.put(4, 14, [
+    '....FFDDDDDDDDCCCBFFFFccccc',
+    '....FDDDDDDDDDCCCBBBFFccccc',
+    '....FDDDDDDDDCCCCBBBF222222',
+    '....FDDDFFFDDFFCCBBBF111111',
+    '....FDDFCCCDDCCFCBBBF.11111',
+    '.....DBBzzCDBzzBCBBBBAMMJJJ',
+    '.....DDzrzyDCrzyCBBBCAMMMMM',
+    '.....DDDDDDDBCCCBBBrBAMMIII',
+    '.....DDDDDDDBCCCBBBrA..JIzz',
+    '.....DDDDDDDBCCCBBBrk..JJJJ',
+    '......DDDDDAABCCBBrAk..JJJJ',
+    '......DDDBDDCCBCBBrA...JJJJ',
+    '.......DDCArrACCBBA.....JJJ',
+    '........CCCCCCCBBA......IJJ',
+])
 PORTRAIT = portrait('trading.heiress', 'Heiress', 'white', [{'skin': 'verydeep', 'hair': 'black'}, {'skin': 'olive', 'hair': 'grey'}], c, accent='orange', merge={'H': 'G', 'K': 'J', 'N': 'M', 'd': 'c'}, minn=5)

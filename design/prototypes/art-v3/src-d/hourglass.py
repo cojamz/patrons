@@ -27,5 +27,24 @@ vis = c.poly([(34, 37), (44, 36), (46.5, 38), (46.5, 41), (35, 41)])
 c.fill(vis & hel, 'z'); c.fill(vis & hel & c.rect(0, 37, 40, 37), 'm')
 c.edge(hel, 'u')
 c.put(31, 39, ['.CCD', 'CCCC', 'BCCB', '.BB.'])
+# Lighting pass for 1x (very deep skin): one lit plane (forehead, near cheek, nose bridge) with a single clean
+# terminator down the far side of the nose, the far side left in C, a warm bounce (wood r) inside the shadow-side jaw,
+# a shorter lit lip so no full light row sits under the mouth.
+c.put(13, 14, [
+    '.EEEEEEEEEEEEEEEEEEE',
+    '.EEEDDDDDDDDDDCCEEEE',
+    '.EEDDDDDDDDDDCCCCBEE',
+    '..DDDFFFFDDDDCFFFBEE',
+    '.CDDDDzzDBDDDBBzBBA.',
+    'CADDDymzDCDDDCymzBA.',
+    'CADDDDDDDDDDDCCBBBA.',
+    '.BDDDDDDDDDDDBCBBrA.',
+    '..DDDDDDDDDDDAABBrA.',
+    '..DDDDDDDDDDCCCBBrA.',
+    '..DDDDDDzACCzACCBrA.',
+    '..DDDDDDDzzzACCCBrA.',
+    '..DDDDDDDDDrCCCCBrA.',
+    '...CCCCCCCDDCCCBBA..',
+])
 PORTRAIT = {'id': 'echo.hourglass', 'name': 'Stunt Double', 'kind': 'member', 'sphere': 'green',
             'people': [{'skin': 'verydeep', 'hair': 'black'}], 'accent': 'red', 'px': c.rows()}

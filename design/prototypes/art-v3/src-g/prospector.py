@@ -55,4 +55,15 @@ nug = ['..dd.',
        '.cbb.']
 c.put(30, 24, nug)
 c.edge({(30 + i, 24 + j) for j, r in enumerate(nug) for i, ch in enumerate(r) if ch != '.'} - c.mask_of('D'), 'a')
+# Lighting pass for 1x (deep skin): the bridge lit between the brows and down the nose, the temple lit, the near cheek
+# and jaw lit down to the chin and the upper lip lit, so the lower face under the brim isn't a dark mass; a bounce
+# (C) inside the shadow-side jaw (wood r would break the color cap).
+lit = [(24, 16), (25, 16), (24, 17), (17, 18), (18, 18), (19, 18), (24, 18), (16, 23), (17, 23), (18, 23), (21, 23),
+       (22, 23), (23, 23), (16, 24)] + [(x, 24) for x in range(17, 23)] + [(25, 24), (26, 24), (17, 25)] + \
+      [(x, 25) for x in range(18, 23)] + [(18, 26), (19, 26), (20, 26), (21, 26)]
+for (x, y) in lit:
+    if c.get(x, y) in 'BC': c.set(x, y, 'D')
+if c.get(19, 27) == 'B': c.set(19, 27, 'C')
+for y in range(19, 24):
+    if c.get(31, y) == 'B': c.set(31, y, 'C')
 PORTRAIT = portrait('gold.prospector', 'Prospector', 'gold', c, [{'skin': 'deep', 'hair': 'black'}], 'red')

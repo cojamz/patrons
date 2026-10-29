@@ -38,5 +38,15 @@ c.edge(vane, 'i')
 c.put(34, 25, ['.CCDC', 'CDCDC', 'CCCCB', 'BCCCB', '.BBB.'])                                  # fist: knuckles lit
 c.put(33, 27, ['D', 'C'])                                                                     # thumb
 c.put(35, 30, ['zz', 'z.'])                                                                   # dark nib below the fist
+# Lighting pass for 1x (deep skin): a D rim down the lit contour, the forehead plane carried down to the glasses,
+# the cheekbone joined to the nose bridge under the near lens, the near cheek and jaw lit down to the beard so the
+# lower face isn't a dark mass, a bounce (C) inside the shadow-side jaw (r would break the color cap).
+lit = [(15, y) for y in range(19, 26)] + [(16, 26), (16, 22), (16, 23), (17, 23), (18, 23), (19, 23), (16, 24), (17, 24),
+       (18, 24), (16, 25), (17, 25)] + [(x, 15) for x in range(17, 22)] + [(17, 16), (18, 16), (19, 16)] + \
+      [(x, 21) for x in range(20, 26)] + [(25, 19), (25, 20)]
+for (x, y) in lit:
+    if c.get(x, y) in 'BC': c.set(x, y, 'D')
+for y in range(21, 26):
+    if c.get(31, y) == 'B': c.set(31, y, 'C')
 PORTRAIT = {'id': 'echo.chronicler', 'name': 'Chronicler', 'kind': 'member', 'sphere': 'green',
             'people': [{'skin': 'deep', 'hair': 'white'}], 'accent': 'red', 'px': c.rows()}

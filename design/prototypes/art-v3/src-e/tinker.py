@@ -54,5 +54,11 @@ c.fill(c.rect(38, 21, 41, 22), '2'); c.fill(c.rect(39, 24, 40, 27), 'j'); c.set(
 c.inner_edge(fl, lambda k: '1')
 c.put(35, 33, ['DC', 'CHD', 'BCH', 'ABB'])                         # her fingers round it, knuckles lit
 c.put(42, 17, ['.!.', '!.!', '.!.']); c.set(44, 21, '!')          # a spark off the gold
+# Lighting pass for 1x (very deep skin): the near jaw and the cheek beside the mouth lit as one plane with the cheek
+# above, the upper lip lit, so the lower face is no longer a dark mass that reads as a goatee.
+for (x, y) in ((19, 24), (20, 25), (20, 26), (21, 26), (22, 26), (23, 26), (21, 27), (22, 27), (24, 25), (25, 25)):
+    if c.get(x, y) == 'C': c.set(x, y, 'D')
+for (x, y) in ((23, 27), (24, 27), (25, 27), (26, 27)):                            # the chin top
+    if c.get(x, y) == 'C': c.set(x, y, 'r')                                          # one warm midtone (wood r)
 PORTRAIT = {'id': 'gold.tinker', 'name': 'Alchemist', 'kind': 'member', 'sphere': 'gold',
             'people': [{'skin': 'verydeep', 'hair': 'brown'}], 'accent': 'red', 'px': c.rows()}

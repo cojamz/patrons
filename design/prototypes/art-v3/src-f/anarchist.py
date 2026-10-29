@@ -53,4 +53,15 @@ c.put(43, 10, ['.44.', '4444', '.44.'])                                         
 hand = c.poly([(35, 31), (37.4, 29.6), (43, 30), (44, 34.4), (41, 36.4), (36, 36)])
 c.fill(hand, 'C'); c.rim(hand, 'D', 0, -1, 1, only='C'); c.fill(hand & c.rect(41, 28, 47, 40), 'B'); c.edge(hand, 'A')
 c.put(37, 32, ['BB.B'])
+# Lighting pass for 1x (deep skin): a D rim down the lit contour, the forehead plane widened, the bridge lit from the
+# brows down the nose, the cheekbone joined to it, the near cheek and jaw and the upper lip lit, so the lower face
+# isn't a dark mass; a warm bounce (wood r) inside the shadow-side jaw.
+lit = [(16, y) for y in range(17, 28)] + [(23, 15), (24, 15), (25, 15)] + [(x, 16) for x in range(17, 24)] + \
+      [(22, 17), (23, 17), (24, 17), (22, 18), (24, 18), (22, 19), (22, 20), (21, 21), (22, 21), (21, 22), (22, 22),
+       (20, 21), (17, 23), (19, 23), (20, 23), (17, 24), (18, 24), (19, 24), (22, 24), (23, 24), (24, 24), (17, 25), (18, 25), (19, 25), (17, 26), (18, 26), (19, 26)]
+for (x, y) in lit:
+    if c.get(x, y) in 'BC': c.set(x, y, 'D')
+c.set(20, 24, 'C')                                                                  # no dark speck on the lit cheek
+for y in range(20, 27):
+    if c.get(31, y) == 'B' and c.get(32, y) == 'A': c.set(31, y, 'r')
 PORTRAIT = portrait('benders.anarchist', 'Anarchist', c, [{'skin': 'deep', 'hair': 'black'}], 'rose')

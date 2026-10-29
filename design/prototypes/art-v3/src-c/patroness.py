@@ -38,5 +38,22 @@ for x in range(16, 28):
 c.put(17, 16, ['EEEE...EEEE'])
 c.put(17, 18, ['Bzz....Bzz.', 'yrqC...Cqry'])
 c.put(18, 18, ['zz']); c.put(24, 18, ['zz'])
+# Lighting pass for 1x (very deep skin): the hair's cast shadow only on the far half, one lit plane (near cheek, nose
+# bridge, the bridge between the brows, upper lip) with a single clean terminator down the far side of the nose, the
+# far side in C with B in the core, a warm bounce (wood r) inside the shadow-side jaw.
+c.put(10, 15, [
+    '...GHECCCCCCCAAAAAAAAAAEE....',
+    '...EFEDEEEEDDDEEEECCBBAEE....',
+    '...EEEDDDDDDDCCCCCCCBBAEE....',
+    '...EEDBBzzDDCBzzzBCCBBABE....',
+    '...EEDDyrqDDCCCqryCCBBABE....',
+    '...EEDDDDDDDBCCCCCCBBrABA....',
+    '.....DDDDDDBACCCCCCBBrAlk....',
+    '.....DDDDDDDCCCCCCCBBrAkj....',
+    '......DDDADDCBACCCBBrA.......',
+    '......DDDCvvvCCCCCBBrA.......',
+    '.......DDCDDCCCCCBBrA........',
+    '........CCCCCCCBBBBA.........',
+])
 PORTRAIT = {'id': 'market.patroness', 'name': 'Patroness', 'kind': 'member', 'sphere': 'blue',
             'people': [{'skin': 'verydeep', 'hair': 'grey'}], 'accent': 'rose', 'px': c.rows()}

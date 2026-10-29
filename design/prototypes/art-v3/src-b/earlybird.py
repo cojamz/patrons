@@ -27,4 +27,25 @@ c.put(33, 32, ['.cc', 'cdcb', 'cbb.']); c.put(41, 32, ['.cc', 'cdcb', '.bbb'][::
 c.put(35, 45, ['b......b'][:1]); c.edge(bod, 'a')
 c.put(31, 30, ['f..', '.f.']); c.put(45, 29, ['..f', '.f.']); c.put(46, 34, ['f', 'f'])  # ringing
 c.put(31, 41, ['.CCC', 'CCCB', 'BCCB', '.BB.'])
+# Lighting pass for 1x (very deep skin): one lit plane (forehead, near cheek, nose bridge, upper lip) with a single
+# clean terminator down the far side of the nose, the far side left in C with B in the core, a warm bounce (wood r)
+# inside the shadow-side jaw, a small chin plane kept off the mouth line.
+c.put(12, 12, [
+    '..FFFGGGGDDDDDCCGFFFFF...',
+    '..FF.DDDDDDDDDDCCBB.FF...',
+    '..FFDDDDDDDDDDDCCBBBFF...',
+    '..FFDDDDDDDDDDCCCCBBFF...',
+    '..FDDDFFDDDDDFFCCCBBAF...',
+    '..FDDFCCFDDDFCCCCCBBAF...',
+    '..CDDBzzBDDBzzBBCCBBABA..',
+    '.CBDDzrzyDDCrzyCCBBBACA..',
+    '.CBDDDDDDDDCCCCCCBBBABA..',
+    '..BDDDDDDDDBCCCCBBBrAA...',
+    '...DDDDDDDDBCCCCBBBrA....',
+    '...DDDDDDDAABCCCBBBrA....',
+    '...DDDDDDBDDCCBCBBBrA....',
+    '....DDDDDCrrrrCCBBrA.....',
+    '....DDDDCCCCCCCBBBrA.....',
+    '.....CCCCDDCCCBBBAA......',
+])
 PORTRAIT = portrait('purple.earlybird', 'Early Bird', 'purple', [{'skin': 'verydeep', 'hair': 'black'}], c, accent='orange', merge={'f': 'j'})

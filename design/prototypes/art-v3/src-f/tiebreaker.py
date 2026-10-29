@@ -44,4 +44,14 @@ c.put(31, 18, ['C', 'D', 'C', 'B'])                                             
 hair = c.poly([(14.6, 15), (14.6, 10.6), (17, 8), (22, 6.8), (28, 7), (31.6, 9), (33.4, 13), (33.2, 18), (31.2, 17), (30.6, 13.4),
                (22, 13.4), (16, 14.2)])
 c.fill(hair, 'F'); c.outside(hair, 'E', 21, 9.5, 11, 5); c.rim(hair, 'G', -1, -1, 1, only='F')
+# Lighting pass for 1x (very deep skin): a D rim down the lit front contour, the upper lip and both cheeks beside the
+# grin lit so the lower face is not a dark mass, the side of the head stepped up to C (B only at the back), and the
+# chin plane kept to two pixels under the lip.
+for (x, y) in ((15, 15), (15, 17), (15, 22), (15, 23), (15, 24), (16, 24), (15, 25), (16, 25),
+               (17, 23), (18, 23), (19, 23), (20, 23), (21, 22), (22, 22), (22, 23), (23, 23), (22, 24)):
+    if c.get(x, y) in 'BC': c.set(x, y, 'D')
+for y in range(16, 26):
+    for x in (27, 28):
+        if c.get(x, y) == 'B': c.set(x, y, 'C')
+c.set(20, 26, 'C')
 PORTRAIT = portrait('benders.tiebreaker', 'Tiebreaker', c, [{'skin': 'verydeep', 'hair': 'grey'}], 'red')
