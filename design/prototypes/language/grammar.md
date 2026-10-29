@@ -19,7 +19,7 @@ Cory: "why are there still symbols here. just simplify visual language everywher
 Objects: **disc** (resource), **card** (member), **doorway** (place).
 Drawn: **● resource dot** (a plain flat disc in its color, no inner mark; the cream/white dot has a hairline edge) · **any** (the same dot split into the table's four colors, each where its quadrant sits) · **follower** (Cory's pixel person, one flat silhouette in the text's color). Nothing else is drawn.
 Words for the rest: "member", "rival", "minion", "extra turn", "swap", "per", "for", "becomes", "times". The one arrow left is the follower buy's ("2● → 1👤"). Plus and minus belong to the number ("+3", "−4"); numbers are heavy and sit right against the dot or follower they count.
-Retired: the member, minion, rival, arrow, swap and extra-turn marks; the typed "/" and "×" operators; the ring for "any", per-color shapes and coin marks, the badge, every space's pixel icon on its face.
+Retired: the member mark (back on 2026-10-29 as the smooth bust, see taste.md), the minion, rival, arrow, swap and extra-turn marks; the typed "/" and "×" operators; the ring for "any", per-color shapes and coin marks, the badge, every space's pixel icon on its face.
 
 ## The three objects
 A **disc** is money (the dot). A **card with a person** is a member. A **doorway** is a place, where you send a minion. Each one's silhouette is unique, so the kind of thing reads before anything on it does.

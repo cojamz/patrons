@@ -49,7 +49,7 @@ New mechanics, card texts and abilities, sphere designs, the scoring rules, and 
 ## Cory's own calls (what he has said he wants, 2026-10-15)
 Critics and designers can't guess these, so they're written down here. Each traces to design/decisions.md.
 - A cost's color is implied by its dot. Never write the color name beside a cost. "Need N" never shouts; at most it's quiet small print.
-- Resources are plain colored dots, and "any" is one split dot. The only symbols are the dot and the follower mark; everything else is words.
+- Resources are plain colored dots, and "any" is one split dot. The only symbols are the dot, the follower mark and (since 2026-10-29) the member bust: a smooth head and shoulders in a color for "red member", split in the table's colors for "any member", used only for a member of a color or a counted member in rule text; everything else is words. The card corner shows followers, never the bust.
 - Action spaces have no names on the panel; the name lives in the hover. Each panel is the main gain first ("+2 ●"), then a short plain phrase, then an optional small clarification. No pictures and no clever shorthand: a newcomer must be able to decipher it.
 - Rims name the color in words ("MOST BLUE · +2 👤") and show the prize with the follower mark.
 - Member cards in the shop show who and what it costs: picture, name, cost, worth. What the member does lives in the hover as one plain sentence.
