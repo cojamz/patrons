@@ -12,6 +12,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Fixes: go with your gut, and log each gut call in design/decisions.md as "(Claude, under Cory's go-with-your-gut)" with the why.
 - "X should be cheaper/pricier" notes are Claude's to price: educated guess, direction checked, logged as a gut call.
 
+- When he picks a mockup, port it from its own code and values, not by eye; change only what he named (Cory, Oct 29).
 - Visual work (art, card looks) is iterated with a very picky, anti-AI-slop design critic agent reviewing each round before Cory sees it, and the best version ships overnight for every piece, not a sample (Cory, Oct 29).
 
 ## Talking to him
@@ -86,3 +87,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-28: "Waiting on me" for engineering came twice (Oct 21, Oct 28). Now a gate: the message check bounces a question to Cory about refactors, rebuilds, tuning or perf passes, profiling or migrations.
 - 2026-10-28: Cory to the harness thread, after it asked him balance questions from the tester panel: "why are you doing balance changes, you're the harness rework agent". Threads stay in their lane; out-of-lane design questions go to the coordinator.
 - 2026-10-29: Cory, after the portrait redraw: "these pixel arts still look pretty bad" and "use a design critique agent, a very picky and very anti AI slop, to critique and help you iterate… ship the best version… fully updated for every member". Visual work now runs through a picky critic each round.
+- 2026-10-29: Cory, after in-game cards drifted from the lab card he picked: "how hard is it to make them look like the image i sent… figure out how it was built before, stop trying to reinvent". A picked mockup is ported from its own code and values; only his named changes differ.
