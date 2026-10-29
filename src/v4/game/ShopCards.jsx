@@ -24,7 +24,9 @@ import './card-header.css'; // the trading-card face (Cory, Oct 29)
 // a name on the card's bar: one line, a size down when it's long, two lines only past that (never broken mid-word)
 export const nameFit = name => (name.length > 15 && name.includes(' ') ? { 'data-wide': '' } : name.length > 11 || name.split(' ').some(w => w.length >= 10) ? { 'data-long': '' } : {});
 // a member that counts as more than one: the count and the member bust on its picture (the worth stays followers)
-export const CountTag = ({ d, sphere }) => (d.n > 1 ? <span className="lt-count" title={`Counts as ${d.n} members`} aria-label={`counts as ${d.n} members`}><b className="num">{d.n}</b><MemberGlyph r={sphere && sphere !== 'colorless' ? sphere : null} size={14} decorative /></span> : null);
+// a member worth N followers also counts as N members (core.js printedMembers; Cory, Oct 28)
+export const membersOf = d => Math.max(d.n ?? 1, d.f || 0);
+export const CountTag = ({ d, sphere }) => { const n = membersOf(d); return n > 1 ? <span className="lt-count" title={`Counts as ${n} members`} aria-label={`counts as ${n} members`}><b className="num">{n}</b><MemberGlyph r={sphere && sphere !== 'colorless' ? sphere : null} size={14} decorative /></span> : null; };
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
 // The face-up row's order (Cory, 2026-10-15): by cost, cheapest first, or by color (the table's color order, then
@@ -245,7 +247,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               <span className="lt-hd">
                 <span className="lt-corner-cost num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>
                 {/* the worth is what the member brings, not part of its price (live panel r1: "1 follower" read as a third cost) */}
-                <span className="val" data-worth={d.f} title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
+                <span className="val" data-worth={d.f} title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${membersOf(d) > 1 ? `; counts as ${membersOf(d)} members` : ''}`}>
                   <b className="num">{d.f}</b><FollowerGlyph size={14} title={`worth ${d.f}`} />
                 </span>
                 {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
