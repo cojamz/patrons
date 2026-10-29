@@ -5,7 +5,7 @@
 //   new <dir> [--seed N] [--colors a,b,c,d] [--names Ava,Ben,Cal,Dee]   start a game and write cards.md
 //   wait <dir> <seat> [--max 100]     block until it is that seat's decision (or the game is over), then show the view
 //   view <dir> <seat>                 the table as that seat sees it
-//   move <dir> <seat> <option> [--think "..."] [--say "..."]
+//   move <dir> <seat> <option> [--why "..."] [--say "..."]
 //   postgame <dir> <seat> "<text>"    the player's after-game note
 //   status <dir>                      one line for the foreman
 //   report <dir> [--out file]         the transcript for the designer (markdown)
@@ -216,7 +216,7 @@ function decisionView(s, me) {
   const t = s.pending;
   const L = [`YOUR DECISION (${t.kind}): ${t.prompt}`];
   t.options.forEach((o, i) => L.push(`  [${i + 1}] ${renderOption(s, me, o, t.kind)}`));
-  L.push('', `Answer with: node scripts/v4-expert.mjs move ${DIR} ${me.id} <number> --think "..." [--say "..."]`);
+  L.push('', `Answer with: node scripts/v4-expert.mjs move ${DIR} ${me.id} <number> --why "..." [--say "..."]`);
   return L.join('\n');
 }
 
@@ -283,7 +283,7 @@ async function main() {
       const round = s.round;
       const next = applyMove(s, { player: seat, option: o.id });
       writeJson(f(dir, 'state.json'), next);
-      const ev = [{ type: 'move', seat, round, n: next.moves, kind: s.pending.kind, option: o.id, label, think: flags.think || '', prompt: s.pending.prompt }];
+      const ev = [{ type: 'move', seat, round, n: next.moves, kind: s.pending.kind, option: o.id, label, think: flags.why || flags.think || '', prompt: s.pending.prompt }];
       if (flags.say) ev.push({ type: 'say', seat, text: String(flags.say) });
       ev.push(...newLines(s, next).map(text => ({ type: 'log', text, by: seat })));
       addEvents(dir, ev);
@@ -313,6 +313,24 @@ async function main() {
     return;
   }
   if (cmd === 'report') { const md = report(dir); if (flags.out) fs.writeFileSync(flags.out, md); else console.log(md); return; }
+  if (cmd === 'digest') {
+    // plain chat-sized update of new turns since the last digest (pointer kept in the game folder)
+    const { s, meta } = load(dir);
+    const evs = events(dir), ptrFile = f(dir, 'digest.ptr');
+    const from = fs.existsSync(ptrFile) ? Number(fs.readFileSync(ptrFile, 'utf8')) : 0;
+    const out = [];
+    for (const e of evs.slice(from)) {
+      if (e.type === 'move' && ['place', 'buy', 'setup'].includes(e.kind) && !/^Pass|^Back/.test(e.label)) {
+        const lab = e.label.replace(/ → you'd get:.*$/, '').replace(/ \[.*?\] —.*$/, '').replace(/^Recruit /, 'recruits ').replace(/^Buy followers: /, 'buys followers: ');
+        out.push(`${meta.names[e.seat]} (R${ROMAN[e.round] || '0'}): ${lab}${e.think ? `\n   “${e.think}”` : ''}`);
+      } else if (e.type === 'say') out.push(`💬 ${meta.names[e.seat]}: "${e.text}"`);
+    }
+    fs.writeFileSync(ptrFile, String(evs.length));
+    const sc = s.players.map(p => `${p.name} ${followers(s, p)}`).join(', ');
+    console.log(`${out.join('\n') || '(no new turns)'}\n\nScore now: ${sc}${s.over ? ' — GAME OVER' : ''}`);
+    return;
+  }
+  if (cmd === 'html') { const h = reportHtml(dir); if (flags.out) fs.writeFileSync(flags.out, h); else console.log(h); return; }
   if (cmd === 'data') { console.log(JSON.stringify(gameData(dir))); return; }
   console.log(`Unknown command ${cmd}`);
 }
@@ -345,6 +363,48 @@ function report(dir) {
   L.push('', '## After the game', '');
   for (const [seat, text] of Object.entries(meta.post)) L.push(`**${meta.names[seat]}:** ${text}`, '');
   return L.join('\n');
+}
+
+const esc = x => String(x).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const HUES = ['#c2410c', '#1d6fb8', '#2f855a', '#8b4fb8'];
+export function reportHtml(dir) {
+  const { s, meta } = load(dir);
+  const evs = events(dir);
+  const done = s.over ? `Final: ${s.ranking.map((id, i) => `${i + 1}. ${meta.names[id]} ${followers(s, s.players[id])}`).join(' · ')}` : `Round ${ROMAN[s.round] || '–'} · move ${s.moves} · waiting on ${s.pending ? meta.names[s.pending.player] : '–'}`;
+  const sc = s.players.map((p, i) => `<span class="chip" style="--h:${HUES[i]}">${meta.names[i]} <b>${followers(s, p)}</b></span>`).join('');
+  const body = [];
+  let round = -1, open = false;
+  const closeTurn = () => { if (open) body.push('</div>'); open = false; };
+  for (const e of evs) {
+    if (e.type === 'move') {
+      if (e.round !== round) { closeTurn(); round = e.round; body.push(`<h2>${round ? `Round ${ROMAN[round]}` : 'Artifact picks'}</h2>`); }
+      const major = ['place', 'buy', 'setup'].includes(e.kind);
+      closeTurn();
+      body.push(`<div class="turn${major ? '' : ' minor'}" style="--h:${HUES[e.seat]}"><div class="who">${meta.names[e.seat]}</div><div class="act">${esc(e.label)}</div>${e.think ? `<div class="why">${esc(e.think)}</div>` : ''}`);
+      open = true;
+    } else if (e.type === 'say') body.push(`<div class="say" style="--h:${HUES[e.seat]}"><b>${meta.names[e.seat]}:</b> “${esc(e.text)}”</div>`);
+    else if (e.type === 'log') body.push(`<div class="log">${esc(e.text)}</div>`);
+  }
+  closeTurn();
+  const post = Object.entries(meta.post).map(([i, x]) => `<div class="turn" style="--h:${HUES[i]}"><div class="who">${meta.names[i]}</div><div class="why">${esc(x)}</div></div>`).join('');
+  return `<title>Expert Game Transcript</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#f6f5f2;--fg:#1c1b19;--mute:#6b6962;--card:#fff;--line:#dedbd3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171716;--fg:#ecebe6;--mute:#9a978e;--card:#222220;--line:#363632;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171716;--fg:#ecebe6;--mute:#9a978e;--card:#222220;--line:#363632;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:720px;margin-inline:auto}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.sub{color:var(--mute);font-size:13px}.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chip{border:1px solid var(--h);border-radius:99px;padding:2px 10px;font-size:13px}
+.turn{background:var(--card);border-left:4px solid var(--h);padding:8px 10px;margin:10px 0 2px;border-radius:2px}.turn.minor{padding:3px 10px;opacity:.85}
+.who{font-size:12px;font-weight:700;color:var(--h)}.act{font-weight:600}.why{color:var(--mute);margin-top:3px;font-size:14px}
+.say{margin:2px 0 2px 14px;padding:3px 8px;border-left:2px solid var(--h);font-size:14px}.log{margin-left:14px;font-size:12.5px;color:var(--mute);overflow-wrap:anywhere}
+</style>
+<h1>Expert game ${esc(path.basename(dir))}</h1>
+<div class="sub">${esc(meta.colors.map(sphereName).join(' · '))} · seed ${meta.seed}</div>
+<div class="sub"><b>${esc(done)}</b></div><div class="chips">${sc}</div>
+${body.join('\n')}
+${post ? `<h2>After the game</h2>${post}` : ''}`;
 }
 
 export function gameData(dir) {
