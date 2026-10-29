@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.839 — 2026-10-29
+
+- Member cards are back to their earlier look while the new card design is reworked.
+
 ## v0.9.838 — 2026-10-29
 
 - Every member's picture redrawn with more detail; members that count as 2 or more show that many people; new guests have pictures
