@@ -69,3 +69,4 @@ Critics and designers can't guess these, so they're written down here. Each trac
 - (2026-10-15) Emojis on the wheel are small, upright, and sit in line with the rim lettering. They never cover words.
 - (2026-10-15) Relaxed is clearly slow. Steady is readable, never rushed.
 - (2026-10-15) Hovers open complete, with no fill-in.
+- (2026-10-29) Member portraits: distinct, stylized, not realistic. Cory on the 48px realistic set: "total AI slop… you've tried too hard to go realistic. they should be distinct, but not completely realistic and with weird AI line work." No rendered face planes, no colored sel-out line work; simple shapes and a character you can name at a glance.
