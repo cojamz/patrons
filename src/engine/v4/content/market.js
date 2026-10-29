@@ -298,7 +298,7 @@ const market = {
     m('onlooker', 'Onlooker', 6, 4, 'Whenever a rival recruits a blue member, +2 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 2); },
     }),
-    m('connoisseur', 'Connoisseur', 1, 1, 'Whenever you recruit a blue member, +1 blue.', {
+    m('connoisseur', 'Connoisseur', 1, 2, 'Whenever you recruit a blue member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1); },
     }),
     m('reseller', 'Reseller', 4, 2, 'Whenever you recruit, +1 of that member’s color.', {

@@ -36,8 +36,8 @@ claude/project-thread-awhu3b) and signed off on the shipped set.
 - Round 3: Tiebreaker 6 +14→+10 but bought 46%→14% (strong when owned at any price: not a price problem); Heiress 9 bought 26%→4% (too far, back to 8); Bodyguard 9→8 bought 6%→16%, owners +12→+8; Night Owl 9→8 bought 8%→19%, +11→+10; Extra Hand 10→8 bought 3%→10%, +11→+8; Con Men 6→7 −1→+2 (not needed).
 - Round 4 (the shipped set): 4p buy-followers-only 27%→26%, 3p 34%→34%, 2p 47%→49%; nothing broke. Cross-check, Hard 4p paired (200 games): Agents −18→−9, Bait −11→−6, Accomplice +5→+8, buy-followers-only 7.5%→8.8%.
 
-## Shipped (v0.9.848)
-Heiress 6→8, Exporter 6→7, Grifter 4→5, Accomplice 2→3 (reverses Cory's 2), Bodyguard 9→8, Night Owl 9→8, Extra Hand 10→8, Launderers 5→4, Agents 4→3, Bait 4→3, Connoisseur 4→3, Scout 4→3.
+## Shipped
+Heiress 6→8, Exporter 6→7, Grifter 4→5, Accomplice 2→3 (reverses Cory's 2), Bodyguard 9→8, Night Owl 9→8, Extra Hand 10→8, Launderers 5→4, Agents 4→3, Bait 4→3, Scout 4→3 (v0.9.849). Connoisseur went 4→3 in v0.9.849 and back to 4 in the next publish: the cross-check withdrew it (neutral at 4 players on both bots; only 2 and 3 players support it).
 
 ## Round 0 grids (lift per run; * past 2 SE)
 Members: r0-members-matrix.txt beside this file. Artifacts, colors and spaces below.
