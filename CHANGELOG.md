@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.841 — 2026-10-29
+
+- Members in card text are now a little head-and-shoulders symbol: a red one for a red member, a split one for any member.
+
 ## v0.9.840 — 2026-10-29
 
 - One Time Use is now called Once per game, on every card and in the rules.
