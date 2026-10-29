@@ -10,7 +10,7 @@ import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
 import { cardColor, cardGround, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
-import { FollowerGlyph } from './Glyphs.jsx';
+import { FollowerGlyph, MemberGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { timingOf, unlockedBy, surely } from './cards.js';
 void timingOf;
@@ -26,6 +26,10 @@ export const nameFit = name => (name.length > 15 && name.includes(' ') ? { 'data
 // a member that counts as more than one: the count and the member bust on its picture (the worth stays followers)
 // a member worth N followers also counts as N members (core.js printedMembers; Cory, Oct 28)
 export const membersOf = d => Math.max(d.n ?? 1, d.f || 0);
+// the top right: the members a card counts as, in its color's bust (every member is a follower, so it's also its score)
+export const WorthTag = ({ d, sphere }) => <>
+  <span className="val" data-worth={d.f} title={`Counts as ${membersOf(d)} member${membersOf(d) === 1 ? '' : 's'}`}><b className="num">{membersOf(d)}</b><MemberGlyph r={sphere && sphere !== 'colorless' && !d.everyColor ? sphere : null} size={14} decorative /></span>
+</>;
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
 // The face-up row's order (Cory, 2026-10-15): by cost, cheapest first, or by color (the table's color order, then
@@ -246,9 +250,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               <span className="lt-hd">
                 <span className="lt-corner-cost num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>
                 {/* the worth is what the member brings, not part of its price (live panel r1: "1 follower" read as a third cost) */}
-                <span className="val" data-worth={d.f} title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${membersOf(d) > 1 ? `; counts as ${membersOf(d)} members` : ''}`}>
-                  <b className="num">{d.f}</b><FollowerGlyph size={14} title={`worth ${d.f}`} />
-                </span>
+                <WorthTag d={d} sphere={sphere} />
                 {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
                 <span className="nm" {...nameFit(d.name)}>{d.name}</span>
               </span>
@@ -314,7 +316,7 @@ function PileRow({ state, viewer, row, optionFor, onPick, hover }) {
               onClick={() => { if (opt) { hover?.close?.(); onPick(opt.id); } }}>
               <span className="lt-hd">
                 <span className="lt-corner-cost num" aria-hidden="true">{shown.reduce((t, c) => t + c.n, 0)}</span>
-                <span className="val" data-worth={d.f}><b className="num">{d.f}</b><FollowerGlyph size={14} title={`worth ${d.f}`} /></span>
+                <WorthTag d={d} sphere={sphereOf(state, d)} />
                 <span className="nm" {...nameFit(d.name)}>{d.name}</span>
               </span>
               <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />

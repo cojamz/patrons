@@ -126,10 +126,10 @@ describe('Silver members', () => {
   });
 
   // Cory (2026-10-14): Feast Hall became Revelers, a group: more members, not more silver
-  it('Revelers counts as 3 silver members for per-member effects, contributes no red contest count, and is worth 1 follower', () => {
+  it('Revelers counts as 3 silver members for per-member effects, contributes no red contest count, and scores 3 followers (every member is a follower, Cory Oct 29)', () => {
     let s = sc({ members: [['silver.revelers'], ['red.intern', 'red.twins']], res: [{}, { red: 3 }], queue: [] });
     expect(memberCount(s, s.players[0])).toBe(3);
-    expect(followers(s, s.players[0])).toBe(2);
+    expect(followers(s, s.players[0])).toBe(4);
     const red = contestTable(s).find(c => c.qid === 'red');
     expect(red.rows.find(r => r.player === 0).count).toBe(0);
     expect(red.rows.find(r => r.player === 1).count).toBe(3);

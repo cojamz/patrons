@@ -12,7 +12,7 @@ import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../
 import { realHover } from '../hover.js';
 import { Popover } from './parts.jsx';
 import { aimAt, arrived, heading, over, holdCard, dropCard, busyWith, claim, unclaim, claimedByOther } from './hoverIntent.js';
-import { Who } from './Glyphs.jsx';
+import { Who, MemberGlyph } from './Glyphs.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { Sprite } from '../art/Sprite.jsx';
@@ -298,7 +298,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       <div className="mc-head mc-hd">
         {!onFace && <span className="mc-price num" aria-hidden="true">{(paid || costParts(d, state.resources)).reduce((t, c) => t + c.n, 0)}</span>}
         <b className="mc-name">{d.name}</b>
-        {!onFace && <span className="mc-worth" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`}><b className="n">{d.f}</b><Follower size={14} title={`worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></span>}
+        {!onFace && <span className="mc-worth" title={`Counts as ${weight} member${weight === 1 ? '' : 's'}`}><b className="n">{weight}</b><MemberGlyph r={sphere !== 'colorless' && !d.everyColor ? sphere : null} size={16} decorative /></span>}
       </div>
       {!onFace && <span className="mc-art" aria-hidden="true"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={72} /></span>}
       {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}

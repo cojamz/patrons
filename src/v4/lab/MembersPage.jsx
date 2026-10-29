@@ -14,7 +14,7 @@ import { guestMembers } from '../../engine/v4/content/index.js';
 import { CUT } from '../../engine/v4/content/cull.js';
 import { ARTIFACTS, DEFAULT_RULES } from '../../engine/v4/core.js';
 import { MemberCard, RuleText, cardColor, cardGround } from '../game/Info.jsx';
-import { CostShapes, nameFit } from '../game/ShopCards.jsx';
+import { CostShapes, nameFit, WorthTag } from '../game/ShopCards.jsx';
 import { FollowerGlyph } from '../game/Glyphs.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
@@ -70,7 +70,7 @@ function Tile({ def, copies, onOver, onOut, onPin, pinned }) {
     onClick={e => onPin(def, e.currentTarget)}>
     <span className="lt-hd">
       <span className="lt-corner-cost num" aria-hidden="true">{total}</span>
-      <span className="val" title={`Worth ${def.f} follower${def.f === 1 ? '' : 's'}`}><b className="num">{def.f}</b><FollowerGlyph size={14} title={`worth ${def.f}`} /></span>
+      <WorthTag d={def} sphere={sphere} />
       <span className="nm" {...nameFit(def.name)}>{def.name}</span>
     </span>
     <span className="art"><Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} />

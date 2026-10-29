@@ -5,10 +5,10 @@
 .lt-shop .lt-card.card.paper.lit:has(> .lt-hd){background:#f4ebd7;box-shadow:inset 0 0 0 2px var(--q),0 0 0 2px #ffe0a1,0 8px 18px -8px rgba(0,0,0,.8)}
 .lt-card.card .lt-hd{flex:none;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"cost . worth" "name name name";
   align-items:center;gap:2px;padding:3px;background:var(--q);color:#fff;position:relative}
-.lt-card.card .lt-hd .lt-corner-cost{grid-area:cost;position:static;opacity:1;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;
-  background:#2a1f17;color:#f4ebd7;font:800 13px/1 var(--sans);box-shadow:0 0 0 1.5px #f4ebd7}
-.lt-card.card .lt-hd .val{grid-area:worth;display:inline-flex;align-items:center;gap:1px;height:21px;padding:0 5px;margin:0;border-radius:11px;
-  background:#f4ebd7;color:#2a1f17;font:800 14px/1 var(--sans);box-shadow:0 0 0 1px rgba(42,31,23,.25)}
+.lt-card.card .lt-hd .lt-corner-cost{grid-area:cost;position:static;opacity:1;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;
+  background:#2a1f17;color:#f4ebd7;font:800 11px/1 var(--sans);box-shadow:0 0 0 1.5px #f4ebd7}
+.lt-card.card .lt-hd .val{grid-area:worth;display:inline-flex;align-items:center;gap:1px;height:16px;padding:0 4px;margin:0;border-radius:8px;
+  background:#f4ebd7;color:#2a1f17;font:800 11px/1 var(--sans);box-shadow:0 0 0 1px rgba(42,31,23,.25)}
 .lt-card.card .lt-hd .val b{font-weight:800}
 .lt-card.card .lt-hd .val .follower-mark{width:12px;height:12px;margin:0 0 0 1px;vertical-align:0}
 .lt-card.card .lt-hd .nm{grid-area:name;display:block;height:auto;min-height:0;margin:0;padding:0;white-space:nowrap;overflow:hidden;text-align:center;
@@ -40,8 +40,8 @@
 /* the lab's Header card as Cory picked it (Oct 29, "this was close to perfect"): one bar with price, name and worth */
 .card-face.mc .mc-hd{display:flex;align-items:center;gap:6px;padding:6px;margin:0;background:var(--c)}
 .card-face.mc .mc-hd .mc-name{flex:1;min-width:0;text-align:center;font:700 17px/20px var(--serif);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.2)}
-.card-face.mc .mc-hd .mc-price{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#2b2018;color:#fbf6ea;font:800 16px/1 var(--sans);box-shadow:0 0 0 2px #f4ebd7}
-.card-face.mc .mc-hd .mc-worth{flex:none;display:inline-flex;align-items:center;gap:1px;height:28px;padding:0 9px;border-radius:14px;background:#f4ebd7;color:#2b2018;font:800 18px/1 var(--sans);box-shadow:0 0 0 1px rgba(42,31,23,.25)}
+.card-face.mc .mc-hd .mc-price{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#2b2018;color:#fbf6ea;font:800 14px/1 var(--sans);box-shadow:0 0 0 2px #f4ebd7}
+.card-face.mc .mc-hd .mc-worth{flex:none;display:inline-flex;align-items:center;gap:1px;height:22px;padding:0 7px;border-radius:11px;background:#f4ebd7;color:#2b2018;font:800 14px/1 var(--sans);box-shadow:0 0 0 1px rgba(42,31,23,.25)}
 .card-face.mc .mc-hd .mc-worth .follower-mark{width:16px;height:16px;vertical-align:0}
 .card-face.mc .mc-art{display:grid;place-items:center;width:auto;height:112px;margin:0 2px;border-radius:0;
   background:radial-gradient(circle at 50% 75%,color-mix(in srgb,var(--c) 34%,#f4ebd7),color-mix(in srgb,var(--c) 14%,#eadfc4) 75%)}
@@ -81,3 +81,5 @@
 /* recruitable: the lab card keeps its own edge, the lamp ring sits outside it */
 .app.game.lt .lt-shop .lt-card.card.lit:has(> .lt-hd){background:#f4ebd7;box-shadow:inset 0 0 0 2px var(--q),0 0 0 2px rgb(var(--lamp,255,206,140)),0 0 14px 1px rgba(var(--lamp,255,206,140),.45)}
 .app.game.lt .lt-shop .lt-card.card.lit:has(> .lt-hd):hover{box-shadow:inset 0 0 0 2px var(--q),0 0 0 2px #fffaf0,0 0 20px 3px rgba(var(--lamp,255,206,140),.6)}
+.lt-card.card .lt-hd .val .member-glyph{width:11px;height:11px;margin-left:1px}
+.card-face.mc .mc-hd .mc-worth .member-glyph{width:13px;height:13px;margin-left:1px}
