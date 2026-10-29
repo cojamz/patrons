@@ -23,7 +23,9 @@ for (const { f, rec } of records) {
     const back = fromNotation(text);
     expect(back.moves).toEqual(rec.moves);
     expect(back.quadrants).toEqual(rec.quadrants);
-    expect(toNotation(back)).toBe(text);
+    // a record made on an earlier build with the same rules reads back as this build (its Version tag moves on with
+    // every publish, which left this red after each release until the record was hand-edited)
+    expect(toNotation(back)).toBe(toNotation({ ...rec, build: back.build }));
   });
 }
 
