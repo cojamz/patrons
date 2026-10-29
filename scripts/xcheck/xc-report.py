@@ -138,6 +138,9 @@ for s in sorted(sp, key=lambda s: -np.mean([a + b for rr in sp[s].values() for a
             parts.append(f'R{rd} {df:+.1f}f {dr:+.1f}r ={df+dr:+.1f} (n={len(v)})'); rec[f'r{rd}'] = [float(df), float(dr), len(v)]
     allv = [a + b for rr in sp[s].values() for a, b in rr]
     rec['value'] = float(np.mean(allv))
+    tk = [(p['win'], 1 / r['seats']) for r in rows if s in {pl['space'] for pl in r['placements']} for p in bots(r) if any(pl['p'] == p['i'] and pl['space'] == s for pl in r['placements'])]
+    rec['takerWin'] = float(np.mean([a for a, _ in tk]) - np.mean([b for _, b in tk])) if tk else None
+    parts.insert(0, f"takers win {100*rec['takerWin']:+.1f}" if tk else '')
     print(f"  {s[:20]:20} {use[s]/tables[s]:4.1f}/table  val {np.mean(allv):+5.2f}   " + '  '.join(parts))
     spaces.append(rec)
 out['spaces'] = spaces

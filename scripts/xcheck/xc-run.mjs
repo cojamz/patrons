@@ -55,7 +55,8 @@ for (let g = first; g < first + count; g++) {
     placements.push({ ...open, df: followers(s, p) - open.f0, dr: resSum(p) - open.r0, f0: undefined, r0: undefined });
     open = null;
   };
-  while (!s.over) {
+  let moves = 0;
+  while (!s.over && ++moves < 6000) {
     for (const uid of s.shop) { const d = s.cards[uid].def; offered[d] ??= s.round; }
     const pend = s.pending, pl = pend.player;
     if (open && (pend.kind === 'buy' || pend.kind === 'place' || pl !== open.p || s.round !== open.round)) closeOpen();
@@ -87,6 +88,7 @@ for (let g = first; g < first + count; g++) {
     }
     s.players.forEach((p, i) => { for (const u of p.members) if (!before[i].has(u)) got[i][s.cards[u].def] ??= round; });
   }
+  if (!s.over) { console.error(`game ${g}: no end after 6000 moves, dropped`); continue; }
   closeOpen();
   const fs = s.players.map(p => followers(s, p)), top = Math.max(...fs), nTop = fs.filter(f => f === top).length;
   const row = {
