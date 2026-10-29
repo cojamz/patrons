@@ -1,0 +1,233 @@
+[
+ {
+  "id": "market.snob",
+  "name": "Snob",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Game end: +1 follower per blue member you have.",
+  "oldPeople": [
+   "porcelain"
+  ]
+ },
+ {
+  "id": "market.trendsetter",
+  "name": "Trendsetter",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Whenever you recruit a member, send 1 shop member to the bottom of the pile, then refill.",
+  "oldPeople": [
+   "deep",
+   "fair",
+   "olive"
+  ]
+ },
+ {
+  "id": "market.windowdresser",
+  "name": "Window Dresser",
+  "sphere": "blue",
+  "n": 1,
+  "text": "On Recruit: send 3 shop members to the bottom of the pile, then refill.",
+  "oldPeople": [
+   "coolbrown",
+   "golden",
+   "palepink"
+  ]
+ },
+ {
+  "id": "market.windowshopper",
+  "name": "Window Shopper",
+  "sphere": "blue",
+  "n": 1,
+  "text": "On Recruit: send 1 shop member to the bottom of the pile, gain 1 of its color. Round Start: send 1 shop member to the bottom of the pile, gain 1 of its color.",
+  "oldPeople": [
+   "coolbrown"
+  ]
+ },
+ {
+  "id": "trading.broker",
+  "name": "Broker",
+  "sphere": "white",
+  "n": 1,
+  "text": "Whenever a White action gives you followers, +1 follower.",
+  "oldPeople": [
+   "deep",
+   "porcelain"
+  ]
+ },
+ {
+  "id": "trading.cashier",
+  "name": "Cashier",
+  "sphere": "white",
+  "n": 1,
+  "text": "On Recruit: turn all your white into followers.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "trading.changer",
+  "name": "Money Changer",
+  "sphere": "white",
+  "n": 1,
+  "text": "Whenever you turn resources or members into followers, +1 white.",
+  "oldPeople": [
+   "brown",
+   "golden"
+  ]
+ },
+ {
+  "id": "trading.exporter",
+  "name": "Exporter",
+  "sphere": "white",
+  "n": 1,
+  "text": "Whenever you recruit a non-white member, +1 white.",
+  "oldPeople": [
+   "tan",
+   "freckled"
+  ]
+ },
+ {
+  "id": "trading.heiress",
+  "name": "Heiress",
+  "sphere": "white",
+  "n": 1,
+  "text": "Once per game: +1 white per member you have.",
+  "oldPeople": [
+   "verydeep",
+   "olive"
+  ]
+ },
+ {
+  "id": "trading.hoarder",
+  "name": "Hoarder",
+  "sphere": "white",
+  "n": 1,
+  "text": "Once per game: turn all your resources into white.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "trading.martyr",
+  "name": "Martyr",
+  "sphere": "white",
+  "n": 1,
+  "text": "When this member leaves your cult, gain followers equal to its cost.",
+  "oldPeople": [
+   "coolbrown",
+   "golden"
+  ]
+ },
+ {
+  "id": "trading.oldmoney",
+  "name": "Old Money",
+  "sphere": "white",
+  "n": 1,
+  "text": "Game end: +1 follower per white member you have.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "trading.raider",
+  "name": "Raiders",
+  "sphere": "white",
+  "n": 1,
+  "text": "Once per game: steal 4 followers from the leader. Pay them 2 white.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "trading.recluse",
+  "name": "Recluse",
+  "sphere": "white",
+  "n": 1,
+  "text": "Game end: +2 followers per rival with more members than you.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "trading.shopkeeper",
+  "name": "Shopkeeper",
+  "sphere": "white",
+  "n": 1,
+  "text": "On Recruit: +2 white. Round Start: +2 white.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "trading.undertaker",
+  "name": "Undertaker",
+  "sphere": "white",
+  "n": 1,
+  "text": "Whenever you cast out one of your members, +2 followers.",
+  "oldPeople": [
+   "porcelain"
+  ]
+ },
+ {
+  "id": "benders.anarchist",
+  "name": "Anarchist",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Once per round: swap any two members within 2 cost.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "benders.bigspender",
+  "name": "Big Spender",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Once per game: recruit twice this turn.",
+  "oldPeople": [
+   "porcelain"
+  ]
+ },
+ {
+  "id": "benders.cheerleader",
+  "name": "Cheerleader",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Whenever you win a contest, +1 follower.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "benders.conmen",
+  "name": "Con Men",
+  "sphere": "colorless",
+  "n": 2,
+  "text": "Counts as 2 members. On Recruit: steal 5 resources.",
+  "oldPeople": [
+   "porcelain",
+   "brown"
+  ]
+ },
+ {
+  "id": "benders.dabblers",
+  "name": "Dabblers",
+  "sphere": "colorless",
+  "n": 2,
+  "text": "Counts as 2 members of every color.",
+  "oldPeople": [
+   "coolbrown",
+   "golden"
+  ]
+ },
+ {
+  "id": "benders.extrahand",
+  "name": "Extra Hand",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Once per game: +1 minion this round.",
+  "oldPeople": [
+   "freckled"
+  ]
+ }
+]

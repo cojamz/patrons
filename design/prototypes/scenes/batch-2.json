@@ -1,0 +1,225 @@
+[
+ {
+  "id": "echo.mirror",
+  "name": "Fan Club",
+  "sphere": "green",
+  "n": 1,
+  "text": "On Recruit: +1 green per Green space with a minion.",
+  "oldPeople": [
+   "brown"
+  ]
+ },
+ {
+  "id": "echo.muse",
+  "name": "Muse",
+  "sphere": "green",
+  "n": 1,
+  "text": "Whenever a rival copies an action, +1 green.",
+  "oldPeople": [
+   "verydeep"
+  ]
+ },
+ {
+  "id": "echo.roadie",
+  "name": "Roadie",
+  "sphere": "green",
+  "n": 1,
+  "text": "Round Start: +1 green per Green member you have.",
+  "oldPeople": [
+   "tan"
+  ]
+ },
+ {
+  "id": "echo.tuningfork",
+  "name": "Impressionist",
+  "sphere": "green",
+  "n": 1,
+  "text": "Whenever you copy an action, +1 of its color.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "echo.understudy",
+  "name": "Understudy",
+  "sphere": "green",
+  "n": 1,
+  "text": "On Recruit: copy the action taken the previous turn.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "echo.wallflower",
+  "name": "Wallflower",
+  "sphere": "green",
+  "n": 1,
+  "text": "When you copy an action, double the resources it gives you.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "thieves.accomplice",
+  "name": "Accomplice",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "On Recruit: steal 3 resources.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "thieves.crew",
+  "name": "Crew",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Worth 2 followers.",
+  "oldPeople": [
+   "tan",
+   "golden"
+  ]
+ },
+ {
+  "id": "thieves.cutpurse",
+  "name": "Cutpurse",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "On Recruit: steal 1 resource from the rival with the most resources. Round Start: steal 1 resource from the rival with the most resources.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "thieves.desperado",
+  "name": "Desperado",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "While you have the fewest followers (ties count), double what you steal from spaces, before other bonuses.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "thieves.doubleagent",
+  "name": "Double Agent",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "On Recruit: swap it for a rival’s member you choose.",
+  "oldPeople": [
+   "brown"
+  ]
+ },
+ {
+  "id": "thieves.extortionist",
+  "name": "Extortionist",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "On Recruit: steal 2 resources from the rival with the most resources. Round Start: steal 2 resources from the rival with the most resources.",
+  "oldPeople": [
+   "porcelain"
+  ]
+ },
+ {
+  "id": "thieves.fence",
+  "name": "Fence",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Whenever you steal, +1 magenta.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "thieves.fixer",
+  "name": "Fixer",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Once per game: spend magenta equal to a rival’s member’s cost to steal it.",
+  "oldPeople": [
+   "coolbrown"
+  ]
+ },
+ {
+  "id": "thieves.grifter",
+  "name": "Grifter",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "On Recruit: steal 1 resource per 2 members you have.",
+  "oldPeople": [
+   "porcelain"
+  ]
+ },
+ {
+  "id": "thieves.kingpin",
+  "name": "Kingpin",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Game end: +1 follower per magenta member you have.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "thieves.robinhood",
+  "name": "Robin Hood",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Whenever you steal from the player with the most followers, +1 follower.",
+  "oldPeople": [
+   "verydeep",
+   "deep"
+  ]
+ },
+ {
+  "id": "thieves.shoplifter",
+  "name": "Shoplifter",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Whenever you recruit, steal 1 resource.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "thieves.snitch",
+  "name": "Snitch",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Whenever a rival steals from you, they lose 1 follower.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "thieves.sticky",
+  "name": "Sticky Fingers",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Your steals take 1 more resource.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "thieves.watchdog",
+  "name": "Bodyguard",
+  "sphere": "magenta",
+  "n": 1,
+  "text": "Rivals can’t steal from you.",
+  "oldPeople": [
+   "deep",
+   "olive"
+  ]
+ },
+ {
+  "id": "purple.bouncer",
+  "name": "Bouncer",
+  "sphere": "purple",
+  "n": 1,
+  "text": "On Recruit: the next two rivals’ turns are skipped.",
+  "oldPeople": [
+   "golden"
+  ]
+ }
+]

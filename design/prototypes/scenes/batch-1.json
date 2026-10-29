@@ -1,0 +1,233 @@
+[
+ {
+  "id": "red.headhunter",
+  "name": "Headhunter",
+  "sphere": "red",
+  "n": 1,
+  "text": "Once per game: swap a rival’s member with a shop member of equal or greater cost.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "red.host",
+  "name": "Host",
+  "sphere": "red",
+  "n": 1,
+  "text": "On Recruit: +1 red per 2 members. Round Start: +1 red per 2 members.",
+  "oldPeople": [
+   "coolbrown"
+  ]
+ },
+ {
+  "id": "red.loyalists",
+  "name": "Loyalists",
+  "sphere": "red",
+  "n": 2,
+  "text": "Your other members can’t be swapped.",
+  "oldPeople": [
+   "brown",
+   "fair"
+  ]
+ },
+ {
+  "id": "red.mentor",
+  "name": "Mentor & Protégé",
+  "sphere": "red",
+  "n": 1,
+  "text": "On Recruit: recruit the cheapest member in the shop.",
+  "oldPeople": [
+   "tan",
+   "golden"
+  ]
+ },
+ {
+  "id": "red.mob",
+  "name": "Mob",
+  "sphere": "red",
+  "n": 5,
+  "text": "Game end: +1 follower per red member.",
+  "oldPeople": [
+   "freckled",
+   "deep",
+   "olive"
+  ]
+ },
+ {
+  "id": "red.movementpenalty",
+  "name": "Movement Penalty",
+  "sphere": "red",
+  "n": 1,
+  "text": "When you move a rival’s member out of their cult, they lose 1 follower.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "red.panel",
+  "name": "Panel",
+  "sphere": "red",
+  "n": 3,
+  "text": "On Recruit: Promote or Demote another member.",
+  "oldPeople": [
+   "verydeep",
+   "fair",
+   "tan"
+  ]
+ },
+ {
+  "id": "red.patriarch",
+  "name": "Patriarch",
+  "sphere": "red",
+  "n": 1,
+  "text": "Game end: +1 follower per 2 members.",
+  "oldPeople": [
+   "tan"
+  ]
+ },
+ {
+  "id": "red.proselytizer",
+  "name": "Proselytizer",
+  "sphere": "red",
+  "n": 1,
+  "text": "Whenever you recruit, +1 follower.",
+  "oldPeople": [
+   "deep",
+   "fair"
+  ]
+ },
+ {
+  "id": "red.recruitbonus",
+  "name": "Recruit Bonus",
+  "sphere": "red",
+  "n": 1,
+  "text": "Whenever one of your members’ \"On Recruit\" happens, +1 of its color.",
+  "oldPeople": [
+   "warmtan",
+   "olive"
+  ]
+ },
+ {
+  "id": "red.recruiter",
+  "name": "Recruiter",
+  "sphere": "red",
+  "n": 1,
+  "text": "Whenever you add a member to your cult, +1 red.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "red.twins",
+  "name": "Triplets",
+  "sphere": "red",
+  "n": 3,
+  "text": "Worth 3 followers.",
+  "oldPeople": [
+   "freckled",
+   "freckled"
+  ]
+ },
+ {
+  "id": "red.volunteer",
+  "name": "Volunteer",
+  "sphere": "red",
+  "n": 1,
+  "text": "Worth 1 follower.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "echo.agents",
+  "name": "Agents",
+  "sphere": "green",
+  "n": 2,
+  "text": "Your actions can’t be copied.",
+  "oldPeople": [
+   "coolbrown",
+   "palepink"
+  ]
+ },
+ {
+  "id": "echo.bait",
+  "name": "Bait",
+  "sphere": "green",
+  "n": 1,
+  "text": "Whenever anyone copies your action, they −1 follower. If it’s a rival, +1 follower.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "echo.chronicler",
+  "name": "Chronicler",
+  "sphere": "green",
+  "n": 1,
+  "text": "Game end: +1 follower per green member.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "echo.dejavu",
+  "name": "Tribute Band",
+  "sphere": "green",
+  "n": 1,
+  "text": "Once per game: do every action a rival you choose has a minion on this round.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "echo.doppel",
+  "name": "Doppelganger",
+  "sphere": "green",
+  "n": 1,
+  "text": "On Recruit: it becomes a copy of one of your members.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "echo.ensemble",
+  "name": "Ensemble",
+  "sphere": "green",
+  "n": 2,
+  "text": "Whenever you copy your own action, +1 follower.",
+  "oldPeople": [
+   "brown",
+   "porcelain"
+  ]
+ },
+ {
+  "id": "echo.evergreen",
+  "name": "Busker",
+  "sphere": "green",
+  "n": 1,
+  "text": "On Recruit: +2 green. Round Start: +2 green.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "echo.hourglass",
+  "name": "Stunt Double",
+  "sphere": "green",
+  "n": 1,
+  "text": "On Recruit: copy the action you just took.",
+  "oldPeople": [
+   "verydeep"
+  ]
+ },
+ {
+  "id": "echo.impostor",
+  "name": "Impostor",
+  "sphere": "green",
+  "n": 1,
+  "text": "On Recruit: it becomes a copy of a rival’s member.",
+  "oldPeople": [
+   "porcelain"
+  ]
+ }
+]

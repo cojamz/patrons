@@ -1,0 +1,225 @@
+[
+ {
+  "id": "benders.freelancer",
+  "name": "Alchemist",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "You may pay any member’s colored part in any colors.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "benders.frontrunner",
+  "name": "Front-runner",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "You go first every round.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "benders.hr",
+  "name": "HR",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Worth 3 followers. Game End: +3 followers per color you have 3 members of.",
+  "oldPeople": [
+   "coolbrown",
+   "freckled",
+   "golden"
+  ]
+ },
+ {
+  "id": "benders.insider",
+  "name": "Insider",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "You may also recruit from the top 3 of the pile.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "benders.launderer",
+  "name": "Launderers",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Worth 2 followers. On Recruit: rearrange your resources into any colors.",
+  "oldPeople": [
+   "tan",
+   "fair"
+  ]
+ },
+ {
+  "id": "benders.saboteur",
+  "name": "Saboteur",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Whenever this joins your cult, −3 followers.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "benders.scout",
+  "name": "Scout",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Once per round: send any shop members to the bottom of the pile, then refill.",
+  "oldPeople": [
+   "tan"
+  ]
+ },
+ {
+  "id": "benders.secondwind",
+  "name": "Coach",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "On Recruit: use one of your used Once per game members again.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "benders.squatter",
+  "name": "Party Crasher",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Once per game: your next minion can be placed on a space a rival already took.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "benders.tiebreaker",
+  "name": "Tiebreaker",
+  "sphere": "colorless",
+  "n": 1,
+  "text": "Ties you’re in go to you alone.",
+  "oldPeople": [
+   "verydeep"
+  ]
+ },
+ {
+  "id": "gold.banker",
+  "name": "Banker",
+  "sphere": "gold",
+  "n": 1,
+  "text": "On Recruit: +3 gold. Round Start: +3 gold.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "gold.merchant",
+  "name": "Merchant",
+  "sphere": "gold",
+  "n": 1,
+  "text": "Whenever anyone recruits a gold member, +1 gold.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "gold.prospector",
+  "name": "Prospector",
+  "sphere": "gold",
+  "n": 1,
+  "text": "When an action gains you gold, +1 gold.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "gold.seed",
+  "name": "Treasurer",
+  "sphere": "gold",
+  "n": 1,
+  "text": "On Recruit: +1 gold per member you have, this one included.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "gold.speculator",
+  "name": "Speculator",
+  "sphere": "gold",
+  "n": 1,
+  "text": "Once per game: double your gold.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "gold.taxman",
+  "name": "Tax Collector",
+  "sphere": "gold",
+  "n": 1,
+  "text": "Whenever a rival buys followers, +1 gold.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "gold.thrift",
+  "name": "Penny Pincher",
+  "sphere": "gold",
+  "n": 1,
+  "text": "Gold you spend on members counts double.",
+  "oldPeople": [
+   "tan"
+  ]
+ },
+ {
+  "id": "gold.tinker",
+  "name": "Alchemist",
+  "sphere": "gold",
+  "n": 1,
+  "text": "Whenever an action gains you another color, +1 gold.",
+  "oldPeople": [
+   "verydeep"
+  ]
+ },
+ {
+  "id": "gold.tycoon",
+  "name": "Tycoon",
+  "sphere": "gold",
+  "n": 1,
+  "text": "Game end: +1 follower per 2 gold.",
+  "oldPeople": [
+   "coolbrown"
+  ]
+ },
+ {
+  "id": "gold.underdog",
+  "name": "Underdog",
+  "sphere": "gold",
+  "n": 1,
+  "text": "While a rival has more gold than you, double your gold gains.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "silver.benefactor",
+  "name": "Benefactor",
+  "sphere": "silver",
+  "n": 1,
+  "text": "On Recruit: +3 silver, and +1 silver to a rival you choose. Round Start: +3 silver, and +1 silver to a rival you choose.",
+  "oldPeople": [
+   "coolbrown"
+  ]
+ },
+ {
+  "id": "silver.caterer",
+  "name": "Caterer",
+  "sphere": "silver",
+  "n": 1,
+  "text": "Whenever you give a rival something, +1 silver.",
+  "oldPeople": [
+   "coolbrown"
+  ]
+ }
+]

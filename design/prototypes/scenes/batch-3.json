@@ -1,0 +1,226 @@
+[
+ {
+  "id": "purple.clockmaker",
+  "name": "Clockmaker",
+  "sphere": "purple",
+  "n": 1,
+  "text": "On Recruit: +1 purple per 2 purple you have. Round Start: +1 purple per 2 purple you have.",
+  "oldPeople": [
+   "porcelain"
+  ]
+ },
+ {
+  "id": "purple.closer",
+  "name": "Closer",
+  "sphere": "purple",
+  "n": 1,
+  "text": "When you place the last minion of the round: +4 purple.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "purple.courier",
+  "name": "Courier",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Whenever you take an extra turn, +1 of each other color.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "purple.crew",
+  "name": "Shift Crew",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Worth 2 followers.",
+  "oldPeople": [
+   "coolbrown",
+   "fair"
+  ]
+ },
+ {
+  "id": "purple.earlybird",
+  "name": "Early Bird",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Your turns can’t be skipped.",
+  "oldPeople": [
+   "verydeep"
+  ]
+ },
+ {
+  "id": "purple.extrashift",
+  "name": "Extra Shift",
+  "sphere": "purple",
+  "n": 1,
+  "text": "On Recruit: +1 minion this round.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "purple.gossip",
+  "name": "Gossip",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Whenever a player’s turn is skipped, +1 follower.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "purple.lateriser",
+  "name": "Late Riser",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Round Start: if you have the fewest followers (ties count), take an extra turn before anyone places.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "purple.nightowl",
+  "name": "Night Owl",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Once per round: after you place your last minion, take an extra turn.",
+  "oldPeople": [
+   "brown",
+   "palepink"
+  ]
+ },
+ {
+  "id": "purple.pocketwatch",
+  "name": "Pocket Watch",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Whenever a player’s turn is skipped, +1 purple.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "purple.secondwind",
+  "name": "Go-Getter",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Once per game: take an extra turn after this one.",
+  "oldPeople": [
+   "tan"
+  ]
+ },
+ {
+  "id": "purple.streak",
+  "name": "Hot Streak",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Once per game: +3 followers per turn in a row you’ve taken just before this one.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "purple.timekeepers",
+  "name": "Timekeepers",
+  "sphere": "purple",
+  "n": 1,
+  "text": "Game end: +1 follower per purple member you have.",
+  "oldPeople": [
+   "brown"
+  ]
+ },
+ {
+  "id": "market.bargainbin",
+  "name": "Bargain Bin",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Whenever shop members go to the bottom of the pile, +1 blue.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "market.connoisseur",
+  "name": "Connoisseur",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Whenever you recruit a blue member, +1 blue.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "market.critic",
+  "name": "Critic",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Whenever a rival recruits a blue member, +1 follower.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "market.doorman",
+  "name": "Doorman",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Whenever a rival recruits more than once in a turn (swaps count), +1 blue.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "market.patroness",
+  "name": "Patroness",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Whenever a shop member goes to the bottom of the pile, +1 follower.",
+  "oldPeople": [
+   "verydeep"
+  ]
+ },
+ {
+  "id": "market.plusone",
+  "name": "Plus-One",
+  "sphere": "blue",
+  "n": 1,
+  "text": "On Recruit: recruit again this turn.",
+  "oldPeople": [
+   "brown",
+   "fair"
+  ]
+ },
+ {
+  "id": "market.regular",
+  "name": "Regular",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Whenever you buy followers, +1 blue.",
+  "oldPeople": [
+   "tan"
+  ]
+ },
+ {
+  "id": "market.restocker",
+  "name": "Restocker",
+  "sphere": "blue",
+  "n": 1,
+  "text": "Once per game: send the whole shop to the bottom of the pile, then refill.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "market.shopaholic",
+  "name": "Shopaholic",
+  "sphere": "blue",
+  "n": 1,
+  "text": "You can always recruit twice.",
+  "oldPeople": [
+   "warmtan",
+   "freckled"
+  ]
+ }
+]

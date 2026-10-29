@@ -1,12 +1,13 @@
-"""Style F, diorama closer: 64x64, camera pulled in from B. Chunky RPG people about 36-40px tall
-fill half the frame; the room or place still wraps them. Flat 2-3 tones, ink outline on figures and props."""
+"""Style F, diorama closer: 64x64. Chunky RPG people ~38px tall fill half the frame; the room or place
+still wraps them. Rules in STYLE.md: one outline per figure, hand-shaped parts, two tones per material,
+quiet two-value backgrounds."""
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.dirname(os.path.dirname(HERE)))
 from lib import C
-from kit import (N, INK, PALE, LIGHT, OLIVE, MED, DEEP, VDEEP, obj, head, body,
-                 pitchfork, torch, cash_brick, bill)
+from kit import (N, INK, PALE, LIGHT, OLIVE, MED, DEEP, VDEEP, layer, over, outline_once, under, edged,
+                 thick, head, hair, torso, legs, hand, pole, fork_head, bill)
 
 STYLE = {
     'title': 'F  Diorama, closer  (64x64: people ~38px, the room still around them)',
@@ -15,315 +16,294 @@ STYLE = {
 }
 
 
+def bg(c, fn, dark):
+    l = layer(); fn(l); edged(l, dark) if dark else None; c.paste(l)
+
+
 # ---------------------------------------------------------------- Kingpin
 def kingpin():
     c = C(N)
     pal = {'k': INK, 'w': '#f4ede1',
-           'p': '#5e3a55', 'P': '#553350',                 # plum wallpaper
-           'o': '#8a5434', 'O': '#6a3d25', 'd': '#a86c44',  # mahogany
-           'g': '#8d9296', 'G': '#62676c',                 # steel safe
-           'y': '#f2d27a', 'b': '#c9a24a',                 # glow / brass
-           'l': '#3f8a5c', 'L': '#2c6a45',                 # lamp shade
-           'n': '#8fb877', 'N': '#5d8a50',                 # cash
-           '1': '#c2457f', '2': '#8f2f5d',  # magenta suit
+           'p': '#5a3a52', 'P': '#4e3248',                 # wall, wainscot (close values)
+           'o': '#8a5434', 'O': '#6a3d25', 'd': '#a2683f',  # desk
+           'g': '#8d9296', 'G': '#6b7075',                 # safe
+           'y': '#f2d27a', 'b': '#c9a24a',
+           'l': '#3f8a5c', 'L': '#2c6a45',
+           'n': '#8fb877', 'N': '#5d8a50',
+           '1': '#c2457f', '2': '#8f2f5d',
            'a': OLIVE[0], 'A': OLIVE[1],
-           'h': '#2f2733', 'H': '#463a4c', 'q': '#2c3558', 'Q': '#41507c', 'e': '#ef7d36'}
-
-    c.rect(0, 0, 63, 40, 'p')
-    for x in range(2, 64, 6):
-        c.vl(x, 0, 33, 'P')
-    c.rect(0, 34, 63, 40, 'O'); c.hl(0, 63, 34, 'o')
-    c.rect(0, 41, 63, 63, 'O')
+           'h': '#2f2733', 'H': '#4a3d50', 'q': '#33405f', 'Q': '#46557d'}
+    c.rect(0, 0, 63, 63, 'p')
+    c.rect(0, 34, 63, 63, 'P')
 
     def window(l):
-        l.rect(1, 4, 18, 24, 'o'); l.rect(3, 6, 16, 22, 'q')
-        l.ell(11, 8, 15, 12, 'y')
-        for x0, x1, top in ((3, 5, 16), (6, 9, 13), (10, 12, 18), (13, 16, 15)):
-            l.rect(x0, top, x1, 22, 'Q')
-        l.pts('y', [(4, 18), (7, 15), (8, 19), (11, 20), (14, 17)])
-    c.paste(obj(window))
+        l.rect(2, 4, 17, 22, 'P'); l.rect(4, 6, 15, 20, 'q')
+        l.ell(11, 8, 14, 11, 'y')
+        l.rect(5, 15, 7, 20, 'Q'); l.rect(9, 13, 11, 20, 'Q'); l.rect(13, 16, 15, 20, 'Q')
+        l.pts('y', [(6, 17), (10, 15)])
+    bg(c, window, None)
 
     def safe(l):
-        l.rect(45, 13, 62, 15, 'g')
-        l.rect(45, 16, 62, 44, 'G'); l.rect(46, 17, 61, 43, 'g')
-        l.rect(48, 19, 59, 41, 'G'); l.rect(49, 20, 58, 40, 'g')
-        l.ell(50, 23, 56, 29, 'G'); l.ell(51, 24, 55, 28, 'b'); l.vl(53, 24, 25, 'k')
-        l.rect(56, 32, 57, 37, 'G')
-    c.paste(obj(safe))
-
-    def boss(l):
-        x0, y0, hw, hh = 24, 11, 16, 15
-        tw = 22
-        tx0 = x0 + hw // 2 - tw // 2
-        body(l, tx0, y0 + hh - 1, tw, 18, 0, 'a', '1', '2', arms=('down', 'down'), aw=4)
-        ty = y0 + hh - 1
-        cx = x0 + hw // 2
-        l.poly([(cx - 4, ty), (cx + 4, ty), (cx, ty + 8)], 'w')            # shirt
-        l.rect(cx - 1, ty + 1, cx, ty + 7, 'h'); l.hl(cx - 1, cx, ty + 1, 'H')  # tie
-        l.line(cx - 5, ty, cx - 1, ty + 9, '2'); l.line(cx + 4, ty, cx, ty + 9, '2')  # lapels
-        l.hl(cx + 5, cx + 7, ty + 4, 'w')                                  # pocket square
-        head(l, x0, y0, hw, hh, 'a', 'A', eyes='glint', mouth='smirk', brows='stern', ears=True)
-        # fedora: crown, magenta band, wide brim
-        l.rect(x0 + 1, y0 - 6, x0 + hw - 2, y0 + 1, 'h'); l.hl(x0 + 2, x0 + hw - 3, y0 - 7, 'h')
-        l.rect(x0 + 5, y0 - 7, x0 + hw - 6, y0 - 6, 'H')
-        l.rect(x0 + 1, y0 - 1, x0 + hw - 2, y0 + 1, '1')
-        l.hl(x0 - 3, x0 + hw + 2, y0 + 2, 'h'); l.hl(x0 - 2, x0 + hw + 1, y0 + 3, 'h')
-        l.hl(x0, x0 + hw - 1, y0 + 4, 'A')
-        # cigar from the mouth corner
-        my = y0 + hh // 2 + 3
-        l.rect(cx + 4, my, cx + 9, my + 1, 'O'); l.rect(cx + 10, my, cx + 10, my + 1, 'e')
-    c.paste(obj(boss))
+        l.rect(48, 14, 62, 40, 'g')
+        l.rect(50, 17, 60, 38, 'G'); l.rect(51, 18, 59, 37, 'g')
+        l.ell(52, 21, 57, 26, 'b'); l.vl(54, 21, 22, 'G')
+        l.rect(57, 29, 58, 33, 'G')
+    bg(c, safe, 'G')
 
     def desk(l):
-        l.poly([(4, 40), (59, 40), (63, 47), (0, 47)], 'd')
-        l.hl(0, 63, 47, 'o')
-        l.rect(1, 48, 62, 63, 'o')
-        l.rect(4, 51, 25, 58, 'O'); l.rect(5, 52, 24, 57, 'o')
-        l.rect(38, 51, 59, 58, 'O'); l.rect(39, 52, 58, 57, 'o')
-        l.hl(13, 16, 54, 'b'); l.hl(47, 50, 54, 'b')
-    c.paste(obj(desk))
-
-    def hands(l):
-        l.rect(18, 40, 22, 43, '1'); l.rect(19, 43, 22, 45, 'a'); l.hl(19, 22, 45, 'A')
-        l.rect(41, 40, 45, 43, '2'); l.rect(41, 43, 44, 45, 'a'); l.hl(41, 44, 45, 'A')
-    c.paste(obj(hands))
+        l.rect(0, 41, 63, 46, 'd')
+        l.rect(0, 47, 63, 63, 'o')
+        l.rect(4, 50, 24, 57, 'O'); l.rect(5, 51, 23, 56, 'o')
+        l.rect(39, 50, 59, 57, 'O'); l.rect(40, 51, 58, 56, 'o')
+        l.hl(12, 16, 53, 'b'); l.hl(47, 51, 53, 'b')
+        l.hl(0, 63, 47, 'O')
+    bg(c, desk, None)
 
     def lamp(l):
-        l.rect(4, 42, 13, 43, 'b'); l.rect(8, 35, 9, 41, 'b')
-        l.poly([(1, 35), (4, 29), (13, 29), (16, 35)], 'l')
-        l.poly([(9, 29), (13, 29), (16, 35), (10, 35)], 'L', only='l')
-        l.hl(2, 15, 35, 'y')
-    c.paste(obj(lamp))
+        l.rect(5, 39, 12, 41, 'b'); l.rect(8, 33, 9, 38, 'b')
+        l.poly([(2, 33), (5, 27), (12, 27), (15, 33)], 'l')
+        l.hl(3, 14, 33, 'y')
+    bg(c, lamp, None)
+    c.poly([(9, 27), (12, 27), (15, 33), (11, 33)], 'L', only='l')
+
+    # ---- the boss: one figure, one outline
+    f = layer()
+    cx = 32
+    t = layer()
+    torso(t, cx, 29, 12, 12, 12, '1', '2', slope=2, skin='a', skin_dark='A')
+    f.paste(t)
+    shirt = layer()
+    shirt.poly([(cx - 4.5, 29), (cx + 4.5, 29), (cx, 38)], 'w')
+    shirt.rect(cx - 1, 30, cx, 38, 'h'); shirt.rect(cx - 1, 30, cx, 31, 'H')
+    f.paste(shirt)
+    for (x, y) in ((27, 29), (27, 30), (28, 31), (28, 32), (29, 33), (29, 34), (30, 35), (30, 36)):
+        f.px(x, y, '2'); f.px(63 - x, y, '2')                       # lapels, clean 1:2 runs
+    f.hl(37, 39, 33, 'w'); f.px(38, 32, 'w')                         # pocket square
+    arms = layer()
+    thick(arms, [(21, 32), (19, 37), (21, 43)], 5, '1')
+    thick(arms, [(43, 32), (45, 37), (43, 43)], 5, '1')
+    arms.poly([(44, 34), (47, 36), (46, 45), (44, 45)], '2', only='1')     # far arm in shade
+    arms.hl(18, 23, 44, 'w'); arms.hl(41, 46, 44, 'w')               # shirt cuffs
+    over(f, arms, {'1': '2'})
+    hand(f, 18, 45, 'flat', 'a', 'A')
+    hand(f, 41, 45, 'flat', 'a', 'A', flip=True)
+    hd = layer()
+    head(hd, 24, 12, 16, 'a', 'A', mouth='smirk', brows='stern')
+    over(f, hd, {'a': 'A', 'w': 'w'})
+    # fedora: tapered crown with a dent, magenta band, drooping brim
+    hat = layer()
+    hat.hl(27, 30, 4, 'h'); hat.hl(33, 36, 4, 'h'); hat.hl(27, 36, 5, 'h')
+    hat.rect(26, 6, 37, 9, 'h'); hat.rect(25, 10, 38, 12, 'h')
+    hat.rect(25, 10, 38, 12, '1'); hat.rect(36, 10, 38, 12, '2')
+    hat.rect(27, 5, 29, 8, 'H')
+    hat.hl(21, 42, 13, 'h'); hat.hl(20, 43, 14, 'h')
+    f.paste(hat)
+    f.recolor('a', 'A', (25, 15, 38, 15)); f.recolor('a', 'A', (25, 16, 27, 16)); f.recolor('a', 'A', (36, 16, 38, 16))
+    outline_once(f)
+    # cigar: rooted at the mouth corner, one row, angled down, ash tip
+    f.pts('O', [(35, 24), (36, 24), (37, 24), (38, 25), (39, 25), (40, 25)])
+    f.px(41, 25, 'g')
+    c.paste(f)
 
     def cash(l):
-        cash_brick(l, 47, 37, 8, 7)
-        cash_brick(l, 55, 40, 7, 4)
-    c.paste(obj(cash))
+        l.rect(47, 38, 54, 45, 'n'); l.rect(50, 38, 51, 45, 'w')
+        l.rect(55, 41, 61, 45, 'n'); l.rect(57, 41, 58, 45, 'w')
+    bg(c, cash, 'N')
     return c.rows(), pal
 
 
 # ---------------------------------------------------------------- Mob
 def mob():
     c = C(N)
-    pal = {'k': INK, 'w': '#f4ede1',
-           's': '#1f2742', 'h': '#3d3245', 'H': '#2b2232',
-           'y': '#f6d36a', 'e': '#ef7d36',
-           't': '#a8703f', 'm': '#d3d7db', 'n': '#2a1d18', 'c': '#5c5560',
-           '1': '#d9534a', '2': '#a83a35', 'g': '#c9c2b6'}
+    pal = {'k': INK, 's': '#2a3252', 'h': '#20263f', 'y': '#f3cf6a', 'e': '#ef7d36', 'r': '#7a2a2a',
+           't': '#a8703f', 'T': '#6e4528', 'm': '#d3d7db', '1': '#d9534a', '2': '#a83a35',
+           'H': '#3a2a22', 'f': '#614434', 'n': '#3b3446'}
     pal['a'], pal['A'] = PALE; pal['b'], pal['B'] = LIGHT; pal['d'], pal['D'] = OLIVE
     pal['u'], pal['U'] = MED; pal['v'], pal['V'] = VDEEP
+    DK = {'1': '2', '2': 'n', 'a': 'A', 'b': 'B', 'd': 'D', 'u': 'U', 'v': 'V', 'n': 'n', 'm': 'm'}
 
     c.rect(0, 0, 63, 63, 's')
-    c.ell(51, 2, 58, 9, 'w'); c.ell(53, 1, 60, 8, 's', only='w')
-    c.pts('w', [(4, 3), (24, 2), (44, 6), (33, 8)])
-    c.poly([(-1, 22), (9, 12), (19, 22)], 'H'); c.rect(0, 22, 17, 63, 'h')
-    c.poly([(44, 24), (54, 14), (65, 24)], 'H'); c.rect(46, 24, 63, 63, 'h')
-    c.poly([(17, 27), (26, 19), (35, 27)], 'H'); c.rect(19, 27, 33, 63, 'h')
-    for (x, y) in ((7, 16), (24, 23), (52, 18)):
-        c.rect(x, y, x + 3, y + 3, 'y'); c.hl(x, x + 3, y + 2, 'e')
-    c.rect(0, 52, 63, 63, 'c')
+    c.poly([(-1, 22), (8, 13), (17, 22)], 'h'); c.rect(0, 22, 15, 63, 'h')
+    c.poly([(46, 20), (55, 11), (65, 20)], 'h'); c.rect(48, 20, 63, 63, 'h')
+    c.rect(0, 56, 63, 63, 'h')
+    c.rect(4, 27, 6, 29, 'y'); c.rect(52, 24, 54, 26, 'y')
+    c.ell(25, 3, 29, 7, 'y'); c.ell(26, 2, 30, 6, 's', only='y')
 
-    def back_l(l):
-        x0, y0, hw, hh = 14, 13, 12, 12
-        hd = body(l, x0 + 1, y0 + hh - 1, 10, 12, 0, 'a', '2', 'n', arms=('up', 'down'), aw=3, hx0=x0, hx1=x0 + hw - 1)
-        head(l, x0, y0, hw, hh, 'a', 'A', hair='y', hs='side', mouth='shout', brows='angry')
-    c.paste(obj(back_l))
+    def person(x0, y0, skin, shade, hs, hk, hd, mouth, brows, shirt, cx, sw, ww, th, arms, hands,
+               lh=6, glint='m', props=None, front=None, stance=0):
+        f = layer()
+        legs(f, cx, y0 + 15 + th, 2, 4, lh, 'n', 'n', 'T', stance=stance)
+        torso(f, cx, y0 + 15, sw, ww, th, shirt, DK[shirt], skin=skin, skin_dark=shade)
+        if front:
+            front(f)
+        for pts, w in arms:
+            a = layer(); thick(a, pts, w, shirt); over(f, a, DK)
+        for (x, y, kind, flip) in hands:
+            hl = layer(); hand(hl, x, y, kind, skin, shade, flip); over(f, hl, DK)
+        hd_ = layer(); head(hd_, x0, y0, 14, skin, shade, mouth=mouth, brows=brows, glint=glint)
+        over(f, hd_, DK)
+        hr = layer(); hair(hr, x0, y0, 14, hs, hk, hd); f.paste(hr)
+        outline_once(f)
+        if props:
+            p = layer(); props(p); under(f, p)
+        c.paste(f)
 
-    def back_r(l):
-        x0, y0, hw, hh = 39, 13, 12, 12
-        body(l, x0 + 1, y0 + hh - 1, 10, 12, 0, 'u', '1', '2', arms=('down', 'up'), aw=3, hx0=x0, hx1=x0 + hw - 1)
-        head(l, x0, y0, hw, hh, 'u', 'U', hair='n', hs='puff', mouth='shout', brows='angry')
-    c.paste(obj(back_r))
+    # back row
+    person(13, 15, 'a', 'A', 'side', 'y', 't', 'o', 'angry', '2', 20, 6, 6, 14,
+           arms=[([(15, 32), (9, 30), (9, 21)], 3)], hands=[(7, 17, 'fist', False)], lh=0)
+    person(44, 14, 'u', 'U', 'afro', 'f', 'H', 'frown', 'angry', '1', 51, 7, 6, 14, arms=[], hands=[], lh=0)
 
-    def front(l, x0, skin, shade, hair, hs, top, top2, arms, mouth, brows, lit=None, hw=13):
-        hh = 13
-        tx0 = x0 + 1
-        hands = body(l, tx0, 26 + hh - 1, hw - 2, 11, 7, skin, top, top2, legs='n', shoes='k',
-                     arms=arms, aw=3, hx0=x0, hx1=x0 + hw - 1)
-        head(l, x0, 26, hw, hh, skin, shade, hair=hair, hs=hs, mouth=mouth, brows=brows, lit=lit)
-        return hands
+    def fork_l(p):
+        pole(p, 4, 14, 58, 't', 'T'); fork_head(p, 4, 8, 'm')
+    person(8, 27, 'd', 'D', 'long', 'H', 'n', 'frown', 'angry', '1', 15, 6, 5, 12,
+           arms=[([(10, 44), (5, 41), (5, 37)], 4)], hands=[(3, 34, 'grip', False)], props=fork_l)
 
-    def front_l(l):
-        h = front(l, 7, 'd', 'D', 'n', 'long', 'g', 'c', ('up', 'down'), 'shout', 'angry')
-        x, y = h['L']
-        pitchfork(l, x + 1, y - 17, y + 16, pole=1)
-        l.rect(x, y, x + 2, y + 2, 'd')
-    c.paste(obj(front_l))
+    def fork_r(p):
+        pole(p, 58, 8, 61, 't', 'T'); fork_head(p, 58, 2, 'm')
+    person(43, 28, 'v', 'V', 'crop', 'H', 'n', 'flat', 'soft', '2', 50, 8, 7, 12,
+           arms=[([(57, 45), (60, 49), (59, 51)], 4)], hands=[(57, 51, 'grip', False)], props=fork_r, stance=1)
 
-    def front_r(l):
-        h = front(l, 45, 'v', 'V', 'n', 'crop', '2', 'n', ('down', 'up'), 'flat', None, lit='U')
-        x, y = h['R']
-        pitchfork(l, x + 1, y - 17, y + 16, pole=1)
-        l.rect(x, y, x + 2, y + 2, 'v')
-    c.paste(obj(front_r))
+    def torch_r(p):
+        pole(p, 41, 22, 40, 't', 'T')
 
-    def lead(l):
-        x0, y0, hw, hh = 24, 25, 14, 14
-        h = body(l, x0 + 1, y0 + hh - 1, hw - 2, 12, 8, 'b', '1', '2', legs='n', arms=('mid', None), aw=3,
-                 hx0=x0, hx1=x0 + hw - 1)
-        ty = y0 + hh - 1
-        # right arm up and in, holding the torch above his head's corner
-        l.rect(x0 + hw - 1, ty + 1, x0 + hw + 1, ty + 4, '2')
-        l.rect(x0 + hw, ty - 6, x0 + hw + 2, ty + 1, '2')
-        torch(l, x0 + hw + 1, 4, ty - 7, pole=1, size=1)
-        l.rect(x0 + hw, ty - 10, x0 + hw + 2, ty - 7, 'b')
-        head(l, x0, y0, hw, hh, 'b', 'B', hair='t', hs='short', mouth='shout', brows='angry')
-        x, y = h['L']
-        l.rect(x, y, x + 2, y + 2, 'b')
-    c.paste(obj(lead))
+    def torch_head(f):
+        f.rect(40, 19, 43, 22, 'm'); f.hl(40, 43, 21, 'T')            # rag wrap, its own tone
+        f.poly([(37.5, 19), (38, 14), (40, 10), (41.5, 7), (43, 11), (45, 13), (46, 19)], 'e')
+        f.ell(39, 13, 44, 19, 'y')
+    person(25, 26, 'b', 'B', 'short', 't', 'T', 'open', 'angry', '1', 32, 7, 6, 13,
+           arms=[([(25, 43), (23, 48), (24, 52)], 3), ([(39, 43), (43, 41), (42, 36)], 3)],
+           hands=[(22, 52, 'fist', False), (40, 33, 'grip', False)], props=torch_r, front=torch_head)
     return c.rows(), pal
 
 
 # ---------------------------------------------------------------- Tiebreaker
 def tiebreaker():
     c = C(N)
-    pal = {'k': INK, 'w': '#f4ede1', 'W': '#cfd6d8',
-           'b': '#9cc8e0', 'B': '#c4e0ea',
-           'g': '#6fa553', 'G': '#5c9145',
-           'r': '#c9534a', 'R': '#a63d36',
-           'x': '#26262b', 'X': '#4a4a52', 'v': VDEEP[0], 'V': VDEEP[1], 'L': '#7a4c34',
-           'y': '#f0c548', 'Y': '#c08f22', 'f': '#f0d24a', 'F': '#d9a52e'}
-    c.rect(0, 0, 63, 63, 'b'); c.rect(0, 0, 63, 3, 'B')
-    c.rect(0, 12, 63, 17, 'r'); c.rect(0, 16, 63, 17, 'R')
-    for x in (3, 21, 39, 57):
-        c.rect(x, 13, x + 9, 14, 'w')
-    c.rect(0, 18, 63, 63, 'g')
-    for y0, hg in ((23, 3), (32, 4), (43, 5), (56, 7)):
-        c.rect(0, y0, 63, y0 + hg, 'G')
-    c.hl(0, 63, 20, 'w')
-    c.ring(-4, 52, 68, 80, 'w')
+    pal = {'k': INK, 'w': '#f4ede1', 'W': '#c9d4d6',
+           'b': '#b2d4e2', 'g': '#78ac5b', 'G': '#6da151',
+           'x': '#26262b', 'X': '#5a5a63', 'v': VDEEP[0], 'V': VDEEP[1], 'H': '#160f0c',
+           'y': '#f0c548', 'Y': '#c08f22', 'F': '#efcf48', 'z': '#433733'}
+    c.rect(0, 0, 63, 63, 'b')
+    c.rect(0, 24, 63, 63, 'g')
+    for y0 in (30, 44, 58):
+        c.rect(0, y0, 63, y0 + 6, 'G')
 
-    net = C(N)
-    for y in range(5, 20):
-        for x in range(2, 23):
-            if (x + y) % 3 == 0 or (x - y) % 3 == 0:
-                net.px(x, y, 'W')
-    c.paste(net)
-    c.paste(obj(lambda l: (l.rect(0, 3, 24, 4, 'w'), l.rect(0, 3, 1, 20, 'w'), l.rect(23, 3, 24, 20, 'w'))))
+    def goal(l):
+        for x in range(7, 21, 4):
+            l.vl(x, 8, 24, 'W')
+        l.hl(3, 21, 16, 'W')
+        l.rect(2, 6, 23, 7, 'w'); l.rect(2, 6, 3, 25, 'w'); l.rect(22, 6, 23, 25, 'w')
+        l.vl(3, 8, 25, 'W'); l.vl(23, 8, 25, 'W'); l.hl(4, 23, 7, 'W')
+    bg(c, goal, None)
+    c.vl(57, 8, 27, 'w')
+    c.poly([(58, 8), (58, 14), (63, 11)], 'F')
 
-    def flag(l):
-        l.vl(58, 6, 24, 'w')
-        l.poly([(59, 6), (59, 13), (65, 9.5)], 'f')
-        l.poly([(59, 10), (59, 13), (65, 9.5)], 'F', only='f')
-    c.paste(obj(flag))
+    f = layer()
+    cx = 26
+    DK = {'w': 'W', 'x': 'x', 'v': 'V'}
+    # lower body: shorts, knees, socks, shoes, each its own value
+    for lx in (20, 28):
+        f.rect(lx, 48, lx + 5, 51, 'x')
+        f.rect(lx + 1, 52, lx + 4, 53, 'v'); f.px(lx + 4, 53, 'V')
+        f.rect(lx + 1, 54, lx + 4, 56, 'X')
+        f.rect(lx + (0 if lx == 20 else 1), 57, lx + (4 if lx == 20 else 5), 58, 'z')
+    f.rect(21, 48, 32, 49, 'x')
+    t = layer()
+    torso(t, cx, 35, 8, 7, 13, 'w', 'W', skin='v', skin_dark='V')
+    for x in range(18, 36):
+        if ((x - 18) // 2) % 2 == 0:
+            t.recolor('wW', 'x', (x, 35, x, 48))
+    t.poly([(cx - 3.5, 35), (cx + 3.5, 35), (cx, 39)], 'x')
+    f.paste(t)
+    a = layer()
+    thick(a, [(34, 38), (37, 38)], 4, 'w'); a.recolor('w', 'x', (36, 36, 37, 40))
+    thick(a, [(38, 38), (40, 37), (40, 31)], 3, 'v'); a.vl(41, 31, 38, 'V')
+    over(f, a, DK)
+    a2 = layer()
+    thick(a2, [(18, 38), (16, 41)], 4, 'w'); a2.recolor('w', 'x', (15, 36, 16, 42))
+    thick(a2, [(16, 42), (16, 46)], 3, 'v')
+    over(f, a2, DK)
+    hl = layer(); hand(hl, 38, 25, 'thumb', 'v', 'V'); over(f, hl, DK)
+    hl = layer(); hand(hl, 14, 46, 'fist', 'v', 'V'); over(f, hl, DK)
+    hd = layer(); head(hd, 18, 18, 16, 'v', 'V', mouth='grin', brows='soft', brow='H'); over(f, hd, DK)
+    hr = layer(); hair(hr, 18, 18, 16, 'crop', 'H', 'x'); f.paste(hr)
+    outline_once(f)
+    c.paste(f)
 
-    def ref(l):
-        x0, y0, hw, hh = 19, 21, 15, 15
-        tw, th = 13, 11
-        tx0 = x0 + 1
-        ty = y0 + hh - 1
-        ly = ty + th
-        # shorts, knees, socks, boots: each its own value
-        l.rect(tx0, ly, tx0 + tw - 1, ly + 3, 'x'); l.vl(tx0 + tw // 2, ly + 2, ly + 3, 'k')
-        for lx in (tx0 + 1, tx0 + tw - 5):
-            l.rect(lx, ly + 4, lx + 3, ly + 5, 'v')
-            l.rect(lx, ly + 6, lx + 3, ly + 8, 'X')
-            l.hl(lx, lx + 3, ly + 6, 'W')
-            l.rect(lx - (1 if lx == tx0 + 1 else 0), ly + 9, lx + 3 + (0 if lx == tx0 + 1 else 1), ly + 10, 'x')
-        body(l, tx0, ty, tw, th, 0, 'v', 'w', 'W', arms=('down', None), aw=3)
-        for x in range(tx0 + 1, tx0 + tw, 2):
-            l.recolor('wW', 'x', (x, ty, x, ly - 1))
-        l.recolor('wW', 'x', (tx0 - 2, ty + 2, tx0 - 1, ty + 2)); l.recolor('wW', 'x', (tx0 - 2, ty + 5, tx0 - 1, ty + 5))
-        l.rect(tx0 + 4, ty, tx0 + 8, ty, 'x')
-        # flicking arm: sleeve out, forearm up, fist with thumb up
-        ex = tx0 + tw
-        l.rect(ex, ty + 1, ex + 3, ty + 4, 'w'); l.vl(ex + 1, ty + 1, ty + 4, 'x'); l.vl(ex + 3, ty + 1, ty + 4, 'x')
-        l.rect(ex + 4, ty - 6, ex + 6, ty + 4, 'v'); l.vl(ex + 6, ty - 6, ty + 4, 'V')
-        l.rect(ex + 3, ty - 10, ex + 7, ty - 7, 'v'); l.vl(ex + 7, ty - 10, ty - 7, 'V')
-        l.rect(ex + 6, ty - 12, ex + 7, ty - 11, 'v')                 # thumb
-        head(l, x0, y0, hw, hh, 'v', 'V', hair='x', hs='crop', mouth='grin', lit='L')
-        # warm lit cheekbones frame the smile
-    c.paste(obj(ref))
-
-    def coin(l):
-        l.ell(37, 14, 43, 20, 'Y'); l.ell(37, 14, 42, 19, 'y', only='Y')
-        l.vl(40, 16, 18, 'Y')
-    c.paste(obj(coin))
+    coin = layer()
+    coin.stamp(37, 16, ['.yyyy.', 'ywyyyY', 'yyyyyY', 'yyyyyY', 'yyyyYY', '.YYYY.'])
+    outline_once(coin)
+    c.paste(coin)
     return c.rows(), pal
 
 
 # ---------------------------------------------------------------- Launderers
 def launderers():
     c = C(N)
-    pal = {'k': INK, 'w': '#f4ede1', 'W': '#cfc8bb',
-           't': '#b9d3cf', 'T': '#a6c4bf', 'f': '#d8cdb4',
-           'g': '#8e9597', 'G': '#6b7274', 'q': '#33424d', 'Q': '#4a6170',
-           'n': '#8fb877', 'N': '#5d8a50',
-           'u': '#7fb0d8', 'U': '#5a8cb8',
-           'o': '#c9a066', 'O': '#9e7840',
-           '1': '#a9aeac', '2': '#7d8381',
+    pal = {'k': INK, 'w': '#f4ede1', 't': '#c4d7d3', 'f': '#b6cac5',
+           'i': '#e8eff1', 'I': '#b7c4c9', 'g': '#8e9597', 'G': '#6b7274', 'q': '#33424d',
+           'n': '#8fb877', 'N': '#5d8a50', 'u': '#7fb0d8', 'U': '#5a8cb8',
+           'o': '#c9a066', 'O': '#9e7840', '1': '#a9aeac', '2': '#7d8381',
            'a': LIGHT[0], 'A': LIGHT[1], 'e': DEEP[0], 'E': DEEP[1],
-           'h': '#1f1714', 'r': '#b0552c'}
-    c.rect(0, 0, 63, 63, 't')
-    for y in range(5, 46, 7):
-        c.hl(0, 63, y, 'T')
-    for x in range(6, 64, 7):
-        c.vl(x, 0, 45, 'T')
-    for y in range(46, 64):
-        for x in range(64):
-            c.px(x, y, 'f' if ((x // 7) + ((y - 46) // 5)) % 2 else 'W')
+           'H': '#47322a', 'z': '#2f221c', 'r': '#b0552c'}
+    c.rect(0, 0, 63, 63, 't'); c.rect(0, 50, 63, 63, 'f')
 
-    c.hl(22, 63, 3, 'G')
+    def line(l):
+        l.hl(22, 63, 4, 'G')
+    bg(c, line, None)
 
-    def shirt(l, x0, y0):
-        l.rect(x0 + 2, y0, x0 + 8, y0 + 9, 'u'); l.rect(x0, y0, x0 + 1, y0 + 4, 'u'); l.rect(x0 + 9, y0, x0 + 10, y0 + 4, 'u')
-        l.vl(x0 + 8, y0 + 1, y0 + 9, 'U'); l.hl(x0 + 4, x0 + 6, y0, 'U')
-    c.paste(obj(lambda l: shirt(l, 25, 4)))
-    c.paste(obj(lambda l: bill(l, 40, 4)))
-    c.paste(obj(lambda l: bill(l, 53, 4)))
-    for x in (27, 33, 42, 55):
-        c.paste(obj(lambda l, x=x: l.rect(x, 2, x, 5, 'O')))
+    def shirt(l):
+        l.rect(27, 5, 33, 14, 'u'); l.rect(25, 5, 26, 9, 'u'); l.rect(34, 5, 35, 9, 'u')
+        l.hl(29, 31, 5, 'U')
+    bg(c, shirt, 'U')
+    for bx in (40, 51):
+        bg(c, lambda l, bx=bx: bill(l, bx, 5, 8, 6), 'N')
+    for px_ in (27, 33, 41, 46, 52, 57):
+        c.pts('o', [(px_, 3), (px_, 4), (px_, 5)]); c.pts('O', [(px_ + 1, 3), (px_ + 1, 4)])
 
     def washer(l):
-        l.rect(0, 14, 20, 16, 'W')
-        l.rect(0, 17, 20, 52, 'w'); l.vl(20, 17, 52, 'W')
-        l.hl(0, 20, 21, 'W')
-        l.rect(2, 18, 7, 20, 'g'); l.ell(15, 18, 17, 20, 'G')
-        l.ell(1, 25, 19, 43, 'g')                                       # rim
-        l.ell(3, 27, 17, 41, 'q')                                       # open drum, dark
-        l.ell(10, 29, 17, 40, 'Q', only='q')
-        bill(l, 5, 35, 7, 4); bill(l, 9, 31, 6, 4)                      # bills already inside
-        l.hl(0, 20, 50, 'W')
-    c.paste(obj(washer))
+        l.rect(0, 14, 20, 58, 'i')
+        l.rect(17, 14, 20, 58, 'I'); l.rect(0, 14, 20, 16, 'I')
+        l.rect(2, 18, 6, 19, 'g'); l.ell(14, 17, 16, 19, 'g')
+        l.ell(1, 24, 19, 43, 'g'); l.ell(4, 27, 16, 40, 'q')
+        bill(l, 5, 35, 6, 3); bill(l, 9, 37, 6, 3)
+    bg(c, washer, 'I')
 
-    def door(l):  # open porthole door swung to the left edge
-        l.ell(-6, 26, 1, 42, 'g'); l.ell(-4, 28, 0, 40, 'Q', only='g')
-    c.paste(obj(door))
+    DK = {'1': '2', 'u': 'U', 'e': 'E', 'a': 'A', 'n': 'N', 'o': 'O', 'G': 'G', 'q': 'q'}
+    # launderer A: feeding a bill into the drum
+    f = layer()
+    legs(f, 32, 47, 2, 4, 8, 'G', 'G', 'q')
+    torso(f, 32, 35, 7, 6, 12, '1', '2', skin='e', skin_dark='E')
+    b = layer(); bill(b, 9, 35, 9, 5); over(f, b, DK)
+    a = layer(); thick(a, [(26, 37), (22, 43), (19, 38)], 3, '1'); over(f, a, DK)
+    a = layer(); thick(a, [(38, 37), (40, 42), (39, 45)], 3, '1'); over(f, a, DK)
+    hl = layer(); hand(hl, 16, 35, 'fist', 'e', 'E'); over(f, hl, DK)
+    hl = layer(); hand(hl, 38, 46, 'fist', 'e', 'E'); over(f, hl, DK)
+    hd = layer(); head(hd, 25, 20, 14, 'e', 'E', mouth='smile', brows='soft', brow='z'); over(f, hd, DK)
+    hr = layer(); hair(hr, 25, 20, 14, 'afro', 'H', 'z'); f.paste(hr)
+    outline_once(f)
+    c.paste(f)
 
-    def person_a(l):
-        x0, y0, hw, hh = 25, 19, 13, 13
-        tx0 = x0 + 1
-        ty = y0 + hh - 1
-        h = body(l, tx0, ty, 11, 11, 7, 'e', '1', '2', legs='G', shoes='k', arms=(None, 'down'), aw=3)
-        # left arm straight out to the drum, hand pushing a bill in
-        l.rect(tx0 - 7, ty + 1, tx0 - 1, ty + 3, '1')
-        l.rect(tx0 - 10, ty + 1, tx0 - 8, ty + 3, 'e')
-        head(l, x0, y0, hw, hh, 'e', 'E', hair='h', hs='puff', mouth='smile', lit='O')
-    c.paste(obj(person_a))
-    c.paste(obj(lambda l: (bill(l, 10, 29, 8, 5), l.rect(15, 31, 17, 33, 'e'))))
-
-    def person_b(l):
-        x0, y0, hw, hh = 46, 18, 13, 13
-        tx0 = x0 + 1
-        ty = y0 + hh - 1
-        body(l, tx0, ty, 11, 11, 8, 'a', 'u', 'U', legs='q', shoes='k', arms=('front', 'front'), aw=3)
-        head(l, x0, y0, hw, hh, 'a', 'A', hair='r', hs='bun', mouth='smile')
-    c.paste(obj(person_b))
-
-    def basket(l):
-        heap = C(N); heap.ell(41, 33, 63, 42, '#')
-        for y in range(33, 40):
-            for x in range(40, 64):
-                if heap.get(x, y) != '#':
-                    continue
-                bx = (x - 40 + (3 if ((y - 33) // 2) % 2 else 0)) % 5
-                l.px(x, y, 'N' if (y - 33) % 2 == 1 or bx == 4 else 'n')
-        l.poly([(40, 38), (64, 38), (62, 49), (42, 49)], 'o')
-        for y in (42, 46):
-            l.hl(41, 62, y, 'O')
-        l.rect(40, 38, 63, 39, 'O')
-        l.rect(44, 37, 46, 40, 'a'); l.rect(57, 37, 59, 40, 'a')
-    c.paste(obj(basket))
+    # launderer B: carrying a basket of bills
+    f = layer()
+    legs(f, 54, 46, 2, 4, 8, 'q', 'q', 'G')
+    torso(f, 54, 34, 7, 6, 12, 'u', 'U', skin='a', skin_dark='A')
+    a = layer(); thick(a, [(48, 36), (46, 41), (47, 44)], 3, 'u'); over(f, a, DK)
+    a = layer(); thick(a, [(60, 36), (62, 41), (61, 44)], 3, 'u'); over(f, a, DK)
+    bk = layer()
+    for (bx, by) in ((45, 41), (51, 40), (56, 41), (48, 43), (54, 43)):
+        p = layer(); bill(p, bx, by, 7, 4, band='w'); over(bk, p, {'n': 'N', 'w': 'N'})
+    bk.poly([(43, 45), (64, 45), (62, 55), (45, 55)], 'o')
+    for x in range(45, 63, 3):
+        bk.vl(x, 47, 54, 'O')
+    bk.hl(43, 63, 45, 'O'); bk.hl(44, 63, 46, 'O')
+    over(f, bk, DK)
+    hl = layer(); hand(hl, 45, 43, 'grip', 'a', 'A'); over(f, hl, DK)
+    hl = layer(); hand(hl, 59, 43, 'grip', 'a', 'A', flip=True); over(f, hl, DK)
+    hd = layer(); head(hd, 47, 19, 14, 'a', 'A', mouth='smile', brows='soft', brow='e'); over(f, hd, DK)
+    hr = layer(); hair(hr, 47, 19, 14, 'bun', 'r', 'e', side='R'); f.paste(hr)
+    outline_once(f)
+    c.paste(f)
     return c.rows(), pal
 
 
