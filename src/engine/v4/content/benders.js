@@ -182,12 +182,12 @@ const members = [
   m('hr', 'HR', null, 0, 8, 'Worth 3 followers. Game End: +3 followers per color you have 3 members of.', { f: 3,
     onGameEnd: (ctx, owner) => 3 * ctx.state.quadrants.filter(q => ctx.countMembersOfColor(owner, q) >= 3).length,
   }),
-  // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"); Second Wind is Claude's name
-  m('secondwind', 'Second Wind', null, 0, 7, 'On Recruit: use one of your used One Time Use members again.', {
+  // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"), named Coach (Cory, Oct 29)
+  m('secondwind', 'Coach', null, 0, 7, 'On Recruit: use one of your used One Time Use members again.', {
     onRecruited(ctx, owner) {
       const spent = ctx.membersOf(owner).filter(c => c.used && [c.def, c.copy && ctx.defOf(c.copy)].some(d => d?.activate === 'game'));
-      if (!spent.length) { ctx.log(`${owner.name}'s Second Wind: no used One Time Use member.`); return; }
-      ctx.choose(owner, 'Second Wind: which One Time Use member can be used again?', spent.map(c => ({
+      if (!spent.length) { ctx.log(`${owner.name}'s Coach: no used One Time Use member.`); return; }
+      ctx.choose(owner, 'Coach: which One Time Use member can be used again?', spent.map(c => ({
         id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: cost(c),
       })), 'benders.rewind');
     },
@@ -221,7 +221,7 @@ export const handlers = {
     const c = ctx.card(uid);
     if (!p.members.includes(uid) || !c.used) return;
     c.used = false;
-    ctx.log(`${p.name}'s Second Wind: ${c.def.name} can be used again.`);
+    ctx.log(`${p.name}'s Coach: ${c.def.name} can be used again.`);
   },
 
   stragglerFrom(ctx, p, from, data) {

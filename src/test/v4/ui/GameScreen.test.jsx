@@ -115,7 +115,8 @@ describe('v4 game screen', () => {
     const me = state.pending.player;
     const session = fakeSession(state, [me]);
     const { container } = render(<GameScreen session={session} />);
-    const legal = new Set(state.pending.options.map(o => o.id));
+    // a member's use is pressed on your seat's card, which opens on hover (member-use tests); at rest the table offers the rest
+    const legal = new Set(state.pending.options.filter(o => o.kind !== 'use').map(o => o.id));
     expect(new Set(clickable(container))).toEqual(legal);
     for (const uid of state.shop) {
       const el = container.querySelector(`.lt-shop .card[data-option="card:${uid}"]`);

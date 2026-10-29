@@ -175,7 +175,7 @@ describe('a use that changes only the shop is a real use (Cory, Oct 28: Restocke
 });
 describe('a second buy is seen (w2a #6)', () => {
   it('Big Spender: the headline says "Recruit again (Big Spender)", the member hops, then reads "used this round"', () => {
-    const s = table(['gold', 'echo', 'trading', 'thieves'], { members: [['benders.bigspender']], res: [{ gold: 6, white: 6 }] });
+    const s = table(['gold', 'echo', 'trading', 'thieves'], { members: [['benders.bigspender1']], res: [{ gold: 6, white: 6 }] });
     s.players[0].turnBuys = 1;
     s.queue = [{ t: 'buy', p: 0, extra: true }];
     resume(s);
@@ -184,11 +184,11 @@ describe('a second buy is seen (w2a #6)', () => {
     expect(promptFor(s, true).text).toBe('Recruit again (Big Spender)');
     // its glow on the seat carries "Skip, keep it for later": the header doesn't say it a second time (f8)
     expect(promptFor(s, true).sub || '').not.toMatch(/keeps it for a later turn/);
-    const uid = uidIn(s, 'benders.bigspender', 0);
+    const uid = uidIn(s, 'benders.bigspender1', 0);
     const { container } = render(<CultSeat state={s} pid={0} me={0} mine optionFor={optionsOf(s)} onPick={() => {}} />);
-    expect(container.querySelector('.cs-member[data-member="benders.bigspender"]').className).toContain('react-hop');
+    expect(container.querySelector('.cs-member[data-member="benders.bigspender1"]').className).toContain('react-hop');
     // during its second buy it's lit, like a member you can use now (blind testers, 2026-10-15), and its row says so
-    expect(container.querySelector('.cs-member[data-member="benders.bigspender"]').className).toContain('ready');
+    expect(container.querySelector('.cs-member[data-member="benders.bigspender1"]').className).toContain('ready');
     expect(memberRows(s, 0, 0).find(r => r.uids.includes(uid)).tag.text).toBe('recruiting again now');
     expect(memberRows(s, 0, 1).find(r => r.uids.includes(uid)).tag.text).toBe('once a round'); // a rival sees its rule
     const t = structuredClone(s);

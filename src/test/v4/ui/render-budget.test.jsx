@@ -95,7 +95,7 @@ describe('render budget', () => {
   });
 
   it('a rival\'s step re-renders only the chairs whose view changed', async () => {
-    let state = advanceTo(createGame({ seats: SEATS, seed: 33 }), 'place', 1); // Bo is about to place
+    let state = advanceTo(createGame({ seats: SEATS, seed: 34 }), 'place', 1); // Bo is about to place
     const session = drivenSession(state, [0]);
     const { container } = render(<GameScreen session={session} pace={0} />);
     await settle();
