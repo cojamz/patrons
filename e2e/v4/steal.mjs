@@ -22,7 +22,7 @@ import { browserPath, launchBrowser } from './lib/browser.mjs';
 //       what the copy gives, and clicking it copies (your resources match the engine's).
 //  (s6) Bury: exactly the offered face-up members light in the shop; no duplicate
 //       card by the space (feedback #14); clicking a lit shop card sends it.
-//  (s7) Shake Down: the offered members glow on the rivals' seats; clicking one picks it.
+//  (s7) Shake Down: the rivals' seats light; a member there opens its card when pointed at, and a click picks the seat.
 // Starts from saved games stopped on each choice (e2e/v4/lib/steal-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
 import { chromium } from 'playwright';
@@ -334,17 +334,29 @@ try {
     if (rec && rec !== o.id) errors.push(`(t1) recorded ${rec}, clicked ${o.id}`);
     await ctx.close();
   }
-  // (s7) Shake Down: a rival's member, on their seat
+  // (s7) Shake Down: choose a rival, on their seat; a member on a lit seat still opens its card when pointed at
+  //      (Cory, Oct 29: "can't hover over members in shake down"), and clicking it picks that seat
   {
     const { ctx, page, save } = await open('shakedown', '.prompt.choice.seat-pick');
-    const lit = await page.$$eval('.cs-member.pick-on', els => els.map(e => e.dataset.uids));
-    if (!lit.length) errors.push('(s7) no member glows on a rival seat');
-    const btn = await page.$('.cs-member.pick-on .cs-pick-member');
+    const btn = await page.$('.lt-cult-seat.pick-seat button.cs-pick-seat');
     const id = btn && await btn.getAttribute('data-option');
-    if (id && !save.state.pending.options.some(o => o.id === id)) errors.push(`(s7) a lit member points at ${id}, not an engine option`);
-    await page.screenshot({ path: `${SHOTS}/s7-shakedown.png` });
-    if (btn) await click(page, '.cs-member.pick-on .cs-pick-member');
-    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s7) clicking the lit member did nothing'));
+    if (!btn) errors.push('(s7) no rival seat is lit to pick');
+    else if (!save.state.pending.options.some(o => o.id === id)) errors.push(`(s7) a lit seat points at ${id}, not an engine option`);
+    const seat = btn && await btn.evaluateHandle(b => b.closest('.lt-cult-seat'));
+    const fig = seat && await seat.$('.cs-member .fig');
+    if (btn && !fig) errors.push('(s7) the lit seat shows no member');
+    if (fig) {
+      const b = await fig.boundingBox();
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 4 });
+      await page.waitForSelector('.popover [data-hover-card], .popover .lt-note, .popover .card-face, .popover', { state: 'visible', timeout: 3000 }).catch(() => {});
+      const shown = await page.evaluate(() => [...document.querySelectorAll('.popover')].some(e => e.getBoundingClientRect().width > 100 && getComputedStyle(e).visibility !== 'hidden' && !e.matches('[data-hover-layer][data-open="0"]')));
+      if (!shown) errors.push('(s7) pointing at a member on a lit seat opened no card');
+      await page.screenshot({ path: `${SHOTS}/s7-shakedown.png` });
+      await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s7) clicking a member on a lit seat did not pick that rival'));
+      const rec = await page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-1)[0]?.[1]; } catch { return null; } });
+      if (rec && rec !== id) errors.push(`(s7) recorded ${rec}, clicked a member on ${id}`);
+    }
     await ctx.close();
   }
 } catch (e) {

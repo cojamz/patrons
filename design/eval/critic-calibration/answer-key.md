@@ -105,3 +105,4 @@ Source: blind tester panel, 2026-10-26 (v0.8.86); fixed in v0.8.87 to v0.8.91.
 82. **Farewell (and Release) left the shop one short when the pile was empty** (crash sweep, Oct 28). Now refills.
 83. **Greatest Hits pick: the wheel tile shows today's per-member amount (+14) but the copy pays what its taker got (+10)** (UI critic and skeptic, Oct 28). The engine follows the rulebook ("the amount on its chip"); the tile misleads during a copy pick. Open.
 84. **Snob's end-game card showed 5 but paid 7** (playtester, Oct 28). The card counts up to the prize; the shot caught it mid-count. Not a bug; card's double period fixed.
+85. **Shake Down "choose a rival": pointing at a member on a rival seat opened nothing** (Cory, Oct 29, mid-playtest). The seat button sat over the members. Fixed: members open their card, a click still picks the seat. Gate: e2e/v4/steal.mjs (s7).

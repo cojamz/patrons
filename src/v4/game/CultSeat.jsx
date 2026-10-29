@@ -135,6 +135,13 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
     <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${outOf && !mine ? ' done' : ''}${setupPick || setupWait ? ' setup-pick' : ''}${setupPick ? ' setup-now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}${pickAll ? ' pick-all' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} {...bodyHover} style={{ '--pc': playerColor(pid) }}
       // a click beside the lit picks in this chair (w3a A53: "a click 30px off did nothing, and no 'pick a lit stack'")
       // makes them pulse once, so the miss says where to click
+      // a choice that picks this seat: its member figures sit over the seat's button so they still open their cards
+      // (Cory, Oct 29: "can't hover over members in shake down"), and a click on one picks the seat like the rest of it
+      onClickCapture={pick && pick.seatMode && pick.seat ? e => {
+        if (!(e.target.closest && e.target.closest('.cs-member'))) return;
+        e.stopPropagation(); e.preventDefault();
+        pick.onPick(pick.seat.id, e.currentTarget.querySelector('.cs-pick-seat') || e.currentTarget);
+      } : undefined}
       onClick={pick && pick.lit && !pick.seatMode ? e => {
         if (e.target.closest && e.target.closest('[data-option], .cs-pick-member, .cs-stack.pick-on')) return;
         const el = e.currentTarget;
