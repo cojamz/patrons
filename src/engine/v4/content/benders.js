@@ -199,7 +199,7 @@ const members = [
     botActivate: (ctx, p) => ctx.state.round >= 2 && ctx.shopCards().filter(c => cost(c) > Object.values(p.res).reduce((a, b) => a + b, 0)).length >= 3,
   }),
   // Cory, 2026-10-28: Con Men, 6, counts as 2 members; On Recruit (was One Time Use), split among rivals like Help Yourself
-  m('conmen', 'Con Men', null, 0, 5, 'Counts as 2 members. On Recruit: steal 5 resources.', { n: 2,
+  m('conmen', 'Con Men', null, 0, 6, /* 7 (Cory, Oct 29: "i would put con men at 7") */ 'Counts as 2 members. On Recruit: steal 5 resources.', { n: 2,
     onRecruited(ctx, owner) { startSteal(ctx, owner, 'Con Men', 5, { fromAction: false }); },
   }),
   // Cory, 2026-10-28: HR (Archivist), 9, worth 3 (so it counts as 3 members)
