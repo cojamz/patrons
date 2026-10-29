@@ -391,7 +391,7 @@ const thieves = {
       guardSteal: () => true,
     }),
     m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2, n: 2 }), // 2 members (Cory, Oct 29)
-    m('doubleagent', 'Double Agent', 2, 1, 'On Recruit: swap this member for a rival’s member you choose.', {
+    m('doubleagent', 'Double Agent', 3, 3, /* 4 to 7 (Cory, Oct 29: "double agent definitely too cheap"; Claude's price) */  'On Recruit: swap this member for a rival’s member you choose.', {
       onRecruited(ctx, owner, card) {
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid);
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });
