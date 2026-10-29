@@ -25,3 +25,4 @@ Closed Oct 29 with nothing owed: Cross-check balance findings (11 price changes 
 Branches
 - claude/gifted-newton-3lcy3i: the game (PR #1). main: the old game plus play/, rules/ and the harness mirror.
 - Every other claude/* branch is an old thread workspace and stale; none are needed.
+- Purple members (thread "Rework purple members"): shipped Clockmaker, Courier, "+1 minion"/"in a row" wording, copied Right Away fix, Help Yourself no magenta, Loyalists vs Double Agent (v0.9.881), Launderers any-mix card (v0.9.882). The rest of the purple list waits: Cory reworks members himself. Gold rework later: gold.tinker and the guest are both named Alchemist; check with the wording thread before renaming (/mnt/project-files/member-rework/purple.md).
