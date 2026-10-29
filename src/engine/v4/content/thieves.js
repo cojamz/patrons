@@ -43,9 +43,9 @@ const stash = (ctx, p, took, fromAction = true) => {
   for (const [color, n] of Object.entries(took)) if (n) ctx.gain(p, color, n, { fromAction });
 };
 // Take `pick` ({ pile: n }) from one victim through the shared steal, and stash it. Returns units taken.
-function commit(ctx, thief, victim, pick, reaction = false, fromAction = true, led = undefined) {
+function commit(ctx, thief, victim, pick, reaction = false, fromAction = true, led = undefined, instance = undefined) {
   if (!ctx.canSteal(thief, victim)) return 0;
-  return ctx.steal(thief, victim, { take: pick, reaction, give: (n, took) => stash(ctx, thief, took, fromAction), ...(led !== undefined ? { led } : {}) });
+  return ctx.steal(thief, victim, { take: pick, reaction, instance, give: (n, took) => stash(ctx, thief, took, fromAction), ...(led !== undefined ? { led } : {}) });
 }
 // Automatic small steal used by members: from the victim's biggest pile, one at a time.
 function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
@@ -102,8 +102,9 @@ function stealStep(ctx, p, data) {
   const from = [], hit = [];
   // who led when the steal began: a follower one victim's theft wins (Robin Hood) doesn't un-lead the next victim
   const led = new Set(ctx.state.players.filter(o => isLeader(ctx, o)).map(o => o.id));
+  const instance = ctx.stealInstance(); // one steal, however many rivals it takes from (Fence pays once)
   for (const [id, pick] of Object.entries(data.picked)) {
-    const v = ctx.player(Number(id)), x = commit(ctx, p, v, pick, false, data.fromAction !== false, led.has(v.id));
+    const v = ctx.player(Number(id)), x = commit(ctx, p, v, pick, false, data.fromAction !== false, led.has(v.id), instance);
     // Each pile stays in its original color, including its recap.
     const what = Object.entries(pick).filter(([, k]) => k > 0).map(([c, k]) => `${k} ${c}`).join(' and ');
     if (x) { got += x; hit.push([v, x]); from.push(x === Object.values(pick).reduce((a, b) => a + b, 0) ? `${what} from ${v.name}` : `${x} from ${v.name}`); }
@@ -436,11 +437,12 @@ const thieves = {
         if (by === owner && what.member?.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1 + stickyMore(ctx, owner), { fromAction: false });
       },
     }),
-    // Cory, 2026-10-29: "fence shouldn't give magenta on every steal" (a split steal paid once per rival)
-    m('fence', 'Fence', 2, 2, 'Once per turn: whenever you steal, +1 magenta.', {
+    // Cory, 2026-10-29: "it's once per steal instance. not per turn, and not per currency taken": a split steal
+    // (several rivals) pays 1, a second steal the same turn (after a recruit) pays again
+    m('fence', 'Fence', 2, 2, 'Whenever you steal, +1 magenta.', {
       onSteal(ctx, owner, card, info) {
-        if (info.thief !== owner || card.turn === ctx.turnKey()) return;
-        card.turn = ctx.turnKey(); ctx.gain(owner, 'magenta', 1);
+        if (info.thief !== owner || card.inst === info.instance) return;
+        card.inst = info.instance; ctx.gain(owner, 'magenta', 1);
       },
     }),
   ],

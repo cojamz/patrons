@@ -204,10 +204,11 @@ function stealStep(ctx, p, data) {
   // who led when the steal began (Robin Hood): a follower won from one victim doesn't un-lead the next
   const top = Math.max(...ctx.state.players.map(o => ctx.followers(o)));
   const led = new Set(ctx.state.players.filter(o => ctx.followers(o) === top).map(o => o.id));
+  const instance = ctx.stealInstance(); // one steal, however many rivals (Fence pays once)
   for (const [id, k] of Object.entries(data.picked)) {
     const v = ctx.player(Number(id));
     // the gold comes in once per victim, but it is one action's gain: Prospector pays once (Cory, 2026-10-15)
-    const x = ctx.steal(p, v, { take: { gold: k }, give: n => ctx.gain(p, 'gold', n, { fromAction: true, again: got > 0 }), led: led.has(v.id) });
+    const x = ctx.steal(p, v, { take: { gold: k }, instance, give: n => ctx.gain(p, 'gold', n, { fromAction: true, again: got > 0 }), led: led.has(v.id) });
     if (x) { got += x; from.push(`${x} from ${v.name}`); }
   }
   ctx.log(got ? `${p.name} stole ${got} gold (${from.join(', ')}).` : `${p.name} found no gold to steal.`);
