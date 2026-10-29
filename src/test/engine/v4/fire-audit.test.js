@@ -160,6 +160,9 @@ const ALLOW = {
   'yellow.gleaner': 'pays only on an action giving 2+ of another color at once; cut from the deck (cards-yellow: Gleaner)',
   // the Oct 29 balance prices moved the seeded games: recruited in one game without an action gaining yellow after
   'yellow.farmer': 'pays only when an action gains its holder yellow (cards-yellow: Farmer)',
+  // Con Men at 7 and Promote/Demote reaching rivals (Oct 29) moved the seeded games: held in 3 games whose holders had
+  // no catch-up left by their last buy, where bots use it (cards-yellow: Rainmaker's bot test)
+  'yellow.rainmaker': 'pays only when used, and bots wait for a big catch-up or their last buy (cards-yellow: Rainmaker)',
 };
 
 describe('namesCard: what counts as a line naming a card', () => {
