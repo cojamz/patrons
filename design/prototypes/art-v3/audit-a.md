@@ -6,15 +6,15 @@ deep and very deep faces carry a warm highlight (forehead, cheekbone, nose bridg
 
 | id | role | person | tone | place | expression |
 |---|---|---|---|---|---|
-| red.headhunter | recruiter (sly) | woman, black bob, business card | warmtan | solo | sly side-glance, one-sided smile |
+| red.headhunter | recruiter (sly) | woman, side part and low bun, business card | olive (final review: took olive from Grifter) | solo | sly side-glance, one-sided smile |
 | red.host | party host | balding man, moustache, coupe | coolbrown | solo | laughing, eyes closed |
 | red.loyalists | loyal pair | woman, short natural hair, hand on heart | brown | front | proud closed smile |
 | | | old man, white hair, hand on her shoulder | fair | behind | laughing, eyes closed |
 | red.mentor | teacher + student | mentor, grey beard, glasses, open book | tan | front | kind smile |
 | | | protégé, spiky hair | golden | behind | eager, looking at the book, mouth open |
-| red.mob | cheering crowd (5) | young man, centre | deep | front | beaming, closed smile, lit forehead and cheek |
-| | | freckled woman, auburn hair, waving an open hand | freckled | side left | closed-happy eyes, smile |
-| | | man with the cream star pennant | olive | side right | smile |
+| red.mob | cheering crowd (5) | freckled woman, auburn hair, centre | freckled | front centre | cheering, open mouth, happy eyes |
+| | | man with the cream star pennant | olive | front left (same size) | happy eyes, small open cheer |
+| | | young man | deep | front right (same size) | laughing eyes, closed smile, lit forehead and cheek |
 | | | two faces peeking (reuse olive / freckled ramps) | olive, freckled | back | smile / laughing |
 | red.movementpenalty | referee | man, moustache, penalty card | golden | solo | stern, level |
 | red.panel | judges (3) | head judge, cropped hair, score card "10" | verydeep | front | pleased smile |
@@ -29,13 +29,13 @@ deep and very deep faces carry a warm highlight (forehead, cheekbone, nose bridg
 | red.volunteer | eager volunteer | teen, two hair puffs, sign-up clipboard, name tag (no raised hand: it read as a fist) | deep (swapped with Snitch, round 2) | solo | eager, brows up, smile |
 | thieves.accomplice | loot carrier | young man, flat cap, sack | olive | solo | sheepish (brows up, smile) |
 | thieves.crew | heist crew | woman, beanie, domino mask | tan | front | pleased one-sided smile |
-| | | partner, beanie, mask | golden | behind | eyes sliding sideways |
-| thieves.cutpurse | pickpocket | teen, newsboy cap, coin pouch | warmtan | solo | sly glance, crooked smile |
+| | | partner, rounder face, auburn curls under the beanie, mask tied with tails | golden | behind | eyes sliding sideways, innocent whistle |
+| thieves.cutpurse | pickpocket | teen, tousled brown mop (no cap), coin pouch | warmtan | solo | sly glance, crooked smile |
 | thieves.desperado | desperate outlaw | sunburnt, stubble, wide hat, bandana | palepink | solo | worried |
 | thieves.doubleagent | spy | side part, dark glasses, ID card | brown | solo | calm, unreadable |
 | thieves.extortionist | collector | bald, round glasses (both eyes alike), ledger with gold coins | porcelain | solo | stern, patient |
 | thieves.fixer | fixer | woman, ponytail, silver phone at her ear | coolbrown | solo | knowing side-glance, one-sided smile |
-| thieves.grifter | con man | boater, pencil moustache, fanned cards | olive (round 2: dandy-swindler costume never on brown or deep skin) | solo | sly glance, smooth smile |
+| thieves.grifter | con man | boater, pencil moustache, fanned cards | porcelain (final review: olive rendered tan-brown; dandy-swindler costume never on brown or deep skin) | solo | sly glance, smooth smile |
 | thieves.kingpin | crime boss (reference) | old boss, fedora, cigar | fair | solo | stern |
 | thieves.robinhood | hero outlaw | pointed cap, feather, bow, clean-shaven | verydeep | solo | wide closed smile, iris eyes |
 | thieves.shoplifter | innocent-looking thief | grandmother, white bun, handbag + baguette | freckled | solo | serene, eyes closed, sweet smile |
@@ -46,10 +46,10 @@ deep and very deep faces carry a warm highlight (forehead, cheekbone, nose bridg
 
 Checks:
 - Shady magenta roles by tone (round 2): light (Kingpin fair, Extortionist porcelain, Desperado palepink, Shoplifter
-  freckled, Snitch freckled), medium (Accomplice olive, Grifter olive, Cutpurse warmtan, Sticky golden, Crew tan/golden),
+  freckled, Snitch freckled, Grifter porcelain), medium (Accomplice olive, Cutpurse warmtan, Sticky golden, Crew tan/golden),
   deep (Fixer coolbrown, Double Agent brown), both cool and competent. Heroes, protectors and everyday roles carry the
   deep tones too (Robin Hood and the head judge verydeep; Bodyguard, Mob, Proselytizer and Volunteer deep).
-- The darkest person in every group card is in front: Loyalists (brown), Mentor (tan), Mob (deep), Panel (verydeep),
+- The darkest person in every group card is in front: Loyalists (brown), Mentor (tan), Mob (deep, in the front row at equal size, not centre), Panel (verydeep),
   Proselytizer (deep), Recruit Bonus (warmtan), Bodyguard (deep). Twins share a tone.
 - Mob: a cheering home crowd with a pennant, three tones over five faces, no torches, no fists, no scowls.
 - Snitch (freckled, round 2) is comic and nervous; his hand is open by his mouth (a whisper), never a raised fist.
@@ -84,3 +84,16 @@ Round 3 (after the critic, average about 6.9):
   clipboard outlined in ink with a light clip; her fingers wrap the board's edge with the thumb up.
 - Twins: the back twin no longer takes the behind skin step, so both read as the same tone (depth from size and height).
 - Library grip hand (Mentor, Recruit Bonus, Grifter, Extortionist, Mob's pennant) now has a knuckle row and a thumb.
+
+Final review (independent critic, whole set):
+- Mob: the front row is three equal heads (same width, same eye row). A freckled woman cheers in the centre; the deep-
+  skinned man laughs beside her on the right, at the same size; the olive man on the left holds the pennant. Two faces
+  peek from behind (olive, freckled). Still 5 people, the pennant, cheering, no fists. No single face leads the card.
+- Grifter recast porcelain (olive rendered tan-brown and still tripped the dandy-swindler rule). Headhunter, a neutral
+  everyday role, takes olive to keep the spread.
+- Robin Hood: the lower face is one clean lit plane on the left and one plain shadow plane on the jaw; no speckle beside
+  the nose, so the grin and warm lower lip read at 1x.
+- Crew: the partner is no longer a copy: rounder, fuller face, auburn curls escaping his beanie, his mask tied at the
+  back with tails, lips pursed in a whistle.
+- Optional, done: Headhunter's hair is a side part swept into a low bun (no shared black bob); Cutpurse is bare-headed
+  with a tousled brown mop (Accomplice and Fence keep their flat caps).
