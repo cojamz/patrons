@@ -14,7 +14,7 @@ const fixture = opts => { const s = table(Q, opts); s.queue = []; s.pending = nu
 const buyOne = (s, i = 0) => { s.queue = [{ t: 'buy', p: i }]; s.current = i; return move(resume(s), 'tier:small'); };
 const colors = (s, i) => s.resources.map(r => s.players[i].res[r]);
 
-describe('Recruiter ("Whenever you recruit, +1 red") follows the recruit definition', () => {
+describe('Recruiter ("Whenever you add a member to your cult, +1 red") counts members you bring in', () => {
   it('a member taken from the shop is a recruit', () => {
     const s = fixture({ members: [['red.recruiter']], shop: ['red.volunteer'] });
     contextFor(s).recruit(s.players[0], uidIn(s, 'red.volunteer', 'shop'), { free: true });
@@ -28,11 +28,11 @@ describe('Recruiter ("Whenever you recruit, +1 red") follows the recruit definit
     expect(p.res.red).toBe(1);
   });
 
-  it('a follower purchase is a recruit (one per purchase)', () => {
+  it('a follower purchase adds no member, so it pays nothing (Cory, 2026-10-29)', () => {
     let s = fixture({ members: [['red.recruiter']], res: [{ gold: 3 }] });
     s = buyOne(s);
     expect(s.players[0].bonus).toBe(1);
-    expect(s.players[0].res.red).toBe(1);
+    expect(s.players[0].res.red || 0).toBe(0);
   });
 
   it('a member a rival moves into your cult is not your recruit', () => {

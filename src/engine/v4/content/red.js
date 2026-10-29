@@ -111,8 +111,9 @@ export default {
     m('mob', 'Mob', 8, 4, 'Game end: +1 follower per red member.', { f: 5, n: 5,
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'red'),
     }),
-    m('recruiter', 'Recruiter', 4, 1, 'Whenever you recruit, +1 red.', {
-      onRecruit(ctx, owner, card, by, what) { if (by === owner && what.member?.uid !== card.uid) ctx.gain(owner, 'red', 1); },
+    // members only, never a follower buy (Cory, 2026-10-29: "red recruit should only work for gaining members")
+    m('recruiter', 'Recruiter', 4, 1, 'Whenever you add a member to your cult, +1 red.', {
+      onRecruit(ctx, owner, card, by, what) { if (by === owner && what.member && what.member.uid !== card.uid) ctx.gain(owner, 'red', 1); },
     }),
     m('drive', 'Pied Piper', 2, 2, 'Whenever you recruit 2 or more members in one turn, +2 red.', {
       // pays the moment your second recruit of the turn lands, so the red can still be spent this turn
