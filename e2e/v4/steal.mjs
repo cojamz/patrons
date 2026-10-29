@@ -348,8 +348,8 @@ try {
     if (fig) {
       const b = await fig.boundingBox();
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 4 });
-      await page.waitForSelector('.popover [data-hover-card], .popover .lt-note, .popover .card-face, .popover', { state: 'visible', timeout: 3000 }).catch(() => {});
-      const shown = await page.evaluate(() => [...document.querySelectorAll('.popover')].some(e => e.getBoundingClientRect().width > 100 && getComputedStyle(e).visibility !== 'hidden' && !e.matches('[data-hover-layer][data-open="0"]')));
+      const name = await fig.evaluate(e => e.closest('.cs-member').querySelector('.fig').getAttribute('aria-label') || '').then(l => l.split(':')[0]);
+      const shown = await page.waitForFunction(n => [...document.querySelectorAll('.popover')].some(e => e.getBoundingClientRect().width > 100 && e.textContent.includes(n)), name, { timeout: 3000 }).then(() => true, () => false);
       if (!shown) errors.push('(s7) pointing at a member on a lit seat opened no card');
       await page.screenshot({ path: `${SHOTS}/s7-shakedown.png` });
       await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
