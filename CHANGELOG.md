@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.824 — 2026-10-28
+
+- Crowd In now gives +5 purple and one more minion this round, instead of letting you place on taken spaces.
+
 ## v0.9.823 — 2026-10-28
 
 - Restocker has its Use button again (it was hidden because it gives no resources).
