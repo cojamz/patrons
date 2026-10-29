@@ -21,6 +21,6 @@ it('Snob with worth-2 and worth-3 blue members: the card shows the prize paid, a
   const { container } = render(<Reckoning info={info} root={null} onDone={() => {}} />);
   for (let i = 0; i < 40 && !/from Snob/.test(container.textContent); i++) act(() => { vi.advanceTimersByTime(1000); });
   expect(container.textContent).toContain(`+${paid} followers from Snob`);
-  expect(container.querySelector('.reckon-counts').textContent).toBe('Game end: +1 follower per blue member you have.');
+  expect(container.querySelector('.reckon-counts').textContent).toBe('Game End: +1 follower per blue member you have.');
   expect(followers(s, s.players[0])).toBeGreaterThan(paid);
 });

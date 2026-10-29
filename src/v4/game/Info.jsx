@@ -194,7 +194,7 @@ function Lines({ text, Text, className = 'fx-line' }) {
 }
 // a member's ongoing benefit opens with a bold Passive (Cory, Oct 29: "For those that are a passive benefit, add Passive as
 // a bold keyword"): any rule that doesn't open with a timing, a use or what the card counts as
-const OPENS = /^(?:on recruit|(?:at )?round start|round end|game end|once per (?:game|round)|one time use|use\b|counts as|worth \d|no (?:ability|effect)|passive|free\b)/i;
+const OPENS = /^(?:on use\b|on recruit|(?:at )?round start|round end|game end|once per (?:game|round)|one time use|use\b|counts as|worth \d|no (?:ability|effect)|passive|free\b)/i;
 // a member's "Worth N followers." never prints: the number at the card's top right says it (Cory, Oct 29)
 const unworth = (def, text) => (def && def.f != null && text ? String(text).replace(/^\s*Worth \d+ followers?\.\s*/i, '') : text);
 export const passiveText = (def, given) => { const text = unworth(def, given); return def && def.f != null && text && !OPENS.test(String(text).trim()) ? `Passive: ${String(text).trim()}` : text; };

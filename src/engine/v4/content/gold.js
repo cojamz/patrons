@@ -128,7 +128,7 @@ export default {
     m('tinker', 'Alchemist', 4, 2, 'Whenever an action gains you another color, +1 gold.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
-    m('investor', 'Investor', 4, 2, 'Round Start: set aside any of your gold. Round end: gain double that.', {
+    m('investor', 'Investor', 4, 2, 'Round Start: set aside any of your gold. Round End: gain double that.', {
       onRoundStartLate(ctx, owner, card) {
         const g = owner.res.gold;
         if (!g) return;
@@ -167,7 +167,7 @@ export default {
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res.gold >= 6,
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6
-    m('tycoon', 'Tycoon', 4, 2, 'Game end: +1 follower per 2 gold.', { // Cory, 2026-10-15: per 2, was per 3
+    m('tycoon', 'Tycoon', 4, 2, 'Game End: +1 follower per 2 gold.', { // Cory, 2026-10-15: per 2, was per 3
       onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 2),
     }),
     m('seed', 'Treasurer', 4, 0, 'On Recruit: +1 gold per member you have, this one included.', {

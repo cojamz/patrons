@@ -130,7 +130,7 @@ export default {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow' && colorOf(ctx, recruited)) ctx.gain(owner, colorOf(ctx, recruited), 1);
       },
     }),
-    m('dyer', 'Dyer', 4, 2, 'Round end: +1 yellow per color you hold.', {
+    m('dyer', 'Dyer', 4, 2, 'Round End: +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
     m('latebloomer', 'Late Bloomers', 2, 2, 'Worth 2 followers. On Recruit: if no rival has fewer followers than you (not counting this card), +1 of each color. Round Start: if no rival has fewer followers than you (not counting this card), +1 of each color.', { now: true, f: 2,
@@ -140,7 +140,7 @@ export default {
         if (ctx.rivals(owner).every(o => ctx.followers(o) >= mine)) eachColor(ctx, owner, 1);
       },
     }),
-    m('sower', 'Sower', 1, 1, 'Round Start: plant any of your yellow. Round end: gain that many of each other color.', {
+    m('sower', 'Sower', 1, 1, 'Round Start: plant any of your yellow. Round End: gain that many of each other color.', {
       onRoundStartLate(ctx, owner, card) {
         const y = owner.res[Y];
         if (!y) return;
@@ -163,7 +163,7 @@ export default {
       },
     }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4 (the most one pass moves)
-    m('harmonist', 'Harmonist', 4, 0,'Game end: +1 follower per full set you hold.', {
+    m('harmonist', 'Harmonist', 4, 0,'Game End: +1 follower per full set you hold.', {
       onGameEnd: (ctx, owner) => setsOf(ctx, owner),
     }),
     m('rainmaker', 'Rainmaker', 3, 1, 'On Use, once per game: raise each of your colors to match your yellow.', {

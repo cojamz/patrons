@@ -159,7 +159,7 @@ const members = [
     },
   }),
   // Cory, 2026-10-28: "a 5 cost Saboteur… gives -3 Followers each time it enters somebody's cult (swapped in OR recruited etc)"
-  m('saboteur', 'Saboteur', null, 0, 4, 'Whenever this joins your cult, −3 followers.', {
+  m('saboteur', 'Saboteur', null, 0, 4, 'Whenever this member joins your cult, −3 followers.', {
     botValue: 0,
     onJoined(ctx, owner) {
       owner.bonus -= 3;
@@ -173,7 +173,7 @@ const members = [
     onContestWin(ctx, owner) { owner.bonus += 1; ctx.log(`${owner.name}'s Cheerleader: +1 follower.`); },
   }),
   // Cory, 2026-10-28: Anarchist, 7, once per round (it stands in for Red's swaps)
-  m('anarchist', 'Anarchist', null, 0, 6, 'On Use, once per round: swap any two members within 2 cost.', {
+  m('anarchist', 'Anarchist', null, 0, 6, 'On Use, once per round: swap any 2 members, in any cult or the shop, that cost within 2 of each other.', {
     activate: 'round',
     onRoundStart(ctx, owner, card) { card.used = false; },
     onActivate(ctx, owner, card) {

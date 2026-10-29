@@ -330,7 +330,7 @@ function freeStep(ctx, p, data) {
 function rivalRecruits(ctx, p) {
   return ctx.rivals(p).flatMap(o => ctx.membersOf(o).map(c => ({ c, o })))
     .filter(({ c }) => !c.def.artifact && (c.def.onRecruited || (c.def.now && (c.def.onRoundStart || c.def.onRoundStartLate)))
-      && !/\bit\b|\bcop(?:y|ies)\b/i.test(c.def.text.replace(/^[^:]*:/, '')));
+      && !/\bit\b|\bthis member\b|\bcop(?:y|ies)\b/i.test(c.def.text.replace(/^[^:]*:/, '')));
 }
 
 // ---------- the quadrant ----------
@@ -500,10 +500,10 @@ const echoQ = {
     }),
     m('tuningfork', 'Impressionist', 1, 2, 'Whenever you copy an action, +1 of its color.'),
     // Cory, 2026-10-28: back as a big card at 10 (6 green + 3 any + the +1 wild); no follower condition any more
-    m('wallflower', 'Wallflower', 6, 3, 'When you copy an action, double the resources it gives you.'),
+    m('wallflower', 'Wallflower', 6, 3, 'Whenever you copy an action, double the resources it gives you.'),
     // Keepsake ("When recruited: copy one of your spaces from this round") is cut: Reprise does the same on a space.
     // Cory, 2026-10-28: Mime returns renamed ("yes but needs a different name"); text and cost 3 are Claude's
-    m('mirror', 'Fan Club', 1, 1, 'On Recruit: +1 green per Green space with a minion.', {
+    m('mirror', 'Fan Club', 1, 1, 'On Recruit: +1 green per Green space with anyone’s minion.', {
       onRecruited(ctx, owner) {
         const q = ctx.state.quadrants.indexOf('echo');
         const g = q < 0 ? 0 : Object.keys(ctx.state.slots).filter(k => Number(k.split('-')[0]) === q).length;
@@ -512,7 +512,7 @@ const echoQ = {
       },
     }),
     // Cory, 2026-10-28: "Roadie is good" (Green's 16th); cost 3 is Claude's
-    m('roadie', 'Roadie', 1, 1, 'Round Start: +1 green per Green member you have.', {
+    m('roadie', 'Roadie', 1, 1, 'Round Start: +1 green per green member you have.', {
       onRoundStart(ctx, owner) {
         const g = ctx.countMembersOfColor(owner, 'echo');
         if (g) ctx.gain(owner, 'green', g);
@@ -537,7 +537,7 @@ const echoQ = {
       },
     }),
     // Cory, 2026-10-28: "lets shift tribute band into this", then "should maybe get to pick the rival they copy"
-    m('dejavu', 'Tribute Band', 8, 3, /* Cory, Oct 27: "tribute band at 12" (with the +1 wild) */ 'On Use, once per game: do every action a rival you choose has a minion on this round.', {
+    m('dejavu', 'Tribute Band', 8, 3, /* Cory, Oct 27: "tribute band at 12" (with the +1 wild) */ 'On Use, once per game: choose a rival. Do every action they have a minion on this round.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const list = ctx.rivals(owner).filter(o => ownPlan(ctx, o).take.length);
@@ -552,7 +552,7 @@ const echoQ = {
         && Math.max(0, ...ctx.rivals(owner).map(o => ownPlan(ctx, o).take.reduce((n, e) => n + entryValue(ctx, e, owner), 0))) >= (ctx.state.round === 3 ? 6 : 10),
     }),
     // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
-    m('doppel', 'Doppelganger', 2, 2, 'On Recruit: it becomes a copy of one of your members.', { round: 3, // joins in round III (Cory, 2026-10-25)
+    m('doppel', 'Doppelganger', 2, 2, 'On Recruit: this member becomes a copy of another of your members.', { round: 3, // joins in round III (Cory, 2026-10-25)
       onRecruited(ctx, owner, card) {
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && (c.copy || !['doppel', 'impostor'].includes(c.def.key)));
         if (!own.length) return;
@@ -562,7 +562,7 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('impostor', 'Impostor', 2, 3, /* Cory, 2026-10-28: "more expensive": 6 (was 5) */ 'On Recruit: it becomes a copy of a rival’s member.', { round: 3, // joins in round III (Cory, 2026-10-25)
+    m('impostor', 'Impostor', 2, 3, /* Cory, 2026-10-28: "more expensive": 6 (was 5) */ 'On Recruit: this member becomes a copy of a rival’s member.', { round: 3, // joins in round III (Cory, 2026-10-25)
       onRecruited(ctx, owner, card) {
         const rivals = ctx.rivals(owner).flatMap(p => ctx.membersOf(p)).filter(c => c.copy || !['doppel', 'impostor'].includes(c.def.key));
         if (!rivals.length) return;
@@ -576,9 +576,9 @@ const echoQ = {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
     }),
-    m('agents', 'Agents', 1, 1, 'Your actions can’t be copied.', { f: 2, n: 2 }),
+    m('agents', 'Agents', 1, 1, 'Rivals can’t copy your actions.', { f: 2, n: 2 }),
     m('bait', 'Bait', 1, 1, 'Whenever anyone copies one of your actions, they −1 follower and you +1 follower.'),
-    m('chronicler', 'Chronicler', 1, 3, 'Game end: +1 follower per green member.', {
+    m('chronicler', 'Chronicler', 1, 3, 'Game End: +1 follower per green member you have.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'echo'),
     }),
   ],

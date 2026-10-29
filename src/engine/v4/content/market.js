@@ -351,16 +351,16 @@ const market = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && totalRes(owner) >= 8,
     }),
-    m('snob', 'Snob', 3, 2, 'Game end: +1 follower per blue member you have.', {
+    m('snob', 'Snob', 3, 2, 'Game End: +1 follower per blue member you have.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, Q),
     }),
-    m('recluse', 'Recluse', 2, 2, 'Game end: +2 followers per rival with more members than you.', {
+    m('recluse', 'Recluse', 2, 2, 'Game End: +2 followers per rival with more members than you.', {
       onGameEnd: (ctx, owner) => 2 * rivalsBigger(ctx, owner),
     }),
     // concepts, Oct 21, not approved (design/eval/member-concepts-2026-10-21.md): prices are sim starting points
     // Cory, 2026-10-24: Blue's round start ("Yeah I kinda like it") and Blue's once per game, the shop refresh that replaces
     // Makeover; names and prices Claude's fill-in
-    m('windowshopper', 'Window Shopper', 2, 2, 'On Recruit: send 1 shop member to the bottom of the pile, gain 1 of its color. Round Start: send 1 shop member to the bottom of the pile, gain 1 of its color.', { now: true,
+    m('windowshopper', 'Window Shopper', 2, 2, 'On Recruit: send 1 shop member to the bottom of the pile. +1 of its color. Round Start: send 1 shop member to the bottom of the pile. +1 of its color.', { now: true,
       onRoundStart(ctx, owner) {
         const shop = ctx.shopCards();
         if (!shop.length) return;
@@ -378,7 +378,7 @@ const market = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && !ctx.shopCards().some(c => ctx.payChoices(owner, c.uid, {}).length),
     }),
-    m('shopaholic', 'Shopaholic', 3, 5, 'You can always recruit twice.', { buyTwice: true, f: 2 }),
+    m('shopaholic', 'Shopaholic', 3, 5, 'You can recruit twice each turn.', { buyTwice: true, f: 2 }),
     m('windowdresser', 'Window Dresser', 2, 1, 'On Recruit: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx, owner) {
         ctx.log(`${owner.name}'s Window Dresser: send 3 shop members to the bottom of the pile.`);

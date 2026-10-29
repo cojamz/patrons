@@ -206,7 +206,7 @@ const trading = {
   // (white + any, followers printed); names marked new are Claude's fill-ins.
   members: [
     // Recluse moves here from Blue (Cory, 2026-10-25: "yes"), so a seat with few members has a payoff
-    m('recluse', 'Recluse', 2, 2, 'Game end: +2 followers per rival with more members than you.', {
+    m('recluse', 'Recluse', 2, 2, 'Game End: +2 followers per rival with more members than you.', {
       onGameEnd: (ctx, owner) => 2 * ctx.rivals(owner).filter(o => ctx.memberCount(o) > ctx.memberCount(owner)).length,
     }),
     // Cory, 2026-10-25: cost 3 (was 4), so White has a cheap starter
@@ -268,14 +268,14 @@ const trading = {
       botActivate: (ctx, owner) => ctx.state.round >= 2 && ctx.membersOf(owner).some(c => c.def.key !== 'appraiser' && buryValue(ctx, owner, c, fv(ctx)) >= 2),
     }),
     m('changer', 'Money Changer', 2, 1, 'Whenever you turn resources or members into followers, +1 white.', { f: 2, onTurned: 1 }),
-    m('martyr', 'Martyr', 2, 1, 'When this member leaves your cult, gain followers equal to its cost.', { f: 2,
+    m('martyr', 'Martyr', 2, 1, 'Whenever this member leaves your cult, gain followers equal to its cost.', { f: 2,
       onLeave(ctx, owner, card) {
         const c = card.def.s + card.def.w;
         ctx.asMember(owner, 'Martyr', () => { owner.bonus += c; ctx.log(`${owner.name}'s Martyr left: +${plural(c, 'follower')}.`); });
       },
     }),
     // Cory, 2026-10-24: "go deep card for every color" ("sure for now"); name and price Claude's fill-in, priced like Chronicler
-    m('oldmoney', 'Old Money', 1, 3, 'Game end: +1 follower per white member you have.', {
+    m('oldmoney', 'Old Money', 1, 3, 'Game End: +1 follower per white member you have.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'trading'),
     }),
     m('hoarder', 'Hoarder', 4, 3, 'On Use, once per game: turn all your resources into white.', {
@@ -308,12 +308,12 @@ const trading = {
     m('tipster', 'Tipster', 4, 2, 'Whenever a rival buys followers, +1 white.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, W, 1); },
     }),
-    m('lender', 'Lender', 4, 0, 'When it joins you: +5 white. Game end: lose 2 followers.', {
+    m('lender', 'Lender', 4, 0, 'When it joins you: +5 white. Game End: lose 2 followers.', {
       onRecruited(ctx, owner, card) { payLoan(ctx, owner, card); },
       onTurnEnd(ctx, owner, card) { if (!card.loanPaid) payLoan(ctx, owner, card); },
       onGameEnd: (ctx, owner) => -Math.min(2, sellable(owner)),
     }),
-    m('magnate', 'Magnate', 2, 2, 'Game end: +1 follower per 3 white.', {
+    m('magnate', 'Magnate', 2, 2, 'Game End: +1 follower per 3 white.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 3),
     }),
     m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),

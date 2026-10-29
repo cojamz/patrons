@@ -246,7 +246,7 @@ const silver = {
     m('grandhost', 'Grand Host', 8, 4, 'Double the silver you gain from Silver spaces.', { hostDouble: true }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6 (the most one pass moves);
     // pass 2's pooled midpoint (5.2) rounds back to 6, so it stays (design/eval/balance-pass-2.md)
-    m('saint', 'Patron Saint', 4, 2, 'Game end: +1 follower per 2 silver members, anyone’s.', {
+    m('saint', 'Patron Saint', 4, 2, 'Game End: +1 follower per 2 silver members, anyone’s.', {
       onGameEnd: ctx => Math.floor(ctx.state.players.reduce((s, o) => s + ctx.countMembersOfColor(o, S), 0) / 2),
     }),
   ],

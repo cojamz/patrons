@@ -108,7 +108,7 @@ export default {
       // a recruit is a member or a follower purchase (Cory, 2026-10-21); not its own arrival
       onRecruit(ctx, owner, card, by, what) { if (by === owner && what.member?.uid !== card.uid) owner.bonus += 1; },
     }),
-    m('mob', 'Mob', 8, 4, 'Game end: +1 follower per red member.', { f: 5, n: 5,
+    m('mob', 'Mob', 8, 4, 'Game End: +1 follower per red member you have.', { f: 5, n: 5,
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'red'),
     }),
     // members only, never a follower buy (Cory, 2026-10-29: "red recruit should only work for gaining members")
@@ -122,23 +122,23 @@ export default {
         if (by === owner && ctx.state.current === owner.id && owner.turnRecruits >= 2 && owner.turnRecruits - ctx.memberWeight(recruited) < 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Pied Piper: +2 red.`); }
       },
     }),
-    m('host', 'Host', 2, 2, 'On Recruit: +1 red per 2 members. Round Start: +1 red per 2 members.', { now: true,
+    m('host', 'Host', 2, 2, 'On Recruit: +1 red per 2 members you have. Round Start: +1 red per 2 members you have.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'red', Math.floor(ctx.memberCount(owner) / 2)); },
     }),
     m('sponsor', 'Sponsor', 6, 4, 'Your members cost 2 less.', { costReduction: 2 }),
     m('crowd', 'Crowd-Pleaser', 2, 0, 'Whenever you buy followers, +1 red.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) ctx.gain(owner, 'red', 1); },
     }),
-    m('patriarch', 'Patriarch', 3, 2, 'Game end: +1 follower per 2 members.', {
+    m('patriarch', 'Patriarch', 3, 2, 'Game End: +1 follower per 2 members you have.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
-    m('recruitbonus', 'Recruit Bonus', 1, 1, 'Whenever one of your members’ "On Recruit" happens, +1 of its color.', { f: 2,
+    m('recruitbonus', 'Recruit Bonus', 1, 1, 'Whenever one of your members’ On Recruit happens, +1 of its color.', { f: 2,
       onRecruitAbility(ctx, owner, card, recruited) { const r = ctx.quadrant(recruited.def.quadrant).resource; if (ctx.state.resources.includes(r)) ctx.gain(owner, r, 1); }, // a guest has no color: nothing
     }),
-    m('movementpenalty', 'Movement Penalty', 1, 2, 'When you move a rival’s member out of their cult, they lose 1 follower.', {
+    m('movementpenalty', 'Movement Penalty', 1, 2, 'Whenever you take a rival’s member out of their cult, they lose 1 follower.', {
       onMoveMember(ctx, owner, card, info) { if (info.from !== owner && ctx.followers(info.from) > 0) info.from.bonus -= 1; },
     }),
-    m('panel', 'Panel', 4, 2, 'On Recruit: Promote or Demote another member.', { f: 3, n: 3,
+    m('panel', 'Panel', 4, 2, 'On Recruit: promote or demote another of your members.', { f: 3, n: 3,
       onRecruited(ctx, owner, card) {
         const options = ['promote', 'demote'].filter(mode => swapPairs(ctx, owner, mode, card.uid).length).map(mode => ({
           id: mode, label: mode === 'promote' ? 'Promote' : 'Demote', kind: 'choice', value: mode,
@@ -148,7 +148,7 @@ export default {
     }),
     m('loyalists', 'Loyalists', 2, 3, /* Claude's fill-in price 5, was 3 (Cory, 2026-10-22: "too cheap") */ 'Your other members can’t be swapped.', { f: 2, n: 2, blockMemberSwaps: true }),
     // Cory, 2026-10-24: Red's once per game, "swap a rivals with the shop" (equal or greater cost); name and price Claude's fill-in
-    m('headhunter', 'Headhunter', 3, 2, 'On Use, once per game: swap a rival’s member with a shop member of equal or greater cost.', {
+    m('headhunter', 'Headhunter', 3, 2, 'On Use, once per game: swap a rival’s member with a shop member that costs as much or more.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!swapPairs(ctx, owner, 'rival').length) { card.used = false; ctx.log(`${owner.name}'s Headhunter: no rival member to swap.`); return; }
@@ -165,7 +165,7 @@ export default {
 // Tryout's shop members: an On Recruit or round-start effect that doesn't act on the card itself ("swap it",
 // "it becomes"), which a member still in the shop can't do.
 function borrowable(ctx) {
-  return ctx.shopCards().filter(c => (c.def.onRecruited || (c.def.now && (c.def.onRoundStart || c.def.onRoundStartLate))) && !/\bit\b|\bcop(?:y|ies)\b/i.test(c.def.text.replace(/^[^:]*:/, '')));
+  return ctx.shopCards().filter(c => (c.def.onRecruited || (c.def.now && (c.def.onRoundStart || c.def.onRoundStartLate))) && !/\bit\b|\bthis member\b|\bcop(?:y|ies)\b/i.test(c.def.text.replace(/^[^:]*:/, '')));
 }
 function cheapValue(ctx) {
   const c = cheapest(ctx);

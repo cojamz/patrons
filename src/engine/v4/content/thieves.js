@@ -364,7 +364,7 @@ const thieves = {
     }),
     // every steal, a member's too (Cory, 2026-10-22 playtest: "it should proc on member recruits (like grifter)")
     m('sticky', 'Sticky Fingers', 2, 1, 'Your steals take 1 more resource.', { stealMore: 1 }),
-    m('desperado', 'Desperado', 2, 2, 'While you have the fewest followers (ties count), double what you steal from spaces, before other bonuses.', {
+    m('desperado', 'Desperado', 2, 2, 'While you have the fewest followers (ties count), double what you steal from spaces.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
     m('robinhood', 'Robin Hood', 2, 1, 'Whenever you steal from the player with the most followers, +1 follower.', {
@@ -391,7 +391,7 @@ const thieves = {
       guardSteal: () => true,
     }),
     m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2 }),
-    m('doubleagent', 'Double Agent', 2, 1, 'On Recruit: swap it for a rival’s member you choose.', {
+    m('doubleagent', 'Double Agent', 2, 1, 'On Recruit: swap this member for a rival’s member you choose.', {
       onRecruited(ctx, owner, card) {
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid);
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });
@@ -419,7 +419,7 @@ const thieves = {
       botActivate: (ctx, owner) => ctx.state.round >= 2 && takeable(ctx, owner, owner.res.magenta || 0).some(([, c]) => cost(c) >= 4),
     }),
     // Cory's #69 "King of Thieves… based more on members… shouldn't compete with ring competition" (Cory's yes, Oct 21)
-    m('kingpin', 'Kingpin', 1, 2, 'Game end: +1 follower per magenta member you have.', {
+    m('kingpin', 'Kingpin', 1, 2, 'Game End: +1 follower per magenta member you have.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'thieves'),
     }),
     // Cory's yes, Oct 21: a counter in Bait's shape, and a weak card for "magenta doesn't gain enough"

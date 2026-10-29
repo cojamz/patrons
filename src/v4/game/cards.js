@@ -115,10 +115,10 @@ export function ownCopyPlan(state, pid) {
   } catch { return null; }
 }
 /** Is this the copy-all card (Greatest Hits as a space, Tribute Band as a member)? */
-export const copiesAll = text => /^(?:(?:on use, )?(?:once per game|one time use): )?(?:copy|do) every (?:action (?:where you have a minion|with your minion|you took this round|(?:the leader|a rival you choose) has a minion on)|space you took this round)/i.test(text || '');
+export const copiesAll = text => /^(?:(?:on use, )?(?:once per game|one time use): )?(?:choose a rival\. )?(?:copy|do) every (?:action (?:they have a minion on|where you have a minion|with your minion|you took this round|(?:the leader|a rival you choose) has a minion on)|space you took this round)/i.test(text || '');
 /** The copy-all plan a card would play for pid: its own actions, or every rival's it could pick (Tribute Band, Cory 2026-10-28). */
 export function copyAllPlan(state, pid, text) {
-  if (!/\ba rival you choose\b/i.test(text || '')) return ownCopyPlan(state, pid);
+  if (!/\ba rival you choose\b|\bchoose a rival\b/i.test(text || '')) return ownCopyPlan(state, pid);
   try {
     const plans = state.players.filter(o => o.id !== pid).map(o => ownCopyPlan(state, o.id)).filter(Boolean);
     return plans.length ? { keys: [...new Set(plans.flatMap(x => x.keys))], names: plans.flatMap(x => x.names), skips: plans[0].skips } : null;
