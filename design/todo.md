@@ -1,13 +1,25 @@
-# To do (one ordered list; rewritten 2026-10-24 in the tidy-up)
+# To do (one ordered list; rewritten 2026-10-24 in the tidy-up; backlog initiatives added 2026-10-29)
 
 Done items and the old lists: design/archive/todo-2026-10-20-to-23.md and design/archive/todo-before-2026-10-20.md.
 
 ## Cory's calls
 All open design and feel questions are numbered in design/notes/waiting-on-cory-2026-10-24.md, defaults in brackets. When he answers, log each call in design/decisions.md, tick it there, and build in this order: two shops (#1 to #4), card changes (#5 to #11), board (#12 to #14), members (#15 to #17).
 
-Redesign, brainstorm with Cory: Shake Down (feels too bad for the player who gets shaken down) and Late Bloomers (works against itself and counts itself). From his Oct 24 game.
-Broader rework, his to lead (Oct 28): one ordered list of actions and members, flagged first, in design/notes/rework-list-2026-10-28.md (Cory works down it by number). Covers Crowd In with Greatest Hits, Encore, Once per round, Shake Down, Extortionist, deck growth to about 16. Nothing built.
-Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 member cards at game end. Next pitches, one example first: a trio set bonus (three linked members, across or within colors, scaling as you collect); how the Saboteur (-3 followers when it joins your cult) enters a cult. Open asks: Host, Grifter, Heiress stay like Patriarch? [yes]; Extortionist rework so it stops taxing follower buys (his yes, no shape yet). Tabled: a follower-spending color.
+Redesign, brainstorm with Cory: Late Bloomers (works against itself and counts itself). From his Oct 24 game. (Shake Down is done: the rival picks which member is at stake, v0.9.835.)
+Broader rework, his to lead (Oct 28): design/notes/rework-list-2026-10-28.md, worked down by number. Decided and live: Crowd In, Encore, Once per game wording, Shake Down, Extortionist. Open steps are in Backlog initiatives below.
+
+## Backlog initiatives (long-term goals, one line each; logged 2026-10-29 from closed threads)
+1. Member decks to 15 per color, color by color with Cory: Green and the guests are done; Magenta, Blue, Purple, White, Red next. Each deck gets two cheap members (2-3), two big ones (8+), every timing, varied bodies (rework list steps 7, 13, 14).
+2. Fewer, more strategic cults (Cory, Oct 27): about 8-10 member cards at game end; a trio set bonus per color (one example first); how the Saboteur reaches a cult if not from the shop (rework list step 11).
+3. Rework list steps still open: what "pack/bonus merchants" means (8), White's cheap "cast me out" members (9), Sleep In growing +3/+5/+7 (10), Host, Grifter, Heiress stay [yes] (12), Double Agent's price (15).
+4. "Once per round" members left: Squatter, Straggler, Big Spender (guests) and Taskmaster, Lookout, Pawnbroker (rework list step 3). Night Owl stays.
+5. Round I passes still to do: White's 3/4/5 space; Gold, Silver and Yellow's round I; Purple's round I after a playtest (Cory, Oct 28).
+6. Gold, Silver, Yellow redesigns (paused by Cory): all colors at 2.0 is v1.0.
+7. Copying in round III: the expert AI games keep naming Last Call, Echo and Greatest Hits copying steals or Last Call; bots say whoever places last takes a third more of the round III contest followers. Spaces have no price, so these go to Cory as design calls once the balance thread reports.
+8. Weakest artifacts: Money Changer and Impressionist are weakest with every bot, and artifacts are free, so a price can't fix them (Impressionist stays, Cory Oct 29).
+9. Portraits as little scenes for every member, through critic rounds (running); two cards are both named Alchemist (gold.tinker, benders.freelancer).
+10. Printed copy: the project's long-term aim. Nothing started; card faces from the members page are the likely starting point.
+
 ## Ours, open (no call needed)
 0. Confirm two browsers in one online room see each other's table-talk bubbles on the live build (v0.9.2 shipped it).
 0b. Known-red browser checks have no owner: shop-sizing.mjs (follower buys resize with details on), layout.mjs (setup waits, P1's count), hotseat.mjs (text cuts in "You" and the Even Swap picker), info.mjs (deck count 3 vs pile 36 in (h); lamp ring check in (s) misses a 3px outline). All red before v0.9.8xx details-text change. Fix, then empty e2e/v4/known-red.json.
@@ -23,6 +35,7 @@ Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 mem
 9. Seat pass: minions, follower number, resources and rivals' engines readable at a glance. Show Cory 2 mockups first.
 
 ## Lag and motion (ours: engineering never waits on Cory; judge on the freeze probe in Chrome and Firefox)
+- Wheel in Firefox: one ~180 ms hitch the first time the rim's words flip; 100-130 ms frames as a spin starts on slowed Firefox. Only if Cory says it still drags.
 - Smoothness panel leftovers (/mnt/project-files/smooth-panel/plan.md): the wheel's landing re-lay (lay out only panels whose upright side flips), scoringSnapshot cache, income line keyed by members, preview cap by time.
 - Snappy pair next (Claude's): bots off the main thread (worker), one animation clock + piece pool, acknowledgment/frame bars in the snappy gate, cult-hop filter. design/eval/snappy-pair/README.md.
 - React commits 80-130ms at 4x CPU; seat re-renders as cards land; hover "a tiny bit wonky"; linger motion starts late. Leftovers: design/eval/perf/lag-2026-10-21.md.
@@ -32,7 +45,7 @@ Member rework toward fewer, more strategic cults (Cory, Oct 27): target 8-10 mem
 
 ## Later
 - Engineering: structured events instead of log parsing; shared verbs for copies; online auth rules; type checking.
-- Cory's 11 balance calls from Oct 29 (Recruiter, Money Changer, Impressionist, Greatest Hits, Last Call copies, Agents, Accomplice, Saboteur, Front-runner, Gather/Spree/Recruit Twice, Tiebreaker): https://claude.ai/artifact/VAMVg3DAPWoFabU8AFSWs8. Build each yes as he answers.
+- Cory's 11 balance calls from Oct 29 (https://claude.ai/artifact/VAMVg3DAPWoFabU8AFSWs8): answered Oct 29, being built in the balance thread.
 - Low priority (Cory, Oct 21): balance-test Crunch Time at 3 turns against 2.
 
 ## Parked
