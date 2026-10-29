@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '../app.css';
 import '../game/lamp-b.css'; // the shop card (.lt-card) and the hover card's look (.mc)
 import './members-page.css';
+import '../game/card-header.css';
 import { allQuadrantIds, quadrant, memberRound, roman } from '../../engine/v4/index.js';
 import { guestMembers } from '../../engine/v4/content/index.js';
 import { CUT } from '../../engine/v4/content/cull.js';
@@ -67,15 +68,16 @@ function Tile({ def, copies, onOver, onOut, onPin, pinned }) {
     aria-label={`${def.name}, worth ${def.f}, costs ${total}`} aria-pressed={pinned}
     onPointerEnter={e => onOver(def, e.currentTarget)} onPointerLeave={onOut} onFocus={e => onOver(def, e.currentTarget)} onBlur={onOut}
     onClick={e => onPin(def, e.currentTarget)}>
-    <span className="art"><Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} />
+    <span className="lt-hd">
       <span className="lt-corner-cost num" aria-hidden="true">{total}</span>
+      <span className="val" title={`Worth ${def.f} follower${def.f === 1 ? '' : 's'}`}><b className="num">{def.f}</b><FollowerGlyph size={14} title={`worth ${def.f}`} /></span>
+      <span className="nm">{def.name}</span>
+    </span>
+    <span className="art"><Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} />
       {def.from > 1 && <span className="lt-round-tag" title="Works from round II on">II+</span>}
       {copies > 1 && <span className="mp-copies" title={`${copies} copies in the deck`}>×{copies}</span>}
     </span>
-    <span className="nm">{def.name}</span>
-    <span className="ft"><CostShapes parts={parts} />
-      <span className="val" title={`Worth ${def.f} follower${def.f === 1 ? '' : 's'}`}><b className="num">{def.f}</b><FollowerGlyph size={11} title={`worth ${def.f}`} /></span>
-    </span>
+    <span className="ft"><CostShapes parts={parts} /></span>
   </button>;
 }
 

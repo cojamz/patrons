@@ -22,6 +22,7 @@ import { MO } from '../motion.js';
 import { withRace } from './race.js';
 import { memberTimingWords } from './memberTiming.js';
 import { poolNote } from './poolNote.js';
+import './card-header.css';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -291,16 +292,15 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
   // a discount on you (the shop face shows the price, the list price struck beside it): its reason
   const paid = where === 'In the shop' && me != null && state.players[me] ? paidParts(state, state.players[me], uid, d) : null;
   return (
-    <div className="card-face mc" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
-      <div className="mc-head">
-        <span className="mc-art" aria-hidden="true"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} /></span>
-        <span className="mc-id">
-          <span className="mc-row"><b className="mc-name">{d.name}</b>{!onFace && <span className="mc-worth" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`}><b className="n">{d.f}</b><Follower size={14} title={`worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></span>}</span>
-          {/* the cost's dots say its colors; a member of no color here says so on its own line below (w3a #23: "costs 4◐ · colorless") */}
-          {onFace ? (weight > 1 ? <small className="mc-cost">counts as {weight} members</small> : null)
-            : <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{weight > 1 ? ` · counts as ${weight} members` : ''}</small>}
-        </span>
+    <div className="card-face mc" style={{ '--c': cardColor(state, d) }} data-card={d.id} data-pale={cardGround(state, d) ? '' : undefined} data-long={ability.length > 110 ? '' : undefined}>
+      {/* a trading card (Cory, Oct 29: "Header is good"): the name on a bar in the color, the price in a dark disc at
+          its left and the worth at its right, the picture under it; the price's colors sit at the foot */}
+      <div className="mc-head mc-hd">
+        {!onFace && <span className="mc-price num" aria-hidden="true">{(paid || costParts(d, state.resources)).reduce((t, c) => t + c.n, 0)}</span>}
+        <b className="mc-name">{d.name}</b>
+        {!onFace && <span className="mc-worth" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`}><b className="n">{d.f}</b><Follower size={14} title={`worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></span>}
       </div>
+      {!onFace && <span className="mc-art" aria-hidden="true"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={72} /></span>}
       {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}
       {/* a member with no ability says so, never an empty card (w2a #36: Twins and Intern showed only a header) */}
       {/* a member you use (once a game, once a round) says so first (w3a #5: "you can't find out which members you use");
@@ -315,6 +315,9 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {/* the shop's header says a discount once; a face beside its hover shows the price (w4 A#23: the sentence on all 10) */}
       {paid && !onFace && discountWhy(state, state.players[me]) && <small className="mc-live" data-discount>{upFirst(discountWhy(state, state.players[me]))}.</small>}
       {where === 'In the pile' && <small className="mc-live">{where}</small>}
+      {/* the cost's dots say its colors; a member of no color here says so on its own line (w3a #23: "costs 4◐ · colorless") */}
+      {onFace ? (weight > 1 ? <small className="mc-cost">counts as {weight} members</small> : null)
+        : <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{weight > 1 ? ` · counts as ${weight} members` : ''}</small>}
     </div>
   );
 }
