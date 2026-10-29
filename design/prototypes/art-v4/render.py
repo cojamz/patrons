@@ -94,7 +94,8 @@ def samples(styles, out):
 if __name__ == '__main__':
     import sys
     SET = sys.argv[1] if len(sys.argv) > 1 else 'samples'
-    data = json.load(open(os.path.join(HERE, SET + '.json')))
+    OUT = os.environ.get('OUT', SET)
+    data = json.load(open(os.path.join(HERE, OUT + '.json')))
     allrows = []
     for st in data['styles']:
         items = st['portraits']
@@ -104,5 +105,5 @@ if __name__ == '__main__':
         for p in items:
             zoom(p, os.path.join(d, p['id'] + '-8x.png'))
         allrows.append((st, items))
-    samples(allrows, os.path.join(HERE, SET + '.png'))
+    samples(allrows, os.path.join(HERE, OUT + '.png'))
     print('ok')

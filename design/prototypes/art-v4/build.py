@@ -20,5 +20,5 @@ for sid in ORDER:
         assert not missing, (sid, pid, missing)
         st['portraits'].append({'id': pid, 'name': name, 'grid': grid, 'pal': {k: v for k, v in pal.items() if k in used}})
     out['styles'].append(st)
-json.dump(out, open(os.path.join(HERE, SET + '.json'), 'w'), indent=1)
+json.dump(out, open(os.path.join(HERE, os.environ.get('OUT', SET) + '.json'), 'w'), indent=1)
 print('built', [len(s['portraits']) for s in out['styles']])
