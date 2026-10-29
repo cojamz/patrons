@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.873 — 2026-10-29
+
+- Cards you use say On Use, once per game or once per round. Coach activates one of your members' On Use ability as a free extra use. Cleaner words on Tiebreaker, Alchemist, Recruit Bonus, Agents, Tribute Band and more.
+
 ## v0.9.872 — 2026-10-29
 
 - Hover a rival's seat for their whole cult: members in columns by card type, priciest first, with their artifact, round-start income, game-end score, resources and members by color up top. Members they haven't used yet glow; used ones are turned face down.
