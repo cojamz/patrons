@@ -25,4 +25,3 @@ Closed Oct 29 with nothing owed: Cross-check balance findings (11 price changes 
 Branches
 - claude/gifted-newton-3lcy3i: the game (PR #1). main: the old game plus play/, rules/ and the harness mirror.
 - Every other claude/* branch is an old thread workspace and stale; none are needed.
-- Member wording pass (thread "Tighten member card wording", Oct 29): Coach and Bait live in v0.9.860. The other rows of /mnt/project-files/member-words/member-words.md wait for Cory's yes; the edited card files (before the Coach/Bait commit) are in /mnt/project-files/member-words/wording-files-pending/. Re-apply only the text strings on the current branch; Night Owl and Hot Streak are on hold for the extra-turn wording question.
