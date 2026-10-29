@@ -1,0 +1,141 @@
+hard bots, 400 games, random tables of the 2.0 colors.
+  2 seats: 160 games; buy-followers-only seat won 16% of 40 (even 50%); avg followers 58.5, winner 67.3, margin 17.5; avg members 10.0
+  3 seats: 160 games; buy-followers-only seat won 15% of 40 (even 33%); avg followers 57.4, winner 68.7, margin 12.5; avg members 8.6
+
+Seat order (win share vs even):
+  2p seat 1: 51% vs 50% (160)
+  2p seat 2: 49% vs 50% (160)
+  3p seat 1: 35% vs 33% (160)
+  3p seat 2: 31% vs 33% (160)
+  3p seat 3: 34% vs 33% (160)
+
+Main color (seats with 3+ members of one color, most of that color; win share vs even):
+  echo: 50% vs 40%, lift +10 ±4 (139 seats)
+  thieves: 47% vs 40%, lift +7 ±6 (76 seats)
+  red: 50% vs 43%, lift +7 ±5 (107 seats)
+  purple: 39% vs 39%, lift +0 ±11 (19 seats)
+  trading: 36% vs 40%, lift -5 ±13 (14 seats)
+  market: 30% vs 41%, lift -11 ±5 (76 seats)
+
+Artifacts (owner win share vs even):
+  Pocket Watch (purple): 50% vs 40%, lift +10 ±4 (134)
+  Recruiter (red): 47% vs 41%, lift +6 ±4 (143)
+  Bargain Bin (market): 41% vs 40%, lift +1 ±4 (142)
+  Money Changer (trading): 35% vs 40%, lift -5 ±4 (132)
+  Fence (thieves): 34% vs 40%, lift -6 ±4 (125)
+  Impressionist (echo): 32% vs 39%, lift -7 ±4 (124)
+
+Members by lift (owner win share minus expected for their member count; 15+ owners). Followers = printed plus what the ability added:
+  Night Owl (purple): +16 ±10 | wins 67% vs 51% | owned 21, a bot owned it in 22% of the 95 games it showed | 2.0 followers for 8
+  Recluse (trading): +15 ±11 | wins 52% vs 37% | owned 22, a bot owned it in 23% of the 97 games it showed | 1.0 followers for 5
+  Grifter (thieves): +13 ±6 STRONG | wins 54% vs 41% | owned 70, a bot owned it in 90% of the 78 games it showed | 1.0 followers for 5
+  Fan Club (echo): +11 ±6 | wins 59% vs 49% | owned 74, a bot owned it in 83% of the 89 games it showed | 3.0 followers for 6
+  Desperado (thieves): +9 ±13 | wins 47% vs 38% | owned 15, a bot owned it in 16% of the 91 games it showed | 1.0 followers for 5
+  Raiders (trading): +8 ±8 | wins 47% vs 39% | owned 35, a bot owned it in 34% of the 102 games it showed | 4.5 followers for 5
+  Loyalists (red): +8 ±9 | wins 56% vs 49% | owned 32, a bot owned it in 26% of the 122 games it showed | 2.0 followers for 6
+  Understudy (echo): +8 ±5 | wins 52% vs 45% | owned 89, a bot owned it in 94% of the 95 games it showed | 1.1 followers for 4
+  Crew (thieves): +7 ±8 | wins 49% vs 41% | owned 37, a bot owned it in 36% of the 103 games it showed | 2.0 followers for 3
+  Old Money (trading): +7 ±9 | wins 47% vs 39% | owned 30, a bot owned it in 35% of the 85 games it showed | 1.0 followers for 5
+  Shopkeeper (trading): +7 ±6 | wins 44% vs 38% | owned 79, a bot owned it in 73% of the 108 games it showed | 1.0 followers for 4
+  Stunt Double (echo): +7 ±6 | wins 51% vs 45% | owned 75, a bot owned it in 87% of the 86 games it showed | 1.3 followers for 5
+  Panel (red): +7 ±5 | wins 57% vs 51% | owned 99, a bot owned it in 98% of the 101 games it showed | 3.0 followers for 7
+  Cheerleader (benders): +6 ±4 | wins 51% vs 45% | owned 124, a bot owned it in 43% of the 289 games it showed | 3.1 followers for 4
+  Extortionist (thieves): +6 ±8 | wins 46% vs 40% | owned 39, a bot owned it in 44% of the 89 games it showed | 1.0 followers for 7
+  Kingpin (thieves): +6 ±6 | wins 45% vs 39% | owned 71, a bot owned it in 69% of the 103 games it showed | 1.0 followers for 4
+  Doppelganger (echo): +5 ±6 | wins 51% vs 46% | owned 60, a bot owned it in 61% of the 99 games it showed | 1.7 followers for 5
+  Party Crasher (benders): +5 ±5 | wins 47% vs 42% | owned 116, a bot owned it in 42% of the 276 games it showed | 1.0 followers for 4
+  Muse (echo): +5 ±9 | wins 45% vs 40% | owned 31, a bot owned it in 28% of the 111 games it showed | 1.0 followers for 4
+  Mob (red): +5 ±7 | wins 63% vs 58% | owned 45, a bot owned it in 42% of the 106 games it showed | 5.0 followers for 13
+  Double Agent (thieves): +4 ±8 | wins 45% vs 41% | owned 38, a bot owned it in 40% of the 95 games it showed | 1.0 followers for 7
+  Hot Streak (purple): +4 ±9 | wins 45% vs 41% | owned 32, a bot owned it in 29% of the 110 games it showed | 6.2 followers for 5
+  Snitch (thieves): +4 ±12 | wins 44% vs 40% | owned 17, a bot owned it in 16% of the 104 games it showed | 1.0 followers for 4
+  Accomplice (thieves): +4 ±5 | wins 43% vs 39% | owned 94, a bot owned it in 95% of the 99 games it showed | 1.0 followers for 3
+  Sticky Fingers (thieves): +3 ±10 | wins 44% vs 41% | owned 24, a bot owned it in 23% of the 103 games it showed | 1.0 followers for 4
+  Con Men (benders): +2 ±4 | wins 47% vs 45% | owned 186, a bot owned it in 87% of the 215 games it showed | 2.0 followers for 7
+  Dabblers (benders): +1 ±3 | wins 46% vs 45% | owned 253, a bot owned it in 97% of the 262 games it showed | 2.0 followers for 3
+  Robin Hood (thieves): +1 ±10 | wins 38% vs 37% | owned 25, a bot owned it in 26% of the 98 games it showed | 2.7 followers for 4
+  Ensemble (echo): +1 ±7 | wins 48% vs 47% | owned 48, a bot owned it in 48% of the 101 games it showed | 5.4 followers for 5
+  Coach (benders): +1 ±9 | wins 50% vs 49% | owned 30, a bot owned it in 12% of the 260 games it showed | 1.0 followers for 8
+  Gossip (purple): 0 ±11 | wins 40% vs 40% | owned 20, a bot owned it in 20% of the 101 games it showed | 6.1 followers for 6
+  Cutpurse (thieves): -1 ±5 | wins 39% vs 39% | owned 96, a bot owned it in 97% of the 99 games it showed | 1.0 followers for 3
+  Roadie (echo): -1 ±6 | wins 43% vs 43% | owned 76, a bot owned it in 72% of the 106 games it showed | 1.0 followers for 3
+  Triplets (red): -1 ±5 | wins 50% vs 50% | owned 116, a bot owned it in 89% of the 130 games it showed | 3.0 followers for 3
+  Proselytizer (red): -1 ±7 | wins 49% vs 50% | owned 45, a bot owned it in 38% of the 119 games it showed | 6.8 followers for 7
+  Tiebreaker (benders): -1 ±4 | wins 41% vs 42% | owned 132, a bot owned it in 47% of the 282 games it showed | 1.0 followers for 4
+  Timekeepers (purple): -1 ±7 | wins 41% vs 42% | owned 55, a bot owned it in 57% of the 97 games it showed | 1.0 followers for 5
+  Host (red): -1 ±5 | wins 49% vs 50% | owned 115, a bot owned it in 99% of the 116 games it showed | 1.0 followers for 5
+  Front-runner (benders): -1 ±3 | wins 42% vs 43% | owned 219, a bot owned it in 81% of the 270 games it showed | 1.0 followers for 2
+  Impostor (echo): -1 ±7 | wins 46% vs 48% | owned 54, a bot owned it in 53% of the 102 games it showed | 2.4 followers for 6
+  Patriarch (red): -2 ±6 | wins 50% vs 52% | owned 79, a bot owned it in 65% of the 121 games it showed | 1.0 followers for 6
+  Agents (echo): -2 ±5 | wins 43% vs 45% | owned 96, a bot owned it in 91% of the 106 games it showed | 2.0 followers for 3
+  Closer (purple): -2 ±11 | wins 45% vs 48% | owned 21, a bot owned it in 20% of the 104 games it showed | 1.0 followers for 5
+  Regular (market): -3 ±5 | wins 38% vs 41% | owned 85, a bot owned it in 63% of the 134 games it showed | 1.0 followers for 3
+  Trendsetter (market): -3 ±5 | wins 40% vs 42% | owned 111, a bot owned it in 83% of the 134 games it showed | 3.0 followers for 4
+  Big Spender (benders): -3 ±4 | wins 39% vs 43% | owned 180, a bot owned it in 63% of the 287 games it showed | 1.0 followers for 3
+  Mentor & Protégé (red): -3 ±8 | wins 54% vs 57% | owned 38, a bot owned it in 35% of the 110 games it showed | 2.0 followers for 9
+  Window Shopper (market): -5 ±6 | wins 37% vs 42% | owned 70, a bot owned it in 54% of the 129 games it showed | 1.0 followers for 5
+  HR (benders): -5 ±5 | wins 46% vs 51% | owned 90, a bot owned it in 36% of the 249 games it showed | 4.0 followers for 10
+  Busker (echo): -5 ±5 | wins 38% vs 43% | owned 100, a bot owned it in 99% of the 101 games it showed | 1.0 followers for 4
+  Critic (market): -5 ±7 | wins 36% vs 41% | owned 50, a bot owned it in 37% of the 136 games it showed | 2.6 followers for 4
+  Scout (benders): -6 ±4 | wins 38% vs 44% | owned 165, a bot owned it in 59% of the 280 games it showed | 1.0 followers for 3
+  Alchemist (benders): -6 ±6 | wins 40% vs 46% | owned 62, a bot owned it in 23% of the 267 games it showed | 1.0 followers for 5
+  Recruit Bonus (red): -6 ±5 | wins 42% vs 48% | owned 117, a bot owned it in 94% of the 124 games it showed | 2.0 followers for 3
+  Launderers (benders): -6 ±4 | wins 38% vs 45% | owned 137, a bot owned it in 50% of the 275 games it showed | 2.0 followers for 4
+  Headhunter (red): -7 ±11 | wins 40% vs 47% | owned 20, a bot owned it in 15% of the 130 games it showed | 1.0 followers for 6
+  Chronicler (echo): -7 ±6 | wins 39% vs 46% | owned 74, a bot owned it in 78% of the 95 games it showed | 1.0 followers for 5
+  Bait (echo): -7 ±5 | wins 33% vs 40% | owned 74, a bot owned it in 67% of the 111 games it showed | 1.3 followers for 3
+  Plus-One (market): -7 ±5 | wins 36% vs 43% | owned 81, a bot owned it in 59% of the 137 games it showed | 2.0 followers for 4
+  Window Dresser (market): -7 ±4 | wins 35% vs 42% | owned 113, a bot owned it in 89% of the 127 games it showed | 3.0 followers for 4
+  Bouncer (purple): -9 ±6 | wins 32% vs 41% | owned 64, a bot owned it in 54% of the 118 games it showed | 1.0 followers for 4
+  Broker (trading): -9 ±8 | wins 29% vs 38% | owned 35, a bot owned it in 34% of the 103 games it showed | 2.0 followers for 5
+  Martyr (trading): -9 ±12 | wins 31% vs 41% | owned 16, a bot owned it in 14% of the 117 games it showed | 2.3 followers for 4
+  Restocker (market): -9 ±7 | wins 33% vs 42% | owned 43, a bot owned it in 31% of the 140 games it showed | 1.0 followers for 4
+  Volunteer (red): -10 ±4 WEAK | wins 36% vs 46% | owned 129, a bot owned it in 104% of the 124 games it showed | 1.0 followers for 1
+  Anarchist (benders): -11 ±7 | wins 42% vs 54% | owned 45, a bot owned it in 17% of the 258 games it showed | 1.0 followers for 7
+  Shift Crew (purple): -12 ±6 | wins 32% vs 43% | owned 57, a bot owned it in 46% of the 124 games it showed | 2.0 followers for 3
+  Saboteur (benders): -12 ±8 | wins 38% vs 49% | owned 41, a bot owned it in 16% of the 263 games it showed | -3.0 followers for 5
+  Movement Penalty (red): -12 ±6 | wins 35% vs 48% | owned 54, a bot owned it in 42% of the 129 games it showed | 1.0 followers for 4
+  Clockmaker (purple): -14 ±10 | wins 30% vs 44% | owned 20, a bot owned it in 20% of the 102 games it showed | 1.0 followers for 5
+  Connoisseur (market): -14 ±7 WEAK | wins 30% vs 44% | owned 49, a bot owned it in 36% of the 136 games it showed | 1.0 followers for 4
+  Snob (market): -17 ±6 WEAK | wins 28% vs 45% | owned 64, a bot owned it in 50% of the 127 games it showed | 1.0 followers for 6
+  Doorman (market): -20 ±7 WEAK | wins 24% vs 44% | owned 42, a bot owned it in 30% of the 138 games it showed | 1.0 followers for 4
+
+Too few owners to read (owned/in shop): Tribute Band (echo) 12/93, Extra Hand (benders) 13/255, Wallflower (echo) 2/95, Bodyguard (thieves) 8/89, Shoplifter (thieves) 4/87, Fixer (thieves) 2/87, Undertaker (trading) 7/96, Cashier (trading) 10/90, Exporter (trading) 12/101, Hoarder (trading) 2/96, Heiress (trading) 10/96, Patroness (market) 10/129, Shopaholic (market) 10/130, Courier (purple) 7/101, Early Bird (purple) 12/105, Go-Getter (purple) 9/107, Late Riser (purple) 8/100, Extra Shift (purple) 5/97
+
+Spaces by lift (seats that took it at least once: win share minus expected for their member count). Uses per game it sits on; winner vs other seats, uses per seat:
+  echo: Greatest Hits: +38 ±5 STRONG | 1.0/game, 1.0 seats take it | winner 0.78 vs others 0.12
+  trading: Cash In: +19 ±8 STRONG | 1.0/game, 1.0 seats take it | winner 0.53 vs others 0.29
+  purple: Last Call: +13 ±4 STRONG | 1.7/game, 1.4 seats take it | winner 0.91 vs others 0.46
+  purple: Crunch Time: +6 ±4 | 1.4/game, 1.2 seats take it | winner 0.58 vs others 0.50
+  thieves: Help Yourself: +5 ±3 | 3.1/game, 2.0 seats take it | winner 1.29 vs others 1.09
+  trading: Allowance: +3 ±3 | 3.0/game, 1.9 seats take it | winner 1.24 vs others 1.10
+  thieves: Poach: +3 ±4 | 1.0/game, 1.0 seats take it | winner 0.45 vs others 0.35
+  trading: Splurge: +3 ±4 | 1.6/game, 1.3 seats take it | winner 0.67 vs others 0.57
+  trading: Exchange: +3 ±3 | 2.2/game, 1.6 seats take it | winner 0.83 vs others 0.84
+  market: Recruit Twice: +2 ±5 | 1.1/game, 1.1 seats take it | winner 0.43 vs others 0.39
+  thieves: Stash: +2 ±3 | 3.0/game, 1.9 seats take it | winner 1.17 vs others 1.12
+  trading: Estate Sale: +1 ±3 | 2.0/game, 1.6 seats take it | winner 0.68 vs others 0.80
+  thieves: Crime Wave: +1 ±3 | 2.0/game, 1.6 seats take it | winner 0.76 vs others 0.76
+  thieves: Shake Down: +1 ±3 | 2.0/game, 1.6 seats take it | winner 0.74 vs others 0.76
+  market: Out of Style: +1 ±3 | 2.8/game, 1.9 seats take it | winner 1.18 vs others 1.03
+  echo: Build Up: +0 ±3 | 2.8/game, 2.0 seats take it | winner 1.19 vs others 1.00
+  purple: Crowd In: 0 ±4 | 1.1/game, 1.1 seats take it | winner 0.42 vs others 0.40
+  purple: Sleep In: 0 ±3 | 3.0/game, 2.0 seats take it | winner 1.17 vs others 1.17
+  purple: Hold Up: 0 ±3 | 2.9/game, 2.0 seats take it | winner 1.11 vs others 1.15
+  trading: Farewell: 0 ±3 | 1.9/game, 1.6 seats take it | winner 0.65 vs others 0.77
+  red: Recruit a Member: -1 ±4 | 1.0/game, 1.0 seats take it | winner 0.47 vs others 0.34
+  thieves: Lie Low: -1 ±4 | 1.7/game, 1.4 seats take it | winner 0.62 vs others 0.66
+  echo: Reprise: -2 ±3 | 3.1/game, 2.0 seats take it | winner 1.23 vs others 1.11
+  red: Walk-In: -2 ±3 | 2.8/game, 1.9 seats take it | winner 1.24 vs others 1.01
+  market: Peek: -3 ±3 | 2.9/game, 1.9 seats take it | winner 1.08 vs others 1.15
+  purple: Right Away: -3 ±3 | 2.4/game, 1.8 seats take it | winner 0.94 vs others 0.95
+  market: Savings: -3 ±3 | 2.7/game, 1.8 seats take it | winner 0.97 vs others 1.11
+  echo: Encore: -3 ±4 | 1.6/game, 1.4 seats take it | winner 0.57 vs others 0.63
+  red: Promote: -3 ±3 | 2.1/game, 1.7 seats take it | winner 0.91 vs others 0.79
+  echo: Echo: -4 ±3 | 3.0/game, 2.0 seats take it | winner 1.12 vs others 1.15
+  echo: Cover: -4 ±3 | 2.0/game, 1.6 seats take it | winner 0.76 vs others 0.74
+  market: Bury: -4 ±3 | 1.9/game, 1.5 seats take it | winner 0.73 vs others 0.73
+  red: Tryout: -4 ±3 | 2.1/game, 1.6 seats take it | winner 0.92 vs others 0.77
+  red: Gather: -4 ±3 | 2.9/game, 1.8 seats take it | winner 1.11 vs others 1.13
+  red: Demote: -5 ±3 | 2.0/game, 1.6 seats take it | winner 0.82 vs others 0.78
+  market: Spree: -14 ±4 WEAK | 1.0/game, 1.0 seats take it | winner 0.27 vs others 0.47
