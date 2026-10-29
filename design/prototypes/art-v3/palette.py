@@ -18,8 +18,20 @@ SPHERES = {'gold': '#e2962c', 'red': '#e0645a', 'magenta': '#d4508f', 'green': '
 TABLE, CARD = '#191310', '#d9ceb6'
 
 # skin: base tone (the C step); the ramp shifts shadows toward red-violet
-SKINS = {'porcelain': '#f0d2bc', 'fair': '#e8bc98', 'olive': '#cf9e70', 'tan': '#b67d52', 'brown': '#8e5a3a',
-         'deep': '#6a3f2a', 'ebony': '#4e2e22'}
+SKINS = {  # light to very deep; undertone in the name where it matters (Cory, Oct 29: a wider variety of skin tones)
+    'palepink': '#f3d2c8',   # pale, pink undertone
+    'porcelain': '#f0d8c2',  # pale, neutral
+    'freckled': '#eec4a2',   # fair, warm (the artist adds freckles in step B)
+    'fair': '#e6b994',       # light, warm
+    'golden': '#d9aa6c',     # light-medium, golden/yellow undertone
+    'olive': '#c39c74',      # medium, olive (green-grey) undertone
+    'warmtan': '#c4834f',    # medium, warm
+    'tan': '#a87452',        # medium-deep, neutral
+    'coolbrown': '#8c5e4e',  # deep, cool (red-violet) undertone
+    'brown': '#80522f',      # deep, warm
+    'deep': '#5e3a28',       # very deep, warm
+    'verydeep': '#402822',   # darkest, neutral
+}
 # hair: base tone (the G step)
 HAIRS = {'black': '#2e2630', 'darkbrown': '#4a3226', 'brown': '#6e4a30', 'auburn': '#8a3e26', 'ginger': '#c06a30',
          'blonde': '#d8b060', 'ash': '#9a8e80', 'grey': '#a8a4a4', 'white': '#e4e0dc', 'blueblack': '#22263a'}
@@ -69,9 +81,10 @@ def _toward(h, target, deg):
     d = ((target - h + 540) % 360) - 180  # shortest signed way round
     return h + max(-deg, min(deg, d))
 
-SHADOW_HUE, LIGHT_HUE = 300.0, 95.0  # OKLCH hue that darks lean to (violet), and lights lean to (warm yellow)
+SHADOW_HUE, LIGHT_HUE = 300.0, 95.0
+SKIN_SHADOW_HUE = 22.0  # skin shadows turn toward warm red, never violet (violet skin reads sickly)  # OKLCH hue that darks lean to (violet), and lights lean to (warm yellow)
 
-def ramp(base, dl, base_i, dark_shift=14, light_shift=8, dark_chroma=1.0, light_chroma=0.82):
+def ramp(base, dl, base_i, dark_shift=14, light_shift=8, dark_chroma=1.0, light_chroma=0.82, shadow_hue=None):
     """Steps dark to light. dl: lightness offsets from the base for each step (the base_i one is 0).
     Each step away from the base on the dark side turns the hue dark_shift degrees toward SHADOW_HUE; light side
     light_shift degrees toward LIGHT_HUE. Yellows and golds (hue 60-130) turn through orange, never green."""
@@ -81,8 +94,8 @@ def ramp(base, dl, base_i, dark_shift=14, light_shift=8, dark_chroma=1.0, light_
         k = i - base_i
         if k == 0: out.append(base); continue
         if k < 0:
-            tgt = SHADOW_HUE
-            if 55 <= h0 <= 135: tgt = 30.0  # yellow/gold shadows go orange-brown
+            tgt = SHADOW_HUE if shadow_hue is None else shadow_hue
+            if shadow_hue is None and 55 <= h0 <= 135: tgt = 30.0  # yellow/gold shadows go orange-brown
             h = _toward(h0, tgt, dark_shift * -k); C = C0 * dark_chroma ** -k
         else:
             h = _toward(h0, LIGHT_HUE, light_shift * k); C = C0 * light_chroma ** k
@@ -98,9 +111,10 @@ def sphere_ramp(base):
     return ramp(base, [-0.30, -0.17, 0, 0.09, 0.17], 2, dark_chroma=1.0)
 
 def skin_ramp(base):
+    """4 steps. Light skin gets deeper shadows (so a brim's shadow reads), deep skin shallower (so faces never go black)."""
     L0 = to_oklch(base)[0]
-    k = 1.0 if L0 > 0.6 else 0.7  # darker skin: shallower shadows, so faces don't go to black
-    return ramp(base, [-0.16 * k, -0.08 * k, 0, 0.07], 2, dark_shift=9, light_shift=6, dark_chroma=0.98, light_chroma=0.88)
+    dl = [-0.33, -0.14, 0, 0.05] if L0 > 0.78 else ([-0.19, -0.09, 0, 0.065] if L0 > 0.6 else [-0.12, -0.06, 0, 0.075])
+    return ramp(base, dl, 2, dark_shift=10, light_shift=6, dark_chroma=1.1, light_chroma=0.88, shadow_hue=SKIN_SHADOW_HUE)
 def hair_ramp(base):
     L0 = to_oklch(base)[0]
     lift = 0.13 if L0 < 0.45 else 0.08
@@ -133,12 +147,13 @@ def ramps_for(portrait, sphere=None):
 def palette(portrait, sphere=None):
     """key -> color, key -> lit-side outline, key -> shadow-side outline, and key -> (ramp keys, index)."""
     col, lit, shade, where = {}, {}, {}, {}
-    for name, (keys, colors) in ramps_for(portrait, sphere).items():
-        o = outline_of(colors[0])
+    R = ramps_for(portrait, sphere)
+    out = outline_of(R['sphere'][1][0])  # ONE shadow-side outline per portrait, from the sphere's darkest step
+    for name, (keys, colors) in R.items():
         for i, k in enumerate(keys):
-            col[k] = colors[i]; lit[k] = colors[0]; shade[k] = o; where[k] = (keys, i)
+            col[k] = colors[i]; lit[k] = colors[0]; shade[k] = out; where[k] = (keys, i)
     col.update({'y': EYEWHITE, 'z': INK, '!': GLINT})
-    for k in 'yz!': lit[k] = INK; shade[k] = INK
+    for k in 'yz!': lit[k] = INK; shade[k] = out
     return col, lit, shade, where
 
 def panel(sphere=None):

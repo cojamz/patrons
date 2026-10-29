@@ -7,7 +7,7 @@ import kit                      # the old renderer (art-v2/kit.py)
 import render, palette as P
 SPH = {'benders.launderer': 'colorless', 'thieves.kingpin': 'magenta', 'purple.nightowl': 'purple', 'benders.hr': 'colorless',
        'market.doorman': 'blue', 'yellow.pilgrim': 'yellow'}
-old = {o['id']: o for o in json.load(open(os.path.join(HERE, '_renders', 'old6.json')))}
+old = {o['id']: o for o in json.load(open(os.path.join(HERE, 'old6.json')))}
 new = json.load(open(os.path.join(HERE, 'samples.json')))
 W, H = 3 * 96 + 48, 96 + 40
 im = Image.new('RGB', (W * 3 + 24, H * 2 + 24), P.TABLE); d = ImageDraw.Draw(im)

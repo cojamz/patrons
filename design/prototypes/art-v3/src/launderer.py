@@ -1,87 +1,80 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from draw import Canvas
 
-# Launderers (colorless, counts as 2): in front, a washerwoman in a red headscarf with a striped towel on her
-# shoulder and an apron, grinning; behind, an old bald washerman with a big moustache. Soap bubbles drift up.
+# Launderers (colorless, counts as 2), round 3, faces by hand. In front: a young laundress, hair up in a bun, sleeves
+# rolled, a wicker basket with three folded layers of linen, a small closed smile. Behind (3px lower, a value darker):
+# her partner in a flat cap, the same quiet smile. No head-wrap, no grin (audit.md). Template: 2 people, front left.
 c = Canvas()
-# ---- behind (person 1): left
-bodyB = c.poly([(0, 48), (0, 37), (3, 32.5), (9, 30), (17, 30), (22, 33), (23, 48)])
-c.fill(bodyB, '3'); c.outside(bodyB, '2', 9, 35, 12, 8); c.rim(bodyB, '4', 0, -1, 1, only='3')
-c.fill(c.rect(9, 26, 15, 30), 'I')
-FACE_B = [
-    '....LLKKKKJ....',  # 11
-    '..KLLLKKKKKKJ..',  # 12
-    '.KKLLKKKKKKKKJ.',  # 13
-    '.KKKKKKKKKKKKJJ',  # 14
-    'MKKKKKKKKKKKKJJ',  # 15
-    'MNKNNNKKKNNNKJJ',  # 16
-    'MNKzzzKKKzzzKKJ',  # 17
-    'NKKy!zKKKz!JKKJ',  # 18
-    'NKKJJJKKKJJJKKJ',  # 19
-    'JKKKKKKLKKKKKJJ',  # 20
-    'JKKKKKKKLLKKKJ.',  # 21
-    '.KKKKKKJJIKKKJ.',  # 22
-    '.KKOOOOOOOOKJJ.',  # 23
-    '.JKNNIIIINNKJ..',  # 24
-    '..JKKKLLKKKJJ..',  # 25
-    '...JJKKKKJJI...',  # 26
-    '.....IIIIII....',  # 27
-]
-assert all(len(r) == 15 for r in FACE_B)
-c.put(5, 11, FACE_B)
-c.put(3, 17, ['.K', 'KJ', 'JI'])                                    # ear
-c.shift(c.mask_of('12345'), -1)
-# ---- in front (person 0): right
-body = c.poly([(12, 48), (14, 40), (18, 35), (24, 32.5), (32, 32.5), (39, 35), (43, 40), (45, 48)])
-c.fill(body, '3'); c.outside(body, '2', 27, 39, 15, 11); c.outside(body, '1', 25, 38, 19, 14)
-c.rim(body, '4', 0, -1, 1, only='3')
-apron = c.poly([(22, 38), (34, 38), (35.5, 48), (20.5, 48)])
-c.fill(apron, 'k'); c.outside(apron, 'j', 26, 41, 9, 9); c.rim(apron, 'l', -1, 0, 1)
-c.fill(c.line(23, 38, 25, 33), 'k'); c.fill(c.line(33, 38, 32, 33), 'j')          # apron straps
-c.fill(c.rect(24, 28, 32, 33), 'A')                                                # neck
-towel = c.poly([(15.5, 35), (18, 33), (22.5, 32.6), (21.5, 46), (16.5, 46), (17.5, 37)])
-c.fill(towel, 'k'); c.outside(towel, 'j', 18, 38, 5, 8); c.rim(towel, 'l', -1, 0, 1)
-for y in (37, 38, 42, 43): c.fill(towel & c.rect(0, y, 47, y), 'v' if y in (38, 43) else 'w')
-c.edge(towel, 'i')
-FACE = [
-    '...BCCCCCCCCCBBA.',  # 15
-    '..BCDDCCCCCCCBBBA',  # 16
-    '.BCDDCCCCCCCCCBBA',  # 17
-    '.CFFCCCCFFFFCCBBA',  # 18
-    '.CCCCCCCCCCCCCBBA',  # 19
-    '.CEEECCCEEEECCBBA',  # 20
-    '.C!zyCDCy!zyCCBBA',  # 20b
-    'BCCCCDCCCCCCCCBBA',  # 22
-    'DDCCDCCCCCCCCCBBA',  # 23
-    'BAACCCCCCCCCCBBA.',  # 24
-    '.CACCCCCACCCCBBA.',  # 25
-    '.CCAzyyzACCCCBBA.',  # 26
-    '..CCCDDCCCCCBBA..',  # 27
-    '...BCCCCCCCBBA...',  # 28
-    '....BBCDDCBBA....',  # 29
-    '......AAAAAA.....',  # 30
-]
-assert all(len(r) == 17 for r in FACE)
-c.put(19, 15, FACE)
-c.put(35, 20, ['C.', 'BA', 'BA', 'A.'])                             # ear
-c.put(32, 16, ['FF', 'EF', '.E', '.E'])                             # hair at the temple
-# headscarf: wraps the crown, a fold over the brow, the knot and two ends up on top
-scarf = c.poly([(18, 17), (18.5, 12), (21, 9), (26, 7.3), (31, 7.6), (35, 10), (37, 14), (36, 19), (33.5, 16.5), (27, 15.5), (21, 16)])
-c.fill(scarf, 'w'); c.outside(scarf, 'v', 25, 11, 10.5, 6.6); c.outside(scarf, 'u', 24, 10, 13, 8.6)
-c.fill(scarf & c.ellipse(24, 9.5, 4.5, 2), 'x')
-c.fill(scarf & c.poly([(18, 15), (27, 14.2), (34, 15.5), (34, 17), (27, 16), (18, 17)]), 'v')
-c.fill(scarf & c.poly([(18, 14), (27, 13.2), (34, 14.5), (34, 15.5), (27, 14.2), (18, 15)]), 'x')
-c.put(31, 2, ['...xw..', '..xwwv.', '.xwwvu.', 'uvvwvu.', '.uvvxww', '..uvwwv', '...uuv.'])  # the knot, ends up
-# soap bubbles: thin rings, a film you see the doorway through, a glint top-left
-def bubble(cx, cy, r):
-    disc = c.ellipse(cx, cy, r, r); ring = disc - c.ellipse(cx, cy, r - 1, r - 1)
-    c.fill(disc, ':')
-    for x, y in ring:
-        a = (x + .5 - cx) + (y + .5 - cy)          # < 0 top-left, > 0 bottom-right
-        if a < -r * 0.3: c.set(x, y, '"')
-        elif a > r * 0.55: c.set(x, y, '^')
-    if r > 2: c.set(int(cx - r * .4), int(cy - r * .4), '!')
-bubble(40.2, 16.4, 3.4); bubble(42.2, 25.2, 2.1); bubble(39.6, 30.6, 1.6)
+
+def seg(rows):
+    for y, parts in rows.items():
+        for x, s in parts: c.put(x, y, [s])
+
+# ---- behind (person 1), right
+bodyB = c.poly([(22, 48), (24, 32), (28, 28), (38, 27.5), (44, 29.5), (47, 34), (47, 48)])
+c.fill(bodyB, '2'); c.outside(bodyB, '1', 34, 35, 11, 8)
+c.fill(c.rect(30, 22, 36, 28), 'I'); c.fill(c.rect(30, 22, 36, 23), 'I')
+seg({
+    14: [(27, 'KKKKKKKKKKKJM')],
+    15: [(27, 'KMMKKKMMMKKJM')],
+    16: [(27, 'KJJKKKJJJKKJM')],
+    17: [(27, 'KzJKKKKzJKKJJ')],
+    18: [(26, 'KKKKJKKKKKKKJJ')],
+    19: [(27, 'KKJIKKKKKKKJJ')],
+    20: [(27, 'KJKKKKJKKKJJ')],
+    21: [(27, 'KKIIIIKKKKJJ')],
+    22: [(28, 'JKKKKKKJJI')],
+    23: [(29, 'IJJJJJJI')],
+})
+c.put(39, 15, ['J', 'JI', 'JI', 'I'])                                # ear
+cap = c.poly([(26, 14), (26.5, 10), (29, 7.5), (35, 6.8), (40, 8.5), (41.5, 12), (40.5, 14.5), (27, 14.5)])
+c.fill(cap, '2'); c.fill(cap & c.ellipse(31, 8.5, 5, 2), '3'); c.edge(cap, '1')
+c.fill(c.poly([(23.5, 14), (27, 12.5), (34, 12.9), (33, 14.9), (25, 15.1)]), '1')      # the peak
+c.shift(c.mask_of('IJKL'), -1)                                       # behind: a value darker
+c.g = [['.'] * 48 for _ in range(3)] + c.g[:45]                      # and 3px lower (template depth rule)
+# ---- in front (person 0), left
+body = c.poly([(0, 48), (0, 40), (3, 37), (9, 35), (24, 35), (30, 37), (33, 41), (34, 48)])
+c.fill(body, '3'); c.outside(body, '2', 14, 39, 17, 10); c.outside(body, '1', 12, 38, 21, 13); c.rim(body, '4', 0, -1, 1, only='3')
+c.fill(c.rect(13, 29, 20, 34), 'A'); c.fill(c.rect(13, 32, 14, 34), 'B')
+c.fill(c.poly([(11, 35), (13, 34.5), (16.5, 37.5), (20, 34.5), (22, 35), (16.5, 39)]), 'B')   # open collar
+hair = c.poly([(6.5, 21), (6.5, 14), (8.5, 9.5), (13, 7), (19, 6.6), (24, 8.5), (26, 12.5), (25.5, 17), (23.5, 15),
+               (16, 14.6), (10, 15.5), (8, 21)])
+c.fill(hair, 'F'); c.outside(hair, 'E', 15, 11, 10, 5.5); c.rim(hair, 'G', -1, -1, 1, only='F')
+bun = c.ellipse(7, 8, 3.2, 3)
+c.fill(bun, 'F'); c.outside(bun, 'E', 6.5, 7.5, 3, 2.8); c.rim(bun, 'G', -1, -1, 1, only='F'); c.edge(bun, 'E')
+seg({
+    15: [(9, 'BBBBBBBBBBBBBBBA')],
+    16: [(9, 'BCDDCCCCCCCCCCBA')],
+    17: [(9, 'BCEEECCCCEEECCBA')],
+    18: [(9, 'BBBBBCCCCBBBCCBA')],
+    19: [(9, 'BCzzzCCCCzzCCCBA')],
+    20: [(9, 'BCCzCCDCCCzCCCBA')],
+    21: [(9, 'BDDDCCDBCCCCCCBA')],
+    22: [(9, 'BCDDCCCDDBCCCCBA')],
+    23: [(9, 'BCCCCCCCAACCCBBA')],
+    24: [(9, 'BCCCBCCCCBCCCBBA')],
+    25: [(9, 'BCCCCAAAACCCCBA')],
+    26: [(10, 'BCCCCDDCCCCBBA')],
+    27: [(11, 'BBCCCCCCBBBA')],
+    28: [(12, 'ABBBBBBBAA')],
+})
+c.put(7, 19, ['.C', 'CA', 'CA', '.B'])
+# arms: rolled sleeves, bare forearms down to the basket
+for x0, d in ((3, 1), (27, -1)):
+    arm = c.poly([(x0, 37), (x0 + 4, 37), (x0 + 4 + d, 43), (x0 + d, 43)])
+    c.fill(arm, 'C'); c.rim(arm, 'B', 1 if d > 0 else -1, 0, 1)
+    c.fill(c.rect(x0 - 1, 37, x0 + 4, 38), '4'); c.fill(c.rect(x0 - 1, 39, x0 + 4, 39), '2')
+    c.edge(arm, 'A')
+# three folded layers of linen in a wicker basket
+for (x0, x1, y) in ((9, 28, 40), (10, 27, 38), (12, 25, 36)):
+    c.fill(c.rect(x0, y, x1, y + 1), 'k'); c.fill(c.rect(x0, y, x1, y), 'l'); c.fill(c.rect(x1 - 2, y, x1, y + 1), 'i')
+    c.set(x0, y + 1, 'i')
+basket = c.poly([(4, 41.5), (32, 41.5), (31, 44.5), (29, 48), (7, 48), (5, 44.5)])
+c.fill(basket, 'r')
+for x in range(7, 31, 3): c.fill(c.rect(x, 44, x, 47) & basket, 'q')
+c.fill(basket & c.rect(0, 43, 47, 43), 'q')
+c.edge(basket, 'q')
+c.put(4, 41, ['CC', 'BC']); c.put(30, 41, ['CB', 'CB'])                 # hands on the rim
 PORTRAIT = {'id': 'benders.launderer', 'name': 'Launderers', 'kind': 'member', 'sphere': 'colorless',
-            'people': [{'skin': 'fair', 'hair': 'auburn'}, {'skin': 'deep', 'hair': 'grey'}], 'accent': 'red',
+            'people': [{'skin': 'olive', 'hair': 'darkbrown'}, {'skin': 'palepink', 'hair': 'brown'}], 'accent': 'red',
             'px': c.rows()}

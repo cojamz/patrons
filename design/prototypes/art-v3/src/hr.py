@@ -1,106 +1,102 @@
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from draw import Canvas
 
-# HR (colorless, counts as 3): the department. In front, a manager in glasses and a black bob with a clipboard;
-# behind her, a young man with a side parting and a tie, and an older woman with a grey bun. Polite smiles all round.
+# HR (colorless, counts as 3), round 3, faces by hand. The department, polite closed smiles all round. In front: a
+# manager in a black bob and glasses, blazer and blouse, clipboard. Behind left: a freckled redhead in shirt and tie.
+# Behind right: an older woman with a grey bun and a turtleneck. Separated by value (front 3-4, behind 1-2) and collar.
+# Template: 3 people.
 c = Canvas()
-# ---- behind left (person 1)
-bodyL = c.poly([(0, 48), (0, 33), (3, 29.5), (8, 27.5), (15, 27.5), (20, 30), (22, 48)])
-c.fill(bodyL, '3'); c.outside(bodyL, '2', 8, 32, 11, 7); c.rim(bodyL, '4', 0, -1, 1, only='3')
-c.put(9, 27, ['kjjk', '.ji.', '.vu.', '.wv.', '.wv.'])                 # collar and tie
-c.fill(c.rect(8, 22, 13, 27), 'I')
-FACE_L = [
-    '...KKKKKKKJ...',  # 12
-    '..KLLKKKKKKJ..',  # 13
-    '.KLLKKKKKKKJJ.',  # 14
-    '.KKKNNNKKNNNJJ',  # 15
-    'JKKMMMKKKMMMKJ',  # 16
-    'JKKy!zKKKy!zKJ',  # 17
-    'JKKJJKKKKJJKKJ',  # 18
-    '.KKKKKKLKKKKKJ',  # 19
-    '.KKKKKKKLLKKJ.',  # 20
-    '.JKKKKKKJJKKJ.',  # 21
-    '.JKKIKKKKKIKJ.',  # 22
-    '..JKKIIIIIKJ..',  # 23
-    '...JJKKKKJJ...',  # 24
-    '.....IIII.....',  # 25
-]
-assert all(len(r) == 14 for r in FACE_L)
-c.put(4, 12, FACE_L)
-c.put(2, 16, ['.K', 'KJ', 'JI'])
-hairL = c.poly([(3.5, 17), (3, 11), (6, 7.5), (11, 6.5), (16, 7.5), (18.5, 10.5), (18.5, 15), (17, 13), (14, 12), (10, 12.4), (7, 14.5), (5, 16)])
-c.fill(hairL, 'O'); c.outside(hairL, 'N', 9, 9, 9, 4.5); c.fill(hairL & c.ellipse(8, 9, 3, 1.4), 'P')
-c.fill(c.line(11, 8, 9, 12), 'M')                                   # the parting
-# ---- behind right (person 2)
-bodyR = c.poly([(26, 48), (27, 31), (31, 28), (38, 27.5), (44, 29.5), (47, 33), (47, 48)])
-c.fill(bodyR, '3'); c.outside(bodyR, '2', 36, 32, 10, 7); c.rim(bodyR, '4', 0, -1, 1, only='3')
-c.put(33, 27, ['ijji', '.jj.'])
-c.fill(c.rect(34, 22, 39, 27), 'Q')
-FACE_R = [
-    '...SSSSSSSR...',  # 12
-    '..STTSSSSSSR..',  # 13
-    '.STTSSSSSSSRR.',  # 14
-    '.SVVVSSVVVSSRR',  # 15
-    '.SzzzSSzzzzSRR',  # 16
-    '.S!zRSS!zyRSRR',  # 17
-    '.SRRRSSRRRRSSR',  # 18
-    'RSSSSTSSSSSSRR',  # 19
-    'TTSSTSSSSSSRR.',  # 20
-    'RQQSSSSSSSSRR.',  # 21
-    '.SQSSSSQSSSRR.',  # 22
-    '..SQQQQQSSRR..',  # 23
-    '...RRSSSSRR...',  # 24
-    '.....QQQQ.....',  # 25
-]
-assert all(len(r) == 14 for r in FACE_R)
-c.put(30, 12, FACE_R)
-c.put(44, 16, ['S.', 'RQ', 'Q.'])
-hairR = c.poly([(30, 15), (30.5, 10), (34, 7.5), (39, 7), (43, 9), (44.5, 13), (44, 17), (42.5, 13), (38, 11.5), (33, 12), (31, 15.5)])
-c.fill(hairR, 'W'); c.outside(hairR, 'V', 36, 9, 8, 4); c.fill(hairR & c.ellipse(34, 9, 3, 1.3), 'X')
-bun = c.ellipse(42.5, 7, 2.8, 2.6)
-c.fill(bun, 'W'); c.outside(bun, 'V', 42, 6.5, 2.5, 2.3); c.set(41, 6, 'X'); c.edge(bun, 'U')
-c.shift(c.mask_of('12345ijkuvw'), -1)
+
+def seg(rows):
+    for y, parts in rows.items():
+        for x, s in parts: c.put(x, y, [s])
+
+# ---- behind left (person 1): shirt and tie
+bodyL = c.poly([(0, 48), (0, 30), (3, 27), (8, 26), (13, 26), (18, 28), (20, 48)])
+c.fill(bodyL, '2'); c.outside(bodyL, '1', 8, 31, 10, 6); c.rim(bodyL, '3', 0, -1, 1, only='2')
+c.fill(c.rect(7, 21, 12, 26), 'I')
+c.put(6, 25, ['33..33', '.3333.', '..11..', '..11..', '..11..', '..11..', '...1..'])
+seg({
+    11: [(5, 'KKKKKKKKKJ')],
+    12: [(4, 'JKKKKKKKKKKJ')],
+    13: [(4, 'JKMMMKKMMMKJ')],
+    14: [(4, 'JKKKKKKKKKKJ')],
+    15: [(4, 'JKKKzKKKKzKJ')],
+    16: [(4, 'JKKKKKKJKKKJ')],
+    17: [(4, 'JKKKKKKKJJKJ')],
+    18: [(4, 'IKKJKKKKJKKJ')],
+    19: [(4, 'IKKKIIIIKKJJ')],
+    20: [(5, 'IKKKKKKKJJI')],
+    21: [(6, 'IIIIIIIII')],
+})
+c.put(3, 14, ['K', 'J', 'I'])
+hairL = c.poly([(3.5, 14), (3, 10), (5, 7.5), (10, 6.5), (15, 7.5), (16.5, 10), (16, 13), (14, 11.2), (10, 11), (6, 12), (4.5, 14)])
+c.fill(hairL, 'N'); c.outside(hairL, 'M', 9.5, 8.5, 7, 4.2); c.fill(c.line(11, 7, 9, 11), 'M')
+# ---- behind right (person 2): turtleneck
+bodyR = c.poly([(27, 48), (28, 29), (32, 26.5), (41, 26), (45, 28), (47, 31), (47, 48)])
+c.fill(bodyR, '2'); c.outside(bodyR, '1', 37, 31, 10, 6); c.rim(bodyR, '3', 0, -1, 1, only='2')
+neckR = c.rect(34, 21, 41, 26)
+c.fill(neckR, '2'); c.fill(c.rect(34, 21, 41, 21), '3'); c.fill(c.rect(40, 22, 41, 26), '1')
+for x in (36, 38): c.fill(c.rect(x, 23, x, 26), '1')
+seg({
+    11: [(33, 'SSSSSSSSSR')],
+    12: [(32, 'RSSSSSSSSSSR')],
+    13: [(32, 'RVVSSSVVVSSR')],
+    14: [(32, 'RzzSSSzzzSSR')],
+    15: [(32, 'RSzSSSSzSSSR')],
+    16: [(32, 'RSSSSSRSSSSR')],
+    17: [(32, 'RSSSQRSSSSRR')],
+    18: [(32, 'RSQSSSQSSSRR')],
+    19: [(32, 'RSSQQQSSSSRR')],
+    20: [(33, 'RSSSSSSSRR')],
+    21: [(34, 'QQQQQQQQ')],
+})
+c.put(44, 14, ['R', 'Q', 'Q'])
+hairR = c.poly([(31.5, 14), (32, 10), (35, 7.5), (40, 7), (44, 9), (45, 13), (44.5, 16), (43, 12.5), (38, 11), (34, 11.5), (32.5, 14)])
+c.fill(hairR, 'V'); c.outside(hairR, 'U', 37, 9, 7.5, 3.6)
+bun = c.ellipse(42.5, 6, 2.6, 2.4)
+c.fill(bun, 'V'); c.outside(bun, 'U', 42, 5.5, 2.4, 2.2); c.edge(bun, 'U')
+c.shift(c.mask_of('IJKLQRST'), -1)                                      # behind: skin a value darker
+c.g = [['.'] * 48 for _ in range(3)] + c.g[:45]                         # and 3px lower (template depth rule)
 # ---- in front (person 0)
-hairF = c.poly([(13.5, 30), (13, 20), (14.5, 12), (19, 8.5), (25, 7.6), (31, 8.8), (34.5, 13), (35, 21), (34.5, 30), (31, 28), (17, 28)])
-c.fill(hairF, 'F'); c.outside(hairF, 'E', 22, 16, 12, 13.5); c.fill(hairF & c.ellipse(20, 10.5, 5, 2.2), 'G')
-c.fill(hairF & c.ellipse(18.5, 10, 2.5, 1.0), 'H')
-body = c.poly([(9, 48), (10, 40), (14, 35), (20, 32.5), (29, 32.5), (35, 35), (38, 40), (39, 48)])
-c.fill(body, '3'); c.outside(body, '2', 22, 39, 14, 11); c.outside(body, '1', 20, 38, 18, 14); c.rim(body, '4', 0, -1, 1, only='3')
-blouse = c.poly([(20.5, 32.5), (28.5, 32.5), (24.5, 40)])
-c.fill(blouse, 'k'); c.fill(c.line(25, 34, 25, 38), 'j'); c.edge(blouse, '1')
-c.fill(c.rect(21, 28, 28, 33), 'A')
-FACE = [
-    '...BCCCCCCCCCCCBA..',  # 15
-    '..BCDDCCCCCCCCCBBA.',  # 16
-    '.BCDDCCCCCCCCCCCBBA',  # 17
-    '.CCEEECCCCCEEEECCBA',  # 18
-    '.CnnnnnCCCnnnnnnCBA',  # 19
-    '.Cn!zynnnnny!zynBBA',  # 20
-    '.CnCCDnCDCnCCCDnBBA',  # 21
-    '.CBnnnBCDCBnnnnBBBA',  # 22
-    '.CCBBBCCDCCBBBBCCBA',  # 23
-    '.CDDCCCCDDCCCCCCCBA',  # 24
-    '.CDCCCCCBAACCCCCCBA',  # 25
-    '..CCCCCCCCCCCCCCBA.',  # 26
-    '..CCACCCCCACCCCCBA.',  # 27
-    '..BCCAzzzACCCCCBBA.',  # 28
-    '...BCCCDDDCCCCBA...',  # 29
-    '....BBCCCCCCBBA....',  # 30
-    '......AAAAAAA......',  # 31
-]
-assert all(len(r) == 19 for r in FACE)
-c.put(15, 14, FACE)
-bangs = c.poly([(15, 17), (16, 12.5), (20, 10.5), (26, 10.2), (31, 11), (34, 14), (34, 18), (31, 15.5), (26, 15), (21, 15.3), (17, 16)])
-c.fill(bangs, 'F'); c.outside(bangs, 'E', 23, 12, 10, 4.4); c.fill(bangs & c.ellipse(21, 12, 4, 1.4), 'G')
-c.edge(hairF | bangs | c.mask_of('ABCDyz!'), None)
-# clipboard, held against her chest
-board = c.rect(28, 37, 37, 47)
-c.fill(board, 'r'); c.rim(board, 's', -1, -1, 1); c.edge(board, 'q')
-paper = c.rect(29, 39, 36, 47)
-c.fill(paper, 'k'); c.rim(paper, 'l', -1, -1, 1)
-for y in (41, 43, 45): c.fill(c.rect(30, y, 34 if y != 43 else 35, y), 'j')
-c.put(31, 36, ['ghhg', 'gffg'])
-c.put(26, 40, ['.CD', 'CCC', 'BCC'])                                # her hand on the board
+hairF = c.poly([(14.5, 30), (14.5, 20), (15.5, 14), (19, 10.5), (25, 9.8), (30.5, 11), (32.6, 15), (33, 22), (32.6, 30), (31, 29), (31, 17), (17, 17), (17, 29)])
+c.fill(hairF, 'F'); c.outside(hairF, 'E', 23, 18, 11, 14)
+body = c.poly([(9, 48), (10, 40), (14, 37), (20, 35.5), (28, 35.5), (34, 37), (38, 40), (39, 48)])
+c.fill(body, '3'); c.outside(body, '2', 22, 41, 14, 9); c.rim(body, '4', 0, -1, 1, only='3')
+blouse = c.poly([(19.5, 35.5), (28.5, 35.5), (24, 43)])
+c.fill(blouse, '4')
+lapL = c.poly([(16, 36.4), (19.5, 35.5), (24, 43.5), (21.5, 44), (17.5, 39)])
+lapR = c.poly([(28.5, 35.5), (32, 36.4), (30.5, 39), (26.5, 44), (24, 43.5)])
+c.fill(lapL, '2'); c.fill(lapR, '2'); c.rim(lapL, '3', -1, 0, 1); c.edge(lapL, '1'); c.edge(lapR, '1')
+c.fill(c.rect(20, 30, 27, 35), 'A'); c.fill(c.rect(20, 33, 21, 35), 'B')
+seg({
+    16: [(17, 'BBBBBBBBBBBBBBA')],
+    17: [(17, 'CCDDCCCCCCCCCBA')],
+    18: [(17, 'CEEECCCEEEECCBA')],
+    19: [(17, 'CzzCCCCzzzzCCBA')],
+    20: [(17, 'z4zzzzz4CzCzzBA')],
+    21: [(17, 'CzzCCDCzzzzCCBA')],
+    22: [(17, 'CCCCDBCCCCCCCBA')],
+    23: [(17, 'CCCDDACCCCCCBBA')],
+    24: [(17, 'CCCCBBCCCCCCBBA')],
+    25: [(17, 'CCBCCCCCBCCCBBA')],
+    26: [(17, 'CCCAAAAACCCCBBA')],
+    27: [(17, 'BCCCDDCCCCCBBA')],
+    28: [(18, 'BCCCCCCCCBBA')],
+    29: [(19, 'ABBBBBBBAA')],
+})
+bangs = c.poly([(16, 17), (16.5, 13), (20, 10.6), (26, 10.2), (30.5, 11.2), (32.3, 14), (32, 17), (30, 15.2), (25, 15.6), (20, 15.2)])
+c.fill(bangs, 'F'); c.outside(bangs, 'E', 22, 12, 10, 4)
+c.edge(hairF | bangs | (c.mask_of('ABCDz4') & c.rect(16, 16, 31, 29)), None)
+# clipboard against her chest, her hand on it
+board = c.rect(29, 38, 38, 48)
+c.fill(board, '1')
+paper = c.rect(30, 40, 37, 48)
+c.fill(paper, '4')
+for y in (42, 44, 46): c.fill(c.rect(31, y, 35 if y != 44 else 36, y), '2')
+c.put(32, 37, ['zzzz', '.zz.'])
+c.edge(board, 'z')
+c.put(27, 41, ['.CD', 'CCC', 'BCC'])
 PORTRAIT = {'id': 'benders.hr', 'name': 'HR', 'kind': 'member', 'sphere': 'colorless',
-            'people': [{'skin': 'tan', 'hair': 'black'}, {'skin': 'porcelain', 'hair': 'ginger'}, {'skin': 'ebony', 'hair': 'grey'}],
+            'people': [{'skin': 'coolbrown', 'hair': 'black'}, {'skin': 'freckled', 'hair': 'ginger'}, {'skin': 'golden', 'hair': 'grey'}],
             'accent': 'teal', 'px': c.rows()}

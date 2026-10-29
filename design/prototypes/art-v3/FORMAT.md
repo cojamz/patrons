@@ -23,19 +23,24 @@
 | `a b c d` | gold · `e f g h` metal · `i j k l` linen · `m n o p` charcoal · `q r s t` wood · `u v w x` accent |
 | `y` eye white · `z` ink · `!` glint | fixed |
 | `.` | empty: the doorway shows through |
-| `:` `^` `"` | see-through film (soap bubble): the doorway lightened 12% / 26% / 62%, never outlined |
+| `:` `^` `"` | see-through film (soap bubble): white at 14% / ink #1c1424 at 42% / white at 85% over whatever is behind, never outlined |
 
 ## Rendering (render.py `grid`)
-1. Doorway: round-topped arch in a 1px margin; frame ring, a lighter 2px lip on the right jamb, a lit wedge top-left,
-   all from `palette.panel(sphere)` (dark, low-chroma, hue turned like a shadow).
+1. No doorway for members (round 2): transparent; the card or seat is the backdrop. `door=True` still draws the old arch.
 2. Figure: each key's color from `palette.palette`.
-3. Sel-out: an empty pixel touching the figure (4-neighbours) becomes that shape's outline. If the shape is to its
-   right or below (the lit top-left side) it takes the shape's darkest step; otherwise `outline_of(darkest)`.
-   Film keys and `!` never make an outline. Outlines between overlapping people are drawn into the px by
-   `draw.Canvas.edge`.
+3. Sel-out: an empty pixel touching the figure (4-neighbours) becomes an outline. If the shape is to its right or
+   below (the lit top-left side) it takes the shape's darkest step; otherwise the portrait's ONE shared outline,
+   `outline_of(sphere step 1)`. Shadow side wins. Film keys and `!` never make an outline. Outlines between
+   overlapping people are drawn into the px by `draw.Canvas.edge`.
+4. Film keys render as '#rrggbbaa' and composite over the backdrop.
+
+## Template
+`template.py` holds the head boxes, eye lines and shoulder lines for 1, 2 and 3 people and the face rules;
+`python3 template.py samples.json template-check.png` draws them over every portrait.
 
 ## Files
 - `palette.py` color system (OKLCH ramps; port to src/v4/art/portrait.js as is)
 - `draw.py` drawing toolkit (masks, terminator shading, rims, edges, overlays, orphan lint)
 - `render.py` renderer and sheets; `build.py` builds samples.json from `src/*.py` and renders `_renders/`
-- `before_after.py` -> `before-after.png`
+- `before_after.py` -> `before-after.png` (old portraits from `old6.json`)
+- `template.py` head-size template; `critique/` the critic's rounds

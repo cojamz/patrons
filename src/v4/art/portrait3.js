@@ -3,14 +3,15 @@
 // together). Every color is computed from a few base hexes with the same OKLCH math. Keys and format: art-v3/FORMAT.md.
 const SPHERES = { gold: '#e2962c', red: '#e0645a', magenta: '#d4508f', green: '#5fb37c', silver: '#a3b3c2',
   white: '#eef3f8', purple: '#9a62e6', yellow: '#d3dd48', blue: '#6aa6dc', colorless: '#8d9693' };
-const SKINS = { porcelain: '#f0d2bc', fair: '#e8bc98', olive: '#cf9e70', tan: '#b67d52', brown: '#8e5a3a', deep: '#6a3f2a', ebony: '#4e2e22' };
+const SKINS = { palepink: '#f3d2c8', porcelain: '#f0d8c2', freckled: '#eec4a2', fair: '#e6b994', golden: '#d9aa6c', olive: '#c39c74',
+  warmtan: '#c4834f', tan: '#a87452', coolbrown: '#8c5e4e', brown: '#80522f', deep: '#5e3a28', verydeep: '#402822' };
 const HAIRS = { black: '#2e2630', darkbrown: '#4a3226', brown: '#6e4a30', auburn: '#8a3e26', ginger: '#c06a30',
   blonde: '#d8b060', ash: '#9a8e80', grey: '#a8a4a4', white: '#e4e0dc', blueblack: '#22263a' };
 const MATERIALS = { gold: '#e0a83a', metal: '#a8acb4', linen: '#e2d8c4', charcoal: '#4a4650', wood: '#8a5a36' };
 const ACCENTS = { red: '#c8423a', teal: '#3a9a94', orange: '#e07a32', navy: '#34487a', rose: '#d87890',
   ochre: '#c89a3a', violet: '#7a4ab0', green: '#4a8a4a' };
 const INK = '#1c1424', EYEWHITE = '#e8e0d4', GLINT = '#fffbf0';
-const SHADOW_HUE = 300, LIGHT_HUE = 95;
+const SHADOW_HUE = 300, LIGHT_HUE = 95, SKIN_SHADOW_HUE = 22;
 
 const lin = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
 const gam = c => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055) * 255;
@@ -47,13 +48,13 @@ function fromOklch(L, C, h) {
 export const mix = (a, b, t) => { const A = hex2rgb(a), B = hex2rgb(b); return rgb2hex(A.map((x, i) => x + (B[i] - x) * t)); };
 const toward = (h, target, d) => { const s = (((target - h + 540) % 360) + 360) % 360 - 180; return h + Math.max(-d, Math.min(d, s)); };
 
-function ramp(base, dl, baseI, darkShift = 14, lightShift = 8, darkChroma = 1, lightChroma = 0.82) {
+function ramp(base, dl, baseI, darkShift = 14, lightShift = 8, darkChroma = 1, lightChroma = 0.82, shadowHue = null) {
   const [L0, C0, h0] = toOklch(base);
   return dl.map((d, i) => {
     const k = i - baseI;
     if (k === 0) return base;
     if (k < 0) {
-      const tgt = h0 >= 55 && h0 <= 135 ? 30 : SHADOW_HUE; // yellow/gold shadows go orange-brown
+      const tgt = shadowHue != null ? shadowHue : h0 >= 55 && h0 <= 135 ? 30 : SHADOW_HUE; // yellow/gold shadows go orange-brown
       return fromOklch(L0 + d, C0 * darkChroma ** -k, toward(h0, tgt, darkShift * -k));
     }
     return fromOklch(L0 + d, C0 * lightChroma ** k, toward(h0, LIGHT_HUE, lightShift * k));
@@ -64,7 +65,12 @@ function sphereRamp(base) {
   if (L0 > 0.84) { const room = Math.max(0, 0.99 - L0); return ramp(base, [-0.36, -0.18, 0, room * 0.5, room], 2, 17, 10, 1); }
   return ramp(base, [-0.30, -0.17, 0, 0.09, 0.17], 2, 14, 8, 1);
 }
-function skinRamp(base) { const k = toOklch(base)[0] > 0.6 ? 1 : 0.7; return ramp(base, [-0.16 * k, -0.08 * k, 0, 0.07], 2, 9, 6, 0.98, 0.88); }
+// light skin gets deeper shadows (so a brim's shadow reads), deep skin shallower (so faces never go black)
+function skinRamp(base) {
+  const L0 = toOklch(base)[0];
+  const dl = L0 > 0.78 ? [-0.33, -0.14, 0, 0.05] : L0 > 0.6 ? [-0.19, -0.09, 0, 0.065] : [-0.12, -0.06, 0, 0.075];
+  return ramp(base, dl, 2, 10, 6, 1.1, 0.88, SKIN_SHADOW_HUE);
+}
 function hairRamp(base) {
   const L0 = toOklch(base)[0];
   return ramp(base, [L0 > 0.3 ? -0.16 : -0.08, L0 > 0.3 ? -0.08 : -0.04, 0, L0 < 0.45 ? 0.13 : 0.08], 2, 10);
@@ -82,12 +88,10 @@ function palette(icon, sphere) {
   PERSON_KEYS.forEach(([sk, hk], n) => { const p = people[Math.min(n, people.length - 1)]; ramps.push([sk, skinRamp(SKINS[p.skin])], [hk, hairRamp(HAIRS[p.hair])]); });
   for (const [m, keys] of Object.entries(MAT_KEYS)) ramps.push([keys, matRamp(m === 'accent' ? ACCENTS[icon.accent || 'red'] : MATERIALS[m])]);
   const col = {}, lit = {}, shade = {};
-  for (const [keys, colors] of ramps) {
-    const o = outlineOf(colors[0]);
-    [...keys].forEach((k, i) => { col[k] = colors[i]; lit[k] = colors[0]; shade[k] = o; });
-  }
+  const o = outlineOf(ramps[0][1][0]); // one shadow-side outline per portrait, from the sphere's darkest step
+  for (const [keys, colors] of ramps) [...keys].forEach((k, i) => { col[k] = colors[i]; lit[k] = colors[0]; shade[k] = o; });
   Object.assign(col, { y: EYEWHITE, z: INK, '!': GLINT });
-  for (const k of 'yz!') { lit[k] = INK; shade[k] = INK; }
+  for (const k of 'yz!') { lit[k] = INK; shade[k] = o; }
   return { col, lit, shade };
 }
 function panel(sphere) {
@@ -98,19 +102,20 @@ function panel(sphere) {
 }
 
 const N = 48;
-const FILM = { ':': 0.12, '^': 0.26, '"': 0.62 }; // see-through keys: faint film, dim rim, bright rim
+const FILM = { ':': ['ffffff', 0.14], '^': ['1c1424', 0.42], '"': ['ffffff', 0.85] }; // see-through: film, shade rim, lit rim
 const ARCH = (() => { // the doorway: the canvas less a 1px margin, round-topped
   const m = [], cx = 24, cy = 23.5, r = 22.6;
   for (let y = 0; y < N; y++) { m.push(Array(N).fill(false)); for (let x = 1; x < N - 1; x++) { if (y < 1) continue; const px = x + 0.5, py = y + 0.5; m[y][x] = !(py < cy && (px - cx) ** 2 + (py - cy) ** 2 > r * r); } }
   return m;
 })();
 
-/** 48×48 hex colors (null = transparent): doorway, sel-out outline, figure. Same as render.py grid(). */
-export function portrait3Grid(icon, sphere) {
+/** 48×48 hex colors (null = transparent): sel-out outline and figure, and the doorway if asked (members have none:
+ * the card or seat behind them is the backdrop). Same as render.py grid(). */
+export function portrait3Grid(icon, sphere, door = false) {
   const { col, lit, shade } = palette(icon, sphere), pn = panel(sphere || icon.sphere), px = icon.px;
   const g = Array.from({ length: N }, () => Array(N).fill(null));
   const inArch = (x, y) => x >= 0 && x < N && y >= 0 && y < N && ARCH[y][x];
-  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+  if (door) for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
     if (!ARCH[y][x]) continue;
     if ([[1, 0], [-1, 0], [0, -1]].some(([a, b]) => !inArch(x + a, y + b))) { g[y][x] = pn.frame; continue; }
     const inner = [[2, 0], [-2, 0], [0, -2]].some(([a, b]) => x + a >= 0 && x + a < N && y + b >= 0 && y + b < N && !ARCH[y + b][x + a]);
@@ -120,7 +125,7 @@ export function portrait3Grid(icon, sphere) {
   const at = (x, y) => (x >= 0 && x < N && y >= 0 && y < N ? px[y][x] : '.');
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
     const k = px[y][x];
-    if (FILM[k] != null) { g[y][x] = mix(g[y][x] || pn.back, '#ffffff', FILM[k]); continue; }
+    if (FILM[k] != null) { g[y][x] = `#${FILM[k][0]}${pyRound(FILM[k][1] * 255).toString(16).padStart(2, '0')}`; continue; } // a color at an alpha, never outlined
     if (k !== '.') { g[y][x] = col[k]; continue; }
     // sel-out: the shape's lit side (this pixel left of or above it) takes its darkest step, the shadow side a deeper tone
     for (const [a, b, litSide] of [[1, 0, true], [0, 1, true], [-1, 0, false], [0, -1, false]]) {
