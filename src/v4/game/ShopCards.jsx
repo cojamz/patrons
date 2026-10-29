@@ -12,7 +12,7 @@ import { realHover } from '../hover.js';
 import { cardColor, cardGround, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
-import { timingOf, unlockedBy, surely } from './cards.js';
+import { timingOf, kindOf, unlockedBy, surely } from './cards.js';
 void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
 import { MemberDeck, useDeal } from './MemberDeck.jsx';
@@ -230,7 +230,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
               className={`card lt-card paper${opt ? ' can' : ''}${dim ? ((buying || picking) && !looking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
-              style={{ '--q': color }} data-ground={ground} aria-disabled={!opt} data-unaffordable={short || undefined}
+              style={{ '--q': color }} data-ground={ground} data-kind={kindOf(d).kind} aria-disabled={!opt} data-unaffordable={short || undefined}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               {...cardHandlers(refs, uid, d.name, optId)}
@@ -248,6 +248,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 {d.from > 1 && <span className="lt-round-tag" data-round-tag="" title="Works from round II on">II+</span>}
                 {fromPile && !tray && <span className="need from-pile" title="From the top of the pile">pile</span>}
               </span>
+              {/* the card's type in words, styled by kind (Cory, Oct 28) */}
+              {kindOf(d).word && <span className="lt-kind" data-kind-word="">{kindOf(d).word}</span>}
               {/* details hides the picture, so its corner number sits on the card itself (Cory, 2026-10-22: "total cost added to corner of details view") */}
               {detailed && <span className="lt-corner-cost lt-corner-cost-detail num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>}
               {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
@@ -307,7 +309,7 @@ function PileRow({ state, viewer, row, optionFor, onPick, hover }) {
           const set = k < row.placed;
           return (
             <button key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
-              className={`card lt-card paper${opt ? ' can lit' : ' recede'}`} style={{ '--q': cardColor(state, d) }} data-ground={cardGround(state, d)}
+              className={`card lt-card paper${opt ? ' can lit' : ' recede'}`} style={{ '--q': cardColor(state, d) }} data-ground={cardGround(state, d)} data-kind={kindOf(d).kind}
               aria-label={`${d.name}, costs ${shown.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}${set ? `, ${NTH[k]} from the top` : ''}`}
               onPointerEnter={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, e.currentTarget); }}
               onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
@@ -315,6 +317,7 @@ function PileRow({ state, viewer, row, optionFor, onPick, hover }) {
               <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
                 <span className="lt-corner-cost num" aria-hidden="true">{shown.reduce((t, c) => t + c.n, 0)}</span>
                 {set && <span className="pr-slot num" aria-hidden="true">{k + 1}</span>}</span>
+              {kindOf(d).word && <span className="lt-kind" data-kind-word="">{kindOf(d).word}</span>}
               <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
               <span className="ft"><CostShapes parts={shown} /></span>
             </button>
