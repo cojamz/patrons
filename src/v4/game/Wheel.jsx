@@ -877,7 +877,7 @@ function Wheel({ state, interactionState = state, legal, idle = null, pickNotes 
       r.gap = !k ? 0 : 0.45;
     }
     const top = Math.abs(norm(qCenter(q, nq) + rot)) < 90;
-    const rr = top ? RIM.r - 1.6 : RIM.r + 1.6;
+    const rr = top ? RIM.r + 2.2 : RIM.r + 1.6; // the pixel face sits low in its box: the top half goes out further (Cory, Oct 29)
     const room = (2 * arcHalf * Math.PI / 180) * rr - 26 - leaders.length * EMOJI_ROOM;
     const lineK = runs.reduce((a, r) => a + r.gap + r.w, 0);
     const tailK = RIM_MARK + (leaders.length ? 0.45 : 0);
