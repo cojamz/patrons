@@ -385,7 +385,7 @@ export default {
     // Cory, 2026-10-29: "clock maker doesnt feel good" (was +1 purple per 2 purple you have, on recruit and at round start).
     // Price 5 (was 4): Claude, under Cory's go-with-your-gut ("will likely need to rebalance cost"): first pick of two spaces
     // every round beats the old trickle. Core builds the order (firstTwoInRow).
-    m('clockmaker', 'Clockmaker', 2, 2, 'Round Start: take your first two turns in a row.', { firstTwoInRow: true }),
+    m('clockmaker', 'Clockmaker', 2, 2, 'Round Start: take your first two turns in a row.', { f: 2, firstTwoInRow: true }), // (Cory, Oct 29, balance run: +1 follower)
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 12
     m('lamplighter', 'Lamplighter', 6, 2,'On Recruit: +1 purple per minion you get this round (3 / 4 / 5). Round Start: +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       // Cory, 2026-10-15: every minion you get counts (Extra Hand's too)
@@ -412,7 +412,7 @@ export default {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),
     // Cory's Purple members (2026-10-22); names are Claude's fill-ins; prices are the pricing thread's educated guesses
-    m('earlybird', 'Early Bird', 2, 2, 'Your turns can’t be skipped.', { noSkip: true }),
+    m('earlybird', 'Early Bird', 2, 2, 'Your turns can’t be skipped.', { f: 2, noSkip: true }), // (Cory, Oct 29, balance run: +1 follower)
     m('bouncer', 'Bouncer', 1, 2, 'On Recruit: the next two rivals’ turns are skipped.', {
       // the next two turns that belong to rivals; your own turn between them still happens (Cory's yes)
       onRecruited(ctx, owner) {

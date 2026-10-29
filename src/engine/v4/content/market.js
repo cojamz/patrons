@@ -370,6 +370,7 @@ const market = {
       },
     }),
     m('restocker', 'Restocker', 2, 1, 'On Use, once per game: send the whole shop to the bottom of the pile, then refill.', {
+      f: 2, // (Cory, Oct 29, balance run: +1 follower)
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!ctx.state.shop.length) { card.used = false; ctx.log(`${owner.name}'s Restocker: the shop is empty.`); return; }

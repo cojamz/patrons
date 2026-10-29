@@ -391,7 +391,7 @@ const thieves = {
       guardSteal: () => true,
     }),
     m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2, n: 2 }), // 2 members (Cory, Oct 29)
-    m('doubleagent', 'Double Agent', 3, 3, /* 4 to 7 (Cory, Oct 29: "double agent definitely too cheap"; Claude's price) */  'On Recruit: swap this member for a rival’s member you choose.', {
+    m('doubleagent', 'Double Agent', 3, 4, /* 4 to 8 (Cory, Oct 29: "double agent definitely too cheap", then "can say 8 for now") */  'On Recruit: swap this member for a rival’s member you choose.', {
       onRecruited(ctx, owner, card) {
         // a swap, so Loyalists' "Your other members can’t be swapped" holds (Claude, 2026-10-29, from the bots thread)
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid && ctx.canSwapMember(c.uid));

@@ -141,6 +141,8 @@ const ALLOW = {
   // Overtime and Crunch Time went free (2026-10-15): only Taskmaster still pays purple for a turn, and both are cut
   // extra turns got rarer when Purple's spaces moved turns instead (2026-10-22); the Purple members are being redone
   'purple.foreman': 'pays only on an extra turn, from members now (cards-purple: Foreman)',
+  // the Oct 29 balance-run followers moved the seeded games: recruited once, its paid turn never bought
+  'purple.taskmaster': 'pays 5 purple for a turn, rarely worth it to a bot (cards-purple: Taskmaster)',
   'purple.doubletime': 'halves only Taskmaster’s paid turn now (cards-purple: Corner-Cutter); cut from the deck',
   // like Bodyguard and Agents above: a pure restriction (its cult's members drop out of every swap's options) that
   // changes no number, so there is no payout line to name it (v0.8.2 Red deck)

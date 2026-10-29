@@ -496,7 +496,7 @@ const echoQ = {
     }),
     // was "Game end: +1 follower per green member." (2+2) until the design critic's follow-ups (2026-10-14): now it
     // pays for the copy itself, a rival's space only, and the follower counts at once (heard() above).
-    m('ensemble', 'Ensemble', 2, 2, 'Whenever you copy your own action, +1 follower.', { n: 2 }), // Cory, 2026-10-28: 2 members
+    m('ensemble', 'Ensemble', 2, 2, 'Whenever you copy your own action, +1 follower.', { n: 2, f: 3 }), // Cory, 2026-10-28: 2 members; (Cory, Oct 29, balance run: +1 follower)
     m('groupie', 'Groupie', 4, 4, 'Whenever anyone recruits a green member, +1 green.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (recruited.uid !== card.uid && recruited.def.id.startsWith('echo.')) ctx.gain(owner, 'green', 1);

@@ -130,7 +130,7 @@ const members = [
     onTurnEnd(ctx, owner, card, p) { if (p === owner) delete owner.buyTwiceNow; },
     botActivate: (ctx, p) => !p.buyTwiceNow && ctx.state.round >= 2 && p.turnBuys === 0 && Object.values(p.res).reduce((a, b) => a + b, 0) >= 10,
   }),
-  m('freelancer', 'Alchemist', 'yellow', 2, 2, /* Freelancer until Cory renamed it, Oct 28 */ 'All your resources count as any when you recruit a member.', { anyColorPart: true }),
+  m('freelancer', 'Alchemist', 'yellow', 2, 2, /* Freelancer until Cory renamed it, Oct 28 */ 'All your resources count as any when you recruit a member.', { f: 2, anyColorPart: true }), // (Cory, Oct 29, balance run: +1 follower)
   m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
   // Extra Hand as it printed until Oct 28, never dealt (retired): the tests of extra minions a card grants by round
   // (Poach and swaps moving an unplaced grant, copies, a full board) keep it as their fixture
