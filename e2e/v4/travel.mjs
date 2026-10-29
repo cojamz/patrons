@@ -91,6 +91,7 @@ const RECT = (w) => {
     case 'rim': return box(document.querySelector(`.rim[data-rim-res="${w.r}"]`));
     case 'member': return box(seat(w.pid) && seat(w.pid).querySelector(`.cs-member[data-uids~="${w.uid}"]`));
     case 'crowd': case 'seat': return box(seat(w.pid));
+    case 'pile': return box(document.querySelector('.lt-deck .back'));
     default: return null;
   }
 };
@@ -98,6 +99,7 @@ const near = (x, y, r, pad = 24) => !!r && x >= r.l - pad && x <= r.r + pad && y
 const numAt = w => (w.kind === 'stack' ? (() => { const s = document.querySelector(`.lt-cult-seat[data-seat="${w.pid}"] .cs-stack[data-res="${w.r}"] b.num`); return s ? s.dataset.hold ?? s.textContent.trim() : null; })() : null);
 
 async function check(kind, label) {
+  if (process.env.ONLY && !process.env.ONLY.split(',').includes(kind)) return;
   let sv;
   try { sv = travelSave(kind); } catch (e) { errors.push(`(${label}) ${e.message}`); return; }
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
@@ -164,7 +166,9 @@ async function check(kind, label) {
     // destination, and that last leg is in the air before the destination's number changes
     // (a member on the stage is a wide card: what it gives leaves from its portrait, inside the card it landed as)
     const meet = (a, b) => Math.hypot(a.x1 - b.x0, a.y1 - b.y0) <= 48 || (!!a.box && near(b.x0, b.y0, a.box, 8));
-    const ok = fl.filter(f => near(f.x1, f.y1, toBox) && f.t <= landedAt + 5 &&
+    // a recruit off the deck (t7) flies its card to the hub, opens there and goes home from the stage: the card must
+    // leave the deck before the member shows in your seat
+    const ok = from.kind === 'pile' ? fl.filter(f => /card-flight/.test(f.cls) && near(f.x0, f.y0, fromR) && f.t < landedAt) : fl.filter(f => near(f.x1, f.y1, toBox) && f.t <= landedAt + 5 &&
       (near(f.x0, f.y0, fromR) || fl.some(a => a !== f && near(a.x0, a.y0, fromR) && !near(a.x0, a.y0, toBox, 0) && a.t <= f.t + 5 && meet(a, f))));
     console.log(`${label}: ${fl.length} flight(s) after the click, ${ok.length} from the source to the destination; landed ${Math.round(landedAt - clickAt)}ms after the click`);
     if (!fl.length) errors.push(`(${label}) nothing flew: the ${to.kind === 'member' ? 'member' : 'number'} changed with no flight in the air`);
@@ -179,6 +183,7 @@ await check('gift', 't3 gift');
 await check('member', 't4 member taken');
 await check('ransom', 't5 ransom paid');
 await check('use', 't6 member use');
+await check('walkin', 't7 member off the top of the deck');
 
 await browser.close();
 if (server) server.kill();

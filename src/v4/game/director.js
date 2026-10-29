@@ -348,7 +348,8 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       const hold = mine.includes(card.to.pid) ? 0 : MO.rivalBuyHold;
       let paid = s + MO.cardLift + hold;
       // The card stays lifted until its payment has landed on the wheel.
-      for (const [i, p] of m.pays.entries()) { const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, { kind: 'shop', index: c.index, uid: c.uid }, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid }); paid = Math.max(paid, r.last + r.d); }
+      const into = card.from.kind === 'pile' ? card.from : { kind: 'shop', index: c.index, uid: c.uid };
+      for (const [i, p] of m.pays.entries()) { const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, into, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid }); paid = Math.max(paid, r.last + r.d); }
       // (Cory, 2026-10-18) the recruit flies to the middle, shows what it does, then goes to its buyer: it leaves its
       // slot as it lifts, its coins drop meanwhile, it holds at the hub a beat to be read, then flies to the crowd
       const hubW = { kind: 'stage', slot: 'hub' };
@@ -1104,6 +1105,12 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   chain.handoffAt = base + (plan.handoff || plan.total);
   // a member arriving in a crowd (a swap, a member taken) shows when its ghost lands, never before it leaves
   for (const a of plan.atoms) {
+    // a recruit's new chip, too: a beat before it (Walk-In's red) must not show the member already home
+    if (a.op === 'card') {
+      const C = where({ kind: 'crowd', pid: a.to, uid: a.uid });
+      if (C && !C.rectOnly && C.animate && C.dataset && (C.dataset.uids || '').split(' ').includes(String(a.uid))) track(C.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.lift + a.toHub + a.show + a.fromHub }));
+      continue;
+    }
     if (a.op !== 'chip' || !a.hide) continue;
     const B = where(a.to);
     // a member going back to the shop: its card there waits, unseen, until the member lands on it
@@ -1222,7 +1229,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           // the recruited card (Cory, 2026-10-18): a picture of it lifts in its old slot with the bought ring, then
           // flies to the hub, where it opens as the member's card (who, what it does) and is read; then it flies on to
           // its new chip in the buyer's crowd, which lands with its ring and sound
-          const sn = snap && snap.get(a.uid);
+          // a member taken off the top of the deck (Red's round I space) was never face up: its card back leaves the deck
+          const sn = (snap && snap.get(a.uid)) || (a.from && a.from.kind === 'pile' ? deckSnap(root) : null);
           if (skip || !sn || !sn.rect) return;
           // (the reads first: the chip and the hub, then the ghost goes in)
           const chip = root.querySelector(`.lt-seat[data-pid="${a.to}"] [data-uids~="${a.uid}"]`) || placeEl(root, { kind: 'crowd', pid: a.to }, ctx);
@@ -1264,7 +1272,6 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
             { opacity: 0, offset: 1 },
           ], { duration: total, fill: 'forwards' }));
           slideShop(root, snap);
-          if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total + a.show + a.fromHub }));
           const id = `recruit:${a.uid}`;
           const ep = chain.epoch || 0;
           // the member's card opens at the hub as the picture arrives
@@ -1450,6 +1457,16 @@ function linger(el, n, r = el && !el.rectOnly ? el.getBoundingClientRect() : nul
   lingering.set(el, { b, n, t });
 }
 
+/** The deck's top card as a picture to fly (its back, the cult mark on it), where it sits, as snapshotShop gives a shop card. */
+function deckSnap(root) {
+  const back = root && root.querySelector('.lt-deck .back');
+  if (!back) return null;
+  const r = back.getBoundingClientRect();
+  if (!r.width) return null;
+  const mark = back.querySelector('.cult-mark');
+  const html = `<div class="lt-deck" style="width:calc(100% + 6px);height:calc(100% + 6px);flex:none"><span class="back">${mark ? mark.outerHTML : ''}</span></div>`;
+  return { html, rect: { left: r.left, top: r.top, width: r.width, height: r.height } };
+}
 /** How a member shows on the stage: its name, picture, sphere colour and rule. */
 /** A shop card's portrait as it stood (the shop snapshot's picture), for a member flying off the shop as itself. */
 function shopFig(snap, uid) {

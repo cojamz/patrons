@@ -22,6 +22,8 @@ export const TRAVEL = {
   ransom: { q: ['gold', 'thieves', 'red', 'purple'], force: 'pay', hit: (s, mv, n) => /^Shake Down: pay /.test(prompt(s)) && mv.option === 'pay' && (g => g && { from: { kind: 'seat', pid: 0 }, to: g.to })(fx(n).find(e => e.type === 'gain' && e.to.pid !== 0)) },
   // a member's Use: what it gives flies from the member to your stack
   use: { q: ['gold', 'red', 'blue', 'green'], hit: (s, mv, n) => String(mv.option).startsWith('use:') && s.pending.kind === 'buy' && (g => g && { from: { kind: 'member', pid: 0, uid: g.cause.uid }, to: g.to })(fx(n).find(e => e.type === 'gain' && e.cause.kind === 'member' && e.to.pid === 0)) },
+  // a member off the top of the deck (Walk-In): its card leaves the deck for your crowd
+  walkin: { q: ['red', 'gold', 'blue', 'green'], hit: (s, mv, n) => (e => e && { from: { kind: 'pile' }, to: { kind: 'member', pid: 0, uid: e.what.uid } })(fx(n).find(e => e.type === 'recruit' && e.from.kind === 'pile' && e.to.pid === 0)) },
 };
 function takeOf(n) {
   const t = fx(n).find(e => e.type === 'transfer' && e.to.pid === 0);
