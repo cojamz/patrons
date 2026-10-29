@@ -31,7 +31,7 @@ Cory picked this on Oct 29: "middle zoom is good, but the art looks rough still"
   - under the arms, as a wedge rather than a strip;
   - the jaw on the far side (in the head template).
 - No 1px shade strips running the full length of a shape.
-- No lit bars: no forehead bars, no cheek pixels, nothing that reads as a hairband or a bruise.
+- No lit bars: no forehead bars, no cheek pixels, nothing that reads as a hairband or a bruise. This holds on deep skin too: a deep face reads by its outline, its hair and its eye glints, never a stepped lit plane (the old 48px lesson is retired here).
 - No alternating-row banding on cash, bills or heaps. A bill is flat green with one dark centre mark. A bundle has a single paper band.
 
 ## 4. Faces: one hand-made template per head size (14 and 16 wide)
