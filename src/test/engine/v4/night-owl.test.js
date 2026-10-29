@@ -28,7 +28,7 @@ describe('Night Owl', () => {
   it('is printed as decided: 6 purple + 1 any, worth 2 followers, in plain words', () => {
     const d = defById('purple.nightowl');
     expect([d.s, d.w, d.f]).toEqual([6, 1 + EXTRA_WILD, 2]); // 8 → 6 purple after the Oct 22 bot run; 9 → 8 in total after the Oct 29 balance runs
-    expect(d.text).toBe('Once per round: after you place your last minion, take an extra turn.');
+    expect(d.text).toBe('Once per round: after you place your last minion, +1 minion, placed right away.');
     expect(d.from).toBe(2); // the II+ tag (Cory, 2026-10-22)
   });
 
@@ -41,7 +41,7 @@ describe('Night Owl', () => {
   it('after your last minion (and that turn’s buy), you place one more before the next player does, named', () => {
     let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) }), 'purple.windup');
     expect(s.players[0].left).toBe(1);
-    expect(owl(s)).toEqual(["P1's Night Owl: P1 takes an extra turn."]);
+    expect(owl(s)).toEqual(["P1's Night Owl: P1 gets 1 more minion, placed now."]);
     expect(queuedTurns(s, 0)).toBe(1);
     const next = nextPlacer(s);
     expect(next.who).toBe(0);
@@ -62,7 +62,7 @@ describe('Night Owl', () => {
     let s = sc({ round: 3, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) });
     s.cards[uidOf(s, 'purple.nightowl', 0)].owlRound = 2; // it fired last round
     s = take(s, 'purple.windup');
-    expect(owl(s)).toEqual(["P1's Night Owl: P1 takes an extra turn."]);
+    expect(owl(s)).toEqual(["P1's Night Owl: P1 gets 1 more minion, placed now."]);
     expect(s.players[0].left).toBe(1);
   });
 

@@ -182,7 +182,7 @@ export function useUseResult(state, pid) {
     for (const r of state.resources) { const d = (p1.res[r] || 0) - (p0.res[r] || 0); if (d) parts.push(`${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`); }
     const f = followers(state, p1) - followers(before, p0);
     if (f) parts.push(`${f > 0 ? '+' : '−'}${Math.abs(f)} follower${Math.abs(f) === 1 ? '' : 's'}`);
-    if ((p1.left || 0) > (p0.left || 0)) parts.push('extra turn');
+    if ((p1.left || 0) > (p0.left || 0)) parts.push('+1 minion');
     setOut({ uid, text: parts.join(' ') || '+0', zero: !parts.length, n: Date.now() });
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setOut(null), 1800);

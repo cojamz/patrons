@@ -49,13 +49,13 @@ describe('an extra turn names the card that gave it', () => {
       queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }], order: [0, 1] }, 1);
     d.take('purple.windup');
     d.on();
-    expect(d.s.log).toContain("P1's Night Owl: P1 takes an extra turn.");
+    expect(d.s.log).toContain("P1's Night Owl: P1 gets 1 more minion, placed now.");
     d.take('purple.lastcall');
     d.on();
     const [earn, extra] = d.t.stories;
-    expect(earn.lines).toContain('Night Owl: an extra turn after this one');
+    expect(earn.lines).toContain('Night Owl: +1 minion, placed now');
     expect(earn.lines).not.toContain('an extra turn');
-    expect(earn.short).toContain('Night Owl: an extra turn after this one');
+    expect(earn.short).toContain('Night Owl: +1 minion, placed now');
     // the extra turn's own card leads with why it happened, and so does its line in the strip
     expect(extra.head).toBe(`P1 took ${actionName('purple.lastcall')}`);
     expect(extra.lines[0]).toBe('Night Owl: extra turn');
@@ -81,7 +81,7 @@ describe('an extra turn names the card that gave it', () => {
     d.on();
     const [earn, extra] = d.t.stories;
     expect(earn.head).toBe(`P1 used Go-Getter, then took ${actionName('purple.windup')}`);
-    expect(earn.lines).toContain('Go-Getter: an extra turn after this one');
+    expect(earn.lines).toContain('Go-Getter: +1 minion, placed now');
     expect(extra.lines[0]).toBe('Go-Getter: extra turn');
   });
 

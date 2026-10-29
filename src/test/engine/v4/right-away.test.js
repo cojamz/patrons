@@ -26,7 +26,7 @@ describe('Right Away', () => {
     while (!(s.round === 1 && s.pending?.kind === 'place')) s = applyMove(s, chooseBotMove(s, rand));
     const base = s.order.slice(0, 4), A = s.pending.player;
     const i = quadrant('purple').actions.findIndex(a => a.key === 'again');
-    expect(quadrant('purple').actions[i].text).toBe('+1 purple (+2 in round II, +3 in round III). Take another turn right after this one.');
+    expect(quadrant('purple').actions[i].text).toBe('+1 purple (+2 in round II, +3 in round III). Your next turn comes right after this one.');
     const before = s.players[A].res.purple || 0;
     s = applyMove(s, { player: A, option: `slot:${s.quadrants.indexOf('purple')}-${i}` });
     expect(s.players[A].res.purple).toBe(before + 1);

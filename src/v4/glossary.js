@@ -27,8 +27,11 @@ export const GLOSSARY = [
     def: 'Held by any player. Members in the shop or the pile are not in play.' },
   { key: 'release', word: 'Release', legacy: true, match: /\breleas(e|ed|es)\b/,
     def: 'Legacy rule, unavailable in normal play. Once per round, when you recruit: put one of your members (not one you recruited this round) at the bottom of the pile and take back only the colored part of its cost, in its own color. You keep your buy.' },
-  { key: 'extra turn', word: 'Extra turn', match: /\bextra turns?\b/,
-    def: 'Another turn right after this one: you place one more minion and may recruit again. Never in round I; later only if a space remains after every minion still due has landed.' },
+  // Cory, 2026-10-29: "going twice in a row is very different from extra member"; "extra turn" left the cards
+  { key: '+1 minion', word: '+1 minion', match: /\+1 minion\b|\bextra turns?\b/,
+    def: 'One more minion this round, to place and recruit with. The card says when you place it; otherwise it goes after everyone else. Never in round I; later only while a space would still be free.' },
+  { key: 'in a row', word: 'In a row', match: /\bin a row\b|\bright after this one\b/,
+    def: 'Your own next turn comes up now, so you place twice in a row. No new minion: you place the same minions, just sooner.' },
   // Cory, 2026-10-22: a skip passes you over once; you never lose the turn or the minion
   { key: 'skip', word: 'Skip', match: /\bskip(?:s|ped)?\b/i,
     def: 'A skipped turn is passed over: play goes on to the next turn, and the skipped player places that minion later in the round. Nobody loses a turn or a minion.' },

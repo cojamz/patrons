@@ -20,7 +20,9 @@ Round I's turn order is drawn at random. Then, starting with the player who goes
 ## Turn order
 - Turns snake: down the order and back up, one minion per turn (1-2-3-4, 4-3-2-1, 1-2-3-4…) until everyone has placed every minion. The players at each end take two turns in a row.
 - Round I's order is the random draw. From round II, fewest followers goes first; ties go to whoever went later last round.
-- An **extra turn** (Overtime, Go-Getter, Night Owl…) lets you place one more minion and recruit again, right away. Extra turns never happen in round I, and later only while a space would still be free after every minion still to come has landed.
+- **+1 minion** (Crowd In, Extra Shift, Go-Getter, Night Owl) gives you one more minion this round, to place and recruit with. The card says when you place it; otherwise it goes after everyone else. It never happens in round I, and later only while a space would still be free after every minion still to come has landed.
+- **In a row** (Right Away, Crunch Time, Clockmaker) moves your own next turn up, so you place twice in a row. No new minion: you place the same minions, just sooner.
+- What you just did happens now, even if a skip is already waiting on you: a copied Right Away after your Last Call still places right away, then the skip goes on.
 - A **skipped** turn is passed over: play goes on to the next turn, and you place that minion later in the round. Nobody loses a turn or a minion.
 
 ## Your turn

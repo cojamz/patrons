@@ -105,7 +105,7 @@ export function extraTurns(ctx, p, n = 1, why = null) {
   }
   if (k) {
     // why: the member that gave it (Errand Runner, Go-Getter), so the turn traces to the card
-    ctx.log(`${why ? `${p.name}'s ${why}: ${p.name}` : p.name} takes ${k === 1 ? 'an extra turn' : `${k} extra turns`}.`);
+    ctx.log(`${why ? `${p.name}'s ${why}: ${p.name}` : p.name} gets ${k === 1 ? '1 more minion' : `${k} more minions`}, placed now.`); // Cory, 2026-10-29: "extra turn" left the game's words
     for (let i = 0; i < k; i++) extraHooks(ctx, p);
   // said with the card or space first, so the turn card names it (Cory, 2026-10-15: "I bought Night Owl in round 1 and it
   // didn't seem to give me an extra"; with 4 players round I has no free space)
@@ -190,7 +190,9 @@ export function turnsNow(ctx, p, n, why) {
   for (const t of seq) if (j < order.length && order[j] === t.pid) t.at = j++;
   const done = (s.turns || []).length;
   const cur = Math.max(-1, ...seq.slice(0, done).map(t => (t.at === undefined ? -1 : t.at)));
-  const tasks = picks.map(i => q[i]);
+  // what you just did happens now, even past a skip you already have (Cory, 2026-10-29: a copied Right Away after Last
+  // Call came at the round's end; "what would be intuitive?" Claude's answer, his game): core's lastCallLast leaves it
+  const tasks = picks.map(i => { q[i].now = true; return q[i]; });
   for (let k = picks.length - 1; k >= 0; k--) q.splice(picks[k], 1);
   q.splice(end + 1, 0, ...tasks);
   const moves = [];
@@ -275,8 +277,8 @@ export default {
       // Cory, 2026-10-22: "+1 purple, take another turn right after this one", in Roll Call's spot. One of your own
       // turns, moved up (his yes: you still place the same minions that round), like Crunch Time's two. Name: fill-in.
       // Cory, 2026-10-23: "Right Away should scale. +1 +2 +3" (Hold Up's wording).
-      key: 'again', copyDoesIt: true, ring: 1, name: 'Right Away', text: '+1 purple (+2 in round II, +3 in round III). Take another turn right after this one.',
-      byRound: { lines: ['+1 purple', '+2 purple', '+3 purple'], rest: 'Take another turn right after this one.' },
+      key: 'again', copyDoesIt: true, ring: 1, name: 'Right Away', text: '+1 purple (+2 in round II, +3 in round III). Your next turn comes right after this one.',
+      byRound: { lines: ['+1 purple', '+2 purple', '+3 purple'], rest: 'Your next turn comes right after this one.' },
       estimate: (ctx, p) => ctx.state.round + turnsNowEstimate(ctx, p, 1),
       resolve(ctx, p) { ctx.gain(p, P, ctx.state.round, { fromAction: true }); turnsNow(ctx, p, 1, 'Right Away'); },
     },
@@ -311,7 +313,7 @@ export default {
       // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
       // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
       // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
-      key: 'rally', copyDoesIt: true, ring: 2, name: 'Crunch Time', text: '+2 purple. Take two turns after this one.',
+      key: 'rally', copyDoesIt: true, ring: 2, name: 'Crunch Time', text: '+2 purple. Your next two turns come right after this one.',
       // Cory, 2026-10-22: "all should give at least 1"; 2026-10-25: +2 (Hard bot read).
       estimate: (ctx, p) => 2 + turnsNowEstimate(ctx, p, 2),
       resolve(ctx, p) { ctx.gain(p, P, 2, { fromAction: true }); turnsNow(ctx, p, 2, 'Crunch Time'); },
@@ -319,7 +321,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Go-Getter', 4, 2, 'On Use, once per game: take an extra turn after this one.', { from: 2,
+    m('secondwind', 'Go-Getter', 4, 2, 'On Use, once per game: +1 minion, placed right after this turn.', { from: 2,
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -335,7 +337,7 @@ export default {
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
-    m('lateriser', 'Late Riser', 4, 2, 'Round Start: if you have the fewest followers (ties count), take an extra turn before anyone places.', { from: 2,
+    m('lateriser', 'Late Riser', 4, 2, 'Round Start: if you have the fewest followers (ties count), +1 minion, placed before anyone else.', { from: 2,
       // the round's turns are queued after round-start hooks, so this one goes first
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
@@ -346,7 +348,7 @@ export default {
           if (openSpaces(ctx).length <= due) { ctx.log(`No space to spare: ${owner.name} gets no extra turn from Late Riser.`); return; }
           ctx.state.queue.unshift({ t: 'turn', p: owner.id });
           owner.left += 1;
-          ctx.log(`${owner.name}'s Late Riser: an extra turn first.`);
+          ctx.log(`${owner.name}'s Late Riser: 1 more minion, placed first.`);
           extraHooks(ctx, owner);
         }
       },
@@ -354,8 +356,11 @@ export default {
     m('foreman', 'Foreman', 4, 2, 'Whenever you take an extra turn, +1 purple per minion you have on the board.', {
       onExtraTurn(ctx, owner) { ctx.gain(owner, P, onBoard(ctx, owner)); },
     }),
-    m('courier', 'Courier', 2, 2, 'Whenever you take an extra turn, +1 of each other color.', {
-      onExtraTurn(ctx, owner) { for (const c of ctx.state.resources) if (c !== P) ctx.gain(owner, c, 1); },
+    // Cory, 2026-10-29: pays on two turns in a row ("the former"), not on a new minion; "courier doesnt seem to work right"
+    // (Right Away and Crunch Time never paid). Price 6 (was 5): Claude, under Cory's go-with-your-gut, since the snake's
+    // turnarounds now pay too
+    m('courier', 'Courier', 3, 2, 'Whenever you take two turns in a row, +1 of each other color.', {
+      onTurnInRow(ctx, owner) { for (const c of ctx.state.resources) if (c !== P) ctx.gain(owner, c, 1); },
     }),
     m('apprentice', 'Apprentice', 2, 2, 'Whenever you take an extra turn, your next member costs 4 less.', {
       onExtraTurn(ctx, owner) { ctx.discount(owner, 4, 'Apprentice'); },
@@ -377,11 +382,10 @@ export default {
         ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
       },
     }),
-    m('clockmaker', 'Clockmaker', 1, 2, 'On Recruit: +1 purple per 2 purple you have. Round Start: +1 purple per 2 purple you have.', { now: true,
-      // round start, not end (Claude, 2026-10-14, after Cory: purple left at the end of round III is worth nothing)
-      // counts after other round-start income (Lamplighter…), like Steward
-      onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
-    }),
+    // Cory, 2026-10-29: "clock maker doesnt feel good" (was +1 purple per 2 purple you have, on recruit and at round start).
+    // Price 5 (was 4): Claude, under Cory's go-with-your-gut ("will likely need to rebalance cost"): first pick of two spaces
+    // every round beats the old trickle. Core builds the order (firstTwoInRow).
+    m('clockmaker', 'Clockmaker', 2, 2, 'Round Start: take your first two turns in a row.', { firstTwoInRow: true }),
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 12
     m('lamplighter', 'Lamplighter', 6, 2,'On Recruit: +1 purple per minion you get this round (3 / 4 / 5). Round Start: +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       // Cory, 2026-10-15: every minion you get counts (Extra Hand's too)
@@ -390,7 +394,7 @@ export default {
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win
     // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
     // pays from round II. Fires once per round (owlRound), whether or not the board had room.
-    m('nightowl', 'Night Owl', 6, 1, 'Once per round: after you place your last minion, take an extra turn.', { f: 2, from: 2,
+    m('nightowl', 'Night Owl', 6, 1, 'Once per round: after you place your last minion, +1 minion, placed right away.', { f: 2, from: 2,
       // recruited after your last minion of the round (its buy step): it waits for next round, and says so
       onRecruited(ctx, owner, card) {
         if (owner.left !== 0 || ctx.state.round < 1) return;

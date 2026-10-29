@@ -14,29 +14,30 @@ const toPlace = s => { let t = s; for (let k = 0; k < 400 && !(t.pending && t.pe
 const give = (s, pid, def) => { const c = Object.values(s.cards).find(x => x.def === def); s.shop = s.shop.filter(u => u !== c.uid); s.pile = s.pile.filter(u => u !== c.uid); s.players[pid].members.push(c.uid); return c; };
 
 describe('seat income says its conditions', () => {
-  it('Clockmaker scales: "per 2 purple", with what you hold in the hover; Banker stays bare', () => {
-    const s = toPlace(createGame({ seats, seed: 4, quadrants }));
-    give(s, 0, 'purple.clockmaker');
+  // Steward stands in for Clockmaker, which stopped paying purple (Cory, 2026-10-29: now "take your first two turns in a row")
+  it('Steward scales: "per 3 silver", with what you hold in the hover; Banker stays bare', () => {
+    const s = toPlace(createGame({ seats, seed: 4, quadrants: ['silver', 'yellow', 'gold', 'red'] }));
+    give(s, 0, 'silver.steward');
     give(s, 0, 'gold.banker');
-    s.players[0].res.purple = 4;
+    s.players[0].res.silver = 6;
     const t = incomeTerms(s, s.players[0]);
-    const purple = t.groups.find(g => g.parts.some(([r]) => r === 'purple'));
-    expect(purple.cond).toBe('per 2 purple');
-    expect(purple.parts.find(([r]) => r === 'purple')[1]).toBe(2);
+    const silver = t.groups.find(g => g.parts.some(([r]) => r === 'silver'));
+    expect(silver.cond).toBe('per 3 silver');
+    expect(silver.parts.find(([r]) => r === 'silver')[1]).toBe(2);
     expect(t.groups.find(g => g.parts.some(([r]) => r === 'gold')).cond).toBeNull();
-    expect(t.sources.find(x => x.name === 'Clockmaker').hold).toBe('4 purple held now');
+    expect(t.sources.find(x => x.name === 'Steward').hold).toBe('6 silver held now');
 
     // after a steal the number drops, and the line still says why it moves
     const s2 = structuredClone(s); // a new state, as every move makes (the dry run is cached per state)
-    s2.players[0].res.purple = 2;
+    s2.players[0].res.silver = 3;
     const after = incomeTerms(s2, s2.players[0]);
-    const p2 = after.groups.find(g => g.parts.some(([r]) => r === 'purple'));
-    expect(p2.parts.find(([r]) => r === 'purple')[1]).toBe(1);
-    expect(p2.cond).toBe('per 2 purple');
+    const p2 = after.groups.find(g => g.parts.some(([r]) => r === 'silver'));
+    expect(p2.parts.find(([r]) => r === 'silver')[1]).toBe(1);
+    expect(p2.cond).toBe('per 3 silver');
 
     const { container } = render(<CultSeat state={s2} pid={0} me={0} mine />);
     expect(container.querySelector('.cs-income')).toBeNull();
-    expect(container.querySelector('[data-member="purple.clockmaker"]')).not.toBeNull();
+    expect(container.querySelector('[data-member="silver.steward"]')).not.toBeNull();
   });
 
   it('Late Bloomers is never shown as a sure +1: every part it touches says "if fewest"', () => {

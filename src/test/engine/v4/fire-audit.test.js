@@ -131,7 +131,7 @@ const SPHERES = ['gold', 'red', 'purple', 'silver', 'yellow'];
 const ALLOW = {
   // seeded games moved with +1 wild and the round I rework (Oct 27-28): recruited in 4-5 games without the trigger coming up
   'silver.dowager': 'a plain worth-3 member the audit counts (cards-silver)',
-  'purple.courier': 'pays only on an extra turn (cards-purple: Courier)',
+  'purple.courier': 'pays only on two turns in a row (courier.test.js)',
   // bots almost never buy it at 12 (Hard bot read, Oct 24); recruited once in the Oct 25 sample
   'silver.grandhost': 'doubles silver from Silver spaces, rarely bought (cards-silver: Grand Host)',
   'purple.lateriser': 'needs the fewest followers at a round start, bought before it (cards-purple: Late Riser)',

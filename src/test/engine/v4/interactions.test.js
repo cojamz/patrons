@@ -293,6 +293,15 @@ describe('Magenta takes members that carry state', () => {
     expect(defs(s, 1)).toEqual(['thieves.doubleagent']);
     expect(s.cards[uidOf(s, 'gold.jackpot', 0)].used).toBeFalsy(); // usable on P1's next buy
   });
+  // Loyalists reads "Your other members can’t be swapped." and Double Agent's text says swap (bots thread, 2026-10-29)
+  it('Double Agent can’t swap for a member that Loyalists guards; Loyalists itself is fair game', () => {
+    let s = scene({ quads: Q, round: 3, res: [{ gold: 9, red: 9, magenta: 9, blue: 9 }, { gold: 7 }], members: [[], ['gold.jackpot', 'red.loyalists']], shop: ['thieves.doubleagent', ...SHOP.slice(1)] });
+    s = take(s, 'gold.rush');
+    s = move(s, `card:${uidOf(s, 'thieves.doubleagent', 'shop')}`);
+    const ids = (s.pending?.options || []).map(o => o.id);
+    expect(ids).not.toContain(`card:${uidOf(s, 'gold.jackpot', 1)}`);
+    expect(defs(s, 1)).toContain('gold.jackpot');
+  });
   // Social Climber now pays on Release (dead-window audit, 2026-10-14); these were its round-start trade-in
   it('a member released with Social Climber held goes back to the pile clean (no Doppelganger copy, used flag), and Climber pays +2', () => {
     // a Green table: Doppelganger is green since 2026-10-15, so its release pays green

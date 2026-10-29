@@ -125,9 +125,9 @@ export function promptFor(state, mine) {
             : { who: p, text: `${name} again (snake order)` };
         }
         const why = t.why ? ` (${t.why})` : '';
-        const what = t.kind === 'hand' ? 'Extra minion' : 'Extra turn';
+        const what = t.kind === 'hand' ? 'Extra minion' : '+1 minion';
         return mine
-          ? { who: p, lead: `${what}${why}: `, text: 'place one more minion', keepCase: true, ...(or ? { sub: or } : {}) }
+          ? { who: p, lead: `${what}${why}: `, text: 'place it now', keepCase: true, ...(or ? { sub: or } : {}) }
           : { who: p, text: `${name}: ${what.toLowerCase()}${why}` };
       }
     }
@@ -205,11 +205,11 @@ function extraGrants(state) {
   const add = (n, why, k) => { const p = byName(n); if (p) for (let j = 0; j < k; j++) (out[p.id] = out[p.id] || []).push(why); };
   for (let i = roundLogStart(log); i < log.length; i++) {
     const l = log[i];
-    let m = l.match(/^(.+?)'s (.+?): (.+?) takes (an extra turn|(\d+) extra turns)\.$/);
+    let m = l.match(/^(.+?)'s (.+?): (.+?) gets (1 more minion|(\d+) more minions), placed now\.$/);
     if (m && m[1] === m[3]) { add(m[1], m[2], m[5] ? Number(m[5]) : 1); continue; }
-    m = l.match(/^(.+?)'s (Late Riser): an extra turn first\.$/);
+    m = l.match(/^(.+?)'s (Late Riser): 1 more minion, placed first\.$/);
     if (m) { add(m[1], m[2], 1); continue; }
-    m = l.match(/^(.+?) takes (an extra turn|(\d+) extra turns)\.$/);
+    m = l.match(/^(.+?) gets (1 more minion|(\d+) more minions), placed now\.$/);
     if (!m) continue;
     // paid for just before: "P1's Taskmaster: pays 5 purple…" (older "pays N purple for X" / "spends N purple on X"
     // lines still parse in saved logs); else the space just taken (Overtime and Crunch Time are free)
@@ -905,8 +905,8 @@ export function traceLine(line, players, resources) {
   return null;
 }
 
-/** A turn card's line for extra turns: "an extra turn", or with the card that gave it ("Night Owl: an extra turn after this one"). */
-const EXTRA_LINE = /^(?:[^:]+: )?(an extra turn|\d+ extra turns)(?: after this one)?$/;
+/** A turn card's line for a minion placed now: "+1 minion, placed now", or with the card that gave it ("Night Owl: +1 minion, placed now"). */
+const EXTRA_LINE = /^(?:[^:]+: )?\+\d+ minions?, placed now$/;
 
 /**
  * A steal that arrives in another color, told once (rule-style: "…, as magenta." once, at the end):
@@ -1017,8 +1017,8 @@ export function turnStory(start, end, actor, me = null, mid = null) {
       else if ((m = own.match(/^ traded (.+)\.$/))) said.push(youName(`traded ${m[1]}`));
       else if ((m = own.match(/^ pulled a heist: (.+)\.$/))) said.push(youName(`took ${m[1]}`));
       // the card that gave it, named (Cory: "Log did not indicate a Night Owl turn"): "Night Owl: an extra turn after this one"
-      else if ((m = own.match(/^'s (.+?): .+? takes (an extra turn|(\d+) extra turns)\.$/))) said.push(`${m[1]}: ${m[3] ? `${m[3]} extra turns` : 'an extra turn'} after this one`);
-      else if ((m = own.match(/takes (an extra turn|(\d+) extra turns)\.$/))) said.push(m[2] ? `${m[2]} extra turns` : 'an extra turn');
+      else if ((m = own.match(/^'s (.+?): .+? gets (1 more minion|(\d+) more minions), placed now\.$/))) said.push(`${m[1]}: +${m[3] || 1} minion${m[3] ? 's' : ''}, placed now`);
+      else if ((m = own.match(/gets (1 more minion|(\d+) more minions), placed now\.$/))) said.push(`+${m[2] || 1} minion${m[2] ? 's' : ''}, placed now`);
       else if ((m = own.match(/^'s next member costs (\d+) less\.$/))) said.push(`next member costs ${m[1]} less`);
       else if ((m = own.match(/^ recruited (.+?)(?: from the pile with .+?)? \((.+)\)\.$/))) said.push(m[2] === 'free' ? `recruited ${m[1]} (free)` : `recruited ${m[1]} (paid ${m[2]})`);
       else if ((m = own.match(/^ bought (\d+) followers? \((.+)\)\.$/))) said.push(`bought ${fword(Number(m[1]))} (paid ${m[2]})`);

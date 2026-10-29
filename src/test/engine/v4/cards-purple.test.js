@@ -104,11 +104,12 @@ describe('Purple members', () => {
     expect(P(t)).toBe(2); // Crunch Time's own +2 only
     expect(named(t, 'Foreman')).toHaveLength(0);
   });
-  it('Courier: +1 of each other color per extra turn, named; Midas leaves member income alone; not on Crunch Time', () => {
-    const s = take(sc({ round: 2, members: [['purple.courier', 'gold.midas']] }), 'purple.overtime');
-    expect(s.players[0].res).toEqual({ gold: 1, red: 1, purple: 0, green: 1 });
+  // Courier pays on two turns in a row since Oct 29 (courier.test.js); here, that its +1 gold isn't doubled by Midas
+  it('Courier: +1 of each other color when your next turn comes right away, named; Midas leaves member income alone', () => {
+    const s = passBuys(take(sc({ round: 2, members: [['purple.courier', 'gold.midas']], queue: [0, 1, 0, 1].map(p => ({ t: 'turn', p })) }), 'purple.rally'));
+    // Crunch Time's +2 purple comes as 2 gold (Midas); Courier's +1 gold stays 1
+    expect(s.players[0].res).toEqual({ gold: 3, red: 1, purple: 0, green: 1 });
     expect(named(s, 'Courier')[0]).toMatch(/P1's Courier: \+1 gold, \+1 red, \+1 green/);
-    expect(crunch({ members: [['purple.courier']] }).players[0].res).toEqual({ gold: 0, red: 0, purple: 2, green: 0 });
   });
   it('Apprentice: each extra turn makes your next member 4 cheaper, named; not on Crunch Time', () => {
     const s = take(sc({ round: 2, members: [['purple.apprentice']] }), 'purple.overtime');
@@ -136,7 +137,7 @@ describe('Purple members', () => {
     expect(turnsQueued(s, 0)).toBe(0); // Crunch Time adds no turn (and here P1 has none left to bring forward)
     expect(named(s, 'Corner-Cutter')).toHaveLength(0);
   });
-  it('Bookkeeper when your last turn of the round ends (after its buy; Cory 2026-10-15), not at round end; Clockmaker and Lamplighter at round start; all named', () => {
+  it('Bookkeeper when your last turn of the round ends (after its buy; Cory 2026-10-15), not at round end; Lamplighter at round start; all named', () => {
     let s = sc({ res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 }, queue: [{ t: 'endRound' }] });
     expect(P(s)).toBe(5);
     s = take(sc({ left: 1, res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 } }), 'red.turnout');
@@ -144,9 +145,6 @@ describe('Purple members', () => {
     s = passBuys(s);
     expect(P(s)).toBe(5 + 2); // the turn ends: 4 workers on the board → +1 per 2
     expect(named(s, 'Bookkeeper')).toHaveLength(1);
-    s = sc({ res: [{ purple: 7 }], members: [['purple.clockmaker']], queue: [{ t: 'round', r: 2 }] });
-    expect(P(s)).toBe(7 + 3); // +1 per 2 purple held
-    expect(named(s, 'Clockmaker')).toHaveLength(1);
     s = sc({ members: [['purple.lamplighter']], queue: [{ t: 'round', r: 3 }] });
     expect(P(s)).toBe(5);
     expect(named(s, 'Lamplighter')).toHaveLength(1);

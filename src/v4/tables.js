@@ -25,7 +25,7 @@ export const tableLine = ids => ids.map(sphereName).join(' · ');
 const LINES = {
   gold: 'Piles up gold, and saves on your next member.',
   red: 'Recruits: free members, and swaps with rivals.',
-  purple: 'Extra turns: place again right away.',
+  purple: 'Turns: go twice in a row, skip, +1 minion.',
   silver: 'Big gains for you, a little for everyone else.',
   yellow: 'Gathers every color, and scores full sets.',
   market: 'Bends the shop: extra recruits, pay half, refresh the row.',

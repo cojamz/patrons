@@ -449,7 +449,8 @@ function lastCallLast(state) {
   const q = state.queue, close = q.findIndex(t => t.t === 'allPlaced'), stop = close < 0 ? q.length : close;
   const at = [];
   for (let i = 0; i < stop; i++) if (q[i].t === 'turn') at.push(i);
-  const late = t => state.players[t.p].lastCall === state.round;
+  // a turn moved up to now (Right Away, Crunch Time, a copy of either) stays where it was put
+  const late = t => !t.now && state.players[t.p].lastCall === state.round;
   const turns = at.map(i => q[i]), sorted = [...turns.filter(t => !late(t)), ...turns.filter(late)];
   at.forEach((i, k) => { q[i] = sorted[k]; });
 }
@@ -721,6 +722,11 @@ function runTask(state, task) {
     case 'turn': {
       state.current = p.id;
       (state.turns = state.turns || []).push(p.id);
+      // two turns in a row (a snake turnaround, Right Away, Crunch Time, Clockmaker, +1 minion placed now): Courier
+      if (state.turns.length > 1 && state.turns[state.turns.length - 2] === p.id) {
+        const ctx = ctxFor(state);
+        eachMemberOf(state, p, (card, def) => { if (def.onTurnInRow) def.onTurnInRow(ctx, p, card); }, ['onTurnInRow']);
+      }
       p.turnRecruits = 0;
       p.turnBuys = 0;
       delete p.peekReach;
@@ -846,7 +852,20 @@ function startRound(state, r) {
     }
     return [id, grants];
   }));
+  const rowNotes = [];
   const snake = state.order.map(id => ({ t: 'turn', p: id }));
+  // Clockmaker (flag firstTwoInRow, Cory 2026-10-29): your first two turns of the round come in a row. Your last snake
+  // turn moves up to right after your first, as Right Away moves one (your turns between stay where they are)
+  for (const id of base) if (sumMemberFlag(state, state.players[id], 'firstTwoInRow') > 0) {
+    const f = snake.findIndex(t => t.p === id), l = snake.findLastIndex(t => t.p === id);
+    if (f < 0 || l <= f + 1 || snake[f + 1].p === id) continue; // already two in a row (a snake end)
+    const [t] = snake.splice(l, 1);
+    snake.splice(f + 1, 0, t);
+    const why = flagName(state, state.players[id], 'firstTwoInRow');
+    if (!state.early || state.early.round !== r) state.early = { round: r, moves: [] };
+    state.early.moves.push({ p: id, from: l, to: f + 1, why });
+    rowNotes.push(`${state.players[id].name}'s ${why}: ${state.players[id].name}'s first two turns come in a row.`);
+  }
   const most = Math.max(0, ...base.map(id => extras[id].length));
   for (let k = 0; k < most; k++) for (const id of base) if (extras[id].length > k) {
     const x = extras[id][k], workerOrder = state.order.length;
@@ -855,7 +874,7 @@ function startRound(state, r) {
   }
   // the cards that bend this round's order and workers are named, so the order and the extra worker trace to them
   const hands = base.filter(id => extras[id].length).map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'extraWorkers')}: +${extras[id].length} minion${extras[id].length > 1 ? 's' : ''}.`);
-  log(state, `Round ${roman(r)} begins. ${state.players[base[0]].name} picks first.${lead.length ? ` (${lead.map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'pickFirst')}`).join(', ')}: always pick${lead.length === 1 ? 's' : ''} first.)` : ''}${hands.length ? ` ${hands.join(' ')}` : ''}`);
+  log(state, `Round ${roman(r)} begins. ${state.players[base[0]].name} picks first.${lead.length ? ` (${lead.map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'pickFirst')}`).join(', ')}: always pick${lead.length === 1 ? 's' : ''} first.)` : ''}${hands.length ? ` ${hands.join(' ')}` : ''}${rowNotes.length ? ` ${rowNotes.join(' ')}` : ''}`);
   state.queue.push(...snake, { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' });
 }
 

@@ -16,12 +16,12 @@ it('keeps Night Owl named in the visible log through its granted extra placement
   // are inserted between them; the view must distinguish that from a snake end.
   state.order = [0, 1];
   state = take(state, 'purple.windup');
-  expect(state.log).toContain("P1's Night Owl: P1 takes an extra turn.");
+  expect(state.log).toContain("P1's Night Owl: P1 gets 1 more minion, placed now.");
   while (state.pending.kind !== 'place') state = move(state, 'pass');
   expect(state.pending.player).toBe(0);
   expect(currentTurn(state)).toMatchObject({ kind: 'extra', why: 'Night Owl' });
   expect(promptFor(state, true).lead).toContain('Night Owl');
   state = take(state, 'purple.lastcall');
   const { getByRole } = render(<Chronicle state={state} onClose={() => {}} />);
-  expect(getByRole('dialog').textContent).toContain("P1's Night Owl: P1 takes an extra turn.");
+  expect(getByRole('dialog').textContent).toContain("P1's Night Owl: P1 gets 1 more minion, placed now.");
 });

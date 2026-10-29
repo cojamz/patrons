@@ -52,7 +52,7 @@ export function useNow(state, pid, uid) {
     const f = followers(after, p1) - followers(state, p0);
     if (f) parts.push(`${f > 0 ? '+' : '−'}${Math.abs(f)} follower${Math.abs(f) === 1 ? '' : 's'}`);
     const turns = (p1.left || 0) - (p0.left || 0);
-    if (turns > 0) parts.push(turns === 1 ? 'an extra turn' : `${turns} extra turns`);
+    if (turns > 0) parts.push(`+${turns} minion${turns === 1 ? '' : 's'}`);
     const blocked = !after.cards[uid] || !after.cards[uid].used;
     const lines = after.log.slice(state.log.length);
     const asks = !!(after.pending && after.pending.player === pid && after.pending.kind === 'choose');

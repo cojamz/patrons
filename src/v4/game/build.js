@@ -66,7 +66,6 @@ const INCOME_IF = {
   latebloomer: 'if fewest', // "if you have the fewest followers"
   safetynet: 'if none', // Rich Uncle: "if you have no white" (round 3 skeptic: the seat's small print ran long; the hover says the rule)
   gardener: 'if none', // "+1 of each color you have none of"
-  clockmaker: 'per 2 purple',
   steward: 'per 3 silver',
   host: 'per 2 members',
   heir: 'per member', // "Now and at the start of round III: +1 silver per member you have"

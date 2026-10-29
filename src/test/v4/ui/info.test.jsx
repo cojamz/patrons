@@ -149,7 +149,7 @@ describe('keyword glossary: one source, every keyword in the cards defined', () 
     for (const t of texts) for (const part of splitTerms(t)) if (part.key) found.add(part.key);
     // 'face-up' left the card texts with Blue's Oct 20 rework (its spaces say "shop member"); the pile is Blue's word now
     // 'in play' left with Patron Saint's rewording (Cory's wording pass, 2026-10-21: "per 2 silver members, anyone’s")
-    for (const k of ['full set', 'plant', 'worth', 'extra turn', 'copy', 'set aside', 'once per round', 'pile']) expect(found.has(k), k).toBe(true);
+    for (const k of ['full set', 'plant', 'worth', '+1 minion', 'copy', 'set aside', 'once per round', 'pile']) expect(found.has(k), k).toBe(true);
     for (const k of found) expect(term(k)?.def?.length, k).toBeGreaterThan(20);
     // Keys are unique; legacy card text can still explain Release without teaching it as normal play.
     expect(new Set(GLOSSARY.map(t => t.key)).size).toBe(GLOSSARY.length);

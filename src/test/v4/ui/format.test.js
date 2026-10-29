@@ -406,7 +406,7 @@ describe('v4 format helpers', () => {
     }
     expect(found).toBeTruthy();
     expect(found.t.why).toBeTruthy();
-    expect(`${found.pr.lead}${found.pr.text}`).toBe(`Extra turn (${found.t.why}): place one more minion`);
+    expect(`${found.pr.lead}${found.pr.text}`).toBe(`+1 minion (${found.t.why}): place it now`);
   });
 
   it('the log: a round opens at the last round\'s end, so its round-start lines are in it (w2a #27)', () => {

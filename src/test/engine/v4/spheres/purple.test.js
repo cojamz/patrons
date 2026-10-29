@@ -101,7 +101,7 @@ describe('Purple actions', () => {
     let s = take(scene({ round: 2, res: [{ purple: 9 }], queue: turns(0, 1) }), 'purple.overtime');
     expect(R(s).purple).toBe(9); // nothing spent
     expect(s.players[0].left).toBe(2 + 1); // one minion in, one back
-    expect(s.log).toContain('P1 takes an extra turn.');
+    expect(s.log).toContain('P1 gets 1 more minion, placed now.');
     expect(nextPlacer(s)).toBe(0);
     s = pass(take(pass(pass(s)), 'purple.windup'));
     expect(nextPlacer(s)).toBe(1);
@@ -241,11 +241,12 @@ describe('Purple members', () => {
     const t = start([['purple.lateriser']], { bonus: [3, 0] });
     expect(t.queue.filter(x => x.t === 'turn' && x.p === 0)).toHaveLength(4);
   });
-  it('Foreman, Courier, Apprentice: whenever you take an extra turn (Overtime gives 1); Crunch Time\'s turns aren\'t extra', () => {
-    const trio = [['purple.foreman', 'purple.courier', 'purple.apprentice']];
+  // Courier left this trio on Oct 29: it pays on two turns in a row now (courier.test.js)
+  it('Foreman, Apprentice: whenever you take an extra turn (Overtime gives 1); Crunch Time\'s turns aren\'t extra', () => {
+    const trio = [['purple.foreman', 'purple.apprentice']];
     const s = take(scene({ round: 2, slots: { [JV]: 0 }, members: trio, queue: turns(0, 1) }), 'purple.overtime');
     // Foreman: 2 workers on the board (Kickback + Overtime)
-    expect(R(s)).toEqual({ gold: 1, red: 1, purple: 2, green: 1 });
+    expect(R(s)).toEqual({ gold: 0, red: 0, purple: 2, green: 0 });
     expect(s.players[0].discount).toBe(4);
     const t = take(scene({ round: 3, slots: { [JV]: 0 }, members: trio, queue: turns(0, 1, 0, 1, 0) }), 'purple.rally');
     expect(R(t)).toEqual({ gold: 0, red: 0, purple: 2, green: 0 }); // Crunch Time's own +2 only
@@ -287,10 +288,29 @@ describe('Purple members', () => {
     s = pass(s); // the turn ends: 4 workers on the board → +2
     expect(R(s).purple).toBe(2);
   });
-  it('Clockmaker: round start (after other round-start income), +1 purple per 2 purple; nothing at round end', () => {
-    expect(R(scene({ members: [['purple.clockmaker']], res: [{ purple: 7 }], queue: [{ t: 'endRound' }] })).purple).toBe(7);
-    // Lamplighter pays 4 at round II start first, then Clockmaker counts 3 + 4 = 7 → +3
-    expect(R(scene({ members: [['purple.clockmaker', 'purple.lamplighter']], res: [{ purple: 3 }], queue: [{ t: 'round', r: 2 }] })).purple).toBe(10);
+  it('Clockmaker: your first two turns of the round come in a row; your last turn moves up (Cory, 2026-10-29)', () => {
+    for (const who of [0, 1, 2]) {
+      const members = [[], [], []]; members[who] = ['purple.clockmaker'];
+      const s = scene({ n: 3, members, queue: [{ t: 'round', r: 2 }] });
+      const order = [s.pending.player, ...s.queue.filter(t => t.t === 'turn').map(t => t.p)];
+      const snake = [...s.order], f = snake.indexOf(who);
+      if (snake[f + 1] === who) { expect(order).toEqual(snake); continue; } // a snake end: already in a row
+      // the snake with this player's last turn moved up to right after their first
+      const want = [...snake]; want.splice(want.lastIndexOf(who), 1); want.splice(f + 1, 0, who);
+      expect(order).toEqual(want);
+      const name = `P${who + 1}`;
+      expect(s.log.some(l => l.includes(`${name}'s Clockmaker: ${name}'s first two turns come in a row.`))).toBe(true);
+    }
+  });
+  it('Clockmaker: nothing moves when your first two turns already come in a row (a snake end)', () => {
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      const s = scene({ seed, members: [['purple.clockmaker']], queue: [{ t: 'round', r: 2 }] });
+      const order = [s.pending.player, ...s.queue.filter(t => t.t === 'turn').map(t => t.p)];
+      const snake = [...s.order.slice(0, order.length)];
+      const f = order.indexOf(0);
+      expect(order[f + 1]).toBe(0);
+      if (snake[f + 1] === 0) expect(order).toEqual(snake); // P1 was second: already two in a row, nothing moved
+    }
   });
   it('Lamplighter: round start, +1 purple per worker you get this round', () => {
     expect(R(start([['purple.lamplighter']])).purple).toBe(4);
