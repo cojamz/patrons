@@ -1,0 +1,86 @@
+/* Member cards as trading cards, the Header look (Cory, Oct 29: "Header is good"; "costs are too small. some of the card
+   body text is too small"): a bar in the member's color across the top with the price in a dark disc at its left and the
+   worth on a paper tab at its right, the name on the bar under them, the picture, the price's colors along the foot.
+   Shop, top of the pile and the members page; .mc below is the full card (hover, tap). Names set in the embedded sans:
+   the serif isn't bundled and Firefox's wider fallback broke names mid-word. */
+.lt-card.card:has(> .lt-hd){box-shadow:inset 0 0 0 2px var(--q),0 0 0 1px rgba(20,14,10,.35),0 6px 14px -6px rgba(0,0,0,.7)}
+.lt-card.card .lt-hd{flex:none;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"cost . worth" "name name name";
+  align-items:center;gap:3px 4px;padding:5px 5px 4px;background:var(--q);position:relative}
+.lt-card.card .lt-hd .lt-corner-cost{grid-area:cost;position:static;opacity:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:#2b2018;color:#fbf6ea;font:800 20px/1 var(--sans);box-shadow:0 0 0 1.5px rgba(251,246,234,.92)}
+.lt-card.card .lt-hd .val{grid-area:worth;display:inline-flex;align-items:center;gap:1px;height:20px;padding:0 6px;margin:0;border-radius:10px;
+  background:#fbf6ea;color:#2b2018;font:700 15px/1 var(--sans)}
+.lt-card.card .lt-hd .val b{font-weight:700}
+.lt-card.card .lt-hd .val .follower-mark{width:15px;height:15px;margin:0 0 0 1px;vertical-align:0}
+.lt-card.card .lt-hd .nm{grid-area:name;display:block;height:auto;min-height:0;margin:0;padding:0 1px;white-space:nowrap;overflow:hidden;text-align:center;
+  font:700 14px/16px var(--serif);letter-spacing:0;text-transform:none;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35);overflow-wrap:normal;hyphens:manual}
+.lt-card.card .lt-hd .nm[data-long]{font-size:12px;letter-spacing:-.02em}
+.lt-card.card .lt-hd .nm[data-wide]{white-space:normal;font-size:12px;line-height:13px;letter-spacing:-.01em}
+/* the pale colors: dark words on a pale bar with an edge */
+.lt-card.card:is([data-ground="white"],[data-ground="silver"],[data-ground="colorless"]) .lt-hd .nm{color:#2b2018;text-shadow:none}
+.lt-card.card[data-ground="white"] .lt-hd{background:#e9e1cd;box-shadow:inset 0 -1px 0 rgba(42,31,23,.18)}
+.lt-card.card[data-ground="white"]:has(> .lt-hd){box-shadow:inset 0 0 0 2px #cfc3a8,0 0 0 1px rgba(20,14,10,.35),0 6px 14px -6px rgba(0,0,0,.7)}
+/* the picture: its own tinted field, lit from below like the lab's */
+.lt-card.card .lt-hd + .art{margin:0 2px;border-radius:0;flex:1 1 auto;min-height:0;height:auto;
+  background:radial-gradient(circle at 50% 78%,color-mix(in srgb,var(--q) 34%,#f4ebd7),color-mix(in srgb,var(--q) 14%,#eadfc4) 78%)}
+.lt-card.card[data-ground="colorless"] .lt-hd + .art{background:color-mix(in srgb,var(--colorless,#8d9693) 26%,#f1ede4)}
+/* the foot: the price's colors, big and centered */
+.lt-card.card:has(> .lt-hd) .ft{justify-content:center;height:auto;margin:0 2px 2px;padding:6px 4px 5px;border-top:1px solid rgba(60,35,20,.18)}
+.lt-card.card:has(> .lt-hd) .ft .lt-cost{gap:7px}
+.lt-card.card:has(> .lt-hd) .ft .lt-res{font-size:18px;gap:2px}
+.lt-card.card:has(> .lt-hd) .ft .num{font-size:18px;font-weight:800}
+.lt-card.card:has(> .lt-hd) .ft .lt-res .pip,.lt-card.card:has(> .lt-hd) .ft .res-glyph{width:16px;height:16px}
+/* reading abilities (Details): the picture gives way to the rule, which stays readable */
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:17px;padding:4px 6px;text-align:center}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability[data-fit="tight"]{font-size:12.5px;line-height:15px}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-cards .lt-card.card .lt-hd .nm{margin:0;padding:0 1px}
+/* top of the pile: a smaller card, same anatomy */
+.app.game.lt .lt-pile-row .lt-card.card{height:132px}
+.app.game.lt .lt-pile-row .lt-card.card .lt-hd{padding:3px}
+.app.game.lt .lt-pile-row .lt-card.card .lt-hd .lt-corner-cost{width:22px;height:22px;font-size:14px}
+.app.game.lt .lt-pile-row .lt-card.card .lt-hd .val{height:18px;padding:0 5px;font-size:13px}
+.app.game.lt .lt-pile-row .lt-card.card .lt-hd .val .follower-mark{width:12px;height:12px}
+.app.game.lt .lt-pile-row .lt-card.card .lt-hd .nm{font-size:11px;line-height:13px}
+
+/* the full card (hover, tap): the lab's Header card. The bar (price, name, worth), the picture field, the rule big, the
+   price's colors at the foot. Beside a shop face (onFace) it's the bar and the rule only: the face shows the rest. */
+.card-face.mc{background:#f4ebd7;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 2px var(--c)}
+.card-face.mc .mc-hd{display:flex;align-items:center;gap:8px;padding:6px;margin:0;background:var(--c)}
+.card-face.mc .mc-hd .mc-name{flex:1;min-width:0;text-align:center;font:700 19px/22px var(--serif);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.28)}
+.card-face.mc .mc-hd .mc-price{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#2b2018;color:#fbf6ea;font:800 20px/1 var(--sans);box-shadow:0 0 0 2px rgba(251,246,234,.92)}
+.card-face.mc .mc-hd .mc-worth{flex:none;display:inline-flex;align-items:center;gap:1px;height:28px;padding:0 9px;border-radius:14px;background:#fbf6ea;color:#2b2018;font:800 18px/1 var(--sans)}
+.card-face.mc .mc-hd .mc-worth .follower-mark{width:16px;height:16px;vertical-align:0}
+.card-face.mc .mc-art{display:grid;place-items:center;width:auto;height:96px;margin:0 2px;border-radius:0;
+  background:radial-gradient(circle at 50% 78%,color-mix(in srgb,var(--c) 34%,#f4ebd7),color-mix(in srgb,var(--c) 14%,#eadfc4) 78%)}
+.card-face.mc .mc-text{margin:0;padding:10px 14px 4px;font-size:17px;line-height:23px;text-align:center;border-top:0;text-wrap:pretty}
+.card-face.mc[data-long] .mc-text{font-size:15.5px;line-height:21px}
+.card-face.mc .mc-live{display:block;padding:0 14px 4px;text-align:center}
+.card-face.mc .mc-cost{display:block;margin:6px 2px 2px;padding:7px 12px 6px;border-top:1px solid rgba(43,32,24,.14);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-align:center;color:#7a5a44}
+.card-face.mc .mc-cost .cost-dots{text-transform:none;letter-spacing:0}
+.card-face.mc .mc-cost .cost-dots{display:inline-flex;align-items:center;gap:8px;vertical-align:middle}
+.card-face.mc .mc-cost .cd{display:inline-flex;align-items:center;gap:1px;font-size:17px;color:#2b2018}
+.card-face.mc .mc-cost .cd .pip.glyph,.card-face.mc .mc-cost .cd .pip.wild{width:16px;height:16px;vertical-align:0;margin:0}
+/* the pale colors: dark words on a pale bar */
+.card-face.mc[data-pale] .mc-hd .mc-name{color:#2b2018;text-shadow:none}
+.card-face.mc[data-pale]{box-shadow:inset 0 0 0 2px #cfc3a8}
+/* counts as more than one member: the count and the bust on a paper tag in the card's lower right, over the picture (or
+   the rule, in Details); the worth up top stays followers, the bust only ever means members */
+.lt-card.card > .lt-count{position:absolute;right:6px;bottom:37px;z-index:1;display:inline-flex;align-items:center;gap:1px;height:21px;padding:0 6px 0 7px;border-radius:11px;
+  background:#fbf6ea;color:#2b2018;font:800 15px/1 var(--sans);box-shadow:0 0 0 1px rgba(42,31,23,.3),0 1px 2px rgba(0,0,0,.15)}
+.lt-card.card > .lt-count .member-glyph{width:15px;height:15px}
+/* the portrait fits its field; Details gives the field to the rule */
+.lt-card.card .lt-hd + .art{overflow:hidden;flex:1 1 0}
+.lt-card.card .lt-hd + .art img{max-height:100%;width:auto}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-card.card .lt-hd + .art{display:none}
+/* the full card is the whole hover: no paper box around it (it brings its own frame) */
+.popover:has(> .tip-body > .card-face.mc:only-child),.lt-hover.popover:has(.card-face.mc){padding:0;background:#f4ebd7;overflow:hidden;border-radius:9px}
+.popover:has(> .tip-body > .card-face.mc:only-child) .card-face.mc,.lt-hover.popover .card-face.mc{margin:0}
+.mp .mp-card:has(> .card-face.mc){box-shadow:0 12px 28px -12px rgba(0,0,0,.8);background:#f4ebd7}
+.mp .mp-card > .card-face.mc.mc{padding:0}
+.mp .mp-tile.lt-card.card:has(> .lt-hd){width:104px;height:164px;min-height:0}
+/* the shop's own name rules (shop.css, by width) wrap every name; on the bar a name stays one line unless it's very long */
+.app.game.lt .lt-shop-cards .lt-card.card .lt-hd .nm:not([data-wide]),.app.game.lt .lt-pile-row .lt-card.card .lt-hd .nm:not([data-wide]){white-space:nowrap;display:block;margin:0}
+.app.game.lt .lt-shop-cards .lt-card.card .lt-hd .nm[data-wide],.app.game.lt .lt-pile-row .lt-card.card .lt-hd .nm[data-wide]{display:block;margin:0}
+/* a card's contents never stretch its row (the shop's rows share the height; Details must not move a slot) */
+.app.game.lt .lt-shop-cards .lt-cards > .lt-card.card:has(> .lt-hd){min-height:0}
+.app.game.lt .lt-shop-cards[data-view="details"] .lt-pick-ability{min-height:0;overflow:hidden}

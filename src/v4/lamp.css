@@ -9,6 +9,12 @@
 @font-face{font-family:'Alegreya Sans';src:url(./fonts/as-700.woff2) format('woff2');font-weight:700;font-display:swap}
 @font-face{font-family:'Alegreya Sans';src:url(./fonts/as-800.woff2) format('woff2');font-weight:800;font-display:swap}
 /* the pixel face (Handjet, tamed: square-ish dots, a finer grid) for the wheel's ring and its spaces' big numbers (Cory, 2026-10-28) */
+/* the serif (names, headings): Alegreya 500/700 and their italics, bundled (Firefox and any laptop without it set a much
+   wider fallback, and long member names broke mid-word); from @fontsource/alegreya 5.1.0, latin */
+@font-face{font-family:'Alegreya';src:url(./fonts/al-500-normal.woff2) format('woff2');font-weight:400 500;font-display:swap}
+@font-face{font-family:'Alegreya';src:url(./fonts/al-700-normal.woff2) format('woff2');font-weight:600 900;font-display:swap}
+@font-face{font-family:'Alegreya';src:url(./fonts/al-500-italic.woff2) format('woff2');font-weight:400 500;font-style:italic;font-display:swap}
+@font-face{font-family:'Alegreya';src:url(./fonts/al-700-italic.woff2) format('woff2');font-weight:600 900;font-style:italic;font-display:swap}
 @font-face{font-family:'Cults Pixel';src:url(./fonts/handjet.woff2) format('woff2');font-weight:100 900;font-display:swap}
 
 /* ---------- tokens: walnut, cream paper, muted inks, Alegreya ---------- */
