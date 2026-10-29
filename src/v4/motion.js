@@ -166,9 +166,12 @@ const TABLE = {
   stepFloor:   [350,   400],
   // the Reckoning (grammar B6, about 1.6s a rim at the base speed): the counts stamp in seat by seat and tick up, the
   // leader hops, the prize arcs from the rim to the winner's count, which rolls as it lands; a rest; the next rim
-  reckonStagger: [60,  100],
-  reckonTick:  [200,   300],
-  reckonRest:  [60,    120],
+  // (Cory, Oct 29: "a bit smoother, a bit quicker": about a third off each rim, every speed; the counts stamp in
+  // closer together, the prize leaves as the verdict shows, and the next rim lights as the prize lands)
+  reckonStagger: [40,   65],
+  reckonTick:  [160,   240],
+  reckonVerdict: [70,  110],  // the verdict shows, then the prize leaves (the leader's hop plays on under it)
+  reckonRest:  [60,    100],
   reckonQuiet: [150,   250],  // a rim nobody scores: it pulses once, dim, and the Reckoning moves on
   // the round's end as its own beat before the first rim lights: "Round II ends" stamps in at the wheel's centre and is
   // read (wave 4 #6: the scoring began while the player looked away)

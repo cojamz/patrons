@@ -21,9 +21,9 @@ import { play } from '../sound.js';
 import { cardDef } from '../../engine/v4/index.js';
 import { finalGrants } from './finalScore.js';
 
-// The pace (the motion language's B6, grammar.md; Cory: "readable, one quadrant at a time"): about 1.6s a rim at
-// Steady, every step moving. The rim lights; the counts stamp in seat by seat and tick up (no still "counting…"); the
-// leader's count and its emoji on the rim hop; the prize arcs off the rim's engraving to the winner's count, which
+// The pace (the motion language's B6, grammar.md; Cory: "readable, one quadrant at a time", then Oct 29: "a bit
+// smoother, a bit quicker"): about 1.4s a rim at Steady, 0.55s Quick, 3.2s Relaxed, every step
+// moving. The rim lights; the counts stamp in seat by seat and tick up (no still "counting…"); the leader's count and its emoji on the rim hop; the prize arcs off the rim's engraving to the winner's count, which
 // rolls the moment it lands; a short rest; the next rim. A rim nobody scores pulses once, dim, and moves on.
 // Every duration scales with the viewer's animation speed (src/v4/motion.js).
 
@@ -150,15 +150,18 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     }
     const timers = [];
     let cancelled = false;
+    // the next rim comes in one update with its beat and counts reset: stepping first showed the next rim's verdict
+    // for a frame before its counting began (round-end smoothing, Oct 29)
+    const advance = () => { setBeat(0); setSeen(0); setStep(s => s + 1); };
     if (reduced) {
       setSeen(row.rows.length); setBeat(1);
-      timers.push(setTimeout(() => { if (onPaid) onPaid(step + 1); setBeat(2); }, 200), setTimeout(() => setStep(s => s + 1), 400));
+      timers.push(setTimeout(() => { if (onPaid) onPaid(step + 1); setBeat(2); }, 200), setTimeout(advance, 400));
       return () => timers.forEach(clearTimeout);
     }
     if (!won && !row.rows.some(r => r.shown > 0)) {
       // nobody scores and nobody counts: the rim pulses once, dim, and the Reckoning moves on
       if (plaque) pulse(plaque, MO.reckonQuiet);
-      timers.push(setTimeout(() => setBeat(1), 60), setTimeout(() => setStep(s => s + 1), MO.reckonQuiet));
+      timers.push(setTimeout(() => setBeat(1), 60), setTimeout(advance, MO.reckonQuiet));
       return () => timers.forEach(clearTimeout);
     }
     // the counts stamp in seat by seat and tick up (the counting is the motion)
@@ -175,7 +178,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         if (e && e.animate) track(e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-5px)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: MO.hop, easing: 'cubic-bezier(.3,1.4,.5,1)', composite: 'add' }));
       }
       if (won) play('fanfare'); // the winner's little flourish (sound.js)
-      if (!won) timers.push(setTimeout(() => setStep(s => s + 1), MO.hop + MO.reckonRest));
+      if (!won) timers.push(setTimeout(advance, MO.hop + MO.reckonRest));
     }, counted));
     if (won) timers.push(setTimeout(() => {
       // the prize lifts off the rim's engraving and arcs to the number it raises: the winner's total on their chair,
@@ -190,7 +193,8 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         }
         if (onPaid) onPaid(step + 1);
         setBeat(2);
-        timers.push(setTimeout(() => setStep(s => s + 1), MO.roll + MO.reckonRest));
+        // the next rim lights while the total rolls on its chair (a still hold of roll + rest read as a stall, Oct 29)
+        timers.push(setTimeout(advance, MO.reckonRest));
       };
       row.winners.forEach((id, k) => {
         const home = root && (root.querySelector(`.lt-cult-seat[data-seat="${id}"] .cs-total`) || playerAnchor(root, id));
@@ -199,7 +203,8 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         const src = row.kind === 'bonus' ? plaque : col && col.getBoundingClientRect().width ? col : plaque;
         if (!src || !home) { land(); return; }
         const a = src.getBoundingClientRect(), b = home.getBoundingClientRect();
-        const d = flightMs(Math.hypot(b.left - a.left, b.top - a.top));
+        // a little quicker than an ordinary flight of its length: it's the fourth of four, and its source is lit (Oct 29)
+        const d = Math.round(flightMs(Math.hypot(b.left - a.left, b.top - a.top)) * 0.8);
         longest = Math.max(longest, d);
         const go = () => {
           const anim = flyToken(src, home, `<b class="reckon-token" style="--pc:${playerColor(id)}">${row.prize < 0 ? '−' : '+'}${Math.abs(row.prize)}</b>`, { tag: 'reckon', duration: d });
@@ -210,7 +215,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         if (k) timers.push(setTimeout(go, k * MO.fan)); else go();
       });
       void longest;
-    }, counted + MO.hop));
+    }, counted + MO.reckonVerdict));
     return () => { cancelled = true; timers.forEach(clearTimeout); };
   }, [step, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
