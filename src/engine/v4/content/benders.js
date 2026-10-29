@@ -86,6 +86,10 @@ function scoutDone(ctx, p, data) {
 }
 
 // Launderers' split: one color at a time, how many of what's left; the last color takes the rest
+// Coach's picks: used Once per game members, but not one used this turn (Tribute Band copying a Tryout that borrowed
+// Coach looped forever; Claude, under Cory's go-with-your-gut, Oct 29)
+const coachable = (ctx, p) => ctx.membersOf(p).filter(c => c.used && c.usedTurn !== ctx.turnKey()
+  && [c.def, c.copy && ctx.defOf(c.copy)].some(d => d?.activate === 'game'));
 function launderStep(ctx, p, data) {
   const colors = ctx.state.resources, c = colors[data.i];
   if (data.i >= colors.length - 1 || !data.left) {
@@ -205,7 +209,7 @@ const members = [
   // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"), named Coach (Cory, Oct 29)
   m('secondwind', 'Coach', null, 0, 7, 'On Recruit: use one of your used Once per game members again.', {
     onRecruited(ctx, owner) {
-      const spent = ctx.membersOf(owner).filter(c => c.used && [c.def, c.copy && ctx.defOf(c.copy)].some(d => d?.activate === 'game'));
+      const spent = coachable(ctx, owner);
       if (!spent.length) { ctx.log(`${owner.name}'s Coach: no used Once per game member.`); return; }
       ctx.choose(owner, 'Coach: which Once per game member can be used again?', spent.map(c => ({
         id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: cost(c),
@@ -239,7 +243,7 @@ export const handlers = {
   },
   rewind(ctx, p, uid) {
     const c = ctx.card(uid);
-    if (!p.members.includes(uid) || !c.used) return;
+    if (!coachable(ctx, p).some(x => x.uid === uid)) return;
     c.used = false;
     ctx.log(`${p.name}'s Coach: ${c.def.name} can be used again.`);
   },

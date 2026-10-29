@@ -52,6 +52,23 @@ describe('Guest members (rule-benders)', () => {
     expect(t.players[0].res).toEqual({ gold: 1, red: 0, blue: 2, green: total - 3 });
     expect(named(t, 'Launderers').at(-1)).toMatch(/rearranged into 1 gold, 2 blue/);
   });
+  it('Coach: a used Once per game member can be used again, but not one used this turn (no loops)', () => {
+    let s = sceneQ({ round: 3, res: [rich], members: [['benders.extrahand']], shop: ['benders.secondwind'] });
+    const hand = uidOf(s, 'benders.extrahand', 0);
+    s = move(s, `use:${hand}`);
+    s = buy(take(s, 'gold.rush'), 'benders.secondwind');
+    expect(named(s, 'Coach').at(-1)).toMatch(/no used Once per game member/); // Extra Hand was used this turn
+    expect(s.cards[hand].used).toBe(true);
+    s.cards[hand].usedTurn = 'earlier';
+    const coach = uidOf(s, 'benders.secondwind', 0);
+    s.players[0].members = s.players[0].members.filter(u => u !== coach);
+    s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
+    s.shop.push(coach);
+    s = take(s, 'red.turnout');
+    s = buy(s, 'benders.secondwind');
+    s = move(s, `card:${hand}`);
+    expect(s.cards[hand].used).toBe(false);
+  });
   it('Big Spender: One Time Use, a second recruit this turn; named; spent after', () => {
     let s = sceneQ({ res: [rich], members: [['benders.bigspender']] });
     const u = uidOf(s, 'benders.bigspender', 0);

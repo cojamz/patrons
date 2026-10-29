@@ -588,6 +588,7 @@ export function useIdle(state, p, uid) {
 function useMember(state, p, uid, resume) {
   const c = state.cards[uid];
   c.used = true;
+  c.usedTurn = turnKey(state); // Coach can't hand back a use spent this turn (it looped with Tribute Band and Tryout)
   const act = effectiveDefs(c).find(e => e.onActivate);
   const before = traceSnapshot(state);
   // used beside the spaces: this turn's minion is still to land, so a space must stay free for it (spareSpace, purple.js)
@@ -598,6 +599,8 @@ function useMember(state, p, uid, resume) {
   state.queue.splice(at < 0 ? state.queue.length : at, 0, resume);
 }
 
+/** This turn, as a key: the round and how many turns it has started. */
+export const turnKey = state => `${state.round}:${(state.turns || []).length}`;
 function resolveTask(state, task, optionId) {
   const p = state.players[task.p];
   switch (task.t) {
@@ -1543,6 +1546,7 @@ function ctxFor(state) {
       memberJoined(state, to, uid);
       return true;
     },
+    turnKey: () => turnKey(state),
     // ---- stealing: one shared verb, so protections and reactions apply to every sphere's steals ----
     /** May `thief` steal from `victim`? kind is 'res' (resources, piles) or 'member'. Quadrants and the
      *  victim's members can refuse (guardSteal returns true). */
