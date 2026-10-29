@@ -610,7 +610,7 @@ function freeUse(state, p, uid) {
   const was = c.used;
   c.freeTurn = turnKey(state);
   const before = traceSnapshot(state);
-  try { act.onActivate(ctxFor(state), p, wrap(state, c)); } finally { c.used = was; }
+  try { act.onActivate(ctxFor(state), p, wrap(state, c)); } finally { if (was === undefined) delete c.used; else c.used = was; }
   traceChanges(state, before, p, act);
   return true;
 }
