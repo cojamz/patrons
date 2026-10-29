@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.876 — 2026-10-29
+
+- Members page: a card's hover stays on screen, and each color's artifact shows as a small artifact beside its spaces, not as a member
+
 ## v0.9.875 — 2026-10-29
 
 - Members count as their printed member count only (Trendsetter and the like are 1 member). Fan Club counts as 3 members (cost 6), Big Family 4 (cost 6), Tribute Band 3, Crew, Shift Crew, Mentor & Protégé, Choir and Raiders 2.
