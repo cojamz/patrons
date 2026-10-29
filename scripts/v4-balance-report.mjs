@@ -14,7 +14,9 @@ const share = (r, p) => (p.win ? 1 / r.players.filter(x => x.win).length : 0);
 const pct = x => `${Math.round(x * 100)}%`, pts = x => `${x >= 0 ? '+' : ''}${Math.round(x * 100)}`;
 const bucket = c => Math.min(c, 20);
 const se = (p, n) => Math.sqrt(Math.max(p * (1 - p), 0.05) / n);
-const bots = r => r.players.filter(p => p.seat !== r.buyer);
+// a game with a followers-only seat counts only toward that seat's own win rate; the rest of it is off balance
+// (Cory, 2026-10-29: "throws off the balance of the rest. Though still good to know")
+const bots = r => (r.buyer >= 0 ? [] : r.players);
 
 // expected win share by (seats, member count), smoothed by pooling neighbours when thin
 const curve = {};
@@ -30,6 +32,7 @@ const add = (o, k, w, e) => { (o[k] ??= { n: 0, w: 0, e: 0 }); o[k].n++; o[k].w 
 const offered = {}, bought = {}, fol = {}, gotR = {};
 for (const r of rows) {
   const S = (out.bySeats[r.seats] ??= { games: 0, buyer: { n: 0, w: 0 }, followers: 0, seatsN: 0, members: 0, top: 0, margin: 0 });
+  if (r.buyer >= 0) { const b = r.players.find(p => p.seat === r.buyer); S.buyer.n++; S.buyer.w += share(r, b); continue; }
   S.games++;
   const fs = r.players.map(p => p.followers).sort((a, b) => b - a);
   S.top += fs[0]; S.margin += fs[0] - fs[1];
@@ -37,6 +40,7 @@ for (const r of rows) {
   for (const p of r.players) {
     const w = share(r, p);
     if (p.seat === r.buyer) { S.buyer.n++; S.buyer.w += w; continue; }
+    if (r.buyer >= 0) continue;
     S.followers += p.followers; S.members += p.memberCount; S.seatsN++;
     const e = expected(r.seats, p.memberCount);
     add(out.seatOrder, `${r.seats}p seat ${p.seat + 1}`, w, 1 / r.seats);
