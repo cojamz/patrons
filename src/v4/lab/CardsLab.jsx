@@ -28,7 +28,7 @@ const total = d => costParts(d, TABLE.resources).reduce((t, c) => t + c.n, 0);
 const Art = ({ d, size = 96 }) => <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(d)} size={size} />;
 const Worth = ({ d, size = 14 }) => <span className="cl-worth" title={`Worth ${d.f}`}><b className="num">{d.f}</b><FollowerGlyph size={size} title={`worth ${d.f}`} /></span>;
 const Text = ({ d }) => (ability(d) ? <RuleText def={d} text={ability(d)} round={1} lines /> : <span className="cl-none">Worth {d.f} follower{d.f === 1 ? '' : 's'}.</span>);
-const Members = ({ d }) => (d.n > 1 ? <span className="cl-n">counts as {d.n} members</span> : null);
+const Members = ({ d }) => (d.n > 1 ? <span className="cl-n">counts as {d.n}</span> : null);
 
 // A · Classic: name and cost on one bar, the picture, a line naming its color, the rule box, worth in the corner
 function Classic({ d, small }) {

@@ -97,3 +97,11 @@
 .cl-d.sm .cl-worth{font-size:12px}
 .cl-d.sm .d-panel{left:3px;right:3px;bottom:3px;top:auto;padding:4px;text-align:center}
 .cl-d.sm .d-name{font-size:11px}
+
+/* B polish: the pale colors keep an edge; names stay one tidy line on the small card */
+.cl-b[data-ground="white"]{box-shadow:inset 0 0 0 1px #8a7760,inset 0 0 0 3px #e4dccb,0 8px 18px -8px rgba(0,0,0,.8)}
+.cl-b[data-ground="white"] .b-name{background:#fffefa;box-shadow:inset 0 0 0 1px rgba(42,31,23,.3)}
+.cl-b[data-ground="silver"] .b-name{box-shadow:inset 0 0 0 1px rgba(42,31,23,.25)}
+.cl-b .cl-n{white-space:nowrap}
+.cl-b.sm .b-name{font-size:10.5px;line-height:12px;padding:2px 2px;letter-spacing:-.01em}
+.cl-b.sm[data-ground="white"]{box-shadow:inset 0 0 0 1px #8a7760,inset 0 0 0 2px #e4dccb,0 6px 14px -6px rgba(0,0,0,.8)}
