@@ -164,8 +164,8 @@ describe('active acquisition versus gifts', () => {
   });
 
   it('a return-to-shop removes only an Extra Hand’s unplaced minion and reacquisition restores it once', () => {
-    let s = table(Q, { members: [['benders.extrahand']], shop: ROW, queue: [{ t: 'round', r: 3 }] });
-    const hand = uidIn(s, 'benders.extrahand', 0), replacement = s.shop[0];
+    let s = table(Q, { members: [['benders.extrahand3']], shop: ROW, queue: [{ t: 'round', r: 3 }] });
+    const hand = uidIn(s, 'benders.extrahand3', 0), replacement = s.shop[0];
     const ctx = contextFor(s), before = s.players[0].left;
     expect(s.queue.filter(t => t.workerSource === hand && t.t === 'turn')).toHaveLength(1);
     ctx.swapMembers(s.players[0], hand, replacement);

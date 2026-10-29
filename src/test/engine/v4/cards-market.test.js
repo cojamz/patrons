@@ -221,8 +221,8 @@ describe('Blue members', () => {
   });
   it('× guest leaning to an absent sphere: Reseller gives nothing (no color on this table)', () => {
     // Front-runner leans purple; purple isn't on this table
-    // red enough to pay Front-runner exactly (4 any: printed 3 since Oct 27, plus the +1 wild), so only Recruit Twice's blue is left
-    let s = table(Q, { round: 2, members: [['market.reseller']], res: [{ red: 4 }], shop: ['benders.frontrunner', ...ROW.slice(1)] });
+    // red enough to pay Front-runner exactly (3 any: printed 2 since Oct 28, plus the +1 wild), so only Recruit Twice's blue is left
+    let s = table(Q, { round: 2, members: [['market.reseller']], res: [{ red: 3 }], shop: ['benders.frontrunner', ...ROW.slice(1)] });
     s = move(take(s, 'market.clearance'), card(s, 'benders.frontrunner'));
     expect(owns(s, 0, 'benders.frontrunner')).toBe(true);
     expect(Object.values(R(s)).reduce((a, b) => a + b, 0)).toBe(1); // only Recruit Twice's 1 blue

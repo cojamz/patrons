@@ -4,11 +4,11 @@ import { contextFor, resume, WORKERS } from '../../../engine/v4/core.js';
 import { sceneQ } from './cards-helpers.js';
 import { uidOf, take, move as contextMove } from './helpers.js';
 const Q = ['gold', 'red', 'purple', 'echo'];
-const start = (members = [['benders.extrahand']]) => sceneQ({ quadrants: Q, members, queue: [{ t: 'round', r: 3 }] });
+const start = (members = [['benders.extrahand3']]) => sceneQ({ quadrants: Q, members, queue: [{ t: 'round', r: 3 }] });
 const extras = (s, uid) => s.queue.filter(t => t.workerSource === uid && (t.t === 'turn' || t.t === 'place'));
 const give = (s, uid, from, to) => contextFor(s).moveMember(uid, s.players[from], s.players[to]);
 function activeExtra() {
-  const s = start(), uid = uidOf(s, 'benders.extrahand', 0), t = extras(s, uid)[0];
+  const s = start(), uid = uidOf(s, 'benders.extrahand3', 0), t = extras(s, uid)[0];
   s.queue = [{ ...t }, { t: 'allPlaced' }];
   s.players[0].left = 1; s.players[1].left = 0;
   resume(s);
@@ -16,7 +16,7 @@ function activeExtra() {
 }
 describe('Extra Hand transfers only its unplaced minion', () => {
   it('moves the source grant, remaining count and order once, without moving any base minion', () => {
-    const s = start(), uid = uidOf(s, 'benders.extrahand', 0);
+    const s = start(), uid = uidOf(s, 'benders.extrahand3', 0);
     const before = s.players.map(p => ({ left: p.left, workers: p.workers }));
     const base = s.queue.filter(t => t.workerSource === undefined).map(t => ({ ...t }));
     const at = extras(s, uid)[0].workerOrder;
@@ -34,9 +34,9 @@ describe('Extra Hand transfers only its unplaced minion', () => {
     expect(extras(s, uid)).toHaveLength(1);
   });
   it('keeps copied grants separate by physical card and survives a JSON save', () => {
-    let s = sceneQ({ quadrants: Q, members: [['benders.extrahand', 'echo.doppel']] });
-    const uid = uidOf(s, 'benders.extrahand', 0), copy = uidOf(s, 'echo.doppel', 0);
-    s.cards[copy].copy = 'benders.extrahand';
+    let s = sceneQ({ quadrants: Q, members: [['benders.extrahand3', 'echo.doppel']] });
+    const uid = uidOf(s, 'benders.extrahand3', 0), copy = uidOf(s, 'echo.doppel', 0);
+    s.cards[copy].copy = 'benders.extrahand3';
     s.queue = [{ t: 'round', r: 3 }]; resume(s);
     s = JSON.parse(JSON.stringify(s));
     give(s, copy, 0, 1);
@@ -68,8 +68,8 @@ describe('Extra Hand transfers only its unplaced minion', () => {
   });
   it('a real Poach transfers the queued entitlement with the card, not a fresh minion', () => {
     let s = sceneQ({ quadrants: ['gold', 'red', 'thieves', 'purple'],
-      members: [['benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
-    const uid = uidOf(s, 'benders.extrahand', 0);
+      members: [['benders.extrahand3']], queue: [{ t: 'round', r: 3 }] });
+    const uid = uidOf(s, 'benders.extrahand3', 0);
     expect(s.pending.player).toBe(1);
     s = take(s, 'thieves.heist');
     const before = s.players.map(p => p.left);

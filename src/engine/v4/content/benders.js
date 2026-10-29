@@ -12,7 +12,7 @@
 //   pickFirst: true        always first in a round's turn order
 // Straggler uses the onAllPlaced hook (after the round's last placement, before its contests).
 import { registerGuests } from './index.js';
-import { extraMinion } from './purple.js';
+import { extraMinion, spareSpace } from './purple.js';
 
 // Prices: member-value sim (scripts/v4-member-value.mjs, 4 normal bots, Release off, handed over at round II),
 // priced so value ≈ cost + 1.5 at 1.5 per follower, rounded to the even cost grid. See design/rule-benders.md.
@@ -62,16 +62,19 @@ const members = [
       owner.crashNext = true;
       ctx.log(`${owner.name}'s Party Crasher: the next minion may go on a space a rival took.`);
     },
-    botActivate: ctx => ctx.state.round >= 2,
+    botActivate: (ctx, p) => ctx.state.round >= 2 && !p.crashNext,
   }),
   m('bigspender', 'Big Spender', 'gold', 1, 1, 'Once per round: recruit twice in one turn.', { extraBuy: true }),
   m('freelancer', 'Freelancer', 'yellow', 2, 2, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 3, 1, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
+  // Extra Hand as it printed until Oct 28, never dealt (retired): the tests of extra minions a card grants by round
+  // (Poach and swaps moving an unplaced grant, copies, a full board) keep it as their fixture
+  m('extrahand3', 'Extra Hand', 'purple', 5, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1], retired: true }),
   // Cory, 2026-10-28: "probably needs to be a Use Once… it had to have some category, and On Recruit would be broken"
   m('extrahand', 'Extra Hand', 'purple', 5, 4, 'One Time Use: +1 minion this round.', { from: 2,
     activate: 'game',
     onActivate(ctx, owner, card) { if (!extraMinion(ctx, owner, 'Extra Hand')) card.used = false; },
-    botActivate: ctx => ctx.state.round === 3,
+    botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
   }),
   m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You go first every round.', { pickFirst: true }), // Cory, Oct 21: 5; Oct 27: 4; Oct 28 "could probably be cheaper": 3 with the +1 wild (Claude's price, the floor)
   // Cory's ideas, Oct 21, on this sim branch only. Launderer is simplified for the bots: one color, not any split.

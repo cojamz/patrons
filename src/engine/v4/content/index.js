@@ -90,7 +90,7 @@ export function registerGuests(group, defs, handlers = {}) {
     if (!GUESTS.includes(def)) GUESTS.push(def);
   }
 }
-export const guestMembers = () => [...GUESTS];
+export const guestMembers = () => GUESTS.filter(d => !d.retired); // a retired guest (the old Extra Hand) is a test fixture only
 
 // Every sphere, so a table can pick any four. A sphere only acts when it's on the table: its scoring, hooks
 // and guards are looked up through state.quadrants, and its members only enter decks that include it.

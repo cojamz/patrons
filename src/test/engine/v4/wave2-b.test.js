@@ -131,10 +131,10 @@ import { followerChoices, TIERS } from '../../../engine/v4/core.js';
 describe('tester A #4: Extra Hand recruited during round III gives its minion this round', () => {
   it('a round-III recruit adds a turn after the others, and the minion count says so', () => {
     let s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 3, left: 5, res: [{ gold: 20, red: 20, blue: 20, green: 20 }],
-      shop: ['benders.extrahand'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' }] });
+      shop: ['benders.extrahand3'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' }] });
     s = take(s, 'gold.rush');
     const left0 = s.players[0].left;
-    s = move(s, `card:${uidOf(s, 'benders.extrahand', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'benders.extrahand3', 'shop')}`);
     expect(s.players[0].left).toBe(left0 + 1);
     // P2's turn is under way; P1's extra one waits after it, before the round closes
     expect(s.pending.player).toBe(1);
@@ -143,9 +143,9 @@ describe('tester A #4: Extra Hand recruited during round III gives its minion th
   });
   it('a round-II recruit still waits for round III', () => {
     let s = sceneQ({ quadrants: ['gold', 'red', 'market', 'echo'], n: 2, round: 2, res: [{ gold: 20, red: 20, blue: 20, green: 20 }],
-      shop: ['benders.extrahand'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }, { t: 'endRound' }] });
+      shop: ['benders.extrahand3'], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'allPlaced' }, { t: 'endRound' }] });
     s = take(s, 'gold.rush');
-    s = move(s, `card:${uidOf(s, 'benders.extrahand', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'benders.extrahand3', 'shop')}`);
     expect(s.pending.player).toBe(1);
     expect(s.queue.filter(t => t.t === 'turn').length).toBe(0);
   });

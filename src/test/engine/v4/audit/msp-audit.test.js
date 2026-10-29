@@ -22,7 +22,7 @@ describe('audit', () => {
   });
 
   it('Lamplighter: "+1 purple per minion you get this round" counts Extra Hand in round III (Cory 2026-10-15)', () => {
-    const s = sc(QP, { members: [['purple.lamplighter', 'benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
+    const s = sc(QP, { members: [['purple.lamplighter', 'benders.extrahand3']], queue: [{ t: 'round', r: 3 }] });
     expect(s.players[0].workers).toBe(6);
     expect(s.players[0].res.purple).toBe(6);
   });

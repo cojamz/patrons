@@ -17,11 +17,17 @@ describe('Tryout — a shop member’s On Recruit, and it stays in the shop', ()
   it('offers only shop members with an On Recruit, never your own members', () => {
     const s = take(sceneQ({ quadrants: T, members: [['echo.evergreen']], shop: ['gold.banker', 'red.twins', 'red.intern'] }), 'red.evenswap');
     expect(s.players[0].res.red).toBe(1);
-    expect(ids(s)).toEqual([`card:${uidOf(s, 'gold.banker', 'shop')}`]);
+    // the row's other cards are a seeded fill; the named ones are what the test is about
+    expect(ids(s)).toContain(`card:${uidOf(s, 'gold.banker', 'shop')}`);
+    expect(ids(s).every(id => s.shop.includes(Number(id.slice(5))))).toBe(true);
+    expect(ids(s)).not.toContain(`card:${uidOf(s, 'red.twins', 'shop')}`);
+    expect(ids(s)).not.toContain(`card:${uidOf(s, 'red.intern', 'shop')}`);
   });
   it('skips shop members whose On Recruit acts on the card itself', () => {
     const s = take(sceneQ({ quadrants: T, shop: ['gold.banker', 'thieves.doubleagent', 'echo.doppel'] }), 'red.evenswap');
-    expect(ids(s)).toEqual([`card:${uidOf(s, 'gold.banker', 'shop')}`]);
+    expect(ids(s)).toContain(`card:${uidOf(s, 'gold.banker', 'shop')}`);
+    expect(ids(s)).not.toContain(`card:${uidOf(s, 'thieves.doubleagent', 'shop')}`);
+    expect(ids(s)).not.toContain(`card:${uidOf(s, 'echo.doppel', 'shop')}`);
   });
   it('uses the On Recruit; the member stays in the shop, nobody recruits, and your recruit watchers stay quiet', () => {
     let s = take(sceneQ({ quadrants: T, members: [['red.recruiter', 'red.proselytizer']], shop: ['gold.banker', 'red.twins'] }), 'red.evenswap');

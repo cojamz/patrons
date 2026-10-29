@@ -95,7 +95,7 @@ describe('Green current actions', () => {
     const GH = `3-${quadrant('echo').actions.findIndex(a => a.key === 'eternity')}`;
     let s = table(Q, { round: 3, left: 5, shop: ROW, members: [['benders.squatter']], queue: turns(0, 1, 0, 0) });
     s = go(s, 'gold.rush'); s = go(s, 'echo.eternity'); s = go(s, 'echo.chant');
-    s = move(s, `squat:${GH}`);
+    s = move(move(s, `use:${s.players[0].members[0]}`), `squat:${GH}`); // Party Crasher (One Time Use since Oct 28)
     expect(s.pending.prompt).toBe('Greatest Hits: copy which next?');
     s = pass(play(s, sp('gold.rush')));
     expect(R(s)).toMatchObject({ gold: 12, green: 11 });
@@ -103,7 +103,7 @@ describe('Green current actions', () => {
     // and a space you joined with Squatter is one of yours for Greatest Hits
     let t = table(Q, { round: 3, left: 5, shop: ROW, members: [['benders.squatter']], queue: turns(1, 0, 0) });
     t = go(t, 'gold.rush');
-    t = pass(move(t, 'squat:0-1'));
+    t = pass(move(move(t, `use:${t.players[0].members[0]}`), 'squat:0-1'));
     t = go(t, 'echo.eternity');
     expect(R(t)).toMatchObject({ gold: 12, green: 1 });
   });

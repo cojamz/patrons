@@ -3,6 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, fireEvent, cleanup, within } from '@testing-library/react';
 import { createGame, cardDef, defById, allQuadrantIds, quadrant } from '../../../engine/v4/index.js';
 import { guestMembers } from '../../../engine/v4/content/index.js';
+import { memberWeight } from '../../../engine/v4/core.js';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
 import { SeatCard } from '../../../v4/game/HoverCards.jsx';
@@ -128,7 +129,7 @@ describe('colorless members', () => {
 
   it('a shop card\'s hover doesn\'t repeat the cost and worth printed on its face (w3a #24)', () => {
     const s = createGame({ seats, seed: 5 });
-    const uid = s.shop.find(u => (s.cards[u] && cardDef(s, u).n || 1) === 1);
+    const uid = s.shop.find(u => memberWeight(s, u) === 1); // a card counting as 2 prints that on its face
     const face = render(<MemberCard state={s} uid={uid} onFace />);
     expect(face.container.querySelector('.mc-cost')).toBeNull();
     expect(face.container.querySelector('.mc-worth')).toBeNull();

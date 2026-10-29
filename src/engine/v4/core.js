@@ -63,7 +63,7 @@ export function createGame({ seats, seed = 1, quadrants, rules = {} }) {
   let uid = 0;
   const table = { ...DEFAULT_RULES, ...(FULL_DECK.tests ? { cull: false, artifacts: false, roundDecks: 0 } : {}), ...rules }; // tests: content/cull.js (artifacts too: a test asks for them)
   const artifactIds = new Set(table.artifacts ? quadrants.map(q => ARTIFACTS[q]).filter(Boolean) : []);
-  const dealt = def => !(table.cull && CUT.has(def.id)) && !artifactIds.has(def.id) && !def.artifact; // the cull (content/cull.js); artifacts (an artifact-only card is never dealt)
+  const dealt = def => !(table.cull && CUT.has(def.id)) && !artifactIds.has(def.id) && !def.artifact && !def.retired; // the cull (content/cull.js); artifacts (an artifact-only card is never dealt)
   for (const q of quadrants) for (const def of quadrant(q).members.filter(dealt))
     for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
   if (table.guests) for (const def of guestMembers().filter(dealt))

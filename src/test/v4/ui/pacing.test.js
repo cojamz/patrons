@@ -90,8 +90,12 @@ describe('the table\'s pace at Steady (H2, H3)', () => {
     const [s, r, q] = [pct(steady, 0.5), pct(relaxed, 0.5), pct(quick, 0.5)];
     console.log(`[pacing] rival turn p50: Quick ${q}ms, Steady ${s}ms, Relaxed ${r}ms (Relaxed/Steady ${(r / s).toFixed(2)})`);
     expect(steady.length).toBe(relaxed.length); // the same games, step for step
-    expect(r / s).toBeGreaterThanOrEqual(1.8);
-    expect(r / s).toBeLessThanOrEqual(2.6);
+    // turn by turn: the same turn at both speeds (a ratio of two p50s moved with the game's mix of recruit turns,
+    // 1.59 to 1.92 on a guest's price alone, Oct 28)
+    const pair = pct(steady.map((x, i) => relaxed[i] / x), 0.5);
+    console.log(`[pacing] the same turn, Relaxed/Steady p50 ${pair.toFixed(2)}`);
+    expect(pair).toBeGreaterThanOrEqual(1.8);
+    expect(pair).toBeLessThanOrEqual(2.6);
     // the old Steady's p50 on these games was 1541ms (2026-10-15); "a little slower" was about a fifth more, until rivals'
     // follower buys moved to the rival pace too (Cory, 2026-10-28: 1565ms): a floor so the table never collapses to a blur
     expect(s).toBeGreaterThan(1541 * 0.95);

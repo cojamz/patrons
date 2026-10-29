@@ -152,7 +152,7 @@ describe('Purple members', () => {
     expect(named(s, 'Lamplighter')).toHaveLength(1);
   });
   it('Lamplighter × Extra Hand: every minion you get counts, 6 in round III (Cory 2026-10-15)', () => {
-    const s = sc({ members: [['purple.lamplighter', 'benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
+    const s = sc({ members: [['purple.lamplighter', 'benders.extrahand3']], queue: [{ t: 'round', r: 3 }] });
     expect(s.players[0].left).toBe(6);
     expect(P(s)).toBe(6);
   });
