@@ -20,6 +20,7 @@ import './lamp-b.css';
 import { MO } from '../motion.js';
 import { HOVER_DELAY_MS, HOVER_OPEN_MS } from './hoverDelay.js';
 import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim, stillOn, pointer, scrolledList } from './hoverIntent.js';
+import { poolNote } from './poolNote.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -549,6 +550,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {/* a value that grows by round: its run is the rule sentence's ("+2● in round I, +4 in round II…"), said once
             (w3b #12: a "By round" row beside "per round number" was two descriptions of one thing); the panel prints this
             round's number and next round's */}
+        {open && poolNote(state, a.text) ? <Row k="Minions"><span data-pool-out>{poolNote(state, a.text)}</span></Row> : null}
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}
         {a.lastRound && round > a.lastRound && <Row k="Closed">after round {roman(a.lastRound)}</Row>}
       </div>

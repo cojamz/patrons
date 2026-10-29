@@ -21,6 +21,7 @@ import { HOVER_DELAY_MS, HOVER_OPEN_MS } from './hoverDelay.js';
 import { MO } from '../motion.js';
 import { withRace } from './race.js';
 import { memberTimingWords } from './memberTiming.js';
+import { poolNote } from './poolNote.js';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -306,6 +307,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
           in the shop, also how: on your turn, from your seat */}
       {ability ? <p className="mc-text">{(copied || d).from > 1 && <span className="mc-round-tag" data-round-tag="" title="Works from round II on">II+</span>}{(copied || d).activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<RuleText def={copied || d} text={ability} round={state.round} lines /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {d.activate && where && !state.over && <small className="mc-live" data-use-how="">Once it’s yours, use it on your turn: it lights up in your seat.</small>}
+      {!(owner && card && card.used) && poolNote(state, (copied || d).text) && <small className="mc-live" data-pool-out="">{poolNote(state, (copied || d).text)}</small>}
       {copied && <small className="mc-live" data-copy-of="">Copy of <CardName state={state} def={copied} /></small>}
       {owner && card && card.used && !state.over && <small className="mc-live" data-member-used="">Used</small>}
       {/* the cost and nothing else about paying (Cory, 03:40: cut "You pay"); a discount on you says only why the face's

@@ -13,19 +13,20 @@
 //
 // An effect: { n (order), type, cause, from, to, what }
 //   type: 'gain' | 'pay' | 'transfer' | 'followers' | 'recruit' | 'release' | 'member-move' | 'refill' | 'shop-out' | 'discount'
+//        | 'minion' (an extra minion this round: from the spare minions, { kind: 'pool' }, to { kind: 'minions', pid })
 //   cause: { kind: 'space', key, qid, pid } | { kind: 'member', pid, uid, def } | { kind: 'recruit', pid, uid, index }
 //        | { kind: 'buy', pid, tier, get } | { kind: 'contest', qid, round } | { kind: 'round', round }
 //        | { kind: 'release', pid, uid } | { kind: 'final' } | { kind: 'setup', pid, qid } | { kind: 'move', pid, option, slot }
 //   from / to: { kind: 'space', key, qid } | { kind: 'quadrant', qid } | { kind: 'member', pid, uid } | { kind: 'stack', pid, r }
 //        | { kind: 'count', pid } | { kind: 'crowd', pid } | { kind: 'shop', index, uid } | { kind: 'rate', tier }
 //        | { kind: 'rim', qid } | { kind: 'pile' } | { kind: 'bank' } | { kind: 'player', pid }
-//   what: { r, n } resources · { n } followers or a discount · { uid, worth } a member
+//   what: { r, n } resources · { n } followers, a discount or minions · { uid, worth } a member
 
 let rec = null;
 
 /** Start recording a move. `followers(state, p)` and `worth(card)` come from core (no import cycle). */
-export function startEffects(state, cause, { followers, worth }) {
-  rec = { state, list: [], stack: [], n: 0, followers, worth };
+export function startEffects(state, cause, { followers, worth, minions }) {
+  rec = { state, list: [], stack: [], n: 0, followers, worth, minions };
   push(cause);
 }
 /** Stop and return the move's effects (closing any frame left open). */
@@ -65,6 +66,8 @@ function snap() {
       members: p.members.map(u => [u, rec.worth(s.cards[u])]),
     })),
     shop: [...s.shop],
+    round: s.round,
+    minions: rec.minions ? s.players.map(p => rec.minions(s, p)) : null,
   };
 }
 
@@ -142,8 +145,21 @@ function flush(f) {
     const disc = (p.discount || 0) - was.players[p.id].discount;
     if (disc) add({ type: 'discount', from: place, to: { kind: 'player', pid: p.id }, what: { n: disc } });
   });
+  // extra minions this round (a minion's own count, placed or not, against before; a new round against its usual
+  // count): one a rival lost to them comes from that rival, the rest from the spare minions
+  if (was.minions) {
+    const base = s.round !== was.round ? s.players.map(() => null) : was.minions;
+    const m = s.players.map((p, i) => rec.minions(s, p) - (base[i] ?? rec.minions.usual(s, p)));
+    for (const g of s.players) for (const q of s.players) {
+      if (g.id === q.id || !(m[g.id] > 0) || !(m[q.id] < 0)) continue;
+      const k = Math.min(m[g.id], -m[q.id]);
+      m[g.id] -= k; m[q.id] += k;
+      add({ type: 'minion', from: { kind: 'minions', pid: q.id }, to: { kind: 'minions', pid: g.id }, what: { n: k } });
+    }
+    s.players.forEach(p => { if (m[p.id] > 0) add({ type: 'minion', from: { kind: 'pool' }, to: { kind: 'minions', pid: p.id }, what: { n: m[p.id] } }); });
+  }
   // what was paid goes before what it bought; a member arrives before the followers it's worth
-  const rank = { pay: 0, transfer: 1, 'shop-out': 2, recruit: 3, 'member-move': 3, release: 3, refill: 4, gain: 5, discount: 6, followers: 7 };
+  const rank = { pay: 0, transfer: 1, 'shop-out': 2, recruit: 3, 'member-move': 3, release: 3, refill: 4, gain: 5, minion: 5, discount: 6, followers: 7 };
   out.sort((a, b) => rank[a.type] - rank[b.type]);
   for (const e of out) rec.list.push({ n: rec.n++, ...e });
 }

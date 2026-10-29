@@ -122,7 +122,7 @@ export function applyMove(prev, move, { effects = false } = {}) {
   state.pending = null;
   state.moves += 1;
   // effects (effects.js): what moved and why, for the table to play back; recorded only when asked (the play session)
-  if (effects) startEffects(state, moveCause(state, task, move), { followers, worth: valueOf });
+  if (effects) startEffects(state, moveCause(state, task, move), { followers, worth: valueOf, minions: minionsThisRound });
   try {
     accounted(state, causeOf(state, task), () => resolveTask(state, task, move.option), task.p);
     clearFresh(state);
@@ -1081,9 +1081,12 @@ function workersNow(state, p, def, uid) {
   const r = state.round;
   const card = state.cards[uid];
   const prior = card?.workerGrantRound === r ? card.workerGrants || 0 : 0;
-  const k = Math.max(0, (r >= 1 ? (def.extraWorkers || [])[r - 1] || 0 : 0) - prior);
+  const want = Math.max(0, (r >= 1 ? (def.extraWorkers || [])[r - 1] || 0 : 0) - prior);
   const at = state.queue.findIndex(t => t.t === 'allPlaced');
-  if (!k || at < 0) return;
+  if (!want || at < 0) return;
+  // only as many as the spare minions (Cory, 2026-10-29: "there are only so many extra minions to be gained")
+  const k = Math.min(want, minionPool(state));
+  if (!k) { log(state, `${p.name}'s ${def.name}: no spare minions left this round, so no extra minion.`); return; }
   const turns = Array.from({ length: k }, (_, i) => ({ t: 'turn', p: p.id, workerSource: uid, workerGrant: prior + i, workerOrder: state.order.length + i, ...(def.extraWorkerRing ? { ring: def.extraWorkerRing } : {}) }));
   card.workerGrantRound = r; card.workerGrants = prior + k;
   state.queue.splice(at, 0, ...turns);
@@ -1367,6 +1370,21 @@ export function squatSlots(state, p) {
     out.push(key.split('-').map(Number));
   }
   return out;
+}
+/** p's minions this round, placed or not; .usual is a round's count before any extra (effects.js reads both). */
+const minionsThisRound = (state, p) => (p.left || 0) + workersOnBoard(state, p);
+minionsThisRound.usual = (state, p) => (state.round >= 1 ? WORKERS[state.round - 1] : minionsThisRound(state, p));
+/**
+ * The spare minions this round (Cory, 2026-10-29: "there are only so many extra minions to be gained (as many spaces
+ * as there are)"): open spaces beyond every minion still to place. An extra minion or extra turn takes one; with none
+ * left it gives nothing. None in round I.
+ */
+export function minionPool(state) {
+  if (!(state.round >= 2)) return 0;
+  let open = 0;
+  state.quadrants.forEach((qid, q) => quadrant(qid).actions.forEach((a, i) => { if (spaceOpen(a, state.round) && state.slots[`${q}-${i}`] === undefined) open++; }));
+  const toCome = state.queue.filter(t => t.t === 'turn' || t.t === 'place').length + (state.unplaced || 0);
+  return Math.max(0, open - toCome);
 }
 /** Workers p has on the board: placed spaces plus spaces joined. */
 export const workersOnBoard = (state, p) => Object.values(state.slots).filter(o => o === p.id).length

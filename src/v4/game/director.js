@@ -417,6 +417,20 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     const before0 = cur;
     phase(own.map(g => ({ from: fromMove && g.from.kind === 'member' ? fromMove : g.from, to: g.to, n: g.what.n, opt: { r: g.what.r, owner: g.to.pid } })));
     if (spill.length) { cur = own.length ? cur : before0; phase(spill.map(g => ({ from: g.from, to: g.to, n: g.what.n, opt: { r: g.what.r, owner: g.to.pid, light: true } }))); }
+    // an extra minion (Cory, 2026-10-29): a spare one leaves the pool (or a rival's row) and lands in its new seat's row
+    const spare = beat.effects.filter(e => e.type === 'minion');
+    if (spare.length) {
+      let o = cur, lastR = null;
+      for (const e of spare) {
+        const d = fly(e.from, e.to);
+        for (let k = 0; k < e.what.n; k++) at(o + k * MO.pieceStagger, { op: 'spare', from: e.from, pid: e.to.pid, k, n: e.what.n, dur: d });
+        const r = { last: o + (e.what.n - 1) * MO.pieceStagger, d };
+        ends(r.last + r.d);
+        if (!lastR || r.last + r.d > lastR.last + lastR.d) lastR = r;
+        o += MO.fan;
+      }
+      cur = after(lastR);
+    }
     // members changing hands (grammar M10; motion gaps 3: "P3 traded Broker for P4's Retinue" showed no travel): a swap's
     // two members cross at once on mirrored arcs; a member taken (Poach, a ransom let go) is a take, the victim's crowd
     // tugs and it flies straight. Each lands on its own new chip, which shows when it lands.
@@ -785,6 +799,9 @@ function placeEl(root, w, ctx) {
       return shown(root.querySelector(`[data-option="color:${w.qid}"]`)) || shown(root.querySelector(`[data-slot^="${q}-"] .base`)) || shown(root.querySelector('.stage .hub-label'));
     }
     case 'stack': { const s = seat(w.pid); return s && shown(s.querySelector(`.cs-stack[data-res="${w.r}"]`)); }
+    // the spare minions (MinionPool.jsx), and a seat's row of minions still to place
+    case 'pool': return shown(root.querySelector('.lt-pool .pool-men')) || shown(root.querySelector('.lt-pool'));
+    case 'minions': { const s = seat(w.pid); return s && (shown(s.querySelector('.cs-minions')) || shown(s)); }
     case 'count': case 'player': { const s = seat(w.pid); return s && (shown(s.querySelector('.cs-total')) || shown(s)); }
     case 'crowd': {
       const s = seat(w.pid);
@@ -1117,6 +1134,25 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
     if (a.to.kind === 'shop' && B && !B.rectOnly && B.animate && B.dataset && B.dataset.uid === String(a.uid)) { track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 })); continue; }
     if (B && !B.rectOnly && B.animate && B.dataset && B.dataset.uids === String(a.uid)) track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 }));
   }
+  // an extra minion (planChain's spare): its new minion in the seat's row waits, unseen, for the spare one to land, and
+  // the pool keeps standing the spare ones until each leaves (MinionPool already shows the new count)
+  const pool = root.querySelector('.lt-pool .pool-men'), poolSrc = root.querySelector('.lt-pool .pool-src');
+  for (const a of plan.atoms) {
+    if (a.op !== 'spare') continue;
+    const row = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions .cs-min:not(.placed)`)];
+    a.el = row[row.length - a.n + a.k] || null;
+    a.toEl = a.el || where({ kind: 'minions', pid: a.pid });
+    a.fromEl = where(a.from);
+    if (a.el && a.el.animate) track(a.el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 }));
+    if (a.from.kind === 'pool' && pool && poolSrc) {
+      const i = document.createElement('i');
+      i.className = 'pool-min held';
+      i.setAttribute('aria-hidden', 'true');
+      i.innerHTML = poolSrc.innerHTML;
+      pool.appendChild(i);
+      a.held = i;
+    }
+  }
   // every place a beat will use, found now with the other reads (a lookup at beat time laid the page out mid-chain);
   // a turn's chain (no round end: no re-sort, no going home, no fresh row) leaves seats and piles standing, so their
   // rects are read now too. Stage items and the shop move: those stay live.
@@ -1196,6 +1232,20 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
             if (a.landed && a.landed.animate) track(a.landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: a.dur + 30 }));
             onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); if (a.landed) settle(a.landed, MO.settle); play('place'); });
           }
+          return;
+        }
+        case 'spare': {
+          const held = a.held;
+          const F = held && held.isConnected ? held.getBoundingClientRect() : (a.fromEl ? a.fromEl.getBoundingClientRect() : null);
+          if (held) held.remove();
+          if (skip || !F || !a.toEl) return;
+          const T = a.toEl.getBoundingClientRect(), size = Math.max(16, a.el ? T.width : 18);
+          const src = a.from.kind === 'pool' ? root.querySelector('.lt-pool .pool-src') : null;
+          const html = src ? src.innerHTML : a.el ? a.el.innerHTML : '';
+          if (!html) return;
+          chain.flying++;
+          const anim = flyPath(html, 'worker-flight minion-flight spare-flight', square(F, size), square(T, size), { path: 'arc', duration: a.dur });
+          onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); if (a.el) settle(a.el, MO.settle); play('place'); });
           return;
         }
         // (homeFlownAt: they already left when the round card's button was pressed; only their seats' columns wait here)
