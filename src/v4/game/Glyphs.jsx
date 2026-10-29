@@ -105,7 +105,7 @@ export function MemberGlyph({ r = null, size = 16, n = null, decorative = false 
         ? <path d={BUST} fill={r === 'white' ? 'var(--white, #e6dcc6)' : `var(--q-${r}, var(--${r}))`} />
         : <><defs><clipPath id={clip}><path d={BUST} /></clipPath></defs>
           <g clipPath={`url(#${clip})`}>{BUST_PARTS[anyCount].map(([d, v]) => <path key={v} d={d} fill={`var(${v}, ${BUST_FALLBACK[v]})`} />)}</g></>}
-      <path d={BUST} fill="none" stroke={r === 'white' || r === 'silver' ? 'rgba(30,18,8,.7)' : 'rgba(30,18,8,.55)'} strokeWidth="1.1" strokeLinejoin="round" />
+      <path d={BUST} fill="none" stroke={r === 'white' || r === 'silver' ? 'rgba(30,18,8,.7)' : 'rgba(30,18,8,.55)'} strokeWidth="1" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
     </svg>
   );
 }
