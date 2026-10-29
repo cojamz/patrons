@@ -23,3 +23,10 @@
 - Hands: knuckle row, thumb, wrist cuff step. Never a box.
 - Costume signifiers (headbands with knot tails, pith helmets) get the same sensitivity glance as cultural dress.
 - The lid-bar eye on at most a third of a batch.
+- Single off-tone pixels on cheeks and chins read as rash, dirt or stubble. One cheek plane, two tones, in a cluster.
+- A gift ribbon or any cross-strap on a box makes a plus. Bow only, or angle it.
+- A red or orange triangle on a dark stick reads as a torch. Crowd pennants are pale, with a star, flying sideways.
+- Masks or dark glasses on black hair merge into one bar: give eyewear its own value, one off-white glint per lens.
+- Dandy costume (boater, pencil moustache) plus a swindler role never goes on brown or deep skin.
+- Comic-coward roles follow the service-role rule: cast light as often as dark, never an open lipped mouth on a deep face.
+- Mismatched eyes read as a wink. Both eyes one expression unless the card is about winking.

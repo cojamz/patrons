@@ -68,7 +68,8 @@ function sphereRamp(base) {
 // light skin gets deeper shadows (so a brim's shadow reads), deep skin shallower (so faces never go black)
 function skinRamp(base) {
   const L0 = toOklch(base)[0];
-  const dl = L0 > 0.78 ? [-0.33, -0.14, 0, 0.05] : L0 > 0.6 ? [-0.19, -0.09, 0, 0.065] : [-0.12, -0.06, 0, 0.075];
+  if (L0 < 0.42) return ramp(base, [-0.08, -0.04, 0, 0.17], 2, 10, 6, 1.1, 1.3, SKIN_SHADOW_HUE);
+  const dl = L0 > 0.78 ? [-0.33, -0.14, 0, 0.05] : L0 > 0.6 ? [-0.19, -0.09, 0, 0.065] : [-0.12, -0.06, 0, 0.12];
   return ramp(base, dl, 2, 10, 6, 1.1, 0.88, SKIN_SHADOW_HUE);
 }
 function hairRamp(base) {
