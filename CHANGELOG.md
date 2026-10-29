@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.857 — 2026-10-29
+
+- Recruiter: whenever you add a member to your cult, +1 red. Buying followers no longer counts.
+
 ## v0.9.856 — 2026-10-29
 
 - Every member scores its member count: Revelers scores 3, Dabblers, Con Men and Ensemble 2. Cards show the member mark and count at the top; the price circle is smaller.
