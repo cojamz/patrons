@@ -108,7 +108,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
       'market.patroness', // under 3 holds when Extortionist at 6 (Oct 25) moved the games; cards-market (Patroness) covers it
       'market.stylist', 'echo.ensemble', 'echo.dejavu', 'market.auctioneer', 'echo.wallflower', // under 3 holds when +1 wild on every member and the round I rework (Oct 27-28) moved the games; cards-market and cards-echo cover them
       'market.sommelier', // cut from the deck; under 3 holds when neutral in Out of Style (Oct 28) moved the games; cards-market covers it
-      'market.connoisseur']); // under 3 holds when Tiebreaker at 5 (Oct 28) moved the games; cards-market (Connoisseur) covers it
+      'market.connoisseur', // under 3 holds when Tiebreaker at 5 (Oct 28) moved the games; cards-market (Connoisseur) covers it
+      'market.restocker']); // under 3 holds when Encore's On Recruit copy and Sleep In's growth (Oct 28) moved the games; cards-member-structure covers it
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
