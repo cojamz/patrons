@@ -453,14 +453,14 @@ export default {
         ctx.gain(owner, P, 4);
       },
     }),
-    m('streak', 'Hot Streak', 2, 2, 'Once per round: +2 followers per turn in a row you’ve taken just before this one.', {
-      activate: 'round',
-      onRoundStart(ctx, owner, card) { card.used = false; },
+    // Cory, 2026-10-28: One Time Use at +3 per turn in a row (was once per round at +2)
+    m('streak', 'Hot Streak', 2, 2, 'One Time Use: +3 followers per turn in a row you’ve taken just before this one.', {
+      activate: 'game',
       onActivate(ctx, owner, card) {
         const k = inARow(ctx, owner);
         if (!k) { card.used = false; ctx.log(`${owner.name}'s Hot Streak: no turns in a row just before this one yet.`); return; }
-        owner.bonus += 2 * k;
-        ctx.log(`${owner.name}'s Hot Streak: +${2 * k} followers.`);
+        owner.bonus += 3 * k;
+        ctx.log(`${owner.name}'s Hot Streak: +${3 * k} followers.`);
       },
       botActivate: (ctx, owner) => inARow(ctx, owner) >= 2 || (inARow(ctx, owner) >= 1 && ctx.state.round === 3),
     }),

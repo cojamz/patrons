@@ -103,12 +103,11 @@ describe('an extra turn names the card that gave it', () => {
 
 describe('a member used before the placement is told as its own, not as the space', () => {
   it('Tribute Band copying Collect Debts, then Spree: the gold is Tribute Band\'s (game-skeptic w4 #6)', () => {
-    const d = table({ quadrants: ['gold', 'echo', 'market', 'red'], round: 3, left: 2, res: [{ gold: 2 }, { gold: 6 }],
-      members: [['echo.dejavu']], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }] }, 0);
+    // Tribute Band plays a rival's actions (Cory, 2026-10-28): P2 collects debts first
+    const d = table({ quadrants: ['gold', 'echo', 'market', 'red'], round: 3, left: 2, res: [{ gold: 6 }, { gold: 2 }],
+      members: [['echo.dejavu']], queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 0 }] }, 0);
     const debts = actionName('gold.steal'), spree = actionName('market.spree');
     d.take('gold.steal');
-    d.on();
-    d.take(d.s.pending.options.find(o => o.kind === 'slot' && !/Spree/.test(o.label)).label);
     d.on();
     const before = d.lives.length;
     d.use();
@@ -119,7 +118,7 @@ describe('a member used before the placement is told as its own, not as the spac
     expect(mid.lines[0]).toMatch(/^Tribute Band: \+3 gold/);
     d.take('market.spree');
     const card = lastLive(d);
-    expect(d.s.log).toContain(`P1's Tribute Band: P1 copies ${debts}: doing it again.`);
+    expect(d.s.log).toContain(`P1's Tribute Band: P1 copies ${debts} (P2's): doing it again.`);
     expect(card.head).toBe(`You used Tribute Band, then took ${spree}`);
     // Spree gives nothing itself: no line of gold under it that isn't Tribute Band's
     expect(card.lines.some(l => /^Tribute Band: \+3 gold/.test(l))).toBe(true);

@@ -113,16 +113,18 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
 
   it('Tribute Band is once per game and its saved replay resumes through choice-bearing actions', () => {
     const band = member('Tribute Band');
-    let s = table(Q, { round: 2, left: 6, members: [[band]], res: [{}, { gold: 6 }], queue: turns(0, 0, 0) });
+    // a rival's actions (Cory, 2026-10-28): P2 collects 3 from P1 and builds up, then P1 plays both back
+    let s = table(Q, { round: 2, left: 6, members: [[band]], res: [{ gold: 3 }, { gold: 6 }], queue: turns(1, 1, 0) });
     s = take(s, 'gold.steal');
-    for (let i = 0; i < 3; i++) s = move(s, 'player:1');
+    for (let i = 0; i < 3; i++) s = move(s, 'player:0');
     s = pass(s);
-    s = take(s, 'echo.chant');
+    s = pass(take(s, 'echo.chant'));
     const uid = uidIn(s, band, 0);
     s = move(s, `use:${uid}`);
     for (let i = 0; i < 3; i++) s = move(saved(s), 'player:1');
-    expect(s.players[0].res.gold).toBe(6);
-    expect(s.players[0].res.green).toBe(8);
+    expect(s.players[0].res.gold).toBe(3);
+    expect(s.players[1].res.gold).toBe(6);
+    expect(s.players[0].res.green).toBe(4);
     expect(s.cards[uid].used).toBe(true);
     expect(ids(s)).not.toContain(`use:${uid}`);
   });

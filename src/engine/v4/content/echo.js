@@ -211,18 +211,13 @@ function copyOwn(ctx, p, self, by, who) {
   else copyAll(ctx, p, take, by, who);
   return true;
 }
-/** The players tied for the most followers. */
-const leaders = ctx => {
-  const best = Math.max(...ctx.state.players.map(o => ctx.followers(o)));
-  return ctx.state.players.filter(o => ctx.followers(o) === best);
-};
-/** Tribute Band: do every action the leader has a minion on this round, in placement order. */
+/** Tribute Band: do every action the chosen rival has a minion on this round, in placement order. */
 function copyLeader(ctx, p, leader) {
   const { take, skip } = ownPlan(ctx, leader);
   const skipped = skipWords(skip);
   if (!take.length) { ctx.log(`${p.name}'s Tribute Band has nothing to copy from ${leader.name}${skipped ? `: it skips ${skipped}` : ''}.`); return false; }
   if (skipped) ctx.log(`Tribute Band skips ${skipped}.`);
-  ctx.log(`${p.name}'s Tribute Band plays ${leader.name === p.name ? 'their own' : `${leader.name}'s`} actions.`);
+  ctx.log(`${p.name}'s Tribute Band plays ${leader.name}'s actions.`);
   copyAll(ctx, p, take, 'Tribute Band', 'Tribute Band');
   return true;
 }
@@ -481,16 +476,16 @@ const echoQ = {
     // Understudy and Ensemble replaced Choirmaster (green for a rival's copy: a gift for doing nothing, and Muse's
     // twin) and Fan (green when a rival takes the center: nothing to do with copying). Claude, 2026-10-14.
     // Cory, 2026-10-28: back in the deck at 4, "two green two wild" (2 green + 1 any + the +1 wild)
-    m('understudy', 'Understudy', 2, 1, 'On Recruit: copy the previous action.', {
+    m('understudy', 'Understudy', 2, 1, 'On Recruit: copy the action taken the previous turn.', { // wording Cory's, Oct 28
       onRecruited(ctx, owner) {
         // Retired Understudy keeps its old before-this-turn behavior in saved games; current Echo uses previousNow.
         const L = ledger(ctx.state), skip = L.origin || (L.now[L.open]?.p === owner.id ? L.open : null);
-        offer(ctx, owner, targets(ctx, owner, 'previous', skip), 'Understudy: copy the previous action?', 'now', 'Understudy');
+        offer(ctx, owner, targets(ctx, owner, 'previous', skip), 'Understudy: copy the action taken the previous turn?', 'now', 'Understudy');
       },
     }),
     // was "Game end: +1 follower per green member." (2+2) until the design critic's follow-ups (2026-10-14): now it
     // pays for the copy itself, a rival's space only, and the follower counts at once (heard() above).
-    m('ensemble', 'Ensemble', 2, 2, 'Whenever you copy your own action, +1 follower.'),
+    m('ensemble', 'Ensemble', 2, 2, 'Whenever you copy your own action, +1 follower.', { n: 2 }), // Cory, 2026-10-28: 2 members
     m('groupie', 'Groupie', 4, 4, 'Whenever anyone recruits a green member, +1 green.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (recruited.uid !== card.uid && recruited.def.id.startsWith('echo.')) ctx.gain(owner, 'green', 1);
@@ -539,23 +534,20 @@ const echoQ = {
         withPath(ctx, [], () => copy(ctx, owner, e, { by: 'Stunt Double' }), e.key);
       },
     }),
-    // Cory, 2026-10-28: "lets shift tribute band into this": the leader's actions, not your own (wording Claude's).
-    // The leader is the player with the most followers, you included; on a tie you pick which of them.
-    m('dejavu', 'Tribute Band', 8, 3, /* Cory, Oct 27: "tribute band at 12" (with the +1 wild) */ 'One Time Use: do every action the leader has a minion on this round.', {
+    // Cory, 2026-10-28: "lets shift tribute band into this", then "should maybe get to pick the rival they copy"
+    m('dejavu', 'Tribute Band', 8, 3, /* Cory, Oct 27: "tribute band at 12" (with the +1 wild) */ 'One Time Use: do every action a rival you choose has a minion on this round.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
-        const top = leaders(ctx);
-        if (top.length > 1) {
-          ctx.choose(owner, 'Tribute Band: whose actions? (tied for the most followers)', top.map(o => ({
-            id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: ownPlan(ctx, o).take.reduce((n, e) => n + entryValue(ctx, e, owner), 0),
-          })), 'echo.tribute', { uid: card.uid });
-          return;
-        }
+        const list = ctx.rivals(owner).filter(o => ownPlan(ctx, o).take.length);
         // nothing to copy: the use isn't spent (as Stunt Double's isn't)
-        if (!copyLeader(ctx, owner, top[0])) card.used = false;
+        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Tribute Band has no rival's actions to copy.`); return; }
+        if (list.length === 1) { copyLeader(ctx, owner, list[0]); return; }
+        ctx.choose(owner, 'Tribute Band: whose actions?', list.map(o => ({
+          id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: ownPlan(ctx, o).take.reduce((n, e) => n + entryValue(ctx, e, owner), 0),
+        })), 'echo.tribute', { uid: card.uid });
       },
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
-        && Math.max(...leaders(ctx).map(o => ownPlan(ctx, o).take.reduce((n, e) => n + entryValue(ctx, e, owner), 0))) >= (ctx.state.round === 3 ? 6 : 10),
+        && Math.max(0, ...ctx.rivals(owner).map(o => ownPlan(ctx, o).take.reduce((n, e) => n + entryValue(ctx, e, owner), 0))) >= (ctx.state.round === 3 ? 6 : 10),
     }),
     // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
     m('doppel', 'Doppelganger', 2, 2, 'On Recruit: it becomes a copy of one of your members.', { round: 3, // joins in round III (Cory, 2026-10-25)
@@ -568,7 +560,7 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('impostor', 'Impostor', 2, 2, 'On Recruit: it becomes a copy of a rival’s member.', { round: 3, // joins in round III (Cory, 2026-10-25)
+    m('impostor', 'Impostor', 2, 3, /* Cory, 2026-10-28: "more expensive": 6 (was 5) */ 'On Recruit: it becomes a copy of a rival’s member.', { round: 3, // joins in round III (Cory, 2026-10-25)
       onRecruited(ctx, owner, card) {
         const rivals = ctx.rivals(owner).flatMap(p => ctx.membersOf(p)).filter(c => c.copy || !['doppel', 'impostor'].includes(c.def.key));
         if (!rivals.length) return;

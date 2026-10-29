@@ -25,9 +25,9 @@ describe('the curated member decks', () => {
   // Member structure (Cory, 2026-10-24): a once per game for Red, Magenta and Blue, Blue's round start, a go-deep for
   // Purple and White; Bulk Buyer, Appraiser and Makeover cut
   // Oct 25: Recluse moves to White, Stylist cut
-  // Green grows to 16 (Cory, 2026-10-29: about 16 per 2.0 color; Understudy, Wallflower, Fan Club, Roadie)
-  const DEALT = { echo: 16, red: 13, thieves: 15, purple: 13, market: 12, trading: 12 };
-  it('Green deals 16, Blue 12, Red and Purple 13, Magenta 15, White 12, other spheres 10, guests 7; no cut card is dealt', () => {
+  // Green grows to 16 (Cory, 2026-10-29: Understudy, Wallflower, Fan Club, Roadie), then 15 (Connector cut)
+  const DEALT = { echo: 15, red: 13, thieves: 15, purple: 13, market: 12, trading: 12 };
+  it('Green deals 15, Blue 12, Red and Purple 13, Magenta 15, White 12, other spheres 10, guests 7; no cut card is dealt', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });
       // artifacts are picked, never dealt (Cory, 2026-10-24): their cards don't count here

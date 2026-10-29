@@ -25,7 +25,7 @@ describe('Green hover targets follow the current rules', () => {
     expect(ownCopyPlan(s, 1).keys).toContain(echoKey);
     expect(ownCopyPlan(s, 1).skips).not.toMatch(/never copy a copy/);
     expect(copiesAll(defById('echo.dejavu').text)).toBe(true);
-    // Tribute Band lights the leader's actions (Cory, 2026-10-28), not the viewer's
+    // Tribute Band lights every rival's actions it could pick (Cory, 2026-10-28), not the viewer's
     s.players[1].bonus = 5;
     expect(copyAllPlan(s, 0, defById('echo.dejavu').text).keys).toEqual(ownCopyPlan(s, 1).keys);
   });

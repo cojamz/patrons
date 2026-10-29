@@ -101,7 +101,7 @@ describe('Green members', () => {
     let s = scene({ round: 2, turns: [0], members: [['echo.dejavu'], []] });
     const u = uidOf(s, 'echo.dejavu', 0);
     s = move(s, `use:${u}`);
-    expect(s.log.some(l => l.includes('Tribute Band has nothing to copy'))).toBe(true);
+    expect(s.log.some(l => l.includes('Tribute Band has no rival'))).toBe(true);
     expect(s.cards[u].used).toBeFalsy();
   });
 

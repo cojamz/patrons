@@ -161,7 +161,7 @@ describe('Green current members', () => {
   });
   it('Roadie: round start, +1 green per Green member you have', () => {
     const start = members => { let s = table(Q, { members: [members] }); s.queue = [{ t: 'round', r: 2 }]; return R(resume(s)).green || 0; };
-    expect(start(['echo.roadie', 'echo.muse', 'echo.ensemble', 'red.twins']) - start(['echo.muse', 'echo.ensemble', 'red.twins'])).toBe(3);
+    expect(start(['echo.roadie', 'echo.muse', 'echo.ensemble', 'red.twins']) - start(['echo.muse', 'echo.ensemble', 'red.twins'])).toBe(4); // Roadie, Muse, Ensemble (2 members)
   });
   it('Busker gives two green on recruit and at round start, naming the source', () => {
     let s = table(Q, { shop: ['echo.evergreen', ...ROW], res: [{ green: 4 }], queue: turns(0) });
@@ -230,8 +230,8 @@ describe('Green current members', () => {
     expect(named(s, 'Stunt Double').length).toBe(1);
     expect(s.recruits).toBe(3); // Stunt Double plus Crew's printed member quantity.
   });
-  // Cory, 2026-10-28: Tribute Band plays the leader's actions (was: your own)
-  it('Tribute Band does every action the leader has a minion on, once per game', () => {
+  // Cory, 2026-10-28: Tribute Band plays a rival's actions, you pick whose (was: your own)
+  it('Tribute Band does every action a rival has a minion on, once per game', () => {
     let s = table(Q, { round: 2, shop: ROW, members: [['echo.dejavu']], bonus: [0, 9], queue: turns(1, 1, 0) });
     s = go(s, 'gold.rush'); s = go(s, 'echo.chant');
     const uid = uidIn(s, 'echo.dejavu', 0), before = R(s).green, gold = R(s).gold || 0;
@@ -241,7 +241,7 @@ describe('Green current members', () => {
     expect(s.cards[uid].used).toBe(true);
     expect(ids(s)).not.toContain('use:' + uid);
   });
-  it('Tribute Band asks whose actions when the leaders are tied', () => {
+  it('Tribute Band asks whose actions when several rivals have some', () => {
     let s = table(Q, { round: 2, n: 3, shop: ROW, members: [['echo.dejavu'], [], []], bonus: [0, 9, 9], queue: turns(1, 2, 0) });
     s = go(s, 'gold.rush'); s = go(s, 'echo.chant');
     const before = R(s).green;

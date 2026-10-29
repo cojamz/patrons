@@ -399,8 +399,10 @@ describe('Release with once-per-game members, just-bought members and Echo copie
   // Cory (2026-10-15): a member you've activated can't be released for its refund (it used to be, right after).
   it('an Echo copy made with Tribute Band keeps its gains, and the used Tribute Band can no longer be released', () => {
     const Q = ['gold', 'red', 'echo', 'purple'];
-    let s = scene({ quadrants: Q, members: [['echo.dejavu']] });
-    s = move(s, `slot:${RUSH}`); s = pickAny(s);
+    // Tribute Band plays a rival's actions (Cory, 2026-10-28): P2 takes Golden Years first
+    let s = scene({ quadrants: Q, members: [['echo.dejavu']], queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }] });
+    s = move(s, `slot:${RUSH}`); s = passBuys(pickAny(s));
+    s = move(s, `slot:${JV}`); s = pickAny(s);
     const g = R(s).gold, u = uidOf(s, 'echo.dejavu', 0);
     expect(ids(s)).toContain(`release:${u}`);
     s = move(s, `use:${u}`); s = pickAny(s);

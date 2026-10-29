@@ -196,8 +196,8 @@ describe('Green table member boundaries', () => {
     expect(followers(s, s.players[0])).toBe(3);
   });
   it('Tribute Band remains spent across a round change', () => {
-    let s = scene({ members: [['echo.dejavu']], turns: [0] });
-    s = take(s, 'gold.rush');
+    let s = scene({ members: [['echo.dejavu']], turns: [1, 0] });
+    s = go(s, 'gold.rush'); // a rival's action to play
     const uid = uidOf(s, 'echo.dejavu', 0);
     s = move(s, 'use:' + uid);
     expect(s.cards[uid].used).toBe(true);

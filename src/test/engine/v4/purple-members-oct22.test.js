@@ -59,13 +59,13 @@ describe('Purple members, Oct 22', () => {
     const t = take(sc({ round: 2, left: 1, members: [['purple.closer']], queue: turns(0, 1) }), 'gold.rush');
     expect(t.players[0].res.purple || 0).toBe(0);
   });
-  it('Hot Streak: +2 followers per turn in a row just before this one; nothing to use with none', () => {
+  it('Hot Streak: One Time Use, +3 followers per turn in a row just before this one; nothing to use with none', () => {
     let s = sc({ round: 2, members: [['purple.streak']], queue: turns(0, 0, 0, 1) });
     s.turns = [0, 0];
     s.current = 0;
     s = move(s, `use:${uidOf(s, 'purple.streak', 0)}`);
-    expect(s.players[0].bonus).toBe(2);
-    expect(followers(s, s.players[0])).toBe(1 + 1 + 2);
+    expect(s.players[0].bonus).toBe(3);
+    expect(followers(s, s.players[0])).toBe(1 + 1 + 3);
     let t = sc({ round: 2, members: [['purple.streak']], queue: turns(0, 1) });
     t = move(t, `use:${uidOf(t, 'purple.streak', 0)}`);
     expect(t.players[0].bonus).toBe(0);

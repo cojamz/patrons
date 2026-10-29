@@ -5,6 +5,7 @@ export const CUT = new Set([
   'gold.midas', 'gold.investor', 'gold.hustler', 'gold.jackpot', 'gold.coinpurse',
   'red.intern', 'red.reserve', 'red.drive', 'red.crowd', 'red.bigfamily', 'red.sponsor',
   'echo.afterimage', 'echo.translator', 'echo.groupie', 'echo.choir',
+  'echo.connector', // Cory, 2026-10-28: "I think connector can go" (Green at 15)
   'market.reseller', 'market.onlooker', 'market.auctioneer', 'market.curator', 'market.blackmarket',
   'market.climber', // Cory, 2026-10-18: cut (dead while Release is off); its fill-in is his call
   'market.planner', 'market.underbidder', 'market.sommelier', // concept branch: cost cuts out (Cory, 2026-10-18)
