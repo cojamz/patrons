@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.837 — 2026-10-29
+
+- Member cards look like trading cards: the name on a bar in its color, the price in a dark circle and the worth beside it, bigger text, and card keywords like One Time Use and Game End in bold.
+
 ## v0.9.836 — 2026-10-28
 
 - Guests: Party Crasher (was Squatter) and Extra Hand are One Time Use; new Saboteur (−3 followers whenever it joins a cult); Launderers worth 2; Front-runner and Tiebreaker cheaper; Straggler is out.
