@@ -1,12 +1,21 @@
-// Table talk (Cory, 2026-10-28 playtest: "there needs to be ability to emote or a chat to shittalk"): a Say button beside the
-// menu opens a small card of quick lines and a box to type in; Enter anywhere on the board opens it ready to type. What
-// anyone says pops up as a speech bubble beside their seat for a few seconds and stays in the log.
+// Table talk (Cory, 2026-10-28 playtest: "there needs to be ability to emote or a chat to shittalk"): a click on your own
+// leader (Cory, Oct 29: "more of an easter egg") opens a small card of quick lines, each with its little drawing
+// (art/emotes.js), and a box to type in; Enter anywhere on the board opens it ready to type. What anyone says pops up as
+// a speech bubble beside their seat for a few seconds and stays in the log.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { QUICK_LINES, TALK_MAX } from '../session/talk.js';
+import { emoteArt } from '../art/emotes.js';
 import './talk.css';
 
 const BUBBLE_MS = 4200;
 const NO_TALK = [];
+
+/** The little drawing for a quick line, or nothing for words typed in. */
+export function Emote({ line, size = 24 }) {
+  const art = emoteArt(line);
+  if (!art) return null;
+  return <svg className="talk-emote" viewBox="0 0 16 16" width={size} height={size} shapeRendering="crispEdges" aria-hidden="true">{art.paths}</svg>;
+}
 
 /** Every line said at this table (oldest first) and the newest one, re-rendered as lines arrive. */
 export function useTalk(session) {
@@ -34,7 +43,7 @@ export function TalkBubble({ talk, pid }) {
     return () => clearTimeout(t);
   }, [fresh, last?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!fresh) return null;
-  return <div key={last.id} className="seat-say" role="status" data-brief="" data-say-seat={pid}>{last.text}</div>;
+  return <div key={last.id} className="seat-say" role="status" data-brief="" data-say-seat={pid}><Emote line={last.text} size={32} />{last.text}</div>;
 }
 
 /** The Say card: quick lines (one click says it) and a box to type in (focused, so Enter, type, Enter says it). */
@@ -43,9 +52,13 @@ export function TalkPicker({ onSay, onClose, anchor }) {
   const input = useRef(null);
   const [text, setText] = useState('');
   const [at, setAt] = useState(null);
+  // beside your leader: above it when it sits low on the screen (yours does, bottom left), below it otherwise
   useLayoutEffect(() => {
     const r = anchor?.getBoundingClientRect?.();
-    if (r) setAt({ left: Math.max(8, r.right - 300), top: r.bottom + 8 });
+    const h = box.current?.offsetHeight || 0, w = box.current?.offsetWidth || 300;
+    if (!r) return;
+    const left = Math.max(8, Math.min(r.left - 6, innerWidth - w - 8));
+    setAt(r.top + r.height / 2 > innerHeight / 2 ? { left, top: Math.max(8, r.top - h - 10) } : { left, top: r.bottom + 10 });
   }, [anchor]);
   // the box is ready to type in at once; a click on a line says it instead
   useEffect(() => { if (at) input.current?.focus(); }, [!!at]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -60,7 +73,7 @@ export function TalkPicker({ onSay, onClose, anchor }) {
   return (
     <div ref={box} className="talk-card" role="dialog" aria-label="Say something" data-talk style={at ? { left: at.left, top: at.top } : { visibility: 'hidden' }}>
       <div className="talk-lines">
-        {QUICK_LINES.map(l => <button key={l} type="button" className="talk-line" data-talk-line={l} onClick={() => say(l)}>{l}</button>)}
+        {QUICK_LINES.map(l => <button key={l} type="button" className="talk-line" data-talk-line={l} onClick={() => say(l)}><Emote line={l} />{l}</button>)}
       </div>
       <form className="talk-type" onSubmit={e => { e.preventDefault(); say(text); }}>
         <input ref={input} type="text" value={text} maxLength={TALK_MAX} placeholder="Say something" aria-label="Say something"

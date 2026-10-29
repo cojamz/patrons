@@ -45,7 +45,7 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
  * hover (useHoverCards), optionFor/onPick (your members' Use / switch), total (the follower count to show, while the
  * results' end-game scoring counts it up).
  */
-export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {}, pick = null, total = null }) {
+export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {}, pick = null, total = null, onLeader = null, talking = false }) {
   const p = state.players[pid];
   const rootEl = useRef(null);
   const latest = useRef(null);
@@ -114,7 +114,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // its followers came from (w3b #39); anywhere else on the seat (name, leader, body, resources) the seat card
   const pointed = e => (e.target && e.target.closest && e.target.closest('.cs-total, .cs-leader, .cs-who, .cs-stack, .cs-res, .cs-crowd, .cs-build, .cs-foot')) || e.currentTarget;
   const openSeat = (e, pinned) => {
-    if (!hover) return;
+    if (!hover || talking) return; // the Say card is open over your seat
     const el = pointed(e);
     if (el.classList && el.classList.contains('cs-total')) hover.onFollowersHover(pid, el, { pinned });
     else hover.onSeatHover(pid, el, { pinned });
@@ -152,9 +152,15 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           if (!r) openSeat(e, false);
         }}
         onPointerLeave={e => { railIn.current = false; if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
-        onClick={e => openSeat(e, true)}
+        onClick={e => {
+          // your own leader speaks for you: a click on it opens the Say card (Cory, Oct 29: "more of an easter egg when you
+          // click on your leader")
+          const lead = onLeader && e.target.closest && e.target.closest('.cs-leader');
+          if (lead) { if (hover) hover.onSeatHover(pid, null); onLeader(lead); return; }
+          openSeat(e, true);
+        }}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSeat(e, true); } }}>
-        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={32} orbit={false} face={!mine} /></span>
+        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`} data-say={onLeader ? '' : undefined}><LeaderRing state={state} id={pid} size={32} orbit={false} face={!mine} /></span>
         <span className="cs-who">
           {/* the name, and on yours its place in the turns in words beside it ("your turn in 3") */}
           <span className="cs-name">

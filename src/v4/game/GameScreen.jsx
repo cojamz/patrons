@@ -988,13 +988,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // the spaces you could point at, worked out in the background after each step, so a hover never waits on one (the
   // space card's "You'd get", the shop's "✓ after X"): yours as soon as it's your move, a rival's once it settles
   usePreviewWarmup(state, needHandoff ? null : me);
-  // table talk (Talk.jsx): the person at the device says it from their seat; Say beside the menu, or Enter on the board
+  // table talk (Talk.jsx): the person at the device says it from their seat; a click on your own leader, or Enter on the board
   const talk = useTalk(session);
   const [talkOpen, setTalkOpen] = useState(false);
   const canTalk = typeof session.say === 'function' && me != null && mySeats.includes(me) && !needHandoff;
   const sayNow = useCallback(text => session.say(me, text), [session, me]);
   const closeTalk = useCallback(() => setTalkOpen(false), []);
   const openTalk = useCallback(() => setTalkOpen(true), []);
+  const openTalkAt = useCallback(() => setTalkOpen(o => !o), []); // a click on your own leader (CultSeat)
   useEnterToTalk(openTalk, canTalk && !talkOpen && !moment);
   // the spaces you can take that would give you nothing right now step back (Wheel: .idle), still placeable
   const legalKeys = useMemo(() => [...legalSlots.keys()], [legalSlots]);
@@ -1605,7 +1606,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           )}
         </div>
         {/* who's winning lives on the chairs (each total, its place, the margin on hover): no score row (Cory, 2026-10-15) */}
-        {canTalk && <button type="button" className="lt-say" data-say aria-expanded={talkOpen} title="Say something to the table (or press Enter)" onClick={() => setTalkOpen(o => !o)}>Say</button>}
         <Menu onRules={() => setRules(true)} onLog={openLog} getState={() => session.getState()} onLeave={onHome ? () => (state.over ? onHome() : setLeaving(true)) : null} />
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
@@ -1655,7 +1655,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} data-slot={pid == null ? undefined : snake.slot[pid]}
               style={{ '--slot': pid == null ? k : snake.slot[pid] ?? k }} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
               {pid == null ? null : (
-                <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={!!(pend && pend.player === pid && !state.over)} hover={hover} optionFor={pid === me ? live : undefined} onPick={shopPick} pick={pickParts[pid] || null} />
+                <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={!!(pend && pend.player === pid && !state.over)} hover={hover} optionFor={pid === me ? live : undefined} onPick={shopPick} pick={pickParts[pid] || null}
+                  onLeader={pid === me && canTalk ? openTalkAt : null} talking={pid === me && talkOpen} />
               )}
               {pid != null && pid === me && lostText && <div key={lostText} className="seat-stolen" role="status" data-stolen={pid} data-brief=""><Rich text={lostText} /></div>}
               {pid != null && <TalkBubble talk={talk} pid={pid} />}
@@ -1687,7 +1688,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {moment && reckoned === moment && closedMoment !== moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={nextRound} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
       {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} talk={talk} onClose={() => setLogOpen(false)} />}
-      {talkOpen && canTalk && <TalkPicker anchor={rootEl?.querySelector('[data-say]')} onSay={sayNow} onClose={closeTalk} />}
+      {talkOpen && canTalk && <TalkPicker anchor={rootEl?.querySelector('.lt-seat.mine [data-say]')} onSay={sayNow} onClose={closeTalk} />}
       {!state.over && <ActionStage />}
       <HoverCardLayer hover={hover} state={state} me={me} optionFor={live} onPick={onPick} />
       {leaving && (
