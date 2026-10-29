@@ -19,6 +19,7 @@ import { MemberDeck, useDeal } from './MemberDeck.jsx';
 import './lamp-b.css';
 import './member-pick.css';
 import './shop.css'; // live panel r1 (G2): the deck, the struck price and the worth
+import './card-header.css'; // the trading-card face (Cory, Oct 29)
 import { breakable } from './hyphen.js'; // long names break at a seam on the narrow card (Doppel-ganger)
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
@@ -235,39 +236,34 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               data-hint={`${d.name} · worth ${d.f} · ${d.text}`}
               {...cardHandlers(refs, uid, d.name, optId)}
             >
-              {/* identity and price (Cory, 2026-10-15: "members can't be translated to shorthand"): the picture on its
-                  tinted field, the name, the cost in dots and the worth; what it does is the hover's one plain sentence */}
-              <span className="band" aria-hidden="true" />
-              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} />
-                {/* the price as one faint number in the corner, for a quick look across the row (Cory, 2026-10-21): what
-                    you'd pay, so it agrees with the dots below; the dots stay the price's words */}
+              {/* a trading card (Cory, Oct 29: "Header is good"): the name on a bar in the color, the price you'd pay in a
+                  dark disc at its left and the worth at its right; the picture; the price's colors along the foot. What
+                  it does is the hover's (or Details') sentence. The price is what you'd pay, so it agrees with the dots. */}
+              <span className="lt-hd">
                 <span className="lt-corner-cost num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>
-                {/* no "need N" on the face (Cory: "the shouting 'need N' goes"; grammar: what you can't afford is the card
-                    fading, not text). What you're short of is the hover's one quiet line. */}
+                {/* the worth is what the member brings, not part of its price (live panel r1: "1 follower" read as a third cost) */}
+                <span className="val" data-worth={d.f} title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
+                  <b className="num">{d.f}</b><FollowerGlyph size={14} title={`worth ${d.f}`} />
+                </span>
+                {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
+                <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
+              </span>
+              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} />
+                {/* no "need N" on the face (Cory: "the shouting 'need N' goes"): what you can't afford is the card fading */}
                 {/* works from round II on (Cory, 2026-10-22: "a better way to denote round II/round III only"): a corner tag, not words */}
                 {d.from > 1 && <span className="lt-round-tag" data-round-tag="" title="Works from round II on">II+</span>}
                 {fromPile && !tray && <span className="need from-pile" title="From the top of the pile">pile</span>}
               </span>
-              {/* details hides the picture, so its corner number sits on the card itself (Cory, 2026-10-22: "total cost added to corner of details view") */}
-              {detailed && <span className="lt-corner-cost lt-corner-cost-detail num" aria-hidden="true" data-corner-cost={(paid || parts).reduce((t, c) => t + c.n, 0)}>{(paid || parts).reduce((t, c) => t + c.n, 0)}</span>}
-              {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
-              <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
               {/* a rule that grows by round reads by round, this round lit, as in every hover (RuleText; compact on the small card) */}
               {detailed && <span className="lt-pick-ability"><RuleText def={d} round={state.round} plain compact /></span>}
               <span className="ft" data-discount={paid ? '' : undefined}>
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>
-                    {/* the list price as one struck number, BEFORE the price you pay (a shop's "was 4, now 2"): after it, it
-                        ran into the worth and read "101" (live panel r1, G2) */}
+                    {/* the list price as one struck number, BEFORE the price you pay (a shop's "was 4, now 2") */}
                     <s className="cost-was num" title={`List price ${parts.map(c => `${c.n} ${c.color === 'any' ? 'any' : c.color}`).join(' + ')}`} aria-label={`list price ${parts.reduce((t, c) => t + c.n, 0)}`}>{parts.reduce((t, c) => t + c.n, 0)}</s>
                     <CostShapes parts={paid} />
                   </span>
                 ) : <CostShapes parts={parts} />}
-                {/* the worth is what the member brings, not part of its price (live panel r1: "1 follower" read as a third
-                    cost): a gain's "+", behind the hairline, at the card's right edge */}
-                <span className="val" data-worth={d.f} title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
-                  <b className="num">{d.f}</b><FollowerGlyph size={11} title={`worth ${d.f}`} />
-                </span>
               </span>
             </button>
           );
@@ -312,10 +308,13 @@ function PileRow({ state, viewer, row, optionFor, onPick, hover }) {
               onPointerEnter={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, e.currentTarget); }}
               onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onCardHover(uid, null); }}
               onClick={() => { if (opt) { hover?.close?.(); onPick(opt.id); } }}>
-              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
+              <span className="lt-hd">
                 <span className="lt-corner-cost num" aria-hidden="true">{shown.reduce((t, c) => t + c.n, 0)}</span>
+                <span className="val" data-worth={d.f}><b className="num">{d.f}</b><FollowerGlyph size={14} title={`worth ${d.f}`} /></span>
+                <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
+              </span>
+              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
                 {set && <span className="pr-slot num" aria-hidden="true">{k + 1}</span>}</span>
-              <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
               <span className="ft"><CostShapes parts={shown} /></span>
             </button>
           );

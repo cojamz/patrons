@@ -34,16 +34,19 @@ export function Pip({ color, n }) {
  * keywords), so "per blue | face-up | member" still reads "blue" as a word. "any" becomes the wild symbol only where a number counts it ("2 any");
  * "in any colors", "any face-up member" and "of anything" keep their words.
  */
+const KEYWORDS = { 'on recruit': 'On Recruit', 'round end': 'Round End', 'game end': 'Game End', 'one time use': 'One Time Use', 'once per game': 'One Time Use', 'once per round': 'Once per Round' };
+const KEYWORD = w => KEYWORDS[w.toLowerCase()] || 'Round Start';
 export function Rich({ text, after = '', timingDone = false }) {
   if (!text) return null;
   // Canonical timing labels are real emphasis everywhere, never visible Markdown.
-  const timing = /\b(On recruit|(?:At )?round start)\b/ig;
+  // Cory, Oct 29: every card keyword is bold ("One Time Use… should be bolded if its a keyword. Same for Game End")
+  const timing = /\b(On recruit|(?:At )?round start|round end|game end|one time use|once per game|once per round)\b(?!-)/ig;
   if (!timingDone && timing.test(text)) {
     timing.lastIndex = 0;
     const pieces = []; let end = 0;
     for (const m of text.matchAll(timing)) {
       if (m.index > end) pieces.push(<Rich key={`before${m.index}`} text={text.slice(end, m.index)} after={text.slice(m.index) + after} timingDone />);
-      pieces.push(<strong key={`timing${m.index}`} className="ability-timing">{m[0].toLowerCase().includes('recruit') ? 'On Recruit' : 'Round Start'}</strong>);
+      pieces.push(<strong key={`timing${m.index}`} className="ability-timing">{KEYWORD(m[0])}</strong>);
       end = m.index + m[0].length;
     }
     if (end < text.length) pieces.push(<Rich key="tail" text={text.slice(end)} after={after} timingDone />);
