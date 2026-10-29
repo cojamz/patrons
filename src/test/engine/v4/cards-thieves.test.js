@@ -212,6 +212,13 @@ describe('Magenta members', () => {
     expect(s.players[0].bonus).toBe(1);
     expect(named(s, 'Robin Hood').length).toBe(1);
   });
+  it('Snitch: whenever a rival steals from you, they lose 1 follower (named)', () => {
+    let s = table(Q, { res: [{}, { gold: 3 }], bonus: [4, 0], members: [[], ['thieves.snitch']], shop: ROW });
+    s = play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold');
+    expect(R(s).gold).toBe(3);
+    expect(s.players[0].bonus).toBe(3);
+    expect(named(s, 'Snitch').length).toBe(1);
+  });
   it('× Poach: taking a member from the leader counts, even when it leaves them behind', () => {
     // P2 leads 4 to 3 only through Big Family (3 followers)
     let s = table(Q, { round: 3, left: 5, members: [['thieves.robinhood'], ['red.bigfamily'], ['red.twins']], n: 3, shop: ROW });

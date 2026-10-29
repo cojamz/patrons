@@ -111,7 +111,8 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
       'market.connoisseur', // under 3 holds when Tiebreaker at 5 (Oct 28) moved the games; cards-market (Connoisseur) covers it
       'market.restocker', // under 3 holds when Encore's On Recruit copy and Sleep In's growth (Oct 28) moved the games; cards-member-structure covers it
       'market.doorman', 'market.planner', // under 3 holds when Cory's 15 guests and Launderers' split (Oct 28) moved the games; cards-market covers them (Planner is cut)
-      'thieves.shoplifter', 'echo.translator']); // under 3 holds when Green grew to 16 (Oct 28) moved the games; recruit-definition (Shoplifter) and cards-echo (Translator, cut) cover them
+      'thieves.shoplifter', 'echo.translator', // under 3 holds when Green grew to 16 (Oct 28) moved the games; recruit-definition (Shoplifter) and cards-echo (Translator, cut) cover them
+      'thieves.snitch']); // under 3 holds when the Oct 29 balance prices moved the games; cards-thieves (Snitch) covers it
     const unseen = hand.filter(id => !THIN.has(id) && !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
@@ -157,6 +158,8 @@ const ALLOW = {
   'purple.overseer': 'pays only when a rival takes an extra turn; cut from the deck (cards-purple: Overseer)',
   // Saboteur joining the deck (Oct 28) moved the seeded games: recruited in one game without a 2-at-once gain after
   'yellow.gleaner': 'pays only on an action giving 2+ of another color at once; cut from the deck (cards-yellow: Gleaner)',
+  // the Oct 29 balance prices moved the seeded games: recruited in one game without an action gaining yellow after
+  'yellow.farmer': 'pays only when an action gains its holder yellow (cards-yellow: Farmer)',
 };
 
 describe('namesCard: what counts as a line naming a card', () => {
