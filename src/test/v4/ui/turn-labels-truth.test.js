@@ -19,7 +19,7 @@ const earlyN = s => (s.early && s.early.round === s.round ? s.early.moves.length
  *  (an extra turn granted, turns taken early) so no label could have known it; null when the round ends first. */
 /** A turn skipped or moved up on the way (Hold Up on a turn already last, Right Away next to its own turn) changes the
  *  plan without moving any count above: read it from the log lines since s (the log is capped, so from s's last line). */
-const moved = (s, t) => t.log.slice(t.log.lastIndexOf(s.log.at(-1)) + 1).some(l => / skips their next turn\.| takes (their next|an extra|\d+ extra)| goes last this round\./.test(l));
+const moved = (s, t) => t.log.slice(t.log.lastIndexOf(s.log.at(-1)) + 1).some(l => / skips their next turn\.|'s turn is skipped| takes (their next|an extra|\d+ extra)| goes last this round\./.test(l));
 function realNext(s, rand) {
   const r = s.round, n0 = (s.turns || []).length, p0 = planned(s), e0 = earlyN(s);
   let t = s;

@@ -213,7 +213,7 @@ const trading = {
     m('shopkeeper', 'Shopkeeper', 2, 1, 'On Recruit: +2 white. Round Start: +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
-    m('heiress', 'Heiress', 3, 2, 'Once per game: +1 white per member you have.', { f: 2,
+    m('heiress', 'Heiress', 4, 3, 'Once per game: +1 white per member you have.', { f: 2,
       activate: 'game',
       onActivate(ctx, owner) {
         const n = ctx.memberCount(owner);
@@ -228,7 +228,7 @@ const trading = {
       },
     }),
     m('broker', 'Broker', 2, 2, 'Whenever a White action gives you followers, +1 follower.', { f: 2, brokerBonus: 1 }),
-    m('exporter', 'Exporter', 2, 3, 'Whenever you recruit a non-white member, +1 white.', { f: 2,
+    m('exporter', 'Exporter', 2, 4, 'Whenever you recruit a non-white member, +1 white.', { f: 2,
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },

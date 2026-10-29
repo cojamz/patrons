@@ -136,7 +136,7 @@ const members = [
   // (Poach and swaps moving an unplaced grant, copies, a full board) keep it as their fixture
   m('extrahand3', 'Extra Hand', 'purple', 5, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1], retired: true }),
   // Cory, 2026-10-28: "probably needs to be a Use Once… it had to have some category, and On Recruit would be broken"
-  m('extrahand', 'Extra Hand', 'purple', 5, 4, 'Once per game: +1 minion this round.', { from: 2,
+  m('extrahand', 'Extra Hand', 'purple', 4, 3, 'Once per game: +1 minion this round.', { from: 2,
     activate: 'game',
     onActivate(ctx, owner, card) { if (!extraMinion(ctx, owner, 'Extra Hand')) card.used = false; },
     botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -145,7 +145,7 @@ const members = [
   // Cory's ideas, Oct 21, on this sim branch only. Launderer is simplified for the bots: one color, not any split.
   // Cory, Oct 28: "Launderers, 2 Followers" and "it should let you completely redo all your money… converting a lot at
   // once and being flexible across colors": all into one color in one click, or split color by color
-  m('launderer', 'Launderers', null, 0, 4, /* Cory, Oct 27: "closer to 5" with the +1 wild */ 'Worth 2 followers. On Recruit: rearrange your resources into any colors.', { f: 2,
+  m('launderer', 'Launderers', null, 0, 3, /* Cory, Oct 27: "closer to 5" with the +1 wild */ 'Worth 2 followers. On Recruit: rearrange your resources into any colors.', { f: 2,
     onRecruited(ctx, owner) {
       const total = Object.values(owner.res).reduce((a, b) => a + b, 0);
       if (!total) return;
@@ -189,7 +189,7 @@ const members = [
     botActivate: (ctx, p) => anarchyPairs(ctx, p).some(([a, b]) => gainFor(ctx, p, a, b) >= 2),
   }),
   // Cory, 2026-10-28: Scout, 4, once per round (it stands in for Blue's shop work)
-  m('scout', 'Scout', null, 0, 3, 'Once per round: send any shop members to the bottom of the pile, then refill.', {
+  m('scout', 'Scout', null, 0, 2, 'Once per round: send any shop members to the bottom of the pile, then refill.', {
     activate: 'round',
     onRoundStart(ctx, owner, card) { card.used = false; },
     onActivate(ctx, owner, card) {

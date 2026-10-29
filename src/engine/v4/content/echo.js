@@ -574,8 +574,8 @@ const echoQ = {
       onRecruited(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', nonGreenMembers(ctx, owner)); },
     }),
-    m('agents', 'Agents', 1, 2, 'No one can copy your actions, you included.', { f: 2, n: 2 }),
-    m('bait', 'Bait', 1, 2, 'Whenever anyone copies your action, they −1 follower. If it’s a rival, +1 follower.'),
+    m('agents', 'Agents', 1, 1, 'No one can copy your actions, you included.', { f: 2, n: 2 }),
+    m('bait', 'Bait', 1, 1, 'Whenever anyone copies your action, they −1 follower. If it’s a rival, +1 follower.'),
     m('chronicler', 'Chronicler', 1, 3, 'Game end: +1 follower per green member.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'echo'),
     }),

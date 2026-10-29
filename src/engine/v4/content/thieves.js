@@ -352,10 +352,10 @@ const thieves = {
       },
     }),
     // Cory, 2026-10-28: back as "On Recruit: steal 3 resources", "maybe a 2 cost?" (1 magenta + the +1 wild)
-    m('accomplice', 'Accomplice', 1, 0, 'On Recruit: steal 3 resources.', {
+    m('accomplice', 'Accomplice', 1, 1, 'On Recruit: steal 3 resources.', {
       onRecruited(ctx, owner) { startSteal(ctx, owner, 'Accomplice', 3 + stickyMore(ctx, owner), { fromAction: false }); },
     }),
-    m('grifter', 'Grifter', 2, 1, 'On Recruit: steal 1 resource per 2 members you have.', {
+    m('grifter', 'Grifter', 2, 2, 'On Recruit: steal 1 resource per 2 members you have.', {
       // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, like any steal
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
@@ -387,7 +387,7 @@ const thieves = {
     m('extortionist', 'Extortionist', 4, 2, 'On Recruit: steal 2 resources from the rival with the most resources. Round Start: steal 2 resources from the rival with the most resources.', { now: true,
       onRoundStart(ctx, owner) { startSteal(ctx, owner, 'Extortionist', 2 + stickyMore(ctx, owner), { fromAction: false, richest: true }); },
     }),
-    m('watchdog', 'Bodyguard', 5, 3, 'Rivals can’t steal from you.', { f: 2, // +1 follower (Cory, 2026-10-25)
+    m('watchdog', 'Bodyguard', 5, 2, 'Rivals can’t steal from you.', { f: 2, // +1 follower (Cory, 2026-10-25)
       guardSteal: () => true,
     }),
     m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2 }),
