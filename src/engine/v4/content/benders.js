@@ -85,6 +85,23 @@ function scoutDone(ctx, p, data) {
   ctx.refillShop();
 }
 
+// Launderers' split: one color at a time, how many of what's left; the last color takes the rest
+function launderStep(ctx, p, data) {
+  const colors = ctx.state.resources, c = colors[data.i];
+  if (data.i >= colors.length - 1 || !data.left) {
+    const set = Object.fromEntries(colors.map(x => [x, data.set[x] || 0]));
+    if (data.left) set[colors[colors.length - 1]] += data.left;
+    for (const x of Object.keys(p.res)) p.res[x] = set[x] || 0;
+    ctx.log(`${p.name}'s Launderers: rearranged into ${colors.filter(x => set[x]).map(x => `${set[x]} ${x}`).join(', ')}.`);
+    return;
+  }
+  const rest = colors.slice(data.i + 1);
+  const now = p.res[c] || 0;
+  ctx.choose(p, `Launderers: how many ${c}? (${data.left} left to place${rest.length === 1 ? `; the rest become ${rest[0]}` : ''})`,
+    Array.from({ length: data.left + 1 }, (_, x) => ({ id: `amount:${x}`, label: `${x} ${c}`, kind: 'amount', value: x, hint: -Math.abs(x - now) })),
+    'benders.launderAmount', data);
+}
+
 const members = [
   // Party Crasher (was Squatter; id kept for old records): Cory, 2026-10-28, Once per game, cheaper; 4 with the +1 wild
   m('squatter', 'Party Crasher', 'thieves', 2, 1, 'Once per game: your next minion can be placed on a space a rival already took.', {
@@ -122,16 +139,19 @@ const members = [
   }),
   m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You go first every round.', { pickFirst: true }), // Cory, Oct 21: 5; Oct 27: 4; Oct 28 "could probably be cheaper": 3 with the +1 wild (Claude's price, the floor)
   // Cory's ideas, Oct 21, on this sim branch only. Launderer is simplified for the bots: one color, not any split.
-  m('launderer', 'Launderers', null, 0, 4, /* Cory, Oct 27: "closer to 5" with the +1 wild */ 'Worth 2 followers. On Recruit: turn all your resources into one color you choose.', { f: 2, // Cory, Oct 28: "Launderers, 2 Followers"
+  // Cory, Oct 28: "Launderers, 2 Followers" and "it should let you completely redo all your money… converting a lot at
+  // once and being flexible across colors": all into one color in one click, or split color by color
+  m('launderer', 'Launderers', null, 0, 4, /* Cory, Oct 27: "closer to 5" with the +1 wild */ 'Worth 2 followers. On Recruit: rearrange your resources into any colors.', { f: 2,
     onRecruited(ctx, owner) {
       const total = Object.values(owner.res).reduce((a, b) => a + b, 0);
       if (!total) return;
       const opts = ctx.state.resources.map(c => {
         const best = Math.max(0, ...ctx.rivals(owner).map(o => o.res[c] || 0));
-        return { id: `color:${c}`, label: `All ${c}`, kind: 'color', value: c, hint: (total > best ? 3 : 0) - best * 0.1 };
+        return { id: `color:${c}`, label: `All ${total} ${c}`, kind: 'color', value: c, hint: (total > best ? 3 : 0) - best * 0.1 };
       });
+      opts.push({ id: 'split', label: 'Split them yourself', kind: 'choice', value: 'split', hint: -1 });
       opts.push({ id: 'keep', label: 'Keep your colors', kind: 'pass', value: null, hint: 0 });
-      ctx.choose(owner, 'Launderers: turn everything into which color?', opts, 'benders.launder');
+      ctx.choose(owner, `Launderers: rearrange your ${total} resources`, opts, 'benders.launder');
     },
   }),
   // Cory, 2026-10-28: "a 5 cost Saboteur… gives -3 Followers each time it enters somebody's cult (swapped in OR recruited etc)"
@@ -255,9 +275,14 @@ export const handlers = {
   launder(ctx, p, color) {
     if (!color) return;
     const total = Object.values(p.res).reduce((a, b) => a + b, 0);
+    if (color === 'split') { launderStep(ctx, p, { total, left: total, i: 0, set: {} }); return; }
     for (const c of Object.keys(p.res)) p.res[c] = 0;
     p.res[color] = total;
     ctx.log(`${p.name}'s Launderers: everything becomes ${color} (${total}).`);
+  },
+  launderAmount(ctx, p, n, data) {
+    const c = ctx.state.resources[data.i];
+    launderStep(ctx, p, { ...data, set: { ...data.set, [c]: n }, left: data.left - n, i: data.i + 1 });
   },
 };
 

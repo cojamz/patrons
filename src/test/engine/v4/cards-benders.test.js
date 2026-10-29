@@ -38,6 +38,20 @@ describe('Guest members (rule-benders)', () => {
     expect(s.players[1].members).toContain(u);
     expect(s.players[1].bonus).toBe(2);
   });
+  it('Launderers: worth 2; all into one color, or split color by color; the last color takes the rest', () => {
+    let s = sceneQ({ res: [{ gold: 4, red: 3, blue: 2, green: 1 }], shop: ['benders.launderer'] });
+    s = buy(take(s, 'gold.rush'), 'benders.launderer'); // Golden Years +2 gold, then the 5 paid out of the resources
+    const total = Object.values(s.players[0].res).reduce((a, b) => a + b, 0);
+    expect(s.pending.options.map(o => o.id)).toEqual(['color:gold', 'color:red', 'color:blue', 'color:green', 'split', 'keep']);
+    let t = move(s, 'color:blue');
+    expect(t.players[0].res).toEqual({ gold: 0, red: 0, blue: total, green: 0 });
+    t = move(s, 'split');
+    t = move(t, 'amount:1'); // gold
+    t = move(t, `amount:0`); // red
+    t = move(t, `amount:2`); // blue; green gets the rest
+    expect(t.players[0].res).toEqual({ gold: 1, red: 0, blue: 2, green: total - 3 });
+    expect(named(t, 'Launderers').at(-1)).toMatch(/rearranged into 1 gold, 2 blue/);
+  });
   it('Big Spender: One Time Use, a second recruit this turn; named; spent after', () => {
     let s = sceneQ({ res: [rich], members: [['benders.bigspender']] });
     const u = uidOf(s, 'benders.bigspender', 0);
