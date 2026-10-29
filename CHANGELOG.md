@@ -5,6 +5,7 @@ Player-facing releases, newest first. What's live is main's play/build.json: a s
 ## v0.9.845 — 2026-10-29
 
 - Members worth 2 or more followers show the member count tag too (they count as that many members).
+- Coach can't hand back a member used this same turn (it could loop forever with Tribute Band and Tryout).
 
 ## v0.9.844 — 2026-10-29
 
