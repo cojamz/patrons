@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.859 — 2026-10-29
+
+- Hover a member or artifact to see what it has gained you this game; a member that scores at game end also says what it would score if the game ended now.
+
 ## v0.9.858 — 2026-10-29
 
 - Bots now weigh what a swap or a stolen member does for every player, so they push a Saboteur into the leader's cult and use Anarchist and Headhunter on rivals.
