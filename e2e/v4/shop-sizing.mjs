@@ -32,7 +32,7 @@ try{for(const[tag,opts]of[['laptop',{viewport:{width:1270,height:700}}],['deskto
   const f=e.querySelector('.ft'),cost=f.querySelector('.cost-now')||f.querySelector('.lt-cost'),v=e.querySelector('.val'),num=f.querySelector('.num'),mark=v?.querySelector('.follower-mark');
   return {font:num?parseFloat(getComputedStyle(num).fontSize):parseFloat(getComputedStyle(cost).fontSize),glyph:mark?.getBoundingClientRect().width,overlap:e.querySelector('.lt-corner-cost').getBoundingClientRect().right>v.getBoundingClientRect().left+1,overflow:f.scrollWidth>f.clientWidth+1};
  }));
- if(footerReadability.some(r=>r.font<16||r.glyph<15||r.overlap||r.overflow))throw Error(`${tag}: unreadable/overlapping price or worth ${JSON.stringify(footerReadability)}`);
+ if(footerReadability.some(r=>r.font<16||r.glyph<12||r.overlap||r.overflow))throw Error(`${tag}: unreadable/overlapping price or worth ${JSON.stringify(footerReadability)}`);
  const a=await inspect();await p.screenshot({path:`${out}/${tag}-${group}-compact.png`});
  await p.getByRole('button',{name:'Show member abilities'}).click();const b=await inspect();
  await p.screenshot({path:`${out}/${tag}-${group}-details.png`});

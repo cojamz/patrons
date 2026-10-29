@@ -6,12 +6,12 @@
 .lt-card.card:has(> .lt-hd){box-shadow:inset 0 0 0 2px var(--q),0 0 0 1px rgba(20,14,10,.35),0 6px 14px -6px rgba(0,0,0,.7)}
 .lt-card.card .lt-hd{flex:none;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"cost . worth" "name name name";
   align-items:center;gap:3px 4px;padding:5px 5px 4px;background:var(--q);position:relative}
-.lt-card.card .lt-hd .lt-corner-cost{grid-area:cost;position:static;opacity:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
-  background:#2b2018;color:#fbf6ea;font:800 20px/1 var(--sans);box-shadow:0 0 0 1.5px rgba(251,246,234,.92)}
-.lt-card.card .lt-hd .val{grid-area:worth;display:inline-flex;align-items:center;gap:1px;height:20px;padding:0 6px;margin:0;border-radius:10px;
-  background:#fbf6ea;color:#2b2018;font:700 15px/1 var(--sans)}
+.lt-card.card .lt-hd .lt-corner-cost{grid-area:cost;position:static;opacity:1;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  background:#2b2018;color:#fbf6ea;font:800 15px/1 var(--sans);box-shadow:0 0 0 1px rgba(251,246,234,.92)}
+.lt-card.card .lt-hd .val{grid-area:worth;display:inline-flex;align-items:center;gap:1px;height:17px;padding:0 5px;margin:0;border-radius:9px;
+  background:#fbf6ea;color:#2b2018;font:700 13px/1 var(--sans)}
 .lt-card.card .lt-hd .val b{font-weight:700}
-.lt-card.card .lt-hd .val .follower-mark{width:15px;height:15px;margin:0 0 0 1px;vertical-align:0}
+.lt-card.card .lt-hd .val .follower-mark{width:12px;height:12px;margin:0 0 0 1px;vertical-align:0}
 .lt-card.card .lt-hd .nm{grid-area:name;display:block;height:auto;min-height:0;margin:0;padding:0 1px;white-space:nowrap;overflow:hidden;text-align:center;
   font:700 14px/16px var(--serif);letter-spacing:0;text-transform:none;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35);overflow-wrap:normal;hyphens:manual}
 .lt-card.card .lt-hd .nm[data-long]{font-size:12px;letter-spacing:-.02em}
@@ -37,9 +37,9 @@
 /* top of the pile: a smaller card, same anatomy */
 .app.game.lt .lt-pile-row .lt-card.card{height:132px}
 .app.game.lt .lt-pile-row .lt-card.card .lt-hd{padding:3px}
-.app.game.lt .lt-pile-row .lt-card.card .lt-hd .lt-corner-cost{width:22px;height:22px;font-size:14px}
-.app.game.lt .lt-pile-row .lt-card.card .lt-hd .val{height:18px;padding:0 5px;font-size:13px}
-.app.game.lt .lt-pile-row .lt-card.card .lt-hd .val .follower-mark{width:12px;height:12px}
+.app.game.lt .lt-pile-row .lt-card.card .lt-hd .lt-corner-cost{width:20px;height:20px;font-size:12px}
+.app.game.lt .lt-pile-row .lt-card.card .lt-hd .val{height:15px;padding:0 4px;font-size:11px}
+.app.game.lt .lt-pile-row .lt-card.card .lt-hd .val .follower-mark{width:10px;height:10px}
 .app.game.lt .lt-pile-row .lt-card.card .lt-hd .nm{font-size:11px;line-height:13px}
 
 /* the full card (hover, tap): the lab's Header card. The bar (price, name, worth), the picture field, the rule big, the
@@ -47,9 +47,9 @@
 .card-face.mc{background:#f4ebd7;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 2px var(--c)}
 .card-face.mc .mc-hd{display:flex;align-items:center;gap:8px;padding:6px;margin:0;background:var(--c)}
 .card-face.mc .mc-hd .mc-name{flex:1;min-width:0;text-align:center;font:700 19px/22px var(--serif);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.28)}
-.card-face.mc .mc-hd .mc-price{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#2b2018;color:#fbf6ea;font:800 20px/1 var(--sans);box-shadow:0 0 0 2px rgba(251,246,234,.92)}
-.card-face.mc .mc-hd .mc-worth{flex:none;display:inline-flex;align-items:center;gap:1px;height:28px;padding:0 9px;border-radius:14px;background:#fbf6ea;color:#2b2018;font:800 18px/1 var(--sans)}
-.card-face.mc .mc-hd .mc-worth .follower-mark{width:16px;height:16px;vertical-align:0}
+.card-face.mc .mc-hd .mc-price{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#2b2018;color:#fbf6ea;font:800 16px/1 var(--sans);box-shadow:0 0 0 2px rgba(251,246,234,.92)}
+.card-face.mc .mc-hd .mc-worth{flex:none;display:inline-flex;align-items:center;gap:1px;height:22px;padding:0 7px;border-radius:11px;background:#fbf6ea;color:#2b2018;font:700 15px/1 var(--sans)}
+.card-face.mc .mc-hd .mc-worth .follower-mark{width:13px;height:13px;vertical-align:0}
 .card-face.mc .mc-art{display:grid;place-items:center;width:auto;height:96px;margin:0 2px;border-radius:0;
   background:radial-gradient(circle at 50% 78%,color-mix(in srgb,var(--c) 34%,#f4ebd7),color-mix(in srgb,var(--c) 14%,#eadfc4) 78%)}
 .card-face.mc .mc-text{margin:0;padding:10px 14px 4px;font-size:17px;line-height:23px;text-align:center;border-top:0;text-wrap:pretty}
@@ -63,11 +63,6 @@
 /* the pale colors: dark words on a pale bar */
 .card-face.mc[data-pale] .mc-hd .mc-name{color:#2b2018;text-shadow:none}
 .card-face.mc[data-pale]{box-shadow:inset 0 0 0 2px #cfc3a8}
-/* counts as more than one member: the count and the bust on a paper tag in the card's lower right, over the picture (or
-   the rule, in Details); the worth up top stays followers, the bust only ever means members */
-.lt-card.card > .lt-count{position:absolute;right:6px;bottom:37px;z-index:1;display:inline-flex;align-items:center;gap:1px;height:21px;padding:0 6px 0 7px;border-radius:11px;
-  background:#fbf6ea;color:#2b2018;font:800 15px/1 var(--sans);box-shadow:0 0 0 1px rgba(42,31,23,.3),0 1px 2px rgba(0,0,0,.15)}
-.lt-card.card > .lt-count .member-glyph{width:15px;height:15px}
 /* the portrait fits its field; Details gives the field to the rule */
 .lt-card.card .lt-hd + .art{overflow:hidden;flex:1 1 0}
 .lt-card.card .lt-hd + .art img{max-height:100%;width:auto}

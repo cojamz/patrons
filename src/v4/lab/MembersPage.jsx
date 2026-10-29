@@ -14,7 +14,7 @@ import { guestMembers } from '../../engine/v4/content/index.js';
 import { CUT } from '../../engine/v4/content/cull.js';
 import { ARTIFACTS, DEFAULT_RULES } from '../../engine/v4/core.js';
 import { MemberCard, RuleText, cardColor, cardGround } from '../game/Info.jsx';
-import { CostShapes, nameFit, CountTag } from '../game/ShopCards.jsx';
+import { CostShapes, nameFit } from '../game/ShopCards.jsx';
 import { FollowerGlyph } from '../game/Glyphs.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
@@ -77,7 +77,7 @@ function Tile({ def, copies, onOver, onOut, onPin, pinned }) {
       {def.from > 1 && <span className="lt-round-tag" title="Works from round II on">II+</span>}
       {copies > 1 && <span className="mp-copies" title={`${copies} copies in the deck`}>×{copies}</span>}
     </span>
-    <span className="ft"><CostShapes parts={parts} /></span><CountTag d={def} sphere={sphere} />
+    <span className="ft"><CostShapes parts={parts} /></span>
   </button>;
 }
 

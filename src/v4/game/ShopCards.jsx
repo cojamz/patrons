@@ -10,7 +10,7 @@ import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
 import { cardColor, cardGround, onTable, usePreview, Tip, CostDots, paidParts, discountWhy, RuleText } from './Info.jsx';
-import { FollowerGlyph, MemberGlyph } from './Glyphs.jsx';
+import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { timingOf, unlockedBy, surely } from './cards.js';
 void timingOf;
@@ -26,7 +26,6 @@ export const nameFit = name => (name.length > 15 && name.includes(' ') ? { 'data
 // a member that counts as more than one: the count and the member bust on its picture (the worth stays followers)
 // a member worth N followers also counts as N members (core.js printedMembers; Cory, Oct 28)
 export const membersOf = d => Math.max(d.n ?? 1, d.f || 0);
-export const CountTag = ({ d, sphere }) => { const n = membersOf(d); return n > 1 ? <span className="lt-count" title={`Counts as ${n} members`} aria-label={`counts as ${n} members`}><b className="num">{n}</b><MemberGlyph r={sphere && sphere !== 'colorless' ? sphere : null} size={14} decorative /></span> : null; };
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
 // The face-up row's order (Cory, 2026-10-15): by cost, cheapest first, or by color (the table's color order, then
@@ -270,7 +269,6 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                   </span>
                 ) : <CostShapes parts={parts} />}
               </span>
-              <CountTag d={d} sphere={sphere} />
             </button>
           );
           built.current.set(uid, { sig, el });
@@ -321,7 +319,7 @@ function PileRow({ state, viewer, row, optionFor, onPick, hover }) {
               </span>
               <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
                 {set && <span className="pr-slot num" aria-hidden="true">{k + 1}</span>}</span>
-              <span className="ft"><CostShapes parts={shown} /></span><CountTag d={d} sphere={sphereOf(state, d)} />
+              <span className="ft"><CostShapes parts={shown} /></span>
             </button>
           );
         })}
