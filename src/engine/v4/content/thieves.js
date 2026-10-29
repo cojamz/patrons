@@ -436,8 +436,12 @@ const thieves = {
         if (by === owner && what.member?.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1 + stickyMore(ctx, owner), { fromAction: false });
       },
     }),
-    m('fence', 'Fence', 2, 2, 'Whenever you steal, +1 magenta.', {
-      onSteal(ctx, owner, card, info) { if (info.thief === owner) ctx.gain(owner, 'magenta', 1); },
+    // Cory, 2026-10-29: "fence shouldn't give magenta on every steal" (a split steal paid once per rival)
+    m('fence', 'Fence', 2, 2, 'Once per turn: whenever you steal, +1 magenta.', {
+      onSteal(ctx, owner, card, info) {
+        if (info.thief !== owner || card.turn === ctx.turnKey()) return;
+        card.turn = ctx.turnKey(); ctx.gain(owner, 'magenta', 1);
+      },
     }),
   ],
 };

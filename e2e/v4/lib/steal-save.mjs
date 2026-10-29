@@ -14,7 +14,7 @@ export const BOARD_TABLE = ['echo', 'red', 'market', 'thieves'];
 export const SPACES = {
   help: [STEAL_TABLE, 'thieves', 'pickpocket'], redistribute: [STEAL_TABLE, 'thieves', 'tipoff'], lielow: [STEAL_TABLE, 'thieves', 'hideout'],
   debts: [STEAL_TABLE, 'gold', 'steal'], kickback: [STEAL_TABLE, 'gold', 'jv'],
-  echo: [BOARD_TABLE, 'echo', 'echo'], encore: [BOARD_TABLE, 'echo', 'encore'], bury: [BOARD_TABLE, 'market', 'pricecheck'],
+  echo: [BOARD_TABLE, 'echo', 'echo'], encore: [BOARD_TABLE, 'echo', 'encore'], cover: [BOARD_TABLE, 'echo', 'hum'], bury: [BOARD_TABLE, 'market', 'pricecheck'],
   shakedown: [BOARD_TABLE, 'thieves', 'ransom'], handpick: [BOARD_TABLE, 'red', 'take'],
 };
 // what everyone holds when P1 takes a steal space (P4 holds less than P1: Redistribute still takes from P4, one from
@@ -66,8 +66,9 @@ export function stragglerSave() {
   const ready = st => st.round >= 2 && st.pending && st.pending.player === 0 && st.pending.kind === 'choose' && /^Straggler: move your last/.test(st.pending.prompt);
   for (let seed = 1; seed < 200; seed++) {
     let s = createGame({ seats, seed, quadrants: BOARD_TABLE });
-    const c = Object.values(s.cards).find(x => x.def === 'benders.straggler');
-    if (!c) continue;
+    // Straggler is on the bench (Cory, Oct 28), so it's never dealt: hand P1 a copy (the wheel's move pick still gets tested)
+    let c = Object.values(s.cards).find(x => x.def === 'benders.straggler');
+    if (!c) { const uid = Math.max(...Object.keys(s.cards).map(Number)) + 1; c = s.cards[uid] = { uid, def: 'benders.straggler' }; }
     s.shop = s.shop.filter(u => u !== c.uid); s.pile = s.pile.filter(u => u !== c.uid);
     s.players[0].members.push(c.uid); c.recruitedRound = 0; c.recruitedBy = 0;
     const rand = seededRandom(seed);

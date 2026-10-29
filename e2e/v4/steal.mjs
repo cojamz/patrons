@@ -17,12 +17,16 @@ import { browserPath, launchBrowser } from './lib/browser.mjs';
 //  (s4) Kickback ("give 1 gold to…"): a gift, so it's the gift card beside the space (Cory, 2026-10-16): one face per
 //       rival the engine offers, and the same rivals' seats light (Cory, 2026-10-15: as Good Deed's), each the engine's
 //       answer, its gold stack lit, never your own; a click on a lit seat gives that player 1 gold.
-//  (s5) Encore (Echo copies only the previous action since Cory's 2026-10-16 call, so it asks no pick on the wheel):
+//  (s5) Cover (Encore copies a member's On Recruit since Cory's Oct 28 call, so it asks no pick on the wheel):
 //       exactly the copyable spaces light on the wheel, the caption covers none of them, a lit space's hover says
 //       what the copy gives, and clicking it copies (your resources match the engine's).
 //  (s6) Bury: exactly the offered face-up members light in the shop; no duplicate
 //       card by the space (feedback #14); clicking a lit shop card sends it.
+<<<<<<< Updated upstream
 //  (s7) Shake Down: the rivals' seats light; a member there opens its card when pointed at, and a click picks the seat.
+=======
+//  (s7) Shake Down: the offered rivals' seats answer; clicking one picks it.
+>>>>>>> Stashed changes
 // Starts from saved games stopped on each choice (e2e/v4/lib/steal-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
 import { chromium } from 'playwright';
@@ -153,7 +157,8 @@ try {
     const after = PICKS.reduce((st, option) => applyMove(st, { player: 0, option }), save.state);
     const counts = { '1:green': 3, '2:gold': 4, '1:blue': 1 };
     for (const r of ['green', 'gold', 'blue', 'magenta']) counts[`0:${r}`] = after.players[0].res[r];
-    if (counts['0:magenta'] < PILES[0].magenta + 1 || counts['0:green'] < PILES[0].green + 1) errors.push(`(s1) the engine's own steal is off: ${JSON.stringify(counts)}`);
+    // Help Yourself gives no magenta (Cory, Oct 29)
+    if (counts['0:magenta'] !== PILES[0].magenta || counts['0:green'] < PILES[0].green + 1) errors.push(`(s1) the engine's own steal is off: ${JSON.stringify(counts)}`);
     await expectCounts(page, 's1', counts);
     const left = await seenLeft(page);
     // from the first take on (never the count again at the start); the closing "0" can be missed on a loaded box
@@ -228,9 +233,9 @@ try {
     await expectCounts(page, 's4', { '3:gold': save.state.players[3].res.gold + 1 });
     await ctx.close();
   }
-  // (s5) Encore: copy a space on the wheel (was Echo, which copies only the previous action since 2026-10-16)
+  // (s5) Cover: copy a space on the wheel (was Encore, which copies a member's On Recruit since Cory's Oct 28 call)
   {
-    const { ctx, page, save } = await open('encore', '.prompt.choice.seat-pick');
+    const { ctx, page, save } = await open('cover', '.prompt.choice.seat-pick');
     const want = save.state.pending.options.filter(o => o.target && o.target.space).map(o => o.target.space).sort();
     const got = await page.$$eval('.lt-wheel .slot.lit[data-slot]', els => els.map(e => e.dataset.slot).sort());
     if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`(s5) lit spaces ${got.join(' ')} ≠ the engine's ${want.join(' ')}`);
@@ -334,6 +339,7 @@ try {
     if (rec && rec !== o.id) errors.push(`(t1) recorded ${rec}, clicked ${o.id}`);
     await ctx.close();
   }
+<<<<<<< Updated upstream
   // (s7) Shake Down: choose a rival, on their seat; a member on a lit seat still opens its card when pointed at
   //      (Cory, Oct 29: "can't hover over members in shake down"), and clicking it picks that seat
   {
@@ -357,6 +363,19 @@ try {
       const rec = await page.evaluate(() => { try { return (JSON.parse(window.patronsRecord()).moves || []).slice(-1)[0]?.[1]; } catch { return null; } });
       if (rec && rec !== id) errors.push(`(s7) recorded ${rec}, clicked a member on ${id}`);
     }
+=======
+  // (s7) Shake Down: pick a rival by their lit seat (the rival picks which member is at stake since Cory's Oct 28 call)
+  {
+    const { ctx, page, save } = await open('shakedown', '.prompt.choice.seat-pick');
+    const seats = await page.$$eval('.lt > .lt-seat[data-pid] .cs-pick-seat:not(.off)', els => els.map(e => e.dataset.option).sort());
+    const want = save.state.pending.options.map(o => o.id).sort();
+    if (seats.join() !== want.join()) errors.push(`(s7) the seats answer ${seats.join(' ')}, the engine offers ${want.join(' ')}`);
+    await page.screenshot({ path: `${SHOTS}/s7-shakedown.png` });
+    const pid = save.state.pending.options[0].target.pid;
+    const sb = await (await page.$(`.lt-seat[data-pid="${pid}"]`)).boundingBox();
+    await page.mouse.click(sb.x + sb.width * 0.35, sb.y + sb.height * 0.7);
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 8000 }).catch(() => errors.push('(s7) clicking the lit seat did nothing'));
+>>>>>>> Stashed changes
     await ctx.close();
   }
 } catch (e) {
@@ -366,4 +385,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`board-picker gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('board-picker gate: ok (Help Yourself, Collect Debts and Take all, Kickback and Escape, Encore, Bury, Hand-pick, Straggler, Shake Down)');
+console.log('board-picker gate: ok (Help Yourself, Collect Debts and Take all, Kickback and Escape, Cover, Bury, Hand-pick, Straggler, Shake Down)');

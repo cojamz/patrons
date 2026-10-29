@@ -307,6 +307,16 @@ describe('Magenta members', () => {
     expect(R(s)[2]).toEqual({ ...Z, gold: 1 });
   });
 
+  it('Fence: once per turn, whenever you steal, +1 magenta (a split steal pays once, not per rival)', () => {
+    const run = members => {
+      const s = scene({ round: 2, res: [{}, { gold: 3 }, { gold: 3 }], members: [members] });
+      return play(take(s, 'thieves.pickpocket'), 'take:1:gold', 'take:2:gold', 'take:1:gold', 'take:2:gold');
+    };
+    const without = run([]), with_ = run(['thieves.fence']);
+    expect(R(with_)[0].magenta).toBe(R(without)[0].magenta + 1);
+    expect(R(with_)[0].gold).toBe(R(without)[0].gold);
+  });
+
   it('Light Fingers: when a rival recruits a member costing 8+, take 1 from them', () => {
     let s = scene({ res: [{ gold: 9 }], members: [[], ['thieves.lightfingers']] });
     s = take(s, 'gold.rush');
