@@ -159,6 +159,20 @@ describe('threats you can see coming (w2b #19, #21)', () => {
   });
 });
 
+describe('a use that changes only the shop is a real use (Cory, Oct 28: Restocker "says it will do nothing")', () => {
+  it('Restocker: a Use button, never "Use: +0"', () => {
+    const s = table(['market', 'gold', 'echo', 'trading'], { members: [['market.restocker']], res: [{}, {}], shop: ['gold.midas', 'gold.banker'] });
+    const uid = uidIn(s, 'market.restocker', 0);
+    expect(s.shop.length).toBeGreaterThan(0);
+    const u = useNow(s, 0, uid);
+    expect(u.blocked).toBe(false);
+    expect(u.idle).toBe(false);
+    expect(u.label).toBe('Use now');
+    const { container } = render(<MemberActions state={s} uid={uid} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
+    expect(container.querySelector('[data-use]')).not.toBeNull();
+    cleanup();
+  });
+});
 describe('a second buy is seen (w2a #6)', () => {
   it('Big Spender: the headline says "Recruit again (Big Spender)", the member hops, then reads "used this round"', () => {
     const s = table(['gold', 'echo', 'trading', 'thieves'], { members: [['benders.bigspender']], res: [{ gold: 6, white: 6 }] });
