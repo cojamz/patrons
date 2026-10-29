@@ -2,10 +2,13 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.846 — 2026-10-29
+
+- Coach can't hand back a member used this same turn (it could loop forever with Tribute Band and Tryout).
+
 ## v0.9.845 — 2026-10-29
 
 - Members worth 2 or more followers show the member count tag too (they count as that many members).
-- Coach can't hand back a member used this same turn (it could loop forever with Tribute Band and Tryout).
 
 ## v0.9.844 — 2026-10-29
 
