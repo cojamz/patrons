@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.888 — 2026-10-29
+
+- Promote and Demote give +3 red. HR counts guests as a color. Recruiter: whenever you recruit a member, +1 of its color.
+
 ## v0.9.887 — 2026-10-29
 
 - Crowd In gives +3 purple (was +4).
