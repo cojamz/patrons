@@ -7,7 +7,7 @@ Durable. Written 2026-10-20 (Claude) against live v0.8.9 and decisions.md up to 
 - Score is followers: 1 to start, each member's printed followers, follower buys, contest prizes, member abilities.
 - Follower buys are 1-for-1 in any resources, in packs of 1, 5 or 10, unlimited (`TIERS`). They are three fixed follower cards in the shop; no space changes their sizes (Cory, Oct 22). So **a resource is a follower at par**, any time, as long as you have a buy to spend.
 - **One buy per turn**: a member or one follower pack. Minions 3/4/5, so about 12 buys a game per player, plus extra turns and Spree. A pack tops out at 10.
-- Contests pay 4/6/10 to the leader (since v0.8.100), halved on a tie, zero holdings never win (`RING_VALUE`). That is 20 followers per color per game, about 48 on a four-color table.
+- Contests pay 4/6/10 to the leader (since v0.8.100), halved on a tie, zero holdings never win (`RING_VALUE`). That is 20 followers per color per game, about 80 on a four-color table.
 - Resources carry over between rounds and are worth nothing at game end unless a member says so.
 - Spaces: 3/2/1 per color, rings stay open. At 4 players round I fills exactly (12 spaces, 12 minions); rounds II and III have 4 spare spaces each (20 for 16, 24 for 20). At 2–3 players the same holds per color.
 - Shop: 5 face up in round I, 6 in round II, 7 in round III (Cory, Oct 21), refills from the pile, whole row refreshes between rounds. Release is off by default. The 10-per-color cull is on.
