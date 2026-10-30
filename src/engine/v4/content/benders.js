@@ -212,7 +212,8 @@ const members = [
   }),
   // Cory, 2026-10-28: HR (Archivist), 9, worth 3 (so it counts as 3 members)
   m('hr', 'HR', null, 0, 9, /* 10, counts as 4 (Cory, Oct 29: "bump HR to four members"; +1 price Claude's) */ 'Counts as 4 members. Game End: +3 followers per color you have 3 members of.', { f: 4, n: 4,
-    onGameEnd: (ctx, owner) => 3 * ctx.state.quadrants.filter(q => ctx.countMembersOfColor(owner, q) >= 3).length,
+    // guests count as a color here, they just have no resource (Cory, 2026-10-30: "should they count for the purposes of HR? they should")
+    onGameEnd: (ctx, owner) => 3 * [...ctx.state.quadrants, 'guest'].filter(q => ctx.countMembersOfColor(owner, q) >= 3).length,
   }),
   // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"), named Coach (Cory, Oct 29); now any member's
   // Once per game or Once per round ability, as a free extra use (Cory, Oct 29: "activate the On Use effect of one of

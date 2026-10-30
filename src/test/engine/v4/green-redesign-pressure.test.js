@@ -108,7 +108,7 @@ describe('Green redesign: copied copy actions and continuation safety', () => {
     expect(s.pending?.kind).not.toBe('choose');
     expect(s.players[0].members).toContain(uidIn(s, stunt, 0));
     expect(s.players[0].res.gold - before).toBe(12);
-    expect(s.players[0].res.green).toBe(2);
+    expect(s.players[0].res.green).toBe(3); // +1 from Recruiter for the green Stunt Double
   });
 
   it('Tribute Band is once per game and its saved replay resumes through choice-bearing actions', () => {

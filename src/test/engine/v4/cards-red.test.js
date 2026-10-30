@@ -63,9 +63,9 @@ describe('Red members', () => {
     expect(s.players[0].final.parts).toEqual(['Mob +6', 'Mob +6']);
   });
 
-  it('Recruiter: +1 red whenever you recruit, named', () => {
-    const s = settle(take(sceneQ({ members: [['red.recruiter']] }), 'red.hire'));
-    expect(R(s).red).toBe(2); // Walk-In's +1, Recruiter's +1
+  it('Recruiter: +1 of the recruited member\'s color, named', () => {
+    const s = settle(take(sceneQ({ members: [['red.recruiter']], shop: ['red.intern'] }), 'red.hire'));
+    expect(R(s).red).toBe(2); // Walk-In's +1, Recruiter's +1 for a red member
     expect(named(s, 'Recruiter')).toHaveLength(1);
   });
 

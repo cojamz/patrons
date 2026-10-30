@@ -31,5 +31,5 @@ it('Panel cannot promote itself into Stunt Double and restart the current Promot
   // Only Panel could swap into Stunt here, and its own ability now excludes it.
   expect(s.pending?.kind).toBe('buy');
   expect(s.pending.options.some(o => o.id === 'promote' || o.id === `trade:${panel}:${stunt}`)).toBe(false);
-  expect(s.players[0].res.red).toBe(2);
+  expect(s.players[0].res.red).toBe(3);
 });

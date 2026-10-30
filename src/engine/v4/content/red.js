@@ -44,17 +44,17 @@ export default {
       },
     },
     {
-      key: 'hireup', ring: 2, name: 'Promote', text: 'Swap a member with a shop or rival member costing up to 2 more. +2 red.', copyDoesIt: true,
-      estimate: (ctx, p) => 2 + (swapPairs(ctx, p, 'promote').length ? 2 : 0),
+      key: 'hireup', ring: 2, name: 'Promote', text: 'Swap a member with a shop or rival member costing up to 2 more. +3 red.', copyDoesIt: true, // +3 red (Cory, Oct 30: balance run)
+      estimate: (ctx, p) => 3 + (swapPairs(ctx, p, 'promote').length ? 2 : 0),
       resolve(ctx, p) {
-        ctx.gain(p, 'red', 2, { fromAction: true });
+        ctx.gain(p, 'red', 3, { fromAction: true });
         swap(ctx, p, 'promote', 'Promote: choose a member and its replacement');
       },
     },
     {
-      key: 'trade', ring: 2, name: 'Demote', text: 'Swap a member with a shop or rival member costing up to 2 less. +2 red.', copyDoesIt: true,
-      estimate: (ctx, p) => 2 + (swapPairs(ctx, p, 'demote').length ? 2 : 0),
-      resolve(ctx, p) { ctx.gain(p, 'red', 2, { fromAction: true }); swap(ctx, p, 'demote', 'Demote: choose a member and its replacement'); },
+      key: 'trade', ring: 2, name: 'Demote', text: 'Swap a member with a shop or rival member costing up to 2 less. +3 red.', copyDoesIt: true, // +3 red (Cory, Oct 30: balance run)
+      estimate: (ctx, p) => 3 + (swapPairs(ctx, p, 'demote').length ? 2 : 0),
+      resolve(ctx, p) { ctx.gain(p, 'red', 3, { fromAction: true }); swap(ctx, p, 'demote', 'Demote: choose a member and its replacement'); },
     },
     {
       key: 'take', ring: 3, name: 'Recruit a Member', text: 'Recruit a member in the shop costing 8 or less. +1 red.', // the cap (Cory, 2026-10-24: "8 or less")
@@ -113,8 +113,12 @@ export default {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'red'),
     }),
     // members only, never a follower buy (Cory, 2026-10-29: "red recruit should only work for gaining members")
-    m('recruiter', 'Recruiter', 4, 1, 'Whenever you add a member to your cult, +1 red.', {
-      onRecruit(ctx, owner, card, by, what) { if (by === owner && what.member && what.member.uid !== card.uid) ctx.gain(owner, 'red', 1); },
+    m('recruiter', 'Recruiter', 4, 1, 'Whenever you recruit a member, +1 of its color.', { // Cory, Oct 30: a guest has no color, so nothing
+      onRecruit(ctx, owner, card, by, what) {
+        if (by !== owner || !what.member || what.member.uid === card.uid) return;
+        const r = ctx.quadrant(ctx.defOf(what.member).quadrant)?.resource;
+        if (ctx.state.resources.includes(r)) ctx.gain(owner, r, 1);
+      },
     }),
     m('drive', 'Pied Piper', 2, 2, 'Whenever you recruit 2 or more members in one turn, +2 red.', {
       // pays the moment your second recruit of the turn lands, so the red can still be spent this turn

@@ -47,7 +47,7 @@ describe('locked Red action progression', () => {
     expect(incoming).toContain('gold.banker'); // 2 -> 4, exact boundary
     expect(incoming).toContain('red.intern');
     expect(incoming).not.toContain('echo.chronicler'); // 5
-    expect(s.players[0].res.red).toBe(2);
+    expect(s.players[0].res.red).toBe(3);
   });
 
   it('Demote permits a rival member and anything costing the same down to 2 cheaper', () => {
@@ -96,8 +96,8 @@ describe('locked Red action progression', () => {
     expect(remaining(s).sort((x, y) => x - y)).toEqual(before);
     expect(defs(s, 0)).toContain('echo.evergreen'); expect(s.shop).toContain(a);
     expect(s.recruits).toBe(1); expect(s.players[0].turnRecruits).toBe(1);
-    expect(s.players[0].res.green).toBe(2);
-    expect(s.players[0].res.red).toBe(3); // Promote +2, Recruiter +1
+    expect(s.players[0].res.green).toBe(3); // Evergreen +2, Recruiter +1 of its color
+    expect(s.players[0].res.red).toBe(3); // Promote +3
     expect(s.players[0].bonus).toBe(1);
   });
 
@@ -158,7 +158,7 @@ describe('locked Red action progression', () => {
     const actorMember = uidIn(s, 'red.volunteer', 1), target = uidIn(s, 'gold.banker', 'shop');
     s = move(s, swapId(actorMember, target));
     expect(defs(s, 1)).toContain('gold.banker');
-    expect([s.players[1].res.green, s.players[1].res.red, s.players[1].res.gold]).toEqual([1, 2, 3]); // Echo +1
+    expect([s.players[1].res.green, s.players[1].res.red, s.players[1].res.gold]).toEqual([1, 3, 3]); // Echo +1
   });
 });
 
@@ -170,7 +170,7 @@ describe('active acquisition versus gifts', () => {
     expect([s.recruits, s.players[0].res.green, s.players[0].res.red]).toEqual([0, 0, 0]);
     ctx.moveMember(uid, s.players[0], s.players[1]);
     expect(ctx.steal(s.players[0], s.players[1], { uid })).toBe(1);
-    expect([s.recruits, s.players[0].res.green, s.players[0].res.red]).toEqual([1, 2, 1]);
+    expect([s.recruits, s.players[0].res.green, s.players[0].res.red]).toEqual([1, 3, 0]); // Recruiter: +1 of the taken member's color
   });
 
   it('a return-to-shop removes only an Extra Hand’s unplaced minion and reacquisition restores it once', () => {
