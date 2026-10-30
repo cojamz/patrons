@@ -143,6 +143,8 @@ const ALLOW = {
   'purple.foreman': 'pays only on an extra turn, from members now (cards-purple: Foreman)',
   // the Oct 29 balance-run followers moved the seeded games: recruited once, its paid turn never bought
   'purple.taskmaster': 'pays 5 purple for a turn, rarely worth it to a bot (cards-purple: Taskmaster)',
+  // Promote +3 red and Recruiter's color (Oct 30) moved the seeded games: recruited in 4, never set gold aside
+  'gold.investor': 'sets gold aside at Round Start only when a bot sees the double (cards-gold: Investor)',
   'purple.doubletime': 'halves only Taskmaster’s paid turn now (cards-purple: Corner-Cutter); cut from the deck',
   // like Bodyguard and Agents above: a pure restriction (its cult's members drop out of every swap's options) that
   // changes no number, so there is no payout line to name it (v0.8.2 Red deck)
