@@ -16,7 +16,7 @@ Broader rework, his to lead (Oct 28): design/notes/rework-list-2026-10-28.md, wo
 3. Rework list steps still open: what "pack/bonus merchants" means (8), White's cheap "cast me out" members (9), Sleep In growing +3/+5/+7 (10), Host, Grifter, Heiress stay [yes] (12), Double Agent's price (15).
 4. "Once per round" members left: Squatter, Straggler, Big Spender (guests) and Taskmaster, Lookout, Pawnbroker (rework list step 3). Night Owl stays.
 5. Round I passes still to do: White's 3/4/5 space; Gold, Silver and Yellow's round I; Purple's round I after a playtest (Cory, Oct 28).
-6. Gold, Silver, Yellow redesigns (paused by Cory): all colors at 2.0 is v1.0.
+6. Yellow 2.0: wheel set Oct 30 (decisions.md); 15 members in progress, then build and a bot balance test (Cory said yes). Then Gold and Silver, round III first. All colors at 2.0 is v1.0.
 7. Copying in round III: the expert AI games keep naming Last Call, Echo and Greatest Hits copying steals or Last Call; bots say whoever places last takes a third more of the round III contest followers. Spaces have no price, so these go to Cory as design calls once the balance thread reports.
 8. Weakest artifacts: Money Changer and Impressionist are weakest with every bot, and artifacts are free, so a price can't fix them (Impressionist stays, Cory Oct 29).
 9. Portraits as little scenes for every member, through critic rounds (running); two cards are both named Alchemist (gold.tinker, benders.freelancer).
