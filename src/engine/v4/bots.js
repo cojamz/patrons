@@ -8,8 +8,10 @@
 //   normal – the same greedy shape, fixed: it values every option by what it's worth at game end (followers now,
 //            a member's ability over the turns left, what its resources can still turn into with the buys it has
 //            left, and the ring contests it leads). Never ends holding resources a follower buy could use.
-//   hard   – normal plus lookahead (thinker.js): plays its best few options out to the round end with normal
-//            bots and keeps the best. Its work is counted in moves, not milliseconds, so it stays deterministic.
+//   hard   – normal plus a game plan and lookahead. It picks two colors and a style at its artifact pick, leans its
+//            choices toward them, and looks again each round (mind.js); then it plays its best few options out to
+//            the round end with normal bots and keeps the best (thinker.js). opts.mind carries the plan, and notes
+//            from earlier games (memory), from move to move. Work is counted in moves, so it stays deterministic.
 // Every level is deterministic for a given state and rand.
 import {
   contextFor, actionAt, cardDef, TIERS, followers, memberCount, RING_VALUE, WORKERS, tierLeft,
@@ -18,6 +20,7 @@ import {
 import { defById, quadrant, handlerById } from './content/index.js';
 import { plainCopy } from './copy.js';
 import { chooseThinkerMove } from './thinker.js';
+import { planFor, planSetupPick } from './mind.js';
 
 export const BOT_LEVELS = ['easy', 'normal', 'hard'];
 // A liking for members on top of what they're measured to be worth, in followers, fading to BIAS_FLOOR of itself
@@ -76,8 +79,28 @@ export function chooseBotMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
   if (!pend) return null;
   const level = botLevel(state, pend.player, opts);
-  if (level === 'hard') return chooseThinkerMove(state, rand, { maxMs: HARD_MAX_MS, ...opts });
+  if (level === 'hard') {
+    // a game plan (mind.js): the caller's mind for this seat (sims carry memory in it), else one kept here per game
+    // opts.noPlan: the Hard before plans (for comparisons)
+    const mind = opts.noPlan ? null : opts.mind || hardMind(state, pend.player);
+    const plan = planFor(state, pend.player, mind, rand);
+    const pick = planSetupPick(state, plan);
+    if (pick) return pick;
+    return chooseThinkerMove(state, rand, { maxMs: HARD_MAX_MS, ...opts, plan, memory: mind?.memory || null });
+  }
   return chooseNormalMove(state, rand, { ...BOT_PROFILES[level], ...opts });
+}
+
+// Plans for Hard seats when the caller keeps none: one per game and seat, the latest few games only.
+const MINDS = new Map();
+function hardMind(state, player) {
+  const key = `${state.seed}:${player}:${state.players.map(p => p.name).join('|')}`;
+  const mind = MINDS.get(key);
+  // a game started over with the same seed and names (a rematch, a replay) gets a fresh plan
+  if (mind && (state.moves ?? 0) >= mind.moves) { mind.moves = state.moves ?? 0; return mind; }
+  if (MINDS.size > 32) MINDS.delete(MINDS.keys().next().value);
+  MINDS.set(key, { moves: state.moves ?? 0 });
+  return MINDS.get(key);
 }
 
 /** The easy level: normal, played carelessly. */

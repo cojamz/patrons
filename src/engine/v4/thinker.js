@@ -5,6 +5,7 @@
 import { applyMove, followers } from './core.js';
 import { chooseNormalMove, chooseGreedyMove, scoreOptions, buyShortcut, rankRivalChoice } from './bots.js';
 import { seededRandom } from './rng.js';
+import { planProfile, planNudge } from './mind.js';
 
 // rollouts play normal, a little noisier, comparing fewer ways to pay
 const ROLLOUT = { noise: 0.6, payWays: 2, payOptions: 2 };
@@ -19,6 +20,8 @@ const margin = (state, id) =>
  * opts.maxMs: a wall-clock cap for the UI (chooseBotMove sets 250). Off by default, so direct calls and sims stay
  *   deterministic; when it bites, rollouts stop early and are scored statically, so a slow machine plays a bit weaker.
  * opts.now: the clock for maxMs (default performance.now).
+ * opts.plan, opts.memory: Hard's game plan and notes from earlier games (mind.js). They tilt which options are looked
+ *   at and add their nudge to each option's played-out result, so a close call goes the plan's way.
  */
 export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
@@ -30,7 +33,9 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   // an activation or a Release normal would take: nothing to think about
   const short = pend.kind === 'buy' ? buyShortcut(state) : null;
   if (short) return { player: me, option: short.id };
-  const ranked = rival || scoreOptions(state, rand);
+  const { plan = null, memory = null } = opts;
+  const nudge = o => planNudge(state, plan, memory, o);
+  const ranked = rival || scoreOptions(state, rand, planProfile(plan)).map(r => ({ ...r, v: r.v + nudge(r.o) })).sort((a, b) => b.v - a.v);
   if (!ranked.length) return chooseNormalMove(state, rand);
   if (ranked.length === 1) return { player: me, option: ranked[0].o.id };
   const { candidates = 3, budget = 100, full = false, maxMs = Infinity } = opts;
@@ -74,8 +79,9 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
     counts[i] += 1;
     if (k > 200) break;
   }
+  const score = i => totals[i] / counts[i] + (rival ? 0 : nudge(pool[i].o));
   let best = 0;
-  for (let i = 1; i < pool.length; i++) if (totals[i] / counts[i] > totals[best] / counts[best]) best = i;
+  for (let i = 1; i < pool.length; i++) if (score(i) > score(best)) best = i;
   return { player: me, option: pool[best].o.id };
 }
 
