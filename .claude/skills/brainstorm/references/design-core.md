@@ -19,7 +19,7 @@ For every idea, name the two or three members (its color's or another's) and the
 You lead a cult for three rounds. Each turn you put a minion somewhere others now can't, take what the space gives, and turn some of what you hold into members or followers. Every turn asks three questions at once:
 
 - **Where?** Spaces are shared and snake-drafted. "Will my spot still be open?" is the heartbeat (Cory). Blocking is real play.
-- **Hold or spend?** Each color's contest pays whoever holds the most of it at round end (+2 / +4 / +6). A resource held wins contests; a resource spent becomes a member or followers. Theft and gifts move piles, so a big pile is both a lead and a target.
+- **Hold or spend?** Each color's contest pays whoever holds the most of it at round end (+4 / +6 / +10). A resource held wins contests; a resource spent becomes a member or followers. Theft and gifts move piles, so a big pile is both a lead and a target.
 - **What do I turn it into?** One recruit a turn: a member (an ability, worth followers, a bet that should return about 2× its cost) or one follower card (1, 5 or 10 at 1 for 1).
 
 ## 2. The arcs a space sits in
