@@ -16,7 +16,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Visual work (art, card looks) is iterated with a very picky, anti-AI-slop design critic agent reviewing each round before Cory sees it, and the best version ships overnight for every piece, not a sample (Cory, Oct 29).
 
 ## Talking to him
-- Extremely brief, smart brevity. A few lines is normal and eight the most, unless he asks for more (he found five too aggressive, Oct 20). Longer things go in a file or picture, linked. The message check hook bounces anything longer, plus tables, headers, bold labels, em dashes, UTC times and AI tics.
+- Extremely brief, smart brevity. A few lines is normal and eight the most, unless he asks for more (he found five too aggressive, Oct 20). Longer things go in a file or picture, linked. The message check hook bounces anything longer, plus tables, headers, em dashes, UTC times and AI tics.
 - Every reply is plain, concise and reader-friendly, in the game's precise card language (Cory, Oct 22; phrasings in /brainstorm's wording.md). That rule is for writing only: brainstorm freely, never limited by the game's current wording.
 - Say what changes for him, in everyday words, not what was built. No file names, mechanisms or labels like "gate", "hook", "tracker", "moves 1-6" unless he asked how it works.
 - Estimates are Claude's real build time in hours with a live time on his clock, never a person's days. A pitch list or recap is a few minutes, sent in the next reply, never announced with a long ETA.
@@ -24,6 +24,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Every call is a plain yes/no question about what changes for a player, in game words, with when it applies (end of game, each round). No file names, test names or system terms (Cory, Oct 21, second phrasing correction this week).
 - Decisions come as a numbered list he answers by number ("1 yes, 2 no"), one line each, your default in brackets, at most three per message in chat. A long list never goes to him as a doc; send the next three after he answers (Cory, Oct 30). Only design and feel calls go to him.
 - Every message ends with either the decision itself (numbered questions, one line each, quoting the card text and what changes for a player, default in brackets) or the plain line "Nothing needed from you." Never "ok?" or a status that leaves him guessing what he's deciding (Cory, Oct 25).
+- Format for skimming (Cory, Oct 30: "use bold and better formatting to make things readable"): bold the card or space name and the key ask, one item per line, short lists, blank lines between groups. Still no tables or headers.
 - Card shorthand in chat (Cory, Oct 30): a colored circle is a resource (🔴🟢🟣🔵⚪🟡), 🌈 is any color you choose, 🧍 is a follower, a colored square is a member of that color (🟥 red member). Quote spaces and members in it, concisely.
 - Don't restate that a space gives +1 of its color; every space does, and it goes without saying (Cory, Oct 22).
 - Every pick names the real card or space, quotes it, and says what a player does differently. Never a pick on a category ("the member-count cards", "one round III space") without the cards. Check any claim about the game against the cards before sending it, and any example against "could a table track this?" (Cory, Oct 27).
@@ -95,3 +96,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-30: Cory, on a 27-item decision list in the report doc: "let's go through them three by three i don't do MD files". Decisions come in chat, three at a time; the doc is only the record.
 - 2026-10-30: Cory, after eight Yellow nos in a morning: "I just don't think your brainstorming is good are you using the skill?" It wasn't followed (the repo skills don't load in project threads, and its steps were skipped for speed). /brainstorm now has four gates that can't be skipped and a stop after two nos on a slot.
 - 2026-10-30: Cory: "you can use the color circle emoji to represent resource, and a little person emoji for followers… symbols for members as well? like red member blue member". Card shorthand added for chat.
+- 2026-10-30: Cory: "can you use bold and better formatting to make things readable for me?" Bold names and asks, one item per line; the message check no longer bounces bold labels.
