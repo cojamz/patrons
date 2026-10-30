@@ -213,7 +213,8 @@ const trading = {
     m('shopkeeper', 'Shopkeeper', 2, 1, 'On Recruit: +2 white. Round Start: +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
-    m('heiress', 'Heiress', 4, 3, 'On Use, once per game: +1 white per member you have.', { f: 2,
+    m('heiress', 'Heiress', 4, 4, // 9 (Cory, Oct 30: balance run)
+      'On Use, once per game: +1 white per member you have.', { f: 2,
       activate: 'game',
       onActivate(ctx, owner) {
         const n = ctx.memberCount(owner);
@@ -275,7 +276,7 @@ const trading = {
       },
     }),
     // Cory, 2026-10-24: "go deep card for every color" ("sure for now"); name and price Claude's fill-in, priced like Chronicler
-    m('oldmoney', 'Old Money', 1, 3, 'Game End: +1 follower per white member you have.', {
+    m('oldmoney', 'Old Money', 1, 4, /* 6 (Cory, Oct 30) */ 'Game End: +1 follower per white member you have.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'trading'),
     }),
     m('hoarder', 'Hoarder', 4, 3, 'On Use, once per game: turn all your resources into white.', {

@@ -361,7 +361,7 @@ export function asYou(text, name) {
 
 /**
  * Text that names members (a log line, a bonus line): each name of a member in this game opens that card.
- * Longest names first, so "Mentor & Protégé" isn't read as two cards.
+ * Longest names first, so "Mentor & Protégés" isn't read as two cards.
  */
 export function NamedText({ state, text }) {
   const names = memberNames(state);

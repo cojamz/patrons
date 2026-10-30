@@ -86,6 +86,7 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   // (Translator, like Wallflower, names itself only when its owner copies resources; held 3 games without a copy after
   // the +1 wild on every member, Oct 27, moved the games. cards-echo covers it.)
   const QUIET_RESTRICTIONS = new Set(['echo.agents', 'trading.cashier', 'echo.doppel', 'market.makeover', 'echo.wallflower', 'echo.translator',
+    'market.snob', // Snob pays only for blue members at game end; Shoplifter 7 and Heiress 9 (Oct 30) moved the games so its owners had none. cards-market covers it
     'market.restocker']); // Restocker: bots held it in 4 seeded games without using it once Out of Style went back to per member (Oct 28); cards-member-structure covers it
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
@@ -100,9 +101,9 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     // 5/6/7 (2026-10-21) moved the seeded games. Still judged when held 3+; cards-thieves.test.js (Light Fingers) covers it.
     // Lookout and Cashier fell under 3 holds when White's rework and Help Yourself's follower steal (2026-10-22) moved the games; cards-thieves (Lookout) and cards-trading (Cashier) cover them.
     // Extortionist fell under 3 holds after the Oct 23-24 Magenta playtest calls moved the games; cards-thieves covers it.
-    // Impostor and Reseller (cut from the deck, still dealt here) fell under 3 holds when the Oct 24 member structure (six
+    // Impostors and Reseller (cut from the deck, still dealt here) fell under 3 holds when the Oct 24 member structure (six
     // new members, three cut) moved the games; cards-echo and cards-market cover them.
-    // Shopaholic, Fence and Doppelganger fell under 3 holds when Gather's +3 (Oct 25) moved the games; spheres/market (Shopaholic), interactions (Fence) and cards-echo (Doppelganger) cover them.
+    // Shopaholics, Fence and Doppelganger fell under 3 holds when Gather's +3 (Oct 25) moved the games; spheres/market (Shopaholics), interactions (Fence) and cards-echo (Doppelganger) cover them.
     const THIN = new Set(['thieves.lightfingers', 'thieves.lookout', 'trading.cashier', 'thieves.extortionist', 'echo.impostor', 'market.reseller', 'market.shopaholic', 'thieves.fence', 'echo.doppel',
       'market.onlooker', 'echo.groupie', // cut cards under 3 holds after the Oct 25 member deck changes; cards-market and cards-echo cover them
       'market.patroness', // under 3 holds when Extortionist at 6 (Oct 25) moved the games; cards-market (Patroness) covers it
@@ -134,7 +135,7 @@ const ALLOW = {
   'purple.courier': 'pays only on two turns in a row (courier.test.js)',
   // bots almost never buy it at 12 (Hard bot read, Oct 24); recruited once in the Oct 25 sample
   'silver.grandhost': 'doubles silver from Silver spaces, rarely bought (cards-silver: Grand Host)',
-  'purple.lateriser': 'needs the fewest followers at a round start, bought before it (cards-purple: Late Riser)',
+  'purple.lateriser': 'needs the fewest followers at a round start, bought before it (cards-purple: Late Risers)',
   'yellow.harmonist': 'pays only with a full set at game end (cards-yellow: Harmonist)',
   // since 10-for-10 is unlimited, bots convert their purple before game end, so a holder can end with fewer than 3
   'purple.patience': 'pays only on 3+ purple still held at game end (cards-purple: Timekeeper)',
@@ -144,6 +145,8 @@ const ALLOW = {
   // the Oct 29 balance-run followers moved the seeded games: recruited once, its paid turn never bought
   'purple.taskmaster': 'pays 5 purple for a turn, rarely worth it to a bot (cards-purple: Taskmaster)',
   // Promote +3 red and Recruiter's color (Oct 30) moved the seeded games: recruited in 4, never set gold aside
+  // the Oct 30 prices (Shoplifter, Heiress, Coach, Mob…) moved the seeded games again
+  'purple.closer': 'pays only when its owner places the round’s last minion, which these games never gave it (cards-purple: Closer)',
   'gold.investor': 'sets gold aside at Round Start only when a bot sees the double (cards-gold: Investor)',
   'purple.doubletime': 'halves only Taskmaster’s paid turn now (cards-purple: Corner-Cutter); cut from the deck',
   // like Bodyguard and Agents above: a pure restriction (its cult's members drop out of every swap's options) that
@@ -153,11 +156,11 @@ const ALLOW = {
   // seeded games where a bot did
   // White's rework (2026-10-22) moved the seeded games: these were held in a game or two without their moment coming
   'trading.cashier': 'acts only on its own recruit; a holder who got it by a swap or steal never sees it (cards-trading: Cashier)',
-  'market.shopaholic': 'a pure allowance (a second buy) that shows only when its holder buys twice (cards-market: Shopaholic)',
+  'market.shopaholic': 'a pure allowance (a second buy) that shows only when its holder buys twice (cards-market: Shopaholics)',
   'thieves.lookout': 'pays only when a rival steals from someone else while it is unspent (cards-thieves: Lookout)',
   // Help Yourself taking followers (2026-10-22) moved the seeded games; its own tests name it when it fires
   'yellow.admirer': 'pays only when a rival recruits a color its holder has none of (cards-yellow: Admirer)',
-  'red.movementpenalty': 'pays only when you move a rival’s member out of their cult (red-members-hooks: Movement Penalty)',
+  'red.movementpenalty': 'pays only when you move a rival’s member out of their cult (red-members-hooks: Deprogrammers)',
   // cut from the deck since 2026-10-18 (tests still deal it); the Oct 24 member structure moved the seeded games off its moment
   'purple.overseer': 'pays only when a rival takes an extra turn; cut from the deck (cards-purple: Overseer)',
   // Saboteur joining the deck (Oct 28) moved the seeded games: recruited in one game without a 2-at-once gain after

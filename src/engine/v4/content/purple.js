@@ -4,7 +4,7 @@
 // Rework (Claude, 2026-10-14, under Cory's go-with-your-gut, after his first play): every extra turn a Purple space
 // gives is a net gain (one worker in, two or more out); Linger became Plan Ahead; the ring counts purple honestly.
 // Reprice (Claude, 2026-10-14, go-with-your-gut, from the member-value sim in design/eval/purple-members.md): Corner-Cutter,
-// Taskmaster, Late Riser 4+2; Overseer 2+2; Go-Getter 6+2. Night Owl takes Relay's slot.
+// Taskmaster, Late Risers 4+2; Overseer 2+2; Go-Getter 6+2. Night Owl takes Relay's slot.
 //
 // Engine notes (content-only, no core change, but for roundOrder):
 // - Crunch Time is not an extra turn: turnsNow moves your own next turns up to right after this one (no new minion).
@@ -337,7 +337,7 @@ export default {
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
-    m('lateriser', 'Late Riser', 4, 2, 'Round Start: if you have the fewest followers (ties count), +1 minion, placed before anyone else.', { from: 2,
+    m('lateriser', 'Late Risers', 4, 2, 'Round Start: if you have the fewest followers (ties count), +1 minion, placed before anyone else.', { f: 2, n: 2, from: 2, // +1 (Cory, Oct 30)
       // the round's turns are queued after round-start hooks, so this one goes first
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
@@ -345,10 +345,10 @@ export default {
           // the round's minions aren't queued yet, so count them from what each player has left: with one sphere per
           // player and Extra Hand twice (a Doppelganger), round III at 2 players can be full before this turn
           const due = ctx.state.players.reduce((n, o) => n + o.left, 0);
-          if (openSpaces(ctx).length <= due) { ctx.log(`No space to spare: ${owner.name} gets no extra turn from Late Riser.`); return; }
+          if (openSpaces(ctx).length <= due) { ctx.log(`No space to spare: ${owner.name} gets no extra turn from Late Risers.`); return; }
           ctx.state.queue.unshift({ t: 'turn', p: owner.id });
           owner.left += 1;
-          ctx.log(`${owner.name}'s Late Riser: 1 more minion, placed first.`);
+          ctx.log(`${owner.name}'s Late Risers: 1 more minion, placed first.`);
           extraHooks(ctx, owner);
         }
       },

@@ -32,7 +32,7 @@ export const DEFAULT_RULES = { release: false, guests: true, cull: true, artifac
 /** Round cutoffs by printed cost (Cory, 2026-10-25: "3 or less / 4 / 5 and up"): the most a round I, then round II,
  *  member costs; anything pricier joins in round III. */
 export const ROUND_CUTOFFS = [3, 4];
-/** Members that join in another round than their cost says (Cory, 2026-10-25: Impostor and Doppelganger, round III). */
+/** Members that join in another round than their cost says (Cory, 2026-10-25: Impostors and Doppelganger, round III). */
 export const ROUND_OF = { 'echo.impostor': 3, 'echo.doppel': 3 };
 // (by the cost before the +1 wild every member pays, content/index.js EXTRA_WILD, so no member changes round)
 const baseCost = def => def.s + def.w - (def.extraWild || 0);
@@ -1384,7 +1384,7 @@ function allowanceCards(state, p, flag) {
   return out;
 }
 const allowance = (state, p, flag) => allowanceCards(state, p, flag).length;
-// Shopaholic (concept): the second buy every turn, never spent
+// Shopaholics (concept): the second buy every turn, never spent
 const alwaysBuysTwice = (state, p) => p.members.some(uid => effectiveDefs(state.cards[uid]).some(d => d.buyTwice));
 function spendAllowance(state, p, flag) {
   const card = allowanceCards(state, p, flag)[0];
@@ -1414,7 +1414,7 @@ const extraOf = task => ({ ...workerSourceOf(task), ...(task.extra ? { extra: tr
 // A real buy (member or followers) in a buy step. The second one spends a Big Spender.
 function boughtOnce(state, p, task) {
   if (task.extra) {
-    // Shopaholic's second buy is named like any other member's use (the fire audit wants every effect in the log)
+    // Shopaholics' second buy is named like any other member's use (the fire audit wants every effect in the log)
     const always = p.members.find(uid => effectiveDefs(state.cards[uid]).some(d => d.buyTwice));
     if (always !== undefined) log(state, `${p.name} uses ${defById(state.cards[always].def).name}.`);
     else if (p.buyTwiceNow) delete p.buyTwiceNow; // Big Spender, used this turn (One Time Use since Oct 28)

@@ -95,10 +95,10 @@ describe('turn labels agree with the engine', () => {
         if (pend.kind === 'place') {
           const t = currentTurn(s);
           // (a seat that took an extra turn this round is left out: its k-th turn is no longer its k-th planned one)
-          // (from last round's end: an extra turn first, like Late Riser's, is logged before "Round … begins")
+          // (from last round's end: an extra turn first, like Late Risers', is logged before "Round … begins")
           const since = s.log.slice(Math.max(0, s.log.findLastIndex(l => /^Round \S+ ends\./.test(l))));
           const nm = s.players[pend.player].name;
-          // (the log says "+1 minion" since Oct 29: "P1's Night Owl: P1 gets 1 more minion, placed now.", Late Riser "1 more minion, placed first.")
+          // (the log says "+1 minion" since Oct 29: "P1's Night Owl: P1 gets 1 more minion, placed now.", Late Risers "1 more minion, placed first.")
           const hadExtra = since.some(l => l.startsWith(`${nm} gets`) && /more minions?, placed now/.test(l) || l.startsWith(`${nm}'s`) && /: (\S+ gets )?(1 more minion|\d+ more minions), placed (now|first)/.test(l));
           // (so is a seat that took its own turns early: its last turns moved up, so its k-th turn isn't its k-th planned)
           const tookEarly = s.early && s.early.round === s.round && s.early.moves.some(m => m.p === pend.player);

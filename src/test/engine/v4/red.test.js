@@ -77,7 +77,7 @@ describe('Red members', () => {
     expect(fol(s, 0)).toBe(2);
   });
 
-  it('Mentor & Protégé: also take the cheapest face-up member free', () => {
+  it('Mentor & Protégés: also take the cheapest face-up member free', () => {
     let s = scene({ res: [{ red: 3, gold: 2 }], shop: ['red.mentor', 'red.intern', 'gold.midas', 'gold.jackpot', 'red.bigfamily'], pileFirst: ['red.volunteer'] });
     s = beginBuy(s);
     s = move(s, `card:${uidOf(s, 'red.mentor', 'shop')}`);
@@ -99,7 +99,7 @@ describe('Red members', () => {
 
   it('Mob: game end +1 follower per red member', () => {
     const s = scene({ members: [['red.mob', 'red.twins', 'red.intern', 'gold.banker']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(9);
+    expect(s.players[0].final.total).toBe(8);
   });
 
   it('Recruiter: +1 red whenever you recruit (not for itself)', () => {

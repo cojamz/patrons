@@ -86,7 +86,7 @@ const BY_ID = new Map(SETS.filter(i => i.kind === 'member' || i.kind === 'action
 // Green's new members use distinct retired Green drawings while their final names/art settle.
 // New IDs preserve each member's own palette and cache entry; no live Green card shares these silhouettes.
 for (const [key, name, source] of [
-  ['impostor', 'Impostor', 'mirror'], ['connector', 'Connector', 'groupie'],
+  ['impostor', 'Impostors', 'mirror'], ['connector', 'Connector', 'groupie'],
   ['agents', 'Agents', 'choir'], ['bait', 'Bait', 'understudy'],
   ['roadie', 'Roadie', 'translator'], // Oct 28: Green's 16th borrows the cut Translator's drawing
 ]) {

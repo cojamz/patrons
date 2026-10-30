@@ -195,7 +195,7 @@ export function promptFor(state, mine) {
 
 // ---------- this round's turns: the snake, extra minions, extra turns ----------
 const ROUND_LINE = /^Round \S+ (begins|ends)\./;
-/** Where this round's log starts (just after the last round-end line, so round-start hooks like Late Riser count). */
+/** Where this round's log starts (just after the last round-end line, so round-start hooks like Late Risers count). */
 function roundLogStart(log) {
   for (let i = log.length - 1; i >= 0; i--) if (/^Round \S+ ends\./.test(log[i])) return i + 1;
   return 0;
@@ -209,7 +209,7 @@ function extraGrants(state) {
     const l = log[i];
     let m = l.match(/^(.+?)'s (.+?): (.+?) gets (1 more minion|(\d+) more minions), placed now\.$/);
     if (m && m[1] === m[3]) { add(m[1], m[2], m[5] ? Number(m[5]) : 1); continue; }
-    m = l.match(/^(.+?)'s (Late Riser): 1 more minion, placed first\.$/);
+    m = l.match(/^(.+?)'s (Late Risers): 1 more minion, placed first\.$/);
     if (m) { add(m[1], m[2], 1); continue; }
     m = l.match(/^(.+?) gets (1 more minion|(\d+) more minions), placed now\.$/);
     if (!m) continue;

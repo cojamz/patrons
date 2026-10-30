@@ -459,7 +459,7 @@ const echoQ = {
       // a copied Hustler works the same color (until its own when-recruited pick below sets one)
       if (target.color !== undefined) self.color = target.color;
       ctx.log(`${p.name}'s ${self.def.name} becomes a copy of ${defById(self.copy).name}.`);
-      // Becoming a copy is this physical card's Recruit ability. An Impostor doesn't recruit that identity again:
+      // Becoming a copy is this physical card's Recruit ability. Impostors doesn't recruit that identity again:
       // its ongoing hooks start now, and round-start hooks wait.
       const d = defById(self.copy);
       // Doppelganger also does the copied member's On Recruit right then (Cory, 2026-10-28: a copied Connector
@@ -570,11 +570,11 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('impostor', 'Impostor', 2, 3, /* Cory, 2026-10-28: "more expensive": 6 (was 5) */ 'On Recruit: this member becomes a copy of a rival’s member.', { round: 3, // joins in round III (Cory, 2026-10-25)
+    m('impostor', 'Impostors', 2, 3, /* Cory, 2026-10-28: "more expensive": 6 (was 5) */ 'On Recruit: this member becomes a copy of a rival’s member.', { f: 2, n: 2, round: 3, // +1 follower and member (Cory, Oct 30); joins in round III (Cory, 2026-10-25)
       onRecruited(ctx, owner, card) {
         const rivals = ctx.rivals(owner).flatMap(p => ctx.membersOf(p)).filter(c => c.copy || !['doppel', 'impostor'].includes(c.def.key));
         if (!rivals.length) return;
-        ctx.choose(owner, 'Impostor: copy a rival’s member', rivals.map(c => ({
+        ctx.choose(owner, 'Impostors: copy a rival’s member', rivals.map(c => ({
           id: `card:${c.uid}`, label: `${ctx.ownerOf(c.uid).name}: ${c.def.name}`, kind: 'member', value: c.uid,
           hint: (defById(c.copy || c.def.id).f || 1) + 1,
         })), 'echo.doppelCopy', { uid: card.uid });

@@ -26,7 +26,7 @@ function scenario(name){
   for(const d of ['red.volunteer','red.twins','red.loyalists','red.mob','red.movementpenalty','red.patriarch'])deal(d,'shop');
   initial.push(action('take'),`card:${panel}`,'promote');pair=`trade:${host}:${mentor}`;picks.push(pair);
  }else if(name==='penalty'){
-  // Poach moves a rival's member out of their cult; the owner's Movement Penalty costs that rival 1 follower.
+  // Poach moves a rival's member out of their cult; the owner's Deprogrammers costs that rival 1 follower.
   deal('red.movementpenalty',0);const target=deal('red.panel',1);deal('red.proselytizer',2);s.players[1].bonus=2;
   for(const d of ['red.volunteer','red.twins','red.host','red.mentor','red.recruitbonus','red.loyalists','red.mob','red.patriarch'])deal(d,'shop');
   initial.push(`slot:2-${quadrant('thieves').actions.findIndex(a=>a.key==='heist')}`,`card:${target}`);

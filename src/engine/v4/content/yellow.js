@@ -1,6 +1,7 @@
 // Yellow: abundance. Gather every color, keep them in balance, and score on full sets.
 // A full set is one of each color on the table. Most full sets at round end takes the ring's followers;
 // Ties all score. The tension: the 6-follower buy eats 3 colors, which breaks the sets you're holding.
+import { gainColorOf } from './color-of.js';
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 
 const Y = 'yellow';
@@ -127,7 +128,7 @@ export default {
     // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4
     m('gobetween', 'Go-Between', 2, 2,'Whenever you recruit a non-yellow member, +1 of its color.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
-        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow' && colorOf(ctx, recruited)) ctx.gain(owner, colorOf(ctx, recruited), 1);
+        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow') gainColorOf(ctx, owner, ctx.defOf(recruited), 'Go-Between');
       },
     }),
     m('dyer', 'Dyer', 4, 2, 'Round End: +1 yellow per color you hold.', {

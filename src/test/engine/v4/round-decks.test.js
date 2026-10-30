@@ -19,7 +19,7 @@ describe('round decks', () => {
     expect([2, 3, 4, 5, 6, 10].map(c => memberRound({ s: c, w: 0 }))).toEqual([1, 1, 2, 3, 3, 3]);
     expect(memberRound({ s: 8, w: 0, round: 1 })).toBe(1);
   });
-  it('Impostor and Doppelganger join in round III', () => {
+  it('Impostors and Doppelganger join in round III', () => {
     for (const id of ['echo.impostor', 'echo.doppel']) expect(memberRound(defById(id))).toBe(3);
   });
   it('round I deals only round I members; the rest wait', () => {

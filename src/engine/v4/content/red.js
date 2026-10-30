@@ -1,4 +1,5 @@
 // Red builds and moves members; held red resources decide its round-end contest.
+import { gainColorOf } from './color-of.js';
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
 
@@ -95,11 +96,11 @@ export default {
     m('bigfamily', 'Big Family', 2, 3, 'Worth 4 followers.', { f: 4, n: 4 }), // 4 members (Cory, Oct 29: "maybe make it 4 members"); 5 to 6, Claude's price
     m('volunteer', 'Volunteer', 0, 0, 'Worth 1 follower.'),
     m('intern', 'Intern', 1, 0, 'Worth 1 follower.'),
-    m('mentor', 'Mentor & Protégé', 5, 3, 'On Recruit: recruit the cheapest member in the shop.', { f: 2, n: 2, // 2 members, two people (Cory, Oct 29)
+    m('mentor', 'Mentor & Protégés', 5, 3, 'On Recruit: recruit the cheapest member in the shop.', { f: 3, n: 3, // 3 members (Cory, Oct 30: +1 follower, "change the names accordingly")
       // +1 follower (Cory, 2026-10-25)
       // card: this Mentor, or a Doppelganger copying it (its free pick says so)
       onRecruited(ctx, owner, card) {
-        const who = card && card.def && card.def.key === 'doppel' ? 'Doppelganger (as Mentor & Protégé)' : 'Mentor & Protégé';
+        const who = card && card.def && card.def.key === 'doppel' ? 'Doppelganger (as Mentor & Protégés)' : 'Mentor & Protégés';
         if (ctx.shopCards().length) ctx.log(`${owner.name}'s ${who}: the cheapest face-up member comes along free.`);
         hireCheapest(ctx, owner, who);
       },
@@ -109,15 +110,14 @@ export default {
       // a recruit is a member or a follower purchase (Cory, 2026-10-21); not its own arrival
       onRecruit(ctx, owner, card, by, what) { if (by === owner && what.member?.uid !== card.uid) owner.bonus += 1; },
     }),
-    m('mob', 'Mob', 8, 4, 'Game End: +1 follower per red member you have.', { f: 5, n: 5,
+    m('mob', 'Mob', 7, 4, /* 12, 4 members (Cory, Oct 30) */ 'Game End: +1 follower per red member you have.', { f: 5, n: 4,
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'red'),
     }),
     // members only, never a follower buy (Cory, 2026-10-29: "red recruit should only work for gaining members")
     m('recruiter', 'Recruiter', 4, 1, 'Whenever you recruit a member, +1 of its color.', { // Cory, Oct 30: a guest has no color, so nothing
       onRecruit(ctx, owner, card, by, what) {
         if (by !== owner || !what.member || what.member.uid === card.uid) return;
-        const r = ctx.quadrant(ctx.defOf(what.member).quadrant)?.resource;
-        if (ctx.state.resources.includes(r)) ctx.gain(owner, r, 1);
+        gainColorOf(ctx, owner, ctx.defOf(what.member), 'Recruiter');
       },
     }),
     m('drive', 'Pied Piper', 2, 2, 'Whenever you recruit 2 or more members in one turn, +2 red.', {
@@ -138,9 +138,9 @@ export default {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
     m('recruitbonus', 'Recruit Bonus', 1, 1, 'Your On Recruits also give +1 of that member’s color.', { f: 2,
-      onRecruitAbility(ctx, owner, card, recruited) { const r = ctx.quadrant(recruited.def.quadrant).resource; if (ctx.state.resources.includes(r)) ctx.gain(owner, r, 1); }, // a guest has no color: nothing
+      onRecruitAbility(ctx, owner, card, recruited) { gainColorOf(ctx, owner, recruited.def, 'Recruit Bonus'); }, // a guest: nothing; Dabblers: pick
     }),
-    m('movementpenalty', 'Movement Penalty', 1, 2, 'Whenever you take a rival’s member out of their cult, they lose 1 follower.', {
+    m('movementpenalty', 'Deprogrammers', 1, 2, 'Whenever you take a rival’s member out of their cult, they lose 1 follower.', { f: 2, n: 2, // +1 (Cory, Oct 30)
       onMoveMember(ctx, owner, card, info) { if (info.from !== owner && ctx.followers(info.from) > 0) info.from.bonus -= 1; },
     }),
     m('panel', 'Panel', 4, 2, 'On Recruit: promote or demote another of your members.', { f: 3, n: 3,
@@ -181,7 +181,7 @@ function cheapest(ctx) {
   if (!shop.length) return null;
   return shop.reduce((a, b) => (cost(b) < cost(a) ? b : a));
 }
-// who: the card or space asking, so its choice is titled with its own name (Mentor & Protégé shares this with Open Door)
+// who: the card or space asking, so its choice is titled with its own name (Mentor & Protégés shares this with Open Door)
 function hireCheapest(ctx, p, who) {
   const shop = ctx.shopCards();
   if (!shop.length) return;

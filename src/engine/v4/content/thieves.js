@@ -356,7 +356,7 @@ const thieves = {
     m('accomplice', 'Accomplice', 1, 1, 'On Recruit: steal 3 resources.', {
       onRecruited(ctx, owner) { startSteal(ctx, owner, 'Accomplice', 3 + stickyMore(ctx, owner), { fromAction: false }); },
     }),
-    m('grifter', 'Grifter', 2, 2, 'On Recruit: steal 1 resource per 2 members you have.', {
+    m('grifter', 'Grifter', 2, 3, /* 6 (Cory, Oct 30) */ 'On Recruit: steal 1 resource per 2 members you have.', {
       // first sentence only (Cory, 2026-10-18): the picks split freely among rivals, like any steal
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
@@ -432,7 +432,8 @@ const thieves = {
       },
     }),
     // Cory's #26 "Steal when you buy a member - should be essential to magenta" (Cory's yes, Oct 21)
-    m('shoplifter', 'Shoplifter', 3, 2, 'Whenever you recruit, steal 1 resource.', {
+    m('shoplifter', 'Shoplifter', 3, 3, // 7 (Cory, Oct 30: balance run)
+      'Whenever you recruit, steal 1 resource.', {
       onRecruit(ctx, owner, card, by, what) {
         if (by === owner && what.member?.uid !== card.uid) startSteal(ctx, owner, 'Shoplifter', 1 + stickyMore(ctx, owner), { fromAction: false });
       },

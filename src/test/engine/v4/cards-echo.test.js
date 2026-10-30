@@ -276,14 +276,14 @@ describe('Green current members', () => {
     expect(s.cards[uidIn(s, 'echo.doppel', 0)].copy).toBe('echo.connector');
     expect(R(s).green - before).toBe(4); // Triplets (3 members) and Tax Man: 4 non-green members
   });
-  it('Impostor still becomes a copy without firing its copied On Recruit', () => {
+  it('Impostors still becomes a copy without firing its copied On Recruit', () => {
     let s = table(Q, { round: 3, shop: ['echo.impostor', ...ROW], members: [[], ['echo.evergreen']], res: [{ green: 5 }], queue: turns(0, 0) });
     s = move(take(s, 'gold.rush'), cardOpt(s, 'echo.impostor'));
     const before = R(s).green;
     s = move(s, cardOpt(s, 'echo.evergreen', 1));
     expect(R(s).green).toBe(before);
   });
-  it('Impostor chooses only a rival’s members and adopts printed quantity', () => {
+  it('Impostors chooses only a rival’s members and adopts printed quantity', () => {
     let s = table(Q, { round: 3, shop: ['echo.impostor', ...ROW], members: [['echo.muse'], ['red.bigfamily']], queue: turns(0, 0) });
     s = move(take(s, 'red.take'), cardOpt(s, 'echo.impostor'));
     expect(s.pending.options.map(o => o.id)).toEqual([cardOpt(s, 'red.bigfamily', 1)]);

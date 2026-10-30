@@ -25,13 +25,13 @@ function row(s, defs, pile = []) {
 }
 
 describe('11 · every choice names the card or space that asked', () => {
-  it('Mentor & Protégé’s free pick among tied cheapest members says Mentor & Protégé, not Open Door', () => {
+  it('Mentor & Protégés’ free pick among tied cheapest members says Mentor & Protégés, not Open Door', () => {
     let s = sceneQ({ quadrants: CLASSIC, res: [rich] });
     row(s, ['red.mentor', 'red.intern', 'red.reserve'], ['red.patriarch']);
     s = take(s, 'gold.rush');
     s = buy(s, 'red.mentor');
     expect(s.pending.kind).toBe('choose');
-    expect(s.pending.prompt).toMatch(/^Mentor & Protégé: /);
+    expect(s.pending.prompt).toMatch(/^Mentor & Protégés: /);
   });
   it('Tryout says Tryout', () => {
     let s = sceneQ({ quadrants: CLASSIC });

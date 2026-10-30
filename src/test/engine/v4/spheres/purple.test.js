@@ -233,7 +233,7 @@ describe('Purple members', () => {
     t = move(t, `use:${u}`);
     expect(ids(t)).toContain(`use:${u}`); // not used up
   });
-  it('Late Riser: from round II, the trailing player takes an extra turn first', () => {
+  it('Late Risers: from round II, the trailing player takes an extra turn first', () => {
     const s = start([['purple.lateriser']], { bonus: [0, 3] });
     expect(s.pending.kind).toBe('place');
     expect(s.pending.player).toBe(0);

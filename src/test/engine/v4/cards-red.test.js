@@ -29,12 +29,12 @@ describe('Red action gains', () => {
 });
 
 describe('Red members', () => {
-  it('Mentor & Protégé: when recruited, also the cheapest face-up member free; the log names Mentor', () => {
+  it('Mentor & Protégés: when recruited, also the cheapest face-up member free; the log names Mentor', () => {
     let s = sceneQ({ res: [rich], shop: ['red.mentor'] });
     s = take(s, 'gold.rush'); s = buy(s, 'red.mentor');
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     expect(s.players[0].members).toHaveLength(2);
-    expect(named(s, 'Mentor & Protégé')).toHaveLength(1);
+    expect(named(s, 'Mentor & Protégés')).toHaveLength(1);
   });
   it('Mentor × Recruiter × Pied Piper: the free protégé is a second recruit this turn', () => {
     let s = sceneQ({ res: [rich], members: [['red.recruiter', 'red.drive']], shop: ['red.mentor'] });
@@ -56,17 +56,35 @@ describe('Red members', () => {
 
   it('Mob: game end +1 follower per red member; a Doppelganger (green since 2026-10-15) is a second Mob', () => {
     let s = sceneQ({ members: [['red.mob', 'red.intern', 'echo.doppel']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.parts).toEqual(['Mob +6']);
+    expect(s.players[0].final.parts).toEqual(['Mob +5']) // Mob counts as 4 since Oct 30;
     s = sceneQ({ members: [['red.mob', 'red.intern', 'echo.doppel']], queue: [] });
     s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'red.mob';
     s.queue = [{ t: 'finish' }]; s = resume(s);
-    expect(s.players[0].final.parts).toEqual(['Mob +6', 'Mob +6']);
+    expect(s.players[0].final.parts).toEqual(['Mob +5', 'Mob +5']);
   });
 
   it('Recruiter: +1 of the recruited member\'s color, named', () => {
     const s = settle(take(sceneQ({ members: [['red.recruiter']], shop: ['red.intern'] }), 'red.hire'));
     expect(R(s).red).toBe(2); // Walk-In's +1, Recruiter's +1 for a red member
     expect(named(s, 'Recruiter')).toHaveLength(1);
+  });
+
+  it('Recruiter: a recruited Dabblers lets you pick its color; a guest gives nothing', () => {
+    const restore = pinCosts({ 'benders.dabblers': [0, 0], 'benders.hr': [0, 0] });
+    let s = sceneQ({ res: [rich], members: [['red.recruiter']], shop: ['benders.dabblers', 'benders.hr'] });
+    s = take(s, 'gold.rush');
+    const blue0 = R(s).blue;
+    s = buy(s, 'benders.dabblers');
+    expect(s.pending?.prompt).toMatch(/Recruiter: \+1 of which color/); // Cory, Oct 30
+    s = move(s, 'blue');
+    expect(R(s).blue).toBe(blue0 + 1);
+    expect(named(s, 'Recruiter')).toHaveLength(1);
+    let t = take(sceneQ({ res: [rich], members: [['red.recruiter']], shop: ['benders.hr'] }), 'gold.rush');
+    const r0 = { ...R(t) };
+    t = settle(buy(t, 'benders.hr'));
+    expect(['red', 'blue', 'green'].map(c => R(t)[c] - r0[c])).toEqual([0, 0, 0]);
+    expect(named(t, 'Recruiter')).toHaveLength(0);
+    restore();
   });
 
   it('Pied Piper: the second recruit in one turn pays +2 red at once, named; Big Spender makes it two buys', () => {

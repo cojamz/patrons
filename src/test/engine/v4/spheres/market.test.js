@@ -225,7 +225,7 @@ describe('Blue members', () => {
     t = move(t, card(t, 'gold.tycoon'));
     expect(t.players[0].discount).toBe(0);
   });
-  it('Shopaholic: you can always recruit twice, and the second recruit names it', () => {
+  it('Shopaholics: you can always recruit twice, and the second recruit names it', () => {
     // its own test since Gather's +3 (Oct 25) moved the seeded fire-audit games under 3 holds
     let s = scene({ res: [{ red: 6, gold: 6 }], members: [['market.shopaholic']], shop: CHEAP });
     s = take(s, 'red.turnout');
@@ -234,7 +234,7 @@ describe('Blue members', () => {
     expect(s.pending.kind).toBe('buy');
     s = pay(move(s, `card:${uidOf(s, 'red.volunteer', 'shop')}`));
     expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(expect.arrayContaining(['red.twins', 'red.volunteer']));
-    expect(s.log.some(l => /uses Shopaholic/.test(typeof l === 'string' ? l : l.text))).toBe(true);
+    expect(s.log.some(l => /uses Shopaholics/.test(typeof l === 'string' ? l : l.text))).toBe(true);
   });
   it('Talent Scout: once per game, also recruit one of the top 5 of the pile at its cost', () => {
     let s = scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });

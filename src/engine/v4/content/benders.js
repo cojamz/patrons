@@ -147,7 +147,7 @@ const members = [
   // once and being flexible across colors": all into one color in one click, or split color by color.
   // Cory, Oct 29: "should let me rearrange colors as i please, not all to one color": on screen the Launderers card
   // (LaunderCard.jsx) sets any mix at once and answers these steps itself; bots still pick here
-  m('launderer', 'Launderers', null, 0, 3, /* Cory, Oct 27: "closer to 5" with the +1 wild */ 'Worth 2 followers. On Recruit: rearrange your resources into any mix of colors.', { f: 2,
+  m('launderer', 'Launderers', null, 0, 3, /* Cory, Oct 27: "closer to 5" with the +1 wild */ 'Worth 3 followers. On Recruit: rearrange your resources into any mix of colors.', { f: 3, n: 3, // +1 (Cory, Oct 30)
     onRecruited(ctx, owner) {
       const total = Object.values(owner.res).reduce((a, b) => a + b, 0);
       if (!total) return;
@@ -218,7 +218,7 @@ const members = [
   // Cory, 2026-10-28: the 8 ("use one of your One Time Use members again"), named Coach (Cory, Oct 29); now any member's
   // Once per game or Once per round ability, as a free extra use (Cory, Oct 29: "activate the On Use effect of one of
   // your members (could be a once per round)")
-  m('secondwind', 'Coach', null, 0, 7, 'On Recruit: activate one of your members’ On Use ability as a free extra use.', {
+  m('secondwind', 'Coach', null, 0, 6, /* 7 (Cory, Oct 30: "coach should be cheaper") */ 'On Recruit: activate one of your members’ On Use ability as a free extra use.', {
     onRecruited(ctx, owner) {
       const list = coachable(ctx, owner);
       if (!list.length) { ctx.log(`${owner.name}'s Coach: no member with an On Use ability.`); return; }
@@ -237,6 +237,11 @@ const members = [
 ];
 
 export const handlers = {
+  pickColor(ctx, p, r, data) { // gainColorOf (color-of.js): Dabblers' owner picks its color
+    if (!ctx.state.resources.includes(r)) return;
+    ctx.gain(p, r, 1);
+    ctx.log(`${p.name}'s ${data.who}: +1 ${r}.`);
+  },
   anarchy(ctx, p, value) {
     if (!Array.isArray(value)) { ctx.log(`${p.name} chose not to swap.`); return; }
     const [a, b] = value;

@@ -13,13 +13,13 @@ const acquire = (s, id) => contextFor(s).recruit(s.players[0], uidIn(s, id, 'sho
 describe('new Red member hooks', () => {
   it('deals exactly thirteen ordinary Red members, with the approved printed bodies and prices', () => {
     expect(quadrant('red').members.filter(d => !CUT.has(d.id))).toHaveLength(13);
-    for (const [id, s, w, f] of [['volunteer', 0, 0, 1], ['twins', 1, 1, 3], ['panel', 4, 2, 3], ['mob', 8, 4, 5], ['loyalists', 2, 3, 2]]) {
+    for (const [id, s, w, f] of [['volunteer', 0, 0, 1], ['twins', 1, 1, 3], ['panel', 4, 2, 3], ['mob', 7, 4, 5], ['loyalists', 2, 3, 2]]) {
       expect(defById(`red.${id}`)).toMatchObject({ s, w: w + EXTRA_WILD, f });
     }
     const s = fixture({ members: [['red.mob', 'red.panel']] });
-    expect(memberCount(s, s.players[0])).toBe(8);
-    expect(countMembersOfColor(s, s.players[0], 'red')).toBe(8);
-    expect(defById('red.mob').onGameEnd(contextFor(s), s.players[0])).toBe(8);
+    expect(memberCount(s, s.players[0])).toBe(7);
+    expect(countMembersOfColor(s, s.players[0], 'red')).toBe(7);
+    expect(defById('red.mob').onGameEnd(contextFor(s), s.players[0])).toBe(7);
   });
 
   it('Recruit Bonus rewards actual explicit and Now abilities, not a vanilla acquisition', () => {
@@ -61,7 +61,7 @@ describe('new Red member hooks', () => {
     expect([p.bonus, a.bonus]).toEqual([0, -1]);
   });
 
-  it('a stolen Movement Penalty does not punish its own arrival retroactively', () => {
+  it('a stolen Deprogrammers does not punish its own arrival retroactively', () => {
     const s = fixture({ members: [[], ['red.movementpenalty']] });
     contextFor(s).steal(s.players[0], s.players[1], { uid: s.players[1].members[0] });
     expect(s.players[1].bonus).toBe(0);

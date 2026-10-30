@@ -37,17 +37,17 @@ describe('a full board', () => {
   });
 });
 
-describe('Late Riser on a full board', () => {
-  it('2 players, 2 spheres, round III: Extra Hand twice fills all 12 spaces, so Late Riser gives no turn', () => {
-    // seed 3 since Promote and Demote reach rivals (Oct 29): on seed 2 P1 swapped its Loyalists to P2, then Late Riser away
-    let s = createGame({ seats: [{ kind: 'bot' }, { kind: 'bot' }], seed: 3, quadrants: ['purple', 'red'], rules: { release: false } });
+describe('Late Risers on a full board', () => {
+  it('2 players, 2 spheres, round III: Extra Hand twice fills all 12 spaces, so Late Risers gives no turn', () => {
+    // seed 5 since Late Risers is 2 members (Oct 30); seed 3 since Promote and Demote reach rivals (Oct 29): on seed 2 P1 swapped its Loyalists to P2, then Late Risers away
+    let s = createGame({ seats: [{ kind: 'bot' }, { kind: 'bot' }], seed: 5, quadrants: ['purple', 'red'], rules: { release: false } });
     const give = id => {
       const uid = Object.values(s.cards).find(c => c.def === id).uid;
       s.pile = s.pile.filter(u => u !== uid); s.shop = s.shop.filter(u => u !== uid);
       s.players[0].members.push(uid);
     };
     give('purple.lateriser');
-    give('red.loyalists'); // Red's swaps (v0.8.0) would otherwise let a bot trade Late Riser away before round III
+    give('red.loyalists'); // Red's swaps (v0.8.0) would otherwise let a bot trade Late Risers away before round III
     s.players[1].bonus += 50; // P1 keeps the fewest followers
     const rand = seededRandom(1);
     let dealt = false;
@@ -60,9 +60,9 @@ describe('Late Riser on a full board', () => {
       }
       s = applyMove(s, chooseBotMove(s, rand));
     }
-    expect(s.players[0].left).toBe(7); // 5 + Extra Hand twice, and no Late Riser turn: 7 + 5 fill all 12 spaces
+    expect(s.players[0].left).toBe(7); // 5 + Extra Hand twice, and no Late Risers turn: 7 + 5 fill all 12 spaces
     expect(s.round).toBe(3);
-    expect(s.log.some(l => l === 'No space to spare: P1 gets no extra turn from Late Riser.')).toBe(true);
+    expect(s.log.some(l => l === 'No space to spare: P1 gets no extra turn from Late Risers.')).toBe(true);
     while (!s.over) s = applyMove(s, chooseBotMove(s, rand));
     expect(s.log.some(l => /sits out/.test(l))).toBe(false);
   });

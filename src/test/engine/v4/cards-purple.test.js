@@ -86,10 +86,10 @@ describe('Purple members', () => {
     expect(named(s, 'Corner-Cutter')).toHaveLength(1);
   });
 
-  it('Late Riser: from round II, the trailing player (ties count) takes a turn before anyone, even a Front-runner', () => {
+  it('Late Risers: from round II, the trailing player (ties count) takes a turn before anyone, even a Front-runner', () => {
     const s = sc({ bonus: [0, 5], members: [['purple.lateriser'], ['benders.frontrunner']], queue: [{ t: 'round', r: 2 }] });
     expect(s.pending.player).toBe(0);
-    expect(named(s, 'Late Riser')).toHaveLength(1);
+    expect(named(s, 'Late Risers')).toHaveLength(1);
     expect(named(s, 'Front-runner')).toHaveLength(1);
     expect(s.players[0].left).toBe(5);
   });

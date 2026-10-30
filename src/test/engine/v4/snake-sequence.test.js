@@ -1,7 +1,7 @@
 // @vitest-environment node
 // The round's real turn sequence against the plain snake when one seat takes turns out of it (3 players, Purple table).
 // Cory's play notes #98/#99 (2026-10-17): "the middle player went twice?" after Crunch Time.
-// - An extra turn (Go-Getter, Night Owl, Errand Runner, Taskmaster, Late Riser) is a turn put in: everyone else keeps
+// - An extra turn (Go-Getter, Night Owl, Errand Runner, Taskmaster, Late Risers) is a turn put in: everyone else keeps
 //   the plain snake, untouched.
 // - Crunch Time ("Take your next 2 turns right away", Cory 2026-10-15) moves your own last two turns of the round up (Cory, 2026-10-21: it shouldn't skip your next turns). Nobody gains
 //   or loses a turn, everyone else keeps their order, but the gaps those two turns left close: a seat that never places

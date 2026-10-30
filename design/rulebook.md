@@ -73,6 +73,6 @@ After round III is scored, game-end member bonuses are added. Most followers win
 - Something looked wrong? Open the menu, tap **Copy game record**, and send it to Cory.
 
 ## Card rulings
-- Impostor and Doppelganger become copies when recruited. Doppelganger also does the copied member's "On Recruit" right then; Impostor doesn't. Their copied abilities and later round-start effects work normally.
+- Impostors and Doppelganger become copies when recruited. Doppelganger also does the copied member's "On Recruit" right then; Impostors doesn't. Their copied abilities and later round-start effects work normally.
 - Panel's "On Recruit" promotes or demotes another member; Panel cannot move itself.
 - Loyalists protects its owner's other members from every swap, its owner's own swaps included, but not itself, and it does not block theft. Two Loyalists (a Doppelganger copy) don't protect each other.

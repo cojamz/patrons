@@ -227,8 +227,8 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     expect(bonus(s)).toEqual([3, 1]);
   });
 
-  it('Impostor adopts a copied member’s effective identity without triggering its Recruit ability', () => {
-    const impostor = member('Impostor');
+  it('Impostors adopts a copied member’s effective identity without triggering its Recruit ability', () => {
+    const impostor = member('Impostors');
     const busker = member('Busker');
     let s = table(Q, { round: 3, left: 6, shop: [impostor], members: [[], [busker, 'echo.doppel']], queue: turns(0, 0) });
     s.cards[uidIn(s, 'echo.doppel', 1)].copy = busker;
@@ -255,7 +255,7 @@ describe('Green redesign: copy observers and anti-copy members', () => {
     expect(s.queue.filter(t => t.workerSource === uid && t.p === 0)).toHaveLength(1);
   });
 
-  it('Doppelganger can copy a resolved Impostor without losing its effective Agents identity', () => {
+  it('Doppelganger can copy a resolved Impostors without losing its effective Agents identity', () => {
     let s = table(Q, { round: 3, left: 5, members: [['echo.impostor']], shop: ['echo.doppel'], queue: turns(0, 1) });
     s.cards[uidIn(s, 'echo.impostor', 0)].copy = 'echo.agents';
     s = move(take(s, 'red.take'), memberOption(s, 'echo.doppel'));

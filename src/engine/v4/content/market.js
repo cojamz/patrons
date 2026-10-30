@@ -2,6 +2,7 @@
 // Scoring: most blue (Cory, 2026-10-15; the old rule counted members costing 8 or more, a cutoff he cut).
 // Blue's members watch who recruits blue members, and Blue's spaces pay out in blue.
 import { registerQuadrant } from './index.js';
+import { gainColorOf } from './color-of.js';
 
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const B = 'blue';
@@ -232,6 +233,7 @@ const market = {
       ctx.state.pile.push(uid);
       if (col) ctx.gain(p, col, 1);
       ctx.log(`${p.name}'s Window Shopper sends ${c.def.name} to the bottom of the pile${col ? `: +1 ${col}` : ''}.`);
+      if (c.def.everyColor) gainColorOf(ctx, p, c.def, 'Window Shopper');
       ctx.refillShop(); toBottom(ctx, 1);
     },
     churn(ctx, p, uid, data) {
@@ -302,7 +304,7 @@ const market = {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1); },
     }),
     m('reseller', 'Reseller', 4, 2, 'Whenever you recruit, +1 of that member’s color.', {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && colorOf(ctx, rec)) ctx.gain(owner, colorOf(ctx, rec), 1); },
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid) gainColorOf(ctx, owner, ctx.defOf(rec), 'Reseller'); },
     }),
     m('curator', 'Curator', 2, 2, 'On Recruit: +1 blue per other blue member you have. Round Start: +1 blue per other blue member you have.', { now: true,
       onRoundStart(ctx, owner, card) { ctx.gain(owner, B, ctx.countMembersOfColor(owner, Q) - (card && isBlue(card.def) ? ctx.memberWeight(card) : 0)); },
@@ -379,7 +381,7 @@ const market = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && !ctx.shopCards().some(c => ctx.payChoices(owner, c.uid, {}).length),
     }),
-    m('shopaholic', 'Shopaholic', 3, 5, 'You can recruit twice each turn.', { buyTwice: true, f: 2 }),
+    m('shopaholic', 'Shopaholics', 3, 5, 'You can recruit twice each turn.', { buyTwice: true, f: 3, n: 3 }), // +1 follower and member (Cory, Oct 30)
     m('windowdresser', 'Window Dresser', 2, 1, 'On Recruit: send 3 shop members to the bottom of the pile, then refill.', { f: 3,
       onRecruited(ctx, owner) {
         ctx.log(`${owner.name}'s Window Dresser: send 3 shop members to the bottom of the pile.`);

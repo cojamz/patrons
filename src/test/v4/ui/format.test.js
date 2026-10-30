@@ -184,7 +184,7 @@ describe('v4 format helpers', () => {
           }
           if (owner !== actor) {
             rival++;
-            // a Movement Penalty hit may follow on the same line ("…, Movement Penalty took 1 of your followers"), never a repeat
+            // a Deprogrammers hit may follow on the same line ("…, Deprogrammers took 1 of your followers"), never a repeat
             const short = effectStory(s, n, actor, owner, n.effects).short;
             // another member's line may come first ("you +2 followers (Cheerleader) · swapped …"), or a Saboteur's loss
             // in the same telling ("took 3 of your followers, swapped your Alchemist for the shop's Saboteur", Oct 29)
