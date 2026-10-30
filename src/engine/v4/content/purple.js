@@ -287,9 +287,9 @@ export default {
       // raise it to +3 after play). Any taken space, yours or a rival's, for the rest of this round. Name is Claude's fill-in.
       // Cory, 2026-10-28 9:31pm Eastern: "It should just be like, +5 purple and gain a minion this round" (placing on
       // taken spaces copied too much with Greatest Hits). Extra minions stop when the round's spare spaces run out.
-      key: 'crowdin', copyDoesIt: true, ring: 3, name: 'Crowd In', text: '+4 purple. +1 minion this round.',
-      estimate: ctx => 4 + (spareSpace(ctx) ? turnValue(ctx) : 0),
-      resolve(ctx, p) { ctx.gain(p, P, 4, { fromAction: true }); extraMinion(ctx, p, 'Crowd In'); },
+      key: 'crowdin', copyDoesIt: true, ring: 3, name: 'Crowd In', text: '+3 purple. +1 minion this round.', // back to +3 (Cory, Oct 30: balance run)
+      estimate: ctx => 3 + (spareSpace(ctx) ? turnValue(ctx) : 0),
+      resolve(ctx, p) { ctx.gain(p, P, 3, { fromAction: true }); extraMinion(ctx, p, 'Crowd In'); },
     },
     {
       // Cory, 2026-10-22: a follower bonus for taking the rest of your turns last ("YES now you're cooking"), in his

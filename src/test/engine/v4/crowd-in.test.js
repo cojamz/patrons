@@ -8,7 +8,7 @@ import { seededRandom } from '../../../engine/v4/rng.js';
 import { quadrant } from '../../../engine/v4/index.js';
 
 describe('Crowd In', () => {
-  it('round III: +4 purple and one more minion this round; no taken spaces opened; not open before round III', () => {
+  it('round III: +3 purple and one more minion this round; no taken spaces opened; not open before round III', () => {
     let s = createGame({ seats: Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed: 5, quadrants: ['gold', 'red', 'purple', 'echo'] });
     const rand = seededRandom(5);
     const q = s.quadrants.indexOf('purple'), i = quadrant('purple').actions.findIndex(a => a.key === 'crowdin');
@@ -18,7 +18,7 @@ describe('Crowd In', () => {
     const who = s.pending.player;
     const before = s.players[who].res.purple || 0, left = s.players[who].left;
     s = applyMove(s, { player: who, option: `slot:${q}-${i}` });
-    expect(s.players[who].res.purple).toBe(before + 4);
+    expect(s.players[who].res.purple).toBe(before + 3);
     expect(s.players[who].squatAll).not.toBe(3); // no longer opens taken spaces
     // the minion just placed is spent, the new one takes its place
     expect(s.players[who].left).toBe(left);
