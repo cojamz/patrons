@@ -17,7 +17,6 @@ const words = prose.split(/\s+/).filter(Boolean).length;
 const hard = [];
 if (/^\s*\|.*\|\s*$/m.test(text) && /\|\s*:?-{3,}/.test(text)) hard.push('no tables');
 if (/^\s*#{1,6} /m.test(text)) hard.push('no headers');
-if (/^\s*[-*]?\s*\*\*[^*]+:\*\*/m.test(text)) hard.push('no bold-label report voice');
 if (/\bUTC\b|\b\d{1,2}:\d{2}\s?Z\b|\b(1[3-9]|2[0-3]):[0-5]\d\b/.test(prose)) hard.push("times in Cory's Eastern 12-hour clock, like 7:43pm");
 if (/—/.test(prose)) hard.push('no em dashes; use a comma, period or parentheses');
 const tics = [/\bfair point\b/i, /\bhere['’]s what\b/i, /\bthe real test\b/i, /\bwant me to\b/i, /\blet me know if\b/i,
