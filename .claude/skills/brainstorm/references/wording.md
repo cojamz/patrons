@@ -35,7 +35,7 @@ Plain, short, reader-friendly, always (Cory, Oct 22). One idea per sentence. Say
 - "Copy the previous action", "Copy an action with a rival minion". A copy gets the space's printed gain.
 
 ## Contests
-- "Most purple: the purple you hold when the round ends." Prize "+2 / +4 / +6 followers by round, ties split". Say "the purple contest" or "most purple".
+- "Most purple: the purple you hold when the round ends." Prize "+4 / +6 / +10 followers by round, ties split". Say "the purple contest" or "most purple".
 
 ## General
 - "rival" for another player, "each rival", "anyone" includes you. "you choose". Numbers as digits. "half, rounded down".

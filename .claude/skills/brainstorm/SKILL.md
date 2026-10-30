@@ -10,15 +10,26 @@ Cory designs Cults; Claude brings ideas he can react to. He has called the ideas
 
 **Speed is part of the job.** He's in a live conversation. A pitch takes about a minute, never a quoted wait ("15 minutes????? what the fuck"). The heavy reading happens once per thread; after that, pitch from what you already know.
 
-## Every pitch (about a minute)
+## Every pitch: four gates, in order, none skipped
 
-1. Once per thread, before the first pitch: read [references/design-core.md](references/design-core.md) (how the game plays, each color's fantasy, why his favorite spaces landed) and [references/cheatsheet.md](references/cheatsheet.md) (the rules in ten lines and the kill list). About two minutes, then never again in that thread.
-2. Write the color's theme in one line first ("Purple: I act when it matters most"; design-core section 3), and open the pitch to Cory with it so he can correct your read. Use it as a light guide, not a constraint: an idea should feel at home in the color and be one clean mechanic, not a mechanic with a numeric bonus bolted on. It doesn't have to echo the theme closely (Cory: "don't over index on the theme. it doesn't need to be super incestual"). Then consider the arc of this slot's round. Generate about 10 ideas from the shapes in design-core section 4: trade one scarce thing for another, break a limit everyone feels, read the table, hand someone a choice, one visible count. Each idea names what the taker gives up and what it combines with (its members, other colors' spaces); the game is engines and synergy, not good picks in a vacuum. Think freely here, in any terms that help; the game's exact wording comes later and must never narrow the ideas.
-3. Play each through one turn in your head: what you'd get here versus your best other space, in round I and round III. Then play its **best case**: the player who builds around it, in round III, with the most members or the biggest pile it reads. A member that triggers on something done every turn ("whenever you recruit followers") multiplies fast. If the best case is absurd, or the idea needs a sentence of explanation to do little, cut it. Cut anything on the cheatsheet's kill list.
-4. Only now, write them up in the game's words ([references/wording.md](references/wording.md)), plainly and briefly. Send about 5 per open slot, all at once, that touch different pieces (even when only one slot is left; never a single pick unless he asks; Cory: "Give me like 5 ideas… why are you doing these so piecemeal?"): numbered, the card text as it would print, what changes for a player, one played example if needed, your pick in brackets, numbers marked as yours. At most eight lines.
-5. Log the pitch in design/pitch-ledger.md and push, after sending.
+Oct 30, Yellow: eight nos in a morning ("small ball gains", "how do you have NO clue how the game works????", "are you using the skill?"). Every one came from skipping a gate below to answer fast. Speed means no padded waits, never skipped steps: a list takes the time the gates take, and you say a real time.
 
-If nothing survives, say so in one line and ask him one sharp question about the color. Don't send filler.
+**Gate 1. The live game, not the notes.** Once per thread: read design/rulebook.md end to end and `RING_VALUE`, the shop sizes and `ROUND_CUTOFFS` in src/engine/v4/core.js, then [references/cheatsheet.md](references/cheatsheet.md) and [references/design-core.md](references/design-core.md). Notes lag the game (they said contests paid 2/4/6 when live was 4/6/10). Never describe a piece you haven't seen in the rulebook: the rim only prints what a contest counts; no rule lives there.
+
+**Gate 2. Cory's sentence and the anchor.** Before any slot, write in one line what the color is *for*, in his words if he's said it (Yellow, Oct 30: "rewards going broad… translate currencies"), and the round III action it builds toward. If either is missing, ask him for it in one question and pitch nothing else. Never pitch round I or II for a color whose round III isn't agreed. Never invent the identity from the color's name or an adjacent color's job (Yellow was pitched as the contests color, a separate color he'd parked).
+
+**Gate 3. Generate wide, then play every idea on paper, in writing.** About 12 seeds per slot, each a verb on a different real piece (design-core section 4 shapes; game-model.md section 1 pieces). For a fresh angle, hand the whole brief (gates 1 and 2, the slot, his refusals) to a general-purpose subagent and generate there too; never pass its output on unread. Then for every seed, write down, not in your head:
+- the card text as it would print;
+- a 4-player turn in round I and in round III: what you get here versus the best other space, by name and number;
+- the decision it creates, and for whom (the taker gives something up, or a rival chooses or reacts). No decision: cut it, however clean;
+- why only this color could print it (not a Green copy, a Red swap, a Magenta steal, a Blue shop move, a guest's text);
+- its best case and Greatest Hits copying it.
+
+**Gate 4. Filter, then send.** Cut on the cheatsheet kill list and every line of [references/verdicts.md](references/verdicts.md), and against this color's lines in design/pitch-ledger.md: anything that resembles a refused idea in shape (a "+1 of another color, more each round" after "Mix" was refused is the same idea) is out. What survives is usually 2 to 4, not 5; send what survives, and if nothing does, say so and ask one sharp question. Each line: the printed text, what changes for a player, your pick in brackets. At most eight lines.
+
+**After a no.** Two nos on the same slot in a row: stop pitching that slot. Re-run gates 2 and 3 properly (subagent included) before the next list, and tell Cory the real time it takes. Rapid re-pitches after a no are how one no became eight.
+
+**Log** each pitch at the top of design/pitch-ledger.md and his answer the same turn; a verdict that shows a new pattern goes into references/verdicts.md.
 
 ## Deeper work (a new color or direction, or when he says the ideas miss)
 

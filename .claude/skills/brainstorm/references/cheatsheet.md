@@ -4,9 +4,9 @@
 - Turn: place a minion on an open space and do it, then recruit ONE thing: a shop member or one follower card. Minions 3/4/5 by round; snake order; fewest followers goes first from round II.
 - Follower cards are fixed cards: 1, 5 or 10 followers for as many resources, any colors. A space can change how often you recruit or what you pay with, never the cards.
 - Spaces: 3 per color in round I, 2 more in round II, 1 center in round III; rings stay open. Round I fills exactly.
-- Shop: 5/6/7 face up by round, pile underneath, row goes to the bottom between rounds.
+- Shop: 6/7/8 face up by round, pile underneath, row goes to the bottom between rounds.
 - Members: colored part + any part (floor 2), worth followers, abilities. They move (swap, steal, bury).
-- Contests: every color scores most of its color held at round end, +2/+4/+6. Hold to win it, spend to recruit.
+- Contests: every color scores most of its color held at round end, +4/+6/+10 (ties split, rounded up). Hold to win it, spend to recruit.
 - Scarce: resources in round I, the recruit in round III. Round II spaces must change what you own or how much you recruit (bar: Promote, Shake Down).
 - Every space gives at least 1 of its color; lean conservative; grows by round.
 - A space does its whole effect the moment it's taken. "Whenever", "this round", "at round end" are member effects.
