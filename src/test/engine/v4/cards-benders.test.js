@@ -112,8 +112,8 @@ describe('Guest members (rule-benders)', () => {
   it('Alchemist: a member’s colored part paid in other colors, and the recruit line names Alchemist', () => {
     const restore = pinCosts({ 'gold.banker': [2, 0] });
     try {
-      let s = sceneQ({ res: [{ red: 4 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
-      s = take(s, 'red.turnout'); // current Gather adds2 red in roundI
+      let s = sceneQ({ res: [{ red: 5 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
+      s = take(s, 'red.turnout'); // Gather adds 2 red in round I (Oct 31)
       s = buy(s, 'gold.banker');
       expect(s.players[0].res.red).toBe(5);
       expect(named(s, 'Alchemist')).toHaveLength(1);

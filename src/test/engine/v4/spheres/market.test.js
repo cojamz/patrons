@@ -237,7 +237,7 @@ describe('Blue members', () => {
     expect(s.log.some(l => /uses Shopaholics/.test(typeof l === 'string' ? l : l.text))).toBe(true);
   });
   it('Talent Scout: once per game, also recruit one of the top 5 of the pile at its cost', () => {
-    let s = scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });
+    let s = scene({ res: [{ gold: 9, red: 1 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });
     s = take(s, 'red.turnout'); // Gather (v0.8.0): +1 red × round and +1 red, so 9 gold and 2 red
     const use = `use:${uidOf(s, 'market.blackmarket', 0)}`;
     s = move(s, use); // its question comes at once (gut call, 2026-10-15); your normal buy follows

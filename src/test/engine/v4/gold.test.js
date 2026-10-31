@@ -106,13 +106,13 @@ describe('Gold members', () => {
     // Gather (v0.8.0): +1 red × round and +1 red, 2 in round I, all of it gold under Midas. (Even Swap's +1 red now
     // opens a swap choice whenever any two members on the table cost the same.)
     s = take(s, 'red.turnout');
-    expect(R(s)[0]).toMatchObject({ gold: 3, red: 2 });
+    expect(R(s)[0]).toMatchObject({ gold: 2, red: 2 }); // Gather's 2 red in round I (Oct 31)
     expect(s.pending.kind).toBe('buy');
     s = move(s, `toggle:${uid}`);
     expect(s.cards[uid].on).toBe(false);
     s = move(s, 'pass');
     s = take(s, 'blue.a1');
-    expect(R(s)[0]).toMatchObject({ gold: 3, blue: 3 });
+    expect(R(s)[0]).toMatchObject({ gold: 2, blue: 3 });
     s = move(s, `toggle:${uid}`);
     expect(s.cards[uid].on).toBe(true);
   });
@@ -232,8 +232,8 @@ describe('Gold members', () => {
     expect(R(take(scene({ members: [['gold.tinker']] }), 'blue.a1'))[0]).toMatchObject({ blue: 3, gold: 1 });
     expect(R(take(scene({ members: [['gold.tinker']] }), 'blue.a2'))[0]).toMatchObject({ blue: 2, red: 1, gold: 2 });
     expect(R(take(scene({ members: [['gold.tinker']] }), 'gold.rush'))[0]).toMatchObject({ gold: 2 });
-    // Gather's 3 red is one gain of one other color: +1 gold, not 2
-    expect(R(take(scene({ members: [['gold.tinker']] }), 'red.turnout'))[0]).toMatchObject({ red: 3, gold: 1 });
+    // Gather's 2 red is one gain of one other color: +1 gold, not 2
+    expect(R(take(scene({ members: [['gold.tinker']] }), 'red.turnout'))[0]).toMatchObject({ red: 2, gold: 1 });
   });
 
   it('Investor: you choose how much gold to set aside at round start; it comes back doubled at round end', () => {

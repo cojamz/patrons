@@ -316,7 +316,7 @@ describe('payment', () => {
   });
 
   it('only affordable members are offered at the buy', () => {
-    let s = scene({ res: [{ gold: 2 }], shop: ['gold.midas', 'red.mentor', 'gold.banker', 'red.intern', 'red.volunteer', 'gold.seed'] });
+    let s = scene({ res: [{ gold: 2, red: 1 }], shop: ['gold.midas', 'red.mentor', 'gold.banker', 'red.intern', 'red.volunteer', 'gold.seed'] });
     s = take(s, 'red.turnout');
     const offered = s.pending.options.filter(o => o.kind === 'card').map(o => s.cards[o.uid].def).sort();
     // Gather gives +1 red × round and +1 red (v0.8.0), so 2 gold + 3 red (+3 since Oct 25): Banker (2+1), Intern (1) and Mentor (3+2) are in reach,

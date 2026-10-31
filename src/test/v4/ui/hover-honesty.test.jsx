@@ -47,7 +47,7 @@ describe('hover honesty (live panel r1)', () => {
     for (const round of [1, 2, 3]) {
       const s = sceneQ({ quadrants: T, round, n: 3 });
       s.recruits = 9;
-      expect(words(s, 'Gather').y.text).toBe(`+${round + 2} red`);
+      expect(words(s, 'Gather').y.text).toMatch(new RegExp(`^\\+${round + 1} red`));
     }
   });
 

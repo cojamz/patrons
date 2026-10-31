@@ -27,10 +27,13 @@ describe('rules that grow by round', () => {
 
   it('the lines say what the space pays in each round', () => {
     const num = l => Number(l.match(/\d+/)[0]);
-    for (const [qid, key] of [['gold', 'rush'], ['red', 'turnout'], ['echo', 'chant']]) {
+    for (const [qid, key] of [['gold', 'rush'], ['echo', 'chant']]) {
       const a = quadrant(qid).actions.find(x => x.key === key);
       for (const r of [1, 2, 3]) expect(num(a.byRound.lines[r - 1]), `${qid}.${key} round ${r}`).toBe(a.estimate({ state: { round: r } }));
     }
+    // Gather (Oct 31): +2/3/4 red, and +1/2/3 followers on a member recruit that turn
+    const g = quadrant('red').actions.find(x => x.key === 'turnout');
+    for (const r of [1, 2, 3]) expect(g.byRound.lines[r - 1].match(/\d+/g).map(Number), `red.turnout round ${r}`).toEqual([r + 1, r]);
   });
 
   it('the hover lights this round and dims the others', () => {

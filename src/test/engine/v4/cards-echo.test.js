@@ -171,7 +171,7 @@ describe('Green current members', () => {
     expect(start(['echo.roadie', 'echo.muse', 'echo.ensemble', 'red.twins']) - start(['echo.muse', 'echo.ensemble', 'red.twins'])).toBe(4); // Roadie, Muse, Ensemble (2 members)
   });
   it('Busker gives two green on recruit and at round start, naming the source', () => {
-    let s = table(Q, { shop: ['echo.evergreen', ...ROW], res: [{ green: 4 }], queue: turns(0) });
+    let s = table(Q, { shop: ['echo.evergreen', ...ROW], res: [{ green: 4, red: 1 }], queue: turns(0) });
     s = move(take(s, 'red.turnout'), cardOpt(s, 'echo.evergreen'));
     expect(R(s).green).toBe(4); // Gather's red pays part of the wild cost; Busker still pays exactly 2 green.
     expect(named(s, 'Busker').length).toBe(1);
