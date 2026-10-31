@@ -2,7 +2,7 @@
 // Bot difficulty levels: legal, deterministic, picked from the seat, and the normal bot doesn't waste its last buy.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, isLegal, quadrant } from '../../../engine/v4/index.js';
-import { chooseBotMove, botLevel, horizon, BOT_LEVELS, setBotLevels, SIM_LEVELS, blendProfile, BOT_PROFILES } from '../../../engine/v4/bots.js';
+import { chooseBotMove, botLevel, horizon, BOT_LEVELS, BOT_LEVEL_INFO, setBotLevels, SIM_LEVELS, blendProfile, BOT_PROFILES } from '../../../engine/v4/bots.js';
 import { followers, memberCount } from '../../../engine/v4/index.js';
 import * as engine from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
@@ -32,7 +32,7 @@ describe('bot levels', () => {
     expect(botLevel(s, 0, { level: 'hard' })).toBe('hard');
     s.players[1].bot = 'nonsense';
     expect(botLevel(s, 1)).toBe('normal');
-    expect(BOT_LEVELS).toEqual(['easy', 'normal', 'hard']);
+    expect(BOT_LEVELS).toEqual(['easy', 'normal', 'hard', 'veryhard']);
     s.players[1].bot = { level: 'hard' };
     expect(botLevel(s, 1)).toBe('hard');
   });
@@ -55,6 +55,12 @@ describe('bot levels', () => {
   it('hard plays a whole game legally (small budget)', () => {
     const { s } = play(3, 5, ['hard', 'normal', 'easy'], { budget: 20, maxMs: Infinity });
     expect(s.over).toBe(true);
+  });
+
+  it('very hard plays a whole game legally and looks further than hard', () => {
+    const { s } = play(2, 6, ['veryhard', 'hard'], { budget: 20, maxMs: Infinity });
+    expect(s.over).toBe(true);
+    expect(BOT_LEVEL_INFO.find(l => l.level === 'veryhard').name).toBe('Very Hard');
   });
 
   it('hard stops thinking at its time cap and still moves legally', () => {
@@ -106,12 +112,12 @@ describe('bot levels', () => {
     expect(lastBuys).toBeGreaterThan(10);
   });
 
-  it('sim-only levels play when asked for, but setup still offers easy, normal and hard', () => {
+  it('sim-only levels play when asked for, but setup still offers only easy, normal, hard and very hard', () => {
     const s = createGame({ seats: [{}, {}], seed: 4 });
     expect(botLevel(s, 0, { level: 'casual' })).toBe('casual');
     s.players[0].bot = 'collector';
     expect(botLevel(s, 0)).toBe('collector');
-    expect(SIM_LEVELS.slice(0, 3)).toEqual(BOT_LEVELS);
+    expect(SIM_LEVELS.slice(0, BOT_LEVELS.length)).toEqual(BOT_LEVELS);
     expect(blendProfile(0)).toEqual(BOT_PROFILES.easy);
     const { s: end } = play(3, 6, ['casual', 'collector', 'easy']);
     expect(end.over).toBe(true);

@@ -1,6 +1,6 @@
 // Bots: pure functions that pick one legal option. Used for empty seats, simulation and fuzz tests.
 //
-// Difficulty levels. A seat's level comes from `state.players[i].bot` ('easy' | 'normal' | 'hard'), or from
+// Difficulty levels. A seat's level comes from `state.players[i].bot` ('easy' | 'normal' | 'hard' | 'veryhard'), or from
 // `chooseBotMove(state, rand, { level })`, which wins over the seat. Anything else plays 'normal'.
 //   easy   – normal's end-of-game judgment, played carelessly: noisy placements and buys, a soft spot for members,
 //            little attention to rivals. Spends down like normal (the old greedy easy hoarded 50+ gold and recruited
@@ -8,10 +8,10 @@
 //   normal – the same greedy shape, fixed: it values every option by what it's worth at game end (followers now,
 //            a member's ability over the turns left, what its resources can still turn into with the buys it has
 //            left, and the ring contests it leads). Never ends holding resources a follower buy could use.
-//   hard   – normal plus a game plan and lookahead. It picks two colors and a style at its artifact pick, leans its
-//            choices toward them, and looks again each round (mind.js); then it plays its best few options out to
-//            the round end with normal bots and keeps the best (thinker.js). opts.mind carries the plan, and notes
-//            from earlier games (memory), from move to move. Work is counted in moves, so it stays deterministic.
+//   hard   – normal plus lookahead (thinker.js): plays its best few options out to the round end with normal
+//            bots and keeps the best. Its work is counted in moves, not milliseconds, so it stays deterministic.
+//            opts.mind (sims only) adds a game plan, tested lessons and a learned position value (mind.js).
+//   veryhard – hard looking three times as far (VERY_HARD).
 // Every level is deterministic for a given state and rand.
 import {
   contextFor, actionAt, cardDef, TIERS, followers, memberCount, RING_VALUE, WORKERS, tierLeft,
@@ -22,7 +22,7 @@ import { plainCopy } from './copy.js';
 import { chooseThinkerMove } from './thinker.js';
 import { planFor, planSetupPick } from './mind.js';
 
-export const BOT_LEVELS = ['easy', 'normal', 'hard'];
+export const BOT_LEVELS = ['easy', 'normal', 'hard', 'veryhard'];
 // A liking for members on top of what they're measured to be worth, in followers, fading to BIAS_FLOOR of itself
 // as the game runs out. The valuation alone under-recruits: with it, normal beat the old normal 37% to 21% and
 // recruits ~7 members instead of ~4 (400 games each; design/eval/bots.md). SPITE: how much the best rival's
@@ -46,6 +46,9 @@ export const BOT_PROFILES = {
 };
 // Hard's wall-clock cap per move (pass { maxMs: Infinity } for deterministic sims).
 const HARD_MAX_MS = 200; // plus ~10–40ms of setup before the clock starts: under 300ms a move in a browser
+// Very Hard: Hard looking 3x as far (300 moves, 4 options). It beat Hard 25 seats to 17 of 76 (20 tables played twice,
+// seats swapped; design/eval/hard-value/README.md, Cory Oct 31: "a new category of Hard"). About 3x Hard's time a move.
+const VERY_HARD = { budget: 300, candidates: 4, maxMs: 600 };
 const SETUP_WEIGHTS = { gold: 3, red: 3, blue: 1, green: 1 };
 
 /** For a setup screen: the levels in order, with a name and a one-line blurb. */
@@ -53,6 +56,7 @@ export const BOT_LEVEL_INFO = [
   { level: 'easy', name: 'Easy', blurb: 'Careless: often takes a worse move, and undervalues what members do.' },
   { level: 'normal', name: 'Normal', blurb: 'Plays for the end: builds a following of members, then spends down into followers.' },
   { level: 'hard', name: 'Hard', blurb: 'Normal, plus it plays its best few moves ahead before choosing.' },
+  { level: 'veryhard', name: 'Very Hard', blurb: 'Hard, looking three times as far ahead. A little slower each move.' },
 ];
 export const DEFAULT_BOT_LEVEL = 'normal';
 
@@ -79,28 +83,17 @@ export function chooseBotMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
   if (!pend) return null;
   const level = botLevel(state, pend.player, opts);
-  if (level === 'hard') {
-    // a game plan (mind.js): the caller's mind for this seat (sims carry memory in it), else one kept here per game
-    // opts.noPlan: the Hard before plans (for comparisons)
-    const mind = opts.noPlan ? null : opts.mind || hardMind(state, pend.player);
+  if (level === 'hard' || level === 'veryhard') {
+    // a game plan and tested lessons (mind.js) only when the caller keeps a mind for the seat (sims): they measured even
+    // with plain Hard, so the levels people play don't use them (design/eval/hard-value/README.md)
+    const mind = opts.noPlan ? null : opts.mind || null;
     const plan = planFor(state, pend.player, mind, rand);
     const pick = planSetupPick(state, plan);
     if (pick) return pick;
-    return chooseThinkerMove(state, rand, { maxMs: HARD_MAX_MS, ...opts, plan, memory: mind?.memory || null, lessons: mind?.lessons || null, valueModel: opts.valueModel ?? mind?.valueModel ?? null });
+    const deep = level === 'veryhard' ? VERY_HARD : { maxMs: HARD_MAX_MS };
+    return chooseThinkerMove(state, rand, { ...deep, ...opts, plan, memory: mind?.memory || null, lessons: mind?.lessons || null, valueModel: opts.valueModel ?? mind?.valueModel ?? null });
   }
   return chooseNormalMove(state, rand, { ...BOT_PROFILES[level], ...opts });
-}
-
-// Plans for Hard seats when the caller keeps none: one per game and seat, the latest few games only.
-const MINDS = new Map();
-function hardMind(state, player) {
-  const key = `${state.seed}:${player}:${state.players.map(p => p.name).join('|')}`;
-  const mind = MINDS.get(key);
-  // a game started over with the same seed and names (a rematch, a replay) gets a fresh plan
-  if (mind && (state.moves ?? 0) >= mind.moves) { mind.moves = state.moves ?? 0; return mind; }
-  if (MINDS.size > 32) MINDS.delete(MINDS.keys().next().value);
-  MINDS.set(key, { moves: state.moves ?? 0 });
-  return MINDS.get(key);
 }
 
 /** The easy level: normal, played carelessly. */
