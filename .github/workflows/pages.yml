@@ -1,0 +1,28 @@
+# Retired 2026-10-17: the play link is main/play/, published only by scripts/v4-play.sh from a checked commit
+# (design/releasing.md). This workflow used to build every push to PR #1's branch into gh-pages, which shipped
+# unchecked source (41f09d8, 2026-10-17). It now runs only by hand, and nothing should point Pages at gh-pages.
+name: play link (manual, gh-pages)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vite build --base ./ --outDir dist-pages
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist-pages
+          publish_branch: gh-pages
+          force_orphan: true

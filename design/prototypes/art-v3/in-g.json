@@ -1,0 +1,65 @@
+[
+ {
+  "id": "echo.tuningfork",
+  "name": "Impressionist",
+  "text": "Whenever you copy an action, +1 of its color.",
+  "members": 1,
+  "sphere": "green"
+ },
+ {
+  "id": "gold.prospector",
+  "name": "Prospector",
+  "text": "When an action gains you gold, +1 gold.",
+  "members": 1,
+  "sphere": "gold"
+ },
+ {
+  "id": "market.bargainbin",
+  "name": "Bargain Bin",
+  "text": "Whenever shop members go to the bottom of the pile, +1 blue.",
+  "members": 1,
+  "sphere": "blue"
+ },
+ {
+  "id": "purple.pocketwatch",
+  "name": "Pocket Watch",
+  "text": "Whenever a player\u2019s turn is skipped, +1 purple.",
+  "members": 1,
+  "sphere": "purple"
+ },
+ {
+  "id": "red.recruiter",
+  "name": "Recruiter",
+  "text": "Whenever you recruit, +1 red.",
+  "members": 1,
+  "sphere": "red"
+ },
+ {
+  "id": "silver.caterer",
+  "name": "Caterer",
+  "text": "Whenever you give a rival something, +1 silver.",
+  "members": 1,
+  "sphere": "silver"
+ },
+ {
+  "id": "thieves.fence",
+  "name": "Fence",
+  "text": "Whenever you steal, +1 magenta.",
+  "members": 1,
+  "sphere": "magenta"
+ },
+ {
+  "id": "trading.changer",
+  "name": "Money Changer",
+  "text": "Whenever you turn resources or members into followers, +1 white.",
+  "members": 2,
+  "sphere": "white"
+ },
+ {
+  "id": "yellow.farmer",
+  "name": "Farmer",
+  "text": "Whenever an action gains you yellow, +1 yellow.",
+  "members": 1,
+  "sphere": "yellow"
+ }
+]

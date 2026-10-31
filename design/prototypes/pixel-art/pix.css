@@ -1,0 +1,26 @@
+/* Pixel-icon prototypes: shared look. Tokens copied from src/v4/v4.css so icons are judged against the real table. */
+:root{
+  --table:#141d1c; --table-2:#1d2928; --table-3:#24322f; --rim:#2d3b39; --ink:#ece6d6; --muted:#97a49f;
+  --gold:#e3b23c; --red:#e0645a; --blue:#6aa6dc; --green:#5fb37c; --magenta:#d4508f;
+  --yellow:#dcd94e; --purple:#9a62e6; --silver:#a3b3c2; --white:#eef3f8;
+  --display:"Marcellus", Georgia, serif; --body:"Figtree", system-ui, sans-serif;
+  --fs-1:11px; --fs-2:13px; --fs-3:15px; --fs-4:18px; --fs-5:22px; --fs-6:28px;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(120% 80% at 40% 30%, var(--table-2), var(--table) 70%);background-color:var(--table);color:var(--ink);font-family:var(--body);font-size:var(--fs-3);overflow-x:hidden}
+h1,h2{font-family:var(--display);font-weight:400;margin:0;letter-spacing:.04em}
+button{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--muted)}
+svg[shape-rendering]{display:block;flex:none}
+
+/* Resource symbols, as in the game's rules text (src/v4/game/Rich.jsx + v4.css .pip). Wild = a ring of every color. */
+.pip{display:inline-block;width:.82em;height:.82em;border-radius:50%;vertical-align:-0.08em;margin:0 .12em;
+  background:var(--c);box-shadow:inset 0 -1px 0 rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.35)}
+.pip.wild{background:conic-gradient(var(--gold),var(--red),var(--magenta),var(--purple),var(--blue),var(--green),var(--yellow),var(--gold));
+  -webkit-mask:radial-gradient(circle,transparent 32%,#000 34%);mask:radial-gradient(circle,transparent 32%,#000 34%)}
+
+.btn{border:1px solid var(--rim);background:none;color:var(--muted);border-radius:999px;padding:4px 12px;font-size:var(--fs-2);min-height:30px;cursor:pointer}
+.btn[aria-pressed="true"]{border-color:var(--ink);color:var(--ink)}

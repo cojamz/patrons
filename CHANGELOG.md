@@ -1,3 +1,939 @@
+# Cults changelog
+
+Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
+
+## v0.9.898 — 2026-10-31
+
+- Allowance: +2 white in round I, +3 in round II, +4 in round III. This turn, if you recruit a member, +1 follower (+2, +3). Stash: the same in magenta.
+
+## v0.9.897 — 2026-10-31
+
+- Yellow 2.0: new spaces, a new 15-member deck and the Guest Book artifact
+
+## v0.9.896 — 2026-10-31
+
+- Poach reads: Recruit a rival's member you choose.
+
+## v0.9.895 — 2026-10-31
+
+- Late in a game the log no longer skips a line that repeats the one before it (a second Harvest pick, a Big Spender recruit).
+
+## v0.9.894 — 2026-10-31
+
+- Savings' wheel face says it can send a shop member to the bottom.
+
+## v0.9.893 — 2026-10-31
+
+- Savings: +2 blue in round I, +3 in round II, +4 in round III. Before you recruit, you may send one shop member to the bottom of the pile, then refill.
+
+## v0.9.892 — 2026-10-31
+
+- New bot level: Very Hard, which looks three times as far ahead as Hard.
+
+## v0.9.891 — 2026-10-31
+
+- Gather's wheel face shows its new +2 red and the followers for recruiting a member.
+
+## v0.9.890 — 2026-10-31
+
+- Gather: +2 red in round I, +3 in round II, +4 in round III. This turn, if you recruit a member, +1 follower (+2 in round II, +3 in round III).
+
+## v0.9.889 — 2026-10-30
+
+- Shoplifter costs 7, Heiress 9, Coach 7, Old Money 6, Grifter 6. Mob costs 12 and counts as 4 members. Shopaholics, Mentor & Protégés, Impostors, Late Risers, Deprogrammers (was Movement Penalty) and Launderers are each worth 1 more follower and member. Dabblers lets you pick its color for Recruiter and other +1 of its color cards.
+
+## v0.9.888 — 2026-10-29
+
+- Promote and Demote give +3 red. HR counts guests as a color. Recruiter: whenever you recruit a member, +1 of its color.
+
+## v0.9.887 — 2026-10-29
+
+- Crowd In gives +3 purple (was +4).
+
+## v0.9.886 — 2026-10-29
+
+- Fence pays +1 magenta once per steal: a steal split among rivals pays 1, and each separate steal pays again.
+
+## v0.9.885 — 2026-10-29
+
+- Fence pays its +1 magenta once per turn, not on every steal. Con Men steals 5 when you choose to use it, not the moment you recruit it.
+
+## v0.9.884 — 2026-10-29
+
+- Choosing a rival (Shake Down and the like): point at their members to see their cards.
+
+## v0.9.883 — 2026-10-29
+
+- Double Agent costs 8. Broker, Clockmaker, Ensemble, Alchemist, Restocker and Early Bird are each worth 1 more follower.
+
+## v0.9.882 — 2026-10-29
+
+- Launderers: rearrange your resources into any mix of colors, on one card with − and + for every color.
+
+## v0.9.881 — 2026-10-29
+
+- Clockmaker: take your first two turns in a row each round. Courier pays whenever you take two turns in a row. Cards say "+1 minion" for a new minion and "your next turn comes right after this one" for going twice in a row. A copied Right Away comes right away, even after Last Call. Help Yourself gives no magenta. Loyalists stops Double Agent.
+
+## v0.9.880 — 2026-10-29
+
+- Double Agent costs 7 (was 4). New pictures: HR is four office staff at a desk, Fan Club three fans, Tribute Band a three-piece band.
+
+## v0.9.879 — 2026-10-29
+
+- Bots now pick the best empty action when they take Cover, instead of a random one.
+
+## v0.9.878 — 2026-10-29
+
+- Peek: drag the top 4 into any order, click a numbered card to take its number back, then Done.
+
+## v0.9.877 — 2026-10-29
+
+- The turn headline no longer clips its words in Firefox.
+
+## v0.9.876 — 2026-10-29
+
+- Members page: a card's hover stays on screen, and each color's artifact shows as a small artifact beside its spaces, not as a member
+
+## v0.9.875 — 2026-10-29
+
+- Members count as their printed member count only (Trendsetter and the like are 1 member). Fan Club counts as 3 members (cost 6), Big Family 4 (cost 6), Tribute Band 3, Crew, Shift Crew, Mentor & Protégé, Choir and Raiders 2.
+
+## v0.9.874 — 2026-10-29
+
+- Round-end scoring plays about 40% quicker at every speed and flows rim to rim with no still pauses
+
+## v0.9.873 — 2026-10-29
+
+- Cards you use say On Use, once per game or once per round. Coach activates one of your members' On Use ability as a free extra use. Cleaner words on Tiebreaker, Alchemist, Recruit Bonus, Agents, Tribute Band and more.
+
+## v0.9.872 — 2026-10-29
+
+- Hover a rival's seat for their whole cult: members in columns by card type, priciest first, with their artifact, round-start income, game-end score, resources and members by color up top. Members they haven't used yet glow; used ones are turned face down.
+
+## v0.9.871 — 2026-10-29
+
+- The shop's member cards fill the panel: two to a row at 6 members, taller at 7 and 8; Details shows each whole picture.
+
+## v0.9.870 — 2026-10-29
+
+- Hard bots now think ahead about which member to swap or take, not just where to place and what to buy.
+
+## v0.9.869 — 2026-10-29
+
+- Your leader opens Say: click your own leader to talk (the Say button is gone), and every quick line has its own little emoji.
+
+## v0.9.868 — 2026-10-29
+
+- The words on the wheel's rim sit in the middle of the band.
+
+## v0.9.867 — 2026-10-29
+
+- The full member card shows its picture big, filling the window
+
+## v0.9.866 — 2026-10-29
+
+- HR counts as 4 members and costs 10.
+
+## v0.9.865 — 2026-10-29
+
+- Member pictures fill the whole middle of each card
+
+## v0.9.864 — 2026-10-29
+
+- Promote and Demote can swap with a rival's member too. Con Men cost 7.
+
+## v0.9.863 — 2026-10-29
+
+- Con Men cost 7.
+
+## v0.9.862 — 2026-10-29
+
+- Every member's picture is now a little scene: the person in a place that says what they do
+
+## v0.9.861 — 2026-10-29
+
+- Spare minions now sit under the cults beside Log; the followers on the wheel's rim glow less.
+
+## v0.9.860 — 2026-10-29
+
+- The spare minions count no longer jumps huge between rounds.
+
+## v0.9.859 — 2026-10-29
+
+- Hover a member or artifact to see what it has gained you this game; a member that scores at game end also says what it would score if the game ended now.
+
+## v0.9.858 — 2026-10-29
+
+- Bots now weigh what a swap or a stolen member does for every player, so they push a Saboteur into the leader's cult and use Anarchist and Headhunter on rivals.
+
+## v0.9.857 — 2026-10-29
+
+- Recruiter: whenever you add a member to your cult, +1 red. Buying followers no longer counts.
+
+## v0.9.856 — 2026-10-29
+
+- Every member scores its member count: Revelers scores 3, Dabblers, Con Men and Ensemble 2. Cards show the member mark and count at the top; the price circle is smaller.
+
+## v0.9.855 — 2026-10-29
+
+- Front-runner costs 2 and Extra Hand 9. Agents: your actions can't be copied (you can still copy them). Crowd In gives +4 purple. Twins are now Triplets, worth 3 followers.
+
+## v0.9.854 — 2026-10-29
+
+- Member cards: the price circle at the top is a bit smaller.
+
+## v0.9.853 — 2026-10-29
+
+- Member cards now match the card design you picked, with bigger costs and slightly bigger rule text.
+
+## v0.9.852 — 2026-10-29
+
+- The full member card (hover, tap, members page) is back to the card you picked: price, name and worth on one bar, the rule under the picture.
+
+## v0.9.851 — 2026-10-29
+
+- Member cards: smaller price and follower number; the separate member count tag is gone.
+
+## v0.9.850 — 2026-10-29
+
+- Connoisseur back to 4.
+
+## v0.9.849 — 2026-10-29
+
+- Twelve member prices from overnight bot balance runs: Heiress 8, Exporter 7, Grifter 5, Accomplice 3, Bodyguard 8, Night Owl 8, Extra Hand 8, Launderers 4, Agents 3, Bait 3, Connoisseur 3, Scout 3.
+
+## v0.9.848 — 2026-10-29
+
+- The darkest faces are lit so they read clearly at card size.
+
+## v0.9.847 — 2026-10-29
+
+- Every member has a new, sharper portrait, with a wider range of skin tones, and cards that count as several members show that many people.
+
+## v0.9.846 — 2026-10-29
+
+- Coach can't hand back a member used this same turn (it could loop forever with Tribute Band and Tryout).
+
+## v0.9.845 — 2026-10-29
+
+- Members worth 2 or more followers show the member count tag too (they count as that many members).
+
+## v0.9.844 — 2026-10-29
+
+- Member cards get a cleaner trading-card look: bigger prices and costs, larger rule text, the name on the color bar, and a tag on members that count as more than one.
+
+## v0.9.843 — 2026-10-29
+
+- Launderers lets you rearrange all your resources: one color for all of them in a click, or split them color by color.
+
+## v0.9.842 — 2026-10-29
+
+- All 15 guests are in: new Dabblers, Cheerleader, Anarchist, Scout, Con Men, HR and Coach; Big Spender is back as Once per game; Freelancer is now Alchemist.
+
+## v0.9.841 — 2026-10-29
+
+- Members in card text are now a little head-and-shoulders symbol: a red one for a red member, a split one for any member.
+
+## v0.9.840 — 2026-10-29
+
+- One Time Use is now called Once per game, on every card and in the rules.
+
+## v0.9.839 — 2026-10-29
+
+- Member cards are back to their earlier look while the new card design is reworked.
+
+## v0.9.838 — 2026-10-29
+
+- Every member's picture redrawn with more detail; members that count as 2 or more show that many people; new guests have pictures
+
+## v0.9.837 — 2026-10-29
+
+- Member cards look like trading cards: the name on a bar in its color, the price in a dark circle and the worth beside it, bigger text, and card keywords like One Time Use and Game End in bold.
+
+## v0.9.836 — 2026-10-28
+
+- Guests: Party Crasher (was Squatter) and Extra Hand are One Time Use; new Saboteur (−3 followers whenever it joins a cult); Launderers worth 2; Front-runner and Tiebreaker cheaper; Straggler is out.
+- Green has 15 members (Connector is out). Ensemble counts as 2 members, Impostor costs 6, Tribute Band plays the actions of a rival you choose, Understudy copies the action taken the previous turn, and Hot Streak is One Time Use at +3 followers per turn in a row.
+
+## v0.9.835 — 2026-10-28
+
+- Extortionist steals 2 from the richest rival when recruited and at each round start. Shake Down: the rival picks which of their members is at stake.
+
+## v0.9.834 — 2026-10-28
+
+- Green has 16 members: Understudy, Wallflower, Fan Club and Roadie join, and Tribute Band plays the leader's actions. Accomplice is back at 2: steal 3 resources.
+
+## v0.9.833 — 2026-10-28
+
+- Cards that could be used once a game now say One Time Use.
+
+## v0.9.832 — 2026-10-28
+
+- The members page shows each color's artifact up top and fits a whole color on one screen.
+
+## v0.9.831 — 2026-10-28
+
+- The wheel no longer freezes for a moment after it stops turning
+
+## v0.9.830 — 2026-10-28
+
+- The members page is now a color explorer: pick a color to see its spaces by round, its artifact and its member deck together.
+
+## v0.9.829 — 2026-10-28
+
+- Encore now copies the On Recruit of a rival's member instead of a space. Sleep In gives +4 purple in round I, +5 in round II, +6 in round III.
+
+## v0.9.828 — 2026-10-28
+
+- Demote now swaps for a shop member costing up to 2 less (a 5 for a 5, 4 or 3), and Promote and Demote give +2 red.
+
+## v0.9.827 — 2026-10-28
+
+- The top half of the wheel's ring sits further from the spaces
+
+## v0.9.826 — 2026-10-28
+
+- A small pool of spare minions stands by the wheel from round II. Each extra minion or extra turn flies from it to the player, and cards that give one warn when it's empty.
+
+## v0.9.825 — 2026-10-28
+
+- The wheel's ring words sit centered in the ring
+
+## v0.9.824 — 2026-10-28
+
+- Crowd In now gives +5 purple and one more minion this round, instead of letting you place on taken spaces.
+
+## v0.9.823 — 2026-10-28
+
+- Restocker has its Use button again (it was hidden because it gives no resources).
+
+## v0.9.822 — 2026-10-28
+
+- Walk-In's recruit now flies off the deck, opens in the middle and lands in your seat, like a shop recruit.
+
+## v0.9.821 — 2026-10-28
+
+- Echo, Reprise, Tryout, Walk-In, Exchange and Splurge give +1 of their color again
+
+## v0.9.820 — 2026-10-28
+
+- The wheel's ring and the big numbers on its spaces are in slightly pixel letters
+
+## v0.9.819 — 2026-10-28
+
+- Details view: text a touch smaller, new member pictures shown whole
+
+## v0.9.818 — 2026-10-28
+
+- Rivals' follower buys play at the same quicker pace as the rest of their turn
+
+## v0.9.817 — 2026-10-28
+
+- A player on Last Call (or a copy of it) shows "goes last" on their seat for the rest of the round.
+
+## v0.9.816 — 2026-10-28
+
+- The wheel turns smoothly in Firefox: no redraw of the whole board each time a spin lands
+
+## v0.9.815 — 2026-10-28
+
+- A member you can use now glows and says USE in your seat; one saved for later shows a small light
+
+## v0.9.814 — 2026-10-28
+
+- Your click answers at once right after a rival's turn
+
+## v0.9.813 — 2026-10-28
+
+- A Doppelganger copying Muse now shows its own +1 green by your cult, beside Muse's
+
+## v0.9.812 — 2026-10-28
+
+- Fixed games freezing for good at the end of a round, or a step behind after your own move
+
+## v0.9.811 — 2026-10-28
+
+- Every member and artifact redrawn as a bigger portrait, with a glow in its color
+
+## v0.9.810 — 2026-10-28
+
+- A members page at play/members/: every member's card, by color
+
+## v0.9.809 — 2026-10-28
+
+- Out of Style is back to +1 blue per member sent
+
+## v0.9.808 — 2026-10-28
+
+- The starting pick's panel goes away once the first moves play, instead of staying up through bots' turns
+
+## v0.9.807 — 2026-10-28
+
+- Seat figures' glow and outline are drawn into the picture, so Firefox stops redrawing them while they bob
+
+## v0.9.806 — 2026-10-28
+
+- Your first click of a turn answers sooner: it no longer waits to cut the last settle short
+
+## v0.9.805 — 2026-10-28
+
+- Your clicks do less redrawing: the table redraws once for your move instead of three or four times
+
+## v0.9.804 — 2026-10-28
+
+- Rival turns move on as the last piece lands; the cards slide home underneath
+
+## v0.9.803 — 2026-10-28
+
+- Smoother play: each move takes far less work to figure out, bots keep thinking off the page after one slow turn, and flying pieces, the wheel's dim and the seat-pick glow no longer make Firefox redraw by hand every frame
+
+## v0.9.802 — 2026-10-28
+
+- Long rival turns play out instead of jumping to the end: they speed up a little to fit
+
+## v0.9.801 — 2026-10-28
+
+- Tiebreaker costs 5, down from 7.
+
+## v0.9.8 — 2026-10-28
+
+- Out of Style can send neutral members to the bottom: pick the gray neutral dot.
+
+## v0.9.7 — 2026-10-28
+
+- Coins, followers and members no longer vanish partway: every flight lands, even when the page is busy
+
+## v0.9.6 — 2026-10-28
+
+- The wheel turns lighter in Firefox: its glows and shadows rest while it spins
+
+## v0.9.5 — 2026-10-28
+
+- Pointing at a copy space late in the game (Greatest Hits, Cover) no longer freezes the page for seconds, and every move does less work
+
+## v0.9.4 — 2026-10-28
+
+- Your own moves answer faster: the table draws your move in one go instead of in pieces
+
+## v0.9.3 — 2026-10-28
+
+- The shop fits on screen at narrower laptop widths (about 1100 wide): every card and "Done, no recruit" show at once, and Peek's top-of-the-pile row no longer covers Done.
+
+## v0.9.2 — 2026-10-28
+
+- Say: quick lines or your own words to the table, shown beside your seat and in the log
+- Every finished game is saved: Past games on the home screen reads any of your last 12 move by move, or saves it
+- Peek shows the top of the pile as a row: click to number the order, or Keep this order; the row stays lit to recruit from
+- Doppelganger does the copied member's On Recruit; Squatter on Greatest Hits is checked
+- Prices: Front-runner 4, Launderer 5, Straggler 8, Tribute Band 12; Loyalists: your other members can't be swapped
+- Spree keeps all three recruits when one of them is a member you can use (Speculator)
+- Panel's Promote or Demote picker is titled by what it does
+- Members sent back to the pile or shop keep nothing from before; Farewell and Release refill a short shop
+- Rounds run lighter: an idle table costs a fraction of before, and late-game clicks answer faster
+
+## v0.9.1 — 2026-10-27
+
+- Out of Style gives a flat +2 blue; the wheel's words match the new round I spaces
+
+## v0.9.0 — 2026-10-27
+
+- Round I spaces reworked: Red's Tryout (use a shop member's On Recruit) and Walk-In (recruit the deck's top member, each rival +1 red); Green's Build Up +3/+4/+5, Echo and Reprise +2, Reprise opens in round I, Cover copies an action with no minion on it; Magenta's Help Yourself steals 3/4/5 and Stash +3/+4/+5; Blue's Savings +3/+4/+5 and Out of Style +2; Splurge pays on member recruits only, Exchange +2
+
+## v0.8.100 — 2026-10-27
+
+- Contest prizes are +4 / +6 / +10 by round (ties get half, rounded up: +2 / +3 / +5), and every member costs 1 more of any color
+- Rounds II and III draw from all three decks: round III members shuffle in with round II's
+- A recruited member shows whole at the wheel's middle, then flies to its buyer; the pay sheet closes once you've paid
+- Picks light up in the shop (Churn, Peek, buys), "Done, no recruit" is amber, the wheel is about 6% bigger
+- Hovering an artifact shows it; member pop-ups linger; the ring note fades
+- Late games run lighter, and the wheel no longer turns by itself
+- Trendsetter fires on member recruits only, and Peek never shows a card twice
+
+## v0.8.99 — 2026-10-27
+
+- Member cards print two clear keywords: 'On Recruit:' and 'Round Start:' (was 'Now and at round start' and 'When recruited')
+
+## v0.8.98 — 2026-10-27
+
+- The round prize on each wheel rim reads bigger and bolder, in plain case, on a slightly thicker rim
+
+## v0.8.97 — 2026-10-27
+
+- The room shows each color's artifact under what its spaces do, and the menu has a volume slider beside Sound on
+
+## v0.8.96 — 2026-10-27
+
+- Bigger text across the game, a step up from 1400px-wide windows, and shop members keep their picture with details on
+
+## v0.8.95 — 2026-10-27
+
+- The log under the player cards shows every turn since yours that fits, and no longer opens over the fourth player's card
+
+## v0.8.94 — 2026-10-26
+
+- Late in a game, bot turns no longer stall: no step's animation holds the screen past about 4 seconds, at any speed
+
+## v0.8.93 — 2026-10-26
+
+- Ordering Peek's cards, the rest of the shop fades back so only the four read as clickable.
+
+## v0.8.92 — 2026-10-26
+
+- Greatest Hits: you pick the order of its copies by clicking your lit spaces on the wheel (playtester Maxwell's idea)
+
+## v0.8.91 — 2026-10-26
+
+- Promote's and Demote's picker shows every player's row whole
+
+## v0.8.90 — 2026-10-26
+
+- Promote's and swaps' rows fade at the edge when there are more; the space's hover closes when its question opens; the swap hover says '9 members for 7 shop members'; round summaries say gained/lost, not won; a member's bubble shows its whole rule; the rules explain the artifact pick
+
+## v0.8.89 — 2026-10-26
+
+- Your seat keeps a line of what rivals took from you since your last turn: resources, followers, members, and swaps ('P2 swapped your Busker for Doorman'); seats say '1 member'
+
+## v0.8.88 — 2026-10-26
+
+- Last Call keeps you waiting until everyone else is out of minions, even when a rival skips a turn after you take it. The shop no longer shows one member twice.
+
+## v0.8.87 — 2026-10-26
+
+- Churn's tap button says Send to bottom; Spree's Done ends every recruit left and its prompt counts them; a steal's card stays put between picks; Shake Down asks 'P4 is taking your Trendsetter: pay 3 to keep it?'; extra clicks on Pay can't open the deck
+
+## v0.8.86 — 2026-10-25
+
+- Extortionist costs 6.
+
+## v0.8.85 — 2026-10-25
+
+- Smoother: bots think without holding up the screen, and flying pieces and counts share one frame loop.
+
+## v0.8.84 — 2026-10-25
+
+- Snappier: hovers open the moment you point, your choices light as the last piece lands, rival turns play quicker, and round II and III members shuffle into the deck.
+
+## v0.8.83 — 2026-10-25
+
+- The artifact list during the draft uses the table's text sizes.
+
+## v0.8.82 — 2026-10-25
+
+- Round decks: round II and III members are shuffled into the deck when their round starts (cost 3 or less round I, 4 round II, 5 and up round III).
+
+## v0.8.81 — 2026-10-25
+
+- Member decks: Shopkeeper and Busker cost 3; Recluse joins White; Stylist leaves Blue; Proselytizer, Mentor & Protégé, Bodyguard and Shopaholic are worth 1 more follower.
+
+## v0.8.80 — 2026-10-25
+
+- A card you're reading stays open while rivals take their turns.
+
+## v0.8.79 — 2026-10-25
+
+- The artifact draft says: A boon for your cult. Comes with 1 resource.
+
+## v0.8.78 — 2026-10-25
+
+- Even Swap and Peek show their +2 on the wheel.
+
+## v0.8.77 — 2026-10-25
+
+- The artifact draft says what an artifact is: your cult's bonus all game.
+
+## v0.8.76 — 2026-10-25
+
+- Artifacts are picked only from the list on the wheel, which says whose pick it is; a taken one leaves the list.
+
+## v0.8.75 — 2026-10-25
+
+- Gather gives +3/+4/+5 red, Hold Up +2/+3/+4 purple, Crunch Time +2 purple.
+
+## v0.8.74 — 2026-10-25
+
+- Dragging the wheel snaps it round to the next side right away, even while rivals are moving.
+
+## v0.8.73 — 2026-10-25
+
+- The artifact draft shows every artifact's picture and what it does, no hover needed.
+
+## v0.8.72 — 2026-10-25
+
+- Artifacts: at the start each player picks an artifact and 1 of its color. Each has its own picture on the player card.
+
+## v0.8.71 — 2026-10-24
+
+- New members: Headhunter (Red), Fixer (Magenta), Window Shopper and Restocker (Blue), Timekeepers (Purple), Old Money (White). Bulk Buyer, Appraiser and Makeover leave the deck.
+
+## v0.8.70 — 2026-10-24
+
+- Growing spaces show their numbers round by round (I +2 · II +3 · III +4) instead of "+4 next round".
+
+## v0.8.69 — 2026-10-24
+
+- Growing spaces show their numbers round by round (I +2 · II +3 · III +4) instead of "+4 next round".
+
+## v0.8.68 — 2026-10-24
+
+- Prices: Trendsetter, Makeover and Window Dresser cost 3; Patroness 7; Early Bird, Bouncer, Gossip and Go-Getter 2 cheaper; Tribute Band 7; Mob 12.
+
+## v0.8.67 — 2026-10-24
+
+- Growing spaces on the wheel say next round's number ("+3 red, +4 next round") instead of "more each round".
+
+## v0.8.66 — 2026-10-24
+
+- Sleep In gives +3 purple (was +4).
+
+## v0.8.65 — 2026-10-24
+
+- Even Swap gives +2 red. Recruit a Member takes a shop member costing 8 or less.
+
+## v0.8.64 — 2026-10-24
+
+- "Cast out" on Undertaker and Appraiser too: one word for sending your own member to the bottom of the pile.
+
+## v0.8.63 — 2026-10-24
+
+- "Cast out": Farewell and Estate Sale cast out one of your members to the bottom of the pile.
+
+## v0.8.62 — 2026-10-23 — shipped (source 07ec995, main 7b510cc)
+
+- The wheel shows more of each space: Right Away's and Crunch Time's purple, and Last Call's followers per minion left.
+
+## v0.8.61 — 2026-10-23 — shipped (source 523b518, main 500e3bc)
+
+- Clearer card text: Allowance, Top Up, Late Bloomers and Exchange; the board's words now match each card (Sweet Talk, Help Yourself, Redistribute, Golden Years, Chorus, Harvest).
+
+## v0.8.60 — 2026-10-22 — shipped (source c1eee17, main eb45b92)
+
+- Peek: the 4 cards you peek at sit beside the shop instead of replacing it, and ones you can't afford stay visible, faded
+
+## v0.8.59 — 2026-10-22 — shipped (source c919007, main 3eb46a0)
+
+- The shop shows 6, 7 and 8 members in rounds I, II and III. Peek gives +2/+4/+6 blue; Lie Low no longer steals; Raiders (renamed) costs 4. Redistribute counts its own space, and the details view shows total cost. Members fly between players online too; seats list members oldest to newest. Top Up: fewest colors get a flat +1, only its yellow grows each round. Wheel and card words match what the spaces do. After an update, players in a game started on the version before go back to their seat on that version.
+
+## v0.8.58 — 2026-10-22 — shipped (source 314e445, main a5cca4f)
+
+- Loyalists costs 5 (was 3). Sticky Fingers: "Your steals take 1 more resource", now members' steals too.
+
+## v0.8.57 — 2026-10-22 — shipped (source 33d3f67, main 1458721)
+
+- Right Away scales (+1, +2, +3 purple). Gossip pays when a turn is really skipped. Closer pays whoever places the round's last minion, now cheaper. Copying Sleep In, Hold Up, Right Away, Crunch Time, Last Call, Crowd In, High Tide or Allowance does the whole action. Stunt Double repeats the space you just took.
+
+## v0.8.56 — 2026-10-22 — shipped (source 8b73f52, main f6ea99e)
+
+- Help Yourself now steals its followers from the rivals you take from, instead of getting them from the bank.
+
+## v0.8.55 — 2026-10-22 — shipped (source 4fd20c7, main 6272bf6)
+
+- Even Swap, Promote and Demote now offer "Don't swap", so the swap is your choice; you keep the +1 red.
+
+## v0.8.54 — 2026-10-22 — shipped (source f45c601, main 84d5563)
+
+- Hover cards put each separate effect on its own line.
+
+## v0.8.53 — 2026-10-22 — shipped (source ba3d88d, main 37b3327)
+
+- The glossary lists the cards that use each word and adds Skip, Get rid of, Turn into followers and more; the Members list shows colors not in this game, dimmed. Right Away now scales by round.
+
+## v0.8.52 — 2026-10-22 — shipped (source 24f6038, main 1aecb82)
+
+- White prices: Exporter, Undertaker and Appraiser cost more; Money Changer, Heiress, Broker and Martyr are worth 2 followers
+
+## v0.8.51 — 2026-10-22 — shipped (source 95516d9, main c272a6e)
+
+- Copying Open Door now recruits the cheapest member in the shop at that moment, instead of nothing once the first player's pick was gone.
+
+## v0.8.50 — 2026-10-22 — shipped (source 8f3e174, main 1e93cb7)
+
+- Dragging or spinning the wheel no longer redraws the whole board each frame, so it turns smoother.
+
+## v0.8.49 — 2026-10-22 — shipped (source 2a10608, main 3c7959f)
+
+- White is redesigned: six new spaces about turning what you have into followers, 12 members, and the contest is Most white
+
+## v0.8.48 — 2026-10-22 — shipped (source 1c61d84, main 0e0f24e)
+
+- Custom table picker: Blue is tagged 2.0
+
+## v0.8.47 — 2026-10-22 — shipped (source 61ccbf3, main 318800d)
+
+- Silver's round III space is now High Tide: each rival +1 silver, then gain 1 follower per silver the rival with the most silver holds.
+
+## v0.8.46 — 2026-10-22 — shipped (source 10b225b, main cb2f026)
+
+- Custom table picker: a small 2.0 / 1.5 / 1.0 tag on each color shows which are redesigned
+
+## v0.8.45 — 2026-10-22 — shipped (source dc4564e, main 9747394)
+
+- Purple redesign: new actions (Sleep In, Hold Up, Right Away, Last Call, Crunch Time, Crowd In), six new members, fresh prices, and a II+ tag on members that work from round II.
+
+## v0.8.44 — 2026-10-22 — shipped (source cd94f94, main 9c45335)
+
+- The log now says every change: each space's gain, every swap, who got paid, new cards in the shop, and what caused it.
+
+## v0.8.43 — 2026-10-22 — shipped (source b7e4550, main 24e5221)
+
+- Five and six player games: Purple joins the board at 5 players, Yellow at 6, with shorter chairs so everyone fits.
+
+## v0.8.42 — 2026-10-22 — shipped (source f4bd276, main e87c033)
+
+- Purple round II: "+2 purple. This round you can place on taken spaces" replaces Plan Ahead.
+
+## v0.8.41 — 2026-10-21 — shipped (source aa791b5, main 29f6ecf)
+
+- Crunch Time's hover says 2 turns after this one.
+
+## v0.8.40 — 2026-10-21 — shipped (source 99b8c53, main ccd71ed)
+
+- Crunch Time reads "Take two turns after this one."
+
+## v0.8.39 — 2026-10-21 — shipped (source 42f448f, main e7599be)
+
+- Crunch Time reads "Take your next 2 turns now" again.
+
+## v0.8.38 — 2026-10-21 — shipped (source 82542e6, main 7196887)
+
+- The final results open with every total already in place; no second count-up after round III.
+
+## v0.8.37 — 2026-10-21 — shipped (source 214e269, main 8d3c539)
+
+- Taking back a placement with Escape (Kickback) now really frees the space again.
+
+## v0.8.36 — 2026-10-21 — shipped (source 1eb83e7, main ce32b97)
+
+- Snappier: a rival's seat card opens as soon as you rest on it, the start of your turn no longer stutters, and rivals' turns run a touch quicker.
+
+## v0.8.35 — 2026-10-21 — shipped (source f9882c0, main 97b0632)
+
+- New member prices for Magenta, Blue, Red, Green and the guests: educated guesses from bot tests, leaning a little pricier, nothing below 2 (one color, one wild). Most cards got cheaper; human play will set the rest. Price list: /mnt/project-files/member-balance/prices-2026-10-21.md
+- The new Blue members are in: Shopaholic, Patroness, Snob, Stylist, Connoisseur, Plus-One, Doorman, Critic, Regular, Window Dresser, Makeover, Trendsetter. Window Dresser, Makeover and Trendsetter are now worth 3 followers each.
+- Guests: Front-runner, Tiebreaker ("Ties you're in go to you alone") and Launderer ("turn all your resources into one color you choose") join the deck.
+- Recruit Bonus is worth 2 followers. Shopaholic's second recruit is named in the game log.
+
+## v0.8.34 — 2026-10-21 — shipped (source 08776e3, main 9b95004)
+
+- Crunch Time's hover says 2 more turns now.
+
+## v0.8.33 — 2026-10-21
+
+- Crunch Time takes 2 more turns now from the end of your round, so your next turns stay where they were and you finish early.
+
+## v0.8.32 — 2026-10-21 — shipped (source 9aec1a1)
+
+- Recruiting means bringing members or followers into your cult yourself: buying followers now counts for "whenever you recruit" cards (Recruiter, Proselytizer, Shoplifter); a member a rival forces on you never does. The step after placing is called Recruit.
+
+## v0.8.31 — 2026-10-21 — shipped (source cbf1440)
+
+- Members say "Recruit" instead of "Buy": "Done, no recruit", "Undo recruit", "Recruit twice this turn". "Buy followers" stays. The space Buy Twice is now Recruit Twice.
+
+## v0.8.30 — 2026-10-21 — shipped (source bd09cf9)
+
+- New player panels: the follower total is big on the right, minions left in a row under the name, resources in one even strip, members sorted by cost with room for two rows. The turn story folds to one line and opens on a tap.
+
+## v0.8.29 — 2026-10-21 — shipped (source d12bd01)
+
+- Player panels no longer slide up a step after the round I picks.
+
+## v0.8.28 — 2026-10-21
+
+- Magenta members: Kingpin now pays per magenta member; new Snitch, Fence and Shoplifter; prices set from balance tests
+
+## v0.8.27 — 2026-10-21 — shipped (source 6266070)
+
+- Faster: your minion stands on the space the moment you click, the wheel spin no longer stalls, round II starts with no dim pause, the shop stops redrawing on rivals' turns, and card flights cost less to draw.
+
+## v0.8.26 — 2026-10-21 — went live together with v0.8.27
+
+- Shorter, more consistent card texts: one opener then a colon, "When recruited:", "each rival", "steal", growing amounts written per round. No card works differently.
+
+## v0.8.25 — 2026-10-21 — shipped (source ed22298)
+
+- Member swaps with the shop cross both portraits at once. A big gain flies every coin (12 coins as 12) without slowing the turn. Round end is smoother: the scoring card fades up, totals count as prizes land, minions fill their columns as they arrive. The follower mark on each rim has a soft sheen. Bots now judge member swaps properly.
+
+## v0.8.24 — 2026-10-21 — shipped (source 2831c45)
+
+- Shop: long abilities in details view fit their card, and a discounted card's old price no longer runs into its worth. The since-your-last-turn story never shows a line cut in half, and a tall turn card sums up its last lines so the story's heading stays visible.
+
+## v0.8.23 — 2026-10-21 — shipped (source 1343cb1)
+
+- Clearer motion: a space's result shows beside its space, members pop out of their seat when they act, a recruit shows itself at the middle before flying to its buyer, and a steal says what was taken at once. Round start plays in steps: minions home, income seat by seat, then the shop refills. Skipping no longer sets off a burst of sounds. Undo plays the move backwards.
+
+## v0.8.22 — 2026-10-21 — shipped (source febdee1)
+
+- Laptops: chairs run full height beside a narrower shop; the story holds two turns. Big screens scale the whole table. Silver, white and colorless members get their own card look. Your first placement each round says which rings are open.
+
+## v0.8.21 — 2026-10-21 — shipped (source e606c44)
+
+- "Safe this round" is a small shield. Big coin piles on the pay sheet stay short and print their count. A buy or recruit pulses before its reward flies. At round start the old shop cards go into the deck and the new ones deal out.
+
+## v0.8.20 — 2026-10-21
+
+- Churn's space on the wheel says what it does: send 3 to the bottom
+
+## v0.8.19 — 2026-10-21 — shipped (source c20f7b7, main 0dae66e)
+
+- Blue reworked: churn the shop, peek at the pile, buy twice, bury, Spree; the shop grows 5/6/7 by round.
+
+## v0.8.18 — 2026-10-20 — shipped (source 902e175)
+
+- Round cards appear faster (no fade-in blur). The final results show where each cult's points came from: followers, then each member's people, then the followers it grants.
+
+## v0.8.17 — 2026-10-20 — shipped (source 84b7374)
+
+
+- Shop: an "affordable" toggle fades the members you can't pay for.
+- Red's shop swap names both members.
+- Rules that grow by round read as I / II / III lines, with this round lit (hovers, member cards, seat lists).
+- "P2 took 1 gold" shows as a small tab on the robbed seat.
+- Gift cards keep their way-out button ("Swap nothing", "Take all") in a footer, apart from the caption.
+- Contest rim marks sit on the line of text.
+- Grifter: only its first sentence. Top Up gives +1 × round. Feastmaker is now Chefs: 6 yellow + 3 any, worth 2 followers.
+- Overseer and Social Climber leave the deck (Purple and Blue deal 9 members until their replacements).
+- A player named Pants gets Max's tall leader.
+## v0.8.16 — 2026-10-20 — shipped (source 9d04664, main e943baa)
+
+- Guest members are colorless: no sphere counts them, and their whole cost is paid in any colors.
+
+## v0.8.15 — 2026-10-20 — shipped (source da1b0c7, main 7497f03)
+
+- A busy rival's chair shows more of its members: "safe this round" sits under the member count.
+
+## v0.8.14 — 2026-10-20 — shipped (source 33aefd2, main e79d4fe)
+
+- Bigger wheel: the shop column is narrower on laptops.
+
+## v0.8.13 — 2026-10-20 — shipped (source 80aa541, main 251daf6)
+
+- Bots no longer swap back a member they swapped away.
+- A member swapped into the shop comes back clean, with no trace of its old owner.
+- A member stolen this round can still be released.
+- The turn story tells a steal's followers once, not twice.
+
+## v0.8.12 — 2026-10-20 — shipped (source a74317c, main eea5b26)
+
+- The shop row fills all its slots at 7 members: the deck stands two cards tall.
+
+## v0.8.11 — 2026-10-20 — shipped (source 2817a9b, main 0c5101b)
+
+- The shop shows 7 members face up, down from 8.
+
+## v0.8.10 — 2026-10-21 — shipped (source 3ff1ac7, main 5ba1b6f)
+
+- Shop cards show their total cost as a faint number in the top-right corner.
+
+## v0.8.9 — 2026-10-19 — shipped (source eab7757, main d657180)
+
+- Straggler destinations stay visible and can be inspected before moving.
+
+## v0.8.8 — 2026-10-19 — shipped (source 68c9bf0, main f366272)
+
+- Round I: steal×round plus safety; steal per already occupied Magenta action; steal×round plus followers×round.
+- Round II: take half a rival’s one-color pile, rounded down; ransom a member costing5 or less. Round III: take a rival’s member without replacement.
+- Every action gives+1 Magenta. Stolen resources keep their colors, including ransom payments and member effects. Split general steals freely across rivals; doubling/+1 apply once to the overall total.
+- Bodyguard protects both resources and members. Updated wheel/hover text, exact half-stack choices and direct original-color resource flights.
+
+## v0.8.7 — 2026-10-19 — shipped (source c387ebd, main d090f0c)
+
+- Magenta contests reward held magenta resources.
+
+## v0.8.6 — 2026-10-19 — shipped (source 12aab9d, main 190bf16)
+
+- Larger printed costs and follower symbols on shop cards.
+
+## v0.8.5 — 2026-10-19 — shipped (source 8619ed0, main 8b6cc10)
+
+- Retinue counts as three, Yellow is warmer, and the opening draft shows the upcoming snake order.
+
+## v0.8.4 — 2026-10-19 — shipped (source 1acee1a, main 70c0fa4)
+
+- Payment passives sit above the money selector with tighter spacing; member abilities remain readable in dark ink.
+- Member hovers put costs beside names, retain whole abilities and controls, and sort by cost inside effect groups. Redundant ownership lines are gone.
+- Details can be toggled during member choices; your explicit reading preference survives subsequent choices and visits.
+
+## v0.8.3 — 2026-10-19 — shipped (source cf9e23c, main a189343)
+
+- Larger shop cards; details reveal abilities in place without rearranging or scrolling the desktop market.
+
+## v0.8.2 — 2026-10-19 — shipped (source ff53560, main 4735862)
+
+- Red’s twelve-member deck now includes Panel, Loyalists and two new recruit/movement passives. Volunteer is free; Twins costs 2 red; Mob counts as 5 members/followers. The upper prices are 6 / 8 / 10.
+- Panel promotes or demotes another member. Loyalists blocks your own and rivals’ swaps; taking members still triggers Recruiter. Printed follower groups count equally as members.
+- Impostor and Doppelganger become copies without triggering the copied member’s On Recruit; ongoing abilities and future Round Start effects remain.
+- Chorus excludes itself. Copy Previous follows the latest action regardless of its owner. On Recruit and Round Start are bold throughout member rules.
+- Followers and members share one shop with matching card art/cost layouts. Swap targeting no longer leaves stale hover highlights.
+
+## v0.8.1 — 2026-10-18 — shipped (source 68e9a5d, main 2222a66)
+
+- Red and Green round prizes now reward held resources instead of members.
+
+## v0.8.0 — 2026-10-18 — shipped (source c643d18, main 99a7ee8)
+
+- Red's six actions now recruit, promote, demote, exchange equal-cost members, or gain 2/3/4 red by round. Every Red action includes +1 red.
+- Promote and Demote can change any cult; Even Swap can exchange any two equal-cost members across cults and the shop. Cost compares printed colored plus wild cost.
+- Taking a member for yourself triggers Recruit effects. Giving a member to another cult does not. Green copies ask for fresh swap targets.
+- Swaps preserve shop size and transfer only unused extra minions. Existing Red members remain while their redesign is discussed.
+
+## v0.7.0 — 2026-10-18 — shipped (source 4b6a8fe, main d6241e1)
+
+- Green copies now choose again through copied copy actions. Each chain prevents revisiting an action, and each Green action gives +1 Green. Encore targets rivals; Reprise targets your actions.
+- Chorus and Build Up replace Hum and Crescendo. Green's twelve-member deck includes Impostor, Connector, Agents and Bait, plus revised existing abilities and prices. Stunt Double copies on recruit; Tribute Band is once per game.
+- Copy-all resolves each choice and recruit before continuing; nested choices survive save/reload. Copying Extra Hand grants the current round's unplaced extra minion.
+- Bait visibly deducts followers without removing members; totals stop at zero and score breakdowns account for losses.
+- Shorter pauses while members pass through the center; flight and landing animations keep their full duration.
+
+## v0.6.5 — 2026-10-18
+
+- Smoother animations: the idle bobbing and breathing pause while a move plays out. At 4× CPU slowdown, that halves the page's work and cuts the worst stall from 0.4s to 0.13s.
+
+## v0.6.4 — 2026-10-18
+
+- Prices: Heir 4+2, Revelers 3+1, Alchemist 4+2, Squatter 5+2, Lamplighter 6+2 are cheaper; Freelancer 3+3 and Front-runner 4 cost more.
+
+## v0.6.3 — 2026-10-18 — shipped (source ebbe04f, main 2817380d)
+
+- A resumed game on your turn takes your first click at once (it waited 2-3s).
+- Redistribute on the wheel says "from every rival" (it still said "from rivals with more resources").
+
+## v0.6.2 — 2026-10-18 — shipped (source f9a419f, main 15e674c)
+
+- At round end, followers fly only from where they really came from: no stray flights from the follower shop, and a closing recruit's followers come off the new card.
+
+## v0.6.1 — 2026-10-18 — shipped (source 4be3a95, main 65b79ea)
+
+- When Crunch Time puts a player back to back, the turn line says so ("P1 took turns early with Crunch Time") instead of blaming snake order.
+- The round card shows the coming round's snake: "Snake order: P4, P2, You, P3, P3, You, P2, P4 …".
+- An extra turn names its card: "Night Owl: extra turn" (also Go-Getter, Late Riser); Crunch Time's turns read "Crunch Time: next turn, now".
+- A member used before placing leads the turn card and keeps its own gains (Tribute Band's copy no longer reads as Spree's).
+- A magenta steal reads once: "1 gold from P2, 1 red from P3, as magenta".
+
+## v0.6.0 — 2026-10-17 — shipped (source 41f09d8, main 11c3ee2)
+
+- Member competitions count members of that arc's own color; Gold, Silver and Yellow keep their conditions.
+- Local/online legal lights and turns wait for actual action animation completion; scoring awards wait for arrival.
+- Remove the round-end pre-screen and fixed gaps; improve swap, steal and wheel rendering.
+- Cutpurse offers resource choice; Poach gives no replacement; Extortionist triggers on5+ follower purchases; Go-Getter can activate after its last-turn purchase.
+- Payment shows member ability; Basic Blue/Green leave normal setup; Straggler/Squatter cues and card wording improved.
+- Version now includes a release number and build reference. Public build manifest includes version and full source commit.
+- Checked: unit tests and build pass; a full laptop game and an online game finish. Every browser test that still fails also fails on v0.5 (old test expectations, see design/HANDOFF.md), except the phone smoke test (phone is out of scope for now).
+
+## Historical v0.5 — verified source6c1e97eb — 2026-10-17
+
+- Reverse RoundI resource draft; printed follower value also counts as member quantity; tied leaders each get half prize.
+- Corrected theft/member effects, multiplayer display and market interactions.
+- Desktop, online fallback and phone checks passed; exact evidence and remaining work are in design/HANDOFF.md.
+- Earlier releases reused the samev0.5 label. Git history and feedback audits retain those individual fixes; no invented release numbers.
+
+## Recorded v0.2 — 2026-10-14 — historical source
+
+- Central Cults name/version marker introduced in [20573121](https://github.com/cojamz/patrons/commit/205731217a93ffb499fcc3804fe140653df4a336), following the deterministic v4 engine and local/online UI work.
+- v0.5 replaced it on October15. No v0.3/v0.4 release is inferred; see the separate deployment timeline for published builds.
+
+## Legacy recorded changelog (preserved)
+
+The original entries below predate the current release-numbering scheme. Their dates and wording are preserved; they do not imply deployment of the new v4 candidate.
+
 # Changelog
 
 All notable changes to Patrons are documented here.

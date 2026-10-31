@@ -1,0 +1,19 @@
+
+ RUN  v4.0.9 /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons/.v4-wt/check-eab7757-91036
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ src/test/engine/v4/cards-benders.test.js (12 tests) 88ms
+ ✓ src/test/engine/v4/straggler-twice.test.js (1 test) 19ms
+ ✓ src/test/v4/ui/shop-steal-plan.test.js (2 tests) 3ms
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ src/test/v4/ui/magenta-redesign.test.jsx (3 tests) 27ms
+ ✓ src/test/v4/ui/round-pending-cue.test.jsx (1 test) 105ms
+ ✓ src/test/v4/ui/hoverDelay.test.jsx (5 tests) 258ms
+
+ Test Files  6 passed (6)
+      Tests  24 passed (24)
+   Start at  23:57:43
+   Duration  3.73s (transform 3.86s, setup 949ms, collect 6.62s, tests 500ms, environment 5.75s, prepare 145ms)
+

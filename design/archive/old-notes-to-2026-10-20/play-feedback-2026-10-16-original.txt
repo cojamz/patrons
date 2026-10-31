@@ -1,0 +1,63 @@
+logging a few items as I play:
+
+Late Bloomer -> Late Bloomers, worth 2 followers, doesn't count towards the Follower comparison. Maybe even 3 followers, I think we should start making members worth more followers. but maybe lets go easy, keep it at two for now. 
+We should default animation speed to relaxed.
+Green Crescendo: saying "more each round" is confusing, it needs to be communicated more clearly. Maybe it has I: 2green II: 4green III: 6green on the card but the appropriate ones get grayed out?
+Instead of "Now" and on round start, it should say on recruit and at round start
+A lot of the action texts are kind of easy to misinterpret - we need to do a pass on the language of each action and how its represented visually.
+Same thing as Crescendo applies to golden Years
+The names of these actions are bad, i think we could bring them more in line with a "Cults" theme
+The round scorecard screens are really laggy/slow to fade in. I suspect this is related to broader lagginess issues
+Members are too dimly lit in general, both during when they should be tinted, and when they should be active
+I cant figure out the UI to release a member? 
+wow the money selector design is SUPER clever. I really like that. 
+The wording of Snap Up is also so bad, vs. what it does
+I'm still struggling to really understand what's driving my opponents points and engine. I know the numbers are presented to me, but it needs to be communicated intuitively
+Copy Space taken since your last turn should really just be copy the previous action (like the action that was picked on the previous turn, whether it was the an opponent or the current player (via the second turn of two turns via snake draft)
+While we're on it, Encore should be something like copy any space with a minion. That probably could be more elegantly and precisely phrased. 
+Greatest Hits should be repeat all actions where you have a minion.
+Generally I think we should be toning down the resource gain a bit? maybe? maybe not
+Anyways, Reprise shouldn't be +2 green. Copying an action is good enough as is. 
+Crescendo and Hum don't really fit the card?
+The take a member, free screen should have bigger member cards to fit in their text
+Honestly, could we figure out a way to fit member text onto the cards? Having to mouse over them is a bit annoying, but i also want to minimize text on the screen. Also, on their cards, we can just say 1 follower (or even just follower symbol in that case) or 2followersymbol instead of +1, +2 etc. We can get some space back with clever little things like that. I must say I am partial to their current design, they're pretty charming
+Maybe we SHOULD have fewer members in the shop? Maybe we bring it down to 8 as well?
+The little "EACH ROUND X" in the player boxes is also unnecessary. We have the same issue there where we need to use the space better, even though current design is nice. we could probably also remove the Members X text as well in favor of just SHOWING more members and only collapsing some in rare cases
+maybe the log could go in the middle of the player boxes? Like 2 on either side
+Minion display on the player box could be more efficient probably? the follower number could be better, or at least different text than player name
+The currencies also feel like they're in a weird spot
+the follower shops aren't lit enough either, like the members
+idea: the memebrs should kind of like pop out of the right or left (probably right) side of the player card when they do something. Maybe even like with a little speech bubble. 
+Yeah, basically remove some members we have a whole row to work work. Redo the follower shop to be more noticeable but more compact. Then we can shift things so theres a bit more space for the player cards. its not a HUGE adjustment vs. current. 
+Hovering anywhere on the kind of empty space of the player card should bring up their member list. That's a nice current design by the way, keep it. Its a really nice hover over.
+I bet we could make the description of these member abilities WAY more efficient but keeping elegance and precision
+Also I don't think we need that many follower buys. Maybe 2 for 2, 5 for 5, 10 for 10. Maybe 1 for 1 in stead of 2 for 2. I like this because then even if you dont have enough for cheapest member on a turn, you can still spend withot worrying to much. You can kind of grind out followers on the turns where you're not really buying a member. Then we need a middle option and a high end option, so I think 5 and 10 fit. I think that works for now. 
+Some members could be worth 2. I think Snob (maybe chatterboxes? gossips? i like the idea of blue kind of being sophisticated/social themed. I think we can start teasing out some deeper themes from these spheres. 
+Lol the follower bonuses have to happen at some point. I just had a game where i actually won by 1 point because of a member end game bonus, but I though I had lost because those dont get added in until the end game screen! also, that screen loads slowly and is weird. The information layout on it is bad, and idk why the totals have liek an animation of being calculated. The member end of game benefits need to go in with the other end of round animations! Also those animations are not very smooth. BUt good design, just need a bit of polishing.
+End of game screen could use some polishing as well. 
+
+Overall this is quite good. I think we could even call this v0.5
+
+I don't think we need tiebreakers on the competitions. The words take up space, and also just give it to both. gives decisions around it a bit more game theory. 
+When i see majordomo in the middle, the +2 silver doesn't seem to come from him. Stuff like that is how it should work. Like +3 from silver from the action to the player. The action is toast in this case. Then +1 silver to the rivals. Then majordomo pops in with +2 silver to the player. Like, it goes from top to bottom in terms of what's happening. And everything is shown, that will go in the log. Maybe even like everything that will go into the log? And then it flies into the log? idk maybe that's a little extra. also btw, for Toast, the amount given to rivals should increase each round as well in proportion. So 1 -> 2 -> 3.
+Goody bags is too close to toast. Its kind of just a better Toast? AND a beter version of Good deed? we could come up with something more clever here. 
+Rising tide is good and should maybe even give everyone else TWO silver. And then our Silver members should play more into the fact that everyone can buy them. I mean that everyone will have a lot of silver. So they could be more expensive, or they could have kind of an alternate dynamic vs. consuming the resource. And then the Round 3 action, which is bad right now, could have more to do with that theme? I like when the members kind of have a little bit of theme together wth the sphere
+Sweet Talk is really awkward we just need something completely different there. 
+Maybe for the second and third rounds for Silver, they benefit from getting RID of silver members or something? Like discarding a silver member to get lots of resources or followers. Something that has interesting interplay with everyone having more silver and currency when silver is in the game
+The followers and the emoji are offcenter from the competition arc text. This is also another place where the follower symbol should be distinguished from the rest of the text. It should have a little, idk, sheen? glimmer? something special about it. But keeping in our charming if not sinister scheme/theme. 
+Cheap seats needs to be different. Yeah this whole white needs a rework that i cant figure out right now. I like the idea of having fewer followers, like it being a catch up. Sob Story is good. 
+Yeah ok i just bought Patron Saint. Thats perfect for silver because you get victory from everyone buying silver members. 
+Actually maybe these end of game conditions should be more rewarding. Maybe 1 follower for each silver member in play? Then the maximum is 10. But maybe then Patron Saint should cost more... but at the same time having them not too expensive helps people compete for them early, so its kind of like do you spend your resources on it when it doesnt pay off until the very end
+The player card hover overs dont need to say you're short
+Heir is too expensive
+it needs to be made clear to players somehow that its a snake draft
+The balance between the resource gain and the buying members to get their effects needs to be more delicate. There needs to be a better balance of actions doing interesting things vs. giving resources. I think spheres have to much resource gain in general. 
+there's a weird animation that occurs right before round end, where followers seem to fly out of thepiles or something toward all the players? i dont understand whats happening there. Its not the sphere contest followers.
+Hold court just is... i dont like it. It seems more like a member ability.
+Maybe every sphere should have a member that's like, end game +follower for members (usually of the color, but sometimes different. Like for yellow maybe +2 members for each color you have a member in (phrased way better), end game +followers for resources. That way there are at least two paths to end of game points, and they should be kind of at odds with each other. 
+One sphere should be kind of reverse, where you can gain followers, and then the members cost FOLLOWERS in addition to wilds. or something like that, where the actions are more focused on follower gain. That gives it synergy with green. Also, one of the spheres we should make more focused on like action manipulation? like more defensive in preventing people from taking what they might want to take. maybe not idk. An overall goal for the game is for it to be clearer what other players are trying to do, so theres more counterplay in action selection rather than just taking the best available for you
+Maybe you shouldn't be able to release members?
+Night owl wording is awful
+Do we have an end of game tiebreaker??? is it members? it think thats not clear. OK that's it! minimize token usage just get all that logged somewhere. 
+
+And update our project docs for handoff!

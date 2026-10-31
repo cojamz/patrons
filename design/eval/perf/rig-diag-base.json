@@ -1,0 +1,967 @@
+{
+ "label": "diag-base",
+ "cpu": 4,
+ "speed": "relaxed",
+ "seed": 20261028,
+ "bars": {
+  "clickP95": 100,
+  "hoverP95": 100,
+  "frameP95": 33.4,
+  "hitchPct": 5,
+  "idleBusyPct": 10,
+  "growth": 1.5,
+  "leakNodes": 1.1,
+  "leakListeners": 1.1,
+  "leakHeap": 1.25
+ },
+ "fails": [
+  "round I: clicks p95 421 ms (bar 100)",
+  "round I: idle table busy 11% (bar 10%)",
+  "round II: clicks p95 2617 ms (bar 100)",
+  "round II: hovers p95 127 ms (bar 100)",
+  "round II: idle table busy 13% (bar 10%)",
+  "round III: clicks p95 3847 ms (bar 100)",
+  "round III: hovers p95 242 ms (bar 100)",
+  "round III: idle table busy 43% (bar 10%)",
+  "clicks p95 grows 421 → 3847 ms over the game",
+  "idle busy grows 11% → 43% over the game",
+  "leak: 6589 elements vs 4680 after a reload",
+  "leak: 824 listeners vs 719 after a reload",
+  "leak: heap 16.5 MB vs 7.2 MB after a reload"
+ ],
+ "sum": {
+  "I": {
+   "frames": {
+    "n": 7439,
+    "showN": 6820,
+    "p50": 16.7,
+    "p95": 16.8,
+    "worst": 233.3,
+    "hitch": 1
+   },
+   "anims": [
+    {
+     "k": "svg.leader:cult-breathe",
+     "n": 2766,
+     "p95": 16.8,
+     "worst": 233.3,
+     "hitch": 2
+    },
+    {
+     "k": "g.blink:cult-blink",
+     "n": 2766,
+     "p95": 16.8,
+     "worst": 233.3,
+     "hitch": 2
+    },
+    {
+     "k": "b.seat-delta.up:seatdelta",
+     "n": 4898,
+     "p95": 16.8,
+     "worst": 233.3,
+     "hitch": 1
+    },
+    {
+     "k": "span.lead:cult-scheme",
+     "n": 1414,
+     "p95": 33.3,
+     "worst": 233.3,
+     "hitch": 3
+    },
+    {
+     "k": "span.tc-line:tcline",
+     "n": 1985,
+     "p95": 33.3,
+     "worst": 183.4,
+     "hitch": 2
+    },
+    {
+     "k": "i.cs-min:cs-bob-eager",
+     "n": 1040,
+     "p95": 33.3,
+     "worst": 233.3,
+     "hitch": 3
+    },
+    {
+     "k": "i.cs-min:cs-bob",
+     "n": 1435,
+     "p95": 33.3,
+     "worst": 233.3,
+     "hitch": 2
+    },
+    {
+     "k": "img.sprite:cult-shift",
+     "n": 2747,
+     "p95": 16.8,
+     "worst": 233.3,
+     "hitch": 1
+    },
+    {
+     "k": "img.sprite:cult-breathe",
+     "n": 2163,
+     "p95": 16.8,
+     "worst": 100.1,
+     "hitch": 1
+    },
+    {
+     "k": "path.wash:fill",
+     "n": 197,
+     "p95": 66.7,
+     "worst": 183.4,
+     "hitch": 10
+    },
+    {
+     "k": "span.dots:blink",
+     "n": 161,
+     "p95": 66.6,
+     "worst": 100,
+     "hitch": 11
+    },
+    {
+     "k": "div.path-inner:js",
+     "n": 1700,
+     "p95": 16.8,
+     "worst": 116.7,
+     "hitch": 1
+    }
+   ],
+   "clicks": {
+    "n": 15,
+    "p50": 117,
+    "p95": 421,
+    "max": 421,
+    "dead": 3,
+    "byKind": [
+     {
+      "k": "place",
+      "n": 3,
+      "p50": 95,
+      "p95": 95
+     },
+     {
+      "k": "choose",
+      "n": 5,
+      "p50": 118,
+      "p95": 421
+     },
+     {
+      "k": "recruit",
+      "n": 3,
+      "p50": 114,
+      "p95": 114
+     },
+     {
+      "k": "pay",
+      "n": 3,
+      "p50": 120,
+      "p95": 189
+     },
+     {
+      "k": "next-round",
+      "n": 1,
+      "p50": 82,
+      "p95": 82
+     }
+    ]
+   },
+   "hovers": {
+    "n": 9,
+    "p50": 49,
+    "p95": 66,
+    "missed": 0
+   },
+   "idle": {
+    "busyPct": 11,
+    "style": 95,
+    "script": 4,
+    "anims": 21
+   },
+   "memory": {
+    "nodes": 2024,
+    "listeners": 506,
+    "heapMB": 10
+   },
+   "loaf": {
+    "n": 54,
+    "over100": 6,
+    "top": [
+     {
+      "round": "I",
+      "d": 261,
+      "scripts": []
+     },
+     {
+      "round": "I",
+      "d": 177,
+      "scripts": [
+       "hn 167"
+      ]
+     },
+     {
+      "round": "I",
+      "d": 124,
+      "scripts": [
+       "hn 106"
+      ]
+     },
+     {
+      "round": "I",
+      "d": 113,
+      "scripts": []
+     },
+     {
+      "round": "I",
+      "d": 112,
+      "scripts": [
+       "hn 27",
+       "Worker.onmessage 13",
+       "Worker.onmessage 62"
+      ]
+     }
+    ]
+   }
+  },
+  "II": {
+   "frames": {
+    "n": 10199,
+    "showN": 9747,
+    "p50": 16.7,
+    "p95": 33.2,
+    "worst": 516.7,
+    "hitch": 2
+   },
+   "anims": [
+    {
+     "k": "b.seat-delta.up:seatdelta",
+     "n": 6613,
+     "p95": 33.2,
+     "worst": 516.7,
+     "hitch": 2
+    },
+    {
+     "k": "svg.leader:cult-breathe",
+     "n": 3118,
+     "p95": 33.3,
+     "worst": 516.7,
+     "hitch": 3
+    },
+    {
+     "k": "g.blink:cult-blink",
+     "n": 3118,
+     "p95": 33.3,
+     "worst": 516.7,
+     "hitch": 3
+    },
+    {
+     "k": "img.sprite:cult-shift",
+     "n": 3118,
+     "p95": 33.3,
+     "worst": 516.7,
+     "hitch": 3
+    },
+    {
+     "k": "img.sprite:cult-breathe",
+     "n": 3118,
+     "p95": 33.3,
+     "worst": 516.7,
+     "hitch": 3
+    },
+    {
+     "k": "span.tc-line:tcline",
+     "n": 2683,
+     "p95": 33.3,
+     "worst": 166.7,
+     "hitch": 3
+    },
+    {
+     "k": "span.lead:cult-scheme",
+     "n": 1552,
+     "p95": 33.4,
+     "worst": 516.7,
+     "hitch": 5
+    },
+    {
+     "k": "i.cs-min:cs-bob",
+     "n": 1773,
+     "p95": 33.4,
+     "worst": 516.7,
+     "hitch": 4
+    },
+    {
+     "k": "i.cs-min:cs-bob-eager",
+     "n": 1374,
+     "p95": 33.4,
+     "worst": 516.7,
+     "hitch": 5
+    },
+    {
+     "k": "div.path-inner:js",
+     "n": 2365,
+     "p95": 33.3,
+     "worst": 316.5,
+     "hitch": 2
+    },
+    {
+     "k": "path.wash:fill",
+     "n": 300,
+     "p95": 66.7,
+     "worst": 316.5,
+     "hitch": 14
+    },
+    {
+     "k": "span.base:opacity",
+     "n": 823,
+     "p95": 33.4,
+     "worst": 316.5,
+     "hitch": 4
+    }
+   ],
+   "clicks": {
+    "n": 21,
+    "p50": 218,
+    "p95": 2617,
+    "max": 2617,
+    "dead": 3,
+    "byKind": [
+     {
+      "k": "place",
+      "n": 4,
+      "p50": 155,
+      "p95": 155
+     },
+     {
+      "k": "choose",
+      "n": 8,
+      "p50": 297,
+      "p95": 2617
+     },
+     {
+      "k": "recruit",
+      "n": 4,
+      "p50": 235,
+      "p95": 238
+     },
+     {
+      "k": "pay",
+      "n": 4,
+      "p50": 144,
+      "p95": 155
+     },
+     {
+      "k": "next-round",
+      "n": 1,
+      "p50": 84,
+      "p95": 84
+     }
+    ]
+   },
+   "hovers": {
+    "n": 12,
+    "p50": 60,
+    "p95": 127,
+    "missed": 0
+   },
+   "idle": {
+    "busyPct": 13,
+    "style": 119,
+    "script": 8,
+    "anims": 34
+   },
+   "memory": {
+    "nodes": 3156,
+    "listeners": 551,
+    "heapMB": 15.2
+   },
+   "loaf": {
+    "n": 93,
+    "over100": 23,
+    "top": [
+     {
+      "round": "II",
+      "d": 531,
+      "scripts": []
+     },
+     {
+      "round": "II",
+      "d": 276,
+      "scripts": [
+       "hn 257"
+      ]
+     },
+     {
+      "round": "II",
+      "d": 239,
+      "scripts": [
+       "hn 211"
+      ]
+     },
+     {
+      "round": "II",
+      "d": 217,
+      "scripts": [
+       "hn 208"
+      ]
+     },
+     {
+      "round": "II",
+      "d": 158,
+      "scripts": [
+       "hn 124"
+      ]
+     }
+    ]
+   }
+  },
+  "III": {
+   "frames": {
+    "n": 12439,
+    "showN": 11518,
+    "p50": 16.7,
+    "p95": 33.4,
+    "worst": 97979.4,
+    "hitch": 5
+   },
+   "anims": [
+    {
+     "k": "svg.leader:cult-breathe",
+     "n": 4988,
+     "p95": 50,
+     "worst": 97979.4,
+     "hitch": 6
+    },
+    {
+     "k": "g.blink:cult-blink",
+     "n": 4988,
+     "p95": 50,
+     "worst": 97979.4,
+     "hitch": 6
+    },
+    {
+     "k": "img.sprite:cult-shift",
+     "n": 4988,
+     "p95": 50,
+     "worst": 97979.4,
+     "hitch": 6
+    },
+    {
+     "k": "img.sprite:cult-breathe",
+     "n": 4988,
+     "p95": 50,
+     "worst": 97979.4,
+     "hitch": 6
+    },
+    {
+     "k": "b.seat-delta.up:seatdelta",
+     "n": 5926,
+     "p95": 33.4,
+     "worst": 5916.5,
+     "hitch": 5
+    },
+    {
+     "k": "span.lead:cult-scheme",
+     "n": 2364,
+     "p95": 83.3,
+     "worst": 97979.4,
+     "hitch": 12
+    },
+    {
+     "k": "i.cs-min:cs-bob",
+     "n": 2520,
+     "p95": 83.3,
+     "worst": 97979.4,
+     "hitch": 11
+    },
+    {
+     "k": "i.cs-min:cs-bob-eager",
+     "n": 2150,
+     "p95": 83.3,
+     "worst": 97979.4,
+     "hitch": 11
+    },
+    {
+     "k": "span.tc-line:tcline",
+     "n": 2825,
+     "p95": 66.6,
+     "worst": 31182,
+     "hitch": 8
+    },
+    {
+     "k": "img.sprite:cult-eager",
+     "n": 1064,
+     "p95": 133.3,
+     "worst": 97979.4,
+     "hitch": 21
+    },
+    {
+     "k": "div.path-inner:js",
+     "n": 2714,
+     "p95": 33.4,
+     "worst": 32865.4,
+     "hitch": 5
+    },
+    {
+     "k": "span.dots:blink",
+     "n": 353,
+     "p95": 149.9,
+     "worst": 97979.4,
+     "hitch": 29
+    }
+   ],
+   "clicks": {
+    "n": 39,
+    "p50": 318,
+    "p95": 3847,
+    "max": 4076,
+    "dead": 9,
+    "byKind": [
+     {
+      "k": "place",
+      "n": 6,
+      "p50": 92,
+      "p95": 92
+     },
+     {
+      "k": "choose",
+      "n": 21,
+      "p50": 335,
+      "p95": 3847
+     },
+     {
+      "k": "recruit",
+      "n": 5,
+      "p50": 353,
+      "p95": 353
+     },
+     {
+      "k": "pay",
+      "n": 6,
+      "p50": 269,
+      "p95": 319
+     },
+     {
+      "k": "next-round",
+      "n": 1,
+      "p50": 63,
+      "p95": 63
+     }
+    ]
+   },
+   "hovers": {
+    "n": 12,
+    "p50": 90,
+    "p95": 242,
+    "missed": 0
+   },
+   "idle": {
+    "busyPct": 43,
+    "style": 295,
+    "script": 346,
+    "anims": 50
+   },
+   "memory": {
+    "nodes": 3585,
+    "listeners": 604,
+    "heapMB": 19.8
+   },
+   "loaf": {
+    "n": 411,
+    "over100": 156,
+    "top": [
+     {
+      "round": "III",
+      "d": 97970,
+      "scripts": [
+       "e 97820 [IdleRequestCallback @ Wheel-B3Z4lCk4.js:71108]"
+      ]
+     },
+     {
+      "round": "III",
+      "d": 89219,
+      "scripts": [
+       "e 89186 [IdleRequestCallback @ Wheel-B3Z4lCk4.js:71108]"
+      ]
+     },
+     {
+      "round": "III",
+      "d": 62016,
+      "scripts": [
+       "e 61886 [IdleRequestCallback @ Wheel-B3Z4lCk4.js:71108]"
+      ]
+     },
+     {
+      "round": "III",
+      "d": 57127,
+      "scripts": [
+       "e 57122 [IdleRequestCallback @ Wheel-B3Z4lCk4.js:71108]"
+      ]
+     },
+     {
+      "round": "III",
+      "d": 35996,
+      "scripts": [
+       "e 35988 [IdleRequestCallback @ Wheel-B3Z4lCk4.js:71108]"
+      ]
+     }
+    ]
+   }
+  }
+ },
+ "unbroken": {
+  "nodes": 6589,
+  "listeners": 824,
+  "heapMB": 16.5
+ },
+ "reloaded": {
+  "nodes": 4680,
+  "listeners": 719,
+  "heapMB": 7.2
+ },
+ "errors": [],
+ "odd": {
+  "I": [
+   {
+    "what": "recruit",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — choose how to pay",
+     "phase": "pay",
+     "place": false,
+     "pay": true,
+     "options": [
+      "back",
+      "pay:0-1-0-0"
+     ],
+     "moves": "11"
+    }
+   },
+   {
+    "what": "place",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — recruit a member or followers",
+     "phase": "buy",
+     "place": false,
+     "pay": false,
+     "options": [
+      "tier:small",
+      "tier:mid",
+      "pass",
+      "card:9",
+      "card:30",
+      "card:29",
+      "card:25"
+     ],
+     "moves": "32"
+    }
+   },
+   {
+    "what": "recruit",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — choose how to pay",
+     "phase": "pay",
+     "place": false,
+     "pay": true,
+     "options": [
+      "back",
+      "pay:0-1-0-0"
+     ],
+     "moves": "44"
+    }
+   }
+  ],
+  "II": [
+   {
+    "what": "place",
+    "ms": null,
+    "why": {
+     "prompt": "",
+     "phase": "choose",
+     "place": false,
+     "pay": false,
+     "options": [
+      "space:empty:0-0",
+      "space:empty:0-1",
+      "space:empty:0-2",
+      "space:empty:0-3",
+      "space:empty:0-4",
+      "space:empty:1-0",
+      "space:empty:1-1",
+      "space:empty:1-3",
+      "space:empty:1-4",
+      "space:empty:2-0",
+      "space:empty:2-1",
+      "space:empty:2-2"
+     ],
+     "moves": "60"
+    }
+   },
+   {
+    "what": "choose",
+    "ms": 2617,
+    "why": {
+     "answer": {
+      "id": "space:empty:0-0",
+      "kind": "option"
+     },
+     "prompt": "Your turn — Kickback: a rival you pick gets 1 gold",
+     "phase": "choose",
+     "moves": "61"
+    }
+   },
+   {
+    "what": "recruit",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — choose how to pay",
+     "phase": "pay",
+     "place": false,
+     "pay": true,
+     "options": [
+      "back",
+      "pay:0-0-0-1"
+     ],
+     "moves": "63"
+    }
+   },
+   {
+    "what": "place",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — Collect Debts: take 3 gold",
+     "phase": "choose",
+     "place": false,
+     "pay": false,
+     "options": [
+      "player:1",
+      "player:2",
+      "player:3",
+      "player:1",
+      "player:2",
+      "player:3"
+     ],
+     "moves": "112"
+    }
+   },
+   {
+    "what": "choose",
+    "ms": 1146,
+    "why": {
+     "answer": {
+      "id": "player:1",
+      "kind": "option"
+     },
+     "prompt": "Your turn — recruit a member or followers",
+     "phase": "buy",
+     "moves": "115"
+    }
+   }
+  ],
+  "III": [
+   {
+    "what": "place",
+    "ms": null,
+    "why": {
+     "prompt": "",
+     "phase": "choose",
+     "place": false,
+     "pay": false,
+     "options": [
+      "card:36",
+      "card:18",
+      "card:44",
+      "card:40"
+     ],
+     "moves": "125"
+    }
+   },
+   {
+    "what": "recruit",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — choose how to pay",
+     "phase": "pay",
+     "place": false,
+     "pay": true,
+     "options": [
+      "back",
+      "pay:1-0-0-0"
+     ],
+     "moves": "129"
+    }
+   },
+   {
+    "what": "place",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — Collect Debts: take 3 gold",
+     "phase": "choose",
+     "place": false,
+     "pay": false,
+     "options": [
+      "player:1",
+      "player:2",
+      "player:3",
+      "player:1",
+      "player:2",
+      "player:3"
+     ],
+     "moves": "156"
+    }
+   },
+   {
+    "what": "choose",
+    "ms": 1156,
+    "why": {
+     "answer": {
+      "id": "player:1",
+      "kind": "option"
+     },
+     "prompt": "Your turn — recruit a member or followers",
+     "phase": "buy",
+     "moves": "159"
+    }
+   },
+   {
+    "what": "recruit",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — choose how to pay",
+     "phase": "pay",
+     "place": false,
+     "pay": true,
+     "options": [
+      "back",
+      "pay:1-0-0-0"
+     ],
+     "moves": "160"
+    }
+   },
+   {
+    "what": "place",
+    "ms": null,
+    "why": {
+     "prompt": "",
+     "phase": "choose",
+     "place": false,
+     "pay": false,
+     "options": [
+      "space:now:1-2",
+      "space:now:2-5",
+      "space:now:3-1",
+      "space:now:3-2"
+     ],
+     "moves": "171"
+    }
+   },
+   {
+    "what": "choose",
+    "ms": 4076,
+    "why": {
+     "answer": {
+      "id": "space:now:1-2",
+      "kind": "option"
+     },
+     "prompt": "Your turn — recruit a member or followers",
+     "phase": "buy",
+     "moves": "172"
+    }
+   },
+   {
+    "what": "recruit",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — choose how to pay",
+     "phase": "pay",
+     "place": false,
+     "pay": true,
+     "options": [
+      "back",
+      "pay:0-0-1-0"
+     ],
+     "moves": "173"
+    }
+   },
+   {
+    "what": "pay",
+    "ms": null,
+    "why": {
+     "answer": {
+      "id": "pay:0-0-1-0",
+      "kind": "pay"
+     },
+     "prompt": "Your turn — choose how to pay",
+     "phase": "pay",
+     "moves": "193"
+    }
+   },
+   {
+    "what": "place",
+    "ms": null,
+    "why": {
+     "prompt": "Your turn — place a minion on a glowing space",
+     "phase": "place",
+     "place": false,
+     "pay": false,
+     "options": [
+      "slot:0-0",
+      "slot:0-1",
+      "slot:0-2",
+      "slot:2-1",
+      "slot:2-4",
+      "slot:3-4",
+      "slot:3-5"
+     ],
+     "moves": "202"
+    }
+   },
+   {
+    "what": "place",
+    "ms": null,
+    "why": {
+     "prompt": "",
+     "phase": "choose",
+     "place": false,
+     "pay": false,
+     "options": [
+      "space:now:1-1",
+      "space:now:1-2",
+      "space:now:1-3",
+      "space:now:2-3",
+      "space:now:2-5",
+      "space:now:3-0",
+      "space:now:3-1",
+      "space:now:3-2"
+     ],
+     "moves": "203"
+    }
+   },
+   {
+    "what": "choose",
+    "ms": 1436,
+    "why": {
+     "answer": {
+      "id": "space:now:1-1",
+      "kind": "option"
+     },
+     "prompt": "",
+     "phase": "choose",
+     "moves": "204"
+    }
+   },
+   {
+    "what": "choose",
+    "ms": 3847,
+    "why": {
+     "answer": {
+      "id": "space:order:2-0",
+      "kind": "option"
+     },
+     "prompt": "",
+     "phase": "choose",
+     "moves": "209"
+    }
+   }
+  ]
+ }
+}

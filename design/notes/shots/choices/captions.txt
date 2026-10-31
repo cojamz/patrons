@@ -1,0 +1,3 @@
+1-goody-bags.png: Goody Bags' colour pick moves from your seat's stacks to a small card on the space you just took.
+2-cheap-seats.png: Cheap Seats' "pay 1 for 1 follower" moves from your seat to the same card at the space, showing what you hold of each colour.
+3-good-deed-seats.png: Good Deed keeps its card, and once you pick the colour the rival seats light as well, on the stack the 2 would land on.

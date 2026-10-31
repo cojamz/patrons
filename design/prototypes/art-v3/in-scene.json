@@ -1,0 +1,4 @@
+[{"id":"thieves.kingpin","name":"Kingpin","text":"Game end: +1 follower per magenta member you have.","members":1,"sphere":"magenta"},
+{"id":"red.mob","name":"Mob","text":"Game end: +1 follower per red member.","members":5,"sphere":"red"},
+{"id":"benders.tiebreaker","name":"Tiebreaker","text":"Ties you’re in go to you alone.","members":1,"sphere":"colorless"},
+{"id":"benders.launderer","name":"Launderers","text":"Worth 2 followers. On Recruit: turn all your resources into one color you choose.","members":2,"sphere":"colorless"}]

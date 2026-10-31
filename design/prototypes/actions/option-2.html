@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1270">
+<title>Actions: Vignettes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,500&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
+<script src="art.js"></script>
+<script src="kit.js"></script>
+<script src="glyphs.js"></script>
+<script src="scenes.js"></script>
+<script>
+// Option 2: Vignettes. Each space is a small illustrated card laid on the wheel: a pixel scene of the cult act in an
+// arched window (the kickback envelope, the velvet rope, the open door), its name on a ribbon, and what it gives as a
+// pip ribbon underneath. Everdell / Root charm; the same card language as the shop's members.
+const { res, INK } = AK;
+const pal = r => ({ ...AK.palette(r), o: '#ffd66e' });
+const n = t => `<b class="num">${t}</b>`;
+const w = t => `<span class="wd">${t}</span>`;
+const g = 12;
+function ribbon(a) {
+  const R = r => res(r, g + 1), c = (o = {}) => G1.card(11, o);
+  switch (a.id) {
+    case 'gold.jv': return n('+3') + R('gold') + `<span class="q">${n('1')}${res('gold', 10)}${G1.arrow('right', 13)}${G1.hood(11)}</span>`;
+    case 'gold.rush': return n('+2') + R('gold') + `<span class="q">${G1.grows(13, 1, 'gold')}</span>`;
+    case 'gold.discount': return c() + n('−4');
+    case 'gold.steal': return G1.hood(12) + G1.arrow('right', 13) + n('3') + R('gold');
+    case 'gold.windfall': return n('+1') + R('gold') + w('/') + c();
+    case 'gold.strike': return n('×2') + R('gold');
+    case 'red.scout': return n('+2') + R('red') + `<span class="q">${G1.card(10, { back: true })}${G1.arrow('down', 12)}</span>`;
+    case 'red.turnout': return n('+1') + R('red') + w('/') + c({ mark: '+' });
+    case 'red.hire': return c() + w('free');
+    case 'red.hireup': return n('+2') + R('red') + c() + w('free', 1);
+    case 'red.trade': return c() + G1.arrow('swap', 15) + c({ rival: true });
+    case 'red.take': return c({ mark: '★' }) + w('free');
+    case 'blue.bargain': return n('+2') + R('blue') + c({ mark: '+' });
+    case 'blue.restock': return n('+2') + R('blue') + G1.arrow('sweep', 14);
+    case 'blue.showroom': return n('+1') + R('blue') + w('/') + c({ mark: '◆' });
+    case 'blue.clearance': return c() + n('½');
+    case 'blue.pricecheck': return R('blue') + w('=') + n('½') + c({ mark: '★' });
+    case 'blue.spree': return n('3') + w('buys');
+    case 'green.hum': return n('+3') + R('green');
+    case 'green.chant': return n('+2') + R('green') + `<span class="q">${G1.grows(13, 1, 'green')}</span>`;
+    case 'green.echo': return w('copy') + G1.hood(12);
+    case 'green.encore': return w('copy any');
+    case 'green.refrain': return n('+2') + R('green') + w('copy');
+    case 'green.eternity': return w('copy all');
+  }
+  return '';
+}
+const SIZE = { 1: 58, 2: 48, 3: 46 };
+function tile(a, ring, open) {
+  const s = SIZE[ring];
+  return `<div class="tile t${ring}" style="width:${s}px;height:${s}px">
+    <div class="win">${AK.gridSVG(SCENES[a.id], pal(a.res), 32)}</div>
+    <div class="ban"><span>${a.name}</span></div>
+    <div class="eff">${ribbon(a)}</div>
+    ${open ? '' : `<span class="seal">${AK.roman(ring)}</span>`}
+  </div>`;
+}
+const U = 200 / 209; // px → wheel units
+window.OPT = {
+  n: '2', title: 'Vignettes',
+  tag: 'Little illustrated cards: the cult act as a pixel scene, its name on a ribbon, the yield as pips. Gold and Red names are proposals.',
+  blurb: 'Each space is a small illustrated card laid on the wheel: a 16×16 pixel scene of the cult act (shown at 2×), its name on a ribbon, and what it gives as a pip ribbon. Same card language as the shop’s members. New art: 24 scenes, drawn for this mock.',
+  ringR: { 1: 160 * U, 2: 112 * U, 3: 58 * U }, spans: { 1: 60, 2: 30 }, hubR: 33,
+  minionPx: 24,
+  space(sp, st) { return tile(sp.a, sp.ring, st.open); },
+  vocab(a) { return `<div class="sp r1 open" style="position:relative;transform:none;zoom:2;--c:${INK[a.res]}">${tile(a, 1, true)}</div>`; },
+  after(doc) {
+    // a name that doesn't fit its ribbon steps down a size (never below 7.5px)
+    doc.querySelectorAll('.ban span').forEach(s => {
+      let f = parseFloat(getComputedStyle(s).fontSize);
+      const max = s.parentElement.clientWidth - 6;
+      while (s.scrollWidth > max && f > 7.5) { f -= 0.25; s.style.fontSize = f + 'px'; }
+    });
+  },
+  css: `
+  .tile{position:relative;border-radius:6px;background:linear-gradient(180deg,#fbf5e7,#f0e4c8);
+    box-shadow:0 0 0 1.5px color-mix(in srgb,var(--c) 70%,#2a1f17),inset 0 0 0 2.5px #fbf5e7,inset 0 0 0 3.3px color-mix(in srgb,var(--c) 45%,transparent),0 3px 5px rgba(40,25,10,.35)}
+  .tile .win{position:absolute;left:4px;right:4px;top:4px;height:30px;border-radius:12px 12px 2px 2px;overflow:hidden;display:flex;justify-content:center;align-items:flex-end;
+    background:radial-gradient(ellipse 80% 90% at 50% 100%, color-mix(in srgb,var(--c) 22%,#fff8ea), color-mix(in srgb,var(--c) 40%,#f4ebd7));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 55%,#2a1f17)}
+  .tile .win svg{flex:none;margin-bottom:-1px}
+  .tile .ban{position:absolute;left:-6px;right:-6px;top:30px;height:11px;display:flex;align-items:center;justify-content:center;
+    background:color-mix(in srgb,var(--c) 30%,#2a1f17);clip-path:polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%);z-index:1}
+  .tile .ban span{font-family:'Alegreya Sans',sans-serif;font-weight:800;font-size:9.6px;letter-spacing:.06em;text-transform:uppercase;color:#fbf1dc;white-space:nowrap;line-height:1}
+  .tile .eff{position:absolute;left:0;right:0;top:42px;height:14px;display:flex;align-items:center;justify-content:center;gap:1px;color:#2a1f17;white-space:nowrap}
+  .tile .eff svg{display:block;flex:none}
+  .tile .eff .num{font-family:'Alegreya Sans',sans-serif;font-weight:800;font-size:13px;line-height:1;letter-spacing:-.01em}
+  .tile .eff .wd{font-family:'Alegreya Sans',sans-serif;font-weight:800;font-size:12px;line-height:1;margin:0 1px}
+  .tile .eff .q{display:inline-flex;align-items:center;margin-left:3px;gap:0}
+  .tile .eff .tag{margin:0}
+  /* inner rings: smaller cards, same parts */
+  .tile.t2,.tile.t3{border-radius:5px}
+  .tile.t2 .win,.tile.t3 .win{left:3px;right:3px;top:3px;height:24px;border-radius:10px 10px 2px 2px}
+  .tile.t2 .ban,.tile.t3 .ban{top:24px;height:10px;left:-5px;right:-5px}
+  .tile.t2 .ban span,.tile.t3 .ban span{font-size:8px}
+  .tile.t2 .eff,.tile.t3 .eff{top:34px;height:12px}
+  .tile.t2 .eff .num,.tile.t3 .eff .num{font-size:12px}
+  .tile.t2 .eff .wd,.tile.t3 .eff .wd{font-size:11px}
+  /* your turn: open cards catch the lamp */
+  .sp.can .tile{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--c) 75%,#2a1f17),inset 0 0 0 2.5px #fbf5e7,inset 0 0 0 3.3px color-mix(in srgb,var(--c) 45%,transparent),0 0 12px 3px rgba(255,206,140,.6),0 3px 5px rgba(40,25,10,.35)}
+  /* not open yet: the card lies flat and faded, sealed with the round it opens */
+  .sp.locked .tile{box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 45%,transparent);background:rgba(251,245,231,.5)}
+  .sp.locked .tile > :not(.seal){opacity:.3;filter:grayscale(.9) sepia(.3)}
+  .sp.locked .seal{position:absolute;right:-6px;top:-6px;width:17px;height:17px;border-radius:50%;display:grid;place-items:center;font-family:'Alegreya',serif;font-weight:700;font-size:9px;color:#fbf1dc;
+    background:radial-gradient(circle at 35% 30%, color-mix(in srgb,var(--c) 70%,#fff), color-mix(in srgb,var(--c) 70%,#2a1f17));box-shadow:0 1px 2px rgba(0,0,0,.4);z-index:2;opacity:.7}
+  /* a minion steps into the picture: the scene behind it fades; the name and the yield still read */
+  .sp.taken .tile .win svg{opacity:.35;filter:grayscale(.6)}
+  .sp .minion{left:50%;top:6px;transform:translateX(-50%)}
+  .sp.r1 .minion{top:5px}
+  .sp .minion svg{filter:drop-shadow(0 2px 1px rgba(0,0,0,.45))}
+  .sp .fresh-ring{position:absolute;inset:-6px;border-radius:10px;border:2px dashed #e0a23a;pointer-events:none}
+  `,
+};
+</script>
+<script src="page.js"></script>
+</head>
+<body></body>
+</html>

@@ -1,0 +1,68 @@
+[
+ {
+  "id": "echo.evergreen",
+  "name": "Busker",
+  "sphere": "green",
+  "text": "On Recruit: +2 green. Round Start: +2 green."
+ },
+ {
+  "id": "echo.muse",
+  "name": "Muse",
+  "sphere": "green",
+  "text": "Whenever a rival copies an action, +1 green."
+ },
+ {
+  "id": "echo.ensemble",
+  "name": "Ensemble",
+  "sphere": "green",
+  "text": "Whenever you copy your own action, +1 follower."
+ },
+ {
+  "id": "echo.hourglass",
+  "name": "Stunt Double",
+  "sphere": "green",
+  "text": "On Recruit: copy the action you just took."
+ },
+ {
+  "id": "echo.dejavu",
+  "name": "Tribute Band",
+  "sphere": "green",
+  "text": "Once per game: copy every action you took this round."
+ },
+ {
+  "id": "echo.doppel",
+  "name": "Doppelganger",
+  "sphere": "green",
+  "text": "On Recruit: it becomes a copy of one of your members."
+ },
+ {
+  "id": "echo.impostor",
+  "name": "Impostor",
+  "sphere": "green",
+  "text": "On Recruit: it becomes a copy of a rival’s member."
+ },
+ {
+  "id": "echo.connector",
+  "name": "Connector",
+  "sphere": "green",
+  "text": "On Recruit: +1 green per non-green member you have. Round Start: +1 green per non-green member you have."
+ },
+ {
+  "id": "echo.agents",
+  "name": "Agents",
+  "sphere": "green",
+  "text": "No one can copy your actions, you included."
+ },
+ {
+  "id": "echo.bait",
+  "name": "Bait",
+  "sphere": "green",
+  "text": "Whenever anyone copies your action, they −1 follower. If it’s a rival, +1 follower."
+ },
+ {
+  "id": "echo.chronicler",
+  "name": "Chronicler",
+  "sphere": "green",
+  "text": "Game end: +1 follower per green member."
+ }
+]

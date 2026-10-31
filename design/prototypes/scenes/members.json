@@ -1,0 +1,1458 @@
+[
+ {
+  "id": "gold.midas",
+  "name": "Midas",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Gains from actions come as gold. Switch it on or off when you recruit."
+ },
+ {
+  "id": "gold.banker",
+  "name": "Banker",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "On Recruit: +3 gold. Round Start: +3 gold."
+ },
+ {
+  "id": "gold.prospector",
+  "name": "Prospector",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "When an action gains you gold, +1 gold."
+ },
+ {
+  "id": "gold.taxman",
+  "name": "Tax Collector",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Whenever a rival buys followers, +1 gold."
+ },
+ {
+  "id": "gold.merchant",
+  "name": "Merchant",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Whenever anyone recruits a gold member, +1 gold."
+ },
+ {
+  "id": "gold.thrift",
+  "name": "Penny Pincher",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Gold you spend on members counts double."
+ },
+ {
+  "id": "gold.coinpurse",
+  "name": "Middleman",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Whenever you recruit a non-gold member, +1 gold."
+ },
+ {
+  "id": "gold.underdog",
+  "name": "Underdog",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "While a rival has more gold than you, double your gold gains."
+ },
+ {
+  "id": "gold.tinker",
+  "name": "Alchemist",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Whenever an action gains you another color, +1 gold."
+ },
+ {
+  "id": "gold.investor",
+  "name": "Investor",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Round Start: set aside any of your gold. Round end: gain double that."
+ },
+ {
+  "id": "gold.jackpot",
+  "name": "Lottery Winner",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Once per game: gain gold equal to the most gold a rival holds."
+ },
+ {
+  "id": "gold.speculator",
+  "name": "Speculator",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Once per game: double your gold."
+ },
+ {
+  "id": "gold.tycoon",
+  "name": "Tycoon",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "Game end: +1 follower per 2 gold."
+ },
+ {
+  "id": "gold.seed",
+  "name": "Treasurer",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "On Recruit: +1 gold per member you have, this one included."
+ },
+ {
+  "id": "gold.hustler",
+  "name": "Hustler",
+  "quadrant": "gold",
+  "n": 1,
+  "text": "On Recruit: you choose a color. Whenever you take an action of that color, +1 gold in round I, +2 in round II, +3 in round III."
+ },
+ {
+  "id": "red.twins",
+  "name": "Triplets",
+  "quadrant": "red",
+  "n": 3,
+  "text": "Worth 3 followers."
+ },
+ {
+  "id": "red.bigfamily",
+  "name": "Big Family",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Worth 3 followers."
+ },
+ {
+  "id": "red.volunteer",
+  "name": "Volunteer",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "red.intern",
+  "name": "Intern",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "red.mentor",
+  "name": "Mentor & Protégé",
+  "quadrant": "red",
+  "n": 1,
+  "text": "On Recruit: recruit the cheapest member in the shop."
+ },
+ {
+  "id": "red.proselytizer",
+  "name": "Proselytizer",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Whenever you recruit, +1 follower."
+ },
+ {
+  "id": "red.mob",
+  "name": "Mob",
+  "quadrant": "red",
+  "n": 5,
+  "text": "Game end: +1 follower per red member."
+ },
+ {
+  "id": "red.recruiter",
+  "name": "Recruiter",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Whenever you add a member to your cult, +1 red."
+ },
+ {
+  "id": "red.drive",
+  "name": "Pied Piper",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Whenever you recruit 2 or more members in one turn, +2 red."
+ },
+ {
+  "id": "red.host",
+  "name": "Host",
+  "quadrant": "red",
+  "n": 1,
+  "text": "On Recruit: +1 red per 2 members. Round Start: +1 red per 2 members."
+ },
+ {
+  "id": "red.sponsor",
+  "name": "Sponsor",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Your members cost 2 less."
+ },
+ {
+  "id": "red.crowd",
+  "name": "Crowd-Pleaser",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Whenever you buy followers, +1 red."
+ },
+ {
+  "id": "red.patriarch",
+  "name": "Patriarch",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Game end: +1 follower per 2 members."
+ },
+ {
+  "id": "red.recruitbonus",
+  "name": "Recruit Bonus",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Whenever one of your members’ \"On Recruit\" happens, +1 of its color."
+ },
+ {
+  "id": "red.movementpenalty",
+  "name": "Movement Penalty",
+  "quadrant": "red",
+  "n": 1,
+  "text": "When you move a rival’s member out of their cult, they lose 1 follower."
+ },
+ {
+  "id": "red.panel",
+  "name": "Panel",
+  "quadrant": "red",
+  "n": 3,
+  "text": "On Recruit: Promote or Demote another member."
+ },
+ {
+  "id": "red.loyalists",
+  "name": "Loyalists",
+  "quadrant": "red",
+  "n": 2,
+  "text": "Your other members can’t be swapped."
+ },
+ {
+  "id": "red.headhunter",
+  "name": "Headhunter",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Once per game: swap a rival’s member with a shop member of equal or greater cost."
+ },
+ {
+  "id": "red.reserve",
+  "name": "Benchwarmer",
+  "quadrant": "red",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "blue.recruit",
+  "name": "Blue Recruit",
+  "quadrant": "blue",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "blue.hand",
+  "name": "Blue Hand",
+  "quadrant": "blue",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "blue.helper",
+  "name": "Blue Helper",
+  "quadrant": "blue",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "blue.regular",
+  "name": "Blue Regular",
+  "quadrant": "blue",
+  "n": 1,
+  "text": "Worth 2 followers."
+ },
+ {
+  "id": "blue.devotee",
+  "name": "Blue Devotee",
+  "quadrant": "blue",
+  "n": 1,
+  "text": "Worth 2 followers."
+ },
+ {
+  "id": "blue.elder",
+  "name": "Blue Elder",
+  "quadrant": "blue",
+  "n": 1,
+  "text": "Worth 3 followers."
+ },
+ {
+  "id": "blue.pillar",
+  "name": "Blue Pillar",
+  "quadrant": "blue",
+  "n": 1,
+  "text": "Worth 5 followers."
+ },
+ {
+  "id": "blue.patron",
+  "name": "Blue Patron",
+  "quadrant": "blue",
+  "n": 1,
+  "text": "Worth 5 followers."
+ },
+ {
+  "id": "green.recruit",
+  "name": "Green Recruit",
+  "quadrant": "green",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "green.hand",
+  "name": "Green Hand",
+  "quadrant": "green",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "green.helper",
+  "name": "Green Helper",
+  "quadrant": "green",
+  "n": 1,
+  "text": "Worth 1 follower."
+ },
+ {
+  "id": "green.regular",
+  "name": "Green Regular",
+  "quadrant": "green",
+  "n": 1,
+  "text": "Worth 2 followers."
+ },
+ {
+  "id": "green.devotee",
+  "name": "Green Devotee",
+  "quadrant": "green",
+  "n": 1,
+  "text": "Worth 2 followers."
+ },
+ {
+  "id": "green.elder",
+  "name": "Green Elder",
+  "quadrant": "green",
+  "n": 1,
+  "text": "Worth 3 followers."
+ },
+ {
+  "id": "green.pillar",
+  "name": "Green Pillar",
+  "quadrant": "green",
+  "n": 1,
+  "text": "Worth 5 followers."
+ },
+ {
+  "id": "green.patron",
+  "name": "Green Patron",
+  "quadrant": "green",
+  "n": 1,
+  "text": "Worth 5 followers."
+ },
+ {
+  "id": "purple.secondwind",
+  "name": "Go-Getter",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Once per game: take an extra turn after this one."
+ },
+ {
+  "id": "purple.errand",
+  "name": "Errand Runner",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "On Recruit: take an extra turn after this one."
+ },
+ {
+  "id": "purple.taskmaster",
+  "name": "Taskmaster",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Once per round: pay 5 purple to take an extra turn after this one."
+ },
+ {
+  "id": "purple.lateriser",
+  "name": "Late Riser",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Round Start: if you have the fewest followers (ties count), take an extra turn before anyone places."
+ },
+ {
+  "id": "purple.foreman",
+  "name": "Foreman",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Whenever you take an extra turn, +1 purple per minion you have on the board."
+ },
+ {
+  "id": "purple.courier",
+  "name": "Courier",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Whenever you take an extra turn, +1 of each other color."
+ },
+ {
+  "id": "purple.apprentice",
+  "name": "Apprentice",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Whenever you take an extra turn, your next member costs 4 less."
+ },
+ {
+  "id": "purple.overseer",
+  "name": "Overseer",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Whenever a rival takes an extra turn, gain half your purple, rounded down (at most 4)."
+ },
+ {
+  "id": "purple.doubletime",
+  "name": "Corner-Cutter",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Purple you pay for extra turns costs half, rounded up."
+ },
+ {
+  "id": "purple.bookkeeper",
+  "name": "Bookkeeper",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "After your last turn each round: +1 purple per 2 of your minions on the board."
+ },
+ {
+  "id": "purple.clockmaker",
+  "name": "Clockmaker",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "On Recruit: +1 purple per 2 purple you have. Round Start: +1 purple per 2 purple you have."
+ },
+ {
+  "id": "purple.lamplighter",
+  "name": "Lamplighter",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "On Recruit: +1 purple per minion you get this round (3 / 4 / 5). Round Start: +1 purple per minion you get this round (3 / 4 / 5)."
+ },
+ {
+  "id": "purple.nightowl",
+  "name": "Night Owl",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Once per round: after you place your last minion, take an extra turn."
+ },
+ {
+  "id": "purple.patience",
+  "name": "Timekeeper",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Game end: +1 follower per 3 purple."
+ },
+ {
+  "id": "purple.earlybird",
+  "name": "Early Bird",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Your turns can’t be skipped."
+ },
+ {
+  "id": "purple.bouncer",
+  "name": "Bouncer",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "On Recruit: the next two rivals’ turns are skipped."
+ },
+ {
+  "id": "purple.pocketwatch",
+  "name": "Pocket Watch",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Whenever a player’s turn is skipped, +1 purple."
+ },
+ {
+  "id": "purple.gossip",
+  "name": "Gossip",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Whenever a player’s turn is skipped, +1 follower."
+ },
+ {
+  "id": "purple.extrashift",
+  "name": "Extra Shift",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "On Recruit: +1 minion this round."
+ },
+ {
+  "id": "purple.timekeepers",
+  "name": "Timekeepers",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Game end: +1 follower per purple member you have."
+ },
+ {
+  "id": "purple.closer",
+  "name": "Closer",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "When you place the last minion of the round: +4 purple."
+ },
+ {
+  "id": "purple.streak",
+  "name": "Hot Streak",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Once per game: +3 followers per turn in a row you’ve taken just before this one."
+ },
+ {
+  "id": "purple.crew",
+  "name": "Shift Crew",
+  "quadrant": "purple",
+  "n": 1,
+  "text": "Worth 2 followers."
+ },
+ {
+  "id": "silver.guest",
+  "name": "Guest",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Whenever a rival gives you something, +1 more of it."
+ },
+ {
+  "id": "silver.benefactor",
+  "name": "Benefactor",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "On Recruit: +3 silver, and +1 silver to a rival you choose. Round Start: +3 silver, and +1 silver to a rival you choose."
+ },
+ {
+  "id": "silver.caterer",
+  "name": "Caterer",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Whenever you give a rival something, +1 silver."
+ },
+ {
+  "id": "silver.majordomo",
+  "name": "Majordomo",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Whenever you take a Silver space, +2 silver."
+ },
+ {
+  "id": "silver.silversmith",
+  "name": "Silversmith",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Whenever a rival takes a Silver space, +1 silver."
+ },
+ {
+  "id": "silver.steward",
+  "name": "Steward",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "On Recruit: +1 silver per 3 silver you hold. Round Start: +1 silver per 3 silver you hold."
+ },
+ {
+  "id": "silver.retinue",
+  "name": "Retinue",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Worth 3 followers. On Recruit: each rival +1 silver."
+ },
+ {
+  "id": "silver.revelers",
+  "name": "Revelers",
+  "quadrant": "silver",
+  "n": 3,
+  "text": "Counts as 3 members."
+ },
+ {
+  "id": "silver.heir",
+  "name": "Heir",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "On Recruit: +1 silver per member you have. Round III Start: +1 silver per member you have."
+ },
+ {
+  "id": "silver.spoon",
+  "name": "Upstart",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "On Recruit: gain half the silver of the rival with the most, rounded up."
+ },
+ {
+  "id": "silver.toastmaster",
+  "name": "Toastmaster",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Whenever you take a Silver space, +1 follower."
+ },
+ {
+  "id": "silver.gala",
+  "name": "Debutante",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Once per game: double your silver. Each rival +2 silver."
+ },
+ {
+  "id": "silver.dowager",
+  "name": "Dowager",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Worth 3 followers."
+ },
+ {
+  "id": "silver.grandhost",
+  "name": "Grand Host",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Double the silver you gain from Silver spaces."
+ },
+ {
+  "id": "silver.saint",
+  "name": "Patron Saint",
+  "quadrant": "silver",
+  "n": 1,
+  "text": "Game end: +1 follower per 2 silver members, anyone’s."
+ },
+ {
+  "id": "yellow.gardener",
+  "name": "Gardener",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "On Recruit: +1 of each color you have none of. Round Start: +1 of each color you have none of."
+ },
+ {
+  "id": "yellow.peddler",
+  "name": "Peddler",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "On Recruit: +1 of each color. Round Start: +1 of each color."
+ },
+ {
+  "id": "yellow.gleaner",
+  "name": "Gleaner",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Whenever an action gains you 2 or more of another color at once, +1 yellow."
+ },
+ {
+  "id": "yellow.admirer",
+  "name": "Admirer",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Whenever a rival recruits a member of a color you have none of, +1 of that color."
+ },
+ {
+  "id": "yellow.gobetween",
+  "name": "Go-Between",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Whenever you recruit a non-yellow member, +1 of its color."
+ },
+ {
+  "id": "yellow.dyer",
+  "name": "Dyer",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Round end: +1 yellow per color you hold."
+ },
+ {
+  "id": "yellow.latebloomer",
+  "name": "Late Bloomers",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Worth 2 followers. On Recruit: if no rival has fewer followers than you (not counting this card), +1 of each color. Round Start: if no rival has fewer followers than you (not counting this card), +1 of each color."
+ },
+ {
+  "id": "yellow.sower",
+  "name": "Sower",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Round Start: plant any of your yellow. Round end: gain that many of each other color."
+ },
+ {
+  "id": "yellow.harmonist",
+  "name": "Harmonist",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Game end: +1 follower per full set you hold."
+ },
+ {
+  "id": "yellow.rainmaker",
+  "name": "Rainmaker",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Once per game: raise each of your colors to match your yellow."
+ },
+ {
+  "id": "yellow.pilgrim",
+  "name": "Pilgrim",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "On Recruit: +1 of each color."
+ },
+ {
+  "id": "yellow.farmer",
+  "name": "Farmer",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Whenever an action gains you yellow, +1 yellow."
+ },
+ {
+  "id": "yellow.weaver",
+  "name": "Weaver",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Whenever you buy 5 or more followers, +1 of each color."
+ },
+ {
+  "id": "yellow.explorer",
+  "name": "Explorer",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Whenever you take a space outside Yellow, +1 yellow."
+ },
+ {
+  "id": "yellow.chefs",
+  "name": "Chefs",
+  "quadrant": "yellow",
+  "n": 1,
+  "text": "Worth 2 followers. Once per game: +1 of each color in round I, +2 in round II, +3 in round III."
+ },
+ {
+  "id": "market.stylist",
+  "name": "Stylist",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever anyone recruits a blue member, +1 blue."
+ },
+ {
+  "id": "market.onlooker",
+  "name": "Onlooker",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever a rival recruits a blue member, +2 blue."
+ },
+ {
+  "id": "market.connoisseur",
+  "name": "Connoisseur",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever you recruit a blue member, +1 blue."
+ },
+ {
+  "id": "market.reseller",
+  "name": "Reseller",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever you recruit, +1 of that member’s color."
+ },
+ {
+  "id": "market.curator",
+  "name": "Curator",
+  "quadrant": "market",
+  "n": 1,
+  "text": "On Recruit: +1 blue per other blue member you have. Round Start: +1 blue per other blue member you have."
+ },
+ {
+  "id": "market.planner",
+  "name": "Planner",
+  "quadrant": "market",
+  "n": 1,
+  "text": "On Recruit: your next member costs 2 less per round number. Round Start: your next member costs 2 less per round number."
+ },
+ {
+  "id": "market.underbidder",
+  "name": "Underbidder",
+  "quadrant": "market",
+  "n": 1,
+  "text": "On Recruit: your next member costs 2 less per rival with more members than you. Round Start: your next member costs 2 less per rival with more members than you."
+ },
+ {
+  "id": "market.minimalist",
+  "name": "Minimalist",
+  "quadrant": "market",
+  "n": 1,
+  "text": "On Recruit: +1 blue per rival with more members than you. Round Start: +1 blue per rival with more members than you."
+ },
+ {
+  "id": "market.climber",
+  "name": "Social Climber",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever you release another member, +2 of any color you choose."
+ },
+ {
+  "id": "market.auctioneer",
+  "name": "Auctioneer",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever a rival recruits a non-blue member, +1 blue."
+ },
+ {
+  "id": "market.sommelier",
+  "name": "Sommelier",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever you recruit a blue member, your next member costs 2 less."
+ },
+ {
+  "id": "market.bargainbin",
+  "name": "Bargain Bin",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever shop members go to the bottom of the pile, +1 blue."
+ },
+ {
+  "id": "market.patroness",
+  "name": "Patroness",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever a shop member goes to the bottom of the pile, +1 follower."
+ },
+ {
+  "id": "market.blackmarket",
+  "name": "Talent Scout",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost."
+ },
+ {
+  "id": "market.snob",
+  "name": "Snob",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Game end: +1 follower per blue member you have."
+ },
+ {
+  "id": "market.recluse",
+  "name": "Recluse",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Game end: +2 followers per rival with more members than you."
+ },
+ {
+  "id": "market.windowshopper",
+  "name": "Window Shopper",
+  "quadrant": "market",
+  "n": 1,
+  "text": "On Recruit: send 1 shop member to the bottom of the pile, gain 1 of its color. Round Start: send 1 shop member to the bottom of the pile, gain 1 of its color."
+ },
+ {
+  "id": "market.restocker",
+  "name": "Restocker",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Once per game: send the whole shop to the bottom of the pile, then refill."
+ },
+ {
+  "id": "market.shopaholic",
+  "name": "Shopaholic",
+  "quadrant": "market",
+  "n": 1,
+  "text": "You can always recruit twice."
+ },
+ {
+  "id": "market.windowdresser",
+  "name": "Window Dresser",
+  "quadrant": "market",
+  "n": 1,
+  "text": "On Recruit: send 3 shop members to the bottom of the pile, then refill."
+ },
+ {
+  "id": "market.plusone",
+  "name": "Plus-One",
+  "quadrant": "market",
+  "n": 1,
+  "text": "On Recruit: recruit again this turn."
+ },
+ {
+  "id": "market.doorman",
+  "name": "Doorman",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever a rival recruits more than once in a turn (swaps count), +1 blue."
+ },
+ {
+  "id": "market.makeover",
+  "name": "Makeover",
+  "quadrant": "market",
+  "n": 1,
+  "text": "On Recruit: send the whole shop to the bottom of the pile, then refill."
+ },
+ {
+  "id": "market.regular",
+  "name": "Regular",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever you buy followers, +1 blue."
+ },
+ {
+  "id": "market.trendsetter",
+  "name": "Trendsetter",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever you recruit a member, send 1 shop member to the bottom of the pile, then refill."
+ },
+ {
+  "id": "market.critic",
+  "name": "Critic",
+  "quadrant": "market",
+  "n": 1,
+  "text": "Whenever a rival recruits a blue member, +1 follower."
+ },
+ {
+  "id": "thieves.cutpurse",
+  "name": "Cutpurse",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "On Recruit: steal 1 resource from the rival with the most resources. Round Start: steal 1 resource from the rival with the most resources."
+ },
+ {
+  "id": "thieves.mole",
+  "name": "Mole",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "On Recruit: steal 1 resource from each rival with more followers than you. Round Start: steal 1 resource from each rival with more followers than you."
+ },
+ {
+  "id": "thieves.accomplice",
+  "name": "Accomplice",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "On Recruit: steal 3 resources."
+ },
+ {
+  "id": "thieves.grifter",
+  "name": "Grifter",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "On Recruit: steal 1 resource per 2 members you have."
+ },
+ {
+  "id": "thieves.sticky",
+  "name": "Sticky Fingers",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Your steals take 1 more resource."
+ },
+ {
+  "id": "thieves.desperado",
+  "name": "Desperado",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "While you have the fewest followers (ties count), double what you steal from spaces, before other bonuses."
+ },
+ {
+  "id": "thieves.robinhood",
+  "name": "Robin Hood",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Whenever you steal from the player with the most followers, +1 follower."
+ },
+ {
+  "id": "thieves.lookout",
+  "name": "Lookout",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Once per round: whenever a rival steals from someone else, steal 1 resource from that rival."
+ },
+ {
+  "id": "thieves.lightfingers",
+  "name": "Light Fingers",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Whenever a rival recruits a member costing 8 or more, steal 1 resource from that rival."
+ },
+ {
+  "id": "thieves.extortionist",
+  "name": "Extortionist",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "On Recruit: steal 2 resources from the rival with the most resources. Round Start: steal 2 resources from the rival with the most resources."
+ },
+ {
+  "id": "thieves.watchdog",
+  "name": "Bodyguard",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Rivals can’t steal from you."
+ },
+ {
+  "id": "thieves.crew",
+  "name": "Crew",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Worth 2 followers."
+ },
+ {
+  "id": "thieves.doubleagent",
+  "name": "Double Agent",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "On Recruit: swap it for a rival’s member you choose."
+ },
+ {
+  "id": "thieves.bigscore",
+  "name": "Safecracker",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Once per game: steal half the magenta of the rival with the most, rounded down."
+ },
+ {
+  "id": "thieves.fixer",
+  "name": "Fixer",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Once per game: spend magenta equal to a rival’s member’s cost to steal it."
+ },
+ {
+  "id": "thieves.kingpin",
+  "name": "Kingpin",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Game end: +1 follower per magenta member you have."
+ },
+ {
+  "id": "thieves.snitch",
+  "name": "Snitch",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Whenever a rival steals from you, they lose 1 follower."
+ },
+ {
+  "id": "thieves.shoplifter",
+  "name": "Shoplifter",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Whenever you recruit, steal 1 resource."
+ },
+ {
+  "id": "thieves.fence",
+  "name": "Fence",
+  "quadrant": "thieves",
+  "n": 1,
+  "text": "Whenever you steal, +1 magenta."
+ },
+ {
+  "id": "trading.recluse",
+  "name": "Recluse",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Game end: +2 followers per rival with more members than you."
+ },
+ {
+  "id": "trading.shopkeeper",
+  "name": "Shopkeeper",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "On Recruit: +2 white. Round Start: +2 white."
+ },
+ {
+  "id": "trading.heiress",
+  "name": "Heiress",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Once per game: +1 white per member you have."
+ },
+ {
+  "id": "trading.bulkbuyer",
+  "name": "Bulk Buyer",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Whenever you buy 5 or more followers, +1 follower."
+ },
+ {
+  "id": "trading.broker",
+  "name": "Broker",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Whenever a White action gives you followers, +1 follower."
+ },
+ {
+  "id": "trading.exporter",
+  "name": "Exporter",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Whenever you recruit a non-white member, +1 white."
+ },
+ {
+  "id": "trading.raider",
+  "name": "Raiders",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Once per game: steal 4 followers from the leader. Pay them 2 white."
+ },
+ {
+  "id": "trading.cashier",
+  "name": "Cashier",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "On Recruit: turn all your white into followers."
+ },
+ {
+  "id": "trading.undertaker",
+  "name": "Undertaker",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Whenever you cast out one of your members, +2 followers."
+ },
+ {
+  "id": "trading.appraiser",
+  "name": "Appraiser",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Once per game: cast out one of your members, gain followers or white equal to its cost."
+ },
+ {
+  "id": "trading.changer",
+  "name": "Money Changer",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Whenever you turn resources or members into followers, +1 white."
+ },
+ {
+  "id": "trading.martyr",
+  "name": "Martyr",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "When this member leaves your cult, gain followers equal to its cost."
+ },
+ {
+  "id": "trading.oldmoney",
+  "name": "Old Money",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Game end: +1 follower per white member you have."
+ },
+ {
+  "id": "trading.hoarder",
+  "name": "Hoarder",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Once per game: turn all your resources into white."
+ },
+ {
+  "id": "trading.dealer",
+  "name": "Dealer",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Whenever you sell followers, +1 white per follower sold."
+ },
+ {
+  "id": "trading.pawnbroker",
+  "name": "Pawnbroker",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Once per round: sell 1 follower you bought or won, for 3 white."
+ },
+ {
+  "id": "trading.safetynet",
+  "name": "Rich Uncle",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "On Recruit: if you have no white, +3 white. Round Start: if you have no white, +3 white."
+ },
+ {
+  "id": "trading.tipster",
+  "name": "Tipster",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Whenever a rival buys followers, +1 white."
+ },
+ {
+  "id": "trading.lender",
+  "name": "Lender",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "When it joins you: +5 white. Game end: lose 2 followers."
+ },
+ {
+  "id": "trading.magnate",
+  "name": "Magnate",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Game end: +1 follower per 3 white."
+ },
+ {
+  "id": "trading.shareholder",
+  "name": "Shareholder",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Worth 3 followers."
+ },
+ {
+  "id": "trading.liquidator",
+  "name": "Liquidator",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Once per game: sell up to 5 followers you bought or won, for 2 white each."
+ },
+ {
+  "id": "trading.reinvestor",
+  "name": "Reinvestor",
+  "quadrant": "trading",
+  "n": 1,
+  "text": "Whenever you sell followers, your next member costs 2 less per follower sold."
+ },
+ {
+  "id": "echo.evergreen",
+  "name": "Busker",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "On Recruit: +2 green. Round Start: +2 green."
+ },
+ {
+  "id": "echo.choir",
+  "name": "Choir",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "Whenever you copy a space, +1 green."
+ },
+ {
+  "id": "echo.muse",
+  "name": "Muse",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "Whenever a rival copies an action, +1 green."
+ },
+ {
+  "id": "echo.understudy",
+  "name": "Understudy",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "On Recruit: copy the action taken the previous turn."
+ },
+ {
+  "id": "echo.ensemble",
+  "name": "Ensemble",
+  "quadrant": "echo",
+  "n": 2,
+  "text": "Whenever you copy your own action, +1 follower."
+ },
+ {
+  "id": "echo.groupie",
+  "name": "Groupie",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "Whenever anyone recruits a green member, +1 green."
+ },
+ {
+  "id": "echo.translator",
+  "name": "Translator",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "What you copy comes as green. Switch it on or off when you recruit."
+ },
+ {
+  "id": "echo.tuningfork",
+  "name": "Impressionist",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "Whenever you copy an action, +1 of its color."
+ },
+ {
+  "id": "echo.wallflower",
+  "name": "Wallflower",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "When you copy an action, double the resources it gives you."
+ },
+ {
+  "id": "echo.mirror",
+  "name": "Fan Club",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "On Recruit: +1 green per Green space with a minion."
+ },
+ {
+  "id": "echo.roadie",
+  "name": "Roadie",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "Round Start: +1 green per Green member you have."
+ },
+ {
+  "id": "echo.afterimage",
+  "name": "Sleepwalker",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "On Recruit: copy one of your spaces from last round. Round Start: copy one of your spaces from last round."
+ },
+ {
+  "id": "echo.hourglass",
+  "name": "Stunt Double",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "On Recruit: copy the action you just took."
+ },
+ {
+  "id": "echo.dejavu",
+  "name": "Tribute Band",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "Once per game: do every action a rival you choose has a minion on this round."
+ },
+ {
+  "id": "echo.doppel",
+  "name": "Doppelganger",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "On Recruit: it becomes a copy of one of your members."
+ },
+ {
+  "id": "echo.impostor",
+  "name": "Impostor",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "On Recruit: it becomes a copy of a rival’s member."
+ },
+ {
+  "id": "echo.connector",
+  "name": "Connector",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "On Recruit: +1 green per non-green member you have. Round Start: +1 green per non-green member you have."
+ },
+ {
+  "id": "echo.agents",
+  "name": "Agents",
+  "quadrant": "echo",
+  "n": 2,
+  "text": "Your actions can’t be copied."
+ },
+ {
+  "id": "echo.bait",
+  "name": "Bait",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "Whenever anyone copies your action, they −1 follower. If it’s a rival, +1 follower."
+ },
+ {
+  "id": "echo.chronicler",
+  "name": "Chronicler",
+  "quadrant": "echo",
+  "n": 1,
+  "text": "Game end: +1 follower per green member."
+ },
+ {
+  "id": "benders.squatter",
+  "name": "Party Crasher",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Once per game: your next minion can be placed on a space a rival already took."
+ },
+ {
+  "id": "benders.bigspender",
+  "name": "Big Spender",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Once per game: recruit twice this turn."
+ },
+ {
+  "id": "benders.freelancer",
+  "name": "Alchemist",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "You may pay any member’s colored part in any colors."
+ },
+ {
+  "id": "benders.insider",
+  "name": "Insider",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "You may also recruit from the top 3 of the pile."
+ },
+ {
+  "id": "benders.extrahand",
+  "name": "Extra Hand",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Once per game: +1 minion this round."
+ },
+ {
+  "id": "benders.frontrunner",
+  "name": "Front-runner",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "You go first every round."
+ },
+ {
+  "id": "benders.launderer",
+  "name": "Launderers",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Worth 2 followers. On Recruit: rearrange your resources into any colors."
+ },
+ {
+  "id": "benders.saboteur",
+  "name": "Saboteur",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Whenever this joins your cult, −3 followers."
+ },
+ {
+  "id": "benders.dabblers",
+  "name": "Dabblers",
+  "quadrant": "guest",
+  "n": 2,
+  "text": "Counts as 2 members of every color."
+ },
+ {
+  "id": "benders.cheerleader",
+  "name": "Cheerleader",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Whenever you win a contest, +1 follower."
+ },
+ {
+  "id": "benders.anarchist",
+  "name": "Anarchist",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Once per round: swap any two members within 2 cost."
+ },
+ {
+  "id": "benders.scout",
+  "name": "Scout",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Once per round: send any shop members to the bottom of the pile, then refill."
+ },
+ {
+  "id": "benders.conmen",
+  "name": "Con Men",
+  "quadrant": "guest",
+  "n": 2,
+  "text": "Counts as 2 members. On Recruit: steal 5 resources."
+ },
+ {
+  "id": "benders.hr",
+  "name": "HR",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Worth 3 followers. Game End: +3 followers per color you have 3 members of."
+ },
+ {
+  "id": "benders.secondwind",
+  "name": "Coach",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "On Recruit: use one of your used Once per game members again."
+ },
+ {
+  "id": "benders.tiebreaker",
+  "name": "Tiebreaker",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Ties you’re in go to you alone."
+ },
+ {
+  "id": "benders.straggler",
+  "name": "Straggler",
+  "quadrant": "guest",
+  "n": 1,
+  "text": "Once per round, after the last minion is placed: you may move your last minion to an open space and take it."
+ }
+]

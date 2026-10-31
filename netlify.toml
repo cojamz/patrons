@@ -1,0 +1,5 @@
+# Netlify is retired for this branch (2026-10-15): the play link is main's play/ on GitHub Pages,
+# published only by scripts/v4-play.sh. Skip every Netlify build of this branch so PR #1 stops
+# showing failed deploy previews. Disconnect the repo in Netlify to remove the checks entirely.
+[build]
+  ignore = "exit 0"

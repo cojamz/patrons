@@ -1,0 +1,1013 @@
+{
+ "mode": "sweep",
+ "games": 300,
+ "seats": 2,
+ "table": [
+  "thieves",
+  "red",
+  "echo",
+  "market"
+ ],
+ "cards": [
+  "purple.crew",
+  "thieves.cutpurse",
+  "thieves.desperado",
+  "thieves.grifter",
+  "thieves.watchdog",
+  "thieves.doubleagent",
+  "thieves.sticky",
+  "thieves.extortionist"
+ ],
+ "round": 2,
+ "freeN": 0,
+ "rollouts": 2,
+ "think": 3,
+ "deltas": [
+  -4,
+  -2,
+  0,
+  2,
+  4
+ ],
+ "printed": {
+  "purple.crew": 2,
+  "thieves.cutpurse": 4,
+  "thieves.desperado": 4,
+  "thieves.grifter": 6,
+  "thieves.watchdog": 6,
+  "thieves.doubleagent": 6,
+  "thieves.sticky": 8,
+  "thieves.extortionist": 10
+ },
+ "secs": 238.778,
+ "rows": [
+  {
+   "id": "purple.crew",
+   "name": "Shift Crew",
+   "printed": 2,
+   "table": "purple,thieves",
+   "fair": 5.024619640387275,
+   "slope": -0.6025,
+   "at0": 3.0273333333333334,
+   "interp": 3.6729810568295114,
+   "interpCens": "",
+   "cens": "",
+   "lo": 3.0806196648751185,
+   "hi": 6.800490797546012,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      3.1866666666666665,
+      1.966147280039793
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.07,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 5.905,
+     "mppB": 4.828333333333333,
+     "boughtRound": 2
+    },
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      2.796666666666667,
+      1.9374139533657735
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.05,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 5.66,
+     "mppB": 4.828333333333333,
+     "boughtRound": 2
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      -0.5466666666666666,
+      1.910005641118482
+     ],
+     "forcedBuy": 1,
+     "forcedWin": -0.03,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 5.441666666666666,
+     "mppB": 4.828333333333333,
+     "boughtRound": 2.0033333333333334
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      -1.82,
+      1.7278588564925854
+     ],
+     "forcedBuy": 0.98,
+     "forcedWin": -0.09,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 5.303333333333334,
+     "mppB": 4.828333333333333,
+     "boughtRound": 2.1462585034013606
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -0.53,
+      1.4797057571856584
+     ],
+     "forcedBuy": 0.8333333333333334,
+     "forcedWin": -0.05,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 5.1866666666666665,
+     "mppB": 4.828333333333333,
+     "boughtRound": 2.64
+    }
+   ]
+  },
+  {
+   "id": "thieves.cutpurse",
+   "name": "Cutpurse",
+   "printed": 4,
+   "table": "thieves,red",
+   "fair": 4.913809990205681,
+   "slope": -0.6806666666666666,
+   "at0": 3.3446666666666665,
+   "interp": 5.471698113207547,
+   "interpCens": "",
+   "cens": "",
+   "lo": 1.6655421686746987,
+   "hi": 8.00552677029361,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      2.8633333333333333,
+      2.8898134101593786
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.09,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.655,
+     "mppB": 7.23,
+     "boughtRound": 2
+    },
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      0.8733333333333333,
+      2.8880773858411763
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.04666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.651666666666666,
+     "mppB": 7.23,
+     "boughtRound": 2
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      3.51,
+      3.118889151272681
+     ],
+     "forcedBuy": 0.9966666666666667,
+     "forcedWin": 0.08666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.3933333333333335,
+     "mppB": 7.23,
+     "boughtRound": 2.0100334448160537
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      -1.26,
+      2.77667286195125
+     ],
+     "forcedBuy": 0.9366666666666666,
+     "forcedWin": 0.023333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.14,
+     "mppB": 7.23,
+     "boughtRound": 2.2775800711743774
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -2.8766666666666665,
+      2.039249860711285
+     ],
+     "forcedBuy": 0.6566666666666666,
+     "forcedWin": -0.03333333333333333,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.17,
+     "mppB": 7.23,
+     "boughtRound": 2.467005076142132
+    }
+   ]
+  },
+  {
+   "id": "thieves.desperado",
+   "name": "Desperado",
+   "printed": 4,
+   "table": "thieves,red",
+   "fair": 6.885834707714862,
+   "slope": -0.9095,
+   "at0": 6.262666666666667,
+   "interp": 7.103694874851013,
+   "interpCens": "",
+   "cens": "",
+   "lo": 5.179527149909068,
+   "hi": 8.882145084182083,
+   "per": [
+    {
+     "P": 0,
+     "n": 300,
+     "forced": [
+      6.513333333333334,
+      3.053332136563663
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.12,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.971666666666667,
+     "mppB": 7.23,
+     "boughtRound": 2
+    },
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      4.2,
+      3.28517414988837
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.09666666666666666,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.84,
+     "mppB": 7.23,
+     "boughtRound": 2
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      2.12,
+      3.2006778370160385
+     ],
+     "forcedBuy": 0.9966666666666667,
+     "forcedWin": 0.03,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.298333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.0100334448160537
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      1.5433333333333332,
+      2.860177236243866
+     ],
+     "forcedBuy": 0.9366666666666666,
+     "forcedWin": 0.07,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.333333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.2775800711743774
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -1.2533333333333334,
+      1.992406914005604
+     ],
+     "forcedBuy": 0.6566666666666666,
+     "forcedWin": -0.01,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.223333333333334,
+     "mppB": 7.23,
+     "boughtRound": 2.467005076142132
+    }
+   ]
+  },
+  {
+   "id": "thieves.grifter",
+   "name": "Grifter",
+   "printed": 6,
+   "table": "thieves,red",
+   "fair": 6.23655147844674,
+   "slope": -0.4678333333333333,
+   "at0": 2.917666666666667,
+   "interp": 4.8422247446084,
+   "interpCens": "",
+   "cens": "",
+   "lo": 1.145919208573784,
+   "hi": 8.312988140005784,
+   "per": [
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      2.92,
+      2.9769508379014344
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.11,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.636666666666667,
+     "mppB": 7.23,
+     "boughtRound": 2
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      1.2366666666666666,
+      2.6051883613583136
+     ],
+     "forcedBuy": 0.9666666666666667,
+     "forcedWin": 0.05333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.378333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.179310344827586
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      -1.7,
+      2.298783504571897
+     ],
+     "forcedBuy": 0.8133333333333334,
+     "forcedWin": -0.02,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.148333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.4057377049180326
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -1.5266666666666666,
+      1.6064871210872667
+     ],
+     "forcedBuy": 0.45,
+     "forcedWin": -0.0033333333333333335,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.193333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.4814814814814814
+    },
+    {
+     "P": 10,
+     "n": 300,
+     "forced": [
+      -0.37666666666666665,
+      0.26245921907921865
+     ],
+     "forcedBuy": 0.056666666666666664,
+     "forcedWin": -0.006666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.2316666666666665,
+     "mppB": 7.23,
+     "boughtRound": 2.9411764705882355
+    }
+   ]
+  },
+  {
+   "id": "thieves.watchdog",
+   "name": "Bodyguard",
+   "printed": 6,
+   "table": "thieves,red",
+   "fair": 8.674797129321263,
+   "slope": -3.553166666666667,
+   "at0": 30.823,
+   "interp": 9.344537815126051,
+   "interpCens": "",
+   "cens": "",
+   "lo": 8.426166863797652,
+   "hi": 8.909176648118457,
+   "per": [
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      28.716666666666665,
+      3.189386291613353
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.41,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.968333333333334,
+     "mppB": 7.23,
+     "boughtRound": 2
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      13.656666666666666,
+      2.992601921213045
+     ],
+     "forcedBuy": 0.9666666666666667,
+     "forcedWin": 0.2633333333333333,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.526666666666666,
+     "mppB": 7.23,
+     "boughtRound": 2.179310344827586
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      4.6,
+      2.5658132157649325
+     ],
+     "forcedBuy": 0.8133333333333334,
+     "forcedWin": 0.12333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.216666666666667,
+     "mppB": 7.23,
+     "boughtRound": 2.4057377049180326
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      1.0666666666666667,
+      1.8004260051649759
+     ],
+     "forcedBuy": 0.45,
+     "forcedWin": 0.04,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.2316666666666665,
+     "mppB": 7.23,
+     "boughtRound": 2.4814814814814814
+    },
+    {
+     "P": 10,
+     "n": 300,
+     "forced": [
+      -0.52,
+      0.44591653772607903
+     ],
+     "forcedBuy": 0.056666666666666664,
+     "forcedWin": -0.01,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.238333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.9411764705882355
+    }
+   ]
+  },
+  {
+   "id": "thieves.doubleagent",
+   "name": "Double Agent",
+   "printed": 6,
+   "table": "thieves,red",
+   "fair": 7.180706521739131,
+   "slope": -0.49066666666666664,
+   "at0": 3.5233333333333334,
+   "interp": 5.306930693069307,
+   "interpCens": "",
+   "cens": "",
+   "lo": 3.2855172413793103,
+   "hi": 9.031275060144345,
+   "per": [
+    {
+     "P": 2,
+     "n": 300,
+     "forced": [
+      3.83,
+      3.136930766277632
+     ],
+     "forcedBuy": 1,
+     "forcedWin": 0.09333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.6466666666666665,
+     "mppB": 7.23,
+     "boughtRound": 2
+    },
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      0.66,
+      2.925999168093419
+     ],
+     "forcedBuy": 0.9666666666666667,
+     "forcedWin": 0.03,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.455,
+     "mppB": 7.23,
+     "boughtRound": 2.179310344827586
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      -0.35,
+      2.361451883197181
+     ],
+     "forcedBuy": 0.8133333333333334,
+     "forcedWin": 0.03333333333333333,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.153333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.4057377049180326
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -0.9933333333333333,
+      1.7401550385786293
+     ],
+     "forcedBuy": 0.45,
+     "forcedWin": 0.02666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.22,
+     "mppB": 7.23,
+     "boughtRound": 2.4814814814814814
+    },
+    {
+     "P": 10,
+     "n": 300,
+     "forced": [
+      -0.25,
+      0.4215964826737748
+     ],
+     "forcedBuy": 0.056666666666666664,
+     "forcedWin": -0.01,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.243333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.9411764705882355
+    }
+   ]
+  },
+  {
+   "id": "thieves.sticky",
+   "name": "Sticky Fingers",
+   "printed": 8,
+   "table": "thieves,red",
+   "fair": 7.891019172552976,
+   "slope": -0.3303333333333333,
+   "at0": 2.6066666666666665,
+   "interp": 6.70440251572327,
+   "interpCens": "",
+   "cens": "",
+   "lo": -0.6905132192846034,
+   "hi": null,
+   "per": [
+    {
+     "P": 4,
+     "n": 300,
+     "forced": [
+      1.93,
+      3.2182243136513313
+     ],
+     "forcedBuy": 0.9966666666666667,
+     "forcedWin": 0.043333333333333335,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.533333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.0100334448160537
+    },
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      0.56,
+      2.808999863021904
+     ],
+     "forcedBuy": 0.9366666666666666,
+     "forcedWin": 0.03666666666666667,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.335,
+     "mppB": 7.23,
+     "boughtRound": 2.2775800711743774
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -1.03,
+      1.9426252794174885
+     ],
+     "forcedBuy": 0.6566666666666666,
+     "forcedWin": 0.0033333333333333335,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.213333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.467005076142132
+    },
+    {
+     "P": 10,
+     "n": 300,
+     "forced": [
+      -1.0933333333333333,
+      0.9637479364102263
+     ],
+     "forcedBuy": 0.24333333333333335,
+     "forcedWin": -0.013333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.2283333333333335,
+     "mppB": 7.23,
+     "boughtRound": 2.8493150684931505
+    },
+    {
+     "P": 12,
+     "n": 300,
+     "forced": [
+      -0.5466666666666666,
+      0.6584811596558413
+     ],
+     "forcedBuy": 0.07666666666666666,
+     "forcedWin": -0.023333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.198333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.869565217391304
+    }
+   ]
+  },
+  {
+   "id": "thieves.extortionist",
+   "name": "Extortionist",
+   "printed": 10,
+   "table": "thieves,red",
+   "fair": null,
+   "slope": 0.11733333333333333,
+   "at0": -1.5233333333333334,
+   "interp": 6,
+   "interpCens": "≤",
+   "cens": "",
+   "lo": 8.905263157894737,
+   "hi": null,
+   "per": [
+    {
+     "P": 6,
+     "n": 300,
+     "forced": [
+      -0.8366666666666667,
+      1.8545414395176372
+     ],
+     "forcedBuy": 0.49666666666666665,
+     "forcedWin": 0.023333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.208333333333333,
+     "mppB": 7.23,
+     "boughtRound": 2.48993288590604
+    },
+    {
+     "P": 8,
+     "n": 300,
+     "forced": [
+      -0.6733333333333333,
+      0.9184822533432122
+     ],
+     "forcedBuy": 0.16333333333333333,
+     "forcedWin": -0.013333333333333334,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.22,
+     "mppB": 7.23,
+     "boughtRound": 2.693877551020408
+    },
+    {
+     "P": 10,
+     "n": 300,
+     "forced": [
+      -0.24,
+      0.23980187734678376
+     ],
+     "forcedBuy": 0.023333333333333334,
+     "forcedWin": 0,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.245,
+     "mppB": 7.23,
+     "boughtRound": 3
+    },
+    {
+     "P": 12,
+     "n": 300,
+     "forced": [
+      0,
+      0
+     ],
+     "forcedBuy": 0,
+     "forcedWin": 0,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.23,
+     "mppB": 7.23,
+     "boughtRound": null
+    },
+    {
+     "P": 14,
+     "n": 300,
+     "forced": [
+      0,
+      0
+     ],
+     "forcedBuy": 0,
+     "forcedWin": 0,
+     "nFree": 0,
+     "free": [
+      null,
+      null
+     ],
+     "freeWin": null,
+     "buyRate": null,
+     "nAff": 0,
+     "mpp": 7.23,
+     "mppB": 7.23,
+     "boughtRound": null
+    }
+   ]
+  }
+ ]
+}

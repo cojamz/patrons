@@ -1,0 +1,46 @@
+# Lessons the critic found in batches (every batch applies these)
+- One shared eye (dark lid bar over a white strip) makes every face look sleepy/sly. Vary eyes: open eyes with an iris,
+  round eyes, glasses, closed-happy arcs; lids only where the expression wants them.
+- Deep and very deep skin: features must read at 1x. Light the face, not the skin tone: a top-left forehead/cheekbone
+  highlight two steps up the ramp, a lit nose bridge, warm lips, eye whites of 1px with a warm iris. Never two bright
+  white slits in a dark face.
+- Upright things on a neck chain or tie with a crossbar read as crucifixes (Kingpin tie, Treasurer key). Angle them.
+- Scattered single-pixel freckles read as a rash. Two deliberate pixels or none.
+- Props must name the role at 48px: outline them, give them their own value, put them in a hand; brown props on brown
+  skin/clothes vanish (or read badly).
+- No tooth pixels in mouths, ever (one white pixel = banned tooth notch).
+- Tone clustering: don't let a tone cluster on one kind of role (very deep skin only on mystics/elders reads as
+  "mystic"). Spread deep tones across everyday, practical and young roles too.
+- An open dark mouth framed by a pale beard on a very deep face risks a minstrel read: closed or small mouths there,
+  beard kept clear of the lips, forehead lit.
+- Plus signs on pennants/badges read as crosses. Stars or numbers.
+- A pale moustache, pearl strand or any light row right under a deep-skin nose reads as a tooth row (minstrel risk). Keep light rows off the mouth line on deep faces; moustaches split into two wedges.
+- A shopkeeper or clerk with a moustache in brown skin reads as a known cartoon stereotype. Cast service roles across tones and keep the props doing the job.
+- Hoods stay rounded, never peaked.
+- A held mask, doll or photo with its own hair or eyes counts as a person at 32px. Give it no hair, empty eye holes and a visible handle.
+- A beard that wraps a dark mouth on all sides reads as a hole. Keep a skin row above the mouth and start the beard on the chin.
+- On shady group cards the lead-crook costume goes on a light or mid tone, with the darker person a friendly equal beside, not the lone crook in front.
+- Hands: knuckle row, thumb, wrist cuff step. Never a box.
+- Costume signifiers (headbands with knot tails, pith helmets) get the same sensitivity glance as cultural dress.
+- The lid-bar eye on at most a third of a batch.
+- Single off-tone pixels on cheeks and chins read as rash, dirt or stubble. One cheek plane, two tones, in a cluster.
+- A gift ribbon or any cross-strap on a box makes a plus. Bow only, or angle it.
+- A red or orange triangle on a dark stick reads as a torch. Crowd pennants are pale, with a star, flying sideways.
+- Masks or dark glasses on black hair merge into one bar: give eyewear its own value, one off-white glint per lens.
+- Dandy costume (boater, pencil moustache) plus a swindler role never goes on brown or deep skin.
+- Comic-coward roles follow the service-role rule: cast light as often as dark, never an open lipped mouth on a deep face.
+- Mismatched eyes read as a wink. Both eyes one expression unless the card is about winking.
+- A back-person face copied across cards is the AI tell. Each back face gets its own eyes, brows, mouth and hair.
+- A dark-skinned man in a uniform with a top hat and grey moustache is the porter image whatever the role. Doormen, porters, bellhops cast light unless plainly modern security.
+- "Longing outside a shop" on a deep or brown face reads as poverty: make it delighted, or cast across tones.
+- A cheek highlight right under the eye reads as a bruise. Put it on the cheekbone, one pixel lower and outward.
+- Three pointed arms on a shaft read as a trident. Short, based, round arms.
+- Every handheld prop shows its hand; a prop at the ear with no hand reads as an antenna.
+- A 2-4-2 diamond mouth reads as a plus. Open mouths are ovals.
+- Pearls or trim the same value as the cloth behind vanish at 1x: put them on skin, alternating light and dark.
+- Highlights are stepped planes, never hard rectangles.
+- "Darkest person in front" backfires on crowd cards with a loaded name (Mob): the lead face there is light or mid, the rest equal.
+- Veils on brown women under a religious-sounding name read as costume. Bare hair unless the card is the halo saint.
+- A bottle with sparks at the neck is a Molotov. Spray cans have a nozzle cap and mist, no sparks.
+- Gold eye pixels on a very deep face glow. Warm brown iris plus 1px off-white.
+- Watch for clusters across a color: three grey dark elders with clocks in one color reads as one face.

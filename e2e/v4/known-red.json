@@ -1,0 +1,6 @@
+{
+  "_about": "Browser gates already red on the live build. The check still runs them and prints KNOWN RED, but they don't fail the run; when one passes again, the check says to remove it. Add an entry only after seeing it fail on the live commit. Owner fixes it; nobody weakens it.",
+  "shop-sizing.mjs": "Red on live v0.8.95 (80b77ee, seen 2026-10-27): turning details on resizes the follower buys. Since the card polish (2026-10-29) laptop and desktop pass; tablet 1100x700 still moves them 108 -> 110px. Owner: Mike readability thread.",
+  "layout.mjs": "Red on live v0.8.95 (80b77ee, seen 2026-10-27): setup waits time out at 1270x700 and 1100x700, and (l7) P1's accessible count misses 10 members. Owner: Mike readability thread.",
+  "hotseat.mjs": "Red on live v0.8.99 (8aa0eb6; seen 2026-10-27 on 22bf4e2, same code): text cuts in the full hot-seat game, b \"You\" spills its box by 4px and the Even Swap picker's span.gc-lbl \"Member\" by 2px (span.gc-name \"Doppelganger\" by 4px in some games). Owner: live-play screen thread."
+}

@@ -1,0 +1,65 @@
+[
+ {
+  "id": "artifact.gold",
+  "name": "Prospector",
+  "sphere": "gold",
+  "text": "When an action gains you gold, +1 gold.",
+  "kind": "artifact"
+ },
+ {
+  "id": "artifact.red",
+  "name": "Recruiter",
+  "sphere": "red",
+  "text": "Whenever you recruit, +1 red.",
+  "kind": "artifact"
+ },
+ {
+  "id": "artifact.echo",
+  "name": "Impressionist",
+  "sphere": "green",
+  "text": "Whenever you copy an action, +1 of its color.",
+  "kind": "artifact"
+ },
+ {
+  "id": "artifact.market",
+  "name": "Bargain Bin",
+  "sphere": "blue",
+  "text": "Whenever shop members go to the bottom of the pile, +1 blue.",
+  "kind": "artifact"
+ },
+ {
+  "id": "artifact.thieves",
+  "name": "Fence",
+  "sphere": "magenta",
+  "text": "Whenever you steal, +1 magenta.",
+  "kind": "artifact"
+ },
+ {
+  "id": "artifact.purple",
+  "name": "Pocket Watch",
+  "sphere": "purple",
+  "text": "Whenever a player’s turn is skipped, +1 purple.",
+  "kind": "artifact"
+ },
+ {
+  "id": "artifact.silver",
+  "name": "Caterer",
+  "sphere": "silver",
+  "text": "Whenever you give a rival something, +1 silver.",
+  "kind": "artifact"
+ },
+ {
+  "id": "artifact.yellow",
+  "name": "Farmer",
+  "sphere": "yellow",
+  "text": "Whenever an action gains you yellow, +1 yellow.",
+  "kind": "artifact"
+ },
+ {
+  "id": "artifact.trading",
+  "name": "Money Changer",
+  "sphere": "white",
+  "text": "Whenever you turn resources or members into followers, +1 white.",
+  "kind": "artifact"
+ }
+]

@@ -1,0 +1,91 @@
+                                 N4     N3     N2     H4     H3     H2    mean
+Bodyguard (thieves)            +25*      .      .      .      .      .      25
+Tribute Band (echo)            +16*      .      .      .      .      .      16
+Shoplifter (thieves)            +7    +24*      .      .      .      .      15
+Heiress (trading)               +9*   +18*   +17*    +1    +26*      .      14
+Extra Hand (benders)           +18*      .    +8       .      .      .      13
+Exporter (trading)              +7*    +8*   +21*    +9    +18*      .      13
+Accomplice (thieves)            +9*   +11*   +13*   +10*   +10*   +13*      11
+Extra Shift (purple)            +4    +18*      .      .      .      .      11
+Night Owl (purple)             +18*    +4     +8       .      .      .      10
+Patroness (market)              +8     +6    +10       .      .      .       8
+Tiebreaker (benders)           +15*    +6*     0    +17*    +6     +5        8
+Old Money (trading)              0     +7*   +17*    +6     +9       .       8
+Broker (trading)                -1    +11*   +19*    +2     +8       .       8
+Snitch (thieves)                +2     +3    +17*    +4    +12       .       8
+Shopkeeper (trading)            +1     +7*   +23*    +6     +5     +3        8
+Raiders (trading)               +5    +10       .      .      .      .       8
+Desperado (thieves)             -2    +12*   +13       .      .      .       7
+Kingpin (thieves)               +2     +6*   +11*    -5    +13*   +12        7
+Mob (red)                        0     +1    +12*      .   +13     +6        6
+Cutpurse (thieves)              +4*    +7*   +12*    +1     +6     +7        6
+Undertaker (trading)            +1    +11       .      .      .      .       6
+Gossip (purple)                +13*    -2     +6       .      .      .       5
+HR (benders)                    +4     +1     +2    +15*    +3     +7        5
+Clockmaker (purple)             +2     +3     +7*    +5     +1    +12*       5
+Go-Getter (purple)              +7     -1     +9       .      .      .       5
+Martyr (trading)                -1     +9    +15*    -4       .      .       5
+Sticky Fingers (thieves)        +5     +5    +14*    -9     +3    +10        5
+Hot Streak (purple)             +3     +1     +4     +4     +9       .       4
+Snob (market)                   -1     +4     +7*    +8     +7      0        4
+Crew (thieves)                  +2     +7*    +4      0     +3     +8        4
+Grifter (thieves)               +3     +7*   +11*    +2     +2     -2        4
+Stunt Double (echo)             +2     -1     +5     +4     +1     +9        3
+Patriarch (red)                  0     +4    +10*    +8    +11    -14*       3
+Muse (echo)                     +5*    +2     -5     +2     +9     +7        3
+Anarchist (benders)            +10*    -1     -6     +5    +12     -2        3
+Extortionist (thieves)          -1     +3     +9*   -11    +12     +6        3
+Fan Club (echo)                 +2     +1     -3     +5     +3     +9        3
+Party Crasher (benders)         +4*    +1     -3      0    +12*     0        3
+Busker (echo)                    0     +5*    +3     -2     +4     +5        2
+Cashier (trading)               -4     +8       .      .      .      .       2
+Understudy (echo)               +3*     0     +1     +1      0     +6        2
+Recluse (trading)                0      0     +9     -6     +4       .       2
+Timekeepers (purple)            -2     +4     +5     +3     +9    -10        1
+Mentor & Protégé (red)          +1     +2     -3       .   +13     -7        1
+Closer (purple)                 +7*    -3     -4     +8     -3       .       1
+Regular (market)                +3*    -3      0    +12*    -3     -3        1
+Doppelganger (echo)             -1     -5     +4     +3     -2     +6        1
+Proselytizer (red)              +1     +4     +1     +4     -4     -2        1
+Saboteur (benders)              +9*    +1    -16*   +15     +3    -11        0
+Panel (red)                      0     +1     +2     -6     -3     +7        0
+Con Men (benders)               +3     +2     +1     -7      0      0        0
+Ensemble (echo)                 +4     -1     +4       .    -8       .       0
+Courier (purple)                +5     +4    -10       .      .      .       0
+Window Dresser (market)         -4*     0     -1     -1     -3     +7        0
+Chronicler (echo)                0      0      0     -3     -6     +5        0
+Late Riser (purple)             +6     -8      0       .      .      .      -1
+Dabblers (benders)              -1     -1     -1      0     +4     -5       -1
+Roadie (echo)                   +3     -2     -2     +2     -9     +5       -1
+Host (red)                      +1     +1     +1     -2      0     -5       -1
+Cheerleader (benders)           +3     +1     -5     -1     +4     -7       -1
+Recruit Bonus (red)             -2     -1     +1     -3     +4     -5       -1
+Connoisseur (market)            -1      0     -2     -5     +4       .      -1
+Trendsetter (market)            -2     -2     +2     -7     +1     +1       -1
+Bouncer (purple)                -1     -6*    -1     -6     -8    +12       -2
+Fixer (thieves)                 -4      0       .      .      .      .      -2
+Shopaholic (market)             -2     -2       .      .      .      .      -2
+Shift Crew (purple)             -1     -3     -2     -4     -4     +4       -2
+Window Shopper (market)         -1     +2     -3     -2     -8     -1       -2
+Doorman (market)                +5*    -3     -8    +11     -2    -19       -3
+Robin Hood (thieves)            +6*    +2     +2    -22*      .      .      -3
+Loyalists (red)                 -3    -11*    +5     +7    -14*      .      -3
+Critic (market)                  0     -7*    -7     +2     -1     -6       -3
+Coach (benders)                 -5     -2    -12*      .    -6     +8       -3
+Big Spender (benders)           -3*    -3*    -6*    -7*    -4     +3       -4
+Movement Penalty (red)          -4*    -4    -10*    -4    +13    -15       -4
+Double Agent (thieves)           0     -1    -12*    -4     -3     -4       -4
+Front-runner (benders)          -4*    -6*    -7*    -2     +3    -10*      -4
+Early Bird (purple)             -2     -9*    -5       .    -2       .      -5
+Twins (red)                     -2     -3     -8*    -1      0    -15*      -5
+Headhunter (red)                +3     -9*    -1       .   -14       .      -5
+Alchemist (benders)             -1     -1     -6     -5    -13*    -7       -6
+Plus-One (market)               -5*    -2     -6*   -12*    -4     -5       -6
+Volunteer (red)                 -2     -6*    -9*    -3     -2    -12*      -6
+Launderers (benders)            -4*    -7*    -8*    -7     -7     -5       -6
+Scout (benders)                 -3     -5*    -6*   -10*    +1    -17*      -6
+Impostor (echo)                 -5*    -2     -7     +2    -14    -15       -7
+Restocker (market)              -4*    -9*    -8    -16*    +1    -10       -8
+Bait (echo)                     -2     -4    -16*    -9    -14*      .      -9
+Hoarder (trading)              -10*      .      .      .      .      .     -10
+Agents (echo)                  -10*    -8*   -15*   -10*   -13*   -23*     -13

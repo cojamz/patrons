@@ -1,0 +1,113 @@
+/* "The Lamplit Table" — shared tokens + pieces for the vision key frames */
+:root{
+  --table:#1d1611; --table-2:#271d16; --table-3:#33271e;
+  --paper:#f4ebd7; --paper-2:#eadfc4; --paper-3:#d9caa8; --paper-edge:#c2ae86;
+  --ink:#2a1f17; --ink-2:#5f4e3d; --ink-3:#8a7760; --rule:rgba(42,31,23,.18);
+  --cream:#f3e6c8; --cream-2:#cbb894; --cream-3:#8f7f66;
+  --gold:#c99327; --silver:#8794a2; --magenta:#b2386c; --green:#3d8c66;
+  --lamp:255,206,140;
+  --serif:'Alegreya',Georgia,serif; --sans:'Alegreya Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:var(--table);color:var(--cream);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}
+.px{display:inline-block;line-height:0;vertical-align:middle}
+.px svg{display:block;image-rendering:pixelated}
+.rz{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
+.rz b{font-weight:700}
+
+/* the table: walnut grain + one warm lamp */
+.table{position:relative;width:1270px;height:700px;overflow:hidden;
+  background:
+    radial-gradient(ellipse 620px 520px at var(--lx,330px) var(--ly,370px), rgba(var(--lamp),.20), rgba(var(--lamp),.05) 55%, transparent 75%),
+    repeating-linear-gradient(92deg, rgba(0,0,0,.0) 0 9px, rgba(0,0,0,.07) 9px 10px, rgba(255,255,255,.012) 10px 23px, rgba(0,0,0,.05) 23px 24px),
+    repeating-linear-gradient(88deg, rgba(255,220,180,.018) 0 41px, rgba(0,0,0,.06) 41px 43px),
+    linear-gradient(180deg,#221a14,#1a140f);
+}
+.table::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 140% 120% at 50% 50%, transparent 55%, rgba(0,0,0,.45));}
+
+/* paper surfaces */
+.paper{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--ink);
+  box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 0 0 1px rgba(80,60,30,.25),0 6px 14px -6px rgba(0,0,0,.7),0 2px 3px rgba(0,0,0,.35)}
+
+/* the prompt */
+.prompt{position:absolute;font-family:var(--serif);color:var(--cream);letter-spacing:.005em}
+.prompt .big{font-size:26px;font-weight:500;line-height:1.05}
+.prompt .big em{font-style:italic;color:#ffd99a}
+.prompt .steps{margin-top:6px;display:flex;gap:14px;font-family:var(--sans);font-size:12.5px;color:var(--cream-3);letter-spacing:.06em;text-transform:uppercase}
+.prompt .steps .on{color:var(--cream)}
+.prompt .steps .on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffd99a;margin-right:6px;vertical-align:2px;box-shadow:0 0 8px #ffd99a}
+.prompt .steps span:not(.on)::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;border:1px solid var(--cream-3);margin-right:6px;vertical-align:2px}
+
+/* menu glyph */
+.menu{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--cream-3);border:1px solid rgba(243,230,200,.14)}
+.menu i{width:14px;height:2px;background:currentColor;display:block;box-shadow:0 -5px 0 currentColor,0 5px 0 currentColor}
+
+/* seats rail: the scoreboard, in turn order */
+.rail{position:absolute;display:flex;align-items:center;gap:6px}
+.seat{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border-radius:30px;color:var(--cream);position:relative}
+.seat .who{font-family:var(--serif);font-size:15px;line-height:1}
+.seat .who small{display:block;font-family:var(--sans);font-size:11px;color:var(--cream-3);margin-top:2px;letter-spacing:.02em}
+.seat .score{font-family:var(--serif);font-size:22px;font-weight:700;display:flex;align-items:center;gap:3px;margin-left:2px}
+.seat .score .px{opacity:.85}
+.seat.now{background:rgba(var(--lamp),.12);box-shadow:0 0 0 1px rgba(var(--lamp),.35)}
+.seat.now::after{content:"now";position:absolute;top:-8px;left:12px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#ffd99a;background:var(--table);padding:0 4px}
+.seat .wk{display:flex;gap:1px;margin-left:2px}
+.seat .wk span{width:4px;height:9px;border-radius:2px 2px 1px 1px;background:var(--cream-2)}
+.seat .wk span.used{background:transparent;box-shadow:inset 0 0 0 1px rgba(203,184,148,.4)}
+.rail .arrow{color:var(--cream-3);font-size:12px;opacity:.6}
+
+/* member card */
+.card{position:relative;width:108px;height:150px;border-radius:7px;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.card .band{height:5px;background:var(--q)}
+.card .art{height:62px;margin:6px 6px 0;border-radius:4px;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 70%, color-mix(in srgb,var(--q) 30%,var(--paper)), color-mix(in srgb,var(--q) 12%,var(--paper-2)) 70%);
+  box-shadow:inset 0 0 0 1px rgba(42,31,23,.18)}
+.card .nm{font-family:var(--serif);font-weight:700;font-size:14.5px;line-height:1.05;margin:6px 8px 0;color:var(--ink)}
+.card .tm{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:2px 8px 0}
+.card .ft{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding:5px 8px 7px;border-top:1px solid var(--rule);font-size:13px;color:var(--ink)}
+.card .ft .cost{display:flex;gap:6px;align-items:center}
+.card .ft .val{display:flex;align-items:center;gap:2px;font-family:var(--serif);font-weight:700}
+.card.dim{filter:brightness(.78) saturate(.8)}
+.card .tick{position:absolute;top:10px;right:8px;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#3e7a2c;background:#eef6d9;border-radius:8px;padding:1px 6px;box-shadow:0 0 0 1px rgba(62,122,44,.35)}
+
+/* follower offering (any resources -> followers) */
+.offer{position:absolute;display:flex;align-items:center;gap:10px;color:var(--cream-3);font-size:12px}
+.offer .lbl{font-family:var(--serif);font-size:15px;color:var(--cream-2)}
+.offer .rate{display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:14px;border:1px solid rgba(243,230,200,.14);color:var(--cream-2)}
+.offer .rate b{color:var(--cream);font-weight:700}
+.offer .rate small{color:var(--cream-3);font-size:10.5px}
+
+/* your seat */
+.mine{position:absolute}
+.mine .hd{display:flex;align-items:baseline;gap:8px;font-family:var(--serif);font-size:15px;color:var(--cream-2)}
+.stacks{display:flex;gap:16px;align-items:flex-end}
+.stack{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:34px}
+.stack .coins{display:flex;flex-direction:column-reverse;align-items:center}
+.stack .coins .px{margin-top:-14px}
+.stack .coins .px:first-child{margin-top:0}
+.stack .n{font-family:var(--serif);font-weight:700;font-size:18px;color:var(--cream);line-height:1}
+.stack.zero{opacity:.32}
+.hand{display:flex;gap:0}
+.hand .mini{width:74px;height:96px;border-radius:6px;margin-right:-14px;transform-origin:50% 120%;display:flex;flex-direction:column;align-items:center;padding-top:4px;overflow:hidden}
+.hand .mini .band{position:absolute;top:0;left:0;right:0;height:4px;background:var(--q)}
+.hand .mini .nm{font-family:var(--serif);font-weight:700;font-size:11.5px;color:var(--ink);margin-top:2px;text-align:center;line-height:1}
+
+/* tooltip / inspect note */
+.note{position:absolute;width:262px;border-radius:9px;padding:12px 14px 12px;z-index:5}
+.note .t{display:flex;gap:10px;align-items:center}
+.note .t .px{flex:none}
+.note h4{font-family:var(--serif);font-weight:700;font-size:20px;line-height:1;color:var(--ink)}
+.note h4 small{display:block;font-family:var(--sans);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
+.note p{font-size:14px;line-height:1.35;color:var(--ink);margin-top:9px}
+.note .yd{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(42,31,23,.28);font-size:13.5px;color:var(--ink);display:flex;flex-direction:column;gap:4px}
+.note .yd .row{display:flex;align-items:center;gap:6px}
+.note .yd .k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);width:62px;flex:none}
+.note .hint{margin-top:9px;font-size:11.5px;color:var(--ink-3)}
+.note::before{content:"";position:absolute;width:14px;height:14px;background:var(--paper);transform:rotate(45deg);box-shadow:-1px 1px 0 rgba(80,60,30,.25)}
+.note.left::before{right:-7px;top:var(--ay,40px);box-shadow:1px -1px 0 rgba(80,60,30,.25)}
+.note.right::before{left:-7px;top:var(--ay,40px)}
+
+/* keyword */
+.kw{border-bottom:1px dotted currentColor}

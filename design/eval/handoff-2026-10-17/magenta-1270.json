@@ -1,0 +1,44 @@
+[
+  {
+    "className": "piece-flight piece-res ghost-layer path-line",
+    "left": 82.8281,
+    "top": 226,
+    "frames": [
+      {
+        "transform": "translate(0,0)"
+      },
+      {
+        "transform": "translate(110.078125px,-140px)"
+      }
+    ],
+    "text": "0 gold"
+  },
+  {
+    "className": "piece-flight piece-res ghost-layer path-line",
+    "left": 116.484,
+    "top": 226,
+    "frames": [
+      {
+        "transform": "translate(0,0)"
+      },
+      {
+        "transform": "translate(76.421875px,-140px)"
+      }
+    ],
+    "text": "0 silver"
+  },
+  {
+    "className": "piece-flight piece-res ghost-layer path-line",
+    "left": 116.484,
+    "top": 226,
+    "frames": [
+      {
+        "transform": "translate(0,0)"
+      },
+      {
+        "transform": "translate(76.421875px,-140px)"
+      }
+    ],
+    "text": "0 silver"
+  }
+]

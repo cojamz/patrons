@@ -1,0 +1,10 @@
+{"game":101,"table":["red","market","trading","thieves"],"seat":1,"A":{"followers":[48,48,52,49],"win":false,"margin":-4},"B":{"followers":[55,56,48,47],"win":true,"margin":1}}
+{"game":102,"table":["red","thieves","purple","trading"],"seat":2,"A":{"followers":[45,56,44,43],"win":false,"margin":-12},"B":{"followers":[52,45,53,56],"win":false,"margin":-3}}
+{"game":103,"table":["red","thieves","market","trading"],"seat":3,"A":{"followers":[66,46,51,53],"win":false,"margin":-13},"B":{"followers":[49,62,50,55],"win":false,"margin":-7}}
+{"game":104,"table":["red","thieves","market","purple"],"seat":0,"A":{"followers":[45,59,72,51],"win":false,"margin":-27},"B":{"followers":[54,72,42,42],"win":false,"margin":-18}}
+{"game":105,"table":["red","echo","purple","trading"],"seat":1,"A":{"followers":[71,65,66,54],"win":false,"margin":-6},"B":{"followers":[67,48,51,85],"win":false,"margin":-37}}
+{"game":106,"table":["red","market","purple","trading"],"seat":2,"A":{"followers":[63,64,57,57],"win":false,"margin":-7},"B":{"followers":[67,66,53,85],"win":false,"margin":-32}}
+{"game":107,"table":["red","thieves","market","trading"],"seat":3,"A":{"followers":[46,35,44,61],"win":true,"margin":15},"B":{"followers":[54,63,59,74],"win":true,"margin":11}}
+{"game":108,"table":["red","purple","trading","thieves"],"seat":0,"A":{"followers":[44,61,48,68],"win":false,"margin":-24},"B":{"followers":[43,49,35,94],"win":false,"margin":-51}}
+{"game":109,"table":["red","thieves","trading","purple"],"seat":1,"A":{"followers":[40,45,66,40],"win":false,"margin":-21},"B":{"followers":[53,49,60,42],"win":false,"margin":-11}}
+{"game":110,"table":["red","market","echo","thieves"],"seat":2,"A":{"followers":[40,75,33,79],"win":false,"margin":-46},"B":{"followers":[56,48,60,97],"win":false,"margin":-37}}

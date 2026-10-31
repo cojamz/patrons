@@ -1,0 +1,180 @@
+// UI contract: the game screen renders engine state, and what's clickable is exactly pending.options
+// for seats this client controls. Clicks become { player, option } moves.
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
+import { createGame, applyMove, chooseBotMove, quadrant } from '../../../engine/v4/index.js';
+import GameScreen from '../../../v4/game/GameScreen.jsx';
+
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+
+function fakeSession(state, mySeats) {
+  return {
+    getState: () => state,
+    subscribe: () => () => {},
+    submit: vi.fn(() => Promise.resolve(state)),
+    mySeats,
+    info: { mode: 'local', seats: state.players.map(p => ({ name: p.name, kind: p.kind, connected: true })), version: 1 },
+    destroy() {},
+  };
+}
+
+/** Play bot moves until the pending decision is of `kind`. */
+function advanceTo(state, kind, max = 500) {
+  let s = state;
+  for (let k = 0; k < max && s.pending && s.pending.kind !== kind; k++) s = applyMove(s, chooseBotMove(s, () => 0.3));
+  if (!s.pending || s.pending.kind !== kind) throw new Error(`never reached ${kind}`);
+  return s;
+}
+
+const seats = [{ name: 'Ana', kind: 'human' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
+const clickable = container => [...container.querySelectorAll('[data-option]')].map(e => e.getAttribute('data-option'));
+
+describe('v4 game screen', () => {
+  it('setup order: distinguishes the remaining reverse resource draft from the upcoming placement snake', () => {
+    let state = createGame({ seats, seed: 7 });
+    const firstDrafter = state.pending.player;
+    state = applyMove(state, { player: firstDrafter, option: state.pending.options[0].id });
+    const me = state.pending.player;
+    const { container } = render(<GameScreen session={fakeSession(state, [me])} />);
+    const cue = container.querySelector('[data-setup-order]');
+    const name = id => id === me ? 'You' : state.players[id].name;
+    const rowNames = kind => [...cue.querySelectorAll(`[data-order="${kind}"] .setup-order-name`)].map(el => el.textContent);
+    expect(rowNames('draft')).toEqual([...state.firstOrder].reverse().slice(1).map(name));
+    expect(rowNames('place')).toEqual(state.firstOrder.map(name));
+    expect(cue.querySelector('[data-current]').textContent).toBe('You');
+    expect(cue.querySelector('[data-order="place"]').getAttribute('aria-label')).toBe(`Place · snake: ${[...state.firstOrder, ...[...state.firstOrder].reverse()].map(name).join(', ')}, and back again`);
+    expect(cue.querySelector('.setup-order-tail').getAttribute('title')).toBe('Then back in reverse order');
+    expect(cue.querySelectorAll('[data-option]')).toHaveLength(0);
+  });
+
+  it('setup order: disappears once placements start', () => {
+    const state = advanceTo(createGame({ seats, seed: 7 }), 'place');
+    const { container } = render(<GameScreen session={fakeSession(state, [state.pending.player])} />);
+    expect(container.querySelector('[data-setup-order]')).toBeNull();
+  });
+
+  it('setup: offers each starting color and submits the option id', () => {
+    const state = createGame({ seats, seed: 7 });
+    const me = state.pending.player; // round I's first seat picks first (the order is drawn before the picks)
+    const session = fakeSession(state, [me]);
+    const { container } = render(<GameScreen session={session} />);
+    const ids = new Set(clickable(container));
+    expect(ids).toEqual(new Set(state.pending.options.map(o => o.id)));
+    // the pick stands in your own chair (Cory, 2026-10-15); the wheel's panel stays for phones
+    expect(container.querySelector('.lt-cult-seat.mine .cs-setup [data-option="color:gold"]')).not.toBeNull();
+    fireEvent.click(within(container.querySelector('.lt-cult-seat.mine .cs-setup')).getByRole('button', { name: 'Take 1 gold' }));
+    expect(session.submit).toHaveBeenCalledWith({ player: me, option: 'color:gold' });
+    expect(screen.getByText(/Draft 1 resource/i, { selector: '[data-prompt] *' })).toBeTruthy();
+  });
+
+  it('place: desktop spaces submit directly; locked and taken spaces are not clickable', () => {
+    vi.stubGlobal('matchMedia', vi.fn(q => ({ matches: q.includes('min-width: 861px'), addEventListener() {}, removeEventListener() {} })));
+    let state = advanceTo(createGame({ seats, seed: 11 }), 'place');
+    // take one space so a taken space exists, then come back round to a placement
+    state = applyMove(state, chooseBotMove(state, () => 0.3));
+    state = advanceTo(state, 'place');
+    const me = state.pending.player;
+    const session = fakeSession(state, [me]);
+    const { container } = render(<GameScreen session={session} />);
+    const legal = new Set(state.pending.options.map(o => o.id));
+    const shown = new Set(clickable(container));
+    expect(shown).toEqual(legal);
+    // the wheel has one clickable space per legal slot
+    expect(container.querySelectorAll('.slot.can').length).toBe(legal.size);
+    // taken spaces show a worker and aren't clickable
+    for (const key of Object.keys(state.slots)) {
+      const g = container.querySelector(`[data-slot="${key}"]`);
+      expect(g.getAttribute('data-option')).toBeNull();
+      expect(g.querySelector('.worker')).not.toBeNull();
+    }
+    // round II and III spaces are locked in round I: printed but not clickable
+    const locked = [...container.querySelectorAll('.slot.locked')];
+    expect(locked.length).toBe(state.quadrants.reduce((n, id) => n + quadrant(id).actions.filter(a => a.ring > state.round).length, 0));
+    for (const b of locked) expect(b.getAttribute('data-option')).toBeNull();
+    // every open space prints its effect (the board reads without hovering)
+    for (const sl of container.querySelectorAll('.slot.open')) expect(sl.querySelector('[data-yield]').textContent.trim() || sl.querySelector('[data-yield] .pip')).toBeTruthy();
+    // clicking a wheel space submits it
+    const first = state.pending.options[0];
+    fireEvent.click(container.querySelector(`[data-slot="${first.q}-${first.i}"]`));
+    expect(session.submit).toHaveBeenCalledWith({ player: me, option: first.id });
+  });
+
+  it("nothing is clickable when the seat to act isn't ours", () => {
+    const state = advanceTo(createGame({ seats, seed: 3 }), 'place');
+    const notMe = (state.pending.player + 1) % state.players.length;
+    const session = fakeSession(state, [notMe]);
+    const { container } = render(<GameScreen session={session} />);
+    expect(clickable(container)).toEqual([]);
+    fireEvent.click(container.querySelector('.slot'));
+    expect(session.submit).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-prompt]').textContent).toMatch(/is placing a minion/);
+  });
+
+  it('buy: affordable shop cards, follower buys and Done, no recruit match the options; the rest are inert', () => {
+    let state = advanceTo(createGame({ seats, seed: 5 }), 'buy');
+    const me = state.pending.player;
+    const session = fakeSession(state, [me]);
+    const { container } = render(<GameScreen session={session} />);
+    // a member's use is pressed on your seat's card, which opens on hover (member-use tests); at rest the table offers the rest
+    const legal = new Set(state.pending.options.filter(o => o.kind !== 'use').map(o => o.id));
+    expect(new Set(clickable(container))).toEqual(legal);
+    for (const uid of state.shop) {
+      const el = container.querySelector(`.lt-shop .card[data-option="card:${uid}"]`);
+      expect(!!el).toBe(legal.has(`card:${uid}`));
+    }
+    // passing (Cory, 2026-10-16: "pass is hard to find"): "Done, no buy" stands in the shop column, under the follower buys
+    const pass = within(container.querySelector('.lt-shop .lt-rates')).getByRole('button', { name: 'Done, no recruit' });
+    fireEvent.click(pass);
+    expect(session.submit).toHaveBeenCalledWith({ player: me, option: 'pass' });
+  });
+
+  it('hot-seat: a choice that opens a turn carries the hand-over in its own header (no extra screen)', () => {
+    const two = [{ name: 'Ana', kind: 'human' }, { name: 'Bea', kind: 'human' }, { name: 'Cy', kind: 'human' }];
+    let state = createGame({ seats: two, seed: 2 });
+    const first = state.pending.player;
+    expect(first).toBe(state.firstOrder.at(-1)); // the resource draft reverses placement order
+    state = applyMove(state, { player: first, option: state.pending.options[0].id });
+    const second = state.pending.player;
+    expect(second).not.toBe(first);
+    expect(state.pending.kind).toBe('setup');
+    const session = fakeSession(state, [0, 1, 2]);
+    const { container } = render(<GameScreen session={session} />);
+    // setup is a choice: the hand-over is folded into it ("Bea's turn · pass the device"), one step not two
+    const who = two[second].name;
+    expect(screen.queryByRole('dialog', { name: new RegExp(`${who}.s turn`) })).toBeNull();
+    expect(container.querySelector('.prompt.choice .turn-of').textContent).toMatch(new RegExp(`${who}.s turn`));
+    // every pick once in the chair and once in the phone's panel (CSS shows one of the two per screen)
+    expect(new Set(clickable(container))).toEqual(new Set(state.pending.options.map(o => o.id)));
+    expect(clickable(container).length).toBeLessThanOrEqual(2 * state.pending.options.length);
+  });
+
+  it('hot-seat: a second person gets a handoff screen before placing', () => {
+    const two = [{ name: 'Ana', kind: 'human' }, { name: 'Bea', kind: 'human' }];
+    let state = createGame({ seats: two, seed: 2 });
+    state = advanceTo(state, 'place');
+    // play until the other person is to place (the first placer hands over after buying)
+    const first = state.pending.player;
+    for (let k = 0; k < 50 && !(state.pending.kind === 'place' && state.pending.player !== first); k++) state = applyMove(state, chooseBotMove(state, () => 0.3));
+    const who = state.players[state.pending.player].name;
+    // the device was last with the first placer
+    const session = fakeSession(state, [0, 1]);
+    const { container } = render(<GameScreen session={session} />);
+    expect(screen.getByRole('dialog', { name: new RegExp(`${who}.s turn`) })).toBeTruthy();
+    expect(clickable(container)).toEqual([]);
+    fireEvent.click(container.querySelector('[data-handoff]'));
+    expect(new Set(clickable(container))).toEqual(new Set(state.pending.options.map(o => o.id)));
+  });
+
+  it('game over: shows the ranking with a followers breakdown', () => {
+    let state = createGame({ seats, seed: 9 });
+    for (let k = 0; k < 2000 && !state.over; k++) state = applyMove(state, chooseBotMove(state, () => 0.4));
+    expect(state.over).toBe(true);
+    const onPlayAgain = vi.fn();
+    render(<GameScreen session={fakeSession(state, [0])} onPlayAgain={onPlayAgain} />);
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('row')).toHaveLength(1 + seats.length);
+    expect(within(table).getByText('Prizes')).toBeTruthy(); // the rims' prizes, in the rulebook's words (RC1 sweep 110)
+    fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+    expect(onPlayAgain).toHaveBeenCalled();
+  });
+});

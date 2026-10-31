@@ -1,0 +1,22 @@
+
+ RUN  v4.0.9 /Users/cory/Documents/Codex/2026-10-15/https-github-com-cojamz-patrons-tree/work/patrons/.v4-wt/check-68c9bf0-87945
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ src/test/engine/v4/magenta-batch.test.js (5 tests) 42ms
+ ✓ src/test/engine/v4/magenta-redesign.test.js (17 tests) 76ms
+ ✓ src/test/engine/v4/cards-thieves.test.js (30 tests) 161ms
+ ✓ src/test/engine/v4/own-color-contests.test.js (10 tests) 20ms
+ ✓ src/test/engine/v4/oct17-choice-audit.test.js (7 tests) 60ms
+ ✓ src/test/v4/ui/shop-steal-plan.test.js (2 tests) 4ms
+ ✓ src/test/v4/ui/chain-sequence.test.js (8 tests) 19ms
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ src/test/v4/ui/magenta-redesign.test.jsx (3 tests) 18ms
+ ✓ src/test/v4/ui/hover-honesty.test.jsx (6 tests) 101ms
+
+ Test Files  9 passed (9)
+      Tests  88 passed (88)
+   Start at  23:34:47
+   Duration  2.85s (transform 3.58s, setup 1.38s, collect 6.79s, tests 501ms, environment 3.85s, prepare 150ms)
+

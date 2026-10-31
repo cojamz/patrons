@@ -1,0 +1,53 @@
+/* A rival's seat card (RivalCard.jsx). Three sizes: 15 body, 13 small, 11 labels; a 4px grid. */
+.rc{--ink:var(--pl-ink,#2b2018);--ink2:var(--pl-ink-2,#6e5c49);--ink3:var(--pl-ink-3,#8a7860);--hair:rgba(43,32,24,.12);--well:rgba(43,32,24,.05);--lamp:#e2a93b;
+  font-family:var(--sans);font-size:15px;line-height:20px;color:var(--ink);max-height:calc(100vh - 56px);overflow:auto;overscroll-behavior:contain}
+.rc .pip.glyph,.rc .pip.wild,.rc .rich-f{width:.8em;height:.8em;vertical-align:-.1em}
+.rc h5{margin:0 0 4px;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.rc-k{font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.rc-nil{color:var(--ink3);font-weight:400}
+.rc-name{font-weight:800}
+.rc-text{display:block;text-wrap:pretty}
+.rc-gain{display:block;margin-top:4px;font-size:13px;font-weight:800}
+.rc-gain small{font-size:13px;font-weight:400;color:var(--ink3)}
+.rc-disc{flex:none;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#2b2018;color:#f4ebd7;font-size:11px;font-weight:800;line-height:1}
+
+/* the heading: who and their artifact, beside four numbers */
+.rc-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;align-items:start;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--hair)}
+.rc-who .t{display:flex;gap:10px;align-items:center}
+.rc-art{display:grid;grid-template-columns:28px 1fr;gap:8px;margin-top:12px;padding:8px 12px;border-radius:8px;background:var(--well);box-shadow:inset 3px 0 0 var(--mc);font-size:13px;line-height:17px}
+.rc-nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;border-radius:8px;overflow:hidden;background:var(--hair)}
+.rc-num{background:var(--paper,#f4ebd7);padding:8px 12px}
+.rc-v{display:block;margin-top:4px;font-size:20px;line-height:24px;font-weight:800}
+.rc-split{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:4px;font-size:13px;line-height:17px;font-weight:700;color:var(--ink2)}
+.rc-bust{display:inline-flex;align-items:center;gap:2px}
+.rc-bust .member-glyph{flex:none}
+
+/* the columns, by the card's keyword, priciest first */
+.rc-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+.rc-col{min-width:0}
+.rc-group + .rc-group{margin-top:8px}
+.rc-gh{display:block;margin:4px 0;font-size:11px;line-height:16px;font-weight:700;color:var(--ink2)}
+
+/* a member: a small card with its color bar, as in the shop */
+.rc-card{display:flex;flex-direction:column;margin-bottom:8px;border-radius:8px;overflow:hidden;background:#fbf5e6;box-shadow:0 0 0 1px rgba(43,32,24,.16);font-size:13px;line-height:17px}
+.rc-bar{display:flex;align-items:center;gap:6px;padding:4px 6px;background:var(--mc);color:#fff;font-weight:800;font-size:13px;line-height:16px;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.rc-bar .rc-disc{background:rgba(0,0,0,.35)}
+.rc-bar-n{flex:1;min-width:0;overflow-wrap:anywhere}
+.rc-usetag{flex:none;font-size:11px;line-height:16px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.rc-body{display:grid;grid-template-columns:28px 1fr;gap:8px;padding:8px}
+.rc-main{min-width:0}
+/* a use not used yet: framed in its color, lit warm, lifted; its tag a lamp-colored pill */
+.rc-card.use-unused{background:#fffaf0;box-shadow:0 0 0 3px var(--mc),0 0 0 5px rgba(226,169,59,.55),0 0 18px 4px rgba(226,169,59,.45);transform:translateY(-1px);margin:4px 4px 12px}
+.rc-card.use-unused .rc-usetag{padding:0 6px;border-radius:8px;background:var(--lamp);color:#2b2018;text-shadow:none}
+/* a used one: face down */
+.rc-card.use-used{background:repeating-linear-gradient(45deg,rgba(43,32,24,.07) 0 6px,transparent 6px 12px),#efe5cf}
+.rc-card.use-used .rc-bar{background:rgba(43,32,24,.45)}
+.rc-card.use-used .rc-body{opacity:.4}
+
+/* members with no ability: chips */
+.rc-chips{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.rc-chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px 2px 2px;border-radius:12px;background:rgba(255,255,255,.55);font-size:13px}
+.rc-chip .rc-name{font-weight:700}
+.rc-hide{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.rc .card-name{color:inherit;text-decoration:none}
+.rc .card-name:hover{text-decoration:underline;text-underline-offset:3px}

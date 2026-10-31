@@ -1,0 +1,31 @@
+/* Shared tokens and type for the language plates (plate 2 on). */
+@font-face{font-family:'AS';src:url(fonts/as-500.woff2) format('woff2');font-weight:500}
+@font-face{font-family:'AS';src:url(fonts/as-700.woff2) format('woff2');font-weight:700}
+@font-face{font-family:'AS';src:url(fonts/as-800.woff2) format('woff2');font-weight:800}
+:root{
+  --table:#191310; --seat:#221a15; --board:#2b2119; --hub:#130e0b;
+  --hair:rgba(242,232,210,.10);
+  --paper:#f2e8d2; --paper-lit:#fbf6ea; --paper-taken:#cfc2a6;
+  --ink:#2b2018; --ink-2:#6e5c49; --ink-3:#a39078;
+  --cream:#f2e8d2; --cream-2:#b9a98c; --cream-3:#7d6e5a;
+  --light:#fff3d4;
+  --gold:#d49b27; --red:#c4533f; --blue:#4a80b8; --green:#3f9467;
+  /* three sizes, decompressed from plate 1 (12/16/28) */
+  --s:14px; --m:18px; --l:36px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--table)}
+body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-serif;font-weight:500;color:var(--cream);
+  font-variant-numeric:lining-nums tabular-nums;-webkit-font-smoothing:antialiased}
+.g{display:inline-block;width:.8em;height:.8em;vertical-align:-.1em;overflow:visible;flex:none}
+.g + .g{margin-left:.06em}
+.n{font-weight:800;letter-spacing:-.01em}
+.n + .g{margin-left:.06em}
+.op{font-weight:500;color:var(--ink-3);margin:0 .12em}
+.gap{display:inline-block;width:.3em}
+.cap{font-size:var(--s);line-height:20px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.s{font-size:var(--s);line-height:20px}
+.m{font-size:var(--m);line-height:24px;text-wrap:pretty}
+.l{font-size:var(--l);line-height:40px}
+.row{display:flex;align-items:center}
+.px{image-rendering:pixelated;display:block}

@@ -1,0 +1,250 @@
+/* The shop strip's fixes from the live panel, round 1 (G2). Each rule is under .lt-shop-cards, so it wins over lamp-b.css and layout.css whatever order they load in.
+
+   The member deck: a pile, not a card. At member size in the first slot it read as a member to buy, so the pile is
+   smaller than a card (about two thirds), its edges show, and a small-caps "deck" names it underneath. The element itself
+   still fills the slot, so the strip's grid and the deal's flight stay put. */
+.lt-shop-cards .lt-deck{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.lt-shop-cards .lt-deck .pile{position:relative;flex:none;width:62px;height:84px}
+.lt-shop-cards .lt-deck .n{font-size:18px}
+.lt-shop-cards .lt-deck .cap{font-family:var(--sans);font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-cream-3,#7d6e5a)}
+.lt-shop-cards .lt-deck.empty .pile{width:56px;height:78px}
+
+/* A member's foot: the price on the left (a struck list price stands before the price you pay, never against the worth),
+   then a clear gap, the hairline and the worth with a gain's "+": what the member brings, not a third cost. */
+.lt-shop-cards .lt-card .ft .cost-now{gap:1px}
+.lt-shop-cards .lt-card .ft .cost-now .lt-res{margin-right:2px}
+.lt-shop-cards .lt-card .ft .cost-now .lt-res:last-child{margin-right:0}
+.lt-shop-cards .lt-card .ft .val{flex:none;padding-left:3px;margin-left:auto;gap:0}
+.lt-shop-cards .lt-card .ft .val .plus{font-weight:600;margin-right:1px}
+
+/* The follower buys carry more weight beside the members (Cory, 2026-10-15: testers never learn that buying followers
+   wins): what you get is the tile's hero (18px, full ink), the price before the arrow steps down to 14px and a quieter ink.
+   No rule and no layout change. */
+.lt-shop-cards .lt-rates .rt-trade{gap:3px}
+.lt-shop-cards .lt-rates .rt-trade b{font-size:15px;color:var(--pl-ink-2,#6e5c49)}
+.lt-shop-cards .lt-rates .rt-trade b.get{font-size:18px;font-weight:800;color:var(--pl-ink,#2b2018)}
+.lt-shop-cards .lt-rates .rt-trade b.get + .follower-mark{width:16px;height:16px;color:var(--pl-ink,#2b2018)}
+
+/* A narrow laptop (900px: five cards a row) has no room for the worth's "+" and the price's spacing: the foot keeps the
+   price and the worth, side by side, inside the card (layout gate, 900x700) */
+@media (max-width:1100px){
+  .lt-shop-cards .lt-card .ft .val .plus{display:none}
+  .lt-shop-cards .lt-card .ft .val{padding-left:1px}
+  .lt-shop-cards .lt-card .ft .cost-now .lt-res{margin-right:0}
+}
+
+/* Three buys in one row leave room for the eight-member shop below. */
+.lt-shop-cards .lt-rates-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* Shop paper stays readable while placing; availability belongs to the edge, never a darkened portrait. */
+.lt-shop .lt-card.card.paper,.lt-shop .lt-rates .lt-rate{background:#fff3da;opacity:1;filter:none}
+.lt-shop .lt-card.card .art{background:color-mix(in srgb,var(--q) 18%,#fff8eb)}
+.lt-shop .lt-card.card.lit,.lt-shop .lt-rates .lt-rate.lit{background:#fffaf0;box-shadow:inset 0 0 0 2px #ffe0a1,0 0 0 2px #ffe0a1,0 0 18px rgba(255,224,161,.45)}
+.lt-shop .lt-card.card[data-aim]{background:#fffaf0;outline:3px solid #ffe0a1;outline-offset:1px;box-shadow:inset 0 0 0 2px #ffe0a1,0 0 0 1px #382516,0 0 24px rgba(255,224,161,.65)}
+.lt-shop .lt-card.card[data-aim] .art{background:color-mix(in srgb,var(--q) 8%,#fffaf0)}
+/* The pale colors' own grounds (Info.jsx cardGround): tinted 18% into cream, silver, white and colorless all read as the
+   same near-cream field at card size. Silver is steel with a coin's sheen, white is clean white against the cream card,
+   colorless is a plain grey with no tint at all. */
+.lt-shop .lt-card.card[data-ground="silver"] .art,.lt-shop .lt-card.card[data-ground="silver"][data-aim] .art{
+  background:linear-gradient(155deg,color-mix(in srgb,var(--silver) 34%,#f7f9fb) 0%,color-mix(in srgb,var(--silver) 10%,#fbfcfd) 46%,color-mix(in srgb,var(--silver) 42%,#eef1f4) 100%)}
+.lt-shop .lt-card.card[data-ground="white"] .art,.lt-shop .lt-card.card[data-ground="white"][data-aim] .art{background:#fffefa;box-shadow:inset 0 -1px 0 rgba(43,32,24,.10)}
+.lt-shop .lt-card.card[data-ground="colorless"] .art,.lt-shop .lt-card.card[data-ground="colorless"][data-aim] .art{background:color-mix(in srgb,var(--colorless,#8d9693) 30%,#f1ede4)}
+
+/* One click anywhere switches the order; the active word moves within one tactile control. */
+.lt-shop-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
+.lt-shop-controls .lt-sort{display:inline-flex;gap:0;margin:0;min-height:32px;padding:2px;font:inherit;background:transparent;color:var(--cream-2);cursor:pointer}
+.lt-shop-controls .lt-sort span{padding:4px 6px;font-size:12px;line-height:16px;border-radius:16px}
+.lt-shop-controls .lt-sort span.on{background:var(--cream);color:var(--table,#191310)}
+.lt-view-btn{min-height:32px;padding:4px 6px;border:0;background:none;color:var(--cream-2);font:inherit;font-size:12px;cursor:pointer}
+.lt-view-btn[aria-pressed="true"]{color:var(--cream);text-decoration:underline;text-underline-offset:4px}
+.lt-view-btn:disabled{cursor:default;opacity:1}
+.lt-shop-controls button:focus-visible{outline:2px solid var(--cream);outline-offset:2px}
+.lt-shop-cards .lt-shop-head{height:auto;min-height:32px;gap:8px}
+.lt-shop-cards .lt-shop-head .lt-h{display:flex;flex-direction:column;gap:0}
+
+/* Keep the colored rim legible even while another quadrant is being counted. */
+.lt .stage svg.wheel-paper .rim.wait{fill-opacity:.8}
+.lt .stage svg.wheel-paper .rim-rule.wait,.lt .stage svg.wheel-paper .rim-emoji.wait,.lt .stage svg.wheel-paper .rim-dot.wait{opacity:.8}
+
+/* A quiet affordability cue only while buying; placement and free choices stay bright. */
+.lt[data-yours="1"][data-phase="buy"] .lt-shop .lt-card.card.paper.recede:not([data-aim]){opacity:.82;filter:none}
+
+/* One market: follower offers and members share the same card rhythm and price baseline. */
+.app.game.lt .lt-shop-cards{flex-direction:column;gap:0}
+.app.game.lt .lt-shop-cards .lt-shop-body{display:block;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px;scrollbar-width:thin}
+.app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(126px,1fr);gap:10px;align-items:stretch}
+.app.game.lt .lt-shop-cards .lt-rates,.app.game.lt .lt-shop-cards .lt-rates-grid{display:contents}
+.app.game.lt .lt-shop-cards .lt-card.card{height:auto;min-height:126px}
+.app.game.lt .lt-shop-cards .lt-deck{order:0;min-height:126px}
+.app.game.lt .lt-shop-cards .lt-rate{order:-1;padding:0;overflow:visible;isolation:isolate;text-align:left}
+.app.game.lt .lt-shop-cards .lt-rate::before{content:"";position:absolute;z-index:-1;inset:3px -2px -3px 2px;border-radius:var(--corner,8px);background:#cbbda4;box-shadow:0 0 0 1px rgba(43,32,24,.25);transform:rotate(1deg)}
+.app.game.lt .lt-shop-cards .lt-rate .fb-tip{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;padding:0;min-height:100%;width:100%;border-radius:inherit;overflow:hidden;background:inherit}
+.app.game.lt .lt-shop-cards .lt-rate .art{flex:1 1 auto;min-height:58px;margin:0;display:grid;place-items:center;background:#eee2ca}
+.app.game.lt .lt-shop-cards .lt-rate .rt-trade{gap:4px}
+.app.game.lt .lt-shop-cards .lt-rate .rt-trade .get{font:800 30px/1 var(--sans);color:var(--pl-ink,#2b2018)}
+.app.game.lt .lt-shop-cards .lt-rate .rt-trade .follower-mark{width:28px;height:28px;color:var(--pl-ink,#2b2018)}
+.app.game.lt .lt-shop-cards .lt-rate .ft{display:flex;align-items:center;justify-content:space-between;min-height:22px;height:22px;width:auto;margin:auto 6px 0}
+.app.game.lt .lt-shop-cards .lt-rate .rt-left{font-size:12px;margin:0}
+.app.game.lt .lt-shop-cards .lt-rates .lt-done{order:2;grid-column:1 / -1;width:100%;margin:2px 0 0;height:40px;min-height:40px;font-size:15px}
+.app.game.lt .lt-shop-cards .lt-rates .lt-done.idle{display:none}
+/* Keep the whole market on the table. Both views use the same twelve slots; rules replace portraits. */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt .lt-shop-cards .lt-shop-main{height:100%}
+  .app.game.lt .lt-shop-cards .lt-shop-body{position:relative;overflow:visible;padding:4px 4px 50px}
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards{height:100%;grid-template-rows:repeat(4,minmax(0,1fr));grid-auto-rows:auto;gap:8px}
+  .app.game.lt .lt-shop-cards .lt-card.card,.app.game.lt .lt-shop-cards .lt-deck{min-height:0}
+  /* 3 follower buys + deck + 7 members: the deck takes two rows so the twelve slots stay full (Cory, 2026-10-20: shop at 7) */
+  .app.game.lt .lt-shop-cards .lt-deck{grid-row:span 2}
+  /* the shop grows 5/6/7 by round (Cory, 2026-10-20): 6 members, the deck takes three rows; 5 members, three rows and the deck takes one */
+  .app.game.lt .lt-shop-cards .lt-cards[data-n="6"] .lt-deck{grid-row:span 3}
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="5"]{grid-template-rows:repeat(3,minmax(0,1fr))}
+  .app.game.lt .lt-shop-cards .lt-cards[data-n="5"] .lt-deck{grid-row:span 1}
+  /* Peek's tray of 4: three rows, the deck takes two */
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="4"]{grid-template-rows:repeat(3,minmax(0,1fr))}
+  /* the top of the pile beside the shop (Peek, Insider; Cory, 2026-10-23): up to 12 members, so five rows and the deck
+     steps aside; the pile cards follow the shop's, each tagged "pile" */
+  .app.game.lt .lt-shop-cards[data-pile-extra] .lt-shop-body > .lt-cards{grid-template-rows:repeat(5,minmax(0,1fr))}
+  .app.game.lt .lt-shop-cards[data-pile-extra] .lt-deck{display:none}
+  /* the narrower column (Cory, 2026-10-20: a bigger wheel): the price and worth keep their whole width */
+  .app.game.lt .lt-shop-cards .lt-card .ft{margin:auto 4px 0}
+  .app.game.lt .lt-shop-cards .lt-card .lt-res{margin-right:3px}
+  .app.game.lt .lt-shop-cards .lt-card .nm{white-space:normal;height:auto;min-height:12px;flex:none;display:grid;align-content:center;margin:3px 4px}
+  .app.game.lt .lt-shop-cards .lt-rates .lt-done{position:absolute;bottom:4px;left:4px;width:calc(100% - 8px);margin:0}
+  .app.game.lt .lt-shop-cards .lt-rates .lt-done.idle{display:block;visibility:hidden}
+  .app.game.lt .lt-shop-cards .lt-rate .art{min-height:0}
+}
+@media (max-width:1199px){
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards{display:flex;overflow-x:auto;overflow-y:hidden;gap:10px;padding:4px 4px 10px;scroll-snap-type:x proximity}
+  .app.game.lt .lt-shop-cards .lt-card.card{flex:0 0 132px;height:166px;min-height:166px;scroll-snap-align:start}
+  .app.game.lt .lt-shop-cards .lt-deck{flex:0 0 66px;min-height:166px}
+  .app.game.lt .lt-shop-cards .lt-rates .lt-done{flex:0 0 108px;align-self:center;height:44px;min-height:44px}
+  .app.game.lt .lt-shop-cards .lt-shop-main{min-height:0}
+}
+@media (min-width:861px) and (max-width:1199px) and (min-height:500px){
+  .app.game.lt{--shop-h:210px}
+  /* the strip starts at the wheel's column (the chairs run the full height, layout.css): its cards take the wide shop
+     column's width (~100px) so as many members show as before; names break at their seam, prices keep their width */
+  .app.game.lt .lt-shop-cards .lt-card.card{flex-basis:100px}
+  .app.game.lt .lt-shop-cards .lt-deck{flex-basis:56px}
+  .app.game.lt .lt-shop-cards .lt-card .nm{white-space:normal;height:auto;min-height:12px;flex:none;display:grid;align-content:center;margin:3px 4px}
+  .app.game.lt .lt-shop-cards .lt-card .ft{margin:auto 4px 0}
+  .app.game.lt .lt-shop-cards .lt-card .lt-res{margin-right:3px}
+  .app.game.lt > .lt-since{max-height:100%}
+  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - var(--turn-h,112px) - 12px)}
+  /* the whole market on screen (1100x700 ran it off the right edge, "Done, no recruit" with it): two rows that fill
+     column by column, every slot sharing the width, Done in the last slot */
+  .app.game.lt{--shop-h:280px}
+  .app.game.lt .lt-shop-cards .lt-shop-body{overflow:hidden}
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards{display:grid;height:100%;grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;overflow:hidden;padding:4px}
+  .app.game.lt .lt-shop-cards .lt-card.card,.app.game.lt .lt-shop-cards .lt-deck{height:auto;min-height:0}
+  .app.game.lt .lt-shop-cards .lt-rate .art{min-height:0}
+  /* the top of the pile (Peek, Insider) rises over the wheel's foot, not over the shop: there it hid "Done, no recruit" */
+  .app.game.lt .lt-shop-cards .lt-pile-row{left:auto;right:18px;width:min(560px,calc(100% - 340px));bottom:calc(var(--shop-h) + 10px)}
+  .app.game.lt .lt-pile-row .lt-card .art{display:grid;grid-template-rows:minmax(0,1fr);grid-auto-rows:0;place-items:center;padding:0;overflow:hidden}
+  .app.game.lt .lt-shop-cards .lt-rates .lt-done{grid-column:auto;grid-row:auto;align-self:center;width:100%;height:44px;min-height:44px;margin:0;font-size:14px;white-space:normal;line-height:1.1}
+}
+/* A chosen member stays pressed; only compatible destinations carry the active lamp. */
+.gift-card[data-gift="trade"] .gc-row[data-live] .gc-item.chosen{background:var(--paper-ink,#2a1f17);color:var(--paper,#f4ebd7);box-shadow:0 0 0 2px var(--paper-ink,#2a1f17)}
+
+/* Very short desktop windows retain readable rules rather than clipping their prices. */
+@media (min-width:1200px) and (min-height:500px) and (max-height:679px){
+  .app.game.lt .lt-shop-cards .lt-shop-body{overflow-y:auto}
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards{height:auto;grid-template-rows:repeat(4,145px)}
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="5"],.app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n="4"]{grid-template-rows:repeat(3,145px)}
+  .app.game.lt .lt-shop-cards .lt-rates .lt-done{position:static;grid-column:1 / -1;width:100%}
+}
+
+/* Printed prices and follower worth remain readable at the enlarged shop-card size. */
+.app.game.lt .lt-shop-cards .lt-card .ft{font-size:16px;line-height:20px;flex:none}
+.app.game.lt .lt-shop-cards .lt-card .ft .num,.app.game.lt .lt-shop-cards .lt-card .ft .lt-cost.free{font-size:16px}
+.app.game.lt .lt-shop-cards .lt-card .ft .pip,.app.game.lt .lt-shop-cards .lt-card .ft .follower-mark{width:16px;height:16px}
+/* A discount's struck list price stands small just above the price you pay (a price tag's "was 10, now 6"): in one row it
+   ran into the worth on a 95px card at 1270x700 (Patriarch, Underdog, Tribute Band) and read as one number ("106") */
+.app.game.lt .lt-shop-cards .lt-card .ft[data-discount]{height:auto;align-items:flex-end}
+.app.game.lt .lt-shop-cards .lt-card .ft .cost-now{display:inline-grid;grid-template-columns:max-content;justify-items:start;row-gap:0}
+.app.game.lt .lt-shop-cards .lt-card .ft .cost-now .cost-was.num{font-size:12px;line-height:12px;font-weight:600;margin-top:2px}
+
+/* The "affordable" toggle (Cory, 2026-10-18): members you can't pay for right now fade, in every phase. A card the space
+   under your pointer would unlock (data-after) or aims at (data-aim) comes back, so the hover's answer still reads. */
+.lt-shop .lt-shop-cards .lt-card.card.paper{transition:transform .12s ease,filter .15s,box-shadow .12s ease-out,background-color .12s ease-out,opacity .2s ease-out}
+.lt-shop .lt-shop-cards[data-fade="on"] .lt-card.card.paper[data-unaffordable]:not([data-after]):not([data-aim]){opacity:.4}
+/* Ordering Peek's 4 (Mike's playtest, 2026-10-26: with "affordable" on, the shop stayed bright beside the 4 and it was
+   unclear what to click): everything but the 4 steps well back, toggle or not, and stays readable */
+.lt-shop .lt-shop-cards[data-peek] .lt-card.card.paper:not(.can){opacity:.4}
+@media (prefers-reduced-motion:reduce){.lt-shop .lt-shop-cards .lt-card.card.paper{transition:none}}
+
+/* Lit audit (Cory, live, Oct 27: "things are not well lit in general when they should be"; "during churn and peek
+   especially"). One rule for every pick in the shop: what you can click now carries the lamp (warm edge and halo), and
+   everything else steps well back. A card under your pointer or one a space would unlock still comes back to read. */
+.app.game.lt .lt-shop-cards[data-choosing] .lt-card.card.paper:not(.lit):not([data-aim]),
+.app.game.lt .lt-shop-cards[data-choosing] .lt-rates .lt-rate:not(.lit){opacity:.42;filter:none}
+.app.game.lt .lt-shop-cards[data-choosing="elsewhere"] .lt-deck{opacity:.42}
+.app.game.lt .lt-shop-cards[data-choosing] .lt-card.card.paper:not(.lit):hover{opacity:.8}
+.app.game.lt .lt-shop .lt-card.card.lit,.app.game.lt .lt-shop .lt-rates .lt-rate.lit{background:#fffaf0;
+  box-shadow:inset 0 0 0 2px #ffd58a,0 0 0 2px rgb(var(--lamp,255,206,140)),0 0 0 5px rgba(var(--lamp,255,206,140),.28),0 0 22px 2px rgba(var(--lamp,255,206,140),.55)}
+.app.game.lt .lt-shop .lt-card.card.lit:hover,.app.game.lt .lt-shop .lt-rates .lt-rate.lit:hover{transform:translateY(-2px);
+  box-shadow:inset 0 0 0 2px #ffe7b8,0 0 0 2px #fffaf0,0 0 0 6px rgba(var(--lamp,255,206,140),.45),0 0 28px 4px rgba(var(--lamp,255,206,140),.7)}
+/* "Done, no recruit": the one button that ends your buy, amber and haloed, never another cream card */
+.app.game.lt .lt-shop-cards .lt-rates .lt-done:not(.idle){background:#f4b860;border-color:#ffd58a;color:#24170c;
+  box-shadow:0 0 0 2px rgba(255,213,138,.55),0 0 18px 2px rgba(var(--lamp,255,206,140),.55),0 2px 6px rgba(0,0,0,.35)}
+.app.game.lt .lt-shop-cards .lt-rates .lt-done:not(.idle):hover{background:#ffcb7a}
+/* The top of the pile as its own row under the shop (Peek, Insider; Cory, playtest Oct 28): a dark tray, the cards
+   lit, numbered in the corner as they're put in draw order; the shop above stays in view and shrinks to make room. */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt .lt-shop-cards[data-pile-row] .lt-shop-body{padding-bottom:214px}
+}
+.lt-shop-cards .lt-pile-row{position:absolute;left:4px;right:4px;bottom:50px;z-index:6;padding:8px;border-radius:12px;
+  background:rgba(28,20,14,.95);box-shadow:0 0 0 1px rgba(244,184,96,.35),0 12px 28px rgba(0,0,0,.55);font-family:var(--sans)}
+.lt-pile-row .pr-head{display:flex;justify-content:space-between;align-items:center;min-height:26px;margin:0 2px 6px;color:#e6d6b8;font-size:13px}
+.lt-pile-row .pr-head b{font-family:var(--serif);font-style:italic;font-weight:600;font-size:16px;color:#f4b860}
+.lt-pile-row .pr-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.app.game.lt .lt-pile-row .lt-card.card{width:100%;height:108px;min-height:0}
+.app.game.lt .lt-pile-row .lt-card .art{flex:1 1 auto;min-height:0;height:auto}
+.app.game.lt .lt-pile-row .lt-card .art > .sprite{width:auto;height:min(44px, 100%)}
+.app.game.lt .lt-pile-row .lt-card .nm{white-space:normal;height:auto;min-height:12px;flex:none;display:grid;align-content:center;margin:3px 2px;font-size:11px;letter-spacing:.04em}
+.app.game.lt .lt-pile-row .lt-card .ft{margin:auto 3px 0;justify-content:center}
+.app.game.lt .lt-pile-row .lt-card .lt-res{margin-right:2px}
+.lt-pile-row .pr-slot{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:800 12px/1 var(--sans);background:#f4b860;color:#2b2018;box-shadow:0 0 0 1px #c98a3c}
+.lt-pile-row .pr-keep{flex:none;white-space:nowrap;font:700 13px/1 var(--sans);color:#2b2018;background:#f4b860;border:0;border-radius:999px;padding:6px 12px;box-shadow:0 0 0 1px #c98a3c;cursor:pointer}
+.lt-pile-row .pr-keep:hover{background:#ffc877}
+.lt-pile-row .pr-keep:active{transform:translateY(1px)}
+/* The shop as one clean grid (Cory, playtest Oct 28: "very weird looking shop"; his yes to the layout): the deck and the
+   three follower buys share one short top row, the same size and the same paper as the members; members fill full rows
+   of three under it, and a last row of one or two sits centered. The deck no longer stretches down beside them. */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards,
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n],
+  .app.game.lt .lt-shop-cards[data-pile-extra] .lt-shop-body > .lt-cards{grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:78px;grid-auto-rows:minmax(0,184px);align-content:start}
+  .app.game.lt .lt-shop-cards .lt-deck,
+  .app.game.lt .lt-shop-cards .lt-cards[data-n] .lt-deck{grid-column:span 3;grid-row:auto;order:-2;flex-direction:row;gap:8px}
+  .app.game.lt .lt-shop-cards .lt-deck .pile{width:40px;height:54px}
+  .app.game.lt .lt-shop-cards .lt-deck .n{font-size:15px}
+  .app.game.lt .lt-shop-cards .lt-rate{grid-column:span 3}
+  .app.game.lt .lt-shop-cards .lt-rate::before{display:none}
+  .app.game.lt .lt-shop-cards .lt-rate .art{background:color-mix(in srgb,var(--colorless,#8d9693) 22%,#fff8eb)}
+  .app.game.lt .lt-shop-cards .lt-rate .rt-trade .get{font-size:22px}
+  .app.game.lt .lt-shop-cards .lt-rate .rt-trade .follower-mark{width:20px;height:20px}
+  .app.game.lt .lt-shop-cards .lt-rate .nm,.app.game.lt .lt-shop-cards[data-view] .lt-rate.card .nm{display:none}
+  .app.game.lt .lt-shop-cards .lt-cards > .lt-card[data-uid]{grid-column:span 4}
+  .app.game.lt .lt-shop-cards .lt-cards > .lt-card[data-uid]:last-child:nth-child(3n){grid-column:5 / 9}
+  .app.game.lt .lt-shop-cards .lt-cards > .lt-card[data-uid]:last-child:nth-child(3n+1){grid-column:7 / 11}
+  .app.game.lt .lt-shop-cards .lt-cards > .lt-card[data-uid]:nth-last-child(2):nth-child(3n){grid-column:3 / 7}
+}
+/* The members fill the shop's height (Cory, Oct 29: "we have so much space here… we should give more room"): their rows
+   share what's left under the follower buys instead of stopping at 184px, and a shop of 6 or fewer deals two to a row
+   (three rows of wider cards); 7 and 8 keep three to a row, taller. Short windows keep their fixed rows. */
+@media (min-width:1200px) and (min-height:680px){
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards,
+  .app.game.lt .lt-shop-cards .lt-shop-body > .lt-cards[data-n],
+  .app.game.lt .lt-shop-cards[data-pile-extra] .lt-shop-body > .lt-cards{height:100%;grid-auto-rows:minmax(0,1fr);align-content:stretch}
+  .app.game.lt .lt-shop-cards:not([data-pile-extra]) .lt-cards:is([data-n="4"],[data-n="5"],[data-n="6"]) > .lt-card[data-uid]{grid-column:span 6}
+  .app.game.lt .lt-shop-cards:not([data-pile-extra]) .lt-cards:is([data-n="5"]) > .lt-card[data-uid]:last-child{grid-column:4 / 10}
+}
+@media (min-width:1200px) and (min-height:680px){
+  /* two to a row, the rule has the width for a bigger size */
+  .app.game.lt .lt-shop-cards[data-view="details"]:not([data-pile-extra]) .lt-cards:is([data-n="4"],[data-n="5"],[data-n="6"]) .lt-pick-ability:not([data-fit]){font-size:14px;line-height:16px;padding:3px 8px}
+}
+/* Peek's 4 while you order them: drag to set the order, click to number or un-number (Cory, Oct 29) */
+.lt-pile-row .lt-card[data-orderable]{cursor:grab;touch-action:none;transition:transform 140ms ease-out}
+.lt-pile-row[data-dragging] .lt-card[data-orderable]{cursor:grabbing}
+.lt-pile-row .lt-card[data-drag]{position:relative;cursor:grabbing;box-shadow:0 10px 22px rgba(0,0,0,.55),0 0 0 2px #f4b860}

@@ -1,0 +1,71 @@
+/* The action stage (ActionStage.jsx): a space's card and the members who chip in, out on the wheel's hub while a
+   move plays. Above the board, under the flying pieces (.flight is 61), never takes a click. */
+.action-stage{position:fixed;inset:0;z-index:60;pointer-events:none}
+.action-stage > *{position:fixed;transform-origin:center;will-change:transform,opacity}
+.as-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box;padding:18px 10px 10px;
+  border-radius:10px;background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);text-align:center;--glyph:.95em;
+  box-shadow:inset 0 4px 0 var(--q),0 0 0 1px rgba(43,32,24,.18),0 14px 30px rgba(0,0,0,.55)}
+.as-card .as-who{position:absolute;top:9px;left:10px;display:flex;align-items:center;gap:4px;font:600 12px/1 var(--sans);color:var(--pl-ink-2,#6e5c49)}
+.as-card .as-who svg{display:block}
+.as-card .as-main{font:800 18px/1.05 var(--sans);letter-spacing:-.01em;white-space:nowrap}
+.as-card .as-second{font:600 15px/1.1 var(--sans);color:var(--pl-ink-2,#6e5c49);text-wrap:balance}
+.as-member{display:flex;flex-direction:row;align-items:center;gap:8px;box-sizing:border-box;padding:6px 10px 6px 6px;border-radius:10px;text-align:left;
+  background:color-mix(in srgb,var(--q) 22%,var(--walnut-2,#271d16));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--q) 55%,transparent),0 10px 24px rgba(0,0,0,.5)}
+.as-member .as-fig{line-height:0;image-rendering:pixelated}
+.as-member .as-fig{flex:none}
+.as-member .as-words{display:flex;flex-direction:column;gap:2px;min-width:0}
+.as-member .as-name{font:700 12px/1.05 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--cream,#f3e6c8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.as-member .as-rule{font:500 12px/1.2 var(--sans);color:color-mix(in srgb,var(--cream,#f3e6c8) 78%,transparent);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.as-member .as-got{font:800 15px/1.1 var(--sans);color:var(--cream,#f3e6c8);white-space:nowrap}
+.as-member .as-got .pip,.as-member .as-rule .pip{width:.85em;height:.85em;vertical-align:-.08em}
+/* its place on the board while it's out: the space stands empty-looking, the member's chip a ghost */
+.lt .stage .slot.on-stage .face .yl,.lt .stage .slot.on-stage .face .note,.lt .stage .slot.on-stage .base{opacity:.4}
+.cs-member.on-stage .fig{opacity:.3}
+/* a member acting: a small speech bubble out of the right side of its seat, its tail pointing back at the seat
+   (Cory, 2026-10-18); 11px name, one line of rule, what it just did */
+.as-member.bubble{gap:6px;padding:4px 8px 4px 4px;border-radius:8px}
+.as-member.bubble::before{content:"";position:absolute;left:-5px;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);
+  background:color-mix(in srgb,var(--q) 22%,var(--walnut-2,#271d16));box-shadow:-1px 1px 0 0 color-mix(in srgb,var(--q) 55%,transparent);border-radius:0 0 0 2px}
+.as-member.bubble .as-rule{-webkit-line-clamp:2}
+.as-member.bubble .as-got{font-size:12px;font-weight:800}
+@media (prefers-reduced-motion: reduce){.action-stage{display:none}}
+.as-card .as-note{font:500 12px/1.1 var(--sans);color:var(--pl-ink-3,#a39078)}
+/* a member changing hands, big on the stage on its way: its name under it */
+.piece-member.staged .path-inner{position:relative}
+.piece-member.staged .pm-name{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:2px;padding:1px 5px;border-radius:4px;background:var(--walnut-2,#271d16);color:var(--cream,#f3e6c8);font:600 12px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.flight.piece-member.staged,.piece-flight.piece-member.staged{overflow:visible}
+/* a seat's follower change, under its count for a while (director.js linger) */
+.seat-delta{position:fixed;transform:translateX(-100%);z-index:55;pointer-events:none;padding:1px 5px;border-radius:4px;font:800 12px/1.25 var(--sans);background:var(--walnut-2,#271d16);box-shadow:0 1px 3px rgba(0,0,0,.5);animation:seatdelta var(--ld,2.6s) ease-out both}
+.seat-delta.up{color:#bfe6a8}.seat-delta.down{color:#f0a49a}
+/* what a steal takes, on the victim's pile the moment it's taken (director.js takeTag) */
+.take-tag{position:fixed;transform:translate(-50%,-100%);z-index:62;pointer-events:none;display:flex;align-items:center;gap:2px;padding:1px 5px 1px 4px;border-radius:4px;
+  font:800 12px/1.25 var(--sans);color:#f0a49a;background:var(--walnut-2,#271d16);box-shadow:0 1px 3px rgba(0,0,0,.5);white-space:nowrap;animation:taketag var(--tl,900ms) ease-out both}
+.take-tag svg,.take-tag .piece-dot{width:10px;height:10px;display:block}
+@keyframes taketag{0%{opacity:0;transform:translate(-50%,-80%) scale(1.25)}14%{opacity:1;transform:translate(-50%,-100%) scale(1)}80%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.take-tag{animation:none}}
+@keyframes seatdelta{0%{opacity:0;transform:translate(-100%,-3px)}8%{opacity:1;transform:translate(-100%,0)}82%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.seat-delta{animation:none}}
+
+/* round II and III members shuffled into the deck (director.js shuffleIn): card backs like the deck's top card, and
+   "+N round II" over the deck */
+.deck-join{display:flex;align-items:center;justify-content:center;border-radius:6px;
+  background:radial-gradient(circle at 50% 36%,rgba(255,217,120,.12),transparent 62%),repeating-linear-gradient(45deg,rgba(0,0,0,.16) 0 2px,transparent 2px 6px),linear-gradient(180deg,#4b2e41,#36202f);
+  box-shadow:0 0 0 1px #120c0a,inset 0 0 0 2px #36202f,inset 0 0 0 3px rgba(217,166,58,.72),0 6px 14px -6px rgba(0,0,0,.7)}
+.deck-join .cult-mark{display:block;flex:none}
+.deck-join-tag{position:fixed;transform:translate(-50%,-100%);z-index:62;pointer-events:none;padding:2px 7px;border-radius:5px;
+  font:800 12px/1.25 var(--sans);color:var(--cream,#f4ebd7);background:var(--walnut-2,#271d16);box-shadow:0 0 0 1px rgba(217,166,58,.55),0 1px 3px rgba(0,0,0,.5);white-space:nowrap;opacity:0}
+/* a member acting (Cory, live, Oct 27: "it should be clearer what they do"): its rule at the sentence size, three lines */
+.as-member.bubble .as-rule{font-size:15px;line-height:18px;-webkit-line-clamp:3;color:color-mix(in srgb,var(--cream,#f3e6c8) 88%,transparent)}
+.as-member.bubble .as-got{font-size:15px}
+/* the recruit reveal (Cory, live, Oct 27, after Hearthstone): the member's card, whole, on lit paper at the hub */
+.as-reveal{display:flex;flex-direction:column;align-items:center;gap:6px;box-sizing:border-box;padding:18px 16px 14px;border-radius:12px;text-align:center;
+  background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);overflow:hidden;
+  box-shadow:0 0 0 2px rgb(var(--lamp,255,206,140)),0 0 28px 6px rgba(var(--lamp,255,206,140),.45),0 18px 40px rgba(0,0,0,.6)}
+.as-reveal .as-band{position:absolute;left:0;right:0;top:0;height:80px;background:color-mix(in srgb,var(--q) 22%,var(--paper-lit,#fbf6ea));z-index:-1}
+.as-reveal{isolation:isolate}
+.as-reveal .as-fig{line-height:0;image-rendering:pixelated;height:64px}
+.as-reveal .as-name{font:800 18px/1.1 var(--sans);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
+.as-reveal .as-rule{font:500 15px/19px var(--sans);color:var(--pl-ink,#2b2018);text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.as-reveal .as-rule .pip{width:.85em;height:.85em;vertical-align:-.08em}
+.as-reveal .as-rule .ability-timing{font-weight:800}
+.as-reveal .as-who-buys{margin-top:auto;font:600 12px/1 var(--sans);color:var(--pl-ink-2,#6e5c49)}

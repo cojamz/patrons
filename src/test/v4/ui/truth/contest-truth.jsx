@@ -1,0 +1,86 @@
+// Scoring truth, as the screen shows it: for seeded mixed-table games, every round end (the Reckoning's rows and the
+// RoundEnd summary card) and every
+// contest standings card (ContestStandings, the board's hover/tap layer) shows the winners and counts the engine
+// scored, checked three ways: the engine's record, what was actually awarded (contest followers), and an
+// independent oracle that counts each rule off the table at the moment of scoring.
+import { expect } from 'vitest';
+import { render, cleanup } from '@testing-library/react';
+import { quadrant } from '../../../../engine/v4/index.js';
+import RoundEnd from '../../../../v4/game/RoundEnd.jsx';
+import { reckonRows } from '../../../../v4/game/Reckoning.jsx';
+import { ContestStandings } from '../../../../v4/game/Info.jsx';
+import { parseRoundEnd, standings, isRoundEnd } from '../../../../v4/format.js';
+import { oracleCount, oracleWinners, playMixedGames } from '../../../engine/v4/contest-oracle.js';
+
+const ids = s => (s ? s.split(',').filter(Boolean).map(Number) : []);
+
+/** Plays games g0..g0+n-1 and checks every round-end card and a sample of live standings cards. */
+export function checkContestTruth(g0, n) {
+  let cards = 0, live = 0;
+  playMixedGames(n, {
+    g0, botEvery: 16,
+    onMove(s, g) {
+      if (s.over || s.round < 1 || s.moves % 61) return;
+      for (const st of standings(s)) {
+        const { container } = render(<ContestStandings state={s} st={st} />);
+        for (const li of container.querySelectorAll('[data-pid]')) {
+          const p = s.players[Number(li.dataset.pid)];
+          const want = oracleCount(s, st.qid, p);
+          if (want != null) expect(Number(li.dataset.count), `game ${g} live ${st.qid} ${p.name}`).toBe(want);
+        }
+        const leads = [...container.querySelectorAll('[data-lead="1"]')].map(li => Number(li.dataset.pid)).sort((a, b) => a - b);
+        const w = oracleWinners(s, st.qid);
+        if (w) expect(leads, `game ${g} live ${st.qid} leaders`).toEqual(w);
+        cleanup();
+        live++;
+      }
+    },
+    onScored({ before, after, moment, record, prize, game }) {
+      const line = after.log.filter(isRoundEnd).pop();
+      const info = { result: parseRoundEnd(after, line), start: before, after, board: moment };
+      // the Reckoning (the animated pay-out) shows the same winners and counts, from the same record
+      for (const r of reckonRows(info)) {
+        const rec = record.results.find(c => c.qid === r.qid);
+        expect([...r.winners].sort((a, b) => a - b), `game ${game} reckoning ${r.qid}`).toEqual([...rec.winners].sort((a, b) => a - b));
+        expect(r.prize, `game ${game} reckoning ${r.qid} prize`).toBe(prize / (r.winners.length > 1 ? 2 : 1));
+        for (const row of r.rows) {
+          const want = oracleCount(moment, r.qid, moment.players[row.id]);
+          if (want != null) expect(row.shown, `game ${game} reckoning ${r.qid} seat ${row.id}`).toBe(want);
+        }
+      }
+      const { container } = render(<RoundEnd info={info} onNext={() => {}} autoMs={0} />);
+      const rows = [...container.querySelectorAll('li[data-qid]')];
+      expect(rows.map(r => r.dataset.qid)).toEqual(after.quadrants);
+      for (const li of rows) {
+        const qid = li.dataset.qid;
+        const shown = ids(li.dataset.winners).sort((a, b) => a - b);
+        const where = `game ${game} round ${record.round} ${qid}`;
+        // 1. the engine's record of the round
+        expect(shown, `${where}: record`).toEqual([...record.results.find(c => c.qid === qid).winners].sort((a, b) => a - b));
+        // 2. the oracle, counting the rule off the table as it was scored
+        const w = oracleWinners(moment, qid);
+        if (w) expect(shown, `${where}: oracle`).toEqual(w);
+        // every count shown is the rule's own count
+        for (const span of li.querySelectorAll('[data-pid]')) {
+          const want = oracleCount(moment, qid, moment.players[Number(span.dataset.pid)]);
+          if (want != null) expect(Number(span.dataset.count), `${where}: count for seat ${span.dataset.pid}`).toBe(want);
+        }
+        // Own-color member labels are intentional; no former secondary tiebreak remains.
+        const tb = quadrant(qid).scoring.tiebreak;
+        if (tb) expect(li.textContent).toContain(tb.text);
+        if (qid === 'purple') expect(li.textContent).toMatch(/Most purple resources/i); // held purple since 2026-10-22
+        const shownPrize = Number(li.querySelector('.re-chip').textContent.match(/\+(\d+)/)?.[1]);
+        expect(shownPrize, `${where}: displayed prize`).toBe(prize / (shown.length > 1 ? 2 : 1));
+      }
+      // 3. what was awarded: each player's contest followers grew by exactly the prizes shown for them
+      for (const p of after.players) {
+        const shownAward = rows.filter(li => ids(li.dataset.winners).includes(p.id)).reduce((n, li) => n + Number(li.querySelector('.re-chip').textContent.match(/\+(\d+)/)?.[1]), 0);
+        expect(after.players[p.id].contest - before.players[p.id].contest, `game ${game}: ${p.name} awarded`).toBe(shownAward);
+      }
+      cleanup();
+      cards++;
+    },
+  });
+  expect(cards).toBeGreaterThanOrEqual(n * 2);
+  expect(live).toBeGreaterThan(n / 2);
+}

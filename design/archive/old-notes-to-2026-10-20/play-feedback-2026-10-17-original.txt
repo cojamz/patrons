@@ -1,0 +1,113 @@
+Hover over in the glossary
+Blue is going to translate to member synergy
+Colors have synergy
+Starting resources? Remove
+Draft 1 to start the round
+Make pants taller
+Outer circle looks dim, colors don’t look bright enough
+Default to members for scoring
+Asking for confirmation to place - NO. Only on phone/small screen
+The extras should count as members
+Frontrunner neutral too cheap
+Done no buy is in a weird spot not visible needs to be easier to click
+Safe this round maybe better icon
+Snap up - pay for member in the shop - member cards got changed into bigger cards. Also why also have the pop up window
+Toggle option for view of member card in shop with more info vs less
+Sort toggle needs to be more fluid, one click not two click spots
+Recluse not in blue
+Steal one each (no conditions)
+Help yourself should scale moment
+Round 3 actions
+Revelers too expensive
+Desperado
+Sticky fingers and desperado combo
+Extra Hand - Probably fine
+Extortionist is out of whack
+Steal when you buy a member - should be essential to magenta
+Should EVERY wheel just be members reward? I think yes
+Run some games without the follower shop
+Rising Tide +2
+Knob tweak on shakedown
+Shakedown didnt seem to work? Counted as a misclick
+“You lose your tie for silver” is unnecessary
+Show Off is trash
+Snap up is good
+Blue: rearrange the shop and then buy a bunch
+Silver is pretty close
+Bodyguard is good
+Remove all cost reduction stuff in shop for now
+Player card hover over with all members needs to be better visually organizd. Its very close. Maybe member word rework will help
+Release needs to go entirely
+Crime wave not named correctly or text is wrong
+Too many words in the hover over on actions we dont need to tell players how it will help them
+Retinue more followers
+Sounds and animation sound off
+Redistribute - more elegant solution
+Sequencing of member effects is not always intuitive
+Silver round 2 actions need work
+Freelancer maybe more expensive
+Grifter is kinda cool
+Start of round needs dedicated animations
+Log doesnt show what was gained for taking show off
+Silver puts the game on steroids, needs some counterweight
+Desperado double let me pick twice instead of doubling the steal from one person
+Lie Low should protect members and resources
+Maybe discount is good/fun
+Discount needs to show where its coming from
+Get rid of release a member
+Why is squatter in magenta
+This should straight up steal
+Should on recruit trigger
+Grifter didnt give me an options
+Multiplayer log isnt updating
+Grifter log doesnt say what I took
+It should show cost in hover over
+Take 3 from opponent instead of one from each
+Hold court a little out of whack
+Robin Hood maybe needs to scale?
+Good deed possible misclick
+Kingpin - magenta doesnt gain enough resources. Maybe like King of Thieves? Based more on members. But shouldnt compete with ring competition?
+Maybe showing a member number
+That is not yellow
+Intro Offer either in trash or not in Gold
+Should shop refresh in between rounds?
+Are there two freelancers
+Front runner purple not neutral? Whats happening with the neutrals
+Late bloomers need two people in the pics
+Lets actually keep # of ghosts. I know I had
+Catch up should be better
+Is frontrunner too strong or weak? Balance test. Not important
+Purple kernel is there, but needs rework
+Shop should refresh between rounds
+8 is a lot for alchemist
+Squatter should be a little cheaper
+Yellow gets weak during lower person game
+Neutrals got shuffled into other colors?
+Rebranding members into assets
+Overseer is a little weird doesnt fit
+Peddler + 1 of each color
+Game popped up repeatedly when “Collect Debts” is taken. Player said it felt like a rude reminder
+“Cory again snake order” displaying on multiplayer screen when not Cory’s turn
+You see in advance round end bonus
+Catch up, plan ahead, rush hour
+Correct to double then add, rather than add then double, in general, unless it should unambiguously be otherwise. For example, should prospector say “after”
+Weaver - 5 or more
+Feastmaker more members - chefs?
+Yellow basically doesnt want members - maybe something there?
+Top up is too bad in Round 3, and even Round 2
+I took multiple actions and then for some reason the middle player went twice? As if to balance out the turns? Its weird 
+Crunch time took 2 “Next” turns - maybe correct in terms of balance but led to non-intuitive turns in snake draft. 
+Lamplighter is too expensive
+Night Owl should be 2 followers
+Log did not indicate a night owl turn
+Trade Seeds - one at a time. As expected.
+If i buy go getter on last turn can i use
+Rush hour doesnt show what you’d actually get like other actions do
+Something is definitely fucked up in multiplayer games with the glowing spaces. Sometimes it seems as though it doesnt even think its my turn
+Magenta animations are awkward - shows multiple animation for the same resource gain?
+Members with multiple “people” should count as additional members
+Yeah when things are lit or not is all off
+The swapping animation for members via actions should have them go to them middle, just clearly swap between the player cards. Maybe a LITTLE exaggerated…
+Steal UI isn’t particularly intuitive. Well, the UI is maybe intuitive but sometimes wording on the cards isnt
+Didn’t we say end of round sphere rewards should divide up evenly on a tie?
+Sometimes turn status is desync’d or wrong

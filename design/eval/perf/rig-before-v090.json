@@ -1,0 +1,636 @@
+{
+ "label": "before-v090",
+ "cpu": 4,
+ "speed": "relaxed",
+ "seed": 20261028,
+ "bars": {
+  "clickP95": 100,
+  "hoverP95": 100,
+  "frameP95": 33.4,
+  "hitchPct": 5,
+  "idleBusyPct": 10,
+  "growth": 1.5,
+  "leakNodes": 1.1,
+  "leakListeners": 1.1,
+  "leakHeap": 1.25
+ },
+ "fails": [
+  "round I: clicks p95 472 ms (bar 100)",
+  "round I: idle table busy 21% (bar 10%)",
+  "round II: clicks p95 960 ms (bar 100)",
+  "round II: hovers p95 137 ms (bar 100)",
+  "round II: idle table busy 37% (bar 10%)",
+  "round III: clicks p95 636 ms (bar 100)",
+  "round III: hovers p95 125 ms (bar 100)",
+  "round III: show frames p95 50 ms (bar 33.4)",
+  "round III: 7% of show frames hitch (bar 5%)",
+  "round III: idle table busy 56% (bar 10%)",
+  "idle busy grows 21% → 56% over the game",
+  "leak: 6431 elements vs 4676 after a reload",
+  "leak: 836 listeners vs 730 after a reload",
+  "leak: heap 17.6 MB vs 7.2 MB after a reload"
+ ],
+ "sum": {
+  "I": {
+   "frames": {
+    "n": 6470,
+    "showN": 6366,
+    "p50": 16.7,
+    "p95": 33.3,
+    "worst": 300,
+    "hitch": 2
+   },
+   "anims": [
+    {
+     "k": "b.seat-delta.up:seatdelta",
+     "n": 3912,
+     "p95": 33.3,
+     "worst": 300,
+     "hitch": 3
+    },
+    {
+     "k": "svg.leader:cult-breathe",
+     "n": 2361,
+     "p95": 33.3,
+     "worst": 183.3,
+     "hitch": 3
+    },
+    {
+     "k": "g.blink:cult-blink",
+     "n": 2361,
+     "p95": 33.3,
+     "worst": 183.3,
+     "hitch": 3
+    },
+    {
+     "k": "span.tc-line:tcline",
+     "n": 1535,
+     "p95": 33.4,
+     "worst": 266.6,
+     "hitch": 4
+    },
+    {
+     "k": "i.cs-min:cs-bob",
+     "n": 1030,
+     "p95": 33.4,
+     "worst": 183.3,
+     "hitch": 5
+    },
+    {
+     "k": "span.lead:cult-scheme",
+     "n": 984,
+     "p95": 33.4,
+     "worst": 183.3,
+     "hitch": 5
+    },
+    {
+     "k": "div.path-inner:js",
+     "n": 1612,
+     "p95": 33.3,
+     "worst": 266.6,
+     "hitch": 3
+    },
+    {
+     "k": "span.base:opacity",
+     "n": 592,
+     "p95": 50,
+     "worst": 300,
+     "hitch": 7
+    },
+    {
+     "k": "i.cs-min:cs-bob-eager",
+     "n": 824,
+     "p95": 49.9,
+     "worst": 183.3,
+     "hitch": 5
+    },
+    {
+     "k": "img.sprite:cult-shift",
+     "n": 2020,
+     "p95": 33.3,
+     "worst": 149.9,
+     "hitch": 2
+    },
+    {
+     "k": "img.sprite:cult-breathe",
+     "n": 1987,
+     "p95": 33.3,
+     "worst": 149.9,
+     "hitch": 2
+    },
+    {
+     "k": "path.wash:fill",
+     "n": 203,
+     "p95": 83.4,
+     "worst": 300,
+     "hitch": 19
+    }
+   ],
+   "clicks": {
+    "n": 20,
+    "p50": 178,
+    "p95": 472,
+    "max": 472,
+    "dead": 1,
+    "byKind": [
+     {
+      "k": "place",
+      "n": 3,
+      "p50": 192,
+      "p95": 192
+     },
+     {
+      "k": "choose",
+      "n": 10,
+      "p50": 178,
+      "p95": 472
+     },
+     {
+      "k": "recruit",
+      "n": 3,
+      "p50": 217,
+      "p95": 299
+     },
+     {
+      "k": "pay",
+      "n": 3,
+      "p50": 167,
+      "p95": 243
+     },
+     {
+      "k": "next-round",
+      "n": 1,
+      "p50": 71,
+      "p95": 71
+     }
+    ]
+   },
+   "hovers": {
+    "n": 9,
+    "p50": 48,
+    "p95": 74,
+    "missed": 0
+   },
+   "idle": {
+    "busyPct": 21,
+    "style": 160,
+    "script": 45,
+    "anims": 21
+   },
+   "memory": {
+    "nodes": 1849,
+    "listeners": 485,
+    "heapMB": 8.6
+   },
+   "loaf": {
+    "n": 82,
+    "over100": 16,
+    "top": [
+     {
+      "round": "I",
+      "d": 282,
+      "scripts": [
+       "hn 229",
+       "I 35"
+      ]
+     },
+     {
+      "round": "I",
+      "d": 237,
+      "scripts": [
+       "hn 34",
+       "hn 5",
+       "hn 8"
+      ]
+     },
+     {
+      "round": "I",
+      "d": 206,
+      "scripts": [
+       "hn 204"
+      ]
+     },
+     {
+      "round": "I",
+      "d": 200,
+      "scripts": [
+       "hn 168"
+      ]
+     },
+     {
+      "round": "I",
+      "d": 200,
+      "scripts": [
+       "hn 157",
+       "I 9"
+      ]
+     }
+    ]
+   }
+  },
+  "II": {
+   "frames": {
+    "n": 10334,
+    "showN": 9549,
+    "p50": 16.7,
+    "p95": 33.4,
+    "worst": 450.1,
+    "hitch": 4
+   },
+   "anims": [
+    {
+     "k": "b.seat-delta.up:seatdelta",
+     "n": 6317,
+     "p95": 33.4,
+     "worst": 450.1,
+     "hitch": 5
+    },
+    {
+     "k": "span.tc-line:tcline",
+     "n": 2747,
+     "p95": 50,
+     "worst": 450.1,
+     "hitch": 7
+    },
+    {
+     "k": "svg.leader:cult-breathe",
+     "n": 3331,
+     "p95": 33.4,
+     "worst": 450,
+     "hitch": 5
+    },
+    {
+     "k": "g.blink:cult-blink",
+     "n": 3331,
+     "p95": 33.4,
+     "worst": 450,
+     "hitch": 5
+    },
+    {
+     "k": "img.sprite:cult-shift",
+     "n": 3331,
+     "p95": 33.4,
+     "worst": 450,
+     "hitch": 5
+    },
+    {
+     "k": "img.sprite:cult-breathe",
+     "n": 3331,
+     "p95": 33.4,
+     "worst": 450,
+     "hitch": 5
+    },
+    {
+     "k": "i.cs-min:cs-bob",
+     "n": 2029,
+     "p95": 50,
+     "worst": 450,
+     "hitch": 7
+    },
+    {
+     "k": "i.cs-min:cs-bob-eager",
+     "n": 1624,
+     "p95": 50.1,
+     "worst": 450,
+     "hitch": 8
+    },
+    {
+     "k": "span.lead:cult-scheme",
+     "n": 1940,
+     "p95": 50,
+     "worst": 450,
+     "hitch": 6
+    },
+    {
+     "k": "div.path-inner:js",
+     "n": 2438,
+     "p95": 33.4,
+     "worst": 366.6,
+     "hitch": 4
+    },
+    {
+     "k": "span.base:opacity",
+     "n": 631,
+     "p95": 66.7,
+     "worst": 333.3,
+     "hitch": 13
+    },
+    {
+     "k": "span.worker-fig:panelland-under",
+     "n": 913,
+     "p95": 50.1,
+     "worst": 450.1,
+     "hitch": 8
+    }
+   ],
+   "clicks": {
+    "n": 21,
+    "p50": 317,
+    "p95": 960,
+    "max": 960,
+    "dead": 7,
+    "byKind": [
+     {
+      "k": "place",
+      "n": 4,
+      "p50": 109,
+      "p95": 109
+     },
+     {
+      "k": "choose",
+      "n": 7,
+      "p50": 317,
+      "p95": 960
+     },
+     {
+      "k": "recruit",
+      "n": 4,
+      "p50": 331,
+      "p95": 331
+     },
+     {
+      "k": "pay",
+      "n": 4,
+      "p50": 333,
+      "p95": 439
+     },
+     {
+      "k": "pick",
+      "n": 1,
+      "p50": 124,
+      "p95": 124
+     },
+     {
+      "k": "next-round",
+      "n": 1,
+      "p50": null,
+      "p95": null
+     }
+    ]
+   },
+   "hovers": {
+    "n": 10,
+    "p50": 58,
+    "p95": 137,
+    "missed": 0
+   },
+   "idle": {
+    "busyPct": 37,
+    "style": 238,
+    "script": 88,
+    "anims": 35
+   },
+   "memory": {
+    "nodes": 3130,
+    "listeners": 546,
+    "heapMB": 14.7
+   },
+   "loaf": {
+    "n": 193,
+    "over100": 36,
+    "top": [
+     {
+      "round": "II",
+      "d": 462,
+      "scripts": []
+     },
+     {
+      "round": "II",
+      "d": 367,
+      "scripts": [
+       "Worker.onmessage 53"
+      ]
+     },
+     {
+      "round": "II",
+      "d": 341,
+      "scripts": []
+     },
+     {
+      "round": "II",
+      "d": 319,
+      "scripts": [
+       "Nf 36",
+       "e 182",
+       "FrameRequestCallback 12"
+      ]
+     },
+     {
+      "round": "II",
+      "d": 318,
+      "scripts": [
+       "hn 242"
+      ]
+     }
+    ]
+   }
+  },
+  "III": {
+   "frames": {
+    "n": 11640,
+    "showN": 10607,
+    "p50": 16.7,
+    "p95": 50,
+    "worst": 1016.6,
+    "hitch": 7
+   },
+   "anims": [
+    {
+     "k": "b.seat-delta.up:seatdelta",
+     "n": 6808,
+     "p95": 66.6,
+     "worst": 1016.6,
+     "hitch": 9
+    },
+    {
+     "k": "svg.leader:cult-breathe",
+     "n": 4834,
+     "p95": 50,
+     "worst": 1016.6,
+     "hitch": 7
+    },
+    {
+     "k": "g.blink:cult-blink",
+     "n": 4834,
+     "p95": 50,
+     "worst": 1016.6,
+     "hitch": 7
+    },
+    {
+     "k": "img.sprite:cult-shift",
+     "n": 4834,
+     "p95": 50,
+     "worst": 1016.6,
+     "hitch": 7
+    },
+    {
+     "k": "img.sprite:cult-breathe",
+     "n": 4834,
+     "p95": 50,
+     "worst": 1016.6,
+     "hitch": 7
+    },
+    {
+     "k": "span.tc-line:tcline",
+     "n": 2474,
+     "p95": 83.3,
+     "worst": 1016.6,
+     "hitch": 13
+    },
+    {
+     "k": "i.cs-min:cs-bob",
+     "n": 2635,
+     "p95": 66.7,
+     "worst": 1016.6,
+     "hitch": 10
+    },
+    {
+     "k": "i.cs-min:cs-bob-eager",
+     "n": 2425,
+     "p95": 66.7,
+     "worst": 1016.6,
+     "hitch": 10
+    },
+    {
+     "k": "span.lead:cult-scheme",
+     "n": 2623,
+     "p95": 66.6,
+     "worst": 866.7,
+     "hitch": 9
+    },
+    {
+     "k": "div.path-inner:js",
+     "n": 2514,
+     "p95": 50,
+     "worst": 666.6,
+     "hitch": 8
+    },
+    {
+     "k": "div.piece-flight.piece-res:js",
+     "n": 2420,
+     "p95": 50.1,
+     "worst": 416.7,
+     "hitch": 8
+    },
+    {
+     "k": "span.cs-stack:js",
+     "n": 2228,
+     "p95": 50,
+     "worst": 450,
+     "hitch": 7
+    }
+   ],
+   "clicks": {
+    "n": 25,
+    "p50": 270,
+    "p95": 636,
+    "max": 636,
+    "dead": 8,
+    "byKind": [
+     {
+      "k": "place",
+      "n": 5,
+      "p50": 636,
+      "p95": 636
+     },
+     {
+      "k": "pick",
+      "n": 1,
+      "p50": 107,
+      "p95": 107
+     },
+     {
+      "k": "choose",
+      "n": 6,
+      "p50": 348,
+      "p95": 542
+     },
+     {
+      "k": "recruit",
+      "n": 6,
+      "p50": 253,
+      "p95": 253
+     },
+     {
+      "k": "pay",
+      "n": 6,
+      "p50": 297,
+      "p95": 412
+     },
+     {
+      "k": "next-round",
+      "n": 1,
+      "p50": null,
+      "p95": null
+     }
+    ]
+   },
+   "hovers": {
+    "n": 12,
+    "p50": 60,
+    "p95": 125,
+    "missed": 0
+   },
+   "idle": {
+    "busyPct": 56,
+    "style": 308,
+    "script": 170,
+    "anims": 52
+   },
+   "memory": {
+    "nodes": 3570,
+    "listeners": 592,
+    "heapMB": 20.3
+   },
+   "loaf": {
+    "n": 410,
+    "over100": 110,
+    "top": [
+     {
+      "round": "III",
+      "d": 1022,
+      "scripts": [
+       "hn 899"
+      ]
+     },
+     {
+      "round": "III",
+      "d": 863,
+      "scripts": [
+       "Nf 841"
+      ]
+     },
+     {
+      "round": "III",
+      "d": 823,
+      "scripts": []
+     },
+     {
+      "round": "III",
+      "d": 436,
+      "scripts": []
+     },
+     {
+      "round": "III",
+      "d": 420,
+      "scripts": [
+       "hn 363",
+       "FrameRequestCallback 6"
+      ]
+     }
+    ]
+   }
+  }
+ },
+ "unbroken": {
+  "nodes": 6431,
+  "listeners": 836,
+  "heapMB": 17.6
+ },
+ "reloaded": {
+  "nodes": 4676,
+  "listeners": 730,
+  "heapMB": 7.2
+ },
+ "errors": []
+}

@@ -1,0 +1,8 @@
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .slice-outline{fill:none;stroke:#2b2018;stroke-width:3.4}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open .wash{fill:#f2e8d2 !important}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open .wash{stroke:var(--c);stroke-width:9;stroke-opacity:.9}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim{stroke:#2b2018;stroke-width:3.4;fill:#2b2018 !important}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-foot{opacity:0}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule{fill:#f2e8d2 !important}
+.lt [data-spaces="panels"] .stage .slot .face,.lt [data-spaces="panels"] .stage .slot .face .second{color:#2b2018 !important}
+.lt [data-spaces="panels"] .stage .slot .face .main{font-family:var(--serif) !important;font-weight:800 !important}

@@ -1,0 +1,534 @@
+<title>Patrons Playtest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout: the table. Spinning wheel on the left (outer ring = round I, inner = II, center = III),
+   the facing quadrant's actions, the shop of 6 and the follower buys on the right. Players across the top.
+   Single dark "table" look by choice, so colors are set explicitly. */
+:root{
+  --table:#141d1c; --table-2:#1d2928; --rim:#2d3b39; --ink:#ece6d6; --muted:#97a49f;
+  --gold:#e3b23c; --red:#e0645a; --blue:#6aa6dc; --green:#5fb37c;
+  --display:"Marcellus", Georgia, serif; --body:"Figtree", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{background:radial-gradient(120% 80% at 40% 30%, var(--table-2), var(--table) 70%);background-color:var(--table);color:var(--ink);font-family:var(--body);font-size:15px;padding-inline:16px;padding-block:14px;box-sizing:border-box;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.app{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:400;font-size:28px;margin:0;letter-spacing:.04em}
+.status{font-size:16px;color:var(--muted)} .status b{color:var(--ink)}
+.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.pl{border:1px solid var(--rim);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;min-width:0;background:color-mix(in srgb,var(--table) 70%,transparent)}
+.pl.active{border-color:var(--pc);box-shadow:0 0 0 1px var(--pc) inset}
+.pl .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pl .nm{font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--pc);display:flex;align-items:center;gap:6px}
+.pl .nm i{width:11px;height:11px;border-radius:50%;background:var(--pc);display:inline-block}
+.pl .fol{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.pl .fol small{font-family:var(--body);font-size:11px;color:var(--muted);margin-left:3px}
+.res{display:flex;gap:10px;flex-wrap:wrap;font-variant-numeric:tabular-nums;font-size:14px;align-items:center}
+.res i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.res .meta{color:var(--muted);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid var(--c);color:var(--ink);background:none;border-radius:999px;padding:1px 8px;font:inherit;font-size:11.5px;cursor:default}
+.chip.use{cursor:pointer;background:color-mix(in srgb,var(--c) 25%,transparent)}
+.chip.off{opacity:.55}
+.chips em{color:var(--muted);font-style:normal;font-size:11.5px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:20px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:1fr}}
+.stage{position:relative;width:min(100%, calc(100dvh - 230px));min-width:260px;max-width:540px;aspect-ratio:1;margin:0 auto;touch-action:none;user-select:none}
+.stage svg{width:100%;height:100%;display:block;overflow:visible}
+#wheel{transform-origin:200px 200px;cursor:grab}
+.slot{cursor:pointer}
+.spin{position:absolute;bottom:4%;width:40px;height:40px;border-radius:50%;border:1px solid var(--rim);background:var(--table);color:var(--ink);font-size:20px;cursor:pointer}
+.spin.l{left:-8px}.spin.r{right:-8px}
+.pointer{text-align:center;font-size:11px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-top:2px}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{display:flex;flex-direction:column;gap:8px}
+.panel h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.panel h2 small{font-family:var(--body);font-size:13px;color:var(--muted)}
+.score{font-size:13px;border-left:3px solid var(--c);padding:4px 10px;background:var(--table-2);border-radius:0 8px 8px 0}
+.tier{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.act{position:relative;text-align:left;border:1px solid var(--rim);background:var(--table-2);color:var(--ink);border-radius:10px;padding:8px 10px;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.act:hover:not(:disabled){border-color:var(--c)}
+.act b{font-size:14px;padding-right:16px} .act span{font-size:12.5px;color:var(--muted)}
+.act:disabled{cursor:default;opacity:.5}
+.act .who{position:absolute;top:8px;right:8px;width:13px;height:13px;border-radius:50%}
+.prompt{border:1px solid var(--ink);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--table-2)}
+.prompt p{margin:0;font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.btn{border:1px solid var(--ink);background:none;color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.pri{background:var(--ink);color:var(--table)}
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.card{border:1px solid var(--rim);border-top:3px solid var(--c);background:var(--table-2);border-radius:8px;padding:8px 9px;display:flex;flex-direction:column;gap:4px;color:var(--ink);font:inherit;text-align:left;cursor:default;min-width:0}
+.card.can{cursor:pointer;border-color:var(--c)}
+.card.can:hover{background:color-mix(in srgb,var(--c) 14%,var(--table-2))}
+.card b{font-size:14px} .card .eff{font-size:12px;color:var(--muted);line-height:1.3}
+.card .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-variant-numeric:tabular-nums;gap:6px}
+.card .fv{font-family:var(--display);font-size:16px;white-space:nowrap}
+.cost i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;vertical-align:-1px}
+.fbuy{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.fb{border:1px solid var(--rim);background:var(--table);color:var(--ink);border-radius:10px;padding:6px 12px;font:inherit;cursor:default;display:flex;flex-direction:column;gap:1px;text-align:left}
+.fb.can{border-color:var(--ink);cursor:pointer}
+.fb b{font-family:var(--display);font-weight:400;font-size:15px}.fb span{font-size:11.5px;color:var(--muted)}
+.log{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:2px;max-height:180px;overflow:auto;border-top:1px dashed var(--rim);padding-top:8px}
+.log div:first-child{color:var(--ink)}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--table) 85%,transparent);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+.dialog{background:var(--table-2);border:1px solid var(--rim);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;max-width:440px;width:100%}
+.dialog h2{font-family:var(--display);font-weight:400;margin:0;font-size:24px}
+.seat{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.seat .nm{color:var(--pc);font-weight:700}
+.seg{display:flex;border:1px solid var(--rim);border-radius:999px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--muted);font:inherit;padding:5px 12px;cursor:pointer}
+.seg button.on{background:var(--ink);color:var(--table)}
+table.res-t{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:13.5px}
+table.res-t td,table.res-t th{padding:4px 6px;border-bottom:1px solid var(--rim);text-align:right}
+table.res-t td:first-child,table.res-t th:first-child{text-align:left}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header>
+    <h1>Patrons</h1>
+    <div class="status" id="status"></div>
+  </header>
+  <div class="players" id="players"></div>
+  <div class="main">
+    <div>
+      <div class="stage" id="stage">
+        <svg viewBox="-26 -26 452 452" aria-label="Board"><g id="wheel"></g></svg>
+        <button class="spin l" id="left" aria-label="Spin left">‹</button>
+        <button class="spin r" id="right" aria-label="Spin right">›</button>
+      </div>
+      <div class="pointer">▲ facing you · drag or use the arrows to spin</div>
+    </div>
+    <div class="side" id="side"></div>
+  </div>
+</div>
+<div class="overlay" id="overlay" hidden></div>
+
+<script>
+// ===== Content =====
+const COLORS=['gold','red','blue','green'];
+const CNAME={gold:'Gold',red:'Red',blue:'Blue',green:'Green'};
+const VAL=[2,4,6], WORKERS=[3,4,5];
+const PCOL=['#f4efe2','#ff8fb1','#b9a2ff','#ffa94d'];
+const TIERS=[{cost:2,get:1,div:1,label:'2 any → 1 follower'},{cost:4,get:3,div:2,label:'4 (2+ colors) → 3 followers'},{cost:6,get:6,div:3,label:'6 (3+ colors) → 6 followers'}];
+
+const M=(q,id,name,s,w,text,o={})=>({id,q,name,s,w,text,f:o.f??1,n:o.n??1,act:o.act||null});
+const GOLD_M=[
+ M('gold','midas','Midas',3,2,'Gains from actions come as gold instead. Tap it to switch on or off.'),
+ M('gold','banker','Banker',2,1,'At round start, +3 gold.'),
+ M('gold','prospector','Prospector',2,1,'Whenever an action gains you gold, +1 more.'),
+ M('gold','taxman','Tax Collector',1,1,'Whenever a rival buys followers, +1 gold.'),
+ M('gold','merchant','Merchant',1,1,'Whenever anyone recruits a gold member, +1 gold.'),
+ M('gold','thrift','Thrift',2,0,'Gold you spend on members counts double.'),
+ M('gold','coinpurse','Coin Purse',1,1,'Whenever you recruit a non-gold member, +1 gold.'),
+ M('gold','underdog','Underdog',1,1,'While you have the least gold, your gold gains are doubled.'),
+ M('gold','tinker','Tinker',1,1,'Whenever an action gains you 2+ of another resource, +1 gold.'),
+ M('gold','investor','Investor',2,2,'Round start: half your gold is set aside. Round end: it comes back doubled.'),
+ M('gold','jackpot','Jackpot',3,3,'Once per game: gain gold equal to the richest rival’s gold.',{act:true}),
+ M('gold','speculator','Speculator',3,2,'Once per game: double your gold.',{act:true}),
+ M('gold','tycoon','Tycoon',3,1,'Game end: +1 follower per 3 gold.'),
+ M('gold','seed','Seed Money',2,0,'When recruited: gain gold equal to your member count.'),
+ M('gold','hustler','Hustler',2,1,'When recruited, pick a color. Actions there give you +1 gold.'),
+];
+const RED_M=[
+ M('red','twins','Twins',1,1,'Counts as 2 members.',{f:2,n:2}),
+ M('red','bigfamily','Big Family',2,2,'Counts as 3 members.',{f:3,n:3}),
+ M('red','volunteer','Volunteer',0,0,'Free. No effect.'),
+ M('red','intern','Intern',1,0,'No effect.'),
+ M('red','mentor','Mentor & Protégé',3,2,'When recruited: also take the cheapest face-up member free.'),
+ M('red','proselytizer','Proselytizer',3,3,'Whenever you recruit, +1 follower.'),
+ M('red','mob','Mob',2,1,'Game end: +1 follower per red member.'),
+ M('red','recruiter','Recruiter',1,1,'Whenever you recruit, +1 red.'),
+ M('red','drive','Recruiting Drive',1,1,'Recruit 2+ members in one turn: +2 red.'),
+ M('red','host','Host',1,1,'At round start, +1 red per 2 members.'),
+ M('red','sponsor','Sponsor',2,1,'Your members cost 1 less.'),
+ M('red','crowd','Crowd-Pleaser',1,0,'Whenever you buy followers, +1 red.'),
+ M('red','doppel','Doppelganger',2,2,'When recruited: copies the effect of one of your members.'),
+ M('red','patriarch','Patriarch',3,1,'Game end: +1 follower per 2 members.'),
+ M('red','reserve','Reserve',1,0,'Effect coming later.'),
+];
+function standIns(q){ // plain members for the two placeholder quadrants
+  const L=[[1,0,1,'Recruit',2],[1,1,1,'Hand',2],[2,0,1,'Helper',2],[2,1,2,'Regular',2],[2,2,2,'Devotee',2],[3,1,3,'Elder',2],[3,3,5,'Pillar',2],[4,2,5,'Patron',1]];
+  const out=[]; L.forEach(([s,w,f,n,k])=>{for(let j=0;j<k;j++)out.push(M(q,q+n,CNAME[q]+' '+n,s,w,'Stand-in. No effect.',{f}))}); return out;
+}
+const DECK=()=>[...GOLD_M,...RED_M,...standIns('blue'),...standIns('green')];
+
+// ===== Quadrants =====
+const Q=[
+ {c:'gold',score:'Most gold',acts:[
+  {r:1,name:'Joint Venture',text:'+3 gold, and +1 gold to a player you choose.',est:()=>3.3,
+   run:async p=>{gain(p,'gold',3,true);const t=await pick(p,'Joint Venture: give 1 gold to…',rivals(p).map(o=>({label:o.name,value:o})),os=>minBy(os,o=>followers(o.value)));if(t)gain(t,'gold',1,false)}},
+  {r:1,name:'Rush',text:'+2 gold per round number (2 / 4 / 6).',est:()=>2*G.round,run:async p=>gain(p,'gold',2*G.round,true)},
+  {r:1,name:'Discount',text:'Your next member costs 2 less, off any part of its cost.',est:p=>G.shop.some(c=>c.s+c.w>=3)?2.4:1.2,run:async p=>{p.discount+=2;say(`${p.name}'s next member costs 2 less.`)}},
+  {r:2,name:'Steal',text:'Take 3 gold from players, split however you like.',est:p=>Math.min(3,rivals(p).reduce((s,o)=>s+o.res.gold,0))*1.4,
+   run:async p=>{let got=0;for(let k=0;k<3;k++){const vs=rivals(p).filter(o=>o.res.gold>0);if(!vs.length)break;
+     const t=await pick(p,`Steal: take 1 gold from… (${3-k} left)`,vs.map(o=>({label:`${o.name} (${o.res.gold})`,value:o})),os=>maxBy(os,o=>o.value.res.gold));if(!t)break;t.res.gold--;got++;}
+     if(got)gain(p,'gold',got,true);say(`${p.name} stole ${got} gold.`)}},
+  {r:2,name:'Windfall',text:'+1 gold per member you have.',est:p=>memberCount(p),run:async p=>gain(p,'gold',memberCount(p),true)},
+  {r:3,name:'Strike',text:'Double your gold.',est:p=>p.res.gold,run:async p=>gain(p,'gold',p.res.gold,true)},
+ ]},
+ {c:'red',score:'Most members',acts:[
+  {r:1,name:'Scout',text:'+2 red, and put a face-up member at the bottom of the pile.',est:()=>2.2,
+   run:async p=>{gain(p,'red',2,true);if(!G.shop.length)return;const c=await pick(p,'Scout: send which face-up member to the bottom of the pile?',G.shop.map(c=>({label:c.name,value:c})),os=>maxBy(os,o=>o.value.s+o.value.w));if(c){G.shop.splice(G.shop.indexOf(c),1);G.pile.push(c);refill();say(`${p.name} sent ${c.name} to the bottom of the pile.`)}}},
+  {r:1,name:'Turnout',text:'+1 red per member recruited this round, by anyone.',est:()=>G.recruits,run:async p=>gain(p,'red',G.recruits,true)},
+  {r:1,name:'Hire',text:'Recruit the cheapest face-up member, free.',est:()=>cheapValue(),run:async p=>{const c=cheapest();if(c)await recruit(p,c,true)}},
+  {r:2,name:'Hire Up',text:'+2 red, and recruit the cheapest face-up member, free.',est:()=>2+cheapValue(),run:async p=>{gain(p,'red',2,true);const c=cheapest();if(c)await recruit(p,c,true)}},
+  {r:2,name:'Trade',text:'Swap one of your members for another player’s costing no more than yours +1.',est:p=>tradePairs(p).length?2:0,
+   run:async p=>{const pairs=tradePairs(p);if(!pairs.length){say(`${p.name} had nothing to trade.`);return}
+     const pr=await pick(p,'Trade: give → get',pairs.map(([a,o,b])=>({label:`${a.name} → ${o.name}'s ${b.name}`,value:[a,o,b]})),os=>maxBy(os,x=>{const [a,,b]=x.value;return (b.f+b.s+b.w)-(a.f+a.s+a.w)}));
+     if(!pr)return;const [a,o,b]=pr;p.members.splice(p.members.indexOf(a),1);o.members.splice(o.members.indexOf(b),1);p.members.push(b);o.members.push(a);say(`${p.name} traded ${a.name} for ${o.name}'s ${b.name}.`)}},
+  {r:3,name:'Take',text:'Take any face-up member, free.',est:()=>Math.max(0,...G.shop.map(c=>c.f+(c.s+c.w)*.6)),
+   run:async p=>{if(!G.shop.length)return;const c=await pick(p,'Take: which member?',G.shop.map(c=>({label:`${c.name} (${c.s+c.w})`,value:c})),os=>maxBy(os,o=>o.value.f*1.5+o.value.s+o.value.w));if(c)await recruit(p,c,true)}},
+ ]},
+ {c:'blue',score:'Most blue',stand:true,acts:[
+  plain(1,'Tide','+3 blue.',{blue:3}),plain(1,'Current','+2 blue, +1 red.',{blue:2,red:1}),plain(1,'Shoal','+2 blue, +1 green.',{blue:2,green:1}),
+  plain(2,'Swell','+5 blue.',{blue:5}),plain(2,'Harbor','+4 blue, +1 gold.',{blue:4,gold:1}),plain(3,'Flood','+8 blue.',{blue:8}),
+ ]},
+ {c:'green',score:'Most green',stand:true,acts:[
+  plain(1,'Sprout','+3 green.',{green:3}),plain(1,'Graft','+2 green, +1 gold.',{green:2,gold:1}),plain(1,'Root','+2 green, +1 blue.',{green:2,blue:1}),
+  plain(2,'Grove','+5 green.',{green:5}),plain(2,'Orchard','+4 green, +1 red.',{green:4,red:1}),plain(3,'Bloom','+8 green.',{green:8}),
+ ]},
+];
+function plain(r,name,text,g){return {r,name,text,est:()=>Object.values(g).reduce((a,b)=>a+b,0),run:async p=>{for(const [c,n] of Object.entries(g))gain(p,c,n,true)}}}
+
+// ===== State =====
+let G=null, rot=0, facing=0, cfg={seats:['human','bot','bot','bot'],speed:'normal'};
+const AUTO=location.hash==='#auto';
+function newState(){
+  const players=cfg.seats.map((s,i)=>s==='off'?null:{seat:i,name:'P'+(i+1),bot:s==='bot',col:PCOL[i],res:{gold:0,red:0,blue:0,green:0},bonus:0,members:[],discount:0,left:0,invest:0,turnRecruits:0,contest:0}).filter(Boolean);
+  const pile=shuffle(DECK().map((c,k)=>({...c,uid:k})));
+  return {players,pile,shop:[],round:0,slots:{},order:[],turn:0,cur:null,phase:'setup',waiting:null,recruits:0,six:2*players.length,endEarly:false,log:[],over:false,results:null};
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function maxBy(a,f){return a.reduce((b,x)=>b===undefined||f(x)>f(b)?x:b,undefined)}
+function minBy(a,f){return a.reduce((b,x)=>b===undefined||f(x)<f(b)?x:b,undefined)}
+function refill(){while(G.shop.length<6&&G.pile.length)G.shop.push(G.pile.shift())}
+const rivals=p=>G.players.filter(o=>o!==p);
+const has=(p,id)=>p.members.filter(m=>m.id===id||m.copy===id).length;
+const memberCount=p=>p.members.reduce((s,m)=>s+m.n,0);
+const redCount=p=>p.members.filter(m=>m.q==='red').reduce((s,m)=>s+m.n,0);
+const followers=p=>1+p.bonus+p.members.reduce((s,m)=>s+m.f,0);
+const cost=c=>c.s+c.w;
+function cheapest(){return minBy(G.shop,c=>cost(c))}
+function cheapValue(){const c=cheapest();return c?c.f+cost(c)*.8:0}
+function tradePairs(p){const out=[];p.members.forEach(a=>rivals(p).forEach(o=>o.members.forEach(b=>{if(cost(b)<=cost(a)+1)out.push([a,o,b])})));return out}
+function say(t){G.log.unshift(t);if(G.log.length>60)G.log.pop()}
+
+// gains: Midas, Underdog, Prospector, Tinker
+function gain(p,c,n,fromAction){
+  if(n<=0)return;
+  if(fromAction&&c!=='gold'&&p.members.some(m=>(m.id==='midas'||m.copy==='midas')&&m.on!==false))c='gold';
+  if(c==='gold'&&has(p,'underdog')&&G.players.every(o=>o===p||p.res.gold<=o.res.gold))n*=2;
+  p.res[c]+=n;
+  if(fromAction&&c==='gold')p.res.gold+=has(p,'prospector');
+  if(fromAction&&c!=='gold'&&n>=2)p.res.gold+=has(p,'tinker');
+}
+
+// paying for a member: discounts come off the color part first, wild is paid from blue/green/red before gold
+function plan(p,card){
+  let s=card.s,w=card.w,off=p.discount+has(p,'sponsor');
+  const ds=Math.min(s,off);s-=ds;off-=ds;w=Math.max(0,w-off);
+  const res={...p.res},spend={gold:0,red:0,blue:0,green:0},thrift=has(p,'thrift')>0,q=card.q;
+  const needS=(thrift&&q==='gold')?Math.ceil(s/2):s;
+  if(res[q]<needS)return null;res[q]-=needS;spend[q]+=needS;
+  let left=w;
+  while(left>0){const c=['blue','green','red'].filter(c=>res[c]>0).sort((a,b)=>res[b]-res[a])[0]||(res.gold>0?'gold':null);
+    if(!c)return null;res[c]--;spend[c]++;left-=(c==='gold'&&thrift)?2:1}
+  return spend;
+}
+function fplan(p,t){
+  if(t.get===6&&G.six<=0)return null;
+  const res={...p.res},spend={gold:0,red:0,blue:0,green:0};
+  const order=()=>COLORS.filter(c=>res[c]>0).sort((a,b)=>(a==='gold')-(b==='gold')||res[b]-res[a]);
+  const cols=order();if(cols.length<t.div)return null;
+  for(let i=0;i<t.div;i++){res[cols[i]]--;spend[cols[i]]++}
+  let left=t.cost-t.div;while(left>0){const c=order()[0];if(!c)return null;res[c]--;spend[c]++;left--}
+  return spend;
+}
+const payStr=s=>Object.entries(s).filter(([,v])=>v).map(([c,v])=>`${v} ${c}`).join(', ')||'nothing';
+function spendRes(p,s){for(const c in s)p.res[c]-=s[c]}
+
+async function recruit(p,card,free){
+  G.shop.splice(G.shop.indexOf(card),1);refill();
+  let paid='free';
+  if(!free){const s=plan(p,card);spendRes(p,s);paid=payStr(s);p.discount=0}
+  const before={rec:has(p,'recruiter'),pros:has(p,'proselytizer'),purse:has(p,'coinpurse')};
+  p.members.push(card);G.recruits++;p.turnRecruits++;
+  p.res.red+=before.rec;p.bonus+=before.pros;
+  if(card.q!=='gold')p.res.gold+=before.purse;
+  if(card.q==='gold')G.players.forEach(o=>{const k=has(o,'merchant')-(o===p&&card.id==='merchant'?1:0);if(k>0)o.res.gold+=k});
+  say(`${p.name} recruited ${card.name} (${paid}).`);
+  if(card.id==='seed')gain(p,'gold',memberCount(p),false);
+  if(card.id==='midas')card.on=true;
+  if(card.id==='hustler')card.color=await pick(p,'Hustler: actions in which color give you +1 gold?',COLORS.map(c=>({label:CNAME[c],value:c})),os=>os.find(o=>o.value==='gold'));
+  if(card.id==='doppel'){const own=p.members.filter(m=>m!==card&&m.id!=='doppel');
+    if(own.length){const t=await pick(p,'Doppelganger: copy which of your members?',own.map(m=>({label:m.name,value:m})),os=>os.find(o=>['banker','prospector','recruiter','proselytizer','host'].includes(o.value.id))||os[0]);if(t){card.copy=t.id;card.copyName=t.name}}}
+  if(card.id==='mentor'){const c=cheapest();if(c)await recruit(p,c,true)}
+}
+async function buyFollowers(p,t){
+  const s=fplan(p,t);spendRes(p,s);p.bonus+=t.get;if(t.get===6){G.six--;if(G.six<=0){G.endEarly=true;say('The last 6-follower buy is gone. The game ends after this round.')}}
+  p.res.red+=has(p,'crowd');rivals(p).forEach(o=>o.res.gold+=has(o,'taxman'));
+  say(`${p.name} bought ${t.get} follower${t.get>1?'s':''} (${payStr(s)}).`);
+}
+function activate(p,card){
+  if(card.used)return;card.used=true;
+  if(card.id==='speculator'){gain(p,'gold',p.res.gold,false);say(`${p.name} used Speculator: gold doubled to ${p.res.gold}.`)}
+  if(card.id==='jackpot'){const r=Math.max(0,...rivals(p).map(o=>o.res.gold));gain(p,'gold',r,false);say(`${p.name} used Jackpot: +${r} gold.`)}
+}
+
+// ===== Input (humans click, bots decide) =====
+const isHuman=p=>p&&!p.bot;
+async function botPause(){if(AUTO)return;await sleep(cfg.speed==='fast'?140:520)}
+async function pick(p,title,options,botFn){
+  if(!options.length)return null;
+  if(p.bot){await botPause();const o=botFn?botFn(options):options[0];return o?o.value:null}
+  return new Promise(res=>{G.waiting={type:'pick',title,options,res:v=>{G.waiting=null;res(v)}};render()});
+}
+function openSlots(){const out=[];Q.forEach((q,qi)=>q.acts.forEach((a,i)=>{if(a.r<=G.round&&G.slots[qi+'-'+i]===undefined)out.push([qi,i])}));return out}
+async function choosePlace(p){
+  if(p.bot){await botPause();
+    const os=openSlots().map(([q,i])=>{const a=Q[q].acts[i];let v=a.est(p)+Math.random()*1.2;
+      const hu=p.members.filter(m=>m.id==='hustler'&&m.color===Q[q].c).length;v+=hu;return {q,i,v}});
+    const b=maxBy(os,o=>o.v);return [b.q,b.i]}
+  return new Promise(res=>{G.waiting={type:'place',res:v=>{G.waiting=null;res(v)}};render()});
+}
+async function chooseBuy(p){
+  if(p.bot){await botPause();return botBuy(p)}
+  return new Promise(res=>{G.waiting={type:'buy',res:v=>{G.waiting=null;res(v)}};render()});
+}
+function botBuy(p){
+  // spend once-per-game members in the last round
+  if(G.round===3)p.members.filter(m=>m.act&&!m.used).forEach(m=>activate(p,m));
+  const last=(G.round===3||G.endEarly)&&p.left<=1;
+  const tiers=TIERS.filter(t=>fplan(p,t));
+  if(last&&tiers.length)return {tier:maxBy(tiers,t=>t.get)};
+  const cards=G.shop.filter(c=>plan(p,c)).map(c=>({c,v:c.f*1.4+(c.text.startsWith('Stand-in')?0:1.6)+cost(c)*.3-(G.round===3?cost(c)*.5:0)}));
+  const best=maxBy(cards,x=>x.v);
+  if(best&&best.v>1.5)return {card:best.c};
+  const six=tiers.find(t=>t.get===6);if(six)return {tier:six};
+  if(G.round>=2&&tiers.find(t=>t.get===3)&&Object.values(p.res).reduce((a,b)=>a+b,0)>=7)return {tier:TIERS[1]};
+  return null;
+}
+
+// ===== Game flow =====
+async function play(){
+  G=newState();refill();render();
+  // Setup: each player picks 2 starting resources, first seat to last, everyone watching
+  G.phase='setup';
+  for(const p of G.players){G.cur=p;
+    for(let k=0;k<2;k++){const c=await pick(p,`${p.name}: pick a starting resource (${k+1} of 2)`,COLORS.map(c=>({label:CNAME[c],value:c})),os=>os[Math.floor(Math.random()*os.length)]);p.res[c]++;say(`${p.name} starts with +1 ${c}.`);render()}}
+  for(G.round=1;G.round<=3;G.round++){
+    startRound();render();
+    for(G.turn=0;G.turn<G.order.length;G.turn++){await turn(G.order[G.turn]);}
+    endRound();render();
+    if(G.endEarly)break;
+  }
+  finish();
+}
+function startRound(){
+  G.slots={};G.recruits=0;G.phase='place';
+  const n=WORKERS[G.round-1];
+  G.players.forEach(p=>{p.left=n;p.res.gold+=3*has(p,'banker');p.res.red+=Math.floor(memberCount(p)/2)*has(p,'host');
+    if(has(p,'investor')){p.invest=Math.floor(p.res.gold/2);p.res.gold-=p.invest;if(p.invest)say(`${p.name}'s Investor sets aside ${p.invest} gold.`)}});
+  const base=[...G.players].sort((a,b)=>followers(a)-followers(b)||b.seat-a.seat);
+  G.order=[];for(let k=0;k<n;k++)G.order.push(...(k%2?[...base].reverse():base));
+  say(`Round ${['I','II','III'][G.round-1]} begins. ${base[0].name} picks first.`);
+}
+async function turn(p){
+  G.cur=p;G.phase='place';p.turnRecruits=0;render();
+  const [q,i]=await choosePlace(p);const a=Q[q].acts[i];
+  G.slots[q+'-'+i]=p.seat;p.left--;
+  say(`${p.name} took ${a.name} (${CNAME[Q[q].c]}).`);
+  await a.run(p);
+  p.members.filter(m=>m.id==='hustler'&&m.color===Q[q].c).forEach(()=>p.res.gold++);
+  G.phase='buy';render();
+  let b=await chooseBuy(p);
+  while(b&&b.use){activate(p,b.use);render();b=await chooseBuy(p)}
+  if(b&&b.card&&plan(p,b.card))await recruit(p,b.card,false);
+  else if(b&&b.tier&&fplan(p,b.tier))await buyFollowers(p,b.tier);
+  else say(`${p.name} passed.`);
+  if(p.turnRecruits>=2&&has(p,'drive')){p.res.red+=2*has(p,'drive');say(`${p.name}'s Recruiting Drive: +${2*has(p,'drive')} red.`)}
+  render();
+}
+function endRound(){
+  const v=VAL[G.round-1],msg=[];
+  G.players.forEach(p=>{if(p.invest){p.res.gold+=2*p.invest;say(`${p.name}'s Investor returns ${2*p.invest} gold.`);p.invest=0}});
+  Q.forEach(q=>{
+    let score=p=>q.c==='red'?memberCount(p)*100+redCount(p):p.res[q.c];
+    const top=Math.max(...G.players.map(score));if(top<=0)return;
+    const win=G.players.filter(p=>score(p)===top);win.forEach(p=>{p.bonus+=v;p.contest+=v});
+    msg.push(`${q.score}: ${win.map(p=>p.name).join(' & ')} +${v}`);
+  });
+  say(`Round end. ${msg.join(' · ')||'No one scored.'}`);
+}
+function finish(){
+  G.phase='over';G.cur=null;
+  G.players.forEach(p=>{
+    const ty=Math.floor(p.res.gold/3)*has(p,'tycoon'),mob=redCount(p)*has(p,'mob'),pa=Math.floor(memberCount(p)/2)*has(p,'patriarch');
+    p.final={ty,mob,pa};p.bonus+=ty+mob+pa;
+  });
+  const ranked=[...G.players].sort((a,b)=>followers(b)-followers(a));
+  G.results=ranked;say(`Game over. ${ranked[0].name} wins with ${followers(ranked[0])} followers.`);
+  render();
+  if(AUTO)console.log('GAME_OVER',JSON.stringify(ranked.map(p=>({n:p.name,f:followers(p),m:memberCount(p),res:p.res,contest:p.contest}))));
+}
+
+// ===== Rendering =====
+const RING={1:{r0:142,r1:198,r:170,n:3},2:{r0:90,r1:142,r:116,n:2},3:{r0:34,r1:90,r:62,n:1}};
+const CX=200,CY=200;
+function polar(a,r){const t=(a-90)*Math.PI/180;return [CX+r*Math.cos(t),CY+r*Math.sin(t)]}
+function arc(a0,a1,r0,r1){const [x0,y0]=polar(a0,r1),[x1,y1]=polar(a1,r1),[x2,y2]=polar(a1,r0),[x3,y3]=polar(a0,r0);
+  return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`}
+const qC=q=>180+q*90, col=q=>`var(--${Q[q].c})`;
+const seatCol=s=>G.players.find(p=>p.seat===s)?.col||'#fff';
+const banner=(q,t)=>`${Q[q].score.toUpperCase()}  +${VAL[t-1]}`;
+const humanTurn=type=>G&&G.waiting&&G.waiting.type===type&&isHuman(G.cur);
+
+function drawWheel(){
+  const R0=Math.max(1,G.round);
+  let s=`<circle cx="${CX}" cy="${CY}" r="200" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/>`;
+  Q.forEach((g,q)=>{
+    const c=qC(q),a0=c-45,a1=c+45,f=q===facing;
+    [1,2,3].forEach(t=>{
+      const R=RING[t],open=t<=R0;
+      s+=`<path d="${arc(a0+.8,a1-.8,R.r0+1,R.r1-1)}" fill="${col(q)}" fill-opacity="${open?(f?.26:.12):.04}" stroke="${col(q)}" stroke-opacity="${open?.55:.18}"/>`;
+      const br=R.r1-6.5,id=`b${q}${t}`,[bx0,by0]=polar(a1-3,br),[bx1,by1]=polar(a0+3,br);
+      s+=`<path d="${arc(a0+1.6,a1-1.6,R.r1-12,R.r1-1.6)}" fill="var(--table)" fill-opacity="${open?.55:.3}"/>`;
+      s+=`<path id="${id}" d="M${bx0},${by0} A${br},${br} 0 0 0 ${bx1},${by1}" fill="none"/>`;
+      s+=`<text font-size="7" font-weight="700" letter-spacing="1.2" fill="${col(q)}" fill-opacity="${open?1:.45}" dominant-baseline="central"><textPath href="#${id}" startOffset="50%" text-anchor="middle">${banner(q,t)}</textPath></text>`;
+    });
+    g.acts.forEach((a,i)=>{
+      const t=a.r,R=RING[t],idx=g.acts.filter((x,j)=>x.r===t&&j<i).length;
+      const span=t===1?66:t===2?44:0,ang=R.n===1?c:(c+span/2)-idx*(span/(R.n-1));
+      const [x,y]=polar(ang,R.r),o=G.slots[q+'-'+i],open=t<=R0,rad=t===3?15:16;
+      const can=open&&o===undefined&&humanTurn('place');
+      s+=`<g class="slot" data-q="${q}" data-i="${i}"><title>${a.name}: ${a.text}</title>`;
+      s+=`<circle cx="${x}" cy="${y}" r="${rad}" fill="var(--table)" stroke="${col(q)}" stroke-opacity="${open?1:.3}" stroke-width="${can?2.5:1.5}"/>`;
+      if(o!==undefined)s+=`<circle cx="${x}" cy="${y}" r="${rad-5}" fill="${seatCol(o)}"/>`;
+      else if(open)s+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${col(q)}" font-size="8.5" font-weight="700" transform="rotate(${ang+180} ${x} ${y})">${a.name.replace(/[^A-Za-z]/g,'').slice(0,4).toUpperCase()}</text>`;
+      else s+=`<circle cx="${x}" cy="${y}" r="2.5" fill="${col(q)}" fill-opacity=".4"/>`;
+      s+=`</g>`;
+    });
+  });
+  const w=document.getElementById('wheel');w.innerHTML=s;w.style.transform=`rotate(${rot}deg)`;
+  w.querySelectorAll('.slot').forEach(el=>el.addEventListener('click',()=>{if(moved)return;clickSlot(+el.dataset.q,+el.dataset.i)}));
+}
+function clickSlot(q,i){
+  if(!humanTurn('place'))return;const a=Q[q].acts[i];
+  if(a.r>G.round||G.slots[q+'-'+i]!==undefined)return;G.waiting.res([q,i]);
+}
+const costHtml=c=>{const parts=[];if(c.s)parts.push(`<span><i style="background:var(--${c.q})"></i>${c.s} ${c.q}</span>`);if(c.w)parts.push(`<span>${c.w} any</span>`);return parts.join(' + ')||'free'};
+
+function render(){
+  if(!G)return;
+  const cur=G.cur;
+  let st='';
+  if(G.phase==='over')st='<b>Game over</b>';
+  else if(G.waiting&&G.waiting.type==='pick'&&isHuman(cur))st=`<b>${G.waiting.title}</b>`;
+  else if(cur&&cur.bot)st=`<b>${cur.name}</b> is thinking…`;
+  else if(G.phase==='setup')st=`<b>Setup</b> · pick starting resources`;
+  else if(cur)st=`Round <b>${['I','II','III'][G.round-1]}</b> · <b style="color:${cur.col}">${cur.name}</b> · ${G.phase==='buy'?'buy one thing, or pass':'place a worker'}`;
+  document.getElementById('status').innerHTML=st;
+
+  document.getElementById('players').innerHTML=G.players.map(p=>{
+    const mine=isHuman(p)&&cur===p;
+    const chips=p.members.length?p.members.map(m=>{
+      const usable=mine&&G.waiting?.type==='buy'&&m.act&&!m.used;
+      const tog=m.id==='midas'&&isHuman(p);
+      const extra=m.copy?` → ${m.copyName}`:m.color?` · ${CNAME[m.color]}`:m.n>1?` ×${m.n}`:'';
+      return `<button class="chip ${usable||tog?'use':''} ${(m.used||m.on===false)?'off':''}" style="--c:var(--${m.q})" data-uid="${m.uid}" data-pl="${p.seat}" title="${m.name}: ${m.text}">${m.name}${extra}${usable?' · use':''}${m.id==='midas'?(m.on===false?' · off':' · on'):''}</button>`}).join('')
+      :'<em>no members yet</em>';
+    return `<div class="pl ${cur===p&&G.phase!=='over'?'active':''}" style="--pc:${p.col}">
+      <div class="top"><span class="nm"><i></i>${p.name}${p.bot?' · bot':''}</span><span class="fol">${followers(p)}<small>${followers(p)===1?'follower':'followers'}</small></span></div>
+      <div class="res">${COLORS.map(c=>`<span><i style="background:var(--${c})"></i>${p.res[c]}</span>`).join('')}<span class="meta">${'●'.repeat(p.left)} · ${memberCount(p)} members${p.discount?` · −${p.discount} next`:''}${p.invest?` · ${p.invest} invested`:''}</span></div>
+      <div class="chips">${chips}</div></div>`}).join('');
+  document.querySelectorAll('.chip.use').forEach(b=>b.onclick=()=>{
+    const p=G.players.find(x=>x.seat===+b.dataset.pl),m=p.members.find(x=>x.uid===+b.dataset.uid);
+    if(m.id==='midas'){m.on=m.on===false;render();return}
+    if(humanTurn('buy')&&G.cur===p)G.waiting.res({use:m});
+  });
+
+  drawWheel();
+  const side=document.getElementById('side');let h='';
+  if(G.phase==='over'){
+    h+=`<section class="panel"><h2>Final count</h2><table class="res-t"><tr><th>Player</th><th>Followers</th><th>Members</th><th>Contests</th><th>Bonus</th></tr>
+      ${G.results.map(p=>`<tr><td style="color:${p.col}">${p.name}</td><td>${followers(p)}</td><td>${memberCount(p)}</td><td>${p.contest}</td><td>${p.final.ty+p.final.mob+p.final.pa}</td></tr>`).join('')}</table>
+      <div><button class="btn pri" id="again">New game</button></div></section>`;
+  }
+  if(G.waiting&&G.waiting.type==='pick'&&isHuman(cur)){
+    h+=`<section class="prompt"><p>${G.waiting.title}</p><div class="opts">${G.waiting.options.map((o,k)=>`<button class="btn" data-opt="${k}">${o.label}</button>`).join('')}</div></section>`;
+  }
+  if(G.phase!=='over'){
+    const g=Q[facing],canPlace=humanTurn('place');
+    h+=`<section class="panel"><h2 style="color:${col(facing)}">${CNAME[g.c]}<small>facing you${g.stand?' · stand-in quadrant':''}</small></h2>
+      <div class="score" style="--c:${col(facing)}">Round end: ${g.score.toLowerCase()} takes the ring’s followers (+2 / +4 / +6). Ties all score.</div>`;
+    [1,2,3].forEach(t=>{
+      h+=`<div class="tier">Round ${['I','II','III'][t-1]}${t>Math.max(1,G.round)?' · locked':''}</div><div class="acts">`;
+      g.acts.forEach((a,i)=>{if(a.r!==t)return;const o=G.slots[facing+'-'+i];
+        h+=`<button class="act" style="--c:${col(facing)}" data-i="${i}" ${(o!==undefined||!canPlace||t>G.round)?'disabled':''}>${o!==undefined?`<i class="who" style="background:${seatCol(o)}"></i>`:''}<b>${a.name}</b><span>${a.text}</span></button>`});
+      h+=`</div>`;
+    });
+    h+=`</section>`;
+    const canBuy=humanTurn('buy');
+    h+=`<section class="panel"><h2>Shop<small>${G.pile.length} in the pile${canBuy?' · tap one to recruit':''}</small></h2><div class="shop">${G.shop.map(c=>{const ok=canBuy&&plan(cur,c);
+      return `<button class="card ${ok?'can':''}" style="--c:var(--${c.q})" data-uid="${c.uid}" ${ok?'':'tabindex="-1"'}><div class="row"><b>${c.name}</b><span class="fv">${c.f}★</span></div><span class="eff">${c.text}</span><div class="row cost">${costHtml(c)}${c.n>1?`<span>${c.n} members</span>`:''}</div></button>`}).join('')}</div>
+      <div class="fbuy">${TIERS.map((t,k)=>{const ok=canBuy&&fplan(cur,t);return `<button class="fb ${ok?'can':''}" data-tier="${k}"><b>+${t.get} follower${t.get>1?'s':''}</b><span>${t.label.split('→')[0]}${t.get===6?` · ${G.six} left`:''}</span></button>`}).join('')}
+      ${canBuy?'<button class="btn" id="pass">Pass</button>':''}</div></section>`;
+  }
+  h+=`<div class="log">${G.log.slice(0,14).map(l=>`<div>${l}</div>`).join('')}</div>`;
+  side.innerHTML=h;
+  side.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>G.waiting.res(G.waiting.options[+b.dataset.opt].value));
+  side.querySelectorAll('.act').forEach(b=>b.onclick=()=>clickSlot(facing,+b.dataset.i));
+  side.querySelectorAll('.card.can').forEach(b=>b.onclick=()=>{const c=G.shop.find(x=>x.uid===+b.dataset.uid);G.waiting.res({card:c})});
+  side.querySelectorAll('.fb.can').forEach(b=>b.onclick=()=>G.waiting.res({tier:TIERS[+b.dataset.tier]}));
+  const ps=document.getElementById('pass');if(ps)ps.onclick=()=>G.waiting.res(null);
+  const ag=document.getElementById('again');if(ag)ag.onclick=showSetup;
+}
+
+// ===== Seat setup =====
+function showSetup(){
+  const ov=document.getElementById('overlay');ov.hidden=false;
+  const draw=()=>{ov.innerHTML=`<div class="dialog"><h2>New game</h2>
+    <p class="hint">Hot-seat: everyone plays on this screen. Bots fill the other seats. Gold and Red are designed; Blue and Green are plain stand-ins.</p>
+    ${cfg.seats.map((s,i)=>`<div class="seat" style="--pc:${PCOL[i]}"><span class="nm">P${i+1}</span><div class="seg">${['human','bot','off'].map(v=>`<button data-s="${i}" data-v="${v}" class="${s===v?'on':''}">${v==='human'?'Person':v==='bot'?'Bot':'Empty'}</button>`).join('')}</div></div>`).join('')}
+    <div class="seat"><span>Bot speed</span><div class="seg">${['normal','fast'].map(v=>`<button data-sp="${v}" class="${cfg.speed===v?'on':''}">${v==='normal'?'Normal':'Fast'}</button>`).join('')}</div></div>
+    <button class="btn pri" id="go" ${cfg.seats.filter(s=>s!=='off').length<2?'disabled':''}>Start</button></div>`;
+    ov.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{cfg.seats[+b.dataset.s]=b.dataset.v;draw()});
+    ov.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{cfg.speed=b.dataset.sp;draw()});
+    ov.querySelector('#go').onclick=()=>{ov.hidden=true;play()};
+  };draw();
+}
+
+// ===== Spinning =====
+function applyRot(){
+  const w=document.getElementById('wheel');w.style.transform=`rotate(${rot}deg)`;
+  let best=0,bd=1e9;Q.forEach((g,q)=>{const a=((qC(q)+rot-180)%360+540)%360-180;if(Math.abs(a)<bd){bd=Math.abs(a);best=q}});
+  if(best!==facing){facing=best;render()}
+}
+let anim=null,drag=null,moved=false;
+function stopAnim(){if(anim)cancelAnimationFrame(anim);anim=null}
+function nudge(deg){stopAnim();const from=rot,to=rot+deg,t0=performance.now(),dur=matchMedia('(prefers-reduced-motion: reduce)').matches?1:600;
+  const step=n=>{const k=Math.min(1,(n-t0)/dur),e=1-Math.pow(1-k,3);rot=from+(to-from)*e;applyRot();if(k<1)anim=requestAnimationFrame(step);else anim=null};anim=requestAnimationFrame(step)}
+const stage=document.getElementById('stage');
+document.getElementById('left').onclick=()=>nudge(-90);
+document.getElementById('right').onclick=()=>nudge(90);
+addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input'))return;if(e.key==='ArrowLeft')nudge(-90);if(e.key==='ArrowRight')nudge(90)});
+function angAt(e){const b=stage.getBoundingClientRect();return Math.atan2(e.clientY-(b.top+b.height/2),e.clientX-(b.left+b.width/2))*180/Math.PI}
+stage.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;stopAnim();drag={a:angAt(e)};moved=false});
+stage.addEventListener('pointermove',e=>{if(!drag)return;const a=angAt(e);let d=a-drag.a;if(d>180)d-=360;if(d<-180)d+=360;
+  if(Math.abs(d)>3&&!moved){moved=true;stage.setPointerCapture(e.pointerId)}
+  if(moved){drag.a=a;rot+=d;applyRot()}});
+stage.addEventListener('pointerup',()=>{if(!drag)return;drag=null;if(!moved)return;
+  const snap=Math.round((rot)/90)*90;nudge(snap-rot);setTimeout(()=>moved=false,0)});
+
+if(AUTO){cfg.seats=['bot','bot','bot','bot'];play()}else{G=newState();refill();render();showSetup()}
+</script>

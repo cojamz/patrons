@@ -1,0 +1,289 @@
+{
+ "speed": "steady",
+ "cpu": 1,
+ "secs": 15,
+ "totals": {
+  "UpdateLayoutTree": {
+   "n": 319,
+   "ms": 246,
+   "max": 21.6
+  },
+  "PrePaint": {
+   "n": 342,
+   "ms": 183,
+   "max": 66
+  },
+  "Paint": {
+   "n": 296,
+   "ms": 150,
+   "max": 9
+  },
+  "Layerize": {
+   "n": 286,
+   "ms": 187,
+   "max": 6.9
+  },
+  "Commit": {
+   "n": 286,
+   "ms": 175,
+   "max": 3.9
+  },
+  "UpdateLayer": {
+   "n": 3167,
+   "ms": 8,
+   "max": 1.6
+  },
+  "RunTask": {
+   "n": 3356,
+   "ms": 3463,
+   "max": 109.6
+  },
+  "FunctionCall": {
+   "n": 1071,
+   "ms": 554,
+   "max": 109.4
+  },
+  "FireAnimationFrame": {
+   "n": 139,
+   "ms": 62,
+   "max": 20.1
+  },
+  "ParseHTML": {
+   "n": 24,
+   "ms": 8,
+   "max": 3.5
+  },
+  "Layout": {
+   "n": 57,
+   "ms": 91,
+   "max": 24
+  },
+  "HitTest": {
+   "n": 70,
+   "ms": 40,
+   "max": 2.7
+  },
+  "TimerFire": {
+   "n": 27,
+   "ms": 11,
+   "max": 5.7
+  },
+  "MinorGC": {
+   "n": 11,
+   "ms": 51,
+   "max": 13.8
+  },
+  "V8.GC_SCAVENGER": {
+   "n": 11,
+   "ms": 47,
+   "max": 13.7
+  }
+ },
+ "styleRecalcElements": {
+  "n": 319,
+  "p50": 14,
+  "max": 1679,
+  "over500": 3
+ },
+ "bigTasks": [
+  {
+   "ms": 110,
+   "by": {
+    "FunctionCall": 109.5,
+    "UpdateLayoutTree": 12.8,
+    "Layout": 14.1
+   },
+   "fn": [
+    "hn@index-ByMJI7Me.js:28",
+    "?@index-ByMJI7Me.js:43"
+   ],
+   "styleElements": [
+    652,
+    176,
+    4,
+    1
+   ]
+  },
+  {
+   "ms": 109,
+   "by": {
+    "FunctionCall": 109.2,
+    "UpdateLayoutTree": 32.7,
+    "Layout": 26.8
+   },
+   "fn": [
+    "hn@index-ByMJI7Me.js:28",
+    "?@index-ByMJI7Me.js:43"
+   ],
+   "styleElements": [
+    23,
+    1679,
+    110,
+    1
+   ]
+  },
+  {
+   "ms": 75,
+   "by": {
+    "UpdateLayoutTree": 0.8,
+    "Layout": 0.9,
+    "PrePaint": 0.5,
+    "FunctionCall": 0.2,
+    "FireAnimationFrame": 0,
+    "Paint": 1.7,
+    "Layerize": 2
+   },
+   "fn": [
+    "ci@index-ByMJI7Me.js:40",
+    "ci@index-ByMJI7Me.js:40"
+   ],
+   "styleElements": [
+    4,
+    18
+   ]
+  },
+  {
+   "ms": 72,
+   "by": {
+    "UpdateLayoutTree": 0.8,
+    "PrePaint": 66,
+    "Paint": 0.7,
+    "Layerize": 1.6
+   },
+   "fn": [],
+   "styleElements": [
+    20
+   ]
+  },
+  {
+   "ms": 68,
+   "by": {
+    "FunctionCall": 1.1,
+    "FireAnimationFrame": 1.1,
+    "UpdateLayoutTree": 1.3,
+    "Layout": 1.1,
+    "PrePaint": 0.4,
+    "Paint": 2.4,
+    "Layerize": 2.9
+   },
+   "fn": [
+    "Ht@CultSeat-Bvk80Xz3.js:1",
+    "ci@index-ByMJI7Me.js:40"
+   ],
+   "styleElements": [
+    42
+   ]
+  },
+  {
+   "ms": 59,
+   "by": {
+    "UpdateLayoutTree": 2.3,
+    "Layout": 0.8,
+    "PrePaint": 0.5,
+    "FireAnimationFrame": 0.1,
+    "FunctionCall": 0.1,
+    "Paint": 3.2,
+    "Layerize": 3.5
+   },
+   "fn": [
+    "Ht@CultSeat-Bvk80Xz3.js:1"
+   ],
+   "styleElements": [
+    4,
+    19
+   ]
+  },
+  {
+   "ms": 56,
+   "by": {
+    "FunctionCall": 55.9,
+    "UpdateLayoutTree": 2.9,
+    "Layout": 3.7
+   },
+   "fn": [
+    "hn@index-ByMJI7Me.js:28",
+    "?@index-ByMJI7Me.js:43"
+   ],
+   "styleElements": [
+    212
+   ]
+  },
+  {
+   "ms": 56,
+   "by": {
+    "FunctionCall": 55.6
+   },
+   "fn": [
+    "hn@index-ByMJI7Me.js:28"
+   ],
+   "styleElements": []
+  },
+  {
+   "ms": 48,
+   "by": {
+    "PrePaint": 1.5,
+    "FunctionCall": 0.1,
+    "FireAnimationFrame": 0,
+    "UpdateLayoutTree": 0.7,
+    "Paint": 11,
+    "Layerize": 2.2
+   },
+   "fn": [
+    "ci@index-ByMJI7Me.js:40",
+    "ci@index-ByMJI7Me.js:40"
+   ],
+   "styleElements": [
+    25
+   ]
+  },
+  {
+   "ms": 47,
+   "by": {
+    "FunctionCall": 46.8
+   },
+   "fn": [
+    "hn@index-ByMJI7Me.js:28",
+    "?@index-ByMJI7Me.js:43"
+   ],
+   "styleElements": []
+  },
+  {
+   "ms": 47,
+   "by": {
+    "FunctionCall": 0,
+    "FireAnimationFrame": 0,
+    "UpdateLayoutTree": 0.7,
+    "Layout": 1.4,
+    "PrePaint": 0.4,
+    "Paint": 0.5,
+    "Layerize": 1.3
+   },
+   "fn": [
+    "B@CultSeat-Bvk80Xz3.js:1",
+    "Ht@CultSeat-Bvk80Xz3.js:1"
+   ],
+   "styleElements": [
+    23
+   ]
+  },
+  {
+   "ms": 46,
+   "by": {
+    "PrePaint": 0.9,
+    "UpdateLayoutTree": 8.3,
+    "Layout": 5.9,
+    "FunctionCall": 35.2
+   },
+   "fn": [
+    "?@index-ByMJI7Me.js:43",
+    "?@index-ByMJI7Me.js:43"
+   ],
+   "styleElements": [
+    5,
+    75,
+    2,
+    34
+   ]
+  }
+ ]
+}

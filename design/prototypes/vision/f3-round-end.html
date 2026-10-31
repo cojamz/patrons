@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1270">
+<title>Lamplit Table · Reckoning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,500&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="vision.css">
+<script src="px.js"></script>
+<script src="board.js"></script>
+<script src="scene.js"></script>
+<style>
+.table::before{content:"";position:absolute;inset:0;background:rgba(8,5,3,.42);z-index:0;pointer-events:none}
+.table > *{z-index:1}
+.board .sock{opacity:.42}
+.board .sock2.ii{opacity:1;border-color:#e0a23a;box-shadow:0 0 10px rgba(255,200,120,.6)}
+.board .plaque{display:none}
+.board{filter:brightness(.78) saturate(.85) drop-shadow(0 18px 22px rgba(0,0,0,.55)) !important}
+.stand{position:absolute;border-radius:10px;padding:9px 11px 10px;z-index:4;width:178px}
+.stand h5{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px}
+.stand h5 small{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--ink-3);letter-spacing:.02em}
+.stand .rows{margin-top:6px;display:flex;flex-direction:column;gap:3px}
+.stand .r{display:flex;align-items:center;gap:6px;height:22px}
+.stand .r .fig{width:22px;display:grid;place-items:center}
+.stand .r .tok{display:flex}
+.stand .r .tok svg{margin-right:-4px}
+.stand .r b{font-family:var(--serif);font-size:15px;color:var(--ink);margin-left:6px}
+.stand .r.win{background:linear-gradient(90deg,rgba(255,217,154,.55),rgba(255,217,154,0));border-radius:6px}
+.stand .r.win::after{content:"+2";margin-left:auto;font-family:var(--serif);font-weight:700;color:#7a4f10;font-size:14px;padding-right:4px}
+.stand.live{box-shadow:0 0 0 2px #2a1f17,0 0 0 5px #ffd99a,0 18px 40px rgba(0,0,0,.6),0 0 60px rgba(255,200,120,.35)}
+.seal{position:absolute;z-index:4;display:flex;align-items:center;gap:6px;padding:4px 10px 4px 5px;border-radius:16px;background:#f4ebd7;color:#2a1f17;font-weight:700;font-size:13px;box-shadow:0 0 0 1.5px var(--q),0 4px 10px rgba(0,0,0,.45);transform:translate(-50%,-50%)}
+.seal .wax{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d0503f,#8e2a1f);color:#ffe9d0;display:grid;place-items:center;font-size:12px}
+.seal.wait{opacity:.6;font-weight:500;color:#5f4e3d}
+.ledger{position:absolute;left:664px;top:70px;width:588px;border-radius:12px;padding:16px 20px 16px}
+.ledger h3{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--ink);line-height:1}
+.ledger h3 small{font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--ink-3);margin-left:8px}
+.ln{display:grid;grid-template-columns:22px 150px 1fr 92px;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink)}
+.ln:first-of-type{margin-top:12px}
+.ln .q{font-weight:700}
+.ln .q small{display:block;font-weight:500;font-size:11.5px;color:var(--ink-3)}
+.ln .cts{display:flex;gap:10px;flex-wrap:wrap;color:var(--ink-2)}
+.ln .cts span{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.ln .cts span svg{width:14px;height:14px}
+.ln .cts .lead{color:var(--ink);font-weight:700}
+.ln .res{text-align:right;font-family:var(--serif);font-weight:700}
+.ln.done .res{color:#7a4f10}
+.ln.now{background:linear-gradient(90deg,rgba(255,217,154,.45),rgba(255,217,154,.0));margin:0 -20px;padding-left:20px;padding-right:20px}
+.ln.next{opacity:.5}
+.ln.next .res{font-family:var(--sans);font-weight:500;color:var(--ink-3);font-size:12.5px}
+.foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;gap:16px}
+.foot p{font-size:13px;color:var(--ink-2);line-height:1.35}
+.foot p b{color:var(--ink)}
+.cont{font-family:var(--serif);font-weight:700;font-size:15px;background:#2a1f17;color:#f6eedb;border-radius:18px;padding:7px 18px;white-space:nowrap}
+.mine{left:664px;top:480px;width:588px;height:206px;border-radius:14px;padding:14px 16px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.06);opacity:.5}
+.mine .row{display:flex;align-items:flex-end;gap:26px;margin-top:10px}
+.arc{position:absolute;inset:0;z-index:5;pointer-events:none}
+.fly{position:absolute;z-index:6;display:flex;align-items:center;gap:3px;font-family:var(--serif);font-weight:700;font-size:15px;color:#2a1f17;background:#ffd99a;border-radius:14px;padding:2px 9px 2px 6px;box-shadow:0 0 18px rgba(255,200,120,.8)}
+.ringnote{position:absolute;z-index:4;font-size:10.5px;color:#ffd99a;letter-spacing:.08em;text-transform:uppercase;text-align:center;background:#2a1f17;border-radius:10px;padding:2px 9px;transform:translateX(-50%);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="table" id="T" style="--lx:344px;--ly:374px">
+  <div class="prompt" style="left:34px;top:20px">
+    <div class="big"><em>The Reckoning.</em> Round I ends.</div>
+    <div class="steps" style="text-transform:none;letter-spacing:0;font-size:13px">Each quadrant pays its leader +2 followers, one at a time.</div>
+  </div>
+  <div class="menu"><i></i></div>
+  <div class="rail" id="rail" style="right:66px;top:18px"></div>
+  <div class="ledger paper" id="ledger"></div>
+  <div class="mine"><div class="hd">Your table</div><div class="row"><div class="stacks" id="stacks"></div></div></div>
+</div>
+<script>
+const { sp, inl, SEAT, Q, QUADS, rail, stacks } = Scene;
+const T = document.getElementById('T');
+const S = SEAT;
+const quads = QUADS({ joint: S.you, rush: S.you, discount: S.ossian, toast: S.ilse, gift: S.ossian, alms: S.ossian, pickpocket: S.ilse, tipoff: S.ilse, hideout: S.you, hum: S.wren, chant: S.wren, echo: S.wren });
+quads[0].leader = S.you; quads[1].leader = S.ossian; quads[2].leader = S.ilse; quads[3].leader = S.wren;
+Board.render(T, { x: 344, y: 374, size: 572, round: 1, legal: false, quads });
+// round II's ring glows: it opens when you continue
+document.querySelectorAll('.board .sock2').forEach((el, i) => { if (i % 3 !== 2) el.classList.add('ii'); });
+const r = [['Wren', S.wren, 3, 0, 0, 'echo'], ['Ossian', S.ossian, 3, 0, 0, 'alms', 0, '+2 …'], ['You', S.you, 5, 0, 0, 'hideout', 0, '+2 ✓'], ['Ilse', S.ilse, 2, 0, 0, 'toast']];
+document.getElementById('rail').innerHTML = rail(r);
+const pol = (r, a) => Board.pol(344, 374, r, a);
+// contests resolve around the rim, in wheel order: Gold (done) → Silver (now) → Magenta → Green
+{ const [x, y] = pol(277, 90); T.insertAdjacentHTML('beforeend', `<div class="seal" style="--q:${Q.gold};left:${x}px;top:${y}px"><span class="wax">✓</span>${sp('acolyte', 1, S.you)} You +2 <span style="font-weight:500;color:#8a7760">· 4 gold</span></div>`); }
+{ const [x, y] = pol(277, 270); T.insertAdjacentHTML('beforeend', `<div class="seal wait" style="--q:${Q.magenta};left:${x}px;top:${y}px">${sp('magenta', 2)} next</div>`); }
+{ const [x, y] = pol(277, 0); T.insertAdjacentHTML('beforeend', `<div class="seal wait" style="--q:${Q.green};left:${x - 14}px;top:${y}px">${sp('green', 2)} then</div>`); }
+const rows = [['ossian', 5, 1], ['ilse', 3], ['wren', 2], ['you', 1]];
+T.insertAdjacentHTML('beforeend', `<div class="stand paper live" style="left:40px;top:292px">
+  <h5>${sp('silver', 2)} Silver <small>most silver</small></h5>
+  <div class="rows">${rows.map(([who, n, win]) => `<div class="r ${win ? 'win' : ''}"><span class="fig">${sp('acolyte', 1, S[who])}</span><span class="tok">${Array.from({ length: n }, () => sp('silver', 2)).join('')}</span><b>${n}</b></div>`).join('')}</div>
+</div>`);
+// the follower token flies from the contest to the winner's seat on the rail
+T.insertAdjacentHTML('beforeend', `<svg class="arc" width="1270" height="700"><path d="M218,300 C260,120 520,40 742,44" fill="none" stroke="#ffd99a" stroke-width="2.5" stroke-dasharray="2 7" stroke-linecap="round" opacity=".85"/></svg>
+  <div class="fly" style="left:430px;top:78px">+2 ${sp('follower', 2)}</div>`);
+T.insertAdjacentHTML('beforeend', `<div class="ringnote" style="left:344px;top:452px">Ring II opens next</div>`);
+// the ledger: the same numbers the engine scores, in words. Waits for you.
+const g = (c, n, w, lead) => `<span class="${lead ? 'lead' : ''}">${sp('acolyte', 1, S[w])}${n}</span>`;
+document.getElementById('ledger').innerHTML = `
+  <h3>Round I<small>4 contests · leaders score +2 · ties all score</small></h3>
+  <div class="ln done"><span>${sp('gold', 2)}</span><span class="q">Gold<small>most gold</small></span><span class="cts">${g('', 4, 'you', 1)}${g('', 2, 'ossian')}${g('', 1, 'wren')}${g('', 1, 'ilse')}</span><span class="res">You +2</span></div>
+  <div class="ln now"><span>${sp('silver', 2)}</span><span class="q">Silver<small>most silver</small></span><span class="cts">${g('', 5, 'ossian', 1)}${g('', 3, 'ilse')}${g('', 2, 'wren')}${g('', 1, 'you')}</span><span class="res">Ossian +2</span></div>
+  <div class="ln next"><span>${sp('magenta', 2)}</span><span class="q">Magenta<small>most Magenta members</small></span><span class="cts">${g('', 1, 'ilse', 1)}<span>others 0</span></span><span class="res">next</span></div>
+  <div class="ln next"><span>${sp('green', 2)}</span><span class="q">Green<small>most green</small></span><span class="cts">${g('', 7, 'wren', 1)}${g('', 2, 'ilse')}${g('', 1, 'you')}${g('', 0, 'ossian')}</span><span class="res">then</span></div>
+  <div class="foot"><p><b>Round II</b> · 4 workers each · the middle ring opens.<br>Ilse goes first (fewest followers).</p><span class="cont">Continue</span></div>`;
+document.getElementById('stacks').innerHTML = stacks([['gold', 4], ['silver', 1], ['magenta', 0], ['green', 1]]);
+</script>
+</body>
+</html>

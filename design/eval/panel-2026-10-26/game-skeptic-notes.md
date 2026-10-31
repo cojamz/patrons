@@ -1,0 +1,56 @@
+Run blocked: cojamz.github.io:443 denied by egress proxy (403 CONNECT), 2026-10-26 15:26 UTC. No findings.
+
+## Rerun 2026-10-26 on local v0.8.86 (localhost:5290), table Magenta/Red/Blue/Green, Normal bots, default speed Relaxed
+- [blocker] setup: game opens "Your turn - pick an artifact" (Fence/Recruiter/Bargain Bin/Impressionist) - rulebook Setup says take 1 resource of an untaken color; "artifact" appears nowhere in rulebook. shot 017
+- [polish] home tagline "Draft the wheel" vs rulebook "send minions to the wheel". shot 001
+- [polish] home shows build hash "v0.8.86 · 55ea7eb" (developer stamp). shot 001
+- [major] setup cards show "1.0"/"2.0" badges, unexplained. shot 004
+- [major] setup "Round III members join in: Round III / Round II" undefined in rulebook. shot 003
+- [blocker] steal dialog: after first pick (on seat chip) the dialog shifted ~60 px, my 2nd click aimed at P4 red landed on P3 blue; got wrong steal, no undo. shots 028, 031, 032
+- [major] hover popover stays open over the steal dialog after placing, covering P3/P4 rows. shot 026
+- [major] Redistribute hover "You'd get up to +4 magenta, +1 blue your pick"; got +3 magenta +2 blue. shot 025/032
+- [major] "Take all 2" button meaning unclear when 7 resources are offered. shot 028
+- [major] log toast "P2 took Help Yourself" / board face "Steal 1 and 1 [follower]": space names never appear on the wheel; log doesn't say whom P2 stole from. shot 024
+- [major] header "Your turn is over" while P2 is still picking artifact (Your turn should mean... contradictory). shot 021
+- Turn read R1 (P2 Gather/Churn, P4 Even Swap/Chorus, P3 Peek/Build Up): ~7/12 parts right; missed Even Swap counterparty (P3's Busker <-> P4's Double Agent), missed P3 Restocker and P4 Agents recruits.
+- [major] P4 Even Swap moved a member out of P3's seat with no visible trace on board. shot 063 vs log 068
+- [polish] "1 members" grammar on seats. shot 041
+- [major] shop reorders/reflows when a card leaves (new card inserted at top-left, others shift). shot 041
+- [major] pay sheet after Pay shows wrong numbers (Paying 2 magenta, Keeping 2) for ~800 ms during exit. shot 040
+- [polish] taken card flies to the wheel centre and lingers, not to my seat. shot 059
+- [major] Trendsetter's ability prompt is titled "Churn" (the blue space's name) - wrong name for the source. shot 080
+- [polish] details mode turned itself on during the Churn choice and stayed on until round end. shot 080
+- [polish] round summary words "+1 won" / "-1 lost" (P2/P4) unexplained: won what? shot 085
+- [good] round-end scoring: contest-by-contest count-up, winner box, "+2" flying to seat; readable at default.
+- [major] Promote hover "COULD SWAP 99 lit pairs" - a capped/placeholder-looking count. sheet2/098
+- [major] "Promote a member" / "Demote a member" faces describe swaps with the shop ("Swap a member with a shop member costing up to 2 more"); face words don't say shop or swap.
+- [major] Shake Down hover "You'd get up to +2 magenta, +2 red, +2 blue, or +4 magenta, +3 members (Stunt Double, Twins), +3 followers their choice" - unreadable wall.
+- [major] hover popovers over the wheel slow: 260-1346 ms to complete (box load 14-15/4 so partly box); 2-5 bursts each.
+- [major] ability toasts truncate ("Whenever a rival recruits more tha…"). shot 092
+- [major] seats reorder by turn order each round (P4 moved from 2nd to 3rd row); rival positions not stable. shot 087
+- [blocker] Shake Down against me: header "Your call - P4 holds Trendsetter: keep it for 3" but I hold Trendsetter; P4 is the shaker. shot 122
+- [major] Promote picker lists rivals members (P2, P3 rows) as "Member"; P4 row is cut off under the Shop row (overlap ~y505); panel covers 2/3 of wheel. shot 137
+- [major] keyboard: "Pick with keys/Pick from a list" focus button overprints the prompt line; Tab after opening list cycles back to the toggle, Enter closes the list instead of picking. shots 149,150,156
+- [major] round II summary "-4 lost" for P2, "+6 won" P3: no breakdown of what was won/lost (steals? contests?). shot 163
+- [polish] round III shop: 8th card orphaned alone on row 4, followers row shrinks; grid shifts every round. shot 166
+- [major] Cutpurse round-start steal fires before my turn with a modal prompt while the hover from my pointer stays open over the wheel. shot 166
+- Turn read R2/R3 (8+ rival turns): from board I saw I dropped 21->19 and 8->6 members and guessed "someone swapped with me"; missed which member left, missed P3 Encore taking Trendsetter on to P3, missed P4 Crime Wave target. ~3/8 parts.
+- [blocker] log line "P2 Even Swap ... you +1 (Doorman)" never says what I gave up; losing a member is invisible on my seat (no departure motion). shot 171
+- [major] "Since your last turn" expanded list covers P3/P4 seats instead of pushing. shot 171
+- [major] Greatest Hits hover WHY lists "Host +4, Stunt Double +1, Busker +2" - rivals members I could take, reads as my bonuses; "22 lit members" count is noise. shot 186
+- [blocker] in "take which member" mode the hover card for a lit member opens over the other lit members of that seat; clicking the member under the pointer hit the popover, nothing happened. shot 191
+- [major] outcome: Greatest Hits promised "up to +2 magenta, +1 green, +3 members (Trendsetter), +3 followers"; got +1 green +1 magenta and a 1-follower member; followers 30->30. shot 186 vs 193
+- [major] spam-click Pay: extra clicks fell through to the deck and opened the full-screen "Members" catalog mid-turn; stray "+1" chip and ghost tooltip float over the catalog. No double buy. shot 199
+- [polish] deck catalog: "dimmed rows are colors not in this game" - developer-ish; useful catalog otherwise.
+- [major] at 900x600: my own seat clipped by the toast ("two turns in a r..." cut under 35), shop cut off on the right (Movement Penalty half-visible), Done/no-recruit button not visible, wheel labels shrink to ~7px. shot 205
+- [major] pay sheet suggestion inconsistent: spent my contest color (magenta 6->1) for 5 followers though 5 blue was free; earlier it kept magenta. Fixing took 5 taps. shot 212/218
+- [major] Spree: after first recruit nothing says how many recruits remain ("Recruit 3 times" but header just "recruit a member or followers"). shot 220
+- [blocker] Spree: "Done, no recruit" after a recruit only consumes one of the 3 recruits; screen looks identical so I sat 15 s thinking bots were slow. Needed to click Done again. shot 222
+- [major] intro teaches with pizza-slice resource icons and a "Kickback" space; the game uses colored dots and no Kickback. phone shot 005
+- [blocker] phone: my own seat (resources, members) sits below the shop, off screen at every turn start; must scroll ~700 px to see what I hold. phone shot 010/012
+- [major] phone: shop is a sideways-scrolling row; the 10-follower card and all members are cut off at the right edge. shot 012
+- [major] phone: setup screen hides the color/table picker (no Custom table); "pick an artifact" here means a colored +1 resource, while on laptop "artifact" was a member card (Fence etc.). shots 007 / laptop 017
+- [major] phone: artifact color dots ~24 px tap targets (<44). shot 007
+- [major] phone: toasts sit on top of wheel spaces (covers +2 green, +1 green, 4off). shot 010
+- [polish] phone prompt truncated "The dark inner rings open in rounds II and I..." shot 010
+- [good] phone: long-press on a space opens a bottom sheet with full text, round schedule and a "Place here" button.

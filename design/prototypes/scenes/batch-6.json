@@ -1,0 +1,208 @@
+[
+ {
+  "id": "silver.gala",
+  "name": "Debutante",
+  "sphere": "silver",
+  "n": 1,
+  "text": "Once per game: double your silver. Each rival +2 silver.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "silver.grandhost",
+  "name": "Grand Host",
+  "sphere": "silver",
+  "n": 1,
+  "text": "Double the silver you gain from Silver spaces.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "silver.guest",
+  "name": "Guest",
+  "sphere": "silver",
+  "n": 1,
+  "text": "Whenever a rival gives you something, +1 more of it.",
+  "oldPeople": [
+   "freckled"
+  ]
+ },
+ {
+  "id": "silver.heir",
+  "name": "Heir",
+  "sphere": "silver",
+  "n": 1,
+  "text": "On Recruit: +1 silver per member you have. Round III Start: +1 silver per member you have.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "silver.majordomo",
+  "name": "Majordomo",
+  "sphere": "silver",
+  "n": 1,
+  "text": "Whenever you take a Silver space, +2 silver.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "silver.retinue",
+  "name": "Retinue",
+  "sphere": "silver",
+  "n": 1,
+  "text": "Worth 3 followers. On Recruit: each rival +1 silver.",
+  "oldPeople": [
+   "deep",
+   "warmtan",
+   "porcelain"
+  ]
+ },
+ {
+  "id": "silver.revelers",
+  "name": "Revelers",
+  "sphere": "silver",
+  "n": 3,
+  "text": "Counts as 3 members.",
+  "oldPeople": [
+   "tan",
+   "palepink",
+   "golden"
+  ]
+ },
+ {
+  "id": "silver.saint",
+  "name": "Patron Saint",
+  "sphere": "silver",
+  "n": 1,
+  "text": "Game end: +1 follower per 2 silver members, anyone’s.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "silver.spoon",
+  "name": "Upstart",
+  "sphere": "silver",
+  "n": 1,
+  "text": "On Recruit: gain half the silver of the rival with the most, rounded up.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "yellow.admirer",
+  "name": "Admirer",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Whenever a rival recruits a member of a color you have none of, +1 of that color.",
+  "oldPeople": [
+   "deep"
+  ]
+ },
+ {
+  "id": "yellow.chefs",
+  "name": "Chefs",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Worth 2 followers. Once per game: +1 of each color in round I, +2 in round II, +3 in round III.",
+  "oldPeople": [
+   "warmtan",
+   "freckled"
+  ]
+ },
+ {
+  "id": "yellow.dyer",
+  "name": "Dyer",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Round end: +1 yellow per color you hold.",
+  "oldPeople": [
+   "palepink"
+  ]
+ },
+ {
+  "id": "yellow.explorer",
+  "name": "Explorer",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Whenever you take a space outside Yellow, +1 yellow.",
+  "oldPeople": [
+   "coolbrown"
+  ]
+ },
+ {
+  "id": "yellow.farmer",
+  "name": "Farmer",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Whenever an action gains you yellow, +1 yellow.",
+  "oldPeople": [
+   "warmtan"
+  ]
+ },
+ {
+  "id": "yellow.gobetween",
+  "name": "Go-Between",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Whenever you recruit a non-yellow member, +1 of its color.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "yellow.latebloomer",
+  "name": "Late Bloomers",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Worth 2 followers. On Recruit: if no rival has fewer followers than you (not counting this card), +1 of each color. Round Start: if no rival has fewer followers than you (not counting this card), +1 of each color.",
+  "oldPeople": [
+   "brown",
+   "fair"
+  ]
+ },
+ {
+  "id": "yellow.peddler",
+  "name": "Peddler",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "On Recruit: +1 of each color. Round Start: +1 of each color.",
+  "oldPeople": [
+   "fair"
+  ]
+ },
+ {
+  "id": "yellow.pilgrim",
+  "name": "Pilgrim",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "On Recruit: +1 of each color.",
+  "oldPeople": [
+   "golden"
+  ]
+ },
+ {
+  "id": "yellow.rainmaker",
+  "name": "Rainmaker",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Once per game: raise each of your colors to match your yellow.",
+  "oldPeople": [
+   "olive"
+  ]
+ },
+ {
+  "id": "yellow.weaver",
+  "name": "Weaver",
+  "sphere": "yellow",
+  "n": 1,
+  "text": "Whenever you buy 5 or more followers, +1 of each color.",
+  "oldPeople": [
+   "deep"
+  ]
+ }
+]

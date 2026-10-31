@@ -1,0 +1,303 @@
+{
+ "label": "idle-before-unwatched",
+ "cpu": 4,
+ "secs": 40,
+ "speed": "relaxed",
+ "phases": {},
+ "domDiff": [
+  [
+   "path",
+   12
+  ],
+  [
+   "span.amt",
+   2
+  ],
+  [
+   "span.pip",
+   2
+  ],
+  [
+   "svg.res-glyph",
+   2
+  ],
+  [
+   "circle.res-ring",
+   2
+  ],
+  [
+   "span.hn",
+   2
+  ],
+  [
+   "span.rich-n",
+   2
+  ],
+  [
+   "span.tip",
+   1
+  ],
+  [
+   "svg.minion",
+   1
+  ],
+  [
+   "span.hitbox",
+   1
+  ],
+  [
+   "span.since-title",
+   1
+  ],
+  [
+   "ol.since-list",
+   1
+  ],
+  [
+   "li.since-row",
+   1
+  ],
+  [
+   "b.who",
+   1
+  ],
+  [
+   "span.sp",
+   1
+  ],
+  [
+   "span.sp-words",
+   1
+  ],
+  [
+   "span.big",
+   1
+  ]
+ ],
+ "idle": [
+  {
+   "moves": 13,
+   "round": "I",
+   "busyPct": 10,
+   "script": 8,
+   "style": 77,
+   "layout": 0,
+   "anims": 22,
+   "timers": 0,
+   "nodes": 2381,
+   "listeners": 515,
+   "docs": 20,
+   "heapMB": 11.2
+  },
+  {
+   "moves": 14,
+   "round": "I",
+   "busyPct": 52,
+   "script": 5,
+   "style": 243,
+   "layout": 0,
+   "anims": 24,
+   "timers": 0,
+   "nodes": 2479,
+   "listeners": 524,
+   "docs": 21,
+   "heapMB": 11.8
+  },
+  {
+   "moves": 17,
+   "round": "I",
+   "busyPct": 19,
+   "script": 9,
+   "style": 76,
+   "layout": 0,
+   "anims": 22,
+   "timers": 0,
+   "nodes": 2452,
+   "listeners": 520,
+   "docs": 22,
+   "heapMB": 12.1
+  },
+  {
+   "moves": 18,
+   "round": "I",
+   "busyPct": 15,
+   "script": 5,
+   "style": 89,
+   "layout": 0,
+   "anims": 21,
+   "timers": 0,
+   "nodes": 2337,
+   "listeners": 509,
+   "docs": 22,
+   "heapMB": 12.5
+  },
+  {
+   "moves": 45,
+   "round": "I",
+   "busyPct": 11,
+   "script": 37,
+   "style": 68,
+   "layout": 6,
+   "anims": 20,
+   "timers": 0,
+   "nodes": 2766,
+   "listeners": 549,
+   "docs": 24,
+   "heapMB": 14.2
+  },
+  {
+   "moves": 51,
+   "round": "II",
+   "busyPct": 19,
+   "script": 8,
+   "style": 163,
+   "layout": 0,
+   "anims": 36,
+   "timers": 0,
+   "nodes": 2661,
+   "listeners": 539,
+   "docs": 31,
+   "heapMB": 14
+  },
+  {
+   "moves": 52,
+   "round": "II",
+   "busyPct": 45,
+   "script": 4,
+   "style": 263,
+   "layout": 0,
+   "anims": 38,
+   "timers": 0,
+   "nodes": 2690,
+   "listeners": 546,
+   "docs": 31,
+   "heapMB": 14.2
+  },
+  {
+   "moves": 76,
+   "round": "II",
+   "busyPct": 20,
+   "script": 33,
+   "style": 168,
+   "layout": 5,
+   "anims": 36,
+   "timers": 0,
+   "nodes": 2991,
+   "listeners": 564,
+   "docs": 38,
+   "heapMB": 16.3
+  },
+  {
+   "moves": 77,
+   "round": "II",
+   "busyPct": 18,
+   "script": 10,
+   "style": 160,
+   "layout": 0,
+   "anims": 35,
+   "timers": 0,
+   "nodes": 2783,
+   "listeners": 552,
+   "docs": 38,
+   "heapMB": 16.4
+  },
+  {
+   "moves": 88,
+   "round": "II",
+   "busyPct": 17,
+   "script": 8,
+   "style": 153,
+   "layout": 0,
+   "anims": 36,
+   "timers": 0,
+   "nodes": 3110,
+   "listeners": 580,
+   "docs": 41,
+   "heapMB": 17.5
+  },
+  {
+   "moves": 107,
+   "round": "II",
+   "busyPct": 35,
+   "script": 35,
+   "style": 194,
+   "layout": 8,
+   "anims": 36,
+   "timers": 0,
+   "nodes": 3157,
+   "listeners": 591,
+   "docs": 48,
+   "heapMB": 19.4
+  },
+  {
+   "moves": 108,
+   "round": "II",
+   "busyPct": 11,
+   "script": 7,
+   "style": 110,
+   "layout": 0,
+   "anims": 35,
+   "timers": 0,
+   "nodes": 3217,
+   "listeners": 605,
+   "docs": 48,
+   "heapMB": 19.8
+  },
+  {
+   "moves": 121,
+   "round": "III",
+   "busyPct": 28,
+   "script": 13,
+   "style": 220,
+   "layout": 0,
+   "anims": 56,
+   "timers": 0,
+   "nodes": 3066,
+   "listeners": 587,
+   "docs": 56,
+   "heapMB": 18.2
+  },
+  {
+   "moves": "reload",
+   "round": "III",
+   "busyPct": 31,
+   "script": 15,
+   "style": 347,
+   "layout": 0,
+   "anims": 56,
+   "timers": 0,
+   "nodes": 2282,
+   "listeners": 534,
+   "docs": 42,
+   "heapMB": 7.9
+  },
+  {
+   "moves": "no infinite idle loops",
+   "round": "III",
+   "busyPct": 0,
+   "script": 0,
+   "style": 0,
+   "layout": 0,
+   "anims": 0,
+   "timers": 0,
+   "nodes": 2285,
+   "listeners": 536,
+   "docs": 42,
+   "heapMB": 7.9
+  },
+  {
+   "moves": "no animations at all",
+   "round": "III",
+   "busyPct": 0,
+   "script": 0,
+   "style": 0,
+   "layout": 0,
+   "anims": 0,
+   "timers": 0,
+   "nodes": 2288,
+   "listeners": 538,
+   "docs": 42,
+   "heapMB": 7.9
+  }
+ ]
+}
