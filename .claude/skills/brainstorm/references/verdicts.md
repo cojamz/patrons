@@ -45,6 +45,8 @@ Each one has drawn a no. Run every idea past all of them.
 16. **Not the color's goal.** Yellow, Oct 30: reading the shop's colored parts and members of a color in every cult → "isnt really aligned with yello… doesnt make sense"; Yellow as the contests color → "no, contests are a separate color"; County Fair (recruit one member of each color paying only colored parts) → "i hate that round III… too focused on member costs". His Yellow: "rewards going broad, i.e. having a combination of colors and being flexible. it also allows you to translate currencies (kind of like launderer)." Check: Gate 2 of SKILL.md.
 17. **What he said yes to that morning:** his own simplification, "+3 or +4 yellow and the launderers effect as round 3 action" ("I think that's right"), and Harvest as "+3/+4/+5 in colors you choose" (fuel spaces get the color's flavor). He liked Rainmaker ("raise each of your colors to match your yellow") and Square Up ("+1 of each color you hold, for each color you hold"); "every color you hold the fewest of goes up to your second-fewest" was "way too strong". Simple and big beat clever.
 
+15. **A rival's choice with a dominated side.** Magenta, Oct 31: "Each rival chooses: give you 1 resource, or you steal 2 from them" → "nobody would ever choose not to give one. really basic strategic thing that makes me have no confidence in you." Check: for every "they choose" or "you choose", play the chooser's side; if one option is always better for them, it isn't a choice, and the card is just the better option.
+
 ## How he wants it delivered
 
 - About 5 ideas per open slot, in one message, one line each. He hates one-at-a-time pitches: "why are you doing these so piecemeal?" (Oct 22). He still decides one slot at a time.
