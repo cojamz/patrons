@@ -1494,3 +1494,4 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - (Cory, 2026-10-31 1:41am Eastern) The once-per-game rearrange member is named Book Cooker: worth 3 followers, "On Use, once per game: rearrange your resources into any mix of colors."
 - (Cory, 2026-10-31 1:42am Eastern) Agitator (Yellow, 3 yellow + 2 any, price Claude's guess): "On Recruit: change up to 4 of rivals' resources one for one, split among rivals as you choose." ("yes")
 - (Cory, 2026-10-31 1:42am Eastern) Yellow member prices are set in the balance pass, not now ("figure out cost in the balance"). Prices in pitches stay placeholders.
+- (Cory, 2026-10-31 1:45am Eastern) Yellow keeps Turncoat's effect with a better name: "Worth 2 followers. Counts as a member of one color you choose when recruited." Double Agent, Gossip, Polyglot and Hedge out ("no others"). Two member slots still open.
