@@ -4,9 +4,7 @@ A digital worker-placement board game for friends playing online (2–4 players)
 The game was called Patrons; since 2026-10-14 it's **Cults** (v0.5). Code ids and storage keys keep "patrons" on purpose. Cory is the designer; Claude is the foreman (builder, tester, facilitator, creative partner, keeper of the harness).
 
 ## Read first, every session
-- **Chat threads run no hooks and load no skills.** First command: `bash .claude/hooks/start.sh` (moves to the game's branch, prints where things stand). Before every message to Cory: `node .claude/hooks/presend.mjs <<'EOF'` (message) `EOF`, and fix what it says. Log a correction of Cory's with `bash .claude/hooks/correction.sh "<his words>"`.
-- Before any design pitch: `.claude/rules/pitching.md`. Skills are read by path: `.claude/skills/<name>/SKILL.md`.
-- Project instructions and these files load once, when a thread starts. Rules added later reach you through presend's NEW RULES lines and the coordinator.
+The SessionStart hook prints where things stand (live version, other threads, current handoff, last decisions). Then, as needed:
 - `.claude/rules/working-with-cory.md` and `.claude/output-styles/foreman.md`: how to work with Cory and the voice for every message. Follow strictly.
 - `.claude/rules/harness.md`: hooks, where every kind of file goes, skills, agents, checks, shipping.
 - `design/HANDOFF.md`, `design/in-flight.md`, `design/todo.md`: current state, what's running, the ordered list.

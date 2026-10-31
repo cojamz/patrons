@@ -3,7 +3,7 @@
 Claude and Codex work from one playbook. This file only points at it; don't fork the rules here.
 
 1. Work on branch `claude/gifted-newton-3lcy3i` (the v4 game). `main` is the frozen v3 game plus `play/` (the live build) and a mirror of the harness. Never merge v4 source into main.
-2. Start: `node .claude/hooks/orient.mjs` prints the live version vs the branch, the other threads' status, the current handoff and the last decisions. Codex and Claude in chat threads run it by hand (`bash .claude/hooks/start.sh` does it all).
+2. Start: `node .claude/hooks/orient.mjs` prints the live version vs the branch, the other threads' status, the current handoff and the last decisions. Claude gets this automatically through hooks; Codex runs it by hand.
 3. Read `CLAUDE.md`, then `.claude/rules/working-with-cory.md`, `.claude/rules/harness.md`, `.claude/rules/design-principles.md` and `.claude/output-styles/foreman.md` (the voice for every message to Cory). They are the rules; this file adds nothing to them.
 4. While working: post your line on the thread board with `node scripts/status.mjs set --thread "Codex: <job>" --state working --doing … --next … --eta …`, and set `--state done` at the end.
 5. Before you stop (Claude's Stop hook does this; you do it by hand):

@@ -22,7 +22,6 @@ Oct 30, Yellow: eight nos in a morning ("small ball gains", "how do you have NO 
 - the card text as it would print;
 - a 4-player turn in round I and in round III: what you get here versus the best other space, by name and number;
 - the decision it creates, and for whom (the taker gives something up, or a rival chooses or reacts). No decision: cut it, however clean;
-- both sides of every choice: play the chooser; if one option always wins for them, it isn't a choice (verdicts.md 15, "give you 1 or you steal 2");
 - why only this color could print it (not a Green copy, a Red swap, a Magenta steal, a Blue shop move, a guest's text);
 - its best case and Greatest Hits copying it.
 
