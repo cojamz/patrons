@@ -86,7 +86,7 @@ export function chooseBotMove(state, rand = Math.random, opts = {}) {
     const plan = planFor(state, pend.player, mind, rand);
     const pick = planSetupPick(state, plan);
     if (pick) return pick;
-    return chooseThinkerMove(state, rand, { maxMs: HARD_MAX_MS, ...opts, plan, memory: mind?.memory || null });
+    return chooseThinkerMove(state, rand, { maxMs: HARD_MAX_MS, ...opts, plan, memory: mind?.memory || null, lessons: mind?.lessons || null, valueModel: opts.valueModel ?? mind?.valueModel ?? null });
   }
   return chooseNormalMove(state, rand, { ...BOT_PROFILES[level], ...opts });
 }
@@ -515,6 +515,25 @@ function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}, future)
     return followers(s, p) + gameEndPay(s, ctx, p) + (extraAbility[p.id] || 0)
       + liquidate(s, p.res, extra, buysLeft[p.id], wild) + contests(s, ctx, p, roundLeft, future);
   });
+}
+/**
+ * A position's parts for every player, the way normal sees them (for a learned value at a round's end, mind.js):
+ * followers, game-end pay, what resources can still become, expected contests, members' abilities still to come,
+ * member count and resources held.
+ */
+export const PART_KEYS = ['followers', 'endPay', 'liquid', 'contests', 'ability', 'members', 'res'];
+export function boundaryParts(s) {
+  const { turns, roundLeft } = horizon(s);
+  const lt = laterTurns(s);
+  const buys = s.players.map((_, i) => turns[i] + lt.turns);
+  const income = turns.map(t => (t * INCOME[Math.max(1, s.round) - 1] + lt.income) * INCOME_SCALE);
+  const ctx = contextFor(s);
+  const wild = new Set(s.quadrants.map(quadrant).filter(q => q.wildInFollowerBuys).map(q => q.resource));
+  const ability = abilityTotals(s, buys);
+  return s.players.map(p => [
+    followers(s, p), gameEndPay(s, ctx, p), liquidate(s, p.res, income[p.id], buys[p.id], wild),
+    contests(s, ctx, p, roundLeft), ability[p.id], memberCount(s, p), sum(p.res),
+  ]);
 }
 const marginOf = (vals, me, spite = SPITE) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
 
