@@ -1493,3 +1493,4 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - (Cory, 2026-10-31 1:37am Eastern) Big Tent: "Game End: +2 followers per color you have exactly one member of." ("I like the big tent suggestion")
 - (Cory, 2026-10-31 1:41am Eastern) The once-per-game rearrange member is named Book Cooker: worth 3 followers, "On Use, once per game: rearrange your resources into any mix of colors."
 - (Cory, 2026-10-31 1:42am Eastern) Agitator (Yellow, 3 yellow + 2 any, price Claude's guess): "On Recruit: change up to 4 of rivals' resources one for one, split among rivals as you choose." ("yes")
+- (Cory, 2026-10-31 1:42am Eastern) Yellow member prices are set in the balance pass, not now ("figure out cost in the balance"). Prices in pitches stay placeholders.
