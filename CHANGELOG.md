@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.892 — 2026-10-31
+
+- New bot level: Very Hard, which looks three times as far ahead as Hard.
+
 ## v0.9.891 — 2026-10-31
 
 - Gather's wheel face shows its new +2 red and the followers for recruiting a member.
