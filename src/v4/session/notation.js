@@ -112,7 +112,7 @@ export function toNotation(input) {
       line.count++;
     }
     const next = step(state, { player, option });
-    notes.push(...(state.logN != null && next.logN != null ? logSince(next, state.logN) : freshLog(state.log, next.log)).filter(l => NOTE.test(l)));
+    notes.push(...(state.logN != null && next.logN > state.logN ? logSince(next, state.logN) : freshLog(state.log, next.log)).filter(l => NOTE.test(l)));
     state = next;
     i++;
   }
