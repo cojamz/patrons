@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.896 — 2026-10-31
+
+- Poach reads: Recruit a rival's member you choose.
+
 ## v0.9.895 — 2026-10-31
 
 - Late in a game the log no longer skips a line that repeats the one before it (a second Harvest pick, a Big Spender recruit).
