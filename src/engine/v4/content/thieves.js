@@ -256,12 +256,12 @@ const thieves = {
       },
     },
     {
-      key: 'heist', ring: 3, name: 'Poach', text: 'Steal a rival’s member you choose. +1 magenta.',
+      key: 'heist', ring: 3, name: 'Poach', text: 'Recruit a rival’s member you choose. +1 magenta.', // "recruit", not "steal" (Cory, Oct 31); still a steal for Bodyguard, Lie Low and Fence
       estimate: (ctx, p) => { const l = takeable(ctx, p); return l.length ? Math.max(...l.map(([, c]) => memberHint(c))) : 0; },
       resolve(ctx, p) {
         const list = takeable(ctx, p);
         if (!list.length) { ctx.log(`${p.name} found nothing worth a heist.`); return; }
-        pickMember(ctx, p, list, 'Poach: take which member?', 'thieves.heist');
+        pickMember(ctx, p, list, 'Poach: recruit which member?', 'thieves.heist');
       },
     },
   ],

@@ -114,7 +114,7 @@ const P = {
     hideout: { verb: 'Safe from steals', second: 'this round', note: '+1 magenta' },
     rob: { verb: 'Steal half a rival’s pile', second: 'one color, rounded down', note: '+1 magenta' },
     ransom: { verb: 'Rival pays or loses a member', second: 'costing 5 or less', note: '+1 magenta' },
-    heist: { verb: 'Take a rival’s member', note: '+1 magenta' },
+    heist: { verb: 'Recruit a rival’s member', note: '+1 magenta' },
   },
   trading: {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers
