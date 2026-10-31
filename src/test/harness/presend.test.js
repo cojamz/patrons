@@ -1,6 +1,9 @@
 // presend.mjs is the only check chat threads get (they run no hooks): card text and voice rules must bounce.
 import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
+import { quadrant } from '../../engine/v4/index.js';
+
+const stash = quadrant('thieves').actions.find(a => a.name === 'Stash');
 
 const run = (text, ...args) => spawnSync('node', ['.claude/hooks/presend.mjs', ...args], { input: text, encoding: 'utf8' });
 
@@ -11,7 +14,7 @@ describe('presend', () => {
     expect(r.stdout).toMatch(/Card text missing.*Stash/);
   });
   it('passes a card quoted next to its name', () => {
-    const r = run('**Stash** (+3 magenta in round I, +4 in round II, +5 in round III) is the better pick. Nothing needed from you.');
+    const r = run(`**Stash** (${stash.text}) is the better pick. Nothing needed from you.`);
     expect(r.status).toBe(0);
   });
   it('bounces voice rules', () => {
