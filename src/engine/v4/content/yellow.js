@@ -173,8 +173,8 @@ export default {
     m('dyer', 'Dyer', 4, 2, 'On Recruit: +1 yellow per color you hold. Round Start: +1 yellow per color you hold.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
-    // Cory, 2026-10-31: "definitely too expensive" (was 4 + 4)
-    m('explorer', 'Explorer', 3, 1, 'Whenever you take a space outside Yellow, +1 yellow.', {
+    // Cory, 2026-10-31: "definitely too expensive" (was 4 + 4); 3 + 1 read strong in both bot runs, so 3 + 2 (Claude, Oct 31 balance run)
+    m('explorer', 'Explorer', 3, 2, 'Whenever you take a space outside Yellow, +1 yellow.', {
       afterAction(ctx, owner, card, qid) { if (qid !== 'yellow') ctx.gain(owner, Y, 1); },
     }),
     // Cory, 2026-10-31: "there should be an On Recruit rearrange opponents resources"
