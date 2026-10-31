@@ -11,7 +11,7 @@ import { sceneQ, settle, passBuys, buy } from './cards-helpers.js';
 
 const FILL = ['gold', 'red', 'market', 'echo', 'purple'];
 const turns = s => s.queue.filter(t => t.t === 'turn' || (t.t === 'content' && t.h === 'purple.skipped')).map(t => `${t.t}${t.p}`).join(' ');
-const flags = p => Object.fromEntries(Object.entries(p).filter(([k]) => !['res', 'members', 'discount', 'left', 'workers', 'bonus', 'lastSlot', 'turnRecruits', 'turnBuys', 'perSpend', 'gatherFollowers', 'peekReach', 'discountSources'].includes(k)).map(([k, v]) => [k, JSON.stringify(v)]));
+const flags = p => Object.fromEntries(Object.entries(p).filter(([k]) => !['res', 'members', 'discount', 'left', 'workers', 'bonus', 'lastSlot', 'turnRecruits', 'turnBuys', 'perSpend', 'recruitFollowers', 'peekReach', 'discountSources'].includes(k)).map(([k, v]) => [k, JSON.stringify(v)]));
 
 describe('a copy does what the space does', () => {
   for (const qid of allQuadrantIds()) {

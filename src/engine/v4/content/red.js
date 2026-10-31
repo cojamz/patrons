@@ -31,7 +31,7 @@ export default {
       estimate: ctx => ctx.state.round + 1 + ctx.state.round * 0.7,
       resolve(ctx, p) {
         ctx.gain(p, 'red', ctx.state.round + 1, { fromAction: true });
-        p.gatherFollowers = Math.max(p.gatherFollowers || 0, ctx.state.round);
+        (p.recruitFollowers ||= []).push({ n: ctx.state.round, name: 'Gather' });
       },
     },
     {

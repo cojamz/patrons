@@ -67,11 +67,13 @@ describe('White scoring: most white held', () => {
 });
 
 describe('White actions', () => {
-  it('Allowance: +N followers and +N white by round number, then +1 white', () => {
+  it('Allowance (Oct 31): +round+1 white, and +round followers on a member recruit that turn', () => {
     for (const [round, f, w] of [[1, 1, 2], [2, 2, 3], [3, 3, 4]]) {
-      const s = take(scene({ round }), 'trading.stipend');
-      expect([B(s), R(s).white]).toEqual([f, w]);
+      let s = take(scene({ round, res: [{ gold: 4 }], shop: ['gold.midas'] }), 'trading.stipend');
+      expect([B(s), R(s).white]).toEqual([0, w]);
       expect(s.pending.kind).toBe('buy');
+      s = move(s, pick(s, 'gold.midas', 'shop'));
+      expect(B(s)).toBe(f);
     }
   });
 
@@ -166,7 +168,7 @@ describe('White actions', () => {
 
   it('Midas takes White action gains as gold (Allowance, Estate Sale)', () => {
     const s = take(scene({ round: 2, members: [['gold.midas']] }), 'trading.stipend');
-    expect([R(s).gold, R(s).white, B(s)]).toEqual([3, 0, 2]);
+    expect([R(s).gold, R(s).white]).toEqual([3, 0]);
     let t = take(scene({ round: 2, members: [['gold.midas', 'red.twins']] }), 'trading.estatesale');
     t = move(t, `card:${uidOf(t, 'red.twins', 0)}`);
     expect([R(t).gold, R(t).white]).toEqual([3, 0]);
@@ -204,7 +206,8 @@ describe('White members', () => {
 
   it('Broker: whenever a White action gives you followers, +1 follower (once per action)', () => {
     const br = { members: [['trading.broker']] };
-    expect(B(take(scene({ round: 2, ...br }), 'trading.stipend'))).toBe(3);
+    const al = take(scene({ round: 2, res: [{ gold: 4 }], shop: ['gold.midas'], ...br }), 'trading.stipend');
+    expect(B(move(al, pick(al, 'gold.midas', 'shop')))).toBe(3); // Allowance's +2 on a member recruit, Broker +1
     expect(B(move(move(take(scene({ round: 2, res: [{ red: 2 }], ...br }), 'trading.exchange'), 'color:red'), 'color:red'))).toBe(5);
     expect(B(take(scene({ round: 3, res: [{ white: 2 }], ...br }), 'trading.cashin'))).toBe(3);
     expect(B(take(scene({ round: 3, ...br }), 'trading.cashin'))).toBe(0); // nothing turned, no bonus

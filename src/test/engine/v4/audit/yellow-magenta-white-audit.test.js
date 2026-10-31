@@ -19,7 +19,7 @@ describe('base rules', () => {
       expect(ids(s)).toContain('tier:mid');
       s = move(s, 'tier:mid');
     }
-    expect(s.players[0].bonus).toBe(16); // three buys by the same player, and Allowance's +1 follower
+    expect(s.players[0].bonus).toBe(15); // three buys by the same player (Allowance's follower needs a member recruit, Oct 31)
     expect(s.stock).toEqual({});
   });
 });

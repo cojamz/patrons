@@ -22,12 +22,12 @@ describe('locked Red action progression', () => {
     s.players[0].res.gold = 9;
     s = take(s, 'red.turnout');
     expect(s.players[0].res.red).toBe(round + 1);
-    expect(s.players[0].gatherFollowers).toBe(round);
+    expect(s.players[0].recruitFollowers).toEqual([{ n: round, name: 'Gather' }]);
     const bonus = s.players[0].bonus;
     s = move(s, `card:${uidIn(s, 'red.intern', 'shop')}`);
     expect(defs(s, 0)).toContain('red.intern');
     expect(s.players[0].bonus - bonus).toBe(round);
-    expect(s.players[0].gatherFollowers).toBeUndefined();
+    expect(s.players[0].recruitFollowers).toBeUndefined();
     expect(s.log.join('\n')).toContain("P1's Gather: +");
   });
 
@@ -36,11 +36,11 @@ describe('locked Red action progression', () => {
     s.players[0].res.gold = 5;
     s = take(s, 'red.turnout');
     s = move(s, 'tier:mid');
-    expect(s.players[0].gatherFollowers).toBe(1);
+    expect(s.players[0].recruitFollowers).toEqual([{ n: 1, name: 'Gather' }]);
     expect(s.log.join('\n')).not.toContain('for recruiting a member');
     s.queue = [{ t: 'turn', p: 0 }]; s.pending = null;
     s = resume(s);
-    expect(s.players[0].gatherFollowers).toBeUndefined();
+    expect(s.players[0].recruitFollowers).toBeUndefined();
   });
 
   it('Walk-In recruits the top member of the deck free, leaves the shop alone, +1 red and each rival +1 red', () => {

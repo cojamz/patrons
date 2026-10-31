@@ -40,10 +40,12 @@ describe('White: the printed cards', () => {
 });
 
 describe('White actions', () => {
-  it('Allowance: round II pays +2 followers and +3 white (named)', () => {
-    const s = take(table(Q, { round: 2, shop: ROW }), 'trading.stipend');
-    expect([B(s), R(s).white]).toEqual([2, 3]);
-    expect(named(s, 'Allowance')).toEqual(["P1's Allowance: +2 followers, +3 white."]);
+  it('Allowance (Oct 31, Gather\'s shape): round II pays +3 white, and +2 followers on a member recruit that turn (named)', () => {
+    let s = take(table(Q, { round: 2, res: [{ red: 2 }], shop: ROW }), 'trading.stipend');
+    expect([B(s), R(s).white]).toEqual([0, 3]);
+    s = move(s, cardOpt(s, 'red.intern', 'shop'));
+    expect(B(s)).toBe(2);
+    expect(named(s, 'Allowance')).toContain("P1's Allowance: +2 followers for recruiting a member.");
   });
 
   it('Splurge: a 12-cost Tycoon pays +6 followers, named; Broker adds 1 in the same line', () => {
@@ -121,7 +123,9 @@ describe('White members', () => {
   it('× Doppelganger copying Broker: two Brokers, +2 on Allowance', () => {
     let s = table(QE, { members: [['trading.broker', 'echo.doppel']], shop: ROW });
     s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'trading.broker';
+    s.players[0].res.red = 2;
     s = take(s, 'trading.stipend');
+    s = move(s, cardOpt(s, 'red.intern', 'shop'));
     expect(B(s)).toBe(1 + 2);
   });
 

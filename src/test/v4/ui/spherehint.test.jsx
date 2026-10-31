@@ -11,7 +11,7 @@ describe('setup sphere hints', () => {
   it('pluralise the follower mark where the words are plural', () => {
     const t = sphereHint('trading');
     expect(t).toMatch(/into followers/);
-    expect(t).toMatch(/\+1 follower \+2 white/); // singular
+    expect(t).toMatch(/\+1 follower if you recruit a member/); // singular
     expect(t).toMatch(/into 2 followers/); // plural
     expect(t).not.toMatch(/@f|more follower\b/);
   });

@@ -110,7 +110,7 @@ const P = {
   },
   thieves: {
     pickpocket: r => ({ verb: `Steal ${r + 2}`, second: 'split among rivals', note: run(n => `${n + 2}`) }),
-    tipoff: r => ({ main: `+${r + 2} magenta`, second: run(n => `+${n + 2}`) }),
+    tipoff: r => ({ main: `+${r + 1} magenta`, second: `+${r} @f if you recruit a member` }), // Gather's shape (Cory, Oct 31)
     hideout: { verb: 'Safe from steals', second: 'this round', note: '+1 magenta' },
     rob: { verb: 'Steal half a rival’s pile', second: 'one color, rounded down', note: '+1 magenta' },
     ransom: { verb: 'Rival pays or loses a member', second: 'costing 5 or less', note: '+1 magenta' },
@@ -128,7 +128,7 @@ const P = {
     // "All for followers" hid that you pay (tester A, live panel r1; the charge is Cory's call): it says so in line 1
     boom: { verb: 'Pay all your resources: +1 @f each', second: 'you may keep your white' },
     // White's Oct 22 spaces (Cory's set): they had no panel words, so the board cut each to its first four words
-    stipend: r => ({ main: `+${r} @f +${r + 1} white`, second: null }), // two parts grow: the hover's round lines say which
+    stipend: r => ({ main: `+${r + 1} white`, second: `+${r} @f if you recruit a member` }), // Gather's shape (Cory, Oct 31)
     splurge: { verb: '+1 @f per 2 you pay', second: 'for a member this turn', note: '+1 white' },
     exchange: r => ({ verb: r === 1 ? 'Turn 1 resource into 2 @f' : `Turn up to ${r} resources into 2 @f each`, note: '+1 white' }),
     // the gain leads: on ring II only one line fits, and the two read the same as "Bury one of your members"

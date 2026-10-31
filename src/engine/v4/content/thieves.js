@@ -211,10 +211,15 @@ const thieves = {
     },
     {
       // every color's 3/4/5 (Cory, 2026-10-27), counting the +1 magenta every Magenta action gives; name Claude's fill-in
-      key: 'tipoff', ring: 1, name: 'Stash', text: '+3 magenta in round I, +4 in round II, +5 in round III.',
-      byRound: { lines: ['+3 magenta', '+4 magenta', '+5 magenta'] },
-      estimate: ctx => 2 + ctx.state.round,
-      resolve(ctx, p) { ctx.gain(p, 'magenta', ctx.state.round + 1, { fromAction: true }); },
+      key: 'tipoff', ring: 1, name: 'Stash', copyDoesIt: true,
+      text: '+2 magenta in round I, +3 in round II, +4 in round III. This turn, if you recruit a member, +1 follower (+2 in round II, +3 in round III).',
+      // Gather's shape for now (Cory, 2026-10-31: "just default to gather style for now for the rest"); Magenta's round I is parked
+      byRound: { lines: ['+2 magenta. This turn, if you recruit a member, +1 follower.', '+3 magenta. This turn, if you recruit a member, +2 followers.', '+4 magenta. This turn, if you recruit a member, +3 followers.'] },
+      estimate: ctx => ctx.state.round + 1 + ctx.state.round * 0.7,
+      resolve(ctx, p) {
+        ctx.gain(p, 'magenta', ctx.state.round + 1, { fromAction: true });
+        (p.recruitFollowers ||= []).push({ n: ctx.state.round, name: 'Stash' });
+      },
     },
     {
       key: 'hideout', ring: 1, name: 'Lie Low', text: 'Rivals can’t steal from you this round. +1 magenta.', // no steal: the protection is the strength (Cory, 2026-10-22 playtest: "Lie Low probably shouldnt even steal")

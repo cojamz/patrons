@@ -81,14 +81,14 @@ const trading = {
   // exchange for followers". The names are Claude's fill-ins.
   actions: [
     {
-      key: 'stipend', copyDoesIt: true, ring: 1, name: 'Allowance', text: '+1 follower and +2 white in round I, +2 and +3 in round II, +3 and +4 in round III.', // Cory, 2026-10-23: white printed once
-      byRound: { lines: ['+1 follower. +2 white.', '+2 followers. +3 white.', '+3 followers. +4 white.'] },
-      estimate: ctx => ctx.state.round * (1 + fv(ctx)) + 1,
+      key: 'stipend', copyDoesIt: true, ring: 1, name: 'Allowance',
+      text: '+2 white in round I, +3 in round II, +4 in round III. This turn, if you recruit a member, +1 follower (+2 in round II, +3 in round III).',
+      // Gather's shape (Cory, 2026-10-31: "just default to gather style for now for the rest"); was +1/2/3 followers and +2/3/4 white
+      byRound: { lines: ['+2 white. This turn, if you recruit a member, +1 follower.', '+3 white. This turn, if you recruit a member, +2 followers.', '+4 white. This turn, if you recruit a member, +3 followers.'] },
+      estimate: ctx => ctx.state.round + 1 + ctx.state.round * 0.7,
       resolve(ctx, p) {
-        const r = ctx.state.round;
-        ctx.gain(p, W, r + 1, { fromAction: true });
-        actionFollowers(ctx, p, r);
-        ctx.log(`${p.name}'s Allowance: +${plural(r, 'follower')}, +${r + 1} white.`);
+        ctx.gain(p, W, ctx.state.round + 1, { fromAction: true });
+        (p.recruitFollowers ||= []).push({ n: ctx.state.round, name: 'Allowance', broker: true });
       },
     },
     {
