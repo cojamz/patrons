@@ -18,7 +18,7 @@ Waiting on Cory (nothing built until he answers)
 Parked
 - Squatter on Greatest Hits ("players actions werent copied", v0.9.1 online): not reproduced; gated by cards-echo test and e2e/v4/squat-hits.mjs; reopens when a saved game shows it.
 - Wheel in Firefox: smooth at full speed since v0.9.831. Left: one ~180 ms hitch the first time the rim's words flip in a game, and 100-130 ms frames as a spin starts on a slowed Firefox. Reopens if Cory says the wheel still drags.
-- Gold, Silver, Yellow redesigns: paused by Cory; last before v1.0.
+- Yellow 2.0: designed Oct 30-31 by this thread (Yellow, Gold, Silver design thread); next build + bot balance test. Gold and Silver next, same thread.
 
 Closed Oct 29 with nothing owed: Cross-check balance findings (11 price changes signed off, shipped in v0.9.850), Run expert AI games overnight (blocked), Rework members and actions by priority (all calls live in v0.9.836), Decide member and guest balance (guests final at 15), Fix the game freezing mid-play (v0.9.831), Make the members page a color explorer (live), Show every member for review (live), Rework round I actions (v0.9.821).
 
