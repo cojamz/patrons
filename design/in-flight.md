@@ -9,6 +9,7 @@ Running now
 - Expert AI games (thread "Play expert AI board game sessions"): AI players play full games and write them up as stories with table talk; game 6 posted in three parts. Their shared suspects: Last Call, Echo and Greatest Hits copying steals or Last Call; Allowance plus Exchange with Money Changer; Help Yourself with Fence on turn one. The overnight try in another thread was blocked by a safety filter and is closed.
 
 - Bots (thread "Make the bots play better"): done Oct 29. Swaps and steals rated for every player (v0.9.857), Hard looks ahead on them (v0.9.870); write-up design/eval/bot-swaps/README.md. Cory: no card-by-card bot rules.
+- Hard bots that learn (thread "Teach Hard bots to learn across games"): done Oct 31. Plans, tested lessons and a learned position value all tied Hard (sims only, opts.mind); looking 3x further ahead beat it, shipped as the Very Hard level (v0.9.892). Reports: design/eval/hard-learn, hard-value (README), hard-search, hard-value-yellow. Runners: scripts/v4-hard-learn.mjs, v4-hard-tune.mjs, v4-hard-value.mjs.
 
 Waiting on Cory (nothing built until he answers)
 - Members page review: https://cojamz.github.io/patrons/play/members/ is a color explorer (pick a color, see its deck, artifact and spaces by round; #red etc. in the link). He reviews color by color with the deck rework.
