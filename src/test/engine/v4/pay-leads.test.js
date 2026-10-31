@@ -66,28 +66,7 @@ describe('follower payments mark the answers that give up a lead', () => {
   });
 });
 
-describe('a payment that breaks your only full set is marked (live panel r1)', () => {
-  it('buying followers: paying silver breaks the one full set P1 leads Most full sets with; paying gold keeps it', () => {
-    let s = sceneQ({ quadrants: ['yellow', 'silver', 'trading', 'gold'], res: [{ yellow: 1, silver: 1, white: 1, gold: 3 }, { gold: 4 }], queue: [{ t: 'buy', p: 0 }] });
-    s = applyMove(s, { player: 0, option: 'tier:small' });
-    expect(s.pending.kind).toBe('pay');
-    const by = color => s.pending.options.find(o => o.spend?.[color] === 1 && o.spend?.gold === (color === 'gold' ? 1 : 0));
-    // Most full sets is yellow's rim: spending silver gives it up, though no yellow is spent
-    expect(by('silver').breaks).toEqual(['yellow', 'silver']); // and its silver lead
-    expect(by('gold').breaks).toBeUndefined();
-  });
-  it('the default way to pay for a member keeps your only full set when another way can', () => {
-    restore = pinCosts({ 'gold.taxman': [1, 1] });
-    const s = sceneQ({ quadrants: ['yellow', 'silver', 'trading', 'gold'], res: [{ yellow: 1, silver: 1, white: 1, gold: 3 }, { yellow: 2, silver: 2, gold: 5 }],
-      shop: ['gold.taxman'], queue: [{ t: 'buy', p: 0 }] });
-    const o = s.pending.options.find(x => x.kind === 'card' && s.cards[x.uid].def === 'gold.taxman');
-    const t = applyMove(s, { player: 0, option: o.id });
-    const pays = t.pending.options.filter(x => x.kind === 'pay');
-    expect(pays.find(x => x.default).spend).toMatchObject({ gold: 2, silver: 0, white: 0, yellow: 0 });
-    expect(pays.find(x => x.spend.silver === 1).breaks).toEqual(['yellow']);
-  });
-});
-
+// The full-set contest left with Yellow 2.0 (Oct 31: most yellow, as every 2.0 color); the lead cases above cover it.
 describe('a payment that cuts a member’s game-end bonus is marked (tester A: Kingpin paid +0 unwarned)', () => {
   // Kingpin counted held magenta until Oct 21 (now: per magenta member), so Tycoon carries the case
   it('buying followers: paying gold cuts Tycoon (+1 per 2 gold); paying magenta does not', () => {

@@ -65,11 +65,6 @@ describe('gains on your turn say why', () => {
     expect(s.log).toContain("P3 +1 silver (P1's Sweet Talk).");
     expect(story(s0, s)).toMatch(/Sweet Talk: P3 \+1 silver/);
   });
-  it('Top Up on a tie says why it paid each tied color, on the turn card too (panel tester C)', () => {
-    const s0 = table(['yellow', 'gold', 'red', 'market'], { res: [{ gold: 2, red: 1, yellow: 1, blue: 2 }], shop: ROW });
-    const s = take(s0, 'yellow.bloom');
-    expect(story(s0, s)).toMatch(/Top Up: .*tie for the fewest \(\d each\), so \+1 of each/);
-  });
 });
 
 describe('a skipped buy says so on the turn card', () => {

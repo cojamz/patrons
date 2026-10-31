@@ -131,6 +131,7 @@ const SPHERES = ['gold', 'red', 'purple', 'silver', 'yellow'];
 // Conditional cards that can go a whole bot game without their condition; each has a named test of its own.
 const ALLOW = {
   // seeded games moved with +1 wild and the round I rework (Oct 27-28): recruited in 4-5 games without the trigger coming up
+  'yellow.matchmaker': 'pays only for a recruit in a new member color; its 2 owners in the Yellow 2.0 sample (Oct 31) recruited none (cards-yellow)',
   'silver.dowager': 'a plain worth-3 member the audit counts (cards-silver)',
   'purple.courier': 'pays only on two turns in a row (courier.test.js)',
   // bots almost never buy it at 12 (Hard bot read, Oct 24); recruited once in the Oct 25 sample

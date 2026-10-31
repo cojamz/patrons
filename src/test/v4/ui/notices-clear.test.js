@@ -16,6 +16,7 @@ const CLEARED = {
   'className="deny-note"': 'the wheel clears its deny note on a timer',
   'className="pay-nudge"': 'lives only inside the open pay sheet',
   'className="pay-receipt"': 'lives only inside the open pay sheet',
+  'className="ld-loose"': 'lives only inside the open rearrange card',
 };
 
 describe('notices clear by themselves', () => {

@@ -12,7 +12,8 @@ const members = (state, p, color = null) => p.members.reduce((n, uid) => {
   const card = state.cards[uid], def = defById(card.def);
   // Dabblers counts as every color on the table (Cory, 2026-10-28), itself or as a copy
   const every = [def, card.copy && defById(card.copy)].some(d => d?.everyColor) && state.quadrants.includes(color);
-  if (color && def.quadrant !== color && !every) return n;
+  // Drifters counts as the color chosen when it was recruited (card.asColor, Oct 31)
+  if (color && (card.asColor || def.quadrant) !== color && !every) return n;
   return n + Math.max(printed(def), card.copy ? printed(defById(card.copy)) : 0);
 }, 0);
 
@@ -28,7 +29,7 @@ export function oracleCount(state, qid, p) {
     case 'market': return res('blue');
     case 'purple': return res('purple');
     case 'trading': return res('white');
-    case 'yellow': return Math.min(...state.resources.map(res));
+    case 'yellow': return res('yellow'); // Yellow 2.0: most yellow, as every 2.0 color (Oct 31)
     // Other arcs retain their own printed member quantity, including stand-ins and copied card weight.
     default: return members(state, p, qid);
   }
