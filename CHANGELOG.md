@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.898 — 2026-10-31
+
+- Allowance: +2 white in round I, +3 in round II, +4 in round III. This turn, if you recruit a member, +1 follower (+2, +3). Stash: the same in magenta.
+
 ## v0.9.897 — 2026-10-31
 
 - Yellow 2.0: new spaces, a new 15-member deck and the Guest Book artifact
