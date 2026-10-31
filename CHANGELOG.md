@@ -2,6 +2,10 @@
 
 Player-facing releases, newest first. What's live is main's play/build.json: a section newer than that version is on the branch, not yet published. Agent process: [design/releasing.md](design/releasing.md). Verified retrospective source/deployment timeline: [design/release-history.md](design/release-history.md).
 
+## v0.9.890 — 2026-10-31
+
+- Gather: +2 red in round I, +3 in round II, +4 in round III. This turn, if you recruit a member, +1 follower (+2 in round II, +3 in round III).
+
 ## v0.9.889 — 2026-10-30
 
 - Shoplifter costs 7, Heiress 9, Coach 7, Old Money 6, Grifter 6. Mob costs 12 and counts as 4 members. Shopaholics, Mentor & Protégés, Impostors, Late Risers, Deprogrammers (was Movement Penalty) and Launderers are each worth 1 more follower and member. Dabblers lets you pick its color for Recruiter and other +1 of its color cards.
