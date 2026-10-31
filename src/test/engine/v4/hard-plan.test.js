@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, isLegal, followers } from '../../../engine/v4/index.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
-import { newMemory, learnFromGame, learned, planFor, planNudge, STYLES } from '../../../engine/v4/mind.js';
+import { newMemory, learnFromGame, learned, planFor, planNudge, STYLES, fitValueModel, modelValues, PRIOR } from '../../../engine/v4/mind.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 
 const TABLE = ['red', 'echo', 'thieves', 'purple'];
@@ -63,5 +63,18 @@ describe('Hard plan', () => {
       return moves.join();
     };
     expect(run()).toBe(run());
+  });
+
+  it('a value model starts at normal\'s yardstick and learns a part that pays', () => {
+    expect(fitValueModel([]).rounds[2].w.map(v => Math.round(v * 100) / 100)).toEqual(PRIOR);
+    // final followers = followers + liquid + 3 per member: the member weight climbs from 0 toward 3
+    const rand = seededRandom(3), samples = [];
+    for (let i = 0; i < 400; i++) {
+      const x = [rand() * 30, 0, rand() * 20, rand() * 8, rand() * 10, Math.floor(rand() * 8), rand() * 15];
+      samples.push({ round: 2, x, y: x[0] + x[2] + 3 * x[5] });
+    }
+    const m = fitValueModel(samples);
+    expect(m.rounds[2].w[5]).toBeGreaterThan(2);
+    expect(modelValues(m, 2, [[10, 0, 5, 0, 0, 2, 0]])[0]).toBeGreaterThan(18);
   });
 });

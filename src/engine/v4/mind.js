@@ -48,7 +48,7 @@ const resOf = qid => quadrant(qid).resource;
 const colorOf = (state, uid) => { try { return cardDef(state, uid).quadrant; } catch { return null; } };
 
 /** How good each color on the table looks for player `me` right now. */
-function colorReads(state, me, memory) {
+function colorReads(state, me, memory, lessons = null) {
   const p = state.players[me];
   const rivals = state.players.filter(o => o.id !== me);
   const artQ = p.artifact !== undefined ? colorOf(state, p.artifact) : null;
@@ -60,15 +60,15 @@ function colorReads(state, me, memory) {
     const crowd = rivals.reduce((a, o) => a + (o.res[r] || 0) * 0.3 + o.members.filter(u => colorOf(state, u) === qid).length, 0) / Math.max(1, rivals.length);
     // the artifact this color hands out (only while it's still there to pick)
     const art = state.round === 0 && artQ === null && state.artifacts?.[qid] !== undefined && !state.players.some(o => o.artifact === state.artifacts[qid])
-      ? learned(memory, 'artifacts', qid) : 0;
+      ? learned(memory, 'artifacts', qid) + (lessons?.artifacts?.[qid] || 0) : 0;
     const own = artQ === qid ? 1.5 : 0;
     return { qid, v: mine + shop - crowd * 0.8 + own + art + learned(memory, 'colors', qid) };
   });
 }
 
 /** A fresh plan from the table as it stands. `stay`: the current plan, read a little better (it's already under way). */
-function readPlan(state, me, memory, rand, stay = null) {
-  const reads = colorReads(state, me, memory).map(c => ({ ...c, v: c.v + (stay?.colors.includes(c.qid) ? STAY_COLOR : 0) + rand() * 0.6 }));
+function readPlan(state, me, memory, rand, stay = null, lessons = null) {
+  const reads = colorReads(state, me, memory, lessons).map(c => ({ ...c, v: c.v + (stay?.colors.includes(c.qid) ? STAY_COLOR : 0) + rand() * 0.6 }));
   reads.sort((a, b) => b.v - a.v);
   const colors = reads.slice(0, 2).map(c => c.qid);
   const p = state.players[me];
@@ -84,6 +84,7 @@ function readPlan(state, me, memory, rand, stay = null) {
     if (style === 'contest') v += reads[0].v > 3 ? 0.6 : 0;
     if (style === 'followers') v += state.round >= 2 && owned <= 1 ? 1 : 0;
     if (stay?.style === style) v += SWITCH;
+    v += lessons?.styles?.[style] || 0;
     return { style, v: v + rand() * 0.5 };
   }).sort((a, b) => b.v - a.v);
   return { style: styles[0].style, colors, score: styles[0].v + reads[0].v + reads[1].v };
@@ -96,20 +97,43 @@ export function planFor(state, me, mind, rand = Math.random) {
   if (mind.plan && mind.plan.round === round) return mind.plan;
   const memory = mind.memory || null;
   if (!mind.plan) {
-    const fresh = readPlan(state, me, memory, rand);
+    const fresh = readPlan(state, me, memory, rand, null, mind.lessons);
     mind.plan = { ...fresh, round, since: round };
     (mind.log ||= []).push({ round, style: fresh.style, colors: fresh.colors, change: 'start' });
     return mind.plan;
   }
-  const next = readPlan(state, me, memory, rand, mind.plan);
+  const next = readPlan(state, me, memory, rand, mind.plan, mind.lessons);
   const changed = next.style !== mind.plan.style || next.colors.join() !== mind.plan.colors.join();
   if (changed) (mind.log ||= []).push({ round, style: next.style, colors: next.colors, change: next.style !== mind.plan.style ? 'style' : 'colors' });
   mind.plan = { ...next, round, since: changed ? round : mind.plan.since };
   return mind.plan;
 }
 
-/** normal's valuation options for a plan (scoreOptions opts). */
-export const planProfile = plan => (plan ? PROFILE[plan.style] : {});
+/** normal's valuation options for a plan (scoreOptions opts), scaled by lessons' knobs. */
+export function planProfile(plan, lessons = null) {
+  const base = { ...BASE, ...(plan ? PROFILE[plan.style] : {}) };
+  if (!lessons?.knobs) return plan ? PROFILE[plan.style] : {};
+  return Object.fromEntries(Object.entries(base).map(([k, v]) => [k, v * (lessons.knobs[k] ?? 1)]));
+}
+// normal's own values for the knobs lessons scale (bots.js NORMAL)
+const BASE = { memberBias: 2, k: 2, future: 0.4, spite: 0.4 };
+
+/**
+ * Lessons: what a Hard seat has been taught by testing (scripts/v4-hard-tune.mjs keeps a change only when the seats
+ * playing it beat the seats without it). All in followers, added to an option's value:
+ * { knobs: { memberBias, k, future, spite } multipliers, members: { defId }, spaces: { 'qid:key' },
+ *   artifacts: { qid }, styles: { style }, tier: [round I, II, III] (a follower buy) }.
+ */
+export function lessonNudge(state, lessons, o) {
+  if (!lessons) return 0;
+  if (o.kind === 'slot') {
+    const qid = state.quadrants[o.q], a = quadrant(qid).actions[o.i];
+    return a ? lessons.spaces?.[`${qid}:${a.key}`] || 0 : 0;
+  }
+  if (o.kind === 'card') { try { return lessons.members?.[cardDef(state, o.uid).id] || 0; } catch { return 0; } }
+  if (o.kind === 'tier') return lessons.tier?.[Math.max(1, state.round) - 1] || 0;
+  return 0;
+}
 
 /** The nudge, in followers, a plan and memory give one place or buy option. */
 export function planNudge(state, plan, memory, o) {
@@ -183,4 +207,56 @@ export function learnFromGame(memory, state, seats = []) {
     members: state.players[w].members.map(u => { try { return cardDef(state, u).id; } catch { return null; } }).filter(Boolean),
   };
   return memory;
+}
+
+// ---------- a learned value for a round's end ----------
+// Hard plays its options out to the end of the round, then has to say what that position is worth. normal's yardstick
+// adds followers, game-end pay, what resources can still become and expected contests, and counts a member's ability
+// for nothing once the round is over. A value model is learned from finished games instead: for every player at the end
+// of round I and of round II, the parts of the position (bots.js boundaryParts) against the followers they finished
+// with. Weights per round, pulled toward normal's yardstick when there is little evidence (ridge).
+// PART_KEYS: followers, endPay, liquid, contests, ability, members, res, plus a constant.
+export const PRIOR = [1, 1, 1, 1, 0, 0, 0, 0];
+const RIDGE = 40; // samples' worth of pull toward the prior
+
+/** Fits per-round weights from samples [{ round, x: parts, y: final followers }]. */
+export function fitValueModel(samples, prior = PRIOR) {
+  const model = { n: samples.length, rounds: {} };
+  for (const r of [1, 2, 3]) {
+    const rows = samples.filter(t => t.round === r);
+    const d = prior.length;
+    // the constant is barely pulled: only the parts lean on normal's yardstick
+    const ridge = i => (i === d - 1 ? 1 : RIDGE);
+    const A = Array.from({ length: d }, (_, i) => Array.from({ length: d }, (_, j) => (i === j ? ridge(i) : 0)));
+    const b = prior.map((w, i) => w * ridge(i));
+    // scale each part by its spread so the ridge pulls every weight alike
+    const scale = Array.from({ length: d }, (_, j) => (j === d - 1 ? 1 : Math.max(1, Math.sqrt(rows.reduce((a, t) => a + t.x[j] ** 2, 0) / Math.max(1, rows.length)))));
+    for (const t of rows) {
+      const x = [...t.x, 1].map((v, j) => v / scale[j]);
+      for (let i = 0; i < d; i++) { b[i] += x[i] * t.y; for (let j = 0; j < d; j++) A[i][j] += x[i] * x[j]; }
+    }
+    // the prior is in plain units: move it into scaled units
+    for (let i = 0; i < d; i++) b[i] += prior[i] * ridge(i) * (scale[i] - 1);
+    const w = solve(A, b).map((v, j) => v / scale[j]);
+    model.rounds[r] = { w, n: rows.length };
+  }
+  return model;
+}
+
+function solve(A, b) {
+  const n = b.length, M = A.map((row, i) => [...row, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let piv = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    [M[c], M[piv]] = [M[piv], M[c]];
+    for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map((row, i) => row[n] / row[i]);
+}
+
+/** Every player's expected final followers from a model and their parts (null when the model has no weights for it). */
+export function modelValues(model, round, parts) {
+  const w = model?.rounds?.[round]?.w;
+  if (!w) return null;
+  return parts.map(x => [...x, 1].reduce((a, v, j) => a + v * w[j], 0));
 }

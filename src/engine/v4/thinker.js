@@ -3,9 +3,9 @@
 // best average result. Work is counted in simulated moves, not wall time, so a seed always gives the same move;
 // chooseBotMove also caps a move at 250ms of wall time for the UI (see opts.maxMs).
 import { applyMove, followers } from './core.js';
-import { chooseNormalMove, chooseGreedyMove, scoreOptions, buyShortcut, rankRivalChoice } from './bots.js';
+import { chooseNormalMove, chooseGreedyMove, scoreOptions, buyShortcut, rankRivalChoice, boundaryParts } from './bots.js';
 import { seededRandom } from './rng.js';
-import { planProfile, planNudge } from './mind.js';
+import { planProfile, planNudge, lessonNudge, modelValues } from './mind.js';
 
 // rollouts play normal, a little noisier, comparing fewer ways to pay
 const ROLLOUT = { noise: 0.6, payWays: 2, payOptions: 2 };
@@ -20,7 +20,8 @@ const margin = (state, id) =>
  * opts.maxMs: a wall-clock cap for the UI (chooseBotMove sets 250). Off by default, so direct calls and sims stay
  *   deterministic; when it bites, rollouts stop early and are scored statically, so a slow machine plays a bit weaker.
  * opts.now: the clock for maxMs (default performance.now).
- * opts.plan, opts.memory: Hard's game plan and notes from earlier games (mind.js). They tilt which options are looked
+ * opts.valueModel: a learned value for a round's end position (mind.js fitValueModel), in place of normal's yardstick.
+ * opts.plan, opts.memory, opts.lessons: Hard's game plan, notes and tested lessons from earlier games (mind.js). They tilt which options are looked
  *   at and add their nudge to each option's played-out result, so a close call goes the plan's way.
  */
 export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
@@ -33,9 +34,9 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   // an activation or a Release normal would take: nothing to think about
   const short = pend.kind === 'buy' ? buyShortcut(state) : null;
   if (short) return { player: me, option: short.id };
-  const { plan = null, memory = null } = opts;
-  const nudge = o => planNudge(state, plan, memory, o);
-  const ranked = rival || scoreOptions(state, rand, planProfile(plan)).map(r => ({ ...r, v: r.v + nudge(r.o) })).sort((a, b) => b.v - a.v);
+  const { plan = null, memory = null, lessons = null } = opts;
+  const nudge = o => planNudge(state, plan, memory, o) + lessonNudge(state, lessons, o);
+  const ranked = rival || scoreOptions(state, rand, planProfile(plan, lessons)).map(r => ({ ...r, v: r.v + nudge(r.o) })).sort((a, b) => b.v - a.v);
   if (!ranked.length) return chooseNormalMove(state, rand);
   if (ranked.length === 1) return { player: me, option: ranked[0].o.id };
   const { candidates = 3, budget = 100, full = false, maxMs = Infinity } = opts;
@@ -67,7 +68,7 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
         if (counted) steps++;
       }
       // at a round boundary, value what's left the way normal does (followers + resources' worth)
-      value = s.over ? margin(s, me) : valueAtBoundary(s, me);
+      value = s.over ? margin(s, me) : valueAtBoundary(s, me, opts.valueModel);
     } catch (err) {
       // an engine error down a hypothetical line must never break the real move: count it as a very bad line
       // (the real game would crash there too), and keep a copy for a repro when THINKER_DUMP is set
@@ -86,8 +87,13 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
 }
 
 // A position mid-game, scored the way normal scores a pass: followers, contests, and what resources can still become.
-function valueAtBoundary(s, me) {
+// With a learned value model (mind.js) at a round's end, every player's expected final followers come from it instead.
+function valueAtBoundary(s, me, model = null) {
   if (!s.pending) return margin(s, me);
+  if (model && s.round !== undefined) {
+    const vals = modelValues(model, s.round, boundaryParts(s));
+    if (vals) return vals[me] - Math.max(...vals.filter((_, i) => i !== me));
+  }
   const probe = { ...s, pending: { player: me, kind: 'buy', options: [{ id: 'pass', kind: 'pass' }] } };
   return scoreOptions(probe, () => 0, { spite: 1 })[0].v; // the same yardstick as a finished game's margin
 }
