@@ -358,7 +358,8 @@ function changeStep(ctx, p, data) {
   }
   if (!opts.length) { if (!data.done) ctx.log(`${p.name}'s ${data.who}: no rival resources to change.`); return; }
   opts.push({ id: 'done', label: data.done ? 'Done' : 'Change nothing', kind: 'done', value: 'done', hint: -5 });
-  ctx.choose(p, `${data.who}: change a rival's resource (${data.left} left)`, opts, 'yellow.changeFrom', data);
+  // "(N left)" would read as a counted steal on screen (Take all buttons), so the count is said another way
+  ctx.choose(p, `${data.who}: change a rival's resource, ${data.left} more at most`, opts, 'yellow.changeFrom', data);
 }
 function changeOne(ctx, p, o, a, b, who) {
   o.res[a] -= 1; o.res[b] = (o.res[b] || 0) + 1;
