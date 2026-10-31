@@ -23,7 +23,7 @@ async function playOne({ g, seats, model, sample, must = [] }) {
   const pool = allQuadrantIds().filter(q => sphereVersion(q) === '2.0' && !must.includes(q)), quads = [...must];
   while (quads.length < 4) quads.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
   let s = createGame({ seats: seats.map(() => ({ kind: 'bot' })), seed: g, quadrants: quads });
-  const minds = seats.map(x => (x.old ? {} : { valueModel: model }));
+  const minds = seats.map(x => (x.old || x.plain ? {} : { valueModel: model }));
   const taken = [], places = seats.map(() => ({}));
   let k = 0, round = s.round;
   while (!s.over) {
@@ -31,7 +31,7 @@ async function playOne({ g, seats, model, sample, must = [] }) {
     round = s.round; k++;
     const pl = s.pending.player, seat = seats[pl];
     const m = seat.buyer ? chooseFollowerBuyerMove(s, rand)
-      : chooseBotMove(s, rand, { level: 'hard', maxMs: Infinity, mind: minds[pl], noPlan: !!seat.old });
+      : chooseBotMove(s, rand, { level: 'hard', maxMs: Infinity, mind: minds[pl], noPlan: !!seat.old || !!seat.plain, ...(seat.budget ? { budget: seat.budget, candidates: 4 } : {}) });
     if (typeof m.option === 'string' && /^(slot|squat):/.test(m.option)) {
       const [q, i] = m.option.split(':')[1].split('-').map(Number);
       const a = quadrant(s.quadrants[q]).actions[i];
@@ -79,12 +79,14 @@ if (!isMainThread) {
       console.log(`reads ${g - 7000 + wv.length - 1}/${games}`);
     }
   } else if (evalMode) {
-    const model = JSON.parse(readFileSync(`${out}/model.json`, 'utf8'));
+    // --budget=N: the testing seats are today's Hard with N moves of lookahead (and 4 options looked at), no plan or model
+    const budget = Number(arg('budget', 0)) || null;
+    const model = budget ? null : JSON.parse(readFileSync(`${out}/model.json`, 'utf8'));
     const tables = Number(arg('tables', 20));
     const jobs = [];
     for (let t = 0; t < tables; t++) for (const side of [0, 1]) {
       const n = 6001 + t, buyer = n % 5 === 0 ? 3 : -1;
-      jobs.push({ g: n, model, sample: false, seats: [0, 1, 2, 3].map(i => (i === buyer ? { buyer: true, role: 'buyer' } : i % 2 === side ? { role: 'learned' } : { old: true, role: 'old' })) });
+      jobs.push({ g: n, model, sample: false, seats: [0, 1, 2, 3].map(i => (i === buyer ? { buyer: true, role: 'buyer' } : i % 2 === side ? (budget ? { role: 'learned', plain: true, budget } : { role: 'learned' }) : { old: true, role: 'old' })) });
     }
     for (let j = 0; j < jobs.length; j += 4) {
       const wv = await Promise.all(jobs.slice(j, j + 4).map(run));

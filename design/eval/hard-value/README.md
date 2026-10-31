@@ -23,3 +23,8 @@ What it learned (stable from about game 12 on):
 - Buy-followers-only seat: 2 of 8 games (25%).
 
 So knowing more about a position didn't win more. Next suspect: Hard looks only to the round's end with about 100 moves of lookahead, so its limit may be search, not knowledge. A Hard with 3x the lookahead against today's Hard would show it.
+
+## Looking further ahead (the follow-up)
+Today's Hard with 3x the lookahead (300 moves, 4 options instead of 3), no plan or learned value, against today's Hard; same 20 tables played twice, seats swapped (`v4-hard-value.mjs --eval --budget=300`, results in design/eval/hard-search/):
+- Won 25 of 76 seats vs 17 of 76. Followers 59.4 vs 56.7 (paired +2.4, give or take 1.3); better on 13 of 20 tables.
+- So Hard is held back by how far it looks, not by what it knows. The catch: a browser move is capped at 200 ms today, and 3x the lookahead takes about 3x as long.
