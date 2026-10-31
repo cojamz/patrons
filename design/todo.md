@@ -12,6 +12,7 @@ Broader rework, his to lead (Oct 28): design/notes/rework-list-2026-10-28.md, wo
 
 ## Backlog initiatives (long-term goals, one line each; logged 2026-10-29 from closed threads)
 1. Member decks to 15 per color, color by color with Cory: Green and the guests are done; Magenta, Blue, Purple, White, Red next. Each deck gets two cheap members (2-3), two big ones (8+), every timing, varied bodies (rework list steps 7, 13, 14).
+- Magenta round I, parked by Cory Oct 31: replace Stash (now in Gather's shape for the meantime) and maybe Lie Low ("its hard to track"). Start from design/notes/magenta-round-i-slow-pass-2026-10-31.md; standing pick for one slot: "Steal 1 of each contest's color from its leader, if it isn't you."
 2. Fewer, more strategic cults (Cory, Oct 27): about 8-10 member cards at game end; a trio set bonus per color (one example first); how the Saboteur reaches a cult if not from the shop (rework list step 11).
 3. Rework list steps still open: what "pack/bonus merchants" means (8), White's cheap "cast me out" members (9), Sleep In growing +3/+5/+7 (10), Host, Grifter, Heiress stay [yes] (12), Double Agent's price (15).
 4. "Once per round" members left: Squatter, Straggler, Big Spender (guests) and Taskmaster, Lookout, Pawnbroker (rework list step 3). Night Owl stays.
