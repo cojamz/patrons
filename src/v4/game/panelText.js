@@ -50,7 +50,7 @@ const P = {
     take: { verb: 'Recruit a member', second: 'costing 8 or less, free', note: '+1 red' },
   },
   market: {
-    bargain: r => ({ main: `+${r + 1} blue`, second: 'may send 1 shop member to the bottom' }), // Cory, Oct 31
+    bargain: r => ({ main: `+${r + 1} blue`, second: '1 shop member to the bottom' }), // Cory, Oct 31 ("may" made line 2 too long; it dropped)
     restock: { verb: 'Send one color to the bottom', second: '+1 blue per member sent', note: '+1 blue' },
     // line 2 was too long and dropped whole at the wheel's bottom, taking the blue with it (round I review, Oct 25)
     showroom: r => ({ main: `+${2 * r} blue`, second: 'peek at the top 4', note: run(n => `+${2 * n}`, 'blue: ') }),

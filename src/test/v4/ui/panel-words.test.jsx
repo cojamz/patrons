@@ -62,7 +62,7 @@ describe('panel words (w3)', () => {
     // Savings (Oct 31): +2/+3/+4 and one shop member to the bottom, if you like
     const savings = panelText('market', { key: 'bargain' }, 2);
     expect(savings.main).toBe('+3 blue');
-    expect(savings.second).toBe('may send 1 shop member to the bottom');
+    expect(savings.second).toBe('1 shop member to the bottom');
     expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
 
