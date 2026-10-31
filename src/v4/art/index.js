@@ -132,7 +132,7 @@ for (const [key, name, source] of [
   ['customs', 'Customs', 'gleaner'], ['tinker', 'Tinker', 'sower'], ['matchmaker', 'Matchmaker', 'admirer'],
   ['agitator', 'Agitator', 'farmer'], ['ringleader', 'Ringleader', 'latebloomer'], ['drifters', 'Drifters', 'weaver'],
   ['leveler', 'Leveler', 'rainmaker'], ['bigtent', 'Big Tent', 'pilgrim'], ['bookcooker', 'Book Cooker', 'peddler'],
-  ['puppeteer', 'Puppeteer', 'feastmaker'],
+  ['puppeteer', 'Puppeteer', 'feastmaker'], ['guestbook', 'Guest Book', 'farmer'],
 ]) {
   const art = BY_ID.get(`yellow.${source}`);
   if (art) BY_ID.set(`yellow.${key}`, { ...art, id: `yellow.${key}`, name });

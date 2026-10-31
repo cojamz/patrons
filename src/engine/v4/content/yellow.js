@@ -217,6 +217,16 @@ export default {
     m('puppeteer', 'Puppeteer', 5, 4, "Worth 3 followers. Round Start: change up to 3 of rivals' resources one for one.", { f: 3,
       onRoundStart(ctx, owner) { startChange(ctx, owner, { who: 'Puppeteer', left: 3 }); },
     }),
+    // Yellow's artifact (Cory, 2026-10-31: "I think C is probably best"; replaces Farmer). Name: Claude's fill-in.
+    m('guestbook', 'Guest Book', 0, 0, 'Whenever you recruit a member of a color none of your members have, +2 yellow.', { artifact: true,
+      onRecruit(ctx, owner, card, by, what) {
+        if (by !== owner || !what.member || what.member.uid === card.uid) return;
+        const def = ctx.defOf(what.member), q = what.member.asColor || def.quadrant;
+        if (!ctx.state.quadrants.includes(q) || ctx.countMembersOfColor(owner, q) > (def.n ?? 1)) return;
+        ctx.gain(owner, Y, 2);
+        ctx.log(`${owner.name}'s Guest Book: a new member color, +2 yellow.`);
+      },
+    }),
     // ---- out of the deck since Yellow 2.0 (cull.js); kept so old records still read ----
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
     m('peddler', 'Peddler', 4, 4, 'On Recruit: +1 of each color. Round Start: +1 of each color.', { now: true,

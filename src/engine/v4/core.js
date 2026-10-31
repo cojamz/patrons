@@ -44,7 +44,7 @@ export const joinsRound = (state, def) => (!state.rules?.roundDecks ? 1 : Math.m
  *  that member leaves its color's deck. Which card is each color's artifact is Claude's pick until Cory says. */
 export const ARTIFACTS = {
   gold: 'gold.prospector', red: 'red.recruiter', echo: 'echo.tuningfork', market: 'market.bargainbin', thieves: 'thieves.fence',
-  purple: 'purple.pocketwatch', silver: 'silver.caterer', yellow: 'yellow.farmer', trading: 'trading.changer',
+  purple: 'purple.pocketwatch', silver: 'silver.caterer', yellow: 'yellow.guestbook', trading: 'trading.changer',
 };
 
 // ---------- creation ----------

@@ -56,6 +56,15 @@ describe('Yellow actions', () => {
 });
 
 describe('Yellow members', () => {
+  it('Guest Book (artifact): a recruit in a new member color gives +2 yellow, named; a second of that color gives nothing', () => {
+    let s = sc({ round: 3, res: [rich], shop: ['red.intern', 'red.volunteer'] });
+    const art = Math.max(...Object.keys(s.cards).map(Number)) + 1;
+    s.cards[art] = { uid: art, def: 'yellow.guestbook' }; s.players[0].artifact = art;
+    const y0 = R(s).yellow;
+    s = move(take(s, 'red.take'), `card:${uidOf(s, 'red.intern', 'shop')}`);
+    expect(named(s, 'Guest Book')).toHaveLength(1);
+    expect(R(s).yellow - y0).toBe(2);
+  });
   it('Customs: +1 yellow when a rival changes or steals your resources, named', () => {
     let s = take(sc({ res: [{}, { red: 2 }], members: [[], ['yellow.customs']] }), 'yellow.dilute');
     s = move(s, 'res:1:red'); s = move(s, 'color:gold'); s = move(s, 'done');
