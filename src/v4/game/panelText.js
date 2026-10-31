@@ -43,7 +43,7 @@ const P = {
   red: {
     // the +2 red sat in line 3, which drops on the outer ring (round I review, Oct 25): it takes line 2, as Right Away's purple
     evenswap: { verb: 'Use a shop member’s On Recruit', second: '+1 red', note: 'it stays in the shop' },
-    turnout: r => ({ main: `+${r + 2} red`, second: run(n => `+${n + 2}`) }),
+    turnout: r => ({ main: `+${r + 1} red`, second: `+${r} @f if you recruit a member` }), // Cory, Oct 31
     hire: { verb: 'Recruit the top of the deck', second: '+1 red', note: 'each rival +1 red' },
     hireup: { verb: 'Promote a member', second: 'shop cost up to 2 more', note: '+2 red' },
     trade: { verb: 'Demote a member', second: 'shop cost up to 2 less', note: '+2 red' },
@@ -153,7 +153,7 @@ const P = {
 // own estimate is the payout for these (Name Drop: 1 + the blue members in the shop), so it never drifts from the rule.
 // A space that pays per something shows this turn's gain big and its rate small (round 3 skeptic: Bandwagon's "+1●"
 // paid +5, Roll Call's +3), for `pid` (the viewer; else whoever's turn it is).
-const LIVE = new Set(['gold.windfall', 'red.turnout', 'purple.windup', 'yellow.harvest', 'trading.haggle', 'trading.dividend']);
+const LIVE = new Set(['gold.windfall', 'purple.windup', 'yellow.harvest', 'trading.haggle', 'trading.dividend']);
 function liveYield(qid, action, state, pid) {
   if (!state || !LIVE.has(`${qid}.${action.key}`) || typeof action.estimate !== 'function') return null;
   const p = state.players && state.players[pid ?? state.current ?? 0];

@@ -99,13 +99,13 @@ describe('panel words (w3)', () => {
     const s = createGame({ seats: [{ name: 'A', kind: 'human' }, { name: 'B', kind: 'bot' }], seed: 5, quadrants: ['market', 'red', 'gold', 'purple'] });
     s.recruits = 5;
     const t = panelText('red', quadrant('red').actions.find(x => x.key === 'turnout'), 1, s, 0);
-    expect(t.main).toBe('+3 red');
-    expect(t.second).toBe('I\u00a0+3\u00a0· II\u00a0+4\u00a0· III\u00a0+5');
+    expect(t.main).toBe('+2 red');
+    expect(t.second).toBe('+1 @f if you recruit a member');
     // Tithe: +1 gold per member you have, for the viewer
     const w = panelText('gold', quadrant('gold').actions.find(x => x.key === 'windfall'), 2, s, 0);
     expect(w.main).toBe(`+${s.players[0].members.length} gold`);
     // without a table: the printed rule
-    expect(panelText('red', { key: 'turnout' }, 1).main).toBe('+3 red');
+    expect(panelText('red', { key: 'turnout' }, 1).main).toBe('+2 red');
   });
 
   // Build Up (Oct 27): every color's 3/4/5
