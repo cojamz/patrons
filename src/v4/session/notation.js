@@ -13,7 +13,7 @@
 // - Reading replays from the seed and matches each move against the options on offer at that point, so the text is
 //   the authority: `fromNotation(toNotation(rec))` gives back the same move list, and a hand-edited line either replays
 //   or says exactly where it stops.
-import { followers } from '../../engine/v4/core.js';
+import { followers, logSince } from '../../engine/v4/core.js';
 import { allQuadrantIds, quadrant } from '../../engine/v4/content/index.js';
 import { RECORD_KIND, SCHEMA, BUILD, parseRecord, replayRecord, step } from './record.js';
 
@@ -112,7 +112,7 @@ export function toNotation(input) {
       line.count++;
     }
     const next = step(state, { player, option });
-    notes.push(...freshLog(state.log, next.log).filter(l => NOTE.test(l)));
+    notes.push(...(state.logN != null && next.logN != null ? logSince(next, state.logN) : freshLog(state.log, next.log)).filter(l => NOTE.test(l)));
     state = next;
     i++;
   }

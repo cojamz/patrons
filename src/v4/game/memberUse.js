@@ -2,7 +2,7 @@
 // they've been activated if it's one of those"), and what using one would do right now. Pure: read off the engine,
 // the dry run is the engine's own move on a copy (applyMove), so "Use: +7 gold" can't drift from the rules.
 import { applyMove, cardDef, defById, followers, quadrant, TIERS, tierLeft } from '../../engine/v4/index.js';
-import { contextFor } from '../../engine/v4/core.js';
+import { contextFor, logCount, logSince } from '../../engine/v4/core.js';
 import { timingOf } from './cards.js';
 import { memberTimingWords } from './memberTiming.js';
 
@@ -54,7 +54,7 @@ export function useNow(state, pid, uid) {
     const turns = (p1.left || 0) - (p0.left || 0);
     if (turns > 0) parts.push(`+${turns} minion${turns === 1 ? '' : 's'}`);
     const blocked = !after.cards[uid] || !after.cards[uid].used;
-    const lines = after.log.slice(state.log.length);
+    const lines = logSince(after, logCount(state));
     const asks = !!(after.pending && after.pending.player === pid && after.pending.kind === 'choose');
     const words = parts.join(', ');
     // worth nothing now (w2b #19: Safecracker invited a use that gave 0): the engine's flag when it gives one, else the

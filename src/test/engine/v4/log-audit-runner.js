@@ -1,6 +1,6 @@
 // Log audit: after every move, every change to a player must come with a new log line naming that player.
 // Used by log-audit.test.js (the gate) and scripts/v4-log-audit.mjs (the report).
-import { createGame, applyMove } from '../../../engine/v4/core.js';
+import { createGame, applyMove, logCount, logSince } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { makeTables } from './fuzz-tables-runner.js';
@@ -33,13 +33,15 @@ export function auditLog({ games = 40, seed = 7, levels = ['easy', 'normal', 'ha
       const rand = seededRandom(g + 11);
       let k = 0;
       while (!s.over && k++ < 8000) {
-        const len = s.log.length, last = s.log[len - 1];
+        const n = logCount(s);
         const before = s.players.map(snap);
         const prompt = s.pending?.prompt || s.pending?.kind || '';
-        const mv = chooseBotMove(s, rand);
+        // no wall-clock cap on Hard, so a seed and move number replay the same game anywhere
+        const mv = chooseBotMove(s, rand, { maxMs: Infinity });
         s = applyMove(s, mv);
         moves++;
-        const fresh = s.log.length > len ? s.log.slice(len) : s.log.slice(s.log.lastIndexOf(last) + 1);
+        // by count, not by the last line's text: once the log is full a new line can repeat it (Cover's +1 green)
+        const fresh = logSince(s, n);
         s.players.forEach((p, i) => {
           const what = changed(before[i], p);
           if (!what.length) return;

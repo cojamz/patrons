@@ -10,5 +10,5 @@ describe('the log says every change to a player', () => {
     const { crashes, gaps } = auditLog({ games: 6 });
     expect(crashes).toEqual([]);
     expect(Object.entries(gaps).map(([k, e]) => `${k}: ${e.ex}`)).toEqual([]);
-  }, 120000);
+  }, 240000);
 });

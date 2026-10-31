@@ -1,6 +1,6 @@
 // Display helpers. No rules here: everything is read off engine state.
 import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds, turnRail, roundOrder } from '../engine/v4/index.js';
-import { contextFor } from '../engine/v4/core.js';
+import { contextFor, logSince } from '../engine/v4/core.js';
 import { defaultEmoji } from './art/emojis.js';
 import { usableNow, memberAsks } from './game/memberUse.js';
 import { panelWords } from './game/panelText.js';
@@ -444,6 +444,8 @@ export function winSentence(state) {
 export function newLogLines(prev, next) {
   const a = prev.log, b = next.log;
   if (a === b) return [];
+  // the engine counts every line it has said: the log keeps only its last lines, and a new line can repeat the last one
+  if (prev.logN != null && next.logN != null && next.logN >= prev.logN) return logSince(next, prev.logN);
   if (b.length >= a.length && (a.length === 0 || b[a.length - 1] === a[a.length - 1])) return b.slice(a.length);
   // trimmed at the front: find where prev's tail (last 4 lines) ends in next
   const tail = a.slice(-4);

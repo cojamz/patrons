@@ -1340,7 +1340,7 @@ function tallied(state, owner, uid, fn) {
 // Every member trigger leaves a trace: if a hook changed anyone's resources or followers and didn't say so itself,
 // the log says it for the hook ("Kay's Tax Collector: +1 gold"), so every number on the table traces to a line.
 function traceSnapshot(state) {
-  return { len: state.log.length, last: state.log[state.log.length - 1], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus, discount: o.discount })), f: fMark(state) };
+  return { n: logCount(state), players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus, discount: o.discount })), f: fMark(state) };
 }
 function traceChanges(state, before, owner, def) {
   const name = def && def.name;
@@ -1363,7 +1363,7 @@ function traceChanges(state, before, owner, def) {
   });
   if (!out.length) return;
   // the hook said so itself: a new line names it. A nested line that doesn't (Underdog doubling Banker's gold) doesn't count.
-  const fresh = state.log.length < LOG_MAX ? state.log.slice(before.len) : state.log.slice(state.log.lastIndexOf(before.last) + 1);
+  const fresh = logSince(state, before.n);
   if (fresh.some(l => l.includes(name))) return;
   for (const line of out) log(state, line);
 }
@@ -1807,7 +1807,7 @@ function note(state, p, member, text, res = null) {
 // ("Tide: P2 +2 blue."), and cards new in the shop are named. New cards log themselves this way.
 const frames = [];
 function accounted(state, cause, fn, actor = null) {
-  const f = { cause, actor, len: state.log.length, last: state.log[state.log.length - 1], shop: [...state.shop], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus, members: [...o.members] })), inner: state.players.map(() => ({ res: {}, bonus: 0 })), innerLines: [] };
+  const f = { cause, actor, n: logCount(state), shop: [...state.shop], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus, members: [...o.members] })), inner: state.players.map(() => ({ res: {}, bonus: 0 })), innerLines: [] };
   frames.push(f);
   let ok = false;
   try { const out = fn(); ok = true; return out; } finally {
@@ -1815,7 +1815,7 @@ function accounted(state, cause, fn, actor = null) {
     if (ok) settle(state, f);
   }
 }
-const freshSince = (state, f) => (f.len <= state.log.length && state.log[f.len - 1] === f.last ? state.log.slice(f.len) : state.log.slice(state.log.lastIndexOf(f.last) + 1));
+const freshSince = (state, f) => logSince(state, f.n);
 function settle(state, f) {
   const parent = frames[frames.length - 1];
   if (f.cause !== null) {
@@ -1878,7 +1878,14 @@ function causeOf(state, task) {
   return '';
 }
 
+// The log keeps its last LOG_MAX lines, so its length stops growing late in a game: "what's new since" counts
+// every line ever said (state.logN), never the length or the last line's text, which repeats ("P2's Cover: +1 green.").
+/** How many lines have ever been logged in this game (old saves without logN count from their log's length). */
+export const logCount = state => state.logN ?? state.log.length;
+/** The lines logged since logCount(state) was n. */
+export const logSince = (state, n) => state.log.slice(Math.max(0, state.log.length - (logCount(state) - n)));
 function log(state, text) {
+  state.logN = logCount(state) + 1;
   state.log.push(text);
   if (state.log.length > LOG_MAX) state.log.splice(0, state.log.length - LOG_MAX);
 }
