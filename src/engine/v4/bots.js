@@ -1,6 +1,6 @@
 // Bots: pure functions that pick one legal option. Used for empty seats, simulation and fuzz tests.
 //
-// Difficulty levels. A seat's level comes from `state.players[i].bot` ('easy' | 'normal' | 'hard'), or from
+// Difficulty levels. A seat's level comes from `state.players[i].bot` ('easy' | 'normal' | 'hard' | 'veryhard'), or from
 // `chooseBotMove(state, rand, { level })`, which wins over the seat. Anything else plays 'normal'.
 //   easy   – normal's end-of-game judgment, played carelessly: noisy placements and buys, a soft spot for members,
 //            little attention to rivals. Spends down like normal (the old greedy easy hoarded 50+ gold and recruited
@@ -10,6 +10,8 @@
 //            left, and the ring contests it leads). Never ends holding resources a follower buy could use.
 //   hard   – normal plus lookahead (thinker.js): plays its best few options out to the round end with normal
 //            bots and keeps the best. Its work is counted in moves, not milliseconds, so it stays deterministic.
+//            opts.mind (sims only) adds a game plan, tested lessons and a learned position value (mind.js).
+//   veryhard – hard looking three times as far (VERY_HARD).
 // Every level is deterministic for a given state and rand.
 import {
   contextFor, actionAt, cardDef, TIERS, followers, memberCount, RING_VALUE, WORKERS, tierLeft,
@@ -18,8 +20,9 @@ import {
 import { defById, quadrant, handlerById } from './content/index.js';
 import { plainCopy } from './copy.js';
 import { chooseThinkerMove } from './thinker.js';
+import { planFor, planSetupPick } from './mind.js';
 
-export const BOT_LEVELS = ['easy', 'normal', 'hard'];
+export const BOT_LEVELS = ['easy', 'normal', 'hard', 'veryhard'];
 // A liking for members on top of what they're measured to be worth, in followers, fading to BIAS_FLOOR of itself
 // as the game runs out. The valuation alone under-recruits: with it, normal beat the old normal 37% to 21% and
 // recruits ~7 members instead of ~4 (400 games each; design/eval/bots.md). SPITE: how much the best rival's
@@ -43,6 +46,9 @@ export const BOT_PROFILES = {
 };
 // Hard's wall-clock cap per move (pass { maxMs: Infinity } for deterministic sims).
 const HARD_MAX_MS = 200; // plus ~10–40ms of setup before the clock starts: under 300ms a move in a browser
+// Very Hard: Hard looking 3x as far (300 moves, 4 options). It beat Hard 25 seats to 17 of 76 (20 tables played twice,
+// seats swapped; design/eval/hard-value/README.md, Cory Oct 31: "a new category of Hard"). About 3x Hard's time a move.
+const VERY_HARD = { budget: 300, candidates: 4, maxMs: 600 };
 const SETUP_WEIGHTS = { gold: 3, red: 3, blue: 1, green: 1 };
 
 /** For a setup screen: the levels in order, with a name and a one-line blurb. */
@@ -50,6 +56,7 @@ export const BOT_LEVEL_INFO = [
   { level: 'easy', name: 'Easy', blurb: 'Careless: often takes a worse move, and undervalues what members do.' },
   { level: 'normal', name: 'Normal', blurb: 'Plays for the end: builds a following of members, then spends down into followers.' },
   { level: 'hard', name: 'Hard', blurb: 'Normal, plus it plays its best few moves ahead before choosing.' },
+  { level: 'veryhard', name: 'Very Hard', blurb: 'Hard, looking three times as far ahead. A little slower each move.' },
 ];
 export const DEFAULT_BOT_LEVEL = 'normal';
 
@@ -76,7 +83,16 @@ export function chooseBotMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
   if (!pend) return null;
   const level = botLevel(state, pend.player, opts);
-  if (level === 'hard') return chooseThinkerMove(state, rand, { maxMs: HARD_MAX_MS, ...opts });
+  if (level === 'hard' || level === 'veryhard') {
+    // a game plan and tested lessons (mind.js) only when the caller keeps a mind for the seat (sims): they measured even
+    // with plain Hard, so the levels people play don't use them (design/eval/hard-value/README.md)
+    const mind = opts.noPlan ? null : opts.mind || null;
+    const plan = planFor(state, pend.player, mind, rand);
+    const pick = planSetupPick(state, plan);
+    if (pick) return pick;
+    const deep = level === 'veryhard' ? VERY_HARD : { maxMs: HARD_MAX_MS };
+    return chooseThinkerMove(state, rand, { ...deep, ...opts, plan, memory: mind?.memory || null, lessons: mind?.lessons || null, valueModel: opts.valueModel ?? mind?.valueModel ?? null });
+  }
   return chooseNormalMove(state, rand, { ...BOT_PROFILES[level], ...opts });
 }
 
@@ -492,6 +508,25 @@ function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}, future)
     return followers(s, p) + gameEndPay(s, ctx, p) + (extraAbility[p.id] || 0)
       + liquidate(s, p.res, extra, buysLeft[p.id], wild) + contests(s, ctx, p, roundLeft, future);
   });
+}
+/**
+ * A position's parts for every player, the way normal sees them (for a learned value at a round's end, mind.js):
+ * followers, game-end pay, what resources can still become, expected contests, members' abilities still to come,
+ * member count and resources held.
+ */
+export const PART_KEYS = ['followers', 'endPay', 'liquid', 'contests', 'ability', 'members', 'res'];
+export function boundaryParts(s) {
+  const { turns, roundLeft } = horizon(s);
+  const lt = laterTurns(s);
+  const buys = s.players.map((_, i) => turns[i] + lt.turns);
+  const income = turns.map(t => (t * INCOME[Math.max(1, s.round) - 1] + lt.income) * INCOME_SCALE);
+  const ctx = contextFor(s);
+  const wild = new Set(s.quadrants.map(quadrant).filter(q => q.wildInFollowerBuys).map(q => q.resource));
+  const ability = abilityTotals(s, buys);
+  return s.players.map(p => [
+    followers(s, p), gameEndPay(s, ctx, p), liquidate(s, p.res, income[p.id], buys[p.id], wild),
+    contests(s, ctx, p, roundLeft), ability[p.id], memberCount(s, p), sum(p.res),
+  ]);
 }
 const marginOf = (vals, me, spite = SPITE) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
 
