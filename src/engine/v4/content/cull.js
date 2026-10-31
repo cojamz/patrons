@@ -14,7 +14,9 @@ export const CUT = new Set([
   'purple.overseer', // Cory, 2026-10-18: cut; its replacement is his call
   'purple.bookkeeper', 'purple.lamplighter', 'purple.patience', // Cory, 2026-10-22: his Purple set of 12
   'silver.silversmith', 'silver.toastmaster', 'silver.caterer', 'silver.dowager', 'silver.steward',
-  'yellow.harmonist', 'yellow.sower', 'yellow.farmer', 'yellow.gardener', 'yellow.gleaner',
+  // Yellow 2.0 (Cory, 2026-10-31): his deck of 15 (yellow.js); Gardener and Harmonist come back
+  'yellow.sower', 'yellow.farmer', 'yellow.gleaner', 'yellow.peddler', 'yellow.admirer', 'yellow.latebloomer',
+  'yellow.rainmaker', 'yellow.pilgrim', 'yellow.weaver', 'yellow.chefs',
   'thieves.mole', 'thieves.lightfingers', 'thieves.bigscore', 'thieves.lookout',
   'trading.lender', 'trading.tipster', 'trading.dealer', 'trading.pawnbroker', 'trading.liquidator',
   'trading.safetynet', 'trading.magnate', 'trading.shareholder', 'trading.reinvestor', // Cory, 2026-10-22: his White set of 12

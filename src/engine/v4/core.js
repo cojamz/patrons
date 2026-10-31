@@ -174,7 +174,8 @@ export const memberCount = (state, p) => p.members.reduce((s, u) => s + countOf(
 // Dabblers (everyColor) counts for every color on the table (Cory, 2026-10-28)
 export const countMembersOfColor = (state, p, q) => p.members.reduce((s, u) => {
   const c = state.cards[u], every = effectiveDefs(c).some(d => d.everyColor) && q !== 'guest' && state.quadrants.includes(q);
-  return s + (defById(c.def).quadrant === q || every ? countOf(c) : 0);
+  // Drifters counts as the one color its owner chose when recruiting it (card.asColor; Cory, 2026-10-31)
+  return s + ((c.asColor || defById(c.def).quadrant) === q || every ? countOf(c) : 0);
 }, 0);
 export const cardDef = (state, uid) => defById(state.cards[uid].def);
 export function actionAt(state, q, i) { return quadrant(state.quadrants[q]).actions[i]; }

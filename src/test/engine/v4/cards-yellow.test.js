@@ -14,31 +14,101 @@ const R = (s, i = 0) => s.players[i].res;
 const rich = { gold: 30, red: 30, yellow: 30, green: 30 };
 
 describe('Yellow actions', () => {
-  it('Harvest: +1 yellow plus 1 per other color held; Top Up: +1 of each color you lack', () => {
-    expect(R(take(sc({ res: [{ gold: 1, red: 2 }] }), 'yellow.harvest')).yellow).toBe(3);
-    expect(R(take(sc({ res: [{ gold: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 1, red: 1, yellow: 2, green: 1 }); // +1 each fewest, +1 yellow (round I)
-  });
-  // the fewest, not "none of" (dead-window audit, 2026-10-14): it was dead whenever you held every color
-  it('Top Up: +1 of each color you hold the fewest of (ties: all), named; holding every color still pays', () => {
-    let s = take(sc({ res: [{ gold: 2, red: 1, yellow: 1, green: 3 }] }), 'yellow.bloom');
-    expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 3, green: 3 });
-    // a tie says why it pays each tied color (panel tester C: only the hover said so)
-    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +1 of each.", "P1's Top Up: +1 red, +2 yellow."]);
-    expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 3, green: 2 });
+  it('Harvest: +3 in round I, +4 in II, +5 in III, one color at a time, named', () => {
+    let s = take(sc({}), 'yellow.harvest');
+    for (const c of ['red', 'red', 'green']) s = move(s, `color:${c}`);
+    expect(R(s)).toEqual({ gold: 0, red: 2, yellow: 0, green: 1 });
+    s = take(sc({ round: 3 }), 'yellow.harvest');
+    for (let i = 0; i < 5; i++) s = move(s, 'color:gold');
+    expect(R(s).gold).toBe(5);
   });
   it('Trade Seeds: +2 yellow, then up to 3 one-for-one swaps', () => {
     let s = take(sc({ res: [{ gold: 4 }] }), 'yellow.transmute');
     s = move(s, 'swap:gold:red'); s = move(s, 'swap:gold:green'); s = move(s, 'swap:gold:red');
     expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 2, green: 1 });
   });
-  it('Branch Out: +1 of each other color per 3 yellow (yellow kept); Potluck: 1 per member of its color; Bumper Crop: per full set', () => {
-    expect(R(take(sc({ round: 2, res: [{ yellow: 7 }] }), 'yellow.prism'))).toEqual({ gold: 2, red: 2, yellow: 7, green: 2 });
-    expect(R(take(sc({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern']] }), 'yellow.gather'))).toMatchObject({ gold: 1, red: 4 }); // Triplets 3 + Intern 1.
-    expect(R(take(sc({ round: 3, res: [{ gold: 2, red: 2, yellow: 3, green: 2 }] }), 'yellow.flourish'))).toEqual({ gold: 4, red: 4, yellow: 3, green: 4 });
+  it("Dilute: +2 yellow, then change up to 3 of rivals' resources one for one, each named", () => {
+    let s = take(sc({ res: [{}, { red: 3 }] }), 'yellow.dilute');
+    expect(R(s).yellow).toBe(2);
+    s = move(s, 'res:1:red'); s = move(s, 'color:gold');
+    s = move(s, 'res:1:red'); s = move(s, 'color:green');
+    s = move(s, 'done');
+    expect(R(s, 1)).toEqual({ gold: 1, red: 1, yellow: 0, green: 1 });
+    expect(named(s, 'Dilute')).toHaveLength(3); // the +2 yellow and both changes
+  });
+  it("Big Dilute (round II): +4 yellow, then up to 6 changes; it stops at 6", () => {
+    let s = take(sc({ round: 2, res: [{}, { red: 9 }] }), 'yellow.bigdilute');
+    for (let i = 0; i < 6; i++) { s = move(s, 'res:1:red'); s = move(s, 'color:gold'); }
+    expect(R(s).yellow).toBe(4);
+    expect(R(s, 1)).toMatchObject({ red: 3, gold: 6 });
+    expect(s.pending?.options?.some(o => o.id === 'res:1:red')).toBeFalsy();
+  });
+  it('Melting Pot (round II): +2 yellow, and +1 in colors you choose per color among your members', () => {
+    let s = take(sc({ round: 2, members: [['red.twins', 'gold.banker', 'yellow.explorer']] }), 'yellow.meltingpot');
+    for (let i = 0; i < 3; i++) s = move(s, 'color:green');
+    expect(R(s)).toMatchObject({ yellow: 2, green: 3 });
+  });
+  it('Makeover (round III): +4 yellow, then rearrange everything', () => {
+    let s = take(sc({ round: 3, res: [{ gold: 2, red: 2 }] }), 'yellow.makeover');
+    s = move(s, 'color:red');
+    expect(R(s)).toEqual({ gold: 0, red: 8, yellow: 0, green: 0 });
   });
 });
 
 describe('Yellow members', () => {
+  it('Customs: +1 yellow when a rival changes or steals your resources, named', () => {
+    let s = take(sc({ res: [{}, { red: 2 }], members: [[], ['yellow.customs']] }), 'yellow.dilute');
+    s = move(s, 'res:1:red'); s = move(s, 'color:gold'); s = move(s, 'done');
+    expect(R(s, 1)).toMatchObject({ red: 1, gold: 1, yellow: 1 });
+    expect(named(s, 'Customs')).toHaveLength(1);
+  });
+  it('Go-Between: once per space, you may change 1 gained resource to another color', () => {
+    let s = take(sc({ members: [['yellow.gobetween']] }), 'yellow.transmute');
+    s = move(s, 'color:red');
+    expect(R(s)).toMatchObject({ yellow: 1, red: 1 });
+    expect(named(s, 'Go-Between')).toHaveLength(1);
+  });
+  it('Tinker: On Recruit and Round Start, up to 3 swaps of your own', () => {
+    let s = sc({ res: [{ gold: 3 }], members: [['yellow.tinker']], queue: [{ t: 'round', r: 2 }] });
+    s = move(s, 'swap:gold:red'); s = move(s, 'done');
+    expect(R(s)).toMatchObject({ gold: 2, red: 1 });
+  });
+  it('Matchmaker: a recruit in a new member color gives +1 follower and +2 in colors you choose', () => {
+    let s = sc({ round: 3, res: [rich], members: [['yellow.matchmaker']], shop: ['red.intern'] });
+    const f0 = followers(s, s.players[0]);
+    s = move(take(s, 'red.take'), `card:${uidOf(s, 'red.intern', 'shop')}`);
+    const g0 = R(s).green;
+    s = move(s, 'color:green'); s = move(s, 'color:green');
+    expect(R(s).green - g0).toBe(2);
+    expect(followers(s, s.players[0]) - f0).toBe(1 + cardDef(s, uidOf(s, 'red.intern', 0)).f);
+  });
+  it('Dyer: round start, +1 yellow per color you hold', () => {
+    const s = sc({ members: [['yellow.dyer']], res: [{ gold: 1, red: 2 }], queue: [{ t: 'round', r: 2 }] });
+    expect(R(s).yellow).toBe(2);
+  });
+  it("Agitator: On Recruit, change up to 4 of rivals' resources", () => {
+    let s = sc({ round: 3, res: [{}, { red: 5 }], shop: ['yellow.agitator'] });
+    s = move(take(s, 'red.take'), `card:${uidOf(s, 'yellow.agitator', 'shop')}`);
+    for (let i = 0; i < 4; i++) { s = move(s, 'res:1:red'); s = move(s, 'color:green'); }
+    expect(R(s, 1)).toMatchObject({ red: 1, green: 4 });
+  });
+  it('Drifters: counts as a member of the color chosen on recruit', () => {
+    let s = sc({ round: 3, shop: ['yellow.drifters'] });
+    s = move(take(s, 'red.take'), `card:${uidOf(s, 'yellow.drifters', 'shop')}`);
+    s = move(s, 'color:green');
+    expect(s.cards[uidOf(s, 'yellow.drifters', 0)].asColor).toBe('green');
+  });
+  it("Leveler: once per round, 1 of each rival's biggest color becomes the color you choose", () => {
+    let s = sc({ res: [{}, { red: 3, gold: 1 }], members: [['yellow.leveler']] });
+    s = take(s, 'gold.rush');
+    s = move(s, `use:${uidOf(s, 'yellow.leveler', 0)}`);
+    s = move(s, 'color:green');
+    expect(R(s, 1)).toMatchObject({ red: 2, green: 1, gold: 1 });
+  });
+  it('Big Tent: game end, +2 followers per color you have exactly one member of', () => {
+    const s = sc({ members: [['yellow.bigtent', 'red.twins', 'red.intern', 'gold.banker']] });
+    expect(cardDef(s, uidOf(s, 'yellow.bigtent', 0)).onGameEnd({ state: s, countMembersOfColor: (p, q) => ({ yellow: 1, red: 2, gold: 1 })[q] || 0 }, s.players[0])).toBe(4);
+  });
   it('Gardener: round start +1 of each color you have none of, named; Midas leaves member income alone', () => {
     const s = sc({ res: [{ gold: 2 }], members: [['yellow.gardener', 'gold.midas']], queue: [{ t: 'round', r: 2 }] });
     expect(R(s)).toEqual({ gold: 2, red: 1, yellow: 1, green: 1 });
@@ -70,24 +140,6 @@ describe('Yellow members', () => {
     expect(s.players[1].members).toContain(u);
     expect(R(s)).toEqual({ gold: 0, red: 0, yellow: 0, green: 0 });
     expect(named(s, 'Admirer')).toEqual([]);
-  });
-  it('Go-Between: your non-yellow recruit gives +1 of its color, named; a guest (colorless) gives nothing', () => {
-    const restore = pinCosts({ 'red.volunteer': [0, 0] });
-    let s = sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] });
-    { const k = s.pile.findIndex(u => s.cards[u].def.startsWith('echo.')); s.pile.unshift(...s.pile.splice(k, 1)); } // a green member on top
-    s = take(s, 'red.hire');
-    restore();
-    expect(R(s).red).toBe(1); // Walk-In's own +1 red; the deck's top member here is green, so Go-Between's +1 is green
-    expect(named(s, 'Go-Between')).toHaveLength(1);
-    s = sc({ round: 3, members: [['yellow.gobetween']], shop: ['benders.squatter'] }); // a guest: colorless
-    s = move(take(s, 'red.take'), `card:${uidOf(s, 'benders.squatter', 'shop')}`);
-    expect(R(s)).toEqual({ gold: 0, red: 1, yellow: 0, green: 0 }); // only Recruit a Member's +1 red
-    expect(named(s, 'Go-Between')).toHaveLength(0);
-  });
-  it('Dyer: round end +1 yellow per color held, named', () => {
-    const s = sc({ res: [{ gold: 1, red: 3 }], members: [['yellow.dyer']], queue: [{ t: 'endRound' }] });
-    expect(R(s).yellow).toBe(2);
-    expect(named(s, 'Dyer')).toHaveLength(1);
   });
   it('Late Bloomers: round start +1 of each color with the fewest followers (ties count), named; not when ahead', () => {
     let s = sc({ members: [['yellow.latebloomer']], bonus: [0, 0], queue: [{ t: 'round', r: 2 }] });
@@ -159,7 +211,7 @@ describe('Yellow members', () => {
   });
   it('Rainmaker × Underdog: the gold part is a gold gain, so it doubles past the match (see ledger question)', () => {
     let s = sc({ res: [{ gold: 1, yellow: 5 }, { gold: 20 }], members: [['yellow.rainmaker', 'gold.underdog']] });
-    s = take(s, 'yellow.harvest');
+    s = move(take(s, 'yellow.transmute'), 'done');
     const y = R(s).yellow;
     s = move(s, `use:${uidOf(s, 'yellow.rainmaker', 0)}`);
     expect(R(s).gold).toBe(1 + 2 * (y - 1));
@@ -171,12 +223,12 @@ describe('Yellow members', () => {
     expect(named(s, 'Pilgrim')[0]).toMatch(/P1's Pilgrim: \+1 gold, \+1 red, \+1 yellow, \+1 green/);
   });
   it('Farmer: +1 more when an action gains yellow, named; a Doppelganger copy adds another', () => {
-    let s = take(sc({ members: [['yellow.farmer']] }), 'yellow.harvest');
-    expect(R(s).yellow).toBe(2);
+    let s = take(sc({ members: [['yellow.farmer']] }), 'yellow.transmute');
+    expect(R(s).yellow).toBe(3);
     expect(named(s, 'Farmer')).toHaveLength(1);
     s = sc({ members: [['yellow.farmer', 'echo.doppel']] });
     s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'yellow.farmer';
-    expect(R(take(s, 'yellow.harvest')).yellow).toBe(3); // Harvest's 1 (no other colors held), +1 Farmer, +1 its copy
+    expect(R(take(s, 'yellow.transmute')).yellow).toBe(4); // Trade Seeds' 2, +1 Farmer, +1 its copy
   });
   it('Weaver: buying 5+ followers gives +1 of each color, named; a 1-buy does not', () => {
     let s = sc({ res: [{ gold: 3, red: 3, yellow: 3, green: 3 }], members: [['yellow.weaver']] });
@@ -211,10 +263,5 @@ describe('Yellow members', () => {
     expect([d.s, d.w, d.f]).toEqual([6, 3 + EXTRA_WILD, 2]);
     expect(memberCount(s, s.players[0])).toBe(1);
     expect(followers(s, s.players[0]) - followers(sc({}), sc({}).players[0])).toBe(2);
-  });
-  it('Top Up: +1 of each fewest color and +1 yellow × round (Cory, 2026-10-22), named', () => {
-    const s = take(sc({ round: 3, res: [{ gold: 2, red: 1, yellow: 1, green: 3 }] }), 'yellow.bloom');
-    expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 5, green: 3 });
-    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +1 of each.", "P1's Top Up: +1 red, +4 yellow."]);
   });
 });

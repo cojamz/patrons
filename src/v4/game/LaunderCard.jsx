@@ -13,7 +13,7 @@ import './launder.css';
 // the mix being sent, kept outside the card so a re-render between two steps never loses it: { key, mix, done }
 let run = null;
 const keyOf = (state, pend) => `${pend.player}|${state.round}`;
-const isLaunder = pend => !!(pend && pend.kind === 'choose' && /^Launderers: /.test(String(pend.prompt || '')));
+const isLaunder = pend => !!(pend && pend.kind === 'choose' && /^[^:]+: (pick a color for all \d+, or split them|how many \w+\? \()/.test(String(pend.prompt || '')));
 
 /**
  * Does the Launderers card answer this choice: its first question, or a "how many <color>?" step of a mix the card is

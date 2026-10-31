@@ -14,7 +14,7 @@ describe('base rules', () => {
   it('5 for 5: one player can buy repeatedly without a stock limit', () => {
     const Q = ['gold', 'red', 'yellow', 'trading'];
     let s = table(Q, { n: 4, res: [{ gold: 30 }], shop: ROW, queue: turns(0, 0, 0) });
-    for (const sp of ['yellow.harvest', 'yellow.bloom', 'trading.stipend']) {
+    for (const sp of ['red.turnout', 'gold.rush', 'trading.stipend']) {
       s = take(s, sp);
       expect(ids(s)).toContain('tier:mid');
       s = move(s, 'tier:mid');
@@ -28,20 +28,21 @@ describe('Yellow', () => {
   it('Late Bloomers on recruit: excludes itself when checking tied for fewest', () => {
     const Q = ['gold', 'red', 'yellow', 'trading'];
     let s = table(Q, { res: [{ yellow: 5 }], shop: ['yellow.latebloomer', ...ROW] });
-    s = take(s, 'yellow.harvest');
+    s = move(take(s, 'yellow.transmute'), 'done');
     expect(followers(s, s.players[0])).toBe(followers(s, s.players[1])); // 1 v 1: tied for fewest
     s = move(s, `card:${uidIn(s, 'yellow.latebloomer', 'shop')}`);
     expect(s.players[0].members.length).toBe(1);
     // The two followers from the card do not stop the recruit income.
-    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 2, white: 1 });
+    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 3, white: 1 }); // Trade Seeds' +2 yellow, less the price
   });
 
-  it('Potluck and Go-Between: a guest member whose color is not on the table brings nothing', () => {
+  it('Melting Pot: a guest member whose color is not on the table adds no color', () => {
     const Q = ['gold', 'red', 'yellow', 'trading']; // no purple: Front-runner leans purple
-    let s = table(Q, { round: 2, members: [['benders.frontrunner', 'yellow.gobetween']], shop: ROW });
-    s = take(s, 'yellow.gather');
-    // Go-Between is yellow: +1 yellow; Front-runner: nothing
-    expect(R(s)).toEqual({ gold: 0, red: 0, yellow: 1, white: 0 });
+    let s = table(Q, { round: 2, members: [['benders.frontrunner', 'yellow.explorer']], shop: ROW });
+    s = take(s, 'yellow.meltingpot');
+    // Explorer is yellow: one pick; Front-runner: nothing
+    s = move(s, 'color:red');
+    expect(R(s)).toEqual({ gold: 0, red: 1, yellow: 2, white: 0 });
   });
 });
 

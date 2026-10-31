@@ -127,6 +127,16 @@ for (const [id, name, source] of [
   const art = BY_ID.get(source);
   if (art) BY_ID.set(id, { ...art, id, name });
 }
+// Yellow 2.0's new members (Cory, 2026-10-31) reuse cut Yellow portraits while names and artwork settle.
+for (const [key, name, source] of [
+  ['customs', 'Customs', 'gleaner'], ['tinker', 'Tinker', 'sower'], ['matchmaker', 'Matchmaker', 'admirer'],
+  ['agitator', 'Agitator', 'farmer'], ['ringleader', 'Ringleader', 'latebloomer'], ['drifters', 'Drifters', 'weaver'],
+  ['leveler', 'Leveler', 'rainmaker'], ['bigtent', 'Big Tent', 'pilgrim'], ['bookcooker', 'Book Cooker', 'peddler'],
+  ['puppeteer', 'Puppeteer', 'feastmaker'],
+]) {
+  const art = BY_ID.get(`yellow.${source}`);
+  if (art) BY_ID.set(`yellow.${key}`, { ...art, id: `yellow.${key}`, name });
+}
 // Feastmaker became Chefs (Cory, 2026-10-18): same drawing under the new id
 { const art = BY_ID.get('yellow.feastmaker'); if (art) BY_ID.set('yellow.chefs', { ...art, id: 'yellow.chefs', name: 'Chefs' }); }
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */
