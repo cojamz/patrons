@@ -24,12 +24,14 @@ export default {
       },
     },
     {
-      key: 'turnout', ring: 1, name: 'Gather', text: '+3 red in round I, +4 in round II, +5 in round III.',
-      // Cory, 2026-10-25: +1 each round (Hard bot read: mostly a losers' space).
-      byRound: { lines: ['+3 red', '+4 red', '+5 red'] },
-      estimate: ctx => ctx.state.round + 2,
+      key: 'turnout', ring: 1, name: 'Gather', copyDoesIt: true,
+      text: '+2 red in round I, +3 in round II, +4 in round III. This turn, if you recruit a member, +1 follower (+2 in round II, +3 in round III).',
+      // Cory, 2026-10-31: fuel tied to the recruit ("B": 2/3/4 red, 1/2/3 followers). Core pays it on the turn's first member recruit.
+      byRound: { lines: ['+2 red. This turn, if you recruit a member, +1 follower.', '+3 red. This turn, if you recruit a member, +2 followers.', '+4 red. This turn, if you recruit a member, +3 followers.'] },
+      estimate: ctx => ctx.state.round + 1 + ctx.state.round * 0.7,
       resolve(ctx, p) {
-        ctx.gain(p, 'red', ctx.state.round + 2, { fromAction: true });
+        ctx.gain(p, 'red', ctx.state.round + 1, { fromAction: true });
+        p.gatherFollowers = Math.max(p.gatherFollowers || 0, ctx.state.round);
       },
     },
     {

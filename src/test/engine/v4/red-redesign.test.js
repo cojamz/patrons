@@ -17,9 +17,30 @@ const pass = s => s.pending?.kind === 'buy' ? move(s, 'pass') : s;
 const remaining = s => [...s.shop, ...s.pile, ...s.players.flatMap(p => p.members)];
 
 describe('locked Red action progression', () => {
-  it.each([1, 2, 3])('Gather gives round +1 red in round %i', round => {
-    const s = take(table(Q, { round, shop: ROW }), 'red.turnout');
-    expect(s.players[0].res.red).toBe(round + 2);
+  it.each([1, 2, 3])('Gather gives round +1 red in round %i, and round followers on a member recruit this turn', round => {
+    let s = table(Q, { round, shop: ROW });
+    s.players[0].res.gold = 9;
+    s = take(s, 'red.turnout');
+    expect(s.players[0].res.red).toBe(round + 1);
+    expect(s.players[0].gatherFollowers).toBe(round);
+    const bonus = s.players[0].bonus;
+    s = move(s, `card:${uidIn(s, 'red.intern', 'shop')}`);
+    expect(defs(s, 0)).toContain('red.intern');
+    expect(s.players[0].bonus - bonus).toBe(round);
+    expect(s.players[0].gatherFollowers).toBeUndefined();
+    expect(s.log.join('\n')).toContain("P1's Gather: +");
+  });
+
+  it('Gather pays nothing for buying followers, and wears off at the next turn', () => {
+    let s = table(Q, { shop: ROW });
+    s.players[0].res.gold = 5;
+    s = take(s, 'red.turnout');
+    s = move(s, 'tier:mid');
+    expect(s.players[0].gatherFollowers).toBe(1);
+    expect(s.log.join('\n')).not.toContain('for recruiting a member');
+    s.queue = [{ t: 'turn', p: 0 }]; s.pending = null;
+    s = resume(s);
+    expect(s.players[0].gatherFollowers).toBeUndefined();
   });
 
   it('Walk-In recruits the top member of the deck free, leaves the shop alone, +1 red and each rival +1 red', () => {

@@ -731,6 +731,7 @@ function runTask(state, task) {
       p.turnBuys = 0;
       delete p.peekReach;
       delete p.perSpend;
+      delete p.gatherFollowers;
       // task.ring: a turn limited to spaces of that ring or lower (a weaker extra worker)
       const source = workerSourceOf(task);
       state.queue.unshift({ t: 'place', p: p.id, ...source, ...(task.ring ? { ring: task.ring } : {}) }, { t: 'buy', p: p.id, ...source }, { t: 'buy', p: p.id, ...source, extra: true }, { t: 'endTurn', p: p.id, ...source });
@@ -1068,6 +1069,7 @@ function memberAcquired(state, p, uid, { stolen = false } = {}) {
  */
 function recruited(state, p, what) {
   const ctx = ctxFor(state);
+  if (what.member) gatherBonus(state, p);
   eachMember(state, (owner, c, d) => {
     if (what.member && d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, what.member);
     if (d.onRecruit) d.onRecruit(ctx, owner, c, p, what);
@@ -1228,6 +1230,17 @@ function spendBonus(state, p, spend) {
   p.bonus += n + extra;
   fCredit(state, mark, 'Splurge');
   log(state, `${p.name}'s Splurge: +${n} follower${n > 1 ? 's' : ''} for spending.${extra ? ` Broker: +${extra}.` : ''}`);
+}
+// Red's Gather (Cory, 2026-10-31): "This turn, if you recruit a member, +1 follower (+2 in round II, +3 in round III)".
+// p.gatherFollowers is set by the space and cleared at turn start; it pays once, on the turn's first member recruit.
+function gatherBonus(state, p) {
+  const n = p.gatherFollowers;
+  if (!n) return;
+  delete p.gatherFollowers;
+  const mark = fMark(state);
+  p.bonus += n;
+  fCredit(state, mark, 'Gather');
+  log(state, `${p.name}'s Gather: +${n} follower${n > 1 ? 's' : ''} for recruiting a member.`);
 }
 function buyFollowers(state, p, tier, chosen) {
   return underCause({ kind: 'buy', pid: p.id, tier: tier.key, get: tier.get }, () => buyFollowersNow(state, p, tier, chosen));

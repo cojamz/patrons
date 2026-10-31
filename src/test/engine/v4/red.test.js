@@ -18,7 +18,7 @@ const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.pr
 describe('Red action progression', () => {
   it.each([1, 2, 3])('Gather totals round %i plus its inherent red', round => {
     const s = scene({ round }); s.recruits = 99;
-    expect(R(take(s, 'red.turnout'))[0].red).toBe(round + 2);
+    expect(R(take(s, 'red.turnout'))[0].red).toBe(round + 1);
   });
   it('Walk-In recruits the top member of the deck free; each rival +1 red; +1 red', () => {
     const s = take(scene({ res: [{ gold: 9 }], shop: SHOP, pileFirst: ['red.volunteer'] }), 'red.hire');
