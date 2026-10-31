@@ -9,4 +9,4 @@ One entry per lesson, newest at the bottom:
 - When the same lesson lands twice, make it a check (a hook, a test, a script) and say so in the entry.
 - Monthly: merge duplicates, delete what's no longer true. Superseded entries go to design/archive/.
 
-Files: design.md (pitches, colors, cards, balance) · engine.md (rules code and tests) · screen.md (UI, motion, screenshots) · shipping.md (checks, publishing, releases) · harness.md (how threads work together).
+Files: working-with-cory-changelog.md (why each rule for working with Cory exists) · design.md (pitches, colors, cards, balance) · engine.md (rules code and tests) · screen.md (UI, motion, screenshots) · shipping.md (checks, publishing, releases) · harness.md (how threads work together).
