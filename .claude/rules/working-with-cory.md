@@ -29,6 +29,7 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - Card shorthand in chat (Cory, Oct 30): a colored circle is a resource (🔴🟢🟣🔵⚪🟡), 🌈 is any color you choose, 🧍 is a follower, a colored square is a member of that color (🟥 red member). Quote spaces and members in it, concisely.
 - Don't restate that a space gives +1 of its color; every space does, and it goes without saying (Cory, Oct 22).
 - Every pick names the real card or space, quotes it, and says what a player does differently. Never a pick on a category ("the member-count cards", "one round III space") without the cards. Check any claim about the game against the cards before sending it, and any example against "could a table track this?" (Cory, Oct 27).
+- He doesn't know the cards by name (Cory, Oct 31: "I DONT HAVE THE ACTION NAMES MEMORIZED"): every space or member named to him comes with its full card text in the same message, every time, even if it was quoted earlier.
 - Use his words. Never coin labels. Say "buy followers". Any card or space you name gets its text quoted in a few words and what changes for a player.
 - Show, don't describe: a play link, screenshot or GIF with a plain caption. Plain URLs. Send iterations as they happen, with screenshots, not just finished builds.
 - Times are his US Eastern clock, 12-hour ("7:43pm"). The container runs UTC.
@@ -99,3 +100,4 @@ Current rules only. When Cory corrects how Claude works, change the rule here th
 - 2026-10-30: Cory: "you can use the color circle emoji to represent resource, and a little person emoji for followers… symbols for members as well? like red member blue member". Card shorthand added for chat.
 - 2026-10-30: Cory: "can you use bold and better formatting to make things readable for me?" Bold names and asks, one item per line; the message check no longer bounces bold labels.
 - 2026-10-31: Cory: "rest of decisions go one by one. give me crisp details no editorializing. all context i need for decision concisely". One decision per message, facts only.
+- 2026-10-31: Cory, after "maybe help yourself is enough" drew a reply naming Stash and Lie Low without their text: "I DONT HAVE THE ACTION NAMES MEMORIZED". Every named card or space comes with its full text, every message.
