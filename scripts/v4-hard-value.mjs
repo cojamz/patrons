@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const EVERY = 5; // a position sampled every this many moves
 
-async function playOne({ g, seats, model, sample }) {
+async function playOne({ g, seats, model, sample, must = [] }) {
   // seats[i]: { role, old?: the Hard before plans, buyer?: buys followers only }
   const { createGame, applyMove, followers, memberCount, allQuadrantIds, quadrant } = await import('../src/engine/v4/index.js');
   const { defById } = await import('../src/engine/v4/content/index.js');
@@ -20,11 +20,11 @@ async function playOne({ g, seats, model, sample }) {
   const { seededRandom } = await import('../src/engine/v4/rng.js');
   const { sphereVersion } = await import('../src/v4/tables.js');
   const rand = seededRandom(g * 7717 + 3);
-  const pool = allQuadrantIds().filter(q => sphereVersion(q) === '2.0'), quads = [];
+  const pool = allQuadrantIds().filter(q => sphereVersion(q) === '2.0' && !must.includes(q)), quads = [...must];
   while (quads.length < 4) quads.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
   let s = createGame({ seats: seats.map(() => ({ kind: 'bot' })), seed: g, quadrants: quads });
   const minds = seats.map(x => (x.old ? {} : { valueModel: model }));
-  const taken = [];
+  const taken = [], places = seats.map(() => ({}));
   let k = 0, round = s.round;
   while (!s.over) {
     if (sample && s.round >= 1 && s.pending?.kind === 'place' && (s.round !== round || k % EVERY === 0)) taken.push({ round: s.round, parts: boundaryParts(s) });
@@ -32,6 +32,11 @@ async function playOne({ g, seats, model, sample }) {
     const pl = s.pending.player, seat = seats[pl];
     const m = seat.buyer ? chooseFollowerBuyerMove(s, rand)
       : chooseBotMove(s, rand, { level: 'hard', maxMs: Infinity, mind: minds[pl], noPlan: !!seat.old });
+    if (typeof m.option === 'string' && /^(slot|squat):/.test(m.option)) {
+      const [q, i] = m.option.split(':')[1].split('-').map(Number);
+      const a = quadrant(s.quadrants[q]).actions[i];
+      if (a) { const key = `${a.name} (${s.quadrants[q]})`; places[pl][key] = (places[pl][key] || 0) + 1; }
+    }
     s = applyMove(s, m);
   }
   const fol = s.players.map(p => followers(s, p)), top = Math.max(...fol);
@@ -41,7 +46,8 @@ async function playOne({ g, seats, model, sample }) {
     players: s.players.map((p, i) => ({
       seat: i, role: seats[i].role, followers: fol[i], win: fol[i] === top, plan: minds[i].log || [],
       names: p.members.map(u => defById(s.cards[u].def).name), memberCount: memberCount(s, p), bought: p.bonus,
-      artifact: p.artifact !== undefined ? s.cards[p.artifact].def.split('.')[0] : null,
+      artifact: p.artifact !== undefined ? s.cards[p.artifact].def.split('.')[0] : null, places: places[i],
+      yellow: p.members.filter(u => s.cards[u].def.startsWith('yellow.')).map(u => defById(s.cards[u].def).name), res: { ...p.res },
     })),
   };
 }
@@ -59,7 +65,20 @@ if (!isMainThread) {
     w.once('message', m => (m.error ? rej(new Error(m.error)) : res(m)));
     w.once('error', rej);
   });
-  if (evalMode) {
+  if (process.argv.includes('--reads')) {
+    // --reads --model=<file> --must=yellow [--games=40]: learning Hard on every seat (a buy-followers-only seat every 5th
+    // game), model fixed, for a color's reads
+    const model = JSON.parse(readFileSync(arg('model', `${out}/model.json`), 'utf8'));
+    const must = arg('must', '').split(',').filter(Boolean), games = Number(arg('games', 40));
+    for (let g = 7001; g < 7001 + games; g += 4) {
+      const wv = await Promise.all(Array.from({ length: Math.min(4, 7001 + games - g) }, (_, k) => {
+        const n = g + k, buyer = n % 5 === 0 ? n % 4 : -1;
+        return run({ g: n, model, sample: false, must, seats: [0, 1, 2, 3].map(i => (i === buyer ? { buyer: true, role: 'buyer' } : { role: 'learned' })) });
+      }));
+      for (const r of wv) appendFileSync(`${out}/reads.jsonl`, JSON.stringify({ ...r, samples: undefined }) + '\n');
+      console.log(`reads ${g - 7000 + wv.length - 1}/${games}`);
+    }
+  } else if (evalMode) {
     const model = JSON.parse(readFileSync(`${out}/model.json`, 'utf8'));
     const tables = Number(arg('tables', 20));
     const jobs = [];
