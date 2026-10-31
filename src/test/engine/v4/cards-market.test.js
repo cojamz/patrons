@@ -28,20 +28,31 @@ const pickPay = (s, color = 'red') => (s.pending?.kind === 'choose' && s.pending
 
 describe('Blue actions', () => {
   const ROW5 = ROW.slice(0, 5);
-  it('Savings: +3 blue in round I, +4 in round II, +5 in round III, and nothing else', () => {
-    for (const [round, n] of [[1, 3], [2, 4], [3, 5]]) {
+  it('Savings: +2 blue in round I, +3 in round II, +4 in round III; keeping the shop leaves it as it is', () => {
+    for (const [round, n] of [[1, 2], [2, 3], [3, 4]]) {
       let s = table(Q, { round, shop: ROW5 });
       const shop = [...s.shop];
       s = take(s, 'market.bargain');
       expect(R(s).blue).toBe(n);
+      s = move(s, 'none');
       expect(s.shop).toEqual(shop);
       expect(s.pending?.kind).toBe('buy');
     }
   });
+  it('Savings (Cory, Oct 31): before you recruit, one shop member to the bottom of the pile, then refill', () => {
+    let s = table(Q, { shop: ROW5 });
+    const gone = s.shop[1], top = s.pile[0];
+    s = take(s, 'market.bargain');
+    s = move(s, `card:${gone}`);
+    expect(s.shop).not.toContain(gone);
+    expect(s.pile[s.pile.length - 1]).toBe(gone);
+    expect(s.shop).toContain(top);
+    expect(s.pending?.kind).toBe('buy');
+  });
   it('× Midas: Savings\' blue comes as gold, and the log names Midas', () => {
     let s = table(Q, { shop: ROW5, members: [['gold.midas']] });
     s = take(s, 'market.bargain');
-    expect([R(s).blue, R(s).gold]).toEqual([0, 3]);
+    expect([R(s).blue, R(s).gold]).toEqual([0, 2]);
     expect(named(s, 'Midas').length).toBe(1);
   });
 

@@ -171,10 +171,19 @@ const market = {
     {
       // every color's 3/4/5 (Cory, 2026-10-27); Churn's sweep goes (Claude's default: Out of Style keeps Blue's sweep).
       // Name is Claude's fill-in.
-      key: 'bargain', ring: 1, name: 'Savings', text: '+3 blue in round I, +4 in round II, +5 in round III.',
-      estimate: ctx => ctx.state.round + 2,
-      byRound: { lines: ['+3 blue', '+4 blue', '+5 blue'] },
-      resolve(ctx, p) { ctx.gain(p, B, ctx.state.round + 2, { fromAction: true }); },
+      key: 'bargain', ring: 1, name: 'Savings', copyDoesIt: true,
+      text: '+2 blue in round I, +3 in round II, +4 in round III. Before you recruit, you may send one shop member to the bottom of the pile, then refill.',
+      // Cory, 2026-10-31: fuel that announces Blue ("C"); was +3/4/5 blue
+      estimate: ctx => ctx.state.round + 1.5,
+      byRound: { lines: ['+2 blue', '+3 blue', '+4 blue'], rest: 'Before you recruit, you may send one shop member to the bottom of the pile, then refill.' },
+      resolve(ctx, p) {
+        ctx.gain(p, B, ctx.state.round + 1, { fromAction: true });
+        const shop = ctx.shopCards();
+        if (!shop.length) return;
+        ctx.choose(p, 'Savings: send a shop member to the bottom of the pile?', shop.map(c => ({
+          id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: 0,
+        })).concat({ id: 'none', label: 'Keep the shop', kind: 'pass', value: null, hint: 1 }), `${Q}.savings`);
+      },
     },
     {
       key: 'restock', ring: 1, name: 'Out of Style', text: 'Send every shop member of one color to the bottom of the pile, then refill. +1 blue per member sent. +1 blue.', copyDoesIt: true, // per member sent: Cory, Oct 28 ("it's actually rather good that way")
@@ -258,6 +267,13 @@ const market = {
     peek(ctx, p, uid, data) {
       if (uid === 'keep') { peekStep(ctx, p, { left: [], placed: [...data.placed, ...data.left] }); return; }
       peekStep(ctx, p, { left: data.left.filter(u => u !== uid), placed: [...data.placed, uid] });
+    },
+    savings(ctx, p, uid) {
+      if (uid == null || !ctx.state.shop.includes(uid)) return;
+      const c = ctx.card(uid);
+      ctx.buryFromShop(uid);
+      ctx.log(`Savings: ${p.name} sends ${c.def.name} to the bottom of the pile.`);
+      toBottom(ctx, 1);
     },
     bury(ctx, p, uid) {
       if (!ctx.state.shop.includes(uid)) return;

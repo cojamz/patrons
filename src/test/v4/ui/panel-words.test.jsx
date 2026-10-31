@@ -59,10 +59,10 @@ describe('panel words (w3)', () => {
     const seeds = panelText('yellow', { key: 'transmute' });
     expect(seeds.main).toBe('+2 yellow');
     expect(seeds.second).toBe('then swap up to 3');
-    // Churn became Savings in the round I rework (Oct 27): no sweep, +3/+4/+5
+    // Savings (Oct 31): +2/+3/+4 and one shop member to the bottom, if you like
     const savings = panelText('market', { key: 'bargain' }, 2);
-    expect(savings.main).toBe('+4 blue');
-    expect(savings.second).toBe('I\u00a0+3\u00a0· II\u00a0+4\u00a0· III\u00a0+5');
+    expect(savings.main).toBe('+3 blue');
+    expect(savings.second).toBe('may send 1 shop member to the bottom');
     expect(panelText('trading', { key: 'pawn' }, 3).second).toBe('or 2 white per @f');
   });
 

@@ -78,12 +78,13 @@ describe('Blue scoring: most blue held', () => {
 
 describe('Blue actions', () => {
   const S5 = SHOP.slice(0, 5);
-  it('Savings (ring I): +3 blue in round I, +4 in round II, +5 in round III; the shop stays as it is', () => {
-    for (const [round, n] of [[1, 3], [2, 4], [3, 5]]) {
+  it('Savings (ring I): +2 blue in round I, +3 in round II, +4 in round III; keeping the shop leaves it as it is', () => {
+    for (const [round, n] of [[1, 2], [2, 3], [3, 4]]) {
       let s = scene({ round, shop: S5 });
       const shop = [...s.shop];
       s = take(s, 'market.bargain');
       expect(R(s).blue).toBe(n);
+      s = move(s, 'none');
       expect(s.shop).toEqual(shop);
       expect(s.pending.kind).toBe('buy');
     }
