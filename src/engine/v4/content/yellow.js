@@ -84,6 +84,7 @@ export default {
     },
     wild(ctx, p, c, data) {
       ctx.gain(p, c, 1, { fromAction: !!data.fromAction });
+      ctx.log(`${p.name}'s ${data.who}: +1 ${c}.`);
       if (data.left > 1) pickColors(ctx, p, data.left - 1, data.who, data.fromAction, data.got + 1);
     },
     changeFrom(ctx, p, value, data) {
