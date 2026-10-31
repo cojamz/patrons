@@ -1492,3 +1492,4 @@ Cory’s additional batch: Chorus excludes the minion placed on itself; Copy Pre
 - (Cory, 2026-10-31 1:36am Eastern) Yellow gets an On Recruit member that rearranges rivals' resources ("there should be an On Recruit rearrange opponents resources"); it takes one of the four open slots. "Whenever you recruit, +1 of its color" is what he's thinking of making Red's artifact, so Go-Between needs a different text.
 - (Cory, 2026-10-31 1:37am Eastern) Big Tent: "Game End: +2 followers per color you have exactly one member of." ("I like the big tent suggestion")
 - (Cory, 2026-10-31 1:41am Eastern) The once-per-game rearrange member is named Book Cooker: worth 3 followers, "On Use, once per game: rearrange your resources into any mix of colors."
+- (Cory, 2026-10-31 1:42am Eastern) Agitator (Yellow, 3 yellow + 2 any, price Claude's guess): "On Recruit: change up to 4 of rivals' resources one for one, split among rivals as you choose." ("yes")
